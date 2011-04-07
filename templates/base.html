@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>{{ 'The New Hive' if not title else title }}</title>
+ <link rel='shortcut icon' type='image/png' href={{ icon }}>
+
+ <style id='css_base'>
+html, body { margin : 0; padding : 0; font-family : Arial, sans-serif;
+    font-family : Arial, sans-serif; font-size : 13pt; color : {{ colors[0] }} }
+img { padding : 0; margin : 0; border : 0; }
+a { color : inherit; text-decoration : none; }
+ </style>
+
+ <style>
+html, body { background-color : white; height : 100%; }
+input[type=text], input[type=password], textarea { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
+input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : {{ colors['selected'] }}; }
+input[type=button], input[type=submit] { border : none; background : none; }
+h1 { font-size : 40px; }
+form { display : inline; }
+.menu { position : fixed; display : none; border : 5px solid {{ colors['unselected'] }};
+    background-color : white; padding : 0; }
+.menu_item { color : {{ colors[5] }}; padding : 10px 12px; margin : -5px; cursor : default; }
+.menu_item:hover { border : 5px solid {{ colors['selected'] }}; color : {{ colors[0] }}; padding : 5px 7px; }
+.tooltip { position : absolute; color : {{ colors['active'] }}; display : none; font-size : 14px; }
+.border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
+.selected { border-color : {{ colors['selected'] }}; }
+.snug { padding : 0 }
+.medbold, .medbold * { font-weight : bold; font-size : 18px; }
+.active { color : {{ colors['active'] }}; }
+#logo { position : absolute; left : 20px; top : 20px; }
+#logo * { vertical-align : middle; }
+#user { display : inline-block; }
+.menu, .top { z-index : 1100; }
+ </style>
+
+ <script src='/lib/jquery.js'></script>
+ <script src='/lib/util.js'></script>
+ {% block head %}{% endblock %}
+</head>
+<body>
+
+ <div id='logo' class='top'>
+  <a href='{{ server }}'><img src={{ icon }}></a>&nbsp;
+  {% if user %}
+   <div id='user'>
+    <div>
+     <a href='{{ home_url }}' class='medbold'>{{ user['username'] }}</a>
+     <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
+    </div>
+    {% if userisowner %}<div id='datetime'>{{ mtime }}</div>{% endif %}
+   </div>
+  {% else %}
+   <a href='{{ server }}'><img src='{{ server }}lib/skin/1/logo_text.png'></a>
+  {% endif %}
+ </div>
+ {% if user %}
+  <div id='user_menu' class='menu medbold'>
+   <form name='logout_form' action='{{ secure_server }}' method='POST'>
+    <input name='action' value='logout' type='hidden'>
+   </form>
+   <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
+   <div class='menu_item'>Change&nbsp;icon</div>
+   <div class='menu_item'>Settings</div>
+  </div>
+  <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
+ {% endif %}
+
+{% block body %}{% endblock %}
+</body>
+</html>

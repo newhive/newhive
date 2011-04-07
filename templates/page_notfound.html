@@ -1,0 +1,24 @@
+{% extends "main.html" %}
+
+{% block head %}
+ <style>
+.toolbtn { margin-left : 20px }
+#meta { position : absolute; right : 20px; top : 27px; }
+ </style>
+{% endblock %}
+
+{% block body %}
+ {% if userisowner %}
+<div id='meta' class='top'>
+  <form id='login_form' action='{{ create }}' method='POST'>
+   <input type='hidden' name='action' value='create'>
+   <input type='image' id='btn_create' src='{{ server }}lib/skin/1/create.png' class='toolbtn hoverable'>
+  </form>
+  <script>tool_tip($('#btn_create'), 'create');</script>
+</div>
+ {% endif %}
+
+<table width='100%' height='100%'><tr><td valign='middle' align='center'>
+<h1>Nothing here yet...</h1>
+</td></tr></table>
+{% endblock %}

@@ -1,0 +1,42 @@
+.widget, .widget > * { position : absolute; }
+.widget .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
+.select_box { width : 100%; height : 100%; z-index : 1; top : -5px; left : -5px; padding : 0; }
+
+.text .select_box { padding : 5px; top : -10px; left : -10px; }
+.text .content { z-index : 2 }
+
+.controls { display : none; }
+.drag { cursor : move; }
+
+.control { position : absolute; cursor : default; z-index : 2 }
+.control.resize_h { cursor : ew-resize; }
+.control.resize { cursor : se-resize; }
+.control.stack img { display : inline-block; margin-left : 5px; }
+
+.control.stack { white-space : nowrap; }
+.control.buttons .button { margin-right : 2px; }
+.control .button, .control .option { cursor : default; }
+.option.small { display : inline-block; }
+.drawer.fontname { padding : 0px; margin : 0; }
+.drawer.fontname .option { padding : 5px; margin : 0; }
+.drawer.color { padding : 10px; }
+.drawer.color > * { display : inline-block; }
+.color .hue_bar { width : 10px; height : 158px; margin : 0 7px 0 15px; }
+.drawer.color .option.small { width : 20px; height : 20px; margin : 2px }
+.align .option.small { margin : 5px; }
+.drawer.link img { vertical-align : middle; }
+
+
+.spacer { height : 10px; }
+
+#app_buttons { display : inline-block; margin : 20px; }
+.insert_btn { margin-right : 15px; cursor : default; }
+.btn { padding : 5px; cursor : default; }
+#btn_save { margin-left : 15px; }
+#menu_save { position : absolute; top : 65px; right : 20px; padding : 10px; display : none;
+     background-color : white; }
+#menu_save textarea { height : 2.5em; }
+#menu_save input, textarea { width : 200px; }
+#menu_privacy .selected { display : none; }
+#right { position : absolute; right : 20px; top : 32px; }
+#right * { vertical-align : middle }
