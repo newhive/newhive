@@ -1,0 +1,50 @@
+{% extends "main.html" %}
+
+{% block head %}
+ <style>
+  iframe { position : absolute; top : 0; left : 0; border : none;
+      background-color : white; width : 100%; height : 100%; overflow : scroll; }
+  .toolbtn { margin-left : 20px }
+  .happ { position : absolute; }
+  .happ img { width : 100%; }
+  
+  #meta { position : absolute; right : 20px; top : 27px; }
+  #info { display : inline-block; text-align : right; margin-right : 10px; }
+  #datetime { font-size:10pt; color : {{ colors[24] }}; }
+  {{ css }}
+ </style>
+{% endblock %}
+
+{% block body %}
+
+<div id='meta' class='top'>
+ {% if user_is_owner %}
+  <form id='login_form' action='{{ secure_server }}' method='POST'>
+   <input type='hidden' name='action' value='create'>
+   <input type='hidden' name='domain' value='{{ domain }}'>
+   <input type='image' id='btn_create' src='{{ server }}lib/skin/1/create.png' class='toolbtn hoverable'>
+  </form>
+  <a href='{{ edit }}'><img id='btn_edit' src='{{ server }}lib/skin/1/edit.png' class='toolbtn hoverable'></a>
+  <script>
+   tool_tip($('#btn_create'), 'create');
+   tool_tip($('#btn_edit'), 'edit');
+   //$('#btn_edit').click(begin_edit);
+   //function begin_edit() {
+   //    var i = $('<iframe>');
+   //    i.attr('src', '{{ secure_server }}edit');
+   //    $(document.body).append(i);
+   //}
+  </script>
+ {% else %}
+
+  <div id='info'>
+   <div id='exp_owner' class='medbold'>{{ owner['username'] }}</div>
+   <div id='datetime'>{{ mtime }}</div>
+  </div>
+
+ {% endif %}
+</div>
+
+{{ body }}
+
+{% endblock %}

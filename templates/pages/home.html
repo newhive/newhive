@@ -1,0 +1,75 @@
+{% extends "main.html" %}
+
+{% block head %}
+ {{ super() }}
+ <style>
+html { display : table; width : 100%; height : 100%; }
+body { display : table-cell; vertical-align : middle; }
+form { display : inline; }
+#login { position : absolute; right : 20px; top : 27px; }
+#login_error { position : absolute; right : 215px; top : 5px; }
+#login * { vertical-align : middle; }
+#login input[type=text] { width : 12em; }
+#welcome { display : inline; font-weight : bold; margin-left:15px; }
+#welcome.open { background-color : {{ colors[0] }}; color : white }
+#contact { position : absolute; right : 20px; top : 75px; }
+ </style>
+{% endblock %}
+
+{% block body %}
+ {% if not logged_in %}
+  <div id='login'>
+   <span class='medbold'>beta log in&nbsp;</span>
+   <form id='login_form' action='{{ secure_server }}' method='POST'>
+    <input type='text' name='username' value='{{ user['name'] }}' alt='Username'>
+    <input type='password' name='secret'>
+    <input type='hidden' name='action' value='login'>
+    <input id='login_submit' type='image' src='/lib/skin/1/sm_arrow.png' class='hoverable'>
+    <div id='session_menu' class='menu'>
+     <nobr><input id='expires' type='checkbox' name='no_expires'><label for='expires'> Stay logged in</label></nobr><br>
+     <nobr><input id='remember' type='checkbox' name='remember'><label for='remember'> Remember me</label></nobr>
+    </div>
+    <script>hover_menu($('#login_submit'), $('#session_menu'), { no_close : true });</script>
+   </form>
+
+   <input type='button' id='welcome' class='medbold hoverable' value='hello!'>
+  </div>
+  <div id='login_error' class='active'>{{ error }}</div>
+  <div id='contact' class='border' style='width : 220px; display : none'>
+We are in beta right now.
+Drop us a line with your email
+and name and we'll be in touch!
+<textarea style='margin : 10px 0 10px 0; width : 200px'></textarea>
+<div style='text-align : right'><input type='button' class='medbold active' value='Send'></div>
+  </div>
+  <script>
+var text = $('#contact textarea');
+function contact_show() { 
+    $('#welcome').addClass('open');
+    $('#contact').show();
+    text.focus();
+}
+function contact_hide() {
+    $('#contact').hide();
+    $('#welcome').removeClass('open');
+}
+
+$('#contact input').click(function() {
+    $.post('/', { message : text.val(), action : 'contact' }, function(data) {
+            if(data) alert(data);
+            else text.val('');
+        }, 'json') });
+
+$('#welcome').click(function() { contact_show() });
+$(window).click(function(e) {
+    if(e.target != $('#welcome').get(0)
+        && e.target != $('#contact').get(0)
+        && !$.contains($('#contact').get(0), e.target)) contact_hide();
+});
+  </script>
+ {% endif %}
+
+<center><h1><img id='plus' src='/lib/skin/1/plus_home.png' class='hoverable'> Liberate your ideas.</h1></center>
+<script>$(function() { var p = $('#plus').get(0); $('h1').hover(p.over, p.out); });</script>
+
+{% endblock %}
