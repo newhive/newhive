@@ -1,130 +1,96 @@
-import random
-import config
 from werkzeug import exceptions
-from state import User, Session
+import config
+from state import User, Session, junkstr
 
 def authenticate_request(request, response):
     sessid = get_cookie(request, 'identity')
-    if not sessid: return {}
-    session = get('session', sessid)
-    if not session: return {}
-    uinfo = User.fetch(session['user'])
+    fail = User({})
+    if not sessid: return fail
+    session = Session.fetch(sessid)
+    if not session: return fail
+    user = User.fetch(session['user'])
+    user.update(session = session.id)
 
-    verified = False
-    client_secret = get_cookie(request, secrets[request.is_secure])
-    if client_secret:
-        if client_secret == session[secrets[request.is_secure]]
-            verified = True
-            #set_secret(uinfo, request.is_secure, response)
-        else: return BadCookie()
-
-    return (uinfo, verified)
+    user.logged_in = False
+    if cmp_secret(session, request, response):
+        user.logged_in = True
+    return user
 
 def handle_login(request, response):
-    if not request.is_secure: return exceptions.BadRequest()
-    user = request.form.get('username', False)
-    secret = request.form.get('secret', False)
-    if not (user or secret): return exceptions.BadRequest()
+    args = request.form
+    if not request.is_secure: raise exceptions.BadRequest()
+    username = args.get('username', False)
+    secret = args.get('secret', False)
+    if not (username or secret): raise exceptions.BadRequest()
 
-    uinfo = User.fetch(user)
-    if uinfo and User.cmp_password(secret):
-        request.requester = login(user, response)
-        return
+    user = User.fetch_by_name(username)
+    if user and user.cmp_password(secret):
+        # login
+
+        # session record looks like:
+        #    user = id
+        #    expires = bool
+        #    remember = bool
+        #    plain_secret = str
+        #    secure_secret = str
+
+        expires = False if args.get('no_expires', False) else True
+        session = Session.create(
+             user = user.id
+            ,active = True
+            ,remember = args.get('remember', False)
+            ,expires = expires
+            )
+        set_secret(session, True, response)
+        set_secret(session, False, response)
+        set_cookie(response, 'identity', session.id, expires = expires)
+        user.logged_in = True
+        request.requester = user
+
     response.context['error'] = 'Invalid username or password'
 
 def handle_logout(request, response):
-    uinfo = request.requester
-    if not uinfo: return
-    if not request.is_secure: return exceptions.BadRequest()
-    logout(uinfo['home'], response)
-    uinfo.clear()
+    if not request.trusting: raise exceptions.BadRequest()
+    session = Session.fetch(request.requester['session'])
 
-def login(user, response):
-    uinfo = User.fetch(user)
-    set_cookie(response, 'identity', uinfo)
-    [ set_secret(uinfo, is_secure, response) for is_secure in [True, False]]
-    return uinfo
-#class Session(Entity):
-#    user = ManyToOne('state.User')
-#    created = Field(DateTime)
-#    expires = Field(DateTime)
-#    remember = Field(Boolean)
-#    key_plain = Field(String())
-#    key_secure = Field(String())
-#
+    rm_cookie(response, 'plain_secret')
+    rm_cookie(response, 'secure_secret', True)
 
-def pwd2uinfo(pw_struct):
-    uinfo = { 'username' : pw_struct.pw_name, 'uid' : pw_struct.pw_uid,
-        'home' : pw_struct.pw_dir, 'gid' : pw_struct.pw_gid }
+    if session['remember']:
+        session.update(active = False)
+    else:
+        rm_cookie(response, 'identity')
+        session.delete()
 
-    user_config = user_state_get(uinfo['home'], 'uinfo')
-    if not user_config:
-        fullname = pw_struct.pw_gecos.split(',')[0] or uinfo['username']
-        user_config = { 'name' : fullname }
-        user_state_set(uinfo['home'], 'uinfo', user_config)
-    for k in user_config: uinfo[k] = user_config[k]
-
-    return uinfo
-
-
-def info_name(user): return pwd2uinfo(pwd.getpwnam(user))
-def info_uid(user): return pwd2uinfo(pwd.getpwuid(user))
+    request.requester.logged_in = False
 
 secrets = ['plain_secret', 'secure_secret']
 cookies = secrets + ['identity']
 
-def logout(home, response):
-    for name in ['identity', 'plain_secret']: rm_cookie(response, name)
-    rm_cookie(response, 'secure_secret', True)
-    for snam in secrets: user_state_del(home, snam)
-    return None
+def set_secret(session, is_secure, response):
+    secret = junkstr(32)
+    session.update(**{ secrets[is_secure] : secret })
+    set_cookie(response, secrets[is_secure], secret, secure = is_secure, expires = session['expires'])
+def cmp_secret(session, request, response):
+    secure = True
+    client_secret = get_cookie(request, secrets[secure])
+    if not client_secret:
+        secure = False
+        client_secret = get_cookie(request, secrets[secure])
+    if not client_secret: return False
+    if client_secret == session[secrets[secure]]:
+        #set_secret(session, secure, response)
+        return True
+    raise BadCookie()
 
-#class Session(Entity):
-#    user = ManyToOne('state.User')
-#    created = Field(DateTime)
-#    expires = Field(DateTime)
-#    remember = Field(Boolean)
-#    key_plain = Field(String())
-#    key_secure = Field(String())
-#
-
-
-def user_state(home, name): #return join(home, '.hive', name)
-def user_state_get(home, name):
-    #try: return json.load(open(user_state(home, name)))
-    #except: return None
-def user_state_set(home, name, val):
-    #f = open(user_state(home, name), 'w')
-    #except:
-    #    os.mkdir(join(home, '.hive'))
-    #    f = open(user_state(home, name))
-    #os.fchmod(f.fileno(), 0660)
-    #json.dump(val, f)
-def user_state_del(home, name): #os.remove(user_state(home, name))
-
-def set_secret(uinfo, is_secure, response):
-    secret = junkstr()
-    user_state_set(uinfo['name'], secrets[is_secure], secret)
-    set_cookie(response, secrets[is_secure], secret, secure = is_secure)
-
-# the ugly PAM part
-def check_password(user, secret):
-    auth = PAM.pam()
-    auth.start('passwd')
-    auth.set_item(PAM.PAM_USER, user)
-    auth.set_item(PAM.PAM_CONV, lambda a, b, c: [(secret, 0)])
-    try:
-        auth.authenticate()
-        auth.acct_mgmt()
-    except PAM.error, resp: return resp.args
-    else: return False
-
-def junkstr(): return ''.join(map(chr, [random.randrange(0, 128) for n in range(32)]))
-
-def set_cookie(response, name, data, secure = False):
-    response.set_cookie(name, value = data,
-        domain = None if secure else '.' + config.server_name, httponly = True)
-def get_cookie(request, name): return request.cookies.get(name, '{}')
+import datetime
+def set_cookie(response, name, data, secure = False, expires = True):
+    expiration = None if expires else datetime.datetime(2100, 1, 1)
+    max_age = 0 if expires else None
+    response.set_cookie(name, value = data, secure = secure,
+        domain = None if secure else '.' + config.server_name, httponly = True,
+        expires = expiration)
+def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name, secure = False): response.delete_cookie(name,
     domain = None if secure else '.' + config.server_name)
 

@@ -1,63 +1,76 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
-import os, pwd, stat
-import json
+import os, re, json, mimetypes
 from datetime import datetime
-from os.path  import dirname, join as joinpath
-from werkzeug import Request, Response, redirect, exceptions
+from os.path  import dirname, exists, join as joinpath
+from werkzeug import Request, Response, exceptions
 import jinja2
 
 import config, auth
 from colors import colors
-from fsquirrel import Resource, thread_add
+from state import Expr, File, User
 
-
-def exp_create(request, response):
-    try:
-        os.makedirs(request.syspath)
-        os.chmod(request.syspath, 0755)
-    except: pass   
-    path = joinpath(request.syspath,  'index.json')
-    if not os.path.exists(path):
-        with open(path,  'w+') as f:
-            f.write('{}')
-            os.fchmod(f.fileno(), 0644)
-    #return abs_url(secure = True) + request.res_path + '?type=edit'
 
 def exp_save(request, response):
-    if not request.trusting: return exceptions.BadRequest()
-    exp = request.form.get('exp', False)
-    # TODO: sanitize, escape
-    #exp = json.loads(request.form.get('exp', False))
-    if not exp: return exceptions.BadRequest()
+    if not request.trusting: raise exceptions.BadRequest()
+    try: exp = json.loads(request.form.get('exp', '0'))
+    except: exp = False
+    if not exp: return ValueError('missing or malformed exp')
 
-    path = request.syspath
-    user_path = request.user_path
-    if request.form.get('path', '') != request.user_path:
-        user_path = request.form.get('path', '')
-        path = joinpath(config.domain_home, request.site_path, user_path)
-        os.renames(request.syspath, path)
+    res = Expr(exp)
+    try: res.update(name  = exp['name'] ,title = exp['title'] ,apps  = exp['apps'])
+    except DuplicateKeyError: return dict( error='An expression already exists with that URL' )
+    return dict( error=False, location=abs_url(domain = res['domain']) + res['name'] )
 
-    with open(joinpath(path, 'index.json'), 'w+') as f:
-        f.write(exp)
-        os.fchmod(f.fileno(), 0644)
-    return abs_url(domain = request.user_host) + user_path
+def exp_create(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    new_name = request.form.get('path',
+        '.'.join(map(str, datetime.utcnow().timetuple()[0:6])))
+    expr = Expr.create(
+         owner = request.requester.id
+        ,domain = request.form['domain']
+        ,name = new_name
+        ,title = 'Untitled'
+        ,apps = {}
+        )
+    return redirect(response, abs_url(secure=True) + 'expr/' + expr.id)
 
+def media_path(user): return joinpath(config.domain_home, config.server_name, user['name'], 'media')
 def save_files(request, response):
-    if not request.trusting: return exceptions.BadRequest()
+    if not request.trusting: raise exceptions.BadRequest()
+
     names = []
     for file_name in request.files:
         file = request.files[file_name]
-        name = joinpath(request.path, file.filename)
-        fname = joinpath(request.syspath, file.filename)
-        file.save(fname)
-        os.chmod(fname, 0644)
-        names.append(abs_url(secure = True) + name)
+        mime = mimetypes.guess_type(file.filename)[0]
+        if not mime: raise ValueError('Unrecognized file type')
+
+        #if exists(joinpath(media_path(request.requester), file.filename)):
+        #    m = re.search('(.*?)(_([0-9]+))?(\..*?$)', file.filename)
+        #    if m.groups()[2]: file.filename = m.groups()[0] + '_' + str(int(m.groups()[2]) + 1) + m.groups()[3]
+        #    else: file.filename = m.groups()[0] + '_1' + m.groups()[3]
+        #path = joinpath(media_path(request.requester), file.filename)
+
+        res = File.create(
+             owner = request.requester.id
+            ,name = file.filename
+            ,mime = mime
+            )
+        path = joinpath(media_path(request.requester), res.id)
+        file.save(path)
+        res.update(fs_path = path)
+        names.append(abs_url() + 'file/' + res.id)
     return names
 
+def home_url(user):
+    return abs_url(domain = user.get('sites', [config.server_name])[0])
+def login(request, response):
+    auth.handle_login(request, response)
+    return redirect(response, home_url(request.requester))
+
 actions = {
-      'login'       : auth.handle_login
+      'login'       : login
     , 'logout'      : auth.handle_logout
     , 'create'      : exp_create
     , 'save_exp'    : exp_save
@@ -78,61 +91,60 @@ unsafe_mimes = {
 def handle(request):
     response = Response()
     response.context = {}
-    (request.requester, verified) = auth.authenticate_request(request, response)
+    request.requester = auth.authenticate_request(request, response)
     request.trusting = False
 
-    (site_domain, user_domain) = parse_host(request.host)
-    if user_domain == None and site_domain == config.server_name:
-        print(str(request.is_secure) +"\n"+ str(request.requester.get('verified', False)))
-        if request.is_secure and verified: request.trusting = True
+    request.path = request.path[1:] # drop leading '/'
+    request.domain = request.host.split(':')[0]
+    if request.domain == config.server_name:
+        if request.is_secure and request.requester and request.requester.logged_in:
+            request.trusting = True
 
         reqaction = request.form.get('action', False)
         if reqaction:
             r = actions.get(reqaction, lambda _,__: raises(exceptions.BadRequest())
                 )(request, response)
+            if type(r) == Response: return r
             if r != None: return serve_json(response, r, html = True)
 
-        if request.path == '/':
-            return serve_html(response, request.requester, 'page_home.html')
-        if request.args.get('type', False) == 'edit':
-            response.context['site'] = request.user_host
-            exp = Resource.fetch(request.syspath)
-            if not exp: return serve_404(response, request.requester)
-            response.context['exp'] = json.dumps(exp.meat)
-            response.context['exp_path'] = json.dumps(request.user_path)
-            response.context['title'] = exp.meat.get('title', '')
-            return serve_html(response, request.requester, 'page_edit.html')
+        if request.path == '':
+            return serve_html(response, request.requester, 'home.html')
 
-    resource = Resource.fetch(request.syspath)
-    if not resource:
-        # TODO: does not work with other websites 
-        response.context['create'] = abs_url(secure = True) + res_path
-        response.context['userisowner'] = user_domain == request.requester.get('name', False)
+        parts = request.path.split('/')
+        (p1, p2) = (None, None)
+        if len(parts) >= 2: (p1, p2) = (parts[0], '/'.join(parts[1:]))
+        if p1 == 'file':
+            res = File.fetch(p2)
+            #if response.enforce_static and unsafe_mimes.get(resource['mime'], False):
+            #    raise DangerousContent()
+            response.content_type = res['mime']
+            with open(res['fs_path']) as f: response.data = f.read()
+            return response
+        if p1 == 'expr':
+            exp = Expr.fetch(p2)
+            if not exp: return serve_404(response, request.requester)
+            response.context['exp_js'] = json.dumps(exp)
+            response.context['exp'] = exp
+            return serve_html(response, request.requester, 'edit.html')
+
         return serve_404(response, request.requester)
 
-    response.enforce_static = (request.trusting and
-        (resource.owner['uid'] != request.requester['uid']) )
+    if request.requester.logged_in:
+        response.context['user_is_owner'] = request.domain in request.requester['sites']
+    response.context['domain'] = request.domain
+    response.context['path'] = request.path
 
-    if resource.type == 'plain':
-        if response.enforce_static and unsafe_mimes.get(resource.mimetype, False):
-            raise DangerousContent()
-        response.content_type = resource.mimetype
-        with open(resource.path) as f: response.data = f.read()
-        return response
+    resource = Expr.fetch_by_names(request.domain, request.path)
+    if not resource: return serve_404(response, request.requester)
 
-    icon = resource.owner.get('icon', False)
-    if icon: response.context['icon'] = json.dumps(icon)
-    response.context['owner'] = resource.owner
-    response.context['mtime'] = friendly_date(resource.mtime)
-    response.context['res_path'] = res_path
-    if request.requester and resource.owner['uid'] == request.requester['uid']:
-        response.context['userisowner'] = True
-        response.context['create'] = (abs_url(secure = True) + request.site_path + '/untitled?type=edit')
-        response.context['edit'] = abs_url(secure = True) + res_path + '?type=edit'
+    #enforce_static = ( request.trusting and (owner.id != request.requester.id) )
 
-    response.context['title'] = resource.meat.get('title', False)
-    (response.context['body'], response.context['css']) = exp_to_html(resource.meat)
-    return serve_html(response, request.requester, 'page_expression.html')
+    response.context['owner'] = User.fetch(resource['owner'])
+    response.context['edit'] = abs_url(secure = True) + 'expr/' + resource.id
+    response.context['mtime'] = friendly_date(apply(datetime, resource['updated']))
+    response.context['title'] = resource.get('title', False)
+    (response.context['body'], response.context['css']) = exp_to_html(resource)
+    return serve_html(response, request.requester, 'expression.html')
 
 
 @Request.application
@@ -148,7 +160,7 @@ def application(request): return handle(request)
 
 # www_expression -> String
 def exp_to_html(exp, enforce_static = True):
-    apps = exp.get('apps', None)
+    apps = exp.get('apps')
     if not apps: return ('', '')
 
     def css_for_app(app, html_id):
@@ -169,10 +181,10 @@ def exp_to_html(exp, enforce_static = True):
         if app.get('type', '') == 'hive.image':
             html = ("<div class='happ' id='%s'><img class='happ' src='%s'></div>"
                 % (html_id, content))
-            link = app.get('href', False)
+            link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
             return html
-        if app.get('type', '') == 'hive.text':
+        if app.get('type') == 'hive.text':
             return "<div class='happ' id='%s'>%s</div>" % (html_id, content)
         return ""
 
@@ -192,14 +204,17 @@ def serve_html(response, requester, template):
     return response
 def render_template(response, requester, template):
     context = response.context
-    context['user'] = requester
-    context['home_url'] = abs_url(domain = requester.get('client home', config.server_name))
-    context['server'] = abs_url()
-    context['secure_server'] = abs_url(secure = True)
-    context['server_name'] = config.server_name
-    context['colors'] = colors
+    context.update(
+         user = requester
+        ,logged_in = requester.logged_in
+        ,home_url = home_url(requester)
+        ,server = abs_url()
+        ,secure_server = abs_url(secure = True)
+        ,server_name = config.server_name
+        ,colors = colors
+        )
     context.setdefault('icon', abs_url() + 'lib/skin/1/icon.png')
-    return jinja_env.get_template(template).render(context)
+    return jinja_env.get_template('pages/' + template).render(context)
 
 def serve_json(response, val, html = False):
     response.mimetype = 'application/json' if not html else 'text/html'
@@ -214,13 +229,18 @@ def serve_json(response, val, html = False):
 
 def serve_404(response, requester):
     response.status_code = 404
-    return serve_html(response, requester, 'page_notfound.html')
+    return serve_html(response, requester, 'notfound.html')
 
 def serve_error(request, e):
     # report error
     #r = Response()
     #r.data = str(request.environ)
     return InternalServerError()
+
+def redirect(response, location):
+    response.location = location
+    response.status_code = 303
+    return response
 
 class InternalServerError(exceptions.InternalServerError):
     def get_body(self, environ):
@@ -239,7 +259,7 @@ def parse_host(host):
     domain_parts = domain.split('.')
     site_domain = '.'.join(domain_parts[-2:])
     sub_domain = domain_parts[0] if len(domain_parts) > 2 else None
-    return (site_domain, sub_domain)
+    return (domain, site_domain, sub_domain)
 
 def abs_url(secure = False, domain = None):
     proto = 'https' if secure else 'http'
