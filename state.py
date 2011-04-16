@@ -1,4 +1,4 @@
-import pymongo
+import re, pymongo, pymongo.objectid
 from datetime import datetime
 import config
 
@@ -55,7 +55,8 @@ class Entity(dict):
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
 
-def fetch(cname, id): return Entity({}, cname=cname).fetch_me(id)
+def fetch(cname, id, keyname='_id'):
+    return Entity({}, cname=cname).fetch_me(id, keyname=keyname)
 def create(cname, **d): return Entity(d, cname=cname).create_me()
 
 
@@ -72,18 +73,23 @@ class User(Entity):
     #     name = str
     #    ,password = str
     #    ,fullname = str
+    #    ,referrer = User
     #    ,sites = [str]
 
     def create_me(self):
+        self['name'] = self['name'].lower()
+        assert re.match('[a-z][a-z0-9]{2,}', self['name']) != None, 'Invalid username'
         self.set_password(self['password'])
         self['fullname'] = self.get('fullname', self['name'])
         self['sites'] = [self['name'] + '.' + config.server_name]
+        self['referrals'] = 0
+        assert self.has_key('referrer')
         return super(User, self).create_me()
 
     @classmethod
     def fetch_by_name(cls, name):
         self = cls({})
-        return self.fetch_me(name, keyname='name')
+        return self.fetch_me(name.lower(), keyname='name')
 
     def cmp_password(self, v):
         return crypt(v, self['password']) == self['password']
@@ -97,6 +103,7 @@ class Session(Entity):
 
 
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
+db.expr.ensure_index([('owner', 1), ('updated', -1)])
 class Expr(Entity):
     cname = 'expr'
 
@@ -104,6 +111,16 @@ class Expr(Entity):
     def fetch_by_names(cls, domain, name):
         self = cls({})
         return self.find_me(domain=domain, name=name)
+
+    @classmethod
+    def list_by_owner(cls, owner, limit, page):
+        return db.expr.find(
+             spec = { 'owner' : owner }
+            ,fields = ['title', 'updated', 'domain', 'name']
+            ,sort = [('updated', -1)]
+            ,limit = limit
+            ,skip = limit * page
+            )
 
 class File(Entity):
     cname = 'file'

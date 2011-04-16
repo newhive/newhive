@@ -11,7 +11,7 @@
  {% if user_is_owner %}
 <div id='meta' class='top'>
   <form id='login_form' action='{{ secure_server }}' method='POST'>
-   <input type='hidden' name='action' value='create'>
+   <input type='hidden' name='action' value='expr_create'>
    <input type='hidden' name='domain' value='{{ domain }}'>
    <input type='hidden' name='name' value='{{ path }}'>
    <input type='image' id='btn_create' src='{{ server }}lib/skin/1/create.png' class='toolbtn hoverable'>

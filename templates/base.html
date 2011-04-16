@@ -9,10 +9,6 @@ html, body { margin : 0; padding : 0; font-family : Arial, sans-serif;
     font-family : Arial, sans-serif; font-size : 13pt; color : {{ colors[0] }} }
 img { padding : 0; margin : 0; border : 0; }
 a { color : inherit; text-decoration : none; }
- </style>
-
- <style>
-html, body { background-color : white; height : 100%; }
 input[type=text], input[type=password], textarea { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : {{ colors['selected'] }}; }
 input[type=button], input[type=submit] { border : none; }
@@ -32,6 +28,19 @@ form { display : inline; }
 #logo * { vertical-align : middle; }
 #user { display : inline-block; }
 .menu, .top { z-index : 1100; }
+@font-face {
+    font-family: Museo;
+    src: url('/lib/fonts/Museo500-Regular.otf');
+    font-weight: 500;
+}
+@font-face {
+    font-family: Museo;
+    src: url('/lib/fonts/Museo700-Regular.otf');
+    font-weight: 700;
+}
+ </style>
+ <style>
+html, body { background-color : white; height : 100%; }
  </style>
 
  <script src='/lib/jquery.js'></script>
@@ -42,7 +51,7 @@ form { display : inline; }
 
  <div id='logo' class='top'>
   <a href='{{ server }}'><img src={{ icon }}></a>&nbsp;
-  {% if logged_in %}
+  {% if user.logged_in %}
    <div id='user'>
     <div>
      <a href='{{ home_url }}' class='medbold'>{{ user['name'] }}</a>
@@ -54,7 +63,7 @@ form { display : inline; }
    <a href='{{ server }}'><img src='{{ server }}lib/skin/1/logo_text.png'></a>
   {% endif %}
  </div>
- {% if logged_in %}
+ {% if user.logged_in %}
   <div id='user_menu' class='menu medbold'>
    <form name='logout_form' action='{{ secure_server }}' method='POST'>
     <input name='action' value='logout' type='hidden'>

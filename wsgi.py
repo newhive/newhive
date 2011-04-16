@@ -9,23 +9,33 @@ import jinja2
 
 import config, auth
 from colors import colors
-from state import Expr, File, User
+from state import Expr, File, User, junkstr, create, fetch
 
+def lget(L, i, default=None): return L[i] if 0 <= i < len(L) else default
+def raises(e): raise e
+def dfilter(d, keys):
+    r = {}
+    for k in keys:
+        if d.has_key(k): r[k] = d[k]
+    return r
 
-def exp_save(request, response):
+def expr_update(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     try: exp = json.loads(request.form.get('exp', '0'))
     except: exp = False
-    if not exp: return ValueError('missing or malformed exp')
+    if not exp: raise ValueError('missing or malformed exp')
 
     res = Expr(exp)
-    try: res.update(name  = exp['name'] ,title = exp['title'] ,apps  = exp['apps'])
+    if not res['owner'] == request.requester.id:
+        raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+
+    try: res.update(name  = exp['name'].lower() ,title = exp['title'] ,apps  = exp['apps'])
     except DuplicateKeyError: return dict( error='An expression already exists with that URL' )
     return dict( error=False, location=abs_url(domain = res['domain']) + res['name'] )
 
-def exp_create(request, response):
+def expr_create(request, response):
     if not request.trusting: raise exceptions.BadRequest()
-    new_name = request.form.get('path',
+    new_name = request.form.get('name',
         '.'.join(map(str, datetime.utcnow().timetuple()[0:6])))
     expr = Expr.create(
          owner = request.requester.id
@@ -34,10 +44,13 @@ def exp_create(request, response):
         ,title = 'Untitled'
         ,apps = {}
         )
-    return redirect(response, abs_url(secure=True) + 'expr/' + expr.id)
+    return redirect(response, abs_url(secure=True) + 'edit/' + expr.id)
+
+def expr_list(user):
+    pass
 
 def media_path(user): return joinpath(config.domain_home, config.server_name, user['name'], 'media')
-def save_files(request, response):
+def files_create(request, response):
     if not request.trusting: raise exceptions.BadRequest()
 
     names = []
@@ -63,19 +76,66 @@ def save_files(request, response):
         names.append(abs_url() + 'file/' + res.id)
     return names
 
+def user_create(request, response):
+    referral = fetch('referral', request.args.get('key'), keyname='key')
+    if not referral: return bad_referral(request, response)
+    referrer = User.fetch(referral['user'])
+    if(referrer['referrals'] <= 0):
+        return no_more_referrals(referrer['name'], request, response)
+
+    args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
+    args['referrer'] = referral['user']
+    user = User.create(**args)
+    referrer.update(referrals = referrer['referrals'] - 1)
+    referral.delete()
+
+    Expr.create(
+          owner  = user.id
+        , name   = ''
+        , domain = user['name'] + '.' + config.server_name
+        , title  = 'Untitled'
+        )
+
+    os.makedirs(joinpath(config.domain_home, config.server_name, user['name'], 'media'))
+
+    request.form = dict(username = args['name'], secret = args['password'])
+    return login(request, response)
+def no_more_referrals(referrer, request, response):
+    response.context['content'] = 'User %s has no more referrals' % referrer
+    return serve_page(response, 'minimal.html')
+def bad_referral(request, response):
+    response.context['content'] = 'Invalid referral; already used or never existed'
+    return serve_page(response, 'minimal.html')
+
+from mailer import Mailer, Message
+def mail_us(request, response):
+    if not request.form.get('message'): return
+
+    Mailer().send(Message(
+          To = 'info@thenewhive.com'
+        , From = 'www-data@' + config.server_name
+        , Subject = '[home page contact form]'
+        , Body = request.form.get('message')
+        ))
+
 def home_url(user):
     return abs_url(domain = user.get('sites', [config.server_name])[0])
 def login(request, response):
     auth.handle_login(request, response)
     return redirect(response, home_url(request.requester))
 
-actions = {
-      'login'       : login
-    , 'logout'      : auth.handle_logout
-    , 'create'      : exp_create
-    , 'save_exp'    : exp_save
-    , 'save_files'  : save_files
-    }
+actions = dict(
+     login           = login
+    ,logout          = auth.handle_logout
+    ,expr_create     = expr_create
+    ,expr_update     = expr_update
+    ,files_create    = files_create
+    ,user_create     = user_create
+    ,mail_us         = mail_us
+    )
+#pages = dict(
+#     edit        = edit
+#    )
 
 unsafe_mimes = {
       'text/xml'                       : True
@@ -90,9 +150,10 @@ unsafe_mimes = {
 
 def handle(request):
     response = Response()
-    response.context = {}
     request.requester = auth.authenticate_request(request, response)
     request.trusting = False
+    response.context = { 'f' : request.form }
+    response.user = request.requester
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0]
@@ -102,17 +163,18 @@ def handle(request):
 
         reqaction = request.form.get('action', False)
         if reqaction:
-            r = actions.get(reqaction, lambda _,__: raises(exceptions.BadRequest())
+            r = actions.get(reqaction,
+                lambda _,__: raises(exceptions.BadRequest('action: '+reqaction))
                 )(request, response)
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, html = True)
 
         if request.path == '':
-            return serve_html(response, request.requester, 'home.html')
+            return serve_page(response, 'home.html')
 
-        parts = request.path.split('/')
-        (p1, p2) = (None, None)
-        if len(parts) >= 2: (p1, p2) = (parts[0], '/'.join(parts[1:]))
+        parts = request.path.split('/', 1)
+        p1 = lget(parts, 0)
+        p2 = lget(parts, 1)
         if p1 == 'file':
             res = File.fetch(p2)
             #if response.enforce_static and unsafe_mimes.get(resource['mime'], False):
@@ -120,12 +182,35 @@ def handle(request):
             response.content_type = res['mime']
             with open(res['fs_path']) as f: response.data = f.read()
             return response
-        if p1 == 'expr':
+        elif p1 == 'edit':
             exp = Expr.fetch(p2)
             if not exp: return serve_404(response, request.requester)
             response.context['exp_js'] = json.dumps(exp)
             response.context['exp'] = exp
-            return serve_html(response, request.requester, 'edit.html')
+            return serve_page(response, 'edit.html')
+        elif p1 == 'signup':
+            referral = fetch('referral', request.args.get('key'), keyname='key')
+            if not referral: return bad_referral(request, response)
+            return serve_page(response, 'user_settings.html')
+        elif p1 == 'referral':
+            if(request.requester['referrals'] <= 0):
+                return no_more_referrals(request.requester['name'], request, response)
+            key = junkstr(16)
+            create('referral', user = request.requester.id, key = key)
+            response.context['content'] = abs_url(secure=True) + 'signup?key=' + key
+            return serve_page(response, 'minimal.html')
+        elif p1 == 'exprs':
+            page = int(request.args.get('p', 0))
+            exprs = Expr.list_by_owner(p2, 4, page)
+            def fmt(e):
+                e.update(
+                     updated = friendly_date(apply(datetime, e['updated']))
+                    ,url = abs_url(domain=e['domain']) + e['name']
+                    )
+                return e
+            response.context['exprs'] = map(fmt, exprs)
+            response.context['page'] = page
+            return serve_page(response, 'feed.html')
 
         return serve_404(response, request.requester)
 
@@ -134,17 +219,24 @@ def handle(request):
     response.context['domain'] = request.domain
     response.context['path'] = request.path
 
-    resource = Expr.fetch_by_names(request.domain, request.path)
+    resource = Expr.fetch_by_names(request.domain, request.path.lower())
     if not resource: return serve_404(response, request.requester)
 
+    # prevent XSS
     #enforce_static = ( request.trusting and (owner.id != request.requester.id) )
 
-    response.context['owner'] = User.fetch(resource['owner'])
-    response.context['edit'] = abs_url(secure = True) + 'expr/' + resource.id
-    response.context['mtime'] = friendly_date(apply(datetime, resource['updated']))
-    response.context['title'] = resource.get('title', False)
-    (response.context['body'], response.context['css']) = exp_to_html(resource)
-    return serve_html(response, request.requester, 'expression.html')
+    (html, css) = exp_to_html(resource)
+    response.context.update(
+        owner = User.fetch(resource['owner'])
+        ,edit = abs_url(secure = True) + 'edit/' + resource.id
+        ,mtime = friendly_date(apply(datetime, resource['updated']))
+        ,title = resource.get('title', False)
+        ,name = resource['name']
+        ,body = html
+        ,css = css
+        )
+
+    return serve_page(response, 'expression.html')
 
 
 @Request.application
@@ -198,16 +290,17 @@ def exp_to_html(exp, enforce_static = True):
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
 
-def serve_html(response, requester, template):
-    response.data = render_template(response, requester, template)
+def serve_html(response, html):
+    response.data = html
     response.content_type = 'text/html'
     return response
-def render_template(response, requester, template):
+def serve_page(response, template):
+    return serve_html(response, render_template(response, template))
+def render_template(response, template):
     context = response.context
     context.update(
-         user = requester
-        ,logged_in = requester.logged_in
-        ,home_url = home_url(requester)
+         home_url = home_url(response.user)
+        ,user = response.user
         ,server = abs_url()
         ,secure_server = abs_url(secure = True)
         ,server_name = config.server_name
@@ -229,7 +322,7 @@ def serve_json(response, val, html = False):
 
 def serve_404(response, requester):
     response.status_code = 404
-    return serve_html(response, requester, 'notfound.html')
+    return serve_page(response, 'notfound.html')
 
 def serve_error(request, e):
     # report error
@@ -315,4 +408,3 @@ if __name__ == '__main__':
 
     os.kill(child, signal.SIGKILL) # does run_simple ever return?
 
-def raises(e): raise e

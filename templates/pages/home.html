@@ -17,7 +17,7 @@ form { display : inline; }
 {% endblock %}
 
 {% block body %}
- {% if not logged_in %}
+ {% if not user.logged_in %}
   <div id='login'>
    <span class='medbold'>beta log in&nbsp;</span>
    <form id='login_form' action='{{ secure_server }}' method='POST'>
@@ -36,11 +36,14 @@ form { display : inline; }
   </div>
   <div id='login_error' class='active'>{{ error }}</div>
   <div id='contact' class='border' style='width : 220px; display : none'>
-We are in beta right now.
-Drop us a line with your email
-and name and we'll be in touch!
-<textarea style='margin : 10px 0 10px 0; width : 200px'></textarea>
-<div style='text-align : right'><input type='button' class='medbold active' value='Send'></div>
+   We are in beta right now.
+   Drop us a line with your email
+   and name and we'll be in touch!
+   <form method='POST'>
+    <input type='hidden' name='action' value='mail_us'>
+    <textarea style='margin : 10px 0 10px 0; width : 200px' name='message'></textarea>
+    <div style='text-align : right'><input type='button' class='medbold active' value='Send'></div>
+   </form>
   </div>
   <script>
 var text = $('#contact textarea');
@@ -69,7 +72,7 @@ $(window).click(function(e) {
   </script>
  {% endif %}
 
-<center><h1><img id='plus' src='/lib/skin/1/plus_home.png' class='hoverable'> Liberate your ideas.</h1></center>
+<center><iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="675" height="380" frameborder="0"></iframe></center>
 <script>$(function() { var p = $('#plus').get(0); $('h1').hover(p.over, p.out); });</script>
 
 {% endblock %}
