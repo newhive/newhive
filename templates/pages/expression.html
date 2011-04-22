@@ -18,13 +18,24 @@
 
 <div id='meta' class='top'>
  {% if user_is_owner %}
-  <form id='login_form' action='{{ secure_server }}' method='POST'>
-   <input type='hidden' name='action' value='expr_create'>
+  <form id='login_form' action='{{ create }}' method='POST'>
    <input type='hidden' name='domain' value='{{ domain }}'>
-   <input type='image' id='btn_create' src='{{ server }}lib/skin/1/create.png' class='toolbtn hoverable'>
+   <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='toolbtn hoverable'>
   </form>
-  <a href='{{ edit }}'><img id='btn_edit' src='{{ server }}lib/skin/1/edit.png' class='toolbtn hoverable'></a>
+  <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='toolbtn hoverable'></a>
+  <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable'>
+  <div id='dia_delete' class='menu' style='padding : 10px'>
+   Are you sure you want<br>
+   to delete this page?<br>
+   <br>
+   <form method='POST' action='{{ secure_server }}'>
+    <input type='hidden' name='action' value='expr_delete'>
+    <input type='hidden' name='id' value='{{ id }}'>
+    <div style='text-align : right'><input type='submit' value='Yes' style='background-color : white;' class='active medbold'></div>
+   </form>
+  </div>
   <script>
+   click_menu($('#btn_delete'), $('#dia_delete'));
    tool_tip($('#btn_create'), 'create');
    tool_tip($('#btn_edit'), 'edit');
    //$('#btn_edit').click(begin_edit);
@@ -37,7 +48,7 @@
  {% else %}
 
   <div id='info'>
-   <div id='exp_owner' class='medbold'>{{ owner['name'] }}</div>
+   <div id='exp_owner' class='medbold'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
    <div id='datetime'>{{ mtime }}</div>
   </div>
 

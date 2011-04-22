@@ -46,8 +46,10 @@ def handle_login(request, response):
         set_cookie(response, 'identity', session.id, expires = expires)
         user.logged_in = True
         request.requester = user
+        return True
 
     response.context['error'] = 'Invalid username or password'
+    return False
 
 def handle_logout(request, response):
     if not request.trusting: raise exceptions.BadRequest()

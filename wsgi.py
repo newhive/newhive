@@ -9,7 +9,7 @@ import jinja2
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, junkstr, create, fetch
+from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u
 
 def lget(L, i, default=None): return L[i] if 0 <= i < len(L) else default
 def raises(e): raise e
@@ -19,32 +19,32 @@ def dfilter(d, keys):
         if d.has_key(k): r[k] = d[k]
     return r
 
-def expr_update(request, response):
+def expr_save(request, response):
     if not request.trusting: raise exceptions.BadRequest()
-    try: exp = json.loads(request.form.get('exp', '0'))
+    try: exp = Expr(json.loads(request.form.get('exp', '0')))
     except: exp = False
     if not exp: raise ValueError('missing or malformed exp')
 
-    res = Expr(exp)
-    if not res['owner'] == request.requester.id:
-        raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
-
-    try: res.update(name  = exp['name'].lower() ,title = exp['title'] ,apps  = exp['apps'])
-    except DuplicateKeyError: return dict( error='An expression already exists with that URL' )
+    res = Expr.fetch(exp.id)
+    upd = dict(name  = exp['name'].lower() ,domain = exp['domain'] ,title = exp['title']
+        ,apps  = exp['apps'])
+    try:
+        if not exp.id or upd['name'] != res['name']:
+            res = Expr.create(owner = request.requester.id, **upd)
+        else:
+            if not res['owner'] == request.requester.id:
+                raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+            res.update(**upd)
+    except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
     return dict( error=False, location=abs_url(domain = res['domain']) + res['name'] )
 
-def expr_create(request, response):
+def expr_delete(request, response):
     if not request.trusting: raise exceptions.BadRequest()
-    new_name = request.form.get('name',
-        '.'.join(map(str, datetime.utcnow().timetuple()[0:6])))
-    expr = Expr.create(
-         owner = request.requester.id
-        ,domain = request.form['domain']
-        ,name = new_name
-        ,title = 'Untitled'
-        ,apps = {}
-        )
-    return redirect(response, abs_url(secure=True) + 'edit/' + expr.id)
+    e = Expr.fetch(request.form.get('id'))
+    if not e: return serve_404(request, response)
+    if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+    e.delete()
+    return redirect(response, home_url(request.requester))
 
 def expr_list(user):
     pass
@@ -117,18 +117,19 @@ def mail_us(request, response):
         , Subject = '[home page contact form]'
         , Body = request.form.get('message')
         ))
+    return ''
 
 def home_url(user):
     return abs_url(domain = user.get('sites', [config.server_name])[0])
 def login(request, response):
-    auth.handle_login(request, response)
-    return redirect(response, home_url(request.requester))
+    if auth.handle_login(request, response):
+        return redirect(response, home_url(request.requester))
 
 actions = dict(
      login           = login
     ,logout          = auth.handle_logout
-    ,expr_create     = expr_create
-    ,expr_update     = expr_update
+    ,expr_save       = expr_save
+    ,expr_delete     = expr_delete
     ,files_create    = files_create
     ,user_create     = user_create
     ,mail_us         = mail_us
@@ -183,8 +184,9 @@ def handle(request):
             with open(res['fs_path']) as f: response.data = f.read()
             return response
         elif p1 == 'edit':
-            exp = Expr.fetch(p2)
-            if not exp: return serve_404(response, request.requester)
+            if not p2: exp = dict(domain = request.form.get('domain'), title = 'Untitled') 
+            else: exp = Expr.fetch(p2)
+            if not exp: return serve_404(request, response)
             response.context['exp_js'] = json.dumps(exp)
             response.context['exp'] = exp
             return serve_page(response, 'edit.html')
@@ -201,10 +203,10 @@ def handle(request):
             return serve_page(response, 'minimal.html')
         elif p1 == 'exprs':
             page = int(request.args.get('p', 0))
-            exprs = Expr.list_by_owner(p2, 4, page)
+            exprs = Expr.list(4, page, owner=p2)
             def fmt(e):
                 e.update(
-                     updated = friendly_date(apply(datetime, e['updated']))
+                     updated = friendly_date(time_u(e['updated']))
                     ,url = abs_url(domain=e['domain']) + e['name']
                     )
                 return e
@@ -212,7 +214,7 @@ def handle(request):
             response.context['page'] = page
             return serve_page(response, 'feed.html')
 
-        return serve_404(response, request.requester)
+        return serve_404(request, response)
 
     if request.requester.logged_in:
         response.context['user_is_owner'] = request.domain in request.requester['sites']
@@ -220,16 +222,20 @@ def handle(request):
     response.context['path'] = request.path
 
     resource = Expr.fetch_by_names(request.domain, request.path.lower())
-    if not resource: return serve_404(response, request.requester)
+    if not resource: return serve_404(request, response)
 
     # prevent XSS
     #enforce_static = ( request.trusting and (owner.id != request.requester.id) )
 
     (html, css) = exp_to_html(resource)
+    owner = User.fetch(resource['owner'])
     response.context.update(
-        owner = User.fetch(resource['owner'])
+         owner = owner
+        ,id = resource.id
+        ,owner_url = home_url(owner)
+        ,create = abs_url(secure = True) + 'edit'
         ,edit = abs_url(secure = True) + 'edit/' + resource.id
-        ,mtime = friendly_date(apply(datetime, resource['updated']))
+        ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
         ,name = resource['name']
         ,body = html
@@ -320,7 +326,7 @@ def serve_json(response, val, html = False):
 #        + '(' + json.dumps(val) +');' )
 #    return response
 
-def serve_404(response, requester):
+def serve_404(request, response):
     response.status_code = 404
     return serve_page(response, 'notfound.html')
 

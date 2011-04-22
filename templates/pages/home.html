@@ -4,7 +4,7 @@
  {{ super() }}
  <style>
 html { display : table; width : 100%; height : 100%; }
-body { display : table-cell; vertical-align : middle; }
+body { display : table-cell; vertical-align : middle; background-image : url('') }
 form { display : inline; }
 #login { position : absolute; right : 20px; top : 27px; }
 #login_error { position : absolute; right : 215px; top : 5px; }
@@ -13,6 +13,7 @@ form { display : inline; }
 #welcome { display : inline; font-weight : bold; margin-left:15px; }
 #welcome.open { background-color : {{ colors[0] }}; color : white }
 #contact { position : absolute; right : 20px; top : 75px; }
+#feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
  </style>
 {% endblock %}
 
@@ -39,11 +40,8 @@ form { display : inline; }
    We are in beta right now.
    Drop us a line with your email
    and name and we'll be in touch!
-   <form method='POST'>
-    <input type='hidden' name='action' value='mail_us'>
-    <textarea style='margin : 10px 0 10px 0; width : 200px' name='message'></textarea>
-    <div style='text-align : right'><input type='button' class='medbold active' value='Send'></div>
-   </form>
+   <textarea style='margin : 10px 0 10px 0; width : 200px' name='message'></textarea>
+   <div style='text-align : right'><input type='button' class='medbold active' value='Send'></div>
   </div>
   <script>
 var text = $('#contact textarea');
@@ -58,9 +56,13 @@ function contact_hide() {
 }
 
 $('#contact input').click(function() {
-    $.post('/', { message : text.val(), action : 'contact' }, function(data) {
-            if(data) alert(data);
-            else text.val('');
+    $.post('/', { message : text.val(), action : 'mail_us' }, function(data) {
+            if(data) alert('Sorry, there was a problem sending your message');
+            else {
+                text.val('');
+                alert('Thankyou for your feedback');
+                contact_hide();
+            }
         }, 'json') });
 
 $('#welcome').click(function() { contact_show() });
@@ -72,7 +74,10 @@ $(window).click(function(e) {
   </script>
  {% endif %}
 
-<center><iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="675" height="380" frameborder="0"></iframe></center>
-<script>$(function() { var p = $('#plus').get(0); $('h1').hover(p.over, p.out); });</script>
+ {% if not user.logged_in %}
+  <center><iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="675" height="380" frameborder="0"></iframe></center>
+ {% endif %}
+
+<!--<iframe id='feed' src='{{ server }}exprs/'></iframe>-->
 
 {% endblock %}

@@ -1,4 +1,5 @@
 import re, pymongo, pymongo.objectid
+from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 import config
 
@@ -6,7 +7,9 @@ import config
 con = pymongo.Connection()
 db = con[config.database]
 
-def now(): return list(datetime.utcnow().timetuple()[0:6])
+def now(): return time_s(datetime.utcnow())
+def time_s(t): return int(t.strftime('%s'))
+def time_u(t): return datetime.utcfromtimestamp(t)
 
 import random
 def junkstr(length):
@@ -65,8 +68,7 @@ db.user.ensure_index('name', unique=True)
 class User(Entity):
     cname = 'user'
     def __init__(self, d):
-        dict.update(self, d)
-        self._col = db[self.cname]
+        super(User, self).__init__(d)
         self.logged_in = False
 
     # structure
@@ -103,7 +105,8 @@ class Session(Entity):
 
 
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
-db.expr.ensure_index([('owner', 1), ('updated', -1)])
+db.expr.ensure_index([('owner', 1), ('updated', 1)])
+db.expr.ensure_index([('updated', 1)])
 class Expr(Entity):
     cname = 'expr'
 
@@ -113,14 +116,21 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name)
 
     @classmethod
-    def list_by_owner(cls, owner, limit, page):
+    def list(cls, limit, page, owner=None):
+        spec = { 'owner' : owner } if owner else { }
         return db.expr.find(
-             spec = { 'owner' : owner }
+             spec = spec
             ,fields = ['title', 'updated', 'domain', 'name']
             ,sort = [('updated', -1)]
             ,limit = limit
             ,skip = limit * page
             )
+
+    def create_me(self):
+        assert map(self.has_key, ['owner', 'domain', 'name'])
+        self['title'] = self.get('title') or 'Untitled'
+        return super(Expr, self).create_me()
+
 
 class File(Entity):
     cname = 'file'
