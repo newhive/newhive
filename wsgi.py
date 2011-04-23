@@ -184,7 +184,9 @@ def handle(request):
             with open(res['fs_path']) as f: response.data = f.read()
             return response
         elif p1 == 'edit':
-            if not p2: exp = dict(domain = request.form.get('domain'), title = 'Untitled') 
+            if not p2:
+                exp = dfilter(request.form, ['domain', 'name'])
+                exp['title'] = 'Untitled'
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['exp_js'] = json.dumps(exp)
@@ -218,8 +220,11 @@ def handle(request):
 
     if request.requester.logged_in:
         response.context['user_is_owner'] = request.domain in request.requester['sites']
-    response.context['domain'] = request.domain
-    response.context['path'] = request.path
+    response.context.update(
+         domain = request.domain
+        ,path = request.path
+        ,create = abs_url(secure = True) + 'edit'
+        )
 
     resource = Expr.fetch_by_names(request.domain, request.path.lower())
     if not resource: return serve_404(request, response)
@@ -233,13 +238,13 @@ def handle(request):
          owner = owner
         ,id = resource.id
         ,owner_url = home_url(owner)
-        ,create = abs_url(secure = True) + 'edit'
         ,edit = abs_url(secure = True) + 'edit/' + resource.id
         ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
         ,name = resource['name']
         ,body = html
         ,css = css
+        ,exp_js = json.dumps(resource)
         )
 
     return serve_page(response, 'expression.html')
