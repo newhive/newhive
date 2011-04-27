@@ -64,7 +64,7 @@ $(window).resize(function() {
    $.map(exp.apps, function(a, i) {
        var e = $('#h_' + i);
        e.css({ left : a.position[0] * s, top : a.position[1] * s,
-           width : a.dimensions[0] * s, height : a.dimensions[1] * s});
+           width : a.dimensions[0] * s, height : a.dimensions[1] * s, opacity : a.opacity });
        if(a.scale) e.css('font-size', a.scale * s + 'em');
    });
 });

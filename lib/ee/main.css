@@ -13,6 +13,9 @@
 .control.resize_h { cursor : ew-resize; }
 .control.resize { cursor : se-resize; }
 .control.stack img { display : inline-block; margin-left : 5px; }
+.control.drawer { position : fixed; text-align : left;
+    background-color : white; display : none; }
+.drawer { background-color : white; }
 
 .control.stack { white-space : nowrap; }
 .control.buttons .button { margin-right : 2px; }
@@ -26,7 +29,8 @@
 .drawer.color .option.small { width : 20px; height : 20px; margin : 2px }
 .align .option.small { margin : 5px; }
 .drawer.link img { vertical-align : middle; }
-
+.button.fontsize { width : 28px; height : 25px; background-image : url('/lib/skin/1/button.png');
+    margin : 0; border : none; text-align : center; font-weight : bold; vertical-align : top; }
 
 .spacer { height : 10px; }
 
