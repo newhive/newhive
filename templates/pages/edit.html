@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block head %}
- <script src='/lib/upload.js'      ></script>
  <script src='/lib/ee/main.js'     ></script>
 
  <script>
@@ -17,10 +16,9 @@
     }
 .button.fontsize { width : 28px; height : 25px; background-image : url(/lib/skin/1/button.png);
     margin : 0; border : none; text-align : center; font-weight : bold; vertical-align : top; }
-.fontsize .option.small { color : {{ colors[12] }}; text-align : center; vertical-align : bottom;
-    width : 40px; height : 50px; line-height : .6em; padding : 10px; }
+.fontsize .option { color : {{ colors[12] }}; vertical-align : bottom; }
 .fontsize .bigger .option.small { width : 70px; height : 135px; }
-.fontsize .option.small:hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }} }
+.fontsize .option:hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }} }
 .drawer.fontname .option:hover { background-color : {{ colors['selected'] }}; }
 
 #privacy { background-color : {{ colors['selected'] }}; color : {{ colors[0] }}; }
@@ -37,11 +35,13 @@
   <img id='insert_video' class='insert_btn' src='/lib/skin/1/video.png'>
   <img id='insert_shape' class='insert_btn' src='/lib/skin/1/shape.png'>
   <img id='insert_app'   class='insert_btn' src='/lib/skin/1/page.png' >
+  <img id='insert_html'  class='insert_btn' src='/lib/skin/1/html.png' >
   <script>
    tool_tip($('#insert_video'), 'video coming soon');
    tool_tip($('#insert_audio'), 'audio coming soon');
    tool_tip($('#insert_shape'), 'shapes coming soon');
    tool_tip($('#insert_app'), 'pages coming soon');
+   tool_tip($('#insert_html'), 'embed html coming soon');
   </script>
  </div>
 </center>
@@ -56,7 +56,7 @@
  <div id='image_webcam' class='menu_item'>From Webcam</div>
 </div>
 <script>
-//hover_menu($('#insert_text'), $('#menu_text'));
+hover_menu($('#insert_text'), $('#menu_text'));
 hover_menu($('#insert_image'), $('#menu_image'));
 </script>
 
@@ -65,7 +65,7 @@ hover_menu($('#insert_image'), $('#menu_image'));
 
  <span id='btn_save' class='medbold btn top'>
   Save
-  <img id='user_menu_handle' src='/lib/skin/1/drop_arrow.png' class='hoverable'>
+  <img src='/lib/skin/1/drop_arrow.png' class='hoverable'>
  </span>
 </div>
 
@@ -77,25 +77,36 @@ hover_menu($('#insert_image'), $('#menu_image'));
  <textarea id='title'>{{ exp.title }}</textarea>
  <div class='spacer'></div>
  <div class='spacer'></div>
- <div id='privacy' style='float : left;' class='medbold btn'>
-  Private
-  <img id='user_menu_handle' src='/lib/skin/1/drop_arrow.png'>
+ <div id='privacy' style='float : left' class='medbold btn'>
+  <span>Private</span>
+  <img src='/lib/skin/1/drop_arrow.png'>
  </div>
  <div id='save_submit' style='float : right;' class='medbold btn'>Save</div>
 
- <div id='menu_privacy' class='menu' style='width : 125px'>
-  <div class='menu_item selected'>Private</div>
-  <div class='menu_item'>Share</div>
-  <div class='menu_item'>Public</div>
+ <div id='menu_privacy' class='menu medbold' style='width : 125px'>
+  <div val='private' name='Private' class='menu_item selected'>Private</div>
+  <div val='public' name='Public' class='menu_item'>Public</div>
+ </div>
+
+ <div id='share' style='display : none'>
  </div>
 </div>
 <script>
 click_dialogue($('#btn_save'), $('#menu_save'));
 hover_menu($('#privacy' ), $('#menu_privacy'));
-$('#save_submit').click(save);
+$('#save_submit').click(Hive.save);
+$('#menu_privacy').click(function(e) {
+    $('#menu_privacy div').removeClass('selected');
+    var t = $(e.target);
+    t.addClass('selected');
+    $('#privacy span').text(t.attr('name'));
+    var v = t.attr('val');
+    if(v == 'share') $('#share').show();
+    else $('#share').hide();
+});
 </script>
 
-<div id='controls_common' class='controls'>
+<div id='controls_common' class='controls_src'>
  <img class='control undo   hoverable' src='/lib/skin/1/undo.png'>
  <img class='control copy   hoverable' src='/lib/skin/1/copy.png'>
  <img class='control remove hoverable' src='/lib/skin/1/delete_sm.png'>
@@ -103,7 +114,7 @@ $('#save_submit').click(save);
  <img class='control resize hoverable' src='/lib/skin/1/resize.png'>
 </div>
 
-<div id='controls_text' class='controls'>
+<div id='controls_text' class='controls_src'>
  <img class='control resize_h hoverable' src='/lib/skin/1/resize_h.png'>
  <div class='control buttons'
   ><img class='button link hoverable'     src='/lib/skin/1/link.png'
@@ -116,17 +127,18 @@ $('#save_submit').click(save);
   ><img class='button unformat hoverable' src='/lib/skin/1/unformat.png' cmd='removeformat'
  ></div
  ><div class='control drawer fontsize'
-  ><div
-   ><div class='option small' style='font-size :  .5em' val =  '.5em'>a</div
-   ><div class='option small' style='font-size :   1em' val =   '1em'>a</div
-   ><div class='option small' style='font-size : 1.5em' val = '1.5em'>a</div
-   ><div class='option small' style='font-size :   2em' val =   '2em'>a</div
-   ><div class='option small' style='font-size :   3em' val =   '3em'>a</div
-  ></div><div class='bigger'
-   ><div class='option small' style='font-size :   5em' val =   '5em'>a</div
-   ><div class='option small' style='font-size :   8em' val =   '8em'>a</div
-   ><div class='option small' style='font-size :  11em' val =  '11em'>a</div
-  ></div
+  ><table><tr>
+   <td class='option' style='font-size :  .5em' val =  '.5em'>a</td>
+   <td class='option' style='font-size :   1em' val =   '1em'>a</td>
+   <td class='option' style='font-size : 1.5em' val = '1.5em'>a</td>
+   <td class='option' style='font-size :   2em' val =   '2em'>a</td>
+   <td class='option' style='font-size :   3em' val =   '3em'>a</td>
+  </tr></table>
+  <table border='1'><tr>
+   <td class='option' style='font-size :   5em' val =   '5em'>a</td>
+   <td class='option' style='font-size :   8em' val =   '8em'>a</td>
+   <td class='option' style='font-size :  11em' val =  '11em'>ab</td>
+  </tr></table
  ></div
  ><div class='control drawer fontname'
   ><div class='option' style='font-family:Arial'       cmd='fontname' val='Arial'      >Arial      </div
@@ -150,19 +162,25 @@ $('#save_submit').click(save);
  ></div>
 </div>
 
-<div id='controls_image' class='controls'>
+<div id='controls_image' class='controls_src'>
  <div class='control buttons'
   ><div class='button link'     ><img src='/lib/skin/1/link.png'   ></div
  ></div>
 </div>
 
-<div id='shape_src' class='controls'>
+<div id='shape_src' class='controls_src'>
  <div class='control buttons control'
   ><div class='button color fill'><img src='/lib/skin/1/color.png'  ></div
   ><div class='button color stroke'><img src='/lib/skin/1/color.png'  ></div
  ></div
  ><div class='control drawer color fill'></div
- ><div class='control drawer color stroke'></div
+ ><div class='control drawer color stroke'></div>
 </div>
+
+<form id='upload_form' method='POST' enctype='multipart/form-data' action='/' style='position : absolute; left : -1000px' target='upload_target'>
+ <input name='file' id='file_input' type='file'>
+ <input type='hidden' name='action' value='files_create'>
+ <iframe id='upload_target' name='upload_target'></iframe>
+</form>
 
 {% endblock %}
