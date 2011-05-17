@@ -1,0 +1,36 @@
+<style>
+.feed { position : fixed; }
+.feed.item { padding : 10px; width : 190px;
+    height : 90px; display : inline-block; bottom : 10px;
+    background-image : url('/lib/skin/1/feed_item.png'); }
+.feed.item0 { left : 50px; }
+.feed.item1 { left : 280px; }
+.feed.item2 { left : 510px; }
+.feed.item3 { left : 740px; }
+#feed_prev { bottom : 45px; left : 20px; }
+#feed_next { bottom : 45px; left : 960px; } 
+.feed.item0 .other { color : {{ colors[1] }} }
+.feed.item1 .other { color : {{ colors[2] }} }
+.feed.item2 .other { color : {{ colors[3] }} }
+.feed.item3 .other { color : {{ colors[5] }} }
+.feed.item .other { font-size:1.25em; font-family : Museo; position : absolute; bottom : 5px; }
+.feed.title:hover { text-decoration : underline; }
+.feed.title1 { font-size : 1.5em; }
+.feed.title2 { font-size : 1.25em; }
+.feed.title3 { font-size : 1em; }
+</style>
+
+{% if page %}
+ <a href='?p={{ page - 1 }}'><img id='feed_prev' src='/lib/skin/1/page_prev.png' class='feed hoverable'></a>
+{% else %}
+ <img id='feed_prev' src='/lib/skin/1/page_prev-disabled.png' class='feed'>
+{% endif %}
+
+{% for e in exprs %}
+ <div class='feed item item{{ loop.index0 }}'>
+  <div class='title title{{ e.title_len }}'><a href='{{ e.url|e }}' target='_top'>{{ e.title|e }}</a></div>
+  <div class='other'>{{ e.updated }}</div>
+ </div>
+{% endfor %}
+
+<a href='?p={{ page + 1 }}'><img id='feed_next' src='/lib/skin/1/page_next.png' class='feed hoverable'></a>

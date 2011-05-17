@@ -26,8 +26,8 @@ def expr_save(request, response):
     if not exp: raise ValueError('missing or malformed exp')
 
     res = Expr.fetch(exp.id)
-    upd = dict(name  = exp['name'].lower() ,domain = exp['domain'] ,title = exp['title']
-        ,apps  = exp['apps'])
+    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'auth', 'password'])
+    upd['name'] = upd['name'].lower()
     try:
         if not exp.id or upd['name'] != res['name']:
             res = Expr.create(owner = request.requester.id, **upd)
@@ -53,11 +53,9 @@ def media_path(user): return joinpath(config.domain_home, config.server_name, us
 def files_create(request, response):
     if not request.trusting: raise exceptions.BadRequest()
 
-    names = []
     for file_name in request.files:
         file = request.files[file_name]
         mime = mimetypes.guess_type(file.filename)[0]
-        if not mime: raise ValueError('Unrecognized file type')
 
         #if exists(joinpath(media_path(request.requester), file.filename)):
         #    m = re.search('(.*?)(_([0-9]+))?(\..*?$)', file.filename)
@@ -65,16 +63,35 @@ def files_create(request, response):
         #    else: file.filename = m.groups()[0] + '_1' + m.groups()[3]
         #path = joinpath(media_path(request.requester), file.filename)
 
-        res = File.create(
-             owner = request.requester.id
-            ,name = file.filename
-            ,mime = mime
-            )
-        path = joinpath(media_path(request.requester), res.id)
-        file.save(path)
-        res.update(fs_path = path)
-        names.append(abs_url() + 'file/' + res.id)
-    return names
+        app = {}
+        if mime == 'text/plain':
+            app['type'] = 'hive.text'
+            app['content'] = file.stream.read()
+        else:
+            res = File.create(
+                 owner = request.requester.id
+                ,name = file.filename
+                ,mime = mime
+                )
+            path = joinpath(media_path(request.requester), res.id)
+            file.save(path)
+            res.update(fs_path = path)
+            url =  abs_url() + 'file/' + res.id
+
+            if mime == 'audio/mpeg':
+                app['content'] = ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
+                    +"<param name='FlashVars' value='soundFile=" + url + "'>"
+                    +"<param name='wmode' value='transparent'></object>"
+                    )
+                app['type'] = 'hive.html'
+            elif mime in ['image/jpeg', 'image/png', 'image/gif']:
+                app['type'] = 'hive.image'
+                app['content'] = url
+            else:
+                app['type'] = 'hive.text'
+                app['content'] = "<a href='%s'>%s</a>" % (url, file.filename)
+
+        return app
 
 def user_create(request, response):
     referral = fetch('referral', request.args.get('key'), keyname='key')
@@ -203,18 +220,6 @@ def handle(request):
             create('referral', user = request.requester.id, key = key)
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + key
             return serve_page(response, 'minimal.html')
-        elif p1 == 'exprs':
-            page = int(request.args.get('p', 0))
-            exprs = Expr.list(4, page, owner=p2)
-            def fmt(e):
-                e.update(
-                     updated = friendly_date(time_u(e['updated']))
-                    ,url = abs_url(domain=e['domain']) + e['name']
-                    )
-                return e
-            response.context['exprs'] = map(fmt, exprs)
-            response.context['page'] = page
-            return serve_page(response, 'feed.html')
 
         return serve_404(request, response)
 
@@ -228,12 +233,36 @@ def handle(request):
 
     resource = Expr.fetch_by_names(request.domain, request.path.lower())
     if not resource: return serve_404(request, response)
+    if resource['owner'] != request.requester.id and resource.get('auth') == 'private':
+        return serve_404(request, response)
 
     # prevent XSS
     #enforce_static = ( request.trusting and (owner.id != request.requester.id) )
 
-    (html, css) = exp_to_html(resource)
     owner = User.fetch(resource['owner'])
+
+    if not request.path:
+        page = int(request.args.get('p', 0))
+        exprs = Expr.list(4, page, owner=owner.id, requester=request.requester.id)
+
+        def title_len(t):
+            l = len(t)
+            if l < 10: return 1
+            if l < 20: return 2
+            return 3
+        def fmt(e):
+            dict.update(e
+                ,updated = friendly_date(time_u(e['updated']))
+                ,url = abs_url(domain=e['domain']) + e['name']
+                ,title_len = title_len(e['title'])
+                ,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
+                )
+            return e
+
+        response.context['exprs'] = map(fmt, exprs)
+        response.context['page'] = page
+
+    (html, css) = exp_to_html(resource)
     response.context.update(
          owner = owner
         ,id = resource.id
@@ -242,6 +271,9 @@ def handle(request):
         ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
         ,name = resource['name']
+        ,auth_required = (resource.get('auth') == 'password'
+            and request.form.get('password') != resource.get('password')
+            and request.requester.id != resource['owner'])
         ,body = html
         ,css = css
         ,exp_js = json.dumps(resource)
@@ -287,7 +319,7 @@ def exp_to_html(exp, enforce_static = True):
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
             return html
-        if app.get('type') == 'hive.text':
+        if app.get('type') == 'hive.text' or app.get('type') == 'hive.html':
             return "<div class='happ' id='%s'>%s</div>" % (html_id, content)
         return ""
 
@@ -316,12 +348,13 @@ def render_template(response, template):
         ,secure_server = abs_url(secure = True)
         ,server_name = config.server_name
         ,colors = colors
+        ,debug = config.debug_mode
         )
     context.setdefault('icon', abs_url() + 'lib/skin/1/icon.png')
     return jinja_env.get_template('pages/' + template).render(context)
 
 def serve_json(response, val, html = False):
-    response.mimetype = 'application/json' if not html else 'text/html'
+    response.mimetype = 'application/json' if not html else 'text/plain'
     response.data = json.dumps(val)
     return response
 # maybe merge with serve_json?
@@ -403,7 +436,7 @@ if __name__ == '__main__':
           , config.plain_port
           , application
           , use_reloader = True
-          , use_debugger = config.debug_mode # from werkzeug.debug import DebuggedApplication
+          , use_debugger = config.debug_local # from werkzeug.debug import DebuggedApplication
           , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
           )
     else:
@@ -412,7 +445,7 @@ if __name__ == '__main__':
           , config.ssl_port
           , application
           , use_reloader = True
-          , use_debugger = config.debug_mode # from werkzeug.debug import DebuggedApplication
+          , use_debugger = config.debug_local # from werkzeug.debug import DebuggedApplication
           , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
           , ssl_context  = ctx
           )

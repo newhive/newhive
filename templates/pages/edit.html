@@ -11,18 +11,28 @@
  <link rel='stylesheet' type='text/css' href='/lib/ee/main.css'>
 
  <style>
+ input, textarea { font-size : inherit }
+
+.drawer { z-index : 1100, white-space : nowrap;  }
+
 .fontsize .option { color : {{ colors[12] }}; vertical-align : bottom; }
 .fontsize .bigger .option.small { width : 70px; height : 135px; }
 .fontsize .option:hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }} }
 .drawer.fontname .option:hover { background-color : {{ colors['selected'] }}; }
 
 #privacy { background-color : {{ colors['selected'] }}; color : {{ colors[0] }}; }
-#save_submit { color : white; background-color : {{ colors[0] }}; }
+.submit { color : {{ colors[1] }}; }
+.submit:hover { color : black; background-color : {{ colors[32] }}; }
+
+.dialogue_handle { background-color : {{ colors.selected }}; }
+.btn { padding : 2px 10px 2px 10px; margin : 5px; cursor : default; }
+.dialogue_handle.active { background-color : {{ colors[0] }}; color : white; }
+#loading { position : absolute; z-index : 1200; display : none; }
  </style>
 {% endblock %}
 
 {% block body %}
-<center class='top'>
+<center class='top' style='position : relative'>
  <div id='app_buttons'>
   <img id='insert_text'  class='insert_btn hoverable' src='/lib/skin/1/text.png' >
   <img id='insert_image' class='insert_btn hoverable' src='/lib/skin/1/image.png'>
@@ -33,34 +43,37 @@
   <img id='insert_html'  class='insert_btn' src='/lib/skin/1/html.png' >
   <script>
    tool_tip($('#insert_video'), 'video coming soon');
-   tool_tip($('#insert_audio'), 'audio coming soon');
    tool_tip($('#insert_shape'), 'shapes coming soon');
    tool_tip($('#insert_app'), 'pages coming soon');
-   tool_tip($('#insert_html'), 'embed html coming soon');
+   tool_tip($('#insert_html'), 'embed html');
+  </script>
+  <div id='menu_text' class='menu medbold'>
+   <div id='text_default' class='menu_item'>Default</div>
+   <div id='text_header' class='menu_item'>Header</div>
+   <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
+  </div>
+  <div id='menu_image' class='menu medbold'>
+   <div id='image_upload' class='menu_item'>Upload Image</div>
+   <div id='image_embed' class='menu_item'>Embed Image</div>
+   <div id='image_webcam' class='menu_item'>From Webcam</div>
+  </div>
+  <div id='menu_audio' class='menu medbold'>
+   <div id='audio_upload' class='menu_item'>Upload MP3</div>
+  </div>
+  <script>
+  hover_menu($('#insert_text'), $('#menu_text'));
+  hover_menu($('#insert_image'), $('#menu_image'));
+  hover_menu($('#insert_audio'), $('#menu_audio'));
   </script>
  </div>
 </center>
-<div id='menu_text' class='menu medbold'>
- <div id='text_default' class='menu_item'>Default</div>
- <div id='text_header' class='menu_item'>Header</div>
- <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
-</div>
-<div id='menu_image' class='menu medbold'>
- <div id='image_upload' class='menu_item'>Upload Image</div>
- <div id='image_embed' class='menu_item'>Embed Image</div>
- <div id='image_webcam' class='menu_item'>From Webcam</div>
-</div>
-<script>
-hover_menu($('#insert_text'), $('#menu_text'));
-hover_menu($('#insert_image'), $('#menu_image'));
-</script>
 
 <div id='right' class='top'>
  <img id='btn_grid' class='hoverable' src='/lib/skin/1/grid-off.png'>
 
- <span id='btn_save' class='medbold btn top'>
+ <span id='btn_save' class='medbold top dialogue_handle btn'>
   Save
-  <img src='/lib/skin/1/drop_arrow.png' class='hoverable'>
+  <img src='/lib/skin/1/drop_arrow.png'>
  </span>
 </div>
 
@@ -72,18 +85,21 @@ hover_menu($('#insert_image'), $('#menu_image'));
  <textarea id='title'>{{ exp.title }}</textarea>
  <div class='spacer'></div>
  <div class='spacer'></div>
- <div id='privacy' style='float : left' class='medbold btn'>
+ <div id='privacy' style='float : left' class='medbold dialogue_handle btn'>
   <span>Private</span>
   <img src='/lib/skin/1/drop_arrow.png'>
  </div>
- <div id='save_submit' style='float : right;' class='medbold btn'>Save</div>
+ <div id='save_submit' style='float : right;' class='medbold submit btn'>SAVE</div>
 
  <div id='menu_privacy' class='menu medbold' style='width : 125px'>
-  <div val='private' name='Private' class='menu_item selected'>Private</div>
-  <div val='public' name='Public' class='menu_item'>Public</div>
+  <div val='private' class='menu_item'>Private</div>
+  <div val='password' class='menu_item'>Password</div>
+  <div val='public' class='menu_item'>Public</div>
  </div>
 
- <div id='share' style='display : none'>
+ <div id='password_ui' style='display : none'>
+  <br><br><br>
+  <input type='text' id='password' alt='Type password here' value='{{ exp.password }}'>
  </div>
 </div>
 <script>
@@ -94,12 +110,15 @@ $('#menu_privacy').click(function(e) {
     $('#menu_privacy div').removeClass('selected');
     var t = $(e.target);
     t.addClass('selected');
-    $('#privacy span').text(t.attr('name'));
+    $('#privacy span').text(t.text());
     var v = t.attr('val');
-    if(v == 'share') $('#share').show();
-    else $('#share').hide();
+    if(v == 'password') $('#password_ui').show();
+    else $('#password_ui').hide();
 });
+if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 </script>
+
+<h1 id='loading'>Loading...</h1>
 
 <div id='controls_common' class='controls_src'>
  <img class='control undo   hoverable' src='/lib/skin/1/undo.png'>
@@ -113,46 +132,41 @@ $('#menu_privacy').click(function(e) {
  <img class='control resize_h hoverable' src='/lib/skin/1/resize_h.png'>
  <div class='control buttons'
   ><img class='button link hoverable'     src='/lib/skin/1/link.png'
-  ><input value='13' class='button fontsize hoverable'            
+  ><img class='button fontsize hoverable' src='/lib/skin/1/button.png'
   ><img class='button fontname'           src='/lib/skin/1/font.png'
   ><img class='button color'              src='/lib/skin/1/color.png'
   ><img class='button bold hoverable'     src='/lib/skin/1/bold.png'     cmd='bold'
   ><img class='button italic hoverable'   src='/lib/skin/1/italic.png'   cmd='italic'
   ><img class='button align'              src='/lib/skin/1/justify.png'  
   ><img class='button unformat hoverable' src='/lib/skin/1/unformat.png' cmd='removeformat'
- ></div
- ><div class='control drawer border fontsize'
-  ><table><tr>
-   <td class='option' style='font-size :  .5em' val =  '.5em'>a</td>
-   <td class='option' style='font-size :   1em' val =   '1em'>a</td>
-   <td class='option' style='font-size : 1.5em' val = '1.5em'>a</td>
-   <td class='option' style='font-size :   2em' val =   '2em'>a</td>
-   <td class='option' style='font-size :   3em' val =   '3em'>a</td>
-  </tr></table>
-  <table border='1'><tr>
-   <td class='option' style='font-size :   5em' val =   '5em'>a</td>
-   <td class='option' style='font-size :   8em' val =   '8em'>a</td>
-   <td class='option' style='font-size :  11em' val =  '11em'>ab</td>
-  </tr></table
- ></div
- ><div class='control drawer border fontname'
-  ><div class='option' style='font-family:Arial'       cmd='fontname' val='Arial'      >Arial      </div
-  ><div class='option' style='font-family:Georgia'     cmd='fontname' val='Georgia'    >Georgia    </div
-  ><div class='option' style='font-family:Museo'       cmd='fontname' val='Museo'      >Museo      </div
-  ><div class='option' style='font-family:Helvetica'   cmd='fontname' val='Helvetica'  >Helvetica  </div
-  ><div class='option' style='font-family:Courier New' cmd='fontname' val='Courier New'>Courier New</div
-  ><div class='option' style='font-family:Times'       cmd='fontname' val='Times'      >Times      </div
-  ><div class='option' style='font-family:Trebuchet'   cmd='fontname' val='Trebuchet'  >Trebuchet  </div
- ></div
- ><div class='control drawer border color'></div
- ><div class='control drawer border align'
-  ><div
-   ><img class='option small hoverable' cmd='justifyleft'    src='/lib/skin/1/justify_left.png' 
-   ><img class='option small hoverable' cmd='justifyright'   src='/lib/skin/1/justify_right.png'
+  ><div class='control drawer border fontsize'
+    ><span class='option fs1' style='font-size : .75em' val = '.75'>a</span
+    ><span class='option fs2' style='font-size :   1em' val =   '1'>a</span
+    ><span class='option fs3' style='font-size : 1.5em' val = '1.5'>a</span
+    ><span class='option fs4' style='font-size :   2em' val =   '2'>a</span
+    ><span class='option fs5' style='font-size :   3em' val =   '3'>a</span
+    ><span class='option fs5' style='font-size :   5em' val =   '5'>a</span
+    ><span class='option fs5' style='font-size :   8em' val =   '8'>a</span
   ></div
-  ><div
-   ><img class='option small hoverable' cmd='justifycenter'  src='/lib/skin/1/justify_center.png'
-   ><img class='option small hoverable' cmd='justifyfull'    src='/lib/skin/1/justify_full.png'  
+  ><div class='control drawer border fontname'
+   ><div class='option' style='font-family:Arial'       cmd='fontname' val='Arial'      >Arial      </div
+   ><div class='option' style='font-family:Georgia'     cmd='fontname' val='Georgia'    >Georgia    </div
+   ><div class='option' style='font-family:Museo'       cmd='fontname' val='Museo'      >Museo      </div
+   ><div class='option' style='font-family:Helvetica'   cmd='fontname' val='Helvetica'  >Helvetica  </div
+   ><div class='option' style='font-family:Courier New' cmd='fontname' val='Courier New'>Courier New</div
+   ><div class='option' style='font-family:Times'       cmd='fontname' val='Times'      >Times      </div
+   ><div class='option' style='font-family:Trebuchet'   cmd='fontname' val='Trebuchet'  >Trebuchet  </div
+  ></div
+  ><div class='control drawer border color' style='width:178px'></div
+  ><div class='control drawer border align'
+   ><div><nobr
+    ><img class='option small hoverable' cmd='justifyleft'    src='/lib/skin/1/justify_left.png' 
+    ><img class='option small hoverable' cmd='justifyright'   src='/lib/skin/1/justify_right.png'
+   ></nobr></div
+   ><div
+    ><img class='option small hoverable' cmd='justifycenter'  src='/lib/skin/1/justify_center.png'
+    ><img class='option small hoverable' cmd='justifyfull'    src='/lib/skin/1/justify_full.png'  
+   ></div
   ></div
  ></div>
 </div>
@@ -161,9 +175,17 @@ $('#menu_privacy').click(function(e) {
  <div class='control buttons'
   ><img class='button link'     src='/lib/skin/1/link.png'   
   ><img class='button opacity'  src='/lib/skin/1/opacity.png'
+  ><input class='control drawer opacity' type='text' size='3'
  ></div
- ><input class='control drawer opacity' type='text' size='3'>
-</div>
+></div>
+
+<div id='controls_html' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button render'   src='/lib/skin/1/render.png'
+  ><img class='button opacity'  src='/lib/skin/1/opacity.png'
+  ><input class='control drawer opacity' type='text' size='3'
+ ></div
+></div>
 
 <div id='shape_src' class='controls_src'>
  <div class='control buttons control'

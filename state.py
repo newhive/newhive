@@ -103,7 +103,6 @@ class User(Entity):
 class Session(Entity):
     cname = 'session'
 
-
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
 db.expr.ensure_index([('owner', 1), ('updated', 1)])
 db.expr.ensure_index([('updated', 1)])
@@ -116,15 +115,19 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name)
 
     @classmethod
-    def list(cls, limit, page, owner=None):
+    def list(cls, limit, page, owner=None, requester=None):
         spec = { 'owner' : owner } if owner else { }
-        return db.expr.find(
+        es = map(Expr, db.expr.find(
              spec = spec
-            ,fields = ['title', 'updated', 'domain', 'name']
+            ,fields = ['owner', 'title', 'updated', 'domain', 'name', 'auth']
             ,sort = [('updated', -1)]
             ,limit = limit
             ,skip = limit * page
-            )
+            ))
+
+        can_view = lambda e: (requester == e['owner']
+            or (e.get('auth', 'public') == 'public'))
+        return filter(can_view, es)
 
     def create_me(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])

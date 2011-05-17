@@ -1,5 +1,6 @@
-.widget, .widget > * { position : absolute; }
-.widget .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
+.happ { position : absolute; white-space : pre-wrap; }
+.happ > * { position : absolute; }
+.happ .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
 .select_box { width : 100%; height : 100%; z-index : 1; top : -5px; left : -5px; padding : 0; }
 .app_select { position : absolute; }
 
@@ -13,7 +14,7 @@
 .control.resize_h { cursor : ew-resize; }
 .control.resize { cursor : se-resize; }
 .control.stack img { display : inline-block; margin-left : 5px; }
-.control.drawer { position : fixed; text-align : left;
+.control.drawer { position : absolute; text-align : left;
     background-color : white; display : none; }
 .drawer { background-color : white; }
 
@@ -29,7 +30,7 @@
 .drawer.color .option.small { width : 20px; height : 20px; margin : 2px }
 .align .option.small { margin : 5px; }
 .drawer.link img { vertical-align : middle; }
-.button.fontsize { width : 28px; height : 25px; background-image : url('/lib/skin/1/button.png');
+.button.fontsize { width : 28px; height : 25px; background-image : url();
     margin : 0; border : none; text-align : center; font-weight : bold; vertical-align : top; }
 
 .spacer { height : 10px; }
