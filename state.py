@@ -31,6 +31,11 @@ class Entity(dict):
         return self.fetch_me(*a, **b)
     def fetch_me(self, key, keyname='_id'):
         return self.find_me(**{ keyname : key })
+
+    @classmethod
+    def find(cls, **spec):
+        self = cls({})
+        return self.find_me(**spec)
     def find_me(self, **spec):
         r = self._col.find_one(spec)
         if not r: return None
@@ -49,7 +54,7 @@ class Entity(dict):
         self._col.insert(self, safe=True)
         return self
 
-    def save(self): return self.update(**self)
+    #def save(self): return self.update(**self)
 
     def update(self, **d):
         d['updated'] = now()
@@ -103,9 +108,14 @@ class User(Entity):
 class Session(Entity):
     cname = 'session'
 
+import re
+def normalize(ws):
+    return filter(lambda s: re.match('[a-z]', s), re.split('\W', ws.lower()))
+
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
 db.expr.ensure_index([('owner', 1), ('updated', 1)])
 db.expr.ensure_index([('updated', 1)])
+db.expr.ensure_index([('index', 1)])
 class Expr(Entity):
     cname = 'expr'
 
@@ -119,7 +129,7 @@ class Expr(Entity):
         spec = { 'owner' : owner } if owner else { }
         es = map(Expr, db.expr.find(
              spec = spec
-            ,fields = ['owner', 'title', 'updated', 'domain', 'name', 'auth']
+            ,fields = ['owner', 'title', 'updated', 'domain', 'name', 'auth', 'tags']
             ,sort = [('updated', -1)]
             ,limit = limit
             ,skip = limit * page
@@ -129,10 +139,19 @@ class Expr(Entity):
             or (e.get('auth', 'public') == 'public'))
         return filter(can_view, es)
 
+    def update(self, **d):
+        d['index'] = normalize(self.get('tags', '')) + normalize(self['name'])
+        return super(Expr, self).update(**d)
+
     def create_me(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['title'] = self.get('title') or 'Untitled'
         return super(Expr, self).create_me()
+
+    #def get_tags(self):
+    #    tags = normalize(self['name'])
+    #    tags += normalize(self['title'])
+    #    return tags
 
 
 class File(Entity):

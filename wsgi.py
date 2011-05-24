@@ -9,7 +9,7 @@ import jinja2
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u
+from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize
 
 def lget(L, i, default=None): return L[i] if 0 <= i < len(L) else default
 def raises(e): raise e
@@ -26,11 +26,11 @@ def expr_save(request, response):
     if not exp: raise ValueError('missing or malformed exp')
 
     res = Expr.fetch(exp.id)
-    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'auth', 'password'])
+    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'auth', 'password', 'tags'])
     upd['name'] = upd['name'].lower()
     try:
         if not exp.id or upd['name'] != res['name']:
-            res = Expr.create(owner = request.requester.id, **upd)
+            res = Expr.create(owner = request.requester.id, owner_name = request.requester['name'], **upd)
         else:
             if not res['owner'] == request.requester.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
@@ -84,6 +84,7 @@ def files_create(request, response):
                     +"<param name='wmode' value='transparent'></object>"
                     )
                 app['type'] = 'hive.html'
+                app['dimensions'] = [200, 24]
             elif mime in ['image/jpeg', 'image/png', 'image/gif']:
                 app['type'] = 'hive.image'
                 app['content'] = url
@@ -198,12 +199,14 @@ def handle(request):
             #if response.enforce_static and unsafe_mimes.get(resource['mime'], False):
             #    raise DangerousContent()
             response.content_type = res['mime']
+            response.headers.add('Content-Disposition', 'inline', filename=res['name'])
             with open(res['fs_path']) as f: response.data = f.read()
             return response
         elif p1 == 'edit':
             if not p2:
                 exp = dfilter(request.form, ['domain', 'name'])
                 exp['title'] = 'Untitled'
+                exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['exp_js'] = json.dumps(exp)
@@ -222,6 +225,7 @@ def handle(request):
             return serve_page(response, 'minimal.html')
 
         return serve_404(request, response)
+    elif request.domain == 'www.' + config.server_name: return redirect(response, abs_url())
 
     if request.requester.logged_in:
         response.context['user_is_owner'] = request.domain in request.requester['sites']
@@ -436,7 +440,7 @@ if __name__ == '__main__':
           , config.plain_port
           , application
           , use_reloader = True
-          , use_debugger = config.debug_local # from werkzeug.debug import DebuggedApplication
+          , use_debugger = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
           , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
           )
     else:
@@ -445,7 +449,7 @@ if __name__ == '__main__':
           , config.ssl_port
           , application
           , use_reloader = True
-          , use_debugger = config.debug_local # from werkzeug.debug import DebuggedApplication
+          , use_debugger = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
           , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
           , ssl_context  = ctx
           )

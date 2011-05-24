@@ -2,7 +2,6 @@
 
 {% block head %}
  <style>
-  .toolbtn { margin-left : 20px }
   .happ { position : absolute; white-space : pre-wrap; }
   .happ img { width : 100%; }
   
@@ -20,9 +19,10 @@
  {% if user_is_owner %}
   <form action='{{ create }}' method='POST'>
    <input type='hidden' name='domain' value='{{ domain }}'>
-   <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='toolbtn hoverable'>
+   <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable'>
   </form>
-  <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='toolbtn hoverable'></a>
+  &nbsp; 
+  <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable'></a>
   <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable'>
   <div id='dia_delete' class='menu' style='padding : 10px'>
    Are you sure you want
@@ -38,6 +38,7 @@
    click_dialogue($('#btn_delete'), $('#dia_delete'));
    tool_tip($('#btn_create'), 'create');
    tool_tip($('#btn_edit'), 'edit');
+   tool_tip($('#btn_delete'), 'delete');
   </script>
  {% else %}
 
