@@ -51,9 +51,6 @@ def expr_delete(request, response):
     e.delete()
     return redirect(response, home_url(request.requester))
 
-def expr_list(user):
-    pass
-
 def media_path(user): return joinpath(config.domain_home, config.server_name, user['name'], 'media')
 def files_create(request, response):
     """ Saves a file uploaded from the expression editor, responds
@@ -318,15 +315,16 @@ def handle(request):
 @Request.application
 def handle_safe(request):
     """Log exceptions thrown, display friendly error message.
-       Clearly not implemneted."""
+       Not implemneted."""
     try: return handle(request)
     except Exception as e: return serve_error(request, e)
 
 @Request.application
-def application(request):
+def handle_debug(request):
     """Allow exceptions to be handled by werkzeug for debugging"""
     return handle(request)
-#def handle_debug(request): return handle(request)
+
+application = handle_debug
 #if config.debug_mode: application = handle_debug
 #else: application = handle_safe
 
@@ -393,10 +391,10 @@ def render_template(response, template):
     context.setdefault('icon', abs_url() + 'lib/skin/1/icon.png')
     return jinja_env.get_template('pages/' + template).render(context)
 
-def serve_json(response, val, html = False):
-    """Json is served as text/plain when being received in an <iframe> by the client"""
+def serve_json(response, val, as_text = False):
+    """ as_text is used when content is received in an <iframe> by the client """
 
-    response.mimetype = 'application/json' if not html else 'text/plain'
+    response.mimetype = 'application/json' if not as_text else 'text/plain'
     response.data = json.dumps(val)
     return response
 # maybe merge with serve_json?
@@ -425,9 +423,9 @@ class InternalServerError(exceptions.InternalServerError):
     def get_body(self, environ):
         return "Something's broken inside"
 
-class DangerousContent(exceptions.UnsupportedMediaType):
-    def get_body(self, environ):
-        return "If you saw this, something bad could happen"
+#class DangerousContent(exceptions.UnsupportedMediaType):
+#    def get_body(self, environ):
+#        return "If you saw this, something bad could happen"
 
 class Forbidden(exceptions.Forbidden):
     def get_body(self, environ):
