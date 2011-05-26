@@ -3,6 +3,10 @@ import config
 from state import User, Session, junkstr
 
 def authenticate_request(request, response):
+    """Read session id from 'identity' cookie, retrieve session record from db,
+       compare session secret with plain_secret or secure_secret, returns
+       state.User object."""
+
     sessid = get_cookie(request, 'identity')
     fail = User({})
     if not sessid: return fail
@@ -17,6 +21,9 @@ def authenticate_request(request, response):
     return user
 
 def handle_login(request, response):
+    """Reads username and password from POST data, creates session,
+       sets request.requester to state.User object, returns True if login succeeds"""
+
     args = request.form
     if not request.is_secure: raise exceptions.BadRequest()
     username = args.get('username', False)
@@ -52,6 +59,9 @@ def handle_login(request, response):
     return False
 
 def handle_logout(request, response):
+    """Removes cookies, deletes session record, sets
+       request.requester.logged_in to False"""
+
     if not request.trusting: raise exceptions.BadRequest()
     session = Session.fetch(request.requester['session'])
 

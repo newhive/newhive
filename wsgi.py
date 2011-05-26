@@ -14,12 +14,17 @@ from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, t
 def lget(L, i, default=None): return L[i] if 0 <= i < len(L) else default
 def raises(e): raise e
 def dfilter(d, keys):
+    """ Accepts dictionary and list of keys, returns a new dictionary
+        with only the keys given """
     r = {}
     for k in keys:
         if d.has_key(k): r[k] = d[k]
     return r
 
 def expr_save(request, response):
+    """ Parses JSON object from POST variable 'exp' and stores it in database.
+        If the name (url) does not match record in database, create a new record."""
+
     if not request.trusting: raise exceptions.BadRequest()
     try: exp = Expr(json.loads(request.form.get('exp', '0')))
     except: exp = False
@@ -51,6 +56,16 @@ def expr_list(user):
 
 def media_path(user): return joinpath(config.domain_home, config.server_name, user['name'], 'media')
 def files_create(request, response):
+    """ Saves a file uploaded from the expression editor, responds
+    with a json object representing that file, passed to the
+    JavaScript Hive.new_app function in lib/ee/main.js.
+
+     * text/txt files are not saved and simply returned in a text box
+     * all other file types are saved in the user's media folder
+     * mp3 and image files are handled specifically by the editor
+     * for all other files a link in a text box is returned
+    """
+
     if not request.trusting: raise exceptions.BadRequest()
 
     for file_name in request.files:
@@ -95,6 +110,14 @@ def files_create(request, response):
         return app
 
 def user_create(request, response):
+    """ Checks if the referral code matches one found in database.
+        Decrements the referral count of the user who created the referral and checks if the count is > 0.
+        Creates user record.
+        Creates empty home expression, so user.thenewhive.com does not show 404.
+        Creates media directory for user.
+        Logs new user in.
+        """
+
     referral = fetch('referral', request.args.get('key'), keyname='key')
     if not referral: return bad_referral(request, response)
     referrer = User.fetch(referral['user'])
@@ -138,11 +161,13 @@ def mail_us(request, response):
     return ''
 
 def home_url(user):
+    """ Returns default URL for given state.User """
     return abs_url(domain = user.get('sites', [config.server_name])[0])
 def login(request, response):
     if auth.handle_login(request, response):
         return redirect(response, home_url(request.requester))
 
+# Possible values for the POST variable 'action'
 actions = dict(
      login           = login
     ,logout          = auth.handle_logout
@@ -152,22 +177,26 @@ actions = dict(
     ,user_create     = user_create
     ,mail_us         = mail_us
     )
-#pages = dict(
-#     edit        = edit
-#    )
 
-unsafe_mimes = {
-      'text/xml'                       : True
-    , 'application/xml'                : True
-    , 'application/xhtml'              : True
-    , 'application/x-shockwave-flash'  : True
-    , 'text/x-sgml'                    : True
-    , 'text/html'                      : True
-    , 'text/xhtml'                     : True
-#    , 'application/x-javascript'       : True
-    }
+# Mime types that could generate HTTP POST requests
+#unsafe_mimes = {
+#      'text/xml'                       : True
+#    , 'application/xml'                : True
+#    , 'application/xhtml'              : True
+#    , 'application/x-shockwave-flash'  : True
+#    , 'text/x-sgml'                    : True
+#    , 'text/html'                      : True
+#    , 'text/xhtml'                     : True
+##    , 'application/x-javascript'       : True
+#    }
 
 def handle(request):
+    """The HTTP handler.
+       All POST requests must be sent to thenewhive.com, as opposed to
+       user.thenewhive.com which can contain arbitrary scripts. Any
+       response for thenewhive.com must not contain unsanitized user content.
+       Accepts werkzeug.Request, returns werkzeug.Response"""
+
     response = Response()
     request.requester = auth.authenticate_request(request, response)
     request.trusting = False
@@ -288,17 +317,24 @@ def handle(request):
 
 @Request.application
 def handle_safe(request):
+    """Log exceptions thrown, display friendly error message.
+       Clearly not implemneted."""
     try: return handle(request)
     except Exception as e: return serve_error(request, e)
+
 @Request.application
-def application(request): return handle(request)
+def application(request):
+    """Allow exceptions to be handled by werkzeug for debugging"""
+    return handle(request)
 #def handle_debug(request): return handle(request)
 #if config.debug_mode: application = handle_debug
 #else: application = handle_safe
 
 
 # www_expression -> String
-def exp_to_html(exp, enforce_static = True):
+def exp_to_html(exp):
+    """Converts JSON object representing an expression as stored in database to HTML"""
+
     apps = exp.get('apps')
     if not apps: return ('', '')
 
@@ -358,6 +394,8 @@ def render_template(response, template):
     return jinja_env.get_template('pages/' + template).render(context)
 
 def serve_json(response, val, html = False):
+    """Json is served as text/plain when being received in an <iframe> by the client"""
+
     response.mimetype = 'application/json' if not html else 'text/plain'
     response.data = json.dumps(val)
     return response
@@ -395,20 +433,24 @@ class Forbidden(exceptions.Forbidden):
     def get_body(self, environ):
         return "You can no looky sorry"
 
-def parse_host(host):
-    domain = host.split(':')[0]
-    domain_parts = domain.split('.')
-    site_domain = '.'.join(domain_parts[-2:])
-    sub_domain = domain_parts[0] if len(domain_parts) > 2 else None
-    return (domain, site_domain, sub_domain)
+#def parse_host(host):
+#    domain = host.split(':')[0]
+#    domain_parts = domain.split('.')
+#    site_domain = '.'.join(domain_parts[-2:])
+#    sub_domain = domain_parts[0] if len(domain_parts) > 2 else None
+#    return (domain, site_domain, sub_domain)
 
 def abs_url(secure = False, domain = None):
+    """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
+
     proto = 'https' if secure else 'http'
     port = config.ssl_port if secure else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
     return (proto + '://' + (domain or config.server_name) + port + '/')
 
 def friendly_date(then):
+    """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
+
     now = datetime.utcnow()
     dt = now - then
     months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -455,4 +497,3 @@ if __name__ == '__main__':
           )
 
     os.kill(child, signal.SIGKILL) # does run_simple ever return?
-

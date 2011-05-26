@@ -13,12 +13,16 @@ def time_u(t): return datetime.utcfromtimestamp(t)
 
 import random
 def junkstr(length):
+    """Creates a random base 64 string"""
+
     def chrange(c1, c2): return [chr(i) for i in range(ord(c1), ord(c2)+1)]
     chrs = chrange('0', '9') + chrange('A', 'Z') + chrange('a', 'z') + ['.', '/']
     return ''.join([chrs[random.randrange(0, 64)] for _ in range(length)])
 
 
 class Entity(dict):
+    """Base-class for very simple wrappers for MongoDB collections"""
+
     def __init__(self, d, cname=None):
         dict.update(self, d)
         if cname: self.cname = cname
@@ -42,6 +46,13 @@ class Entity(dict):
         dict.update(self, r)
         self.id = self['_id']
         return self
+
+    @classmethod
+    def search(cls, **spec):
+        self = cls({})
+        return self.search_me(**spec)
+    def search_me(self, **spec):
+        return self._col.find(spec)
 
     @classmethod
     def create(cls, **d):
@@ -122,7 +133,7 @@ class Expr(Entity):
     @classmethod
     def fetch_by_names(cls, domain, name):
         self = cls({})
-        return self.find_me(domain=domain, name=name)
+        return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
     def list(cls, limit, page, owner=None, requester=None):
@@ -140,7 +151,7 @@ class Expr(Entity):
         return filter(can_view, es)
 
     def update(self, **d):
-        d['index'] = normalize(self.get('tags', '')) + normalize(self['name'])
+        d['index'] = normalize(d.get('tags', '')) + normalize(d['name'])
         return super(Expr, self).update(**d)
 
     def create_me(self):
@@ -159,6 +170,9 @@ class File(Entity):
         #if not r: # TODO: check out the file system
         #    return None
         #return self
+
+class Log(Entity):
+    cname = 'log'
 
 #class Resource(Entity):
 #    site = Field(String(255))
