@@ -5,25 +5,35 @@
   .happ { position : absolute; white-space : pre-wrap; }
   .happ img { width : 100%; }
   
-  #meta { position : absolute; right : 20px; top : 27px; }
-  #info { display : inline-block; text-align : right; margin-right : 10px; font-family : Museo; }
-  #datetime { font-size:10pt; color : {{ colors[24] }}; }
+  #meta { position : absolute; right : 10px; top : 0px; height : 44px; }
+  #info { display : inline-block; text-align : right; margin-right : 10px; font-family : Museo; color : white; vertical-align : top; }
+  #datetime { font-size : .7em; color : {{ colors[24] }}; line-height : .5em; }
   #feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
   {{ css }}
  </style>
 {% endblock %}
 
-{% block body %}
-
+{% block nav %} 
 <div id='meta' class='top'>
+ {% if not user_is_owner %}
+  <div id='info' class='medbold scale'>
+   <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
+   <div id='datetime'><nobr>{{ mtime }}</nobr></div>
+  </div>
+  &nbsp;
+ {% endif %}
+
+ <form action='{{ create }}' method='POST'>
+  <input type='hidden' name='domain' value='{{ domain }}'>
+ </form>
+  <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable scale'>
+ &nbsp; 
+ <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable scale'>
+ &nbsp;
+
  {% if user_is_owner %}
-  <form action='{{ create }}' method='POST'>
-   <input type='hidden' name='domain' value='{{ domain }}'>
-   <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable'>
-  </form>
-  &nbsp; 
-  <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable'></a>
-  <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable'>
+  <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable scale'></a>
+  <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable scale'>
   <div id='dia_delete' class='menu' style='padding : 10px'>
    Are you sure you want
    to delete this page?
@@ -40,15 +50,12 @@
    tool_tip($('#btn_edit'), 'edit');
    tool_tip($('#btn_delete'), 'delete');
   </script>
- {% else %}
-
-  <div id='info'>
-   <div id='exp_owner' class='medbold'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
-   <div id='datetime'>{{ mtime }}</div>
-  </div>
-
  {% endif %}
 </div>
+
+{% endblock %}
+
+{% block body %}
 
 {% if auth_required %}
  <center>
@@ -65,23 +72,31 @@
 {% endif %}
 
 <script>
-//var sizes;
-//$(function() {
-//    $(document.body).children().each(function(e) {
 var exp = {{ exp_js }};
-$(window).resize(function() {
+$(function() {
    var s = $(window).width() / 1000;
    $.map(exp.apps, function(a, i) {
        var e = $('#h_' + i);
-       e.css({ left : a.position[0] * s, top : a.position[1] * s,
-           width : a.dimensions[0] * s, height : a.dimensions[1] * s, opacity : a.opacity });
+       e.css({ opacity : a.opacity });
        if(a.angle) e.rotate(a.angle);
-       if(a.scale) e.css('font-size', a.scale * s + 'em');
+   });
+});
+var elems = [];
+$('.happ').each(function(i, e) {
+    var o = { e : $(e) };
+    o.pos = $(o.e).position();
+    o.fs = parseFloat(o.e.css('font-size')) / 17.3333;
+    o.dims = [ o.e.width(), o.e.height() ];
+    elems.push(o);
+});
+$(window).resize(function() {
+   var s = $(window).width() / 1000;
+   $.map(elems, function(o) {
+       o.e.css({ left : o.pos.left * s, top : o.pos.top * s,
+           width : o.dims[0] * s, height : o.dims[1] * s});
+       if(o.fs != 1) o.e.css('font-size', o.fs * s + 'em');
    });
 });
 $(window).resize();
 </script>
-{% if not name %}
- {% include 'feed.html' %}
-{% endif %}
 {% endblock %}

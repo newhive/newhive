@@ -26,21 +26,28 @@
 
 .dialogue_handle { background-color : {{ colors.selected }}; }
 .btn { padding : 2px 10px 2px 10px; margin : 5px; cursor : default; }
-.dialogue_handle.active { background-color : {{ colors[0] }}; color : white; }
+#btn_save { color : white; }
 #loading { position : absolute; z-index : 1200; display : none; }
-#app_buttons { text-align : left; }
+#app_buttons { text-align : left; margin : 0; }
+/*.insert_btn { position : absolute; }
+#insert_text  { top : 0; left : 300px }
+#insert_image { top : 0; left : 370px }
+#insert_audio { top : 0; left : 440px }
+#insert_file  { top : 0; left : 510px }
+#insert_embed { top : 0; left : 580px }
+#insert_shape { top : 0; left : 650px }*/
  </style>
 {% endblock %}
 
-{% block body %}
-<center class='top' style='position : relative'>
+{% block nav %}
+<center style='margin : 0; padding : 0; border : 1px solid red'>
  <div id='app_buttons'>
-  <img id='insert_text'  class='insert_btn hoverable' src='/lib/skin/1/text.png' >
-  <img id='insert_image' class='insert_btn hoverable' src='/lib/skin/1/image.png'>
-  <img id='insert_audio' class='insert_btn' src='/lib/skin/1/audio.png'>
-  <img id='insert_file' class='insert_btn' src='/lib/skin/1/upload.png'>
-  <img id='insert_embed' class='insert_btn' src='/lib/skin/1/html.png'>
-  <img id='insert_shape' class='insert_btn' src='/lib/skin/1/shape.png'>
+  <img id='insert_text'  class='insert_btn hoverable scale' src='/lib/skin/1/text.png' >
+  <img id='insert_image' class='insert_btn hoverable scale' src='/lib/skin/1/image.png'>
+  <img id='insert_audio' class='insert_btn hoverable scale' src='/lib/skin/1/audio.png'>
+  <img id='insert_file'  class='insert_btn hoverable scale' src='/lib/skin/1/upload.png'>
+  <img id='insert_embed' class='insert_btn hoverable scale' src='/lib/skin/1/embed.png'>
+  <img id='insert_shape' class='insert_btn hoverable scale' src='/lib/skin/1/shape.png'>
   <!--<img id='insert_app'   class='insert_btn' src='/lib/skin/1/page.png' >-->
   <script>
    tool_tip($('#insert_shape'), 'drawing tools coming soon');
@@ -79,12 +86,14 @@
  </div>
 </center>
 
-<div id='right' class='top'>
- <img id='btn_grid' class='hoverable' src='/lib/skin/1/grid-off.png'>
+<div id='right' class='medbold top scale'>
+ <img id='btn_grid' class='hoverable scale' src='/lib/skin/1/grid-off.png'>
 
- <span id='btn_save' class='medbold top dialogue_handle btn'>
-  Save
-  <img src='/lib/skin/1/drop_arrow.png'>
+ <span id='btn_save' class='btn'>
+  <nobr>
+   Save
+   <img src='/lib/skin/1/drop_arrow.png'>
+  </nobr>
  </span>
 </div>
 
@@ -131,6 +140,10 @@ $('#menu_privacy').click(function(e) {
 });
 if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 </script>
+
+{% endblock %}
+
+{% block body %}
 
 <img id='loading' src='/lib/skin/1/loading.gif'>
 

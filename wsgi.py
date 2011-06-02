@@ -212,7 +212,7 @@ def handle(request):
                 lambda _,__: raises(exceptions.BadRequest('action: '+reqaction))
                 )(request, response)
             if type(r) == Response: return r
-            if r != None: return serve_json(response, r, html = True)
+            if r != None: return serve_json(response, r, as_text = True)
 
         if request.path == '':
             return serve_page(response, 'home.html')

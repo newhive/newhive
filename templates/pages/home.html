@@ -75,7 +75,9 @@ $(window).click(function(e) {
  {% endif %}
 
  {% if not user.logged_in %}
-  <center><iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="675" height="380" frameborder="0"></iframe></center>
+  <table width='100%' height='100%'><tr><td valign='middle' align='center'>
+   <iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="675" height="380" frameborder="0"></iframe>
+  </td></tr></table>
  {% endif %}
 
 <!--<iframe id='feed' src='{{ server }}exprs/'></iframe>-->

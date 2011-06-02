@@ -20,12 +20,13 @@ form { display : inline; }
 .tooltip { position : absolute; color : {{ colors['active'] }}; display : none; white-space : nowrap; }
 .border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 .selected { border-color : {{ colors['selected'] }}; }
-.snug { padding : 0 }
 .medbold { font-weight : bold; font-size : 1.23em; font-family : Museo; }
 .active { color : {{ colors['active'] }}; }
-#logo { position : absolute; left : 20px; top : 20px; z-index : 1101; }
-#logo * { vertical-align : middle; }
-#user { display : inline-block; }
+#nav { position : fixed; width : 100%; height : 44px; background-image : url('/lib/skin/1/nav_gradient.png'); top : 0; left : 0; }
+#logo { position : absolute; left : 5px; top : 0px; width : 42px; }
+#user { position : absolute; left : 50px; top : 0px; display : inline-block; color : white; height : 44px; }
+#user * { vertical-align : middle; }
+#body { position : absolute; left : 0; top : 42px; width : 100%; }
 .menu, .top { z-index : 1100; }
 @font-face {
     font-family: Museo;
@@ -48,31 +49,32 @@ html, body { background-color : white; height : 100%; }
 </head>
 <body>
 
- <div id='logo' class='top'>
-  <a href='{{ server }}'><img src={{ icon }}></a>&nbsp;
+<div id='nav' class='top'>
+ <a href='{{ server }}'><img id='logo' src={{ icon }} class='hoverable scale'></a>&nbsp;
+ <div id='user' class='medbold scale'>
   {% if user.logged_in %}
-   <div id='user'>
-    <div>
-     <a href='{{ home_url }}' class='medbold'>{{ user['name'] }}</a>
-     <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
-     <div id='user_menu' class='menu medbold'>
-      <form name='logout_form' action='{{ secure_server }}' method='POST'>
-       <input name='action' value='logout' type='hidden'>
-      </form>
-      <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
-      <!--<div class='menu_item'>Change&nbsp;icon</div>
-      <div class='menu_item'>Settings</div>-->
-     </div>
-     <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
-    </div>
-    {% if user_is_owner %}<div id='datetime'>{{ mtime }}</div>{% endif %}
+   <nobr>
+    <a href='{{ home_url }}'>{{ user['name'] }}</a>
+    <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png' class='scale'>
+   </nobr>
+   <div id='user_menu' class='menu'>
+    <form name='logout_form' action='{{ secure_server }}' method='POST'>
+     <input name='action' value='logout' type='hidden'>
+    </form>
+    <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
+    <!--<div class='menu_item'>Change&nbsp;icon</div>
+    <div class='menu_item'>Settings</div>-->
    </div>
+   <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
   {% else %}
-   <a href='{{ server }}'><img src='{{ server }}lib/skin/1/logo_text.png'></a>
+   <a href='{{ server }}'><img id='logotype' src='/lib/skin/1/logotype.png' class='scale'></a>
   {% endif %}
  </div>
+ {% block nav %}{% endblock %}
+</div>
 
-{% block body %}{% endblock %}
+{% block body %}
+{% endblock %}
 
 </body>
 </html>

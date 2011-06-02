@@ -38,11 +38,10 @@
 #app_buttons { display : inline-block; margin : 20px; }
 .insert_btn { margin-right : 15px; cursor : default; }
 .btn { display : inline-block; padding : 5px; cursor : default; }
-#btn_save { margin-left : 15px; }
-#menu_save { position : absolute; top : 65px; right : 20px; padding : 10px; display : none;
+#menu_save { position : absolute; top : 43px; right : 0px; padding : 10px; display : none;
      background-color : white; }
 #menu_save textarea { height : 2.5em; }
 #menu_save input, textarea { width : 200px; }
 #menu_privacy .selected { display : none; }
-#right { position : absolute; right : 20px; top : 32px; }
+#right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }
