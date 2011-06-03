@@ -35,7 +35,7 @@ def expr_save(request, response):
     upd['name'] = upd['name'].lower()
     try:
         if not exp.id or upd['name'] != res['name']:
-            res = Expr.create(owner = request.requester.id, owner_name = request.requester['name'], **upd)
+            res = Expr.create(owner = request.requester.id, **upd)
         else:
             if not res['owner'] == request.requester.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
@@ -230,7 +230,8 @@ def handle(request):
             return response
         elif p1 == 'edit':
             if not p2:
-                exp = dfilter(request.form, ['domain', 'name'])
+                exp = { 'domain' : lget(request.requester.get('sites'), 0) }
+                exp.update(dfilter(request.form, ['domain', 'name']))
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
@@ -271,26 +272,26 @@ def handle(request):
 
     owner = User.fetch(resource['owner'])
 
-    if not request.path:
-        page = int(request.args.get('p', 0))
-        exprs = Expr.list(4, page, owner=owner.id, requester=request.requester.id)
+    #if not request.path:
+    #    page = int(request.args.get('p', 0))
+    #    exprs = Expr.list(4, page, owner=owner.id, requester=request.requester.id)
 
-        def title_len(t):
-            l = len(t)
-            if l < 10: return 1
-            if l < 20: return 2
-            return 3
-        def fmt(e):
-            dict.update(e
-                ,updated = friendly_date(time_u(e['updated']))
-                ,url = abs_url(domain=e['domain']) + e['name']
-                ,title_len = title_len(e['title'])
-                ,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
-                )
-            return e
+    #    def title_len(t):
+    #        l = len(t)
+    #        if l < 10: return 1
+    #        if l < 20: return 2
+    #        return 3
+    #    def fmt(e):
+    #        dict.update(e
+    #            ,updated = friendly_date(time_u(e['updated']))
+    #            ,url = abs_url(domain=e['domain']) + e['name']
+    #            ,title_len = title_len(e['title'])
+    #            ,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
+    #            )
+    #        return e
 
-        response.context['exprs'] = map(fmt, exprs)
-        response.context['page'] = page
+    #    response.context['exprs'] = map(fmt, exprs)
+    #    response.context['page'] = page
 
     (html, css) = exp_to_html(resource)
     response.context.update(
