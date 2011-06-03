@@ -25,74 +25,63 @@
 .submit:hover { color : black; background-color : {{ colors[32] }}; }
 
 .dialogue_handle { background-color : {{ colors.selected }}; }
-.btn { padding : 2px 10px 2px 10px; margin : 5px; cursor : default; }
-#btn_save { color : white; }
 #loading { position : absolute; z-index : 1200; display : none; }
-#app_buttons { text-align : left; margin : 0; position : absolute; top : 0; left : 300px; }
-/*.insert_btn { position : absolute; }
-#insert_text  { top : 0; left : 300px }
-#insert_image { top : 0; left : 370px }
-#insert_audio { top : 0; left : 440px }
-#insert_file  { top : 0; left : 510px }
-#insert_embed { top : 0; left : 580px }
-#insert_shape { top : 0; left : 650px }*/
+.insert_btn { position : fixed; z-index : 1200 }
  </style>
 {% endblock %}
 
-{% block nav %}
- <div id='app_buttons'>
-  <img id='insert_text'  class='insert_btn hoverable scale' src='/lib/skin/1/text.png' >
-  <img id='insert_image' class='insert_btn hoverable scale' src='/lib/skin/1/image.png'>
-  <img id='insert_audio' class='insert_btn hoverable scale' src='/lib/skin/1/audio.png'>
-  <img id='insert_file'  class='insert_btn hoverable scale' src='/lib/skin/1/upload.png'>
-  <img id='insert_embed' class='insert_btn hoverable scale' src='/lib/skin/1/embed.png'>
-  <img id='insert_shape' class='insert_btn hoverable scale' src='/lib/skin/1/shape.png'>
-  <!--<img id='insert_app'   class='insert_btn' src='/lib/skin/1/page.png' >-->
-  <script>
-   tool_tip($('#insert_shape'), 'drawing tools coming soon');
-   tool_tip($('#insert_file'), 'Click to upload any file type<br>(pdf, zip, etc) to share as a link.').drawer.css({color : 'black'});
-   //tool_tip($('#insert_app'), 'pages coming soon');
-  </script>
+{% block body %}
 
-  <div id='menu_text' class='menu medbold'>
-   <div id='text_default' class='menu_item'>Default</div>
-   <div id='text_header' class='menu_item'>Header</div>
-   <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
-  </div>
-  <script>hover_menu($('#insert_text'), $('#menu_text'));</script>
+<img id='insert_text'  class='insert_btn hoverable scale nav' style='top : 0; left : 300px' src='/lib/skin/1/text.png' >
+<img id='insert_image' class='insert_btn hoverable scale nav' style='top : 0; left : 370px' src='/lib/skin/1/image.png'>
+<img id='insert_audio' class='insert_btn hoverable scale nav' style='top : 0; left : 440px' src='/lib/skin/1/audio.png'>
+<img id='insert_file'  class='insert_btn hoverable scale nav' style='top : 0; left : 510px' src='/lib/skin/1/upload.png'>
+<img id='insert_embed' class='insert_btn hoverable scale nav' style='top : 0; left : 580px' src='/lib/skin/1/embed.png'>
+<img id='insert_shape' class='insert_btn hoverable scale nav' style='top : 0; left : 650px' src='/lib/skin/1/shapes.png'>
+<!--<img id='insert_app'   class='insert_btn' src='/lib/skin/1/page.png' >-->
 
-  <div id='menu_image' class='menu medbold'>
-   <div id='image_upload' class='menu_item'>Upload Image</div>
-   <div id='image_webcam' class='menu_item'>Take Picture (coming soon)</div>
-   <div id='image_search' class='menu_item'>Google Image Search (coming soon)</div>
-  </div>
-  <script>hover_menu($('#insert_image'), $('#menu_image'));</script>
+<div id='menu_text' class='menu medbold'>
+ <div id='text_default' class='menu_item'>Default</div>
+ <div id='text_header' class='menu_item'>Header</div>
+ <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
+</div>
+<script>hover_menu($('#insert_text'), $('#menu_text'));</script>
 
-  <div id='menu_audio' class='menu medbold'>
-   <div id='audio_upload' class='menu_item'>Upload MP3</div>
-   <div id='audio_record' class='menu_item'>Record Audio (coming soon)</div>
-  </div>
-  <script>hover_menu($('#insert_audio'), $('#menu_audio'));</script>
+<div id='menu_image' class='menu medbold'>
+ <div id='image_upload' class='menu_item'>Upload image</div>
+ <div id='image_background' class='menu_item'>Background</div>
+ <div id='image_webcam' class='menu_item'>Take picture</div>
+ <div id='image_search' class='menu_item'>Google images</div>
+</div>
+<script>hover_menu($('#insert_image'), $('#menu_image'));</script>
 
-  <div id='menu_embed' class='menu' style='padding : .5em; width : 20em;'>
-   <span class='normal'>Paste URL for images or videos<br>(youtube and vimeo) or embed code for widgets here:</span><br>
-   <div class='spacer'></div>
-   <textarea id='embed_code' style='width : 18em'></textarea><br>
-   <div class='spacer'></div>
-   <input id='embed_done' type='button' value='Embed' class='medbold'>
-  </div>
+<div id='menu_audio' class='menu medbold'>
+ <div id='audio_upload' class='menu_item'>Upload MP3</div>
+ <div id='audio_record' class='menu_item'>Record Audio (coming soon)</div>
+</div>
+<script>hover_menu($('#insert_audio'), $('#menu_audio'));</script>
 
- </div>
+<div id='menu_file' class='menu medbold'>
+ <div class='menu_item selected'>Upload file to link</div>
+</div>
+<script>hover_menu($('#insert_file'), $('#menu_file'));</script>
 
-<div id='right' class='medbold top scale'>
- <img id='btn_grid' class='hoverable scale' src='/lib/skin/1/grid-off.png'>
+<div id='menu_embed' class='menu' style='padding : .5em; width : 20em;'>
+ <span class='medbold'>Embed</span><br>
+ <div class='spacer'></div>
+ <textarea id='embed_code' style='width : 18em; display : inline-block' alt='Paste url or embed code for videos and widgets here.'></textarea>
+ <div class='spacer'></div>
+ <img id='embed_done' src='/lib/skin/1/lg_arrow_red.png'>
+</div>
 
- <span id='btn_save' class='btn'>
-  <nobr>
-   Save
-   <img src='/lib/skin/1/drop_arrow.png'>
-  </nobr>
- </span>
+<div id='menu_shape' class='menu medbold'>
+ <div class='menu_item'>Drawing tools coming soon</div>
+</div>
+<script>hover_menu($('#insert_shape'), $('#menu_shape'));</script>
+
+<img id='btn_grid' class='hoverable nav scale' style='top : 0; left : 856px;' src='/lib/skin/1/grid-off.png'>
+<div id='btn_save' class='medbold nav scale' style='top : 8px; left : 917px; color : white; cursor : default'>
+ <nobr>Save <img class='scale' src='/lib/skin/1/drop_arrow.png'></nobr>
 </div>
 
 <div id='menu_save' class='border top'>
@@ -106,13 +95,13 @@
  <input id='tags' type='text' value='{{ exp.tags|e }}'>
  <div class='spacer'></div>
  <div class='spacer'></div>
- <div id='privacy' style='float : left' class='medbold dialogue_handle btn'>
+ <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle'>
   <span>Private</span>
   <img src='/lib/skin/1/drop_arrow.png'>
  </div>
- <div id='save_submit' style='float : right;' class='medbold submit btn'>SAVE</div>
+ <div id='save_submit' style='float : right; padding : 5px' class='medbold submit'>SAVE</div>
 
- <div id='menu_privacy' class='menu medbold' style='width : 125px'>
+ <div id='menu_privacy' class='menu medbold' style='width : 125px;'>
   <div val='private' class='menu_item'>Private</div>
   <div val='password' class='menu_item'>Password</div>
   <div val='public' class='menu_item'>Public</div>
@@ -139,9 +128,6 @@ $('#menu_privacy').click(function(e) {
 if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 </script>
 
-{% endblock %}
-
-{% block body %}
 
 <img id='loading' src='/lib/skin/1/loading.gif'>
 

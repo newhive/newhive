@@ -5,7 +5,6 @@
   .happ { position : absolute; white-space : pre-wrap; }
   .happ img { width : 100%; }
   
-  #meta { position : absolute; right : 10px; top : 0px; height : 44px; }
   #info { display : inline-block; text-align : right; margin-right : 10px; font-family : Museo; color : white; vertical-align : top; }
   #datetime { font-size : .7em; color : {{ colors[24] }}; line-height : .5em; }
   #feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
@@ -13,21 +12,25 @@
  </style>
 {% endblock %}
 
-{% block nav %} 
-<div id='meta' class='top'>
+{% block body %}
+
+<div class='nav' style='right : 10px; top : 0px;'>
  {% if not user_is_owner %}
-  <div id='info' class='medbold scale'>
+  <div id='info' class='medbold scale' style='text-align : right'>
    <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
    <div id='datetime'><nobr>{{ mtime }}</nobr></div>
   </div>
   &nbsp;
  {% endif %}
 
- <form action='{{ create }}' method='POST'>
-  <input type='hidden' name='domain' value='{{ domain }}'>
- </form>
-  <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable scale'>
- &nbsp; 
+ {% if user.logged_in %}
+  <form action='{{ create }}' method='POST'>
+   <input type='hidden' name='domain' value='{{ domain }}'>
+   <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable scale'>
+  </form>
+  &nbsp; 
+ {% endif %}
+
  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable scale'>
  &nbsp;
 
@@ -53,10 +56,6 @@
  {% endif %}
 </div>
 
-{% endblock %}
-
-{% block body %}
-
 {% if auth_required %}
  <center>
   <form method='POST'>
@@ -73,28 +72,14 @@
 
 <script>
 var exp = {{ exp_js }};
-$(function() {
+$(window).resize(function() {
    var s = $(window).width() / 1000;
    $.map(exp.apps, function(a, i) {
        var e = $('#h_' + i);
-       e.css({ opacity : a.opacity });
+       e.css({ left : a.position[0] * s, top : a.position[1] * s,
+           width : a.dimensions[0], height : a.dimensions[1],
+           'font-size' : a.scale * s + 'em', opacity : a.opacity });
        if(a.angle) e.rotate(a.angle);
-   });
-});
-var elems = [];
-$('.happ').each(function(i, e) {
-    var o = { e : $(e) };
-    o.pos = $(o.e).position();
-    o.fs = parseFloat(o.e.css('font-size')) / 17.3333;
-    o.dims = [ o.e.width(), o.e.height() ];
-    elems.push(o);
-});
-$(window).resize(function() {
-   var s = $(window).width() / 1000;
-   $.map(elems, function(o) {
-       o.e.css({ left : o.pos.left * s, top : o.pos.top * s,
-           width : o.dims[0] * s, height : o.dims[1] * s});
-       if(o.fs != 1) o.e.css('font-size', o.fs * s + 'em');
    });
 });
 $(window).resize();

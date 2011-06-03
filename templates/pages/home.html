@@ -19,8 +19,8 @@ form { display : inline; }
 
 {% block body %}
  {% if not user.logged_in %}
-  <div id='login'>
-   <span class='medbold'>beta log in&nbsp;</span>
+  <div id='login' class='nav' style='top : 0; left : 500px'>
+   <span class='medbold'>log in&nbsp;</span>
    <form id='login_form' action='{{ secure_server }}' method='POST'>
     <input type='text' name='username' value='{{ user['name'] }}' alt='Username'>
     <input type='password' name='secret'>
@@ -33,10 +33,10 @@ form { display : inline; }
     <script>hover_menu($('#login_submit'), $('#session_menu'), { no_close : true });</script>
    </form>
 
-   <input type='button' id='welcome' class='medbold hoverable' value='hello!'>
+   <input type='button' id='welcome' class='medbold hoverable scale' value='hello!'>
   </div>
   <div id='login_error' class='active'>{{ error }}</div>
-  <div id='contact' class='border' style='width : 220px; display : none'>
+  <div id='welcome_menu' class='border' style='width : 220px; display : none'>
    We are in beta right now.
    Drop us a line with your email
    and name and we'll be in touch!
@@ -44,18 +44,19 @@ form { display : inline; }
    <div style='text-align : right'><input type='button' class='medbold active' value='Send'></div>
   </div>
   <script>
-var text = $('#contact textarea');
-function contact_show() { 
-    $('#welcome').addClass('open');
-    $('#contact').show();
-    text.focus();
-}
-function contact_hide() {
-    $('#contact').hide();
-    $('#welcome').removeClass('open');
-}
+click_dialogue($('#welcome'), $('#welcome_menu'));
+//var text = $('#contact textarea');
+//function contact_show() { 
+//    $('#welcome').addClass('open');
+//    $('#contact').show();
+//    text.focus();
+//}
+//function contact_hide() {
+//    $('#contact').hide();
+//    $('#welcome').removeClass('open');
+//}
 
-$('#contact input').click(function() {
+$('#welcome_menu input').click(function() {
     $.post('/', { message : text.val(), action : 'mail_us' }, function(data) {
             if(data) alert('Sorry, there was a problem sending your message');
             else {
@@ -65,12 +66,12 @@ $('#contact input').click(function() {
             }
         }, 'json') });
 
-$('#welcome').click(function() { contact_show() });
-$(window).click(function(e) {
-    if(e.target != $('#welcome').get(0)
-        && e.target != $('#contact').get(0)
-        && !$.contains($('#contact').get(0), e.target)) contact_hide();
-});
+//$('#welcome').click(function() { contact_show() });
+//$(window).click(function(e) {
+//    if(e.target != $('#welcome').get(0)
+//        && e.target != $('#contact').get(0)
+//        && !$.contains($('#contact').get(0), e.target)) contact_hide();
+//});
   </script>
  {% endif %}
 
