@@ -77,7 +77,7 @@ $(window).resize(function() {
    $.map(exp.apps, function(a, i) {
        var e = $('#h_' + i);
        e.css({ left : a.position[0] * s, top : a.position[1] * s,
-           width : a.dimensions[0], height : a.dimensions[1],
+           width : a.dimensions[0] * s, height : a.dimensions[1] * s,
            'font-size' : a.scale * s + 'em', opacity : a.opacity });
        if(a.angle) e.rotate(a.angle);
    });
