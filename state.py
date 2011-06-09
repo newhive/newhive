@@ -121,7 +121,7 @@ class Session(Entity):
 
 import re
 def normalize(ws):
-    return filter(lambda s: re.match('[a-z]', s), re.split('\W', ws.lower()))
+    return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
 
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
 db.expr.ensure_index([('owner', 1), ('updated', 1)])
@@ -163,6 +163,15 @@ class Expr(Entity):
     #    tags = normalize(self['name'])
     #    tags += normalize(self['title'])
     #    return tags
+
+def tags_by_frequency(**query):
+    tags = {}
+    for d in Expr.search(**query):
+        if d.get('index'):
+            for t in d.get('index'): tags[t] = tags.get(t, 0) + 1
+    counts = [[tags[t], t] for t in tags]
+    counts.sort(reverse=True)
+    return [c[1] for c in counts]
 
 
 class File(Entity):

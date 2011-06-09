@@ -9,7 +9,7 @@ import jinja2
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize
+from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, tags_by_frequency
 
 def lget(L, i, default=None): return L[i] if 0 <= i < len(L) else default
 def raises(e): raise e
@@ -243,7 +243,7 @@ def handle(request):
             referral = fetch('referral', request.args.get('key'), keyname='key')
             if not referral: return bad_referral(request, response)
             return serve_page(response, 'user_settings.html')
-        elif p1 == 'referral':
+        elif p1 == 'referral' and request.requester.logged_in:
             if(request.requester['referrals'] <= 0):
                 return no_more_referrals(request.requester['name'], request, response)
             key = junkstr(16)
@@ -272,26 +272,30 @@ def handle(request):
 
     owner = User.fetch(resource['owner'])
 
-    #if not request.path:
-    #    page = int(request.args.get('p', 0))
-    #    exprs = Expr.list(4, page, owner=owner.id, requester=request.requester.id)
+    if request.args.get('view'):
+        page = int(request.args.get('p', 0))
+        exprs = Expr.list(50, page, owner=owner.id, requester=request.requester.id)
 
-    #    def title_len(t):
-    #        l = len(t)
-    #        if l < 10: return 1
-    #        if l < 20: return 2
-    #        return 3
-    #    def fmt(e):
-    #        dict.update(e
-    #            ,updated = friendly_date(time_u(e['updated']))
-    #            ,url = abs_url(domain=e['domain']) + e['name']
-    #            ,title_len = title_len(e['title'])
-    #            ,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
-    #            )
-    #        return e
+        def title_len(t):
+            l = len(t)
+            if l < 10: return 1
+            if l < 20: return 2
+            return 3
+        def fmt(e):
+            dict.update(e
+                ,updated = friendly_date(time_u(e['updated']))
+                ,url = abs_url(domain=e['domain']) + e['name']
+                ,title_len = title_len(e['title'])
+                #,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
+                ,tags = ['#' + t for t in e.get('index', ['foo','bar'])]
+                )
+            return e
 
-    #    response.context['exprs'] = map(fmt, exprs)
-    #    response.context['page'] = page
+        response.context['tags'] = tags_by_frequency(owner=owner.id)
+        response.context['exprs'] = map(fmt, exprs)
+        return serve_page(response, 'expr_cards.html')
+        #response.context['page'] = page
+
 
     (html, css) = exp_to_html(resource)
     response.context.update(
