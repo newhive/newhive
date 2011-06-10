@@ -136,11 +136,10 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
-    def list(cls, limit, page, owner=None, requester=None):
-        spec = { 'owner' : owner } if owner else { }
+    def list(cls, limit, page, spec, requester=None):
         es = map(Expr, db.expr.find(
              spec = spec
-            ,fields = ['owner', 'title', 'updated', 'domain', 'name', 'auth', 'tags']
+            ,fields = ['owner', 'title', 'updated', 'domain', 'name', 'auth', 'tags', 'index', 'thumb']
             ,sort = [('updated', -1)]
             ,limit = limit
             ,skip = limit * page
@@ -151,7 +150,11 @@ class Expr(Entity):
         return filter(can_view, es)
 
     def update(self, **d):
-        d['index'] = normalize(d.get('tags', '')) + normalize(d['name'])
+        d['index'] = (
+              normalize(d.get('tags', self.get('tags', '')))
+            + normalize(d.get('name', self['name']))
+            + normalize(d.get('title', self['title']))
+            )
         return super(Expr, self).update(**d)
 
     def create_me(self):

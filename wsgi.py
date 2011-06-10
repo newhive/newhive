@@ -43,6 +43,48 @@ def expr_save(request, response):
     except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
     return dict( error=False, location=abs_url(domain = res['domain']) + res['name'] )
 
+import urllib, PIL.Image
+def generate_thumb(expr, owner):
+    # retrieve first image from expression
+    fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), 0)
+    if not fst_img or not fst_img.get('content'): return
+
+    print(expr['name'] +' ( '+ expr.id +' )')
+    print(fst_img['content'])
+    # create file record in database, copy file to media directory via http
+    try: response = urllib.urlopen(fst_img['content'])
+    except: return
+    if response.getcode() != 200: return
+    res = File.create(
+         owner = expr['owner']
+        ,name = 'thumb'
+        ,mime = response.headers.getheader('Content-Type')
+        )
+    path = media_path(owner, res.id)
+    f = open(path, 'w')
+    f.write(response.read())
+    f.close()
+    res.update(fs_path = path)
+
+    # resize and crop image to 124x96, preserving aspect ratio, save over original
+    try: imo = PIL.Image.open(path)
+    except:
+        res.delete()
+        return
+    print(imo.mode + "\n")
+    ratio = float(imo.size[0]) / imo.size[1]
+    ratio_target = 124.0 / 96
+    new_size = (124, 124 / ratio) if ratio < ratio_target else (96 * ratio, 96)
+    imo = imo.resize(new_size)
+    imo = imo.crop((0, 0, 124, 96))
+    imo = imo.convert(mode='RGB')
+    imo.save(path, format='jpeg')
+
+    url = abs_url() + 'file/' + res.id
+    expr['thumb'] = url
+
+    #fst_img
+
 def expr_delete(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     e = Expr.fetch(request.form.get('id'))
@@ -51,7 +93,9 @@ def expr_delete(request, response):
     e.delete()
     return redirect(response, home_url(request.requester))
 
-def media_path(user): return joinpath(config.domain_home, config.server_name, user['name'], 'media')
+def media_path(user, f_id=None):
+    p = joinpath(config.domain_home, config.server_name, user['name'], 'media')
+    return joinpath(p, f_id) if p else p
 def files_create(request, response):
     """ Saves a file uploaded from the expression editor, responds
     with a json object representing that file, passed to the
@@ -85,7 +129,7 @@ def files_create(request, response):
                 ,name = file.filename
                 ,mime = mime
                 )
-            path = joinpath(media_path(request.requester), res.id)
+            path = media_path(request.requester, res.id)
             file.save(path)
             res.update(fs_path = path)
             url =  abs_url() + 'file/' + res.id
@@ -254,27 +298,25 @@ def handle(request):
         return serve_404(request, response)
     elif request.domain == 'www.' + config.server_name: return redirect(response, abs_url())
 
-    if request.requester.logged_in:
-        response.context['user_is_owner'] = request.domain in request.requester['sites']
+    subdomain = request.domain.split('.')[0]
+    owner = User.fetch_by_name(subdomain)
+    if not owner: return serve_404(request, response)
+
+    response.context['user_is_owner'] = (request.requester.logged_in
+        and owner.id == request.requester.id)
     response.context.update(
          domain = request.domain
         ,path = request.path
         ,create = abs_url(secure = True) + 'edit'
         )
 
-    resource = Expr.fetch_by_names(request.domain, request.path.lower())
-    if not resource: return serve_404(request, response)
-    if resource['owner'] != request.requester.id and resource.get('auth') == 'private':
-        return serve_404(request, response)
-
-    # prevent XSS
-    #enforce_static = ( request.trusting and (owner.id != request.requester.id) )
-
-    owner = User.fetch(resource['owner'])
-
     if request.args.get('view'):
+        tag = request.path[1:]
         page = int(request.args.get('p', 0))
-        exprs = Expr.list(50, page, owner=owner.id, requester=request.requester.id)
+        spec = { 'owner' : owner.id }
+        tags = request.args.get('tags')
+        if tags: spec['index'] = tags
+        exprs = Expr.list(50, page, spec, requester=request.requester.id)
 
         def title_len(t):
             l = len(t)
@@ -287,7 +329,7 @@ def handle(request):
                 ,url = abs_url(domain=e['domain']) + e['name']
                 ,title_len = title_len(e['title'])
                 #,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
-                ,tags = ['#' + t for t in e.get('index', ['foo','bar'])]
+                ,tags = ['#' + t for t in e.get('index', [])]
                 )
             return e
 
@@ -296,6 +338,11 @@ def handle(request):
         return serve_page(response, 'expr_cards.html')
         #response.context['page'] = page
 
+
+    resource = Expr.fetch_by_names(request.domain, request.path.lower())
+    if not resource: return serve_404(request, response)
+    if resource['owner'] != request.requester.id and resource.get('auth') == 'private':
+        return serve_404(request, response)
 
     (html, css) = exp_to_html(resource)
     response.context.update(
