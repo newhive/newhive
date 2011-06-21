@@ -31,8 +31,9 @@ def expr_save(request, response):
     if not exp: raise ValueError('missing or malformed exp')
 
     res = Expr.fetch(exp.id)
-    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'auth', 'password', 'tags'])
+    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags'])
     upd['name'] = upd['name'].lower()
+    generate_thumb(upd, request.requester)
     try:
         if not exp.id or upd['name'] != res['name']:
             res = Expr.create(owner = request.requester.id, **upd)
@@ -49,14 +50,12 @@ def generate_thumb(expr, owner):
     fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), 0)
     if not fst_img or not fst_img.get('content'): return
 
-    print(expr['name'] +' ( '+ expr.id +' )')
-    print(fst_img['content'])
     # create file record in database, copy file to media directory via http
     try: response = urllib.urlopen(fst_img['content'])
     except: return
     if response.getcode() != 200: return
     res = File.create(
-         owner = expr['owner']
+         owner = owner
         ,name = 'thumb'
         ,mime = response.headers.getheader('Content-Type')
         )
@@ -71,7 +70,6 @@ def generate_thumb(expr, owner):
     except:
         res.delete()
         return
-    print(imo.mode + "\n")
     ratio = float(imo.size[0]) / imo.size[1]
     ratio_target = 124.0 / 96
     new_size = (124, 124 / ratio) if ratio < ratio_target else (96 * ratio, 96)
@@ -83,7 +81,6 @@ def generate_thumb(expr, owner):
     url = abs_url() + 'file/' + res.id
     expr['thumb'] = url
 
-    #fst_img
 
 def expr_delete(request, response):
     if not request.trusting: raise exceptions.BadRequest()
@@ -189,6 +186,13 @@ def bad_referral(request, response):
     response.context['content'] = 'Invalid referral; already used or never existed'
     return serve_page(response, 'minimal.html')
 
+def tag_create(request, response):
+    pass
+def tag_remove(request, response):
+    pass
+def tag_add(request, response):
+    pass
+
 from mailer import Mailer, Message
 def mail_us(request, response):
     if not request.form.get('message'): return
@@ -217,6 +221,9 @@ actions = dict(
     ,files_create    = files_create
     ,user_create     = user_create
     ,mail_us         = mail_us
+    ,tag_create      = tag_create
+    ,tag_remove      = tag_remove
+    ,tag_add         = tag_add
     )
 
 # Mime types that could generate HTTP POST requests
@@ -280,6 +287,7 @@ def handle(request):
                 exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
+            response.context['title'] = 'Editing: ' + exp['title']
             response.context['exp_js'] = json.dumps(exp)
             response.context['exp'] = exp
             return serve_page(response, 'edit.html')
@@ -299,7 +307,7 @@ def handle(request):
     elif request.domain == 'www.' + config.server_name: return redirect(response, abs_url())
 
     subdomain = request.domain.split('.')[0]
-    owner = User.fetch_by_name(subdomain)
+    owner = User.named(subdomain)
     if not owner: return serve_404(request, response)
 
     response.context['user_is_owner'] = (request.requester.logged_in
@@ -315,7 +323,7 @@ def handle(request):
         page = int(request.args.get('p', 0))
         spec = { 'owner' : owner.id }
         tags = request.args.get('tags')
-        if tags: spec['index'] = tags
+        if tags: spec['tags_index'] = tags
         exprs = Expr.list(50, page, spec, requester=request.requester.id)
 
         def title_len(t):
@@ -329,17 +337,21 @@ def handle(request):
                 ,url = abs_url(domain=e['domain']) + e['name']
                 ,title_len = title_len(e['title'])
                 #,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
-                ,tags = ['#' + t for t in e.get('index', [])]
+                ,tags = e.get('tags_index', [])
                 )
             return e
 
+        response.context['title'] = owner['fullname']
+        response.context['fullname'] = owner['fullname']
         response.context['tags'] = tags_by_frequency(owner=owner.id)
         response.context['exprs'] = map(fmt, exprs)
+        response.context['view'] = request.args.get('view')
+
         return serve_page(response, 'expr_cards.html')
         #response.context['page'] = page
 
 
-    resource = Expr.fetch_by_names(request.domain, request.path.lower())
+    resource = Expr.named(request.domain, request.path.lower())
     if not resource: return serve_404(request, response)
     if resource['owner'] != request.requester.id and resource.get('auth') == 'private':
         return serve_404(request, response)
@@ -383,7 +395,7 @@ application = handle_debug
 
 # www_expression -> String
 def exp_to_html(exp):
-    """Converts JSON object representing an expression as stored in database to HTML"""
+    """Converts JSON object representing an expression to HTML"""
 
     apps = exp.get('apps')
     if not apps: return ('', '')

@@ -7,56 +7,55 @@ html { display : table; width : 100%; height : 100%; }
 body { display : table-cell; vertical-align : middle; }
 form { display : inline; }
 #login { position : absolute; right : 20px; top : 27px; }
-#login_error { position : absolute; right : 215px; top : 5px; }
 #login * { vertical-align : middle; }
 #login input[type=text] { width : 12em; }
 #welcome { display : inline; font-weight : bold; margin-left:15px; }
 #welcome.open { background-color : {{ colors[0] }}; color : white }
 #contact { position : absolute; right : 20px; top : 75px; background-color : white; }
 #feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
+.spacer { height : 10px; }
  </style>
 {% endblock %}
 
 {% block body %}
- {% if not user.logged_in %}
-  <div id='login' class='nav' style='top : 0; left : 500px'>
-   <span class='medbold'>log in&nbsp;</span>
-   <form id='login_form' action='{{ secure_server }}' method='POST'>
-    <input type='text' name='username' value='{{ user['name'] }}' alt='Username'>
-    <input type='password' name='secret'>
-    <input type='hidden' name='action' value='login'>
-    <input id='login_submit' type='image' src='/lib/skin/1/sm_arrow.png' class='hoverable'>
-    <div id='session_menu' class='menu'>
-     <nobr><input id='expires' type='checkbox' name='no_expires'><label for='expires'> Stay logged in</label></nobr><br>
-     <nobr><input id='remember' type='checkbox' name='remember'><label for='remember'> Remember me</label></nobr>
-    </div>
-    <script>hover_menu($('#login_submit'), $('#session_menu'), { no_close : true });</script>
-   </form>
 
-   <input type='button' id='welcome' class='medbold hoverable scale' value='hello!'>
+{% if not user.logged_in %}
+ <div id='right' class='nav' style='position : fixed; top : 0; right : 10px; vertical-align : middle'>
+  <div id='login_btn' class='btn hoverable nav_icon' value='Log In'>Log In</div>
+  &nbsp; &nbsp;
+  <div id='welcome_btn' class='btn hoverable nav_icon' value='Sign Up'>Sign Up</div>
+
+  <div id='login_menu' class='border nav' style='position : absolute; display : none; top : 44px; right : 100px; background-color : white; padding : 10px'>
+   <form id='login_form' action='{{ secure_server }}' method='POST'>
+    {% if error %}<div id='login_error' class='active'>{{ error }}</div><br>{% endif %}
+    <span>Username</span><br>
+    <input id='username' type='text' name='username' value='{{ user['name'] }}' alt='Username'>
+    <div class='spacer'></div>
+    <span>Password</span><br>
+    <input type='password' name='secret'><br>
+    <input id='expires' type='checkbox' name='no_expires'><label for='expires'> Remember me</label>
+    <br><br>
+    <div style='text-align : center'><input id='login_submit' type='submit' class='btn black' value='Enter'></div>
+    <input type='hidden' name='action' value='login'>
+   </form>
   </div>
-  <div id='login_error' class='active'>{{ error }}</div>
-  <div id='welcome_menu' class='border' style='width : 220px; display : none'>
+
+  <div id='welcome_menu' class='border nav' style='position : absolute; width : 220px; display : none; top : 44px; right : 0px; background-color : white; padding : 10px'>
    We are in beta right now.
    Drop us a line with your email
    and name and we'll be in touch!
    <textarea style='margin : 10px 0 10px 0; width : 200px' name='message'></textarea>
-   <div style='text-align : right'><input type='button' class='medbold active' value='Send'></div>
+   <div style='text-align : right'><input type='button' class='btn black' value='Send'></div>
   </div>
-  <script>
-click_dialogue($('#welcome'), $('#welcome_menu'));
-//var text = $('#contact textarea');
-//function contact_show() { 
-//    $('#welcome').addClass('open');
-//    $('#contact').show();
-//    text.focus();
-//}
-//function contact_hide() {
-//    $('#contact').hide();
-//    $('#welcome').removeClass('open');
-//}
+ </div>
 
-$('#welcome_menu input').click(function() {
+ <script>
+ var login_menu = click_dialogue($('#login_btn'), $('#login_menu'),
+     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); } });
+ {% if error %} login_menu.open() {% endif %}
+ click_dialogue($('#welcome_btn'), $('#welcome_menu'));
+ 
+ $('#welcome_menu input').click(function() {
     $.post('/', { message : text.val(), action : 'mail_us' }, function(data) {
             if(data) alert('Sorry, there was a problem sending your message');
             else {
@@ -66,21 +65,12 @@ $('#welcome_menu input').click(function() {
             }
         }, 'json') });
 
-//$('#welcome').click(function() { contact_show() });
-//$(window).click(function(e) {
-//    if(e.target != $('#welcome').get(0)
-//        && e.target != $('#contact').get(0)
-//        && !$.contains($('#contact').get(0), e.target)) contact_hide();
-//});
-  </script>
- {% endif %}
+ </script>
 
- {% if not user.logged_in %}
-  <table width='100%' height='100%'><tr><td valign='middle' align='center'>
-   <iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="675" height="380" frameborder="0"></iframe>
-  </td></tr></table>
- {% endif %}
-
-<!--<iframe id='feed' src='{{ server }}exprs/'></iframe>-->
+<center style='margin : 100px'>
+  <iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="675" height="380" frameborder="0"></iframe>
+</center>
+{% else %}
+{% endif %}
 
 {% endblock %}

@@ -105,7 +105,7 @@ class User(Entity):
         return super(User, self).create_me()
 
     @classmethod
-    def fetch_by_name(cls, name):
+    def named(cls, name):
         self = cls({})
         return self.fetch_me(name.lower(), keyname='name')
 
@@ -126,12 +126,12 @@ def normalize(ws):
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
 db.expr.ensure_index([('owner', 1), ('updated', 1)])
 db.expr.ensure_index([('updated', 1)])
-db.expr.ensure_index([('index', 1)])
+db.expr.ensure_index([('tags_index', 1)])
 class Expr(Entity):
     cname = 'expr'
 
     @classmethod
-    def fetch_by_names(cls, domain, name):
+    def named(cls, domain, name):
         self = cls({})
         return self.find_me(domain=domain, name=name.lower())
 
@@ -139,7 +139,7 @@ class Expr(Entity):
     def list(cls, limit, page, spec, requester=None):
         es = map(Expr, db.expr.find(
              spec = spec
-            ,fields = ['owner', 'title', 'updated', 'domain', 'name', 'auth', 'tags', 'index', 'thumb']
+            ,fields = ['owner', 'title', 'updated', 'domain', 'name', 'auth', 'tags_index', 'thumb', 'dimensions']
             ,sort = [('updated', -1)]
             ,limit = limit
             ,skip = limit * page
@@ -150,11 +150,12 @@ class Expr(Entity):
         return filter(can_view, es)
 
     def update(self, **d):
-        d['index'] = (
-              normalize(d.get('tags', self.get('tags', '')))
-            + normalize(d.get('name', self['name']))
-            + normalize(d.get('title', self['title']))
-            )
+        if d.get('tags'): d['tags_index'] = normalize(d['tags'])
+        #d['index'] = (
+        #      normalize(d.get('tags', self.get('tags', '')))
+        #    + normalize(d.get('name', self['name']))
+        #    + normalize(d.get('title', self['title']))
+        #    )
         return super(Expr, self).update(**d)
 
     def create_me(self):
@@ -170,8 +171,8 @@ class Expr(Entity):
 def tags_by_frequency(**query):
     tags = {}
     for d in Expr.search(**query):
-        if d.get('index'):
-            for t in d.get('index'): tags[t] = tags.get(t, 0) + 1
+        if d.get('tags_index'):
+            for t in d.get('tags_index'): tags[t] = tags.get(t, 0) + 1
     counts = [[tags[t], t] for t in tags]
     counts.sort(reverse=True)
     return [c[1] for c in counts]

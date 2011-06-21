@@ -1,4 +1,4 @@
-.happ { position : absolute; white-space : pre-wrap; }
+.happ { position : absolute; white-space : pre-line; }
 .happ > * { position : absolute; }
 .happ .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
 .select_box { width : 100%; height : 100%; z-index : 1; top : -5px; left : -5px; padding : 0; }
@@ -30,16 +30,15 @@
 .drawer.color .option.small { width : 20px; height : 20px; margin : 2px }
 .align .option.small { margin : 5px; }
 .drawer.link img { vertical-align : middle; }
-.button.fontsize { width : 28px; height : 25px; background-image : url();
-    margin : 0; border : none; text-align : center; font-weight : bold; vertical-align : top; }
+.drawer.fontsize { white-space : nowrap; overflow : hidden; }
+.fontsize .option { line-height : 100px; vertical-align : middle; }
 
 .spacer { height : 10px; }
 
 #app_buttons { display : inline-block; margin : 20px; }
 .insert_btn { margin-right : 15px; cursor : default; }
 .btn { display : inline-block; padding : 5px; cursor : default; }
-#menu_save { position : absolute; top : 43px; right : 0px; padding : 10px; display : none;
-     background-color : white; }
+#menu_save { top : 43px; right : 0px; padding : 10px; }
 #menu_save textarea { height : 2.5em; }
 #menu_save input, textarea { width : 200px; }
 #menu_privacy .selected { display : none; }

@@ -3,37 +3,36 @@
 {% block head %}
  {{ super() }}
 <style>
-#categories { position : absolute; top : 100px; left : 124px; width : 776px; height : 33px; margin : 0; }
-#feed { position : absolute; top : 60px; width : 100%; } /*left : 124px; width : 776px; padding : 0; }*/
-.feed.item { position : relative; float : left; padding : 10px; width : 358px; height : 96px;
-    display : inline-block; margin : 5px;
-    background-image : url('/lib/skin/1/feed_item.png'); }
-.feed.item:hover { background-color : {{ colors.selected }} }
-.feed.item0 { left : 50px; }
-.feed.item1 { left : 280px; }
-.feed.item2 { left : 510px; }
-.feed.item3 { left : 740px; }
-#feed_prev { bottom : 45px; left : 20px; }
-#feed_next { bottom : 45px; left : 960px; } 
-.feed.item0 .other { color : {{ colors[1] }} }
-.feed.item1 .other { color : {{ colors[2] }} }
-.feed.item2 .other { color : {{ colors[3] }} }
-.feed.item3 .other { color : {{ colors[5] }} }
-.feed .title { font-weight : bold; height : 2.5em; overflow : hidden; }
-.feed .title1 { font-size : 1.3em; }
+#feed { width : auto; margin : 0 50px 50px 50px; } /*left : 124px; width : 776px; padding : 0; }*/
+.feed.item { position : relative; float : left; padding : 5px; margin : 0 5px 5px 0; width : 330px; height : 96px;
+    display : inline-block; background-image : url('/lib/skin/1/feed_item.png'); }
+.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }
+.title { font-weight : bold; max-height : 2.5em; overflow : hidden; text-overflow : ellipsis; margin-bottom : 5px; }
+.feed .title1 { font-size : 1.3em; max-height : 1em; }
 .feed .title2 { font-size : 1.1em; }
 .feed .title3 { font-size : .9em; }
-.feed .thumb { float : left; margin-right : 20px; }
+.feed .thumb { float : left; margin-right : 10px; }
 .feed .other, .feed .tags { font-size : .8em }
-.feed .tags { position : absolute; left : 154px; top : 60px; }
-.feed .other { position : absolute; left : 154px; bottom : 5px; font-weight : bold; }
-#feed .tag { background-color : black; color : white; padding : 0 10px; margin : 5px; display : inline-block}
-#tags { margin : 10px; height : 1.5em; overflow : hidden; white-space : nowrap; }
+.feed .tags { height : 2.5em; overflow : hidden; text-overflow : ellipsis; }
+.tags .tag:hover { text-decoration : line-through; color : red; }
+.feed .other { position : absolute; left : 139px; bottom : 5px; font-weight : bold; }
+.tag_label { background-color : white; color : black; padding : 3px; margin-right : 10px; display : inline-block;
+    font-size : 1.3em; font-weight : bold; height : 25px; vertical-align : bottom; }
+#tags { margin : 50px 50px 25px 50px; }
 .category { font-weight : bold; font-size : 1.23em; height : 33px; }
 .category.open { border-bottom : 10px solid white; }
+iframe { border : none; }
 </style>
 {% endblock %}
 {% block body %}
+
+<div class='nav' style='right : 10px; top : 0px;'>
+ <form action='{{ create }}' method='POST'>
+  <input type='hidden' name='domain' value='{{ domain }}'>
+  <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable scale nav_icon' title='create'>
+ </form>
+ <img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' onclick='background_pick()'>
+</div>
 
 {#
 {% if page %}
@@ -47,26 +46,56 @@
   <div class='category border open'>All</div>
   <div class='category border'><img src='/lib/skin/1/add_tab.png'></div>
 </div>#}
-<div id='feed' class=''>
+<div style='font-size : 4em; margin : 100px 50px 50px 50px;'><a href='/'>{{ fullname }}</a></div>
 <div id='tags'>
- {% for t in tags %}
-  <span class='tag'><a href='?view=cards&tags={{ t|e }}'>{{ t }}</a></span>
- {% endfor %}
+ <span class='tag_label'><a href='?view=cards'>All</a></span>
+ {% for t in tags %}<a href='?view=cards&tags={{ t|e }}'><span class='tag_label drag' draggable='false' value='{{ t|e }}'>{{ t }}</span></a>{% endfor %}
+ <img src='/lib/skin/1/add_tab.png' class='tag_label hoverable'>
 </div>
 
-{% for e in exprs %}
- <div class='feed item'><a href='{{ e.url|e }}' target='_top'>
-  <img src='{{ e.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
-  <div class='title title{{ e.title_len }}'>{{ e.title|e }}</div>
-  <div class='tags'>{{ e.tags|join(' ') }}</div>
-  <div class='other'>{{ e.updated }}</div>
- </a></div>
-{% endfor %}
-
+<div id='feed' class=''>
+ {% for e in exprs %}
+  {% if view == 'blog' %}
+   <div class='expr_header'>Header</div>
+   <iframe src='{{ e.url|e }}' class='expr' width='{{ e.dimensions[0] }}' height='{{ e.dimensions[1] }}'></iframe>
+  {% else %}
+   <a href='{{ e.url|e }}' target='_top'><div class='feed item' draggable='false'>
+    <input type='hidden' class='expr_id' value='{{ e.id }}'>
+    <img src='{{ e.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
+    <div class='title title{{ e.title_len }}'>{{ e.title|e }}</div>
+    <div class='tags'>{% for t in e.tags %}<span class='tag' value='{{ t|e }}'>#{{ t }} </span> {% endfor %}</div>
+    <div class='other'>{{ e.updated }}</div>
+   </div></a>
+  {% endif %}
+ {% endfor %}
 </div>
 
 {#
 <a href='?p={{ page + 1 }}'><img id='feed_next' src='/lib/skin/1/page_next.png' class='feed hoverable'></a>
 #}
 
+{% if user_is_owner %}
+<script>
+function add_tag(item, tag) {
+    var tags = $(item).find('.tags'), v = $(tag).attr('value');
+    // check if tag is already there (blehck)
+    if(tags.children().filter(function() { return $(this).attr('value') == v }).length) return;
+    tags.append($("<span class='tag'>").attr('value', v).append('#' + v + ' '));
+    tags.append(' ');
+}
+function remove_tag() {
+    var item = $(this).parent().parent();
+    item.find('input').val();
+    $(this).remove();
+    return false;
+}
+
+$('.tags .tag').live('click', remove_tag);
+$('.tag_label').draggable().droppable({
+    accept : '.feed.item', drop : function(target, dragged) { add_tag(dragged, target) } });
+$('.feed.item').droppable({ accept : '.tag_label', drop : add_tag }).draggable();
+</script>
+{% endif %}
+
+<img id='close_tag' src='/lib/skin/1/close-hover.png' style='position : absolute; display : none'>
 {% endblock %}

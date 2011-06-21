@@ -6,20 +6,20 @@
 #meta { position : absolute; right : 20px; top : 27px; }
  </style>
 {% endblock %}
-
 {% block body %}
- {% if user_is_owner %}
-<div id='meta' class='top'>
-  <form id='login_form' action='{{ create }}' method='POST'>
-   <input type='hidden' name='domain' value='{{ domain }}'>
-   <input type='hidden' name='name' value='{{ path }}'>
-   <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='toolbtn hoverable'>
-  </form>
-  <script>tool_tip($('#btn_create'), 'create');</script>
-</div>
- {% endif %}
+
+{% if user_is_owner %}
+ <div class='nav' style='right : 10px; top : 0px;'>
+   <form action='{{ create }}' method='POST'>
+    <input type='hidden' name='domain' value='{{ domain }}'>
+    <input type='hidden' name='name' value='{{ path }}'>
+    <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'>
+   </form>
+ </div>
+{% endif %}
 
 <table width='100%' height='100%'><tr><td valign='middle' align='center'>
 <h1>Nothing here yet...</h1>
 </td></tr></table>
+
 {% endblock %}

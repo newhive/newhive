@@ -14,18 +14,21 @@ input[type=button], input[type=submit] { border : none; }
 h1 { font-size : 40px; }
 form { display : inline; }
 .menu { position : absolute; display : none; border : 5px solid {{ colors['unselected'] }};
-    background-color : white; padding : 0; z-index : 1100; }
-.menu_item { color : {{ colors[18] }}; padding : 5px 8px; cursor : default; font-family : Arial; font-size : .9em; }
-.menu_item:hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }}; }
+    background-color : white; padding : 0; z-index : 1100; font-size : 11pt; }
+.menu_item { color : {{ colors[18] }}; padding : 5px 8px; cursor : default; font-family : Arial; font-size : 15pt; }
+.menu_item:hover, .menu_hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }}; font-family : Arial; }
+.nav_icon { height : 50px; vertical-align : middle; line-height : 50px; }
 .tooltip { position : absolute; color : {{ colors['active'] }}; display : none; white-space : nowrap; }
 .border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 .selected { border-color : {{ colors['selected'] }}; }
-.medbold { font-weight : bold; font-size : 1.23em; font-family : Museo; }
+.medbold { font-weight : bold; font-size : 1.23em; }
+.btn { font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default; }
+.black { background-color : black; color : white; }
 .active { color : {{ colors['active'] }}; }
-#user { position : fixed; display : inline-block; color : white; height : 44px; }
-#nav_bg { top : 0; left : 0; width : 1000px; height : 44px; }
+#user { position : fixed; display : inline-block; }
 .nav { position : fixed; margin : 0; padding : 0; }
-.menu, .top, .nav { z-index : 1100; }
+#nav_bg { top : 0; left : 0; width : 100%; height : 50px; background-image : url('/lib/skin/1/nav_gradient.png'); z-index : 1; }
+.menu, .top, .nav { z-index : 1; }
 @font-face {
     font-family: Museo;
     src: url('/lib/fonts/Museo500-Regular.otf');
@@ -36,6 +39,9 @@ form { display : inline; }
     src: url('/lib/fonts/Museo700-Regular.otf');
     font-weight: 700;
 }
+#bg { position : fixed; top : 0; left : 0; width : 100%; height : 100%; overflow : hidden z-index : 0; }
+#body { position : absolute; top : 0; left : 0; min-width : 100%; min-height : 100%; z-index : 1; }
+#content { position : absolute; top : 50px; left : 0; z-index : 0; }
  </style>
  <style>
 html, body { background-color : white; height : 100%; }
@@ -47,14 +53,45 @@ html, body { background-color : white; height : 100%; }
 </head>
 <body>
 
-<img src='/lib/skin/1/nav_bg.png' class='nav scale' id='nav_bg'>
-<a href='{{ server }}'><img id='logo' class='hoverable nav scale' style='left : 5px; top : 0px; width : 44px; height : 44px;' src={{ icon }}></a>
-{% if user.logged_in %}
- <div id='user' class='medbold nav scale' style='left : 50px; top : 8px;'>
-  <nobr>
-   <a href='{{ home_url }}'>{{ user['name'] }}</a>
-   <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png' class='scale'>
-  </nobr>
+<div id='bg'></div>
+<script>
+var Background = {
+      url : 'http://thenewhive.com:1313/file/4db77b2dba2839730c000005'
+    , opacity : .7
+    , fill : 'stretch'
+    , color : 'white'
+    }
+Background.update = function() {
+    var o = Background;
+    if(o.url) {
+        if(o.fill == 'stretch') {
+            o.img = $('<img>').attr('src', o.url).css({ 'width' : '100%', opacity : o.opacity});
+            $('#bg').append(o.img);
+            $(o.img).load(function() {
+                o.ratio = o.img.width() / o.img.height();
+                o.img.css('width','');
+                $(window).resize();
+            });
+            $(window).resize(function() {
+                var win_size = [$(window).width(), $(window).height()];
+                if(win_size[0] / win_size[1] > o.ratio) { o.img.width(win_size[0]); o.img.height(win_size[0] / o.ratio); }
+                else { o.img.width(win_size[1] * o.ratio); o.img.height(win_size[1]); }
+            });
+        }
+        else $('#bg').css({ 'background-image' : o.url });
+    }
+    if(o.color) $('#bg').css('background-color', o.color);
+}
+</script>
+
+<div id='body'>
+
+<div class='nav' id='nav_bg'></div>
+<div class='nav medbold' style='left : 50px; top : 0'>
+ <a href='{{ server }}'><img id='logo' class='hoverable nav nav_icon' style='left : 5px; top : 0px;' src={{ icon }}></a>
+ {% if user.logged_in %}
+  &nbsp; <a href='{{ home_url }}' class='nav_icon'>{{ user['name'] }}</a>
+  <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
   <div id='user_menu' class='menu'>
    <form name='logout_form' action='{{ secure_server }}' method='POST'>
     <input name='action' value='logout' type='hidden'>
@@ -64,32 +101,17 @@ html, body { background-color : white; height : 100%; }
    <div class='menu_item'>Settings</div>-->
   </div>
   <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
- </div>
-{% else %}
- <a href='{{ server }}'><img id='logotype' src='/lib/skin/1/logotype.png' class='nav scale' style='left : 50px; top : 0; width : 216px; height : 44px'></a>
-{% endif %}
+ {% else %}
+  <a href='{{ server }}'><div style='left : 50px; top : 0;' class='nav'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+ {% endif %}
+</div>
 
 {% block body %}
 {% endblock %}
 
-<script>
-var elems = [];
-$('.scale').each(function(i, e) {
-    var o = { e : $(e) };
-    o.pos = $(o.e).position();
-    o.fs = parseFloat(o.e.css('font-size')) / 17.3333;
-    o.dims = [ o.e.width(), o.e.height() ];
-    elems.push(o);
-});
-$(window).resize(function() {
-   var s = $(window).width() / 1000;
-   $.map(elems, function(o) {
-       o.e.css({ left : o.pos.left * s, top : o.pos.top * s,
-           width : o.dims[0] * s, height : o.dims[1] * s});
-       if(o.fs != 1) o.e.css('font-size', o.fs * s + 'em');
-   });
-});
-$(window).resize();
-</script>
+<div id='content'>{% block content %}{% endblock %}</div>
+
+</div>
+
 </body>
 </html>

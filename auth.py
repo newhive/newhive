@@ -30,7 +30,7 @@ def handle_login(request, response):
     secret = args.get('secret', False)
     if not (username or secret): raise exceptions.BadRequest()
 
-    user = User.fetch_by_name(username)
+    user = User.named(username)
     if user and user.cmp_password(secret):
         # login
 

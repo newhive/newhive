@@ -25,139 +25,127 @@
 .submit:hover { color : black; background-color : {{ colors[32] }}; }
 
 .dialogue_handle { background-color : {{ colors.selected }}; }
-#loading { position : absolute; z-index : 1200; display : none; }
-.insert_btn { position : fixed; z-index : 1200 }
+#loading { position : fixed; z-index : 1200; display : none; }
+#app_btns { top : 0; left : 300px; }
+#app_btns .nav_icon.menu_open { background-color : {{ colors[18] }}; }
+#app_btns .menu { }
+.btn { cursor : default; }
+#nav_bg { min-width : 620px; }
  </style>
 {% endblock %}
 
 {% block body %}
 
-<img id='insert_text'  class='insert_btn hoverable scale nav' style='top : 0; left : 300px' src='/lib/skin/1/text.png' >
-<img id='insert_image' class='insert_btn hoverable scale nav' style='top : 0; left : 370px' src='/lib/skin/1/image.png'>
-<img id='insert_audio' class='insert_btn hoverable scale nav' style='top : 0; left : 440px' src='/lib/skin/1/audio.png'>
-<img id='insert_file'  class='insert_btn hoverable scale nav' style='top : 0; left : 510px' src='/lib/skin/1/upload.png'>
-<img id='insert_embed' class='insert_btn hoverable scale nav' style='top : 0; left : 580px' src='/lib/skin/1/embed.png'>
-<img id='insert_shape' class='insert_btn hoverable scale nav' style='top : 0; left : 650px' src='/lib/skin/1/shapes.png'>
-<!--<img id='insert_app'   class='insert_btn' src='/lib/skin/1/page.png' >-->
-
-<div id='menu_text' class='menu medbold'>
- <div id='text_default' class='menu_item'>Default</div>
- <div id='text_header' class='menu_item'>Header</div>
- <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
-</div>
-<script>hover_menu($('#insert_text'), $('#menu_text'));</script>
-
-<div id='menu_image' class='menu medbold'>
- <div id='image_upload' class='menu_item'>Upload image</div>
- <div id='image_background' class='menu_item'>Background</div>
- <div id='image_webcam' class='menu_item'>Take picture</div>
- <div id='image_search' class='menu_item'>Google images</div>
-</div>
-<script>hover_menu($('#insert_image'), $('#menu_image'));</script>
-
-<div id='menu_audio' class='menu medbold'>
- <div id='audio_upload' class='menu_item'>Upload MP3</div>
- <div id='audio_record' class='menu_item'>Record Audio (coming soon)</div>
-</div>
-<script>hover_menu($('#insert_audio'), $('#menu_audio'));</script>
-
-<div id='menu_file' class='menu medbold'>
- <div class='menu_item selected'>Upload file to link</div>
-</div>
-<script>hover_menu($('#insert_file'), $('#menu_file'));</script>
-
-<div id='menu_embed' class='menu' style='padding : .5em; width : 20em;'>
- <span class='medbold'>Embed</span><br>
- <div class='spacer'></div>
- <textarea id='embed_code' style='width : 18em; display : inline-block' alt='Paste url or embed code for videos and widgets here.'></textarea>
- <div class='spacer'></div>
- <img id='embed_done' src='/lib/skin/1/lg_arrow_red.png'>
-</div>
-
-<div id='menu_shape' class='menu medbold'>
- <div class='menu_item'>Drawing tools coming soon</div>
-</div>
-<script>hover_menu($('#insert_shape'), $('#menu_shape'));</script>
-
-<img id='btn_grid' class='hoverable nav scale' style='top : 0; left : 856px;' src='/lib/skin/1/grid-off.png'>
-<div id='btn_save' class='medbold nav scale' style='top : 8px; left : 917px; color : white; cursor : default'>
- <nobr>Save <img class='scale' src='/lib/skin/1/drop_arrow.png'></nobr>
-</div>
-
-<div id='menu_save' class='border top'>
- <div class='medbold'>{{ exp.domain }}/</div>
- <input id='url' type='text' value='{{ exp.name|e }}'>
- <div class='spacer'></div>
- <div class='medbold'>title</div>
- <textarea id='title'>{{ exp.title }}</textarea>
- <div class='spacer'></div>
- <div class='medbold'>tags</div>
- <input id='tags' type='text' value='{{ exp.tags|e }}'>
- <div class='spacer'></div>
- <div class='spacer'></div>
- <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle'>
-  <span>Private</span>
-  <img src='/lib/skin/1/drop_arrow.png'>
+<div id='app_btns' class='nav'>
+ <img id='insert_text'  class='hoverable nav_icon' src='/lib/skin/1/text.png'
+ ><img id='insert_image' class='hoverable nav_icon' src='/lib/skin/1/images.png'
+ ><img id='insert_audio' class='hoverable nav_icon' src='/lib/skin/1/audio.png'
+ ><img id='insert_file'  class='hoverable nav_icon' src='/lib/skin/1/upload.png'
+ ><img id='insert_embed' class='hoverable nav_icon' src='/lib/skin/1/embed.png'
+ ><img id='insert_shape' class='hoverable nav_icon' src='/lib/skin/1/shapes.png'>
+ 
+ <div id='menu_text' class='menu medbold'>
+  <div id='text_default' class='menu_item'>Default</div>
+  <div id='text_header' class='menu_item'>Header</div>
+  <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
  </div>
- <div id='save_submit' style='float : right; padding : 5px' class='medbold submit'>SAVE</div>
-
- <div id='menu_privacy' class='menu medbold' style='width : 125px;'>
-  <div val='private' class='menu_item'>Private</div>
-  <div val='password' class='menu_item'>Password</div>
-  <div val='public' class='menu_item'>Public</div>
+ 
+ <div id='menu_image' class='menu medbold'>
+  <div id='image_upload' class='menu_item'>Upload image</div>
+  <div id='image_background' class='menu_item'>Background</div>
+  <div id='image_webcam' class='menu_item'>Take picture</div>
+  <div id='image_search' class='menu_item'>Google images</div>
  </div>
-
- <div id='password_ui' style='display : none'>
-  <br><br><br>
-  <input type='text' id='password' alt='Type password here' value='{{ exp.password }}'>
+ 
+ <div id='menu_audio' class='menu medbold'>
+  <div id='audio_upload' class='menu_item'>Upload MP3</div>
+  <div id='audio_record' class='menu_item'>Record Audio (coming soon)</div>
+ </div>
+ 
+ <div id='menu_file' class='menu medbold'>
+  <div class='menu_item menu_hover'>Upload file to link</div>
+ </div>
+ 
+ <div id='menu_embed' class='menu' style='padding : .5em; width : 16em;'>
+  <span class='medbold'>Embed</span><br>
+  <div class='spacer'></div>
+  <textarea id='embed_code' style='width : 14em; height : 2.25em;' alt='Paste your url or embed code here.'></textarea>
+  <div class='spacer'></div>
+  <div style='text-align : center'><input id='embed_done' type='submit' class='btn black' value='Enter'></div>
+ </div>
+ 
+ <div id='menu_shape' class='menu medbold'>
+  <div class='menu_item menu_hover'><nobr>Drawing tools coming soon</nobr></div>
  </div>
 </div>
-<script>
-click_dialogue($('#btn_save'), $('#menu_save'));
-hover_menu($('#privacy' ), $('#menu_privacy'));
-$('#save_submit').click(Hive.save);
-$('#menu_privacy').click(function(e) {
-    $('#menu_privacy div').removeClass('selected');
-    var t = $(e.target);
-    t.addClass('selected');
-    $('#privacy span').text(t.text());
-    var v = t.attr('val');
-    if(v == 'password') $('#password_ui').show();
-    else $('#password_ui').hide();
-});
-if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
-</script>
 
+<div class='nav' style='right : 10px; top : 0; white-space : nowrap'>
+ <img id='btn_grid' class='nav_icon' src='/lib/skin/1/grid-off.png'>
+ &nbsp;
+ <div id='btn_save' class='medbold nav_icon' style='cursor : default; display : inline-block;'>
+  <nobr>Save <img class='scale' src='/lib/skin/1/drop_arrow.png'></nobr>
+ </div>
+ 
+ <div id='menu_save' class='menu border top'>
+  <div class='medbold'>URL</div>
+  <div class=''>{{ exp.domain }}/</div>
+  <input id='url' type='text' value='{{ exp.name|e }}'>
+  <div class='spacer'></div>
+  <div class='medbold'>Title</div>
+  <textarea id='title'>{{ exp.title }}</textarea>
+  <div class='spacer'></div>
+  <div class='medbold'>Tags</div>
+  <input id='tags' type='text' value='{{ exp.tags|e }}'>
+  <div class='spacer'></div>
+  <div class='spacer'></div>
+  <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle btn'>
+   <span>Private</span>
+   <img src='/lib/skin/1/drop_arrow.png'>
+  </div>
+  <div id='save_submit' style='float : right; padding : 5px' class='btn black'>Save</div>
+ 
+  <div id='menu_privacy' class='menu medbold' style='width : 125px;'>
+   <div val='private' class='menu_item'>Private</div>
+   <div val='password' class='menu_item'>Password</div>
+   <div val='public' class='menu_item'>Public</div>
+  </div>
+ 
+  <div id='password_ui' style='display : none'>
+   <br><br><br>
+   <input type='text' id='password' alt='Type password here' value='{{ exp.password }}'>
+  </div>
+ </div>
+</div>
 
 <img id='loading' src='/lib/skin/1/loading.gif'>
 
 <div id='controls_common' class='controls_src'>
- <img class='control undo   hoverable' src='/lib/skin/1/undo.png'>
- <img class='control copy   hoverable' src='/lib/skin/1/copy.png'>
- <img class='control remove hoverable' src='/lib/skin/1/delete_sm.png'>
- <div class='control stack'><img class='stack_up hoverable' src='/lib/skin/1/stack_up.png'><img class='stack_down hoverable' src='/lib/skin/1/stack_down.png'></div>
+ <!--<img class='control undo   hoverable' src='/lib/skin/1/undo.png'>-->
+ <img class='control copy   hoverable' src='/lib/skin/1/copy.png' title='copy'>
+ <img class='control remove hoverable' src='/lib/skin/1/delete_sm.png' title='delete, no undo!'>
+ <div class='control stack'><img class='stack_up hoverable' src='/lib/skin/1/stack_up.png' title='stack to top'><img class='stack_down hoverable' src='/lib/skin/1/stack_down.png' title='stack to bottom'></div>
  <img class='control resize hoverable' src='/lib/skin/1/resize.png'>
 </div>
 
 <div id='controls_text' class='controls_src'>
  <img class='control resize_h hoverable' src='/lib/skin/1/resize_h.png'>
  <div class='control buttons'
-  ><img class='button link hoverable'     src='/lib/skin/1/link.png'
+  ><img class='button link hoverable'     src='/lib/skin/1/link.png' title='link'
   ><img class='button fontsize hoverable' src='/lib/skin/1/button.png'
   ><img class='button fontname'           src='/lib/skin/1/font.png'
   ><img class='button color'              src='/lib/skin/1/color.png'
   ><img class='button bold hoverable'     src='/lib/skin/1/bold.png'     cmd='bold'
   ><img class='button italic hoverable'   src='/lib/skin/1/italic.png'   cmd='italic'
   ><img class='button align'              src='/lib/skin/1/justify.png'  
-  ><img class='button unformat hoverable' src='/lib/skin/1/unformat.png' cmd='removeformat'
+  ><img class='button unformat hoverable' src='/lib/skin/1/unformat.png' cmd='removeformat' title='unformat'
   ><div class='control drawer border fontsize'
     ><span class='option fs1' style='font-size : .75em' val = '.75'>a</span
-    ><span class='option fs2' style='font-size :   1em' val =   '1'>a</span
-    ><span class='option fs3' style='font-size : 1.5em' val = '1.5'>a</span
-    ><span class='option fs4' style='font-size :   2em' val =   '2'>a</span
-    ><span class='option fs5' style='font-size :   3em' val =   '3'>a</span
-    ><span class='option fs5' style='font-size :   5em' val =   '5'>a</span
-    ><span class='option fs5' style='font-size :   8em' val =   '8'>a</span
+    > <span class='option fs2' style='font-size :   1em' val =   '1'>a</span
+    > <span class='option fs3' style='font-size : 1.5em' val = '1.5'>a</span
+    > <span class='option fs4' style='font-size :   2em' val =   '2'>a</span
+    > <span class='option fs5' style='font-size :   3em' val =   '3'>a</span
+    > <span class='option fs5' style='font-size :   5em' val =   '5'>a</span
+    > <span class='option fs5' style='font-size :   8em' val =   '8'>a</span
   ></div
   ><div class='control drawer border fontname'
    ><div class='option' style='font-family:Arial'       cmd='fontname' val='Arial'      >Arial      </div
