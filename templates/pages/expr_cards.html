@@ -23,6 +23,10 @@
 .category.open { border-bottom : 10px solid white; }
 iframe { border : none; }
 </style>
+<script>
+Hive = {};
+Hive.Exp = {};
+</script>
 {% endblock %}
 {% block body %}
 
@@ -97,5 +101,4 @@ $('.feed.item').droppable({ accept : '.tag_label', drop : add_tag }).draggable()
 </script>
 {% endif %}
 
-<img id='close_tag' src='/lib/skin/1/close-hover.png' style='position : absolute; display : none'>
 {% endblock %}

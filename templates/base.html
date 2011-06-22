@@ -29,19 +29,44 @@ form { display : inline; }
 .nav { position : fixed; margin : 0; padding : 0; }
 #nav_bg { top : 0; left : 0; width : 100%; height : 50px; background-image : url('/lib/skin/1/nav_gradient.png'); z-index : 1; }
 .menu, .top, .nav { z-index : 1; }
-@font-face {
-    font-family: Museo;
-    src: url('/lib/fonts/Museo500-Regular.otf');
-    font-weight: 500;
-}
-@font-face {
-    font-family: Museo;
-    src: url('/lib/fonts/Museo700-Regular.otf');
-    font-weight: 700;
-}
+
+@font-face { src: url('/lib/fonts/Museo500-Regular.otf'); font-family: Museo; font-weight: 500; }
+@font-face { src: url('/lib/fonts/Museo700-Regular.otf'); font-family: Museo; font-weight: 700; }
+@font-face { src: url('/lib/fonts/BPscript/BPscript.otf'); font-family: BPscript; font-weight : 500; }
+@font-face { src: url('/lib/fonts/ChanticleerRoman/CHANTICL.ttf'); font-family: Chanticleer; font-weight : 500; }
+@font-face { src: url('/lib/fonts/code/CODE_Bold.otf'); font-family: Code; font-weight : 700; }
+@font-face { src: url('/lib/fonts/code/CODE_Light.otf'); font-family: Code; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Comic-Zine-OT/comic_zine_ot.otf'); font-family: Comic Zine; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Folk/Folkoutline.otf'); font-family: Folk Outline; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Folk/Folkshadow.otf'); font-family: Folk Shadow; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Folk/Folksketches.otf'); font-family: Folk Sketches; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Folk/Folksolid.otf'); font-family: Folk; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lane/LANENAR_.ttf'); font-family: Lane; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lane/LANEPOSH.ttf'); font-family: Lane Posh; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lane/LANEUP__.ttf'); font-family: Lane Up; font-weight : 500; }
+@font-face { src: url('/lib/fonts/League-Gothic/League_Gothic.otf'); font-family: League Gothic; font-weight : 500; }
+@font-face { src: url('/lib/fonts/LemonChicken/LEMONCHI.ttf'); font-family: Lemon Chi; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lilly/Lilly__.ttf'); font-family: Lilly; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lobster/Lobster_1.3.otf'); font-family: Lobster; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Matiz/Matiz.ttf'); font-family: Matiz; font-weight : 500; }
+@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold_Oblique.otf'); font-family: Quicksand; font-weight : 700; font-style : italic; }
+@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold.otf'); font-family: Quicksand; font-weight : 700; }
+@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book_Oblique.otf'); font-family: Quicksand; font-weight : 500; font-style : italic; }
+@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book.otf'); font-family: Quicksand; font-weight : 500; }
+@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBd.ttf'); font-family: Bitstream Mono; font-weight : 700; }
+@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBI.ttf'); font-family: Bitstream Mono; font-weight : 700; font-style : italic; }
+@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoIt.ttf'); font-family: Bitstream Mono; font-weight : 500; font-style : italic; }
+@font-face { src: url('/lib/fonts/bitstream-vera/VeraMono.ttf'); font-family: Bitstream Mono; font-weight : 500; }
+/*@font-face { src: url('lib/fonts/bitstream-vera/VeraBd.ttf'); font-family: FAM; font-weight : 500; }
+@font-face { src: url('lib/fonts/bitstream-vera/VeraBI.ttf'); font-family: FAM; font-weight : 500; }
+@font-face { src: url('lib/fonts/bitstream-vera/VeraIt.ttf'); font-family: FAM; font-weight : 500; }
+@font-face { src: url('lib/fonts/bitstream-vera/VeraSeBd.ttf'); font-family: FAM; font-weight : 500; }
+@font-face { src: url('lib/fonts/bitstream-vera/VeraSe.ttf'); font-family: FAM; font-weight : 500; }
+@font-face { src: url('lib/fonts/bitstream-vera/Vera.ttf'); font-family: FAM; font-weight : 500; }*/
+
 #bg { position : fixed; top : 0; left : 0; width : 100%; height : 100%; overflow : hidden z-index : 0; }
 #body { position : absolute; top : 0; left : 0; min-width : 100%; min-height : 100%; z-index : 1; }
-#content { position : absolute; top : 50px; left : 0; z-index : 0; }
+#content { position : absolute; top : 50px; left : 0; z-index : 0; min-width : 100%; }
  </style>
  <style>
 html, body { background-color : white; height : 100%; }
@@ -53,16 +78,11 @@ html, body { background-color : white; height : 100%; }
 </head>
 <body>
 
-<div id='bg'></div>
+{{ exp }}
+<div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}></div>
 <script>
-var Background = {
-      url : 'http://thenewhive.com:1313/file/4db77b2dba2839730c000005'
-    , opacity : .7
-    , fill : 'stretch'
-    , color : 'white'
-    }
-Background.update = function() {
-    var o = Background;
+background_update = function() {
+    var o = Hive.Exp.background;
     if(o.url) {
         if(o.fill == 'stretch') {
             o.img = $('<img>').attr('src', o.url).css({ 'width' : '100%', opacity : o.opacity});

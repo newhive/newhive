@@ -22,12 +22,8 @@
 .control.buttons .button { margin-right : 2px; }
 .control .button, .control .option { cursor : default; }
 .option.small { display : inline-block; }
-.drawer.fontname { padding : 0px; margin : 0; }
-.drawer.fontname .option { padding : 5px; margin : 0; }
-.drawer.color { padding : 10px; }
-.drawer.color > * { display : inline-block; }
-.color .hue_bar { width : 10px; height : 158px; margin : 0 7px 0 15px; }
-.drawer.color .option.small { width : 20px; height : 20px; margin : 2px }
+.drawer.fontname { padding : 0px; margin : 0; width : 24em; }
+.drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 8em; height : 1em; }
 .align .option.small { margin : 5px; }
 .drawer.link img { vertical-align : middle; }
 .drawer.fontsize { white-space : nowrap; overflow : hidden; }

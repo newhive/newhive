@@ -31,7 +31,7 @@ def expr_save(request, response):
     if not exp: raise ValueError('missing or malformed exp')
 
     res = Expr.fetch(exp.id)
-    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags'])
+    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background'])
     upd['name'] = upd['name'].lower()
     generate_thumb(upd, request.requester)
     try:
@@ -191,6 +191,7 @@ def tag_create(request, response):
 def tag_remove(request, response):
     pass
 def tag_add(request, response):
+
     pass
 
 from mailer import Mailer, Message
@@ -359,17 +360,16 @@ def handle(request):
     (html, css) = exp_to_html(resource)
     response.context.update(
          owner = owner
-        ,id = resource.id
         ,owner_url = home_url(owner)
         ,edit = abs_url(secure = True) + 'edit/' + resource.id
         ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
-        ,name = resource['name']
         ,auth_required = (resource.get('auth') == 'password'
             and request.form.get('password') != resource.get('password')
             and request.requester.id != resource['owner'])
         ,body = html
         ,css = css
+        ,exp = resource
         ,exp_js = json.dumps(resource)
         )
 
