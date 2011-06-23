@@ -35,7 +35,7 @@ Hive.Exp = {};
   <input type='hidden' name='domain' value='{{ domain }}'>
   <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable scale nav_icon' title='create'>
  </form>
- <img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' onclick='background_pick()'>
+ <!--<img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' onclick='background_pick()'>-->
 </div>
 
 {#
@@ -52,10 +52,23 @@ Hive.Exp = {};
 </div>#}
 <div style='font-size : 4em; margin : 100px 50px 50px 50px;'><a href='/'>{{ fullname }}</a></div>
 <div id='tags'>
- <span class='tag_label'><a href='?view=cards'>All</a></span>
- {% for t in tags %}<a href='?view=cards&tags={{ t|e }}'><span class='tag_label drag' draggable='false' value='{{ t|e }}'>{{ t }}</span></a>{% endfor %}
- <img src='/lib/skin/1/add_tab.png' class='tag_label hoverable'>
+ <span class='tag_label'><a href='/!'>All</a></span>
+ {% for t in tags %}<a href='!{{ t|e }}'><span class='tag_label drag' draggable='false' value='{{ t|e }}'>{{ t }}</span></a>{% endfor %}
+ <img src='/lib/skin/1/add_tab.png' class='tag_label hoverable' onclick='tag_create()'>
 </div>
+<form id='tag_create' method='POST' action='{{ secure_server }}'>
+ <input type='hidden' name='action' value='tag_create'>
+ <input type='hidden' name='from' value='' id='from_input'>
+ <input type='hidden' name='tag' value='' id='tag_input'>
+</form>
+<script>
+function tag_create() {
+    var tag = prompt('New Folder');
+    $('#tag_input').val(tag);
+    $('#from_input').val(unescape(window.location));
+    $('#tag_create').submit();
+}
+</script>
 
 <div id='feed' class=''>
  {% for e in exprs %}
@@ -79,6 +92,12 @@ Hive.Exp = {};
 #}
 
 {% if user_is_owner %}
+<form id='upload_form' method='POST' action='{{ secure_server }}' style='position : absolute; left : -1000px' target='upload_target'>
+ <input type='hidden' name='action' value='' id='action_input'>
+ <input type='hidden' name='expr_id' value='' id='id_input'>
+ <input type='hidden' name='tag' value='' id='value_input'>
+ <iframe id='upload_target' name='upload_target'></iframe>
+</form>
 <script>
 function add_tag(item, tag) {
     var tags = $(item).find('.tags'), v = $(tag).attr('value');
@@ -86,6 +105,10 @@ function add_tag(item, tag) {
     if(tags.children().filter(function() { return $(this).attr('value') == v }).length) return;
     tags.append($("<span class='tag'>").attr('value', v).append('#' + v + ' '));
     tags.append(' ');
+    $('#action_input').val('tag_add');
+    $('#id_input').val($(item).find('.expr_id').val());
+    $('#value_input').val(v);
+    $('#upload_form').submit();
 }
 function remove_tag() {
     var item = $(this).parent().parent();
@@ -95,9 +118,9 @@ function remove_tag() {
 }
 
 $('.tags .tag').live('click', remove_tag);
-$('.tag_label').draggable().droppable({
+$('.tag_label.drag').draggable().droppable({
     accept : '.feed.item', drop : function(target, dragged) { add_tag(dragged, target) } });
-$('.feed.item').droppable({ accept : '.tag_label', drop : add_tag }).draggable();
+$('.feed.item').droppable({ accept : '.tag_label.drag', drop : add_tag }).draggable();
 </script>
 {% endif %}
 

@@ -33,6 +33,7 @@ def expr_save(request, response):
     res = Expr.fetch(exp.id)
     upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background'])
     upd['name'] = upd['name'].lower()
+    if re.search('\#|\?|\!', upd['name']): return dict(error="URL may not contain '#', '?', or '!'.")
     generate_thumb(upd, request.requester)
     try:
         if not exp.id or upd['name'] != res['name']:
@@ -55,7 +56,7 @@ def generate_thumb(expr, owner):
     except: return
     if response.getcode() != 200: return
     res = File.create(
-         owner = owner
+         owner = owner.id
         ,name = 'thumb'
         ,mime = response.headers.getheader('Content-Type')
         )
@@ -186,13 +187,23 @@ def bad_referral(request, response):
     response.context['content'] = 'Invalid referral; already used or never existed'
     return serve_page(response, 'minimal.html')
 
-def tag_create(request, response):
-    pass
 def tag_remove(request, response):
     pass
 def tag_add(request, response):
-
-    pass
+    if not request.trusting: raise exceptions.BadRequest()
+    tag = request.form.get('tag')
+    id = request.form.get('expr_id')
+    expr = Expr.fetch(id)
+    if not expr: return serve_404(request, response)
+    print('updating ' + id + 'with ' + tag)
+    expr.update(tags=expr['tags'] + ' ' + tag)
+def tag_create(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    tag = request.form.get('tag')
+    url = request.form.get('from', home_url(request.requester) + '!')
+    if not tag: redirect(response, url)
+    request.requester.update_cmd({'$addToSet':{'tags':tag}})
+    redirect(response, url)
 
 from mailer import Mailer, Message
 def mail_us(request, response):
@@ -319,12 +330,11 @@ def handle(request):
         ,create = abs_url(secure = True) + 'edit'
         )
 
-    if request.args.get('view'):
-        tag = request.path[1:]
+    if lget(request.path, 0) == '!':
         page = int(request.args.get('p', 0))
         spec = { 'owner' : owner.id }
-        tags = request.args.get('tags')
-        if tags: spec['tags_index'] = tags
+        tag = request.path[1:]
+        if tag: spec['tags_index'] = tag
         exprs = Expr.list(50, page, spec, requester=request.requester.id)
 
         def title_len(t):
@@ -344,7 +354,7 @@ def handle(request):
 
         response.context['title'] = owner['fullname']
         response.context['fullname'] = owner['fullname']
-        response.context['tags'] = tags_by_frequency(owner=owner.id)
+        response.context['tags'] = owner.get('tags', []) #tags_by_frequency(owner=owner.id)
         response.context['exprs'] = map(fmt, exprs)
         response.context['view'] = request.args.get('view')
 

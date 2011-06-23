@@ -71,6 +71,7 @@ class Entity(dict):
         d['updated'] = now()
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d })
+    def update_cmd(self, d): return self._col.update({ '_id' : self.id }, d)
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
 

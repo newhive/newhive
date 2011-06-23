@@ -78,30 +78,29 @@ html, body { background-color : white; height : 100%; }
 </head>
 <body>
 
-{{ exp }}
 <div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}></div>
 <script>
-background_update = function() {
-    var o = Hive.Exp.background;
-    if(o.url) {
-        if(o.fill == 'stretch') {
-            o.img = $('<img>').attr('src', o.url).css({ 'width' : '100%', opacity : o.opacity});
-            $('#bg').append(o.img);
-            $(o.img).load(function() {
-                o.ratio = o.img.width() / o.img.height();
-                o.img.css('width','');
-                $(window).resize();
-            });
-            $(window).resize(function() {
-                var win_size = [$(window).width(), $(window).height()];
-                if(win_size[0] / win_size[1] > o.ratio) { o.img.width(win_size[0]); o.img.height(win_size[0] / o.ratio); }
-                else { o.img.width(win_size[1] * o.ratio); o.img.height(win_size[1]); }
-            });
-        }
-        else $('#bg').css({ 'background-image' : o.url });
-    }
-    if(o.color) $('#bg').css('background-color', o.color);
-}
+//background_update = function() {
+//    var o = Hive.Exp.background;
+//    if(o.url) {
+//        if(o.fill == 'stretch') {
+//            o.img = $('<img>').attr('src', o.url).css({ 'width' : '100%', opacity : o.opacity});
+//            $('#bg').append(o.img);
+//            $(o.img).load(function() {
+//                o.ratio = o.img.width() / o.img.height();
+//                o.img.css('width','');
+//                $(window).resize();
+//            });
+//            $(window).resize(function() {
+//                var win_size = [$(window).width(), $(window).height()];
+//                if(win_size[0] / win_size[1] > o.ratio) { o.img.width(win_size[0]); o.img.height(win_size[0] / o.ratio); }
+//                else { o.img.width(win_size[1] * o.ratio); o.img.height(win_size[1]); }
+//            });
+//        }
+//        else $('#bg').css({ 'background-image' : o.url });
+//    }
+//    if(o.color) $('#bg').css('background-color', o.color);
+//}
 </script>
 
 <div id='body'>

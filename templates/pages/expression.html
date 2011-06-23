@@ -39,7 +39,7 @@
     <br>
     <form method='POST' action='{{ secure_server }}'>
      <input type='hidden' name='action' value='expr_delete'>
-     <input type='hidden' name='id' value='{{ id }}'>
+     <input type='hidden' name='id' value='{{ exp.id }}'>
      <div style='text-align : right'><input type='submit' value='Yes' style='background-color : white;' class='active medbold'></div>
     </form>
    </div>
@@ -78,6 +78,5 @@
     });
  });
  $(window).resize();
- background_update();
  </script>
 {% endblock %}
