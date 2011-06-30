@@ -12,8 +12,10 @@ form { display : inline; }
 #welcome { display : inline; font-weight : bold; margin-left:15px; }
 #welcome.open { background-color : {{ colors[0] }}; color : white }
 #contact { position : absolute; right : 20px; top : 75px; background-color : white; }
-#feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
+#tags { margin : 50px 50px 25px 50px; }
 .spacer { height : 10px; }
+.tag_label { font-weight : bold; color : white; padding : 1px 15px 1px 15px; margin-right : 5px; background-color : grey; }
+.tag_label.current { background-color : black; }
  </style>
 {% endblock %}
 
@@ -66,11 +68,21 @@ form { display : inline; }
         }, 'json') });
 
  </script>
-
-<center style='margin : 100px'>
-  <iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="675" height="380" frameborder="0"></iframe>
-</center>
-{% else %}
 {% endif %}
+{% endblock %}
 
+{% block content %}
+ {% if user.logged_in %}
+  <center style='font-size : 3em; font-weight : bold; margin : 30px 50px 30px 50px;'>The New Hive</center>
+  <div id='tags'>
+   <a href='/home/' class='tag_label {{ 'current' if not tag }}'>Recent</a>
+   {% for t in tags %}<a href='{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
+  </div>
+
+  {% include 'cards.html' %}
+ {% else %}
+  <center style='margin : 100px'>
+    <iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" width="675" height="380" frameborder="0"></iframe>
+  </center>
+ {% endif %}
 {% endblock %}

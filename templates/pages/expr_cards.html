@@ -3,22 +3,10 @@
 {% block head %}
  {{ super() }}
 <style>
-#feed { width : auto; margin : 0 50px 50px 50px; } /*left : 124px; width : 776px; padding : 0; }*/
-.feed.item { position : relative; float : left; padding : 5px; margin : 0 5px 5px 0; width : 330px; height : 96px;
-    display : inline-block; background-image : url('/lib/skin/1/feed_item.png'); }
-.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }
-.title { font-weight : bold; max-height : 2.5em; overflow : hidden; text-overflow : ellipsis; margin-bottom : 5px; }
-.feed .title1 { font-size : 1.3em; max-height : 1em; }
-.feed .title2 { font-size : 1.1em; }
-.feed .title3 { font-size : .9em; }
-.feed .thumb { float : left; margin-right : 10px; }
-.feed .other, .feed .tags { font-size : .8em }
-.feed .tags { height : 2.5em; overflow : hidden; text-overflow : ellipsis; }
 .tags .tag:hover { text-decoration : line-through; color : red; }
-.feed .other { position : absolute; left : 139px; bottom : 5px; font-weight : bold; }
 .tag_label { background-color : white; color : black; padding : 3px; margin-right : 10px; display : inline-block;
     font-size : 1.3em; font-weight : bold; height : 25px; vertical-align : bottom; }
-#tags { margin : 50px 50px 25px 50px; }
+#tags { margin : 0px 50px 25px 50px; }
 .category { font-weight : bold; font-size : 1.23em; height : 33px; }
 .category.open { border-bottom : 10px solid white; }
 iframe { border : none; }
@@ -38,6 +26,9 @@ Hive.Exp = {};
  <!--<img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' onclick='background_pick()'>-->
 </div>
 
+{% endblock %}
+{% block content %}
+
 {#
 {% if page %}
  <a href='?p={{ page - 1 }}'><img id='feed_prev' src='/lib/skin/1/page_prev.png' class='feed hoverable'></a>
@@ -46,46 +37,17 @@ Hive.Exp = {};
 {% endif %}
 #}
 
-{#<div id='categories'>
-  <div class='category border open'>All</div>
-  <div class='category border'><img src='/lib/skin/1/add_tab.png'></div>
-</div>#}
-<div style='font-size : 4em; margin : 100px 50px 50px 50px;'><a href='/'>{{ fullname }}</a></div>
+<div style='font-size : 4em; margin : 30px 50px 30px 50px;'><a href='/'>{{ fullname }}</a>{{ ': ' + tag if tag }}</div>
+
 <div id='tags'>
  <span class='tag_label'><a href='/!'>All</a></span>
  {% for t in tags %}<a href='!{{ t|e }}'><span class='tag_label drag' draggable='false' value='{{ t|e }}'>{{ t }}</span></a>{% endfor %}
- <img src='/lib/skin/1/add_tab.png' class='tag_label hoverable' onclick='tag_create()'>
+ {% if user_is_owner %}
+  <img src='/lib/skin/1/add_tab.png' class='tag_label hoverable' onclick='tag_create()'>
+ {% endif %}
 </div>
-<form id='tag_create' method='POST' action='{{ secure_server }}'>
- <input type='hidden' name='action' value='tag_create'>
- <input type='hidden' name='from' value='' id='from_input'>
- <input type='hidden' name='tag' value='' id='tag_input'>
-</form>
-<script>
-function tag_create() {
-    var tag = prompt('New Folder');
-    $('#tag_input').val(tag);
-    $('#from_input').val(unescape(window.location));
-    $('#tag_create').submit();
-}
-</script>
 
-<div id='feed' class=''>
- {% for e in exprs %}
-  {% if view == 'blog' %}
-   <div class='expr_header'>Header</div>
-   <iframe src='{{ e.url|e }}' class='expr' width='{{ e.dimensions[0] }}' height='{{ e.dimensions[1] }}'></iframe>
-  {% else %}
-   <a href='{{ e.url|e }}' target='_top'><div class='feed item' draggable='false'>
-    <input type='hidden' class='expr_id' value='{{ e.id }}'>
-    <img src='{{ e.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
-    <div class='title title{{ e.title_len }}'>{{ e.title|e }}</div>
-    <div class='tags'>{% for t in e.tags %}<span class='tag' value='{{ t|e }}'>#{{ t }} </span> {% endfor %}</div>
-    <div class='other'>{{ e.updated }}</div>
-   </div></a>
-  {% endif %}
- {% endfor %}
-</div>
+{% include 'cards.html' %}
 
 {#
 <a href='?p={{ page + 1 }}'><img id='feed_next' src='/lib/skin/1/page_next.png' class='feed hoverable'></a>
@@ -99,6 +61,13 @@ function tag_create() {
  <iframe id='upload_target' name='upload_target'></iframe>
 </form>
 <script>
+function tag_create() {
+    var tag = prompt('New Folder');
+    $('#action_input').val('tag_create');
+    $('#value_input').val(tag);
+    $('#upload_form').submit();
+    $('#upload_target').load(function() { window.location = window.location });
+}
 function add_tag(item, tag) {
     var tags = $(item).find('.tags'), v = $(tag).attr('value');
     // check if tag is already there (blehck)
@@ -109,11 +78,16 @@ function add_tag(item, tag) {
     $('#id_input').val($(item).find('.expr_id').val());
     $('#value_input').val(v);
     $('#upload_form').submit();
+    return false;
 }
 function remove_tag() {
     var item = $(this).parent().parent();
-    item.find('input').val();
     $(this).remove();
+    var v = $(this).attr('value');
+    $('#action_input').val('tag_remove');
+    $('#id_input').val($(item).find('.expr_id').val());
+    $('#value_input').val(v);
+    $('#upload_form').submit();
     return false;
 }
 

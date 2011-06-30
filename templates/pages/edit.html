@@ -26,8 +26,9 @@
 
 .dialogue_handle { background-color : {{ colors.selected }}; }
 #loading { position : fixed; z-index : 1200; display : none; }
-#app_btns { top : 0; left : 300px; }
+#app_btns { top : 0; left : 300px; width : 350px; height : 50px; }
 #app_btns .nav_icon.menu_open { background-color : {{ colors[12] }}; }
+#btn_save.menu_open { background-color : white; }
 #app_btns .menu { }
 .btn { cursor : default; }
 #nav_bg { min-width : 620px; }
@@ -82,11 +83,11 @@
 <div class='nav' style='right : 10px; top : 0; white-space : nowrap'>
  <img id='btn_grid' class='nav_icon' src='/lib/skin/1/grid-off.png'>
  &nbsp;
- <div id='btn_save' class='medbold nav_icon' style='cursor : default; display : inline-block;'>
+ <div id='btn_save' class='medbold nav_icon' style='cursor : default; display : inline-block; padding : 0px 5px'>
   <nobr>Save <img class='scale' src='/lib/skin/1/drop_arrow.png'></nobr>
  </div>
  
- <div id='menu_save' class='menu border top'>
+ <div id='menu_save' class='menu top'>
   <div class='medbold'>URL</div>
   <div class=''>{{ exp.domain }}/</div>
   <input id='url' type='text' value='{{ exp.name|e }}'>
@@ -216,6 +217,7 @@
 <form id='upload_form' method='POST' enctype='multipart/form-data' action='/' style='position : absolute; left : -1000px' target='upload_target'>
  <input name='file' id='file_input' type='file'>
  <input type='hidden' name='action' value='files_create'>
+ <input type='hidden' name='expr_id' value='{{ exp.id }}'>
  <iframe id='upload_target' name='upload_target'></iframe>
 </form>
 

@@ -68,7 +68,8 @@ class Entity(dict):
     #def save(self): return self.update(**self)
 
     def update(self, **d):
-        d['updated'] = now()
+        if d.has_key('updated'): del d['updated']
+        else: d['updated'] = now()
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d })
     def update_cmd(self, d): return self._col.update({ '_id' : self.id }, d)
@@ -117,6 +118,13 @@ class User(Entity):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
 
+root = User.named('root')
+if not root:
+    import getpass
+    print("Enter password for root user. You have one chance only:")
+    secret = getpass.getpass()
+    root = User.create(name='root', password=secret, referrer=None)
+
 class Session(Entity):
     cname = 'session'
 
@@ -137,10 +145,10 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
-    def list(cls, limit, page, spec, requester=None):
+    def list(cls, spec, requester=None, limit=50, page=0):
         es = map(Expr, db.expr.find(
              spec = spec
-            ,fields = ['owner', 'title', 'updated', 'domain', 'name', 'auth', 'tags_index', 'thumb', 'dimensions']
+            ,fields = ['owner', 'owner_name', 'title', 'updated', 'domain', 'name', 'auth', 'tags_index', 'thumb', 'dimensions']
             ,sort = [('updated', -1)]
             ,limit = limit
             ,skip = limit * page
@@ -161,6 +169,7 @@ class Expr(Entity):
 
     def create_me(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
+        self['owner_name'] = User.fetch(self['owner'])['name']
         self['title'] = self.get('title') or 'Untitled'
         return super(Expr, self).create_me()
 

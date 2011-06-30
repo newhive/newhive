@@ -34,7 +34,7 @@ palette = [
     ,'#F3D3C1'
     ,'#FFF673'
     ,'#D6D64D'
-    ,'#C5D9E2'
+    ,'#D0E0F0'
     ,'#FFFFFF'
     ]
 

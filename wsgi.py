@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
@@ -9,7 +10,8 @@ import jinja2
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, tags_by_frequency
+from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, tags_by_frequency, root
+
 
 def lget(L, i, default=None): return L[i] if 0 <= i < len(L) else default
 def raises(e): raise e
@@ -18,8 +20,9 @@ def dfilter(d, keys):
         with only the keys given """
     r = {}
     for k in keys:
-        if d.has_key(k): r[k] = d[k]
+        if k in d: r[k] = d[k]
     return r
+
 
 def expr_save(request, response):
     """ Parses JSON object from POST variable 'exp' and stores it in database.
@@ -35,18 +38,19 @@ def expr_save(request, response):
     upd['name'] = upd['name'].lower()
     if re.search('\#|\?|\!', upd['name']): return dict(error="URL may not contain '#', '?', or '!'.")
     generate_thumb(upd, request.requester)
-    try:
-        if not exp.id or upd['name'] != res['name']:
-            res = Expr.create(owner = request.requester.id, **upd)
-        else:
-            if not res['owner'] == request.requester.id:
-                raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
-            res.update(**upd)
-    except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
+    if not exp.id or upd['name'] != res['name']:
+        try: res = Expr.create(owner = request.requester.id, **upd)
+        except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
+    else:
+        if not res['owner'] == request.requester.id:
+            raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+        res.update(**upd)
     return dict( error=False, location=abs_url(domain = res['domain']) + res['name'] )
 
 import urllib, PIL.Image
 def generate_thumb(expr, owner):
+    # TODO: don't regenerate thumb when image has not changed
+
     # retrieve first image from expression
     fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), 0)
     if not fst_img or not fst_img.get('content'): return
@@ -74,7 +78,7 @@ def generate_thumb(expr, owner):
     ratio = float(imo.size[0]) / imo.size[1]
     ratio_target = 124.0 / 96
     new_size = (124, 124 / ratio) if ratio < ratio_target else (96 * ratio, 96)
-    imo = imo.resize(new_size)
+    imo = imo.resize(new_size, resample=PIL.Image.ANTIALIAS)
     imo = imo.crop((0, 0, 124, 96))
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
@@ -89,6 +93,7 @@ def expr_delete(request, response):
     if not e: return serve_404(request, response)
     if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
     e.delete()
+    # TODO: garbage collect media files that are no longer referenced by expression
     return redirect(response, home_url(request.requester))
 
 def media_path(user, f_id=None):
@@ -187,23 +192,30 @@ def bad_referral(request, response):
     response.context['content'] = 'Invalid referral; already used or never existed'
     return serve_page(response, 'minimal.html')
 
-def tag_remove(request, response):
-    pass
-def tag_add(request, response):
+
+def expr_tag_update(request, response):
     if not request.trusting: raise exceptions.BadRequest()
-    tag = request.form.get('tag')
+    tag = lget(normalize(request.form.get('tag', '')), 0)
     id = request.form.get('expr_id')
     expr = Expr.fetch(id)
-    if not expr: return serve_404(request, response)
-    print('updating ' + id + 'with ' + tag)
-    expr.update(tags=expr['tags'] + ' ' + tag)
-def tag_create(request, response):
+    action = request.form.get('action')
+    if action == 'tag_add': new_tags = expr['tags'] + ' ' + tag
+    elif action == 'tag_remove': new_tags = re.sub(tag, '', expr['tags'])
+    expr.update(tags=new_tags, updated=False)
+    return True
+
+def tags_update(request, response):
     if not request.trusting: raise exceptions.BadRequest()
-    tag = request.form.get('tag')
-    url = request.form.get('from', home_url(request.requester) + '!')
-    if not tag: redirect(response, url)
+    tag = lget(normalize(request.form.get('tag', '')), 0)
+    if not tag: return False
     request.requester.update_cmd({'$addToSet':{'tags':tag}})
-    redirect(response, url)
+    return True
+
+def admin_update(request, response):
+    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+    for k in ['tags', 'tagged']:
+        v = json.loads(request.form.get(k))
+        if v: root.update(**{ k : v })
 
 from mailer import Mailer, Message
 def mail_us(request, response):
@@ -219,7 +231,7 @@ def mail_us(request, response):
 
 def home_url(user):
     """ Returns default URL for given state.User """
-    return abs_url(domain = user.get('sites', [config.server_name])[0])
+    return abs_url(domain = user.get('sites', [config.server_name])[0]) + '!'
 def login(request, response):
     if auth.handle_login(request, response):
         return redirect(response, home_url(request.requester))
@@ -233,9 +245,10 @@ actions = dict(
     ,files_create    = files_create
     ,user_create     = user_create
     ,mail_us         = mail_us
-    ,tag_create      = tag_create
-    ,tag_remove      = tag_remove
-    ,tag_add         = tag_add
+    ,tag_create      = tags_update
+    ,tag_remove      = expr_tag_update
+    ,tag_add         = expr_tag_update
+    ,admin_update    = admin_update
     )
 
 # Mime types that could generate HTTP POST requests
@@ -249,6 +262,25 @@ actions = dict(
 #    , 'text/xhtml'                     : True
 ##    , 'application/x-javascript'       : True
 #    }
+
+def format_card(e):
+    def title_len(t):
+        l = len(t)
+        if l < 10: return 1
+        if l < 20: return 2
+        return 3
+
+    dict.update(e
+        ,updated = friendly_date(time_u(e['updated']))
+        ,url = abs_url(domain=e['domain']) + e['name']
+        ,title_len = title_len(e['title'])
+        #,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
+        ,tags = e.get('tags_index', [])
+        )
+    return e
+
+def expr_list(spec, **args):
+    return map(format_card, Expr.list(spec, **args))
 
 def handle(request):
     """The HTTP handler.
@@ -278,7 +310,7 @@ def handle(request):
             if r != None: return serve_json(response, r, as_text = True)
 
         if request.path == '':
-            return serve_page(response, 'home.html')
+            return redirect(response, abs_url() + 'home/' + lget(root.get('tags'), 0))
 
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
@@ -314,6 +346,28 @@ def handle(request):
             create('referral', user = request.requester.id, key = key)
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + key
             return serve_page(response, 'minimal.html')
+        elif p1 == 'home':
+            if request.requester.logged_in:
+                ids = root.get('tagged', {}).get(p2, [])
+                exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id) if p2 else Expr.list({})
+                response.context['exprs'] = map(format_card, exprs)
+                response.context['tag'] = p2
+                response.context['tags'] = root.get('tags', [])
+                response.context['show_name'] = True
+            return serve_page(response, 'home.html')
+        elif p1 == 'admin_home' and request.requester.logged_in:
+            if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+            response.context['tags_js'] = json.dumps(root.get('tags'))
+            response.context['tagged_js'] = json.dumps(root.get('tagged'))
+
+            ids = root.get('tagged', {}).get(p2, [])
+            exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id) if p2 else Expr.list({})
+            response.context['exprs'] = map(format_card, exprs)
+            response.context['tag'] = p2
+            response.context['tags'] = root.get('tags', [])
+            response.context['show_name'] = True
+
+            return serve_page(response, 'admin_home.html')
 
         return serve_404(request, response)
     elif request.domain == 'www.' + config.server_name: return redirect(response, abs_url())
@@ -335,27 +389,12 @@ def handle(request):
         spec = { 'owner' : owner.id }
         tag = request.path[1:]
         if tag: spec['tags_index'] = tag
-        exprs = Expr.list(50, page, spec, requester=request.requester.id)
-
-        def title_len(t):
-            l = len(t)
-            if l < 10: return 1
-            if l < 20: return 2
-            return 3
-        def fmt(e):
-            dict.update(e
-                ,updated = friendly_date(time_u(e['updated']))
-                ,url = abs_url(domain=e['domain']) + e['name']
-                ,title_len = title_len(e['title'])
-                #,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
-                ,tags = e.get('tags_index', [])
-                )
-            return e
 
         response.context['title'] = owner['fullname']
         response.context['fullname'] = owner['fullname']
+        response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', []) #tags_by_frequency(owner=owner.id)
-        response.context['exprs'] = map(fmt, exprs)
+        response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
         response.context['view'] = request.args.get('view')
 
         return serve_page(response, 'expr_cards.html')
@@ -447,7 +486,7 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.sr
 
 def serve_html(response, html):
     response.data = html
-    response.content_type = 'text/html'
+    response.content_type = 'text/html; charset=utf-8'
     return response
 def serve_page(response, template):
     return serve_html(response, render_template(response, template))
@@ -554,8 +593,10 @@ if __name__ == '__main__':
           , config.plain_port
           , application
           , use_reloader = True
-          , use_debugger = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
+          , use_debugger = config.debug_mode
+          , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
           , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
+          , processes = 1
           )
     else:
         run_simple(
@@ -563,9 +604,9 @@ if __name__ == '__main__':
           , config.ssl_port
           , application
           , use_reloader = True
-          , use_debugger = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
+          , use_debugger = config.debug_mode
+          , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
           , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
           , ssl_context  = ctx
+          , processes = 1
           )
-
-    os.kill(child, signal.SIGKILL) # does run_simple ever return?

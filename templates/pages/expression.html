@@ -5,17 +5,26 @@
   .happ { position : absolute; white-space : pre-line; }
   .happ img { width : 100%; }
   
-  #info { display : inline-block; text-align : right; margin-right : 10px; font-family : Museo; color : white; vertical-align : top; }
-  #datetime { font-size : .7em; color : {{ colors[24] }}; line-height : .5em; }
+  #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
+  #exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
+  #datetime { font-size : .7em; color : {{ colors[12] }}; line-height : .5em; }
   #feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
+  .nav_icon.menu_open { background-color : white; }
   {{ css }}
  </style>
+ <meta id="og_title" class="og_title" property="og:title" content='{{ title }}'>
+ <meta id="og_image" class="og_image" property="og:image" content='{{ exp.thumb }}'>
+ <meta id="og_url" class="og_url"     property="og:url" content='{{ secure_server }}'>
+ <meta id="og_desc" class="og_desc"   property="og:description" content='blahblah'>
+ <!--<meta id="fb_admin" class="fb_admin" property="fb:admins" content=__optional, a facebook user id__/>-->
+ <meta property="og:type" content="website" />
+ <meta property="og:site_name" content='The New Hive'>
 {% endblock %}
 
 {% block body %}
  <div class='nav' style='right : 10px; top : 0px;'>
   {% if not user_is_owner %}
-   <div id='info' class='medbold scale' style='text-align : right'>
+   <div id='info' class='medbold' style='text-align : right'>
     <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
     <div id='datetime'><nobr>{{ mtime }}</nobr></div>
    </div>
@@ -24,11 +33,19 @@
   {% if user.logged_in %}
    <form action='{{ create }}' method='POST'>
     <input type='hidden' name='domain' value='{{ domain }}'>
-    <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable scale nav_icon' title='create'>
+    <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'>
    </form>
   {% endif %}
  
-  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable scale nav_icon' title='share'>
+  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
+  <div id='dia_share' class='menu' style='padding : 10px'>
+   <iframe allowtransparency="true" frameborder="0" scrolling="no"
+    src="http://platform.twitter.com/widgets/tweet_button.html" style="width:130px; height:20px;"></iframe>
+   <div id="fb-root"></div>
+   <script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
+   <a href="http://www.reddit.com/submit" onclick="window.location = 'http://www.reddit.com/submit?url=' + encodeURIComponent(window.location); return false"><img src="http://www.reddit.com/static/spreddit5.gif" alt="submit to reddit" border="0" /></a>
+  </div>
+  <script>click_dialogue($('#btn_share'), $('#dia_share'));</script>
  
   {% if user_is_owner %}
    <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' title='edit'></a>
@@ -43,9 +60,7 @@
      <div style='text-align : right'><input type='submit' value='Yes' style='background-color : white;' class='active medbold'></div>
     </form>
    </div>
-   <script>
-    click_dialogue($('#btn_delete'), $('#dia_delete'));
-   </script>
+   <script>click_dialogue($('#btn_delete'), $('#dia_delete'));</script>
   {% endif %}
  </div>
 {% endblock %}
