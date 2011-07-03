@@ -1,0 +1,42 @@
+{% extends "main.html" %}
+
+{% block head %}
+ {{ super() }}
+<style>
+#tags { margin : 50px 50px 25px 50px; }
+.spacer { height : 10px; }
+.tag_label { font-weight : bold; color : white; padding : 1px 15px 1px 15px; margin-right : 5px; background-color : grey; }
+.tag_label.current { background-color : black; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<br>
+<input type='text' id='expr_id' size='26'><br>
+<form method='POST'>
+ <input type='hidden' name='action' value='admin_update'>
+ <textarea rows='1'  cols='80' name='tags'>{{ tags_js }}</textarea><br>
+ <textarea rows='20' cols='80' name='tagged'>{{ tagged_js }}</textarea><br>
+ <input type='submit' class='medbold' value='save'>
+</form>
+
+<div id='tags'>
+ <a href='/admin_home/' class='tag_label {{ 'current' if not tag }}'>Recent</a>
+ {% for t in tags %}<a href='/admin_home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
+</div>
+
+{% include 'cards.html' %}
+<script>
+$('.feed.item').each(function() {
+    var that = this;
+    $(this).click(function() {
+        $('#expr_id').val('"' + $(that).find('.expr_id').val() + '"');
+        $('#expr_id').select();
+        $('#expr_id').focus();
+        return false;
+    });
+});
+</script>
+
+{% endblock %}

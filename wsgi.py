@@ -13,7 +13,9 @@ from colors import colors
 from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, tags_by_frequency, root
 
 
-def lget(L, i, default=None): return L[i] if isinstance(L,list) and 0 <= i < len(L) else default
+def lget(L, i, default=None):
+    try: return L[i]
+    except: return default
 def raises(e): raise e
 def dfilter(d, keys):
     """ Accepts dictionary and list of keys, returns a new dictionary
@@ -47,13 +49,16 @@ def expr_save(request, response):
         res.update(**upd)
     return dict( error=False, location=abs_url(domain = res['domain']) + res['name'] )
 
-import urllib, PIL.Image
+import urllib, PIL.Image, random
 def generate_thumb(expr, owner):
     # TODO: don't regenerate thumb when image has not changed
 
     # retrieve first image from expression
     fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), 0)
-    if not fst_img or not fst_img.get('content'): return
+    if not fst_img or not fst_img.get('content'):
+        print 'oo'
+        expr['thumb'] = '/lib/skin/1/default_thumb_' + str(random.randrange(1,6)) +'.png'
+        return
 
     # create file record in database, copy file to media directory via http
     try: response = urllib.urlopen(fst_img['content'])
@@ -216,6 +221,9 @@ def admin_update(request, response):
 
 from smtplib import SMTP
 def send_mail(headers, body):
+    print body
+    print headers
+    print headers.keys()
     b = "\r\n".join([k + ': ' + headers[k] for k in headers.keys()] + ['', body])
     return SMTP('localhost').sendmail(headers['From'], headers['To'].split(','), b)
 def mail_us(request, response):
@@ -235,13 +243,13 @@ def mail_them(request, response):
     heads = {
          'To' : request.form.get('to')
         ,'From' : 'The New Hive <noreply@thenewhive.com>'
-        ,'Subject' : request.form.get('subject')
-        ,'Reply-to' : request.requester.get('email')
+        ,'Subject' : request.form.get('subject', '')
+        ,'Reply-to' : request.requester.get('email', '')
         }
     body = request.form.get('message')
     send_mail(heads, body)
     if request.form.get('send_copy'):
-        heads.update(To = request.requester.get('email'))
+        heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
 
