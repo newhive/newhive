@@ -2,14 +2,13 @@
 
 {% block head %}
  <style>
-  .happ { position : absolute; white-space : pre-line; }
+  .happ { position : absolute; }
   .happ img { width : 100%; }
   
   #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
   #exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
   #datetime { font-size : .7em; color : {{ colors[12] }}; line-height : .5em; }
   #feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
-  .nav_icon.menu_open { background-color : white; }
   {{ css }}
  </style>
  <meta id="og_title" class="og_title" property="og:title" content='{{ title }}'>
@@ -31,21 +30,38 @@
   {% endif %}
  
   {% if user.logged_in %}
-   <form action='{{ create }}' method='POST'>
-    <input type='hidden' name='domain' value='{{ domain }}'>
-    <input type='image' id='btn_create' src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'>
-   </form>
+   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
   {% endif %}
  
   <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
   <div id='dia_share' class='menu' style='padding : 10px'>
-   <iframe allowtransparency="true" frameborder="0" scrolling="no"
-    src="http://platform.twitter.com/widgets/tweet_button.html" style="width:130px; height:20px;"></iframe>
-   <div id="fb-root"></div>
-   <script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script>
-   <a href="http://www.reddit.com/submit" onclick="window.location = 'http://www.reddit.com/submit?url=' + encodeURIComponent(window.location); return false"><img src="http://www.reddit.com/static/spreddit5.gif" alt="submit to reddit" border="0" /></a>
+   {% if user.logged_in %}
+    <form id='mail_form' action='{{ secure_server }}' method='POST'>
+     <input type='hidden' name='forward' value='{{ url|e }}'>
+     <input type='hidden' name='action' value='mail_them'>
+     <div class='medbold'>Email(s)</div>
+     <input type='text' size='30' name='to'>
+     <div class='spacer'></div>
+     <input type='hidden' name='subject' value='{{ user.fullname|e }} has sent you an expression'>
+     <div class='medbold'>Message</div>
+     <textarea cols='30' rows='5' name='message'>Check out this expression:
+
+{{ url }}</textarea>
+     <div class='spacer'></div>
+     <input id='send_copy' type='checkbox' name='send_copy' checked><label for='send_copy'> Send me a copy</label>
+     <div class='spacer'></div>
+     <div style='text-align : center'><input id='email_send' type='submit' class='btn black' value='Send'></div>
+     <div class='spacer'></div>
+     <div class='spacer'></div>
+    </form>
+   {% endif %}
+   <img style='width:32px;height:32px' onclick="javascript:new_window('http://twitter.com/share?url=' + encodeURIComponent(window.location), 550, 425)" src='/lib/skin/1/twitter.png' title='Share on Twitter'>
+   <img style='width:32px;height:32px' onclick="javascript:new_window('http://www.facebook.com/sharer.php?u=' + encodeURIComponent(window.location), 755, 425)" src='/lib/skin/1/facebook.png' title='Share on Facebook'>
+   <a href="http://www.reddit.com/submit" onclick="window.location = 'http://www.reddit.com/submit?url=' + encodeURIComponent(window.location); return false"><img src="/lib/skin/1/reddit.png" alt="submit to reddit" border="0" /></a>
   </div>
-  <script>click_dialogue($('#btn_share'), $('#dia_share'));</script>
+  <script>
+share_menu = click_dialogue($('#btn_share'), $('#dia_share'));
+  </script>
  
   {% if user_is_owner %}
    <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' title='edit'></a>
@@ -57,7 +73,7 @@
     <form method='POST' action='{{ secure_server }}'>
      <input type='hidden' name='action' value='expr_delete'>
      <input type='hidden' name='id' value='{{ exp.id }}'>
-     <div style='text-align : right'><input type='submit' value='Yes' style='background-color : white;' class='active medbold'></div>
+     <div style='text-align : right'><input type='submit' value='Yes' class='btn black medbold'></div>
     </form>
    </div>
    <script>click_dialogue($('#btn_delete'), $('#dia_delete'));</script>

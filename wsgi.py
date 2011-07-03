@@ -13,7 +13,7 @@ from colors import colors
 from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, tags_by_frequency, root
 
 
-def lget(L, i, default=None): return L[i] if 0 <= i < len(L) else default
+def lget(L, i, default=None): return L[i] if isinstance(L,list) and 0 <= i < len(L) else default
 def raises(e): raise e
 def dfilter(d, keys):
     """ Accepts dictionary and list of keys, returns a new dictionary
@@ -39,7 +39,7 @@ def expr_save(request, response):
     if re.search('\#|\?|\!', upd['name']): return dict(error="URL may not contain '#', '?', or '!'.")
     generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name']:
-        try: res = Expr.create(owner = request.requester.id, **upd)
+        try: res = request.requester.expr_create(upd)
         except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
     else:
         if not res['owner'] == request.requester.id:
@@ -77,7 +77,7 @@ def generate_thumb(expr, owner):
         return
     ratio = float(imo.size[0]) / imo.size[1]
     ratio_target = 124.0 / 96
-    new_size = (124, 124 / ratio) if ratio < ratio_target else (96 * ratio, 96)
+    new_size = (124, int(124 / ratio)) if ratio < ratio_target else (int(96 * ratio), 96)
     imo = imo.resize(new_size, resample=PIL.Image.ANTIALIAS)
     imo = imo.crop((0, 0, 124, 96))
     imo = imo.convert(mode='RGB')
@@ -93,6 +93,7 @@ def expr_delete(request, response):
     if not e: return serve_404(request, response)
     if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
     e.delete()
+    if e['name'] == '': request.requester.expr_create({})
     # TODO: garbage collect media files that are no longer referenced by expression
     return redirect(response, home_url(request.requester))
 
@@ -170,16 +171,11 @@ def user_create(request, response):
 
     args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
     args['referrer'] = referral['user']
+    args['sites'] = [args['name'] + '.' + config.server_name]
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
-
-    Expr.create(
-          owner  = user.id
-        , name   = ''
-        , domain = user['name'] + '.' + config.server_name
-        , title  = 'Untitled'
-        )
+    user.expr_create({})
 
     os.makedirs(joinpath(config.domain_home, config.server_name, user['name'], 'media'))
 
@@ -195,7 +191,7 @@ def bad_referral(request, response):
 
 def expr_tag_update(request, response):
     if not request.trusting: raise exceptions.BadRequest()
-    tag = lget(normalize(request.form.get('tag', '')), 0)
+    tag = lget(normalize(request.form.get('value', '')), 0)
     id = request.form.get('expr_id')
     expr = Expr.fetch(id)
     action = request.form.get('action')
@@ -204,11 +200,12 @@ def expr_tag_update(request, response):
     expr.update(tags=new_tags, updated=False)
     return True
 
-def tags_update(request, response):
+def user_tag_update(request, response):
     if not request.trusting: raise exceptions.BadRequest()
-    tag = lget(normalize(request.form.get('tag', '')), 0)
+    tag = lget(normalize(request.form.get('value', '')), 0)
     if not tag: return False
-    request.requester.update_cmd({'$addToSet':{'tags':tag}})
+    if request.form.get('action') == 'user_tag_add': request.requester.update_cmd({'$addToSet':{'tags':tag}})
+    else: request.requester.update_cmd({'$pull':{'tags':tag}})
     return True
 
 def admin_update(request, response):
@@ -217,17 +214,36 @@ def admin_update(request, response):
         v = json.loads(request.form.get(k))
         if v: root.update(**{ k : v })
 
-from mailer import Mailer, Message
+from smtplib import SMTP
+def send_mail(headers, body):
+    b = "\r\n".join([k + ': ' + headers[k] for k in headers.keys()] + ['', body])
+    return SMTP('localhost').sendmail(headers['From'], headers['To'].split(','), b)
 def mail_us(request, response):
-    if not request.form.get('message'): return
+    if not request.form.get('message'): return False
 
-    Mailer().send(Message(
-          To = 'info@thenewhive.com'
-        , From = 'www-data@' + config.server_name
-        , Subject = '[home page contact form]'
-        , Body = request.form.get('message')
-        ))
-    return ''
+    send_mail(
+        dict(To = 'info@thenewhive.com'
+            ,From = 'www-data@' + config.server_name
+            ,Subject = '[home page contact form]'
+            )
+        , request.form.get('message'))
+    return True
+def mail_them(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    if not request.form.get('message') or not request.form.get('to'): return False
+
+    heads = {
+         'To' : request.form.get('to')
+        ,'From' : 'The New Hive <noreply@thenewhive.com>'
+        ,'Subject' : request.form.get('subject')
+        ,'Reply-to' : request.requester.get('email')
+        }
+    body = request.form.get('message')
+    send_mail(heads, body)
+    if request.form.get('send_copy'):
+        heads.update(To = request.requester.get('email'))
+        send_mail(heads, body)
+    return redirect(response, request.form.get('forward'))
 
 def home_url(user):
     """ Returns default URL for given state.User """
@@ -245,7 +261,9 @@ actions = dict(
     ,files_create    = files_create
     ,user_create     = user_create
     ,mail_us         = mail_us
-    ,tag_create      = tags_update
+    ,mail_them       = mail_them
+    ,user_tag_add    = user_tag_update
+    ,user_tag_remove = user_tag_update
     ,tag_remove      = expr_tag_update
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
@@ -309,9 +327,6 @@ def handle(request):
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
 
-        if request.path == '':
-            return redirect(response, abs_url() + 'home/' + lget(root.get('tags'), 0))
-
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
         p2 = lget(parts, 1)
@@ -326,12 +341,13 @@ def handle(request):
         elif p1 == 'edit':
             if not p2:
                 exp = { 'domain' : lget(request.requester.get('sites'), 0) }
-                exp.update(dfilter(request.form, ['domain', 'name']))
+                exp.update(dfilter(request.args, ['domain', 'name']))
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
+            response.context['sites'] = request.requester.get('sites')
             response.context['exp_js'] = json.dumps(exp)
             response.context['exp'] = exp
             return serve_page(response, 'edit.html')
@@ -346,19 +362,20 @@ def handle(request):
             create('referral', user = request.requester.id, key = key)
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + key
             return serve_page(response, 'minimal.html')
-        elif p1 == 'home':
+        elif p1 == '' or p1 == 'home':
             if request.requester.logged_in:
-                ids = root.get('tagged', {}).get(p2, [])
-                exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id) if p2 else Expr.list({})
+                tag = p2 if p1 else lget(root.get('tags'), 0)
+                ids = root.get('tagged', {}).get(tag, [])
+                exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id) if tag else Expr.list({})
                 response.context['exprs'] = map(format_card, exprs)
-                response.context['tag'] = p2
+                response.context['tag'] = tag
                 response.context['tags'] = root.get('tags', [])
                 response.context['show_name'] = True
             return serve_page(response, 'home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
             response.context['tags_js'] = json.dumps(root.get('tags'))
-            response.context['tagged_js'] = json.dumps(root.get('tagged'))
+            response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
 
             ids = root.get('tagged', {}).get(p2, [])
             exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id) if p2 else Expr.list({})
@@ -372,16 +389,17 @@ def handle(request):
         return serve_404(request, response)
     elif request.domain == 'www.' + config.server_name: return redirect(response, abs_url())
 
-    subdomain = request.domain.split('.')[0]
-    owner = User.named(subdomain)
-    if not owner: return serve_404(request, response)
+    d = resource = Expr.named(request.domain, request.path.lower())
+    if not d: d = Expr.named(request.domain, '')
+    if not d: return serve_404(request, response)
+    owner = User.fetch(d['owner'])
+    is_owner = request.requester.logged_in and owner.id == request.requester.id
 
-    response.context['user_is_owner'] = (request.requester.logged_in
-        and owner.id == request.requester.id)
     response.context.update(
          domain = request.domain
         ,path = request.path
         ,create = abs_url(secure = True) + 'edit'
+        ,user_is_owner = is_owner
         )
 
     if lget(request.path, 0) == '!':
@@ -396,15 +414,14 @@ def handle(request):
         response.context['tags'] = owner.get('tags', []) #tags_by_frequency(owner=owner.id)
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
         response.context['view'] = request.args.get('view')
+        response.context['expr'] = dfilter(owner, ['background'])
 
         return serve_page(response, 'expr_cards.html')
         #response.context['page'] = page
 
 
-    resource = Expr.named(request.domain, request.path.lower())
     if not resource: return serve_404(request, response)
-    if resource['owner'] != request.requester.id and resource.get('auth') == 'private':
-        return serve_404(request, response)
+    if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
     (html, css) = exp_to_html(resource)
     response.context.update(
@@ -420,6 +437,7 @@ def handle(request):
         ,css = css
         ,exp = resource
         ,exp_js = json.dumps(resource)
+        ,url = request.base_url
         )
 
     return serve_page(response, 'expression.html')
@@ -501,7 +519,7 @@ def render_template(response, template):
         ,colors = colors
         ,debug = config.debug_mode
         )
-    context.setdefault('icon', abs_url() + 'lib/skin/1/icon.png')
+    context.setdefault('icon', abs_url() + 'lib/skin/1/logo.png')
     return jinja_env.get_template('pages/' + template).render(context)
 
 def serve_json(response, val, as_text = False):

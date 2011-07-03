@@ -5,34 +5,41 @@
  <link rel='shortcut icon' type='image/png' href={{ icon }}>
 
  <style id='css_base'>
-html, body { margin : 0; padding : 0; font-family : Arial, sans-serif; font-size : 13pt; color : {{ colors[0] }}; }
+html, body { margin : 0; padding : 0; font-family : Helvetica, sans-serif; font-size : 13pt; color : {{ colors[0] }}; white-space-collapse : discard; }
 img { padding : 0; margin : 0; border : 0; }
 a { color : inherit; text-decoration : none; }
+.happ a { text-decoration : underline; }
 input[type=text], input[type=password], textarea { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : {{ colors['selected'] }}; }
 input[type=button], input[type=submit] { border : none; }
 h1 { font-size : 40px; }
 form { display : inline; }
-.menu { position : absolute; display : none; border : 0px solid {{ colors['unselected'] }};
-    background-color : white; padding : 0; z-index : 1100; font-size : 11pt;
-    -moz-box-shadow: 10px 10px 10px #AAA;
-    -webkit-box-shadow: 10px 10px 10px #AAA;
-    box-shadow: 10px 10px 10px #AAA;
+.menu { display : none; border : 0px solid {{ colors['unselected'] }};
+    background-color : white; z-index : 1100; font-size : 11pt; position : absolute;
+    -moz-box-shadow: 05px 05px 05px #888;
+    -webkit-box-shadow: 05px 05px 05px #888;
+    box-shadow: 05px 05px 05px #888;
     }
-.menu_item { color : {{ colors[18] }}; padding : 5px 8px; cursor : default; font-family : Arial; font-size : 15pt; white-space : nowrap; }
-.menu_item:hover, .menu_hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }}; font-family : Arial; }
-.nav_icon { height : 50px; vertical-align : middle; line-height : 50px; }
-.tooltip { position : absolute; color : {{ colors['active'] }}; display : none; white-space : nowrap; }
+.menu_item { color : {{ colors[18] }}; padding : 5px 8px; cursor : default; font-size : 15pt; white-space : nowrap; }
+.menu_item:hover, .menu_hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }}; }
+.nav_icon { height : 50px; line-height : 50px; vertical-align : middle; display : inline-block; cursor : default; }
+.nav_icon * { vertical-align : middle; }
+.nav_icon.active { color : white; background-color : {{ colors[12] }}; }
+.nav_icon.text { padding : 0 10px; }
 .border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 .selected { border-color : {{ colors['selected'] }}; }
 .medbold { font-weight : bold; font-size : 1.23em; }
 .btn { font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default; }
 .black { background-color : black; color : white; }
-.active { color : {{ colors['active'] }}; }
+.error { color : {{ colors['active'] }}; }
 #user { position : fixed; display : inline-block; }
-.nav { position : fixed; margin : 0; padding : 0; }
+.nav { position : fixed; margin : 0; }
 #nav_bg { top : 0; left : 0; width : 100%; height : 50px; background-image : url('/lib/skin/1/nav_gradient.png'); z-index : 1; }
 .menu, .top, .nav { z-index : 1; }
+.spacer { height : 10px; }
+#bg { position : fixed; top : 0; left : 0; width : 100%; height : 100%; overflow : hidden z-index : 0; background-color : white; }
+#body { position : absolute; top : 0; left : 0; min-width : 100%; min-height : 100%; z-index : 1; }
+#content { position : absolute; top : 50px; left : 0; z-index : 0; min-width : 100%; }
 
 @font-face { src: url('/lib/fonts/Museo/Museo500-Regular.otf'); font-family: Museo; font-weight: 500; }
 @font-face { src: url('/lib/fonts/Museo/Museo700-Regular.otf'); font-family: Museo; font-weight: 700; }
@@ -61,16 +68,7 @@ form { display : inline; }
 @font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBI.ttf'); font-family: Bitstream Mono; font-weight : 700; font-style : italic; }
 @font-face { src: url('/lib/fonts/bitstream-vera/VeraMoIt.ttf'); font-family: Bitstream Mono; font-weight : 500; font-style : italic; }
 @font-face { src: url('/lib/fonts/bitstream-vera/VeraMono.ttf'); font-family: Bitstream Mono; font-weight : 500; }
-/*@font-face { src: url('lib/fonts/bitstream-vera/VeraBd.ttf'); font-family: FAM; font-weight : 500; }
-@font-face { src: url('lib/fonts/bitstream-vera/VeraBI.ttf'); font-family: FAM; font-weight : 500; }
-@font-face { src: url('lib/fonts/bitstream-vera/VeraIt.ttf'); font-family: FAM; font-weight : 500; }
-@font-face { src: url('lib/fonts/bitstream-vera/VeraSeBd.ttf'); font-family: FAM; font-weight : 500; }
-@font-face { src: url('lib/fonts/bitstream-vera/VeraSe.ttf'); font-family: FAM; font-weight : 500; }
-@font-face { src: url('lib/fonts/bitstream-vera/Vera.ttf'); font-family: FAM; font-weight : 500; }*/
 
-#bg { position : fixed; top : 0; left : 0; width : 100%; height : 100%; overflow : hidden z-index : 0; }
-#body { position : absolute; top : 0; left : 0; min-width : 100%; min-height : 100%; z-index : 1; }
-#content { position : absolute; top : 50px; left : 0; z-index : 0; min-width : 100%; }
  </style>
  <style>
 html, body { background-color : white; height : 100%; }
@@ -82,38 +80,36 @@ html, body { background-color : white; height : 100%; }
 </head>
 <body>
 
-<div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}></div>
+<div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
+>{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
 <script>
-//background_update = function() {
-//    var o = Hive.Exp.background;
-//    if(o.url) {
-//        if(o.fill == 'stretch') {
-//            o.img = $('<img>').attr('src', o.url).css({ 'width' : '100%', opacity : o.opacity});
-//            $('#bg').append(o.img);
-//            $(o.img).load(function() {
-//                o.ratio = o.img.width() / o.img.height();
-//                o.img.css('width','');
-//                $(window).resize();
-//            });
-//            $(window).resize(function() {
-//                var win_size = [$(window).width(), $(window).height()];
-//                if(win_size[0] / win_size[1] > o.ratio) { o.img.width(win_size[0]); o.img.height(win_size[0] / o.ratio); }
-//                else { o.img.width(win_size[1] * o.ratio); o.img.height(win_size[1]); }
-//            });
-//        }
-//        else $('#bg').css({ 'background-image' : o.url });
+//background_fit = function(bg) {
+//    var fill = '{#{ exp.background.fill }#}';
+//    if(o.fill == 'stretch') {
+//        o.img = $('<img>').attr('src', o.url).css({ 'width' : '100%', opacity : o.opacity});
+//        $('#bg').append(o.img);
+//        $(o.img).load(function() {
+//            o.ratio = o.img.width() / o.img.height();
+//            o.img.css('width','');
+//            $(window).resize();
+//        });
+//        $(window).resize(function() {
+//            var win_size = [$(window).width(), $(window).height()];
+//            if(win_size[0] / win_size[1] > o.ratio) { o.img.width(win_size[0]); o.img.height(win_size[0] / o.ratio); }
+//            else { o.img.width(win_size[1] * o.ratio); o.img.height(win_size[1]); }
+//        });
 //    }
-//    if(o.color) $('#bg').css('background-color', o.color);
+//    else $('#bg').css({ 'background-image' : o.url });
 //}
 </script>
 
 <div id='body'>
 
 <div class='nav' id='nav_bg'></div>
-<div class='nav' style='left : 50px; top : 0; font-weight : bold'>
- <a href='{{ server }}'><img id='logo' class='hoverable nav nav_icon' style='left : 5px; top : 0px;' src={{ icon }}></a>
+<div class='nav' style='font-weight : bold'>
+ <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
  {% if user.logged_in %}
-  &nbsp; <a href='{{ home_url }}' class='nav_icon'>{{ user['name'] }}</a>
+  <div class='nav_icon' style='left : 50px; top : 0;'><a href='{{ home_url }}'>{{ user['name'] }}</a></div>
   <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
   <div id='user_menu' class='menu'>
    <form name='logout_form' action='{{ secure_server }}' method='POST'>
@@ -125,7 +121,7 @@ html, body { background-color : white; height : 100%; }
   </div>
   <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
  {% else %}
-  <a href='{{ server }}'><div style='left : 50px; top : 0;' class='nav'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  <a href='{{ server }}'><div style='left : 50px; top : 0px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
  {% endif %}
 </div>
 

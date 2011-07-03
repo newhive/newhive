@@ -96,12 +96,16 @@ class User(Entity):
     #    ,referrer = User
     #    ,sites = [str]
 
+    def expr_create(self, d):
+        doc = dict(owner = self.id, name = '', domain = self['sites'][0]) 
+        doc.update(d)
+        return Expr.create(**doc)
+
     def create_me(self):
         self['name'] = self['name'].lower()
         assert re.match('[a-z][a-z0-9]{2,}', self['name']) != None, 'Invalid username'
         self.set_password(self['password'])
         self['fullname'] = self.get('fullname', self['name'])
-        self['sites'] = [self['name'] + '.' + config.server_name]
         self['referrals'] = 0
         assert self.has_key('referrer')
         return super(User, self).create_me()

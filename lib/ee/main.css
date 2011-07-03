@@ -29,8 +29,6 @@
 .drawer.fontsize { white-space : nowrap; overflow : hidden; }
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
-.spacer { height : 10px; }
-
 #app_buttons { display : inline-block; margin : 20px; }
 .insert_btn { margin-right : 15px; cursor : default; }
 .btn { display : inline-block; padding : 5px; cursor : default; }
