@@ -369,7 +369,7 @@ def handle(request):
         elif p1 == 'edit':
             if not p2:
                 exp = { 'domain' : lget(request.requester.get('sites'), 0) }
-                exp.update(dfilter(request.args, ['domain', 'name']))
+                exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
@@ -393,7 +393,8 @@ def handle(request):
         elif p1 == '' or p1 == 'home':
             if request.requester.logged_in:
                 root = get_root()
-                tag = p2 if p1 else lget(root.get('tags'), 0) # comment this to make 'Recent' default community page
+                #tag = p2 if p1 else lget(root.get('tags'), 0) # make first tag/category default community page
+                tag = p2
                 ids = root.get('tagged', {}).get(tag, [])
                 exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id) if tag else Expr.list({})
                 response.context['exprs'] = map(format_card, exprs)
