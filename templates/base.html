@@ -40,6 +40,7 @@ form { display : inline; }
 #bg { position : fixed; top : 0; left : 0; width : 100%; height : 100%; overflow : hidden z-index : 0; background-color : white; }
 #body { position : absolute; top : 0; left : 0; min-width : 100%; min-height : 100%; z-index : 1; }
 #content { position : absolute; top : 50px; left : 0; z-index : 0; min-width : 100%; }
+#feedback_msg { display : inline-block; }
 
 @font-face { src: url('/lib/fonts/Museo/Museo500-Regular.otf'); font-family: Museo; font-weight: 500; }
 @font-face { src: url('/lib/fonts/Museo/Museo700-Regular.otf'); font-family: Museo; font-weight: 700; }
@@ -130,7 +131,30 @@ html, body { background-color : white; height : 100%; }
 
 <div id='content'>{% block content %}{% endblock %}</div>
 
+{% if user.logged_in %}
+ <div id='feedback_msg' class='border selected' style='display : none; position : fixed; background-color : white; padding : 30px; width : 400px'>
+  <span class='medbold'>We’re in beta and love feedback! Want a feature? Found a bug? Please be specific and describe in detail what’s going on:</span><br>
+  <form method='POST' action='{{ secure_server }}'>
+   <input type='hidden' name='action' value='mail_feedback'>
+   <input type='hidden' name='url' value='{{ url }}'>
+   <textarea rows='10' cols='40' name='message'></textarea><br>
+   <div class='spacer'></div>
+   <input id='send_copy' type='checkbox' name='send_copy' checked><label for='send_copy'> Send me a copy</label>
+   <div class='spacer'></div>
+   <input type='submit' value='Send' class='btn black medbold'>&nbsp;
+   <input type='button' value='Cancel' class='btn black medbold' onclick='$("#feedback_msg").hide()'>
+  </form>
+ </div>
+ <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable' title='Send feedback'>
+ <script>
+$('#feedback_btn').click(function() {
+ center($('#feedback_msg').show());
+});
+ </script>
+{% endif%}
+
 </div>
+
 
 </body>
 </html>

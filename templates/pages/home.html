@@ -46,7 +46,6 @@ a.tag_label:hover { color : black; background : {{ colors[32] }}; }
    We are in beta right now.
    Drop us a line with your email
    and name and we'll be in touch!<br>
-   <form 
    <textarea style='margin : 10px 0 10px 0; width : 200px' id='message'></textarea>
    <div style='text-align : right'><input type='button' class='btn black' value='Send'></div>
   </div>
@@ -63,7 +62,7 @@ $(function() {
     $.post('/', { message : $('#message').val(), action : 'mail_us' }, function(data) {
             if(!data) alert('Sorry, there was a problem sending your message');
             else {
-                text.val('');
+                $('#message').val('');
                 alert('Thankyou for your feedback');
                 mail_menu.close();
             }

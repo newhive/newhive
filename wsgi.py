@@ -5,12 +5,12 @@
 import os, re, json, mimetypes
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
-from werkzeug import Request, Response, exceptions
+from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, tags_by_frequency, root
+from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, tags_by_frequency, get_root
 
 
 def lget(L, i, default=None):
@@ -37,7 +37,7 @@ def expr_save(request, response):
 
     res = Expr.fetch(exp.id)
     upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background'])
-    upd['name'] = upd['name'].lower()
+    upd['name'] = upd['name'].lower().strip()
     if re.search('\#|\?|\!', upd['name']): return dict(error="URL may not contain '#', '?', or '!'.")
     generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name']:
@@ -47,18 +47,15 @@ def expr_save(request, response):
         if not res['owner'] == request.requester.id:
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
-    return dict( error=False, location=abs_url(domain = res['domain']) + res['name'] )
+    return dict( error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, PIL.Image, random
 def generate_thumb(expr, owner):
     # TODO: don't regenerate thumb when image has not changed
 
     # retrieve first image from expression
-    fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), 0)
-    if not fst_img or not fst_img.get('content'):
-        print 'oo'
-        expr['thumb'] = '/lib/skin/1/default_thumb_' + str(random.randrange(1,6)) +'.png'
-        return
+    fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), -1)
+    if not fst_img or not fst_img.get('content'): return
 
     # create file record in database, copy file to media directory via http
     try: response = urllib.urlopen(fst_img['content'])
@@ -185,7 +182,9 @@ def user_create(request, response):
     os.makedirs(joinpath(config.domain_home, config.server_name, user['name'], 'media'))
 
     request.form = dict(username = args['name'], secret = args['password'])
-    return login(request, response)
+    login(request, response)
+    return redirect(response, config.intro_url)
+
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
     return serve_page(response, 'minimal.html')
@@ -200,7 +199,7 @@ def expr_tag_update(request, response):
     id = request.form.get('expr_id')
     expr = Expr.fetch(id)
     action = request.form.get('action')
-    if action == 'tag_add': new_tags = expr['tags'] + ' ' + tag
+    if action == 'tag_add': new_tags = expr.get('tags', '') + ' ' + tag
     elif action == 'tag_remove': new_tags = re.sub(tag, '', expr['tags'])
     expr.update(tags=new_tags, updated=False)
     return True
@@ -217,13 +216,10 @@ def admin_update(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
     for k in ['tags', 'tagged']:
         v = json.loads(request.form.get(k))
-        if v: root.update(**{ k : v })
+        if v: get_root().update(**{ k : v })
 
 from smtplib import SMTP
 def send_mail(headers, body):
-    print body
-    print headers
-    print headers.keys()
     b = "\r\n".join([k + ': ' + headers[k] for k in headers.keys()] + ['', body])
     return SMTP('localhost').sendmail(headers['From'], headers['To'].split(','), b)
 def mail_us(request, response):
@@ -242,7 +238,7 @@ def mail_them(request, response):
 
     heads = {
          'To' : request.form.get('to')
-        ,'From' : 'The New Hive <noreply@thenewhive.com>'
+        ,'From' : 'The New Hive <noreply+share@thenewhive.com>'
         ,'Subject' : request.form.get('subject', '')
         ,'Reply-to' : request.requester.get('email', '')
         }
@@ -252,6 +248,28 @@ def mail_them(request, response):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
+def mail_feedback(request, response):
+    if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')
+
+    heads = {
+         'To' : 'bugs@thenewhive.com'
+        ,'From' : 'Feedback <noreply+feedback@' + config.server_name +'>'
+        ,'Subject' : 'Feedback from ' + request.requester.get('name', '') + ', ' + request.requester.get('fullname', '')
+        ,'Reply-to' : request.requester.get('email', '')
+        }
+    url = url_unquote(request.form.get('url', ''))
+    body = (
+        request.form.get('message')
+        + "\n\n----------------------------------------\n\n"
+        + url + "\n"
+        + 'User-Agent: ' + request.headers.get('User-Agent', default='')
+        )
+    send_mail(heads, body)
+    if request.form.get('send_copy'):
+        heads.update(To = request.requester.get('email', ''))
+        send_mail(heads, body)
+    return redirect(response, url if url else abs_url())
+
 
 def home_url(user):
     """ Returns default URL for given state.User """
@@ -270,6 +288,7 @@ actions = dict(
     ,user_create     = user_create
     ,mail_us         = mail_us
     ,mail_them       = mail_them
+    ,mail_feedback   = mail_feedback
     ,user_tag_add    = user_tag_update
     ,user_tag_remove = user_tag_update
     ,tag_remove      = expr_tag_update
@@ -318,7 +337,7 @@ def handle(request):
     response = Response()
     request.requester = auth.authenticate_request(request, response)
     request.trusting = False
-    response.context = { 'f' : request.form }
+    response.context = { 'f' : request.form, 'url' : request.base_url }
     response.user = request.requester
 
     request.path = request.path[1:] # drop leading '/'
@@ -340,6 +359,7 @@ def handle(request):
         p2 = lget(parts, 1)
         if p1 == 'file':
             res = File.fetch(p2)
+            if not res: return serve_404(request, response)
             #if response.enforce_static and unsafe_mimes.get(resource['mime'], False):
             #    raise DangerousContent()
             response.content_type = res['mime']
@@ -372,7 +392,8 @@ def handle(request):
             return serve_page(response, 'minimal.html')
         elif p1 == '' or p1 == 'home':
             if request.requester.logged_in:
-                tag = p2 if p1 else lget(root.get('tags'), 0)
+                root = get_root()
+                tag = p2 if p1 else lget(root.get('tags'), 0) # comment this to make 'Recent' default community page
                 ids = root.get('tagged', {}).get(tag, [])
                 exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id) if tag else Expr.list({})
                 response.context['exprs'] = map(format_card, exprs)
@@ -381,6 +402,7 @@ def handle(request):
                 response.context['show_name'] = True
             return serve_page(response, 'home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
+            root = get_root()
             if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
             response.context['tags_js'] = json.dumps(root.get('tags'))
             response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
@@ -405,6 +427,8 @@ def handle(request):
 
     response.context.update(
          domain = request.domain
+        ,owner = owner
+        ,owner_url = home_url(owner)
         ,path = request.path
         ,create = abs_url(secure = True) + 'edit'
         ,user_is_owner = is_owner
@@ -433,9 +457,7 @@ def handle(request):
 
     (html, css) = exp_to_html(resource)
     response.context.update(
-         owner = owner
-        ,owner_url = home_url(owner)
-        ,edit = abs_url(secure = True) + 'edit/' + resource.id
+         edit = abs_url(secure = True) + 'edit/' + resource.id
         ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
         ,auth_required = (resource.get('auth') == 'password'
@@ -445,7 +467,6 @@ def handle(request):
         ,css = css
         ,exp = resource
         ,exp_js = json.dumps(resource)
-        ,url = request.base_url
         )
 
     return serve_page(response, 'expression.html')
@@ -456,7 +477,7 @@ def handle_safe(request):
     """Log exceptions thrown, display friendly error message.
        Not implemneted."""
     try: return handle(request)
-    except Exception as e: return serve_error(request, e)
+    except Exception as e: return serve_error(request, str(e))
 
 @Request.application
 def handle_debug(request):
@@ -545,13 +566,13 @@ def serve_json(response, val, as_text = False):
 
 def serve_404(request, response):
     response.status_code = 404
-    return serve_page(response, 'notfound.html')
+    response.context['msg'] = 'Nothing here yet...'
+    return serve_page(response, 'error.html')
 
-def serve_error(request, e):
-    # report error
-    #r = Response()
-    #r.data = str(request.environ)
-    return InternalServerError()
+def serve_error(request, msg):
+    response.status_code = 500
+    response.context['msg'] = msg
+    return serve_page(response, 'error.html')
 
 def redirect(response, location):
     response.location = location

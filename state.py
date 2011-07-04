@@ -122,8 +122,8 @@ class User(Entity):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
 
-root = User.named('root')
-if not root:
+def get_root(): return User.named('root')
+if not get_root():
     import getpass
     print("Enter password for root user. You have one chance only:")
     secret = getpass.getpass()

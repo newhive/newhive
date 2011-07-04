@@ -4,21 +4,22 @@
  <style>
 .toolbtn { margin-left : 20px }
 #meta { position : absolute; right : 20px; top : 27px; }
+#exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
  </style>
 {% endblock %}
 {% block body %}
 
-{% if user_is_owner %}
- <div class='nav' style='right : 10px; top : 0px;'>
+<div class='nav' style='right : 10px; top : 0px;'>
+ {% if user_is_owner %}
   <a href='{{ create }}?name={{ path|e }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
- </div>
-{% endif %}
+ {% endif %}
+</div>
 
 {% endblock %}
 {% block content %}
 
 <table width='100%' height='100%'><tr><td valign='middle' align='center'>
-<h1>Nothing here yet...</h1>
+<h1>{{ msg }}</h1>
 </td></tr></table>
 
 {% endblock %}
