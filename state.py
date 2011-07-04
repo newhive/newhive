@@ -139,6 +139,7 @@ def normalize(ws):
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
 db.expr.ensure_index([('owner', 1), ('updated', 1)])
 db.expr.ensure_index([('updated', 1)])
+db.expr.ensure_index([('created', 1)])
 db.expr.ensure_index([('tags_index', 1)])
 class Expr(Entity):
     cname = 'expr'
@@ -149,11 +150,11 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
-    def list(cls, spec, requester=None, limit=50, page=0):
+    def list(cls, spec, requester=None, limit=50, page=0, sort='updated'):
         es = map(Expr, db.expr.find(
              spec = spec
             ,fields = ['owner', 'owner_name', 'title', 'updated', 'domain', 'name', 'auth', 'tags_index', 'thumb', 'dimensions']
-            ,sort = [('updated', -1)]
+            ,sort = [(sort, -1)]
             ,limit = limit
             ,skip = limit * page
             ))

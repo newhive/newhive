@@ -396,7 +396,7 @@ def handle(request):
                 #tag = p2 if p1 else lget(root.get('tags'), 0) # make first tag/category default community page
                 tag = p2
                 ids = root.get('tagged', {}).get(tag, [])
-                exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id) if tag else Expr.list({})
+                exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
                 response.context['exprs'] = map(format_card, exprs)
                 response.context['tag'] = tag
                 response.context['tags'] = root.get('tags', [])
@@ -409,7 +409,7 @@ def handle(request):
             response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
 
             ids = root.get('tagged', {}).get(p2, [])
-            exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id) if p2 else Expr.list({})
+            exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if p2 else Expr.list({}, sort='created')
             response.context['exprs'] = map(format_card, exprs)
             response.context['tag'] = p2
             response.context['tags'] = root.get('tags', [])
