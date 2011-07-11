@@ -77,9 +77,9 @@ $(function() {
 
 {% block content %}
  {% if user.logged_in %}
-  <center style='font-family : Museo; font-size : 3em; font-weight : bold; margin : 30px 50px 30px 50px;'>
+  <div style='font-family : Museo; font-size : 3em; font-weight : bold; margin : 30px 50px 30px 50px;'>
    <a href='/edit?tags=playground'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
-  </center>
+  </div>
   <div id='tags'>
    <a href='/home/' class='tag_label {{ 'current' if not tag }}'>Recent</a>
    {% for t in tags %}<a href='/home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
