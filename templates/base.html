@@ -78,6 +78,7 @@ html, body { background-color : white; height : 100%; }
  <script src='/lib/jquery.js'></script>
  <script src='/lib/util.js'></script>
  {% block head %}{% endblock %}
+{% if not debug %}
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
@@ -92,7 +93,7 @@ html, body { background-color : white; height : 100%; }
   })();
 
 </script>
-
+{% endif %}
 </head>
 <body>
 
