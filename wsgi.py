@@ -40,7 +40,7 @@ def expr_save(request, response):
     upd['name'] = upd['name'].lower().strip()
     if re.search('\#|\?|\!', upd['name']): return dict(error="URL may not contain '#', '?', or '!'.")
     generate_thumb(upd, request.requester)
-    if not exp.id or upd['name'] != res['name']:
+    if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try: res = request.requester.expr_create(upd)
         except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
     else:
