@@ -418,7 +418,8 @@ def handle(request):
             return serve_page(response, 'admin_home.html')
 
         return serve_404(request, response)
-    elif request.domain == 'www.' + config.server_name: return redirect(response, abs_url())
+    elif request.domain.startswith('www.'):
+        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]))
 
     d = resource = Expr.named(request.domain, request.path.lower())
     if not d: d = Expr.named(request.domain, '')
