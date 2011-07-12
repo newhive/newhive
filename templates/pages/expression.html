@@ -4,7 +4,7 @@
  <style>
   .happ { position : absolute; }
   .happ img { width : 100%; }
-  
+  #private_expr { background-color: white; border: 5px solid #EDEBE1; padding: 5px; }
   #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
   #exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
   #datetime { font-size : .7em; color : {{ colors[12] }}; line-height : .5em; }
@@ -14,8 +14,10 @@
  <meta id="og_title" class="og_title" property="og:title" content='{{ title }}'>
  <meta id="og_image" class="og_image" property="og:image" content='{{ exp.thumb }}'>
  <meta id="og_url" class="og_url"     property="og:url" content='{{ secure_server }}'>
+ <!--
  <meta id="og_desc" class="og_desc"   property="og:description" content='blahblah'>
- <!--<meta id="fb_admin" class="fb_admin" property="fb:admins" content=__optional, a facebook user id__/>-->
+ <meta id="fb_admin" class="fb_admin" property="fb:admins" content=__optional, a facebook user id__/>
+ -->
  <meta property="og:type" content="website" />
  <meta property="og:site_name" content='The New Hive'>
 {% endblock %}
@@ -58,8 +60,8 @@
   <center>
    <form method='POST'>
     <br> <br> <br> <br>
-    <h2>This is a private expression</h2>
-    Enter password to view:<br>
+    <div id="private_expr"><h2>This is a private expression</h2>
+    Enter password to view:<div><br>
     <input type='password' name='password'>
     <input type='image' src='/lib/skin/1/sm_arrow.png' class='hoverable' style='vertical-align : middle'> 
    </form>

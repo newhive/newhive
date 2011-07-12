@@ -3,9 +3,9 @@
 {% block head %}
  {{ super() }}
 <style>
-.tag_label { font-weight : bold; color : white; padding : 2px 15px 2px 15px; margin-right : 5px; background-image : url('/lib/skin/1/black_trans_60.png'); }
-a.tag_label:hover { color : black; background : {{ colors[32] }}; }
-.tag_label.current { background : black; }
+.tag_label { font-weight : bold; color : #696E76; padding : 3px 15px; margin-right : 5px; background-color : #EDEBE1; }
+a.tag_label:hover { color : #F73627; background : #FFF673; }
+.tag_label.current { background : black; color : white; }
 #tags { margin : 0px 50px 25px 50px; }
 .category { font-weight : bold; font-size : 1.23em; height : 33px; }
 .category.open { border-bottom : 10px solid white; }
@@ -43,7 +43,7 @@ iframe { border : none; }
 {% endif %}
 #}
 
-<div style='font-size : 4em; margin : 30px 50px 30px 50px;'><a href='/'>{{ fullname }}</a>{{ ': ' + tag if tag }}</div>
+<div style='font-family : Museo; font-size : 4em; margin : 30px 50px 30px 50px;'><a href='/'>{{ fullname }}</a>{{ ': ' + tag if tag }}</div>
 
 <div id='tags'>
  <a href='/!' class='tag_label {{ 'current' if not tag }}'>All</a>

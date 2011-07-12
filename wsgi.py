@@ -171,7 +171,7 @@ def user_create(request, response):
     if(referrer['referrals'] <= 0):
         return no_more_referrals(referrer['name'], request, response)
 
-    args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
+    args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'tos'])
     args['referrer'] = referral['user']
     args['sites'] = [args['name'] + '.' + config.server_name]
     user = User.create(**args)

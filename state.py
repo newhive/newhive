@@ -102,6 +102,7 @@ class User(Entity):
         return Expr.create(**doc)
 
     def create_me(self):
+        assert 'tos' in self
         self['name'] = self['name'].lower()
         assert re.match('[a-z][a-z0-9]{2,}', self['name']) != None, 'Invalid username'
         self.set_password(self['password'])
@@ -150,7 +151,7 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
-    def list(cls, spec, requester=None, limit=50, page=0, sort='updated'):
+    def list(cls, spec, requester=None, limit=111, page=0, sort='updated'):
         es = map(Expr, db.expr.find(
              spec = spec
             ,fields = ['owner', 'owner_name', 'title', 'updated', 'domain', 'name', 'auth', 'tags_index', 'thumb', 'dimensions']
@@ -176,6 +177,7 @@ class Expr(Entity):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = User.fetch(self['owner'])['name']
         self['title'] = self.get('title') or 'Untitled'
+        self['domain'] = self['domain'].lower()
         return super(Expr, self).create_me()
 
     #def get_tags(self):
