@@ -416,8 +416,17 @@ def handle(request):
             response.context['show_name'] = True
 
             return serve_page(response, 'admin_home.html')
+        #else:
+        #    # search for expressions with given tag
+        #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
+        #    response.context['exprs'] = map(format_card, exprs)
+        #    response.context['tag'] = tag
+        #    response.context['tags'] = root.get('tags', [])
+        #    response.context['show_name'] = True
+        #    return serve_page(response, 'home.html')
 
         return serve_404(request, response)
+
     elif request.domain.startswith('www.'):
         return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]))
 
