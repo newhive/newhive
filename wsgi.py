@@ -170,8 +170,9 @@ def user_create(request, response):
     referrer = User.fetch(referral['user'])
     if(referrer['referrals'] <= 0):
         return no_more_referrals(referrer['name'], request, response)
+    assert 'tos' in request.form
 
-    args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'tos'])
+    args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
     args['referrer'] = referral['user']
     args['sites'] = [args['name'] + '.' + config.server_name]
     user = User.create(**args)
@@ -263,6 +264,7 @@ def mail_feedback(request, response):
         + "\n\n----------------------------------------\n\n"
         + url + "\n"
         + 'User-Agent: ' + request.headers.get('User-Agent', default='')
+        + 'From: ' + request.requester.get('email', '')
         )
     send_mail(heads, body)
     if request.form.get('send_copy'):
@@ -397,7 +399,7 @@ def handle(request):
                 tag = p2
                 ids = root.get('tagged', {}).get(tag, [])
                 exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
-                response.context['exprs'] = map(format_card, exprs)
+                response.context['exprs'] = map(format_card, [e for e in exprs if e['title'] != 'Untitled'])
                 response.context['tag'] = tag
                 response.context['tags'] = root.get('tags', [])
                 response.context['show_name'] = True

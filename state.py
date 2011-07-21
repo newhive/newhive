@@ -102,9 +102,8 @@ class User(Entity):
         return Expr.create(**doc)
 
     def create_me(self):
-        assert 'tos' in self
         self['name'] = self['name'].lower()
-        assert re.match('[a-z][a-z0-9]{2,}', self['name']) != None, 'Invalid username'
+        assert re.match('[a-z][a-z0-9]{2,}$', self['name']) != None, 'Invalid username'
         self.set_password(self['password'])
         self['fullname'] = self.get('fullname', self['name'])
         self['referrals'] = 0
