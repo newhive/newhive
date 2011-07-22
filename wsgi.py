@@ -443,7 +443,6 @@ def handle(request):
         ,owner = owner
         ,owner_url = home_url(owner)
         ,path = request.path
-        ,create = abs_url(secure = True) + 'edit'
         ,user_is_owner = is_owner
         )
 
@@ -555,6 +554,7 @@ def render_template(response, template):
     context.update(
          home_url = home_url(response.user)
         ,user = response.user
+        ,create = abs_url(secure = True) + 'edit'
         ,server = abs_url()
         ,secure_server = abs_url(secure = True)
         ,server_name = config.server_name

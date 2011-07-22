@@ -70,7 +70,7 @@ $(function() {
  </script>
 {% else %}
  <div class='nav' style='right : 10px; top : 0px;'>
-  <a href='/edit?tags=playground'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
+  <a href='{{ create }}?tags=playground'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
  </div>
 {% endif %}
 {% endblock %}
@@ -78,7 +78,7 @@ $(function() {
 {% block content %}
  {% if user.logged_in %}
   <div style='font-family : Museo; font-size : 3em; font-weight : bold; margin : 30px 50px 30px 50px;'>
-   <a href='/edit?tags=playground'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
+   <a href='{{ create }}?tags=playground'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
   </div>
   <div id='tags'>
    <a href='/home/' class='tag_label {{ 'current' if not tag }}'>Recent</a>
