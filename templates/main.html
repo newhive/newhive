@@ -1,1 +1,64 @@
 {% extends "base.html" %}
+
+{% block main %}
+<div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
+>{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
+<script>
+//background_fit = function(bg) {
+//    var fill = '{#{ exp.background.fill }#}';
+//    if(o.fill == 'stretch') {
+//        o.img = $('<img>').attr('src', o.url).css({ 'width' : '100%', opacity : o.opacity});
+//        $('#bg').append(o.img);
+//        $(o.img).load(function() {
+//            o.ratio = o.img.width() / o.img.height();
+//            o.img.css('width','');
+//            $(window).resize();
+//        });
+//        $(window).resize(function() {
+//            var win_size = [$(window).width(), $(window).height()];
+//            if(win_size[0] / win_size[1] > o.ratio) { o.img.width(win_size[0]); o.img.height(win_size[0] / o.ratio); }
+//            else { o.img.width(win_size[1] * o.ratio); o.img.height(win_size[1]); }
+//        });
+//    }
+//    else $('#bg').css({ 'background-image' : o.url });
+//}
+</script>
+
+
+<div class='nav' id='nav_bg'></div>
+<div class='nav' style='font-weight : bold'>
+ <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
+ {% if user.logged_in %}
+  <div class='nav_icon' style='left : 50px; top : 0;'><a href='{{ home_url }}'>{{ user['name'] }}</a></div>
+  <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
+  <div id='user_menu' class='menu'>
+   <form name='logout_form' action='{{ secure_server }}' method='POST'>
+    <input name='action' value='logout' type='hidden'>
+   </form>
+   <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
+   <!--<div class='menu_item'>Change&nbsp;icon</div>
+   <div class='menu_item'>Settings</div>-->
+  </div>
+  <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
+ {% else %}
+  <a href='{{ server }}'><div style='left : 50px; top : 0px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+ {% endif %}
+</div>
+
+{% block body %}
+{% endblock %}
+
+<div id='content'>{% block content %}{% endblock %}</div>
+
+{% if user.logged_in %}
+ <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable' title='Send feedback'>
+ <script>
+$('#feedback_btn').click(function() {
+    new_window('{{ server }}feedback', 470, 400);
+});
+ </script>
+{% endif%}
+
+</div>
+
+{% endblock %}

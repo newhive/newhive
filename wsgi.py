@@ -270,7 +270,8 @@ def mail_feedback(request, response):
     if request.form.get('send_copy'):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
-    return redirect(response, url if url else abs_url())
+    
+    response.context['success'] = True
 
 
 def home_url(user):
@@ -392,6 +393,7 @@ def handle(request):
             create('referral', user = request.requester.id, key = key)
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + key
             return serve_page(response, 'minimal.html')
+        elif p1 == 'feedback': return serve_page(response, 'feedback.html')
         elif p1 == '' or p1 == 'home':
             if request.requester.logged_in:
                 root = get_root()

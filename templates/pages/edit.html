@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "main.html" %}
 
 {% block head %}
- <script src='/lib/ee/main.js'     ></script>
+ <script src='/lib/ee/main.js?v=1'></script>
  <script src='/lib/filedrop.js' ></script>
 
  <script>
   Hive.Exp = {{ exp_js }}; // current expression from server
  </script>
 
- <link rel='stylesheet' type='text/css' href='/lib/ee/main.css'>
+ <link rel='stylesheet' type='text/css' href='/lib/ee/main.css?v=1'>
 
  <style>
  input, textarea { font-size : inherit }
