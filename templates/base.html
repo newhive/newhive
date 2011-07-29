@@ -79,6 +79,7 @@ html, body { background-color : white; height : 100%; }
  <script src='/lib/jquery.js'></script>
  <script src='/lib/util.js'></script>
  {% block head %}{% endblock %}
+ {% if not debug %}
   <script type="text/javascript">
    var _gaq = _gaq || [];
    _gaq.push(['_setAccount', 'UA-22827299-2']);
@@ -92,6 +93,7 @@ html, body { background-color : white; height : 100%; }
      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
    })();
   </script>
+ {% endif %}
 </head>
 <body>{% block main %}{% endblock %}</body>
 </html>

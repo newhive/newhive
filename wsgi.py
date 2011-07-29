@@ -330,6 +330,20 @@ def format_card(e):
 def expr_list(spec, **args):
     return map(format_card, Expr.list(spec, **args))
 
+def expr_home_list(tag, request, response):
+    root = get_root()
+    #tag = p2 if p1 else lget(root.get('tags'), 0) # make first tag/category default community page
+    ids = root.get('tagged', {}).get(tag, [])
+    if ids:
+        by_id = {}
+        for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
+        exprs = [by_id[i] for i in ids]
+    else: exprs = Expr.list({}, sort='created')
+    response.context['exprs'] = map(format_card, [e for e in exprs if e['title'] != 'Untitled'])
+    response.context['tag'] = tag
+    response.context['tags'] = root.get('tags', [])
+    response.context['show_name'] = True
+
 def handle(request):
     """The HTTP handler.
        All POST requests must be sent to thenewhive.com, as opposed to
@@ -395,16 +409,7 @@ def handle(request):
             return serve_page(response, 'minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'feedback.html')
         elif p1 == '' or p1 == 'home':
-            if request.requester.logged_in:
-                root = get_root()
-                #tag = p2 if p1 else lget(root.get('tags'), 0) # make first tag/category default community page
-                tag = p2
-                ids = root.get('tagged', {}).get(tag, [])
-                exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
-                response.context['exprs'] = map(format_card, [e for e in exprs if e['title'] != 'Untitled'])
-                response.context['tag'] = tag
-                response.context['tags'] = root.get('tags', [])
-                response.context['show_name'] = True
+            if request.requester.logged_in: expr_home_list(p2, request, response)
             return serve_page(response, 'home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()
@@ -412,13 +417,7 @@ def handle(request):
             response.context['tags_js'] = json.dumps(root.get('tags'))
             response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
 
-            ids = root.get('tagged', {}).get(p2, [])
-            exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if p2 else Expr.list({}, sort='created')
-            response.context['exprs'] = map(format_card, exprs)
-            response.context['tag'] = p2
-            response.context['tags'] = root.get('tags', [])
-            response.context['show_name'] = True
-
+            expr_home_list(p2, request, response)
             return serve_page(response, 'admin_home.html')
         #else:
         #    # search for expressions with given tag

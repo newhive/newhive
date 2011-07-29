@@ -50,9 +50,7 @@ class Entity(dict):
     @classmethod
     def search(cls, **spec):
         self = cls({})
-        return self.search_me(**spec)
-    def search_me(self, **spec):
-        return self._col.find(spec)
+        return map(cls, self._col.find(**spec))
 
     @classmethod
     def create(cls, **d):
@@ -179,11 +177,6 @@ class Expr(Entity):
         self['domain'] = self['domain'].lower()
         return super(Expr, self).create_me()
 
-    #def get_tags(self):
-    #    tags = normalize(self['name'])
-    #    tags += normalize(self['title'])
-    #    return tags
-
 def tags_by_frequency(**query):
     tags = {}
     for d in Expr.search(**query):
@@ -192,6 +185,11 @@ def tags_by_frequency(**query):
     counts = [[tags[t], t] for t in tags]
     counts.sort(reverse=True)
     return [c[1] for c in counts]
+
+def count(L):
+    c = {}
+    for v in L: c[v] = c.get(v, 0) + 1
+    return sorted([(c[v], v) for v in c])
 
 
 class File(Entity):
