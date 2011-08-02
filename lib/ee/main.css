@@ -1,4 +1,3 @@
-.happ { position : absolute; white-space : pre-line; }
 .happ > * { position : absolute; }
 .happ .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
 .select_box { width : 100%; height : 100%; z-index : 1; top : -5px; left : -5px; padding : 0; }

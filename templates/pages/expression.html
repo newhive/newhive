@@ -2,7 +2,6 @@
 
 {% block head %}
  <style>
-  .happ { position : absolute; }
   .happ img { width : 100%; }
   #private_expr { background-color: white; border: 5px solid #EDEBE1; padding: 5px; }
   #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
@@ -12,7 +11,7 @@
   {{ css }}
  </style>
  <meta id="og_title" class="og_title" property="og:title" content='{{ title }}'>
- <meta id="og_image" class="og_image" property="og:image" content='{{ exp.thumb }}'>
+ <meta id="og_image" class="og_image" property="og:image" content='{{ exp.thumb|default('/lib/skin/1/default_thumb.png') }}'>
  <meta id="og_url" class="og_url"     property="og:url" content='{{ secure_server }}'>
  <!--
  <meta id="og_desc" class="og_desc"   property="og:description" content='blahblah'>

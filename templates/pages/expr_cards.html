@@ -46,8 +46,8 @@ iframe { border : none; }
 <div style='font-family : Museo; font-size : 4em; margin : 30px 50px 30px 50px;'><a href='/'>{{ fullname }}</a>{{ ': ' + tag if tag }}</div>
 
 <div id='tags'>
- <a href='/!' class='tag_label {{ 'current' if not tag }}'>All</a>
- {% for t in tags %}<a href='!{{ t|e }}' class='tag_label drag {{ 'current' if t == tag }}' draggable='false' value='{{ t|e }}'>{{ t }}</a>{% endfor %}
+ <a href='{{ home_url }}' class='tag_label {{ 'current' if not tag }}'>All</a>
+ {% for t in tags %}<a href='{{ home_url + t|e }}' class='tag_label drag {{ 'current' if t == tag }}' draggable='false' value='{{ t|e }}'>{{ t }}</a>{% endfor %}
  {% if user_is_owner %}
   <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='vertical-align : bottom' title='Add Folder'>
   {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag|e }}"'>{% endif %}
@@ -80,7 +80,7 @@ iframe { border : none; }
      $('#action_input').val('user_tag_remove');
      $('#value_input').val(current_tag);
      $('#upload_form').submit();
-     $('#upload_target').load(function() { window.location = '/!' });
+     $('#upload_target').load(function() { window.location = '{{ home_url }}' });
  }
  function add_tag(item, tag) {
      var tags = $(item).find('.tags'), v = $(tag).attr('value');

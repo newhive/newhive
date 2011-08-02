@@ -178,7 +178,7 @@ def user_create(request, response):
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
-    user.expr_create({})
+    user.expr_create({ 'title' : 'Homepage' })
 
     os.makedirs(joinpath(config.domain_home, config.server_name, user['name'], 'media'))
 
@@ -276,7 +276,7 @@ def mail_feedback(request, response):
 
 def home_url(user):
     """ Returns default URL for given state.User """
-    return abs_url(domain = user.get('sites', [config.server_name])[0]) + '!'
+    return abs_url(domain = user.get('sites', [config.server_name])[0]) + '*'
 def login(request, response):
     if auth.handle_login(request, response):
         return redirect(response, home_url(request.requester))
@@ -339,7 +339,7 @@ def expr_home_list(tag, request, response):
         for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
         exprs = [by_id[i] for i in ids]
     else: exprs = Expr.list({}, sort='created')
-    response.context['exprs'] = map(format_card, [e for e in exprs if e['title'] != 'Untitled'])
+    response.context['exprs'] = map(format_card, exprs)
     response.context['tag'] = tag
     response.context['tags'] = root.get('tags', [])
     response.context['show_name'] = True
@@ -447,7 +447,7 @@ def handle(request):
         ,user_is_owner = is_owner
         )
 
-    if lget(request.path, 0) == '!':
+    if lget(request.path, 0) == '*':
         page = int(request.args.get('p', 0))
         spec = { 'owner' : owner.id }
         tag = request.path[1:]

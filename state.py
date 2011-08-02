@@ -50,7 +50,7 @@ class Entity(dict):
     @classmethod
     def search(cls, **spec):
         self = cls({})
-        return map(cls, self._col.find(**spec))
+        return map(cls, self._col.find(spec=spec))
 
     @classmethod
     def create(cls, **d):
@@ -151,14 +151,14 @@ class Expr(Entity):
     def list(cls, spec, requester=None, limit=111, page=0, sort='updated'):
         es = map(Expr, db.expr.find(
              spec = spec
-            ,fields = ['owner', 'owner_name', 'title', 'updated', 'domain', 'name', 'auth', 'tags_index', 'thumb', 'dimensions']
             ,sort = [(sort, -1)]
             ,limit = limit
             ,skip = limit * page
             ))
 
-        can_view = lambda e: (requester == e['owner']
-            or (e.get('auth', 'public') == 'public'))
+        can_view = lambda e: (
+            (requester == e['owner'] or (e.get('auth', 'public') == 'public'))
+            and len(e.get('apps', [])))
         return filter(can_view, es)
 
     def update(self, **d):
