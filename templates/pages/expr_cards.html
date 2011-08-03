@@ -44,18 +44,18 @@ iframe { border : none; }
 #}
 
 <div style='position : fixed; top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95'>
- <div style='font-family : Museo; font-size : 4em; margin : 30px 50px 30px 50px;'><a href='/'>{{ fullname }}</a>{{ ': ' + tag if tag }}</div>
+ <div style='font-family : Museo; font-size : 4em; margin : 20px 50px 20px 50px;'><a href='/'>{{ fullname }}</a>{{ ': ' + tag if tag }}</div>
  
  <div id='tags'>
-  <a href='{{ home_url }}' class='tag_label {{ 'current' if not tag }}'>All</a>
-  {% for t in tags %}<a href='{{ home_url + t|e }}' class='tag_label drag {{ 'current' if t == tag }}' draggable='false' value='{{ t|e }}'>{{ t }}</a>{% endfor %}
+  <a href='/*' class='tag_label {{ 'current' if not tag }}'>All</a>
+  {% for t in tags %}<a href='/*{{ t|e }}' class='tag_label drag {{ 'current' if t == tag }}' draggable='false' value='{{ t|e }}'>{{ t }}</a>{% endfor %}
   {% if user_is_owner %}
    <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='vertical-align : bottom' title='Add Folder'>
    {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag|e }}"'>{% endif %}
   {% endif %}
  </div>
 </div>
-<div style='position : absolute; top : 180px'>
+<div style='position : absolute; top : 170px'>
  {% include 'cards.html' %}
 </div>
 
