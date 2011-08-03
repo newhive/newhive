@@ -30,9 +30,10 @@ form { display : inline; }
 .nav_icon.text { padding : 0 10px; }
 .border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 .selected { border-color : {{ colors['selected'] }}; }
-.medbold { font-weight : bold; font-size : 1.23em; }
+.medbold { font-weight : bold; font-size : 1.2em; }
 .btn { font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default; }
 .black { background-color : black; color : white; }
+.btn.black:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}; }
 .error { color : {{ colors['active'] }}; }
 #user { position : fixed; display : inline-block; }
 .nav { position : fixed; margin : 0; }

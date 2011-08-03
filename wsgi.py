@@ -114,6 +114,7 @@ def files_create(request, response):
     """
 
     if not request.trusting: raise exceptions.BadRequest()
+    request.max_content_length = 100000000
 
     for file_name in request.files:
         file = request.files[file_name]
