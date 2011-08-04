@@ -7,10 +7,11 @@ from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
+import PIL.Image as Img
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, tags_by_frequency, get_root
+from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, get_root
 
 
 def lget(L, i, default=None):
@@ -38,7 +39,8 @@ def expr_save(request, response):
     res = Expr.fetch(exp.id)
     upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background'])
     upd['name'] = upd['name'].lower().strip()
-    if re.search('\#|\?|\!', upd['name']): return dict(error="URL may not contain '#', '?', or '!'.")
+    if re.search('\#|\?|\!', upd['name']) or re.match('^\*', upd['name']):
+        return dict(error="Sorry, the URL may not contain '#', '?', or begin with '*'.")
     generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try: res = request.requester.expr_create(upd)
@@ -49,7 +51,7 @@ def expr_save(request, response):
         res.update(**upd)
     return dict( error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
 
-import urllib, PIL.Image, random
+import urllib, random
 def generate_thumb(expr, owner):
     # TODO: don't regenerate thumb when image has not changed
 
@@ -73,14 +75,14 @@ def generate_thumb(expr, owner):
     res.update(fs_path = path)
 
     # resize and crop image to 124x96, preserving aspect ratio, save over original
-    try: imo = PIL.Image.open(path)
+    try: imo = Img.open(path)
     except:
         res.delete()
         return
     ratio = float(imo.size[0]) / imo.size[1]
     ratio_target = 124.0 / 96
     new_size = (124, int(124 / ratio)) if ratio < ratio_target else (int(96 * ratio), 96)
-    imo = imo.resize(new_size, resample=PIL.Image.ANTIALIAS)
+    imo = imo.resize(new_size, resample=Img.ANTIALIAS)
     imo = imo.crop((0, 0, 124, 96))
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
@@ -104,7 +106,7 @@ def media_path(user, f_id=None):
     return joinpath(p, f_id) if p else p
 def files_create(request, response):
     """ Saves a file uploaded from the expression editor, responds
-    with a json object representing that file, passed to the
+    with a URL.json object representing that file, passed to the
     JavaScript Hive.new_app function in lib/ee/main.js.
 
      * text/txt files are not saved and simply returned in a text box
@@ -141,16 +143,31 @@ def files_create(request, response):
             res.update(fs_path = path)
             url =  abs_url() + 'file/' + res.id
 
-            if mime == 'audio/mpeg':
+            if mime in ['image/jpeg', 'image/png', 'image/gif']:
+                app['type'] = 'hive.image'
+                app['content'] = url
+
+                try: imo = Img.open(path)
+                except:
+                    res.delete()
+                    return False
+                if imo.size[0] > 1600 or imo.size[1] > 1000:
+                    ratio = float(imo.size[0]) / imo.size[1]
+                    new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
+                    imo = imo.resize(new_size, resample=Img.ANTIALIAS)
+                    imo = imo.convert(mode='RGB')
+                    opts = {}
+                    if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
+                    if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
+                    if mime == 'image/gif': opts.update(format = 'GIF')
+                    imo.save(path, **opts)
+            elif mime == 'audio/mpeg':
                 app['content'] = ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
                     +"<param name='FlashVars' value='soundFile=" + url + "'>"
                     +"<param name='wmode' value='transparent'></object>"
                     )
                 app['type'] = 'hive.html'
                 app['dimensions'] = [200, 24]
-            elif mime in ['image/jpeg', 'image/png', 'image/gif']:
-                app['type'] = 'hive.image'
-                app['content'] = url
             else:
                 app['type'] = 'hive.text'
                 app['content'] = "<a href='%s'>%s</a>" % (url, file.filename)
