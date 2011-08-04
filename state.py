@@ -148,7 +148,7 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
-    def list(cls, spec, requester=None, limit=111, page=0, sort='updated'):
+    def list(cls, spec, requester=None, limit=999, page=0, sort='updated'):
         es = map(Expr, db.expr.find(
              spec = spec
             ,sort = [(sort, -1)]
