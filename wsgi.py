@@ -580,7 +580,7 @@ def render_template(response, template):
         ,colors = colors
         ,debug = config.debug_mode
         )
-    context.setdefault('icon', abs_url() + 'lib/skin/1/logo.png')
+    context.setdefault('icon', '/lib/skin/1/logo.png')
     return jinja_env.get_template('pages/' + template).render(context)
 
 def serve_json(response, val, as_text = False):
