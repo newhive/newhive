@@ -407,6 +407,8 @@ def handle(request):
                 exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
+                if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3)) <= 1:
+                    exp.update(config.intro_expr)
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
