@@ -101,6 +101,7 @@ class User(Entity):
 
     def create_me(self):
         self['name'] = self['name'].lower()
+        self['signup_group'] = config.signup_group
         assert re.match('[a-z][a-z0-9]{2,}$', self['name']) != None, 'Invalid username'
         self.set_password(self['password'])
         self['fullname'] = self.get('fullname', self['name'])
