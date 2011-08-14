@@ -202,6 +202,9 @@ class File(Entity):
 class Log(Entity):
     cname = 'log'
 
+class Contact(Entity):
+    cname = 'contact_log'
+
 #class Resource(Entity):
 #    site = Field(String(255))
 #    subdomain = Field(String(20))

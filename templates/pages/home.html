@@ -42,11 +42,16 @@ a.tag_label:hover { color : #F73627; background : #FFF673; }
   </div>
 
   <div id='welcome_menu' class='menu top'>
-   We are in beta right now.
-   Drop us a line with your email
-   and name and we'll be in touch!<br>
-   <textarea style='margin : 10px 0 10px 0; width : 200px' id='message'></textarea>
-   <div style='text-align : right'><input type='button' class='btn black' value='Send'></div>
+   We are in beta right now. Drop us a line to tell us your name, how
+   you heard about us and what's your interest. We'll be in touch!<br>
+   <div class='spacer'></div>
+   <textarea style='width : 240px' rows='4' id='message' name='message'></textarea>
+   <div class='spacer'></div>
+   <div><b>Email</b></div>
+   <input type='text' style='width : 200px' name='email'>
+   <div class='spacer'></div>
+   <div class='spacer'></div>
+   <div style='text-align : right'><input type='button' id='send_msg' class='btn black' value='Send'></div>
   </div>
  </div>
 
@@ -57,8 +62,8 @@ $(function() {
  {% if error %} login_menu.open() {% endif %}
  mail_menu = click_dialogue($('#welcome_btn'), $('#welcome_menu'));
  
- $('#welcome_menu input').click(function() {
-    $.post('/', { message : $('#message').val(), action : 'mail_us' }, function(data) {
+ $('#send_msg').click(function() {
+    $.post('/', { message : $('#message').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
             if(!data) alert('Sorry, there was a problem sending your message');
             else {
                 $('#message').val('');

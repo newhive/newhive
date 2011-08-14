@@ -11,7 +11,7 @@ import PIL.Image as Img
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, get_root
+from state import Expr, File, User, Contact, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, get_root
 
 
 def lget(L, i, default=None):
@@ -241,20 +241,23 @@ from smtplib import SMTP
 def send_mail(headers, body):
     b = "\r\n".join([k + ': ' + headers[k] for k in headers.keys()] + ['', body])
     return SMTP('localhost').sendmail(headers['From'], headers['To'].split(','), b)
+
 def mail_us(request, response):
     if not request.form.get('message'): return False
-
-    send_mail(
-        dict(To = 'info@thenewhive.com'
-            ,From = 'www-data@' + config.server_name
-            ,Subject = '[home page contact form]'
-            )
-        , request.form.get('message'))
+    heads = {
+         'To' : 'info@thenewhive.com'
+        ,'From' : 'www-data@' + config.server_name
+        ,'Subject' : '[home page contact form]'
+        ,'Reply-to' : request.form.get('email')
+        }
+    body = request.form.get('message')
+    #send_mail(heads, body)
+    create('contact_log', msg=body, email=request.form.get('email'))
     return True
+
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
-
     heads = {
          'To' : request.form.get('to')
         ,'From' : 'The New Hive <noreply+share@thenewhive.com>'
@@ -267,9 +270,9 @@ def mail_them(request, response):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
+
 def mail_feedback(request, response):
     if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')
-
     heads = {
          'To' : 'bugs@thenewhive.com'
         ,'From' : 'Feedback <noreply+feedback@' + config.server_name +'>'
@@ -288,7 +291,6 @@ def mail_feedback(request, response):
     if request.form.get('send_copy'):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
-    
     response.context['success'] = True
 
 
@@ -439,6 +441,11 @@ def handle(request):
 
             expr_home_list(p2, request, response)
             return serve_page(response, 'admin_home.html')
+        elif p1 == 'contacts' and request.requester.get('name') in config.admins:
+            response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
+            response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
+            response.content_type = 'text/csv; charset=utf-8'
+            return response
         #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
@@ -493,7 +500,7 @@ def handle(request):
          edit = abs_url(secure = True) + 'edit/' + resource.id
         ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
-        ,auth_required = (resource.get('auth') == 'password'
+        ,auth_required = (resource.get('auth') == 'password' and resource.get('password')
             and request.form.get('password') != resource.get('password')
             and request.requester.id != resource['owner'])
         ,body = html
