@@ -13,6 +13,14 @@ import config, auth
 from colors import colors
 from state import Expr, File, User, Contact, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, get_root
 
+import webassets
+
+assets_env = webassets.Environment('./lib', '/lib')
+assets_env.register('edit_js', 'ee/main.js', filters='jsmin', output='assets/edit.js')
+assets_env.register('filedrop', 'filedrop.js', filters='jsmin', output='assets/filedrop.js')
+assets_env.register('app', 'util.js', filters='jsmin', output='assets/app.js')
+
+
 
 def lget(L, i, default=None):
     try: return L[i]
@@ -588,6 +596,7 @@ def render_template(response, template):
         ,server_name = config.server_name
         ,colors = colors
         ,debug = config.debug_mode
+        ,assets_env = assets_env
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
     return jinja_env.get_template('pages/' + template).render(context)

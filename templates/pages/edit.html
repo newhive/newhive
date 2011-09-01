@@ -1,8 +1,8 @@
 {% extends "main.html" %}
 
 {% block head %}
- <script src='/lib/ee/main.js?v=2014'></script>
- <script src='/lib/filedrop.js?v=1' ></script>
+ <script src='{{ assets_env["filedrop"].urls()[0] }}'></script>
+ <script src='{{ assets_env["edit_js"].urls()[0] }}'></script>
 
  <script>
   Hive.Exp = {{ exp_js }}; // current expression from server

@@ -78,8 +78,8 @@ html, body { background-color : white; height : 100%; }
 #content { padding-bottom : 20px; }
  </style>
 
- <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js'></script>
- <script src='/lib/util.js?v=9'></script>
+ <script src='/lib/jquery.js'></script>
+ <script src='{{ assets_env["app"].urls()[0] }}'></script>
  {% block head %}{% endblock %}
 </head>
 <body>
