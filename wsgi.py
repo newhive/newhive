@@ -43,13 +43,16 @@ def expr_save(request, response):
         return dict(error="Sorry, the URL may not contain '#', '?', or begin with '*'.")
     generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
-        try: res = request.requester.expr_create(upd)
+        try: 
+          new_expression = True
+          res = request.requester.expr_create(upd)
         except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
     else:
         if not res['owner'] == request.requester.id:
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
-    return dict( error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
+        new_expression = False
+    return dict( new=new_expression, error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
 def generate_thumb(expr, owner):
@@ -388,6 +391,7 @@ def handle(request):
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0]
+    #import pdb; pdb.set_trace()
     if request.domain == config.server_name:
         if request.is_secure and request.requester and request.requester.logged_in:
             request.trusting = True
