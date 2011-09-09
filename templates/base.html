@@ -16,7 +16,8 @@ input[type=text]:focus, input[type=password]:focus, textarea:focus { border-colo
 input[type=button], input[type=submit] { border : none; }
 h1 { font-size : 40px; }
 form { display : inline; }
-.dialog { display : none; width:555px;position:absolute; text-align: center;}
+.dialog { display : none; width:555px;position:absolute; text-align: center; z-index:2001; background: white;}
+#dia_share_shield{position:absolute;width:100%;height:100%; z-index:2000; background-color:black;opacity:0.5;display:none;}
 #congrats_message h1 {font-weight:lighter; font-family:Museo; display:inline; font-size: 33px;}
 #expression_url { background-color: {{ colors['highlight'] }}; }
 .menu { display : none; border : 0px solid {{ colors['unselected'] }};
