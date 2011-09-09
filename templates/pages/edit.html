@@ -1,7 +1,7 @@
 {% extends "main.html" %}
 
 {% block head %}
- <script src='/lib/ee/main.js?v=2016'></script>
+ <script src='/lib/ee/main.js?v=2018'></script>
  <script src='/lib/filedrop.js?v=1' ></script>
 
  <script>
@@ -80,7 +80,9 @@
 </div>
 
 <div class='nav' style='right : 10px; top : 0; white-space : nowrap;'>
- <img id='btn_share' style='display:none' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
+ <div id='btn_share' style='display:none'>
+   <img  src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
+ </div>
  <img id='btn_grid' class='hoverable' src='/lib/skin/1/grid-off.png' style='vertical-align : middle'>
  &nbsp;
  <div id='btn_save' class='medbold nav_icon hoverable text'>

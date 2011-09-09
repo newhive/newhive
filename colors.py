@@ -42,5 +42,6 @@ colors = {
       'selected'   : palette[4]
     , 'unselected' : palette[30]
     , 'active'     : palette[19]
+    , 'highlight'  : palette[32]
     }
 for n in range(len(palette)): colors[n] = palette[n]
