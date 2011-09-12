@@ -31,7 +31,11 @@
    </div>
   {% endif %}
 
-  {% include 'share.html' %}
+  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
+  {% include 'initial_save_popup.html' %}
+  <script>
+    share_menu = click_dialogue($('#btn_share'), $('#dia_share'));
+  </script>
  
   {% if user.logged_in %}
    <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
