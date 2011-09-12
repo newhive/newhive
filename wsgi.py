@@ -509,6 +509,7 @@ def handle(request):
         ,exp_js = json.dumps(resource)
         )
 
+    resource.increment_counter('views')
     return serve_page(response, 'expression.html')
 
 
