@@ -251,7 +251,7 @@ def mail_us(request, response):
         ,'Reply-to' : request.form.get('email')
         }
     body = request.form.get('message')
-    #send_mail(heads, body)
+    send_mail(heads, body)
     create('contact_log', msg=body, email=request.form.get('email'))
     return True
 
@@ -685,7 +685,7 @@ if __name__ == '__main__':
           , use_debugger = config.debug_mode
           , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
           , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
-          , processes = 1
+          , processes = 0
           )
     else:
         run_simple(
@@ -697,5 +697,5 @@ if __name__ == '__main__':
           , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
           , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
           , ssl_context  = ctx
-          , processes = 1
+          , processes = 0
           )
