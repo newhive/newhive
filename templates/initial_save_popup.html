@@ -2,7 +2,7 @@
 <div id='dia_share' class='dialog border selected' >
     <div id="btn_dialog_close"></div>
     <div id="congrats_message" class="line center">
-        <h1><strong>Great work!</strong> Now you can share your expression anywhere.</h1>
+        <h1>Share this expression:</h1>
     </div>
     <div class="line">
         <div class="label medbold">Link</div>
@@ -37,7 +37,7 @@
         </div>
         <div class="line">
             <div class='medbold label'>Message</div>
-            <textarea class="element" cols='40' rows='4' name='message'>Check out this expression:
+            <textarea id='email_message' class="element" cols='40' rows='4' name='message'>Check out this expression:
              {{ url }}</textarea>
             <input id='email_send' type='submit' class='btn black' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
         </div>
