@@ -24,10 +24,11 @@ form { display : inline; }
 #dia_share{ width: 555px; padding: 20px;}
 .dialog .center { text-align: center;}
 .dialog .line { margin: 7px 0; clear: both;}
+.dialog input, .dialog textarea { font-size: 13px; font-family:Arial;}
 #like_buttons { margin: 20px 0;}
 .dialog .line .element { float: left; }
 .dialog .line .label {float:left; margin-top: 6px; margin-right:4px;}
-#email_send {margin-top: 22px; margin-left:20px;}
+#email_send {margin-top: 22px; margin-left:20px; font-family:Arial; font-size:17px;}
 #dia_share_shield{position:absolute;width:100%;height:100%; z-index:2000; background-color:black;opacity:0.5;display:none;}
 #congrats_message h1 {font-weight:lighter; font-family:Museo; display:inline; font-size: 33px;}
 #expression_url { display:block; float: left; font-size:14px; padding:2px; margin:6px auto auto 10px; width: 460px; background-color: {{ colors['highlight'] }}; }
@@ -50,7 +51,7 @@ form { display : inline; }
 .border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 .selected { border-color : {{ colors['selected'] }}; }
 .medbold { font-weight : bold; font-size : 1.2em; }
-.btn { font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default; }
+.btn { padding:5px; font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default; }
 .black { background-color : black; color : white; }
 .btn.black:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}; }
 .error { color : {{ colors['active'] }}; }
