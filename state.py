@@ -142,6 +142,7 @@ db.expr.ensure_index([('created', 1)])
 db.expr.ensure_index([('tags_index', 1)])
 class Expr(Entity):
     cname = 'expr'
+    counters = ['views', 'emails']
 
     @classmethod
     def named(cls, domain, name):
@@ -177,6 +178,14 @@ class Expr(Entity):
         self['title'] = self.get('title') or 'Untitled'
         self['domain'] = self['domain'].lower()
         return super(Expr, self).create_me()
+
+    def increment_counter(self, counter):
+        assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
+        if self.has_key(counter):
+          self.update(**{counter: self[counter] + 1})
+        else:
+          self.update(**{counter: 1})
+        
 
 def tags_by_frequency(**query):
     tags = {}
