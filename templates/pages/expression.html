@@ -35,16 +35,6 @@
   <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
   <script>
     $('#expression_url').html(window.location.href);
-    $('#btn_share').click(function(){
-      $('#dia_share_shield').show();
-      center(
-        $('#dia_share').show()
-      );
-      ZeroClipboard.setMoviePath("/lib/zeroclipboard/ZeroClipboard.swf");
-      var clip = new ZeroClipboard.Client();
-      clip.setText($('#expression_url').html());
-      clip.glue('btn_url_copy', 'btn_url_copy_wrapper');
-    });
     //share_menu = click_dialogue($('#btn_share'), $('#dia_share'));
   </script>
  

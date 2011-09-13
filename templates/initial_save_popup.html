@@ -32,13 +32,14 @@
         <input type='hidden' name='subject' value='{{ user.fullname|e }} has sent you an expression'/>
         <div class="line">
             <div class='medbold label'>Email(s) </div>
-            <input type='text' size='35' name='to'/>
+            <input id='email_to', type='text' size='35' name='to'/>
             <input id='send_copy' type='checkbox' name='send_copy' checked><label for='send_copy'> Send me a copy</label>
         </div>
         <div class="line">
             <div class='medbold label'>Message</div>
             <textarea id='email_message' class="element" cols='40' rows='4' name='message'>Check out this expression:
-             {{ url }}</textarea>
+
+{{ url }}</textarea>
             <input id='email_send' type='submit' class='btn black' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
         </div>
     </form>
