@@ -22,6 +22,7 @@
  <meta property="og:site_name" content='The New Hive'>
 {% endblock %}
 
+{% include 'initial_save_popup.html' %}
 {% block body %}
  <div class='nav' style='right : 10px; top : 0px;'>
   {% if not user_is_owner %}
@@ -32,9 +33,19 @@
   {% endif %}
 
   <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
-  {% include 'initial_save_popup.html' %}
   <script>
-    share_menu = click_dialogue($('#btn_share'), $('#dia_share'));
+    $('#expression_url').html(window.location.href);
+    $('#btn_share').click(function(){
+      $('#dia_share_shield').show();
+      center(
+        $('#dia_share').show()
+      );
+      ZeroClipboard.setMoviePath("/lib/zeroclipboard/ZeroClipboard.swf");
+      var clip = new ZeroClipboard.Client();
+      clip.setText($('#expression_url').html());
+      clip.glue('btn_url_copy', 'btn_url_copy_wrapper');
+    });
+    //share_menu = click_dialogue($('#btn_share'), $('#dia_share'));
   </script>
  
   {% if user.logged_in %}

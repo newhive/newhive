@@ -16,10 +16,25 @@ input[type=text]:focus, input[type=password]:focus, textarea:focus { border-colo
 input[type=button], input[type=submit] { border : none; }
 h1 { font-size : 40px; }
 form { display : inline; }
-.dialog { display : none; width:555px;position:absolute; text-align: center; z-index:2001; background: white;}
+.dialog { display : none; position:absolute;z-index:2001; background: white;
+    -moz-box-shadow: 05px 05px 05px #444;
+    -webkit-box-shadow: 05px 05px 05px #444;
+    box-shadow: 05px 05px 05px #444;
+}
+#dia_share{ width: 555px; padding: 20px;}
+.dialog .center { text-align: center;}
+.dialog .line { margin: 7px 0; clear: both;}
+#like_buttons { margin: 20px 0;}
+.dialog .line .element { float: left; }
+.dialog .line .label {float:left; margin-top: 6px; margin-right:4px;}
+#email_send {margin-top: 22px; margin-left:20px;}
 #dia_share_shield{position:absolute;width:100%;height:100%; z-index:2000; background-color:black;opacity:0.5;display:none;}
 #congrats_message h1 {font-weight:lighter; font-family:Museo; display:inline; font-size: 33px;}
-#expression_url { background-color: {{ colors['highlight'] }}; }
+#expression_url { display:block; float: left; font-size:14px; padding:2px; margin:6px auto auto 10px; width: 460px; background-color: {{ colors['highlight'] }}; }
+#btn_url_copy { background-image:url("/lib/skin/1/copy_clipboard.png"); float:right; width:20px; height:24px; margin: 2px 5px 0 0;}
+#btn_url_copy.hover { background-image:url("/lib/skin/1/copy_clipboard-hover.png");}
+#btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png"); right:10px; top:5px;}
+#btn_dialog_close:hover {background-image: url("/lib/skin/1/close-hover.png")}
 .menu { display : none; border : 0px solid {{ colors['unselected'] }};
     background-color : white; z-index : 1100; font-size : 11pt; position : absolute;
     -moz-box-shadow: 05px 05px 05px #888;
@@ -85,6 +100,7 @@ html, body { background-color : white; height : 100%; }
  <script src='/lib/jquery.js'></script>
  <script src='/lib/jquery-ui.color.js'></script>
  <script src='/lib/util.js?v=10'></script>
+ <script src='/lib/zeroclipboard/ZeroClipboard.js'></script>
  {% block head %}{% endblock %}
 </head>
 <body>
