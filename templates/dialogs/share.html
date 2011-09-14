@@ -12,17 +12,15 @@
     </div>
     <div class="line"></div>
     <div id="like_buttons" class="line center">
-        <img src='/lib/skin/1/twitter.png' title='Share on Twitter' style='width:32px;height:32px' onclick="
-            _gaq.push(['_trackEvent', 'share', 'twitter']); 
-            new_window('http://twitter.com/share?url=' + encodeURIComponent(window.location), 550, 425)"/>
-        <img src='/lib/skin/1/facebook.png' title='Share on Facebook' style='width:32px;height:32px' onclick="
-            _gaq.push(['_trackEvent', 'share', 'facebook']); 
-            new_window('http://www.facebook.com/sharer.php?u=' + encodeURIComponent(window.location), 755, 425)"/>
-        <a href="http://www.reddit.com/submit" onclick="
-            _gaq.push(['_trackEvent', 'share', 'reddit']); 
-            window.location = 'http://www.reddit.com/submit?url=' + encodeURIComponent(window.location); return false">
+      <a class='twitter' onclick="_gaq.push(['_trackEvent', 'share', 'twitter']); ">
+        <img src='/lib/skin/1/twitter.png' title='Share on Twitter' style='width:32px;height:32px' />
+      </a>
+      <a class='facebook' onclick="_gaq.push(['_trackEvent', 'share', 'facebook']);">
+        <img src='/lib/skin/1/facebook.png' title='Share on Facebook' style='width:32px;height:32px'/>
+      </a>
+      <a class='reddit' onclick="_gaq.push(['_trackEvent', 'share', 'reddit']);">
         <img src="/lib/skin/1/reddit.png" alt="submit to reddit" border="0" />
-        </a>
+      </a>
         <g:plusone count="false" onclick="_gaq.push(['_trackEvent', 'share', 'plusone']);"></g:plusone>
     </div>
     {% if user.logged_in %}
