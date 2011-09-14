@@ -52,7 +52,13 @@ form { display : inline; }
 .border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 .selected { border-color : {{ colors['selected'] }}; }
 .medbold { font-weight : bold; font-size : 1.2em; }
-.btn { padding:5px; font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default; }
+.btn { padding:5px 10px; font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default;}
+.rounded {
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+}
 .black { background-color : black; color : white; }
 .btn.black:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}; }
 .error { color : {{ colors['active'] }}; }

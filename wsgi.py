@@ -43,16 +43,13 @@ def expr_save(request, response):
         return dict(error="Sorry, the URL may not contain '#', '?', or begin with '*'.")
     generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
-        try: 
-          new_expression = True
-          res = request.requester.expr_create(upd)
+        try: res = request.requester.expr_create(upd)
         except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
     else:
         if not res['owner'] == request.requester.id:
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
-        new_expression = False
-    return dict( new=new_expression, error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
+    return dict( error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
 def generate_thumb(expr, owner):
@@ -246,16 +243,25 @@ def send_mail(headers, body):
     return SMTP('localhost').sendmail(headers['From'], headers['To'].split(','), b)
 
 def mail_us(request, response):
-    if not request.form.get('message'): return False
+    if not request.form.get('email'): return False
+    form = {
+        'name': request.form.get('name')
+        ,'email': request.form.get('email')
+        ,'referral': request.form.get('referral')
+        ,'message': request.form.get('message')
+        }
     heads = {
          'To' : 'info@thenewhive.com'
         ,'From' : 'www-data@' + config.server_name
         ,'Subject' : '[home page contact form]'
-        ,'Reply-to' : request.form.get('email')
+        ,'Reply-to' : form['email']
         }
-    body = request.form.get('message')
+    body = "Name: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
+    print(request.form)
+    print(form)
+    form.update({'msg': body})
     send_mail(heads, body)
-    create('contact_log', msg=body, email=request.form.get('email'))
+    create('contact_log', **form)
     return True
 
 def mail_them(request, response):
@@ -382,7 +388,6 @@ def handle(request):
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0]
-    #import pdb; pdb.set_trace()
     if request.domain == config.server_name:
         if request.is_secure and request.requester and request.requester.logged_in:
             request.trusting = True
