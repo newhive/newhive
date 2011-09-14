@@ -5,10 +5,7 @@
     </div>
     <div class="line">
         <div class="label medbold">Link</div>
-        <code id="expression_url">test.thenewhive.com/dummyurl</code>
-        <div id="btn_url_copy_wrapper" style="position:relative">
-          <div id="btn_url_copy"></div>
-        </div>
+        <input type="text" class="copy copy_url" id="expression_url" onfocus="this.select()" onclick="this.select()" readonly="readonly"></input>
     </div>
     <div class="line"></div>
     <div id="like_buttons" class="line center">
@@ -21,7 +18,7 @@
       <a class='reddit' onclick="_gaq.push(['_trackEvent', 'share', 'reddit']);">
         <img src="/lib/skin/1/reddit.png" alt="submit to reddit" border="0" />
       </a>
-        <g:plusone count="false" onclick="_gaq.push(['_trackEvent', 'share', 'plusone']);"></g:plusone>
+      <g:plusone class = 'gplus' count="false" onclick="_gaq.push(['_trackEvent', 'share', 'plusone']);"></g:plusone>
     </div>
     {% if user.logged_in %}
     <form id='mail_form' action='{{ secure_server }}' method='POST'>
@@ -38,17 +35,16 @@
             <textarea id='email_message' class="element" cols='40' rows='4' name='message'>Check out this expression:
 
 {{ url }}</textarea>
-            <input id='email_send' type='submit' class='btn black' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
+            <input id='email_send' type='submit' class='btn black rounded' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
         </div>
     </form>
     {% endif %}
+    
+    <div class="line"></div>
+    <div class="line">
+        <div class="label medbold">Embed</div>
+        <textarea class="copy embed_code" onfocus="this.select()" onclick="this.select()" readonly="readonly" id="expression_embed_code"></textarea>
+    </div>
 
     <br/>
-    <script type="text/javascript">
-        (function() {
-            var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-            po.src = 'https://apis.google.com/js/plusone.js';
-            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
-        })();
-    </script>
 </div>

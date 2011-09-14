@@ -19,13 +19,37 @@
 .dialog .line .label {float:left; margin-top: 6px; margin-right:4px;}
 .btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png"); right:10px; top:5px;}
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: url("/lib/skin/1/close-hover.png")}
+input[type="text"].copy, textarea.copy {
+    border: none;
+    font-family: courier, monospace;
+    white-space: pre-wrap;
+}
 
 /* Share dialog */
 #email_send {margin-top: 22px; margin-left:20px; font-family:Arial; font-size:17px;}
 #dia_share_shield, #dialog_shield{position:absolute;width:100%;height:100%; z-index:2000; background-color:black;opacity:0.33;-moz-opacity:0.33;display:none;}
 #congrats_message h1 {font-weight:lighter; font-family:Museo; display:inline; font-size: 33px;}
 #congrats_message strong {font-weight:normal; color:{{ colors['bright_red'] }}; }
-#expression_url { display:block; float: left; font-size:14px; padding:7px; margin:3px auto auto 10px; width: 450px; background-color: {{ colors['highlight'] }}; }
+#expression_url { 
+    display:block; 
+    float: left; 
+    font-size:14px; 
+    padding:7px; 
+    margin:3px auto auto 10px; 
+    width: 470px; 
+    background-color: #FFF673; 
+}
+#expression_embed_code { 
+    overflow:auto; 
+    white-space: nowrap; 
+    display:block; 
+    float: left; 
+    font-size:12px; 
+    padding:7px; 
+    margin:3px auto auto 10px; 
+    width: 445px; 
+    background-color: #FFF673; 
+}
 #btn_url_copy { background-image:url("/lib/skin/1/copy_clipboard.png"); float:right; width:20px; height:24px; margin: 5px 5px 0 0;}
 #btn_url_copy.hover { background-image:url("/lib/skin/1/copy_clipboard-hover.png");}
 #dia_share{ 
@@ -33,20 +57,25 @@
   padding: 20px;
 }
 #like_buttons { margin: 20px 0;}
+#dia_share #email_message { width:360px; }
+#dia_share #email_to { width: 282px; }
 
 /* Referral Dialog */
 #dia_referral {
-  width: 350px;
+  width: 420px;
   padding: 20px 50px;
   text-align: left;
 }
 #dia_referral h3 {
   font-family: Museo, serif;
   font-weight: normal;
-  font-size: 25px;
+  font-size: 28px;
   margin: 20px 0;
 }
 #referral_count { color: red; }
+#dia_referral input[type="text"] { width: 400px; }
+#dia_referral input[type="submit"] { float: right; font-size: 18px; }
+#dia_referral textarea { width: 310px; }
 
 /* firefox warning dialog */
 #firefox_warning {
