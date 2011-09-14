@@ -26,6 +26,7 @@
         </a>
         <g:plusone count="false" onclick="_gaq.push(['_trackEvent', 'share', 'plusone']);"></g:plusone>
     </div>
+    {% if user.logged_in %}
     <form id='mail_form' action='{{ secure_server }}' method='POST'>
         <input type='hidden' name='forward' value='{{ url|e }}'/>
         <input type='hidden' name='action' value='mail_them'/>
@@ -43,6 +44,7 @@
             <input id='email_send' type='submit' class='btn black' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
         </div>
     </form>
+    {% endif %}
 
     <br/>
     <script type="text/javascript">
