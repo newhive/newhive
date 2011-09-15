@@ -100,7 +100,7 @@ def expr_delete(request, response):
     if not e: return serve_404(request, response)
     if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
     e.delete()
-    if e['name'] == '': request.requester.expr_create({})
+    if e['name'] == '': request.requester.expr_create({ 'title' : 'Homepage', 'home' : True })
     # TODO: garbage collect media files that are no longer referenced by expression
     return redirect(response, home_url(request.requester))
 
@@ -199,7 +199,7 @@ def user_create(request, response):
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
-    user.expr_create({ 'title' : 'Homepage' })
+    user.expr_create({ 'title' : 'Homepage', 'home' : True })
 
     os.makedirs(joinpath(config.domain_home, config.server_name, user['name'], 'media'))
 
@@ -423,7 +423,8 @@ def handle(request):
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
                 if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                    exp.update(config.intro_expr)
+                    intro_expr = Expr.fetch(config.intro_expr)
+                    if intro_expr: exp.update(intro_expr)
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
