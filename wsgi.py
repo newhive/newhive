@@ -424,7 +424,7 @@ def handle(request):
                 exp['auth'] = 'public'
                 if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
                     intro_expr = Expr.fetch(config.intro_expr)
-                    if intro_expr: exp.update(intro_expr)
+                    if intro_expr: exp['apps'] = intro_expr.get('apps', [])
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
