@@ -1,7 +1,7 @@
 {% extends "main.html" %}
 
 {% block head %}
- <script src='/lib/ee/main.js?v=2017'></script>
+ <script src='/lib/ee/main.js?v=2019'></script>
  <script src='/lib/filedrop.js?v=1' ></script>
 
  <script>
@@ -33,6 +33,8 @@
 {% endblock %}
 
 {% block body %}
+
+{% include 'dialogs/firefox_warning.html' %}
 
 <div id='app_btns' class='nav'>
  <img id='insert_text'  class='hoverable nav_icon' src='/lib/skin/1/text.png'
@@ -78,6 +80,9 @@
 </div>
 
 <div class='nav' style='right : 10px; top : 0; white-space : nowrap;'>
+ <div id='btn_share' style='display:none'>
+   <img  src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
+ </div>
  <img id='btn_grid' class='hoverable' src='/lib/skin/1/grid-off.png' style='vertical-align : middle'>
  &nbsp;
  <div id='btn_save' class='medbold nav_icon hoverable text'>

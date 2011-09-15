@@ -4,6 +4,7 @@
  <title>{{ 'The New Hive' if not title else title }}</title>
  <link rel='shortcut icon' type='image/png' href={{ icon }}>
 
+ <link rel='stylesheet' type='text/css' href='/lib/app.css'></link>
  <style id='css_base'>
 html, body { margin : 0; padding : 0; font-family : Helvetica, sans-serif; font-size : 17px;
     color : black; white-space-collapse : discard; }
@@ -31,7 +32,13 @@ form { display : inline; }
 .border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 .selected { border-color : {{ colors['selected'] }}; }
 .medbold { font-weight : bold; font-size : 1.2em; }
-.btn { font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default; }
+.btn { padding:5px 10px; font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default;}
+.rounded {
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+}
 .black { background-color : black; color : white; }
 .btn.black:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}; }
 .error { color : {{ colors['active'] }}; }
@@ -79,7 +86,9 @@ html, body { background-color : white; height : 100%; }
  </style>
 
  <script src='/lib/jquery.js'></script>
- <script src='/lib/util.js?v=10'></script>
+ <script src='/lib/jquery-ui.color.js'></script>
+ <script src='/lib/util.js?v=11'></script>
+ <script src='/lib/zeroclipboard/ZeroClipboard.js'></script>
  {% block head %}{% endblock %}
 </head>
 <body>

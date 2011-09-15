@@ -243,16 +243,25 @@ def send_mail(headers, body):
     return SMTP('localhost').sendmail(headers['From'], headers['To'].split(','), b)
 
 def mail_us(request, response):
-    if not request.form.get('message'): return False
+    if not request.form.get('email'): return False
+    form = {
+        'name': request.form.get('name')
+        ,'email': request.form.get('email')
+        ,'referral': request.form.get('referral')
+        ,'message': request.form.get('message')
+        }
     heads = {
          'To' : 'info@thenewhive.com'
         ,'From' : 'www-data@' + config.server_name
         ,'Subject' : '[home page contact form]'
-        ,'Reply-to' : request.form.get('email')
+        ,'Reply-to' : form['email']
         }
-    body = request.form.get('message')
+    body = "Name: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
+    print(request.form)
+    print(form)
+    form.update({'msg': body})
     send_mail(heads, body)
-    create('contact_log', msg=body, email=request.form.get('email'))
+    create('contact_log', **form)
     return True
 
 def mail_them(request, response):
