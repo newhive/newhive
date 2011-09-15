@@ -101,18 +101,20 @@ def expr_delete(request, response):
     # TODO: garbage collect media files that are no longer referenced by expression
     return redirect(response, home_url(request.requester))
 
+def save_file(file_or_name):
+    """ Uploads file to s3 if config.aws_id is defined, otherwise
+    saves in config.media_path
+    """
+
+    path = media_path(request.requester, res.id)
+
 def media_path(user, f_id=None):
     p = joinpath(config.domain_home, config.server_name, user['name'], 'media')
     return joinpath(p, f_id) if p else p
 def files_create(request, response):
     """ Saves a file uploaded from the expression editor, responds
-    with a URL.json object representing that file, passed to the
-    JavaScript Hive.new_app function in lib/ee/main.js.
-
-     * text/txt files are not saved and simply returned in a text box
-     * all other file types are saved in the user's media folder
-     * mp3 and image files are handled specifically by the editor
-     * for all other files a link in a text box is returned
+    with a Hive.App JSON object Resamples images to 1600x1000 or
+    smaller, sets JPEG quality to 70
     """
 
     if not request.trusting: raise exceptions.BadRequest()
@@ -138,7 +140,6 @@ def files_create(request, response):
                 ,name = file.filename
                 ,mime = mime
                 )
-            path = media_path(request.requester, res.id)
             file.save(path)
             res.update(fs_path = path)
             url =  abs_url() + 'file/' + res.id
@@ -155,12 +156,12 @@ def files_create(request, response):
                     ratio = float(imo.size[0]) / imo.size[1]
                     new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
                     imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-                    imo = imo.convert(mode='RGB')
-                    opts = {}
-                    if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
-                    if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
-                    if mime == 'image/gif': opts.update(format = 'GIF')
-                    imo.save(path, **opts)
+                imo = imo.convert(mode='RGB')
+                opts = {}
+                if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
+                if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
+                if mime == 'image/gif': opts.update(format = 'GIF')
+                imo.save(path, **opts)
             elif mime == 'audio/mpeg':
                 app['content'] = ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
                     +"<param name='FlashVars' value='soundFile=" + url + "'>"
@@ -198,7 +199,7 @@ def user_create(request, response):
     referral.delete()
     user.expr_create({ 'title' : 'Homepage' })
 
-    os.makedirs(joinpath(config.domain_home, config.server_name, user['name'], 'media'))
+    os.makedirs(media_path(user))
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
