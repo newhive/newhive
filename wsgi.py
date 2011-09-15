@@ -524,6 +524,7 @@ def handle(request):
         )
 
     resource.increment_counter('views')
+    if is_owner: resource.increment_counter('owner_views')
     return serve_page(response, 'expression.html')
 
 
