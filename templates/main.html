@@ -3,28 +3,12 @@
 {% block main %}
 <div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
 >{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
-<script>
-//background_fit = function(bg) {
-//    var fill = '{#{ exp.background.fill }#}';
-//    if(o.fill == 'stretch') {
-//        o.img = $('<img>').attr('src', o.url).css({ 'width' : '100%', opacity : o.opacity});
-//        $('#bg').append(o.img);
-//        $(o.img).load(function() {
-//            o.ratio = o.img.width() / o.img.height();
-//            o.img.css('width','');
-//            $(window).resize();
-//        });
-//        $(window).resize(function() {
-//            var win_size = [$(window).width(), $(window).height()];
-//            if(win_size[0] / win_size[1] > o.ratio) { o.img.width(win_size[0]); o.img.height(win_size[0] / o.ratio); }
-//            else { o.img.width(win_size[1] * o.ratio); o.img.height(win_size[1]); }
-//        });
-//    }
-//    else $('#bg').css({ 'background-image' : o.url });
-//}
-</script>
 
-
+<div id='dialog_shield'></div>
+{% include 'dialogs/share.html' %}
+{% if user.logged_in %}
+  {% include 'dialogs/referral.html' %}
+{% endif %}
 <div class='nav' id='nav_bg'></div>
 <div class='nav' style='font-weight : bold'>
  <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
@@ -36,6 +20,9 @@
     <input name='action' value='logout' type='hidden'>
    </form>
    <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
+   {% if user.referrals > 0 %}
+     <div class='menu_item' onclick='showDialog("#dia_referral")'>Referrals</div>
+  {% endif %}
    <!--<div class='menu_item'>Change&nbsp;icon</div>
    <div class='menu_item'>Settings</div>-->
   </div>

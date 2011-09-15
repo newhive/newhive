@@ -9,7 +9,6 @@ a.tag_label:hover { color : #F73627; background : #FFF673; }
 .tag_label.current { background-color : #96E2CE; color : black; padding : 3px 20px; }
 .tag_label { font-weight : bold; color : #696E76; padding : 3px 15px; margin-right : 5px; background-color : #EDEBE1; }
 .spacer { height : 10px; }
-.btn { padding : 0px 10px; }
 #welcome.open { background-color : {{ colors[0] }}; color : white }
 #welcome { display : inline; font-weight : bold; margin-left:15px; }
 #tags { margin : 50px 50px 25px 50px; }
@@ -36,22 +35,26 @@ a.tag_label:hover { color : #F73627; background : #FFF673; }
     <input type='password' name='secret'><br>
     <input id='expires' type='checkbox' name='no_expires'><label for='expires'> Remember me</label>
     <br><br>
-    <div style='text-align : center'><input id='login_submit' type='submit' class='btn black' value='Enter'></div>
+    <div style='text-align : center'><input id='login_submit' type='submit' class='btn black rounded' value='Enter'></div>
     <input type='hidden' name='action' value='login'>
    </form>
   </div>
 
   <div id='welcome_menu' class='menu top'>
-   We are in beta right now. Drop us a line to tell us your name, how
-   you heard about us and what's your interest. We'll be in touch!<br>
-   <div class='spacer'></div>
-   <textarea style='width : 240px' rows='4' id='message' name='message'></textarea>
+   <div><b>Name</b></div>
+   <input type='text' style='width : 200px' name='name'>
    <div class='spacer'></div>
    <div><b>Email</b></div>
    <input type='text' style='width : 200px' name='email'>
    <div class='spacer'></div>
+   <div><b>How did you hear<br/>about The New Hive?</b></div>
+   <input type='text' style='width : 200px' name='referral'>
    <div class='spacer'></div>
-   <div style='text-align : right'><input type='button' id='send_msg' class='btn black' value='Send'></div>
+   <div><b>How do you<br/>express yourself?</b></div>
+   <input type='text' style='width : 200px' name='message'>
+   <div class='spacer'></div>
+   <div class='spacer'></div>
+   <div style='text-align : right'><input type='button' id='send_msg' class='btn black rounded' value='Enter'></div>
   </div>
  </div>
 
@@ -63,11 +66,11 @@ $(function() {
  mail_menu = click_dialogue($('#welcome_btn'), $('#welcome_menu'));
  
  $('#send_msg').click(function() {
-    $.post('/', { message : $('#message').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
-            if(!data) alert('Sorry, there was a problem sending your message');
+    $.post('/', { name : $('[name=name]').val(), message : $('[name=message]').val(), referral : $('[name=referral]').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
+            if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
             else {
                 $('#message').val('');
-                alert('Thankyou for your feedback');
+                alert('Thank you for your feedback');
                 mail_menu.close();
             }
         }, 'json') });

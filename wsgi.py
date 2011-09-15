@@ -43,13 +43,16 @@ def expr_save(request, response):
         return dict(error="Sorry, the URL may not contain '#', '?', or begin with '*'.")
     generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
-        try: res = request.requester.expr_create(upd)
+        try: 
+          new_expression = True
+          res = request.requester.expr_create(upd)
         except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
     else:
         if not res['owner'] == request.requester.id:
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
-    return dict( error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
+        new_expression = False
+    return dict( new=new_expression, error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
 def generate_thumb(expr, owner):
@@ -97,7 +100,7 @@ def expr_delete(request, response):
     if not e: return serve_404(request, response)
     if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
     e.delete()
-    if e['name'] == '': request.requester.expr_create({})
+    if e['name'] == '': request.requester.expr_create({ 'title' : 'Homepage', 'home' : True })
     # TODO: garbage collect media files that are no longer referenced by expression
     return redirect(response, home_url(request.requester))
 
@@ -197,7 +200,7 @@ def user_create(request, response):
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
-    user.expr_create({ 'title' : 'Homepage' })
+    user.expr_create({ 'title' : 'Homepage', 'home' : True })
 
     os.makedirs(media_path(user))
 
@@ -244,16 +247,25 @@ def send_mail(headers, body):
     return SMTP('localhost').sendmail(headers['From'], headers['To'].split(','), b)
 
 def mail_us(request, response):
-    if not request.form.get('message'): return False
+    if not request.form.get('email'): return False
+    form = {
+        'name': request.form.get('name')
+        ,'email': request.form.get('email')
+        ,'referral': request.form.get('referral')
+        ,'message': request.form.get('message')
+        }
     heads = {
          'To' : 'info@thenewhive.com'
         ,'From' : 'www-data@' + config.server_name
         ,'Subject' : '[home page contact form]'
-        ,'Reply-to' : request.form.get('email')
+        ,'Reply-to' : form['email']
         }
-    body = request.form.get('message')
+    body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
+    print(request.form)
+    print(form)
+    form.update({'msg': body})
     send_mail(heads, body)
-    create('contact_log', msg=body, email=request.form.get('email'))
+    create('contact_log', **form)
     return True
 
 def mail_them(request, response):
@@ -380,6 +392,7 @@ def handle(request):
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0]
+    #import pdb; pdb.set_trace()
     if request.domain == config.server_name:
         if request.is_secure and request.requester and request.requester.logged_in:
             request.trusting = True
@@ -411,7 +424,8 @@ def handle(request):
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
                 if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                    exp.update(config.intro_expr)
+                    intro_expr = Expr.fetch(config.intro_expr)
+                    if intro_expr: exp['apps'] = intro_expr.get('apps', [])
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
@@ -511,6 +525,7 @@ def handle(request):
         )
 
     resource.increment_counter('views')
+    if is_owner: resource.increment_counter('owner_views')
     return serve_page(response, 'expression.html')
 
 
