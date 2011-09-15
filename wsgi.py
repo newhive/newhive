@@ -113,8 +113,8 @@ def media_path(user, f_id=None):
     return joinpath(p, f_id) if p else p
 def files_create(request, response):
     """ Saves a file uploaded from the expression editor, responds
-    with a Hive.App JSON object Resamples images to 1600x1000 or
-    smaller, sets JPEG quality to 70
+    with a Hive.App JSON object.
+    Resamples images to 1600x1000 or smaller, sets JPEG quality to 70
     """
 
     if not request.trusting: raise exceptions.BadRequest()
