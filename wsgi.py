@@ -259,7 +259,7 @@ def mail_us(request, response):
         ,'Subject' : '[home page contact form]'
         ,'Reply-to' : form['email']
         }
-    body = "Name: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
+    body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
     print(request.form)
     print(form)
     form.update({'msg': body})
@@ -524,6 +524,7 @@ def handle(request):
         )
 
     resource.increment_counter('views')
+    if is_owner: resource.increment_counter('owner_views')
     return serve_page(response, 'expression.html')
 
 

@@ -142,7 +142,7 @@ db.expr.ensure_index([('created', 1)])
 db.expr.ensure_index([('tags_index', 1)])
 class Expr(Entity):
     cname = 'expr'
-    counters = ['views', 'emails']
+    counters = ['owner_views', 'views', 'emails']
 
     @classmethod
     def named(cls, domain, name):
