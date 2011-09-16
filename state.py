@@ -1,4 +1,4 @@
-import re, pymongo, pymongo.objectid, random, urllib
+import re, pymongo, pymongo.objectid, random, urllib, os
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 import config
@@ -215,6 +215,7 @@ class File(Entity):
             k.set_contents_from_filename(tmp_path,
                 headers={ 'Content-Disposition' : 'inline; filename=' + name })
             url = k.generate_url(86400 * 3600)
+            os.remove(tmp_path)
         else:
             path = media_path(request.requester, self.id)
             os.renames(tmp_path, path)
@@ -227,7 +228,7 @@ class File(Entity):
     def delete(self):
         if self.get('s3_bucket'):
             k = s3_con.get_bucket(self['s3_bucket']).get_key(self.id)
-            k.delete()
+            if k: k.delete()
         elif self.get('fs_path'): os.remove(self['fs_path'])
 
         super(File, self).delete()

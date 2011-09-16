@@ -69,21 +69,17 @@ def generate_thumb(expr, owner):
     try: response = urllib.urlopen(fst_img['content'])
     except: return
     if response.getcode() != 200: return
-    res = File.create(
-         owner = owner.id
-        ,name = 'thumb'
-        ,mime = response.headers.getheader('Content-Type')
-        )
-    path = media_path(owner, res.id)
+    mime = response.headers.getheader('Content-Type')
+
+    path = os.tmpnam()
     f = open(path, 'w')
     f.write(response.read())
     f.close()
-    res.update(fs_path = path)
 
     # resize and crop image to 124x96, preserving aspect ratio, save over original
     try: imo = Img.open(path)
     except:
-        res.delete()
+        os.remove(path)
         return
     ratio = float(imo.size[0]) / imo.size[1]
     ratio_target = 124.0 / 96
@@ -93,8 +89,8 @@ def generate_thumb(expr, owner):
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
 
-    url = abs_url() + 'file/' + res.id
-    expr['thumb'] = url
+    res = File.create(owner=owner.id, path=path, name='thumb', mime=mime)
+    expr['thumb'] = res.get('url')
 
 
 def expr_delete(request, response):
@@ -138,7 +134,6 @@ def files_create(request, response):
                 ratio = float(imo.size[0]) / imo.size[1]
                 new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
                 imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-            imo = imo.convert(mode='RGB')
             opts = {}
             if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
             if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
@@ -597,6 +592,7 @@ def render_template(response, template):
         ,server_name = config.server_name
         ,colors = colors
         ,debug = config.debug_mode
+        ,use_ga = config.use_ga
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
     return jinja_env.get_template('pages/' + template).render(context)
