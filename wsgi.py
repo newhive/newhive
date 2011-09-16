@@ -11,6 +11,9 @@ import PIL.Image as Img
 
 import config, auth
 from colors import colors
+# TODO: remove create and fetch, use specific Entity objects instead
+# TODO: remove junkstr, call it from Referral.create_me
+# TODO: remove DuplicateKeyError replace with sane user error
 from state import Expr, File, User, Contact, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, get_root
 
 
@@ -104,16 +107,6 @@ def expr_delete(request, response):
     # TODO: garbage collect media files that are no longer referenced by expression
     return redirect(response, home_url(request.requester))
 
-def save_file(file_or_name):
-    """ Uploads file to s3 if config.aws_id is defined, otherwise
-    saves in config.media_path
-    """
-
-    path = media_path(request.requester, res.id)
-
-def media_path(user, f_id=None):
-    p = joinpath(config.domain_home, config.server_name, user['name'], 'media')
-    return joinpath(p, f_id) if p else p
 def files_create(request, response):
     """ Saves a file uploaded from the expression editor, responds
     with a Hive.App JSON object.
@@ -127,56 +120,56 @@ def files_create(request, response):
         file = request.files[file_name]
         mime = mimetypes.guess_type(file.filename)[0]
 
-        #if exists(joinpath(media_path(request.requester), file.filename)):
-        #    m = re.search('(.*?)(_([0-9]+))?(\..*?$)', file.filename)
-        #    if m.groups()[2]: file.filename = m.groups()[0] + '_' + str(int(m.groups()[2]) + 1) + m.groups()[3]
-        #    else: file.filename = m.groups()[0] + '_1' + m.groups()[3]
-        #path = joinpath(media_path(request.requester), file.filename)
-
         app = {}
         if mime == 'text/plain':
             app['type'] = 'hive.text'
             app['content'] = file.stream.read()
-        else:
-            res = File.create(
-                 owner = request.requester.id
-                ,name = file.filename
-                ,mime = mime
+            return app
+
+        path = os.tmpnam()
+        file.save(path)
+
+        if mime in ['image/jpeg', 'image/png', 'image/gif']:
+            try: imo = Img.open(path)
+            except:
+                res.delete()
+                return False
+            if imo.size[0] > 1600 or imo.size[1] > 1000:
+                ratio = float(imo.size[0]) / imo.size[1]
+                new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
+                imo = imo.resize(new_size, resample=Img.ANTIALIAS)
+            imo = imo.convert(mode='RGB')
+            opts = {}
+            if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
+            if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
+            if mime == 'image/gif': opts.update(format = 'GIF')
+            imo.save(path, **opts)
+
+        res = File.create(owner=request.requester.id, path=path, name=file.filename, mime=mime)
+        url = res.get('url')
+        app['file_id'] = res.id
+
+        if mime in ['image/jpeg', 'image/png', 'image/gif']:
+            app['type'] = 'hive.image'
+            app['content'] = url
+        elif mime == 'audio/mpeg':
+            app['content'] = ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
+                +"<param name='FlashVars' value='soundFile=" + url + "'>"
+                +"<param name='wmode' value='transparent'></object>"
                 )
-            file.save(path)
-            res.update(fs_path = path)
-            url =  abs_url() + 'file/' + res.id
-
-            if mime in ['image/jpeg', 'image/png', 'image/gif']:
-                app['type'] = 'hive.image'
-                app['content'] = url
-
-                try: imo = Img.open(path)
-                except:
-                    res.delete()
-                    return False
-                if imo.size[0] > 1600 or imo.size[1] > 1000:
-                    ratio = float(imo.size[0]) / imo.size[1]
-                    new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
-                    imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-                imo = imo.convert(mode='RGB')
-                opts = {}
-                if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
-                if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
-                if mime == 'image/gif': opts.update(format = 'GIF')
-                imo.save(path, **opts)
-            elif mime == 'audio/mpeg':
-                app['content'] = ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
-                    +"<param name='FlashVars' value='soundFile=" + url + "'>"
-                    +"<param name='wmode' value='transparent'></object>"
-                    )
-                app['type'] = 'hive.html'
-                app['dimensions'] = [200, 24]
-            else:
-                app['type'] = 'hive.text'
-                app['content'] = "<a href='%s'>%s</a>" % (url, file.filename)
+            app['type'] = 'hive.html'
+            app['dimensions'] = [200, 24]
+        else:
+            app['type'] = 'hive.text'
+            app['content'] = "<a href='%s'>%s</a>" % (url, file.filename)
 
         return app
+
+def file_delete(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    res = File.fetch(request.form.get('id'))
+    if res: res.delete()
+    return True
 
 def user_create(request, response):
     """ Checks if the referral code matches one found in database.
@@ -201,8 +194,6 @@ def user_create(request, response):
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
     user.expr_create({ 'title' : 'Homepage', 'home' : True })
-
-    os.makedirs(media_path(user))
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
@@ -321,6 +312,7 @@ actions = dict(
     ,expr_save       = expr_save
     ,expr_delete     = expr_delete
     ,files_create    = files_create
+    ,file_delete    = file_delete
     ,user_create     = user_create
     ,mail_us         = mail_us
     ,mail_them       = mail_them
@@ -498,7 +490,7 @@ def handle(request):
         response.context['title'] = owner['fullname']
         response.context['fullname'] = owner['fullname']
         response.context['tag'] = tag
-        response.context['tags'] = owner.get('tags', []) #tags_by_frequency(owner=owner.id)
+        response.context['tags'] = owner.get('tags', [])
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
         response.context['view'] = request.args.get('view')
         response.context['expr'] = dfilter(owner, ['background'])
