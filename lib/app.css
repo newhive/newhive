@@ -105,3 +105,17 @@ input[type="text"].copy, textarea.copy {
 #firefox_warning a {
   text-decoration: underline;
 }
+
+
+/* ==========================================
+   form validation
+   ========================================== */
+
+.form_validation_info.valid {
+  color: green;
+}
+
+.form_validation_info.invalid {
+  color: red;
+}
+

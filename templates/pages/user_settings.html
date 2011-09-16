@@ -10,6 +10,7 @@
 
   <b>Username</b><br>
   <input id='name' type='text' name='name' value='{{f.name}}'><br>
+  <div class="form_validation_info" id="name_availability" style="display:none">Sorry, that name isn't available</div>
   <br>
 
   <b>Password</b><br>
@@ -36,15 +37,39 @@
  
  </form>
  <script>
+   $(document).ready(function(){
+     $('#name').blur(function(){
+       user_check($(this).val());
+     });
+   });
+   function user_check(user_name){
+     $.ajax({
+       type: "POST",
+       dataType: 'json',
+       data: {action: "user_check", name: user_name},
+       success: function(data){
+         if (data) {
+           $('#name_availability').html("Your website will be: <code>" + user_name + ".{{ server_name }}</code>").show().addClass('valid').removeClass('invalid');
+         } else {
+           $('#name_availability').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');
+         }
+       },
+       error: function(){$('#name_unavailable').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');}
+     });
+   }
 function validate() {
     var n = $('#name').val().trim();
     $('#name').val(n);
     if( $('#name').val().length < 3 ) {
-        alert('Please enter username of at least 3 letters, thankyou.');
+        alert('Please enter username of at least 3 letters, thank you.');
         return false;
     }
     if( ! n.match(/^[a-z][a-z0-9]{2,}$/i) ) {
-        alert('Username must be only letters and numbers, and start with a letter (no spaces or punctuation, thankyou).');
+        alert('Username must be only letters and numbers, and start with a letter (no spaces or punctuation, thank you).');
+        return false;
+    }
+    if( ! $('#name_availability').hasClass('valid') ) {
+        alert("Your username isn't avaialable, please try again.");
         return false;
     }
 
