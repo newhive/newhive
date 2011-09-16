@@ -177,6 +177,13 @@ def files_create(request, response):
 
         return app
 
+def user_check(request, response):
+    if User.named(request.form['name']):
+        return False
+    else:
+        return True
+
+
 def user_create(request, response):
     """ Checks if the referral code matches one found in database.
         Decrements the referral count of the user who created the referral and checks if the count is > 0.
@@ -321,6 +328,7 @@ actions = dict(
     ,expr_delete     = expr_delete
     ,files_create    = files_create
     ,user_create     = user_create
+    ,user_check      = user_check
     ,mail_us         = mail_us
     ,mail_them       = mail_them
     ,mail_feedback   = mail_feedback
