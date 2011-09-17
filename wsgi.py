@@ -248,9 +248,21 @@ def admin_update(request, response):
         if v: get_root().update(**{ k : v })
 
 from smtplib import SMTP
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 def send_mail(headers, body):
-    b = "\r\n".join([k + ': ' + headers[k] for k in headers.keys()] + ['', body])
-    return SMTP('localhost').sendmail(headers['From'], headers['To'].split(','), b)
+    msg = MIMEMultipart('alternative')
+    for k in ['Subject', 'From', 'To']:
+      msg[k] = headers[k]
+
+    part1 = MIMEText(body, 'plain')
+    msg.attach(part1)
+
+    smtp = SMTP(config.email_server)
+    if config.email_user and config.email_password:
+      smtp.login(config.email_user, config.email_password)
+
+    return smtp.sendmail(msg['From'], msg['To'].split(','), msg.as_string())
 
 def mail_us(request, response):
     if not request.form.get('email'): return False
