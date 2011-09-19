@@ -593,7 +593,7 @@ def exp_to_html(exp):
     return (html, css)
 
 
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
+jinja_env = jinja2.Environment(extensions=['jinja2.ext.i18n'], loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
 
 def serve_html(response, html):
     response.data = html
