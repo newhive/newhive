@@ -185,6 +185,15 @@ class Expr(Entity):
           self.update(**{'updated': False, counter: self[counter] + 1})
         else:
           self.update(**{'updated': False, counter: 1})
+
+    def views(self):
+        if self.has_key('views'):
+            if self.has_key('owner_views'):
+                return self['views'] - self['owner_views']
+            else:
+                return self['views']
+        else:
+            return 0
         
 
 def tags_by_frequency(**query):

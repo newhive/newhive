@@ -34,6 +34,7 @@
   <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
   <script>
     $('#expression_url').html(window.location.href);
+    var stats = {views: {{ exp.views() }} };
     //share_menu = click_dialogue($('#btn_share'), $('#dia_share'));
   </script>
  
