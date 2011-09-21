@@ -32,8 +32,8 @@
         </div>
         <div class="line">
             <div class='medbold label'>Message</div>
-            <textarea id='email_message' class="element" cols='40' rows='4' name='message'>Check out this expression:
-
+            <textarea cols='30' rows='5' name='message'>Check out this expression{{ ', ' + exp.title if exp else '' }}:
+       
 {{ url }}</textarea>
             <input id='email_send' type='submit' class='btn black rounded' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
         </div>
