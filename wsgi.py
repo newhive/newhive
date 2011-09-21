@@ -12,9 +12,8 @@ import PIL.Image as Img
 import config, auth
 from colors import colors
 # TODO: remove create and fetch, use specific Entity objects instead
-# TODO: remove junkstr, call it from Referral.create_me
 # TODO: remove DuplicateKeyError replace with sane user error
-from state import Expr, File, User, Contact, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, get_root
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root
 
 
 def lget(L, i, default=None):
@@ -166,6 +165,13 @@ def file_delete(request, response):
     if res: res.delete()
     return True
 
+
+def user_check(request, response):
+    if User.named(request.form['name']):
+        return False
+    else:
+        return True
+
 def user_create(request, response):
     """ Checks if the referral code matches one found in database.
         Decrements the referral count of the user who created the referral and checks if the count is > 0.
@@ -175,7 +181,7 @@ def user_create(request, response):
         Logs new user in.
         """
 
-    referral = fetch('referral', request.args.get('key'), keyname='key')
+    referral = Referral.fetch(request.args.get('key'), keyname='key')
     if not referral: return bad_referral(request, response)
     referrer = User.fetch(referral['user'])
     if(referrer['referrals'] <= 0):
@@ -251,7 +257,7 @@ def mail_us(request, response):
     print(form)
     form.update({'msg': body})
     send_mail(heads, body)
-    create('contact_log', **form)
+    Contact.create(**form)
     return True
 
 def mail_them(request, response):
@@ -309,6 +315,7 @@ actions = dict(
     ,files_create    = files_create
     ,file_delete    = file_delete
     ,user_create     = user_create
+    ,user_check      = user_check
     ,mail_us         = mail_us
     ,mail_them       = mail_them
     ,mail_feedback   = mail_feedback
@@ -412,7 +419,7 @@ def handle(request):
                 exp['auth'] = 'public'
                 if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
                     intro_expr = Expr.fetch(config.intro_expr)
-                    if intro_expr: exp['apps'] = intro_expr.get('apps', [])
+                    if intro_expr: exp.update(dfilter(intro_expr, ['apps']))
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
@@ -421,15 +428,14 @@ def handle(request):
             response.context['exp'] = exp
             return serve_page(response, 'edit.html')
         elif p1 == 'signup':
-            referral = fetch('referral', request.args.get('key'), keyname='key')
+            referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral: return bad_referral(request, response)
             return serve_page(response, 'user_settings.html')
         elif p1 == 'referral' and request.requester.logged_in:
             if(request.requester['referrals'] <= 0):
                 return no_more_referrals(request.requester['name'], request, response)
-            key = junkstr(16)
-            create('referral', user = request.requester.id, key = key)
-            response.context['content'] = abs_url(secure=True) + 'signup?key=' + key
+            res = Referral.create(user = request.requester.id)
+            response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'feedback.html')
         elif p1 == '' or p1 == 'home':

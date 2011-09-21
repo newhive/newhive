@@ -237,6 +237,11 @@ class File(Entity):
 class Referral(Entity):
     cname = 'referral'
 
+    def create_me(self):
+        self['key'] = junkstr(16)
+        return super(Referral, self).create_me()
+
+
 class Contact(Entity):
     cname = 'contact_log'
 
