@@ -61,15 +61,10 @@
 
 {% block content %}
  {% if auth_required %}
-  <center>
-   <form method='POST'>
-    <br> <br> <br> <br>
-    <div id="private_expr"><h2>This is a private expression</h2>
-    Enter password to view:<div><br>
-    <input type='password' name='password'>
-    <input type='image' src='/lib/skin/1/sm_arrow.png' class='hoverable' style='vertical-align : middle'> 
-   </form>
-  </center>
+  <script>
+   showDialog('#dia_password');
+   $('#password_input').select();
+  </script>
  {% else %}
   {{ body }}
  {% endif %}
