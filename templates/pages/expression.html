@@ -4,7 +4,6 @@
  <style>
   .happ { position : absolute; }
   .happ img { width : 100%; }
-  #private_expr { background-color: white; border: 5px solid #EDEBE1; padding: 5px; }
   #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
   #exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
   #datetime { font-size : .7em; color : {{ colors[12] }}; line-height : .5em; }
@@ -62,8 +61,10 @@
 {% block content %}
  {% if auth_required %}
   <script>
-   showDialog('#dia_password');
-   $('#password_input').select();
+   $(function() {
+       showDialog('#dia_password');
+       $('#password_input').select();
+   });
   </script>
  {% else %}
   {{ body }}

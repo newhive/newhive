@@ -100,7 +100,7 @@ def expr_delete(request, response):
     if not e: return serve_404(request, response)
     if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
     e.delete()
-    if e['name'] == '': request.requester.expr_create({})
+    if e['name'] == '': request.requester.expr_create({ 'title' : 'Homepage', 'home' : True })
     # TODO: garbage collect media files that are no longer referenced by expression
     return redirect(response, home_url(request.requester))
 
@@ -177,6 +177,13 @@ def files_create(request, response):
 
         return app
 
+def user_check(request, response):
+    if User.named(request.form['name']):
+        return False
+    else:
+        return True
+
+
 def user_create(request, response):
     """ Checks if the referral code matches one found in database.
         Decrements the referral count of the user who created the referral and checks if the count is > 0.
@@ -199,7 +206,7 @@ def user_create(request, response):
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
-    user.expr_create({ 'title' : 'Homepage' })
+    user.expr_create({ 'title' : 'Homepage', 'home' : True })
 
     os.makedirs(joinpath(config.domain_home, config.server_name, user['name'], 'media'))
 
@@ -259,13 +266,15 @@ def mail_us(request, response):
         ,'Subject' : '[home page contact form]'
         ,'Reply-to' : form['email']
         }
-    body = "Name: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
+    body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
     print(request.form)
     print(form)
     form.update({'msg': body})
-    send_mail(heads, body)
+    if not config.debug_mode:
+        send_mail(heads, body)
     create('contact_log', **form)
-    return True
+
+    return jinja_env.get_template('dialogs/signup_thank_you.html').render(response.context)
 
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
@@ -321,6 +330,7 @@ actions = dict(
     ,expr_delete     = expr_delete
     ,files_create    = files_create
     ,user_create     = user_create
+    ,user_check      = user_check
     ,mail_us         = mail_us
     ,mail_them       = mail_them
     ,mail_feedback   = mail_feedback
@@ -423,7 +433,8 @@ def handle(request):
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
                 if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                    exp.update(config.intro_expr)
+                    intro_expr = Expr.fetch(config.intro_expr)
+                    if intro_expr: exp.update(dfilter(intro_expr, ['apps']))
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
@@ -523,6 +534,7 @@ def handle(request):
         )
 
     resource.increment_counter('views')
+    if is_owner: resource.increment_counter('owner_views')
     return serve_page(response, 'expression.html')
 
 
