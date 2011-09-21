@@ -28,9 +28,69 @@
   </div>
   <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
  {% else %}
-  <a href='{{ server }}'><div style='left : 50px; top : 0px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  <a href='{{ server }}'><div style='left : 42px; top : -2px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
  {% endif %}
 </div>
+
+{% if not user.logged_in %}
+ <div class='nav' style='right : 10px; top : 0px;'>
+  <div id='login_btn' class='btn hoverable nav_icon text' value='Log In'>Log In</div>
+  <div id='login_menu' class='menu top'>
+   <form id='login_form' action='{{ secure_server }}' method='POST'>
+    {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
+    <span>Username</span><br>
+    <input id='username' type='text' name='username' value='{{ user['name'] }}'>
+    <div class='spacer'></div>
+    <span>Password</span><br>
+    <input type='password' name='secret'><br>
+    <input id='expires' type='checkbox' name='no_expires'><label for='expires'> Remember me</label>
+    <br><br>
+    <div style='text-align : center'><input id='login_submit' type='submit' class='btn black rounded' value='Enter'></div>
+    <input type='hidden' name='action' value='login'>
+   </form>
+  </div>
+ </div>
+
+ <script>
+$(function() {
+ var login_menu = click_dialogue($('#login_btn'), $('#login_menu'),
+     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); } });
+ {% if error %} login_menu.open() {% endif %}
+ mail_menu = click_dialogue($('#welcome_btn'), $('#welcome_menu'));
+ 
+ $('#send_msg').click(function() {
+    $.post('/', { name : $('[name=name]').val(), message : $('[name=message]').val(), referral : $('[name=referral]').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
+            if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
+            else {
+                $('#message').val('');
+                alert('Thank you for your feedback');
+                mail_menu.close();
+            }
+        }, 'json') });
+});
+ </script>
+
+ <!--<div id='right' class='nav' style='position : fixed; top : 0; right : 10px;'>
+  <div id='welcome_btn' class='btn hoverable nav_icon text' value='Sign Up'>Sign Up</div>
+  <div id='welcome_menu' class='menu top'>
+   <div><b>Name</b></div>
+   <input type='text' style='width : 200px' name='name'>
+   <div class='spacer'></div>
+   <div><b>Email</b></div>
+   <input type='text' style='width : 200px' name='email'>
+   <div class='spacer'></div>
+   <div><b>How did you hear<br/>about The New Hive?</b></div>
+   <input type='text' style='width : 200px' name='referral'>
+   <div class='spacer'></div>
+   <div><b>How do you<br/>express yourself?</b></div>
+   <input type='text' style='width : 200px' name='message'>
+   <div class='spacer'></div>
+   <div class='spacer'></div>
+   <div style='text-align : right'><input type='button' id='send_msg' class='btn black rounded' value='Enter'></div>
+  </div>
+ </div>
+ -->
+{% endif %}
 
 {% block body %}
 {% endblock %}
