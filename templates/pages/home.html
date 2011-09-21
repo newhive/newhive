@@ -70,7 +70,7 @@ $(function() {
             if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
             else {
                 $('#message').val('');
-                alert('Thank you for your feedback');
+                loadDialog(data);
                 mail_menu.close();
             }
         }, 'json') });
