@@ -11,8 +11,9 @@
   -moz-box-shadow: 05px 05px 05px #666;
   -webkit-box-shadow: 05px 05px 05px #666;
   box-shadow: 05px 05px 05px #666;
+  width: 350px;
 }
-.dialog .center { text-align: center;}
+.dialog .center, .dialog.center { text-align: center;}
 .dialog .line { margin: 7px 0; clear: both;}
 .dialog input, .dialog textarea { font-size: 14px; font-family:Arial;}
 .dialog .line .element { float: left; }
@@ -23,6 +24,11 @@ input[type="text"].copy, textarea.copy {
     border: none;
     font-family: courier, monospace;
     white-space: pre-wrap;
+}
+.dialog h3 {
+  font-family: Museo, serif;
+  font-weight: normal;
+  font-size: 28px;
 }
 
 /* Share dialog */
@@ -68,9 +74,6 @@ input[type="text"].copy, textarea.copy {
   text-align: left;
 }
 #dia_referral h3 {
-  font-family: Museo, serif;
-  font-weight: normal;
-  font-size: 28px;
   margin: 20px 0;
 }
 #referral_count { color: red; }
@@ -97,14 +100,42 @@ input[type="text"].copy, textarea.copy {
   margin: 0;
 }
 #firefox_warning h3 {
-  font-family: Museo, serif;
-  font-weight: normal;
   font-size: 25px;
   margin: 20px 0;
 }
 #firefox_warning a {
   text-decoration: underline;
 }
+
+/* signup thank-you dialog */
+#signup_thank_you {
+  width: 400px;
+  padding: 20px 50px;
+  margin: 0;
+}
+
+#signup_thank_you h1 {
+  font-family: League Gothic, sans-serif;
+  font-weight: normal;
+  font-size: 62px;
+  color: #13A507;
+  margin: 20px
+}
+
+#signup_thank_you h3 {
+  margin-top: 10px;
+}
+
+#signup_thank_you h4 {
+  margin-top: 10px;
+  font-family: Museo, serif;
+  font-size: 20px;
+}
+
+#signup_thank_you h4 a:hover {
+  color: #419DD6;
+}
+
 
 
 /* ==========================================
