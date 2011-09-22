@@ -194,6 +194,9 @@ class Expr(Entity):
                 return self['views']
         else:
             return 0
+
+    def url(self):
+      return "http://" + self['domain'] + "/" + self['name']
         
 
 def tags_by_frequency(**query):
