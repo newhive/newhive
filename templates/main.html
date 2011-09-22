@@ -33,18 +33,18 @@
   <div id='login_menu' class='menu top'>
    <form id='login_form' action='{{ secure_server }}' method='POST'>
     {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
-    <span>Username</span><br>
+    <b>Username</b><br>
     <input id='username' type='text' name='username' value='{{ user['name'] }}'>
     <div class='spacer'></div>
-    <span>Password</span><br>
+    <b>Password</b><br>
     <input type='password' name='secret'><br>
     <input id='expires' type='checkbox' name='no_expires'><label for='expires'> Remember me</label>
     <br><br>
-    <div style='text-align : center'><input id='login_submit' type='submit' class='btn black rounded' value='Enter'></div>
+    <div style='text-align : right'><input id='login_submit' type='submit' class='btn black rounded' value='Enter'></div>
     <input type='hidden' name='action' value='login'>
    </form>
    <br>
-   <a href="" onclick="showDialog('#dia_signup'); return false;">Don't have an account?</a>
+   <a href="" onclick="showDialog('#dia_signup'); return false;" style='background-color : {{ colors[32] }}; font-weight : bold; padding : 2px 5px'>Sign up for an account</a>
   </div>
  </div>
 
