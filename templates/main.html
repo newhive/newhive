@@ -4,11 +4,6 @@
 <div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
 >{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
 
-<div id='dialog_shield'></div>
-{% include 'dialogs/share.html' %}
-{% if user.logged_in %}
-  {% include 'dialogs/referral.html' %}
-{% endif %}
 <div class='nav' id='nav_bg'></div>
 <div class='nav' style='font-weight : bold'>
  <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
@@ -48,4 +43,12 @@ $('#feedback_btn').click(function() {
 
 </div>
 
+<div id='dialogs'>
+  <div id='dialog_shield'></div>
+  {% include 'dialogs/share.html' %}
+  {% if user.logged_in %}
+    {% include 'dialogs/referral.html' %}
+  {% endif %}
+  {% include 'dialogs/password.html' %}
+</div>
 {% endblock %}

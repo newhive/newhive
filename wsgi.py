@@ -270,9 +270,11 @@ def mail_us(request, response):
     print(request.form)
     print(form)
     form.update({'msg': body})
-    send_mail(heads, body)
+    if not config.debug_mode:
+        send_mail(heads, body)
     create('contact_log', **form)
-    return True
+
+    return jinja_env.get_template('dialogs/signup_thank_you.html').render(response.context)
 
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
