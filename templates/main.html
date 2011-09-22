@@ -23,9 +23,49 @@
   </div>
   <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
  {% else %}
-  <a href='{{ server }}'><div style='left : 50px; top : 0px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  <a href='{{ server }}'><div style='left : 42px; top : -2px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
  {% endif %}
 </div>
+
+{% if not user.logged_in %}
+ <div class='nav' style='right : 10px; top : 0px;'>
+  <div id='login_btn' class='btn hoverable nav_icon text' value='Log In'>Log In</div>
+  <div id='login_menu' class='menu top'>
+   <form id='login_form' action='{{ secure_server }}' method='POST'>
+    {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
+    <b>Username</b><br>
+    <input id='username' type='text' name='username' value='{{ user['name'] }}'>
+    <div class='spacer'></div>
+    <b>Password</b><br>
+    <input type='password' name='secret'><br>
+    <input id='expires' type='checkbox' name='no_expires'><label for='expires'> Remember me</label>
+    <br><br>
+    <div style='text-align : right'><input id='login_submit' type='submit' class='btn black rounded' value='Enter'></div>
+    <input type='hidden' name='action' value='login'>
+   </form>
+   <br>
+   <a href="" onclick="showDialog('#dia_signup'); return false;" style='background-color : {{ colors[32] }}; font-weight : bold; padding : 2px 5px'>Sign up for an account</a>
+  </div>
+ </div>
+
+ <script>
+$(function() {
+ var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
+     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); }, hover_close : false });
+ {% if error %} login_menu.open() {% endif %}
+ 
+ $('#send_msg').bind('click dblclick', function() {
+    $.post('/', { name : $('[name=name]').val(), message : $('[name=message]').val(), referral : $('[name=referral]').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
+            if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
+            else {
+                $('#message').val('');
+                hideDialog('#dia_signup');
+                loadDialog(data);
+            }
+        }, 'json') });
+});
+ </script>
+{% endif %}
 
 {% block body %}
 {% endblock %}
@@ -50,5 +90,6 @@ $('#feedback_btn').click(function() {
     {% include 'dialogs/referral.html' %}
   {% endif %}
   {% include 'dialogs/password.html' %}
+  {% include 'dialogs/signup.html' %}
 </div>
 {% endblock %}
