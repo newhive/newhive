@@ -80,9 +80,16 @@ input[type="text"].copy, textarea.copy {
   padding: 20px;
 }
 #like_buttons { margin: 20px 0;}
+#like_buttons .like_button {
+  display: inline-block;
+  margin: 10px;
+}
 #dia_share #email_message { width:348px; }
 #dia_share #email_to { width: 282px; }
 #dia_share .line.embed { padding-top: 20px; }
+#dia_share .count {
+  font-size: 20px;
+}
 
 /* Referral Dialog */
 #dia_referral {
