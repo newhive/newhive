@@ -170,3 +170,5 @@ input[type="text"].copy, textarea.copy {
 .form_validation_info.invalid {
   color: red;
 }
+
+#login_menu { padding : 10px; }
