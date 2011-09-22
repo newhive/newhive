@@ -54,7 +54,7 @@ $(function() {
      { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); }, hover_close : false });
  {% if error %} login_menu.open() {% endif %}
  
- $('#send_msg').click(function() {
+ $('#send_msg').bind('click dblclick', function() {
     $.post('/', { name : $('[name=name]').val(), message : $('[name=message]').val(), referral : $('[name=referral]').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
             if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
             else {
