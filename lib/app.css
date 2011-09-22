@@ -159,6 +159,35 @@ input[type="text"].copy, textarea.copy {
   padding: 0 10px 20px 10px;
 }
 
+/* signup dialot */
+#dia_signup {
+  font-size: 15px;
+  width: 300px;
+  padding: 0 30px 10px 30px;
+}
+
+#dia_signup input[type=text] {
+  width: 280px; 
+}
+
+/* ==========================================
+   login menu
+   ========================================== */
+#login_menu {
+  width: 160px;
+}
+
+#login_menu input[type=text], #login_menu input[type=password] {
+  width: 140px;
+}
+
+#signup_link {
+  font-weight: bold; 
+  font-size: 13px;
+  text-align: center;
+  padding : 2px 5px;
+}
+
 /* ==========================================
    form validation
    ========================================== */
