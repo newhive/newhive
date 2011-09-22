@@ -45,13 +45,13 @@
         <input type='hidden' name='action' value='mail_them'/>
         <input type='hidden' name='subject' value='{{ user.fullname|e }} has sent you an expression'/>
         <div class="line">
-            <div class='medbold label'>Email(s) </div>
+            <div class='medbold label align'>Email(s) </div>
             <input id='email_to' type='text' size='35' name='to'/>
             <input id='send_copy' type='checkbox' name='send_copy' checked><label for='send_copy'> Send me a copy</label>
         </div>
         <div class="line">
-            <div class='medbold label'>Message</div>
-            <textarea cols='40' rows='4' name='message' class='element'>Check out this expression:
+            <div class='medbold label align'>Message</div>
+            <textarea cols='40' rows='4' name='message' class='element' id="email_message">Check out this expression:
               
 {{ 'Title: ' + exp.title if exp else '' }}
 {{ url }}</textarea>
@@ -62,7 +62,7 @@
     
     <div class="line"></div>
     <div class="line embed">
-        <div class="label medbold">Embed</div>
+        <div class="label medbold align">Embed</div>
         <textarea class="copy embed_code" onfocus="this.select()" onclick="this.select()" readonly="readonly" id="expression_embed_code"></textarea>
     </div>
 

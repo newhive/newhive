@@ -40,7 +40,7 @@
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: url("/lib/skin/1/close-hover.png")}
 input[type="text"].copy, textarea.copy {
     border: none;
-    font-family: courier, monospace;
+    font-family: helvetica, verdana, sans-serif;
     white-space: pre-wrap;
 }
 .dialog h3 {
@@ -68,10 +68,10 @@ input[type="text"].copy, textarea.copy {
     float: left; 
     font-size:12px; 
     padding:7px; 
-    margin:3px auto auto 10px; 
-    width: 445px; 
+    margin: 0; 
+    width: 439px; 
     height: 60px;
-    background-color: #FFF673; 
+    background-color: #D0E0F0; 
 }
 #btn_url_copy { background-image:url("/lib/skin/1/copy_clipboard.png"); float:right; width:20px; height:24px; margin: 5px 5px 0 0;}
 #btn_url_copy.hover { background-image:url("/lib/skin/1/copy_clipboard-hover.png");}
@@ -84,12 +84,18 @@ input[type="text"].copy, textarea.copy {
   display: inline-block;
   margin: 10px;
 }
-#dia_share #email_message { width:348px; }
-#dia_share #email_to { width: 282px; }
+#dia_share #email_message { width:350px; }
+#dia_share #email_to { width: 301px; }
 #dia_share .line.embed { padding-top: 20px; }
+#dia_share label { font-size: 14px; }
 #dia_share .count {
-  font-size: 20px;
+  font-family: League Gothic, sans-serif;
+  font-size: 55px;
 }
+#dia_share .label.align {
+    width: 89px;
+}
+
 
 /* Referral Dialog */
 #dia_referral {
