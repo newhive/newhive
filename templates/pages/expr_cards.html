@@ -15,12 +15,11 @@ iframe { border : none; }
 {% block body %}
 
 <div class='nav' style='right : 10px; top : 0px;'>
+  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
  {% if user.logged_in %}
   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
-  <!--<img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' onclick='background_pick()'>-->
  {% endif %}
 
- {% include 'dialogs/share.html' %}
 </div>
 <script>
 //function profile_bg_pick() {
