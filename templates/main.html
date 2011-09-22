@@ -43,14 +43,15 @@
     <div style='text-align : center'><input id='login_submit' type='submit' class='btn black rounded' value='Enter'></div>
     <input type='hidden' name='action' value='login'>
    </form>
-   Don't have an account? <a href='javascript: '>Sign up!</a>
+   <br>
+   <a href="" onclick="showDialog('#dia_signup'); return false;">Don't have an account?</a>
   </div>
  </div>
 
  <script>
 $(function() {
  var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
-     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); } });
+     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); }, hover_close : false });
  {% if error %} login_menu.open() {% endif %}
  mail_menu = click_dialogue($('#welcome_btn'), $('#welcome_menu'));
  
@@ -65,27 +66,6 @@ $(function() {
         }, 'json') });
 });
  </script>
-
- <!--<div id='right' class='nav' style='position : fixed; top : 0; right : 10px;'>
-  <div id='welcome_btn' class='btn hoverable nav_icon text' value='Sign Up'>Sign Up</div>
-  <div id='welcome_menu' class='menu top'>
-   <div><b>Name</b></div>
-   <input type='text' style='width : 200px' name='name'>
-   <div class='spacer'></div>
-   <div><b>Email</b></div>
-   <input type='text' style='width : 200px' name='email'>
-   <div class='spacer'></div>
-   <div><b>How did you hear<br/>about The New Hive?</b></div>
-   <input type='text' style='width : 200px' name='referral'>
-   <div class='spacer'></div>
-   <div><b>How do you<br/>express yourself?</b></div>
-   <input type='text' style='width : 200px' name='message'>
-   <div class='spacer'></div>
-   <div class='spacer'></div>
-   <div style='text-align : right'><input type='button' id='send_msg' class='btn black rounded' value='Enter'></div>
-  </div>
- </div>
- -->
 {% endif %}
 
 {% block body %}
@@ -111,5 +91,6 @@ $('#feedback_btn').click(function() {
     {% include 'dialogs/referral.html' %}
   {% endif %}
   {% include 'dialogs/password.html' %}
+  {% include 'dialogs/signup.html' %}
 </div>
 {% endblock %}
