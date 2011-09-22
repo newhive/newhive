@@ -154,6 +154,10 @@ input[type="text"].copy, textarea.copy {
 }
 
 
+/* password for private expression */
+#dia_password {
+  padding: 0 10px 20px 10px;
+}
 
 /* ==========================================
    form validation
