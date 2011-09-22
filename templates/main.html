@@ -48,12 +48,13 @@
     <div style='text-align : center'><input id='login_submit' type='submit' class='btn black rounded' value='Enter'></div>
     <input type='hidden' name='action' value='login'>
    </form>
+   Don't have an account? <a href='javascript: '>Sign up!</a>
   </div>
  </div>
 
  <script>
 $(function() {
- var login_menu = click_dialogue($('#login_btn'), $('#login_menu'),
+ var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
      { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); } });
  {% if error %} login_menu.open() {% endif %}
  mail_menu = click_dialogue($('#welcome_btn'), $('#welcome_menu'));
