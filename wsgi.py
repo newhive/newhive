@@ -11,8 +11,6 @@ import PIL.Image as Img
 
 import config, auth
 from colors import colors
-# TODO: remove create and fetch, use specific Entity objects instead
-# TODO: remove DuplicateKeyError replace with sane user error
 from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root
 
 
@@ -256,9 +254,11 @@ def mail_us(request, response):
     print(request.form)
     print(form)
     form.update({'msg': body})
-    send_mail(heads, body)
+    if not config.debug_mode:
+        send_mail(heads, body)
     Contact.create(**form)
-    return True
+
+    return jinja_env.get_template('dialogs/signup_thank_you.html').render(response.context)
 
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
