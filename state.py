@@ -145,7 +145,7 @@ def normalize(ws):
     return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
 
 def media_path(user, f_id=None):
-    p = joinpath(config.media_path, user['name'], 'media')
+    p = joinpath(config.media_path, user['name'])
     return joinpath(p, f_id) if p else p
 
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
@@ -223,7 +223,7 @@ class File(Entity):
             path = media_path(owner, fs_name)
             os.renames(tmp_path, path)
             dict.update(self, fs_path=path)
-            url =  abs_url() + 'file/' + owner['name'] + '/media/' + fs_name
+            url =  abs_url() + 'file/' + owner['name'] + '/' + fs_name
 
         dict.update(self, url=url)
         return super(File, self).create_me()
