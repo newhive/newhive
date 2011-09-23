@@ -199,7 +199,7 @@ class Expr(Entity):
     def url(self):
       return "http://" + self['domain'] + "/" + self['name']
 
-    def facebook_count():
+    def facebook_count(self):
       return social_stats.facebook_count(self.url())
         
 
