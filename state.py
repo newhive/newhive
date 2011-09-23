@@ -201,6 +201,9 @@ class Expr(Entity):
 
     def facebook_count(self):
       return social_stats.facebook_count(self.url())
+
+    def gplus_count(self):
+      return social_stats.gplus_count(self.url())
         
 
 def tags_by_frequency(**query):
