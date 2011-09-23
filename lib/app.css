@@ -15,8 +15,8 @@
   height:100%;
   z-index:2000;
   background-color:black;
-  opacity:0.33;
-  -moz-opacity:0.33;
+  opacity:0.23;
+  -moz-opacity:0.18;
   display:none;
 }
 
@@ -154,6 +154,39 @@ input[type="text"].copy, textarea.copy {
 }
 
 
+/* password for private expression */
+#dia_password {
+  padding: 0 10px 20px 10px;
+}
+
+/* signup dialot */
+#dia_signup {
+  font-size: 15px;
+  width: 300px;
+  padding: 0 30px 10px 30px;
+}
+
+#dia_signup input[type=text] {
+  width: 280px; 
+}
+
+/* ==========================================
+   login menu
+   ========================================== */
+#login_menu {
+  width: 160px;
+}
+
+#login_menu input[type=text], #login_menu input[type=password] {
+  width: 140px;
+}
+
+#signup_link {
+  font-weight: bold; 
+  font-size: 13px;
+  text-align: center;
+  padding : 2px 5px;
+}
 
 /* ==========================================
    form validation
@@ -166,3 +199,7 @@ input[type="text"].copy, textarea.copy {
 .form_validation_info.invalid {
   color: red;
 }
+
+#login_menu { padding : 10px; }
+#signup_button { font-weight : bold; padding : 2px 5px; background-color : #FFF673; cursor : pointer; }
+#signup_button:hover, #signup_button.open { color : red; background-color : white; }

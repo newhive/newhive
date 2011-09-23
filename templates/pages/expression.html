@@ -22,7 +22,7 @@
 {% endblock %}
 
 {% block body %}
- <div class='nav' style='right : 10px; top : 0px;'>
+ <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
   {% if not user_is_owner %}
    <div id='info' class='medbold' style='text-align : right'>
     <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
