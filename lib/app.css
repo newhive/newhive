@@ -173,14 +173,6 @@ input[type="text"].copy, textarea.copy {
 /* ==========================================
    login menu
    ========================================== */
-#login_menu {
-  width: 160px;
-}
-
-#login_menu input[type=text], #login_menu input[type=password] {
-  width: 140px;
-}
-
 #signup_link {
   font-weight: bold; 
   font-size: 13px;

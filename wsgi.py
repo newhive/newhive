@@ -11,7 +11,7 @@ import PIL.Image as Img
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url
 
 
 def lget(L, i, default=None):
@@ -643,21 +643,6 @@ class Forbidden(exceptions.Forbidden):
     def get_body(self, environ):
         return "You can no looky sorry"
 
-#def parse_host(host):
-#    domain = host.split(':')[0]
-#    domain_parts = domain.split('.')
-#    site_domain = '.'.join(domain_parts[-2:])
-#    sub_domain = domain_parts[0] if len(domain_parts) > 2 else None
-#    return (domain, site_domain, sub_domain)
-
-def abs_url(secure = False, domain = None):
-    """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
-
-    proto = 'https' if secure else 'http'
-    port = config.ssl_port if secure else config.plain_port
-    port = '' if port == 80 or port == 443 else ':' + str(port)
-    return (proto + '://' + (domain or config.server_name) + port + '/')
-
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
 
@@ -694,7 +679,10 @@ if __name__ == '__main__':
           , use_reloader = True
           , use_debugger = config.debug_mode
           , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-          , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
+          , static_files = {
+               '/lib' : joinpath(config.src_home, 'lib')
+              ,'/file' : config.media_path
+            }
           , processes = 0
           )
     else:
@@ -705,7 +693,10 @@ if __name__ == '__main__':
           , use_reloader = True
           , use_debugger = config.debug_mode
           , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-          , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
+          , static_files = {
+               '/lib' : joinpath(config.src_home, 'lib')
+              ,'/file' : config.media_path
+            }
           , ssl_context  = ctx
           , processes = 0
           )

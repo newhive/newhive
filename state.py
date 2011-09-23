@@ -1,4 +1,5 @@
-import re, pymongo, pymongo.objectid, random, urllib, os
+import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes
+from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 import config
@@ -144,7 +145,7 @@ def normalize(ws):
     return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
 
 def media_path(user, f_id=None):
-    p = joinpath(config.media_path, config.server_name, user['name'], 'media')
+    p = joinpath(config.media_path, user['name'], 'media')
     return joinpath(p, f_id) if p else p
 
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
@@ -217,10 +218,12 @@ class File(Entity):
             url = k.generate_url(86400 * 3600)
             os.remove(tmp_path)
         else:
-            path = media_path(request.requester, self.id)
+            owner = User.fetch(self['owner'])
+            fs_name = self.id + mimetypes.guess_extension(self['mime'])
+            path = media_path(owner, fs_name)
             os.renames(tmp_path, path)
             dict.update(self, fs_path=path)
-            url =  abs_url() + 'file/' + self.id
+            url =  abs_url() + 'file/' + owner['name'] + '/media/' + fs_name
 
         dict.update(self, url=url)
         return super(File, self).create_me()
@@ -246,6 +249,15 @@ class Contact(Entity):
     cname = 'contact_log'
 
         
+def abs_url(secure = False, domain = None):
+    """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
+
+    proto = 'https' if secure else 'http'
+    port = config.ssl_port if secure else config.plain_port
+    port = '' if port == 80 or port == 443 else ':' + str(port)
+    return (proto + '://' + (domain or config.server_name) + port + '/')
+
+
 ## analytics utils
 
 def tags_by_frequency(**query):
