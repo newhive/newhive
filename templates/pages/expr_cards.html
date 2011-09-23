@@ -14,22 +14,12 @@ iframe { border : none; }
 {% endblock %}
 {% block body %}
 
-<div class='nav' style='right : 10px; top : 0px;'>
-  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
+<div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
+ <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
  {% if user.logged_in %}
   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
  {% endif %}
-
 </div>
-<script>
-//function profile_bg_pick() {
-//    function save_bg() {
-//         $('#action_input').val('user_bg_set');
-//         $('#value_input').val($('#bg').css('background-color'));
-//         $('#upload_form').submit();
-//    }
-//    function bg_update(c) { 
-</script>
 
 {% endblock %}
 {% block content %}

@@ -23,7 +23,7 @@
   </div>
   <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
  {% else %}
-  <a href='{{ server }}'><div style='left : 42px; top : -2px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  <a href='{{ server }}'><div style='left : 44px; top : -1px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
  {% endif %}
 </div>
 
@@ -38,20 +38,28 @@
     <div class='spacer'></div>
     <b>Password</b><br>
     <input type='password' name='secret'><br>
-    <input id='expires' type='checkbox' name='no_expires'><label for='expires'> Remember me</label>
-    <br><br>
-    <div style='text-align : right'><input id='login_submit' type='submit' class='btn black rounded' value='Enter'></div>
+    <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:small'> Remember me</label>
+    <div style='display : float; float : right; margin : 10px'>
+     <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
+    </div>
     <input type='hidden' name='action' value='login'>
    </form>
-   <br>
-   <a href="" onclick="showDialog('#dia_signup'); return false;" style='background-color : {{ colors[32] }}; font-weight : bold; padding : 2px 5px'>Sign up for an account</a>
+   <div class='spacer'></div>
+   <div class='spacer'></div>
+   <div class='spacer'></div>
+   <div class='spacer'></div>
+   <div><span id='signup_button' onclick="showDialog('#dia_signup'); $(this).addClass('open');"
+    >Sign up for an account</span>
+    <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
+   </div>
   </div>
  </div>
 
  <script>
 $(function() {
  var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
-     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); }, hover_close : false });
+     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
+       hover_close : false, auto_close : false });
  {% if error %} login_menu.open() {% endif %}
  
  $('#send_msg').click(function() {

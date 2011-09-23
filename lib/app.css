@@ -15,8 +15,8 @@
   height:100%;
   z-index:2000;
   background-color:black;
-  opacity:0.33;
-  -moz-opacity:0.33;
+  opacity:0.23;
+  -moz-opacity:0.18;
   display:none;
 }
 
@@ -172,3 +172,5 @@ input[type="text"].copy, textarea.copy {
 }
 
 #login_menu { padding : 10px; }
+#signup_button { font-weight : bold; padding : 2px 5px; background-color : #FFF673; cursor : pointer; }
+#signup_button:hover, #signup_button.open { color : red; background-color : white; }
