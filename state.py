@@ -2,6 +2,7 @@ import re, pymongo, pymongo.objectid
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 import config
+import social_stats
 
 
 con = pymongo.Connection()
@@ -197,6 +198,9 @@ class Expr(Entity):
 
     def url(self):
       return "http://" + self['domain'] + "/" + self['name']
+
+    def facebook_count():
+      return social_stats.facebook_count(self.url())
         
 
 def tags_by_frequency(**query):
