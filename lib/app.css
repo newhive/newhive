@@ -193,5 +193,5 @@ input[type="text"].copy, textarea.copy {
 }
 
 #login_menu { padding : 10px; }
-#signup_button { font-weight : bold; padding : 2px 5px; background-color : #FFF673; cursor : pointer; }
+#signup_button { font-weight : bold; padding : 2px 5px; background-color : #FFF673; cursor : pointer; display : inline-block; }
 #signup_button:hover, #signup_button.open { color : red; background-color : white; }
