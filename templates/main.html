@@ -62,8 +62,12 @@ $(function() {
        hover_close : false, auto_close : false });
  {% if error %} login_menu.open() {% endif %}
  
- $('#send_msg').click(function() {
+ $('#send_msg').bind('click dblclick', function() {
+    if ($(this).hasClass('inactive')) { return true; }
+    $(this).addClass('inactive');
+
     $.post('/', { name : $('[name=name]').val(), message : $('[name=message]').val(), referral : $('[name=referral]').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
+            $('#send_msg').removeClass('inactive');
             if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
             else {
                 $('#message').val('');
