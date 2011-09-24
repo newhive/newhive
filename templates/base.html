@@ -11,7 +11,6 @@ html, body { margin : 0; padding : 0; font-family : Helvetica, sans-serif; font-
 img { padding : 0; margin : 0; border : 0; }
 a { color : inherit; text-decoration : none; }
 .happ { line-height : 1.2em; }
-.happ a { text-decoration : underline; }
 #tos, input[type=text], input[type=password], textarea { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : {{ colors['selected'] }}; }
 input[type=button], input[type=submit] { border : none; }
@@ -52,32 +51,32 @@ form { display : inline; }
 #content { position : absolute; top : 50px; left : 0; z-index : 0; min-width : 100%; }
 #feedback_msg { display : inline-block; }
 
-@font-face { src: url('/lib/fonts/Museo/Museo500-Regular.eot'); src: url('/lib/fonts/Museo/Museo500-Regular.otf') format('opentype'); font-family: Museo; font-weight: 500; }
-@font-face { src: url('/lib/fonts/Museo/Museo700-Regular.eot'); src: url('/lib/fonts/Museo/Museo700-Regular.otf') format('opentype'); font-family: Museo; font-weight: 700; }
-@font-face { src: url('/lib/fonts/BPscript/BPscript.eot'); src: url('/lib/fonts/BPscript/BPscript.otf') format('opentype'); font-family: BPscript; font-weight : 500; }
-@font-face { src: url('/lib/fonts/code/CODE_Bold.eot'); src: url('/lib/fonts/code/CODE_Bold.otf') format('opentype'); font-family: Code; font-weight : 700; }
-@font-face { src: url('/lib/fonts/code/CODE_Light.eot'); src: url('/lib/fonts/code/CODE_Light.otf') format('opentype'); font-family: Code; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Comic-Zine-OT/comic_zine_ot.eot'); src: url('/lib/fonts/Comic-Zine-OT/comic_zine_ot.otf') format('opentype'); font-family: Comic Zine; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folkoutline.eot'); src: url('/lib/fonts/Folk/Folkoutline.otf') format('opentype'); font-family: Folk Outline; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folkshadow.eot'); src: url('/lib/fonts/Folk/Folkshadow.otf') format('opentype'); font-family: Folk Shadow; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folksketches.eot'); src: url('/lib/fonts/Folk/Folksketches.otf') format('opentype'); font-family: Folk Sketches; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folksolid.eot'); src: url('/lib/fonts/Folk/Folksolid.otf') format('opentype'); font-family: Folk; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lane/LANENAR_.eot'); src: url('/lib/fonts/Lane/LANENAR_.ttf') format('truetype'); font-family: Lane; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lane/LANEPOSH.eot'); src: url('/lib/fonts/Lane/LANEPOSH.ttf') format('truetype'); font-family: Lane Posh; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lane/LANEUP__.eot'); src: url('/lib/fonts/Lane/LANEUP__.ttf') format('truetype'); font-family: Lane Up; font-weight : 500; }
-@font-face { src: url('/lib/fonts/League-Gothic/League_Gothic.eot'); src: url('/lib/fonts/League-Gothic/League_Gothic.otf') format('opentype'); font-family: League Gothic; font-weight : 500; }
-@font-face { src: url('/lib/fonts/LemonChicken/LEMONCHI.eot'); src: url('/lib/fonts/LemonChicken/LEMONCHI.ttf') format('truetype'); font-family: Lemon Chi; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lilly/Lilly__.eot'); src: url('/lib/fonts/Lilly/Lilly__.ttf') format('truetype'); font-family: Lilly; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lobster/Lobster_1.3.eot'); src: url('/lib/fonts/Lobster/Lobster_1.3.otf') format('opentype'); font-family: Lobster; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Matiz/Matiz.eot'); src: url('/lib/fonts/Matiz/Matiz.ttf') format('truetype'); font-family: Matiz; font-weight : 500; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold_Oblique.eot'); src: url('/lib/fonts/quicksand_2/Quicksand_Bold_Oblique.otf') format('opentype'); font-family: Quicksand; font-weight : 700; font-style : italic; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold.eot'); src: url('/lib/fonts/quicksand_2/Quicksand_Bold.otf') format('opentype'); font-family: Quicksand; font-weight : 700; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book_Oblique.eot'); src: url('/lib/fonts/quicksand_2/Quicksand_Book_Oblique.otf') format('opentype'); font-family: Quicksand; font-weight : 500; font-style : italic; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book.eot'); src: url('/lib/fonts/quicksand_2/Quicksand_Book.otf') format('opentype'); font-family: Quicksand; font-weight : 500; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBd.eot'); src: url('/lib/fonts/bitstream-vera/VeraMoBd.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 700; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBI.eot'); src: url('/lib/fonts/bitstream-vera/VeraMoBI.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 700; font-style : italic; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoIt.eot'); src: url('/lib/fonts/bitstream-vera/VeraMoIt.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; font-style : italic; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMono.eot'); src: url('/lib/fonts/bitstream-vera/VeraMono.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Museo/Museo500-Regular.eot'); src: local("☺"), url('/lib/fonts/Museo/Museo500-Regular.otf') format('opentype'); font-family: Museo; font-weight: 500; }
+@font-face { src: url('/lib/fonts/Museo/Museo700-Regular.eot'); src: local("☺"), url('/lib/fonts/Museo/Museo700-Regular.otf') format('opentype'); font-family: Museo; font-weight: 700; }
+@font-face { src: url('/lib/fonts/BPscript/BPscript.eot'); src: local("☺"), url('/lib/fonts/BPscript/BPscript.otf') format('opentype'); font-family: BPscript; font-weight : 500; }
+@font-face { src: url('/lib/fonts/code/CODE_Bold.eot'); src: local("☺"), url('/lib/fonts/code/CODE_Bold.otf') format('opentype'); font-family: Code; font-weight : 700; }
+@font-face { src: url('/lib/fonts/code/CODE_Light.eot'); src: local("☺"), url('/lib/fonts/code/CODE_Light.otf') format('opentype'); font-family: Code; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Comic-Zine-OT/comic_zine_ot.eot'); src: local("☺"), url('/lib/fonts/Comic-Zine-OT/comic_zine_ot.otf') format('opentype'); font-family: Comic Zine; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Folk/Folkoutline.eot'); src: local("☺"), url('/lib/fonts/Folk/Folkoutline.otf') format('opentype'); font-family: Folk Outline; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Folk/Folkshadow.eot'); src: local("☺"), url('/lib/fonts/Folk/Folkshadow.otf') format('opentype'); font-family: Folk Shadow; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Folk/Folksketches.eot'); src: local("☺"), url('/lib/fonts/Folk/Folksketches.otf') format('opentype'); font-family: Folk Sketches; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Folk/Folksolid.eot'); src: local("☺"), url('/lib/fonts/Folk/Folksolid.otf') format('opentype'); font-family: Folk; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lane/LANENAR_.eot'); src: local("☺"), url('/lib/fonts/Lane/LANENAR_.ttf') format('truetype'); font-family: Lane; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lane/LANEPOSH.eot'); src: local("☺"), url('/lib/fonts/Lane/LANEPOSH.ttf') format('truetype'); font-family: Lane Posh; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lane/LANEUP__.eot'); src: local("☺"), url('/lib/fonts/Lane/LANEUP__.ttf') format('truetype'); font-family: Lane Up; font-weight : 500; }
+@font-face { src: url('/lib/fonts/League-Gothic/League_Gothic.eot'); src: local("☺"), url('/lib/fonts/League-Gothic/League_Gothic.otf') format('opentype'); font-family: League Gothic; font-weight : 500; }
+@font-face { src: url('/lib/fonts/LemonChicken/LEMONCHI.eot'); src: local("☺"), url('/lib/fonts/LemonChicken/LEMONCHI.ttf') format('truetype'); font-family: Lemon Chi; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lilly/Lilly__.eot'); src: local("☺"), url('/lib/fonts/Lilly/Lilly__.ttf') format('truetype'); font-family: Lilly; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Lobster/Lobster_1.3.eot'); src: local("☺"), url('/lib/fonts/Lobster/Lobster_1.3.otf') format('opentype'); font-family: Lobster; font-weight : 500; }
+@font-face { src: url('/lib/fonts/Matiz/Matiz.eot'); src: local("☺"), url('/lib/fonts/Matiz/Matiz.ttf') format('truetype'); font-family: Matiz; font-weight : 500; }
+@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold_Oblique.eot'); src: local("☺"), url('/lib/fonts/quicksand_2/Quicksand_Bold_Oblique.otf') format('opentype'); font-family: Quicksand; font-weight : 700; font-style : italic; }
+@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold.eot'); src: local("☺"), url('/lib/fonts/quicksand_2/Quicksand_Bold.otf') format('opentype'); font-family: Quicksand; font-weight : 700; }
+@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book_Oblique.eot'); src: local("☺"), url('/lib/fonts/quicksand_2/Quicksand_Book_Oblique.otf') format('opentype'); font-family: Quicksand; font-weight : 500; font-style : italic; }
+@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book.eot'); src: local("☺"), url('/lib/fonts/quicksand_2/Quicksand_Book.otf') format('opentype'); font-family: Quicksand; font-weight : 500; }
+@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBd.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMoBd.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 700; }
+@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBI.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMoBI.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 700; font-style : italic; }
+@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoIt.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMoIt.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; font-style : italic; }
+@font-face { src: url('/lib/fonts/bitstream-vera/VeraMono.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMono.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; }
 
  </style>
  <style>
