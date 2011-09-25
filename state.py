@@ -196,14 +196,14 @@ class Expr(Entity):
         else:
             return 0
 
-    def url(self):
+    def qualified_url(self):
       return "http://" + self['domain'] + "/" + self['name']
 
     def facebook_count(self):
-      return social_stats.facebook_count(self.url())
+      return social_stats.facebook_count(self.qualified_url())
 
     def gplus_count(self):
-      return social_stats.gplus_count(self.url())
+      return social_stats.gplus_count(self.qualified_url())
         
 
 def tags_by_frequency(**query):
