@@ -33,7 +33,7 @@
 }
 .dialog .center, .dialog.center { text-align: center;}
 .dialog .line { margin: 7px 0; clear: both;}
-.dialog input, .dialog textarea { font-size: 14px; font-family:Arial;}
+/* .dialog input, .dialog textarea { font-size: 14px; font-family:Arial;} */
 .dialog .line .element { float: left; }
 .dialog .line .label {float:left; margin-top: 6px; margin-right:4px;}
 .btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png"); right:10px; top:5px;}
