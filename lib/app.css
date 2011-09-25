@@ -174,11 +174,11 @@ input[type="text"].copy, textarea.copy {
    login menu
    ========================================== */
 #login_menu {
-  width: 160px;
+  width: 190px;
 }
 
 #login_menu input[type=text], #login_menu input[type=password] {
-  width: 140px;
+  width: 170px;
 }
 
 #signup_link {
@@ -186,6 +186,23 @@ input[type="text"].copy, textarea.copy {
   font-size: 13px;
   text-align: center;
   padding : 2px 5px;
+}
+
+#signup_button_wrapper {
+  clear: both;
+  padding-top: 10px;
+}
+
+#signup_button { 
+  font-weight : bold; 
+  padding : 2px 5px; 
+  background-color : #FFF673; 
+  cursor : pointer; 
+}
+
+#signup_button:hover, #signup_button.open { 
+  color : red; 
+  background-color : white; 
 }
 
 /* ==========================================
@@ -201,5 +218,3 @@ input[type="text"].copy, textarea.copy {
 }
 
 #login_menu { padding : 10px; }
-#signup_button { font-weight : bold; padding : 2px 5px; background-color : #FFF673; cursor : pointer; }
-#signup_button:hover, #signup_button.open { color : red; background-color : white; }

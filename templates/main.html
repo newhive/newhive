@@ -38,17 +38,15 @@
     <div class='spacer'></div>
     <b>Password</b><br>
     <input type='password' name='secret'><br>
-    <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:small'> Remember me</label>
-    <div style='display : float; float : right; margin : 10px'>
+    <div>
+      <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:small'> Remember me</label>
+    </div>
+    <div style='display : float; float : right; clear: both; margin : 6px 0px'>
      <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
     </div>
     <input type='hidden' name='action' value='login'>
    </form>
-   <div class='spacer'></div>
-   <div class='spacer'></div>
-   <div class='spacer'></div>
-   <div class='spacer'></div>
-   <div><span id='signup_button' onclick="showDialog('#dia_signup'); $(this).addClass('open');"
+   <div id='signup_button_wrapper'><span id='signup_button' onclick="showDialog('#dia_signup'); $(this).addClass('open');"
     >Sign up for an account</span>
     <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
    </div>
