@@ -33,6 +33,10 @@
 }
 .dialog .center, .dialog.center { text-align: center;}
 .dialog .line { margin: 7px 0; clear: both;}
+<<<<<<< HEAD
+=======
+/* .dialog input, .dialog textarea { font-size: 14px; font-family:Arial;} /* this is in templates/base.html */
+>>>>>>> aa380f4969dcbabefaf79a1bc3851df0ab41adbf
 .dialog .line .element { float: left; }
 .dialog .line .label {float:left; margin-top: 6px; margin-right:4px;}
 .btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png"); right:10px; top:5px;}
@@ -172,11 +176,39 @@ input[type="text"].copy, textarea.copy {
 /* ==========================================
    login menu
    ========================================== */
+<<<<<<< HEAD
+=======
+#login_menu {
+  width: 190px;
+}
+
+#login_menu input[type=text], #login_menu input[type=password] {
+  width: 170px;
+}
+
+>>>>>>> aa380f4969dcbabefaf79a1bc3851df0ab41adbf
 #signup_link {
   font-weight: bold; 
   font-size: 13px;
   text-align: center;
   padding : 2px 5px;
+}
+
+#signup_button_wrapper {
+  clear: both;
+  padding-top: 10px;
+}
+
+#signup_button { 
+  font-weight : bold; 
+  padding : 2px 5px; 
+  background-color : #FFF673; 
+  cursor : pointer; 
+}
+
+#signup_button:hover, #signup_button.open { 
+  color : red; 
+  background-color : white; 
 }
 
 /* ==========================================
@@ -192,5 +224,8 @@ input[type="text"].copy, textarea.copy {
 }
 
 #login_menu { padding : 10px; }
+<<<<<<< HEAD
 #signup_button { font-weight : bold; padding : 2px 5px; background-color : #FFF673; cursor : pointer; display : inline-block; }
 #signup_button:hover, #signup_button.open { color : red; background-color : white; }
+=======
+>>>>>>> aa380f4969dcbabefaf79a1bc3851df0ab41adbf
