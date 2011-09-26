@@ -11,7 +11,7 @@ import PIL.Image as Img
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, junkstr, create, fetch, DuplicateKeyError, time_u, normalize, get_root
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url
 
 
 def lget(L, i, default=None):
@@ -66,21 +66,17 @@ def generate_thumb(expr, owner):
     try: response = urllib.urlopen(fst_img['content'])
     except: return
     if response.getcode() != 200: return
-    res = File.create(
-         owner = owner.id
-        ,name = 'thumb'
-        ,mime = response.headers.getheader('Content-Type')
-        )
-    path = media_path(owner, res.id)
+    mime = response.headers.getheader('Content-Type')
+
+    path = os.tmpnam()
     f = open(path, 'w')
     f.write(response.read())
     f.close()
-    res.update(fs_path = path)
 
     # resize and crop image to 124x96, preserving aspect ratio, save over original
     try: imo = Img.open(path)
     except:
-        res.delete()
+        os.remove(path)
         return
     ratio = float(imo.size[0]) / imo.size[1]
     ratio_target = 124.0 / 96
@@ -90,8 +86,8 @@ def generate_thumb(expr, owner):
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
 
-    url = abs_url() + 'file/' + res.id
-    expr['thumb'] = url
+    res = File.create(owner=owner.id, path=path, name='thumb', mime=mime)
+    expr['thumb'] = res.get('url')
 
 
 def expr_delete(request, response):
@@ -104,18 +100,10 @@ def expr_delete(request, response):
     # TODO: garbage collect media files that are no longer referenced by expression
     return redirect(response, home_url(request.requester))
 
-def media_path(user, f_id=None):
-    p = joinpath(config.domain_home, config.server_name, user['name'], 'media')
-    return joinpath(p, f_id) if p else p
 def files_create(request, response):
     """ Saves a file uploaded from the expression editor, responds
-    with a URL.json object representing that file, passed to the
-    JavaScript Hive.new_app function in lib/ee/main.js.
-
-     * text/txt files are not saved and simply returned in a text box
-     * all other file types are saved in the user's media folder
-     * mp3 and image files are handled specifically by the editor
-     * for all other files a link in a text box is returned
+    with a Hive.App JSON object.
+    Resamples images to 1600x1000 or smaller, sets JPEG quality to 70
     """
 
     if not request.trusting: raise exceptions.BadRequest()
@@ -125,64 +113,62 @@ def files_create(request, response):
         file = request.files[file_name]
         mime = mimetypes.guess_type(file.filename)[0]
 
-        #if exists(joinpath(media_path(request.requester), file.filename)):
-        #    m = re.search('(.*?)(_([0-9]+))?(\..*?$)', file.filename)
-        #    if m.groups()[2]: file.filename = m.groups()[0] + '_' + str(int(m.groups()[2]) + 1) + m.groups()[3]
-        #    else: file.filename = m.groups()[0] + '_1' + m.groups()[3]
-        #path = joinpath(media_path(request.requester), file.filename)
-
         app = {}
         if mime == 'text/plain':
             app['type'] = 'hive.text'
             app['content'] = file.stream.read()
-        else:
-            res = File.create(
-                 owner = request.requester.id
-                ,name = file.filename
-                ,mime = mime
+            return app
+
+        path = os.tmpnam()
+        file.save(path)
+
+        if mime in ['image/jpeg', 'image/png', 'image/gif']:
+            try: imo = Img.open(path)
+            except:
+                res.delete()
+                return False
+            if imo.size[0] > 1600 or imo.size[1] > 1000:
+                ratio = float(imo.size[0]) / imo.size[1]
+                new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
+                imo = imo.resize(new_size, resample=Img.ANTIALIAS)
+            opts = {}
+            if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
+            if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
+            if mime == 'image/gif': opts.update(format = 'GIF')
+            imo.save(path, **opts)
+
+        res = File.create(owner=request.requester.id, path=path, name=file.filename, mime=mime)
+        url = res.get('url')
+        app['file_id'] = res.id
+
+        if mime in ['image/jpeg', 'image/png', 'image/gif']:
+            app['type'] = 'hive.image'
+            app['content'] = url
+        elif mime == 'audio/mpeg':
+            app['content'] = ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
+                +"<param name='FlashVars' value='soundFile=" + url + "'>"
+                +"<param name='wmode' value='transparent'></object>"
                 )
-            path = media_path(request.requester, res.id)
-            file.save(path)
-            res.update(fs_path = path)
-            url =  abs_url() + 'file/' + res.id
-
-            if mime in ['image/jpeg', 'image/png', 'image/gif']:
-                app['type'] = 'hive.image'
-                app['content'] = url
-
-                try: imo = Img.open(path)
-                except:
-                    res.delete()
-                    return False
-                if imo.size[0] > 1600 or imo.size[1] > 1000:
-                    ratio = float(imo.size[0]) / imo.size[1]
-                    new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
-                    imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-                    imo = imo.convert(mode='RGB')
-                    opts = {}
-                    if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
-                    if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
-                    if mime == 'image/gif': opts.update(format = 'GIF')
-                    imo.save(path, **opts)
-            elif mime == 'audio/mpeg':
-                app['content'] = ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
-                    +"<param name='FlashVars' value='soundFile=" + url + "'>"
-                    +"<param name='wmode' value='transparent'></object>"
-                    )
-                app['type'] = 'hive.html'
-                app['dimensions'] = [200, 24]
-            else:
-                app['type'] = 'hive.text'
-                app['content'] = "<a href='%s'>%s</a>" % (url, file.filename)
+            app['type'] = 'hive.html'
+            app['dimensions'] = [200, 24]
+        else:
+            app['type'] = 'hive.text'
+            app['content'] = "<a href='%s'>%s</a>" % (url, file.filename)
 
         return app
+
+def file_delete(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    res = File.fetch(request.form.get('id'))
+    if res: res.delete()
+    return True
+
 
 def user_check(request, response):
     if User.named(request.form['name']):
         return False
     else:
         return True
-
 
 def user_create(request, response):
     """ Checks if the referral code matches one found in database.
@@ -193,7 +179,7 @@ def user_create(request, response):
         Logs new user in.
         """
 
-    referral = fetch('referral', request.args.get('key'), keyname='key')
+    referral = Referral.fetch(request.args.get('key'), keyname='key')
     if not referral: return bad_referral(request, response)
     referrer = User.fetch(referral['user'])
     if(referrer['referrals'] <= 0):
@@ -207,8 +193,6 @@ def user_create(request, response):
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
     user.expr_create({ 'title' : 'Homepage', 'home' : True })
-
-    os.makedirs(joinpath(config.domain_home, config.server_name, user['name'], 'media'))
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
@@ -272,7 +256,7 @@ def mail_us(request, response):
     form.update({'msg': body})
     if not config.debug_mode:
         send_mail(heads, body)
-    create('contact_log', **form)
+    Contact.create(**form)
 
     return jinja_env.get_template('dialogs/signup_thank_you.html').render(response.context)
 
@@ -329,6 +313,7 @@ actions = dict(
     ,expr_save       = expr_save
     ,expr_delete     = expr_delete
     ,files_create    = files_create
+    ,file_delete    = file_delete
     ,user_create     = user_create
     ,user_check      = user_check
     ,mail_us         = mail_us
@@ -443,15 +428,14 @@ def handle(request):
             response.context['exp'] = exp
             return serve_page(response, 'edit.html')
         elif p1 == 'signup':
-            referral = fetch('referral', request.args.get('key'), keyname='key')
+            referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral: return bad_referral(request, response)
             return serve_page(response, 'user_settings.html')
         elif p1 == 'referral' and request.requester.logged_in:
             if(request.requester['referrals'] <= 0):
                 return no_more_referrals(request.requester['name'], request, response)
-            key = junkstr(16)
-            create('referral', user = request.requester.id, key = key)
-            response.context['content'] = abs_url(secure=True) + 'signup?key=' + key
+            res = Referral.create(user = request.requester.id)
+            response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'feedback.html')
         elif p1 == '' or p1 == 'home':
@@ -507,7 +491,7 @@ def handle(request):
         response.context['title'] = owner['fullname']
         response.context['fullname'] = owner['fullname']
         response.context['tag'] = tag
-        response.context['tags'] = owner.get('tags', []) #tags_by_frequency(owner=owner.id)
+        response.context['tags'] = owner.get('tags', [])
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
         response.context['view'] = request.args.get('view')
         response.context['expr'] = dfilter(owner, ['background'])
@@ -614,6 +598,7 @@ def render_template(response, template):
         ,server_name = config.server_name
         ,colors = colors
         ,debug = config.debug_mode
+        ,use_ga = config.use_ga
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
     return jinja_env.get_template('pages/' + template).render(context)
@@ -658,21 +643,6 @@ class Forbidden(exceptions.Forbidden):
     def get_body(self, environ):
         return "You can no looky sorry"
 
-#def parse_host(host):
-#    domain = host.split(':')[0]
-#    domain_parts = domain.split('.')
-#    site_domain = '.'.join(domain_parts[-2:])
-#    sub_domain = domain_parts[0] if len(domain_parts) > 2 else None
-#    return (domain, site_domain, sub_domain)
-
-def abs_url(secure = False, domain = None):
-    """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
-
-    proto = 'https' if secure else 'http'
-    port = config.ssl_port if secure else config.plain_port
-    port = '' if port == 80 or port == 443 else ':' + str(port)
-    return (proto + '://' + (domain or config.server_name) + port + '/')
-
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
 
@@ -709,7 +679,10 @@ if __name__ == '__main__':
           , use_reloader = True
           , use_debugger = config.debug_mode
           , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-          , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
+          , static_files = {
+               '/lib' : joinpath(config.src_home, 'lib')
+              ,'/file' : config.media_path
+            }
           , processes = 0
           )
     else:
@@ -720,7 +693,10 @@ if __name__ == '__main__':
           , use_reloader = True
           , use_debugger = config.debug_mode
           , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-          , static_files = { '/lib': joinpath(config.src_home, 'lib') } # from werkzeug import SharedDataMiddleware
+          , static_files = {
+               '/lib' : joinpath(config.src_home, 'lib')
+              ,'/file' : config.media_path
+            }
           , ssl_context  = ctx
           , processes = 0
           )
