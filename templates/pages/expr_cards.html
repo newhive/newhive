@@ -14,23 +14,12 @@ iframe { border : none; }
 {% endblock %}
 {% block body %}
 
-<div class='nav' style='right : 10px; top : 0px;'>
+<div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
+ <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
  {% if user.logged_in %}
   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
-  <!--<img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' onclick='background_pick()'>-->
  {% endif %}
-
- {% include 'share.html' %}
 </div>
-<script>
-//function profile_bg_pick() {
-//    function save_bg() {
-//         $('#action_input').val('user_bg_set');
-//         $('#value_input').val($('#bg').css('background-color'));
-//         $('#upload_form').submit();
-//    }
-//    function bg_update(c) { 
-</script>
 
 {% endblock %}
 {% block content %}
@@ -43,7 +32,7 @@ iframe { border : none; }
 {% endif %}
 #}
 
-<div style='position : fixed; top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95'>
+<div style='position : fixed; top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
  <div style='font-family : Museo; font-size : 4em; margin : 20px 50px 20px 50px;'><a href='/'>{{ fullname }}</a>{{ ': ' + tag if tag }}</div>
  
  <div id='tags'>

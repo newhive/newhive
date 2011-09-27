@@ -4,7 +4,6 @@
  <style>
   .happ { position : absolute; }
   .happ img { width : 100%; }
-  #private_expr { background-color: white; border: 5px solid #EDEBE1; padding: 5px; }
   #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
   #exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
   #datetime { font-size : .7em; color : {{ colors[12] }}; line-height : .5em; }
@@ -23,7 +22,7 @@
 {% endblock %}
 
 {% block body %}
- <div class='nav' style='right : 10px; top : 0px;'>
+ <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
   {% if not user_is_owner %}
    <div id='info' class='medbold' style='text-align : right'>
     <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
@@ -31,7 +30,11 @@
    </div>
   {% endif %}
 
-  {% include 'share.html' %}
+  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
+  <script>
+    $('#expression_url').html(window.location.href);
+    //share_menu = click_dialogue($('#btn_share'), $('#dia_share'));
+  </script>
  
   {% if user.logged_in %}
    <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
@@ -57,15 +60,12 @@
 
 {% block content %}
  {% if auth_required %}
-  <center>
-   <form method='POST'>
-    <br> <br> <br> <br>
-    <div id="private_expr"><h2>This is a private expression</h2>
-    Enter password to view:<div><br>
-    <input type='password' name='password'>
-    <input type='image' src='/lib/skin/1/sm_arrow.png' class='hoverable' style='vertical-align : middle'> 
-   </form>
-  </center>
+  <script>
+   $(function() {
+       showDialog('#dia_password');
+       $('#password_input').select();
+   });
+  </script>
  {% else %}
   {{ body }}
  {% endif %}
