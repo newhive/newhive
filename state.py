@@ -1,18 +1,27 @@
-import re, pymongo, pymongo.objectid
+import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes
+from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 import config
 import social_stats
 
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key as S3Key
 
 con = pymongo.Connection()
 db = con[config.database]
 
+# initialize s3 connection
+if config.aws_id:
+    s3_con = S3Connection(config.aws_id, config.aws_secret)
+    s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
+
+
 def now(): return time_s(datetime.utcnow())
 def time_s(t): return int(t.strftime('%s'))
 def time_u(t): return datetime.utcfromtimestamp(t)
+def guid(): return str(pymongo.objectid.ObjectId())
 
-import random
 def junkstr(length):
     """Creates a random base 64 string"""
 
@@ -56,9 +65,9 @@ class Entity(dict):
     @classmethod
     def create(cls, **d):
         self = cls(d)
+        self['_id'] = self.id = guid()
         return self.create_me()
     def create_me(self):
-        self['_id'] = self.id = str(pymongo.objectid.ObjectId())
         self['created'] = now()
         self['updated'] = now()
         self._col.insert(self, safe=True)
@@ -127,6 +136,7 @@ class User(Entity):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
 
+
 def get_root(): return User.named('root')
 if not get_root():
     import getpass
@@ -140,6 +150,10 @@ class Session(Entity):
 import re
 def normalize(ws):
     return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
+
+def media_path(user, f_id=None):
+    p = joinpath(config.media_path, user['name'])
+    return joinpath(p, f_id) if p else p
 
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
 db.expr.ensure_index([('owner', 1), ('updated', 1)])
@@ -171,11 +185,6 @@ class Expr(Entity):
 
     def update(self, **d):
         if d.get('tags'): d['tags_index'] = normalize(d['tags'])
-        #d['index'] = (
-        #      normalize(d.get('tags', self.get('tags', '')))
-        #    + normalize(d.get('name', self['name']))
-        #    + normalize(d.get('title', self['title']))
-        #    )
         return super(Expr, self).update(**d)
 
     def create_me(self):
@@ -210,6 +219,72 @@ class Expr(Entity):
       else:
         return 0
       
+
+class File(Entity):
+    cname = 'file'
+
+    def create_me(self):
+        """ Uploads file to s3 if config.aws_id is defined, otherwise
+        saves in config.media_path
+        """
+
+        self['owner']
+        tmp_path = self['path']
+        del self['path']
+        name = urllib.quote_plus(self['name'].encode('utf8'))
+
+        if config.aws_id:
+            b = random.choice(s3_buckets)
+            self['s3_bucket'] = b.name
+            k = S3Key(b)
+            k.name = self.id
+            k.set_contents_from_filename(tmp_path,
+                headers={ 'Content-Disposition' : 'inline; filename=' + name })
+            url = k.generate_url(86400 * 3600)
+            os.remove(tmp_path)
+        else:
+            owner = User.fetch(self['owner'])
+            fs_name = self.id + mimetypes.guess_extension(self['mime'])
+            path = media_path(owner, fs_name)
+            os.renames(tmp_path, path)
+            dict.update(self, fs_path=path)
+            url =  abs_url() + 'file/' + owner['name'] + '/' + fs_name
+
+        dict.update(self, url=url)
+        return super(File, self).create_me()
+
+    def delete(self):
+        if self.get('s3_bucket'):
+            k = s3_con.get_bucket(self['s3_bucket']).get_key(self.id)
+            if k: k.delete()
+        elif self.get('fs_path'): os.remove(self['fs_path'])
+
+        super(File, self).delete()
+
+
+class Referral(Entity):
+    cname = 'referral'
+
+    def create_me(self):
+        self['key'] = junkstr(16)
+        return super(Referral, self).create_me()
+
+
+class Contact(Entity):
+    cname = 'contact_log'
+
+        
+def abs_url(secure = False, domain = None):
+    """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
+
+    proto = 'https' if secure else 'http'
+    port = config.ssl_port if secure else config.plain_port
+    port = '' if port == 80 or port == 443 else ':' + str(port)
+    return (proto + '://' + (domain or config.server_name) + port + '/')
+
+
+## analytics utils
+
 def tags_by_frequency(**query):
     tags = {}
     for d in Expr.search(**query):
@@ -223,28 +298,3 @@ def count(L):
     c = {}
     for v in L: c[v] = c.get(v, 0) + 1
     return sorted([(c[v], v) for v in c])
-
-
-class File(Entity):
-    cname = 'file'
-        #if not r: # TODO: check out the file system
-        #    return None
-        #return self
-
-class Log(Entity):
-    cname = 'log'
-
-class Contact(Entity):
-    cname = 'contact_log'
-
-#class Resource(Entity):
-#    site = Field(String(255))
-#    subdomain = Field(String(20))
-#    path = Field(String(255))
-#
-#class File(Resource):
-#    content_type = Field(String(100))
-#    fspath = Field(String(255))
-#
-#class Expr(Resource):
-#    data = Field(Text())
