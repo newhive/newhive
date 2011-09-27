@@ -73,6 +73,11 @@ class Entity(dict):
         return self._col.update({ '_id' : self.id }, { '$set' : d })
     def update_cmd(self, d): return self._col.update({ '_id' : self.id }, d)
 
+    def increment(self, d):
+      """Increment counter(s) identified by a dict.
+      For example {'foo': 2, 'bar': -1, 'baz.qux': 10}"""
+      return self._col.update({ '_id' : self.id }, {'$inc': d}, upsert=True)
+
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
 
 def fetch(cname, id, keyname='_id'):
@@ -182,10 +187,7 @@ class Expr(Entity):
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
-        if self.has_key(counter):
-          self.update(**{'updated': False, counter: self[counter] + 1})
-        else:
-          self.update(**{'updated': False, counter: 1})
+        return self.increment({counter: 1})
 
     def views(self):
         if self.has_key('views'):
@@ -199,13 +201,15 @@ class Expr(Entity):
     def qualified_url(self):
       return "http://" + self['domain'] + "/" + self['name']
 
-    def facebook_count(self):
-      return social_stats.facebook_count(self.qualified_url())
-
-    def gplus_count(self):
-      return social_stats.gplus_count(self.qualified_url())
-        
-
+    def analytic_count(self,string):
+      if string in ['facebook', 'gplus']:
+        count = getattr(social_stats, string + "_count")(self.qualified_url())
+        subdocument = 'analytics.' + string
+        self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+        return count
+      else:
+        return 0
+      
 def tags_by_frequency(**query):
     tags = {}
     for d in Expr.search(**query):
