@@ -4,11 +4,6 @@
 <div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
 >{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
 
-<div id='dialog_shield'></div>
-{% include 'dialogs/share.html' %}
-{% if user.logged_in %}
-  {% include 'dialogs/referral.html' %}
-{% endif %}
 <div class='nav' id='nav_bg'></div>
 <div class='nav' style='font-weight : bold'>
  <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
@@ -28,9 +23,60 @@
   </div>
   <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
  {% else %}
-  <a href='{{ server }}'><div style='left : 50px; top : 0px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  <a href='{{ server }}'><div style='left : 44px; top : -1px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
  {% endif %}
 </div>
+
+{% if not user.logged_in %}
+ <div class='nav' style='right : 10px; top : 0px;'>
+  <div id='login_btn' class='btn hoverable nav_icon text' value='Log In'>Log In</div>
+  <div id='login_menu' class='menu top'>
+   <form id='login_form' action='{{ secure_server }}' method='POST'>
+    {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
+    <b>Username</b><br>
+    <input id='username' type='text' name='username' value='{{ user['name'] }}'>
+    <div class='spacer'></div>
+    <b>Password</b><br>
+    <input type='password' name='secret'><br>
+    <div>
+      <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:small'> Remember me</label>
+    </div>
+    <div style='display : float; float : right; clear: both; margin : 6px 0px'>
+     <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
+    </div>
+    <input type='hidden' name='action' value='login'>
+   </form>
+   <div class='spacer'></div>
+   <div style='white-space : nowrap'><span id='signup_button' onclick="showDialog('#dia_signup'); $(this).addClass('open');"
+    ><span>Sign up for an account</span>
+    <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
+   </div>
+  </div>
+ </div>
+
+ <script>
+$(function() {
+ var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
+     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
+       hover_close : false, auto_close : false });
+ {% if error %} login_menu.open() {% endif %}
+ 
+ $('#send_msg').bind('click dblclick', function() {
+    if ($(this).hasClass('inactive')) { return true; }
+    $(this).addClass('inactive');
+
+    $.post('/', { name : $('[name=name]').val(), message : $('[name=message]').val(), referral : $('[name=referral]').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
+            $('#send_msg').removeClass('inactive');
+            if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
+            else {
+                $('#message').val('');
+                hideDialog('#dia_signup');
+                loadDialog(data);
+            }
+        }, 'json') });
+});
+ </script>
+{% endif %}
 
 {% block body %}
 {% endblock %}
@@ -48,4 +94,13 @@ $('#feedback_btn').click(function() {
 
 </div>
 
+<div id='dialogs'>
+  <div id='dialog_shield'></div>
+  {% include 'dialogs/share.html' %}
+  {% if user.logged_in %}
+    {% include 'dialogs/referral.html' %}
+  {% endif %}
+  {% include 'dialogs/password.html' %}
+  {% include 'dialogs/signup.html' %}
+</div>
 {% endblock %}
