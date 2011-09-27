@@ -27,3 +27,13 @@ def facebook_count(url):
     return int(response[0]['like_count'])
   except KeyError:
     raise Exception(response)
+
+def twitter_count(url):
+  host = 'http://search.twitter.com/search.json'
+  data = {'q': url}
+  response_stream = urllib2.urlopen(host + "?" + urllib.urlencode(data))
+  response = json.loads(response_stream.read())
+  try:
+    return len(response['results'])
+  except KeyError:
+    raise Exception(response)
