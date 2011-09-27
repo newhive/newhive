@@ -2,3 +2,5 @@ Check out this expression:
 
 Title: {{ title }}
 {{ url }}
+
+{# extra newlines are here to give space to sendgrid footer #}
