@@ -1,5 +1,5 @@
 {% extends "emails/base.html" %}
 {% block body%}
-<h2>Check out this expression:</h2>
+<h2>{{ message|e }}</h2>
 <a href='{{ url }}'>{{ title }}</a>
 {% endblock %}
