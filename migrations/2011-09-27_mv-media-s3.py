@@ -23,7 +23,7 @@ def s3_upload(file_o):
         headers={ 'Content-Disposition' : 'inline; filename=' + file_o['name'], 'Content-Type' : file_o.get('mime') })
     url = k.generate_url(86400 * 3600)
 
-    file_o.update_cmd({ '$unset' : { 'fs_path' : True } })
+    #file_o.update_cmd({ '$unset' : { 'fs_path' : True } })
     file_o.update(url=url, s3_bucket=b.name)
     print file_o.id + ' -> ' + b.name
     return url
