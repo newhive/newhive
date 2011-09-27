@@ -214,7 +214,7 @@ class File(Entity):
             k = S3Key(b)
             k.name = self.id
             k.set_contents_from_filename(tmp_path,
-                headers={ 'Content-Disposition' : 'inline; filename=' + name })
+                headers={ 'Content-Disposition' : 'inline; filename=' + name, 'Content-Type' : self['mime'] })
             url = k.generate_url(86400 * 3600)
             os.remove(tmp_path)
         else:
