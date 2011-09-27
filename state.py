@@ -212,10 +212,23 @@ class Expr(Entity):
 
     def analytic_count(self,string):
       if string in ['facebook', 'gplus']:
-        count = getattr(social_stats, string + "_count")(self.qualified_url())
-        subdocument = 'analytics.' + string
-        self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+        count = None
+        try:
+          updated = self['analytics'][string]['updated']
+        except KeyError:
+          updated = 0
+
+        if (now() - updated) < 36000:
+          count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
+
+        if count == None:
+          count = getattr(social_stats, string + "_count")(self.qualified_url())
+          subdocument = 'analytics.' + string
+          self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+
         return count
+      if string in ['email']:
+        return self['analytics'][string]['count']
       else:
         return 0
       
