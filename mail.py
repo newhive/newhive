@@ -9,7 +9,6 @@ def send_mail(headers, body):
     for k in ['Subject', 'From', 'To']:
       msg[k] = headers[k]
 
-    import pdb; pdb.set_trace()
     if type(body) == dict:
         plain = MIMEText(body['plain'], 'plain')
         html = MIMEText(body['html'], 'html')
