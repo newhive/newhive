@@ -210,8 +210,8 @@ class Expr(Entity):
     def qualified_url(self):
       return "http://" + self['domain'] + "/" + self['name']
 
-    def analytic_count(self,string):
-      if string in ['facebook', 'gplus']:
+    def analytic_count(self, string):
+      if string in ['facebook', 'gplus', 'twitter']:
         count = None
         try:
           updated = self['analytics'][string]['updated']

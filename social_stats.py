@@ -28,12 +28,17 @@ def facebook_count(url):
   except KeyError:
     raise Exception(response)
 
-def twitter_count(url):
+def twitter_count(url, raw=False):
+  import re
+  url = re.sub(r"https?://", "", url) # drop the http(s)
   host = 'http://search.twitter.com/search.json'
   data = {'q': url}
   response_stream = urllib2.urlopen(host + "?" + urllib.urlencode(data))
   response = json.loads(response_stream.read())
   try:
-    return len(response['results'])
+    if raw:
+      return response
+    else:
+      return len(response['results'])
   except KeyError:
     raise Exception(response)
