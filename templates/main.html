@@ -96,7 +96,6 @@ $('#feedback_btn').click(function() {
 
 <div id='dialogs'>
   <div id='dialog_shield'></div>
-  {% include 'dialogs/share.html' %}
   {% if user.logged_in %}
     {% include 'dialogs/referral.html' %}
   {% endif %}

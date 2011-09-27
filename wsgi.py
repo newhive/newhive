@@ -517,9 +517,13 @@ def handle(request):
         ,exp_js = json.dumps(resource)
         )
 
-    resource.increment_counter('views')
-    if is_owner: resource.increment_counter('owner_views')
-    return serve_page(response, 'expression.html')
+    if request.args.has_key('dialog'):
+        return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
+        #return jinja_env.get_template('dialogs/' + request.args['dialog'] + '.html').render(response.context)
+    else:
+        resource.increment_counter('views')
+        if is_owner: resource.increment_counter('owner_views')
+        return serve_page(response, 'expression.html')
 
 
 @Request.application
@@ -585,9 +589,9 @@ def serve_html(response, html):
     response.data = html
     response.content_type = 'text/html; charset=utf-8'
     return response
-def serve_page(response, template):
-    return serve_html(response, render_template(response, template))
-def render_template(response, template):
+def serve_page(response, template, directory='pages'):
+    return serve_html(response, render_template(response, template, directory))
+def render_template(response, template, directory='pages'):
     context = response.context
     context.update(
          home_url = home_url(response.user)
@@ -601,7 +605,7 @@ def render_template(response, template):
         ,use_ga = config.use_ga
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
-    return jinja_env.get_template('pages/' + template).render(context)
+    return jinja_env.get_template(directory + '/' + template).render(context)
 
 def serve_json(response, val, as_text = False):
     """ as_text is used when content is received in an <iframe> by the client """
