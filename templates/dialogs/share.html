@@ -43,6 +43,7 @@
     {% if user.logged_in %}
     <form id='mail_form' action='{{ secure_server }}' method='POST'>
         <input type='hidden' name='forward' value='{{ url|e }}'/>
+        <input type='hidden' name='id' value='{{ exp.id if exp }}'/>
         <input type='hidden' name='action' value='mail_them'/>
         <input type='hidden' name='subject' value='{{ user.fullname|e }} has sent you an expression'/>
         <div class="line">

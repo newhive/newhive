@@ -263,6 +263,8 @@ def mail_us(request, response):
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
+    Expr.fetch(request.form.get('id')).increment({'analytics.email.count': 1})
+
     heads = {
          'To' : request.form.get('to')
         ,'From' : 'The New Hive <noreply+share@thenewhive.com>'
