@@ -16,7 +16,7 @@ from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u
 import webassets
 
 assets_env = webassets.Environment('./libsrc', '/lib')
-assets_env.register('edit.js', 'editor.js', 'filedrop.js', 'upload.js', filters='yui_js', output='../lib/edit.js')
+assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('app.css', 'app.css', 'editor.css', filters='yui_css', output='../lib/app.css')
