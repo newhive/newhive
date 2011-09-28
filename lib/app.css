@@ -113,12 +113,13 @@ input[type="text"].copy, textarea.copy {
   margin: 8px 0 0 0;
   font-size: 38px;
 }
-#firefox_warning h2 #ie_warning h2{
+#firefox_warning h2, #ie_warning h2{
   font-family: Helvetica, Arial, sans-serif;
   font-size: 18px;
   margin: 0;
 }
-#firefox_warning h3 #ie_warning h3{
+
+#firefox_warning h3, #ie_warning h3{
   font-size: 25px;
   margin: 20px 0;
 }
