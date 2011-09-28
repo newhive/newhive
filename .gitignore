@@ -1,3 +1,4 @@
-/lib/assets
+/lib/*.js
+/lib/*.css
 /config.py
 *.pyc

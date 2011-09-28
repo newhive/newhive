@@ -1,19 +1,11 @@
 {% extends "main.html" %}
 
 {% block head %}
-<<<<<<< HEAD
- <script src='{{ assets_env["filedrop"].urls()[0] }}'></script>
- <script src='{{ assets_env["edit_js"].urls()[0] }}'></script>
-=======
- <script src='/lib/ee/main.js?v=2025'></script>
- <script src='/lib/filedrop.js?v=1' ></script>
->>>>>>> 21cb6b707045213c1523bcbfb9945050fc25370c
+ <script src='{{ assets_env["edit.js"].urls()[0] }}'></script>
 
  <script>
   Hive.Exp = {{ exp_js }}; // current expression from server
  </script>
-
- <link rel='stylesheet' type='text/css' href='/lib/ee/main.css?v=1'>
 
  <style>
  input, textarea { font-size : inherit }
