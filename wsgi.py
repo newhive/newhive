@@ -188,7 +188,7 @@ def user_create(request, response):
 
     args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
     args['referrer'] = referral['user']
-    args['sites'] = [args['name'] + '.' + config.server_name]
+    args['sites'] = [args['name'].lower() + '.' + config.server_name]
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
@@ -385,7 +385,7 @@ def handle(request):
     response.user = request.requester
 
     request.path = request.path[1:] # drop leading '/'
-    request.domain = request.host.split(':')[0]
+    request.domain = request.host.split(':')[0].lower()
     #import pdb; pdb.set_trace()
     if request.domain == config.server_name:
         if request.is_secure and request.requester and request.requester.logged_in:
