@@ -365,7 +365,7 @@ def expr_home_list(tag, request, response):
         by_id = {}
         for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
         exprs = [by_id[i] for i in ids]
-    else: exprs = Expr.list({}, sort='created')
+    else: exprs = Expr.list({}, sort='created', limit=100)
     response.context['exprs'] = map(format_card, exprs)
     response.context['tag'] = tag
     response.context['tags'] = root.get('tags', [])
