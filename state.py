@@ -228,7 +228,11 @@ class Expr(Entity):
 
         return count
       if string in ['email']:
-        return self['analytics'][string]['count']
+        try:
+          return self['analytics'][string]['count']
+        except KeyError:
+          return 0
+
       else:
         return 0
       
