@@ -1,4 +1,6 @@
-Check out this expression:
+{{ user_name}} has send you an expression!
+
+   {{ message }}
 
 Title: {{ title }}
 {{ url }}

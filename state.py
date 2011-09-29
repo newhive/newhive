@@ -215,7 +215,7 @@ class Expr(Entity):
         count = None
         try:
           updated = self['analytics'][string]['updated']
-        except KeyError:
+        except (KeyError, TypeError):
           updated = 0
 
         if (now() - updated) < 36000:
@@ -230,7 +230,7 @@ class Expr(Entity):
       if string in ['email']:
         try:
           return self['analytics'][string]['count']
-        except KeyError:
+        except (KeyError, TypeError):
           return 0
 
       else:

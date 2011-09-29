@@ -298,6 +298,7 @@ def mail_them(request, response):
          'message': request.form.get('message')
         ,'url': request.form.get('forward')
         ,'title': exp.get('title')
+        ,'user_name': request.requester.get('fullname')
         }
     body = {
          'plain': jinja_env.get_template("emails/share.txt").render(context)

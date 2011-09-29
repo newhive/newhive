@@ -1,5 +1,6 @@
 {% extends "emails/base.html" %}
 {% block body%}
-<h2>{{ message|e }}</h2>
-<a href='{{ url }}'>{{ title }}</a>
+<h2>{{ user_name }} has sent you an expression!</h2>
+<p style="font-size: 1.2em; font-style: italic;">&nbsp;&nbsp;&nbsp;&nbsp;{{ message|e }}</p>
+<a style="color: #F73627;" href='{{ url }}'><h2>{{ title }}</h2></a>
 {% endblock %}
