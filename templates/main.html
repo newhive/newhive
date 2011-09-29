@@ -48,7 +48,7 @@
    </form>
    <div class='spacer'></div>
    <div style='white-space : nowrap'><span id='signup_button' onclick="showDialog('#dia_signup'); $(this).addClass('open');"
-    ><span>Sign up for an account</span>
+    >Sign up for an account</span>
     <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
    </div>
   </div>
@@ -101,5 +101,6 @@ $('#feedback_btn').click(function() {
   {% endif %}
   {% include 'dialogs/password.html' %}
   {% include 'dialogs/signup.html' %}
+  {% include 'dialogs/ie_warning.html' %}
 </div>
 {% endblock %}

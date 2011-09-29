@@ -503,7 +503,7 @@ def handle(request):
     elif request.domain.startswith('www.'):
         return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]))
 
-    d = resource = Expr.named(request.domain, request.path.lower())
+    d = resource = Expr.named(request.domain.lower(), request.path.lower())
     if not d: d = Expr.named(request.domain, '')
     if not d: return serve_404(request, response)
     owner = User.fetch(d['owner'])
