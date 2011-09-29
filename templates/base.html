@@ -2,9 +2,11 @@
 <html>
 <head>
  <title>{{ 'The New Hive' if not title else title }}</title>
- <link rel='shortcut icon' type='image/png' href={{ icon }}>
+ <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
 
- <link rel='stylesheet' type='text/css' href='/lib/app.css?v=129'></link>
+ {% for item in assets_env["app.css"].urls() %}
+   <link rel='stylesheet' type='text/css' href='{{ item }}'></link>
+ {% endfor %}
  <style id='css_base'>
 html, body { margin : 0; padding : 0; font-family : Helvetica, sans-serif; font-size : 17px;
     color : black; white-space-collapse : discard; }
@@ -83,9 +85,9 @@ form { display : inline; }
 html, body { background-color : white; height : 100%; }
  </style>
 
- <script src='/lib/jquery.js'></script>
- <script src='/lib/jquery-ui.color.js'></script>
- <script src='/lib/util.js?v=20'></script>
+ {% for item in assets_env["app.js"].urls() %}
+   <script src='{{ item }}'></script>
+ {% endfor %}
  {% block head %}{% endblock %}
 </head>
 <body>

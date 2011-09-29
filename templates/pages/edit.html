@@ -1,14 +1,14 @@
 {% extends "main.html" %}
 
 {% block head %}
- <script src='/lib/ee/main.js?v=2025'></script>
- <script src='/lib/filedrop.js?v=1' ></script>
+{% for item in assets_env["edit.js"].urls() %}
+ <script src='{{ item }}'></script>
+{% endfor %}
+ <link rel='stylesheet' type='text/css' href='{{ assets_env["editor.css"].urls()[0] }}'>
 
  <script>
   Hive.Exp = {{ exp_js }}; // current expression from server
  </script>
-
- <link rel='stylesheet' type='text/css' href='/lib/ee/main.css?v=1'>
 
  <style>
  input, textarea { font-size : inherit }
@@ -27,7 +27,6 @@
 .dialogue_handle { background-color : {{ colors.selected }}; }
 #loading { position : fixed; z-index : 1200; display : none; }
 #app_btns { top : 0; left : 300px; width : 402px; height : 50px; }
-#app_btns .menu { }
 #nav_bg { min-width : 620px; }
  </style>
 {% endblock %}

@@ -13,6 +13,19 @@ import config, auth
 from colors import colors
 from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url
 
+import webassets
+
+assets_env = webassets.Environment('./libsrc', '/lib')
+if config.webassets_debug:
+    assets_env.debug = True
+    assets_env.updater = "always"
+assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
+assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'hover.js',
+    'drag.js', 'dragndrop.js', 'colors.js', 'util.js',  output='../lib/app.js')
+assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
+
+
 
 def lget(L, i, default=None):
     try: return L[i]
@@ -598,6 +611,7 @@ def render_template(response, template):
         ,server_name = config.server_name
         ,colors = colors
         ,debug = config.debug_mode
+        ,assets_env = assets_env
         ,use_ga = config.use_ga
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
