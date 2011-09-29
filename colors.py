@@ -44,4 +44,4 @@ colors = {
     , 'active'     : palette[19]
     , 'highlight'  : palette[32]
     }
-for n in range(len(palette)): colors[n] = palette[n]
+for i, x in enumerate(palette): colors[i] = x

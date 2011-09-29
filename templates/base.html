@@ -2,7 +2,7 @@
 <html>
 <head>
  <title>{{ 'The New Hive' if not title else title }}</title>
- <link rel='shortcut icon' type='image/png' href={{ icon }}>
+ <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
 
  {% for item in assets_env["app.css"].urls() %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'></link>
