@@ -19,7 +19,8 @@ assets_env = webassets.Environment('./libsrc', '/lib')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js',  output='../lib/app.js')
-assets_env.register('app.css', 'app.css', 'editor.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 
 
 
