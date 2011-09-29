@@ -1,7 +1,9 @@
 {% extends "main.html" %}
 
 {% block head %}
- <script src='{{ assets_env["edit.js"].urls()[0] }}'></script>
+{% for item in assets_env["edit.js"].urls() %}
+ <script src='{{ item }}'></script>
+{% endfor %}
 
  <script>
   Hive.Exp = {{ exp_js }}; // current expression from server
