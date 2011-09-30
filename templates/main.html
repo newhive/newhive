@@ -45,6 +45,7 @@
      <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
     </div>
     <input type='hidden' name='action' value='login'>
+    <input type='hidden' name='url' value='{{ url }}'>
    </form>
    <div class='spacer'></div>
    <div style='white-space : nowrap'><span id='signup_button' onclick="showDialog('#dia_signup'); $(this).addClass('open');"
@@ -58,7 +59,7 @@
 $(function() {
  var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
      { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
-       hover_close : false, auto_close : false });
+       close_delay : 1000, auto_close : false });
  {% if error %} login_menu.open() {% endif %}
  
  $('#send_msg').bind('click dblclick', function() {

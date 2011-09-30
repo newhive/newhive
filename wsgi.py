@@ -356,7 +356,7 @@ def home_url(user):
     return abs_url(domain = user.get('sites', [config.server_name])[0]) + '*'
 def login(request, response):
     if auth.handle_login(request, response):
-        return redirect(response, home_url(request.requester))
+        return redirect(response, request.form.get('url', home_url(request.requester)))
 
 # Possible values for the POST variable 'action'
 actions = dict(
