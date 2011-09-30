@@ -468,7 +468,7 @@ def handle(request):
             response.headers.add('Content-Disposition', 'inline', filename=res['name'])
             with open(res['fs_path']) as f: response.data = f.read()
             return response
-        elif p1 == 'edit':
+        elif p1 == 'edit' and request.requester.logged_in:
             if not p2:
                 exp = { 'domain' : lget(request.requester.get('sites'), 0) }
                 exp.update(dfilter(request.args, ['domain', 'name', 'tags']))

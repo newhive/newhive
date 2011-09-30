@@ -11,7 +11,7 @@
 
 {% block content %}
  <div style='font-family : Museo; font-size : 3em; font-weight : bold; margin : 30px 50px 30px 50px;'>
-  <a href='{{ create }}?tags=playground'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
+  <a href='{{ create if user.logged_in else 'http://thenewhive.thenewhive.com' }}'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
  </div>
  <div id='tags'>
   {% for t in tags %}<a href='/home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
