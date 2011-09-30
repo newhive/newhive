@@ -1,31 +1,14 @@
-<style>
-#feed { width : auto; margin : 0 50px 50px 50px; } /*left : 124px; width : 776px; padding : 0; }*/
-.feed.item { position : relative; float : left; padding : 5px; margin : 0 5px 5px 0; width : 330px; height : 96px;
-    display : inline-block; background-image : url('/lib/skin/1/feed_item.png'); }
-.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }
-.title { font-weight : bold; max-height : 2.5em; overflow : hidden; text-overflow : ellipsis; margin-bottom : 5px; }
-.feed .title1 { font-size : 1.3em; }
-.feed .title2 { font-size : 1.1em; }
-.feed .title3 { font-size : .9em; }
-.feed .thumb { float : left; margin-right : 10px; }
-.feed .other, .feed .tags { font-size : .8em }
-.feed .tags { height : 2.5em; overflow : hidden; text-overflow : ellipsis; }
-.feed .other { position : absolute; left : 139px; bottom : 5px; font-weight : bold; }
-</style>
-
-<div id='feed' class=''>
- {% for e in exprs %}
-  {% if view == 'blog' %}
-   <div class='expr_header'>Header</div>
-   <iframe src='{{ e.url|e }}' class='expr' width='{{ e.dimensions[0] }}' height='{{ e.dimensions[1] }}'></iframe>
-  {% else %}
-   <a href='{{ e.url|e }}' target='_top'><div class='feed item' draggable='false'>
-    <input type='hidden' class='expr_id' value='{{ e.id }}'>
-    <img src='{{ e.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
-    <div class='title title{{ e.title_len }}'>{{ e.title|e }}</div>
-    <div class='tags'>{% for t in e.tags %}<span class='tag' value='{{ t|e }}'>#{{ t }} </span> {% endfor %}</div>
-    <div class='other'>{{ e.owner_name if show_name else e.updated }}</div>
-   </div></a>
-  {% endif %}
- {% endfor %}
-</div>
+{% for e in exprs %}
+ {% if view == 'blog' %}
+  <div class='expr_header'>Header</div>
+  <iframe src='{{ e.url|e }}' class='expr' width='{{ e.dimensions[0] }}' height='{{ e.dimensions[1] }}'></iframe>
+ {% else %}
+  <a href='{{ e.url|e }}' target='_top'><div class='feed item' draggable='false'>
+   <input type='hidden' class='expr_id' value='{{ e.id }}'>
+   <img src='{{ e.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
+   <div class='title title{{ e.title_len }}'>{{ e.title|e }}</div>
+   <div class='tags'>{% for t in e.tags %}<span class='tag' value='{{ t|e }}'>#{{ t }} </span> {% endfor %}</div>
+   <div class='other'>{{ e.owner_name if show_name else e.updated }}</div>
+  </div></a>
+ {% endif %}
+{% endfor %}

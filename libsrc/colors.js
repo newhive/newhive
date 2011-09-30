@@ -1,4 +1,4 @@
-palette = [
+colors = [
      '#000000'
     ,'#F73627'
     ,'#E87B25'
@@ -36,12 +36,8 @@ palette = [
     ,'#D0E0F0'
     ,'#FFFFFF'
     ]
+;
 
-colors = {
-      'selected'   : palette[4]
-    , 'bright_red' : palette[1]
-    , 'unselected' : palette[30]
-    , 'active'     : palette[19]
-    , 'highlight'  : palette[32]
-    }
-for i, x in enumerate(palette): colors[i] = x
+colors.selected = colors[4];
+colors.unselected = colors[30];
+colors.active = [19];

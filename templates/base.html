@@ -2,9 +2,11 @@
 <html xmlns:og="http://ogp.me/ns#" xmlns:fb="http://www.facebook.com/2008/fbml">
 <head>
  <title>{{ 'The New Hive' if not title else title }}</title>
- <link rel='shortcut icon' type='image/png' href='{{ icon }}'/>
+ <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
 
- <link rel='stylesheet' type='text/css' href='/lib/app.css?v=829'></link>
+ {% for item in assets_env["app.css"].urls() %}
+   <link rel='stylesheet' type='text/css' href='{{ item }}'>
+ {% endfor %}
  <style id='css_base'>
 html, body { margin : 0; padding : 0; font-family : Helvetica, sans-serif; font-size : 17px;
     color : black; white-space-collapse : discard; }
@@ -49,7 +51,6 @@ form { display : inline; }
 #bg { position : fixed; top : 0; left : 0; width : 99999px; height : 99999px; overflow : hidden z-index : 0; background-color : white; }
 #body { position : absolute; top : 0; left : 0; min-width : 100%; min-height : 100%; z-index : 1; }
 #content { position : absolute; top : 50px; left : 0; z-index : 0; min-width : 100%; }
-#feedback_msg { display : inline-block; }
 
 @font-face { src: url('/lib/fonts/Museo/Museo500-Regular.eot'); src: local("☺"), url('/lib/fonts/Museo/Museo500-Regular.ttf') format('opentype'); font-family: Museo; font-weight: 500; }
 @font-face { src: url('/lib/fonts/Museo/Museo700-Regular.eot'); src: local("☺"), url('/lib/fonts/Museo/Museo700-Regular.ttf') format('opentype'); font-family: Museo; font-weight: 700; }
@@ -83,9 +84,9 @@ form { display : inline; }
 html, body { background-color : white; height : 100%; }
  </style>
 
- <script src='/lib/jquery.js'></script>
- <script src='/lib/jquery-ui.color.js'></script>
- <script src='/lib/util.js?v=749'></script>
+ {% for item in assets_env["app.js"].urls() %}
+   <script src='{{ item }}'></script>
+ {% endfor %}
 
  <meta property="og:site_name" content='The New Hive' />
  <meta property="fb:app_id" content="153421698080835" />

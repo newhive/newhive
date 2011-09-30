@@ -170,7 +170,7 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
-    def list(cls, spec, requester=None, limit=999, page=0, sort='updated'):
+    def list(cls, spec, requester=None, limit=300, page=0, sort='updated'):
         es = map(Expr, db.expr.find(
              spec = spec
             ,sort = [(sort, -1)]
@@ -182,6 +182,10 @@ class Expr(Entity):
             requester == e['owner'] or (e.get('auth', 'public') == 'public'
             and len(e.get('apps', [])) ))
         return filter(can_view, es)
+
+    @classmethod
+    def list_count(cls, spec):
+        return db.expr.find(spec = spec).count()
 
     def update(self, **d):
         if d.get('tags'): d['tags_index'] = normalize(d['tags'])

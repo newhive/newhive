@@ -1,4 +1,4 @@
-// Copyright 2010, Abram Clark & A Reflection Of LLC
+/* Copyright 2010, A Reflection Of Inc */
 // thenewhive.com client-side expression editor version 0.1
 
 var Hive = {};
@@ -493,7 +493,7 @@ Hive.App.Text = function(common) {
     o.div.addClass('text');
     o.set_shield();
     o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
-        class : 'content', load : o.load });
+        'class' : 'content', load : o.load });
     
     return o;
 }
@@ -669,7 +669,7 @@ Hive.App.Image.Controls = function(common) {
         o.app.opacity(parseFloat(input.val()) / 100);
     });
 
-    o.rotateHandle = $(elem('img', { src : '/lib/skin/1/rotate.png',  class : 'control rotate hoverable' }));
+    o.rotateHandle = $(elem('img', { src : '/lib/skin/1/rotate.png',  'class' : 'control rotate hoverable' }));
     o.addControl(o.rotateHandle);
     d.find('.resize, .rotate').drag('start', function(e, dd) {
         o.refDims = o.app.dims();
@@ -954,7 +954,7 @@ Hive.save = function() {
         if(typeof(ret) != 'object') alert("There was a problem saving your stuff :(.");
         if(ret.error) alert(ret.error);
         else if(ret.location) {
-            if(ret.new){
+            if(ret['new']){
                 showDialog('#dia_share');
                 updateShareUrls('#dia_share', ret.location);
                 $('#mail_form [name=forward]').attr('value', ret.location);
@@ -976,14 +976,14 @@ Hive.save = function() {
         data : { action : 'expr_save', exp : JSON.stringify(Hive.get_state()) },
         success : on_response
     } );
-}
+};
 
 Hive.get_state = function() {
     //Hive.Exp.domain = $('#domain').val();
     Hive.Exp.name = $('#url').val();
     Hive.Exp.apps = Hive.OpenApps.getState();
     Hive.Exp.title = $('#title').val();
-    Hive.Exp.tags = $('#tags').val();
+    Hive.Exp.tags = $('#tags_input').val();
     Hive.Exp.auth = $('#menu_privacy .selected').attr('val');
     if(Hive.Exp.auth == 'password') Hive.Exp.password = $('#password').val();
 
@@ -1022,7 +1022,7 @@ Hive.rte = function(options) {
     o.create_editor = function() {
         o.iframe = $("<iframe style='border : none; width : 100%; height : 100%;'>").get(0);
         o.iframe.src = 'javascript:void(0)';
-        if(o.options.class) $(o.iframe).addClass(o.options.class);
+        if(o.options['class']) $(o.iframe).addClass(o.options['class']);
         $(o.options.parent || document.body).append(o.iframe);
         o.doc_poll = setTimeout(o.wait_for_doc, 1);
     }
