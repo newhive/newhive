@@ -15,7 +15,6 @@
  </div>
  <div id='tags'>
   {% for t in tags %}<a href='/home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
-  <a href='/home/Recent' class='tag_label {{ 'current' if tag == 'Recent' }}'>Recent</a>
  </div>
 
  <div id='feed'>{% include 'cards.html' %}</div>

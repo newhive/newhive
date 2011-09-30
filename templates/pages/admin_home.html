@@ -22,7 +22,6 @@
 </form>
 
 <div id='tags'>
- <a href='/admin_home/' class='tag_label {{ 'current' if not tag }}'>Recent</a>
  {% for t in tags %}<a href='/admin_home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
 </div>
 
