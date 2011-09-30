@@ -286,7 +286,11 @@ def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
     exp = Expr.fetch(request.form.get('id'))
-    exp.increment({'analytics.email.count': 1})
+    if exp:
+        exp.increment({'analytics.email.count': 1})
+        title = exp.get('title')
+    else:
+        title = request.form.get('forward')
 
     heads = {
          'To' : request.form.get('to')
@@ -297,7 +301,7 @@ def mail_them(request, response):
     context = {
          'message': request.form.get('message')
         ,'url': request.form.get('forward')
-        ,'title': exp.get('title')
+        ,'title': title
         ,'user_name': request.requester.get('fullname')
         }
     body = {
@@ -517,6 +521,10 @@ def handle(request):
         ,user_is_owner = is_owner
         )
 
+    if request.args.has_key('dialog'):
+        response.context.update(exp=resource)
+        return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
+
     if lget(request.path, 0) == '*':
         page = int(request.args.get('p', 0))
         spec = { 'owner' : owner.id }
@@ -552,13 +560,9 @@ def handle(request):
         ,exp_js = json.dumps(resource)
         )
 
-    if request.args.has_key('dialog'):
-        return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
-        #return jinja_env.get_template('dialogs/' + request.args['dialog'] + '.html').render(response.context)
-    else:
-        resource.increment_counter('views')
-        if is_owner: resource.increment_counter('owner_views')
-        return serve_page(response, 'expression.html')
+    resource.increment_counter('views')
+    if is_owner: resource.increment_counter('owner_views')
+    return serve_page(response, 'expression.html')
 
 
 @Request.application
