@@ -231,10 +231,32 @@ def admin_update(request, response):
         v = json.loads(request.form.get(k))
         if v: get_root().update(**{ k : v })
 
+######################################
+########### mail functions ###########
+######################################
+
 from smtplib import SMTP
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 def send_mail(headers, body):
-    b = "\r\n".join([k + ': ' + headers[k] for k in headers.keys()] + ['', body])
-    return SMTP('localhost').sendmail(headers['From'], headers['To'].split(','), b)
+    msg = MIMEMultipart('alternative')
+    for k in ['Subject', 'From', 'To']:
+      msg[k] = headers[k]
+
+    if type(body) == dict:
+        plain = MIMEText(body['plain'], 'plain')
+        html = MIMEText(body['html'], 'html')
+        msg.attach(plain); msg.attach(html)
+    else:
+        part1 = MIMEText(body, 'plain')
+        msg.attach(part1)
+
+    smtp = SMTP(config.email_server)
+    if config.email_user and config.email_password:
+      smtp.login(config.email_user, config.email_password)
+
+    return smtp.sendmail(msg['From'], msg['To'].split(','), msg.as_string())
 
 def mail_us(request, response):
     if not request.form.get('email'): return False
@@ -263,13 +285,29 @@ def mail_us(request, response):
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
+    exp = Expr.fetch(request.form.get('id'))
+    if exp:
+        exp.increment({'analytics.email.count': 1})
+        title = exp.get('title')
+    else:
+        title = request.form.get('forward')
+
     heads = {
          'To' : request.form.get('to')
         ,'From' : 'The New Hive <noreply+share@thenewhive.com>'
         ,'Subject' : request.form.get('subject', '')
         ,'Reply-to' : request.requester.get('email', '')
         }
-    body = request.form.get('message')
+    context = {
+         'message': request.form.get('message')
+        ,'url': request.form.get('forward')
+        ,'title': title
+        ,'user_name': request.requester.get('fullname')
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/share.txt").render(context)
+        ,'html': jinja_env.get_template("emails/share.html").render(context)
+        }
     send_mail(heads, body)
     if request.form.get('send_copy'):
         heads.update(To = request.requester.get('email', ''))
@@ -297,6 +335,7 @@ def mail_feedback(request, response):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
     response.context['success'] = True
+########### End of mail functions ###########
 
 
 def home_url(user):
@@ -482,6 +521,10 @@ def handle(request):
         ,user_is_owner = is_owner
         )
 
+    if request.args.has_key('dialog'):
+        response.context.update(exp=resource)
+        return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
+
     if lget(request.path, 0) == '*':
         page = int(request.args.get('p', 0))
         spec = { 'owner' : owner.id }
@@ -585,9 +628,9 @@ def serve_html(response, html):
     response.data = html
     response.content_type = 'text/html; charset=utf-8'
     return response
-def serve_page(response, template):
-    return serve_html(response, render_template(response, template))
-def render_template(response, template):
+def serve_page(response, template, directory='pages'):
+    return serve_html(response, render_template(response, template, directory))
+def render_template(response, template, directory='pages'):
     context = response.context
     context.update(
          home_url = home_url(response.user)
@@ -601,7 +644,7 @@ def render_template(response, template):
         ,use_ga = config.use_ga
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
-    return jinja_env.get_template('pages/' + template).render(context)
+    return jinja_env.get_template(directory + '/' + template).render(context)
 
 def serve_json(response, val, as_text = False):
     """ as_text is used when content is received in an <iframe> by the client """
