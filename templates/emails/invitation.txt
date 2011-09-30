@@ -1,0 +1,16 @@
+Welcome to thenewhive.com,
+your space for expression
+
+One of our users, {{ referrer_name }}, sent you an invite to The New Hive!
+
+Use this signup link to get started:
+{{ url }}
+
+The New Hive is your creative playground. We love to hear from you, and are
+looking forward to seeing your creations. Without you, the new hive is just a
+blank canvas. You make Us a community. Thank you for expressing yourself!
+
+Cheers,
+The New Hive team
+
+{# newlines here on purpose #}

@@ -1,0 +1,8 @@
+{{ user_name}} has send you an expression!
+
+   {{ message }}
+
+Title: {{ title }}
+{{ url }}
+
+{# extra newlines are here to give space to sendgrid footer #}

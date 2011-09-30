@@ -3,6 +3,8 @@ from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 import config
+import social_stats
+
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
@@ -79,6 +81,11 @@ class Entity(dict):
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d })
     def update_cmd(self, d): return self._col.update({ '_id' : self.id }, d)
+
+    def increment(self, d):
+      """Increment counter(s) identified by a dict.
+      For example {'foo': 2, 'bar': -1, 'baz.qux': 10}"""
+      return self._col.update({ '_id' : self.id }, {'$inc': d}, upsert=True)
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
 
@@ -189,11 +196,46 @@ class Expr(Entity):
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
-        if self.has_key(counter):
-          self.update(**{'updated': False, counter: self[counter] + 1})
-        else:
-          self.update(**{'updated': False, counter: 1})
+        return self.increment({counter: 1})
 
+    def views(self):
+        if self.has_key('views'):
+            if self.has_key('owner_views'):
+                return self['views'] - self['owner_views']
+            else:
+                return self['views']
+        else:
+            return 0
+
+    def qualified_url(self):
+      return "http://" + self['domain'] + "/" + self['name']
+
+    def analytic_count(self, string):
+      if string in ['facebook', 'gplus', 'twitter']:
+        count = None
+        try:
+          updated = self['analytics'][string]['updated']
+        except (KeyError, TypeError):
+          updated = 0
+
+        if (now() - updated) < 36000:
+          count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
+
+        if count == None:
+          count = getattr(social_stats, string + "_count")(self.qualified_url())
+          subdocument = 'analytics.' + string
+          self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+
+        return count
+      if string in ['email']:
+        try:
+          return self['analytics'][string]['count']
+        except (KeyError, TypeError):
+          return 0
+
+      else:
+        return 0
+      
 
 class File(Entity):
     cname = 'file'
