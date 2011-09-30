@@ -83,9 +83,15 @@ function autoLink(string) {
 }
             
 function loadDialog(htmlString) {
-    showDialog(
-        $('#dialogs').append(htmlString).children().last()
-    );
+    var match = /id=['"]([^'"]*)['"]/.exec(htmlString)
+    var dialog = $('#' + match[1]);
+    if (dialog.length === 0) {
+        showDialog(
+            $('#dialogs').append(htmlString).children().last()
+        );
+    } else {
+        showDialog(dialog)
+    }
 }
 
 function showDialog(name, select) {
@@ -120,19 +126,22 @@ function hideDialog(name) {
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);
-    var encodedUrl = encodeURIComponent(currentUrl);
+    var encodedUrl = encodeURIComponent(currentUrl), total=0;
     element.find('.copy_url').val(currentUrl);
     element.find('.embed_code').val('<iframe src="' + currentUrl + '" style="width: 100%; height: 100%" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0"></iframe>');
-    element.find('.twitter')
+    element.find('a.twitter')
       .attr('href', 'http://twitter.com/share?url=' + encodedUrl);
-    element.find('.facebook')
+    element.find('a.facebook')
       .attr('href', 'http://www.facebook.com/sharer.php?u=' + encodedUrl);
-    element.find('.reddit')
+    element.find('a.reddit')
       .attr('href', 'http://www.reddit.com/submit?url=' + encodedUrl);
-    element.find('.gplus')
+    element.find('.gplus_button')
       .attr('href', currentUrl);
-
-    element.find('textarea[name=message]').html("Check out this expression:\n\n" + currentUrl);
+    
+    element.find('.count').each(function(){
+      $(this).html($(this).html().replace(/^0$/, "-"))
+    });
+    //element.find('textarea[name=message]').html("Check out this expression:\n\n" + currentUrl);
 
     // Activate Google Plus
     (function() {
@@ -192,9 +201,18 @@ function elem(tag, attrs) {
  * ***/
 $(document).ready(function () {
     $('#btn_share').click(function(){
-      showDialog('#dia_share', '#expression_url');
-      updateShareUrls('#dia_share', window.location);
-      $('#expression_url').click(); //This should have been handled by the second arg to showDialog, but alas
+        var dialog = $('#dia_share');
+        if (dialog.length === 0 ) {
+            $.get("?dialog=share", function(data){
+                loadDialog(data);
+                updateShareUrls('#dia_share', window.location);
+                $('#expression_url').click(); //This should have been handled by the second arg to showDialog, but alas
+            });
+        } else {
+            showDialog('#dia_share', '#expression_url');
+            updateShareUrls('#dia_share', window.location);
+            $('#expression_url').click(); //This should have been handled by the second arg to showDialog, but alas
+        }
     });
   
   $("input[alt], textarea[alt]").each(function() {

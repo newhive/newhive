@@ -10,15 +10,11 @@
   #feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
   {{ css }}
  </style>
- <meta id="og_title" class="og_title" property="og:title" content='{{ title }}'>
- <meta id="og_image" class="og_image" property="og:image" content='{{ exp.thumb|default('/lib/skin/1/default_thumb.png') }}'>
- <meta id="og_url" class="og_url"     property="og:url" content='{{ secure_server }}'>
- <!--
- <meta id="og_desc" class="og_desc"   property="og:description" content='blahblah'>
- <meta id="fb_admin" class="fb_admin" property="fb:admins" content=__optional, a facebook user id__/>
- -->
- <meta property="og:type" content="website" />
- <meta property="og:site_name" content='The New Hive'>
+ <meta property="og:title" content='{{ title }}' />
+ <meta property="og:image" content='{{ exp.thumb|default('/lib/skin/1/default_thumb.png') }}' />
+ <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
+ <meta property="og:type" content="article" />
+ <meta property="fb:admins" content="1007003" />
 {% endblock %}
 
 {% block body %}
@@ -31,10 +27,6 @@
   {% endif %}
 
   <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
-  <script>
-    $('#expression_url').html(window.location.href);
-    //share_menu = click_dialogue($('#btn_share'), $('#dia_share'));
-  </script>
  
   {% if user.logged_in %}
    <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>

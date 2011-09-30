@@ -1,10 +1,12 @@
 {% extends "main.html" %}
 
 {% block head %}
-{% for item in assets_env["edit.js"].urls() %}
- <script src='{{ item }}'></script>
-{% endfor %}
+ {% for item in assets_env["edit.js"].urls() %}
+  <script src='{{ item }}'></script>
+ {% endfor %}
  <link rel='stylesheet' type='text/css' href='{{ assets_env["editor.css"].urls()[0] }}'>
+  <script src='edit.js'></script>
+ <link rel='stylesheet' type='text/css' href='/lib/editor.css'>
 
  <script>
   Hive.Exp = {{ exp_js }}; // current expression from server
