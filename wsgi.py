@@ -409,19 +409,24 @@ def format_card(e):
 def expr_list(spec, **args):
     return map(format_card, Expr.list(spec, **args))
 
-def expr_home_list(tag, request, response):
+def expr_home_list(p2, request, response):
     root = get_root()
-    #tag = p2 if p1 else lget(root.get('tags'), 0) # make first tag/category default community page
+    tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
+    page = int(request.args.get('page', 0))
     ids = root.get('tagged', {}).get(tag, [])
     if ids:
         by_id = {}
         for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
         exprs = [by_id[i] for i in ids]
-    else: exprs = Expr.list({}, sort='created', limit=100)
+        response.context['pages'] = 0;
+    else:
+        exprs = Expr.list({}, sort='created', limit=90, page=page)
+        response.context['pages'] = Expr.list_count({});
     response.context['exprs'] = map(format_card, exprs)
     response.context['tag'] = tag
     response.context['tags'] = root.get('tags', [])
     response.context['show_name'] = True
+    response.context['page'] = page
 
 def handle(request):
     """The HTTP handler.
@@ -491,8 +496,9 @@ def handle(request):
             return serve_page(response, 'minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'feedback.html')
         elif p1 == '' or p1 == 'home':
-            if request.requester.logged_in: expr_home_list(p2, request, response)
-            return serve_page(response, 'home.html')
+            expr_home_list(p2, request, response)
+            if request.args.get('partial'): return serve_page(response, 'cards.html', directory='')
+            else: return serve_page(response, 'home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()
             if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
@@ -539,7 +545,7 @@ def handle(request):
         return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
 
     if lget(request.path, 0) == '*':
-        page = int(request.args.get('p', 0))
+        page = int(request.args.get('page', 0))
         spec = { 'owner' : owner.id }
         tag = request.path[1:]
         if tag: spec['tags_index'] = tag
@@ -658,7 +664,7 @@ def render_template(response, template, directory='pages'):
         ,use_ga = config.use_ga
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
-    return jinja_env.get_template(directory + '/' + template).render(context)
+    return jinja_env.get_template(joinpath(directory, template)).render(context)
 
 def serve_json(response, val, as_text = False):
     """ as_text is used when content is received in an <iframe> by the client """

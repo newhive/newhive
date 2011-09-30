@@ -26,7 +26,7 @@
  {% for t in tags %}<a href='/admin_home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
 </div>
 
-{% include 'cards.html' %}
+<div id='feed'>{% include 'cards.html' %}</div>
 <script>
 $('.feed.item').each(function() {
     var that = this;
