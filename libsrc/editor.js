@@ -983,7 +983,7 @@ Hive.get_state = function() {
     Hive.Exp.name = $('#url').val();
     Hive.Exp.apps = Hive.OpenApps.getState();
     Hive.Exp.title = $('#title').val();
-    Hive.Exp.tags = $('#tags').val();
+    Hive.Exp.tags = $('#tags_input').val();
     Hive.Exp.auth = $('#menu_privacy .selected').attr('val');
     if(Hive.Exp.auth == 'password') Hive.Exp.password = $('#password').val();
 

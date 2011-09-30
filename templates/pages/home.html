@@ -1,15 +1,5 @@
 {% extends "main.html" %}
 
-{% block head %}
- {{ super() }}
- <style>
-a.tag_label:hover { color : #F73627; background : #FFF673; }
-.tag_label.current { background-color : #96E2CE; color : black; padding : 3px 20px; }
-.tag_label { font-weight : bold; color : #696E76; padding : 3px 15px; margin-right : 5px; background-color : #EDEBE1; }
-#tags { margin : 50px 50px 25px 50px; }
- </style>
-{% endblock %}
-
 {% block body %}
 
 {% if user.logged_in %}
