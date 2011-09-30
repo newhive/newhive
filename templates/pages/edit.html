@@ -5,15 +5,13 @@
   <script src='{{ item }}'></script>
  {% endfor %}
  <link rel='stylesheet' type='text/css' href='{{ assets_env["editor.css"].urls()[0] }}'>
-  <script src='edit.js'></script>
- <link rel='stylesheet' type='text/css' href='/lib/editor.css'>
 
  <script>
   Hive.Exp = {{ exp_js }}; // current expression from server
  </script>
 
  <style>
- input, textarea { font-size : inherit }
+input, textarea { font-size : inherit }
 
 .drawer { z-index : 1100, white-space : nowrap;  }
 
