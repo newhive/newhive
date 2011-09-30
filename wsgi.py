@@ -340,7 +340,7 @@ def mail_feedback(request, response):
         request.form.get('message')
         + "\n\n----------------------------------------\n\n"
         + url + "\n"
-        + 'User-Agent: ' + request.headers.get('User-Agent', default='')
+        + 'User-Agent: ' + request.headers.get('User-Agent', '') + "\n"
         + 'From: ' + request.requester.get('email', '')
         )
     send_mail(heads, body)

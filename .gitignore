@@ -1,5 +1,4 @@
 /lib/*.js
 /lib/*.css
 /config.py
-/sendgridconfig.py
 *.pyc
