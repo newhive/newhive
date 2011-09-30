@@ -15,7 +15,7 @@ from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u
 
 import webassets
 
-assets_env = webassets.Environment('./libsrc', '/lib')
+assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
