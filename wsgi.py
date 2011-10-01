@@ -22,6 +22,7 @@ if config.webassets_debug:
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js',  output='../lib/app.js')
+assets_env.register('admin.js', 'jquery.tablesorter.min.js', output='../lib/admin.js')
 assets_env.register('app.css', 'app_src.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 
@@ -507,6 +508,12 @@ def handle(request):
 
             expr_home_list(p2, request, response, limit=900)
             return serve_page(response, 'admin_home.html')
+        elif p1 == 'analytics' and request.requester.get('name') in config.admins:
+            import analytics
+            active_users = analytics.active_users()
+            response.context['active_users'] = active_users
+            response.context['active_users_js'] = json.dumps(active_users)
+            return serve_page(response, 'analytics.html')
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
             response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
             response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
