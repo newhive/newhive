@@ -21,7 +21,7 @@
 
  <script>
 var load_page = null;
-var next_page = 0;
+var next_page = 1;
 var pages = {{ pages }};
 $(window).scroll(function() {
     if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page < pages) {

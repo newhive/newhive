@@ -41,7 +41,7 @@
       });
     });
     function user_check(user_name){
-      var n = $('#name').val().trim();
+      var n = $('#name').val().trim().toLowerCase();
       $('#name').val(n);
       if( $('#name').val().length < 3 ) {
           $('#name_availability').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');
@@ -67,7 +67,7 @@
       });
     }
  function validate() {
-     var n = $('#name').val().trim();
+     var n = $('#name').val().trim().toLowerCase();
      $('#name').val(n);
      if( $('#name').val().length < 3 ) {
          alert('Please enter username of at least 3 letters, thank you.');
