@@ -15,6 +15,9 @@
  <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
  <meta property="og:type" content="article" />
  <meta property="fb:admins" content="1007003" />
+ {% for item in assets_env["jplayer"].urls() %}
+   <script src='{{ item }}' />
+ {% endfor %}
 {% endblock %}
 
 {% block body %}
