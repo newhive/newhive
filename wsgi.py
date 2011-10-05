@@ -573,13 +573,15 @@ def handle(request):
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
     (html, css) = exp_to_html(resource)
+
+    auth_required = (resource.get('auth') == 'password' and resource.get('password')
+        and request.form.get('password') != resource.get('password')
+        and request.requester.id != resource['owner'])
     response.context.update(
          edit = abs_url(secure = True) + 'edit/' + resource.id
         ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
-        ,auth_required = (resource.get('auth') == 'password' and resource.get('password')
-            and request.form.get('password') != resource.get('password')
-            and request.requester.id != resource['owner'])
+        ,auth_required = auth_required
         ,body = html
         ,css = css
         ,exp = resource
@@ -588,7 +590,13 @@ def handle(request):
 
     resource.increment_counter('views')
     if is_owner: resource.increment_counter('owner_views')
-    return serve_page(response, 'expression.html')
+
+    template = resource.get('template', request.args.get('template', 'default'))
+    if template == 'none':
+        if auth_required: return Forbidden()
+        return serve_html(response, '<style>' + css + '</style>' + html)
+    elif template == 'minimal': return serve_page(response, 'expr_minimal.html')
+    else: return serve_page(response, 'expression.html')
 
 
 @Request.application
