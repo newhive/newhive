@@ -277,6 +277,7 @@ Hive.App.Controls = function(app) {
                 input.select();
                 input.val(o.app.link());
             }
+            ,hover_close : false
             ,auto_close : false
             ,close : function() {
                 var v = input.val();
@@ -814,7 +815,7 @@ var main = function() {
     hover_menu($('#insert_image'), $('#menu_image'), { offsetY : 0 });
     hover_menu($('#insert_audio'), $('#menu_audio'), { offsetY : 0 });
     hover_menu($('#insert_file'), $('#menu_file'), { offsetY : 0 });
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { auto_close : false, offsetY : 0 });
+    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { hover_close : false, auto_close : false, offsetY : 0 });
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
     hover_menu($('#insert_shape'), $('#menu_shape'), { offsetY : 0 });
     

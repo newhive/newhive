@@ -278,6 +278,7 @@ hover_menu = function(handle, drawer, options_arg) {
         ,close : noop
         ,auto_close : true
         ,hover_close : true
+        ,close_delay : 500
         ,offsetY : 5
         ,hover : true
     };
@@ -298,7 +299,7 @@ hover_menu = function(handle, drawer, options_arg) {
         o.hover_src = hover_url(o.handle_src);
     }
 
-    o.delayed_close = function() { o.close_timer = setTimeout(o.close, 500); }
+    o.delayed_close = function() { o.close_timer = setTimeout(o.close, options.close_delay); }
     o.cancel_close = function() { if(o.close_timer) clearTimeout(o.close_timer); }
 
     o.close = function() {
