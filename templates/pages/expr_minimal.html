@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block head %}
+ <style>
+  {{ css }}
+ </style>
+ <meta property="og:title" content='{{ title }}' />
+ <meta property="og:image" content='{{ exp.thumb|default('/lib/skin/1/default_thumb.png') }}' />
+ <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
+ <meta property="og:type" content="article" />
+ <meta property="fb:admins" content="1007003" />
+{% endblock %}
+
+
+{% block main %}
+ {% if auth_required %}
+  <script>
+   $(function() {
+       showDialog('#dia_password');
+       $('#password_input').select();
+   });
+  </script>
+ {% else %}
+  {{ body }}
+ {% endif %}
+ 
+ <script>
+ var exp = {{ exp_js }};
+ $(window).resize(function() {
+    var s = $(window).width() / 1000;
+    $.map(exp.apps, function(a, i) {
+        var e = $('#h_' + i);
+        e.css({ left : a.position[0] * s, top : a.position[1] * s,
+            width : a.dimensions[0] * s, height : a.dimensions[1] * s,
+            'font-size' : a.scale * s + 'em', opacity : a.opacity });
+        if(a.angle) e.rotate(a.angle);
+    });
+ });
+ $(window).resize();
+ $(document).ready(function() {
+     // Warning for IE
+     //if(/MSIE/.test(navigator.userAgent)){
+     if(/MSIE/.test(navigator.userAgent)){
+         var count = parseInt(readCookie('ie_warning_count'));
+         if (! count) { count=0; }
+         if ( count < 2) {
+             showDialog('#ie_warning');
+             count++;
+             createCookie('ie_warning_count', count, 7);
+         }
+     }
+ });
+
+ </script>
+<div id='dialogs'>
+  <div id='dialog_shield'></div>
+  {% include 'dialogs/password.html' %}
+  {% include 'dialogs/ie_warning.html' %}
+</div>
+{% endblock %}

@@ -85,13 +85,8 @@ function autoLink(string) {
 function loadDialog(htmlString) {
     var match = /id=['"]([^'"]*)['"]/.exec(htmlString)
     var dialog = $('#' + match[1]);
-    if (dialog.length === 0) {
-        showDialog(
-            $('#dialogs').append(htmlString).children().last()
-        );
-    } else {
-        showDialog(dialog)
-    }
+    if(dialog.length === 0) dialog = $('#dialogs').append(htmlString).children().last();
+    showDialog(dialog);
 }
 
 function showDialog(name, select) {
@@ -100,10 +95,9 @@ function showDialog(name, select) {
     if (dialog.length === 1 )
     {
         dialog.addClass(['dialog', 'border', 'selected']);
-        center(
-            dialog.show()
-        );
+        center(dialog.show());
         shield.show();
+        $(window).resize(function() { center(dialog) });
 
         if (! dialog.hasClass('mandatory') ) {
             if (dialog.find('.btn_dialog_close').length === 0 ) {
@@ -199,7 +193,7 @@ function elem(tag, attrs) {
  * it when focused.
  * Adds hover events for elements with class='hoverable'
  * ***/
-$(document).ready(function () {
+$(function () {
     $('#btn_share').click(function(){
         var dialog = $('#dia_share');
         if (dialog.length === 0 ) {
