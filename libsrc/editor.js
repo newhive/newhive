@@ -844,9 +844,12 @@ var main = function() {
 
     click_dialogue($('#btn_save'), $('#menu_save'));
     $('#save_submit').click(function(){
-        if ( checkUrl() ){
-            window.onbeforeunload = null; //Cancel the warning for leaving the page
-            Hive.save();
+        if (! $(this).hasClass('disabled')){ 
+            $(this).addClass('disabled');
+            if ( checkUrl() ){
+                window.onbeforeunload = null; //Cancel the warning for leaving the page
+                Hive.save();
+            }
         }
     });
     $('#menu_save #title').blur( function(){
@@ -952,9 +955,12 @@ Hive.save = function() {
         }
 
         if(typeof(ret) != 'object') alert("There was a problem saving your stuff :(.");
-        if(ret.error) alert(ret.error);
-        else if(ret.location) {
-            if(ret['new']){
+        if (ret.error) {
+            alert(ret.error);
+            $('#save_submit').removeClass('disabled');
+        }
+        else if (ret.location) {
+            if (ret['new']){
                 showDialog('#dia_share');
                 updateShareUrls('#dia_share', ret.location);
                 $('#mail_form [name=forward]').attr('value', ret.location);
