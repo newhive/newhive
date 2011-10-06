@@ -1,6 +1,7 @@
 {% extends "main.html" %}
 
 {% block content %}
+<div id="canvas_container"></div>
 <table width='100%' class='tablesorter'>
   <thead>
     <tr>
@@ -38,12 +39,15 @@
 {% block head %}
  {% for item in assets_env["admin.js"].urls() %}
   <script src='{{ item }}'></script>
+ {% endfor %}
   <script type='text/javascript'>
+    var paper;
     $(function(){
         $('table.tablesorter').tablesorter();
+        paper = Raphael($('#canvas_container')[0], '1000px', '500px');
     });
+    var active_users = {{ active_users_js }};
   </script>
- {% endfor %}
 <style type='text/css'>
 /* tables */
 table {
