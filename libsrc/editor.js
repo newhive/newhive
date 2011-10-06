@@ -217,14 +217,15 @@ Hive.App = function(initState) {
     }, { handle : '.drag' } );
     o.layer(o.layer());
       
+    // add to apps collection
+    o.index = o.apps.add(o);
+
     // add type-specific properties
     o = o.type(o);
     
     // run type-specific code?
     //setTimeout(function() { o.resize(o.dims()) }, 500);
     
-    // add to apps collection
-    o.index = o.apps.add(o);
 
     return o;
 }
@@ -630,6 +631,7 @@ Hive.App.Image = function(common) {
     o.image_src(o.state.content);
 
     return o;
+        '</div>'
 }
 Hive.registerApp(Hive.App.Image, 'hive.image');
 
@@ -691,6 +693,7 @@ Hive.App.Image.Controls = function(common) {
 }
 
 
+
 Hive.App.Shape = function(common) {
     var o = {};
     $.extend(o, common);
@@ -712,6 +715,39 @@ Hive.App.Shape = function(common) {
 Hive.registerApp(Hive.App.Shape, 'hive.shape.0');
 
 Hive.App.Shape.Controls = function(app) {
+}
+
+Hive.App.Audio = function(common) {
+    var o = {};
+    $.extend(o, common);
+    o.type = 'hive.audio';
+
+    o.content = function(content) {
+        return o.state.content;
+    }
+
+    o.div.append($.jPlayer.skin[o.state.content.player](o.state.content.url, o.index));
+
+    $('#jquery_jplayer_' + o.index).jPlayer({
+        cssSelectorAncestor: "#jp_container_" + o.index,
+        ready: function () {
+          $(this).jPlayer("setMedia", {
+            mp3: o.state.content.url 
+          });
+        },
+        swfPath: "/js",
+        supplied: "mp3"
+    });
+
+    o.load();
+    return o;
+}
+Hive.registerApp(Hive.App.Audio, 'hive.audio');
+
+Hive.App.Audio.Controls = function(common) {
+    var o = {};
+    $.extend(o, common);
+    return o;
 }
 
 
@@ -892,8 +928,7 @@ Hive.embed_code = function() {
         app = { type : 'hive.html', content :
             '<iframe src="http://player.vimeo.com/video/' + m[2] + '?title=0&amp;byline=0&amp;portrait=0" style="width:100%;height:100%;border:0"></iframe>' };
     else if(m = c.match(/^https?:\/\/(.*)mp3$/i))
-        app = { type : 'hive.html', content : "<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
-            + "<param name='FlashVars' value='soundFile=" + c + "'><param name='wmode' value='transparent'></object>" }
+        app = { type : 'hive.audio', content : {url : c, player : basic} }
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
 //http://player.vimeo.com/video/                                                   13110687
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>

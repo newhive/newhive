@@ -160,11 +160,8 @@ def files_create(request, response):
             app['type'] = 'hive.image'
             app['content'] = url
         elif mime == 'audio/mpeg':
-            app['content'] = ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
-                +"<param name='FlashVars' value='soundFile=" + url + "'>"
-                +"<param name='wmode' value='transparent'></object>"
-                )
-            app['type'] = 'hive.html'
+            app['type'] = 'hive.audio'
+            app['content'] = {'url': url, 'player': 'basic'}
             app['dimensions'] = [200, 24]
         else:
             app['type'] = 'hive.text'
