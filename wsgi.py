@@ -441,10 +441,10 @@ def handle(request):
     request.trusting = False
     response.context = { 'f' : request.form, 'url' : request.base_url }
     response.user = request.requester
+    response.headers.add('Access-Control-Allow-Origin', '*')
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
-    #import pdb; pdb.set_trace()
     if request.domain == config.server_name:
         if request.is_secure and request.requester and request.requester.logged_in:
             request.trusting = True
