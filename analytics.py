@@ -1,6 +1,6 @@
 import state, time
 
-def active_users():
+def active_users(reference_date=time.time()):
     col = state.db['expr']
     key={"owner": 1}
     condition = {}
@@ -23,13 +23,13 @@ def active_users():
             }
 
             // Totals
-            if (age < 3600*24) { authSlice('day'); }
-            if (age < 3600*24*7) { authSlice('week'); }
-            if (age < 3600*24*7*4) { authSlice('month'); }
+            if (0 < age && age < 3600*24) { authSlice('day'); }
+            if (0 < age && age < 3600*24*7) { authSlice('week'); }
+            if (0 < age && age < 3600*24*7*4) { authSlice('month'); }
             authSlice('total');
             
         }
-    """ % {'now': time.time()}
+    """ % {'now': reference_date}
 
     res = col.group(key, condition, initial, reducejs)
     for item in res:
