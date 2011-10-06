@@ -697,7 +697,6 @@ Hive.App.Image.Controls = function(common) {
 Hive.App.Shape = function(common) {
     var o = {};
     $.extend(o, common);
-    o.type = 'hive.shape.0';
 
     o.content = function(content) {
         //if(typeof(content) != 'undefined') o.imageSrc(content);
@@ -720,7 +719,6 @@ Hive.App.Shape.Controls = function(app) {
 Hive.App.Audio = function(common) {
     var o = {};
     $.extend(o, common);
-    o.type = 'hive.audio';
 
     o.content = function(content) {
         return o.state.content;
