@@ -82,22 +82,25 @@ function autoLink(string) {
     return string;
 }
             
-function loadDialog(htmlString) {
+function loadDialog(htmlString, opts) {
+    var opts = $.extend({ absolute : false }, opts);
     var match = /id=['"]([^'"]*)['"]/.exec(htmlString)
     var dialog = $('#' + match[1]);
     if(dialog.length === 0) dialog = $('#dialogs').append(htmlString).children().last();
-    showDialog(dialog);
+    showDialog(dialog, null, opts);
 }
 
-function showDialog(name, select) {
+function showDialog(name, select, opts) {
+    var opts = $.extend({ absolute : false }, opts);
     var dialog = $(name);
     var shield = $('#dialog_shield');
     if (dialog.length === 1 )
     {
         dialog.addClass(['dialog', 'border', 'selected']);
+        if(opts.absolute) dialog.css('position', 'absolute');
         center(dialog.show());
-        shield.show();
         $(window).resize(function() { center(dialog) });
+        shield.show();
 
         if (! dialog.hasClass('mandatory') ) {
             if (dialog.find('.btn_dialog_close').length === 0 ) {
@@ -234,10 +237,16 @@ $(function () {
 
 });
 
-function center(e, inside) {
+function center(e, inside, opts) {
+    var opts = $.extend({ absolute : false }, opts);
     var w = typeof(inside) == 'undefined' ? $(window) : inside;
-    e.css({ left : w.width() / 2 - e.width() / 2,
-        top : w.height() / 2 - e.height() / 2});
+    pos = { left : Math.max(0, w.width() / 2 - e.width() / 2),
+        'top' : Math.max(0, w.height() / 2 - e.height() / 2) };
+    if(opts.absolute) {
+        pos['left'] += window.scrollX;
+        pos['top'] += window.scrollY;
+    }
+    e.css(pos);
 }
 
 function asyncSubmit(form, callback) {
