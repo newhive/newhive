@@ -843,7 +843,7 @@ var main = function() {
         }
     }
 
-    click_dialogue($('#btn_save'), $('#menu_save'));
+    click_dialogue($('#btn_save'), $('#menu_save'), {open: function(){$('#title').focus().select();}} );
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');
@@ -853,14 +853,24 @@ var main = function() {
             }
         }
     });
-    $('#menu_save #title').blur( function(){
-        $('#title').val($('#title').val().trim());
-        if ($('#url').val() === "" && !Hive.Exp.home){
+    
+    // Automatically update url unless it's an already saved expression or the user has modified the url manually
+    $('#menu_save #title').bind('keydown keyup', function(){
+        if (!(Hive.Exp.name || $('#url').hasClass('modified') )){
             $('#url').val(
                 $('#title').val().replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").toLowerCase()
             );
         }
+    }).keydown();
+
+    $('#url').focus(function(){
+        $(this).addClass('modified');
     });
+
+    $('#menu_save #title').blur( function(){
+        $('#title').val($('#title').val().trim());
+    }).blur();
+
     $('#url').change(checkUrl);
 
     hover_menu($('#privacy' ), $('#menu_privacy'));
