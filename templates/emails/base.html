@@ -1,8 +1,27 @@
+{% set header_boxes = [
+{'color': '#698293', 'width': '91px'},
+{'color': '#4a969e', 'width': '73px'},
+{'color': '#1ea616', 'width': '47px'},
+{'color': '#7ba008', 'width': '65px'},
+{'color': '#f9a818', 'width': '94px'},
+{'color': '#e87c25', 'width': '95px'},
+{'color': '#f45518', 'width': '56px'},
+{'color': '#f72e4d', 'width': '54px'},
+{'color': '#f73627', 'width': '11px'},
+]
+%}
 <html>
   <head></head>
   <body style="font-family: Arial;">
     <table>
-      <tr><td width="500px">
+      <tr><td width="580px">
+          <table style="border-spacing: 0;" border="0">
+            <tr height="70px">
+              {% for item in header_boxes %}
+              <td width="{{ item['width'] }}" style="background-color: {{ item['color'] }};"></td>
+              {% endfor %}
+            </tr>
+          </table>
         {% block header %}
         <a href='http://thenewhive.com'><img alt="The New Hive" src="http://thenewhive.com/lib/skin/1/logotype_beta_composite.png" /></a>
         {% endblock %}
