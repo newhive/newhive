@@ -1,14 +1,14 @@
-Welcome to thenewhive.com,
-your space for expression
+Welcome, {{ name }}!
 
 One of our users, {{ referrer_name }}, sent you an invite to The New Hive!
 
 Use this signup link to get started:
 {{ url }}
 
-The New Hive is your creative playground. We love to hear from you, and are
-looking forward to seeing your creations. Without you, the new hive is just a
-blank canvas. You make Us a community. Thank you for expressing yourself!
+The New Hive is a creative playground that makes it easy for anyone to express
+themselves online. There will never be any ads, the content you create is your
+own, and can be easily shared across the web.  And oh yeah, it's FREE. What are
+you waiting for? We're looking forward to seeing your expressions!
 
 Cheers,
 The New Hive team

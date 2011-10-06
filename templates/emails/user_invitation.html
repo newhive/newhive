@@ -1,18 +1,24 @@
 {% extends "emails/base.html" %}
-{% block header %}
-{{ super() }}
-<img alt="WELCOME" src="http://thenewhive.com/lib/skin/1/welcome_text.png" />
-<div style="height: 40px;">&nbsp;</div>
-{% endblock %}
+
 {% block body %}
-<h2>Welcome to thenewhive.com,<br/>
-your space for expression</h2>
-<p style="font-size: 1.2em;">One of our users, <a style='color: #F73627;' href='{{ referrer_url }}'>{{ referrer_name }}</a>, sent you an invite to The New Hive!</p>
-<h3>Use <a style='color: #F73627;' href='{{ url }}'>this signup link</a> to get started. :)</h3>
-<p style="font-size: 1.2em;">The New Hive is your creative playground. We love
-  to hear from you, and are looking forward to seeing your creations. Without
-  you, the new hive is just a blank canvas. You make Us a community. Thank you
-  for expressing yourself!</p>
-<p style="font-size: 1.2em;"><strong>Cheers,</strong><br/>
-The New Hive team</p>
+<h2 style="margin: 43px 0 0 57px; font-size: 40px; letter-spacing: -2px; color: #f73627;">Hi {{ name }}!</h2>
+<h2 style="margin: 20px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 450px;">Your friend, <a href="{{referrer_url}}" style="text-decoration: none; color: #222222;">{{ referrer_name }}</a></h2>
+<h2 style="margin:  5px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 450px;">sent you a beta invitation</h2>
+<h2 style="margin:  5px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 450px;">to <a href="http://thenewhive.com" style="text-decoration: none; color: #000000;">The New Hive</a>. :)</h2>
+
+<a href='{{ url }}' style="color: #000000; text-decoration: none; font-size: 20px;">
+  <h2 style="font-size: 34px; letter-spacing: -2px; margin: 30px 0 0 0;  background-color: #96e2ce; width: 228px; padding: 5px;"><span style="color: #7f4799;">+</span> Click here to</h2>
+  <h2 style="font-size: 34px; letter-spacing: -2px; margin: 0 0 0 145px; background-color: #96e2ce; width: 228px; padding: 5px 5px 7px 20px;">get started &gt;&gt;&gt;</h2>
+</a>
+
+<p style="font-size: 1em; padding: 0 57px; font-size: 14px; line-height: 21px; margin-top: 30px;">
+  The New Hive is a creative playground that makes it easy for anyone to
+  express themselves online. There will never be any ads, the content you
+  create is your own, and can be easily shared across the web.  And oh yeah,
+  it's FREE. What are you waiting for? We're looking forward to seeing your
+  expressions!</p>
+
+<h3 style="margin: 30px 0 43px 57px; letter-spacing: -1px;">Cheers,<br/>
+The New Hive team</h3>
+
 {% endblock %}
