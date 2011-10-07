@@ -331,11 +331,13 @@ def mail_them(request, response):
 def mail_referral(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     user = request.requester
+    name = request.form.get('name')
+    to_email = request.form.get('to')
     if not user['referrals'] > 0: return False
-    referral = user.new_referral()
+    referral = user.new_referral({'name': name, 'to': to_email})
 
     heads = {
-         'To' : request.form.get('to')
+         'To' : to_email
         ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
         ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
         ,'Reply-to' : user.get('email', '')
@@ -343,8 +345,8 @@ def mail_referral(request, response):
     context = {
          'referrer_url': home_url(user)
         ,'referrer_name': user.get('fullname')
-        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'])
-        ,'name': request.form.get('name')
+        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + to_email)
+        ,'name': name
         }
     body = {
          'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
