@@ -328,6 +328,33 @@ def mail_them(request, response):
         send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
 
+def mail_referral(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    user = request.requester
+    if not user['referrals'] > 0: return False
+    referral = user.new_referral()
+
+    heads = {
+         'To' : request.form.get('to')
+        ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
+        ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
+        ,'Reply-to' : user.get('email', '')
+        }
+    context = {
+         'referrer_url': home_url(user)
+        ,'referrer_name': user.get('fullname')
+        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'])
+        ,'name': request.form.get('name')
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
+        ,'html': jinja_env.get_template("emails/user_invitation.html").render(context)
+        }
+    send_mail(heads, body)
+    return redirect(response, request.form.get('forward'))
+
+   
+
 def mail_feedback(request, response):
     if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')
     heads = {
@@ -366,11 +393,12 @@ actions = dict(
     ,expr_save       = expr_save
     ,expr_delete     = expr_delete
     ,files_create    = files_create
-    ,file_delete    = file_delete
+    ,file_delete     = file_delete
     ,user_create     = user_create
     ,user_check      = user_check
     ,mail_us         = mail_us
     ,mail_them       = mail_them
+    ,mail_referral   = mail_referral
     ,mail_feedback   = mail_feedback
     ,user_tag_add    = user_tag_update
     ,user_tag_remove = user_tag_update

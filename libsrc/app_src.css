@@ -98,17 +98,29 @@ input[type="text"].copy, textarea.copy {
 
 /* Referral Dialog */
 #dia_referral {
-  width: 420px;
-  padding: 20px 50px;
+  width: 430px;
+  padding: 20px 40px 20px 50px;
   text-align: left;
 }
 #dia_referral h3 {
   margin: 20px 0;
 }
 #referral_count { color: red; }
-#dia_referral input[type="text"] { width: 400px; }
-#dia_referral input[type="submit"] { float: right; font-size: 18px; }
-#dia_referral textarea { width: 310px; }
+#dia_referral input[type="text"], #dia_referral textarea { width: 305px; }
+#dia_referral input[type="submit"] { 
+  float: right; 
+  font-size: 18px; 
+  margin: 5px 12px; 
+}
+
+#dia_referral .align {
+  width: 88px;
+}
+
+#dia_referral .line.first { margin-top: 27px; }
+
+#dia_referral .medbold { line-height: 1em; }
+#dia_referral .label .small { font-size: 12px; font-weight: normal }
 
 /* firefox warning dialog */
 #firefox_warning, #ie_warning {

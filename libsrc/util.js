@@ -237,6 +237,8 @@ $(document).ready(function () {
     }
   });
 
+  $('#dia_referral input[name=forward]').val(window.location);
+
 
 });
 

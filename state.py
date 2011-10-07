@@ -124,6 +124,11 @@ class User(Entity):
         assert self.has_key('referrer')
         return super(User, self).create_me()
 
+    def new_referral(self):
+        if self.get('referrals', 0) > 0:
+            self.update(referrals=self['referrals'] - 1)
+            return Referral.create(user = self.id)
+
     @classmethod
     def named(cls, name):
         self = cls({})
