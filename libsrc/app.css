@@ -4,10 +4,7 @@
 
 
 /* === Container element === */
-#dialogs {
-  width:100%; height:100%;
-  position: absolute;
-}
+#dialogs { display : none; width : 100%; height : 100%; }
 
 /* === click shield element === */
 #dialog_shield{
@@ -26,7 +23,7 @@
   display: none; 
   position:absolute;
   z-index:2001; 
-  background: white;
+  background-color : white;
   -moz-box-shadow: 05px 05px 05px #666;
   -webkit-box-shadow: 05px 05px 05px #666;
   box-shadow: 05px 05px 05px #666;

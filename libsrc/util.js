@@ -96,10 +96,10 @@ function showDialog(name, select, opts) {
     var shield = $('#dialog_shield');
     if (dialog.length === 1 )
     {
-        dialog.addClass(['dialog', 'border', 'selected']);
-        if(opts.absolute) dialog.css('position', 'absolute');
-        center(dialog.show());
+        dialog.addClass('dialog');
+        $('#dialogs').add(dialog).css('position', opts.absolute ? 'absolute' : 'fixed').show();
         $(window).resize(function() { center(dialog) });
+        center(dialog);
         shield.show();
 
         if (! dialog.hasClass('mandatory') ) {
@@ -117,8 +117,7 @@ function showDialog(name, select, opts) {
 }
 
 function hideDialog(name) {
-    $(name).hide();
-    $('#dialog_shield').hide();
+    $(name).add('#dialog_shield, #dialogs').hide();
 }
 
 function updateShareUrls(element, currentUrl) {
@@ -527,3 +526,24 @@ function eraseCookie(name) {
 }
 
 function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
+
+var place_apps = function(apps) {
+   if(!apps) apps = '.happ';
+   $(apps).each(function() {
+       var e = $(this);
+       var s = e.parent().width() / 1000;
+       if(!e.data('css')) {
+           var c = {}, that = this;
+           map(function(p) { c[p] = parseFloat(that.style[p]) }, ['left', 'top', 'width', 'height']);
+           var scale = parseFloat(e.attr('data-scale'));
+           if(scale) c['font-size'] = scale;
+           e.data('css', c);
+           e.rotate(parseFloat(e.attr('data-angle')));
+           e.css('opacity', this.style.opacity);
+       }
+       var c = $.extend({}, e.data('css'));
+       for(var p in c) c[p] *= s;
+       if(c['font-size']) c['font-size'] += 'em';
+       e.css(c);
+   });
+}

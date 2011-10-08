@@ -19,12 +19,14 @@ assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
+    assets_env.set_url('/lib/libsrc')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'hover.js',
-    'drag.js', 'dragndrop.js', 'colors.js', 'util.js',  output='../lib/app.js')
+    'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('admin.js', 'jquery.tablesorter.min.js', output='../lib/admin.js')
-assets_env.register('app.css', 'app_src.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
+assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
 
 
@@ -476,8 +478,7 @@ def handle(request):
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
                 if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                    intro_expr = Expr.fetch(config.intro_expr)
-                    if intro_expr: exp.update(dfilter(intro_expr, ['apps']))
+                    show_help = True
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
@@ -572,8 +573,7 @@ def handle(request):
     if not resource: return serve_404(request, response)
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
-    (html, css) = exp_to_html(resource)
-
+    html = exp_to_html(resource)
     auth_required = (resource.get('auth') == 'password' and resource.get('password')
         and request.form.get('password') != resource.get('password')
         and request.requester.id != resource['owner'])
@@ -583,7 +583,6 @@ def handle(request):
         ,title = resource.get('title', False)
         ,auth_required = auth_required
         ,body = html
-        ,css = css
         ,exp = resource
         ,exp_js = json.dumps(resource)
         )
@@ -594,9 +593,8 @@ def handle(request):
     template = resource.get('template', request.args.get('template', 'default'))
     if template == 'none':
         if auth_required: return Forbidden()
-        return serve_html(response, '<style>' + css + '</style>' + html)
-    elif template == 'minimal': return serve_page(response, 'expr_minimal.html')
-    else: return serve_page(response, 'expression.html')
+        return serve_html(response, html)
+    else: return serve_page(response, template, directory='')
 
 
 @Request.application
@@ -621,39 +619,31 @@ def exp_to_html(exp):
     """Converts JSON object representing an expression to HTML"""
 
     apps = exp.get('apps')
-    if not apps: return ('', '')
+    if not apps: return ''
 
-    def css_for_app(app, html_id):
-        return "#%s { left:%dpx; top:%dpx; width:%dpx; height:%dpx; %s; z-index : %d; }\n" % (
-            html_id,
+    def css_for_app(app):
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %s; z-index : %d; opacity:%f" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
             app['dimensions'][1],
             'font-size : ' + str(app['scale']) + 'em' if app.get('scale') else '',
-            app['z']
+            app['z'],
+            app.get('opacity', 1)
             )
 
-    html_ids = map(lambda num: 'h_' + str(num), range(0, len(apps)))
-
-    def html_for_app(app, html_id):
+    def html_for_app(app):
         content = app.get('content', '')
         if app.get('type', '') == 'hive.image':
-            html = ("<div class='happ' id='%s'><img class='happ' src='%s'></div>"
-                % (html_id, content))
+            html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
-            return html
-        if app.get('type') == 'hive.text' or app.get('type') == 'hive.html':
-            return "<div class='happ' id='%s'>%s</div>" % (html_id, content)
-        return ""
+        else: html = content
+        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
+        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
+        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app), data, html)
 
-    css = (''.join(map(css_for_app, apps, html_ids)) + "\n"
-        + "body { height:%dpx; }\n"
-            % max(map(lambda a: a['position'][1] + a['dimensions'][1], apps))
-        )
-    html = ''.join(map(html_for_app, apps, html_ids))
-    return (html, css)
+    return ''.join(map(html_for_app, apps))
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
