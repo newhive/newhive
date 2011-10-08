@@ -274,19 +274,20 @@ function hover_add(o) {
     $(o).hover(function() { $(o).addClass('active'); }, function() { if(!o.busy) $(o).removeClass('active'); });
 }
 
-hover_menu = function(handle, drawer, options_arg) {
-    var options = {
+hover_menu = function(handle, drawer, options) {
+    var o = { handle : handle, drawer : drawer };
+    o.options = {
          open : noop
         ,close : noop
         ,auto_close : true
         ,hover_close : true
         ,close_delay : 500
-        ,offsetY : 5
+        ,offsetY : 0
+        ,focus_persist : false
         ,hover : true
     };
-    $.extend(options, options_arg);
+    $.extend(o.options, options);
     if(!handle.length) throw("no handle"); if(!drawer.length) throw("no drawer");
-    var o = { handle : handle, drawer : drawer };
     handle.get(0).hover_menu = o;
     //drawer.remove();
     //$(document.body).append(drawer);
@@ -301,7 +302,9 @@ hover_menu = function(handle, drawer, options_arg) {
         o.hover_src = hover_url(o.handle_src);
     }
 
-    o.delayed_close = function() { o.close_timer = setTimeout(o.close, options.close_delay); }
+    o.delayed_close = function() {
+        if(o.options.hover_close) o.close_timer = setTimeout(o.close, o.options.close_delay);
+    }
     o.cancel_close = function() { if(o.close_timer) clearTimeout(o.close_timer); }
 
     o.close = function() {
@@ -310,7 +313,7 @@ hover_menu = function(handle, drawer, options_arg) {
         o.opened = false;
         if(o.rollover) o.rollover.attr('src', o.handle_src);
         handle.removeClass('active');
-        options.close();
+        o.options.close();
         handle.get(0).busy = false;
     }
     o.open = function() {
@@ -321,32 +324,33 @@ hover_menu = function(handle, drawer, options_arg) {
         handle.get(0).busy = true;
         if(o.rollover) o.rollover.attr('src', o.hover_src);
         handle.addClass('active');
+        if(o.options.focus_persist) o.options.hover_close = true;
 
         drawer.show();
         var hp = handle.position();
-        var oy = handle.outerHeight() + options.offsetY;
+        var oy = handle.outerHeight() + o.options.offsetY;
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
         var top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
             && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
-            hp.top - drawer.outerHeight() - options.offsetY : hp.top + oy;
+            hp.top - drawer.outerHeight() - o.options.offsetY : hp.top + oy;
         var left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
             hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
         drawer.css({ left : left, top : top });
-        options.open();
+        o.options.open();
     }
     
-    if(options.hover) {
-        if(options.hover_close) {
-            handle.hover(o.open, o.delayed_close);
-            drawer.hover(o.cancel_close, o.delayed_close);
-        }
-        else handle.hover(o.open);
+    if(o.options.hover) {
+        handle.hover(o.open, o.delayed_close);
+        drawer.hover(o.cancel_close, o.delayed_close);
+        handle.hover(o.open);
     }
     handle.click(o.open);
+    var chc = function() { o.options.hover_close = false; };
+    $(o.options.focus_persist).focus(chc).click(chc);
 
-    //if(options.auto_close) drawer.click(o.close);
-    //if(options.auto_close) handle.click(o.close);
+    //if(o.options.auto_close) drawer.click(o.close);
+    //if(o.options.auto_close) handle.click(o.close);
 
     $(window).click(function(e) {
         if(handle.get(0) == e.target

@@ -277,7 +277,7 @@ Hive.App.Controls = function(app) {
                 input.select();
                 input.val(o.app.link());
             }
-            ,hover_close : false
+            ,focus_persist : input
             ,auto_close : false
             ,close : function() {
                 var v = input.val();
@@ -380,7 +380,7 @@ Hive.App.Html = function(common) {
         return o.embed.outerHTML();
     }
 
-    o.embed = $(o.state.content);
+    o.embed = $(o.state.content).addClass('content');
     o.div.append(o.embed);
     if(o.embed.is('object') || o.embed.is('embed') || o.embed.is('iframe')) {
         Hive.App.makeShielded(o);
@@ -811,13 +811,13 @@ var main = function() {
     $('#insert_file' ).click(Hive.pick_file);
     $('#menu_file'   ).click(Hive.pick_file);
 
-    hover_menu($('#insert_text'), $('#menu_text'), { offsetY : 0 });
-    hover_menu($('#insert_image'), $('#menu_image'), { offsetY : 0 });
-    hover_menu($('#insert_audio'), $('#menu_audio'), { offsetY : 0 });
-    hover_menu($('#insert_file'), $('#menu_file'), { offsetY : 0 });
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { hover_close : false, auto_close : false, offsetY : 0 });
+    hover_menu($('#insert_text'), $('#menu_text'));
+    hover_menu($('#insert_image'), $('#menu_image'));
+    hover_menu($('#insert_audio'), $('#menu_audio'));
+    hover_menu($('#insert_file'), $('#menu_file'));
+    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { focus_persist : $('#embed_code') } );
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
-    hover_menu($('#insert_shape'), $('#menu_shape'), { offsetY : 0 });
+    hover_menu($('#insert_shape'), $('#menu_shape'));
     
     $('#btn_grid').click(Hive.toggle_grid);
     
