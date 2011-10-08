@@ -590,11 +590,11 @@ def handle(request):
     resource.increment_counter('views')
     if is_owner: resource.increment_counter('owner_views')
 
-    template = resource.get('template', request.args.get('template', 'default'))
+    template = resource.get('template', request.args.get('template', 'expression'))
     if template == 'none':
         if auth_required: return Forbidden()
         return serve_html(response, html)
-    else: return serve_page(response, template, directory='')
+    else: return serve_page(response, template + '.html', directory='pages')
 
 
 @Request.application
