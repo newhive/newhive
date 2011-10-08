@@ -631,7 +631,6 @@ Hive.App.Image = function(common) {
     o.image_src(o.state.content);
 
     return o;
-        '</div>'
 }
 Hive.registerApp(Hive.App.Image, 'hive.image');
 
