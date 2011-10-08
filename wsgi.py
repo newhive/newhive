@@ -299,24 +299,34 @@ def mail_us(request, response):
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
+
+    context = {
+         'message': request.form.get('message')
+        ,'url': request.form.get('forward')
+        ,'title': request.form.get('forward')
+        ,'sender_fullname': request.requester.get('fullname')
+        ,'sender_url': home_url(request.requester)
+        }
+
     exp = Expr.fetch(request.form.get('id'))
+
     if exp:
         exp.increment({'analytics.email.count': 1})
-        title = exp.get('title')
-    else:
-        title = request.form.get('forward')
+        owner = User.fetch(exp.get('owner'))
+        context.update({
+          'short_url': (exp.get('domain') + '/' + exp.get('name'))
+          ,'tags': exp.get('tags')
+          ,'thumbnail_url': exp.get('thumb')
+          ,'user_url': home_url(owner)
+          ,'user_name': owner.get('name')
+          ,'title': exp.get('title')
+          })
 
     heads = {
          'To' : request.form.get('to')
         ,'From' : 'The New Hive <noreply+share@thenewhive.com>'
         ,'Subject' : request.form.get('subject', '')
         ,'Reply-to' : request.requester.get('email', '')
-        }
-    context = {
-         'message': request.form.get('message')
-        ,'url': request.form.get('forward')
-        ,'title': title
-        ,'user_name': request.requester.get('fullname')
         }
     body = {
          'plain': jinja_env.get_template("emails/share.txt").render(context)

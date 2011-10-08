@@ -1,13 +1,13 @@
 {% set header_boxes = [
-{'color': '#698293', 'width': '91px'},
-{'color': '#4a969e', 'width': '73px'},
-{'color': '#1ea616', 'width': '47px'},
-{'color': '#7ba008', 'width': '65px'},
-{'color': '#f9a818', 'width': '94px'},
-{'color': '#e87c25', 'width': '95px'},
-{'color': '#f45518', 'width': '56px'},
-{'color': '#f72e4d', 'width': '54px'},
 {'color': '#f73627', 'width': '11px'},
+{'color': '#f72e4d', 'width': '54px'},
+{'color': '#f45518', 'width': '56px'},
+{'color': '#e87c25', 'width': '95px'},
+{'color': '#f9a818', 'width': '94px'},
+{'color': '#7ba008', 'width': '65px'},
+{'color': '#1ea616', 'width': '47px'},
+{'color': '#4a969e', 'width': '73px'},
+{'color': '#698293', 'width': '91px'}
 ]
 %}
 {% set table_width = 'width="586px"' %}
@@ -45,7 +45,12 @@
     </td></tr>
     <tr><td style="background-color: #696e76;" height="30px" {{ table_width }}>
       {% block footer %}
-      <p style="text-align: center; color: #ffffff;"><a href="mailto:info@thenewhive.com" style="text-decoration: none; color: #ffffff;">info@thenewhive.com</a> | <a href="http://thenewhive.com" style="text-decoration: none; color: #ffffff;">thenewhive.com</a> | facebook | twitter</p>
+      <p style="text-align: center; color: #ffffff;">
+        <a href="mailto:info@thenewhive.com" style="text-decoration: none; color: #ffffff;">info@thenewhive.com</a> 
+        | <a href="http://thenewhive.com" style="text-decoration: none; color: #ffffff;">thenewhive.com</a> 
+        | <a href="http://www.facebook.com/pages/The-New-Hive/122884201115568" style="text-decoration: none; color: #ffffff;">facebook </a>
+        | <a href="http://twitter.com/#!/NewHive" style="text-decoration: none; color: #ffffff;">twitter</a>
+      </p>
       {% endblock %}
     </td></tr>
 </body>
