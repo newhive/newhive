@@ -19,13 +19,15 @@ assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
+    assets_env.set_url('/lib/libsrc')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'hover.js',
-    'drag.js', 'dragndrop.js', 'colors.js', 'util.js',  output='../lib/app.js')
+    'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('admin.js', 'jquery.tablesorter.min.js', output='../lib/admin.js')
-assets_env.register('app.css', 'app_src.css', 'jplayer/jplayer.blue.monday.css', filters='yui_css', output='../lib/app.css')
-assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('jplayer', 'jplayer/jquery.jplayer.min.js', 'jplayer/skin.js', output='../lib/jplayer.js')
+assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
+assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
 
 
@@ -208,7 +210,7 @@ def user_create(request, response):
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
-    return redirect(response, config.intro_url)
+    return redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
@@ -355,7 +357,7 @@ def home_url(user):
     return abs_url(domain = user.get('sites', [config.server_name])[0]) + '*'
 def login(request, response):
     if auth.handle_login(request, response):
-        return redirect(response, home_url(request.requester))
+        return redirect(response, request.form.get('url', home_url(request.requester)))
 
 # Possible values for the POST variable 'action'
 actions = dict(
@@ -408,7 +410,7 @@ def format_card(e):
 def expr_list(spec, **args):
     return map(format_card, Expr.list(spec, **args))
 
-def expr_home_list(p2, request, response):
+def expr_home_list(p2, request, response, limit=90):
     root = get_root()
     tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
     page = int(request.args.get('page', 0))
@@ -419,7 +421,7 @@ def expr_home_list(p2, request, response):
         exprs = [by_id[i] for i in ids]
         response.context['pages'] = 0;
     else:
-        exprs = Expr.list({}, sort='created', limit=90, page=page)
+        exprs = Expr.list({}, sort='created', limit=limit, page=page)
         response.context['pages'] = Expr.list_count({});
     response.context['exprs'] = map(format_card, exprs)
     response.context['tag'] = tag
@@ -439,10 +441,10 @@ def handle(request):
     request.trusting = False
     response.context = { 'f' : request.form, 'url' : request.base_url }
     response.user = request.requester
+    response.headers.add('Access-Control-Allow-Origin', '*')
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
-    #import pdb; pdb.set_trace()
     if request.domain == config.server_name:
         if request.is_secure and request.requester and request.requester.logged_in:
             request.trusting = True
@@ -467,15 +469,14 @@ def handle(request):
             response.headers.add('Content-Disposition', 'inline', filename=res['name'])
             with open(res['fs_path']) as f: response.data = f.read()
             return response
-        elif p1 == 'edit':
+        elif p1 == 'edit' and request.requester.logged_in:
             if not p2:
                 exp = { 'domain' : lget(request.requester.get('sites'), 0) }
                 exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
                 if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                    intro_expr = Expr.fetch(config.intro_expr)
-                    if intro_expr: exp.update(dfilter(intro_expr, ['apps']))
+                    show_help = True
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
@@ -504,7 +505,7 @@ def handle(request):
             response.context['tags_js'] = json.dumps(root.get('tags'))
             response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
 
-            expr_home_list(p2, request, response)
+            expr_home_list(p2, request, response, limit=900)
             return serve_page(response, 'admin_home.html')
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             import analytics
@@ -570,23 +571,28 @@ def handle(request):
     if not resource: return serve_404(request, response)
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
-    (html, css) = exp_to_html(resource)
+    html = exp_to_html(resource)
+    auth_required = (resource.get('auth') == 'password' and resource.get('password')
+        and request.form.get('password') != resource.get('password')
+        and request.requester.id != resource['owner'])
     response.context.update(
          edit = abs_url(secure = True) + 'edit/' + resource.id
         ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
-        ,auth_required = (resource.get('auth') == 'password' and resource.get('password')
-            and request.form.get('password') != resource.get('password')
-            and request.requester.id != resource['owner'])
+        ,auth_required = auth_required
         ,body = html
-        ,css = css
         ,exp = resource
         ,exp_js = json.dumps(resource)
         )
 
     resource.increment_counter('views')
     if is_owner: resource.increment_counter('owner_views')
-    return serve_page(response, 'expression.html')
+
+    template = resource.get('template', request.args.get('template', 'expression'))
+    if template == 'none':
+        if auth_required: return Forbidden()
+        return serve_html(response, html)
+    else: return serve_page(response, template + '.html', directory='pages')
 
 
 @Request.application
@@ -611,39 +617,31 @@ def exp_to_html(exp):
     """Converts JSON object representing an expression to HTML"""
 
     apps = exp.get('apps')
-    if not apps: return ('', '')
+    if not apps: return ''
 
-    def css_for_app(app, html_id):
-        return "#%s { left:%dpx; top:%dpx; width:%dpx; height:%dpx; %s; z-index : %d; }\n" % (
-            html_id,
+    def css_for_app(app):
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %s; z-index : %d; opacity:%f" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
             app['dimensions'][1],
             'font-size : ' + str(app['scale']) + 'em' if app.get('scale') else '',
-            app['z']
+            app['z'],
+            app.get('opacity', 1)
             )
 
-    html_ids = map(lambda num: 'h_' + str(num), range(0, len(apps)))
-
-    def html_for_app(app, html_id):
+    def html_for_app(app):
         content = app.get('content', '')
         if app.get('type', '') == 'hive.image':
-            html = ("<div class='happ' id='%s'><img class='happ' src='%s'></div>"
-                % (html_id, content))
+            html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
-            return html
-        if app.get('type') == 'hive.text' or app.get('type') == 'hive.html':
-            return "<div class='happ' id='%s'>%s</div>" % (html_id, content)
-        return ""
+        else: html = content
+        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
+        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
+        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app), data, html)
 
-    css = (''.join(map(css_for_app, apps, html_ids)) + "\n"
-        + "body { height:%dpx; }\n"
-            % max(map(lambda a: a['position'][1] + a['dimensions'][1], apps))
-        )
-    html = ''.join(map(html_for_app, apps, html_ids))
-    return (html, css)
+    return ''.join(map(html_for_app, apps))
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
@@ -663,6 +661,7 @@ def render_template(response, template, directory='pages'):
         ,server = abs_url()
         ,secure_server = abs_url(secure = True)
         ,server_name = config.server_name
+        ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
         ,colors = colors
         ,debug = config.debug_mode
         ,assets_env = assets_env

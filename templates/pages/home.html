@@ -10,19 +10,18 @@
 {% endblock %}
 
 {% block content %}
- <div style='font-family : Museo; font-size : 3em; font-weight : bold; margin : 30px 50px 30px 50px;'>
-  <a href='{{ create }}?tags=playground'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
+ <div class='fathead'>
+  <a href='{{ create if user.logged_in else 'http://thenewhive.thenewhive.com' }}'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
  </div>
  <div id='tags'>
   {% for t in tags %}<a href='/home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
-  <a href='/home/Recent' class='tag_label {{ 'current' if tag == 'Recent' }}'>Recent</a>
  </div>
 
  <div id='feed'>{% include 'cards.html' %}</div>
 
  <script>
 var load_page = null;
-var next_page = 0;
+var next_page = 1;
 var pages = {{ pages }};
 $(window).scroll(function() {
     if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page < pages) {
