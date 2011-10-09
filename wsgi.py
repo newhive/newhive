@@ -25,7 +25,7 @@ assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'h
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('admin.js', 'jquery.tablesorter.min.js', output='../lib/admin.js')
 assets_env.register('jplayer', 'jplayer/jquery.jplayer.min.js', 'jplayer/skin.js', output='../lib/jplayer.js')
-assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', 'app.css', 'jplayer/jplayer.blue.monday.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
