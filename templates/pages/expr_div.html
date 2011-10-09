@@ -1,0 +1,7 @@
+{% if auth_required %}
+ {% include 'dialogs/password.html' %}
+{% else %}
+ <div id='expr_{{ exp.name }}' data-aspect='{{ exp.dimensions[0] / exp.dimensions[1] }}'
+  {{ "style='background-color : " + exp.background.color + "'" if exp.background.color }}
+>{{ body }}</div>
+{% endif %}

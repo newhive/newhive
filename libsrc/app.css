@@ -4,9 +4,7 @@
 
 
 /* === Container element === */
-#dialogs {
-  position: fixed;
-}
+#dialogs { display : none; width : 100%; height : 100%; }
 
 /* === click shield element === */
 #dialog_shield{
@@ -25,7 +23,7 @@
   display: none; 
   position:absolute;
   z-index:2001; 
-  background: white;
+  background-color : white;
   -moz-box-shadow: 05px 05px 05px #666;
   -webkit-box-shadow: 05px 05px 05px #666;
   box-shadow: 05px 05px 05px #666;
@@ -234,14 +232,14 @@ input[type="text"].copy, textarea.copy {
 /* === Expression cards and category labels, profile and homepage === */
 
 a.tag_label:hover { color : #F73627; background : #FFF673; }
-.tag_label.current { background-color : #96E2CE; color : black; padding : 3px 20px; }
-.tag_label { font-weight : bold; color : #696E76; padding : 3px 15px; margin-right : 5px; background-color : #EDEBE1; }
+.tag_label.current { background-color : #96E2CE; color : black; padding : 6px 20px; }
+.tag_label { font-weight : bold; color : #696E76; padding : 6px 15px; margin-right : 5px; background-color : #EDEBE1; }
 #tags { margin : 50px 50px 25px 50px; }
 
 #feed { width : auto; margin : 0 50px 50px 50px; } /*left : 124px; width : 776px; padding : 0; }*/
 .feed.item { position : relative; float : left; padding : 5px; margin : 0 5px 5px 0; width : 330px; height : 96px;
     display : inline-block; background-image : url('/lib/skin/1/feed_item.png'); }
-.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }
+/*.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }*/
 .title { font-weight : bold; max-height : 2.5em; overflow : hidden; text-overflow : ellipsis; margin-bottom : 5px; }
 .feed .title1 { font-size : 1.3em; }
 .feed .title2 { font-size : 1.1em; }
@@ -250,3 +248,12 @@ a.tag_label:hover { color : #F73627; background : #FFF673; }
 .feed .other, .feed .tags { font-size : .8em }
 .feed .tags { height : 2.5em; overflow : hidden; text-overflow : ellipsis; }
 .feed .other { position : absolute; left : 139px; bottom : 5px; font-weight : bold; }
+
+.fathead { font-family : Museo, Helvetica, sans-serif; font-size : 3em; font-weight : bold; margin : 60px 50px 60px 50px; }
+.fathead img { margin : 8px 0; vertical-align : top; }
+
+
+/* === Expression pages === */
+
+.happ { position : absolute; }
+.happ img { width : 100%; }
