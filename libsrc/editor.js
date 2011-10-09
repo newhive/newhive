@@ -104,13 +104,6 @@ Hive.App = function(initState) {
     o.remove = function() {
         o.div.remove();
         o.apps.remove(o);
-
-        if(o.state.file_id) {
-            $.ajax( {
-                type : "POST",
-                data : { action : 'file_delete', id : o.state.file_id }
-            } );
-        }
     }
     
     o.stackBottom = function() {

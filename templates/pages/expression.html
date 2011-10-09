@@ -20,6 +20,7 @@
    <div id='info' class='medbold' style='text-align : right'>
     <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
     <div id='datetime'><nobr>{{ mtime }}</nobr></div>
+    <input type='hidden' name='expr_id' value='{{ exp.id }}'>
    </div>
   {% endif %}
 
