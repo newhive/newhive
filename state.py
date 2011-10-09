@@ -261,7 +261,8 @@ class File(Entity):
             k.name = self.id
             k.set_contents_from_filename(tmp_path,
                 headers={ 'Content-Disposition' : 'inline; filename=' + name, 'Content-Type' : self['mime'] })
-            url = k.generate_url(86400 * 3600)
+            k.make_public()
+            url = k.generate_url(86400 * 3600, query_auth=False)
             os.remove(tmp_path)
         else:
             owner = User.fetch(self['owner'])
