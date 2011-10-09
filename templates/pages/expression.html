@@ -15,12 +15,12 @@
 {% endblock %}
 
 {% block body %}
+ <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
  <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
   {% if not user_is_owner %}
    <div id='info' class='medbold' style='text-align : right'>
     <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
     <div id='datetime'><nobr>{{ mtime }}</nobr></div>
-    <input type='hidden' name='expr_id' value='{{ exp.id }}'>
    </div>
   {% endif %}
 

@@ -81,6 +81,20 @@ function autoLink(string) {
     }
     return string;
 }
+
+function exprDialog(url) {
+    $.get(url + '?template=expr_div', function(h) {
+        var d = loadDialog(h, { absolute : true });
+        var place = function() {
+            d.css({ width : '80%' });
+            d.css({ height : d.width() / parseFloat(d.attr('data-aspect')) });
+            place_apps();
+            center(d);
+        }
+        $(window).resize(place);
+        place();
+    });
+}
             
 function loadDialog(htmlString, opts) {
     var opts = $.extend({ absolute : false }, opts);
@@ -88,6 +102,7 @@ function loadDialog(htmlString, opts) {
     var dialog = $('#' + match[1]);
     if(dialog.length === 0) dialog = $('#dialogs').append(htmlString).children().last();
     showDialog(dialog, null, opts);
+    return dialog;
 }
 
 function showDialog(name, select, opts) {
@@ -385,8 +400,6 @@ tool_tip = function(tool, tip, above) {
     tool.hover(o.show, function() { o.drawer.hide() });
     return o;
 }
-
-function redirect(u) { window.location = u; }
 
 var append_color_picker = function(container, callback, init_color) {
     var e = $("<div style='width : 310px; height : 165px'>");

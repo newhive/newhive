@@ -212,7 +212,7 @@ def user_create(request, response):
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
-    return redirect(response, config.intro_url)
+    return redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
@@ -663,6 +663,7 @@ def render_template(response, template, directory='pages'):
         ,server = abs_url()
         ,secure_server = abs_url(secure = True)
         ,server_name = config.server_name
+        ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
         ,colors = colors
         ,debug = config.debug_mode
         ,assets_env = assets_env

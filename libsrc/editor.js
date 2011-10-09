@@ -198,7 +198,7 @@ Hive.App = function(initState) {
     }
 
     // initialize
-    o.div = $('<div class="happ">');
+    o.div = $('<div class="ehapp">');
     $('#content').append(o.div);
     o.pos_n(o.state.position);
     o.dims_n(o.state.dimensions);
@@ -1030,7 +1030,7 @@ Hive.rte = function(options) {
         o.win = o.iframe.contentWindow;
         o.doc = o.win.document;
         if(o.options.css) $(o.doc).find('head').append(o.options.css);
-        $(o.doc.body).addClass('happ');
+        $(o.doc.body).addClass('ehapp');
         o.doc.body.style.overflow = 'hidden';
         //o.editor_cmd('styleWithCSS', true);
         if(options.load) options.load();

@@ -1,4 +1,4 @@
-$(window).resize(place_apps);
+$(window).resize(function() { place_apps() });
 $(function() { place_apps(); });
 
 $(function() {
