@@ -85,11 +85,12 @@ form { display : inline; }
 html, body { background-color : white; height : 100%; }
  </style>
 
+ <script>server_name = '{{ server_name }}';</script>
  {% for item in assets_env["app.js"].urls() %}
    <script src='{{ item }}'></script>
  {% endfor %}
  {% for item in assets_env["jplayer"].urls() %}
- <script src='{{ item }}' ></script>
+  <script src='{{ item }}' ></script>
  {% endfor %}
 
  <meta property="og:site_name" content='The New Hive' />

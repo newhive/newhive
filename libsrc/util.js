@@ -238,7 +238,7 @@ $(function () {
   // Cause external links to open in a new window
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
   $('a').each(function() {
-    var a = new RegExp('thenewhive.com');
+    var a = new RegExp(server_name);
     if(!a.test(this.href)) {
       $(this).click(function(event) {
         event.preventDefault();
