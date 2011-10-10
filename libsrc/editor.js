@@ -830,21 +830,34 @@ var main = function() {
         }
     }
 
-    click_dialogue($('#btn_save'), $('#menu_save'));
+    click_dialogue($('#btn_save'), $('#menu_save'), {open: function(){$('#title').focus().select();}} );
     $('#save_submit').click(function(){
-        if ( checkUrl() ){
-            window.onbeforeunload = null; //Cancel the warning for leaving the page
-            Hive.save();
+        if (! $(this).hasClass('disabled')){ 
+            $(this).addClass('disabled');
+            if ( checkUrl() ){
+                window.onbeforeunload = null; //Cancel the warning for leaving the page
+                Hive.save();
+            }
         }
     });
-    $('#menu_save #title').blur( function(){
-        $('#title').val($('#title').val().trim());
-        if ($('#url').val() === "" && !Hive.Exp.home){
+    
+    // Automatically update url unless it's an already saved expression or the user has modified the url manually
+    $('#menu_save #title').bind('keydown keyup', function(){
+        if (!(Hive.Exp.name || $('#url').hasClass('modified') )){
             $('#url').val(
                 $('#title').val().replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").toLowerCase()
             );
         }
+    }).keydown();
+
+    $('#url').focus(function(){
+        $(this).addClass('modified');
     });
+
+    $('#menu_save #title').blur( function(){
+        $('#title').val($('#title').val().trim());
+    }).blur();
+
     $('#url').change(checkUrl);
 
     hover_menu($('#privacy' ), $('#menu_privacy'));
@@ -926,9 +939,12 @@ Hive.save = function() {
         }
 
         if(typeof(ret) != 'object') alert("There was a problem saving your stuff :(.");
-        if(ret.error) alert(ret.error);
-        else if(ret.location) {
-            if(ret['new']){
+        if (ret.error) {
+            alert(ret.error);
+            $('#save_submit').removeClass('disabled');
+        }
+        else if (ret.location) {
+            if (ret['new']){
                 showDialog('#dia_share');
                 updateShareUrls('#dia_share', ret.location);
                 $('#mail_form [name=forward]').attr('value', ret.location);
