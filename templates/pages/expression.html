@@ -2,22 +2,20 @@
 
 {% block head %}
  <style>
-  .happ { position : absolute; }
-  .happ img { width : 100%; }
-  #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
   #exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
   #datetime { font-size : .7em; color : {{ colors[12] }}; line-height : .5em; }
-  #feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
-  {{ css }}
+  #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
  </style>
  <meta property="og:title" content='{{ title }}' />
  <meta property="og:image" content='{{ exp.thumb|default('/lib/skin/1/default_thumb.png') }}' />
  <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
  <meta property="og:type" content="article" />
  <meta property="fb:admins" content="1007003" />
+ <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
 {% endblock %}
 
 {% block body %}
+ <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
  <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
   {% if not user_is_owner %}
    <div id='info' class='medbold' style='text-align : right'>
@@ -61,33 +59,4 @@
  {% else %}
   {{ body }}
  {% endif %}
- 
- <script>
- var exp = {{ exp_js }};
- $(window).resize(function() {
-    var s = $(window).width() / 1000;
-    $.map(exp.apps, function(a, i) {
-        var e = $('#h_' + i);
-        e.css({ left : a.position[0] * s, top : a.position[1] * s,
-            width : a.dimensions[0] * s, height : a.dimensions[1] * s,
-            'font-size' : a.scale * s + 'em', opacity : a.opacity });
-        if(a.angle) e.rotate(a.angle);
-    });
- });
- $(window).resize();
- $(document).ready(function() {
-     // Warning for IE
-     //if(/MSIE/.test(navigator.userAgent)){
-     if(/MSIE/.test(navigator.userAgent)){
-         var count = parseInt(readCookie('ie_warning_count'));
-         if (! count) { count=0; }
-         if ( count < 2) {
-             showDialog('#ie_warning');
-             count++;
-             createCookie('ie_warning_count', count, 7);
-         }
-     }
- });
-
- </script>
 {% endblock %}

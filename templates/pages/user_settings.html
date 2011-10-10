@@ -1,10 +1,12 @@
 {% extends "main.html" %}
 
 {% block content %}
- <br><br>
+ <div class='fathead'>
+  <img src='/lib/skin/1/plus_lg.png'> Create your account
+ </div>
 
- <div style='margin : 0 auto; width : 950px'>
-  <div style='float : left; display:inline-block;text-align:left'>
+ <div style='margin : 0 auto; width : 80%;'>
+  <div style='float : left; text-align:left; margin : 0 25px 50px 50px; vertical-align : top'>
  
   <form id='form' method='POST'>
    <input type='hidden' name='action' value='user_create'>
@@ -31,7 +33,7 @@
    <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
    <br>
  
-   <input class='medbold' type='submit' value='Create Account!'>
+   <input class='black btn rounded' type='submit' value='Create Account'>
   
   </form>
   <script>
@@ -41,7 +43,7 @@
       });
     });
     function user_check(user_name){
-      var n = $('#name').val().trim();
+      var n = $('#name').val().trim().toLowerCase();
       $('#name').val(n);
       if( $('#name').val().length < 3 ) {
           $('#name_availability').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');
@@ -67,7 +69,7 @@
       });
     }
  function validate() {
-     var n = $('#name').val().trim();
+     var n = $('#name').val().trim().toLowerCase();
      $('#name').val(n);
      if( $('#name').val().length < 3 ) {
          alert('Please enter username of at least 3 letters, thank you.');
@@ -100,12 +102,10 @@
      }
  }
  $('#form').submit(validate);
-  </script>
-  
-  </div>
-  <div style='float : right; margin-left : 100px'>
+</script>
+  </div><div style='float : right; margin : 0 0 50px 25px; vertical-align : top'>
    <b>Terms of Service</b><br>
-   <iframe src='/lib/doc/tos.html' style='height:400px;width:500px;' class='border'></iframe>
+   <iframe src='/lib/doc/tos.html' style='height:400px;width:400px;' class='border'></iframe>
   </div>
  </div>
 

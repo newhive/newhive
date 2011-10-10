@@ -81,28 +81,40 @@ function autoLink(string) {
     }
     return string;
 }
+
+function exprDialog(url) {
+    $.get(url + '?template=expr_div', function(h) {
+        var d = loadDialog(h, { absolute : true });
+        var place = function() {
+            d.css({ width : '80%' });
+            d.css({ height : d.width() / parseFloat(d.attr('data-aspect')) });
+            place_apps();
+            center(d);
+        }
+        $(window).resize(place);
+        place();
+    });
+}
             
-function loadDialog(htmlString) {
+function loadDialog(htmlString, opts) {
+    var opts = $.extend({ absolute : false }, opts);
     var match = /id=['"]([^'"]*)['"]/.exec(htmlString)
     var dialog = $('#' + match[1]);
-    if (dialog.length === 0) {
-        showDialog(
-            $('#dialogs').append(htmlString).children().last()
-        );
-    } else {
-        showDialog(dialog)
-    }
+    if(dialog.length === 0) dialog = $('#dialogs').append(htmlString).children().last();
+    showDialog(dialog, null, opts);
+    return dialog;
 }
 
-function showDialog(name, select) {
+function showDialog(name, select, opts) {
+    var opts = $.extend({ absolute : false }, opts);
     var dialog = $(name);
     var shield = $('#dialog_shield');
     if (dialog.length === 1 )
     {
-        dialog.addClass(['dialog', 'border', 'selected']);
-        center(
-            dialog.show()
-        );
+        dialog.addClass('dialog');
+        $('#dialogs').add(dialog).css('position', opts.absolute ? 'absolute' : 'fixed').show();
+        $(window).resize(function() { center(dialog) });
+        center(dialog);
         shield.show();
 
         if (! dialog.hasClass('mandatory') ) {
@@ -120,8 +132,7 @@ function showDialog(name, select) {
 }
 
 function hideDialog(name) {
-    $(name).hide();
-    $('#dialog_shield').hide();
+    $(name).add('#dialog_shield, #dialogs').hide();
 }
 
 function updateShareUrls(element, currentUrl) {
@@ -199,7 +210,7 @@ function elem(tag, attrs) {
  * it when focused.
  * Adds hover events for elements with class='hoverable'
  * ***/
-$(document).ready(function () {
+$(function () {
     $('#btn_share').click(function(){
         var dialog = $('#dia_share');
         if (dialog.length === 0 ) {
@@ -242,10 +253,16 @@ $(document).ready(function () {
 
 });
 
-function center(e, inside) {
+function center(e, inside, opts) {
+    var opts = $.extend({ absolute : false }, opts);
     var w = typeof(inside) == 'undefined' ? $(window) : inside;
-    e.css({ left : w.width() / 2 - e.width() / 2,
-        top : w.height() / 2 - e.height() / 2});
+    pos = { left : Math.max(0, w.width() / 2 - e.width() / 2),
+        'top' : Math.max(0, w.height() / 2 - e.height() / 2) };
+    if(opts.absolute) {
+        pos['left'] += window.scrollX;
+        pos['top'] += window.scrollY;
+    }
+    e.css(pos);
 }
 
 function asyncSubmit(form, callback) {
@@ -274,19 +291,20 @@ function hover_add(o) {
     $(o).hover(function() { $(o).addClass('active'); }, function() { if(!o.busy) $(o).removeClass('active'); });
 }
 
-hover_menu = function(handle, drawer, options_arg) {
-    var options = {
+hover_menu = function(handle, drawer, options) {
+    var o = { handle : handle, drawer : drawer };
+    o.options = {
          open : noop
         ,close : noop
         ,auto_close : true
         ,hover_close : true
         ,close_delay : 500
-        ,offsetY : 5
+        ,offsetY : 0
+        ,focus_persist : false
         ,hover : true
     };
-    $.extend(options, options_arg);
+    $.extend(o.options, options);
     if(!handle.length) throw("no handle"); if(!drawer.length) throw("no drawer");
-    var o = { handle : handle, drawer : drawer };
     handle.get(0).hover_menu = o;
     //drawer.remove();
     //$(document.body).append(drawer);
@@ -301,7 +319,9 @@ hover_menu = function(handle, drawer, options_arg) {
         o.hover_src = hover_url(o.handle_src);
     }
 
-    o.delayed_close = function() { o.close_timer = setTimeout(o.close, options.close_delay); }
+    o.delayed_close = function() {
+        if(o.options.hover_close) o.close_timer = setTimeout(o.close, o.options.close_delay);
+    }
     o.cancel_close = function() { if(o.close_timer) clearTimeout(o.close_timer); }
 
     o.close = function() {
@@ -310,7 +330,7 @@ hover_menu = function(handle, drawer, options_arg) {
         o.opened = false;
         if(o.rollover) o.rollover.attr('src', o.handle_src);
         handle.removeClass('active');
-        options.close();
+        o.options.close();
         handle.get(0).busy = false;
     }
     o.open = function() {
@@ -321,32 +341,33 @@ hover_menu = function(handle, drawer, options_arg) {
         handle.get(0).busy = true;
         if(o.rollover) o.rollover.attr('src', o.hover_src);
         handle.addClass('active');
+        if(o.options.focus_persist) o.options.hover_close = true;
 
         drawer.show();
         var hp = handle.position();
-        var oy = handle.outerHeight() + options.offsetY;
+        var oy = handle.outerHeight() + o.options.offsetY;
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
         var top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
             && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
-            hp.top - drawer.outerHeight() - options.offsetY : hp.top + oy;
+            hp.top - drawer.outerHeight() - o.options.offsetY : hp.top + oy;
         var left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
             hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
         drawer.css({ left : left, top : top });
-        options.open();
+        o.options.open();
     }
     
-    if(options.hover) {
-        if(options.hover_close) {
-            handle.hover(o.open, o.delayed_close);
-            drawer.hover(o.cancel_close, o.delayed_close);
-        }
-        else handle.hover(o.open);
+    if(o.options.hover) {
+        handle.hover(o.open, o.delayed_close);
+        drawer.hover(o.cancel_close, o.delayed_close);
+        handle.hover(o.open);
     }
     handle.click(o.open);
+    var chc = function() { o.options.hover_close = false; };
+    $(o.options.focus_persist).focus(chc).click(chc);
 
-    //if(options.auto_close) drawer.click(o.close);
-    //if(options.auto_close) handle.click(o.close);
+    //if(o.options.auto_close) drawer.click(o.close);
+    //if(o.options.auto_close) handle.click(o.close);
 
     $(window).click(function(e) {
         if(handle.get(0) == e.target
@@ -381,8 +402,6 @@ tool_tip = function(tool, tip, above) {
     tool.hover(o.show, function() { o.drawer.hide() });
     return o;
 }
-
-function redirect(u) { window.location = u; }
 
 var append_color_picker = function(container, callback, init_color) {
     var e = $("<div style='width : 310px; height : 165px'>");
@@ -526,3 +545,24 @@ function eraseCookie(name) {
 }
 
 function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
+
+var place_apps = function(apps) {
+   if(!apps) apps = '.happ';
+   $(apps).each(function() {
+       var e = $(this);
+       var s = e.parent().width() / 1000;
+       if(!e.data('css')) {
+           var c = {}, that = this;
+           map(function(p) { c[p] = parseFloat(that.style[p]) }, ['left', 'top', 'width', 'height']);
+           var scale = parseFloat(e.attr('data-scale'));
+           if(scale) c['font-size'] = scale;
+           e.data('css', c);
+           e.rotate(parseFloat(e.attr('data-angle')));
+           e.css('opacity', this.style.opacity);
+       }
+       var c = $.extend({}, e.data('css'));
+       for(var p in c) c[p] *= s;
+       if(c['font-size']) c['font-size'] += 'em';
+       e.css(c);
+   });
+}

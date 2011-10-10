@@ -301,13 +301,14 @@ class Contact(Entity):
     cname = 'contact_log'
 
         
-def abs_url(secure = False, domain = None):
+def abs_url(secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
     proto = 'https' if secure else 'http'
     port = config.ssl_port if secure else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
-    return (proto + '://' + (domain or config.server_name) + port + '/')
+    return (proto + '://' + (subdomain + '.' if subdomain else '') +
+        (domain or config.server_name) + port + '/')
 
 
 ## analytics utils

@@ -1,4 +1,5 @@
 /lib/*.js
 /lib/*.css
+/lib/libsrc
 /config.py
 *.pyc
