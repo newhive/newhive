@@ -30,7 +30,7 @@ iframe { border : none; }
 {% endif %}
 #}
 <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
- <div class='fathead' style='font-family : Helvetica, sans-serif'><a href='/'>{{ fullname }}</a>{{ ': ' + tag if tag }}</div>
+ <div class='fathead' style='font-family : Helvetica, sans-serif'><a href='/'>{{ owner.fullname }}</a>{{ ': ' + tag if tag }}</div>
  
  <div id='tags'>
   <a href='/*' class='tag_label {{ 'current' if not tag }}'>All</a>

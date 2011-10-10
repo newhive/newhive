@@ -30,9 +30,9 @@ assets_env.register('expression.js', 'expression.js', filters='yui_js', output='
 
 
 
-def lget(L, i, default=None):
+def lget(L, i, *default):
     try: return L[i]
-    except: return default
+    except: return default[0] if default else None
 def raises(e): raise e
 def dfilter(d, keys):
     """ Accepts dictionary and list of keys, returns a new dictionary
@@ -53,11 +53,11 @@ def expr_save(request, response):
     if not exp: raise ValueError('missing or malformed exp')
 
     res = Expr.fetch(exp.id)
-    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background'])
+    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
     upd['name'] = upd['name'].lower().strip()
     if re.search('\#|\?|\!', upd['name']) or re.match('^\*', upd['name']):
         return dict(error="Sorry, the URL may not contain '#', '?', or begin with '*'.")
-    generate_thumb(upd, request.requester)
+    if not res or upd.get('thumb') != res.get('thumb'): generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try: 
           new_expression = True
@@ -72,8 +72,6 @@ def expr_save(request, response):
 
 import urllib, random
 def generate_thumb(expr, owner):
-    # TODO: don't regenerate thumb when image has not changed
-
     # retrieve first image from expression
     fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), -1)
     if not fst_img or not fst_img.get('content'): return

@@ -111,7 +111,7 @@ function showDialog(name, select, opts) {
     var shield = $('#dialog_shield');
     if (dialog.length === 1 )
     {
-        dialog.addClass('dialog');
+        dialog.addClass('dialog').appendTo($('#dialogs'));
         $('#dialogs').add(dialog).css('position', opts.absolute ? 'absolute' : 'fixed').show();
         $(window).resize(function() { center(dialog) });
         center(dialog);

@@ -136,6 +136,8 @@ class User(Entity):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
 
+    def get_url(self): return abs_url(domain=self['domain']) + self['name']
+
 
 def get_root(): return User.named('root')
 if not get_root():
