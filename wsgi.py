@@ -478,7 +478,7 @@ def handle(request):
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
                 if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                    show_help = True
+                    response.context['show_help'] = True
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']

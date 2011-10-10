@@ -195,6 +195,7 @@ Hive.App = function(initState) {
         o.opacity(o.state.opacity);
         o.content_element.click(function(e) { o.focus(); });
         if(o.state.load) o.state.load(o);
+        delete o.state.create;
     }
 
     // initialize
@@ -265,11 +266,7 @@ Hive.App.Controls = function(app) {
         d.append(e);
         var input = e.find('input');
         var m = hover_menu(d.find('.button.link'), e, {
-            open : function() {
-                input.focus();
-                input.select();
-                input.val(o.app.link());
-            }
+             open : function() { input.val(o.app.link()); }
             ,focus_persist : input
             ,auto_close : false
             ,close : function() {
@@ -476,7 +473,7 @@ Hive.App.Text = function(common) {
     }
     
     o.load = function() {
-        o.scale(scale);
+        o.scale_n(refScale);
         o.content(content);
         $(o.rte.doc).keypress(throttle(o.refresh_size, 200));
         common.load();
@@ -511,8 +508,6 @@ Hive.App.Text.Controls = function(common) {
     o.c.resize_h = d.find('.resize_h');
 
     o.append_link_picker(d.find('.buttons'));
-
-    o.get_pointsize = function() { return Math.round(o.app.scale() * 13) }
 
     var cmd_buttons = function(query, func) {
         $(query).each(function(i, e) {
@@ -604,7 +599,6 @@ Hive.App.Image = function(common) {
         o.imageHeight = o.img.height();
         o.aspectRatio = o.imageWidth / o.imageHeight;
         if(o.state.create) {
-            delete o.state.create;
             var w = o.imageWidth > $(window).width() * 0.8 ? $(window).width() * 0.8 : o.imageWidth;
             o.resize([w,w]);
         }
