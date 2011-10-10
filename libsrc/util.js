@@ -82,58 +82,75 @@ function autoLink(string) {
     return string;
 }
 
-function exprDialog(url) {
+function exprDialog(url, opts, callback) {
+    $.extend(opts, { absolute : true });
+    if(exprDialog.loaded[url]) return (callback || noop)(exprDialog.loaded[url].open());
     $.get(url + '?template=expr_div', function(h) {
-        var d = loadDialog(h, { absolute : true });
+        var dia = loadDialog(h, opts);
         var place = function() {
-            d.css({ width : '80%' });
-            d.css({ height : d.width() / parseFloat(d.attr('data-aspect')) });
+            dia.dialog.css({ width : '80%' });
+            dia.dialog.css({ height : dia.dialog.width() / parseFloat(dia.dialog.attr('data-aspect')) });
             place_apps();
-            center(d);
+            center(dia.dialog);
         }
         $(window).resize(place);
         place();
+        exprDialog.loaded[url] = dia;
+        return (callback || noop)(dia);
     });
 }
-            
+exprDialog.loaded = {};
+
 function loadDialog(htmlString, opts) {
     var opts = $.extend({ absolute : false }, opts);
     var match = /id=['"]([^'"]*)['"]/.exec(htmlString)
     var dialog = $('#' + match[1]);
     if(dialog.length === 0) dialog = $('#dialogs').append(htmlString).children().last();
-    showDialog(dialog, null, opts);
-    return dialog;
+    return showDialog(dialog, opts);
 }
 
-function showDialog(name, select, opts) {
-    var opts = $.extend({ absolute : false }, opts);
-    var dialog = $(name);
-    var shield = $('#dialog_shield');
-    if (dialog.length === 1 )
-    {
-        dialog.addClass('dialog');
-        $('#dialogs').add(dialog).css('position', opts.absolute ? 'absolute' : 'fixed').show();
-        $(window).resize(function() { center(dialog) });
-        center(dialog);
-        shield.show();
+function showDialog(name, opts) {
+    var o = { dialog : $(name), shield : $('#dialog_shield')} 
+    o.opts = $.extend({ open : noop, close : function() { o.dialog.hide(); }, absolute : false }, opts);
+    if(!o.dialog.length) throw "dialog element " + name + " not found";
 
-        if (! dialog.hasClass('mandatory') ) {
-            if (dialog.find('.btn_dialog_close').length === 0 ) {
-                dialog.prepend('<div class="btn_dialog_close"></div>');
-            }
-            shield.add( dialog.find('.btn_dialog_close') ).click(function(){ hideDialog(name); });
+    o.close = function() {
+        var o = showDialog.opened.pop();
+        if(!showDialog.opened.length) $('#dialog_shield').hide();
+        var clean_up = function() {
+            if(!showDialog.opened.length) $('#dialogs').hide();
+            o.opts.close();
         }
-        if (select) {
-            dialog.find(select).focus().click();
-        }
-    } else {
-        throw "dialog element " + name + " not found";
+        if(o.opts.minimize_to) minimize(o.dialog, $(o.opts.minimize_to), { 'complete' : clean_up });
+        else clean_up();
     }
-}
+    
+    o.open = function() {
+        if(o.opened) return;
+        o.opened = true;
+        o.dialog.addClass('dialog').appendTo($('#dialogs'));
+        $('#dialogs').add(o.dialog).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+        $(window).resize(function() { center(o.dialog) });
+        center(o.dialog);
+        o.shield.show();
 
-function hideDialog(name) {
-    $(name).add('#dialog_shield, #dialogs').hide();
+        if (! o.dialog.hasClass('mandatory') ) {
+            if (o.dialog.find('.btn_dialog_close').length === 0 ) {
+                o.dialog.prepend('<div class="btn_dialog_close"></div>');
+            }
+            o.shield.add( o.dialog.find('.btn_dialog_close') ).click(o.close);
+        }
+        if (o.opts.select) o.dialog.find(o.opts.select).focus().click();
+        o.index = showDialog.opened.length;
+        showDialog.opened.push(o);
+        return o.opts.open();
+    }
+
+    o.open();
+
+    return o;
 }
+showDialog.opened = [];
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);
@@ -215,14 +232,12 @@ $(function () {
         var dialog = $('#dia_share');
         if (dialog.length === 0 ) {
             $.get("?dialog=share", function(data){
-                loadDialog(data);
+                loadDialog(data, { 'select' : '#expression_url' } );
                 updateShareUrls('#dia_share', window.location);
-                $('#expression_url').click(); //This should have been handled by the second arg to showDialog, but alas
             });
         } else {
-            showDialog('#dia_share', '#expression_url');
+            showDialog('#dia_share', { 'select' : '#expression_url' });
             updateShareUrls('#dia_share', window.location);
-            $('#expression_url').click(); //This should have been handled by the second arg to showDialog, but alas
         }
     });
   
@@ -238,7 +253,7 @@ $(function () {
   // Cause external links to open in a new window
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
   $('a').each(function() {
-    var a = new RegExp('thenewhive.com');
+    var a = new RegExp(server_name);
     if(!a.test(this.href)) {
       $(this).click(function(event) {
         event.preventDefault();
@@ -400,6 +415,23 @@ tool_tip = function(tool, tip, above) {
     }
 
     tool.hover(o.show, function() { o.drawer.hide() });
+    return o;
+}
+
+var minimize = function(what, to, opts) {
+    var o = $.extend({ 'to' : $(to).addClass('active'), 'what' : $(what), 'duration' : 1000, 'complete' : noop }, opts);
+    o.init_css = { 'top' : o.what.css('top'), 'left' : o.what.css('left'), 'width' : o.what.css('width') || '',
+        'height' : o.what.css('height') || '', 'opacity' : o.what.css('opacity') };
+    o.reset = function() {
+        o.to.removeClass('active');
+        o.what.css(o.init_css);
+        o.complete();
+    };
+    var pos = o.to.offset();
+    if(o.what.css('position') == 'fixed') { pos.left -= $(window).scrollLeft(); pos.top -= $(window).scrollTop() }
+    o.what.animate({ 'left' : pos.left, 'top' : pos.top, 'width' : o.to.width(), 'height' : o.to.height(), 'opacity' : 0 }
+        , {'duration' : o.duration, complete : function() { o.what.hide() } });
+    setTimeout(o.reset, o.duration * 1.5);
     return o;
 }
 
