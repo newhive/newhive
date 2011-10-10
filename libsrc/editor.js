@@ -726,7 +726,7 @@ Hive.App.Audio = function(common) {
             mp3: o.state.content.url 
           });
         },
-        swfPath: "/js",
+        swfPath: server_url + "lib/",
         supplied: "mp3"
     });
 
