@@ -82,10 +82,9 @@ function autoLink(string) {
     return string;
 }
 
-var exprDialogs = {};
 function exprDialog(url, opts, callback) {
     $.extend(opts, { absolute : true });
-    if(exprDialogs[url]) return (callback || noop)(exprDialogs[url].open());
+    if(exprDialog.loaded[url]) return (callback || noop)(exprDialog.loaded[url].open());
     $.get(url + '?template=expr_div', function(h) {
         var dia = loadDialog(h, opts);
         var place = function() {
@@ -96,10 +95,11 @@ function exprDialog(url, opts, callback) {
         }
         $(window).resize(place);
         place();
-        exprDialogs[url] = dia;
+        exprDialog.loaded[url] = dia;
         return (callback || noop)(dia);
     });
 }
+exprDialog.loaded = {};
 
 function loadDialog(htmlString, opts) {
     var opts = $.extend({ absolute : false }, opts);
@@ -115,13 +115,19 @@ function showDialog(name, opts) {
     if(!o.dialog.length) throw "dialog element " + name + " not found";
 
     o.close = function() {
-        $('#dialog_shield').hide();
-        var clean_up = function() { $('#dialogs').hide(); o.opts.close(); }
+        var o = showDialog.opened.pop();
+        if(!showDialog.opened.length) $('#dialog_shield').hide();
+        var clean_up = function() {
+            if(!showDialog.opened.length) $('#dialogs').hide();
+            o.opts.close();
+        }
         if(o.opts.minimize_to) minimize(o.dialog, $(o.opts.minimize_to), { 'complete' : clean_up });
         else clean_up();
     }
     
     o.open = function() {
+        if(o.opened) return;
+        o.opened = true;
         o.dialog.addClass('dialog').appendTo($('#dialogs'));
         $('#dialogs').add(o.dialog).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
         $(window).resize(function() { center(o.dialog) });
@@ -135,6 +141,8 @@ function showDialog(name, opts) {
             o.shield.add( o.dialog.find('.btn_dialog_close') ).click(o.close);
         }
         if (o.opts.select) o.dialog.find(o.opts.select).focus().click();
+        o.index = showDialog.opened.length;
+        showDialog.opened.push(o);
         return o.opts.open();
     }
 
@@ -142,6 +150,7 @@ function showDialog(name, opts) {
 
     return o;
 }
+showDialog.opened = [];
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);
