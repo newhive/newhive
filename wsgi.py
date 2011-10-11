@@ -393,7 +393,7 @@ def mail_feedback(request, response):
 
 def home_url(user):
     """ Returns default URL for given state.User """
-    return abs_url(domain = user.get('sites', [config.server_name])[0]) + '*'
+    return abs_url(domain = user.get('sites', [config.server_name])[0]) + 'expressions'
 def login(request, response):
     if auth.handle_login(request, response):
         return redirect(response, request.form.get('url', home_url(request.requester)))
@@ -590,14 +590,13 @@ def handle(request):
         response.context.update(exp=resource)
         return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
 
-    if lget(request.path, 0) == '*':
+    if request.args.has_key('tag') or request.path == 'expressions':
         page = int(request.args.get('page', 0))
         spec = { 'owner' : owner.id }
-        tag = request.path[1:]
+        tag = request.args.get('tag')
         if tag: spec['tags_index'] = tag
 
         response.context['title'] = owner['fullname']
-        response.context['fullname'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', [])
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
