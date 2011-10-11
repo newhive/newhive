@@ -590,6 +590,8 @@ def handle(request):
         response.context.update(exp=resource)
         return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
 
+    if lget(request.path, 0) == '*':
+        return redirect(response, home_url(owner) + ('?tag=' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
     if request.path == 'expressions':
         page = int(request.args.get('page', 0))
         spec = { 'owner' : owner.id }
@@ -732,9 +734,9 @@ def serve_error(request, msg):
     response.context['msg'] = msg
     return serve_page(response, 'error.html')
 
-def redirect(response, location):
+def redirect(response, location, permanent=False):
     response.location = location
-    response.status_code = 303
+    response.status_code = 301 if permanent else 303
     return response
 
 class InternalServerError(exceptions.InternalServerError):
