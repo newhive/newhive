@@ -48,8 +48,7 @@
     <input type='hidden' name='url' value='{{ url }}'>
    </form>
    <div class='spacer'></div>
-   <div style='white-space : nowrap'><span id='signup_button' onclick="showDialog('#dia_signup'); $(this).addClass('open');"
-    >Sign up for an account</span>
+   <div style='white-space : nowrap'><span id='signup_button'>Sign up for an account</span>
     <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
    </div>
   </div>
@@ -61,6 +60,12 @@ $(function() {
      { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
        close_delay : 1000, auto_close : false });
  {% if error %} login_menu.open() {% endif %}
+
+ var dia;
+ $('#signup_button').click(function() {
+     dia = showDialog('#dia_signup');
+     $(this).addClass('open');
+ });
  
  $('#send_msg').bind('click dblclick', function() {
     if ($(this).hasClass('inactive')) { return true; }
@@ -71,7 +76,7 @@ $(function() {
             if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
             else {
                 $('#message').val('');
-                hideDialog('#dia_signup');
+                dia.close();
                 loadDialog(data);
             }
         }, 'json') });

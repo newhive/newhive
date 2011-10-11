@@ -195,6 +195,7 @@ Hive.App = function(initState) {
         o.opacity(o.state.opacity);
         o.content_element.click(function(e) { o.focus(); });
         if(o.state.load) o.state.load(o);
+        delete o.state.create;
     }
 
     // initialize
@@ -265,11 +266,7 @@ Hive.App.Controls = function(app) {
         d.append(e);
         var input = e.find('input');
         var m = hover_menu(d.find('.button.link'), e, {
-            open : function() {
-                input.focus();
-                input.select();
-                input.val(o.app.link());
-            }
+             open : function() { input.val(o.app.link()); }
             ,focus_persist : input
             ,auto_close : false
             ,close : function() {
@@ -476,7 +473,7 @@ Hive.App.Text = function(common) {
     }
     
     o.load = function() {
-        o.scale(scale);
+        o.scale_n(refScale);
         o.content(content);
         $(o.rte.doc).keypress(throttle(o.refresh_size, 200));
         common.load();
@@ -511,8 +508,6 @@ Hive.App.Text.Controls = function(common) {
     o.c.resize_h = d.find('.resize_h');
 
     o.append_link_picker(d.find('.buttons'));
-
-    o.get_pointsize = function() { return Math.round(o.app.scale() * 13) }
 
     var cmd_buttons = function(query, func) {
         $(query).each(function(i, e) {
@@ -604,7 +599,6 @@ Hive.App.Image = function(common) {
         o.imageHeight = o.img.height();
         o.aspectRatio = o.imageWidth / o.imageHeight;
         if(o.state.create) {
-            delete o.state.create;
             var w = o.imageWidth > $(window).width() * 0.8 ? $(window).width() * 0.8 : o.imageWidth;
             o.resize([w,w]);
         }
@@ -927,23 +921,9 @@ Hive.upload_finish = function() { $('#loading').hide(); }
 Hive.save = function() {
     var on_response = function(ret) {
         var hideDialogAndRedirect = function(){
-            var btnShare = $('#btn_share').show();
-            var animationDuration = 400;
-            var redirect = function(){window.location = ret.location}
-            var flashButton = function(){
-                for (i=0; i<5; i++){
-                    btnShare.animate({'backgroundColor': "#f2f2f2"}, 100);
-                    btnShare.animate({'backgroundColor': "#696876"}, 100); 
-                }
-                btnShare.animate({'backgroundColor': "#f2f2f2"}, {'duration': 100, 'complete':redirect});
-            }
-            $('#dialog_shield').hide();
-            $('#dia_share').removeClass('border')
-                .animate({'top':50, 'left':$(window).width() - 100}, {'duration': animationDuration, 'complete':flashButton})
-                .find('h1,h2,h3,pre')
-                .animate({'font-size': 0},animationDuration)
-                .end().find('div,img,iframe').andSelf()
-                .animate({'width':0, 'height':0, 'opacity':0},animationDuration);
+            $('#btn_share').show();
+            minimize($('#dia_share'), $('#btn_share'), { duration : 1000,
+                complete : function() { window.location = ret.location } });
         }
 
         if(typeof(ret) != 'object') alert("There was a problem saving your stuff :(.");
