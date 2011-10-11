@@ -110,12 +110,14 @@ function loadDialog(htmlString, opts) {
 }
 
 function showDialog(name, opts) {
-    var o = { dialog : $(name), shield : $('#dialog_shield')} 
+    var o = { dialog : $(name), shield : $('#dialog_shield') };
     o.opts = $.extend({ open : noop, close : function() { o.dialog.hide(); }, absolute : false }, opts);
     if(!o.dialog.length) throw "dialog element " + name + " not found";
 
     o.close = function() {
+        if(!showDialog.opened.length) return;
         var o = showDialog.opened.pop();
+        o.opened = false;
         if(!showDialog.opened.length) $('#dialog_shield').hide();
         var clean_up = function() {
             if(!showDialog.opened.length) $('#dialogs').hide();
@@ -138,7 +140,8 @@ function showDialog(name, opts) {
             if (o.dialog.find('.btn_dialog_close').length === 0 ) {
                 o.dialog.prepend('<div class="btn_dialog_close"></div>');
             }
-            o.shield.add( o.dialog.find('.btn_dialog_close') ).click(o.close);
+            o.shield.unbind('click');
+            if(!showDialog.opened.length) o.shield.add( o.dialog.find('.btn_dialog_close') ).click(o.close);
         }
         if (o.opts.select) o.dialog.find(o.opts.select).focus().click();
         o.index = showDialog.opened.length;
