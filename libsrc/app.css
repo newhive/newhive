@@ -250,7 +250,7 @@ a.tag_label:hover { color : #F73627; background : #FFF673; }
 
 #feed { width : auto; margin : 0 50px 50px 50px; } /*left : 124px; width : 776px; padding : 0; }*/
 .feed.item { position : relative; padding : 5px; margin : 0 5px 5px 0; width : 330px; height : 96px;
-    display : inline-block; background-image : url('/lib/skin/1/feed_item.png'); }
+    display : float; float : left; background-image : url('/lib/skin/1/feed_item.png'); }
 /*.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }*/
 .title { font-weight : bold; max-height : 2.5em; overflow : hidden; text-overflow : ellipsis; margin-bottom : 5px; }
 .feed .title1 { font-size : 1.3em; }
