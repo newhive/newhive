@@ -55,11 +55,11 @@ def expr_save(request, response):
     res = Expr.fetch(exp.id)
     upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background'])
     upd['name'] = upd['name'].lower().strip()
-    if re.search('\#|\?|\!', upd['name']) or re.match('^\*', upd['name']):
-        return dict(error="Sorry, the URL may not contain '#', '?', or begin with '*'.")
+    if upd['name'] == 'expressions':
+        return dict(error="The name /expressions is reserved for your profile page.")
     generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
-        try: 
+        try:
           new_expression = True
           res = request.requester.expr_create(upd)
         except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
@@ -552,7 +552,7 @@ def handle(request):
         response.context.update(exp=resource)
         return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
 
-    if request.args.has_key('tag') or request.path == 'expressions':
+    if request.path == 'expressions':
         page = int(request.args.get('page', 0))
         spec = { 'owner' : owner.id }
         tag = request.args.get('tag')

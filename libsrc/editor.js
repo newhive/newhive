@@ -827,8 +827,9 @@ var main = function() {
     });
 
     var checkUrl = function(){
-        if ($('#url').val().match(/ /)){
-            alert("Please don't use spaces in URLs. It makes your expression harder to share.");
+        var u = $('#url').val();
+        if(u.match(/[^\w.\/-]/)) {
+            alert("Please just use letters, numbers, dash, period and slash in URLs. It makes it easier to share on other websites.");
             $('#url').focus();
             return false;
         } else {
