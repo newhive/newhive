@@ -920,21 +920,19 @@ Hive.upload_finish = function() { $('#loading').hide(); }
 
 Hive.save = function() {
     var on_response = function(ret) {
-        var hideDialogAndRedirect = function(){
-            $('#btn_share').show();
-            minimize($('#dia_share'), $('#btn_share'), { duration : 1000,
-                complete : function() { window.location = ret.location } });
-        }
-
         if(typeof(ret) != 'object') alert("There was a problem saving your stuff :(.");
         if(ret.error) alert(ret.error);
         else if(ret.location) {
             if(ret['new']){
                 showDialog('#dia_share');
+                $('#btn_share').show();
                 updateShareUrls('#dia_share', ret.location);
                 $('#mail_form [name=forward]').attr('value', ret.location);
-                $('#app_btns').add('#btn_save').add('#btn_grid').add('#menu_save').hide();
-                $('#dialog_shield, .btn_dialog_close').unbind('click').click(hideDialogAndRedirect);
+                $('#app_btns').add('#btn_save').add('#btn_grid').add('#menu_save').add('#btn_help').hide();
+                $('#dialog_shield, .btn_dialog_close').unbind('click').click(function(){
+                    minimize($('#dia_share'), $('#btn_share'), { duration : 1000,
+                        complete : function() { window.location = ret.location } });
+                    });
                 $('#expression_url').html(ret.location);
                 $('#congrats_message').html('<h1>Now you can share your expression anywhere.</h1>');
                 $('#email_message').html('Check out this expression: \n\n' + ret.location);
