@@ -1,0 +1,41 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block content %}
+<div id="canvas_container"></div>
+<table width='100%' class='tablesorter'>
+  <thead>
+    <tr>
+      <th colspan=2></th>
+      {% for auth in ["public", "private", "total"] %}
+      <th width="26%" colspan=5>{{ auth }}</th>
+      {% endfor %}
+    </tr>
+    <tr>
+      <th width="15%">Name</th>
+      <th width="8%">Age in weeks</th>
+      {% for auth in ["public", "private", "total"] %}
+      {% for timerange in ["day", "week", "month", "total"] %}
+      <th width="5%">{{ timerange }}</th>
+      {% endfor %}
+      <th width="5%">Per Week</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  {% for user in active_users %}
+  <tr>
+    <td>{{ user['name'] }}</td>
+    <td>{{ (user['age']/7) | round(0,'ceil') | int}}</td>
+    {% for auth in ["public", "private", "total"] %}
+      {% if analytics_type == 'range' %} 
+        <td colspan=5>{{ user[auth] }}</td>
+      {% else %}
+        {% for timerange in ["day", "week", "month", "total"] %}
+          <td>{{ user[auth][timerange] | int }}</td>
+        {% endfor %}
+        <td>{{ (user[auth]['total'] / (user['age']/7)|round(0, 'ceil')) | round(2) }} </td>
+      {% endif %}
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

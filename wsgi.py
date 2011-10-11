@@ -3,7 +3,7 @@
 # thenewhive.com WSGI server version 0.2
 
 import os, re, json, mimetypes
-from datetime import datetime
+from datetime import datetime, date
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
@@ -551,12 +551,17 @@ def handle(request):
             import analytics
             if p2 == 'active_users':
                 if request.args.has_key('start') and request.args.has_key('end'):
-                    active_users = analytics.active_users()
+                    start = date(int(request.args['start'][0:4]), int(request.args['start'][4:6]), int(request.args['start'][6:8]))
+                    end = date(int(request.args['end'][0:4]), int(request.args['end'][4:6]), int(request.args['end'][6:8]))
+                    active_users = analytics.active_users_range(start,end)
+                    response.context['active_users'] = active_users
+                    response.context['analytics_type'] = 'range'
+                    return serve_page(response, 'analytics/active_users.html')
                 else:
                     active_users = analytics.active_users()
                     response.context['active_users'] = active_users
                     response.context['active_users_js'] = json.dumps(active_users)
-                    return serve_page(response, 'analytics.html')
+                    return serve_page(response, 'analytics/active_users.html')
             else:
                 return serve_404(request, response)
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
