@@ -510,10 +510,16 @@ def handle(request):
             return serve_page(response, 'admin_home.html')
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             import analytics
-            active_users = analytics.active_users()
-            response.context['active_users'] = active_users
-            response.context['active_users_js'] = json.dumps(active_users)
-            return serve_page(response, 'analytics.html')
+            if p2 == 'active_users':
+                if request.args.has_key('start') and request.args.has_key('end'):
+                    active_users = analytics.active_users()
+                else:
+                    active_users = analytics.active_users()
+                    response.context['active_users'] = active_users
+                    response.context['active_users_js'] = json.dumps(active_users)
+                    return serve_page(response, 'analytics.html')
+            else:
+                return serve_404(request, response)
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
             response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
             response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
