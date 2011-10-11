@@ -1,6 +1,45 @@
 {% extends "emails/base.html" %}
 {% block body%}
-<h2>{{ user_name }} has sent you an expression!</h2>
-<p style="font-size: 1.2em; font-style: italic;">&nbsp;&nbsp;&nbsp;&nbsp;{{ message|e }}</p>
-<a style="color: #F73627;" href='{{ url }}'><h2>{{ title }}</h2></a>
+
+<h2 style="margin: 20px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
+  <a href="{{ sender_url }}" style="color: #f72e4d;">{{ sender_fullname }}</a>
+</h2>
+<h2 style="margin:  5px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
+  sent you an expression.
+</h2>
+
+<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;">
+  {{ message | e }}
+</p>
+<table width="484px;" style="margin: 20px 0 0 45px; background-color: #ffffff;">
+  <tr>
+    <td width="158px;" rowspan="2">
+      <a style="text-decoration: none;" href="{{ url }}">
+        <img style="margin: 16px;" src="{{ thumbnail_url }}" />
+      </a>
+    </td>
+    <td width="314px;">
+      <a style="color: #000000; text-decoration: none;" href="{{ url }}">
+        <h3 style="margin: 16px 0 0 0; font-size: 22px;">{{ title }}</h3>
+      </a>
+      <h4 style="margin: 10px 0 0 0; font-size: 17px; font-weight: normal;">{{ tags }}</h4>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a style="color: #000000; text-decoration: none;" href="{{ user_url }}" style="color: #7ba008;">
+        <h3 style="margin: 0; font-size: 22px;">{{ user_name }}</h3>
+      </a>
+    </td>
+  </tr>
+</table>
+<h3 style="color: #7ba008; margin: 10px 0 0 57px; font-size: 22px;">{{ short_url }}</h3>
+<p style="font-size: 15px; padding: 0 57px; line-height: 21px; margin: 30px 0;">
+  Want to learn more about The New Hive? Or sign</br>
+  up for an account? 
+  <a href="http://thenewhive.com/signup" style="text-decoration: none; color: #222222; font-weight: bold;">
+    Click here to get started.
+  </a>
+</p>
+
 {% endblock %}

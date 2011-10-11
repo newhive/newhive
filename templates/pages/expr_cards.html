@@ -3,12 +3,10 @@
 {% block head %}
  {{ super() }}
 <style>
-.tag_label { font-weight : bold; color : #696E76; padding : 3px 15px; margin-right : 5px; background-color : #EDEBE1; }
+.tag_label { color : #696E76; background-color : #EDEBE1; }
 a.tag_label:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}; }
-.tag_label.current { background : black; color : white; }
+.tag_label.current { background-color : black; color : white; }
 #tags { margin : 0px 50px 25px 50px; }
-.category { font-weight : bold; font-size : 1.23em; height : 33px; }
-.category.open { border-bottom : 10px solid white; }
 iframe { border : none; }
 </style>
 {% endblock %}
@@ -31,9 +29,8 @@ iframe { border : none; }
  <img id='feed_prev' src='/lib/skin/1/page_prev-disabled.png' class='feed'>
 {% endif %}
 #}
-
-<div style='position : fixed; top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
- <div style='font-family : Museo; font-size : 4em; margin : 20px 50px 20px 50px;'><a href='/'>{{ fullname }}</a>{{ ': ' + tag if tag }}</div>
+<div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
+ <div class='fathead' style='font-family : Helvetica, sans-serif'><a href='/'>{{ owner.fullname }}</a>{{ ': ' + tag if tag }}</div>
  
  <div id='tags'>
   <a href='/*' class='tag_label {{ 'current' if not tag }}'>All</a>
@@ -44,7 +41,7 @@ iframe { border : none; }
   {% endif %}
  </div>
 </div>
-<div style='position : absolute; top : 170px'>
+<div style='position : absolute; top : 250px'>
 <div id='feed'>{% include 'cards.html' %}</div>
 </div>
 

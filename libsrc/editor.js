@@ -104,13 +104,6 @@ Hive.App = function(initState) {
     o.remove = function() {
         o.div.remove();
         o.apps.remove(o);
-
-        if(o.state.file_id) {
-            $.ajax( {
-                type : "POST",
-                data : { action : 'file_delete', id : o.state.file_id }
-            } );
-        }
     }
     
     o.stackBottom = function() {
@@ -202,10 +195,11 @@ Hive.App = function(initState) {
         o.opacity(o.state.opacity);
         o.content_element.click(function(e) { o.focus(); });
         if(o.state.load) o.state.load(o);
+        delete o.state.create;
     }
 
     // initialize
-    o.div = $('<div class="happ">');
+    o.div = $('<div class="ehapp">');
     $('#content').append(o.div);
     o.pos_n(o.state.position);
     o.dims_n(o.state.dimensions);
@@ -272,12 +266,8 @@ Hive.App.Controls = function(app) {
         d.append(e);
         var input = e.find('input');
         var m = hover_menu(d.find('.button.link'), e, {
-            open : function() {
-                input.focus();
-                input.select();
-                input.val(o.app.link());
-            }
-            ,hover_close : false
+             open : function() { input.val(o.app.link()); }
+            ,focus_persist : input
             ,auto_close : false
             ,close : function() {
                 var v = input.val();
@@ -380,7 +370,7 @@ Hive.App.Html = function(common) {
         return o.embed.outerHTML();
     }
 
-    o.embed = $(o.state.content);
+    o.embed = $(o.state.content).addClass('content');
     o.div.append(o.embed);
     if(o.embed.is('object') || o.embed.is('embed') || o.embed.is('iframe')) {
         Hive.App.makeShielded(o);
@@ -483,7 +473,7 @@ Hive.App.Text = function(common) {
     }
     
     o.load = function() {
-        o.scale(scale);
+        o.scale_n(refScale);
         o.content(content);
         $(o.rte.doc).keypress(throttle(o.refresh_size, 200));
         common.load();
@@ -518,8 +508,6 @@ Hive.App.Text.Controls = function(common) {
     o.c.resize_h = d.find('.resize_h');
 
     o.append_link_picker(d.find('.buttons'));
-
-    o.get_pointsize = function() { return Math.round(o.app.scale() * 13) }
 
     var cmd_buttons = function(query, func) {
         $(query).each(function(i, e) {
@@ -611,7 +599,6 @@ Hive.App.Image = function(common) {
         o.imageHeight = o.img.height();
         o.aspectRatio = o.imageWidth / o.imageHeight;
         if(o.state.create) {
-            delete o.state.create;
             var w = o.imageWidth > $(window).width() * 0.8 ? $(window).width() * 0.8 : o.imageWidth;
             o.resize([w,w]);
         }
@@ -811,13 +798,13 @@ var main = function() {
     $('#insert_file' ).click(Hive.pick_file);
     $('#menu_file'   ).click(Hive.pick_file);
 
-    hover_menu($('#insert_text'), $('#menu_text'), { offsetY : 0 });
-    hover_menu($('#insert_image'), $('#menu_image'), { offsetY : 0 });
-    hover_menu($('#insert_audio'), $('#menu_audio'), { offsetY : 0 });
-    hover_menu($('#insert_file'), $('#menu_file'), { offsetY : 0 });
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { hover_close : false, auto_close : false, offsetY : 0 });
+    hover_menu($('#insert_text'), $('#menu_text'));
+    hover_menu($('#insert_image'), $('#menu_image'));
+    hover_menu($('#insert_audio'), $('#menu_audio'));
+    hover_menu($('#insert_file'), $('#menu_file'));
+    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { focus_persist : $('#embed_code') } );
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
-    hover_menu($('#insert_shape'), $('#menu_shape'), { offsetY : 0 });
+    hover_menu($('#insert_shape'), $('#menu_shape'));
     
     $('#btn_grid').click(Hive.toggle_grid);
     
@@ -843,21 +830,34 @@ var main = function() {
         }
     }
 
-    click_dialogue($('#btn_save'), $('#menu_save'));
+    click_dialogue($('#btn_save'), $('#menu_save'), {open: function(){$('#title').focus().select();}} );
     $('#save_submit').click(function(){
-        if ( checkUrl() ){
-            window.onbeforeunload = null; //Cancel the warning for leaving the page
-            Hive.save();
+        if (! $(this).hasClass('disabled')){ 
+            $(this).addClass('disabled');
+            if ( checkUrl() ){
+                window.onbeforeunload = null; //Cancel the warning for leaving the page
+                Hive.save();
+            }
         }
     });
-    $('#menu_save #title').blur( function(){
-        $('#title').val($('#title').val().trim());
-        if ($('#url').val() === "" && !Hive.Exp.home){
+    
+    // Automatically update url unless it's an already saved expression or the user has modified the url manually
+    $('#menu_save #title').bind('keydown keyup', function(){
+        if (!(Hive.Exp.name || $('#url').hasClass('modified') )){
             $('#url').val(
                 $('#title').val().replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").toLowerCase()
             );
         }
+    }).keydown();
+
+    $('#url').focus(function(){
+        $(this).addClass('modified');
     });
+
+    $('#menu_save #title').blur( function(){
+        $('#title').val($('#title').val().trim());
+    }).blur();
+
     $('#url').change(checkUrl);
 
     hover_menu($('#privacy' ), $('#menu_privacy'));
@@ -933,29 +933,18 @@ Hive.upload_finish = function() { $('#loading').hide(); }
 Hive.save = function() {
     var on_response = function(ret) {
         var hideDialogAndRedirect = function(){
-            var btnShare = $('#btn_share').show();
-            var animationDuration = 400;
-            var redirect = function(){window.location = ret.location}
-            var flashButton = function(){
-                for (i=0; i<5; i++){
-                    btnShare.animate({'backgroundColor': "#f2f2f2"}, 100);
-                    btnShare.animate({'backgroundColor': "#696876"}, 100); 
-                }
-                btnShare.animate({'backgroundColor': "#f2f2f2"}, {'duration': 100, 'complete':redirect});
-            }
-            $('#dialog_shield').hide();
-            $('#dia_share').removeClass('border')
-                .animate({'top':50, 'left':$(window).width() - 100}, {'duration': animationDuration, 'complete':flashButton})
-                .find('h1,h2,h3,pre')
-                .animate({'font-size': 0},animationDuration)
-                .end().find('div,img,iframe').andSelf()
-                .animate({'width':0, 'height':0, 'opacity':0},animationDuration);
+            $('#btn_share').show();
+            minimize($('#dia_share'), $('#btn_share'), { duration : 1000,
+                complete : function() { window.location = ret.location } });
         }
 
         if(typeof(ret) != 'object') alert("There was a problem saving your stuff :(.");
-        if(ret.error) alert(ret.error);
-        else if(ret.location) {
-            if(ret['new']){
+        if (ret.error) {
+            alert(ret.error);
+            $('#save_submit').removeClass('disabled');
+        }
+        else if (ret.location) {
+            if (ret['new']){
                 showDialog('#dia_share');
                 updateShareUrls('#dia_share', ret.location);
                 $('#mail_form [name=forward]').attr('value', ret.location);
@@ -1037,7 +1026,7 @@ Hive.rte = function(options) {
         o.win = o.iframe.contentWindow;
         o.doc = o.win.document;
         if(o.options.css) $(o.doc).find('head').append(o.options.css);
-        $(o.doc.body).addClass('happ');
+        $(o.doc.body).addClass('ehapp');
         o.doc.body.style.overflow = 'hidden';
         //o.editor_cmd('styleWithCSS', true);
         if(options.load) options.load();

@@ -1,7 +1,7 @@
 {% extends "emails/base.html" %}
 {% block body %}
 
-<h2 style="margin: 43px 0 0 57px; font-size: 40px; letter-spacing: -2px; color: #f73627;">Welcome, {{ name }}!</h2>
+<h2 style="margin: 43px 0 0 57px; font-size: 40px; letter-spacing: -2px; color: #7ba008;">Welcome, {{ name }}!</h2>
 <h2 style="margin: 20px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 315px;">This is your new</h2>
 <h2 style="margin:  5px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 415px;">creative playground. :)</h2>
 <h3 style="margin: 20px 0 0 57px; font-size: 19px; font-weight: normal;">
@@ -10,15 +10,17 @@
 </h3>
 
 <a href='{{ url }}' style="color: #000000; text-decoration: none; font-size: 20px;">
-  <h2 style="font-size: 34px; letter-spacing: -2px; margin: 30px 0 0 0;  background-color: #96e2ce; width: 228px; padding: 5px;"><span style="color: #7f4799;">+</span> Click here to</h2>
+  <h2 style="font-size: 34px; letter-spacing: -2px; margin: 30px 0 0 0;  background-color: #96e2ce; width: 228px; padding: 5px;"><span style="color: #f73627;">+</span> Click here to</h2>
   <h2 style="font-size: 34px; letter-spacing: -2px; margin: 0 0 0 145px; background-color: #96e2ce; width: 228px; padding: 5px 5px 7px 20px;">get started &gt;&gt;&gt;</h2>
 </a>
 <p style="font-size: 1em; padding: 0 57px; font-size: 14px; line-height: 21px; margin-top: 30px;">
-  The New Hive is a creative playground that makes it easy for anyone to
-  express themselves online. There will never be any ads, the content you
-  create is your own, and can be easily shared across the web.  And oh yeah,
-  it's FREE. What are you waiting for? We're looking forward to seeing your
-  expressions!</p>
+  This is {{ admin_name }}, from thenewhive.com.  We wanted to make sure you
+  know you can create your account by <a href='{{ url }}'
+    style="text-decoration: none; color: #f72e4d;">clicking here</a>. Sometimes
+  emails get lost in the mix or caught in spam filters, so we want to make sure
+  you received your invitation.  Let us know how your experience is going...
+  and feel free to hit us up with any questions you might have!
+</p>
 <h3 style="margin: 30px 0 43px 57px; letter-spacing: -1px;">Cheers,<br/>
-The New Hive team</h3>
+{{ admin_name }} &amp; The New Hive team</h3>
 {% endblock %}

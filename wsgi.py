@@ -19,18 +19,20 @@ assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
+    assets_env.set_url('/lib/libsrc')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js',  output='../lib/app.js')
 assets_env.register('admin.js', 'raphael.js', 'jquery.tablesorter.min.js', output='../lib/admin.js')
-assets_env.register('app.css', 'app_src.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
+assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
 
 
-def lget(L, i, default=None):
+def lget(L, i, *default):
     try: return L[i]
-    except: return default
+    except: return default[0] if default else None
 def raises(e): raise e
 def dfilter(d, keys):
     """ Accepts dictionary and list of keys, returns a new dictionary
@@ -51,11 +53,11 @@ def expr_save(request, response):
     if not exp: raise ValueError('missing or malformed exp')
 
     res = Expr.fetch(exp.id)
-    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background'])
+    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
     upd['name'] = upd['name'].lower().strip()
     if re.search('\#|\?|\!', upd['name']) or re.match('^\*', upd['name']):
         return dict(error="Sorry, the URL may not contain '#', '?', or begin with '*'.")
-    generate_thumb(upd, request.requester)
+    if not res or upd.get('thumb') != res.get('thumb'): generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try: 
           new_expression = True
@@ -70,8 +72,6 @@ def expr_save(request, response):
 
 import urllib, random
 def generate_thumb(expr, owner):
-    # TODO: don't regenerate thumb when image has not changed
-
     # retrieve first image from expression
     fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), -1)
     if not fst_img or not fst_img.get('content'): return
@@ -210,7 +210,7 @@ def user_create(request, response):
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
-    return redirect(response, config.intro_url)
+    return redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
@@ -299,24 +299,34 @@ def mail_us(request, response):
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
+
+    context = {
+         'message': request.form.get('message')
+        ,'url': request.form.get('forward')
+        ,'title': request.form.get('forward')
+        ,'sender_fullname': request.requester.get('fullname')
+        ,'sender_url': home_url(request.requester)
+        }
+
     exp = Expr.fetch(request.form.get('id'))
+
     if exp:
         exp.increment({'analytics.email.count': 1})
-        title = exp.get('title')
-    else:
-        title = request.form.get('forward')
+        owner = User.fetch(exp.get('owner'))
+        context.update({
+          'short_url': (exp.get('domain') + '/' + exp.get('name'))
+          ,'tags': exp.get('tags')
+          ,'thumbnail_url': exp.get('thumb')
+          ,'user_url': home_url(owner)
+          ,'user_name': owner.get('name')
+          ,'title': exp.get('title')
+          })
 
     heads = {
          'To' : request.form.get('to')
         ,'From' : 'The New Hive <noreply+share@thenewhive.com>'
         ,'Subject' : request.form.get('subject', '')
         ,'Reply-to' : request.requester.get('email', '')
-        }
-    context = {
-         'message': request.form.get('message')
-        ,'url': request.form.get('forward')
-        ,'title': title
-        ,'user_name': request.requester.get('fullname')
         }
     body = {
          'plain': jinja_env.get_template("emails/share.txt").render(context)
@@ -327,6 +337,35 @@ def mail_them(request, response):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
+
+def mail_referral(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    user = request.requester
+    name = request.form.get('name')
+    to_email = request.form.get('to')
+    if not user['referrals'] > 0: return False
+    referral = user.new_referral({'name': name, 'to': to_email})
+
+    heads = {
+         'To' : to_email
+        ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
+        ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
+        ,'Reply-to' : user.get('email', '')
+        }
+    context = {
+         'referrer_url': home_url(user)
+        ,'referrer_name': user.get('fullname')
+        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + to_email)
+        ,'name': name
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
+        ,'html': jinja_env.get_template("emails/user_invitation.html").render(context)
+        }
+    send_mail(heads, body)
+    return redirect(response, request.form.get('forward'))
+
+   
 
 def mail_feedback(request, response):
     if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')
@@ -366,11 +405,12 @@ actions = dict(
     ,expr_save       = expr_save
     ,expr_delete     = expr_delete
     ,files_create    = files_create
-    ,file_delete    = file_delete
+    ,file_delete     = file_delete
     ,user_create     = user_create
     ,user_check      = user_check
     ,mail_us         = mail_us
     ,mail_them       = mail_them
+    ,mail_referral   = mail_referral
     ,mail_feedback   = mail_feedback
     ,user_tag_add    = user_tag_update
     ,user_tag_remove = user_tag_update
@@ -441,10 +481,10 @@ def handle(request):
     request.trusting = False
     response.context = { 'f' : request.form, 'url' : request.base_url }
     response.user = request.requester
+    response.headers.add('Access-Control-Allow-Origin', '*')
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
-    #import pdb; pdb.set_trace()
     if request.domain == config.server_name:
         if request.is_secure and request.requester and request.requester.logged_in:
             request.trusting = True
@@ -476,8 +516,7 @@ def handle(request):
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
                 if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                    intro_expr = Expr.fetch(config.intro_expr)
-                    if intro_expr: exp.update(dfilter(intro_expr, ['apps']))
+                    response.context['show_help'] = True
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
@@ -572,23 +611,28 @@ def handle(request):
     if not resource: return serve_404(request, response)
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
-    (html, css) = exp_to_html(resource)
+    html = exp_to_html(resource)
+    auth_required = (resource.get('auth') == 'password' and resource.get('password')
+        and request.form.get('password') != resource.get('password')
+        and request.requester.id != resource['owner'])
     response.context.update(
          edit = abs_url(secure = True) + 'edit/' + resource.id
         ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
-        ,auth_required = (resource.get('auth') == 'password' and resource.get('password')
-            and request.form.get('password') != resource.get('password')
-            and request.requester.id != resource['owner'])
+        ,auth_required = auth_required
         ,body = html
-        ,css = css
         ,exp = resource
         ,exp_js = json.dumps(resource)
         )
 
     resource.increment_counter('views')
     if is_owner: resource.increment_counter('owner_views')
-    return serve_page(response, 'expression.html')
+
+    template = resource.get('template', request.args.get('template', 'expression'))
+    if template == 'none':
+        if auth_required: return Forbidden()
+        return serve_html(response, html)
+    else: return serve_page(response, template + '.html', directory='pages')
 
 
 @Request.application
@@ -613,39 +657,31 @@ def exp_to_html(exp):
     """Converts JSON object representing an expression to HTML"""
 
     apps = exp.get('apps')
-    if not apps: return ('', '')
+    if not apps: return ''
 
-    def css_for_app(app, html_id):
-        return "#%s { left:%dpx; top:%dpx; width:%dpx; height:%dpx; %s; z-index : %d; }\n" % (
-            html_id,
+    def css_for_app(app):
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %s; z-index : %d; opacity:%f" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
             app['dimensions'][1],
             'font-size : ' + str(app['scale']) + 'em' if app.get('scale') else '',
-            app['z']
+            app['z'],
+            app.get('opacity', 1)
             )
 
-    html_ids = map(lambda num: 'h_' + str(num), range(0, len(apps)))
-
-    def html_for_app(app, html_id):
+    def html_for_app(app):
         content = app.get('content', '')
         if app.get('type', '') == 'hive.image':
-            html = ("<div class='happ' id='%s'><img class='happ' src='%s'></div>"
-                % (html_id, content))
+            html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
-            return html
-        if app.get('type') == 'hive.text' or app.get('type') == 'hive.html':
-            return "<div class='happ' id='%s'>%s</div>" % (html_id, content)
-        return ""
+        else: html = content
+        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
+        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
+        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app), data, html)
 
-    css = (''.join(map(css_for_app, apps, html_ids)) + "\n"
-        + "body { height:%dpx; }\n"
-            % max(map(lambda a: a['position'][1] + a['dimensions'][1], apps))
-        )
-    html = ''.join(map(html_for_app, apps, html_ids))
-    return (html, css)
+    return ''.join(map(html_for_app, apps))
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
@@ -665,6 +701,7 @@ def render_template(response, template, directory='pages'):
         ,server = abs_url()
         ,secure_server = abs_url(secure = True)
         ,server_name = config.server_name
+        ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
         ,colors = colors
         ,debug = config.debug_mode
         ,assets_env = assets_env

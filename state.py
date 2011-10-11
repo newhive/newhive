@@ -124,6 +124,12 @@ class User(Entity):
         assert self.has_key('referrer')
         return super(User, self).create_me()
 
+    def new_referral(self, d):
+        if self.get('referrals', 0) > 0:
+            self.update(referrals=self['referrals'] - 1)
+            d.update(user = self.id)
+            return Referral.create(**d)
+
     @classmethod
     def named(cls, name):
         self = cls({})
@@ -135,6 +141,8 @@ class User(Entity):
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
+
+    def get_url(self): return abs_url(domain=self['domain']) + self['name']
 
 
 def get_root(): return User.named('root')
@@ -261,7 +269,8 @@ class File(Entity):
             k.name = self.id
             k.set_contents_from_filename(tmp_path,
                 headers={ 'Content-Disposition' : 'inline; filename=' + name, 'Content-Type' : self['mime'] })
-            url = k.generate_url(86400 * 3600)
+            k.make_public()
+            url = k.generate_url(86400 * 3600, query_auth=False)
             os.remove(tmp_path)
         else:
             owner = User.fetch(self['owner'])
@@ -295,13 +304,14 @@ class Contact(Entity):
     cname = 'contact_log'
 
         
-def abs_url(secure = False, domain = None):
+def abs_url(secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
     proto = 'https' if secure else 'http'
     port = config.ssl_port if secure else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
-    return (proto + '://' + (domain or config.server_name) + port + '/')
+    return (proto + '://' + (subdomain + '.' if subdomain else '') +
+        (domain or config.server_name) + port + '/')
 
 
 ## analytics utils
