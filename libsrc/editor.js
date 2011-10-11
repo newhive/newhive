@@ -789,7 +789,8 @@ var main = function() {
 
     if(!Hive.Exp.background) Hive.Exp.background = {};
     var bg_set = function(c) { $('#bg').css('background-color', c); Hive.Exp.background.color = c; }
-    $('#image_background').click(function() { background_pick(bg_set, Hive.Exp.background.color) } );
+    append_color_picker($('#color_pick'), bg_set, '');
+    $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
 
     $('#insert_image').click(Hive.pick_file);
     $('#image_upload').click(Hive.pick_file);
@@ -1152,4 +1153,102 @@ Hive.rte = function(options) {
 
     o.create_editor();
     return o;
+}
+
+var append_color_picker = function(container, callback, init_color) {
+    var e = $("<div style='width : 310px; height : 165px'>");
+    container.append(e);
+
+    var make_picker = function(c) {
+        var d = $("<div style='display : inline-block; width : 20px; height : 20px; margin : 2px'>");
+        d.css('background-color', c).attr('val', c).click(function() { manual_input.val(c); callback(c) });
+        return d.get(0);
+    }
+    var make_row = function(cs) {
+        var d = $("<div>");
+        d.append(map(make_picker, cs));
+        return d.get(0);
+    }
+    by_sixes = map(function(n) { return colors.slice(n, n+6)}, [0, 6, 12, 18, 24, 30]);
+    var pickers = $("<div>");
+    pickers.append(map(make_row, by_sixes));
+    e.append(pickers);
+
+    var bar = $("<img style='width : 10px; height : 165px; position : absolute; top : 5px; left : 162px'>");
+    bar.attr('src', '/lib/skin/1/saturated.png');
+    var shades = $("<div style='width : 120px; height : 120px; position : absolute; top : 5px; left : 190px'><img src='/lib/skin/1/greys.png' style='width : 100%; position : absolute'></div>");
+    var manual = $("<div style='position : absolute; top : 130px; left : 190px; width : 120px'>#</div>");
+    var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
+    manual.append(manual_input);
+
+    var update_hex = function() {
+        var v = manual_input.val();
+        if(v.match(/[\dA-Z]{6}/i) || v.match(/[\dA-Z]{3}/i)) callback('#' + v);
+    };
+    manual_input.change(update_hex).keyup(update_hex);
+
+    // saturated color picked from color bar
+    var scolor = [255, 255, 255];
+    var get_hue = function(e) {
+        var o = Math.floor(e.pageY - bar.offset().top);
+        if(o < 0) o = 0;
+        if(o > 164) o = 164;
+        scolor = saturated_color(o, 165);
+        var color = 'rgb(' + scolor.join(',') + ')';
+        shades.css('background-color', color);
+        calc_color();
+    }
+    bar.click(get_hue).drag(get_hue);
+
+    var x = 1, y = 0; // gamma (x), saturation (y)
+    var get_shade = function(e) {
+        x = (e.pageX - shades.offset().left) / 120;
+        y = (e.pageY - shades.offset().top) / 120;
+        if(x < 0) x = 0;
+        if(x > 1) x = 1;
+        if(y < 0) y = 0;
+        if(y > 1) y = 1;
+        calc_color();
+    }
+    shades.click(get_shade).drag(get_shade);
+
+    var calc_color = function() {
+        var a = 1 - x, b = 1 - y;
+        // blend saturated color with brightness and saturation
+        var blend = function(c) { return Math.floor(a * b * 255 + (1 - a) * c); }
+        var color = map(blend, scolor);
+        var hex = map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
+        manual_input.val(hex);
+        callback('#' + hex);
+    }
+
+    e.append(bar);
+    e.append(shades);
+    e.append(manual);
+
+    // Returns a fully saturated color in the RGB color wheel.
+    // This function generated lib/skin/1/saturated.png.
+    // The max param must be >= 1536 to get every possible fully saturated
+    // color in a 24 bit color space.
+    var saturated_color = function(n, max) {
+        if(!max) max = 1536;
+        if(n < 0) n = 0;
+        if(n > max) n = max;
+
+        var scale = 255;
+        var r = [1, 1, 0, 0, 0, 1, 1];
+        var g = [0, 1, 1, 1, 0, 0, 0];
+        var b = [0, 0, 0, 1, 1, 1, 0];
+
+        var linear_interp = function(points) {
+            var p = (n / max) * (points.length - 1);
+            var p0 = Math.floor(p);
+            var v = p - p0;
+            if(p0 == points.length - 1) p0--;
+            delta = points[p0 + 1] * scale - points[p0] * scale;
+            return Math.floor(delta * v + points[p0] * scale);
+        }
+
+        return [linear_interp(r), linear_interp(g), linear_interp(b)]; 
+    }
 }

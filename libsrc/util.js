@@ -84,7 +84,8 @@ function autoLink(string) {
 
 function exprDialog(url, opts, callback) {
     $.extend(opts, { absolute : true });
-    if(exprDialog.loaded[url]) return (callback || noop)(exprDialog.loaded[url].open());
+    if(exprDialog.loaded[url])
+        return (callback || noop)(showDialog(exprDialog.loaded[url].dialog, opts));
     $.get(url + '?template=expr_div', function(h) {
         var dia = loadDialog(h, opts);
         var place = function() {
@@ -110,12 +111,14 @@ function loadDialog(htmlString, opts) {
 }
 
 function showDialog(name, opts) {
-    var o = { dialog : $(name), shield : $('#dialog_shield')} 
-    o.opts = $.extend({ open : noop, close : function() { o.dialog.hide(); }, absolute : false }, opts);
+    var o = { dialog : $(name), shield : $('#dialog_shield') };
+    o.opts = $.extend({ open : noop, close : function() { o.dialog.hide(); }, absolute : false, fade : true }, opts);
     if(!o.dialog.length) throw "dialog element " + name + " not found";
 
     o.close = function() {
+        if(!showDialog.opened.length) return;
         var o = showDialog.opened.pop();
+        o.opened = false;
         if(!showDialog.opened.length) $('#dialog_shield').hide();
         var clean_up = function() {
             if(!showDialog.opened.length) $('#dialogs').hide();
@@ -132,13 +135,15 @@ function showDialog(name, opts) {
         $('#dialogs').add(o.dialog).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
         $(window).resize(function() { center(o.dialog) });
         center(o.dialog);
+        o.shield[o.opts.fade ? 'addClass' : 'removeClass']('fade');
         o.shield.show();
 
         if (! o.dialog.hasClass('mandatory') ) {
             if (o.dialog.find('.btn_dialog_close').length === 0 ) {
                 o.dialog.prepend('<div class="btn_dialog_close"></div>');
             }
-            o.shield.add( o.dialog.find('.btn_dialog_close') ).click(o.close);
+            o.shield.unbind('click');
+            if(!showDialog.opened.length) o.shield.add( o.dialog.find('.btn_dialog_close') ).click(o.close);
         }
         if (o.opts.select) o.dialog.find(o.opts.select).focus().click();
         o.index = showDialog.opened.length;
@@ -433,121 +438,6 @@ var minimize = function(what, to, opts) {
         , {'duration' : o.duration, complete : function() { o.what.hide() } });
     setTimeout(o.reset, o.duration * 1.5);
     return o;
-}
-
-var append_color_picker = function(container, callback, init_color) {
-    var e = $("<div style='width : 310px; height : 165px'>");
-    container.append(e);
-
-    var make_picker = function(c) {
-        var d = $("<div style='display : inline-block; width : 20px; height : 20px; margin : 2px'>");
-        d.css('background-color', c).attr('val', c).click(function() { manual_input.val(c); callback(c) });
-        return d.get(0);
-    }
-    var make_row = function(cs) {
-        var d = $("<div>");
-        d.append(map(make_picker, cs));
-        return d.get(0);
-    }
-    by_sixes = map(function(n) { return colors.slice(n, n+6)}, [0, 6, 12, 18, 24, 30]);
-    var pickers = $("<div>");
-    pickers.append(map(make_row, by_sixes));
-    e.append(pickers);
-
-    var bar = $("<img style='width : 10px; height : 165px; position : absolute; top : 5px; left : 162px'>");
-    bar.attr('src', '/lib/skin/1/saturated.png');
-    var shades = $("<div style='width : 120px; height : 120px; position : absolute; top : 5px; left : 190px'><img src='/lib/skin/1/greys.png' style='width : 100%; position : absolute'></div>");
-    var manual = $("<div style='position : absolute; top : 130px; left : 190px; width : 120px'>#</div>");
-    var manual_input = $("<input type='text' size='6'>").val(init_color);
-    manual.append(manual_input);
-
-    var update_hex = function() {
-        var v = manual_input.val();
-        if(v.match(/[\dA-Z]{6}/i) || v.match(/[\dA-Z]{3}/i)) callback('#' + v);
-    };
-    manual_input.change(update_hex).keyup(update_hex);
-
-    // saturated color picked from color bar
-    var scolor = [255, 255, 255];
-    var get_hue = function(e) {
-        var o = Math.floor(e.pageY - bar.offset().top);
-        if(o < 0) o = 0;
-        if(o > 164) o = 164;
-        scolor = saturated_color(o, 165);
-        var color = 'rgb(' + scolor.join(',') + ')';
-        shades.css('background-color', color);
-        calc_color();
-    }
-    bar.click(get_hue).drag(get_hue);
-
-    var x = 1, y = 0; // gamma (x), saturation (y)
-    var get_shade = function(e) {
-        x = (e.pageX - shades.offset().left) / 120;
-        y = (e.pageY - shades.offset().top) / 120;
-        if(x < 0) x = 0;
-        if(x > 1) x = 1;
-        if(y < 0) y = 0;
-        if(y > 1) y = 1;
-        calc_color();
-    }
-    shades.click(get_shade).drag(get_shade);
-
-    var calc_color = function() {
-        var a = 1 - x, b = 1 - y;
-        // blend saturated color with brightness and saturation
-        var blend = function(c) { return Math.floor(a * b * 255 + (1 - a) * c); }
-        var color = map(blend, scolor);
-        var hex = map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
-        manual_input.val(hex);
-        callback('#' + hex);
-    }
-
-    e.append(bar);
-    e.append(shades);
-    e.append(manual);
-
-    // Returns a fully saturated color in the RGB color wheel.
-    // This function generated lib/skin/1/saturated.png.
-    // The max param must be >= 1536 to get every possible fully saturated
-    // color in a 24 bit color space.
-    var saturated_color = function(n, max) {
-        if(!max) max = 1536;
-        if(n < 0) n = 0;
-        if(n > max) n = max;
-
-        var scale = 255;
-        var r = [1, 1, 0, 0, 0, 1, 1];
-        var g = [0, 1, 1, 1, 0, 0, 0];
-        var b = [0, 0, 0, 1, 1, 1, 0];
-
-        var linear_interp = function(points) {
-            var p = (n / max) * (points.length - 1);
-            var p0 = Math.floor(p);
-            var v = p - p0;
-            if(p0 == points.length - 1) p0--;
-            delta = points[p0 + 1] * scale - points[p0] * scale;
-            return Math.floor(delta * v + points[p0] * scale);
-        }
-
-        return [linear_interp(r), linear_interp(g), linear_interp(b)]; 
-    }
-}
-
-var background_pick = function(callback, initial, callback_final) {
-    if(!callback_final) var callback_final = noop;
-    var e = $("<div id='bg_select' style='position : fixed; width : 530px; height : 320px; z-index : 1' class='border selected'>"
-        + "<div style='position: absolute; left: 0px; top: 0px; background-color : white; width : 540px; height : 330px; opacity : 0.7;'/>"
-        + "<div style='position: absolute; color : "+colors[1]+"; font-size : 1.5em'>Edit Background</div>"
-        //+ "<div id='bg_upload'>Upload Image</div>"
-        //+ "<div style='position : absolute; top : 100px'>Opacity</div>"
-        //+ "<div id='bg_opacity' style='position : absolute; height : 10px; width : 160px; top : 130px'><img src='/lib/skin/1/opacity_bar.png'><div style='position : absolute; width : 10px; height : 20px; background-color : black'></div>"
-        + "<div id='color_pick' style='position : absolute; left : 10px; top : 50px'></div>"
-        + "<div class='medbold' id='bg_done' style='cursor : default; position : absolute; right : 10px; bottom : 10px'>Done</div>"
-        + "</div>");
-    $('#content').before(e);
-    $('#bg_done').click(function() { $('#bg_select').remove(); callback_final(); });
-    append_color_picker($('#color_pick'), callback, initial);
-    center(e);
 }
 
 // from http://www.quirksmode.org/js/cookies.html#script

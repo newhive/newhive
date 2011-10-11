@@ -34,7 +34,6 @@ input, textarea { font-size : inherit }
 {% block body %}
 
 {% include 'dialogs/firefox_warning.html' %}
-{% include 'dialogs/edit_background.html' %}
 
 <div id='app_btns' class='nav'>
  <img id='insert_text'  class='hoverable nav_icon' src='/lib/skin/1/text.png'
@@ -228,5 +227,14 @@ input, textarea { font-size : inherit }
  <input type='hidden' name='expr_id' value='{{ exp.id }}'>
  <iframe id='upload_target' name='upload_target' style='position : absolute; left : -1000px'></iframe>
 </form>
+
+<div id='dia_edit_bg' class='dialog border selected'>
+ <h2>Edit Background</h2>
+ <!--<div id='bg_upload'>Upload Image</div>
+ <div style='position : absolute; top : 100px'>Opacity</div>
+ <div id='bg_opacity' style='position : absolute; height : 10px; width : 160px; top : 130px'><img src='/lib/skin/1/opacity_bar.png'><div style='position : absolute; width : 10px; height : 20px; background-color : black'></div></div>
+ -->
+ <div id='color_pick' style='position : relative; margin : 20px'></div>
+</div>
 
 {% endblock %}
