@@ -25,7 +25,6 @@
   -moz-box-shadow: 05px 05px 05px #666;
   -webkit-box-shadow: 05px 05px 05px #666;
   box-shadow: 05px 05px 05px #666;
-  width: 350px;
 }
 .dialog .center, .dialog.center { text-align: center;}
 .dialog .line { margin: 7px 0; clear: both;}
@@ -109,12 +108,8 @@ input[type="text"].copy, textarea.copy {
 
 /* firefox warning dialog */
 #firefox_warning, #ie_warning {
-  width: 350px;
   padding: 20px 50px;
   text-align: center;
-}
-#ie_warning {
-  width: 410px;
 }
 #firefox_warning h1, #ie_warning h1{
   font-family: Lobster, serif;

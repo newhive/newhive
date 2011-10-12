@@ -92,49 +92,61 @@ function exprDialog(url, opts) {
         dia = exprDialog.loaded[url] = $(html);
     }
 
-    var place = function() {
+    opts.layout = function() {
         dia.css({ width : '80%' });
         dia.css({ height : dia.width() / parseFloat(dia.attr('data-aspect')) });
         place_apps();
-        center(dia);
+        center(dia, $(window), opts);
     }
     var r = showDialog(dia, opts);
-    $(window).resize(place);
-    place();
     return r;
 }
 exprDialog.loaded = {};
 
 function showDialog(name, opts) {
-    var o = { dialog : $(name).clone() };
-    o.opts = $.extend({ open : noop, close : noop, absolute : false, fade : true,
-        mandatory : o.dialog.hasClass('mandatory') }, opts);
-    if(!o.dialog.length) throw "dialog element " + name + " not found";
+    var dialog = $(name);
+    if(!dialog.length) throw "dialog element " + name + " not found";
+    var o = dialog.data('dialog');
+    if(!o) {
+        var o = { dialog : dialog };
+        dialog.data('dialog', o);
 
-    o.close = function() {
-        showDialog.opened.splice(showDialog.opened.indexOf(o), 1);
-        o.shield.remove();
-        var clean_up = function() {
-            o.dialog.remove();
-            o.opts.close();
+        o.open = function() {
+            if(o.opened) return;
+            o.opened = true;
+            o.opts = $.extend({ open : noop, close : noop, absolute : false, fade : true,
+                mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
+
+            o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
+            dialog.addClass('dialog').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            if(!o.opts.mandatory) {
+                dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
+                o.shield.add(o.btn_close).click(o.close);
+            }
+            $(window).resize(o.opts.layout);
+            o.opts.layout();
+
+            if (o.opts.select) dialog.find(o.opts.select).focus().click();
+            o.index = showDialog.opened.length;
+            showDialog.opened.push(o);
+            o.opts.open();
         }
-        if(o.opts.minimize_to) minimize(o.dialog, $(o.opts.minimize_to), { 'complete' : clean_up });
-        else clean_up();
-    }
 
-    o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
-    o.dialog.addClass('dialog').appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
-    $(window).resize(function() { center(o.dialog) });
-    center(o.dialog);
-
-    if (! o.opts.mandatory) {
-        o.dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
-        o.shield.add(o.btn_close).click(o.close);
+        o.close = function() {
+            showDialog.opened.splice(showDialog.opened.indexOf(o), 1);
+            o.shield.remove();
+            if(o.btn_close) o.btn_close.remove();
+            $(window).unbind('resize', o.opts.layout);
+            var clean_up = function() {
+                dialog.hide();
+                o.opts.close();
+                o.opened = false;
+            }
+            if(o.opts.minimize_to) minimize(dialog, $(o.opts.minimize_to), { 'complete' : clean_up });
+            else clean_up();
+        }
     }
-    if (o.opts.select) o.dialog.find(o.opts.select).focus().click();
-    o.index = showDialog.opened.length;
-    showDialog.opened.push(o);
-    o.opts.open();
+    o.open();
 
     return o;
 }
@@ -257,8 +269,8 @@ $(function () {
 function center(e, inside, opts) {
     var opts = $.extend({ absolute : false }, opts);
     var w = typeof(inside) == 'undefined' ? $(window) : inside;
-    pos = { left : Math.max(0, w.width() / 2 - e.width() / 2),
-        'top' : Math.max(0, w.height() / 2 - e.height() / 2) };
+    pos = { left : Math.max(0, w.width() / 2 - e.outerWidth() / 2),
+        'top' : Math.max(0, w.height() / 2 - e.outerHeight() / 2) };
     if(opts.absolute) {
         pos['left'] += window.scrollX;
         pos['top'] += window.scrollY;
@@ -400,22 +412,22 @@ tool_tip = function(tool, tip, above) {
 }
 
 var minimize = function(what, to, opts) {
-    var o = $.extend({ 'to' : $(to).addClass('active'), 'what' : $(what), 'duration' : 1000, 'complete' : noop }, opts);
+    var o = $.extend({ 'to' : $(to).addClass('active'), 'what' : $(what), 'duration' : 700, 'complete' : noop }, opts);
     if(o.what.data('minimizing')) return;
     o.what.data('minimizing', true);
     o.init_css = { 'top' : o.what.css('top'), 'left' : o.what.css('left'), 'width' : o.what.css('width') || '',
         'height' : o.what.css('height') || '', 'opacity' : o.what.css('opacity') };
     o.reset = function() {
-        o.to.removeClass('active');
+        o.what.hide();
         o.what.css(o.init_css);
-        o.complete();
         o.what.removeData('minimizing');
+        o.complete();
     };
     var pos = o.to.offset();
     if(o.what.css('position') == 'fixed') { pos.left -= $(window).scrollLeft(); pos.top -= $(window).scrollTop() }
     o.what.animate({ 'left' : pos.left, 'top' : pos.top, 'width' : o.to.width(), 'height' : o.to.height(), 'opacity' : 0 }
-        , {'duration' : o.duration, complete : function() { o.what.hide() } });
-    setTimeout(o.reset, o.duration * 1.5);
+        , {'duration' : o.duration, complete : o.reset  });
+    setTimeout(function() { o.to.removeClass('active'); }, o.duration * 1.5);
     return o;
 }
 
@@ -458,7 +470,7 @@ var place_apps = function(apps) {
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
            e.data('css', c);
-           e.rotate(parseFloat(e.attr('data-angle')));
+           var a; if(a = e.attr('data-angle')) e.rotate(parseFloat(a));
            e.css('opacity', this.style.opacity);
        }
        var c = $.extend({}, e.data('css'));
