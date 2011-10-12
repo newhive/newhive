@@ -279,6 +279,7 @@ def mail_us(request, response):
         ,'email': request.form.get('email')
         ,'referral': request.form.get('referral')
         ,'message': request.form.get('message')
+        ,'url': request.form.get('forward')
         }
     heads = {
          'To' : 'info@thenewhive.com'
@@ -294,7 +295,7 @@ def mail_us(request, response):
         send_mail(heads, body)
     Contact.create(**form)
 
-    return jinja_env.get_template('dialogs/signup_thank_you.html').render(response.context)
+    return redirect(response, request.form.get('forward'))
 
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
