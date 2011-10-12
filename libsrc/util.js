@@ -281,11 +281,7 @@ function center(e, inside, opts) {
 }
 
 function asyncSubmit(form, callback) {
-    var data = {};
-    $(form).find("[name]").each(function() { data[this.name] = this.value; });
-    var path = $(form).attr('action');
-    if(!path) path = '.';
-    $.post(path, data, callback, 'json');
+    $.post(server_url, $(form).serialize(), callback);
     return false;
 }
 
