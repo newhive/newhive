@@ -28,20 +28,18 @@ $(function() {
      $('input[name=forward]').val(window.location);
  });
  
-// $('#send_msg').bind('click', function() {
-//    if ($(this).hasClass('inactive')) { return true; }
-//    $(this).addClass('inactive');
-//
-//    $.post(server_url, { name : $('[name=name]').val(), message : $('[name=message]').val(),
-//         referral : $('[name=referral]').val(), email : $('[name=email]').val(), action : 'mail_us' }
-//        ,function(data) {
-//            $('#send_msg').removeClass('inactive');
-//            if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
-//            else {
-//                $('#message').val('');
-//                dia.close();
-//                showDialog(data);
-//            }
-//        }, 'json') });
+ $('form').submit(function() {
+    if ($(this).hasClass('inactive')) { return true; }
+    $(this).addClass('inactive');
+    return asyncSubmit($('form'), function(data) {
+        $('#send_msg').removeClass('inactive');
+        if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
+        else {
+            $('#message').val('');
+            dia.close();
+            showDialog(data);
+        }
+    });
+ });
 });
 </script>

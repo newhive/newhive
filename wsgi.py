@@ -21,7 +21,7 @@ if config.webassets_debug:
     assets_env.updater = "always"
     assets_env.set_url('/lib/libsrc')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
-assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'hover.js',
+assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('admin.js', 'jquery.tablesorter.min.js', output='../lib/admin.js')
 assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
@@ -214,10 +214,10 @@ def user_create(request, response):
 
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
-    return serve_page(response, 'minimal.html')
+    return serve_page(response, 'pages/minimal.html')
 def bad_referral(request, response):
     response.context['content'] = 'Invalid referral; already used or never existed'
-    return serve_page(response, 'minimal.html')
+    return serve_page(response, 'pages/minimal.html')
 
 
 def expr_tag_update(request, response):
@@ -295,7 +295,7 @@ def mail_us(request, response):
         send_mail(heads, body)
     Contact.create(**form)
 
-    return redirect(response, request.form.get('forward'))
+    return serve_page(response, 'dialogs/signup_thank_you.html')
 
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
@@ -313,15 +313,15 @@ def mail_them(request, response):
         ,'Subject' : request.form.get('subject', '')
         ,'Reply-to' : request.requester.get('email', '')
         }
-    context = {
+    response.context.update({
          'message': request.form.get('message')
         ,'url': request.form.get('forward')
         ,'title': title
         ,'user_name': request.requester.get('fullname')
-        }
+        })
     body = {
-         'plain': jinja_env.get_template("emails/share.txt").render(context)
-        ,'html': jinja_env.get_template("emails/share.html").render(context)
+         'plain': render_template(response, "emails/share.txt")
+        ,'html': render_template(response, "emails/share.html")
         }
     send_mail(heads, body)
     if request.form.get('send_copy'):
@@ -484,22 +484,22 @@ def handle(request):
             response.context['sites'] = request.requester.get('sites')
             response.context['exp_js'] = json.dumps(exp)
             response.context['exp'] = exp
-            return serve_page(response, 'edit.html')
+            return serve_page(response, 'pages/edit.html')
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral: return bad_referral(request, response)
-            return serve_page(response, 'user_settings.html')
+            return serve_page(response, 'pages/user_settings.html')
         elif p1 == 'referral' and request.requester.logged_in:
             if(request.requester['referrals'] <= 0):
                 return no_more_referrals(request.requester['name'], request, response)
             res = Referral.create(user = request.requester.id)
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
-            return serve_page(response, 'minimal.html')
-        elif p1 == 'feedback': return serve_page(response, 'feedback.html')
+            return serve_page(response, 'pages/minimal.html')
+        elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
         elif p1 == '' or p1 == 'home':
             expr_home_list(p2, request, response)
-            if request.args.get('partial'): return serve_page(response, 'cards.html', directory='')
-            else: return serve_page(response, 'home.html')
+            if request.args.get('partial'): return serve_page(response, 'cards.html')
+            else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()
             if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
@@ -507,13 +507,13 @@ def handle(request):
             response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
 
             expr_home_list(p2, request, response, limit=900)
-            return serve_page(response, 'admin_home.html')
+            return serve_page(response, 'pages/admin_home.html')
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             import analytics
             active_users = analytics.active_users()
             response.context['active_users'] = active_users
             response.context['active_users_js'] = json.dumps(active_users)
-            return serve_page(response, 'analytics.html')
+            return serve_page(response, 'pages/analytics.html')
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
             response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
             response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
@@ -526,7 +526,7 @@ def handle(request):
         #    response.context['tag'] = tag
         #    response.context['tags'] = root.get('tags', [])
         #    response.context['show_name'] = True
-        #    return serve_page(response, 'home.html')
+        #    return serve_page(response, 'pages/home.html')
 
         return serve_404(request, response)
 
@@ -549,7 +549,7 @@ def handle(request):
 
     if request.args.has_key('dialog'):
         response.context.update(exp=resource)
-        return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
+        return serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
 
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) + ('?tag=' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
@@ -566,7 +566,7 @@ def handle(request):
         response.context['view'] = request.args.get('view')
         response.context['expr'] = dfilter(owner, ['background'])
 
-        return serve_page(response, 'expr_cards.html')
+        return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
 
 
@@ -594,7 +594,7 @@ def handle(request):
     if template == 'none':
         if auth_required: return Forbidden()
         return serve_html(response, html)
-    else: return serve_page(response, template + '.html', directory='pages')
+    else: return serve_page(response, 'pages/' + template + '.html')
 
 
 @Request.application
@@ -652,9 +652,9 @@ def serve_html(response, html):
     response.data = html
     response.content_type = 'text/html; charset=utf-8'
     return response
-def serve_page(response, template, directory='pages'):
-    return serve_html(response, render_template(response, template, directory))
-def render_template(response, template, directory='pages'):
+def serve_page(response, template):
+    return serve_html(response, render_template(response, template))
+def render_template(response, template):
     context = response.context
     context.update(
          home_url = home_url(response.user)
@@ -670,7 +670,7 @@ def render_template(response, template, directory='pages'):
         ,use_ga = config.use_ga
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
-    return jinja_env.get_template(joinpath(directory, template)).render(context)
+    return jinja_env.get_template(template).render(context)
 
 def serve_json(response, val, as_text = False):
     """ as_text is used when content is received in an <iframe> by the client """
@@ -688,12 +688,12 @@ def serve_json(response, val, as_text = False):
 def serve_404(request, response):
     response.status_code = 404
     response.context['msg'] = 'Nothing here yet...'
-    return serve_page(response, 'error.html')
+    return serve_page(response, 'pages/error.html')
 
 def serve_error(request, msg):
     response.status_code = 500
     response.context['msg'] = msg
-    return serve_page(response, 'error.html')
+    return serve_page(response, 'pages/error.html')
 
 def redirect(response, location, permanent=False):
     response.location = location

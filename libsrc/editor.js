@@ -1145,7 +1145,7 @@ var append_color_picker = function(container, callback, init_color) {
 
     var make_picker = function(c) {
         var d = $("<div style='display : inline-block; width : 20px; height : 20px; margin : 2px'>");
-        d.css('background-color', c).attr('val', c).click(function() { manual_input.val(c); callback(c) });
+        d.css('background-color', c).attr('val', c).click(function() { manual_input.val('#' + c); callback(c) });
         return d.get(0);
     }
     var make_row = function(cs) {
@@ -1161,7 +1161,7 @@ var append_color_picker = function(container, callback, init_color) {
     var bar = $("<img style='width : 10px; height : 165px; position : absolute; top : 5px; left : 162px'>");
     bar.attr('src', '/lib/skin/1/saturated.png');
     var shades = $("<div style='width : 120px; height : 120px; position : absolute; top : 5px; left : 190px'><img src='/lib/skin/1/greys.png' style='width : 100%; position : absolute'></div>");
-    var manual = $("<div style='position : absolute; top : 130px; left : 190px; width : 120px'>#</div>");
+    var manual = $("<div style='position : absolute; top : 130px; left : 200px; width : 120px'></div>");
     var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
     manual.append(manual_input);
 
