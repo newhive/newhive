@@ -368,7 +368,27 @@ def mail_referral(request, response):
     send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
 
-   
+def mail_invite(email, name=False):
+    user = get_root()
+
+    referral = user.new_referral({'name': name, 'to': email})
+
+    heads = {
+        'To': email
+        ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
+        ,'Subject' : "You have a beta invitation to thenewhive.com"
+        }
+
+    context = {
+        'name': name
+        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + email)
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/invitation.txt").render(context)
+        ,'html': jinja_env.get_template("emails/invitation.html").render(context)
+        }
+    send_mail(heads, body)
+
 
 def mail_feedback(request, response):
     if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')

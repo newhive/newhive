@@ -1,7 +1,7 @@
 {% extends "emails/base.html" %}
 {% block body %}
 
-<h2 style="margin: 43px 0 0 57px; font-size: 40px; letter-spacing: -2px; color: #f73627;">Welcome, {{ name }}!</h2>
+<h2 style="margin: 43px 0 0 57px; font-size: 40px; letter-spacing: -2px; color: #f73627;">Welcome, {{ name + "!" if name }}</h2>
 <h2 style="margin: 20px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 315px;">This is your new</h2>
 <h2 style="margin:  5px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 415px;">creative playground. :)</h2>
 <h3 style="margin: 20px 0 0 57px; font-size: 19px; font-weight: normal;">
