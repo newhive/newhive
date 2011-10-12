@@ -190,6 +190,7 @@ def user_create(request, response):
         Creates user record.
         Creates empty home expression, so user.thenewhive.com does not show 404.
         Creates media directory for user.
+        emails thank you for registering to user
         Logs new user in.
         """
 
@@ -207,6 +208,8 @@ def user_create(request, response):
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
     user.expr_create({ 'title' : 'Homepage', 'home' : True })
+
+    mail_user_register_thankyou(user)
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
@@ -389,6 +392,30 @@ def mail_feedback(request, response):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
     response.context['success'] = True
+
+def mail_user_register_thankyou(user):
+    user_profile_url = home_url(user)
+    user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
+    heads = {
+        'To' : user['email']
+        , 'From' : 'The New Hive <noreply@thenewhive.com'
+        , 'Subject' : 'Thank you for creating an account on thenewhive.com'
+        }
+    context = {
+        'user_fullname' : user['fullname']
+        , 'user_home_url' : user_home_url
+        , 'user_home_url_display' : re.sub(r'^https?://', '', user_home_url)
+        , 'user_profile_url' : user_profile_url
+        , 'user_profile_url_display' : re.sub(r'^https?://', '', user_profile_url)
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/thank_you_register.txt").render(context)
+        ,'html': jinja_env.get_template("emails/thank_you_register.html").render(context)
+        }
+    send_mail(heads, body)
+
+
+
 ########### End of mail functions ###########
 
 
