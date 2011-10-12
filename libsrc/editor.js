@@ -832,7 +832,7 @@ var main = function() {
         }
     }
 
-    click_dialogue($('#btn_save'), $('#menu_save'), {open: function(){$('#title').focus().select();}} );
+    hover_menu($('#btn_save'), $('#menu_save'), { hover : false });
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');

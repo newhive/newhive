@@ -4,16 +4,15 @@
 
 
 /* === Container element === */
-#dialogs { display : none; width : 100%; height : 100%; }
+#dialogs { display : none; }
 
 /* === click shield element === */
 #dialog_shield{
   position:fixed;
   width:100%;
   height:100%;
-  z-index:2000;
+  z-index:2;
   -moz-opacity:0.23;
-  display:none;
 }
 #dialog_shield.fade { background-color:black; opacity:0.23; }
 
@@ -21,18 +20,18 @@
 .dialog { 
   display: none; 
   position:absolute;
-  z-index:2001; 
+  z-index:3; 
   background-color : white;
   -moz-box-shadow: 05px 05px 05px #666;
   -webkit-box-shadow: 05px 05px 05px #666;
   box-shadow: 05px 05px 05px #666;
-  width: 350px;
 }
 .dialog .center, .dialog.center { text-align: center;}
 .dialog .line { margin: 7px 0; clear: both;}
 .dialog .line .element { float: left; }
 .dialog .line .label {float:left; margin-top: 6px; margin-right:4px;}
-.btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png"); right:10px; top:5px;}
+.btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png");
+    right:10px; top:5px; z-index : 1; }
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: url("/lib/skin/1/close-hover.png")}
 input[type="text"].copy, textarea.copy {
     border: none;
@@ -121,12 +120,8 @@ input[type="text"].copy, textarea.copy {
 
 /* firefox warning dialog */
 #firefox_warning, #ie_warning {
-  width: 350px;
   padding: 20px 50px;
   text-align: center;
-}
-#ie_warning {
-  width: 410px;
 }
 #firefox_warning h1, #ie_warning h1{
   font-family: Lobster, serif;
@@ -184,7 +179,7 @@ input[type="text"].copy, textarea.copy {
   padding: 0 10px 20px 10px;
 }
 
-/* signup dialot */
+/* signup dialog */
 #dia_signup {
   font-size: 15px;
   width: 300px;
