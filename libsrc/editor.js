@@ -832,7 +832,7 @@ var main = function() {
         }
     }
 
-    click_dialogue($('#btn_save'), $('#menu_save'));
+    hover_menu($('#btn_save'), $('#menu_save'), { hover : false });
     $('#save_submit').click(function(){
         if ( checkUrl() ){
             window.onbeforeunload = null; //Cancel the warning for leaving the page

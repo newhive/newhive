@@ -82,76 +82,59 @@ function autoLink(string) {
     return string;
 }
 
-function exprDialog(url, opts, callback) {
+function exprDialog(url, opts) {
     $.extend(opts, { absolute : true });
-    if(exprDialog.loaded[url])
-        return (callback || noop)(showDialog(exprDialog.loaded[url].dialog, opts));
-    $.get(url + '?template=expr_div', function(h) {
-        var dia = loadDialog(h, opts);
-        var place = function() {
-            dia.dialog.css({ width : '80%' });
-            dia.dialog.css({ height : dia.dialog.width() / parseFloat(dia.dialog.attr('data-aspect')) });
-            place_apps();
-            center(dia.dialog);
-        }
-        $(window).resize(place);
-        place();
-        exprDialog.loaded[url] = dia;
-        return (callback || noop)(dia);
-    });
+    var dia;
+    if(exprDialog.loaded[url]) dia = exprDialog.loaded[url];
+    else {
+        var html;
+        $.ajax({ url : url + '?template=expr_div', success : function(h) { html = h }, async : false });
+        dia = exprDialog.loaded[url] = $(html);
+    }
+
+    var place = function() {
+        dia.css({ width : '80%' });
+        dia.css({ height : dia.width() / parseFloat(dia.attr('data-aspect')) });
+        place_apps();
+        center(dia);
+    }
+    var r = showDialog(dia, opts);
+    $(window).resize(place);
+    place();
+    return r;
 }
 exprDialog.loaded = {};
 
-function loadDialog(htmlString, opts) {
-    var opts = $.extend({ absolute : false }, opts);
-    var match = /id=['"]([^'"]*)['"]/.exec(htmlString)
-    var dialog = $('#' + match[1]);
-    if(dialog.length === 0) dialog = $('#dialogs').append(htmlString).children().last();
-    return showDialog(dialog, opts);
-}
-
 function showDialog(name, opts) {
-    var o = { dialog : $(name), shield : $('#dialog_shield') };
-    o.opts = $.extend({ open : noop, close : function() { o.dialog.hide(); }, absolute : false, fade : true }, opts);
+    var o = { dialog : $(name).clone() };
+    o.opts = $.extend({ open : noop, close : noop, absolute : false, fade : true,
+        mandatory : o.dialog.hasClass('mandatory') }, opts);
     if(!o.dialog.length) throw "dialog element " + name + " not found";
 
     o.close = function() {
-        if(!showDialog.opened.length) return;
-        var o = showDialog.opened.pop();
-        o.opened = false;
-        if(!showDialog.opened.length) $('#dialog_shield').hide();
+        showDialog.opened.splice(showDialog.opened.indexOf(o), 1);
+        o.shield.remove();
         var clean_up = function() {
-            if(!showDialog.opened.length) $('#dialogs').hide();
+            o.dialog.remove();
             o.opts.close();
         }
         if(o.opts.minimize_to) minimize(o.dialog, $(o.opts.minimize_to), { 'complete' : clean_up });
         else clean_up();
     }
-    
-    o.open = function() {
-        if(o.opened) return;
-        o.opened = true;
-        o.dialog.addClass('dialog').appendTo($('#dialogs'));
-        $('#dialogs').add(o.dialog).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
-        $(window).resize(function() { center(o.dialog) });
-        center(o.dialog);
-        o.shield[o.opts.fade ? 'addClass' : 'removeClass']('fade');
-        o.shield.show();
 
-        if (! o.dialog.hasClass('mandatory') ) {
-            if (o.dialog.find('.btn_dialog_close').length === 0 ) {
-                o.dialog.prepend('<div class="btn_dialog_close"></div>');
-            }
-            o.shield.unbind('click');
-            if(!showDialog.opened.length) o.shield.add( o.dialog.find('.btn_dialog_close') ).click(o.close);
-        }
-        if (o.opts.select) o.dialog.find(o.opts.select).focus().click();
-        o.index = showDialog.opened.length;
-        showDialog.opened.push(o);
-        return o.opts.open();
+    o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
+    o.dialog.addClass('dialog').appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+    $(window).resize(function() { center(o.dialog) });
+    center(o.dialog);
+
+    if (! o.opts.mandatory) {
+        o.dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
+        o.shield.add(o.btn_close).click(o.close);
     }
-
-    o.open();
+    if (o.opts.select) o.dialog.find(o.opts.select).focus().click();
+    o.index = showDialog.opened.length;
+    showDialog.opened.push(o);
+    o.opts.open();
 
     return o;
 }
@@ -170,7 +153,7 @@ function updateShareUrls(element, currentUrl) {
       .attr('href', 'http://www.reddit.com/submit?url=' + encodedUrl);
     element.find('.gplus_button')
       .attr('href', currentUrl);
-    
+
     element.find('.count').each(function(){
       $(this).html($(this).html().replace(/^0$/, "-"))
     });
@@ -208,7 +191,7 @@ function reduce(f, list, first) {
     if(first === undefined) first = list.shift();
     for(var i = 0; i < list.length; i++) first = f(first, list[i]);
     return first;
-}    
+}
 function zip(list1, list2) {
     var ret = [];
     for(var i = 0; i < list1.length; i++) ret.push([list1[i], list2[i]]);
@@ -237,7 +220,7 @@ $(function () {
         var dialog = $('#dia_share');
         if (dialog.length === 0 ) {
             $.get("?dialog=share", function(data){
-                loadDialog(data, { 'select' : '#expression_url' } );
+                showDialog(data, { 'select' : '#expression_url' } );
                 updateShareUrls('#dia_share', window.location);
             });
         } else {
@@ -245,7 +228,7 @@ $(function () {
             updateShareUrls('#dia_share', window.location);
         }
     });
-  
+
   $("input[alt], textarea[alt]").each(function() {
     var defaultValue = $(this).attr('alt');
     this.onfocus = function() { if(this.value == defaultValue) this.value = ""; }
@@ -374,7 +357,7 @@ hover_menu = function(handle, drawer, options) {
         drawer.css({ left : left, top : top });
         o.options.open();
     }
-    
+
     if(o.options.hover) {
         handle.hover(o.open, o.delayed_close);
         drawer.hover(o.cancel_close, o.delayed_close);
@@ -399,11 +382,6 @@ hover_menu = function(handle, drawer, options) {
     return o;
 }
 
-click_dialogue = function(handle, drawer, options_arg) {
-    var opts = $.extend({ offsetY : 0, hover : false, auto_close : false }, options_arg);
-    return hover_menu(handle, drawer, opts);
-}
-
 tool_tip = function(tool, tip, above) {
     var o = { };
     o.drawer = $('<div>').html(tip).addClass('tooltip');
@@ -423,12 +401,15 @@ tool_tip = function(tool, tip, above) {
 
 var minimize = function(what, to, opts) {
     var o = $.extend({ 'to' : $(to).addClass('active'), 'what' : $(what), 'duration' : 1000, 'complete' : noop }, opts);
+    if(o.what.data('minimizing')) return;
+    o.what.data('minimizing', true);
     o.init_css = { 'top' : o.what.css('top'), 'left' : o.what.css('left'), 'width' : o.what.css('width') || '',
         'height' : o.what.css('height') || '', 'opacity' : o.what.css('opacity') };
     o.reset = function() {
         o.to.removeClass('active');
         o.what.css(o.init_css);
         o.complete();
+        o.what.removeData('minimizing');
     };
     var pos = o.to.offset();
     if(o.what.css('position') == 'fixed') { pos.left -= $(window).scrollLeft(); pos.top -= $(window).scrollTop() }
