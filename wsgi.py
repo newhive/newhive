@@ -777,8 +777,7 @@ def serve_json(response, val, as_text = False):
 
 def serve_404(request, response):
     response.status_code = 404
-    response.context['msg'] = 'Nothing here yet...'
-    return serve_page(response, 'pages/error.html')
+    return serve_page(response, 'pages/notfound.html')
 
 def serve_error(request, msg):
     response.status_code = 500

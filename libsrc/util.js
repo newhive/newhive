@@ -264,8 +264,8 @@ $(function () {
   });
 
   $('#dia_referral input[name=forward]').val(window.location);
-
-
+  $(window).resize(place_apps);
+  place_apps();
 });
 
 function center(e, inside, opts) {
@@ -457,14 +457,14 @@ function eraseCookie(name) {
 
 function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
 
-var place_apps = function(apps) {
-   if(!apps) apps = '.happ';
-   $(apps).each(function() {
+var place_apps = function() {
+   $('.happ').each(function(i, app_div) {
        var e = $(this);
        var s = e.parent().width() / 1000;
        if(!e.data('css')) {
-           var c = {}, that = this;
-           map(function(p) { c[p] = parseFloat(that.style[p]) }, ['left', 'top', 'width', 'height']);
+           var c = {};
+           console.log(app_div);
+           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height']);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
            e.data('css', c);
