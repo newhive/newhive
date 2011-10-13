@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block body_classes %}{{ super() }} main{% endblock%}
+
 {% block main %}
 <div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
 >{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
@@ -23,7 +25,7 @@
   </div>
   <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
  {% else %}
-  <a href='{{ server }}'><div style='left : 44px; top : -1px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  <a href='{{ server }}'><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
  {% endif %}
 </div>
 
@@ -67,7 +69,7 @@
 {% block body %}
 {% endblock %}
 
-<div id='content' style='top : 50px'>{% block content %}{% endblock %}</div>
+<div id='content'>{% block content %}{% endblock %}</div>
 
 {% if user.logged_in %}
  <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable' title='Send feedback'>

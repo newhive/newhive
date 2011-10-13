@@ -40,7 +40,7 @@ iframe { border : none; }
  
  <div id='tags'>
   <a href='/expressions' class='tag_label {{ 'current' if not tag }}'>All</a>
-  {% for t in tags %}<a href='?tag={{ t|e }}' class='tag_label drag {{ 'current' if t == tag }}' draggable='false' value='{{ t|e }}'>{{ t }}</a>{% endfor %}
+  {% for t in tags %}<a href='/expressions/{{ t|e }}' class='tag_label drag {{ 'current' if t == tag }}' draggable='false' value='{{ t|e }}'>{{ t }}</a>{% endfor %}
   {% if user_is_owner %}
    <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='vertical-align : bottom' title='Add Folder'>
    {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag|e }}"'>{% endif %}

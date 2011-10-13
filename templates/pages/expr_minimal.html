@@ -9,6 +9,8 @@
  <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
 {% endblock %}
 
+{% block body_classes %}{{ super() }} expression minimal{% endblock %}
+
 
 {% block main %}
  {% if auth_required %}
