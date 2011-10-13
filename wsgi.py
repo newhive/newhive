@@ -217,8 +217,9 @@ def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
     return serve_page(response, 'pages/minimal.html')
 def bad_referral(request, response):
-    response.context['content'] = 'Invalid referral; already used or never existed'
-    return serve_page(response, 'pages/minimal.html')
+    response.context['msg'] = 'You have already signed up, or if there\'s been a mistake, sorry, and please sign up again!'
+    response.context['error'] = 'Log in if you already have an account'
+    return serve_page(response, 'pages/error.html')
 
 
 def expr_tag_update(request, response):

@@ -83,25 +83,28 @@ function autoLink(string) {
 }
 
 function exprDialog(url, opts) {
-    $.extend(opts, { absolute : true });
-    var dia;
-    if(exprDialog.loaded[url]) dia = exprDialog.loaded[url];
-    else {
-        var html;
-        $.ajax({ url : url + '?template=expr_div', success : function(h) { html = h }, async : false });
-        dia = exprDialog.loaded[url] = $(html);
-    }
-
-    opts.layout = function() {
+    $.extend(opts, { layout : function() {
         dia.css({ width : '80%' });
         dia.css({ height : dia.width() / parseFloat(dia.attr('data-aspect')) });
         place_apps();
         center(dia, $(window), opts);
-    }
-    var r = showDialog(dia, opts);
-    return r;
+    } });
+    return loadDialog(url + '?template=expr_div', opts);
 }
 exprDialog.loaded = {};
+
+function loadDialog(url, opts) {
+    $.extend(opts, { absolute : true });
+    var dia;
+    if(loadDialog.loaded[url]) dia = loadDialog.loaded[url];
+    else {
+        var html;
+        $.ajax({ url : url, success : function(h) { html = h }, async : false });
+        dia = loadDialog.loaded[url] = $(html);
+    }
+    return showDialog(dia, opts);
+}
+loadDialog.loaded = {};
 
 function showDialog(name, opts) {
     var dialog = $(name);
