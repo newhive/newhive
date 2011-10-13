@@ -11,8 +11,9 @@ s3_buckets      = []
 admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach']
 site_user       = 'thenewhive'
 site_pages      = {
-     'editor_help' : 'default-instructional'
-    ,'welcome'     : 'welcome'
+     'editor-help'  : 'default-instructional'
+    ,'profile-help' : 'profile-help'
+    ,'welcome'      : 'welcome'
     }
 
 email_server    = 'localhost'

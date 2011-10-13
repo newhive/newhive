@@ -309,7 +309,7 @@ hover_menu = function(handle, drawer, options) {
         ,hover_close : true
         ,close_delay : 500
         ,offsetY : 0
-        ,focus_persist : false
+        ,click_persist : false
         ,hover : true
     };
     $.extend(o.options, options);
@@ -350,7 +350,7 @@ hover_menu = function(handle, drawer, options) {
         handle.get(0).busy = true;
         if(o.rollover) o.rollover.attr('src', o.hover_src);
         handle.addClass('active');
-        if(o.options.focus_persist) o.options.hover_close = true;
+        if(o.options.click_persist) o.options.hover_close = true;
 
         drawer.show();
         var hp = handle.position();
@@ -372,8 +372,8 @@ hover_menu = function(handle, drawer, options) {
         handle.hover(o.open);
     }
     handle.click(o.open);
-    var chc = function() { o.options.hover_close = false; };
-    $(o.options.focus_persist).focus(chc).click(chc);
+    var no_hover_close = function() { o.options.hover_close = false; }
+    $(o.options.click_persist).click(no_hover_close).bind('contextmenu', no_hover_close);
 
     //if(o.options.auto_close) drawer.click(o.close);
     //if(o.options.auto_close) handle.click(o.close);
