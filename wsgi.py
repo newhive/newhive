@@ -197,8 +197,6 @@ def user_create(request, response):
     referral = Referral.fetch(request.args.get('key'), keyname='key')
     if not referral: return bad_referral(request, response)
     referrer = User.fetch(referral['user'])
-    if(referrer['referrals'] <= 0):
-        return no_more_referrals(referrer['name'], request, response)
     assert 'tos' in request.form
 
     args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
