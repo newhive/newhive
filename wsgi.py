@@ -530,9 +530,8 @@ def handle(request): # HANDLER
         #    return serve_page(response, 'pages/home.html')
 
         return serve_404(request, response)
-
     elif request.domain.startswith('www.'):
-        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]))
+        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]) + request.path + '?' + request.query_string)
 
     d = resource = Expr.named(request.domain.lower(), request.path.lower())
     if not d: d = Expr.named(request.domain, '')
@@ -553,11 +552,12 @@ def handle(request): # HANDLER
         return serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
 
     if lget(request.path, 0) == '*':
-        return redirect(response, home_url(owner) + ('?tag=' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
-    if request.path == 'expressions':
+        return redirect(response, home_url(owner) + 'expressions' +
+            ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
+    if request.path.startswith('expressions'):
         page = int(request.args.get('page', 0))
         spec = { 'owner' : owner.id }
-        tag = request.args.get('tag')
+        tag = lget(request.path.split('/'), 1, '')
         if tag: spec['tags_index'] = tag
 
         response.context['title'] = owner['fullname']

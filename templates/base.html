@@ -85,7 +85,7 @@ form { display : inline; }
 html, body { background-color : white; height : 100%; }
  </style>
 
- <script>var server_name = '{{ server_name }}', server_url = '{{ server }}';</script>
+ <script>var server_name = '{{ server_name }}', server_url = '{{ secure_server }}', debug_mode = {{ 'true' if debug else 'false' }};</script>
  {% for item in assets_env["app.js"].urls() %}
    <script src='{{ item }}'></script>
  {% endfor %}

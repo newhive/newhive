@@ -193,7 +193,7 @@ Hive.App = function(initState) {
     o.load = function() {
         o.content_element = o.div.find('.content');
         o.opacity(o.state.opacity);
-        o.content_element.click(function(e) { o.focus(); });
+        o.content_element.click(function(e) { o.focus(); return false; });
         if(o.state.load) o.state.load(o);
         delete o.state.create;
     }
@@ -272,6 +272,7 @@ Hive.App.Controls = function(app) {
              }
             ,click_persist : input
             ,close : function() {
+                input.blur();
                 var v = input.val();
                 // TODO: improve URL guessing
                 if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
@@ -435,7 +436,7 @@ Hive.App.Text = function(common) {
             autoLink(o.rte.get_content())
         );
         o.rte.editMode(false);
-        o.rte.select(null);
+        //o.rte.select(null);
     });
     
     o.link = function(v) {
@@ -745,7 +746,7 @@ Hive.new_app = function(s) {
 
 var main = function() {
     // Warn the user if they leave the page by any route other than the save button TODO: actually check if they've made any changes
-    window.onbeforeunload = function(){ return "If you leave this page any unsaved changes to your expression will be lost." }
+    if(!debug_mode) window.onbeforeunload = function(){ return "If you leave this page any unsaved changes to your expression will be lost." }
 
     if(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) && parseInt(RegExp.$1) < 5)
         if(confirm("You're using an oldish version of Firefox. Click OK to get the newest version"))
@@ -1098,7 +1099,8 @@ Hive.rte = function(options) {
         var s = o.win.getSelection();
         if(!s) return;
         s.removeAllRanges();
-        if(range) s.addRange(range);
+        if(range)
+        s.addRange(range);
     }
 
     // An attempt to replace execCommand?
@@ -1121,7 +1123,7 @@ Hive.rte = function(options) {
         if(mode) {
             o.doc.designMode = 'on';
             o.iframe.contentWindow.focus();
-            if(o.range) o.select(o.range);
+            //if(o.range) o.select(o.range);
         } else {
             //o.range = o.get_range(); // attempt to save cursor positoion breaks deleting textboxes
             o.doc.designMode = 'off';
