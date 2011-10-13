@@ -1,20 +1,31 @@
 {% extends "main.html" %}
 
 {% block head%}
-<meta name="description" content="The New Hive is a creative playground that makes it easy for anyone to express themselves online.  THe content you create is your own, and can be easily shared across the web.  We will never put ads on your expressions, and oh yeah, its free!"
+  <meta name="description" content="The New Hive is a creative playground that
+  makes it easy for anyone to express themselves online.  THe content you
+  create is your own, and can be easily shared across the web.  We will never
+  put ads on your expressions, and oh yeah, its free!">
+{% endblock %}
+
+{% block body_classes %}{{ super() }} home{% endblock %}
 {% block body %}
 
 {% if user.logged_in %}
- <div class='nav' style='right : 10px; top : 0px;'>
+<div class='nav' style='right : 10px; top : 0px;'>
   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
- </div>
+</div>
 {% endif %}
+
 {% endblock %}
 
+
 {% block content %}
+
+{% if user.logged_in %}
  <div class='fathead'>
-  <a href='http://thenewhive.thenewhive.com'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
+   <a href='http://thenewhive.thenewhive.com'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
  </div>
+ {% endif %}
  <div id='tags'>
   {% for t in tags %}<a href='/home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
  </div>

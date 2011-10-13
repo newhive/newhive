@@ -1,4 +1,31 @@
 /* ==========================================
+   layout
+   ========================================== */
+
+#nav_bg {
+  top : 0; 
+  left : 0; 
+  width : 100%; 
+  height : 50px; 
+  background-image : url('/lib/skin/1/nav_gradient.png'); 
+  z-index : 1; 
+}
+
+body.main #content{
+  top: 50px
+}
+
+body.home #nav_bg {
+  background: #EDEBE1;
+  height: 320px;
+}
+
+body.home #content{
+  top: 320px;
+}
+
+
+/* ==========================================
    popup dialogs 
    ========================================== */
 

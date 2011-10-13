@@ -45,7 +45,6 @@ form { display : inline; }
 .error { color : {{ colors['active'] }}; }
 #user { position : fixed; display : inline-block; }
 .nav { position : fixed; margin : 0; }
-#nav_bg { top : 0; left : 0; width : 100%; height : 50px; background-image : url('/lib/skin/1/nav_gradient.png'); z-index : 1; }
 .menu, .top, .nav { z-index : 1; }
 .spacer { height : 10px; clear : both; }
 #bg { position : fixed; top : 0; left : 0; width : 99999px; height : 99999px; overflow : hidden z-index : 0; background-color : white; }
@@ -95,7 +94,7 @@ html, body { background-color : white; height : 100%; }
 
  {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_classes %}{% endblock %}" >
  {% block main %}{% endblock %}
  <script type="text/javascript">
   var _gaq = _gaq || [];
