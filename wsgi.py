@@ -443,6 +443,7 @@ def handle(request): # HANDLER
     response.context = { 'f' : request.form, 'url' : request.base_url }
     response.user = request.requester
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
