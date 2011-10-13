@@ -13,6 +13,7 @@ for line in mailing_reader:
   else:
     name = False
 
-  wsgi.mail_invite(email, name)
+  print "sending invite to " + line[0]
+  print wsgi.mail_invite(email, name)
 
 mailing_file.close()
