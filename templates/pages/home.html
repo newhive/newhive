@@ -17,6 +17,14 @@
     }
   </style>
   <script>
+    function homepage_header() {
+        var header = $('#homepage_header')
+        if (header.length > 0) {
+            $('#content').css('top',
+              parseInt(header.find(' .background').css('height')) + 50
+            );
+        }
+    }
     $(function(){
       var dia;
       $('.signup_button').click(function() {
@@ -24,6 +32,8 @@
         $(this).addClass('open');
         $('input[name=forward]').val(window.location);
       });
+      $(window).resize(homepage_header) 
+      homepage_header();
     });
   </script>
 {% endblock %}

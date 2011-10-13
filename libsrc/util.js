@@ -265,19 +265,10 @@ $(function () {
 
   $('#dia_referral input[name=forward]').val(window.location);
   $(window).resize(place_apps);
-  $(window).resize(homepage_header);
   place_apps();
-  homepage_header();
 });
 
-function homepage_header() {
-    var header = $('#homepage_header')
-    if (header.length > 0) {
-        $('#content').css('top',
-          parseInt(header.find(' .background').css('height')) + 50
-        );
-    }
-}
+
 
 
 function center(e, inside, opts) {
