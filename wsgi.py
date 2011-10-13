@@ -373,8 +373,11 @@ def mail_referral(request, response):
     send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
 
-def mail_invite(email, name=False):
+def mail_invite(email, name=False, force_resend=False):
     user = get_root()
+
+    if Referral.find(to=email) and not force_resend:
+        return False
 
     referral = user.new_referral({'name': name, 'to': email})
 
@@ -393,6 +396,7 @@ def mail_invite(email, name=False):
         ,'html': jinja_env.get_template("emails/invitation.html").render(context)
         }
     send_mail(heads, body)
+    return True
 
 
 def mail_feedback(request, response):
