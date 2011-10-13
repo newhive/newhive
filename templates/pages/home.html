@@ -13,7 +13,7 @@
 
 {% block content %}
  <div class='fathead'>
-  <a href='{{ create if user.logged_in else 'http://thenewhive.thenewhive.com' }}'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
+  <a href='http://thenewhive.thenewhive.com'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
  </div>
  <div id='tags'>
   {% for t in tags %}<a href='/home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
