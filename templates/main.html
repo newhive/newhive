@@ -61,7 +61,7 @@
    var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
        { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
          close_delay : 1000, auto_close : false });
-   {% if error %} login_menu.open() {% endif %}
+   {% if error %} login_menu.options.hover_close = false; login_menu.open(); {% endif %}
   });
  </script>
 {% endif %}
