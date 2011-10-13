@@ -23,7 +23,7 @@
 <script>
 $(function() {
  var dia;
- $('#signup_button').click(function() {
+ $('#signup_button, .signup_button').click(function() {
      dia = showDialog('#dia_signup');
      $(this).addClass('open');
      $('input[name=forward]').val(window.location);
