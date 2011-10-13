@@ -207,7 +207,8 @@ def user_create(request, response):
     referral.delete()
     home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
 
-    mail_user_register_thankyou(user)
+    try: mail_user_register_thankyou(user)
+    except: pass # TODO: log an error
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
