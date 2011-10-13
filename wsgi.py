@@ -205,13 +205,13 @@ def user_create(request, response):
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
-    user.expr_create({ 'title' : 'Homepage', 'home' : True })
+    home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
 
     mail_user_register_thankyou(user)
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
-    return redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
+    return redirect(response, abs_url(secure=True) + 'edit/' + home_expr.id)
 
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
@@ -525,8 +525,8 @@ def expr_home_list(p2, request, response, limit=90):
     response.context['show_name'] = True
     response.context['page'] = page
 
-def handle(request):
-    """The HTTP handler.
+def handle(request): # HANDLER
+    """The HTTP handler, main entry point from Werkzeug.
        All POST requests must be sent to thenewhive.com, as opposed to
        user.thenewhive.com which can contain arbitrary scripts. Any
        response for thenewhive.com must not contain unsanitized user content.
@@ -572,14 +572,14 @@ def handle(request):
                 exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
-                if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                    response.context['show_help'] = True
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
             response.context['sites'] = request.requester.get('sites')
             response.context['exp_js'] = json.dumps(exp)
             response.context['exp'] = exp
+            if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
+                response.context['show_help'] = True
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')

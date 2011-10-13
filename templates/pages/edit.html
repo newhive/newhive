@@ -82,7 +82,7 @@ input, textarea { font-size : inherit }
  <div class='nav_icon text hoverable medbold' onclick="" style='margin-right : 20px' id='btn_help'>?</div>
  <script>
   (function() { var b = $('#btn_help');
-    b.click(function() { exprDialog('{{ site_pages.editor_help }}', { minimize_to : b } ) });
+    b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to : b } ) });
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
  <img id='btn_grid' class='hoverable' src='/lib/skin/1/grid-off.png' style='vertical-align : middle'>
