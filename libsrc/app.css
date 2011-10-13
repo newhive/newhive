@@ -22,9 +22,14 @@ body.home.logged_out #content{
   top: 320px;
 }
 
+body.home.logged_out .nav{
+  position: absolute;
+}
+
 #homepage_header {
   position: relative;
   top: 50px;
+  z-index: 0;
 }
 
 
