@@ -5,6 +5,7 @@
   makes it easy for anyone to express themselves online.  THe content you
   create is your own, and can be easily shared across the web.  We will never
   put ads on your expressions, and oh yeah, its free!">
+  <style>body.home.logged_out #nav_bg{background: {{colors['tan'] }}; }</style>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} home{% endblock %}
@@ -14,6 +15,27 @@
 <div class='nav' style='right : 10px; top : 0px;'>
   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
 </div>
+{% else %}
+<div id="homepage_header">
+  <div class="happ" style="left:0px; top:0px; width:1000px; height: 260px; background-color: {{ colors['tan'] }}; z-index: 3;"></div>
+  <div class="happ" style="left: 48px; top: 43px; width: 420px; height: 56px; z-index: 3; font-size: 3.3em; font-weight: normal; font-family: Lobster;" data-scale="3.3">
+    Express Yourself
+  </div>
+  <div class='happ' style='width:485px; height: 44px; left:48px; top: 116px; z-index: 3; font-size: 0.75em;' data-scale="0.75">
+    The New Hive makes it easy for anyone to express themselved online.  The
+    content you create is your own, and can be easily shared anywhere.  We will
+    never put ads on your expressions, and oh yeah, it's free! So get on board
+    and express yourself!
+  </div>
+  <div class='happ rounded' style='width:87px; white-space: nowrap; padding: 3px 5px 10px 5px; height: 24px; left:48px; top: 192px; z-index: 3; font-size: 1.4em; background-color: {{ colors['active'] }}; color:#ffffff;' data-scale="1.4">
+    <span style="font-family: Museo;">Sign up</span>
+  </div>
+  <div id="h_2" class="happ" style="left: 585px; top: 23.8262px; width: 365.802px; height: 206.727px; z-index:3;">
+    <iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0" width="100%" height="100%" frameborder="0" webkitAllowFullScreen allowFullScreen></iframe>
+  </div>
+</div>
+
+
 {% endif %}
 
 {% endblock %}

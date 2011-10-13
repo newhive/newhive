@@ -43,6 +43,6 @@ colors = {
     , 'unselected' : palette[30]
     , 'active'     : palette[19]
     , 'highlight'  : palette[32]
-    , 'tan'        : palette[29]
+    , 'tan'        : palette[30]
     }
 for i, x in enumerate(palette): colors[i] = x

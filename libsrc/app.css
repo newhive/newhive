@@ -16,13 +16,17 @@ body.main #content{
 }
 
 body.home.logged_out #nav_bg {
-  background: #EDEBE1;
-  height: 320px;
 }
 
 body.home.logged_out #content{
   top: 320px;
 }
+
+#homepage_header {
+  position: relative;
+  top: 50px;
+}
+
 
 
 /* ==========================================
