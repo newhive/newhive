@@ -125,7 +125,7 @@ class User(Entity):
         return super(User, self).create_me()
 
     def new_referral(self, d):
-        if self.get('referrals', 0) > 0:
+        if self.get('referrals', 0) > 0 or self == get_root():
             self.update(referrals=self['referrals'] - 1)
             d.update(user = self.id)
             return Referral.create(**d)
