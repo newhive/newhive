@@ -266,13 +266,15 @@ Hive.App.Controls = function(app) {
         d.append(e);
         var input = e.find('input');
         var m = hover_menu(d.find('.button.link'), e, {
-             open : function() { input.val(o.app.link()); }
-            ,focus_persist : input
-            ,auto_close : false
+             open : function() {
+                 input.focus();
+                 input.val(o.app.link());
+             }
+            ,click_persist : input
             ,close : function() {
                 var v = input.val();
                 // TODO: improve URL guessing
-                //if(v.match(/\./) && !v.match(/^http/i)) v = 'http://' + v;
+                if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
                 o.app.link(v);
                 o.app.focus();
             }
@@ -803,7 +805,7 @@ var main = function() {
     hover_menu($('#insert_image'), $('#menu_image'));
     hover_menu($('#insert_audio'), $('#menu_audio'));
     hover_menu($('#insert_file'), $('#menu_file'));
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { focus_persist : $('#embed_code') } );
+    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code') } );
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
     hover_menu($('#insert_shape'), $('#menu_shape'));
     
