@@ -845,6 +845,10 @@ var main = function() {
             }
         }
     });
+    $('#save_overwrite').click(function() {
+        Hive.Exp.overwrite = true;
+        Hive.save();
+    });
     
     // Automatically update url unless it's an already saved expression or the user has modified the url manually
     $('#menu_save #title').bind('keydown keyup', function(){
@@ -936,10 +940,18 @@ Hive.upload_start = function() { center($('#loading').show()); }
 Hive.upload_finish = function() { $('#loading').hide(); }
 
 Hive.save = function() {
+    var expr = Hive.get_state();
+
+    if(expr.name.match(/^expressions/)) {
+        alert('The url "/expressions" is reserved for your profile page.');
+        return false;
+    }
+
     var on_response = function(ret) {
-        if(typeof(ret) != 'object') alert("There was a problem saving your stuff :(.");
-        if (ret.error) {
-            alert(ret.error);
+        if(typeof(ret) != 'object') alert("Sorry, something is broken :(. Please send us feedback");
+        if(ret.error == 'overwrite') {
+            $('#expr_name').html(expr.name);
+            showDialog('#dia_overwrite');
             $('#save_submit').removeClass('disabled');
         }
         else if (ret.location) {
