@@ -94,7 +94,7 @@ html, body { background-color : white; height : 100%; }
 
  {% block head %}{% endblock %}
 </head>
-<body class="{% block body_classes %}{% endblock %}" >
+<body class="{% block body_classes %}{{'logged_out' if not user.logged_in }}{% endblock %}" >
  {% block main %}{% endblock %}
  <script type="text/javascript">
   var _gaq = _gaq || [];
