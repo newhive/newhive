@@ -302,20 +302,20 @@ def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
 
-    context = {
+    response.context.update({
          'message': request.form.get('message')
         ,'url': request.form.get('forward')
         ,'title': request.form.get('forward')
         ,'sender_fullname': request.requester.get('fullname')
         ,'sender_url': home_url(request.requester)
-        }
+        })
 
     exp = Expr.fetch(request.form.get('id'))
 
     if exp:
         exp.increment({'analytics.email.count': 1})
         owner = User.fetch(exp.get('owner'))
-        context.update({
+        response.context.update({
           'short_url': (exp.get('domain') + '/' + exp.get('name'))
           ,'tags': exp.get('tags')
           ,'thumbnail_url': exp.get('thumb')
@@ -330,12 +330,6 @@ def mail_them(request, response):
         ,'Subject' : request.form.get('subject', '')
         ,'Reply-to' : request.requester.get('email', '')
         }
-    response.context.update({
-         'message': request.form.get('message')
-        ,'url': request.form.get('forward')
-        ,'title': title
-        ,'user_name': request.requester.get('fullname')
-        })
     body = {
          'plain': render_template(response, "emails/share.txt")
         ,'html': render_template(response, "emails/share.html")
