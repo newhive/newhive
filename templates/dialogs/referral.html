@@ -3,11 +3,24 @@
     Hi <span id='user_first_name'>{{ user.name }}</span>, good news!<br/>
     You have <span id='referral_count'>{{ user.referrals }}</span> hive referrals.
   </h3>
-  <div class="medbold label">Type in email address(es) to send an invite</div>
-  <input type="text" name="to"></input>
-  <div class="line">
-    <div class="label medbold">Message</div>
-    <textarea name="message"></textarea>
-    <input type='submit' class='btn black rounded' value='Send'></input>
-  </div>
+  <form id='referral_form' action='{{ secure_server}}' method='POST'>
+    <input type='hidden' name='forward' value='' />
+    <input type='hidden' name='action' value='mail_referral'/>
+    <div class="label">Enter your friend's contact info below <br/>to send an invitation</div>
+    <div class="line first">
+      <div class='medbold label align'>Name</div>
+      <input type="text" name="name"></input>
+    </div>
+    <div class="line">
+      <div class='medbold label align'>Email</div>
+      <input type="text" name="to"></input>
+    </div>
+{#
+    <div class="line">
+      <div class="label medbold align">Message<br/><span class="small">(optional)</span></div>
+      <textarea name="message"></textarea>
+    </div>
+#}
+  <input type='submit' class='btn black rounded' value='Send'></input>
+  </form>
 </div>

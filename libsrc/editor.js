@@ -193,12 +193,13 @@ Hive.App = function(initState) {
     o.load = function() {
         o.content_element = o.div.find('.content');
         o.opacity(o.state.opacity);
-        o.content_element.click(function(e) { o.focus(); });
+        o.content_element.click(function(e) { o.focus(); return false; });
         if(o.state.load) o.state.load(o);
+        delete o.state.create;
     }
 
     // initialize
-    o.div = $('<div class="happ">');
+    o.div = $('<div class="ehapp">');
     $('#content').append(o.div);
     o.pos_n(o.state.position);
     o.dims_n(o.state.dimensions);
@@ -265,17 +266,16 @@ Hive.App.Controls = function(app) {
         d.append(e);
         var input = e.find('input');
         var m = hover_menu(d.find('.button.link'), e, {
-            open : function() {
-                input.focus();
-                input.select();
-                input.val(o.app.link());
-            }
-            ,hover_close : false
-            ,auto_close : false
+             open : function() {
+                 input.focus();
+                 input.val(o.app.link());
+             }
+            ,click_persist : input
             ,close : function() {
+                input.blur();
                 var v = input.val();
                 // TODO: improve URL guessing
-                //if(v.match(/\./) && !v.match(/^http/i)) v = 'http://' + v;
+                if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
                 o.app.link(v);
                 o.app.focus();
             }
@@ -373,7 +373,7 @@ Hive.App.Html = function(common) {
         return o.embed.outerHTML();
     }
 
-    o.embed = $(o.state.content);
+    o.embed = $(o.state.content).addClass('content');
     o.div.append(o.embed);
     if(o.embed.is('object') || o.embed.is('embed') || o.embed.is('iframe')) {
         Hive.App.makeShielded(o);
@@ -436,7 +436,7 @@ Hive.App.Text = function(common) {
             autoLink(o.rte.get_content())
         );
         o.rte.editMode(false);
-        o.rte.select(null);
+        //o.rte.select(null);
     });
     
     o.link = function(v) {
@@ -476,7 +476,7 @@ Hive.App.Text = function(common) {
     }
     
     o.load = function() {
-        o.scale(scale);
+        o.scale_n(refScale);
         o.content(content);
         $(o.rte.doc).keypress(throttle(o.refresh_size, 200));
         common.load();
@@ -511,8 +511,6 @@ Hive.App.Text.Controls = function(common) {
     o.c.resize_h = d.find('.resize_h');
 
     o.append_link_picker(d.find('.buttons'));
-
-    o.get_pointsize = function() { return Math.round(o.app.scale() * 13) }
 
     var cmd_buttons = function(query, func) {
         $(query).each(function(i, e) {
@@ -604,7 +602,6 @@ Hive.App.Image = function(common) {
         o.imageHeight = o.img.height();
         o.aspectRatio = o.imageWidth / o.imageHeight;
         if(o.state.create) {
-            delete o.state.create;
             var w = o.imageWidth > $(window).width() * 0.8 ? $(window).width() * 0.8 : o.imageWidth;
             o.resize([w,w]);
         }
@@ -749,7 +746,7 @@ Hive.new_app = function(s) {
 
 var main = function() {
     // Warn the user if they leave the page by any route other than the save button TODO: actually check if they've made any changes
-    window.onbeforeunload = function(){ return "If you leave this page any unsaved changes to your expression will be lost." }
+    if(!debug_mode) window.onbeforeunload = function(){ return "If you leave this page any unsaved changes to your expression will be lost." }
 
     if(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) && parseInt(RegExp.$1) < 5)
         if(confirm("You're using an oldish version of Firefox. Click OK to get the newest version"))
@@ -795,7 +792,8 @@ var main = function() {
 
     if(!Hive.Exp.background) Hive.Exp.background = {};
     var bg_set = function(c) { $('#bg').css('background-color', c); Hive.Exp.background.color = c; }
-    $('#image_background').click(function() { background_pick(bg_set, Hive.Exp.background.color) } );
+    append_color_picker($('#color_pick'), bg_set, '');
+    $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
 
     $('#insert_image').click(Hive.pick_file);
     $('#image_upload').click(Hive.pick_file);
@@ -804,13 +802,13 @@ var main = function() {
     $('#insert_file' ).click(Hive.pick_file);
     $('#menu_file'   ).click(Hive.pick_file);
 
-    hover_menu($('#insert_text'), $('#menu_text'), { offsetY : 0 });
-    hover_menu($('#insert_image'), $('#menu_image'), { offsetY : 0 });
-    hover_menu($('#insert_audio'), $('#menu_audio'), { offsetY : 0 });
-    hover_menu($('#insert_file'), $('#menu_file'), { offsetY : 0 });
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { hover_close : false, auto_close : false, offsetY : 0 });
+    hover_menu($('#insert_text'), $('#menu_text'));
+    hover_menu($('#insert_image'), $('#menu_image'));
+    hover_menu($('#insert_audio'), $('#menu_audio'));
+    hover_menu($('#insert_file'), $('#menu_file'));
+    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code') } );
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
-    hover_menu($('#insert_shape'), $('#menu_shape'), { offsetY : 0 });
+    hover_menu($('#insert_shape'), $('#menu_shape'));
     
     $('#btn_grid').click(Hive.toggle_grid);
     
@@ -827,8 +825,9 @@ var main = function() {
     });
 
     var checkUrl = function(){
-        if ($('#url').val().match(/ /)){
-            alert("Please don't use spaces in URLs. It makes your expression harder to share.");
+        var u = $('#url').val();
+        if(u.match(/[^\w.\/-]/)) {
+            alert("Please just use letters, numbers, dash, period and slash in URLs. It makes it easier to share on other websites.");
             $('#url').focus();
             return false;
         } else {
@@ -836,21 +835,38 @@ var main = function() {
         }
     }
 
-    click_dialogue($('#btn_save'), $('#menu_save'));
+    hover_menu($('#btn_save'), $('#menu_save'), { hover : false });
     $('#save_submit').click(function(){
-        if ( checkUrl() ){
-            window.onbeforeunload = null; //Cancel the warning for leaving the page
-            Hive.save();
+        if (! $(this).hasClass('disabled')){ 
+            $(this).addClass('disabled');
+            if ( checkUrl() ){
+                window.onbeforeunload = null; //Cancel the warning for leaving the page
+                Hive.save();
+            }
         }
     });
-    $('#menu_save #title').blur( function(){
-        $('#title').val($('#title').val().trim());
-        if ($('#url').val() === "" && !Hive.Exp.home){
+    $('#save_overwrite').click(function() {
+        Hive.Exp.overwrite = true;
+        Hive.save();
+    });
+    
+    // Automatically update url unless it's an already saved expression or the user has modified the url manually
+    $('#menu_save #title').bind('keydown keyup', function(){
+        if (!(Hive.Exp.home || Hive.Exp.name || $('#url').hasClass('modified') )){
             $('#url').val(
                 $('#title').val().replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").toLowerCase()
             );
         }
+    }).keydown();
+
+    $('#url').focus(function(){
+        $(this).addClass('modified');
     });
+
+    $('#menu_save #title').blur( function(){
+        $('#title').val($('#title').val().trim());
+    }).blur();
+
     $('#url').change(checkUrl);
 
     hover_menu($('#privacy' ), $('#menu_privacy'));
@@ -924,39 +940,34 @@ Hive.upload_start = function() { center($('#loading').show()); }
 Hive.upload_finish = function() { $('#loading').hide(); }
 
 Hive.save = function() {
-    var on_response = function(ret) {
-        var hideDialogAndRedirect = function(){
-            var btnShare = $('#btn_share').show();
-            var animationDuration = 400;
-            var redirect = function(){window.location = ret.location}
-            var flashButton = function(){
-                for (i=0; i<5; i++){
-                    btnShare.animate({'backgroundColor': "#f2f2f2"}, 100);
-                    btnShare.animate({'backgroundColor': "#696876"}, 100); 
-                }
-                btnShare.animate({'backgroundColor': "#f2f2f2"}, {'duration': 100, 'complete':redirect});
-            }
-            $('#dialog_shield').hide();
-            $('#dia_share').removeClass('border')
-                .animate({'top':50, 'left':$(window).width() - 100}, {'duration': animationDuration, 'complete':flashButton})
-                .find('h1,h2,h3,pre')
-                .animate({'font-size': 0},animationDuration)
-                .end().find('div,img,iframe').andSelf()
-                .animate({'width':0, 'height':0, 'opacity':0},animationDuration);
-        }
+    var expr = Hive.get_state();
 
-        if(typeof(ret) != 'object') alert("There was a problem saving your stuff :(.");
-        if(ret.error) alert(ret.error);
-        else if(ret.location) {
-            if(ret['new']){
+    if(expr.name.match(/^expressions/)) {
+        alert('The url "/expressions" is reserved for your profile page.');
+        return false;
+    }
+
+    var on_response = function(ret) {
+        if(typeof(ret) != 'object') alert("Sorry, something is broken :(. Please send us feedback");
+        if(ret.error == 'overwrite') {
+            $('#expr_name').html(expr.name);
+            showDialog('#dia_overwrite');
+            $('#save_submit').removeClass('disabled');
+        }
+        else if (ret.location) {
+            if (ret['new']){
                 showDialog('#dia_share');
+                $('#btn_share').show();
                 updateShareUrls('#dia_share', ret.location);
                 $('#mail_form [name=forward]').attr('value', ret.location);
-                $('#app_btns').add('#btn_save').add('#btn_grid').add('#menu_save').hide();
-                $('#dialog_shield, .btn_dialog_close').unbind('click').click(hideDialogAndRedirect);
+                $('#mail_form [name=id]').attr('value', ret.id);
+                $('#app_btns').add('#btn_save').add('#btn_grid').add('#menu_save').add('#btn_help').hide();
+                $('#dialog_shield, .btn_dialog_close').unbind('click').click(function(){
+                    minimize($('#dia_share'), $('#btn_share'), { duration : 1000,
+                        complete : function() { window.location = ret.location } });
+                    });
                 $('#expression_url').html(ret.location);
                 $('#congrats_message').html('<h1>Now you can share your expression anywhere.</h1>');
-                $('#email_message').html('Check out this expression: \n\n' + ret.location);
             } else {
                 window.location = ret.location;
             }
@@ -1030,7 +1041,7 @@ Hive.rte = function(options) {
         o.win = o.iframe.contentWindow;
         o.doc = o.win.document;
         if(o.options.css) $(o.doc).find('head').append(o.options.css);
-        $(o.doc.body).addClass('happ');
+        $(o.doc.body).addClass('ehapp');
         o.doc.body.style.overflow = 'hidden';
         //o.editor_cmd('styleWithCSS', true);
         if(options.load) options.load();
@@ -1116,7 +1127,8 @@ Hive.rte = function(options) {
         var s = o.win.getSelection();
         if(!s) return;
         s.removeAllRanges();
-        if(range) s.addRange(range);
+        if(range)
+        s.addRange(range);
     }
 
     // An attempt to replace execCommand?
@@ -1139,7 +1151,7 @@ Hive.rte = function(options) {
         if(mode) {
             o.doc.designMode = 'on';
             o.iframe.contentWindow.focus();
-            if(o.range) o.select(o.range);
+            //if(o.range) o.select(o.range);
         } else {
             //o.range = o.get_range(); // attempt to save cursor positoion breaks deleting textboxes
             o.doc.designMode = 'off';
@@ -1157,4 +1169,102 @@ Hive.rte = function(options) {
 
     o.create_editor();
     return o;
+}
+
+var append_color_picker = function(container, callback, init_color) {
+    var e = $("<div style='width : 310px; height : 165px'>");
+    container.append(e);
+
+    var make_picker = function(c) {
+        var d = $("<div style='display : inline-block; width : 20px; height : 20px; margin : 2px'>");
+        d.css('background-color', c).attr('val', c).click(function() { manual_input.val('#' + c); callback(c) });
+        return d.get(0);
+    }
+    var make_row = function(cs) {
+        var d = $("<div>");
+        d.append(map(make_picker, cs));
+        return d.get(0);
+    }
+    by_sixes = map(function(n) { return colors.slice(n, n+6)}, [0, 6, 12, 18, 24, 30]);
+    var pickers = $("<div>");
+    pickers.append(map(make_row, by_sixes));
+    e.append(pickers);
+
+    var bar = $("<img style='width : 10px; height : 165px; position : absolute; top : 5px; left : 162px'>");
+    bar.attr('src', '/lib/skin/1/saturated.png');
+    var shades = $("<div style='width : 120px; height : 120px; position : absolute; top : 5px; left : 190px'><img src='/lib/skin/1/greys.png' style='width : 100%; position : absolute'></div>");
+    var manual = $("<div style='position : absolute; top : 130px; left : 200px; width : 120px'></div>");
+    var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
+    manual.append(manual_input);
+
+    var update_hex = function() {
+        var v = manual_input.val();
+        if(v.match(/[\dA-Z]{6}/i) || v.match(/[\dA-Z]{3}/i)) callback('#' + v);
+    };
+    manual_input.change(update_hex).keyup(update_hex);
+
+    // saturated color picked from color bar
+    var scolor = [255, 255, 255];
+    var get_hue = function(e) {
+        var o = Math.floor(e.pageY - bar.offset().top);
+        if(o < 0) o = 0;
+        if(o > 164) o = 164;
+        scolor = saturated_color(o, 165);
+        var color = 'rgb(' + scolor.join(',') + ')';
+        shades.css('background-color', color);
+        calc_color();
+    }
+    bar.click(get_hue).drag(get_hue);
+
+    var x = 1, y = 0; // gamma (x), saturation (y)
+    var get_shade = function(e) {
+        x = (e.pageX - shades.offset().left) / 120;
+        y = (e.pageY - shades.offset().top) / 120;
+        if(x < 0) x = 0;
+        if(x > 1) x = 1;
+        if(y < 0) y = 0;
+        if(y > 1) y = 1;
+        calc_color();
+    }
+    shades.click(get_shade).drag(get_shade);
+
+    var calc_color = function() {
+        var a = 1 - x, b = 1 - y;
+        // blend saturated color with brightness and saturation
+        var blend = function(c) { return Math.floor(a * b * 255 + (1 - a) * c); }
+        var color = map(blend, scolor);
+        var hex = map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
+        manual_input.val(hex);
+        callback('#' + hex);
+    }
+
+    e.append(bar);
+    e.append(shades);
+    e.append(manual);
+
+    // Returns a fully saturated color in the RGB color wheel.
+    // This function generated lib/skin/1/saturated.png.
+    // The max param must be >= 1536 to get every possible fully saturated
+    // color in a 24 bit color space.
+    var saturated_color = function(n, max) {
+        if(!max) max = 1536;
+        if(n < 0) n = 0;
+        if(n > max) n = max;
+
+        var scale = 255;
+        var r = [1, 1, 0, 0, 0, 1, 1];
+        var g = [0, 1, 1, 1, 0, 0, 0];
+        var b = [0, 0, 0, 1, 1, 1, 0];
+
+        var linear_interp = function(points) {
+            var p = (n / max) * (points.length - 1);
+            var p0 = Math.floor(p);
+            var v = p - p0;
+            if(p0 == points.length - 1) p0--;
+            delta = points[p0 + 1] * scale - points[p0] * scale;
+            return Math.floor(delta * v + points[p0] * scale);
+        }
+
+        return [linear_interp(r), linear_interp(g), linear_interp(b)]; 
+    }
 }

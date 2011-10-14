@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block head %}
+ <meta property="og:title" content='{{ title }}' />
+ <meta property="og:image" content='{{ exp.thumb|default('/lib/skin/1/default_thumb.png') }}' />
+ <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
+ <meta property="og:type" content="article" />
+ <meta property="fb:admins" content="1007003" />
+ <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
+{% endblock %}
+
+{% block body_classes %}{{ super() }} expression minimal{% endblock %}
+
+
+{% block main %}
+ {% if auth_required %}
+  <script>
+   $(function() {
+       showDialog('#dia_password');
+       $('#password_input').select();
+   });
+  </script>
+ {% else %}
+  <div id='content'>{{ body }}</div>
+ {% endif %}
+
+ {% include 'dialogs/password.html' %}
+ {% include 'dialogs/ie_warning.html' %}
+{% endblock %}

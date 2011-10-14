@@ -1,6 +1,6 @@
-.happ { position : absolute; }
-.happ > * { position : absolute; }
-.happ .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
+.ehapp { position : absolute; }
+.ehapp > * { position : absolute; }
+.ehapp .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
 .select_box { width : 100%; height : 100%; z-index : 1; top : -5px; left : -5px; padding : 0; }
 .app_select { position : absolute; }
 
@@ -15,14 +15,14 @@
 .control.resize { cursor : se-resize; }
 .control.stack img { display : inline-block; margin-left : 5px; }
 .control.drawer { position : absolute; text-align : left;
-    background-color : white; display : none; }
+    background-color : white; display : none; margin-top : 5px; }
 .drawer { background-color : white; }
 
 .control.stack { white-space : nowrap; }
 .control.buttons .button { margin-right : 2px; }
 .control .button, .control .option { cursor : default; }
 .option.small { display : inline-block; }
-.drawer.fontname { padding : 0px; margin : 0; width : 24em; }
+.drawer.fontname { width : 24em; }
 .drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 8em; height : 1em; }
 .align .option.small { margin : 5px; }
 .drawer.link img { vertical-align : middle; }
@@ -38,3 +38,5 @@
 #menu_privacy .selected { display : none; }
 #right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }
+
+#dia_edit_bg h2 { text-align : center; }

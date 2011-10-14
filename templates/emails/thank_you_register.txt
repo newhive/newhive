@@ -1,0 +1,18 @@
+Hi {{ user_fullname }},
+welcome aboard!
+The next step is to customize your homepage, which is
+{{user_home_url }}.  
+
+Also, by clicking on your name, you'll go to 
+{{ user_expressions_url }}.
+This is a list of all your public expressions, and a good way to show your
+friends what you're up to!  
+
+Have a question or comment?  We want to hear from you!  Hit that lil "Feedback"
+button in the bottom right corner of every page (while you're logged in) and
+we'll get the message!  Or email us anytime at mailto:info@thenewhive.com.
+
+Have fun,
+The New Hive team
+
+

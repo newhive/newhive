@@ -1,19 +1,58 @@
+{% set header_boxes = [
+{'color': '#f73627', 'width': '11px'},
+{'color': '#f72e4d', 'width': '54px'},
+{'color': '#f45518', 'width': '56px'},
+{'color': '#e87c25', 'width': '95px'},
+{'color': '#f9a818', 'width': '94px'},
+{'color': '#7ba008', 'width': '65px'},
+{'color': '#1ea616', 'width': '47px'},
+{'color': '#4a969e', 'width': '73px'},
+{'color': '#698293', 'width': '91px'}
+]
+%}
+{% set table_width = 'width="586px"' %}
 <html>
-  <head></head>
-  <body style="font-family: Arial;">
-    <table>
-      <tr><td width="500px">
-        {% block header %}
-        <a href='http://thenewhive.com'><img alt="The New Hive" src="http://thenewhive.com/lib/skin/1/logotype_beta_composite.png" /></a>
-        {% endblock %}
-      </td></tr>
-      <tr><td width="500px">
-        {% block body %}
-        {% endblock %}
-      </td></tr>
-      <tr><td height="100px" width="500px">
-        {% block footer %}
-        {% endblock %}
-      </td></tr>
-  </body>
+<head></head>
+
+<body style="font-family: Helvetica, Verdana, sans-serif;">
+
+  {# Main layout table #}
+  <table {{ table_width }} style="border-collapse: collapse; border-spacing: 0;">
+    <tr><td {{ table_width }} style="padding: 0;">
+      {% block header %}
+      <table {{ table_width }} style="border-collapse: collapse; border-spacing: 0;" border="0">
+
+        {# Colored boxes in header #}
+        <tr height="60px">
+          {% for item in header_boxes %}
+          <td width="{{ item['width'] }}" style="background-color: {{ item['color'] }};"></td>
+          {% endfor %}
+        </tr>
+
+        {# logotype approximation #}
+        <tr height="50px">
+          <td style="background-color: #696e76; color: #ffffff; font-size: 37px; letter-spacing: -2px; font-weight: bold; vertical-align: bottom; padding-left: 15px;" colspan="9">
+            <a href="http://thenewhive.com" style="text-decoration: none; color: #ffffff">thenewhive.com</a>
+          </td>
+        </tr>
+
+      </table>
+      {% endblock %}
+    </td></tr>
+    <tr><td style="background-color: #f1f0e8;" {{ table_width }} >
+      {% block body %}
+      {% endblock %}
+    </td></tr>
+    <tr><td style="background-color: #696e76;" height="30px" {{ table_width }}>
+      {% block footer %}
+      <p style="text-align: center; color: #ffffff;">
+        <a href="mailto:info@thenewhive.com" style="text-decoration: none; color: #ffffff;">info@thenewhive.com</a> 
+        | <a href="http://thenewhive.com" style="text-decoration: none; color: #ffffff;">thenewhive.com</a> 
+        | <a href="http://www.facebook.com/pages/The-New-Hive/122884201115568" style="text-decoration: none; color: #ffffff;">facebook </a>
+        | <a href="http://twitter.com/#!/NewHive" style="text-decoration: none; color: #ffffff;">twitter</a>
+      </p>
+      {% endblock %}
+    </td></tr>
+</body>
 </html>
+
