@@ -9,6 +9,8 @@
  <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
 {% endblock %}
 
+{% block body_classes %}{{ super() }} expression minimal{% endblock %}
+
 
 {% block main %}
  {% if auth_required %}
@@ -19,11 +21,9 @@
    });
   </script>
  {% else %}
-  {{ body }}
+  <div id='content'>{{ body }}</div>
  {% endif %}
-<div id='dialogs'>
-  <div id='dialog_shield'></div>
-  {% include 'dialogs/password.html' %}
-  {% include 'dialogs/ie_warning.html' %}
-</div>
+
+ {% include 'dialogs/password.html' %}
+ {% include 'dialogs/ie_warning.html' %}
 {% endblock %}

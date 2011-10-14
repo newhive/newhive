@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block body_classes %}{{ super() }} main{% endblock%}
+
 {% block main %}
 <div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
 >{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
@@ -23,7 +25,7 @@
   </div>
   <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
  {% else %}
-  <a href='{{ server }}'><div style='left : 44px; top : -1px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  <a href='{{ server }}'><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
  {% endif %}
 </div>
 
@@ -55,32 +57,12 @@
  </div>
 
  <script>
-$(function() {
- var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
-     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
-       close_delay : 1000, auto_close : false });
- {% if error %} login_menu.open() {% endif %}
-
- var dia;
- $('#signup_button').click(function() {
-     dia = showDialog('#dia_signup');
-     $(this).addClass('open');
- });
- 
- $('#send_msg').bind('click dblclick', function() {
-    if ($(this).hasClass('inactive')) { return true; }
-    $(this).addClass('inactive');
-
-    $.post('/', { name : $('[name=name]').val(), message : $('[name=message]').val(), referral : $('[name=referral]').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
-            $('#send_msg').removeClass('inactive');
-            if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
-            else {
-                $('#message').val('');
-                dia.close();
-                loadDialog(data);
-            }
-        }, 'json') });
-});
+  $(function() {
+   var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
+       { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
+         close_delay : 1000, auto_close : false });
+   {% if error %} login_menu.options.hover_close = false; login_menu.open(); {% endif %}
+  });
  </script>
 {% endif %}
 
@@ -92,16 +74,15 @@ $(function() {
 {% if user.logged_in %}
  <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable' title='Send feedback'>
  <script>
-$('#feedback_btn').click(function() {
-    new_window('{{ server }}feedback?url=' + window.location, 470, 400);
-});
+  $('#feedback_btn').click(function() {
+      new_window('{{ server }}feedback?url=' + window.location, 470, 400);
+  });
  </script>
 {% endif%}
 
 </div>
 
 <div id='dialogs'>
-  <div id='dialog_shield'></div>
   {% if user.logged_in %}
     {% include 'dialogs/referral.html' %}
   {% endif %}

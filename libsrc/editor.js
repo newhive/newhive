@@ -193,7 +193,7 @@ Hive.App = function(initState) {
     o.load = function() {
         o.content_element = o.div.find('.content');
         o.opacity(o.state.opacity);
-        o.content_element.click(function(e) { o.focus(); });
+        o.content_element.click(function(e) { o.focus(); return false; });
         if(o.state.load) o.state.load(o);
         delete o.state.create;
     }
@@ -266,13 +266,16 @@ Hive.App.Controls = function(app) {
         d.append(e);
         var input = e.find('input');
         var m = hover_menu(d.find('.button.link'), e, {
-             open : function() { input.val(o.app.link()); }
-            ,focus_persist : input
-            ,auto_close : false
+             open : function() {
+                 input.focus();
+                 input.val(o.app.link());
+             }
+            ,click_persist : input
             ,close : function() {
+                input.blur();
                 var v = input.val();
                 // TODO: improve URL guessing
-                //if(v.match(/\./) && !v.match(/^http/i)) v = 'http://' + v;
+                if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
                 o.app.link(v);
                 o.app.focus();
             }
@@ -433,7 +436,7 @@ Hive.App.Text = function(common) {
             autoLink(o.rte.get_content())
         );
         o.rte.editMode(false);
-        o.rte.select(null);
+        //o.rte.select(null);
     });
     
     o.link = function(v) {
@@ -743,7 +746,7 @@ Hive.new_app = function(s) {
 
 var main = function() {
     // Warn the user if they leave the page by any route other than the save button TODO: actually check if they've made any changes
-    window.onbeforeunload = function(){ return "If you leave this page any unsaved changes to your expression will be lost." }
+    if(!debug_mode) window.onbeforeunload = function(){ return "If you leave this page any unsaved changes to your expression will be lost." }
 
     if(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) && parseInt(RegExp.$1) < 5)
         if(confirm("You're using an oldish version of Firefox. Click OK to get the newest version"))
@@ -803,7 +806,7 @@ var main = function() {
     hover_menu($('#insert_image'), $('#menu_image'));
     hover_menu($('#insert_audio'), $('#menu_audio'));
     hover_menu($('#insert_file'), $('#menu_file'));
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { focus_persist : $('#embed_code') } );
+    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code') } );
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
     hover_menu($('#insert_shape'), $('#menu_shape'));
     
@@ -832,7 +835,7 @@ var main = function() {
         }
     }
 
-    click_dialogue($('#btn_save'), $('#menu_save'), {open: function(){$('#title').focus().select();}} );
+    hover_menu($('#btn_save'), $('#menu_save'), { hover : false });
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');
@@ -842,10 +845,14 @@ var main = function() {
             }
         }
     });
+    $('#save_overwrite').click(function() {
+        Hive.Exp.overwrite = true;
+        Hive.save();
+    });
     
     // Automatically update url unless it's an already saved expression or the user has modified the url manually
     $('#menu_save #title').bind('keydown keyup', function(){
-        if (!(Hive.Exp.name || $('#url').hasClass('modified') )){
+        if (!(Hive.Exp.home || Hive.Exp.name || $('#url').hasClass('modified') )){
             $('#url').val(
                 $('#title').val().replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").toLowerCase()
             );
@@ -933,10 +940,18 @@ Hive.upload_start = function() { center($('#loading').show()); }
 Hive.upload_finish = function() { $('#loading').hide(); }
 
 Hive.save = function() {
+    var expr = Hive.get_state();
+
+    if(expr.name.match(/^expressions/)) {
+        alert('The url "/expressions" is reserved for your profile page.');
+        return false;
+    }
+
     var on_response = function(ret) {
-        if(typeof(ret) != 'object') alert("There was a problem saving your stuff :(.");
-        if (ret.error) {
-            alert(ret.error);
+        if(typeof(ret) != 'object') alert("Sorry, something is broken :(. Please send us feedback");
+        if(ret.error == 'overwrite') {
+            $('#expr_name').html(expr.name);
+            showDialog('#dia_overwrite');
             $('#save_submit').removeClass('disabled');
         }
         else if (ret.location) {
@@ -945,6 +960,7 @@ Hive.save = function() {
                 $('#btn_share').show();
                 updateShareUrls('#dia_share', ret.location);
                 $('#mail_form [name=forward]').attr('value', ret.location);
+                $('#mail_form [name=id]').attr('value', ret.id);
                 $('#app_btns').add('#btn_save').add('#btn_grid').add('#menu_save').add('#btn_help').hide();
                 $('#dialog_shield, .btn_dialog_close').unbind('click').click(function(){
                     minimize($('#dia_share'), $('#btn_share'), { duration : 1000,
@@ -952,7 +968,6 @@ Hive.save = function() {
                     });
                 $('#expression_url').html(ret.location);
                 $('#congrats_message').html('<h1>Now you can share your expression anywhere.</h1>');
-                $('#email_message').html('Check out this expression: \n\n' + ret.location);
             } else {
                 window.location = ret.location;
             }
@@ -1112,7 +1127,8 @@ Hive.rte = function(options) {
         var s = o.win.getSelection();
         if(!s) return;
         s.removeAllRanges();
-        if(range) s.addRange(range);
+        if(range)
+        s.addRange(range);
     }
 
     // An attempt to replace execCommand?
@@ -1135,7 +1151,7 @@ Hive.rte = function(options) {
         if(mode) {
             o.doc.designMode = 'on';
             o.iframe.contentWindow.focus();
-            if(o.range) o.select(o.range);
+            //if(o.range) o.select(o.range);
         } else {
             //o.range = o.get_range(); // attempt to save cursor positoion breaks deleting textboxes
             o.doc.designMode = 'off';
@@ -1161,7 +1177,7 @@ var append_color_picker = function(container, callback, init_color) {
 
     var make_picker = function(c) {
         var d = $("<div style='display : inline-block; width : 20px; height : 20px; margin : 2px'>");
-        d.css('background-color', c).attr('val', c).click(function() { manual_input.val(c); callback(c) });
+        d.css('background-color', c).attr('val', c).click(function() { manual_input.val('#' + c); callback(c) });
         return d.get(0);
     }
     var make_row = function(cs) {
@@ -1177,7 +1193,7 @@ var append_color_picker = function(container, callback, init_color) {
     var bar = $("<img style='width : 10px; height : 165px; position : absolute; top : 5px; left : 162px'>");
     bar.attr('src', '/lib/skin/1/saturated.png');
     var shades = $("<div style='width : 120px; height : 120px; position : absolute; top : 5px; left : 190px'><img src='/lib/skin/1/greys.png' style='width : 100%; position : absolute'></div>");
-    var manual = $("<div style='position : absolute; top : 130px; left : 190px; width : 120px'>#</div>");
+    var manual = $("<div style='position : absolute; top : 130px; left : 200px; width : 120px'></div>");
     var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
     manual.append(manual_input);
 

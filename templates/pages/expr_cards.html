@@ -13,6 +13,12 @@ iframe { border : none; }
 {% block body %}
 
 <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
+ <div class='nav_icon text hoverable medbold' onclick="" style='margin-right : 20px' id='btn_help'>?</div>
+ <script>
+  (function() { var b = $('#btn_help');
+    b.click(function() { exprDialog('{{ site_pages['profile-help'] }}', { minimize_to : b } ) });
+    {% if show_help %}$('#btn_help').click(){% endif %} })();
+ </script>
  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
  {% if user.logged_in %}
   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
@@ -30,11 +36,11 @@ iframe { border : none; }
 {% endif %}
 #}
 <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
- <div class='fathead' style='font-family : Helvetica, sans-serif'><a href='/'>{{ owner.fullname }}</a>{{ ': ' + tag if tag }}</div>
+ <div class='fathead'><a href='/'>{{ owner.fullname }}</a>{{ ': ' + tag if tag }}</div>
  
  <div id='tags'>
   <a href='/expressions' class='tag_label {{ 'current' if not tag }}'>All</a>
-  {% for t in tags %}<a href='?tag={{ t|e }}' class='tag_label drag {{ 'current' if t == tag }}' draggable='false' value='{{ t|e }}'>{{ t }}</a>{% endfor %}
+  {% for t in tags %}<a href='/expressions/{{ t|e }}' class='tag_label drag {{ 'current' if t == tag }}' draggable='false' value='{{ t|e }}'>{{ t }}</a>{% endfor %}
   {% if user_is_owner %}
    <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='vertical-align : bottom' title='Add Folder'>
    {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag|e }}"'>{% endif %}
