@@ -293,8 +293,6 @@ def mail_us(request, response):
         ,'Reply-to' : form['email']
         }
     body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
-    print(request.form)
-    print(form)
     form.update({'msg': body})
     if not config.debug_mode:
         send_mail(heads, body)
