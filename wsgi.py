@@ -70,7 +70,7 @@ def expr_save(request, response):
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
         new_expression = False
-    return dict( new=new_expression, error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
+    return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
 def generate_thumb(expr, owner):
@@ -293,8 +293,6 @@ def mail_us(request, response):
         ,'Reply-to' : form['email']
         }
     body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
-    print(request.form)
-    print(form)
     form.update({'msg': body})
     if not config.debug_mode:
         send_mail(heads, body)
@@ -322,7 +320,7 @@ def mail_them(request, response):
         response.context.update({
           'short_url': (exp.get('domain') + '/' + exp.get('name'))
           ,'tags': exp.get('tags')
-          ,'thumbnail_url': exp.get('thumb')
+          ,'thumbnail_url': exp.get('thumb', 'http://thenewhive.com/lib/skin/1/default_thumb.png')
           ,'user_url': home_url(owner)
           ,'user_name': owner.get('name')
           ,'title': exp.get('title')
