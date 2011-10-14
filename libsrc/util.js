@@ -81,48 +81,80 @@ function autoLink(string) {
     }
     return string;
 }
-            
-function loadDialog(htmlString) {
-    var match = /id=['"]([^'"]*)['"]/.exec(htmlString)
-    var dialog = $('#' + match[1]);
-    if (dialog.length === 0) {
-        showDialog(
-            $('#dialogs').append(htmlString).children().last()
-        );
-    } else {
-        showDialog(dialog)
-    }
-}
 
-function showDialog(name, select) {
+function exprDialog(url, opts) {
+    $.extend(opts, { layout : function(dia) {
+        dia.css({ width : '80%' });
+        dia.css({ height : dia.width() / parseFloat(dia.attr('data-aspect')) });
+        place_apps();
+        center(dia, $(window), opts);
+    } });
+    return loadDialog(url + '?template=expr_div', opts);
+}
+exprDialog.loaded = {};
+
+function loadDialog(url, opts) {
+    $.extend(opts, { absolute : true });
+    var dia;
+    if(loadDialog.loaded[url]) dia = loadDialog.loaded[url];
+    else {
+        var html;
+        $.ajax({ url : url, success : function(h) { html = h }, async : false });
+        dia = loadDialog.loaded[url] = $(html);
+    }
+    return showDialog(dia, opts);
+}
+loadDialog.loaded = {};
+
+function showDialog(name, opts) {
     var dialog = $(name);
-    var shield = $('#dialog_shield');
-    if (dialog.length === 1 )
-    {
-        dialog.addClass(['dialog', 'border', 'selected']);
-        center(
-            dialog.show()
-        );
-        shield.show();
+    if(!dialog.length) throw "dialog element " + name + " not found";
+    var o = dialog.data('dialog');
+    if(!o) {
+        var o = { dialog : dialog };
+        dialog.data('dialog', o);
 
-        if (! dialog.hasClass('mandatory') ) {
-            if (dialog.find('.btn_dialog_close').length === 0 ) {
-                dialog.prepend('<div class="btn_dialog_close"></div>');
+        o.open = function() {
+            if(o.opened) return;
+            o.opened = true;
+            o.opts = $.extend({ open : noop, close : noop, absolute : false, fade : true,
+                mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
+
+            o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
+            dialog.addClass('dialog').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            if(!o.opts.mandatory) {
+                dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
+                o.shield.add(o.btn_close).click(o.close);
             }
-            shield.add( dialog.find('.btn_dialog_close') ).click(function(){ hideDialog(name); });
-        }
-        if (select) {
-            dialog.find(select).focus().click();
-        }
-    } else {
-        throw "dialog element " + name + " not found";
-    }
-}
+            $(window).resize(function() { o.opts.layout(o.dialog) });
+            o.opts.layout(o.dialog);
 
-function hideDialog(name) {
-    $(name).hide();
-    $('#dialog_shield').hide();
+            if (o.opts.select) dialog.find(o.opts.select).focus().click();
+            o.index = showDialog.opened.length;
+            showDialog.opened.push(o);
+            o.opts.open();
+        }
+
+        o.close = function() {
+            showDialog.opened.splice(showDialog.opened.indexOf(o), 1);
+            o.shield.remove();
+            if(o.btn_close) o.btn_close.remove();
+            $(window).unbind('resize', o.opts.layout);
+            var clean_up = function() {
+                dialog.hide();
+                o.opts.close();
+                o.opened = false;
+            }
+            if(o.opts.minimize_to) minimize(dialog, $(o.opts.minimize_to), { 'complete' : clean_up });
+            else clean_up();
+        }
+    }
+    o.open();
+
+    return o;
 }
+showDialog.opened = [];
+closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);
@@ -137,7 +169,7 @@ function updateShareUrls(element, currentUrl) {
       .attr('href', 'http://www.reddit.com/submit?url=' + encodedUrl);
     element.find('.gplus_button')
       .attr('href', currentUrl);
-    
+
     element.find('.count').each(function(){
       $(this).html($(this).html().replace(/^0$/, "-"))
     });
@@ -175,7 +207,7 @@ function reduce(f, list, first) {
     if(first === undefined) first = list.shift();
     for(var i = 0; i < list.length; i++) first = f(first, list[i]);
     return first;
-}    
+}
 function zip(list1, list2) {
     var ret = [];
     for(var i = 0; i < list1.length; i++) ret.push([list1[i], list2[i]]);
@@ -199,22 +231,20 @@ function elem(tag, attrs) {
  * it when focused.
  * Adds hover events for elements with class='hoverable'
  * ***/
-$(document).ready(function () {
+$(function () {
     $('#btn_share').click(function(){
         var dialog = $('#dia_share');
         if (dialog.length === 0 ) {
             $.get("?dialog=share", function(data){
-                loadDialog(data);
+                showDialog(data, { 'select' : '#expression_url' } );
                 updateShareUrls('#dia_share', window.location);
-                $('#expression_url').click(); //This should have been handled by the second arg to showDialog, but alas
             });
         } else {
-            showDialog('#dia_share', '#expression_url');
+            showDialog('#dia_share', { 'select' : '#expression_url' });
             updateShareUrls('#dia_share', window.location);
-            $('#expression_url').click(); //This should have been handled by the second arg to showDialog, but alas
         }
     });
-  
+
   $("input[alt], textarea[alt]").each(function() {
     var defaultValue = $(this).attr('alt');
     this.onfocus = function() { if(this.value == defaultValue) this.value = ""; }
@@ -227,7 +257,7 @@ $(document).ready(function () {
   // Cause external links to open in a new window
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
   $('a').each(function() {
-    var a = new RegExp('thenewhive.com');
+    var a = new RegExp(server_name);
     if(!a.test(this.href)) {
       $(this).click(function(event) {
         event.preventDefault();
@@ -237,21 +267,28 @@ $(document).ready(function () {
     }
   });
 
-
+  $('#dia_referral input[name=forward]').val(window.location);
+  $(window).resize(place_apps);
+  place_apps();
 });
 
-function center(e, inside) {
+
+
+
+function center(e, inside, opts) {
+    var opts = $.extend({ absolute : false }, opts);
     var w = typeof(inside) == 'undefined' ? $(window) : inside;
-    e.css({ left : w.width() / 2 - e.width() / 2,
-        top : w.height() / 2 - e.height() / 2});
+    pos = { left : Math.max(0, w.width() / 2 - e.outerWidth() / 2),
+        'top' : Math.max(0, w.height() / 2 - e.outerHeight() / 2) };
+    if(opts.absolute) {
+        pos['left'] += window.scrollX;
+        pos['top'] += window.scrollY;
+    }
+    e.css(pos);
 }
 
 function asyncSubmit(form, callback) {
-    var data = {};
-    $(form).find("[name]").each(function() { data[this.name] = this.value; });
-    var path = $(form).attr('action');
-    if(!path) path = '.';
-    $.post(path, data, callback, 'json');
+    $.post(server_url, $(form).serialize(), callback);
     return false;
 }
 
@@ -272,19 +309,20 @@ function hover_add(o) {
     $(o).hover(function() { $(o).addClass('active'); }, function() { if(!o.busy) $(o).removeClass('active'); });
 }
 
-hover_menu = function(handle, drawer, options_arg) {
-    var options = {
+hover_menu = function(handle, drawer, options) {
+    var o = { handle : handle, drawer : drawer };
+    o.options = {
          open : noop
         ,close : noop
         ,auto_close : true
         ,hover_close : true
         ,close_delay : 500
-        ,offsetY : 5
+        ,offsetY : 0
+        ,click_persist : false
         ,hover : true
     };
-    $.extend(options, options_arg);
+    $.extend(o.options, options);
     if(!handle.length) throw("no handle"); if(!drawer.length) throw("no drawer");
-    var o = { handle : handle, drawer : drawer };
     handle.get(0).hover_menu = o;
     //drawer.remove();
     //$(document.body).append(drawer);
@@ -299,7 +337,9 @@ hover_menu = function(handle, drawer, options_arg) {
         o.hover_src = hover_url(o.handle_src);
     }
 
-    o.delayed_close = function() { o.close_timer = setTimeout(o.close, options.close_delay); }
+    o.delayed_close = function() {
+        if(o.options.hover_close) o.close_timer = setTimeout(o.close, o.options.close_delay);
+    }
     o.cancel_close = function() { if(o.close_timer) clearTimeout(o.close_timer); }
 
     o.close = function() {
@@ -308,7 +348,7 @@ hover_menu = function(handle, drawer, options_arg) {
         o.opened = false;
         if(o.rollover) o.rollover.attr('src', o.handle_src);
         handle.removeClass('active');
-        options.close();
+        o.options.close();
         handle.get(0).busy = false;
     }
     o.open = function() {
@@ -319,32 +359,33 @@ hover_menu = function(handle, drawer, options_arg) {
         handle.get(0).busy = true;
         if(o.rollover) o.rollover.attr('src', o.hover_src);
         handle.addClass('active');
+        if(o.options.click_persist) o.options.hover_close = true;
 
         drawer.show();
         var hp = handle.position();
-        var oy = handle.outerHeight() + options.offsetY;
+        var oy = handle.outerHeight() + o.options.offsetY;
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
         var top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
             && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
-            hp.top - drawer.outerHeight() - options.offsetY : hp.top + oy;
+            hp.top - drawer.outerHeight() - o.options.offsetY : hp.top + oy;
         var left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
             hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
         drawer.css({ left : left, top : top });
-        options.open();
+        o.options.open();
     }
-    
-    if(options.hover) {
-        if(options.hover_close) {
-            handle.hover(o.open, o.delayed_close);
-            drawer.hover(o.cancel_close, o.delayed_close);
-        }
-        else handle.hover(o.open);
+
+    if(o.options.hover) {
+        handle.hover(o.open, o.delayed_close);
+        drawer.hover(o.cancel_close, o.delayed_close);
+        handle.hover(o.open);
     }
     handle.click(o.open);
+    var no_hover_close = function() { o.options.hover_close = false; }
+    $(o.options.click_persist).click(no_hover_close).bind('contextmenu', no_hover_close);
 
-    //if(options.auto_close) drawer.click(o.close);
-    //if(options.auto_close) handle.click(o.close);
+    //if(o.options.auto_close) drawer.click(o.close);
+    //if(o.options.auto_close) handle.click(o.close);
 
     $(window).click(function(e) {
         if(handle.get(0) == e.target
@@ -356,11 +397,6 @@ hover_menu = function(handle, drawer, options_arg) {
     });
 
     return o;
-}
-
-click_dialogue = function(handle, drawer, options_arg) {
-    var opts = $.extend({ offsetY : 0, hover : false, auto_close : false }, options_arg);
-    return hover_menu(handle, drawer, opts);
 }
 
 tool_tip = function(tool, tip, above) {
@@ -380,121 +416,24 @@ tool_tip = function(tool, tip, above) {
     return o;
 }
 
-function redirect(u) { window.location = u; }
-
-var append_color_picker = function(container, callback, init_color) {
-    var e = $("<div style='width : 310px; height : 165px'>");
-    container.append(e);
-
-    var make_picker = function(c) {
-        var d = $("<div style='display : inline-block; width : 20px; height : 20px; margin : 2px'>");
-        d.css('background-color', c).attr('val', c).click(function() { manual_input.val(c); callback(c) });
-        return d.get(0);
-    }
-    var make_row = function(cs) {
-        var d = $("<div>");
-        d.append(map(make_picker, cs));
-        return d.get(0);
-    }
-    by_sixes = map(function(n) { return colors.slice(n, n+6)}, [0, 6, 12, 18, 24, 30]);
-    var pickers = $("<div>");
-    pickers.append(map(make_row, by_sixes));
-    e.append(pickers);
-
-    var bar = $("<img style='width : 10px; height : 165px; position : absolute; top : 5px; left : 162px'>");
-    bar.attr('src', '/lib/skin/1/saturated.png');
-    var shades = $("<div style='width : 120px; height : 120px; position : absolute; top : 5px; left : 190px'><img src='/lib/skin/1/greys.png' style='width : 100%; position : absolute'></div>");
-    var manual = $("<div style='position : absolute; top : 130px; left : 190px; width : 120px'>#</div>");
-    var manual_input = $("<input type='text' size='6'>").val(init_color);
-    manual.append(manual_input);
-
-    var update_hex = function() {
-        var v = manual_input.val();
-        if(v.match(/[\dA-Z]{6}/i) || v.match(/[\dA-Z]{3}/i)) callback('#' + v);
+var minimize = function(what, to, opts) {
+    var o = $.extend({ 'to' : $(to).addClass('active'), 'what' : $(what), 'duration' : 700, 'complete' : noop }, opts);
+    if(o.what.data('minimizing')) return;
+    o.what.data('minimizing', true);
+    o.init_css = { 'top' : o.what.css('top'), 'left' : o.what.css('left'), 'width' : o.what.css('width') || '',
+        'height' : o.what.css('height') || '', 'opacity' : o.what.css('opacity') };
+    o.reset = function() {
+        o.what.hide();
+        o.what.css(o.init_css);
+        o.what.removeData('minimizing');
+        o.complete();
     };
-    manual_input.change(update_hex).keyup(update_hex);
-
-    // saturated color picked from color bar
-    var scolor = [255, 255, 255];
-    var get_hue = function(e) {
-        var o = Math.floor(e.pageY - bar.offset().top);
-        if(o < 0) o = 0;
-        if(o > 164) o = 164;
-        scolor = saturated_color(o, 165);
-        var color = 'rgb(' + scolor.join(',') + ')';
-        shades.css('background-color', color);
-        calc_color();
-    }
-    bar.click(get_hue).drag(get_hue);
-
-    var x = 1, y = 0; // gamma (x), saturation (y)
-    var get_shade = function(e) {
-        x = (e.pageX - shades.offset().left) / 120;
-        y = (e.pageY - shades.offset().top) / 120;
-        if(x < 0) x = 0;
-        if(x > 1) x = 1;
-        if(y < 0) y = 0;
-        if(y > 1) y = 1;
-        calc_color();
-    }
-    shades.click(get_shade).drag(get_shade);
-
-    var calc_color = function() {
-        var a = 1 - x, b = 1 - y;
-        // blend saturated color with brightness and saturation
-        var blend = function(c) { return Math.floor(a * b * 255 + (1 - a) * c); }
-        var color = map(blend, scolor);
-        var hex = map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
-        manual_input.val(hex);
-        callback('#' + hex);
-    }
-
-    e.append(bar);
-    e.append(shades);
-    e.append(manual);
-
-    // Returns a fully saturated color in the RGB color wheel.
-    // This function generated lib/skin/1/saturated.png.
-    // The max param must be >= 1536 to get every possible fully saturated
-    // color in a 24 bit color space.
-    var saturated_color = function(n, max) {
-        if(!max) max = 1536;
-        if(n < 0) n = 0;
-        if(n > max) n = max;
-
-        var scale = 255;
-        var r = [1, 1, 0, 0, 0, 1, 1];
-        var g = [0, 1, 1, 1, 0, 0, 0];
-        var b = [0, 0, 0, 1, 1, 1, 0];
-
-        var linear_interp = function(points) {
-            var p = (n / max) * (points.length - 1);
-            var p0 = Math.floor(p);
-            var v = p - p0;
-            if(p0 == points.length - 1) p0--;
-            delta = points[p0 + 1] * scale - points[p0] * scale;
-            return Math.floor(delta * v + points[p0] * scale);
-        }
-
-        return [linear_interp(r), linear_interp(g), linear_interp(b)]; 
-    }
-}
-
-var background_pick = function(callback, initial, callback_final) {
-    if(!callback_final) var callback_final = noop;
-    var e = $("<div id='bg_select' style='position : fixed; width : 530px; height : 320px; z-index : 1' class='border selected'>"
-        + "<div style='position: absolute; left: 0px; top: 0px; background-color : white; width : 540px; height : 330px; opacity : 0.7;'/>"
-        + "<div style='position: absolute; color : "+colors[1]+"; font-size : 1.5em'>Edit Background</div>"
-        //+ "<div id='bg_upload'>Upload Image</div>"
-        //+ "<div style='position : absolute; top : 100px'>Opacity</div>"
-        //+ "<div id='bg_opacity' style='position : absolute; height : 10px; width : 160px; top : 130px'><img src='/lib/skin/1/opacity_bar.png'><div style='position : absolute; width : 10px; height : 20px; background-color : black'></div>"
-        + "<div id='color_pick' style='position : absolute; left : 10px; top : 50px'></div>"
-        + "<div class='medbold' id='bg_done' style='cursor : default; position : absolute; right : 10px; bottom : 10px'>Done</div>"
-        + "</div>");
-    $('#content').before(e);
-    $('#bg_done').click(function() { $('#bg_select').remove(); callback_final(); });
-    append_color_picker($('#color_pick'), callback, initial);
-    center(e);
+    var pos = o.to.offset();
+    if(o.what.css('position') == 'fixed') { pos.left -= $(window).scrollLeft(); pos.top -= $(window).scrollTop() }
+    o.what.animate({ 'left' : pos.left, 'top' : pos.top, 'width' : o.to.width(), 'height' : o.to.height(), 'opacity' : 0 }
+        , {'duration' : o.duration, complete : o.reset  });
+    setTimeout(function() { o.to.removeClass('active'); }, o.duration * 1.5);
+    return o;
 }
 
 // from http://www.quirksmode.org/js/cookies.html#script
@@ -524,3 +463,23 @@ function eraseCookie(name) {
 }
 
 function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
+
+var place_apps = function() {
+   $('.happ').each(function(i, app_div) {
+       var e = $(this);
+       var s = e.parent().width() / 1000;
+       if(!e.data('css')) {
+           var c = {};
+           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height']);
+           var scale = parseFloat(e.attr('data-scale'));
+           if(scale) c['font-size'] = scale;
+           e.data('css', c);
+           var a; if(a = e.attr('data-angle')) e.rotate(parseFloat(a));
+           e.css('opacity', this.style.opacity);
+       }
+       var c = $.extend({}, e.data('css'));
+       for(var p in c) c[p] *= s;
+       if(c['font-size']) c['font-size'] += 'em';
+       e.css(c);
+   });
+}

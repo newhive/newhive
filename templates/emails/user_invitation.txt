@@ -1,7 +1,6 @@
 Welcome, {{ name }}!
 
-Thanks for signing up for a beta account on thenewhive.com,
-your new creative playground.
+One of our users, {{ referrer_name }}, sent you an invite to The New Hive!
 
 Use this signup link to get started:
 {{ url }}

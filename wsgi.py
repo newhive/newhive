@@ -19,18 +19,20 @@ assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
+    assets_env.set_url('/lib/libsrc')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
-assets_env.register('app.js', 'jquery.js', 'jquery-ui.color.js', 'rotate.js', 'hover.js',
-    'drag.js', 'dragndrop.js', 'colors.js', 'util.js',  output='../lib/app.js')
+assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
+    'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('admin.js', 'raphael.js', 'jquery.tablesorter.min.js', output='../lib/admin.js')
-assets_env.register('app.css', 'app_src.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
+assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
 
 
-def lget(L, i, default=None):
+def lget(L, i, *default):
     try: return L[i]
-    except: return default
+    except: return default[0] if default else None
 def raises(e): raise e
 def dfilter(d, keys):
     """ Accepts dictionary and list of keys, returns a new dictionary
@@ -51,27 +53,27 @@ def expr_save(request, response):
     if not exp: raise ValueError('missing or malformed exp')
 
     res = Expr.fetch(exp.id)
-    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background'])
+    upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
     upd['name'] = upd['name'].lower().strip()
-    if re.search('\#|\?|\!', upd['name']) or re.match('^\*', upd['name']):
-        return dict(error="Sorry, the URL may not contain '#', '?', or begin with '*'.")
-    generate_thumb(upd, request.requester)
+    if not res or upd.get('thumb') != res.get('thumb'): generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
-        try: 
+        try:
           new_expression = True
           res = request.requester.expr_create(upd)
-        except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
+        except DuplicateKeyError:
+            if exp.get('overwrite'):
+                Expr.named(upd['domain'], upd['name']).delete()
+                res = request.requester.expr_create(upd)
+            else: return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
     else:
         if not res['owner'] == request.requester.id:
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
         new_expression = False
-    return dict( new=new_expression, error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
+    return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
 def generate_thumb(expr, owner):
-    # TODO: don't regenerate thumb when image has not changed
-
     # retrieve first image from expression
     fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), -1)
     if not fst_img or not fst_img.get('content'): return
@@ -190,14 +192,13 @@ def user_create(request, response):
         Creates user record.
         Creates empty home expression, so user.thenewhive.com does not show 404.
         Creates media directory for user.
+        emails thank you for registering to user
         Logs new user in.
         """
 
     referral = Referral.fetch(request.args.get('key'), keyname='key')
     if not referral: return bad_referral(request, response)
     referrer = User.fetch(referral['user'])
-    if(referrer['referrals'] <= 0):
-        return no_more_referrals(referrer['name'], request, response)
     assert 'tos' in request.form
 
     args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
@@ -206,18 +207,22 @@ def user_create(request, response):
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.delete()
-    user.expr_create({ 'title' : 'Homepage', 'home' : True })
+    home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
+
+    try: mail_user_register_thankyou(user)
+    except: pass # TODO: log an error
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
-    return redirect(response, config.intro_url)
+    return redirect(response, abs_url(secure=True) + 'edit/' + home_expr.id)
 
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
-    return serve_page(response, 'minimal.html')
+    return serve_page(response, 'pages/minimal.html')
 def bad_referral(request, response):
-    response.context['content'] = 'Invalid referral; already used or never existed'
-    return serve_page(response, 'minimal.html')
+    response.context['msg'] = 'You have already signed up, or if there\'s been a mistake, sorry, and please sign up again!'
+    response.context['error'] = 'Log in if you already have an account'
+    return serve_page(response, 'pages/error.html')
 
 
 def expr_tag_update(request, response):
@@ -279,6 +284,7 @@ def mail_us(request, response):
         ,'email': request.form.get('email')
         ,'referral': request.form.get('referral')
         ,'message': request.form.get('message')
+        ,'url': request.form.get('forward')
         }
     heads = {
          'To' : 'info@thenewhive.com'
@@ -287,24 +293,38 @@ def mail_us(request, response):
         ,'Reply-to' : form['email']
         }
     body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
-    print(request.form)
-    print(form)
     form.update({'msg': body})
     if not config.debug_mode:
         send_mail(heads, body)
     Contact.create(**form)
 
-    return jinja_env.get_template('dialogs/signup_thank_you.html').render(response.context)
+    return serve_page(response, 'dialogs/signup_thank_you.html')
 
 def mail_them(request, response):
     if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
+
+    response.context.update({
+         'message': request.form.get('message')
+        ,'url': request.form.get('forward')
+        ,'title': request.form.get('forward')
+        ,'sender_fullname': request.requester.get('fullname')
+        ,'sender_url': home_url(request.requester)
+        })
+
     exp = Expr.fetch(request.form.get('id'))
+
     if exp:
         exp.increment({'analytics.email.count': 1})
-        title = exp.get('title')
-    else:
-        title = request.form.get('forward')
+        owner = User.fetch(exp.get('owner'))
+        response.context.update({
+          'short_url': (exp.get('domain') + '/' + exp.get('name'))
+          ,'tags': exp.get('tags')
+          ,'thumbnail_url': exp.get('thumb', 'http://thenewhive.com/lib/skin/1/default_thumb.png')
+          ,'user_url': home_url(owner)
+          ,'user_name': owner.get('name')
+          ,'title': exp.get('title')
+          })
 
     heads = {
          'To' : request.form.get('to')
@@ -312,21 +332,68 @@ def mail_them(request, response):
         ,'Subject' : request.form.get('subject', '')
         ,'Reply-to' : request.requester.get('email', '')
         }
-    context = {
-         'message': request.form.get('message')
-        ,'url': request.form.get('forward')
-        ,'title': title
-        ,'user_name': request.requester.get('fullname')
-        }
     body = {
-         'plain': jinja_env.get_template("emails/share.txt").render(context)
-        ,'html': jinja_env.get_template("emails/share.html").render(context)
+         'plain': render_template(response, "emails/share.txt")
+        ,'html': render_template(response, "emails/share.html")
         }
     send_mail(heads, body)
     if request.form.get('send_copy'):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
+
+def mail_referral(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    user = request.requester
+    name = request.form.get('name')
+    to_email = request.form.get('to')
+    if not user['referrals'] > 0: return False
+    referral = user.new_referral({'name': name, 'to': to_email})
+
+    heads = {
+         'To' : to_email
+        ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
+        ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
+        ,'Reply-to' : user.get('email', '')
+        }
+    context = {
+         'referrer_url': home_url(user)
+        ,'referrer_name': user.get('fullname')
+        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + to_email)
+        ,'name': name
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
+        ,'html': jinja_env.get_template("emails/user_invitation.html").render(context)
+        }
+    send_mail(heads, body)
+    return redirect(response, request.form.get('forward'))
+
+def mail_invite(email, name=False, force_resend=False):
+    user = get_root()
+
+    if Referral.find(to=email) and not force_resend:
+        return False
+
+    referral = user.new_referral({'name': name, 'to': email})
+
+    heads = {
+        'To': email
+        ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
+        ,'Subject' : "You have a beta invitation to thenewhive.com"
+        }
+
+    context = {
+        'name': name
+        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + email)
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/invitation.txt").render(context)
+        ,'html': jinja_env.get_template("emails/invitation.html").render(context)
+        }
+    send_mail(heads, body)
+    return True
+
 
 def mail_feedback(request, response):
     if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')
@@ -349,12 +416,36 @@ def mail_feedback(request, response):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
     response.context['success'] = True
+
+def mail_user_register_thankyou(user):
+    user_profile_url = home_url(user)
+    user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
+    heads = {
+        'To' : user['email']
+        , 'From' : 'The New Hive <noreply@thenewhive.com'
+        , 'Subject' : 'Thank you for creating an account on thenewhive.com'
+        }
+    context = {
+        'user_fullname' : user['fullname']
+        , 'user_home_url' : user_home_url
+        , 'user_home_url_display' : re.sub(r'^https?://', '', user_home_url)
+        , 'user_profile_url' : user_profile_url
+        , 'user_profile_url_display' : re.sub(r'^https?://', '', user_profile_url)
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/thank_you_register.txt").render(context)
+        ,'html': jinja_env.get_template("emails/thank_you_register.html").render(context)
+        }
+    send_mail(heads, body)
+
+
+
 ########### End of mail functions ###########
 
 
 def home_url(user):
     """ Returns default URL for given state.User """
-    return abs_url(domain = user.get('sites', [config.server_name])[0]) + '*'
+    return abs_url(domain = user.get('sites', [config.server_name])[0]) + 'expressions'
 def login(request, response):
     if auth.handle_login(request, response):
         return redirect(response, request.form.get('url', home_url(request.requester)))
@@ -366,11 +457,12 @@ actions = dict(
     ,expr_save       = expr_save
     ,expr_delete     = expr_delete
     ,files_create    = files_create
-    ,file_delete    = file_delete
+    ,file_delete     = file_delete
     ,user_create     = user_create
     ,user_check      = user_check
     ,mail_us         = mail_us
     ,mail_them       = mail_them
+    ,mail_referral   = mail_referral
     ,mail_feedback   = mail_feedback
     ,user_tag_add    = user_tag_update
     ,user_tag_remove = user_tag_update
@@ -429,8 +521,8 @@ def expr_home_list(p2, request, response, limit=90):
     response.context['show_name'] = True
     response.context['page'] = page
 
-def handle(request):
-    """The HTTP handler.
+def handle(request): # HANDLER
+    """The HTTP handler, main entry point from Werkzeug.
        All POST requests must be sent to thenewhive.com, as opposed to
        user.thenewhive.com which can contain arbitrary scripts. Any
        response for thenewhive.com must not contain unsanitized user content.
@@ -441,10 +533,11 @@ def handle(request):
     request.trusting = False
     response.context = { 'f' : request.form, 'url' : request.base_url }
     response.user = request.requester
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
-    #import pdb; pdb.set_trace()
     if request.domain == config.server_name:
         if request.is_secure and request.requester and request.requester.logged_in:
             request.trusting = True
@@ -475,31 +568,30 @@ def handle(request):
                 exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
-                if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                    intro_expr = Expr.fetch(config.intro_expr)
-                    if intro_expr: exp.update(dfilter(intro_expr, ['apps']))
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
             response.context['title'] = 'Editing: ' + exp['title']
             response.context['sites'] = request.requester.get('sites')
             response.context['exp_js'] = json.dumps(exp)
             response.context['exp'] = exp
-            return serve_page(response, 'edit.html')
+            if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
+                response.context['show_help'] = True
+            return serve_page(response, 'pages/edit.html')
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral: return bad_referral(request, response)
-            return serve_page(response, 'user_settings.html')
+            return serve_page(response, 'pages/user_settings.html')
         elif p1 == 'referral' and request.requester.logged_in:
             if(request.requester['referrals'] <= 0):
                 return no_more_referrals(request.requester['name'], request, response)
             res = Referral.create(user = request.requester.id)
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
-            return serve_page(response, 'minimal.html')
-        elif p1 == 'feedback': return serve_page(response, 'feedback.html')
+            return serve_page(response, 'pages/minimal.html')
+        elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
         elif p1 == '' or p1 == 'home':
             expr_home_list(p2, request, response)
-            if request.args.get('partial'): return serve_page(response, 'cards.html', directory='')
-            else: return serve_page(response, 'home.html')
+            if request.args.get('partial'): return serve_page(response, 'cards.html')
+            else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()
             if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
@@ -507,7 +599,7 @@ def handle(request):
             response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
 
             expr_home_list(p2, request, response, limit=900)
-            return serve_page(response, 'admin_home.html')
+            return serve_page(response, 'pages/admin_home.html')
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             import analytics
             if p2 == 'active_users':
@@ -517,7 +609,7 @@ def handle(request):
                     active_users = analytics.active_users()
                     response.context['active_users'] = active_users
                     response.context['active_users_js'] = json.dumps(active_users)
-                    return serve_page(response, 'analytics.html')
+                    return serve_page(response, 'pages/analytics.html')
             else:
                 return serve_404(request, response)
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
@@ -532,12 +624,11 @@ def handle(request):
         #    response.context['tag'] = tag
         #    response.context['tags'] = root.get('tags', [])
         #    response.context['show_name'] = True
-        #    return serve_page(response, 'home.html')
+        #    return serve_page(response, 'pages/home.html')
 
         return serve_404(request, response)
-
     elif request.domain.startswith('www.'):
-        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]))
+        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]) + request.path + '?' + request.query_string)
 
     d = resource = Expr.named(request.domain.lower(), request.path.lower())
     if not d: d = Expr.named(request.domain, '')
@@ -555,46 +646,53 @@ def handle(request):
 
     if request.args.has_key('dialog'):
         response.context.update(exp=resource)
-        return serve_page(response, request.args['dialog'] + '.html', directory="dialogs")
+        return serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
 
     if lget(request.path, 0) == '*':
+        return redirect(response, home_url(owner) + 'expressions' +
+            ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
+    if request.path.startswith('expressions'):
         page = int(request.args.get('page', 0))
         spec = { 'owner' : owner.id }
-        tag = request.path[1:]
+        tag = lget(request.path.split('/'), 1, '')
         if tag: spec['tags_index'] = tag
 
         response.context['title'] = owner['fullname']
-        response.context['fullname'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', [])
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
         response.context['view'] = request.args.get('view')
         response.context['expr'] = dfilter(owner, ['background'])
 
-        return serve_page(response, 'expr_cards.html')
+        return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
 
 
     if not resource: return serve_404(request, response)
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
-    (html, css) = exp_to_html(resource)
+    html = exp_to_html(resource)
+    auth_required = (resource.get('auth') == 'password' and resource.get('password')
+        and request.form.get('password') != resource.get('password')
+        and request.requester.id != resource['owner'])
     response.context.update(
          edit = abs_url(secure = True) + 'edit/' + resource.id
         ,mtime = friendly_date(time_u(resource['updated']))
         ,title = resource.get('title', False)
-        ,auth_required = (resource.get('auth') == 'password' and resource.get('password')
-            and request.form.get('password') != resource.get('password')
-            and request.requester.id != resource['owner'])
+        ,auth_required = auth_required
         ,body = html
-        ,css = css
         ,exp = resource
         ,exp_js = json.dumps(resource)
         )
 
     resource.increment_counter('views')
     if is_owner: resource.increment_counter('owner_views')
-    return serve_page(response, 'expression.html')
+
+    template = resource.get('template', request.args.get('template', 'expression'))
+    if template == 'none':
+        if auth_required: return Forbidden()
+        return serve_html(response, html)
+    else: return serve_page(response, 'pages/' + template + '.html')
 
 
 @Request.application
@@ -619,39 +717,31 @@ def exp_to_html(exp):
     """Converts JSON object representing an expression to HTML"""
 
     apps = exp.get('apps')
-    if not apps: return ('', '')
+    if not apps: return ''
 
-    def css_for_app(app, html_id):
-        return "#%s { left:%dpx; top:%dpx; width:%dpx; height:%dpx; %s; z-index : %d; }\n" % (
-            html_id,
+    def css_for_app(app):
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %s; z-index : %d; opacity:%f" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
             app['dimensions'][1],
             'font-size : ' + str(app['scale']) + 'em' if app.get('scale') else '',
-            app['z']
+            app['z'],
+            app.get('opacity', 1)
             )
 
-    html_ids = map(lambda num: 'h_' + str(num), range(0, len(apps)))
-
-    def html_for_app(app, html_id):
+    def html_for_app(app):
         content = app.get('content', '')
         if app.get('type', '') == 'hive.image':
-            html = ("<div class='happ' id='%s'><img class='happ' src='%s'></div>"
-                % (html_id, content))
+            html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
-            return html
-        if app.get('type') == 'hive.text' or app.get('type') == 'hive.html':
-            return "<div class='happ' id='%s'>%s</div>" % (html_id, content)
-        return ""
+        else: html = content
+        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
+        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
+        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app), data, html)
 
-    css = (''.join(map(css_for_app, apps, html_ids)) + "\n"
-        + "body { height:%dpx; }\n"
-            % max(map(lambda a: a['position'][1] + a['dimensions'][1], apps))
-        )
-    html = ''.join(map(html_for_app, apps, html_ids))
-    return (html, css)
+    return ''.join(map(html_for_app, apps))
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
@@ -660,9 +750,9 @@ def serve_html(response, html):
     response.data = html
     response.content_type = 'text/html; charset=utf-8'
     return response
-def serve_page(response, template, directory='pages'):
-    return serve_html(response, render_template(response, template, directory))
-def render_template(response, template, directory='pages'):
+def serve_page(response, template):
+    return serve_html(response, render_template(response, template))
+def render_template(response, template):
     context = response.context
     context.update(
          home_url = home_url(response.user)
@@ -671,13 +761,14 @@ def render_template(response, template, directory='pages'):
         ,server = abs_url()
         ,secure_server = abs_url(secure = True)
         ,server_name = config.server_name
+        ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
         ,colors = colors
         ,debug = config.debug_mode
         ,assets_env = assets_env
         ,use_ga = config.use_ga
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
-    return jinja_env.get_template(joinpath(directory, template)).render(context)
+    return jinja_env.get_template(template).render(context)
 
 def serve_json(response, val, as_text = False):
     """ as_text is used when content is received in an <iframe> by the client """
@@ -694,17 +785,16 @@ def serve_json(response, val, as_text = False):
 
 def serve_404(request, response):
     response.status_code = 404
-    response.context['msg'] = 'Nothing here yet...'
-    return serve_page(response, 'error.html')
+    return serve_page(response, 'pages/notfound.html')
 
 def serve_error(request, msg):
     response.status_code = 500
     response.context['msg'] = msg
-    return serve_page(response, 'error.html')
+    return serve_page(response, 'pages/error.html')
 
-def redirect(response, location):
+def redirect(response, location, permanent=False):
     response.location = location
-    response.status_code = 303
+    response.status_code = 301 if permanent else 303
     return response
 
 class InternalServerError(exceptions.InternalServerError):
