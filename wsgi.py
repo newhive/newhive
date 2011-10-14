@@ -531,7 +531,7 @@ def handle(request): # HANDLER
     response = Response()
     request.requester = auth.authenticate_request(request, response)
     request.trusting = False
-    response.context = { 'f' : request.form, 'url' : request.base_url }
+    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.base_url }
     response.user = request.requester
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
