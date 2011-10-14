@@ -68,7 +68,7 @@ def expr_save(request, response):
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
         new_expression = False
-    return dict( new=new_expression, error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
+    return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
 def generate_thumb(expr, owner):
@@ -207,7 +207,8 @@ def user_create(request, response):
     referral.delete()
     home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
 
-    mail_user_register_thankyou(user)
+    try: mail_user_register_thankyou(user)
+    except: pass # TODO: log an error
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
@@ -217,8 +218,9 @@ def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
     return serve_page(response, 'pages/minimal.html')
 def bad_referral(request, response):
-    response.context['content'] = 'Invalid referral; already used or never existed'
-    return serve_page(response, 'pages/minimal.html')
+    response.context['msg'] = 'You have already signed up, or if there\'s been a mistake, sorry, and please sign up again!'
+    response.context['error'] = 'Log in if you already have an account'
+    return serve_page(response, 'pages/error.html')
 
 
 def expr_tag_update(request, response):
@@ -318,7 +320,7 @@ def mail_them(request, response):
         response.context.update({
           'short_url': (exp.get('domain') + '/' + exp.get('name'))
           ,'tags': exp.get('tags')
-          ,'thumbnail_url': exp.get('thumb')
+          ,'thumbnail_url': exp.get('thumb', 'http://thenewhive.com/lib/skin/1/default_thumb.png')
           ,'user_url': home_url(owner)
           ,'user_name': owner.get('name')
           ,'title': exp.get('title')

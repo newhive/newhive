@@ -948,6 +948,7 @@ Hive.save = function() {
                 $('#btn_share').show();
                 updateShareUrls('#dia_share', ret.location);
                 $('#mail_form [name=forward]').attr('value', ret.location);
+                $('#mail_form [name=id]').attr('value', ret.id);
                 $('#app_btns').add('#btn_save').add('#btn_grid').add('#menu_save').add('#btn_help').hide();
                 $('#dialog_shield, .btn_dialog_close').unbind('click').click(function(){
                     minimize($('#dia_share'), $('#btn_share'), { duration : 1000,
@@ -955,7 +956,6 @@ Hive.save = function() {
                     });
                 $('#expression_url').html(ret.location);
                 $('#congrats_message').html('<h1>Now you can share your expression anywhere.</h1>');
-                $('#email_message').html('Check out this expression: \n\n' + ret.location);
             } else {
                 window.location = ret.location;
             }
