@@ -1,6 +1,3 @@
-$(window).resize(function() { place_apps() });
-$(function() { place_apps(); });
-
 $(function() {
     // Warning for IE
     //if(/MSIE/.test(navigator.userAgent)){

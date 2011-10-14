@@ -83,25 +83,28 @@ function autoLink(string) {
 }
 
 function exprDialog(url, opts) {
-    $.extend(opts, { absolute : true });
-    var dia;
-    if(exprDialog.loaded[url]) dia = exprDialog.loaded[url];
-    else {
-        var html;
-        $.ajax({ url : url + '?template=expr_div', success : function(h) { html = h }, async : false });
-        dia = exprDialog.loaded[url] = $(html);
-    }
-
-    opts.layout = function() {
+    $.extend(opts, { layout : function(dia) {
         dia.css({ width : '80%' });
         dia.css({ height : dia.width() / parseFloat(dia.attr('data-aspect')) });
         place_apps();
         center(dia, $(window), opts);
-    }
-    var r = showDialog(dia, opts);
-    return r;
+    } });
+    return loadDialog(url + '?template=expr_div', opts);
 }
 exprDialog.loaded = {};
+
+function loadDialog(url, opts) {
+    $.extend(opts, { absolute : true });
+    var dia;
+    if(loadDialog.loaded[url]) dia = loadDialog.loaded[url];
+    else {
+        var html;
+        $.ajax({ url : url, success : function(h) { html = h }, async : false });
+        dia = loadDialog.loaded[url] = $(html);
+    }
+    return showDialog(dia, opts);
+}
+loadDialog.loaded = {};
 
 function showDialog(name, opts) {
     var dialog = $(name);
@@ -123,8 +126,8 @@ function showDialog(name, opts) {
                 dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
                 o.shield.add(o.btn_close).click(o.close);
             }
-            $(window).resize(o.opts.layout);
-            o.opts.layout();
+            $(window).resize(function() { o.opts.layout(o.dialog) });
+            o.opts.layout(o.dialog);
 
             if (o.opts.select) dialog.find(o.opts.select).focus().click();
             o.index = showDialog.opened.length;
@@ -466,7 +469,6 @@ var place_apps = function() {
        var s = e.parent().width() / 1000;
        if(!e.data('css')) {
            var c = {};
-           console.log(app_div);
            map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height']);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
