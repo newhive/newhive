@@ -55,14 +55,16 @@ def expr_save(request, response):
     res = Expr.fetch(exp.id)
     upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
     upd['name'] = upd['name'].lower().strip()
-    if upd['name'] == 'expressions':
-        return dict(error="The name /expressions is reserved for your profile page.")
     if not res or upd.get('thumb') != res.get('thumb'): generate_thumb(upd, request.requester)
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
           new_expression = True
           res = request.requester.expr_create(upd)
-        except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
+        except DuplicateKeyError:
+            if exp.get('overwrite'):
+                Expr.named(upd['domain'], upd['name']).delete()
+                res = request.requester.expr_create(upd)
+            else: return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
     else:
         if not res['owner'] == request.requester.id:
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')

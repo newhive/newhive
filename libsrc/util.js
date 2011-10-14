@@ -154,6 +154,7 @@ function showDialog(name, opts) {
     return o;
 }
 showDialog.opened = [];
+closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);
