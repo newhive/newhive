@@ -1,9 +1,8 @@
 from state import *
 import config
 
-def update_domain(old_name='thenewhive.com'):
-    for e in Expr.search():
-        e.update(updated=False, domain=re.sub(old_name, config.server_name, e['domain']))
+def update_domain():
+    """ Hack for overwriting the TLD on all user and expr records to server_name
+    THIS WILL BREAK things when we support multiple domains """
 
-    for u in User.search():
-        u.update(updated=False, sites=[u['name'] + '.' + config.server_name])
+    for e in Expr.search() + User.search(): e.set_tld(config.server_name)

@@ -554,7 +554,7 @@ Hive.App.Text.Controls = function(common) {
     o.refDims = null;
     o.c.resize.drag(function(e, dd) {
         //cos(atan2(x, y) - atan2(w, h))
-        o.app.rescale(o.refDims, (o.refDims[0] + dd.deltaX) / o.refDims[0]);
+        o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0], (o.refDims[1] + dd.deltaY) / o.refDims[1]));
     });
     o.c.resize_h.drag(function(e, dd) {
         o.app.resize_h([o.refDims[0] + dd.deltaX, o.refDims[1]]);
@@ -752,7 +752,7 @@ var main = function() {
         if(confirm("You're using an oldish version of Firefox. Click OK to get the newest version"))
             window.location = 'http://www.mozilla.com/en-US/products/download.html';
 
-    if(!/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent))
+    if(!debug_mode && !/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent))
         showDialog('#firefox_warning');
 
     $(window).click(function(e) {
@@ -848,6 +848,29 @@ var main = function() {
     $('#save_overwrite').click(function() {
         Hive.Exp.overwrite = true;
         Hive.save();
+    });
+    var dia_thumbnail;
+    $('#btn_thumbnail').click(function() {
+        // Set thumb_src property for the server to generate a new thumb
+        dia_thumbnail = showDialog('#dia_thumbnail');
+        $('#expr_images').empty().append(map(function(thumb) {
+            var img = $('<img>').attr('src', thumb.src);
+            var e = $("<div style='width : 124px; height : 96px; overflow : hidden' class='thumb'>").append(img).get(0);
+            if(img.width() / img.height() <= 124 / 96) img.css('width', 124);
+            else img.css('height', 96);
+            return e;
+        }, $('.ehapp img')));
+        $('#expr_images img').click(function() {
+            Hive.Exp.thumb_src = this.src;
+            dia_thumbnail.close();
+            return false;
+        });
+    });
+    $('#default_thumbs img').click(function() {
+        // The thumb property is set directly
+        Hive.Exp.thumb = $(this).attr('src');
+        dia_thumbnail.close();
+        return false;
     });
     
     // Automatically update url unless it's an already saved expression or the user has modified the url manually
@@ -1177,7 +1200,7 @@ var append_color_picker = function(container, callback, init_color) {
 
     var make_picker = function(c) {
         var d = $("<div style='display : inline-block; width : 20px; height : 20px; margin : 2px'>");
-        d.css('background-color', c).attr('val', c).click(function() { manual_input.val('#' + c); callback(c) });
+        d.css('background-color', c).attr('val', c).click(function() { manual_input.val(c); callback(c) });
         return d.get(0);
     }
     var make_row = function(cs) {
