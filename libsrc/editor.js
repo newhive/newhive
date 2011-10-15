@@ -554,7 +554,7 @@ Hive.App.Text.Controls = function(common) {
     o.refDims = null;
     o.c.resize.drag(function(e, dd) {
         //cos(atan2(x, y) - atan2(w, h))
-        o.app.rescale(o.refDims, (o.refDims[0] + dd.deltaX) / o.refDims[0]);
+        o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0], (o.refDims[1] + dd.deltaY) / o.refDims[1]));
     });
     o.c.resize_h.drag(function(e, dd) {
         o.app.resize_h([o.refDims[0] + dd.deltaX, o.refDims[1]]);
