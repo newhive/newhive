@@ -1,49 +1,19 @@
 {% extends "main.html" %}
 
-{% block content %}
-<table width='100%' class='tablesorter'>
-  <thead>
-    <tr>
-      <th colspan=2></th>
-      {% for auth in ["public", "private", "total"] %}
-      <th width="26%" colspan=5>{{ auth }}</th>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th width="15%">Name</th>
-      <th width="8%">Age in weeks</th>
-      {% for auth in ["public", "private", "total"] %}
-      {% for timerange in ["day", "week", "month", "total"] %}
-      <th width="5%">{{ timerange }}</th>
-      {% endfor %}
-      <th width="5%">Per Week</th>
-      {% endfor %}
-    </tr>
-  </thead>
-  {% for user in active_users %}
-  <tr>
-    <td>{{ user['name'] }}</td>
-    <td>{{ (user['age']/7) | round(0,'ceil') | int}}</td>
-    {% for auth in ["public", "private", "total"] %}
-    {% for timerange in ["day", "week", "month", "total"] %}
-    <td>{{ user[auth][timerange] | int }}</td>
-    {% endfor %}
-    <td>{{ (user[auth]['total'] / (user['age']/7)|round(0, 'ceil')) | round(2) }} </td>
-    {% endfor %}
-  </tr>
-  {% endfor %}
-</table>
-{% endblock %}
-
 {% block head %}
+ {% for item in assets_env["admin.css"].urls() %}
+   <link rel='stylesheet' type='text/css' href='{{ item }}'>
+ {% endfor %}
  {% for item in assets_env["admin.js"].urls() %}
   <script src='{{ item }}'></script>
+ {% endfor %}
   <script type='text/javascript'>
+    var paper;
     $(function(){
         $('table.tablesorter').tablesorter();
+        //paper = Raphael($('#canvas_container')[0], '1000px', '500px');
     });
   </script>
- {% endfor %}
 <style type='text/css'>
 /* tables */
 table {
@@ -72,7 +42,7 @@ table tbody td {
   background-color: #FFF;
   vertical-align: top;
 }
-table tbody tr.odd td {
+table tbody tr:nth-child(odd) td, table tbody tr.odd td {
   background-color:#F0F0F6;
 }
 table thead tr .headerSortUp {
@@ -87,3 +57,21 @@ background-color: #8dbdd8;
 </style>
 {% endblock %}
 
+
+{% block content %}
+<div id="canvas_container"></div>
+<div id="header">
+  {% block header %}
+  {% endblock %}
+</div>
+<table width='100%' class='tablesorter'>
+  <thead>
+    {% block table_head %}
+    {% endblock %}
+  </thead>
+  <tbody>
+    {% block table_body %}
+    {% endblock %}
+  </tbody>
+</table>
+{% endblock %}
