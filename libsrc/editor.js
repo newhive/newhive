@@ -854,10 +854,11 @@ var main = function() {
         // Set thumb_src property for the server to generate a new thumb
         dia_thumbnail = showDialog('#dia_thumbnail');
         $('#expr_images').empty().append(map(function(thumb) {
-            var img = $('<img>').attr('src', thumb.src).width(124);
-            if(img.width() / img.height() < 124 / 96) img.width(124);
-            else img.height(96);
-            return $("<div style='width : 124px; height : 96px; overflow : hidden' class='thumb'>").append(img).get(0);
+            var img = $('<img>').attr('src', thumb.src);
+            var e = $("<div style='width : 124px; height : 96px; overflow : hidden' class='thumb'>").append(img).get(0);
+            if(img.width() / img.height() <= 124 / 96) img.css('width', 124);
+            else img.css('height', 96);
+            return e;
         }, $('.ehapp img')));
         $('#expr_images img').click(function() {
             Hive.Exp.thumb_src = this.src;
