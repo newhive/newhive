@@ -23,7 +23,10 @@ if config.webassets_debug:
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
-assets_env.register('admin.js', 'jquery.tablesorter.min.js', output='../lib/admin.js')
+
+assets_env.register('admin.js', 'raphael.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
+assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
+
 assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
@@ -193,7 +196,7 @@ def user_create(request, response):
         """
 
     referral = Referral.fetch(request.args.get('key'), keyname='key')
-    if not referral: return bad_referral(request, response)
+    if (not referral or referral.get('used')): return bad_referral(request, response)
     referrer = User.fetch(referral['user'])
     assert 'tos' in request.form
 
@@ -202,7 +205,7 @@ def user_create(request, response):
     args['sites'] = [args['name'].lower() + '.' + config.server_name]
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
-    referral.delete()
+    referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
     home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
 
     try: mail_user_register_thankyou(user)
@@ -216,7 +219,7 @@ def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
     return serve_page(response, 'pages/minimal.html')
 def bad_referral(request, response):
-    response.context['msg'] = 'You have already signed up, or if there\'s been a mistake, sorry, and please sign up again!'
+    response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
     response.context['error'] = 'Log in if you already have an account'
     return serve_page(response, 'pages/error.html')
 
@@ -577,7 +580,7 @@ def handle(request): # HANDLER
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
-            if not referral: return bad_referral(request, response)
+            if not referral or referral.get('used'): return bad_referral(request, response)
             return serve_page(response, 'pages/user_settings.html')
         elif p1 == 'referral' and request.requester.logged_in:
             if(request.requester['referrals'] <= 0):
@@ -599,11 +602,7 @@ def handle(request): # HANDLER
             expr_home_list(p2, request, response, limit=900)
             return serve_page(response, 'pages/admin_home.html')
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
-            import analytics
-            active_users = analytics.active_users()
-            response.context['active_users'] = active_users
-            response.context['active_users_js'] = json.dumps(active_users)
-            return serve_page(response, 'pages/analytics.html')
+            return route_analytics(request, response)
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
             response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
             response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
@@ -686,6 +685,28 @@ def handle(request): # HANDLER
         return serve_html(response, html)
     else: return serve_page(response, 'pages/' + template + '.html')
 
+def route_analytics(request, response):            
+    import analytics
+    parts = request.path.split('/', 1)
+    p1 = lget(parts, 0)
+    p2 = lget(parts, 1)
+    if p2 == 'active_users':
+        if request.args.has_key('start') and request.args.has_key('end'):
+            active_users = analytics.active_users()
+        else:
+            active_users = analytics.active_users()
+            response.context['active_users'] = active_users
+            response.context['active_users_js'] = json.dumps(active_users)
+            return serve_page(response, 'pages/analytics/active_users.html')
+    if p2 == 'invites':
+        invites = Referral.search()
+        for item in invites:
+            item['sender_name'] = User.fetch(item['user'])['name']
+
+        response.context['invites'] = invites
+        return serve_page(response, 'pages/analytics/invites.html')
+    else:
+        return serve_404(request, response)
 
 @Request.application
 def handle_safe(request):
