@@ -55,7 +55,7 @@ def expr_save(request, response):
     res = Expr.fetch(exp.id)
     upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
     upd['name'] = upd['name'].lower().strip()
-    if not res or upd.get('thumb') != res.get('thumb'): generate_thumb(upd, request.requester)
+    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'))
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
           new_expression = True
@@ -73,13 +73,9 @@ def expr_save(request, response):
     return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
-def generate_thumb(expr, owner):
-    # retrieve first image from expression
-    fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), -1)
-    if not fst_img or not fst_img.get('content'): return
-
+def generate_thumb(owner, url):
     # create file record in database, copy file to media directory via http
-    try: response = urllib.urlopen(fst_img['content'])
+    try: response = urllib.urlopen(url)
     except: return
     if response.getcode() != 200: return
     mime = response.headers.getheader('Content-Type')
@@ -103,7 +99,7 @@ def generate_thumb(expr, owner):
     imo.save(path, format='jpeg')
 
     res = File.create(owner=owner.id, path=path, name='thumb', mime=mime)
-    expr['thumb'] = res.get('url')
+    return res.get('url')
 
 
 def expr_delete(request, response):
@@ -320,7 +316,7 @@ def mail_them(request, response):
         response.context.update({
           'short_url': (exp.get('domain') + '/' + exp.get('name'))
           ,'tags': exp.get('tags')
-          ,'thumbnail_url': exp.get('thumb', 'http://thenewhive.com/lib/skin/1/default_thumb.png')
+          ,'thumbnail_url': exp.get('thumb', '/lib/skin/1/thumb_0.png')
           ,'user_url': home_url(owner)
           ,'user_name': owner.get('name')
           ,'title': exp.get('title')
@@ -570,12 +566,14 @@ def handle(request): # HANDLER
                 exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
-            response.context['title'] = 'Editing: ' + exp['title']
-            response.context['sites'] = request.requester.get('sites')
-            response.context['exp_js'] = json.dumps(exp)
-            response.context['exp'] = exp
-            if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                response.context['show_help'] = True
+            response.context.update({
+                 'title'     : 'Editing: ' + exp['title']
+                ,'sites'     : request.requester.get('sites')
+                ,'exp_js'    : json.dumps(exp)
+                ,'exp'       : exp
+                # show help dialog unless more than one expression exists
+                ,'show_help' : len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1
+            })
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
