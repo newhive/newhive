@@ -8,13 +8,20 @@ import social_stats
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-con = pymongo.Connection()
-db = con[config.database]
 
-# initialize s3 connection
-if config.aws_id:
-    s3_con = S3Connection(config.aws_id, config.aws_secret)
-    s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
+con = None
+db = None
+s3_con = None
+s3_buckets = None
+def init_connections(config):
+    con = pymongo.Connection()
+    db = con[config.database]
+
+    # initialize s3 connection
+    if config.aws_id:
+        s3_con = S3Connection(config.aws_id, config.aws_secret)
+        s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
+init_connections(config)
 
 
 def now(): return time_s(datetime.utcnow())
@@ -124,12 +131,6 @@ class User(Entity):
         assert self.has_key('referrer')
         return super(User, self).create_me()
 
-    def new_referral(self, d):
-        if self.get('referrals', 0) > 0 or self == get_root():
-            self.update(referrals=self['referrals'] - 1)
-            d.update(user = self.id)
-            return Referral.create(**d)
-
     @classmethod
     def named(cls, name):
         self = cls({})
@@ -141,12 +142,6 @@ class User(Entity):
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
-
-    def get_url(self): return abs_url(domain=self['domain']) + self['name']
-
-    def set_tld(self, tld):
-        """ Sets the top level domain (everything following first dot) for each element in sites attribute """
-        return self.update(updated=False, sites=map(lambda domain: re.sub(r'([^.]+\.[^.]+)$', tld, domain), self['sites']))
 
 
 def get_root(): return User.named('root')
@@ -180,12 +175,6 @@ class Expr(Entity):
     def named(cls, domain, name):
         self = cls({})
         return self.find_me(domain=domain, name=name.lower())
-
-    @classmethod
-    def with_url(cls, name):
-        """ Convenience utility function not used in production, retrieve Expr from full URL """
-        [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', 'http://abram.thenewhive.com:1414/foobar')
-        return cls.named(domain, name)
 
     @classmethod
     def list(cls, spec, requester=None, limit=300, page=0, sort='updated'):
@@ -257,11 +246,6 @@ class Expr(Entity):
 
       else:
         return 0
-
-    def set_tld(self, domain):
-        """ Sets the top level domain (everything following first dot) in domain attribute """
-        return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
-
       
 
 class File(Entity):
@@ -284,8 +268,7 @@ class File(Entity):
             k.name = self.id
             k.set_contents_from_filename(tmp_path,
                 headers={ 'Content-Disposition' : 'inline; filename=' + name, 'Content-Type' : self['mime'] })
-            k.make_public()
-            url = k.generate_url(86400 * 3600, query_auth=False)
+            url = k.generate_url(86400 * 3600)
             os.remove(tmp_path)
         else:
             owner = User.fetch(self['owner'])
@@ -319,14 +302,13 @@ class Contact(Entity):
     cname = 'contact_log'
 
         
-def abs_url(secure = False, domain = None, subdomain = None):
+def abs_url(secure = False, domain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
     proto = 'https' if secure else 'http'
     port = config.ssl_port if secure else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
-    return (proto + '://' + (subdomain + '.' if subdomain else '') +
-        (domain or config.server_name) + port + '/')
+    return (proto + '://' + (domain or config.server_name) + port + '/')
 
 
 ## analytics utils
