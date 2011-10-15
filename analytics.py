@@ -1,15 +1,12 @@
 import state, time, datetime
 
 def shared_user_data(result):
-    rv = {}
     for item in result:
-      owner = item.pop('owner')
-      user = state.User.fetch(owner)
+      user = state.User.fetch(item['owner'])
       if user:
         item['name'] = user['name']
         item['age'] = (time.time() - user['created']) / 3600 /24
-      rv[owner] = item
-    return rv
+    return result
 
 
 def active_users(reference_date=time.time()):
@@ -46,16 +43,6 @@ def active_users(reference_date=time.time()):
     res = col.group(key, condition, initial, reducejs)
     return shared_user_data(res)
 
-def active_users_range(start_date, end_date):
-  start_snapshot = state.db.user_snapshot.find(
-      spec={"date": {"$lte": time.mktime(start_date.timetuple())}}, 
-      sort=[('date', -1)], 
-      limit=1
-      )[0]['snapshot']
-  end_snapshot = state.db.user_snapshot.find(spec={"date": {"$lte": time.mktime(end_date.timetuple())}}, sort=[('date', -1)], limit=1)[0]['snapshot']
-  return start_snapshot
-  
-    
 def user_snapshot(reference_date):
   col = state.db['expr']
   key={"owner": 1}
