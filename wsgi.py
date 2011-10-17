@@ -568,8 +568,14 @@ def handle(request): # HANDLER
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
+
             if not exp: return serve_404(request, response)
-            show_help = request.requester.get('flags') and request.requester['flags'].get('default-instructional') < 1
+
+            if request.requester.get('flags'):
+                show_help = request.requester['flags'].get('default-instructional') < 1
+            else:
+               show_help = True
+
             if show_help:
                 request.requester.increment({'flags.default-instructional': 1})
             response.context.update({
