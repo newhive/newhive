@@ -1,6 +1,15 @@
-import state, time
+import state, time, datetime
 
-def active_users():
+def shared_user_data(result):
+    for item in result:
+      user = state.User.fetch(item['owner'])
+      if user:
+        item['name'] = user['name']
+        item['age'] = (time.time() - user['created']) / 3600 /24
+    return result
+
+
+def active_users(reference_date=time.time()):
     col = state.db['expr']
     key={"owner": 1}
     condition = {}
@@ -23,19 +32,44 @@ def active_users():
             }
 
             // Totals
-            if (age < 3600*24) { authSlice('day'); }
-            if (age < 3600*24*7) { authSlice('week'); }
-            if (age < 3600*24*7*4) { authSlice('month'); }
+            if (0 < age && age < 3600*24) { authSlice('day'); }
+            if (0 < age && age < 3600*24*7) { authSlice('week'); }
+            if (0 < age && age < 3600*24*7*4) { authSlice('month'); }
             authSlice('total');
             
         }
-    """ % {'now': time.time()}
+    """ % {'now': reference_date}
 
     res = col.group(key, condition, initial, reducejs)
-    for item in res:
-      user = state.User.fetch(item['owner'])
-      if user:
-        item['name'] = user['name']
-        item['age'] = (time.time() - user['created']) / 3600 /24
+    return shared_user_data(res)
 
-    return res
+def user_snapshot(reference_date):
+  col = state.db['expr']
+  key={"owner": 1}
+  condition = {'apps': {'$exists': True}, 'created': {'$lt': reference_date}}
+  initial = {"total": 0, "private": 0, "public": 0, "expressions": []}
+  reducejs =  """
+    function(obj, prev) {
+        prev.expressions.push(obj['_id']);
+        if (obj.apps.length > 0) {
+          if (obj.auth === 'password') { 
+            prev.private++; 
+          } else { 
+            prev.public++; 
+          }
+          prev.total++;
+        }
+    };
+  """
+  res = col.group(key, condition, initial, reducejs)
+  return shared_user_data(res)
+
+def user_snapshot_load():
+  current_time = start_time = time.mktime(datetime.date(2011,1,1).timetuple())
+  end_time = time.time()
+  while current_time <= end_time:
+    snapshot = user_snapshot(current_time)
+    state.db.user_snapshot.insert({"date": current_time, "snapshot": snapshot})
+    current_time += 60*60*24
+
+

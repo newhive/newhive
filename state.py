@@ -254,7 +254,13 @@ class Expr(Entity):
 
       else:
         return 0
-      
+
+    def get_url(self): return abs_url(domain=self['domain']) + self['name']
+
+    def set_tld(self, domain):
+        """ Sets the top level domain (everything following first dot) in domain attribute """
+        return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
+
 
 class File(Entity):
     cname = 'file'
