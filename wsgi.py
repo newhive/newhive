@@ -569,13 +569,15 @@ def handle(request): # HANDLER
                 exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
             if not exp: return serve_404(request, response)
+            show_help = request.requester.get('flags') and request.requester['flags'].get('default-instructional') < 1
+            if show_help:
+                request.requester.increment({'flags.default-instructional': 1})
             response.context.update({
                  'title'     : 'Editing: ' + exp['title']
                 ,'sites'     : request.requester.get('sites')
                 ,'exp_js'    : json.dumps(exp)
                 ,'exp'       : exp
-                # show help dialog unless more than one expression exists
-                ,'show_help' : len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1
+                ,'show_help' : show_help
             })
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'signup':
@@ -680,6 +682,7 @@ def handle(request): # HANDLER
     if is_owner: resource.increment_counter('owner_views')
 
     template = resource.get('template', request.args.get('template', 'expression'))
+
     if template == 'none':
         if auth_required: return Forbidden()
         return serve_html(response, html)
