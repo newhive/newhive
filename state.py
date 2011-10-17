@@ -144,6 +144,10 @@ class User(Entity):
 
     def get_url(self): return abs_url(domain=self['domain']) + self['name']
 
+    def set_tld(self, tld):
+        """ Sets the top level domain (everything following first dot) for each element in sites attribute """
+        return self.update(updated=False, sites=map(lambda domain: re.sub(r'([^.]+\.[^.]+)$', tld, domain), self['sites']))
+
 
 def get_root(): return User.named('root')
 if not get_root():
@@ -176,6 +180,12 @@ class Expr(Entity):
     def named(cls, domain, name):
         self = cls({})
         return self.find_me(domain=domain, name=name.lower())
+
+    @classmethod
+    def with_url(cls, name):
+        """ Convenience utility function not used in production, retrieve Expr from full URL """
+        [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', 'http://abram.thenewhive.com:1414/foobar')
+        return cls.named(domain, name)
 
     @classmethod
     def list(cls, spec, requester=None, limit=300, page=0, sort='updated'):
@@ -248,6 +258,13 @@ class Expr(Entity):
 
       else:
         return 0
+
+    def get_url(self): return abs_url(domain=self['domain']) + self['name']
+
+    def set_tld(self, domain):
+        """ Sets the top level domain (everything following first dot) in domain attribute """
+        return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
+
       
 
 class File(Entity):

@@ -122,6 +122,9 @@ input, textarea { font-size : inherit }
    <b>Optional password</b><br>
    <input type='text' id='password' value='{{ exp.password }}'>
   </div>
+  <div class='spacer'></div>
+
+  <nobr><span id='btn_thumbnail' class='hoverable'>Choose thumbnail <img class='scale' src='/lib/skin/1/drop_arrow.png'></span></nobr>
  </div>
  <div id='btn_share' style='display:none' class='nav_icon'>
    <img  src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
@@ -243,5 +246,17 @@ input, textarea { font-size : inherit }
  <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
  <input id='save_overwrite' type='button' class='btn black rounded' value='No' onclick='closeDialog()'>
 </div>
+<div id='dia_thumbnail' class='dialog border selected center'>
+ <h2>Choose thumbnail</h2>
+ <span id='expr_images'></span>
+ <span id='default_thumbs'>
+  <img src='/lib/skin/1/thumb_0.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_1.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_2.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_3.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_4.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_5.png' class='thumb'>
+ </span>
+</div> 
 
 {% endblock %}
