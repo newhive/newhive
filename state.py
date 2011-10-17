@@ -212,8 +212,9 @@ class Expr(Entity):
     def create_me(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = User.fetch(self['owner'])['name']
-        self['title'] = self.get('title') or 'Untitled'
         self['domain'] = self['domain'].lower()
+        self.setdefault('title', 'Untitled')
+        self.setdefault('auth', 'public')
         return super(Expr, self).create_me()
 
     def increment_counter(self, counter):
