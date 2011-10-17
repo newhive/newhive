@@ -22,7 +22,7 @@
 {% block table_body %}
   {% for user in active_users %}
   <tr>
-    <td>{{ user['name'] }}</td>
+    <td><a href="http://{{ user['name'] }}.thenewhive.com">{{ user['name'] }}</a></td>
     <td>{{ (user['age']/7) | round(0,'ceil') | int}}</td>
     {% for auth in ["public", "private", "total"] %}
     {% for timerange in ["day", "week", "month", "total"] %}
