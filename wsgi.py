@@ -737,12 +737,12 @@ def exp_to_html(exp):
     if not apps: return ''
 
     def css_for_app(app):
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %s; z-index : %d; opacity:%f" % (
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
             app['dimensions'][1],
-            'font-size : ' + str(app['scale']) + 'em' if app.get('scale') else '',
+            'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
             app['z'],
             app.get('opacity', 1)
             )

@@ -185,6 +185,12 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
+    def with_url(cls, url):
+        """ Convenience utility function not used in production, retrieve Expr from full URL """
+        [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
+        return cls.named(domain, name)
+
+    @classmethod
     def list(cls, spec, requester=None, limit=300, page=0, sort='updated'):
         es = map(Expr, db.expr.find(
              spec = spec
@@ -209,8 +215,8 @@ class Expr(Entity):
     def create_me(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = User.fetch(self['owner'])['name']
-        self['title'] = self.get('title') or 'Untitled'
         self['domain'] = self['domain'].lower()
+        self.setdefault('auth', 'public')
         return super(Expr, self).create_me()
 
     def increment_counter(self, counter):
