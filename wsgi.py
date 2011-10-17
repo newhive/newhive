@@ -24,7 +24,7 @@ assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters=
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 
-assets_env.register('admin.js', 'raphael.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
+assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
 assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
@@ -700,8 +700,12 @@ def route_analytics(request, response):
             return serve_page(response, 'pages/analytics/active_users.html')
     if p2 == 'invites':
         invites = Referral.search()
+        cache = {}
         for item in invites:
-            item['sender_name'] = User.fetch(item['user'])['name']
+            user_name = cache.get(item['user'])
+            if not user_name:
+                user_name = cache[item['user']] = User.fetch(item['user'])['name']
+            item['sender_name'] = user_name
 
         response.context['invites'] = invites
         return serve_page(response, 'pages/analytics/invites.html')
@@ -733,12 +737,12 @@ def exp_to_html(exp):
     if not apps: return ''
 
     def css_for_app(app):
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %s; z-index : %d; opacity:%f" % (
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
             app['dimensions'][1],
-            'font-size : ' + str(app['scale']) + 'em' if app.get('scale') else '',
+            'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
             app['z'],
             app.get('opacity', 1)
             )
