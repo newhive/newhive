@@ -213,7 +213,7 @@ def user_create(request, response):
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
-    return redirect(response, abs_url(secure=True) + 'edit/' + home_expr.id)
+    return redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
