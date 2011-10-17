@@ -13,6 +13,15 @@ con = None
 db = None
 s3_con = None
 s3_buckets = None
+
+con = pymongo.Connection()
+db = con[config.database]
+
+# initialize s3 connection
+if config.aws_id:
+    s3_con = S3Connection(config.aws_id, config.aws_secret)
+    s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
+
 def init_connections(config):
     con = pymongo.Connection()
     db = con[config.database]
@@ -21,7 +30,6 @@ def init_connections(config):
     if config.aws_id:
         s3_con = S3Connection(config.aws_id, config.aws_secret)
         s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
-init_connections(config)
 
 
 def now(): return time_s(datetime.utcnow())
