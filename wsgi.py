@@ -249,6 +249,24 @@ def admin_update(request, response):
         v = json.loads(request.form.get(k))
         if v: get_root().update(**{ k : v })
 
+def add_referral(request, response):
+    form = request.form.copy()
+    action = form.pop('action')
+    number = int(form.pop('number'))
+    forward = form.pop('forward')
+    if form.get('all'):
+        users = User.search();
+    else:
+        users = []
+        for key in form:
+            users.append(User.fetch(key))
+
+    for user in users:
+        user.increment({'referrals': number})
+
+    return redirect(response, forward)
+
+
 ######################################
 ########### mail functions ###########
 ######################################
@@ -468,6 +486,7 @@ actions = dict(
     ,tag_remove      = expr_tag_update
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
+    ,add_referral    = add_referral
     )
 
 # Mime types that could generate HTTP POST requests
@@ -609,6 +628,8 @@ def handle(request): # HANDLER
 
             expr_home_list(p2, request, response, limit=900)
             return serve_page(response, 'pages/admin_home.html')
+        elif p1 == 'admin' and request.requester.get('name') in config.admins:
+            return route_admin(request, response)
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             return route_analytics(request, response)
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
@@ -693,6 +714,15 @@ def handle(request): # HANDLER
         if auth_required: return Forbidden()
         return serve_html(response, html)
     else: return serve_page(response, 'pages/' + template + '.html')
+
+def route_admin(request, response):            
+    parts = request.path.split('/', 1)
+    p1 = lget(parts, 0)
+    p2 = lget(parts, 1)
+    if p2 == 'referrals':
+        response.context['users'] = User.search()
+        return serve_page(response, 'pages/admin/referrals.html')
+
 
 def route_analytics(request, response):            
     import analytics
