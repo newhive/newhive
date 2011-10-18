@@ -250,6 +250,7 @@ def admin_update(request, response):
         if v: get_root().update(**{ k : v })
 
 def add_referral(request, response):
+    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
     form = request.form.copy()
     action = form.pop('action')
     number = int(form.pop('number'))
