@@ -868,7 +868,7 @@ var main = function() {
     });
     $('#default_thumbs img').click(function() {
         // The thumb property is set directly
-        Hive.Exp.thumb = $(this).attr('src');
+        Hive.Exp.thumb = this.src;
         dia_thumbnail.close();
         return false;
     });

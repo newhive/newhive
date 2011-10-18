@@ -58,7 +58,14 @@ def expr_save(request, response):
     res = Expr.fetch(exp.id)
     upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
     upd['name'] = upd['name'].lower().strip()
+
+    # if user has not picked a thumbnail, pick the latest image added
+    if not ((res and res.get('thumb')) or exp.get('thumb') or exp.get('thumb_src')):
+        fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
+        if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
+    # Generate thumbnail from given image url
     if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'))
+
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
           new_expression = True
