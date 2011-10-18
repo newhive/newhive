@@ -575,6 +575,8 @@ def handle(request): # HANDLER
             if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
                 response.context['show_help'] = True
             return serve_page(response, 'pages/edit.html')
+        elif p1 == 'tag':
+            pass
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral: return bad_referral(request, response)
