@@ -220,7 +220,7 @@ def user_create(request, response):
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
-    return redirect(response, abs_url(secure=True) + 'edit/' + home_expr.id)
+    return redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
@@ -255,6 +255,25 @@ def admin_update(request, response):
     for k in ['tags', 'tagged']:
         v = json.loads(request.form.get(k))
         if v: get_root().update(**{ k : v })
+
+def add_referral(request, response):
+    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+    form = request.form.copy()
+    action = form.pop('action')
+    number = int(form.pop('number'))
+    forward = form.pop('forward')
+    if form.get('all'):
+        users = User.search();
+    else:
+        users = []
+        for key in form:
+            users.append(User.fetch(key))
+
+    for user in users:
+        user.increment({'referrals': number})
+
+    return redirect(response, forward)
+
 
 ######################################
 ########### mail functions ###########
@@ -326,7 +345,7 @@ def mail_them(request, response):
         response.context.update({
           'short_url': (exp.get('domain') + '/' + exp.get('name'))
           ,'tags': exp.get('tags')
-          ,'thumbnail_url': exp.get('thumb', '/lib/skin/1/thumb_0.png')
+          ,'thumbnail_url': exp.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
           ,'user_url': home_url(owner)
           ,'user_name': owner.get('name')
           ,'title': exp.get('title')
@@ -475,6 +494,7 @@ actions = dict(
     ,tag_remove      = expr_tag_update
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
+    ,add_referral    = add_referral
     )
 
 # Mime types that could generate HTTP POST requests
@@ -575,14 +595,22 @@ def handle(request): # HANDLER
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
+
             if not exp: return serve_404(request, response)
+
+            if request.requester.get('flags'):
+                show_help = request.requester['flags'].get('default-instructional') < 1
+            else:
+               show_help = True
+
+            if show_help:
+                request.requester.increment({'flags.default-instructional': 1})
             response.context.update({
                  'title'     : 'Editing: ' + exp['title']
                 ,'sites'     : request.requester.get('sites')
                 ,'exp_js'    : json.dumps(exp)
                 ,'exp'       : exp
-                # show help dialog unless more than one expression exists
-                ,'show_help' : len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1
+                ,'show_help' : show_help
             })
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'signup':
@@ -608,6 +636,8 @@ def handle(request): # HANDLER
 
             expr_home_list(p2, request, response, limit=900)
             return serve_page(response, 'pages/admin_home.html')
+        elif p1 == 'admin' and request.requester.get('name') in config.admins:
+            return route_admin(request, response)
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             return route_analytics(request, response)
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
@@ -687,10 +717,20 @@ def handle(request): # HANDLER
     if is_owner: resource.increment_counter('owner_views')
 
     template = resource.get('template', request.args.get('template', 'expression'))
+
     if template == 'none':
         if auth_required: return Forbidden()
         return serve_html(response, html)
     else: return serve_page(response, 'pages/' + template + '.html')
+
+def route_admin(request, response):            
+    parts = request.path.split('/', 1)
+    p1 = lget(parts, 0)
+    p2 = lget(parts, 1)
+    if p2 == 'referrals':
+        response.context['users'] = User.search()
+        return serve_page(response, 'pages/admin/referrals.html')
+
 
 def route_analytics(request, response):            
     import analytics
@@ -751,7 +791,8 @@ def exp_to_html(exp):
             app['dimensions'][1],
             'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
             app['z'],
-            app.get('opacity', 1)
+            # Added "or 1" in case "None" is stored in the database
+            app.get('opacity', 1) or 1
             )
 
     def html_for_app(app):

@@ -216,6 +216,7 @@ class Expr(Entity):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = User.fetch(self['owner'])['name']
         self['domain'] = self['domain'].lower()
+        self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         return super(Expr, self).create_me()
 

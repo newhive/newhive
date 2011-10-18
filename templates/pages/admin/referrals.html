@@ -1,0 +1,60 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+  {{ super() }}
+  <script>
+    $(function(){
+        $('input[name="forward"]').val(window.location);
+        $('input[type="checkbox"][name="all"]').change(function(){
+          if (this.checked) {
+            $('input[type="checkbox"]').attr("checked", "checked");
+          } else {
+            $('input[type="checkbox"]').removeAttr("checked");
+          }
+        });
+    });
+  </script>
+{% endblock %}
+
+{% block content %}
+<form url="{{secure_server}}" method="POST">
+  <input type="hidden" name="action" value="add_referral"/>
+  <input type="hidden" name="forward" value=""/>
+  {{ super() }}
+</form>
+{% endblock %}
+
+{% block header %}
+  <label class="label medbold">Referrals</label>
+  <input type="text" name="number" value="0"/>
+  <input type="submit" value="Give Referrals" class="button rounded"/>
+{% endblock %}
+
+{% block table_head %}
+<tr>
+  <th><input type="checkbox" name="all" value="1"></input>All</th>
+  <th>username</th>
+  <th>current referrals</th>
+</tr>
+{% endblock %}
+
+{% block tablesorter_options %}
+{
+  headers: {
+    0: {sorter: false}
+    }
+}
+{% endblock %}
+
+{% block table_body %}
+{% for user in users %}
+<tr>
+  <td><input type="checkbox" name="{{user.id}}" value="1"></input></td>
+  <td>{{ user['name'] }}</td>
+  <td>{{ user['referrals'] }}</td>
+</tr>
+
+{% endfor %}
+{% endblock %}
+
+
