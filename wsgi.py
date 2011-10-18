@@ -337,7 +337,7 @@ def mail_them(request, response):
         response.context.update({
           'short_url': (exp.get('domain') + '/' + exp.get('name'))
           ,'tags': exp.get('tags')
-          ,'thumbnail_url': exp.get('thumb', '/lib/skin/1/thumb_0.png')
+          ,'thumbnail_url': exp.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
           ,'user_url': home_url(owner)
           ,'user_name': owner.get('name')
           ,'title': exp.get('title')
