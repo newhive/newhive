@@ -783,7 +783,8 @@ def exp_to_html(exp):
             app['dimensions'][1],
             'font-size : ' + str(app['scale']) + 'em' if app.get('scale') else '',
             app['z'],
-            app.get('opacity', 1)
+            # Added "or 1" in case "None" is stored in the database
+            app.get('opacity', 1) or 1
             )
 
     def html_for_app(app):
