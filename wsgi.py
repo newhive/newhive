@@ -323,6 +323,8 @@ def mail_us(request, response):
         send_mail(heads, body)
     Contact.create(**form)
 
+    mail_signup_thank_you(form)
+
     return serve_page(response, 'dialogs/signup_thank_you.html')
 
 def mail_them(request, response):
@@ -418,6 +420,24 @@ def mail_invite(email, name=False, force_resend=False):
         }
     send_mail(heads, body)
     return True
+
+
+def mail_signup_thank_you(form):
+    context = {
+        'url': 'http://thenewhive.com'
+        ,'thumbnail_url': 'http://thenewhive.com/lib/skin/1/thumb_0.png'
+        ,'name': form.get('name')
+        }
+    heads = {
+        'To': form.get('email')
+        ,'From': 'The New Hive <noreply@thenewhive.com>'
+        ,'Subject': 'Thank you for signing up for a beta account on The New Hive'
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/thank_you_signup.txt").render(context)
+        ,'html': jinja_env.get_template("emails/thank_you_signup.html").render(context)
+        }
+    send_mail(heads,body)
 
 
 def mail_feedback(request, response):
