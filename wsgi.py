@@ -539,7 +539,7 @@ def expr_home_list(p2, request, response, limit=90):
         exprs = [by_id[i] for i in ids]
         response.context['pages'] = 0;
     else:
-        exprs = Expr.list({}, sort='created', limit=limit, page=page)
+        exprs = Expr.list({}, sort='updated', limit=limit, page=page)
         response.context['pages'] = Expr.list_count({});
     response.context['exprs'] = map(format_card, exprs)
     response.context['tag'] = tag
