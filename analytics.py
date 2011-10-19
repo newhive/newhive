@@ -6,6 +6,7 @@ def shared_user_data(result):
       if user:
         item['name'] = user['name']
         item['age'] = (time.time() - user['created']) / 3600 /24
+        item['updated'] = user['updated']
     return result
 
 

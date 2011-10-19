@@ -3,16 +3,6 @@
 {% block head %}
   {{ super() }}
   <script>
-    var epochToDate = function(epoch){
-      if (typeof(epoch) !== 'undefined' && epoch != "") {
-        var d = new Date(epoch*1000);
-        var minutes = d.getMinutes() + "";
-        if (minutes.length == 1) { minutes = "0" + minutes }
-
-        return d.toDateString() + " " + d.getHours() + ":" + minutes;
-      }
-    };
-
     var stats = {};
     var filter = function(){
       var date_sent_start = parseInt($('#date_sent_start').val()) / 1000;
@@ -48,13 +38,6 @@
     $(function(){
 
       $('.datepicker').datepicker({dateFormat: "@"});
-      $('[data-type="epoch_date"]').each(
-        function(){
-          $(this).html(
-            epochToDate($(this).html())
-          );
-        }
-      );
       $('#filters input').change(filter).change();
 
     });

@@ -2,19 +2,20 @@
 
 {% block table_head %}
   <tr>
-    <th colspan=2></th>
+    <th colspan=3></th>
     {% for auth in ["public", "private", "total"] %}
     <th width="26%" colspan=5>{{ auth }}</th>
     {% endfor %}
   </tr>
   <tr>
-    <th width="15%">Name</th>
-    <th width="8%">Age in weeks</th>
+    <th width="7%">Name</th>
+    <th width="5%">Age in weeks</th>
+    <th width="10%">Last Login</th>
     {% for auth in ["public", "private", "total"] %}
     {% for timerange in ["day", "week", "month", "total"] %}
-    <th width="5%">{{ timerange }}</th>
+    <th width="4%">{{ timerange }}</th>
     {% endfor %}
-    <th width="5%">Per Week</th>
+    <th width="5%">Per Wk</th>
     {% endfor %}
   </tr>
 {% endblock %}
@@ -24,6 +25,7 @@
   <tr>
     <td><a href="http://{{ user['name'] }}.thenewhive.com">{{ user['name'] }}</a></td>
     <td>{{ (user['age']/7) | round(0,'ceil') | int}}</td>
+    <td data-type="epoch_date">{{ user.updated }}</td>
     {% for auth in ["public", "private", "total"] %}
     {% for timerange in ["day", "week", "month", "total"] %}
     <td>{{ user[auth][timerange] | int }}</td>

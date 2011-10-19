@@ -9,9 +9,27 @@
  {% endfor %}
   <script type='text/javascript'>
     var paper;
+
+    var epochToDate = function(epoch){
+      if (typeof(epoch) !== 'undefined' && epoch != "") {
+        var d = new Date(epoch*1000);
+        var minutes = d.getMinutes() + "";
+        if (minutes.length == 1) { minutes = "0" + minutes }
+
+        return d.toDateString() + " " + d.getHours() + ":" + minutes;
+      }
+    };
+
     $(function(){
         $('table.tablesorter').tablesorter({% block tablesorter_options %}{% endblock %});
         //paper = Raphael($('#canvas_container')[0], '1000px', '500px');
+        $('[data-type="epoch_date"]').each(
+          function(){
+            $(this).html(
+              epochToDate($(this).html())
+            );
+          }
+        );
     });
   </script>
 <style type='text/css'>
