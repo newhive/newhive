@@ -270,6 +270,7 @@ def add_referral(request, response):
             users.append(User.fetch(key))
 
     for user in users:
+        user.flag('new_referrals')
         user.increment({'referrals': number})
 
     return redirect(response, forward)
@@ -574,6 +575,7 @@ def handle(request): # HANDLER
        response for thenewhive.com must not contain unsanitized user content.
        Accepts werkzeug.Request, returns werkzeug.Response"""
 
+
     response = Response()
     request.requester = auth.authenticate_request(request, response)
     request.trusting = False
@@ -599,6 +601,14 @@ def handle(request): # HANDLER
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
         p2 = lget(parts, 1)
+        if p1 == 'api':
+            if p2 == 'notifications_opened':
+                response = Response()
+                origin = request.headers.get('origin')
+                response.headers.add('Access-Control-Allow-Credentials', 'true')
+                response.headers.add('Access-Control-Allow-Origin', origin)
+                request.requester.unflag('new_referrals')
+                return serve_json(response, True)
         if p1 == 'file':
             res = File.fetch(p2)
             if not res: return serve_404(request, response)
