@@ -58,7 +58,14 @@ def expr_save(request, response):
     res = Expr.fetch(exp.id)
     upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
     upd['name'] = upd['name'].lower().strip()
+
+    # if user has not picked a thumbnail, pick the latest image added
+    if not ((res and res.get('thumb')) or exp.get('thumb') or exp.get('thumb_src')):
+        fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
+        if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
+    # Generate thumbnail from given image url
     if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'))
+
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
           new_expression = True
@@ -777,12 +784,12 @@ def exp_to_html(exp):
     if not apps: return ''
 
     def css_for_app(app):
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %s; z-index : %d; opacity:%f" % (
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
             app['dimensions'][1],
-            'font-size : ' + str(app['scale']) + 'em' if app.get('scale') else '',
+            'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
             app['z'],
             # Added "or 1" in case "None" is stored in the database
             app.get('opacity', 1) or 1
