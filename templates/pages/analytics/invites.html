@@ -1,0 +1,126 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+  {{ super() }}
+  <script>
+    var epochToDate = function(epoch){
+      if (typeof(epoch) !== 'undefined' && epoch != "") {
+        var d = new Date(epoch*1000);
+        var minutes = d.getMinutes() + "";
+        if (minutes.length == 1) { minutes = "0" + minutes }
+
+        return d.toDateString() + " " + d.getHours() + ":" + minutes;
+      }
+    };
+
+    var stats = {};
+    var filter = function(){
+      var date_sent_start = parseInt($('#date_sent_start').val()) / 1000;
+      var date_sent_end = parseInt($('#date_sent_end').val()) / 1000;
+      stats.user_created = 0;
+      stats.total_rows = 0;
+      $('.tablesorter tbody tr').show();
+      $('.tablesorter tbody tr').each(function(){
+        var hidden = false;
+        if (date_sent_start > 0){
+          if ($(this).find('[data-key="date_sent"]').attr('data-value') < date_sent_start){
+            hidden = true;
+            $(this).hide();
+          }
+        }
+        if (date_sent_end > 0){
+          if ($(this).find('[data-key="date_sent"]').attr('data-value') > date_sent_end){
+            hidden = true;
+            $(this).hide();
+          }
+        }
+        if (! hidden) {
+          stats.total_rows++;
+          if ($(this).hasClass('used')) { stats.user_created++; }
+        }
+      });
+      $('#total_invites_sent').html(stats.total_rows);
+      $('#total_accounts_created').html(stats.user_created);
+      $('#percent_accounts_created').html(Math.round(stats.user_created / stats.total_rows * 1000)/10 + "%");
+    };
+
+    var r;
+    $(function(){
+
+      $('.datepicker').datepicker({dateFormat: "@"});
+      $('[data-type="epoch_date"]').each(
+        function(){
+          $(this).html(
+            epochToDate($(this).html())
+          );
+        }
+      );
+      $('#filters input').change(filter).change();
+
+    });
+  </script>
+  <style>
+    #filters {
+      float: left;
+      width: 40%;
+    }
+    #stats {
+      float: left;
+      width:20%;
+    }
+  </style>
+{% endblock %}
+
+{% block header %}
+<div id="filters">
+  <h2>Filters</h2>
+  <h3>Invitation Sent</h3>
+  <label class="label medbold">From: </label>
+  <input class="datepicker" id="date_sent_start" type="text"/>
+  <label class="label medbold">To: </label>
+  <input class="datepicker" id="date_sent_end" type="text"/>
+</div>
+<div id="stats">
+  <h2>Stats</h2>
+  <table>
+    <tr>
+      <td>Invites sent:</td><td id="total_invites_sent"></td>
+    </tr>
+    <tr>
+      <td>Accounts created:</td><td id="total_accounts_created"></td>
+    </tr>
+    <tr>
+      <td>Percentage</td><td id="percent_accounts_created"></td>
+    </tr>
+  </table>
+</div>
+
+{% endblock %}
+{% block table_head %}
+  <tr>
+    <th>sender</th>
+    <th>email</th>
+    <th>name</th>
+    <th>date sent</th>
+    <th>tags</th>
+    <th>User Created</th>
+    <th>User Created Date</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+
+  {% for invite in invites %}
+  <tr class='{{ "used" if invite['user_created'] }}'>
+    <td>{{ invite['sender_name'] }}</td>
+    <td>{{ invite['to'] }}</td>
+    <td>{{ invite['name'] if invite['name']}}</td>
+    <td data-type="epoch_date" data-key="date_sent" data-value="{{invite['created']}}">{{ invite['created'] }}</td>
+    <td>{{ invite['tags'] | join(", ") }}</td>
+    <td><a href='http://{{ invite['user_created_name'] }}.thenewhive.com'>{{ invite['user_created_name'] }}</a></td>
+    <td data-type="epoch_date">{{ invite['user_created_date'] }}</td>
+  </tr>
+  {% endfor %}
+
+{% endblock %}
+

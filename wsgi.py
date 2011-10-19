@@ -23,7 +23,10 @@ if config.webassets_debug:
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
-assets_env.register('admin.js', 'jquery.tablesorter.min.js', output='../lib/admin.js')
+
+assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
+assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
+
 assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
@@ -55,29 +58,34 @@ def expr_save(request, response):
     res = Expr.fetch(exp.id)
     upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
     upd['name'] = upd['name'].lower().strip()
-    if upd['name'] == 'expressions':
-        return dict(error="The name /expressions is reserved for your profile page.")
-    if not res or upd.get('thumb') != res.get('thumb'): generate_thumb(upd, request.requester)
+
+    # if user has not picked a thumbnail, pick the latest image added
+    if not ((res and res.get('thumb')) or exp.get('thumb') or exp.get('thumb_src')):
+        fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
+        if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
+    # Generate thumbnail from given image url
+    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'))
+
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
           new_expression = True
           res = request.requester.expr_create(upd)
-        except DuplicateKeyError: return dict( error='An expression already exists with the URL: ' + upd['name'])
+        except DuplicateKeyError:
+            if exp.get('overwrite'):
+                Expr.named(upd['domain'], upd['name']).delete()
+                res = request.requester.expr_create(upd)
+            else: return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
     else:
         if not res['owner'] == request.requester.id:
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
         new_expression = False
-    return dict( new=new_expression, error=False, location=abs_url(domain = upd['domain']) + upd['name'] )
+    return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
-def generate_thumb(expr, owner):
-    # retrieve first image from expression
-    fst_img = lget(filter(lambda a: a['type'] == 'hive.image', expr.get('apps', [])), -1)
-    if not fst_img or not fst_img.get('content'): return
-
+def generate_thumb(owner, url):
     # create file record in database, copy file to media directory via http
-    try: response = urllib.urlopen(fst_img['content'])
+    try: response = urllib.urlopen(url)
     except: return
     if response.getcode() != 200: return
     mime = response.headers.getheader('Content-Type')
@@ -101,7 +109,7 @@ def generate_thumb(expr, owner):
     imo.save(path, format='jpeg')
 
     res = File.create(owner=owner.id, path=path, name='thumb', mime=mime)
-    expr['thumb'] = res.get('url')
+    return res.get('url')
 
 
 def expr_delete(request, response):
@@ -195,7 +203,7 @@ def user_create(request, response):
         """
 
     referral = Referral.fetch(request.args.get('key'), keyname='key')
-    if not referral: return bad_referral(request, response)
+    if (not referral or referral.get('used')): return bad_referral(request, response)
     referrer = User.fetch(referral['user'])
     assert 'tos' in request.form
 
@@ -204,21 +212,23 @@ def user_create(request, response):
     args['sites'] = [args['name'].lower() + '.' + config.server_name]
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
-    referral.delete()
+    referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
     home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
 
-    mail_user_register_thankyou(user)
+    try: mail_user_register_thankyou(user)
+    except: pass # TODO: log an error
 
     request.form = dict(username = args['name'], secret = args['password'])
     login(request, response)
-    return redirect(response, abs_url(secure=True) + 'edit/' + home_expr.id)
+    return redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
     return serve_page(response, 'pages/minimal.html')
 def bad_referral(request, response):
-    response.context['content'] = 'Invalid referral; already used or never existed'
-    return serve_page(response, 'pages/minimal.html')
+    response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
+    response.context['error'] = 'Log in if you already have an account'
+    return serve_page(response, 'pages/error.html')
 
 
 def expr_tag_update(request, response):
@@ -245,6 +255,25 @@ def admin_update(request, response):
     for k in ['tags', 'tagged']:
         v = json.loads(request.form.get(k))
         if v: get_root().update(**{ k : v })
+
+def add_referral(request, response):
+    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+    form = request.form.copy()
+    action = form.pop('action')
+    number = int(form.pop('number'))
+    forward = form.pop('forward')
+    if form.get('all'):
+        users = User.search();
+    else:
+        users = []
+        for key in form:
+            users.append(User.fetch(key))
+
+    for user in users:
+        user.increment({'referrals': number})
+
+    return redirect(response, forward)
+
 
 ######################################
 ########### mail functions ###########
@@ -289,12 +318,12 @@ def mail_us(request, response):
         ,'Reply-to' : form['email']
         }
     body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
-    print(request.form)
-    print(form)
     form.update({'msg': body})
     if not config.debug_mode:
         send_mail(heads, body)
     Contact.create(**form)
+
+    mail_signup_thank_you(form)
 
     return serve_page(response, 'dialogs/signup_thank_you.html')
 
@@ -318,7 +347,7 @@ def mail_them(request, response):
         response.context.update({
           'short_url': (exp.get('domain') + '/' + exp.get('name'))
           ,'tags': exp.get('tags')
-          ,'thumbnail_url': exp.get('thumb')
+          ,'thumbnail_url': exp.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
           ,'user_url': home_url(owner)
           ,'user_name': owner.get('name')
           ,'title': exp.get('title')
@@ -391,6 +420,24 @@ def mail_invite(email, name=False, force_resend=False):
         }
     send_mail(heads, body)
     return True
+
+
+def mail_signup_thank_you(form):
+    context = {
+        'url': 'http://thenewhive.com'
+        ,'thumbnail_url': 'http://thenewhive.com/lib/skin/1/thumb_0.png'
+        ,'name': form.get('name')
+        }
+    heads = {
+        'To': form.get('email')
+        ,'From': 'The New Hive <noreply@thenewhive.com>'
+        ,'Subject': 'Thank you for signing up for a beta account on The New Hive'
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/thank_you_signup.txt").render(context)
+        ,'html': jinja_env.get_template("emails/thank_you_signup.html").render(context)
+        }
+    send_mail(heads,body)
 
 
 def mail_feedback(request, response):
@@ -467,6 +514,7 @@ actions = dict(
     ,tag_remove      = expr_tag_update
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
+    ,add_referral    = add_referral
     )
 
 # Mime types that could generate HTTP POST requests
@@ -511,7 +559,7 @@ def expr_home_list(p2, request, response, limit=90):
         exprs = [by_id[i] for i in ids]
         response.context['pages'] = 0;
     else:
-        exprs = Expr.list({}, sort='created', limit=limit, page=page)
+        exprs = Expr.list({}, sort='updated', limit=limit, page=page)
         response.context['pages'] = Expr.list_count({});
     response.context['exprs'] = map(format_card, exprs)
     response.context['tag'] = tag
@@ -529,7 +577,7 @@ def handle(request): # HANDLER
     response = Response()
     request.requester = auth.authenticate_request(request, response)
     request.trusting = False
-    response.context = { 'f' : request.form, 'url' : request.base_url }
+    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.base_url }
     response.user = request.requester
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
@@ -567,19 +615,29 @@ def handle(request): # HANDLER
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
             else: exp = Expr.fetch(p2)
+
             if not exp: return serve_404(request, response)
-            response.context['title'] = 'Editing: ' + exp['title']
-            response.context['sites'] = request.requester.get('sites')
-            response.context['exp_js'] = json.dumps(exp)
-            response.context['exp'] = exp
-            if len(Expr.list({ 'owner_name' : request.requester['name'] }, limit=3, requester=request.requester.id)) <= 1:
-                response.context['show_help'] = True
+
+            if request.requester.get('flags'):
+                show_help = request.requester['flags'].get('default-instructional') < 1
+            else:
+               show_help = True
+
+            if show_help:
+                request.requester.increment({'flags.default-instructional': 1})
+            response.context.update({
+                 'title'     : 'Editing: ' + exp['title']
+                ,'sites'     : request.requester.get('sites')
+                ,'exp_js'    : json.dumps(exp)
+                ,'exp'       : exp
+                ,'show_help' : show_help
+            })
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'tag':
             pass
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
-            if not referral: return bad_referral(request, response)
+            if not referral or referral.get('used'): return bad_referral(request, response)
             return serve_page(response, 'pages/user_settings.html')
         elif p1 == 'referral' and request.requester.logged_in:
             if(request.requester['referrals'] <= 0):
@@ -600,12 +658,10 @@ def handle(request): # HANDLER
 
             expr_home_list(p2, request, response, limit=900)
             return serve_page(response, 'pages/admin_home.html')
+        elif p1 == 'admin' and request.requester.get('name') in config.admins:
+            return route_admin(request, response)
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
-            import analytics
-            active_users = analytics.active_users()
-            response.context['active_users'] = active_users
-            response.context['active_users_js'] = json.dumps(active_users)
-            return serve_page(response, 'pages/analytics.html')
+            return route_analytics(request, response)
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
             response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
             response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
@@ -621,9 +677,8 @@ def handle(request): # HANDLER
         #    return serve_page(response, 'pages/home.html')
 
         return serve_404(request, response)
-
     elif request.domain.startswith('www.'):
-        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]))
+        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]) + request.path + '?' + request.query_string)
 
     d = resource = Expr.named(request.domain.lower(), request.path.lower())
     if not d: d = Expr.named(request.domain, '')
@@ -644,11 +699,12 @@ def handle(request): # HANDLER
         return serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
 
     if lget(request.path, 0) == '*':
-        return redirect(response, home_url(owner) + ('?tag=' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
-    if request.path == 'expressions':
+        return redirect(response, home_url(owner) + 'expressions' +
+            ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
+    if request.path.startswith('expressions'):
         page = int(request.args.get('page', 0))
         spec = { 'owner' : owner.id }
-        tag = request.args.get('tag')
+        tag = lget(request.path.split('/'), 1, '')
         if tag: spec['tags_index'] = tag
 
         response.context['title'] = owner['fullname']
@@ -683,11 +739,47 @@ def handle(request): # HANDLER
     if is_owner: resource.increment_counter('owner_views')
 
     template = resource.get('template', request.args.get('template', 'expression'))
+
     if template == 'none':
         if auth_required: return Forbidden()
         return serve_html(response, html)
     else: return serve_page(response, 'pages/' + template + '.html')
 
+def route_admin(request, response):            
+    parts = request.path.split('/', 1)
+    p1 = lget(parts, 0)
+    p2 = lget(parts, 1)
+    if p2 == 'referrals':
+        response.context['users'] = User.search()
+        return serve_page(response, 'pages/admin/referrals.html')
+
+
+def route_analytics(request, response):            
+    import analytics
+    parts = request.path.split('/', 1)
+    p1 = lget(parts, 0)
+    p2 = lget(parts, 1)
+    if p2 == 'active_users':
+        if request.args.has_key('start') and request.args.has_key('end'):
+            active_users = analytics.active_users()
+        else:
+            active_users = analytics.active_users()
+            response.context['active_users'] = active_users
+            response.context['active_users_js'] = json.dumps(active_users)
+            return serve_page(response, 'pages/analytics/active_users.html')
+    if p2 == 'invites':
+        invites = Referral.search()
+        cache = {}
+        for item in invites:
+            user_name = cache.get(item['user'])
+            if not user_name:
+                user_name = cache[item['user']] = User.fetch(item['user'])['name']
+            item['sender_name'] = user_name
+
+        response.context['invites'] = invites
+        return serve_page(response, 'pages/analytics/invites.html')
+    else:
+        return serve_404(request, response)
 
 @Request.application
 def handle_safe(request):
@@ -714,14 +806,15 @@ def exp_to_html(exp):
     if not apps: return ''
 
     def css_for_app(app):
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %s; z-index : %d; opacity:%f" % (
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
             app['dimensions'][1],
-            'font-size : ' + str(app['scale']) + 'em' if app.get('scale') else '',
+            'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
             app['z'],
-            app.get('opacity', 1)
+            # Added "or 1" in case "None" is stored in the database
+            app.get('opacity', 1) or 1
             )
 
     def html_for_app(app):
@@ -779,8 +872,7 @@ def serve_json(response, val, as_text = False):
 
 def serve_404(request, response):
     response.status_code = 404
-    response.context['msg'] = 'Nothing here yet...'
-    return serve_page(response, 'pages/error.html')
+    return serve_page(response, 'pages/notfound.html')
 
 def serve_error(request, msg):
     response.status_code = 500

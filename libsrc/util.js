@@ -83,25 +83,28 @@ function autoLink(string) {
 }
 
 function exprDialog(url, opts) {
-    $.extend(opts, { absolute : true });
-    var dia;
-    if(exprDialog.loaded[url]) dia = exprDialog.loaded[url];
-    else {
-        var html;
-        $.ajax({ url : url + '?template=expr_div', success : function(h) { html = h }, async : false });
-        dia = exprDialog.loaded[url] = $(html);
-    }
-
-    opts.layout = function() {
+    $.extend(opts, { layout : function(dia) {
         dia.css({ width : '80%' });
         dia.css({ height : dia.width() / parseFloat(dia.attr('data-aspect')) });
         place_apps();
         center(dia, $(window), opts);
-    }
-    var r = showDialog(dia, opts);
-    return r;
+    } });
+    return loadDialog(url + '?template=expr_div', opts);
 }
 exprDialog.loaded = {};
+
+function loadDialog(url, opts) {
+    $.extend(opts, { absolute : true });
+    var dia;
+    if(loadDialog.loaded[url]) dia = loadDialog.loaded[url];
+    else {
+        var html;
+        $.ajax({ url : url, success : function(h) { html = h }, async : false });
+        dia = loadDialog.loaded[url] = $(html);
+    }
+    return showDialog(dia, opts);
+}
+loadDialog.loaded = {};
 
 function showDialog(name, opts) {
     var dialog = $(name);
@@ -123,8 +126,8 @@ function showDialog(name, opts) {
                 dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
                 o.shield.add(o.btn_close).click(o.close);
             }
-            $(window).resize(o.opts.layout);
-            o.opts.layout();
+            $(window).resize(function() { o.opts.layout(o.dialog) });
+            o.opts.layout(o.dialog);
 
             if (o.opts.select) dialog.find(o.opts.select).focus().click();
             o.index = showDialog.opened.length;
@@ -151,6 +154,7 @@ function showDialog(name, opts) {
     return o;
 }
 showDialog.opened = [];
+closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);
@@ -264,9 +268,12 @@ $(function () {
   });
 
   $('#dia_referral input[name=forward]').val(window.location);
-
-
+  $(window).resize(place_apps);
+  place_apps();
 });
+
+
+
 
 function center(e, inside, opts) {
     var opts = $.extend({ absolute : false }, opts);
@@ -457,14 +464,13 @@ function eraseCookie(name) {
 
 function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
 
-var place_apps = function(apps) {
-   if(!apps) apps = '.happ';
-   $(apps).each(function() {
+var place_apps = function() {
+   $('.happ').each(function(i, app_div) {
        var e = $(this);
        var s = e.parent().width() / 1000;
        if(!e.data('css')) {
-           var c = {}, that = this;
-           map(function(p) { c[p] = parseFloat(that.style[p]) }, ['left', 'top', 'width', 'height']);
+           var c = {};
+           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height']);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
            e.data('css', c);

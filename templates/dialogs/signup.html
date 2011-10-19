@@ -23,14 +23,14 @@
 <script>
 $(function() {
  var dia;
- $('#signup_button').click(function() {
+ $('#signup_button, .signup_button').click(function() {
      dia = showDialog('#dia_signup');
      $(this).addClass('open');
      $('input[name=forward]').val(window.location);
  });
  
  $('#signup_form').submit(function() {
-    if ($(this).hasClass('inactive')) { return true; }
+    if($(this).hasClass('inactive')) { return false; }
     $(this).addClass('inactive');
     return asyncSubmit($('#signup_form'), function(data) {
         $('#send_msg').removeClass('inactive');

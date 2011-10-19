@@ -38,5 +38,7 @@
 #menu_privacy .selected { display : none; }
 #right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }
-
+#btn_thumbnail { font-weight : bold; cursor : default; }
 #dia_edit_bg h2 { text-align : center; }
+#dia_thumbnail { width : 690px; max-height : 400px; overflow : auto; }
+#dia_thumbnail .thumb { float : left; margin : 5px; }

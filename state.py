@@ -8,6 +8,12 @@ import social_stats
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
+
+con = None
+db = None
+s3_con = None
+s3_buckets = None
+
 con = pymongo.Connection()
 db = con[config.database]
 
@@ -15,6 +21,15 @@ db = con[config.database]
 if config.aws_id:
     s3_con = S3Connection(config.aws_id, config.aws_secret)
     s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
+
+def init_connections(config):
+    con = pymongo.Connection()
+    db = con[config.database]
+
+    # initialize s3 connection
+    if config.aws_id:
+        s3_con = S3Connection(config.aws_id, config.aws_secret)
+        s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
 
 
 def now(): return time_s(datetime.utcnow())
@@ -142,8 +157,6 @@ class User(Entity):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
 
-    def get_url(self): return abs_url(domain=self['domain']) + self['name']
-
 
 def get_root(): return User.named('root')
 if not get_root():
@@ -178,6 +191,12 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
+    def with_url(cls, url):
+        """ Convenience utility function not used in production, retrieve Expr from full URL """
+        [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
+        return cls.named(domain, name)
+
+    @classmethod
     def list(cls, spec, requester=None, limit=300, page=0, sort='updated'):
         es = map(Expr, db.expr.find(
              spec = spec
@@ -202,8 +221,9 @@ class Expr(Entity):
     def create_me(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = User.fetch(self['owner'])['name']
-        self['title'] = self.get('title') or 'Untitled'
         self['domain'] = self['domain'].lower()
+        self.setdefault('title', 'Untitled')
+        self.setdefault('auth', 'public')
         return super(Expr, self).create_me()
 
     def increment_counter(self, counter):
@@ -247,7 +267,13 @@ class Expr(Entity):
 
       else:
         return 0
-      
+
+    def get_url(self): return abs_url(domain=self['domain']) + self['name']
+
+    def set_tld(self, domain):
+        """ Sets the top level domain (everything following first dot) in domain attribute """
+        return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
+
 
 class File(Entity):
     cname = 'file'

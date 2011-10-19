@@ -1,0 +1,77 @@
+{% extends "main.html" %}
+
+{% block head %}
+ {% for item in assets_env["admin.css"].urls() %}
+   <link rel='stylesheet' type='text/css' href='{{ item }}'>
+ {% endfor %}
+ {% for item in assets_env["admin.js"].urls() %}
+  <script src='{{ item }}'></script>
+ {% endfor %}
+  <script type='text/javascript'>
+    var paper;
+    $(function(){
+        $('table.tablesorter').tablesorter({% block tablesorter_options %}{% endblock %});
+        //paper = Raphael($('#canvas_container')[0], '1000px', '500px');
+    });
+  </script>
+<style type='text/css'>
+/* tables */
+table {
+  font-family:arial;
+  background-color: #CDCDCD;
+  margin:10px 0pt 15px;
+  font-size: 8pt;
+  width: 100%;
+  text-align: left;
+}
+table thead tr th, table tfoot tr th {
+  background-color: #e6EEEE;
+  border: 1px solid #FFF;
+  font-size: 8pt;
+  padding: 4px;
+}
+table thead tr .header {
+  background-image: url(/lib/skin/1/tablesorter_bg.gif);
+  background-repeat: no-repeat;
+  background-position: center right;
+  cursor: pointer;
+}
+table tbody td {
+  color: #3D3D3D;
+  padding: 4px;
+  background-color: #FFF;
+  vertical-align: top;
+}
+table tbody tr:nth-child(odd) td, table tbody tr.odd td {
+  background-color:#F0F0F6;
+}
+table thead tr .headerSortUp {
+  background-image: url(/lib/skin/1/tablesorter_asc.gif);
+}
+table thead tr .headerSortDown {
+  background-image: url(/lib/skin/1/tablesorter_desc.gif);
+}
+table thead tr .headerSortDown, table thead tr .headerSortUp {
+background-color: #8dbdd8;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div id="canvas_container"></div>
+<div id="header">
+  {% block header %}
+  {% endblock %}
+</div>
+<table width='100%' class='tablesorter'>
+  <thead>
+    {% block table_head %}
+    {% endblock %}
+  </thead>
+  <tbody>
+    {% block table_body %}
+    {% endblock %}
+  </tbody>
+</table>
+{% endblock %}
