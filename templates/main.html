@@ -18,7 +18,7 @@
    </form>
    <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
    {% if user.referrals > 0 %}
-     <div class='menu_item' onclick='showDialog("#dia_referral")'>Referrals</div>
+   <div class='menu_item' onclick='showDialog("#dia_referral")'>Referrals <div style="float: right; color:{{colors['active']}};">{{ user.referrals }}</div></div>
   {% endif %}
    <!--<div class='menu_item'>Change&nbsp;icon</div>
    <div class='menu_item'>Settings</div>-->
@@ -31,7 +31,7 @@
 
 {% if not user.logged_in %}
  <div class='nav' style='right : 10px; top : 0px;'>
-  <div id='login_btn' class='btn hoverable nav_icon text' value='Log In'>Log In</div>
+  <div id='login_btn' class='btn hoverable nav_icon text'>Log In</div>
   <div id='login_menu' class='menu top'>
    <form id='login_form' action='{{ secure_server }}' method='POST'>
     {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
@@ -79,8 +79,6 @@
   });
  </script>
 {% endif%}
-
-</div>
 
 <div id='dialogs'>
   {% if user.logged_in %}

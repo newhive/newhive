@@ -1,16 +1,18 @@
 {% extends "main.html" %}
 
+{% block meta %}
+ <meta property="og:title" content='{{ title }}' />
+ <meta property="og:type" content="article" />
+ <meta property="og:url" content='{{ "http://" + domain + "/" + exp["name"] }}' />
+ <meta property="og:image" content='{{ exp.thumb|default('http://thenewhive.com/lib/skin/1/thumb_0.png') | e }}' />
+ <meta property="fb:admins" content="1007003" />
+{% endblock %}
 {% block head %}
  <style>
   #exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
   #datetime { font-size : .7em; color : {{ colors[12] }}; line-height : .5em; }
   #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
  </style>
- <meta property="og:title" content='{{ title }}' />
- <meta property="og:image" content='{{ exp.thumb|default('/lib/skin/1/thumb_0.png') }}' />
- <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
- <meta property="og:type" content="article" />
- <meta property="fb:admins" content="1007003" />
  <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
 {% endblock %}
 
@@ -20,7 +22,7 @@
   {% if not user_is_owner %}
    <div id='info' class='medbold' style='text-align : right'>
     <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
-    <div id='datetime'><nobr>{{ mtime }}</nobr></div>
+    <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
    </div>
   {% endif %}
 

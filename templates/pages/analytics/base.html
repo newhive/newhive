@@ -10,7 +10,7 @@
   <script type='text/javascript'>
     var paper;
     $(function(){
-        $('table.tablesorter').tablesorter();
+        $('table.tablesorter').tablesorter({% block tablesorter_options %}{% endblock %});
         //paper = Raphael($('#canvas_container')[0], '1000px', '500px');
     });
   </script>

@@ -8,6 +8,12 @@ import social_stats
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
+
+con = None
+db = None
+s3_con = None
+s3_buckets = None
+
 con = pymongo.Connection()
 db = con[config.database]
 
@@ -15,6 +21,15 @@ db = con[config.database]
 if config.aws_id:
     s3_con = S3Connection(config.aws_id, config.aws_secret)
     s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
+
+def init_connections(config):
+    con = pymongo.Connection()
+    db = con[config.database]
+
+    # initialize s3 connection
+    if config.aws_id:
+        s3_con = S3Connection(config.aws_id, config.aws_secret)
+        s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
 
 
 def now(): return time_s(datetime.utcnow())
@@ -124,12 +139,6 @@ class User(Entity):
         assert self.has_key('referrer')
         return super(User, self).create_me()
 
-    def new_referral(self, d):
-        if self.get('referrals', 0) > 0 or self == get_root():
-            self.update(referrals=self['referrals'] - 1)
-            d.update(user = self.id)
-            return Referral.create(**d)
-
     @classmethod
     def named(cls, name):
         self = cls({})
@@ -141,12 +150,6 @@ class User(Entity):
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
-
-    def get_url(self): return abs_url(domain=self['domain']) + self['name']
-
-    def set_tld(self, tld):
-        """ Sets the top level domain (everything following first dot) for each element in sites attribute """
-        return self.update(updated=False, sites=map(lambda domain: re.sub(r'([^.]+\.[^.]+)$', tld, domain), self['sites']))
 
 
 def get_root(): return User.named('root')
@@ -182,9 +185,9 @@ class Expr(Entity):
         return self.find_me(domain=domain, name=name.lower())
 
     @classmethod
-    def with_url(cls, name):
+    def with_url(cls, url):
         """ Convenience utility function not used in production, retrieve Expr from full URL """
-        [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', 'http://abram.thenewhive.com:1414/foobar')
+        [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
         return cls.named(domain, name)
 
     @classmethod
@@ -212,8 +215,9 @@ class Expr(Entity):
     def create_me(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = User.fetch(self['owner'])['name']
-        self['title'] = self.get('title') or 'Untitled'
         self['domain'] = self['domain'].lower()
+        self.setdefault('title', 'Untitled')
+        self.setdefault('auth', 'public')
         return super(Expr, self).create_me()
 
     def increment_counter(self, counter):
@@ -264,7 +268,6 @@ class Expr(Entity):
         """ Sets the top level domain (everything following first dot) in domain attribute """
         return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
 
-      
 
 class File(Entity):
     cname = 'file'
