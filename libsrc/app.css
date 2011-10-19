@@ -74,7 +74,7 @@ body.home.logged_out .nav{
 .dialog .line .element { float: left; }
 .dialog .line .label {float:left; margin-top: 6px; margin-right:4px;}
 .btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png");
-    right:10px; top:5px; z-index : 1; }
+    right:10px; top:5px; z-index : 100; }
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: url("/lib/skin/1/close-hover.png")}
 input[type="text"].copy, textarea.copy {
     border: none;
