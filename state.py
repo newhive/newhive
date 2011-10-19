@@ -102,6 +102,18 @@ class Entity(dict):
       For example {'foo': 2, 'bar': -1, 'baz.qux': 10}"""
       return self._col.update({ '_id' : self.id }, {'$inc': d}, upsert=True)
 
+    def flag(self, name):
+        return self._col.update({ '_id' : self.id }, {'$set': {'flags.' + name: True}})
+
+    def unflag(self, name):
+        return self._col.update({ '_id' : self.id }, {'$set': {'flags.' + name: False}})
+
+    def flagged(self, name):
+        if self.has_key('flags'):
+            return self['flags'].get(name, False)
+        else:
+            return False
+
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
 
 def fetch(cname, id, keyname='_id'):
