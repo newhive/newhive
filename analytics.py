@@ -32,10 +32,12 @@ def active_users(reference_date=time.time()):
             }
 
             // Totals
-            if (0 < age && age < 3600*24) { authSlice('day'); }
-            if (0 < age && age < 3600*24*7) { authSlice('week'); }
-            if (0 < age && age < 3600*24*7*4) { authSlice('month'); }
-            authSlice('total');
+            if (obj.apps && obj.apps.length > 0) {
+              if (0 < age && age < 3600*24) { authSlice('day'); }
+              if (0 < age && age < 3600*24*7) { authSlice('week'); }
+              if (0 < age && age < 3600*24*7*4) { authSlice('month'); }
+              authSlice('total');
+            }
             
         }
     """ % {'now': reference_date}
