@@ -2,6 +2,10 @@
 <html xmlns:og="http://ogp.me/ns#" xmlns:fb="http://www.facebook.com/2008/fbml">
 <head>
  <title>{{ 'The New Hive' if not title else title }}</title>
+ {% block meta %}
+ {% endblock %}
+ <meta property="og:site_name" content='The New Hive' />
+ <meta property="fb:app_id" content="153421698080835" />
  <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
 
  {% for item in assets_env["app.css"].urls() %}
@@ -91,8 +95,6 @@ html, body { background-color : white; height : 100%; }
    <script src='{{ item }}'></script>
  {% endfor %}
 
- <meta property="og:site_name" content='The New Hive' />
- <meta property="fb:app_id" content="153421698080835" />
 
  {% block head %}{% endblock %}
 </head>
