@@ -643,6 +643,8 @@ def handle(request): # HANDLER
                 ,'show_help' : show_help
             })
             return serve_page(response, 'pages/edit.html')
+        elif p1 == 'tag':
+            pass
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral or referral.get('used'): return bad_referral(request, response)
