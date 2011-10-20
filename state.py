@@ -255,14 +255,14 @@ class Expr(Entity):
       return "http://" + self['domain'] + "/" + self['name']
 
     def analytic_count(self, string):
-      if string in ['facebook', 'gplus', 'twitter']:
+      if string in ['facebook', 'gplus', 'twitter', 'stumble']:
         count = None
         try:
           updated = self['analytics'][string]['updated']
         except (KeyError, TypeError):
           updated = 0
 
-        if (now() - updated) < 36000:
+        if (now() - updated) < 36000 or string == 'stumble':
           count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
 
         if count == None:
