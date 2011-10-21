@@ -56,10 +56,11 @@
     <div class='spacer'></div>
     <b>Password</b><br>
     <input type='password' name='secret'><br>
-    <div>
-      <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:small'> Remember me</label>
+    <div class='spacer'></div>
+    <div style='float : left'>
+      <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:.75em'> Remember me</label>
     </div>
-    <div style='display : float; float : right; clear: both; margin : 6px 0px'>
+    <div style='float : right;'>
      <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
     </div>
     <input type='hidden' name='action' value='login'>
@@ -76,7 +77,7 @@
   $(function() {
    var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
        { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
-         close_delay : 1000, auto_close : false });
+         close_delay : 1000, auto_close : false, click_persist : '#login_menu' });
    {% if error %} login_menu.options.hover_close = false; login_menu.open(); {% endif %}
   });
  </script>
