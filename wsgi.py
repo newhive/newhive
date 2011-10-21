@@ -256,6 +256,22 @@ def admin_update(request, response):
         v = json.loads(request.form.get(k))
         if v: get_root().update(**{ k : v })
 
+def bulk_invite(request, resposne):
+    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+    form = request.form.copy()
+    for key in form:
+        parts = key.split('_')
+        if parts[0] == 'check':
+            id = parts[1]
+            contact = Contact.fetch(id)
+            name = form.get('name_' + id)
+            if contact.get('email'):
+                referral_id = mail_invite(contact['email'], name)
+                if referral_id:
+                    contact.update(referral_id=referral_id)
+                else:
+                    print "email not sent to " + contact['email'] + " referral already exists"
+      
 def add_referral(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
     form = request.form.copy()
@@ -420,7 +436,7 @@ def mail_invite(email, name=False, force_resend=False):
         ,'html': jinja_env.get_template("emails/invitation.html").render(context)
         }
     send_mail(heads, body)
-    return True
+    return referral.id
 
 
 def mail_signup_thank_you(form):
@@ -516,6 +532,7 @@ actions = dict(
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
     ,add_referral    = add_referral
+    ,bulk_invite     = bulk_invite
     )
 
 # Mime types that could generate HTTP POST requests
@@ -759,6 +776,9 @@ def route_admin(request, response):
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
     p2 = lget(parts, 1)
+    if p2 == 'contact_log':
+        response.context['contacts'] = Contact.search()
+        return serve_page(response, 'pages/admin/contact_log.html')
     if p2 == 'referrals':
         response.context['users'] = User.search()
         return serve_page(response, 'pages/admin/referrals.html')
