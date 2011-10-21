@@ -381,8 +381,7 @@ hover_menu = function(handle, drawer, options) {
         handle.hover(o.open);
     }
     handle.click(o.open);
-    var no_hover_close = function() { o.options.hover_close = false; }
-    $(o.options.click_persist).click(no_hover_close).bind('contextmenu', no_hover_close);
+    $(o.options.click_persist).bind('click contextmenu keydown', function() { o.options.hover_close = false; });
 
     //if(o.options.auto_close) drawer.click(o.close);
     //if(o.options.auto_close) handle.click(o.close);
