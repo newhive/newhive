@@ -752,8 +752,8 @@ var main = function() {
         if(confirm("You're using an oldish version of Firefox. Click OK to get the newest version"))
             window.location = 'http://www.mozilla.com/en-US/products/download.html';
 
-    if(!debug_mode && !/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent))
-        showDialog('#firefox_warning');
+    if(!(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) || /Chrome/.test(navigator.userAgent)))
+        showDialog('#editor_browsers');
 
     $(window).click(function(e) {
         if(!focused()) return;
