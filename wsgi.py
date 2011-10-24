@@ -65,7 +65,7 @@ def expr_save(request, response):
         fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
         if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
     # Generate thumbnail from given image url
-    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'))
+    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'), size=(124,96))
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
@@ -84,7 +84,7 @@ def expr_save(request, response):
     return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
-def generate_thumb(owner, url):
+def generate_thumb(owner, url, size):
     # create file record in database, copy file to media directory via http
     try: response = urllib.urlopen(url)
     except: return
@@ -96,12 +96,12 @@ def generate_thumb(owner, url):
     f.write(response.read())
     f.close()
 
-    # resize and crop image to 124x96, preserving aspect ratio, save over original
+    # resize and crop image to size set by size tuple, preserving aspect ratio, save over original
     try: imo = Img.open(path)
     except:
         os.remove(path)
         return
-    imo = ImageOps.fit(imo, size=(124, 96), method=Img.ANTIALIAS, centering=(0.5, 0.5))
+    imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
 
