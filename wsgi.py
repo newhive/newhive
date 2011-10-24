@@ -8,6 +8,7 @@ from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
 import PIL.Image as Img
+from PIL import ImageOps
 
 import config, auth
 from colors import colors
@@ -100,11 +101,7 @@ def generate_thumb(owner, url):
     except:
         os.remove(path)
         return
-    ratio = float(imo.size[0]) / imo.size[1]
-    ratio_target = 124.0 / 96
-    new_size = (124, int(124 / ratio)) if ratio < ratio_target else (int(96 * ratio), 96)
-    imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-    imo = imo.crop((0, 0, 124, 96))
+    imo = ImageOps.fit(imo, size=(124, 96), method=Img.ANTIALIAS, centering=(0.5, 0.5))
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
 
@@ -740,6 +737,7 @@ def handle(request): # HANDLER
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
         response.context['view'] = request.args.get('view')
         response.context['expr'] = dfilter(owner, ['background'])
+        response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
