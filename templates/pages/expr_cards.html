@@ -9,6 +9,17 @@ a.tag_label:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}
 #tags { margin : 0px 50px 25px 50px; }
 iframe { border : none; }
 </style>
+<script>
+  $(function(){
+    var hoverin = function(){
+      $('#profile_thumb').append('<div class="message">Change Picture</div>');
+    };
+    var hoverout = function(){
+      $('#profile_thumb .message').remove();
+    };
+    $('#profile_thumb img').hover(hoverin, hoverout);
+  });
+</script>
 {% endblock %}
 {% block body %}
 
@@ -37,6 +48,15 @@ iframe { border : none; }
 #}
 <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
  <div class='fathead'><a href='/'>{{ owner.fullname }}</a>{{ ': ' + tag if tag }}</div>
+ <div id='profile_thumb'>
+   {% if user_is_owner %}
+   <a href="" onclick="profile_thumb_choose" alt="Choose Picture">
+   {% endif %}
+   <img src='{{ profile_thumb }}' alt={{ owner.fullname }}/>
+   {% if user_is_owner %}
+   </a>
+   {% endif %}
+ </div>
  
  <div id='tags'>
   <a href='/expressions' class='tag_label {{ 'current' if not tag }}'>All</a>
@@ -47,7 +67,7 @@ iframe { border : none; }
   {% endif %}
  </div>
 </div>
-<div style='position : absolute; top : 250px'>
+<div style='position : absolute; top : 300px'>
 <div id='feed'>{% include 'cards.html' %}</div>
 </div>
 
