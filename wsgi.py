@@ -794,7 +794,11 @@ def route_analytics(request, response):
         if request.args.has_key('start') and request.args.has_key('end'):
             active_users = analytics.active_users()
         else:
-            active_users = analytics.active_users()
+            event = request.args.get('event')
+            if event:
+                active_users = analytics.active_users(event=event)
+            else:
+                active_users = analytics.active_users()
             response.context['active_users'] = active_users
             response.context['active_users_js'] = json.dumps(active_users)
             return serve_page(response, 'pages/analytics/active_users.html')
