@@ -481,4 +481,11 @@ var place_apps = function() {
        if(c['font-size']) c['font-size'] += 'em';
        e.css(c);
    });
+   $('.happfill').each(function(i, div) {
+       var e = $(this), img = e.find('img');
+       if(!img) return;
+       if(img.width() / img.height() > e.parent().width() / e.parent().height())
+           img.width('').height(e.parent().height());
+       else img.width(e.parent().width()).height('');
+   });
 }
