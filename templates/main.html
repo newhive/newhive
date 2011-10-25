@@ -89,7 +89,7 @@
 <div id='content'>{% block content %}{% endblock %}</div>
 
 {% if user.logged_in %}
- <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable' title='Send feedback'>
+ <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable tip_none' title='Send feedback'>
  <script>
   $('#feedback_btn').click(function() {
       new_window('{{ server }}feedback?url=' + window.location, 470, 400);
