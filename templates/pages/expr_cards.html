@@ -11,14 +11,20 @@ iframe { border : none; }
 </style>
 <script>
   $(function(){
-    var hoverin = function(){
-      $('#profile_thumb').append('<div class="message">Change Picture</div>');
-    };
-    var hoverout = function(){
-      $('#profile_thumb .message').remove();
-    };
+    var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
+    var hoverout = function(){ $('#profile_thumb .message').remove(); };
     $('#profile_thumb img').hover(hoverin, hoverout);
+
+    $('#profile_thumb_file_input').change(function() {
+      $('#profile_thumb_upload_form input[name="forward"]').val(window.location);
+      $('#profile_thumb_upload_form').submit();
+    });
   });
+
+  var profile_thumb_choose = function(){
+    $('#profile_thumb_file_input').click();
+    return false;
+  };
 </script>
 {% endblock %}
 {% block body %}
@@ -47,12 +53,16 @@ iframe { border : none; }
 {% endif %}
 #}
 <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
- <div class='fathead'><a href='/'>{{ owner.fullname }}</a>{{ ': ' + tag if tag }}</div>
+  <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{{ ': ' + tag if tag }}</div>
  <div id='profile_thumb'>
    {% if user_is_owner %}
-   <a href="" onclick="profile_thumb_choose" alt="Choose Picture">
+   <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
    {% endif %}
+   {% if profile_thumb %}
    <img src='{{ profile_thumb }}' alt={{ owner.fullname }}/>
+   {% elif user_is_owner %}
+   <div class='placeholder rounded'>Upload A Profile Image</div>
+   {% endif %}
    {% if user_is_owner %}
    </a>
    {% endif %}
@@ -67,7 +77,7 @@ iframe { border : none; }
   {% endif %}
  </div>
 </div>
-<div style='position : absolute; top : 300px'>
+<div style='position : absolute; top : {{"300" if profile_thumb or user_is_owner else "250"}}px'>
 <div id='feed'>{% include 'cards.html' %}</div>
 </div>
 
@@ -133,6 +143,15 @@ iframe { border : none; }
   });
  {% endif %}
  </script>
+{% endif %}
+
+{% if user_is_owner %}
+<form id='profile_thumb_upload_form' method='POST' enctype='multipart/form-data' action='{{ secure_server }}' style='position : absolute; left : -1000px'>
+ <input name='profile_thumb' id='profile_thumb_file_input' type='file'>
+ <input type='hidden' name='action' value='profile_thumb_set'>
+ <input type='hidden' name='forward' value=''>
+ <iframe id='profile_thumb_upload_target' name='profile_thumb_upload_target' style='position : absolute; left : -1000px'></iframe>
+</form>
 {% endif %}
 
 {% endblock %}

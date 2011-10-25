@@ -84,7 +84,7 @@ def expr_save(request, response):
     return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
-def generate_thumb(owner, url, size):
+def generate_thumb_from_url(owner, url, size):
     # create file record in database, copy file to media directory via http
     try: response = urllib.urlopen(url)
     except: return
@@ -95,17 +95,19 @@ def generate_thumb(owner, url, size):
     f = open(path, 'w')
     f.write(response.read())
     f.close()
+    return generate_thumb(owner, path, size)
 
+def generate_thumb(owner, path, size):
     # resize and crop image to size set by size tuple, preserving aspect ratio, save over original
     try: imo = Img.open(path)
     except:
         os.remove(path)
-        return
+        return False
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
 
-    res = File.create(owner=owner.id, path=path, name='thumb', mime=mime)
+    res = File.create(owner=owner.id, path=path, size=size, name='thumb', mime='image/jpeg')
     return res.get('url')
 
 
@@ -226,6 +228,24 @@ def bad_referral(request, response):
     response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
     response.context['error'] = 'Log in if you already have an account'
     return serve_page(response, 'pages/error.html')
+
+def profile_thumb_set(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    request.max_content_length = 10000000 # 10 megs
+    user = request.requester
+
+    file = request.files.get('profile_thumb')
+    path = os.tmpnam()
+    file.save(path)
+    mime = mimetypes.guess_type(file.filename)[0]
+
+    if mime in ['image/jpeg', 'image/png', 'image/gif']:
+        profile_thumb_url = generate_thumb(user, path, (275,200))
+        user.update(profile_thumb=profile_thumb_url)
+    else: 
+        response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
+
+    return redirect(response, request.form['forward'])
 
 
 def expr_tag_update(request, response):
@@ -530,6 +550,7 @@ actions = dict(
     ,admin_update    = admin_update
     ,add_referral    = add_referral
     ,bulk_invite     = bulk_invite
+    ,profile_thumb_set  = profile_thumb_set
     )
 
 # Mime types that could generate HTTP POST requests
