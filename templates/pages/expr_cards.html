@@ -13,7 +13,7 @@ iframe { border : none; }
 {% block body %}
 
 <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
- <div class='nav_icon text hoverable medbold' onclick="" style='margin-right : 8px; color: #696E76;' id='btn_help'>?</div>
+ <div class='nav_icon text hoverable medbold' onclick="" title="Help with your profile" style='margin-right : 8px; color: #696E76;' id='btn_help'>?</div>
  <script>
   (function() { var b = $('#btn_help');
     b.click(function() { exprDialog('{{ site_pages['profile-help'] }}', { minimize_to : b } ) });
@@ -21,7 +21,7 @@ iframe { border : none; }
  </script>
  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
  {% if user.logged_in %}
-  <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
+   {{create_button(create) }} 
  {% endif %}
 </div>
 
