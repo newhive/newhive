@@ -593,7 +593,7 @@ def expr_home_list(p2, request, response, limit=90):
     if ids:
         by_id = {}
         for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
-        exprs = [by_id[i] for i in ids]
+        exprs = [by_id[i] for i in ids if by_id.has_key(i)]
         response.context['pages'] = 0;
     else:
         exprs = Expr.list({}, sort='updated', limit=limit, page=page)
