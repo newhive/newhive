@@ -314,6 +314,28 @@ function asyncSubmit(form, callback) {
     return false;
 }
 
+function asyncUpload(opts) {
+    var target, form, opts = $.extend({ json : true, file_name : 'file',
+        start : noop, success : noop, data : { action : 'files_create' } }, opts);
+
+    var onload = function() {
+        var frame = target.get(0);
+        if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
+        var resp = $(frame.contentDocument.body).text();
+        if(opts.json) resp = JSON.parse(resp);
+        opts.success(resp);
+        form.remove();
+    }
+
+    var tname = 'upload' + Math.random();
+    form = $("<form method='POST' enctype='multipart/form-data' action='/' style='position : absolute; left : -1000px'>").attr('target', tname);
+    target = $("<iframe style='position : absolute; left : -1000px'></iframe>").attr('name', tname).appendTo(form).load(onload);
+    var input = $("<input type='file'>").attr('name', opts.file_name).change(function() { opts.start(); form.submit() }).appendTo(form);
+    for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
+    form.appendTo(document.body);
+    input.click();
+}
+
 function hover_url(url) {
     var h = url.replace(/(.png)|(-.*)$/, '-hover.png');
     var i = $(elem('img', { src : h, style : 'display : none' }));

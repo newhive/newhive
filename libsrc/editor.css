@@ -52,6 +52,9 @@
 #edit_bg_image { float : left; margin-right : 30px; }
 #bg_preview { width : 120px; height : 80px; overflow : hidden; }
 #bg_preview img { width : 100%; }
+.small_text { font-size : x-small; }
+#bg_opacity_label { margin : 5px; }
+#bg_opacity { font-size : xx-small; }
 
 #btn_thumbnail { font-weight : bold; cursor : default; }
 #dia_thumbnail { width : 690px; max-height : 400px; overflow : auto; }

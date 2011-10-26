@@ -205,6 +205,7 @@ input, textarea { font-size : inherit }
  <div class='control buttons'
   ><img class='button link hoverable tip_W' src='/lib/skin/1/link.png' title='link'
   ><img class='button opacity'  src='/lib/skin/1/opacity.png'
+  ><img class='button set_bg hoverable' src='/lib/skin/1/fullscreen.png' title='make background'
   ><input class='control drawer opacity' type='text' size='3'
  ></div
 ></div>
@@ -225,19 +226,13 @@ input, textarea { font-size : inherit }
  ><div class='control drawer border color stroke'></div>
 </div>
 
-<form id='upload_form' method='POST' enctype='multipart/form-data' action='/' style='position : absolute; left : -1000px' target='upload_target'>
- <input name='file' id='file_input' type='file'>
- <input type='hidden' name='action' value='files_create'>
- <input type='hidden' name='expr_id' value='{{ exp.id }}'>
- <iframe id='upload_target' name='upload_target' style='position : absolute; left : -1000px'></iframe>
-</form>
-
 <div id='dia_edit_bg' class='dialog border selected' style='padding : 20px'>
  <h2>Edit Background</h2>
  <div id='edit_bg_image'>
-  <div id='bg_preview' class='border'><img src='{{ exp.background.url if exp.background and exp.background.url else '/lib/skin/1.png' }}'></div>
-  <div id='bg_upload' class='btn yellow rounded'>Upload Image</div>
-  <div>opacity: <input type='text' size='2'></div>
+  <div id='bg_preview' class='border'><img id='bg_preview_img'></div>
+  <div id='bg_opacity_label' class='small_text'>opacity: <input id='bg_opacity' type='text' size='3' value='100%'></div>
+  <div id='bg_upload' class='btn black small_text rounded'>Upload Image</div>
+  <div id='bg_remove' class='btn black small_text rounded'>Clear</div>
  </div>
  <div id='color_pick' style='float : right; position : relative;'></div>
 </div>

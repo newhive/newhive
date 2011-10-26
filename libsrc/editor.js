@@ -661,6 +661,8 @@ Hive.App.Image.Controls = function(common) {
         o.app.opacity(parseFloat(input.val()) / 100);
     });
 
+    d.find('.button.set_bg').click(function() { Hive.set_bg_img(o.app.getState()) });
+
     o.rotateHandle = $(elem('img', { src : '/lib/skin/1/rotate.png',  'class' : 'control rotate hoverable' }));
     o.addControl(o.rotateHandle);
     d.find('.resize, .rotate').drag('start', function(e, dd) {
@@ -791,21 +793,31 @@ var main = function() {
         Hive.new_app({ type : 'hive.text', content : '<span style="font-weight:bold">&nbsp;</span>', scale : 3 });
     });
 
-    if(!Hive.Exp.background) Hive.Exp.background = {};
-    var bg_div = $('.happfill');
-    var bg_set = function(c) {
-        bg_div.css('background-color', c);
-        Hive.Exp.background.color = c;
-    }
-    append_color_picker($('#color_pick'), bg_set, '');
-    $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
 
-    $('#insert_image').click(Hive.pick_file);
-    $('#image_upload').click(Hive.pick_file);
-    $('#insert_audio').click(Hive.pick_file);
-    $('#audio_upload').click(Hive.pick_file);
-    $('#insert_file' ).click(Hive.pick_file);
-    $('#menu_file'   ).click(Hive.pick_file);
+    if(!Hive.Exp.background) Hive.Exp.background = {};
+    Hive.bg_div = $('.happfill');
+    var bg_set_color = function(c) {
+        Hive.bg_div.css('background-color', c);
+        Hive.Exp.background.color = c;
+    };
+    append_color_picker($('#color_pick'), bg_set_color, Hive.Exp.background.color);
+    $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
+    $('#bg_remove').click(function() { delete Hive.Exp.background.url; Hive.update_bg_img(); });
+    $('#bg_opacity').focus(function() { $('#bg_opacity').select() }).keyup(function(e) {
+        Hive.Exp.background.opacity = parseFloat($(e.target).val()) / 100;
+        Hive.update_bg_img();
+    });
+    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start,
+        success : function(r) { Hive.set_bg_img(r); Hive.upload_finish() } }); });
+    Hive.update_bg_img();
+
+    var pick_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_app }); };
+    $('#insert_image').click(pick_file);
+    $('#image_upload').click(pick_file);
+    $('#insert_audio').click(pick_file);
+    $('#audio_upload').click(pick_file);
+    $('#insert_file' ).click(pick_file);
+    $('#menu_file'   ).click(pick_file);
 
     hover_menu($('#insert_text'), $('#menu_text'));
     hover_menu($('#insert_image'), $('#menu_image'));
@@ -817,18 +829,6 @@ var main = function() {
     
     $('#btn_grid').click(Hive.toggle_grid);
     
-
-    $('#file_input').change(function() {
-        Hive.upload_start();
-        $('#upload_form').submit();
-    });
-    $('#upload_target').load(function() {
-        var frame = $('#upload_target').get(0);
-        if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
-        var resp = JSON.parse($(frame.contentDocument.body).text());
-        Hive.new_app(resp);
-    });
-
     var checkUrl = function(){
         var u = $('#url').val();
         if(u.match(/[^\w.\/-]/)) {
@@ -912,8 +912,6 @@ var main = function() {
     Hive.Apps(Hive.Exp.apps);
 }
 $(main);
-
-Hive.pick_file = function() { $('#file_input').click() }
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to Hive.new_app.
@@ -1039,6 +1037,19 @@ Hive.toggle_grid = function() {
         : { 'background-image' : '' }
     );
 }
+
+Hive.update_bg_img = function() {
+    var imgs = Hive.bg_div.find('img').add('#bg_preview_img');
+    if(Hive.Exp.background.url) {
+        imgs.show();
+        imgs.attr('src', Hive.Exp.background.url).css('opacity', Hive.Exp.background.opacity);
+    } else { imgs.hide(); }
+};
+Hive.set_bg_img = function(app) {
+    Hive.Exp.background.url = app.content;
+    Hive.Exp.background.opacity = app.opacity;
+    Hive.update_bg_img();
+};
 
 function remove_all_apps() {
     var aps = map(id, Hive.OpenApps); // store a copy of OpenApps so we can destructively update it
@@ -1233,7 +1244,7 @@ var append_color_picker = function(container, callback, init_color) {
     var scolor = [255, 255, 255];
     var get_hue = function(e) {
         var hue = bound(Math.floor(e.pageY - bar.offset().top) / bar.height(), 0, 1);
-        scolor = hsvToRgb(hue, 1, 1);
+        scolor = map(Math.round, hsvToRgb(hue, 1, 1));
         var color = 'rgb(' + scolor.join(',') + ')';
         shades.css('background-color', color);
         calc_color();
@@ -1242,10 +1253,10 @@ var append_color_picker = function(container, callback, init_color) {
 
     var set_hue = function(c) {
         var rgb = map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
-        var hue = Math.round(rgbToHsv(rgb[0], rgb[1], rgb[2])[0]);
-        scolor = hsvToRgb(hue, 1, 1);
+        scolor = map(Math.round, hsvToRgb(rgbToHsv(rgb[0], rgb[1], rgb[2])[0], 1, 1));
         shades.css('background-color', 'rgb(' + scolor.join(',') + ')');
     }
+    set_hue(init_color);
 
     var x = 1, y = 0; // gamma (x), saturation (y)
     var get_shade = function(e) {
