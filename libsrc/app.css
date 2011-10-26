@@ -167,29 +167,29 @@ input[type="text"].copy, textarea.copy {
 #dia_referral .medbold { line-height: 1em; }
 #dia_referral .label .small { font-size: 12px; font-weight: normal }
 
-/* firefox warning dialog */
-#firefox_warning, #ie_warning {
+/* Editor browser warning dialog */
+#editor_browsers, #ie_warning {
   padding: 20px 50px;
   text-align: center;
 }
-#firefox_warning h1, #ie_warning h1{
+#editor_browsers h1, #ie_warning h1{
   font-family: Lobster, serif;
   font-weight: normal;
   color: red;
   margin: 8px 0 0 0;
   font-size: 38px;
 }
-#firefox_warning h2, #ie_warning h2{
+#editor_browsers h2, #ie_warning h2{
   font-family: Helvetica, Arial, sans-serif;
   font-size: 18px;
   margin: 0;
 }
 
-#firefox_warning h3, #ie_warning h3{
+#editor_browsers h3, #ie_warning h3{
   font-size: 25px;
   margin: 20px 0;
 }
-#firefox_warning a {
+#editor_browsers a {
   text-decoration: underline;
 }
 
@@ -310,13 +310,10 @@ a.tag_label:hover { color : #F73627; background : #FFF673; }
 
 #profile_thumb { float: right; width: auto; }
 #profile_thumb img, #profile_thumb .placeholder{ margin: 25px 40px 20px 0; height: 200px; }
-#profile_thumb .placeholder{ height: 20px; width: 275px; border: 1px dashed #CCC; text-align:center; padding: 90px 0;}
+#profile_thumb .placeholder{ height: 20px; width: 275px; padding: 90px 0;}
+.placeholder { border: 1px dashed #CCC; text-align:center; }
 #profile_thumb .message {position: absolute; top: 225px; font-size: 12px;}
 
 #tags { clear:both; }
 
-
-/* === Expression pages === */
-
-.happ { position : absolute; }
-.happ img { width : 100%; }
+#btn_help.active { color : white; }

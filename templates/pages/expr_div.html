@@ -3,5 +3,5 @@
 {% else %}
  <div id='expr_{{ exp.name }}' data-aspect='{{ exp.dimensions[0] / exp.dimensions[1] if exp.dimensions else 1 }}'
   {{ "style='background-color : " + exp.background.color + "'" if exp.background and exp.background.color }}
->{{ body }}</div>
+ >{% include 'expr_background.html' %}{{ body }}</div>
 {% endif %}

@@ -3,6 +3,7 @@
 .ehapp .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
 .select_box { width : 100%; height : 100%; z-index : 1; top : -5px; left : -5px; padding : 0; }
 .app_select { position : absolute; }
+#grid_guide { position : fixed; width : 100%; height : 100%; }
 
 .text .select_box { padding : 5px; top : -10px; left : -10px; }
 .text .content { z-index : 2 }
@@ -38,7 +39,23 @@
 #menu_privacy .selected { display : none; }
 #right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }
+
+.color_picker { width : 310px; }
+.color_picker img { width : 100%; }
+.color_picker .palette { float : left; }
+.color_picker .color_select { display : inline-block; width : 20px; height : 20px; margin : 2px; }
+.color_picker .hue_bar { width : 10px; height : 170px; float : left; margin : 2px 10px; }
+.color_picker .color_input { margin : 10px; }
+.color_picker .shades { width : 120px; height : 120px; float : left; }
+
+#dia_edit_bg h2 { margin : 0 0 20px; text-align : center; }
+#edit_bg_image { float : left; margin-right : 30px; }
+#bg_preview { width : 120px; height : 80px; overflow : hidden; }
+#bg_preview img { width : 100%; }
+.small_text { font-size : x-small; }
+#bg_opacity_label { margin : 5px; }
+#bg_opacity { font-size : xx-small; }
+
 #btn_thumbnail { font-weight : bold; cursor : default; }
-#dia_edit_bg h2 { text-align : center; }
 #dia_thumbnail { width : 690px; max-height : 400px; overflow : auto; }
-#dia_thumbnail .thumb { float : left; margin : 5px; }
+#dia_thumbnail .thumb { float : left; margin : 5px; width : 124px; height : 96px; overflow : hidden; position : relative; }

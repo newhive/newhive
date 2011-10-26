@@ -29,6 +29,7 @@ assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'r
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
 assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
@@ -614,7 +615,7 @@ def handle(request): # HANDLER
     response = Response()
     request.requester = auth.authenticate_request(request, response)
     request.trusting = False
-    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.base_url }
+    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
     response.user = request.requester
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
@@ -622,8 +623,7 @@ def handle(request): # HANDLER
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
     if request.domain == config.server_name:
-        if request.is_secure and request.requester and request.requester.logged_in:
-            request.trusting = True
+        request.trusting = request.is_secure and request.requester and request.requester.logged_in
 
         reqaction = request.form.get('action', False)
         if reqaction:
@@ -723,7 +723,7 @@ def handle(request): # HANDLER
 
         return serve_404(request, response)
     elif request.domain.startswith('www.'):
-        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]) + request.path + '?' + request.query_string)
+        return redirect(response, re.sub('www.', '', request.url, 1))
 
     d = resource = Expr.named(request.domain.lower(), request.path.lower())
     if not d: d = Expr.named(request.domain, '')
@@ -756,8 +756,6 @@ def handle(request): # HANDLER
         response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', [])
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
-        response.context['view'] = request.args.get('view')
-        response.context['expr'] = dfilter(owner, ['background'])
         response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')
@@ -767,7 +765,7 @@ def handle(request): # HANDLER
     if not resource: return serve_404(request, response)
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
-    html = exp_to_html(resource)
+    html = expr_to_html(resource)
     auth_required = (resource.get('auth') == 'password' and resource.get('password')
         and request.form.get('password') != resource.get('password')
         and request.requester.id != resource['owner'])
@@ -852,7 +850,7 @@ application = handle_debug
 
 
 # www_expression -> String
-def exp_to_html(exp):
+def expr_to_html(exp):
     """Converts JSON object representing an expression to HTML"""
 
     apps = exp.get('apps')
@@ -866,7 +864,6 @@ def exp_to_html(exp):
             app['dimensions'][1],
             'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
             app['z'],
-            # Added "or 1" in case "None" is stored in the database
             app.get('opacity', 1) or 1
             )
 
@@ -885,6 +882,7 @@ def exp_to_html(exp):
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
+jinja_env.trim_blocks = True
 
 def serve_html(response, html):
     response.data = html
@@ -965,12 +963,11 @@ def friendly_date(then):
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
 
-# run_simple is not so simple
+
 if __name__ == '__main__':
+    """ This Werkzeug server is used only for development and debugging """
     from werkzeug import run_simple
     import OpenSSL.SSL as ssl
-    import os
-    import signal
 
     ctx = ssl.Context(ssl.SSLv3_METHOD)
     ctx.use_certificate_file(config.ssl_cert)
