@@ -79,13 +79,13 @@ input, textarea { font-size : inherit }
 </div>
 
 <div class='nav' style='right : 10px; top : 0; white-space : nowrap;'>
- <div class='nav_icon text hoverable medbold' onclick="" style='margin-right : 15px; color: #696E76;' id='btn_help'>?</div>
+ <div class='nav_icon text hoverable medbold' title="Editor Help" onclick="" style='margin-right : 15px; color: #696E76;' id='btn_help'>?</div>
  <script>
   (function() { var b = $('#btn_help');
     b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to : b } ) });
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
- <img id='btn_grid' class='hoverable' src='/lib/skin/1/grid-off.png' style='vertical-align : middle'>
+ <img id='btn_grid' title="Show Grid" class='hoverable' src='/lib/skin/1/grid-off.png' style='vertical-align : middle'>
  &nbsp;
  <div id='btn_save' class='medbold nav_icon hoverable text'>
   <nobr>Save <img class='scale' src='/lib/skin/1/drop_arrow.png'></nobr>
@@ -135,16 +135,16 @@ input, textarea { font-size : inherit }
 
 <div id='controls_common' class='controls_src'>
  <!--<img class='control undo   hoverable' src='/lib/skin/1/undo.png'>-->
- <img class='control copy   hoverable' src='/lib/skin/1/copy.png' title='copy'>
- <img class='control remove hoverable' src='/lib/skin/1/delete_sm.png' title='delete, no undo!'>
+ <img class='control copy   hoverable tip_N' src='/lib/skin/1/copy.png' title='Duplicate Element'>
+ <img class='control remove hoverable tip_NE' src='/lib/skin/1/delete_sm.png' title='Delete, no undo!'>
  <div class='control stack'><img class='stack_up hoverable' src='/lib/skin/1/stack_up.png' title='move to front'><img class='stack_down hoverable' src='/lib/skin/1/stack_down.png' title='move to back'></div>
- <img class='control resize hoverable' src='/lib/skin/1/resize.png'>
+ <img class='control resize hoverable tip_SE' src='/lib/skin/1/resize.png' title="Scale Text">
 </div>
 
 <div id='controls_text' class='controls_src'>
- <img class='control resize_h hoverable' src='/lib/skin/1/resize_h.png'>
+ <img class='control resize_h hoverable tip_E' src='/lib/skin/1/resize_h.png' title="Resize Text Box">
  <div class='control buttons'
-  ><img class='button link hoverable'     src='/lib/skin/1/link.png' title='link'
+  ><img class='button link hoverable tip_W'     src='/lib/skin/1/link.png' title='link'
   ><!--<img class='button fontsize hoverable' src='/lib/skin/1/text_size.png'
   >--><img class='button fontname'           src='/lib/skin/1/font.png'
   ><img class='button color'              src='/lib/skin/1/color.png'

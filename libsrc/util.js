@@ -270,6 +270,7 @@ $(function () {
   $('#dia_referral input[name=forward]').val(window.location);
   $(window).resize(place_apps);
   place_apps();
+  qtip_intialize();
 });
 
 
@@ -413,6 +414,47 @@ tool_tip = function(tool, tip, above) {
 
     tool.hover(o.show, function() { o.drawer.hide() });
     return o;
+}
+
+qtip_intialize = function (elements) {
+    if (!elements) var elements = '*';
+    elements = $(elements).find('.hoverable[title]');
+    var qtipOptions = {
+        style: { 
+            background: "#96E2CE",
+            color: "black",
+            padding: 3,
+            border: {width: 3, radius: 3, color: "#96E2CE"},
+            name: 'green', 
+            "font-family": "Museo, Helvetica, Verdana, sans-serif",
+            tip: true } ,
+        position: { 
+            adjust: { screen: true }
+        }
+    };
+    var pos = {
+        N: { target: "topMiddle", tooltip: "bottomMiddle"}
+        , NE: { target: "topRight", tooltip: "bottomLeft"}
+        , E: { target: "rightMiddle", tooltip: "leftMiddle"}
+        , SE: { target: "bottomRight", tooltip: "topLeft"}
+        , S: { target: "bottomMiddle", tooltip: "topMiddle"}
+        , SW: { target: "bottomLeft", tooltip: "topRight"}
+        , W: { target: "leftMiddle", tooltip: "rightMiddle"}
+        , NW: { target: "topLeft", tooltip: "bottomRight"}
+    };
+    // Loop through directions and filter elements having "tip_N", etc.. class
+    $.each(pos, function(key, value){
+        var current = elements.filter('.tip_' + key);
+        elements = elements.not(current);
+        qtipOptions.position.corner = value;
+        current.qtip(qtipOptions);
+    });
+    // filter out elements that we don't want custom tooltips for
+    elements = elements.not('.tip_none');
+    // For all elements not matched by above filters, default tooltip to S
+    qtipOptions.position.corner = pos.S;
+    elements.qtip(qtipOptions);
+
 }
 
 var minimize = function(what, to, opts) {

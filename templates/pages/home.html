@@ -43,7 +43,7 @@
 
 {% if user.logged_in %}
 <div class='nav' style='right : 10px; top : 0px;'>
-  <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
+  {{ create_button(create) }}
 </div>
 {% else %}
 <div id="homepage_header">
