@@ -420,7 +420,14 @@ qtip_intialize = function (elements) {
     if (!elements) var elements = '*';
     elements = $(elements).find('.hoverable[title]');
     var qtipOptions = {
-        style: { name: 'green', tip: true } ,
+        style: { 
+            background: "#96E2CE",
+            color: "black",
+            padding: 3,
+            border: {width: 3, radius: 3, color: "#96E2CE"},
+            name: 'green', 
+            "font-family": "Museo, Helvetica, Verdana, sans-serif",
+            tip: true } ,
         position: { 
             adjust: { screen: true }
         }
