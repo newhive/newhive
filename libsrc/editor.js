@@ -596,7 +596,7 @@ Hive.App.Image = function(common) {
         o.img.hide();
         o.img.attr('src', src);
         o.div.append(o.img);
-        o.img.load(o.img_load);
+        o.img.load(function(){setTimeout(o.img_load, 1)});
     }
     o.img_load = function() {
         o.imageWidth  = o.img.width();
@@ -794,10 +794,11 @@ var main = function() {
     });
 
 
-    if(!Hive.Exp.background) Hive.Exp.background = {};
+    if(!Hive.Exp.background) Hive.Exp.background = { };
+    if(!Hive.Exp.background.color) Hive.Exp.background.color = '#FFFFFF';
     Hive.bg_div = $('.happfill');
     var bg_set_color = function(c) {
-        Hive.bg_div.css('background-color', c);
+        Hive.bg_div.add('#bg_preview').css('background-color', c);
         Hive.Exp.background.color = c;
     };
     append_color_picker($('#color_pick'), bg_set_color, Hive.Exp.background.color);
@@ -810,6 +811,7 @@ var main = function() {
     $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start,
         success : function(r) { Hive.set_bg_img(r); Hive.upload_finish() } }); });
     Hive.update_bg_img();
+    bg_set_color(Hive.Exp.background.color);
 
     var pick_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_app }); };
     $('#insert_image').click(pick_file);
@@ -1039,6 +1041,7 @@ Hive.toggle_grid = function() {
 }
 
 Hive.update_bg_img = function() {
+    if(!Hive.bg_div.find('img').length) Hive.bg_div.append($('<img>'));
     var imgs = Hive.bg_div.find('img').add('#bg_preview_img');
     if(Hive.Exp.background.url) {
         imgs.show();
@@ -1049,6 +1052,7 @@ Hive.set_bg_img = function(app) {
     Hive.Exp.background.url = app.content;
     Hive.Exp.background.opacity = app.opacity;
     Hive.update_bg_img();
+    setTimeout(place_apps, 1);
 };
 
 function remove_all_apps() {
@@ -1214,7 +1218,7 @@ var append_color_picker = function(container, callback, init_color) {
 
     var make_picker = function(c) {
         var d = $('<div>').addClass('color_select');
-        d.css('background-color', c).attr('val', c).click(function() { set_hue(c); manual_input.val(c); callback(c) });
+        d.css('background-color', c).attr('val', c).click(function() { set_color(c); manual_input.val(c); callback(c) });
         return d.get(0);
     }
     var make_row = function(cs) {
@@ -1235,42 +1239,37 @@ var append_color_picker = function(container, callback, init_color) {
     var update_hex = function() {
         var v = manual_input.val();
         var c = $('<div>').css('color', v).css('color');
-        set_hue(c);
+        set_color(c);
         callback(c);
     };
     manual_input.change(update_hex).keyup(update_hex);
 
     // saturated color picked from color bar
-    var scolor = [255, 255, 255];
+    var hsv = [0, 0, 1];
     var get_hue = function(e) {
-        var hue = bound(Math.floor(e.pageY - bar.offset().top) / bar.height(), 0, 1);
-        scolor = map(Math.round, hsvToRgb(hue, 1, 1));
-        var color = 'rgb(' + scolor.join(',') + ')';
-        shades.css('background-color', color);
+        hsv[0] = bound(Math.floor(e.pageY - bar.offset().top) / bar.height(), 0, 1);
+        shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
         calc_color();
     }
     bar.click(get_hue).drag(get_hue);
 
-    var set_hue = function(c) {
+    var set_color = function(c) {
         var rgb = map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
-        scolor = map(Math.round, hsvToRgb(rgbToHsv(rgb[0], rgb[1], rgb[2])[0], 1, 1));
-        shades.css('background-color', 'rgb(' + scolor.join(',') + ')');
+        hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
+        shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
     }
-    set_hue(init_color);
+    set_color(init_color);
 
     var x = 1, y = 0; // gamma (x), saturation (y)
     var get_shade = function(e) {
-        x = bound((e.pageX - shades.offset().left) / 120, 0, 1);
-        y = bound((e.pageY - shades.offset().top) / 120, 0, 1);
+        hsv[2] = bound((e.pageX - shades.offset().left) / 120, 0, 1);
+        hsv[1] = bound((e.pageY - shades.offset().top) / 120, 0, 1);
         calc_color();
     }
     shades.click(get_shade).drag(get_shade);
 
     var calc_color = function() {
-        var a = 1 - x, b = 1 - y;
-        // blend saturated color with brightness and saturation
-        var blend = function(c) { return Math.floor(a * b * 255 + (1 - a) * c); }
-        var color = map(blend, scolor);
+        var color = hsvToRgb(hsv[0], hsv[1], hsv[2]);
         var hex = '#' + map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
         manual_input.val(hex);
         callback(hex);
@@ -1298,7 +1297,7 @@ var append_color_picker = function(container, callback, init_color) {
             case 5: r = v, g = p, b = q; break;
         }
 
-        return [r * 255, g * 255, b * 255];
+        return map(Math.round, [r * 255, g * 255, b * 255]);
     }
 
     function rgbToHsv(r, g, b){
