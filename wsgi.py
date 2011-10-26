@@ -8,6 +8,7 @@ from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
 import PIL.Image as Img
+from PIL import ImageOps
 
 import config, auth
 from colors import colors
@@ -21,7 +22,7 @@ if config.webassets_debug:
     assets_env.updater = "always"
     assets_env.set_url('/lib/libsrc')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
-assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
+assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js', 'jquery.qtip-1.0.0-rc3.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
@@ -65,7 +66,7 @@ def expr_save(request, response):
         fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
         if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
     # Generate thumbnail from given image url
-    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'))
+    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'), size=(124,96))
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
@@ -84,7 +85,7 @@ def expr_save(request, response):
     return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
-def generate_thumb(owner, url):
+def generate_thumb_from_url(owner, url, size):
     # create file record in database, copy file to media directory via http
     try: response = urllib.urlopen(url)
     except: return
@@ -95,21 +96,19 @@ def generate_thumb(owner, url):
     f = open(path, 'w')
     f.write(response.read())
     f.close()
+    return generate_thumb(owner, path, size)
 
-    # resize and crop image to 124x96, preserving aspect ratio, save over original
+def generate_thumb(owner, path, size):
+    # resize and crop image to size set by size tuple, preserving aspect ratio, save over original
     try: imo = Img.open(path)
     except:
         os.remove(path)
-        return
-    ratio = float(imo.size[0]) / imo.size[1]
-    ratio_target = 124.0 / 96
-    new_size = (124, int(124 / ratio)) if ratio < ratio_target else (int(96 * ratio), 96)
-    imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-    imo = imo.crop((0, 0, 124, 96))
+        return False
+    imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
 
-    res = File.create(owner=owner.id, path=path, name='thumb', mime=mime)
+    res = File.create(owner=owner.id, path=path, size=size, name='thumb', mime='image/jpeg')
     return res.get('url')
 
 
@@ -231,6 +230,24 @@ def bad_referral(request, response):
     response.context['error'] = 'Log in if you already have an account'
     return serve_page(response, 'pages/error.html')
 
+def profile_thumb_set(request, response):
+    if not request.trusting: raise exceptions.BadRequest()
+    request.max_content_length = 10000000 # 10 megs
+    user = request.requester
+
+    file = request.files.get('profile_thumb')
+    path = os.tmpnam()
+    file.save(path)
+    mime = mimetypes.guess_type(file.filename)[0]
+
+    if mime in ['image/jpeg', 'image/png', 'image/gif']:
+        profile_thumb_url = generate_thumb(user, path, (275,200))
+        user.update(profile_thumb=profile_thumb_url)
+    else: 
+        response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
+
+    return redirect(response, request.form['forward'])
+
 
 def expr_tag_update(request, response):
     if not request.trusting: raise exceptions.BadRequest()
@@ -257,6 +274,22 @@ def admin_update(request, response):
         v = json.loads(request.form.get(k))
         if v: get_root().update(**{ k : v })
 
+def bulk_invite(request, resposne):
+    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+    form = request.form.copy()
+    for key in form:
+        parts = key.split('_')
+        if parts[0] == 'check':
+            id = parts[1]
+            contact = Contact.fetch(id)
+            name = form.get('name_' + id)
+            if contact.get('email'):
+                referral_id = mail_invite(contact['email'], name)
+                if referral_id:
+                    contact.update(referral_id=referral_id)
+                else:
+                    print "email not sent to " + contact['email'] + " referral already exists"
+      
 def add_referral(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
     form = request.form.copy()
@@ -421,7 +454,7 @@ def mail_invite(email, name=False, force_resend=False):
         ,'html': jinja_env.get_template("emails/invitation.html").render(context)
         }
     send_mail(heads, body)
-    return True
+    return referral.id
 
 
 def mail_signup_thank_you(form):
@@ -517,6 +550,8 @@ actions = dict(
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
     ,add_referral    = add_referral
+    ,bulk_invite     = bulk_invite
+    ,profile_thumb_set  = profile_thumb_set
     )
 
 # Mime types that could generate HTTP POST requests
@@ -721,6 +756,7 @@ def handle(request): # HANDLER
         response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', [])
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
+        response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
@@ -757,6 +793,9 @@ def route_admin(request, response):
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
     p2 = lget(parts, 1)
+    if p2 == 'contact_log':
+        response.context['contacts'] = Contact.search()
+        return serve_page(response, 'pages/admin/contact_log.html')
     if p2 == 'referrals':
         response.context['users'] = User.search()
         return serve_page(response, 'pages/admin/referrals.html')
@@ -771,7 +810,11 @@ def route_analytics(request, response):
         if request.args.has_key('start') and request.args.has_key('end'):
             active_users = analytics.active_users()
         else:
-            active_users = analytics.active_users()
+            event = request.args.get('event')
+            if event:
+                active_users = analytics.active_users(event=event)
+            else:
+                active_users = analytics.active_users()
             response.context['active_users'] = active_users
             response.context['active_users_js'] = json.dumps(active_users)
             return serve_page(response, 'pages/analytics/active_users.html')

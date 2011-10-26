@@ -31,6 +31,12 @@
         <g:plusone class='gplus gplus_button' count="false" onclick="_gaq.push(['_trackEvent', 'share', 'plusone']);"></g:plusone>
         <div class="count">{{ exp.analytic_count('gplus') if exp and exp.id else zero_count_string }}</div>
       </div>
+      <div class="like_button stumble">
+        <a class='stumble' onclick="_gaq.push(['_trackEvent', 'share', 'stumble']);">
+          <img src="/lib/skin/1/stumbleupon.png" alt="submit to stumbleupon" border="0" />
+        </a>
+        <div class="count">{{ exp.analytic_count("stumble") if exp and exp.id else zero_count_string }}</div>
+      </div>
       <div class="like_button email">
         <img src="/lib/skin/1/share_square.png" alt="emails sent" border="0" />
         <div class="count">{{ exp.analytic_count("email") if exp and exp.id else zero_count_string }}</div>

@@ -29,7 +29,7 @@
   <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
  
   {% if user.logged_in %}
-   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
+  {{ create_button(create) }}  
   {% endif %}
  
  {% if user_is_owner %}

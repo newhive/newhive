@@ -1,0 +1,71 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+{{ super() }}
+<script>
+  var text_to_input = function(element, id) {
+    element = $(element);
+    if (element.children().length == 0){
+      element.html(
+        '<input type="textarea" name="' + element.attr('class') + '_' + id + '" value="' + element.html() + '">'
+      );
+    }
+  }
+  $(function(){
+    $('input[type="checkbox"]').click(function(){
+      var id = $(this).attr('data-id');
+      var element = $(this).parent().siblings('.name'); // Aunts and uncles
+      text_to_input(element, id);
+    });
+  });
+</script>
+<style>
+  table tbody tr.invited td {
+    color: red;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<form url="{{secure_server}}" method="POST">
+  <input type="hidden" name="action" value="bulk_invite"/>
+  <input type="hidden" name="forward" value=""/>
+  <input type="submit" value="Send Invites" class="button rounded medbold"/>
+  <div style="color: red;">red = already sent</div>
+  {{ super() }}
+</form>
+{% endblock %}
+
+{% block table_head %}
+<tr>
+  <th></th>
+  <th>Date</th>
+  <th>E-mail</th>
+  <th>Name</th>
+  <th>How did you hear about tnh?</th>
+  <th>How do you express yourself?</th>
+  <th>Invited date</th>
+</tr>
+{% endblock %}
+
+{% block tablesorter_options %}
+{
+  headers: {
+    0: {sorter: false}
+    }
+}
+{% endblock %}
+
+{% block table_body %}
+{% for contact in contacts %}
+<tr class="{{'invited' if contact.referral_id}}" id="{{contact.id}}">
+  <td><input type="checkbox" data-id="{{contact.id}}" name="check_{{contact.id}}" value="1"></input></td>
+  <td data-type="epoch_date">{{ contact.created }}</td>
+  <td>{{ contact['email'] }}</td>
+  <td class='name'>{{ contact['name'] }}</td>
+  <td>{{ contact['referral'] }}</td>
+  <td>{{ contact['message'] }}</td>
+  <td data-type="epoch_date">{{ contact.updated if contact.referral_id }}</td>
+</tr>
+{% endfor %}
+{% endblock %}
+

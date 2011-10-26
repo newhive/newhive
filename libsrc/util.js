@@ -159,6 +159,7 @@ closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close
 function updateShareUrls(element, currentUrl) {
     element = $(element);
     var encodedUrl = encodeURIComponent(currentUrl), total=0;
+    var encodedTitle = encodeURIComponent(document.title)
     element.find('.copy_url').val(currentUrl);
     element.find('.embed_code').val('<iframe src="' + currentUrl + '" style="width: 100%; height: 100%" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0"></iframe>');
     element.find('a.twitter')
@@ -169,6 +170,8 @@ function updateShareUrls(element, currentUrl) {
       .attr('href', 'http://www.reddit.com/submit?url=' + encodedUrl);
     element.find('.gplus_button')
       .attr('href', currentUrl);
+    element.find('a.stumble')
+      .attr('href', 'http://www.stumbleupon.com/submit?url=' + encodedUrl + '&title=' + encodedTitle);
 
     element.find('.count').each(function(){
       $(this).html($(this).html().replace(/^0$/, "-"))
@@ -271,6 +274,7 @@ $(function () {
 });
 $(window).load(function() {
   place_apps();
+  qtip_intialize();
 });
 
 
@@ -427,6 +431,47 @@ tool_tip = function(tool, tip, above) {
 
     tool.hover(o.show, function() { o.drawer.hide() });
     return o;
+}
+
+qtip_intialize = function (elements) {
+    if (!elements) var elements = '*';
+    elements = $(elements).find('.hoverable[title]');
+    var qtipOptions = {
+        style: { 
+            background: "#96E2CE",
+            color: "black",
+            padding: 3,
+            border: {width: 3, radius: 3, color: "#96E2CE"},
+            name: 'green', 
+            "font-family": "Museo, Helvetica, Verdana, sans-serif",
+            tip: true } ,
+        position: { 
+            adjust: { screen: true }
+        }
+    };
+    var pos = {
+        N: { target: "topMiddle", tooltip: "bottomMiddle"}
+        , NE: { target: "topRight", tooltip: "bottomLeft"}
+        , E: { target: "rightMiddle", tooltip: "leftMiddle"}
+        , SE: { target: "bottomRight", tooltip: "topLeft"}
+        , S: { target: "bottomMiddle", tooltip: "topMiddle"}
+        , SW: { target: "bottomLeft", tooltip: "topRight"}
+        , W: { target: "leftMiddle", tooltip: "rightMiddle"}
+        , NW: { target: "topLeft", tooltip: "bottomRight"}
+    };
+    // Loop through directions and filter elements having "tip_N", etc.. class
+    $.each(pos, function(key, value){
+        var current = elements.filter('.tip_' + key);
+        elements = elements.not(current);
+        qtipOptions.position.corner = value;
+        current.qtip(qtipOptions);
+    });
+    // filter out elements that we don't want custom tooltips for
+    elements = elements.not('.tip_none');
+    // For all elements not matched by above filters, default tooltip to S
+    qtipOptions.position.corner = pos.S;
+    elements.qtip(qtipOptions);
+
 }
 
 var minimize = function(what, to, opts) {

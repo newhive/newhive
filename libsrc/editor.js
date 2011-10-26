@@ -120,6 +120,7 @@ Hive.App = function(initState) {
         if(o.apps.focused) o.apps.focused.unfocus();
         o.apps.focused = o;
         if(!o.controls) o.controls = Hive.App.Controls(o);
+        qtip_intialize(o.controls.div);
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
