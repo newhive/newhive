@@ -262,7 +262,8 @@ class Expr(Entity):
         except (KeyError, TypeError):
           updated = 0
 
-        if (now() - updated) < 36000 or string == 'stumble':
+        age = now() - updated
+        if age < 36000 or (string == 'stumble' and age < 1):
           count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
 
         if count == None:
