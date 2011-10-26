@@ -863,7 +863,7 @@ var main = function() {
             var e = $("<div class='thumb'>").append(img).get(0);
             return e;
         }, $('.ehapp img')));
-        setTimeout(function() { $('#expr_images .thumb img').each(function() { console.log(this.complete); img_fill(this) }) }, 0);
+        $('#expr_images .thumb img').each(function() { var img = $(this); setTimeout(function() { img_fill(img) }, 1) });
         $('#expr_images img').click(function() {
             Hive.Exp.thumb_src = this.src;
             dia_thumbnail.close();
@@ -1003,7 +1003,6 @@ Hive.save = function() {
 
     $.ajax( {
         type : "POST",
-        //url : '/' + Hive.Exp.path,
         dataType : 'json',
         data : { action : 'expr_save', exp : JSON.stringify(Hive.get_state()) },
         success : on_response
@@ -1199,12 +1198,12 @@ Hive.rte = function(options) {
 }
 
 var append_color_picker = function(container, callback, init_color) {
-    var e = $("<div style='width : 310px; height : 165px'>");
+    var e = $('<div>').addClass('color_picker');
     container.append(e);
 
     var make_picker = function(c) {
-        var d = $("<div style='display : inline-block; width : 20px; height : 20px; margin : 2px'>");
-        d.css('background-color', c).attr('val', c).click(function() { manual_input.val(c); callback(c) });
+        var d = $('<div>').addClass('color_select');
+        d.css('background-color', c).attr('val', c).click(function() { set_hue(c); manual_input.val(c); callback(c) });
         return d.get(0);
     }
     var make_row = function(cs) {
@@ -1213,44 +1212,45 @@ var append_color_picker = function(container, callback, init_color) {
         return d.get(0);
     }
     by_sixes = map(function(n) { return colors.slice(n, n+6)}, [0, 6, 12, 18, 24, 30]);
-    var pickers = $("<div>");
+    var pickers = $("<div class='palette'>");
     pickers.append(map(make_row, by_sixes));
     e.append(pickers);
 
-    var bar = $("<img style='width : 10px; height : 165px; position : absolute; top : 5px; left : 162px'>");
+    var bar = $("<img class='hue_bar'>");
     bar.attr('src', '/lib/skin/1/saturated.png');
-    var shades = $("<div style='width : 120px; height : 120px; position : absolute; top : 5px; left : 190px'><img src='/lib/skin/1/greys.png' style='width : 100%; position : absolute'></div>");
-    var manual = $("<div style='position : absolute; top : 130px; left : 200px; width : 120px'></div>");
+    var shades = $("<div class='shades'><img src='/lib/skin/1/greys.png'></div>");
     var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
-    manual.append(manual_input);
 
     var update_hex = function() {
         var v = manual_input.val();
-        callback($('<div>').css('color', v).css('color'));
+        var c = $('<div>').css('color', v).css('color');
+        set_hue(c);
+        callback(c);
     };
     manual_input.change(update_hex).keyup(update_hex);
 
     // saturated color picked from color bar
     var scolor = [255, 255, 255];
     var get_hue = function(e) {
-        var o = Math.floor(e.pageY - bar.offset().top);
-        if(o < 0) o = 0;
-        if(o > 164) o = 164;
-        scolor = saturated_color(o, 165);
+        var hue = bound(Math.floor(e.pageY - bar.offset().top) / bar.height(), 0, 1);
+        scolor = hsvToRgb(hue, 1, 1);
         var color = 'rgb(' + scolor.join(',') + ')';
         shades.css('background-color', color);
         calc_color();
     }
     bar.click(get_hue).drag(get_hue);
 
+    var set_hue = function(c) {
+        var rgb = map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
+        var hue = Math.round(rgbToHsv(rgb[0], rgb[1], rgb[2])[0]);
+        scolor = hsvToRgb(hue, 1, 1);
+        shades.css('background-color', 'rgb(' + scolor.join(',') + ')');
+    }
+
     var x = 1, y = 0; // gamma (x), saturation (y)
     var get_shade = function(e) {
-        x = (e.pageX - shades.offset().left) / 120;
-        y = (e.pageY - shades.offset().top) / 120;
-        if(x < 0) x = 0;
-        if(x > 1) x = 1;
-        if(y < 0) y = 0;
-        if(y > 1) y = 1;
+        x = bound((e.pageX - shades.offset().left) / 120, 0, 1);
+        y = bound((e.pageY - shades.offset().top) / 120, 0, 1);
         calc_color();
     }
     shades.click(get_shade).drag(get_shade);
@@ -1267,31 +1267,48 @@ var append_color_picker = function(container, callback, init_color) {
 
     e.append(bar);
     e.append(shades);
-    e.append(manual);
+    e.append(manual_input);
 
-    // Returns a fully saturated color in the RGB color wheel.
-    // This function generated lib/skin/1/saturated.png.
-    // The max param must be >= 1536 to get every possible fully saturated
-    // color in a 24 bit color space.
-    var saturated_color = function(n, max) {
-        if(!max) max = 1536;
-        if(n < 0) n = 0;
-        if(n > max) n = max;
+    function hsvToRgb(h, s, v){
+        var r, g, b;
 
-        var scale = 255;
-        var r = [1, 1, 0, 0, 0, 1, 1];
-        var g = [0, 1, 1, 1, 0, 0, 0];
-        var b = [0, 0, 0, 1, 1, 1, 0];
+        var i = Math.floor(h * 6);
+        var f = h * 6 - i;
+        var p = v * (1 - s);
+        var q = v * (1 - f * s);
+        var t = v * (1 - (1 - f) * s);
 
-        var linear_interp = function(points) {
-            var p = (n / max) * (points.length - 1);
-            var p0 = Math.floor(p);
-            var v = p - p0;
-            if(p0 == points.length - 1) p0--;
-            delta = points[p0 + 1] * scale - points[p0] * scale;
-            return Math.floor(delta * v + points[p0] * scale);
+        switch(i % 6){
+            case 0: r = v, g = t, b = p; break;
+            case 1: r = q, g = v, b = p; break;
+            case 2: r = p, g = v, b = t; break;
+            case 3: r = p, g = q, b = v; break;
+            case 4: r = t, g = p, b = v; break;
+            case 5: r = v, g = p, b = q; break;
         }
 
-        return [linear_interp(r), linear_interp(g), linear_interp(b)]; 
+        return [r * 255, g * 255, b * 255];
+    }
+
+    function rgbToHsv(r, g, b){
+        r = r/255, g = g/255, b = b/255;
+        var max = Math.max(r, g, b), min = Math.min(r, g, b);
+        var h, s, v = max;
+
+        var d = max - min;
+        s = max == 0 ? 0 : d / max;
+
+        if(max == min){
+            h = 0; // achromatic
+        }else{
+            switch(max){
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return [h, s, v];
     }
 }

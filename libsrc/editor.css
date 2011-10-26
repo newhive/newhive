@@ -39,9 +39,20 @@
 #menu_privacy .selected { display : none; }
 #right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }
-#btn_thumbnail { font-weight : bold; cursor : default; }
+
+.color_picker { width : 310px; }
+.color_picker img { width : 100%; }
+.color_picker .palette { float : left; }
+.color_picker .color_select { display : inline-block; width : 20px; height : 20px; margin : 2px; }
+.color_picker .hue_bar { width : 10px; height : 170px; float : left; margin : 2px 10px; }
+.color_picker .color_input { margin : 10px; }
+.color_picker .shades { width : 120px; height : 120px; float : left; }
+
 #dia_edit_bg h2 { margin : 0 0 20px; text-align : center; }
-#edit_bg_image { margin-right : 20px; }
+#edit_bg_image { float : left; margin-right : 30px; }
+#bg_preview { width : 120px; height : 80px; overflow : hidden; }
+#bg_preview img { width : 100%; }
+
+#btn_thumbnail { font-weight : bold; cursor : default; }
 #dia_thumbnail { width : 690px; max-height : 400px; overflow : auto; }
 #dia_thumbnail .thumb { float : left; margin : 5px; width : 124px; height : 96px; overflow : hidden; position : relative; }
-#btn_help.active { color : red; background-color : transparent; }

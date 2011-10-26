@@ -203,7 +203,7 @@ input, textarea { font-size : inherit }
 
 <div id='controls_image' class='controls_src'>
  <div class='control buttons'
-  ><img class='button link'     src='/lib/skin/1/link.png'   
+  ><img class='button link hoverable tip_W' src='/lib/skin/1/link.png' title='link'
   ><img class='button opacity'  src='/lib/skin/1/opacity.png'
   ><input class='control drawer opacity' type='text' size='3'
  ></div
@@ -234,10 +234,10 @@ input, textarea { font-size : inherit }
 
 <div id='dia_edit_bg' class='dialog border selected' style='padding : 20px'>
  <h2>Edit Background</h2>
- <div id='edit_bg_image' style='float : left; width : 120px'>
-  <div id='bg_preview' style='height : '><img src='{{ exp.background.url if exp.background }}'></div>
-  <div id='bg_upload'>Upload Image</div>
-  <div>opacity: </div>
+ <div id='edit_bg_image'>
+  <div id='bg_preview' class='border'><img src='{{ exp.background.url if exp.background and exp.background.url else '/lib/skin/1.png' }}'></div>
+  <div id='bg_upload' class='btn yellow rounded'>Upload Image</div>
+  <div>opacity: <input type='text' size='2'></div>
  </div>
  <div id='color_pick' style='float : right; position : relative;'></div>
 </div>

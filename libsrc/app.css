@@ -310,7 +310,10 @@ a.tag_label:hover { color : #F73627; background : #FFF673; }
 
 #profile_thumb { float: right; width: auto; }
 #profile_thumb img, #profile_thumb .placeholder{ margin: 25px 40px 20px 0; height: 200px; }
-#profile_thumb .placeholder{ height: 20px; width: 275px; border: 1px dashed #CCC; text-align:center; padding: 90px 0;}
+#profile_thumb .placeholder{ height: 20px; width: 275px; padding: 90px 0;}
+.placeholder { border: 1px dashed #CCC; text-align:center; }
 #profile_thumb .message {position: absolute; top: 225px; font-size: 12px;}
 
 #tags { clear:both; }
+
+#btn_help.active { color : white; }

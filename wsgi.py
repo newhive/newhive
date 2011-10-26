@@ -883,6 +883,7 @@ def expr_to_html(exp):
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
+jinja_env.trim_blocks = True
 
 def serve_html(response, html):
     response.data = html

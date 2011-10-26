@@ -5,6 +5,7 @@ a { color : inherit; text-decoration : none; }
 .happ, .ehapp { position : absolute; line-height : 1.2em; }
 .happ img { width : 100%; }
 .happfill { position : fixed; width : 100%; height : 100%; }
+.happfill img { left : 0; top : 0; width : 100%; }
 h1 { font-size : 40px; }
 form { display : inline; }
 

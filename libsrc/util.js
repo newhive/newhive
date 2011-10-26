@@ -223,6 +223,11 @@ op = {
     '/' : function(a, b) { return a / b },
     '%' : function(a, b) { return a % b }
 }
+function bound(num, lower_bound, upper_bound) {
+    if(num < lower_bound) return lower_bound;
+    if(num > upper_bound) return upper_bound;
+    return num;
+}
 
 function elem(tag, attrs) {
     var e = document.createElement(tag);
@@ -269,10 +274,9 @@ $(function () {
       });
     }
   });
-
-  $(window).resize(place_apps);
 });
 $(window).load(function() {
+  $(window).resize(place_apps);
   place_apps();
   qtip_intialize();
 });
@@ -413,23 +417,6 @@ hover_menu = function(handle, drawer, options) {
         o.close();
     });
 
-    return o;
-}
-
-tool_tip = function(tool, tip, above) {
-    var o = { };
-    o.drawer = $('<div>').html(tip).addClass('tooltip');
-    o.tool = tool;
-    tool.after(o.drawer);
-
-    o.show = function() {
-        var x = tool.position().left + tool.outerWidth() / 2 - o.drawer.outerWidth() / 2;
-        var y = o.tool.position().top + (above ? -5 - o.drawer.outerHeight() : o.tool.outerHeight() + 5);
-        o.drawer.css({ 'left' : x, 'top' : y});
-        o.drawer.show();
-    }
-
-    tool.hover(o.show, function() { o.drawer.hide() });
     return o;
 }
 
