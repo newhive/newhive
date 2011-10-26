@@ -28,6 +28,7 @@ input, textarea { font-size : inherit }
 #loading { position : fixed; z-index : 1200; display : none; }
 #app_btns { top : 0; left : 300px; width : 402px; height : 50px; }
 #nav_bg { min-width : 620px; }
+#btn_help { color : {{ colors[12] }}; }
  </style>
 {% endblock %}
 
@@ -79,7 +80,7 @@ input, textarea { font-size : inherit }
 </div>
 
 <div class='nav' style='right : 10px; top : 0; white-space : nowrap;'>
- <div class='nav_icon text hoverable medbold' onclick="" style='margin-right : 15px; color: #696E76;' id='btn_help'>?</div>
+ <div class='nav_icon text medbold hoverable' style='margin-right : 15px;' id='btn_help'>?</div>
  <script>
   (function() { var b = $('#btn_help');
     b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to : b } ) });
@@ -231,13 +232,14 @@ input, textarea { font-size : inherit }
  <iframe id='upload_target' name='upload_target' style='position : absolute; left : -1000px'></iframe>
 </form>
 
-<div id='dia_edit_bg' class='dialog border selected'>
+<div id='dia_edit_bg' class='dialog border selected' style='padding : 20px'>
  <h2>Edit Background</h2>
- <!--<div id='bg_upload'>Upload Image</div>
- <div style='position : absolute; top : 100px'>Opacity</div>
- <div id='bg_opacity' style='position : absolute; height : 10px; width : 160px; top : 130px'><img src='/lib/skin/1/opacity_bar.png'><div style='position : absolute; width : 10px; height : 20px; background-color : black'></div></div>
- -->
- <div id='color_pick' style='position : relative; margin : 20px'></div>
+ <div id='edit_bg_image' style='float : left; width : 120px'>
+  <div id='bg_preview' style='height : '><img src='{{ exp.background.url if exp.background }}'></div>
+  <div id='bg_upload'>Upload Image</div>
+  <div>opacity: </div>
+ </div>
+ <div id='color_pick' style='float : right; position : relative;'></div>
 </div>
 
 <div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
@@ -259,4 +261,6 @@ input, textarea { font-size : inherit }
  </span>
 </div> 
 
+{% include 'expr_background.html' %}
+<div id='grid_guide'></div>
 {% endblock %}

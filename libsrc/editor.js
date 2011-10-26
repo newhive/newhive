@@ -791,7 +791,11 @@ var main = function() {
     });
 
     if(!Hive.Exp.background) Hive.Exp.background = {};
-    var bg_set = function(c) { $('#bg').css('background-color', c); Hive.Exp.background.color = c; }
+    var bg_div = $('.happfill');
+    var bg_set = function(c) {
+        bg_div.css('background-color', c);
+        Hive.Exp.background.color = c;
+    }
     append_color_picker($('#color_pick'), bg_set, '');
     $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
 
@@ -855,11 +859,10 @@ var main = function() {
         dia_thumbnail = showDialog('#dia_thumbnail');
         $('#expr_images').empty().append(map(function(thumb) {
             var img = $('<img>').attr('src', thumb.src);
-            var e = $("<div style='width : 124px; height : 96px; overflow : hidden' class='thumb'>").append(img).get(0);
-            if(img.width() / img.height() <= 124 / 96) img.css('width', 124);
-            else img.css('height', 96);
+            var e = $("<div class='thumb'>").append(img).get(0);
             return e;
         }, $('.ehapp img')));
+        setTimeout(function() { $('#expr_images .thumb img').each(function() { console.log(this.complete); img_fill(this) }) }, 0);
         $('#expr_images img').click(function() {
             Hive.Exp.thumb_src = this.src;
             dia_thumbnail.close();
@@ -1031,7 +1034,7 @@ Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
     var e = $('#btn_grid').get(0);
     e.src = e.src_d = '/lib/skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png';
-    $('#bg').css(Hive.grid ?
+    $('#grid_guide').css(Hive.grid ?
           { 'background-image' : "url('/lib/skin/1/grid_square.png')", 'background-repeat' : 'repeat' }
         : { 'background-image' : '' }
     );
@@ -1222,7 +1225,7 @@ var append_color_picker = function(container, callback, init_color) {
 
     var update_hex = function() {
         var v = manual_input.val();
-        if(v.match(/[\dA-Z]{6}/i) || v.match(/[\dA-Z]{3}/i)) callback('#' + v);
+        callback($('<div>').css('color', v).css('color'));
     };
     manual_input.change(update_hex).keyup(update_hex);
 
@@ -1256,9 +1259,9 @@ var append_color_picker = function(container, callback, init_color) {
         // blend saturated color with brightness and saturation
         var blend = function(c) { return Math.floor(a * b * 255 + (1 - a) * c); }
         var color = map(blend, scolor);
-        var hex = map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
+        var hex = '#' + map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
         manual_input.val(hex);
-        callback('#' + hex);
+        callback(hex);
     }
 
     e.append(bar);

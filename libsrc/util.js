@@ -267,8 +267,9 @@ $(function () {
     }
   });
 
-  $('#dia_referral input[name=forward]').val(window.location);
   $(window).resize(place_apps);
+});
+$(window).load(function() {
   place_apps();
 });
 
@@ -276,15 +277,28 @@ $(function () {
 
 
 function center(e, inside, opts) {
-    var opts = $.extend({ absolute : false }, opts);
+    var opts = $.extend({ absolute : false, minimum : true }, opts);
     var w = typeof(inside) == 'undefined' ? $(window) : inside;
-    pos = { left : Math.max(0, w.width() / 2 - e.outerWidth() / 2),
-        'top' : Math.max(0, w.height() / 2 - e.outerHeight() / 2) };
+    pos = { left : (w.width() - e.outerWidth()) / 2, 'top' : (w.height() - e.outerHeight()) / 2 };
+    if(opts.minimum) {
+        pos['left'] = Math.max(0, pos['left']);
+        pos['top'] = Math.max(0, pos['top']);
+    }
     if(opts.absolute) {
         pos['left'] += window.scrollX;
         pos['top'] += window.scrollY;
     }
     e.css(pos);
+}
+
+function img_fill(img) {
+    var e = $(img), w = e.parent().width(), h = e.parent().height();
+    if(!e.length) return;
+    e.css('position', 'absolute');
+    if(e.width() / e.height() > w / h) e.width('').height(h);
+    else e.width(w).height('');
+    center(e, e.parent(), { minimum : false });
+    return e;
 }
 
 function asyncSubmit(form, callback) {
@@ -443,16 +457,14 @@ function createCookie(name,value,days) {
         var expires = "; expires="+date.toGMTString();
     }
     else var expires = "";
-    document.cookie = name+"="+value+expires+"; path=/";
+    document.cookie = name+"="+escape(value)+expires+"; path=/";
 }
 
 function readCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1,c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    var pairs = document.cookie.split(';');
+    for(var i=0; i < pairs.length; i++) {
+        pair = pairs[i].trim().split('=');
+        if(pair[0] == name && pair.length > 1) return unescape(pair[1]);
     }
     return null;
 }
@@ -482,10 +494,8 @@ var place_apps = function() {
        e.css(c);
    });
    $('.happfill').each(function(i, div) {
-       var e = $(this), img = e.find('img');
-       if(!img) return;
-       if(img.width() / img.height() > e.parent().width() / e.parent().height())
-           img.width('').height(e.parent().height());
-       else img.width(e.parent().width()).height('');
+       var e = $(div);
+       e.width(e.parent().width()).height(e.parent().height());
+       img_fill(e.find('img'))
    });
 }
