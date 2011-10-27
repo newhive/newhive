@@ -291,6 +291,13 @@ def add_referral(request, response):
 
     return redirect(response, forward)
 
+def add_comment(request, response):
+    commenter = request.requester
+    expression = request.form.get('expression')
+    comment_text = request.form.get('comment')
+    comment = Comment.create(expression, commenter, comment_text)
+    return serve_json(response, comment)
+
 
 ######################################
 ########### mail functions ###########

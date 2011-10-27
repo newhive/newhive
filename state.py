@@ -286,6 +286,11 @@ class Expr(Entity):
         """ Sets the top level domain (everything following first dot) in domain attribute """
         return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
 
+    def get_comments(self):
+        return Comment.search(**{'_id': {'$in': self['feed']}})
+
+    comments = property(get_comments)
+
 
 class File(Entity):
     cname = 'file'
@@ -329,6 +334,46 @@ class File(Entity):
 
         super(File, self).delete()
 
+class Feed(Entity):
+    cname = 'feed'
+
+    def create_me(self):
+        for key in ['initiator', 'entity', 'entity_class']:
+            assert self.has_key(key)
+
+        self.update(class_name=type(self).__name__)
+        super(Feed, self).create_me()
+        db.user.update({'_id': self['initiator']}, {'$push': {'feed': self.id}})
+        self.entity.update_cmd({'$push': {'feed': self.id}})
+        return self
+
+    def get_entity(self):
+        return globals()[self['entity_class']].fetch(self['entity'])
+
+    def get_initiator(self):
+        return User.fetch(self['initiator'])
+
+    entity = property(get_entity)
+    initiator = property(get_initiator)
+
+    @classmethod
+    def new(cls, initiator, entity, data={}):
+        data.update({'initiator': initiator.id, 'entity': entity.id, 'entity_class': entity.__class__.__name__})
+        return cls.create(**data)
+
+    @classmethod
+    def search(cls, **spec):
+        if not cls == Feed:
+            spec.update({"class_name": cls.__name__})
+        return super(Feed, cls).search(**spec)
+
+class Comment(Feed):
+    def create_me(self):
+        assert self.has_key('text')
+        super(Comment, self).create_me()
+
+        return self
+
 
 class Referral(Entity):
     cname = 'referral'
@@ -341,7 +386,6 @@ class Referral(Entity):
 class Contact(Entity):
     cname = 'contact_log'
 
-        
 def abs_url(secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
