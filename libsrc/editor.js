@@ -194,7 +194,7 @@ Hive.App = function(initState) {
     o.load = function() {
         o.content_element = o.div.find('.content');
         o.opacity(o.state.opacity);
-        o.content_element.click(function(e) { o.focus(); return false; });
+        o.content_element.click(function(e) { o.focus(); });
         if(o.state.load) o.state.load(o);
         delete o.state.create;
     }
@@ -206,10 +206,7 @@ Hive.App = function(initState) {
     o.dims_n(o.state.dimensions);
     var refPos;
     o.div.drag('start', function() { refPos = o.pos(); });
-    o.div.drag(function(e, dd) {
-        o.pos([refPos[0] + dd.deltaX, refPos[1] + dd.deltaY]);
-        //if(o.controls) o.controls.layout();
-    }, { handle : '.drag' } );
+    o.div.drag(function(e, dd) { o.pos([refPos[0] + dd.deltaX, refPos[1] + dd.deltaY]); }, { handle : '.drag' } );
     o.layer(o.layer());
       
     // add type-specific properties
@@ -263,7 +260,7 @@ Hive.App.Controls = function(app) {
     }
 
     o.append_link_picker = function(d) {
-        var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='/lib/skin/1/sm_arrow.png'></nobr>");
+        var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='/lib/skin/1/delete_sm.png' title='Clear link'></nobr>");
         d.append(e);
         var input = e.find('input');
         var m = hover_menu(d.find('.button.link'), e, {
@@ -274,15 +271,19 @@ Hive.App.Controls = function(app) {
             ,click_persist : input
             ,close : function() {
                 input.blur();
-                var v = input.val();
-                // TODO: improve URL guessing
-                if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
-                o.app.link(v);
                 o.app.focus();
             }
         });
-        e.find('img').click(m.close);
+        var set_link = function(){
+            var v = input.val();
+            // TODO: improve URL guessing
+            if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
+            o.app.link(v);
+        };
+        input.bind('change keyup mouseup paste', function(){setTimeout(set_link, 10)} );
+        e.find('img').click(function() { input.val(''); o.app.link(''); m.close(); });
         input.keypress(function(e) { if(e.keyCode == 13) m.close() });
+        return m;
     }
 
     o.addControl = function(c) { o.div.append(c); }
@@ -336,7 +337,7 @@ Hive.App.makeShielded = function(o) {
     o.shield = function() {
         if(o.eventCapturer) return;
         o.eventCapturer = $("<div class='drag shield'>");
-        o.eventCapturer.click(o.focus);
+        o.eventCapturer.click(function(e) { console.log(e); o.focus(); });
         o.div.append(o.eventCapturer);
         o.eventCapturer.css('opacity', 0.0);
     }
@@ -361,6 +362,7 @@ Hive.App.makeShielded = function(o) {
         o.dragging = false;
         o.set_shield();
         o.resize(o.dims());
+        return false;
     });
 }
 
@@ -433,11 +435,8 @@ Hive.App.Text = function(common) {
 
     o.focus.add(function() { o.rte.editMode(true) });
     o.unfocus.add(function() {
-        o.rte.set_content(
-            autoLink(o.rte.get_content())
-        );
+        o.rte.set_content(autoLink(o.rte.get_content()));
         o.rte.editMode(false);
-        //o.rte.select(null);
     });
     
     o.link = function(v) {
@@ -488,7 +487,7 @@ Hive.App.Text = function(common) {
     o.div.addClass('text');
     o.set_shield();
     o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
-        'class' : 'content', load : o.load });
+        'class' : 'content', load : o.load, click : function() { o.controls.close() } });
     
     return o;
 }
@@ -511,7 +510,8 @@ Hive.App.Text.Controls = function(common) {
     var d = o.div;
     o.c.resize_h = d.find('.resize_h');
 
-    o.append_link_picker(d.find('.buttons'));
+    o.link_menu = o.append_link_picker(d.find('.buttons'));
+    o.close = function() { o.link_menu.close(); }
 
     var cmd_buttons = function(query, func) {
         $(query).each(function(i, e) {
@@ -1062,14 +1062,14 @@ function remove_all_apps() {
 
 // Creates iframe for Hive.App.Text
 Hive.rte = function(options) {
-    var o = {};
-    o.options = typeof(options) == 'object' ? options : {};
+    var o = { };
+    o.options = $.extend({ click : noop }, options);
 
     o.create_editor = function() {
         o.iframe = $("<iframe style='border : none; width : 100%; height : 100%;'>").get(0);
         o.iframe.src = 'javascript:void(0)';
         if(o.options['class']) $(o.iframe).addClass(o.options['class']);
-        $(o.options.parent || document.body).append(o.iframe);
+        $(o.options.parent).append(o.iframe);
         o.doc_poll = setTimeout(o.wait_for_doc, 1);
     }
     o.wait_for_doc = function() {
@@ -1080,9 +1080,9 @@ Hive.rte = function(options) {
     }
     o.setup_editor = function() {
         o.win = o.iframe.contentWindow;
+        $(o.win).click(function(){ o.range = null; o.options.click(); });
         o.doc = o.win.document;
         if(o.options.css) $(o.doc).find('head').append(o.options.css);
-        $(o.doc.body).addClass('ehapp');
         o.doc.body.style.overflow = 'hidden';
         //o.editor_cmd('styleWithCSS', true);
         if(options.load) options.load();
@@ -1100,6 +1100,9 @@ Hive.rte = function(options) {
         //    r = o.range_all();
         //    if(r.toString().trim()) o.select(r);
         //}
+
+        // Fix Chrome's incompatibile behavior of inserting href as text 
+        if(command == 'createlink' && !o.get_range().toString()) return;
 
         o.editor_cmd(command, args);
 
@@ -1142,26 +1145,48 @@ Hive.rte = function(options) {
     // Finds link element the cursor is on, selects it after saving
     // any existing selection, returns its href
     o.get_link = function() {
-        o.range = o.get_range();
-        var node = o.range.startContainer;
+        o.range = o.get_range(); // save existing selection
+        var r = o.range.cloneRange();
+
+        // Look for link in parents
+        var node = r.startContainer;
         while(node.parentNode) {
             node = node.parentNode;
             if($(node).is('a')) {
-                o.select(o.range_all(node));
+                r.selectNode(node);   
+                o.select(r);
                 return $(node).attr('href');
             }
         }
-        return '';
-    }
 
-    // Return a range spanning a whole element
-    o.range_all = function(node) {
-        var last = node || o.doc.body
-        var r = o.win.document.createRange();
-        r.setStart(last, 0);
-        while(last.lastChild) last = last.lastChild;
-        r.setEnd(last, last.length ? last.length : 0);
-        return r;
+        // Look for the first link that intersects r
+        var find_intersecting = function(r) {
+            var link = false;
+            $(o.doc.body).find('a').each(function() { if(!link && rangeIntersectsNode(r, this)) link = this });
+            if(link) {
+                r.selectNode(link);
+                o.select(r);
+                return $(link).attr('href');
+            };
+            return '';
+        }
+        var link = find_intersecting(r);
+        if(link) return link;
+
+        // If there's still no link, select current word
+        if(!r.toString()) {
+            // select current word
+            // r.expand('word') // works in IE and Chrome
+            var s = o.select(r);
+            // If the cursor is not at the beginning of a word...
+            if(!r.startContainer.data || !/\W|^$/.test(r.startContainer.data.charAt(r.startOffset - 1)))
+                s.modify('move','backward','word');
+            s.modify('extend','forward','word');
+        }
+
+        // It's possible to grab a previously missed link with the above code 
+        var link = find_intersecting(o.get_range());
+        return link;
     }
 
     o.select = function(range) {
@@ -1170,6 +1195,7 @@ Hive.rte = function(options) {
         s.removeAllRanges();
         if(range)
         s.addRange(range);
+        return s;
     }
 
     // An attempt to replace execCommand?
@@ -1192,7 +1218,7 @@ Hive.rte = function(options) {
         if(mode) {
             o.doc.designMode = 'on';
             o.iframe.contentWindow.focus();
-            //if(o.range) o.select(o.range);
+            if(o.range) o.select(o.range);
         } else {
             //o.range = o.get_range(); // attempt to save cursor positoion breaks deleting textboxes
             o.doc.designMode = 'off';
@@ -1206,6 +1232,19 @@ Hive.rte = function(options) {
     }
     o.set_content = function(c) {
         return $(o.doc.body).html(c);
+    }
+
+    function rangeIntersectsNode(range, node) {
+        var nodeRange = node.ownerDocument.createRange();
+        try {
+          nodeRange.selectNode(node);
+        }
+        catch (e) {
+          nodeRange.selectNodeContents(node);
+        }
+
+        return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
+               range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
     }
 
     o.create_editor();
