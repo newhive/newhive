@@ -28,6 +28,7 @@
 
   <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
  
+  {{ discussion_button() }}
   {% if user.logged_in %}
   {{ create_button(create) }}  
   {% endif %}
