@@ -115,6 +115,7 @@ Hive.App = function(initState) {
         o.apps.restack();
     }
     
+    o.make_controls = [];
     o.focus = Funcs(function() {
         if(o.focused()) return;
         if(o.apps.focused) o.apps.focused.unfocus();
@@ -191,13 +192,13 @@ Hive.App = function(initState) {
         o.content_element.css('opacity', s);
     }
 
-    o.load = function() {
+    o.load = Funcs(function() {
         o.content_element = o.div.find('.content');
         o.opacity(o.state.opacity);
         o.content_element.click(function(e) { o.focus(); });
         if(o.state.load) o.state.load(o);
         delete o.state.create;
-    }
+    });
 
     // initialize
     o.div = $('<div class="ehapp">');
@@ -221,9 +222,10 @@ Hive.App = function(initState) {
     return o;
 }
 
-// Generic object for all App.Controls types. The Controls objects are
-// responsible for the selection border, and all the buttons
-// surounding the App when selected, and for these button's behavior.
+// Generic widgets for all App types. This objects is responsible for the
+// selection border, and all the buttons surounding the App when selected, and for
+// these button's behavior.  App specific behavior is added by
+// Hive.App.Foo.Controls function, and a list of modifiers in app.make_controls
 Hive.App.Controls = function(app) {
     var o = {};
     o.app = app;
@@ -232,18 +234,18 @@ Hive.App.Controls = function(app) {
         o.div.remove();
         o.select_box.remove();
         o.app.controls = false;
-    }
+    };
 
     o.dims = function() {
         var dims = o.app.dims();
         if(dims[0] < 70) dims[0] = 70;
         if(dims[1] < 40) dims[1] = 40;
         return dims;
-    }
+    };
 
     o.pos = function() {
         o.div.css(o.app.div.offset());
-    }
+    };
 
     o.layout = function() {
         o.pos();
@@ -257,7 +259,7 @@ Hive.App.Controls = function(app) {
         o.c.resize .css({ left  : dims[0] - 20 + p, top   : dims[1] - 20 + p });
         o.c.stack  .css({ left  : dims[0] - 78 + p, top   : dims[1] + 8 + p });
         o.c.buttons.css({ left  :  -5 - p, top : dims[1] + p + 10, width : dims[0] - 60 });
-    }
+    };
 
     o.append_link_picker = function(d) {
         var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='/lib/skin/1/delete_sm.png' title='Clear link'></nobr>");
@@ -284,12 +286,10 @@ Hive.App.Controls = function(app) {
         e.find('img').click(function() { input.val(''); o.app.link(''); m.close(); });
         input.keypress(function(e) { if(e.keyCode == 13) m.close() });
         return m;
-    }
+    };
 
-    o.addControl = function(c) { o.div.append(c); }
-    o.addControls = function(ctrls) {
-        map(o.addControl, ctrls.clone(false).children());
-    }
+    o.addControl = function(c) { o.div.append(c); };
+    o.addControls = function(ctrls) { map(o.addControl, ctrls.clone(false).children()); };
 
     o.div = $("<div style='position : absolute; z-index : 3; width : 0; height : 0' class='controls'>");
     o.select_box = $("<div class='select_box drag border selected'>");
@@ -312,7 +312,7 @@ Hive.App.Controls = function(app) {
     d.find('.stack_down').click(o.app.stackBottom);
     o.padding = 0;
 
-    o = o.app.type.Controls(o);
+    o = reduce(function(o, f) { return f(o) }, o.app.make_controls, o);
 
     o.c.buttons = d.find('.buttons');
     o.layout();
@@ -337,7 +337,7 @@ Hive.App.makeShielded = function(o) {
     o.shield = function() {
         if(o.eventCapturer) return;
         o.eventCapturer = $("<div class='drag shield'>");
-        o.eventCapturer.click(function(e) { console.log(e); o.focus(); });
+        o.eventCapturer.click(function(e) { o.focus(); });
         o.div.append(o.eventCapturer);
         o.eventCapturer.css('opacity', 0.0);
     }
@@ -368,8 +368,7 @@ Hive.App.makeShielded = function(o) {
 
 // This App shows an arbitrary single HTML tag.
 Hive.App.Html = function(common) {
-    var o = {};
-    $.extend(o, common);
+    var o = $.extend({}, common);
 
     o.content = function(c) {
         if(typeof(c) != 'undefined') 
@@ -384,45 +383,44 @@ Hive.App.Html = function(common) {
         o.shield();
     }
 
+    function controls(common) {
+        var o = $.extend({}, common);
+
+        var d = o.div;
+        d.find('.resize').drag('start', function(e, dd) { o.refDims = o.app.dims(); });
+        d.find('.resize').drag(function(e, dd) {
+            //cos(atan2(x, y) - atan2(w, h))
+            o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1] + dd.deltaY]);
+        });
+
+        o.addControls($('#controls_html'));
+
+        var input = d.find('input.opacity');
+        var m = hover_menu(d.find('.button.opacity'), d.find('.drawer.opacity'),
+            { open : function() { input.focus(); input.select(); } });
+        input.val((o.app.opacity() * 100) + '%');
+        input.keyup(function(e) {
+            if(e.keyCode == 13) { input.blur(); m.close(); }
+            o.app.opacity(parseFloat(input.val()) / 100);
+        });
+
+        d.find('.render').click(o.app.toggle_render);
+
+        return o;
+    }
+    o.make_controls.push(controls);
+
     setTimeout(function(){ o.load(); }, 100);
 
     return o;
 }
 Hive.registerApp(Hive.App.Html, 'hive.html');
 
-Hive.App.Html.Controls = function(common) {
-    var o = {};
-    $.extend(o, common);
-
-    var d = o.div;
-    d.find('.resize').drag('start', function(e, dd) { o.refDims = o.app.dims(); });
-    d.find('.resize').drag(function(e, dd) {
-        //cos(atan2(x, y) - atan2(w, h))
-        o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1] + dd.deltaY]);
-    });
-
-    o.addControls($('#controls_html'));
-
-    var input = d.find('input.opacity');
-    var m = hover_menu(d.find('.button.opacity'), d.find('.drawer.opacity'),
-        { open : function() { input.focus(); input.select(); } });
-    input.val((o.app.opacity() * 100) + '%');
-    input.keyup(function(e) {
-        if(e.keyCode == 13) { input.blur(); m.close(); }
-        o.app.opacity(parseFloat(input.val()) / 100);
-    });
-
-    d.find('.render').click(o.app.toggle_render);
-
-    return o;
-}
-
 var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
 // Contains an iframe that has designMode set when selected
 Hive.App.Text = function(common) {
-    var o = {};
-    $.extend(o, common);
+    var o = $.extend({}, common);
     
     var content = o.state.content;
     o.content = function(content) {
@@ -484,6 +482,82 @@ Hive.App.Text = function(common) {
 
     Hive.App.makeShielded(o);
 
+    function controls(common) {
+        var o = $.extend({}, common);
+
+        o.padding = 5;
+        o.layout = function() {
+            common.layout();
+            var p = o.padding;
+            var dims = o.dims();
+            o.c.resize_h.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+        }
+
+        o.addControls($('#controls_text'));
+
+        var d = o.div;
+        o.c.resize_h = d.find('.resize_h');
+
+        o.link_menu = o.append_link_picker(d.find('.buttons'));
+        o.close = function() { o.link_menu.close(); }
+
+        var cmd_buttons = function(query, func) {
+            $(query).each(function(i, e) {
+                $(e).click(function() { func($(e).attr('val')) });
+            })
+        }
+
+        //hover_menu(d.find('.button.fontsize'), d.find('.drawer.fontsize'));
+        //d.find('.drawer.fontsize .option').each(function(i, e) { $(e).click(function() {
+        //    o.app.rte.edit('fontsize', (parseFloat($(e).attr('val')) / o.app.scale()) + 'em')
+        //    o.app.resize_h(o.app.dims());
+        //}) });
+
+        //d.find('.undo').click(function() { o.app.rte.undo() });
+
+        hover_menu(d.find('.button.fontname'), d.find('.drawer.fontname'));
+        //cmd_buttons('.fontname .option', function(v) { o.app.rte.css('font-family', v) });
+
+        append_color_picker(d.find('.drawer.color'), function(v) { o.app.rte.edit('forecolor', v) });
+        hover_menu(d.find('.button.color'), d.find('.drawer.color'), { auto_close : false });
+
+        //cmd_buttons('.button.bold',   function(v) { o.app.rte.css('font-weight', '700'   , { toggle : '400'   }) });
+        //cmd_buttons('.button.italic', function(v) { o.app.rte.css('font-style' , 'italic', { toggle : 'normal'}) });
+
+        hover_menu(d.find('.button.align'), d.find('.drawer.align'));
+        //cmd_buttons('.align .option', function(v) { o.app.rte.css('text-align', v, { body : true }) });
+
+        //cmd_buttons('.button.unformat', function(v) { o.app.rte.edit('removeformat') });
+
+        $('.option[cmd],.button[cmd]').each(function(i, e) { $(e).click(function() {
+            o.app.rte.edit($(e).attr('cmd'), $(e).attr('val'))
+        }); })
+
+        d.find('.resize, .resize_h').drag('start', function(e, dd) {
+            o.refDims = o.app.dims();
+            o.dragging = e.target;
+            o.dragging.busy = true;
+            o.dragging.over();
+            o.app.div.drag('start');
+        });
+        o.refDims = null;
+        o.c.resize.drag(function(e, dd) {
+            //cos(atan2(x, y) - atan2(w, h))
+            o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0], (o.refDims[1] + dd.deltaY) / o.refDims[1]));
+        });
+        o.c.resize_h.drag(function(e, dd) {
+            o.app.resize_h([o.refDims[0] + dd.deltaX, o.refDims[1]]);
+        });
+        d.find('.resize, .resize_h').drag('end', function(e, dd) {
+            o.dragging.busy = false;
+            o.dragging.out();
+            o.app.div.drag('end');
+        });
+
+        return o;
+    }
+    o.make_controls.push(controls);
+
     o.div.addClass('text');
     o.set_shield();
     o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
@@ -493,86 +567,45 @@ Hive.App.Text = function(common) {
 }
 Hive.registerApp(Hive.App.Text, 'hive.text');
 
-Hive.App.Text.Controls = function(common) {
-    var o = {};
-    $.extend(o, common);
 
-    o.padding = 5;
-    o.layout = function() {
-        common.layout();
-        var p = o.padding;
-        var dims = o.dims();
-        o.c.resize_h.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+Hive.App.make_rotatable = function(o) {
+    var angle = o.state.angle ? o.state.angle : 0;
+    o.angle = function(a) {
+        if(typeof(a) == 'undefined') return angle;
+        angle = a;
+        o.content_element.rotate(a);
     }
+    o.load.add(function() { if(o.angle()) o.angle(o.angle()) });
 
-    o.addControls($('#controls_text'));
+    function controls(common) {
+        var o = $.extend({}, common), refAngle = null, offsetAngle = null;
 
-    var d = o.div;
-    o.c.resize_h = d.find('.resize_h');
+        o.getAngle = function(e) {
+            var cpos = o.app.centerPos();
+            var x = e.pageX - cpos[0];
+            var y = e.pageY - cpos[1];
+            return Math.atan2(y, x) * 180 / Math.PI;
+        }
 
-    o.link_menu = o.append_link_picker(d.find('.buttons'));
-    o.close = function() { o.link_menu.close(); }
+        o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', '/lib/skin/1/rotate.png');
+        o.addControl(o.rotateHandle);
 
-    var cmd_buttons = function(query, func) {
-        $(query).each(function(i, e) {
-            $(e).click(function() { func($(e).attr('val')) });
-        })
+        o.rotateHandle.drag('start', function(e, dd) {
+            refAngle = angle;
+            offsetAngle = o.getAngle(e);
+        }).drag(function(e, dd) {
+            angle = o.getAngle(e) - offsetAngle + refAngle;
+            o.app.angle(angle);
+        });
+
+        return o;
     }
-
-    //hover_menu(d.find('.button.fontsize'), d.find('.drawer.fontsize'));
-    //d.find('.drawer.fontsize .option').each(function(i, e) { $(e).click(function() {
-    //    o.app.rte.edit('fontsize', (parseFloat($(e).attr('val')) / o.app.scale()) + 'em')
-    //    o.app.resize_h(o.app.dims());
-    //}) });
-
-    //d.find('.undo').click(function() { o.app.rte.undo() });
-
-    hover_menu(d.find('.button.fontname'), d.find('.drawer.fontname'));
-    //cmd_buttons('.fontname .option', function(v) { o.app.rte.css('font-family', v) });
-
-    append_color_picker(d.find('.drawer.color'), function(v) { o.app.rte.edit('forecolor', v) });
-    hover_menu(d.find('.button.color'), d.find('.drawer.color'), { auto_close : false });
-
-    //cmd_buttons('.button.bold',   function(v) { o.app.rte.css('font-weight', '700'   , { toggle : '400'   }) });
-    //cmd_buttons('.button.italic', function(v) { o.app.rte.css('font-style' , 'italic', { toggle : 'normal'}) });
-
-    hover_menu(d.find('.button.align'), d.find('.drawer.align'));
-    //cmd_buttons('.align .option', function(v) { o.app.rte.css('text-align', v, { body : true }) });
-
-    //cmd_buttons('.button.unformat', function(v) { o.app.rte.edit('removeformat') });
-
-    $('.option[cmd],.button[cmd]').each(function(i, e) { $(e).click(function() {
-        o.app.rte.edit($(e).attr('cmd'), $(e).attr('val'))
-    }); })
-
-    d.find('.resize, .resize_h').drag('start', function(e, dd) {
-        o.refDims = o.app.dims();
-        o.dragging = e.target;
-        o.dragging.busy = true;
-        o.dragging.over();
-        o.app.div.drag('start');
-    });
-    o.refDims = null;
-    o.c.resize.drag(function(e, dd) {
-        //cos(atan2(x, y) - atan2(w, h))
-        o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0], (o.refDims[1] + dd.deltaY) / o.refDims[1]));
-    });
-    o.c.resize_h.drag(function(e, dd) {
-        o.app.resize_h([o.refDims[0] + dd.deltaX, o.refDims[1]]);
-    });
-    d.find('.resize, .resize_h').drag('end', function(e, dd) {
-        o.dragging.busy = false;
-        o.dragging.out();
-        o.app.div.drag('end');
-    });
-
-    return o;
+    o.make_controls.push(controls);
 }
 
 
 Hive.App.Image = function(common) {
-    var o = {};
-    $.extend(o, common);
+    var o = $.extend({}, common);
 
     o.content = function(content) {
         if(typeof(content) != 'undefined') o.image_src(content);
@@ -584,12 +617,6 @@ Hive.App.Image = function(common) {
         o.state.href = v;
     }
 
-    var angle = o.state.angle ? o.state.angle : 0;
-    o.angle = function(a) {
-        if(typeof(a) == 'undefined') return angle;
-        angle = a;
-        o.img.rotate(a);
-    }
     o.image_src = function(src) {
         if(o.img) o.img.remove();
         o.img = $("<img class='content drag'>");
@@ -608,7 +635,6 @@ Hive.App.Image = function(common) {
         }
         o.img.css('width', '100%');
         o.img.show();
-        if(o.angle()) o.angle(o.angle());
         common.load();
     }
 
@@ -619,94 +645,89 @@ Hive.App.Image = function(common) {
         return dims;
     }
 
+    Hive.App.make_rotatable(o);
+    function controls(common) {
+        var o = $.extend({}, common);
+
+        o.layout = function() {
+            common.layout();
+            var p = o.padding;
+            var dims = o.dims();
+            o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+        }
+
+        o.addControls($('#controls_image'));
+
+        var d = o.div;
+        o.append_link_picker(d.find('.buttons'));
+
+        var input = d.find('input.opacity');
+        var m = hover_menu(d.find('.button.opacity'), d.find('.drawer.opacity'),
+            { open : function() { input.focus(); input.select(); } });
+        input.val((o.app.opacity() * 100) + '%');
+        input.keyup(function(e) {
+            if(e.keyCode == 13) { input.blur(); m.close(); }
+            o.app.opacity(parseFloat(input.val()) / 100);
+        });
+
+        d.find('.button.set_bg').click(function() { Hive.set_bg_img(o.app.getState()) });
+
+        o.refDims = null;
+        d.find('.resize').drag(function(e, dd) {
+            o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1] + dd.deltaY]);
+        });
+        d.find('.resize').drag('start', function(e, dd) { o.refDims = o.dims(); });
+
+        return o;
+    };
+    o.make_controls.push(controls);
+
     o.image_src(o.state.content);
 
     return o;
 }
 Hive.registerApp(Hive.App.Image, 'hive.image');
 
-Hive.App.Image.Controls = function(common) {
-    var o = {};
-    $.extend(o, common);
 
-    o.layout = function() {
-        common.layout();
-        var p = o.padding;
-        var dims = o.dims();
-        o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
-    }
+Hive.App.Rectangle = function(common) {
+    var o = $.extend({}, common);
 
-    o.refDims = null;
-    var refAngle = null;
-    var offsetAngle = null;
-    var angle = o.app.angle();
-    o.getAngle = function(e) {
-        var cpos = o.app.centerPos();
-        var x = e.pageX - cpos[0];
-        var y = e.pageY - cpos[1];
-        return Math.atan2(y, x) * 180 / Math.PI;
-    }
+    var state = {};
+    o.content = function(content) { return $.extend({}, state); };
+    o.fore_color = function(v) {
+        o.rect.css('background-color', v);
+        state.color = v;
+    };
 
-    o.addControls($('#controls_image'));
+    Hive.App.make_rotatable(o);
+    function controls(common) {
+        var o = $.extend({}, common);
 
-    var d = o.div;
-    o.append_link_picker(d.find('.buttons'));
+        o.layout = function() {
+            common.layout();
+            var p = o.padding;
+            var dims = o.dims();
+            o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 40, dims[1] - 34) });
+            o.resizeHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 00, dims[1] - 74) });
+        };
 
-    var input = d.find('input.opacity');
-    var m = hover_menu(d.find('.button.opacity'), d.find('.drawer.opacity'),
-        { open : function() { input.focus(); input.select(); } });
-    input.val((o.app.opacity() * 100) + '%');
-    input.keyup(function(e) {
-        if(e.keyCode == 13) { input.blur(); m.close(); }
-        o.app.opacity(parseFloat(input.val()) / 100);
-    });
+        o.addControls($('#controls_rectangle'));
+        o.resizeHandle = o.div.find('.resize_h');
+        append_color_picker(o.div.find('.drawer.fill'), o.app.fore_color);
+        hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.color'), { auto_close : false });
+        append_color_picker(o.div.find('.drawer.stroke'), noop);
+        hover_menu(o.div.find('.button.stroke'), o.div.find('.drawer.stroke'), { auto_close : false });
 
-    d.find('.button.set_bg').click(function() { Hive.set_bg_img(o.app.getState()) });
-
-    o.rotateHandle = $(elem('img', { src : '/lib/skin/1/rotate.png',  'class' : 'control rotate hoverable' }));
-    o.addControl(o.rotateHandle);
-    d.find('.resize, .rotate').drag('start', function(e, dd) {
-        o.refDims = o.app.dims();
-        refAngle = angle;
-        offsetAngle = o.getAngle(e);
-    });
-    d.find('.resize').drag(function(e, dd) {
-        //cos(atan2(x, y) - atan2(w, h))
-        o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1] + dd.deltaY]);
-    });
-    d.find('.rotate').drag(function(e, dd) {
-        angle = o.getAngle(e) - offsetAngle + refAngle;
-        o.app.angle(angle);
-    });
-
-    //activate_drawer('link');
-
+        return o;
+    };
+    o.make_controls.push(controls);
+        
+    o.rect = $("<div class='content rectangle drag'>").appendTo(o.div);
+    setTimeout(function(){common.load()},1);
+    
     return o;
-}
-
-
-Hive.App.Shape = function(common) {
-    var o = {};
-    $.extend(o, common);
-    o.type = 'hive.shape.0';
-
-    o.content = function(content) {
-        //if(typeof(content) != 'undefined') o.imageSrc(content);
-        //return o.img.attr('src');
-    }
-
-    o.canvas = Raphael(o.div.get(0), o.dims()[0], o.dims()[1]);
-    o.shape = o.canvas.rect(0, 0, o.dims()[0] - 1, o.dims()[1] - 1);
-
-    o.fillColor = function(c) { o.shape.attr({ 'fill' : c }) }
-    o.strokeColor = function(c) { o.shape.attr({ 'stroke' : c }) }
-
-    return o;
-}
-Hive.registerApp(Hive.App.Shape, 'hive.shape.0');
-
-Hive.App.Shape.Controls = function(app) {
-}
+};
+Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
 
 
 // For selecting multilpe Apps. Not implemented
@@ -718,20 +739,20 @@ Hive.select_start = function(e, dd) {
     $(document.body).append(o.div);
     o.div.append(o.select_box);
     o.start = [e.pageX, e.pageY];
-}
+};
 Hive.select_move = function(e, dd) {
     var o = Hive.selection;
     o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
     o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
     o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
-}
+};
 Hive.select_finish = function() {
     if(!Hive.selection.selected.length) Hive.select_none();
-}
+};
 Hive.select_none = function() {
     Hive.selection.div.remove();
     Hive.selection = false;
-}
+};
 
 Hive.new_app = function(s) {
     s.create = true;
@@ -742,10 +763,10 @@ Hive.new_app = function(s) {
         a.resize(a.dims());
         a.focus();
         if(load) load(a);
-    }
+    };
     Hive.App(s);
     return false;
-}
+};
 
 var main = function() {
     // Warn the user if they leave the page by any route other than the save button TODO: actually check if they've made any changes
@@ -828,6 +849,7 @@ var main = function() {
     var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code') } );
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
     hover_menu($('#insert_shape'), $('#menu_shape'));
+    $('#insert_shape,#menu_shape').click(function(e) { Hive.new_app({ type : 'hive.rectangle', color : '#000000' }); });
     
     $('#btn_grid').click(Hive.toggle_grid);
     
@@ -1062,14 +1084,13 @@ function remove_all_apps() {
 
 // Creates iframe for Hive.App.Text
 Hive.rte = function(options) {
-    var o = { };
-    o.options = $.extend({ click : noop }, options);
+    var o = $.extend({ click : noop }, options);
 
     o.create_editor = function() {
         o.iframe = $("<iframe style='border : none; width : 100%; height : 100%;'>").get(0);
         o.iframe.src = 'javascript:void(0)';
-        if(o.options['class']) $(o.iframe).addClass(o.options['class']);
-        $(o.options.parent).append(o.iframe);
+        if(o['class']) $(o.iframe).addClass(o['class']);
+        $(o.parent).append(o.iframe);
         o.doc_poll = setTimeout(o.wait_for_doc, 1);
     }
     o.wait_for_doc = function() {
@@ -1080,12 +1101,12 @@ Hive.rte = function(options) {
     }
     o.setup_editor = function() {
         o.win = o.iframe.contentWindow;
-        $(o.win).click(function(){ o.range = null; o.options.click(); });
+        $(o.win).click(function(){ o.range = null; o.click(); });
         o.doc = o.win.document;
-        if(o.options.css) $(o.doc).find('head').append(o.options.css);
+        if(o.css) $(o.doc).find('head').append(o.css);
         o.doc.body.style.overflow = 'hidden';
         //o.editor_cmd('styleWithCSS', true);
-        if(options.load) options.load();
+        if(o.load) o.load();
     }
 
     o.editor_cmd = function(command, args) {

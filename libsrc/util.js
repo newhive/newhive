@@ -206,10 +206,12 @@ function map2(f, list1, list2) {
     for(var i = 0; i < list1.length; i++) ret.push(f(list1[i], list2[i]));
     return ret;
 }
-function reduce(f, list, first) {
-    if(first === undefined) first = list.shift();
-    for(var i = 0; i < list.length; i++) first = f(first, list[i]);
-    return first;
+// Combination of foldl and foldl1
+function reduce(f, list, left) {
+    var L = $.extend([], list), left;
+    if(left === undefined) left = L.shift();
+    while(right = L.shift()) left = f(left, right);
+    return left;
 }
 function zip(list1, list2) {
     var ret = [];
@@ -227,12 +229,6 @@ function bound(num, lower_bound, upper_bound) {
     if(num < lower_bound) return lower_bound;
     if(num > upper_bound) return upper_bound;
     return num;
-}
-
-function elem(tag, attrs) {
-    var e = document.createElement(tag);
-    for(name in attrs) e.setAttribute(name, attrs[name]);
-    return e;
 }
 
 /*** puts alt attribute of input fields in to value attribute, clears
@@ -280,7 +276,6 @@ $(window).load(function() {
   place_apps();
   qtip_intialize();
 });
-
 
 
 
@@ -338,7 +333,7 @@ function asyncUpload(opts) {
 
 function hover_url(url) {
     var h = url.replace(/(.png)|(-.*)$/, '-hover.png');
-    var i = $(elem('img', { src : h, style : 'display : none' }));
+    var i = $("<img style='display:none'>").attr('src', h);
     $(document.body).append(i);
     return h;
 }

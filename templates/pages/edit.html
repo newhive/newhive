@@ -75,7 +75,7 @@ input, textarea { font-size : inherit }
  </div>
  
  <div id='menu_shape' class='menu medbold'>
-  <div class='menu_item menu_hover'><nobr>Drawing tools coming soon</nobr></div>
+  <div class='menu_item menu_hover'>Rectangle</div>
  </div>
 </div>
 
@@ -139,7 +139,7 @@ input, textarea { font-size : inherit }
  <img class='control copy   hoverable tip_N' src='/lib/skin/1/copy.png' title='Duplicate Element'>
  <img class='control remove hoverable tip_NE' src='/lib/skin/1/delete_sm.png' title='Delete, no undo!'>
  <div class='control stack'><img class='stack_up hoverable' src='/lib/skin/1/stack_up.png' title='move to front'><img class='stack_down hoverable' src='/lib/skin/1/stack_down.png' title='move to back'></div>
- <img class='control resize hoverable tip_SE' src='/lib/skin/1/resize.png' title="Scale Text">
+ <img class='control resize hoverable tip_SE' src='/lib/skin/1/resize.png' title="Scale">
 </div>
 
 <div id='controls_text' class='controls_src'>
@@ -217,13 +217,24 @@ input, textarea { font-size : inherit }
  ></div
 ></div>
 
-<div id='shape_src' class='controls_src'>
- <div class='control buttons control'
-  ><div class='button color fill'><img src='/lib/skin/1/color.png'  ></div
-  ><div class='button color stroke'><img src='/lib/skin/1/color.png'  ></div
- ></div
- ><div class='control drawer border color fill'></div
- ><div class='control drawer border color stroke'></div>
+<div id='controls_rectangle' class='controls_src'>
+ <img class='control resize_h hoverable tip_E' src='/lib/skin/1/resize_h.png' title="Resize width">
+ <div class='control buttons'
+  ><div class='button blank fill' title='Toggle fill'></div
+  ><img class='button color fill' src='/lib/skin/1/color.png' title='Fill color'
+  ><img class='button color stroke' src='/lib/skin/1/color.png' title='Border color'
+  ><div class='button blank bstyle' title='Border style'></div
+  ><div class='button blank bwidth' title='Border width'></div
+  ><div class='button blank rounding' title='Corner rounding'></div
+
+  ><div class='control drawer color fill border'></div
+  ><div class='control drawer color stroke border'></div
+  ><div class='control drawer style bstyle'
+   ><div class='border' style='border-style : solid;'></div
+   ><div class='border' style='border-style : dashed;'></div
+   ><div class='border' style='border-style : none;'></div
+  ></div
+ ></div>
 </div>
 
 <div id='dia_edit_bg' class='dialog border selected' style='padding : 20px'>
