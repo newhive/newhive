@@ -663,7 +663,7 @@ Hive.App.Image = function(common) {
 
         var input = d.find('input.opacity');
         var m = hover_menu(d.find('.button.opacity'), d.find('.drawer.opacity'),
-            { open : function() { input.focus(); input.select(); } });
+            { open : function() { input.focus().select(); } });
         input.val((o.app.opacity() * 100) + '%');
         input.keyup(function(e) {
             if(e.keyCode == 13) { input.blur(); m.close(); }
@@ -824,14 +824,14 @@ var main = function() {
     };
     append_color_picker($('#color_pick'), bg_set_color, Hive.Exp.background.color);
     $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
-    $('#bg_remove').click(function() { delete Hive.Exp.background.url; Hive.update_bg_img(); });
-    $('#bg_opacity').focus(function() { $('#bg_opacity').select() }).keyup(function(e) {
+    $('#bg_remove').click(function() { delete Hive.Exp.background.url; Hive.set_bg_img({}); });
+    $('#bg_opacity').focus(function() { $('#bg_opacity').focus().select() }).keyup(function(e) {
         Hive.Exp.background.opacity = parseFloat($(e.target).val()) / 100;
-        Hive.update_bg_img();
+        Hive.set_bg_img(Hive.Exp.background);
     });
     $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start,
         success : function(r) { Hive.set_bg_img(r); Hive.upload_finish() } }); });
-    Hive.update_bg_img();
+    Hive.set_bg_img(Hive.Exp.background);
     bg_set_color(Hive.Exp.background.color);
 
     var pick_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_app }); };
@@ -1062,19 +1062,19 @@ Hive.toggle_grid = function() {
     );
 }
 
-Hive.update_bg_img = function() {
-    if(!Hive.bg_div.find('img').length) Hive.bg_div.append($('<img>'));
-    var imgs = Hive.bg_div.find('img').add('#bg_preview_img');
-    if(Hive.Exp.background.url) {
-        imgs.show();
-        imgs.attr('src', Hive.Exp.background.url).css('opacity', Hive.Exp.background.opacity);
-    } else { imgs.hide(); }
-};
 Hive.set_bg_img = function(app) {
-    Hive.Exp.background.url = app.content;
+    var url = Hive.Exp.background.url = app.content || app.url;
     Hive.Exp.background.opacity = app.opacity;
-    Hive.update_bg_img();
-    setTimeout(place_apps, 1);
+    var img = Hive.bg_div.find('img'), imgs = img.add('#bg_preview_img');
+
+    if(url) imgs.show();
+    else { imgs.hide(); return }
+
+    if(img.attr('src') != url) {
+        imgs.attr('src', url);
+        img.load(function() { setTimeout(place_apps, 1); });
+    }
+    imgs.css('opacity', app.opacity);
 };
 
 function remove_all_apps() {

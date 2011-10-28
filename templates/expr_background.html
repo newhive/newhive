@@ -1,4 +1,4 @@
 {% set bg = exp.background %}
-<div class='happfill' {{ "style='background-color : " + bg.color + "'" if bg and bg.color }}>{% if bg and bg.url %}
- <img src='{{ bg.url }}' style='opacity:{{ bg.opacity if bg.opacity is defined else 1 }}'>
-{% endif %}</div>
+<div class='happfill' {{ "style='background-color : " + bg.color + "'" if bg and bg.color }}>
+ <img src='{{ bg.url if bg }}' style='opacity:{{ bg.opacity if bg and bg.opacity is defined else 1 }};{{ 'display:none' if not (bg and bg.url) }}'>
+</div>
