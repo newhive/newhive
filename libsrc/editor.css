@@ -26,6 +26,7 @@
 .drawer.fontname { width : 24em; }
 .drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 8em; height : 1em; }
 .align .option.small { margin : 5px; }
+.drawer.link { background-color : transparent; }
 .drawer.link img { vertical-align : middle; }
 .drawer.fontsize { white-space : nowrap; overflow : hidden; }
 .fontsize .option { line-height : 100px; vertical-align : middle; }
