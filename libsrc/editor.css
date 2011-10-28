@@ -24,6 +24,9 @@
 .control .button, .control .option { cursor : default; }
 .button.blank { display : inline-block; background-image : url('/lib/skin/1/button.png'); width : 28px; height : 28px; }
 .option.small { display : inline-block; }
+.drawer.bstyle { padding : 5px 5px 0 5px; }
+.bstyle .border { background-color : #54D3AC; border-color : #0A2655; border-width : 5px; width : 45px; height : 25px; margin-bottom : 15px; }
+.bstyle .border:last { margin-bottom : 0 }
 .drawer.fontname { width : 24em; }
 .drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 8em; height : 1em; }
 .align .option.small { margin : 5px; }

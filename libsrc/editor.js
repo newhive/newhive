@@ -694,10 +694,23 @@ Hive.App.Rectangle = function(common) {
 
     var state = {};
     o.content = function(content) { return $.extend({}, state); };
-    o.fore_color = function(v) {
-        o.rect.css('background-color', v);
-        state.color = v;
-    };
+    o.set_css = function(props) {
+        props['background-color'] = props.color || props['background-color'];
+        o.rect.css(props);
+        $.extend(state, props);
+    }
+    o.css_setter = function(css_prop) { return function(v) { var ps = {}; ps[css_prop] = v; o.set_css(ps); } }
+
+    // TODO: Correct for opposite border offset on load
+    // Correct for border offset when displaying
+    //o.dims = function(dims) {
+    //    if(dims) { dims[0] -= state['border-width'] * 2; dims[1] -= state['border-width'] * 2; }
+    //    return common.dims(dims);
+    //}
+    //o.pos = function(dims) {
+    //    if(dims) { dims[0] += state['border-width']; dims[1] += state['border-width']; }
+    //    return common.pos(dims);
+    //}
 
     Hive.App.make_rotatable(o);
     function controls(common) {
@@ -711,20 +724,25 @@ Hive.App.Rectangle = function(common) {
             o.resizeHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 00, dims[1] - 74) });
         };
 
+        o.select_box.hide();
         o.addControls($('#controls_rectangle'));
+
         o.resizeHandle = o.div.find('.resize_h');
-        append_color_picker(o.div.find('.drawer.fill'), o.app.fore_color);
-        hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.color'), { auto_close : false });
-        append_color_picker(o.div.find('.drawer.stroke'), noop);
+        append_color_picker(o.div.find('.drawer.fill'), o.app.css_setter('color'));
+        hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
+        append_color_picker(o.div.find('.drawer.stroke'), o.app.css_setter('border-color'));
         hover_menu(o.div.find('.button.stroke'), o.div.find('.drawer.stroke'), { auto_close : false });
+        hover_menu(o.div.find('.button.bstyle'), o.div.find('.drawer.bstyle'));
 
         return o;
     };
     o.make_controls.push(controls);
         
+    console.log(o);
     o.rect = $("<div class='content rectangle drag'>").appendTo(o.div);
+    o.set_css(o.state.content);
     setTimeout(function(){common.load()},1);
-    
+
     return o;
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
@@ -849,7 +867,10 @@ var main = function() {
     var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code') } );
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
     hover_menu($('#insert_shape'), $('#menu_shape'));
-    $('#insert_shape,#menu_shape').click(function(e) { Hive.new_app({ type : 'hive.rectangle', color : '#000000' }); });
+    $('#insert_shape,#menu_shape').click(function(e) {
+        Hive.new_app({ type : 'hive.rectangle', content : { color : colors[10],
+            'border-color' : colors[11], 'border-width' : 5, 'border-style' : 'solid' } });
+    });
     
     $('#btn_grid').click(Hive.toggle_grid);
     

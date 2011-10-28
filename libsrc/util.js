@@ -206,6 +206,11 @@ function map2(f, list1, list2) {
     for(var i = 0; i < list1.length; i++) ret.push(f(list1[i], list2[i]));
     return ret;
 }
+function propsin(o, plist) {
+    var ret = {};
+    for(var i = 0; i < plist.length; i++) ret[plist[i]] = o[plist[i]];
+    return ret;
+}
 // Combination of foldl and foldl1
 function reduce(f, list, left) {
     var L = $.extend([], list), left;

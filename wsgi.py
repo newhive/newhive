@@ -857,7 +857,7 @@ def expr_to_html(exp):
     if not apps: return ''
 
     def css_for_app(app):
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f" % (
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
@@ -869,14 +869,19 @@ def expr_to_html(exp):
 
     def html_for_app(app):
         content = app.get('content', '')
-        if app.get('type', '') == 'hive.image':
+        more_css = ''
+        html = ''
+        if app.get('type') == 'hive.image':
             html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
+        if app.get('type') == 'hive.rectangle':
+            c = app.get('content', {})
+            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
         else: html = content
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app), data, html)
+        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app) + more_css, data, html)
 
     return ''.join(map(html_for_app, apps))
 
