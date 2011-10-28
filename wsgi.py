@@ -875,7 +875,7 @@ def expr_to_html(exp):
             html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
-        if app.get('type') == 'hive.rectangle':
+        elif app.get('type') == 'hive.rectangle':
             c = app.get('content', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])
         else: html = content

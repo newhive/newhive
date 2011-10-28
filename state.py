@@ -256,20 +256,20 @@ class Expr(Entity):
 
     def analytic_count(self, string):
       if string in ['facebook', 'gplus', 'twitter', 'stumble']:
-        count = None
+        count = 0
+        updated = 0
         try:
           updated = self['analytics'][string]['updated']
-        except (KeyError, TypeError):
-          updated = 0
+          count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
+        except: pass # (KeyError, TypeError):
 
         age = now() - updated
-        if age < 36000 or (string == 'stumble' and age < 1):
-          count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
-
-        if count == None:
-          count = getattr(social_stats, string + "_count")(self.qualified_url())
-          subdocument = 'analytics.' + string
-          self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+        if not (age < 36000 or (string == 'stumble' and age < 1)):
+          try:
+              count = getattr(social_stats, string + "_count")(self.qualified_url())
+              subdocument = 'analytics.' + string
+              self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+          except: pass
 
         return count
       if string in ['email']:
