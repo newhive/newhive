@@ -94,7 +94,7 @@ function exprDialog(url, opts) {
 exprDialog.loaded = {};
 
 function loadDialog(url, opts) {
-    $.extend(opts, { absolute : true });
+    $.extend({ absolute : true }, opts);
     var dia;
     if(loadDialog.loaded[url]) dia = loadDialog.loaded[url];
     else {
@@ -105,6 +105,15 @@ function loadDialog(url, opts) {
     return showDialog(dia, opts);
 }
 loadDialog.loaded = {};
+
+function secureDialog(type, opts) {
+    var dia;
+    if (loadDialog.loaded[type]) dia = loadDialog.loaded[type];
+    else {
+        dia = loadDialog.loaded[type] = '<iframe style="' + opts.style + '" src="' + server_url + type + '?' + $.param({'domain': window.location.hostname, 'path': window.location.pathname}) + '" />';
+    }
+    return showDialog(dia, opts);
+};
 
 function showDialog(name, opts) {
     var dialog = $(name);
@@ -121,7 +130,7 @@ function showDialog(name, opts) {
                 mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
 
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
-            dialog.addClass('dialog').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            dialog.addClass('dialog border selected').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
             if(!o.opts.mandatory) {
                 dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
                 o.shield.add(o.btn_close).click(o.close);
@@ -155,6 +164,11 @@ function showDialog(name, opts) {
 }
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
+
+function commentDialog(){
+    secureDialog('comments', {'absolute': false, style: 'width: 550px; height: 700px;'});
+    return false;
+}
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);

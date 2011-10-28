@@ -287,9 +287,23 @@ class Expr(Entity):
         return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
 
     def get_comments(self):
-        return Comment.search(**{'_id': {'$in': self['feed']}})
-
+        if not self.has_key('feed'): return []
+        comments = Comment.search(**{'_id': {'$in': self['feed']}})
+        try:
+            comments_accurate = len(comments) == self['analytics']['Comment']['count']
+        except KeyError:
+            comments_accurate = False
+        if not comments_accurate:
+            self.update_cmd({'$set': {'analytics.Comment.count': len(comments)}})
+        return comments
     comments = property(get_comments)
+
+    def get_comment_count(self):
+        try:
+            return self['analytics']['Comment']['count']
+        except KeyError:
+            return 0
+    comment_count = property(get_comment_count)
 
 
 class File(Entity):
@@ -341,10 +355,12 @@ class Feed(Entity):
         for key in ['initiator', 'entity', 'entity_class']:
             assert self.has_key(key)
 
-        self.update(class_name=type(self).__name__)
+        class_name = type(self).__name__
+        self.update(class_name=class_name)
         super(Feed, self).create_me()
         db.user.update({'_id': self['initiator']}, {'$push': {'feed': self.id}})
         self.entity.update_cmd({'$push': {'feed': self.id}})
+        self.entity.update_cmd({'$inc': {'analytics.' + class_name: 1}})
         return self
 
     def get_entity(self):
@@ -358,7 +374,12 @@ class Feed(Entity):
 
     @classmethod
     def new(cls, initiator, entity, data={}):
-        data.update({'initiator': initiator.id, 'entity': entity.id, 'entity_class': entity.__class__.__name__})
+        data.update({
+            'initiator': initiator.id
+            ,'initiator_name': initiator.get('name')
+            ,'entity': entity.id
+            ,'entity_class': entity.__class__.__name__
+            })
         return cls.create(**data)
 
     @classmethod
@@ -371,8 +392,15 @@ class Comment(Feed):
     def create_me(self):
         assert self.has_key('text')
         super(Comment, self).create_me()
-
         return self
+
+    def get_author(self):
+        author = self.get('initiator_name')
+        if not author:
+            author = self.initiator['name']
+            self.update_cmd({'$set': {'initiator_name': author}})
+        return author
+    author = property(get_author)
 
 
 class Referral(Entity):

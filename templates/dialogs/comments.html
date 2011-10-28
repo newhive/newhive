@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block main %}
+<div id='dia_comments'>
+  <img class="icon" src='/lib/skin/1/discussion.png' title='Discussion Icon' />
+  <h3 class="title">Discussion<span class='comments_count'> ({{ expr.comment_count }})</span></h3>
+  <form>
+    <input type="hidden" name="action" value="add_comment" />
+    <input type="hidden" name="expression" value="{{exp.id}}" />
+    <textarea name="comment"></textarea>
+    <input type="submit" class="btn black rounded" value="Enter" onclick="submitComment(); return false;"/>
+  </form>
+  <div id="comments">
+    {% for comment in expr.comments %}
+    <div class='comment'>
+      {% if comment.thumb %}
+      <img class='comment_thumb' src='{{comment.thumb}}' title='{{comment.author}}'/>
+      {% else %}
+      <div class='comment_thumb'></div>
+      {% endif %}
+      <div class="comment_content">
+        <p class='text'>{{comment.text|e}}</p>
+        <h3 class='author'>{{comment.author|e}}</h3>
+        <h3 class='age'>{{comment.created|friendly_date}}</h3>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block head %}
+<script>
+  var submitComment = function(){
+    asyncSubmit($('#dia_comments form'), function(data){
+      console.log(data);
+    });
+  };
+</script>
+{% endblock %}

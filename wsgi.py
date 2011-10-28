@@ -11,7 +11,7 @@ import PIL.Image as Img
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment
 
 import webassets
 
@@ -292,10 +292,12 @@ def add_referral(request, response):
     return redirect(response, forward)
 
 def add_comment(request, response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
     commenter = request.requester
-    expression = request.form.get('expression')
+    expression = Expr.fetch(request.form.get('expression'))
     comment_text = request.form.get('comment')
-    comment = Comment.create(expression, commenter, comment_text)
+    comment = Comment.new(commenter, expression, {'text': comment_text})
     return serve_json(response, comment)
 
 
@@ -539,6 +541,7 @@ actions = dict(
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
     ,add_referral    = add_referral
+    ,add_comment     = add_comment
     ,bulk_invite     = bulk_invite
     )
 
@@ -581,7 +584,7 @@ def expr_home_list(p2, request, response, limit=90):
     if ids:
         by_id = {}
         for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
-        exprs = [by_id[i] for i in ids]
+        exprs = [by_id[i] for i in ids if by_id.has_key(i)]
         response.context['pages'] = 0;
     else:
         exprs = Expr.list({}, sort='updated', limit=limit, page=page)
@@ -701,6 +704,13 @@ def handle(request): # HANDLER
             response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
             response.content_type = 'text/csv; charset=utf-8'
             return response
+        elif p1 == 'comments':
+            if not request.trusting: raise exceptions.BadRequest()
+            print request.args
+            expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
+            print expr
+            response.context['exp'] = response.context['expr'] = expr
+            return serve_page(response, 'dialogs/comments.html')
         #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
@@ -729,8 +739,10 @@ def handle(request): # HANDLER
         )
 
     if request.args.has_key('dialog'):
-        response.context.update(exp=resource)
-        return serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
+        dialog = request.args['dialog']
+        response.context.update(exp=resource, expr=resource)
+        return serve_page(response, 'dialogs/' + dialog + '.html')
+
 
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) + 'expressions' +
@@ -939,6 +951,8 @@ class Forbidden(exceptions.Forbidden):
 
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
+    if type(then) == int:
+      then = time_u(then)
 
     now = datetime.utcnow()
     dt = now - then
@@ -952,6 +966,8 @@ def friendly_date(then):
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
+
+jinja_env.filters['friendly_date'] = friendly_date
 
 # run_simple is not so simple
 if __name__ == '__main__':
