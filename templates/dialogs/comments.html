@@ -31,8 +31,14 @@
 <script>
   var submitComment = function(){
     asyncSubmit($('#dia_comments form'), function(data){
-      console.log(data);
+      window.location = window.location;
     });
   };
+  var comment_count = {{expr.comment_count}};
+  $(function(){
+      var height = 150 * comment_count;
+      if (height > 450) height = 450;
+      $('#comments').css('height', height);
+  });
 </script>
 {% endblock %}

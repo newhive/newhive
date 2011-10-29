@@ -271,7 +271,7 @@ def bulk_invite(request, resposne):
                     contact.update(referral_id=referral_id)
                 else:
                     print "email not sent to " + contact['email'] + " referral already exists"
-      
+
 def add_referral(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
     form = request.form.copy()
@@ -297,7 +297,8 @@ def add_comment(request, response):
     commenter = request.requester
     expression = Expr.fetch(request.form.get('expression'))
     comment_text = request.form.get('comment')
-    comment = Comment.new(commenter, expression, {'text': comment_text})
+    comment = Comment.new(commenter, expression, {'text': comment_text}).to_json()
+    comment['created'] = friendly_date(comment['created'])
     return serve_json(response, comment)
 
 

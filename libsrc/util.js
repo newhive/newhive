@@ -166,7 +166,9 @@ showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
 function commentDialog(){
-    secureDialog('comments', {'absolute': false, style: 'width: 550px; height: 700px;'});
+    var height = 200 + 150 * comment_count;
+    if (height > 650) height = 650;
+    secureDialog('comments', {'absolute': false, style: 'width: 550px; height: ' + height + 'px;'});
     return false;
 }
 

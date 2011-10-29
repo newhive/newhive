@@ -137,7 +137,7 @@ class User(Entity):
     #    ,sites = [str]
 
     def expr_create(self, d):
-        doc = dict(owner = self.id, name = '', domain = self['sites'][0]) 
+        doc = dict(owner = self.id, name = '', domain = self['sites'][0])
         doc.update(d)
         return Expr.create(**doc)
 
@@ -360,7 +360,7 @@ class Feed(Entity):
         super(Feed, self).create_me()
         db.user.update({'_id': self['initiator']}, {'$push': {'feed': self.id}})
         self.entity.update_cmd({'$push': {'feed': self.id}})
-        self.entity.update_cmd({'$inc': {'analytics.' + class_name: 1}})
+        self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
         return self
 
     def get_entity(self):
@@ -401,6 +401,18 @@ class Comment(Feed):
             self.update_cmd({'$set': {'initiator_name': author}})
         return author
     author = property(get_author)
+
+    def to_json(self):
+        return {
+            'text': self.get('text')
+            , 'author': self.author
+            , 'created': self.get('created')
+            , 'thumb': self.initiator.get('thumb')
+            }
+
+    def get_thumb(self):
+        return self.initiator.get('profile_thumb')
+    thumb = property(get_thumb)
 
 
 class Referral(Entity):
