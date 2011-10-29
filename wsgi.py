@@ -13,7 +13,7 @@ from PIL import ImageOps
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment
 
 import webassets
 
@@ -66,7 +66,7 @@ def expr_save(request, response):
         fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
         if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
     # Generate thumbnail from given image url
-    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'), size=(124,96))
+    if exp.get('thumb_src'): upd['thumb'] = generate_thumb_from_url(request.requester, exp.get('thumb_src'), size=(124,96))
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
@@ -283,7 +283,7 @@ def bulk_invite(request, resposne):
                     contact.update(referral_id=referral_id)
                 else:
                     print "email not sent to " + contact['email'] + " referral already exists"
-      
+
 def add_referral(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
     form = request.form.copy()
@@ -302,6 +302,16 @@ def add_referral(request, response):
         user.increment({'referrals': number})
 
     return redirect(response, forward)
+
+def add_comment(request, response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
+    commenter = request.requester
+    expression = Expr.fetch(request.form.get('expression'))
+    comment_text = request.form.get('comment')
+    comment = Comment.new(commenter, expression, {'text': comment_text}).to_json()
+    comment['created'] = friendly_date(comment['created'])
+    return serve_json(response, comment)
 
 
 ######################################
@@ -542,6 +552,7 @@ actions = dict(
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
     ,add_referral    = add_referral
+    ,add_comment     = add_comment
     ,bulk_invite     = bulk_invite
     ,profile_thumb_set  = profile_thumb_set
     )
@@ -703,7 +714,15 @@ def handle(request): # HANDLER
             response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
             response.content_type = 'text/csv; charset=utf-8'
             return response
-        #else:
+        elif p1 == 'comments':
+            ## Duffy: What's with request.trusting? Can't everybody read comments?
+            #if not request.trusting: raise exceptions.BadRequest()
+            print request.args
+            expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
+            print expr
+            response.context['exp'] = response.context['expr'] = expr
+            return serve_page(response, 'dialogs/comments.html')
+         #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
         #    response.context['exprs'] = map(format_card, exprs)
@@ -731,8 +750,10 @@ def handle(request): # HANDLER
         )
 
     if request.args.has_key('dialog'):
-        response.context.update(exp=resource)
-        return serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
+        dialog = request.args['dialog']
+        response.context.update(exp=resource, expr=resource)
+        return serve_page(response, 'dialogs/' + dialog + '.html')
+
 
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) + 'expressions' +
@@ -945,6 +966,8 @@ class Forbidden(exceptions.Forbidden):
 
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
+    if type(then) == int:
+      then = time_u(then)
 
     now = datetime.utcnow()
     dt = now - then
@@ -959,7 +982,9 @@ def friendly_date(then):
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
 
+jinja_env.filters['friendly_date'] = friendly_date
 
+# run_simple is not so simple
 if __name__ == '__main__':
     """ This Werkzeug server is used only for development and debugging """
     from werkzeug import run_simple
