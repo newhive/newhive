@@ -1,3 +1,12 @@
 {% macro create_button(url, title='Create a new expression', classes='hoverable nav_icon') %}
 <a href='{{ url }}'><img src='/lib/skin/1/create.png' class='{{classes}}' title='{{ title }}'></a>
 {%- endmacro %}
+
+{% macro discussion_button(count=0) %}
+<a href='' onclick='commentDialog(); return false;' class='discussion_button'>
+  <div class="hoverable nav_icon" style="position: relative;">
+    <img src='/lib/skin/1/discussion.png' class='hoverable ' title="Discussions">
+    <div style="position: absolute; left: 18px; top:0px; width: 30px; text-align: center; color: #FFF; font-weight: bold;">{{count}}</div>
+  </div>
+</a>
+{%- endmacro %}
