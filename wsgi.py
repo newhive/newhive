@@ -6,6 +6,7 @@ import os, re, json, mimetypes
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
+from urlparse import urlparse
 import jinja2
 import PIL.Image as Img
 from PIL import ImageOps
@@ -52,7 +53,6 @@ def expr_save(request, response):
     """ Parses JSON object from POST variable 'exp' and stores it in database.
         If the name (url) does not match record in database, create a new record."""
 
-    if not request.trusting: raise exceptions.BadRequest()
     try: exp = Expr(json.loads(request.form.get('exp', '0')))
     except: exp = False
     if not exp: raise ValueError('missing or malformed exp')
@@ -66,7 +66,7 @@ def expr_save(request, response):
         fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
         if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
     # Generate thumbnail from given image url
-    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'), size=(124,96))
+    if exp.get('thumb_src'): upd['thumb'] = generate_thumb_from_url(request.requester, exp.get('thumb_src'), size=(124,96))
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
@@ -113,7 +113,6 @@ def generate_thumb(owner, path, size):
 
 
 def expr_delete(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     e = Expr.fetch(request.form.get('id'))
     if not e: return serve_404(request, response)
     if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
@@ -128,7 +127,6 @@ def files_create(request, response):
     Resamples images to 1600x1000 or smaller, sets JPEG quality to 70
     """
 
-    if not request.trusting: raise exceptions.BadRequest()
     request.max_content_length = 100000000
 
     for file_name in request.files:
@@ -180,7 +178,6 @@ def files_create(request, response):
         return app
 
 def file_delete(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     res = File.fetch(request.form.get('id'))
     if res: res.delete()
     return True
@@ -231,7 +228,6 @@ def bad_referral(request, response):
     return serve_page(response, 'pages/error.html')
 
 def profile_thumb_set(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     request.max_content_length = 10000000 # 10 megs
     user = request.requester
 
@@ -250,7 +246,6 @@ def profile_thumb_set(request, response):
 
 
 def expr_tag_update(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     tag = lget(normalize(request.form.get('value', '')), 0)
     id = request.form.get('expr_id')
     expr = Expr.fetch(id)
@@ -261,7 +256,6 @@ def expr_tag_update(request, response):
     return True
 
 def user_tag_update(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     tag = lget(normalize(request.form.get('value', '')), 0)
     if not tag: return False
     if request.form.get('action') == 'user_tag_add': request.requester.update_cmd({'$addToSet':{'tags':tag}})
@@ -373,7 +367,6 @@ def mail_us(request, response):
     return serve_page(response, 'dialogs/signup_thank_you.html')
 
 def mail_them(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
 
     response.context.update({
@@ -415,7 +408,6 @@ def mail_them(request, response):
     return redirect(response, request.form.get('forward'))
 
 def mail_referral(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     user = request.requester
     name = request.form.get('name')
     to_email = request.form.get('to')
@@ -625,7 +617,6 @@ def handle(request): # HANDLER
 
     response = Response()
     request.requester = auth.authenticate_request(request, response)
-    request.trusting = False
     response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
     response.user = request.requester
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -634,13 +625,15 @@ def handle(request): # HANDLER
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
     if request.domain == config.server_name:
-        request.trusting = request.is_secure and request.requester and request.requester.logged_in
-
         reqaction = request.form.get('action', False)
         if reqaction:
-            r = actions.get(reqaction,
-                lambda _,__: raises(exceptions.BadRequest('action: '+reqaction))
-                )(request, response)
+            if not (request.is_secure and request.requester and request.requester.logged_in):
+                raise exceptions.BadRequest('post request is not secure or not logged in')
+            if not urlparse(request.headers.get('Referer')).hostname in request.requester['sites'] + [config.server_name]:
+                raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
+
+            if not actions.get(reqaction): raise exceptions.BadRequest('invalid action: '+reqaction)
+            r = actions.get(reqaction)(request, response)
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
 
@@ -724,13 +717,14 @@ def handle(request): # HANDLER
             response.content_type = 'text/csv; charset=utf-8'
             return response
         elif p1 == 'comments':
-            if not request.trusting: raise exceptions.BadRequest()
+            ## Duffy: What's with request.trusting? Can't everybody read comments?
+            #if not request.trusting: raise exceptions.BadRequest()
             print request.args
             expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
             print expr
             response.context['exp'] = response.context['expr'] = expr
             return serve_page(response, 'dialogs/comments.html')
-        #else:
+         #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
         #    response.context['exprs'] = map(format_card, exprs)
