@@ -10,7 +10,7 @@ def shared_user_data(result):
     return result
 
 
-def active_users(reference_date=time.time()):
+def active_users(reference_date=time.time(), event='created'):
     col = state.db['expr']
     key={"owner": 1}
     condition = {}
@@ -21,7 +21,7 @@ def active_users(reference_date=time.time()):
         }
     reducejs = """
         function(obj,prev) { 
-            var age = %(now)d - obj.created
+            var age = %(now)d - obj.%(event)s
 
             var authSlice = function(timerange) {
               if (obj.auth === 'password') { 
@@ -41,7 +41,7 @@ def active_users(reference_date=time.time()):
             }
             
         }
-    """ % {'now': reference_date}
+    """ % {'now': reference_date, 'event': event}
 
     res = col.group(key, condition, initial, reducejs)
     return shared_user_data(res)

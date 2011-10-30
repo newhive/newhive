@@ -1,14 +1,9 @@
 {% for e in exprs %}
- {% if view == 'blog' %}
-  <div class='expr_header'>Header</div>
-  <iframe src='{{ e.url|e }}' class='expr' width='{{ e.dimensions[0] }}' height='{{ e.dimensions[1] }}'></iframe>
- {% else %}
-  <a href='{{ e.url|e }}' target='_top'><div class='feed item' draggable='false'>
-   <input type='hidden' class='expr_id' value='{{ e.id }}'>
-   <img src='{{ e.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
-   <div class='title title{{ e.title_len }}'>{{ e.title|e }}</div>
-   <div class='tags'>{% for t in e.tags %}<span class='tag' value='{{ t|e }}'>#{{ t }} </span> {% endfor %}</div>
-   <div class='other'>{{ e.owner_name if show_name else e.updated }}</div>
-  </div></a>
- {% endif %}
+ <a href='{{ e.url|e }}' target='_top'><div class='feed item' draggable='false'>
+  <input type='hidden' class='expr_id' value='{{ e.id }}'>
+  <img src='{{ e.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
+  <div class='title title{{ e.title_len }}'>{{ e.title|e }}</div>
+  <div class='tags'>{% for t in e.tags %}<span class='tag' value='{{ t|e }}'>#{{ t }} </span> {% endfor %}</div>
+  <div class='other'>{{ e.owner_name if show_name else e.updated }}</div>
+ </div></a>
 {% endfor %}

@@ -94,7 +94,7 @@ function exprDialog(url, opts) {
 exprDialog.loaded = {};
 
 function loadDialog(url, opts) {
-    $.extend(opts, { absolute : true });
+    $.extend({ absolute : true }, opts);
     var dia;
     if(loadDialog.loaded[url]) dia = loadDialog.loaded[url];
     else {
@@ -105,6 +105,15 @@ function loadDialog(url, opts) {
     return showDialog(dia, opts);
 }
 loadDialog.loaded = {};
+
+function secureDialog(type, opts) {
+    var dia;
+    if (loadDialog.loaded[type]) dia = loadDialog.loaded[type];
+    else {
+        dia = loadDialog.loaded[type] = '<iframe style="' + opts.style + '" src="' + server_url + type + '?' + $.param({'domain': window.location.hostname, 'path': window.location.pathname}) + '" />';
+    }
+    return showDialog(dia, opts);
+};
 
 function showDialog(name, opts) {
     var dialog = $(name);
@@ -121,7 +130,7 @@ function showDialog(name, opts) {
                 mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
 
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
-            dialog.addClass('dialog').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            dialog.addClass('dialog border selected').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
             if(!o.opts.mandatory) {
                 dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
                 o.shield.add(o.btn_close).click(o.close);
@@ -156,9 +165,17 @@ function showDialog(name, opts) {
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
+function commentDialog(){
+    var height = 200 + 150 * comment_count;
+    if (height > 650) height = 650;
+    secureDialog('comments', {'absolute': false, style: 'width: 550px; height: ' + height + 'px;'});
+    return false;
+}
+
 function updateShareUrls(element, currentUrl) {
     element = $(element);
     var encodedUrl = encodeURIComponent(currentUrl), total=0;
+    var encodedTitle = encodeURIComponent(document.title)
     element.find('.copy_url').val(currentUrl);
     element.find('.embed_code').val('<iframe src="' + currentUrl + '" style="width: 100%; height: 100%" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0"></iframe>');
     element.find('a.twitter')
@@ -169,6 +186,8 @@ function updateShareUrls(element, currentUrl) {
       .attr('href', 'http://www.reddit.com/submit?url=' + encodedUrl);
     element.find('.gplus_button')
       .attr('href', currentUrl);
+    element.find('a.stumble')
+      .attr('href', 'http://www.stumbleupon.com/submit?url=' + encodedUrl + '&title=' + encodedTitle);
 
     element.find('.count').each(function(){
       $(this).html($(this).html().replace(/^0$/, "-"))
@@ -220,6 +239,11 @@ op = {
     '/' : function(a, b) { return a / b },
     '%' : function(a, b) { return a % b }
 }
+function bound(num, lower_bound, upper_bound) {
+    if(num < lower_bound) return lower_bound;
+    if(num > upper_bound) return upper_bound;
+    return num;
+}
 
 function elem(tag, attrs) {
     var e = document.createElement(tag);
@@ -266,20 +290,24 @@ $(function () {
       });
     }
   });
-
-  $('#dia_referral input[name=forward]').val(window.location);
+});
+$(window).load(function() {
   $(window).resize(place_apps);
   place_apps();
+  qtip_intialize();
 });
 
 
 
 
 function center(e, inside, opts) {
-    var opts = $.extend({ absolute : false }, opts);
+    var opts = $.extend({ absolute : false, minimum : true }, opts);
     var w = typeof(inside) == 'undefined' ? $(window) : inside;
-    pos = { left : Math.max(0, w.width() / 2 - e.outerWidth() / 2),
-        'top' : Math.max(0, w.height() / 2 - e.outerHeight() / 2) };
+    pos = { left : (w.width() - e.outerWidth()) / 2, 'top' : (w.height() - e.outerHeight()) / 2 };
+    if(opts.minimum) {
+        pos['left'] = Math.max(0, pos['left']);
+        pos['top'] = Math.max(0, pos['top']);
+    }
     if(opts.absolute) {
         pos['left'] += window.scrollX;
         pos['top'] += window.scrollY;
@@ -287,9 +315,41 @@ function center(e, inside, opts) {
     e.css(pos);
 }
 
+function img_fill(img) {
+    var e = $(img), w = e.parent().width(), h = e.parent().height();
+    if(!e.length) return;
+    e.css('position', 'absolute');
+    if(e.width() / e.height() > w / h) e.width('').height(h);
+    else e.width(w).height('');
+    center(e, e.parent(), { minimum : false });
+    return e;
+}
+
 function asyncSubmit(form, callback) {
     $.post(server_url, $(form).serialize(), callback);
     return false;
+}
+
+function asyncUpload(opts) {
+    var target, form, opts = $.extend({ json : true, file_name : 'file',
+        start : noop, success : noop, data : { action : 'files_create' } }, opts);
+
+    var onload = function() {
+        var frame = target.get(0);
+        if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
+        var resp = $(frame.contentDocument.body).text();
+        if(opts.json) resp = JSON.parse(resp);
+        opts.success(resp);
+        form.remove();
+    }
+
+    var tname = 'upload' + Math.random();
+    form = $("<form method='POST' enctype='multipart/form-data' action='/' style='position : absolute; left : -1000px'>").attr('target', tname);
+    target = $("<iframe style='position : absolute; left : -1000px'></iframe>").attr('name', tname).appendTo(form).load(onload);
+    var input = $("<input type='file'>").attr('name', opts.file_name).change(function() { opts.start(); form.submit() }).appendTo(form);
+    for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
+    form.appendTo(document.body);
+    input.click();
 }
 
 function hover_url(url) {
@@ -398,21 +458,45 @@ hover_menu = function(handle, drawer, options) {
     return o;
 }
 
-tool_tip = function(tool, tip, above) {
-    var o = { };
-    o.drawer = $('<div>').html(tip).addClass('tooltip');
-    o.tool = tool;
-    tool.after(o.drawer);
+qtip_intialize = function (elements) {
+    if (!elements) var elements = '*';
+    elements = $(elements).find('.hoverable[title]');
+    var qtipOptions = {
+        style: { 
+            background: "#96E2CE",
+            color: "black",
+            padding: 3,
+            border: {width: 3, radius: 3, color: "#96E2CE"},
+            name: 'green', 
+            "font-family": "Museo, Helvetica, Verdana, sans-serif",
+            tip: true } ,
+        position: { 
+            adjust: { screen: true }
+        }
+    };
+    var pos = {
+        N: { target: "topMiddle", tooltip: "bottomMiddle"}
+        , NE: { target: "topRight", tooltip: "bottomLeft"}
+        , E: { target: "rightMiddle", tooltip: "leftMiddle"}
+        , SE: { target: "bottomRight", tooltip: "topLeft"}
+        , S: { target: "bottomMiddle", tooltip: "topMiddle"}
+        , SW: { target: "bottomLeft", tooltip: "topRight"}
+        , W: { target: "leftMiddle", tooltip: "rightMiddle"}
+        , NW: { target: "topLeft", tooltip: "bottomRight"}
+    };
+    // Loop through directions and filter elements having "tip_N", etc.. class
+    $.each(pos, function(key, value){
+        var current = elements.filter('.tip_' + key);
+        elements = elements.not(current);
+        qtipOptions.position.corner = value;
+        current.qtip(qtipOptions);
+    });
+    // filter out elements that we don't want custom tooltips for
+    elements = elements.not('.tip_none');
+    // For all elements not matched by above filters, default tooltip to S
+    qtipOptions.position.corner = pos.S;
+    elements.qtip(qtipOptions);
 
-    o.show = function() {
-        var x = tool.position().left + tool.outerWidth() / 2 - o.drawer.outerWidth() / 2;
-        var y = o.tool.position().top + (above ? -5 - o.drawer.outerHeight() : o.tool.outerHeight() + 5);
-        o.drawer.css({ 'left' : x, 'top' : y});
-        o.drawer.show();
-    }
-
-    tool.hover(o.show, function() { o.drawer.hide() });
-    return o;
 }
 
 var minimize = function(what, to, opts) {
@@ -443,16 +527,14 @@ function createCookie(name,value,days) {
         var expires = "; expires="+date.toGMTString();
     }
     else var expires = "";
-    document.cookie = name+"="+value+expires+"; path=/";
+    document.cookie = name+"="+escape(value)+expires+"; path=/";
 }
 
 function readCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1,c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    var pairs = document.cookie.split(';');
+    for(var i=0; i < pairs.length; i++) {
+        pair = pairs[i].trim().split('=');
+        if(pair[0] == name && pair.length > 1) return unescape(pair[1]);
     }
     return null;
 }
@@ -480,5 +562,10 @@ var place_apps = function() {
        for(var p in c) c[p] *= s;
        if(c['font-size']) c['font-size'] += 'em';
        e.css(c);
+   });
+   $('.happfill').each(function(i, div) {
+       var e = $(div);
+       e.width(e.parent().width()).height(e.parent().height());
+       img_fill(e.find('img'))
    });
 }

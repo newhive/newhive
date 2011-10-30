@@ -120,6 +120,7 @@ Hive.App = function(initState) {
         if(o.apps.focused) o.apps.focused.unfocus();
         o.apps.focused = o;
         if(!o.controls) o.controls = Hive.App.Controls(o);
+        qtip_intialize(o.controls.div);
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
@@ -193,7 +194,7 @@ Hive.App = function(initState) {
     o.load = function() {
         o.content_element = o.div.find('.content');
         o.opacity(o.state.opacity);
-        o.content_element.click(function(e) { o.focus(); return false; });
+        o.content_element.click(function(e) { o.focus(); });
         if(o.state.load) o.state.load(o);
         delete o.state.create;
     }
@@ -205,10 +206,7 @@ Hive.App = function(initState) {
     o.dims_n(o.state.dimensions);
     var refPos;
     o.div.drag('start', function() { refPos = o.pos(); });
-    o.div.drag(function(e, dd) {
-        o.pos([refPos[0] + dd.deltaX, refPos[1] + dd.deltaY]);
-        //if(o.controls) o.controls.layout();
-    }, { handle : '.drag' } );
+    o.div.drag(function(e, dd) { o.pos([refPos[0] + dd.deltaX, refPos[1] + dd.deltaY]); }, { handle : '.drag' } );
     o.layer(o.layer());
       
     // add type-specific properties
@@ -262,7 +260,7 @@ Hive.App.Controls = function(app) {
     }
 
     o.append_link_picker = function(d) {
-        var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='/lib/skin/1/sm_arrow.png'></nobr>");
+        var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='/lib/skin/1/delete_sm.png' title='Clear link'></nobr>");
         d.append(e);
         var input = e.find('input');
         var m = hover_menu(d.find('.button.link'), e, {
@@ -273,15 +271,19 @@ Hive.App.Controls = function(app) {
             ,click_persist : input
             ,close : function() {
                 input.blur();
-                var v = input.val();
-                // TODO: improve URL guessing
-                if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
-                o.app.link(v);
                 o.app.focus();
             }
         });
-        e.find('img').click(m.close);
+        var set_link = function(){
+            var v = input.val();
+            // TODO: improve URL guessing
+            if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
+            o.app.link(v);
+        };
+        input.bind('change keyup mouseup paste', function(){setTimeout(set_link, 10)} );
+        e.find('img').click(function() { input.val(''); o.app.link(''); m.close(); });
         input.keypress(function(e) { if(e.keyCode == 13) m.close() });
+        return m;
     }
 
     o.addControl = function(c) { o.div.append(c); }
@@ -335,7 +337,7 @@ Hive.App.makeShielded = function(o) {
     o.shield = function() {
         if(o.eventCapturer) return;
         o.eventCapturer = $("<div class='drag shield'>");
-        o.eventCapturer.click(o.focus);
+        o.eventCapturer.click(function(e) { console.log(e); o.focus(); });
         o.div.append(o.eventCapturer);
         o.eventCapturer.css('opacity', 0.0);
     }
@@ -360,6 +362,7 @@ Hive.App.makeShielded = function(o) {
         o.dragging = false;
         o.set_shield();
         o.resize(o.dims());
+        return false;
     });
 }
 
@@ -432,11 +435,8 @@ Hive.App.Text = function(common) {
 
     o.focus.add(function() { o.rte.editMode(true) });
     o.unfocus.add(function() {
-        o.rte.set_content(
-            autoLink(o.rte.get_content())
-        );
+        o.rte.set_content(autoLink(o.rte.get_content()));
         o.rte.editMode(false);
-        //o.rte.select(null);
     });
     
     o.link = function(v) {
@@ -487,7 +487,7 @@ Hive.App.Text = function(common) {
     o.div.addClass('text');
     o.set_shield();
     o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
-        'class' : 'content', load : o.load });
+        'class' : 'content', load : o.load, click : function() { o.controls.close() } });
     
     return o;
 }
@@ -510,7 +510,8 @@ Hive.App.Text.Controls = function(common) {
     var d = o.div;
     o.c.resize_h = d.find('.resize_h');
 
-    o.append_link_picker(d.find('.buttons'));
+    o.link_menu = o.append_link_picker(d.find('.buttons'));
+    o.close = function() { o.link_menu.close(); }
 
     var cmd_buttons = function(query, func) {
         $(query).each(function(i, e) {
@@ -595,7 +596,7 @@ Hive.App.Image = function(common) {
         o.img.hide();
         o.img.attr('src', src);
         o.div.append(o.img);
-        o.img.load(o.img_load);
+        o.img.load(function(){setTimeout(o.img_load, 1)});
     }
     o.img_load = function() {
         o.imageWidth  = o.img.width();
@@ -659,6 +660,8 @@ Hive.App.Image.Controls = function(common) {
         if(e.keyCode == 13) { input.blur(); m.close(); }
         o.app.opacity(parseFloat(input.val()) / 100);
     });
+
+    d.find('.button.set_bg').click(function() { Hive.set_bg_img(o.app.getState()) });
 
     o.rotateHandle = $(elem('img', { src : '/lib/skin/1/rotate.png',  'class' : 'control rotate hoverable' }));
     o.addControl(o.rotateHandle);
@@ -790,17 +793,33 @@ var main = function() {
         Hive.new_app({ type : 'hive.text', content : '<span style="font-weight:bold">&nbsp;</span>', scale : 3 });
     });
 
-    if(!Hive.Exp.background) Hive.Exp.background = {};
-    var bg_set = function(c) { $('#bg').css('background-color', c); Hive.Exp.background.color = c; }
-    append_color_picker($('#color_pick'), bg_set, '');
-    $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
 
-    $('#insert_image').click(Hive.pick_file);
-    $('#image_upload').click(Hive.pick_file);
-    $('#insert_audio').click(Hive.pick_file);
-    $('#audio_upload').click(Hive.pick_file);
-    $('#insert_file' ).click(Hive.pick_file);
-    $('#menu_file'   ).click(Hive.pick_file);
+    if(!Hive.Exp.background) Hive.Exp.background = { };
+    if(!Hive.Exp.background.color) Hive.Exp.background.color = '#FFFFFF';
+    Hive.bg_div = $('.happfill');
+    var bg_set_color = function(c) {
+        Hive.bg_div.add('#bg_preview').css('background-color', c);
+        Hive.Exp.background.color = c;
+    };
+    append_color_picker($('#color_pick'), bg_set_color, Hive.Exp.background.color);
+    $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
+    $('#bg_remove').click(function() { delete Hive.Exp.background.url; Hive.update_bg_img(); });
+    $('#bg_opacity').focus(function() { $('#bg_opacity').select() }).keyup(function(e) {
+        Hive.Exp.background.opacity = parseFloat($(e.target).val()) / 100;
+        Hive.update_bg_img();
+    });
+    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start,
+        success : function(r) { Hive.set_bg_img(r); Hive.upload_finish() } }); });
+    Hive.update_bg_img();
+    bg_set_color(Hive.Exp.background.color);
+
+    var pick_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_app }); };
+    $('#insert_image').click(pick_file);
+    $('#image_upload').click(pick_file);
+    $('#insert_audio').click(pick_file);
+    $('#audio_upload').click(pick_file);
+    $('#insert_file' ).click(pick_file);
+    $('#menu_file'   ).click(pick_file);
 
     hover_menu($('#insert_text'), $('#menu_text'));
     hover_menu($('#insert_image'), $('#menu_image'));
@@ -812,18 +831,6 @@ var main = function() {
     
     $('#btn_grid').click(Hive.toggle_grid);
     
-
-    $('#file_input').change(function() {
-        Hive.upload_start();
-        $('#upload_form').submit();
-    });
-    $('#upload_target').load(function() {
-        var frame = $('#upload_target').get(0);
-        if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
-        var resp = JSON.parse($(frame.contentDocument.body).text());
-        Hive.new_app(resp);
-    });
-
     var checkUrl = function(){
         var u = $('#url').val();
         if(u.match(/[^\w.\/-]/)) {
@@ -855,11 +862,10 @@ var main = function() {
         dia_thumbnail = showDialog('#dia_thumbnail');
         $('#expr_images').empty().append(map(function(thumb) {
             var img = $('<img>').attr('src', thumb.src);
-            var e = $("<div style='width : 124px; height : 96px; overflow : hidden' class='thumb'>").append(img).get(0);
-            if(img.width() / img.height() <= 124 / 96) img.css('width', 124);
-            else img.css('height', 96);
+            var e = $("<div class='thumb'>").append(img).get(0);
             return e;
         }, $('.ehapp img')));
+        $('#expr_images .thumb img').each(function() { var img = $(this); setTimeout(function() { img_fill(img) }, 1) });
         $('#expr_images img').click(function() {
             Hive.Exp.thumb_src = this.src;
             dia_thumbnail.close();
@@ -908,8 +914,6 @@ var main = function() {
     Hive.Apps(Hive.Exp.apps);
 }
 $(main);
-
-Hive.pick_file = function() { $('#file_input').click() }
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to Hive.new_app.
@@ -999,7 +1003,6 @@ Hive.save = function() {
 
     $.ajax( {
         type : "POST",
-        //url : '/' + Hive.Exp.path,
         dataType : 'json',
         data : { action : 'expr_save', exp : JSON.stringify(Hive.get_state()) },
         success : on_response
@@ -1031,11 +1034,26 @@ Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
     var e = $('#btn_grid').get(0);
     e.src = e.src_d = '/lib/skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png';
-    $('#bg').css(Hive.grid ?
+    $('#grid_guide').css(Hive.grid ?
           { 'background-image' : "url('/lib/skin/1/grid_square.png')", 'background-repeat' : 'repeat' }
         : { 'background-image' : '' }
     );
 }
+
+Hive.update_bg_img = function() {
+    if(!Hive.bg_div.find('img').length) Hive.bg_div.append($('<img>'));
+    var imgs = Hive.bg_div.find('img').add('#bg_preview_img');
+    if(Hive.Exp.background.url) {
+        imgs.show();
+        imgs.attr('src', Hive.Exp.background.url).css('opacity', Hive.Exp.background.opacity);
+    } else { imgs.hide(); }
+};
+Hive.set_bg_img = function(app) {
+    Hive.Exp.background.url = app.content;
+    Hive.Exp.background.opacity = app.opacity;
+    Hive.update_bg_img();
+    setTimeout(place_apps, 1);
+};
 
 function remove_all_apps() {
     var aps = map(id, Hive.OpenApps); // store a copy of OpenApps so we can destructively update it
@@ -1044,14 +1062,14 @@ function remove_all_apps() {
 
 // Creates iframe for Hive.App.Text
 Hive.rte = function(options) {
-    var o = {};
-    o.options = typeof(options) == 'object' ? options : {};
+    var o = { };
+    o.options = $.extend({ click : noop }, options);
 
     o.create_editor = function() {
         o.iframe = $("<iframe style='border : none; width : 100%; height : 100%;'>").get(0);
         o.iframe.src = 'javascript:void(0)';
         if(o.options['class']) $(o.iframe).addClass(o.options['class']);
-        $(o.options.parent || document.body).append(o.iframe);
+        $(o.options.parent).append(o.iframe);
         o.doc_poll = setTimeout(o.wait_for_doc, 1);
     }
     o.wait_for_doc = function() {
@@ -1062,9 +1080,9 @@ Hive.rte = function(options) {
     }
     o.setup_editor = function() {
         o.win = o.iframe.contentWindow;
+        $(o.win).click(function(){ o.range = null; o.options.click(); });
         o.doc = o.win.document;
         if(o.options.css) $(o.doc).find('head').append(o.options.css);
-        $(o.doc.body).addClass('ehapp');
         o.doc.body.style.overflow = 'hidden';
         //o.editor_cmd('styleWithCSS', true);
         if(options.load) options.load();
@@ -1082,6 +1100,9 @@ Hive.rte = function(options) {
         //    r = o.range_all();
         //    if(r.toString().trim()) o.select(r);
         //}
+
+        // Fix Chrome's incompatibile behavior of inserting href as text 
+        if(command == 'createlink' && !o.get_range().toString()) return;
 
         o.editor_cmd(command, args);
 
@@ -1124,26 +1145,48 @@ Hive.rte = function(options) {
     // Finds link element the cursor is on, selects it after saving
     // any existing selection, returns its href
     o.get_link = function() {
-        o.range = o.get_range();
-        var node = o.range.startContainer;
+        o.range = o.get_range(); // save existing selection
+        var r = o.range.cloneRange();
+
+        // Look for link in parents
+        var node = r.startContainer;
         while(node.parentNode) {
             node = node.parentNode;
             if($(node).is('a')) {
-                o.select(o.range_all(node));
+                r.selectNode(node);   
+                o.select(r);
                 return $(node).attr('href');
             }
         }
-        return '';
-    }
 
-    // Return a range spanning a whole element
-    o.range_all = function(node) {
-        var last = node || o.doc.body
-        var r = o.win.document.createRange();
-        r.setStart(last, 0);
-        while(last.lastChild) last = last.lastChild;
-        r.setEnd(last, last.length ? last.length : 0);
-        return r;
+        // Look for the first link that intersects r
+        var find_intersecting = function(r) {
+            var link = false;
+            $(o.doc.body).find('a').each(function() { if(!link && rangeIntersectsNode(r, this)) link = this });
+            if(link) {
+                r.selectNode(link);
+                o.select(r);
+                return $(link).attr('href');
+            };
+            return '';
+        }
+        var link = find_intersecting(r);
+        if(link) return link;
+
+        // If there's still no link, select current word
+        if(!r.toString()) {
+            // select current word
+            // r.expand('word') // works in IE and Chrome
+            var s = o.select(r);
+            // If the cursor is not at the beginning of a word...
+            if(!r.startContainer.data || !/\W|^$/.test(r.startContainer.data.charAt(r.startOffset - 1)))
+                s.modify('move','backward','word');
+            s.modify('extend','forward','word');
+        }
+
+        // It's possible to grab a previously missed link with the above code 
+        var link = find_intersecting(o.get_range());
+        return link;
     }
 
     o.select = function(range) {
@@ -1152,6 +1195,7 @@ Hive.rte = function(options) {
         s.removeAllRanges();
         if(range)
         s.addRange(range);
+        return s;
     }
 
     // An attempt to replace execCommand?
@@ -1174,7 +1218,7 @@ Hive.rte = function(options) {
         if(mode) {
             o.doc.designMode = 'on';
             o.iframe.contentWindow.focus();
-            //if(o.range) o.select(o.range);
+            if(o.range) o.select(o.range);
         } else {
             //o.range = o.get_range(); // attempt to save cursor positoion breaks deleting textboxes
             o.doc.designMode = 'off';
@@ -1190,17 +1234,30 @@ Hive.rte = function(options) {
         return $(o.doc.body).html(c);
     }
 
+    function rangeIntersectsNode(range, node) {
+        var nodeRange = node.ownerDocument.createRange();
+        try {
+          nodeRange.selectNode(node);
+        }
+        catch (e) {
+          nodeRange.selectNodeContents(node);
+        }
+
+        return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
+               range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
+    }
+
     o.create_editor();
     return o;
 }
 
 var append_color_picker = function(container, callback, init_color) {
-    var e = $("<div style='width : 310px; height : 165px'>");
+    var e = $('<div>').addClass('color_picker');
     container.append(e);
 
     var make_picker = function(c) {
-        var d = $("<div style='display : inline-block; width : 20px; height : 20px; margin : 2px'>");
-        d.css('background-color', c).attr('val', c).click(function() { manual_input.val(c); callback(c) });
+        var d = $('<div>').addClass('color_select');
+        d.css('background-color', c).attr('val', c).click(function() { set_color(c); manual_input.val(c); callback(c) });
         return d.get(0);
     }
     var make_row = function(cs) {
@@ -1209,85 +1266,98 @@ var append_color_picker = function(container, callback, init_color) {
         return d.get(0);
     }
     by_sixes = map(function(n) { return colors.slice(n, n+6)}, [0, 6, 12, 18, 24, 30]);
-    var pickers = $("<div>");
+    var pickers = $("<div class='palette'>");
     pickers.append(map(make_row, by_sixes));
     e.append(pickers);
 
-    var bar = $("<img style='width : 10px; height : 165px; position : absolute; top : 5px; left : 162px'>");
+    var bar = $("<img class='hue_bar'>");
     bar.attr('src', '/lib/skin/1/saturated.png');
-    var shades = $("<div style='width : 120px; height : 120px; position : absolute; top : 5px; left : 190px'><img src='/lib/skin/1/greys.png' style='width : 100%; position : absolute'></div>");
-    var manual = $("<div style='position : absolute; top : 130px; left : 200px; width : 120px'></div>");
+    var shades = $("<div class='shades'><img src='/lib/skin/1/greys.png'></div>");
     var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
-    manual.append(manual_input);
 
     var update_hex = function() {
         var v = manual_input.val();
-        if(v.match(/[\dA-Z]{6}/i) || v.match(/[\dA-Z]{3}/i)) callback('#' + v);
+        var c = $('<div>').css('color', v).css('color');
+        set_color(c);
+        callback(c);
     };
     manual_input.change(update_hex).keyup(update_hex);
 
     // saturated color picked from color bar
-    var scolor = [255, 255, 255];
+    var hsv = [0, 0, 1];
     var get_hue = function(e) {
-        var o = Math.floor(e.pageY - bar.offset().top);
-        if(o < 0) o = 0;
-        if(o > 164) o = 164;
-        scolor = saturated_color(o, 165);
-        var color = 'rgb(' + scolor.join(',') + ')';
-        shades.css('background-color', color);
+        hsv[0] = bound(Math.floor(e.pageY - bar.offset().top) / bar.height(), 0, 1);
+        shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
         calc_color();
     }
     bar.click(get_hue).drag(get_hue);
 
+    var set_color = function(c) {
+        var rgb = map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
+        hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
+        shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
+    }
+    set_color(init_color);
+
     var x = 1, y = 0; // gamma (x), saturation (y)
     var get_shade = function(e) {
-        x = (e.pageX - shades.offset().left) / 120;
-        y = (e.pageY - shades.offset().top) / 120;
-        if(x < 0) x = 0;
-        if(x > 1) x = 1;
-        if(y < 0) y = 0;
-        if(y > 1) y = 1;
+        hsv[2] = bound((e.pageX - shades.offset().left) / 120, 0, 1);
+        hsv[1] = bound((e.pageY - shades.offset().top) / 120, 0, 1);
         calc_color();
     }
     shades.click(get_shade).drag(get_shade);
 
     var calc_color = function() {
-        var a = 1 - x, b = 1 - y;
-        // blend saturated color with brightness and saturation
-        var blend = function(c) { return Math.floor(a * b * 255 + (1 - a) * c); }
-        var color = map(blend, scolor);
-        var hex = map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
+        var color = hsvToRgb(hsv[0], hsv[1], hsv[2]);
+        var hex = '#' + map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
         manual_input.val(hex);
-        callback('#' + hex);
+        callback(hex);
     }
 
     e.append(bar);
     e.append(shades);
-    e.append(manual);
+    e.append(manual_input);
 
-    // Returns a fully saturated color in the RGB color wheel.
-    // This function generated lib/skin/1/saturated.png.
-    // The max param must be >= 1536 to get every possible fully saturated
-    // color in a 24 bit color space.
-    var saturated_color = function(n, max) {
-        if(!max) max = 1536;
-        if(n < 0) n = 0;
-        if(n > max) n = max;
+    function hsvToRgb(h, s, v){
+        var r, g, b;
 
-        var scale = 255;
-        var r = [1, 1, 0, 0, 0, 1, 1];
-        var g = [0, 1, 1, 1, 0, 0, 0];
-        var b = [0, 0, 0, 1, 1, 1, 0];
+        var i = Math.floor(h * 6);
+        var f = h * 6 - i;
+        var p = v * (1 - s);
+        var q = v * (1 - f * s);
+        var t = v * (1 - (1 - f) * s);
 
-        var linear_interp = function(points) {
-            var p = (n / max) * (points.length - 1);
-            var p0 = Math.floor(p);
-            var v = p - p0;
-            if(p0 == points.length - 1) p0--;
-            delta = points[p0 + 1] * scale - points[p0] * scale;
-            return Math.floor(delta * v + points[p0] * scale);
+        switch(i % 6){
+            case 0: r = v, g = t, b = p; break;
+            case 1: r = q, g = v, b = p; break;
+            case 2: r = p, g = v, b = t; break;
+            case 3: r = p, g = q, b = v; break;
+            case 4: r = t, g = p, b = v; break;
+            case 5: r = v, g = p, b = q; break;
         }
 
-        return [linear_interp(r), linear_interp(g), linear_interp(b)]; 
+        return map(Math.round, [r * 255, g * 255, b * 255]);
+    }
+
+    function rgbToHsv(r, g, b){
+        r = r/255, g = g/255, b = b/255;
+        var max = Math.max(r, g, b), min = Math.min(r, g, b);
+        var h, s, v = max;
+
+        var d = max - min;
+        s = max == 0 ? 0 : d / max;
+
+        if(max == min){
+            h = 0; // achromatic
+        }else{
+            switch(max){
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return [h, s, v];
     }
 }

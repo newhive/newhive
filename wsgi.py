@@ -6,12 +6,14 @@ import os, re, json, mimetypes
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
+from urlparse import urlparse
 import jinja2
 import PIL.Image as Img
+from PIL import ImageOps
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment
 
 import webassets
 
@@ -21,7 +23,7 @@ if config.webassets_debug:
     assets_env.updater = "always"
     assets_env.set_url('/lib/libsrc')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
-assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
+assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js', 'jquery.qtip-1.0.0-rc3.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
@@ -51,7 +53,6 @@ def expr_save(request, response):
     """ Parses JSON object from POST variable 'exp' and stores it in database.
         If the name (url) does not match record in database, create a new record."""
 
-    if not request.trusting: raise exceptions.BadRequest()
     try: exp = Expr(json.loads(request.form.get('exp', '0')))
     except: exp = False
     if not exp: raise ValueError('missing or malformed exp')
@@ -65,7 +66,7 @@ def expr_save(request, response):
         fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
         if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
     # Generate thumbnail from given image url
-    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'))
+    if exp.get('thumb_src'): upd['thumb'] = generate_thumb_from_url(request.requester, exp.get('thumb_src'), size=(124,96))
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
@@ -84,7 +85,7 @@ def expr_save(request, response):
     return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
-def generate_thumb(owner, url):
+def generate_thumb_from_url(owner, url, size):
     # create file record in database, copy file to media directory via http
     try: response = urllib.urlopen(url)
     except: return
@@ -95,26 +96,23 @@ def generate_thumb(owner, url):
     f = open(path, 'w')
     f.write(response.read())
     f.close()
+    return generate_thumb(owner, path, size)
 
-    # resize and crop image to 124x96, preserving aspect ratio, save over original
+def generate_thumb(owner, path, size):
+    # resize and crop image to size set by size tuple, preserving aspect ratio, save over original
     try: imo = Img.open(path)
     except:
         os.remove(path)
-        return
-    ratio = float(imo.size[0]) / imo.size[1]
-    ratio_target = 124.0 / 96
-    new_size = (124, int(124 / ratio)) if ratio < ratio_target else (int(96 * ratio), 96)
-    imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-    imo = imo.crop((0, 0, 124, 96))
+        return False
+    imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
 
-    res = File.create(owner=owner.id, path=path, name='thumb', mime=mime)
+    res = File.create(owner=owner.id, path=path, size=size, name='thumb', mime='image/jpeg')
     return res.get('url')
 
 
 def expr_delete(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     e = Expr.fetch(request.form.get('id'))
     if not e: return serve_404(request, response)
     if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
@@ -129,7 +127,6 @@ def files_create(request, response):
     Resamples images to 1600x1000 or smaller, sets JPEG quality to 70
     """
 
-    if not request.trusting: raise exceptions.BadRequest()
     request.max_content_length = 100000000
 
     for file_name in request.files:
@@ -181,7 +178,6 @@ def files_create(request, response):
         return app
 
 def file_delete(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     res = File.fetch(request.form.get('id'))
     if res: res.delete()
     return True
@@ -231,9 +227,25 @@ def bad_referral(request, response):
     response.context['error'] = 'Log in if you already have an account'
     return serve_page(response, 'pages/error.html')
 
+def profile_thumb_set(request, response):
+    request.max_content_length = 10000000 # 10 megs
+    user = request.requester
+
+    file = request.files.get('profile_thumb')
+    path = os.tmpnam()
+    file.save(path)
+    mime = mimetypes.guess_type(file.filename)[0]
+
+    if mime in ['image/jpeg', 'image/png', 'image/gif']:
+        profile_thumb_url = generate_thumb(user, path, (275,200))
+        user.update(profile_thumb=profile_thumb_url)
+    else: 
+        response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
+
+    return redirect(response, request.form['forward'])
+
 
 def expr_tag_update(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     tag = lget(normalize(request.form.get('value', '')), 0)
     id = request.form.get('expr_id')
     expr = Expr.fetch(id)
@@ -244,7 +256,6 @@ def expr_tag_update(request, response):
     return True
 
 def user_tag_update(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     tag = lget(normalize(request.form.get('value', '')), 0)
     if not tag: return False
     if request.form.get('action') == 'user_tag_add': request.requester.update_cmd({'$addToSet':{'tags':tag}})
@@ -256,6 +267,22 @@ def admin_update(request, response):
     for k in ['tags', 'tagged']:
         v = json.loads(request.form.get(k))
         if v: get_root().update(**{ k : v })
+
+def bulk_invite(request, resposne):
+    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+    form = request.form.copy()
+    for key in form:
+        parts = key.split('_')
+        if parts[0] == 'check':
+            id = parts[1]
+            contact = Contact.fetch(id)
+            name = form.get('name_' + id)
+            if contact.get('email'):
+                referral_id = mail_invite(contact['email'], name)
+                if referral_id:
+                    contact.update(referral_id=referral_id)
+                else:
+                    print "email not sent to " + contact['email'] + " referral already exists"
 
 def add_referral(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
@@ -275,6 +302,16 @@ def add_referral(request, response):
         user.increment({'referrals': number})
 
     return redirect(response, forward)
+
+def add_comment(request, response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
+    commenter = request.requester
+    expression = Expr.fetch(request.form.get('expression'))
+    comment_text = request.form.get('comment')
+    comment = Comment.new(commenter, expression, {'text': comment_text}).to_json()
+    comment['created'] = friendly_date(comment['created'])
+    return serve_json(response, comment)
 
 
 ######################################
@@ -330,7 +367,6 @@ def mail_us(request, response):
     return serve_page(response, 'dialogs/signup_thank_you.html')
 
 def mail_them(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
 
     response.context.update({
@@ -372,7 +408,6 @@ def mail_them(request, response):
     return redirect(response, request.form.get('forward'))
 
 def mail_referral(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     user = request.requester
     name = request.form.get('name')
     to_email = request.form.get('to')
@@ -421,7 +456,7 @@ def mail_invite(email, name=False, force_resend=False):
         ,'html': jinja_env.get_template("emails/invitation.html").render(context)
         }
     send_mail(heads, body)
-    return True
+    return referral.id
 
 
 def mail_signup_thank_you(form):
@@ -517,6 +552,9 @@ actions = dict(
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
     ,add_referral    = add_referral
+    ,add_comment     = add_comment
+    ,bulk_invite     = bulk_invite
+    ,profile_thumb_set  = profile_thumb_set
     )
 
 # Mime types that could generate HTTP POST requests
@@ -558,7 +596,7 @@ def expr_home_list(p2, request, response, limit=90):
     if ids:
         by_id = {}
         for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
-        exprs = [by_id[i] for i in ids]
+        exprs = [by_id[i] for i in ids if by_id.has_key(i)]
         response.context['pages'] = 0;
     else:
         exprs = Expr.list({}, sort='updated', limit=limit, page=page)
@@ -579,8 +617,7 @@ def handle(request): # HANDLER
 
     response = Response()
     request.requester = auth.authenticate_request(request, response)
-    request.trusting = False
-    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.base_url }
+    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
     response.user = request.requester
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
@@ -588,14 +625,15 @@ def handle(request): # HANDLER
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
     if request.domain == config.server_name:
-        if request.is_secure and request.requester and request.requester.logged_in:
-            request.trusting = True
-
         reqaction = request.form.get('action', False)
         if reqaction:
-            r = actions.get(reqaction,
-                lambda _,__: raises(exceptions.BadRequest('action: '+reqaction))
-                )(request, response)
+            if not (request.is_secure and request.requester and request.requester.logged_in):
+                raise exceptions.BadRequest('post request is not secure or not logged in')
+            if not urlparse(request.headers.get('Referer')).hostname in request.requester['sites'] + [config.server_name]:
+                raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
+
+            if not actions.get(reqaction): raise exceptions.BadRequest('invalid action: '+reqaction)
+            r = actions.get(reqaction)(request, response)
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
 
@@ -678,7 +716,15 @@ def handle(request): # HANDLER
             response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
             response.content_type = 'text/csv; charset=utf-8'
             return response
-        #else:
+        elif p1 == 'comments':
+            ## Duffy: What's with request.trusting? Can't everybody read comments?
+            #if not request.trusting: raise exceptions.BadRequest()
+            print request.args
+            expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
+            print expr
+            response.context['exp'] = response.context['expr'] = expr
+            return serve_page(response, 'dialogs/comments.html')
+         #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
         #    response.context['exprs'] = map(format_card, exprs)
@@ -689,7 +735,7 @@ def handle(request): # HANDLER
 
         return serve_404(request, response)
     elif request.domain.startswith('www.'):
-        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]) + request.path + '?' + request.query_string)
+        return redirect(response, re.sub('www.', '', request.url, 1))
 
     d = resource = Expr.named(request.domain.lower(), request.path.lower())
     if not d: d = Expr.named(request.domain, '')
@@ -706,8 +752,10 @@ def handle(request): # HANDLER
         )
 
     if request.args.has_key('dialog'):
-        response.context.update(exp=resource)
-        return serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
+        dialog = request.args['dialog']
+        response.context.update(exp=resource, expr=resource)
+        return serve_page(response, 'dialogs/' + dialog + '.html')
+
 
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) + 'expressions' +
@@ -722,8 +770,7 @@ def handle(request): # HANDLER
         response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', [])
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
-        response.context['view'] = request.args.get('view')
-        response.context['expr'] = dfilter(owner, ['background'])
+        response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
@@ -732,7 +779,7 @@ def handle(request): # HANDLER
     if not resource: return serve_404(request, response)
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
-    html = exp_to_html(resource)
+    html = expr_to_html(resource)
     auth_required = (resource.get('auth') == 'password' and resource.get('password')
         and request.form.get('password') != resource.get('password')
         and request.requester.id != resource['owner'])
@@ -760,6 +807,9 @@ def route_admin(request, response):
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
     p2 = lget(parts, 1)
+    if p2 == 'contact_log':
+        response.context['contacts'] = Contact.search()
+        return serve_page(response, 'pages/admin/contact_log.html')
     if p2 == 'referrals':
         response.context['users'] = User.search()
         return serve_page(response, 'pages/admin/referrals.html')
@@ -774,7 +824,11 @@ def route_analytics(request, response):
         if request.args.has_key('start') and request.args.has_key('end'):
             active_users = analytics.active_users()
         else:
-            active_users = analytics.active_users()
+            event = request.args.get('event')
+            if event:
+                active_users = analytics.active_users(event=event)
+            else:
+                active_users = analytics.active_users()
             response.context['active_users'] = active_users
             response.context['active_users_js'] = json.dumps(active_users)
             return serve_page(response, 'pages/analytics/active_users.html')
@@ -810,7 +864,7 @@ application = handle_debug
 
 
 # www_expression -> String
-def exp_to_html(exp):
+def expr_to_html(exp):
     """Converts JSON object representing an expression to HTML"""
 
     apps = exp.get('apps')
@@ -824,7 +878,6 @@ def exp_to_html(exp):
             app['dimensions'][1],
             'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
             app['z'],
-            # Added "or 1" in case "None" is stored in the database
             app.get('opacity', 1) or 1
             )
 
@@ -843,6 +896,7 @@ def exp_to_html(exp):
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
+jinja_env.trim_blocks = True
 
 def serve_html(response, html):
     response.data = html
@@ -909,6 +963,8 @@ class Forbidden(exceptions.Forbidden):
 
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
+    if type(then) == int:
+      then = time_u(then)
 
     now = datetime.utcnow()
     dt = now - then
@@ -923,12 +979,13 @@ def friendly_date(then):
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
 
+jinja_env.filters['friendly_date'] = friendly_date
+
 # run_simple is not so simple
 if __name__ == '__main__':
+    """ This Werkzeug server is used only for development and debugging """
     from werkzeug import run_simple
     import OpenSSL.SSL as ssl
-    import os
-    import signal
 
     ctx = ssl.Context(ssl.SSLv3_METHOD)
     ctx.use_privatekey_file(config.ssl_key)
