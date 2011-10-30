@@ -990,7 +990,7 @@ if __name__ == '__main__':
     ctx = ssl.Context(ssl.SSLv3_METHOD)
     ctx.use_privatekey_file(config.ssl_key)
     ctx.use_certificate_file(config.ssl_cert)
-    ctx.use_certificate_chain_file(config.ssl_ca)
+    if config.ssl_ca: ctx.use_certificate_chain_file(config.ssl_ca)
 
     child = os.fork()
     if(child):
