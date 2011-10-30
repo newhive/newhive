@@ -931,8 +931,9 @@ if __name__ == '__main__':
     import signal
 
     ctx = ssl.Context(ssl.SSLv3_METHOD)
-    ctx.use_certificate_file(config.ssl_cert)
     ctx.use_privatekey_file(config.ssl_key)
+    ctx.use_certificate_file(config.ssl_cert)
+    ctx.use_certificate_chain_file(config.ssl_ca)
 
     child = os.fork()
     if(child):
