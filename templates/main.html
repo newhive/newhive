@@ -16,11 +16,9 @@
   <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 6}}'>
     <img class="hoverable" title="Notifications" src='{{ server }}lib/skin/1/feed.png' />
   </div>
-  {% if user.referrals > 0 and user.flagged('new_referrals') %}
-    <div class='button rounded notification_count' style="background-color: {{colors['active']}}; color: white;">
-      {{ user.referrals }}
-    </div>
-  {% endif %}
+  <div id='feed_menu' class='menu border selected'>
+    {% include "dialogs/feed.html" %}
+  </div>
   <div id='user_menu' class='menu'>
    <form name='logout_form' action='{{ secure_server }}' method='POST'>
     <input name='action' value='logout' type='hidden'>
@@ -43,6 +41,9 @@
         {% endif %}
       }
     );
+    hover_menu($('#notifications'), $('#feed_menu'));
+    $('#feed_menu .feed_item').hover(function(){$(this).addClass('active');}, function(){$(this).removeClass('active');})
+    .click(function(){window.location = $(this).find('.entity_url').attr('href')});
   </script>
  {% else %}
   <a href='{{ server }}'><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>

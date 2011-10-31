@@ -76,6 +76,33 @@ body.home.logged_out .nav{
 }
 
 /* ==========================================
+   feed menu
+   ========================================== */
+#feed_menu .feed_item {
+  width: 350px;
+  clear: both;
+  overflow: auto;
+}
+#feed_menu .feed_item.active {
+  background-color: #696E76;
+  color: #FFF;
+}
+#feed_menu img {
+  margin: 5px;
+  width: 90px;
+  float: left;
+}
+#feed_menu .feed_text {
+  width: 240px;
+  float: left;
+  margin-left: 5px;
+}
+
+#feed_menu .feed_item .name {
+  color: #F72E4D;
+}
+
+/* ==========================================
    popup dialogs 
    ========================================== */
 

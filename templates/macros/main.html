@@ -3,7 +3,7 @@
 {%- endmacro %}
 
 {% macro discussion_button(count=0) %}
-  <div class="hoverable nav_icon has_count" data-count="{{count}}" onclick='commentDialog(); return false;'>
+  <div class="hoverable nav_icon has_count" data-count="{{count}}" onclick='commentDialog();'>
     <img src='/lib/skin/1/discussion.png' class='hoverable ' title="Discussions">
   </div>
 {%- endmacro %}
@@ -14,8 +14,8 @@
   </div>
 {%- endmacro %}
 
-{% macro star_button(count=0) %}
-  <div id="btn_star" class="hoverable nav_icon has_count" data-count="{{count}}" >
-    <img src='/lib/skin/1/star.png' class='hoverable ' title="Star This Expression">
+{% macro star_button(count=0, active=false) %}
+  <div id="btn_star" class="hoverable nav_icon has_count" data-count="{{count}}" onclick='starExpression();' >
+    <img src='/lib/skin/1/star{{"_active" if active}}.png' class='hoverable ' title="{{"Un-star" if active else "Star"}} This Expression">
   </div>
 {%- endmacro %}

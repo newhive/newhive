@@ -175,6 +175,15 @@ function commentDialog(){
     });
 }
 
+function starExpression(){
+    $.ajax({
+        type: 'POST'
+        , url: server_url
+        , data: {'domain': window.location.hostname, 'path': window.location.pathname}
+        , xhrFields: { withCredentials: true }
+    });
+}
+
 function updateShareUrls(element, currentUrl) {
     element = $(element);
     var encodedUrl = encodeURIComponent(currentUrl), total=0;
