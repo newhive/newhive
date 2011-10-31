@@ -627,8 +627,8 @@ def handle(request): # HANDLER
     if request.domain == config.server_name:
         reqaction = request.form.get('action', False)
         if reqaction:
-            if not (request.is_secure and request.requester and request.requester.logged_in):
-                raise exceptions.BadRequest('post request is not secure or not logged in')
+            if not (request.is_secure and request.requester and request.requester.logged_in and reqaction != 'login'):
+                raise exceptions.BadRequest('post request action ' + reqaction + ' is not secure or not logged in')
             if not urlparse(request.headers.get('Referer')).hostname in request.requester['sites'] + [config.server_name]:
                 raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
 
