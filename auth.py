@@ -61,8 +61,6 @@ def handle_login(request, response):
 def handle_logout(request, response):
     """Removes cookies, deletes session record, sets
        request.requester.logged_in to False"""
-
-    if not request.trusting: raise exceptions.BadRequest()
     session = Session.fetch(request.requester['session'])
 
     rm_cookie(response, 'plain_secret')
