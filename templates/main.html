@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/main.html" import create_button, discussion_button %} 
+{% from "macros/main.html" import star_button, share_button, create_button, discussion_button %} 
 
 {% block body_classes %}{{ super() }} main{% endblock%}
 
@@ -13,6 +13,9 @@
  {% if user.logged_in %}
   <div class='nav_icon medbold' style='left : 50px; top : 0;'><a href='{{ home_url }}'>{{ user['name'] }}</a></div>
   <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
+  <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 6}}'>
+    <img class="hoverable" title="Notifications" src='{{ server }}lib/skin/1/feed.png' />
+  </div>
   {% if user.referrals > 0 and user.flagged('new_referrals') %}
     <div class='button rounded notification_count' style="background-color: {{colors['active']}}; color: white;">
       {{ user.referrals }}

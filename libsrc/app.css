@@ -11,6 +11,33 @@
   z-index : 1; 
 }
 
+.nav .nav_icon.has_count {
+  position: relative;
+}
+.has_count .count {
+  color: #FFF;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  border-radius: 6px;
+  margin: 15px 5px 0 -5px;
+  padding: 2px 5px;
+  line-height: 13px;
+  font-size: 12px;
+  font-weight: bold;
+  float: left;
+  background: #888;
+}
+.has_count img {
+  float: left;
+}
+#notifications.has_count .count {
+  margin: 0;
+  position: absolute;
+  top: 27px;
+  left: 40px;
+  background-color: #F72E4D;
+}
+
 body.main #content{
   top: 50px
 }

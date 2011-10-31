@@ -306,6 +306,21 @@ class Expr(Entity):
     comment_count = property(get_comment_count)
 
 
+    def get_star_count(self):
+        try:
+            return self['analytics']['Star']['count']
+        except KeyError:
+            return 0
+    star_count = property(get_star_count)
+
+    def get_share_count(self):
+        count = 0
+        for item in ["email", "gplus", "twitter", "facebook"]:
+            count += self.analytic_count(item)
+        return count
+    share_count = property(get_share_count)
+
+
 class File(Entity):
     cname = 'file'
 

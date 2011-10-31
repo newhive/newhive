@@ -27,8 +27,8 @@
    </div>
   {% endif %}
 
-  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
- 
+  {{ share_button(exp.share_count) }}
+  {{ star_button(exp.star_count) }} 
   {{ discussion_button(exp.comment_count) }}
   {% if user.logged_in %}
   {{ create_button(create) }}  

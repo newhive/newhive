@@ -3,10 +3,19 @@
 {%- endmacro %}
 
 {% macro discussion_button(count=0) %}
-<a href='' onclick='commentDialog(); return false;' class='discussion_button'>
-  <div class="hoverable nav_icon" style="position: relative;">
+  <div class="hoverable nav_icon has_count" data-count="{{count}}" onclick='commentDialog(); return false;'>
     <img src='/lib/skin/1/discussion.png' class='hoverable ' title="Discussions">
-    <div style="position: absolute; left: 18px; top:0px; width: 30px; text-align: center; color: #FFF; font-weight: bold;">{{count}}</div>
   </div>
-</a>
+{%- endmacro %}
+
+{% macro share_button(count=0) %}
+  <div id="btn_share" class="hoverable nav_icon has_count" data-count="{{count}}" >
+    <img src='/lib/skin/1/share.png' class='hoverable ' title="Share This Expression">
+  </div>
+{%- endmacro %}
+
+{% macro star_button(count=0) %}
+  <div id="btn_star" class="hoverable nav_icon has_count" data-count="{{count}}" >
+    <img src='/lib/skin/1/star.png' class='hoverable ' title="Star This Expression">
+  </div>
 {%- endmacro %}

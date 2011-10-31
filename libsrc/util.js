@@ -246,11 +246,22 @@ function elem(tag, attrs) {
     return e;
 }
 
+function iconCounts() {
+    $('.has_count').each(function(){
+        var count = $(this).attr('data-count');
+        var count_div = $(this).find('.count');
+        if (count_div.length == 0){
+            count_div = $(this).append('<div class="count"></div>').children().last();
+        }
+        count_div.html(count);
+    });
+};
 /*** puts alt attribute of input fields in to value attribute, clears
  * it when focused.
  * Adds hover events for elements with class='hoverable'
  * ***/
 $(function () {
+    iconCounts();
     $('#btn_share').click(function(){
         var dialog = $('#dia_share');
         if (dialog.length === 0 ) {
