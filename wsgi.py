@@ -709,8 +709,8 @@ def handle(request): # HANDLER
             if not request.trusting: raise exceptions.BadRequest()
             print request.args
             expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
-            print expr
             response.context['exp'] = response.context['expr'] = expr
+            response.context['max_height'] = request.args.get('max_height')
             return serve_page(response, 'dialogs/comments.html')
         #else:
         #    # search for expressions with given tag

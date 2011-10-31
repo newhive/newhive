@@ -108,9 +108,10 @@ loadDialog.loaded = {};
 
 function secureDialog(type, opts) {
     var dia;
+    var params = $.extend({'domain': window.location.hostname, 'path': window.location.pathname}, opts.params)
     if (loadDialog.loaded[type]) dia = loadDialog.loaded[type];
     else {
-        dia = loadDialog.loaded[type] = '<iframe style="' + opts.style + '" src="' + server_url + type + '?' + $.param({'domain': window.location.hostname, 'path': window.location.pathname}) + '" />';
+        dia = loadDialog.loaded[type] = '<iframe style="' + opts.style + '" src="' + server_url + type + '?' + $.param(params) + '" />';
     }
     return showDialog(dia, opts);
 };
@@ -168,8 +169,10 @@ closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close
 function commentDialog(){
     var height = 200 + 150 * comment_count;
     if (height > 650) height = 650;
-    secureDialog('comments', {'absolute': false, style: 'width: 550px; height: ' + height + 'px;'});
-    return false;
+    secureDialog('comments', {'params': {'max_height': window.height * 0.8}, 'absolute': false, style: 'width: 550px; height: ' + height + 'px;'});
+    $(document).bind('message onmessage', function(e){
+        alert(e.domain + " said: " + e.data);
+    });
 }
 
 function updateShareUrls(element, currentUrl) {
