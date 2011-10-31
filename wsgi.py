@@ -625,12 +625,13 @@ def handle(request): # HANDLER
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
     if request.domain == config.server_name:
-        reqaction = request.form.get('action', False)
+        reqaction = request.form.get('action')
         if reqaction:
-            if not (request.is_secure and request.requester and request.requester.logged_in and reqaction != 'login'):
-                raise exceptions.BadRequest('post request action ' + reqaction + ' is not secure or not logged in')
-            if not urlparse(request.headers.get('Referer')).hostname in request.requester['sites'] + [config.server_name]:
-                raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
+            if not reqaction == 'login':
+                if not (request.is_secure and request.requester.logged_in):
+                    raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure or not logged in')
+                if not urlparse(request.headers.get('Referer')).hostname in request.requester['sites'] + [config.server_name]:
+                    raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
 
             if not actions.get(reqaction): raise exceptions.BadRequest('invalid action: '+reqaction)
             r = actions.get(reqaction)(request, response)
