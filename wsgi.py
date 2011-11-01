@@ -11,7 +11,7 @@ import PIL.Image as Img
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star
 
 import webassets
 
@@ -249,6 +249,23 @@ def user_tag_update(request, response):
     if request.form.get('action') == 'user_tag_add': request.requester.update_cmd({'$addToSet':{'tags':tag}})
     else: request.requester.update_cmd({'$pull':{'tags':tag}})
     return True
+
+def star(request, response):
+    if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
+    expr = Expr.named(request.domain.lower(), request.path.lower())
+    if request.form.get('action') == "star":
+        s = Star.new(request.requester, expr)
+        if s or s.get('entity'):
+          return 'starred'
+        else:
+          return False
+    else:
+       s = Star.find(initiator=request.requester.id, entity=expr.id)
+       if s:
+           res = s.delete()
+           if not res['err']: return 'unstarred'
+       else:
+           return 'unstarred'
 
 def admin_update(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
@@ -544,6 +561,8 @@ actions = dict(
     ,add_referral    = add_referral
     ,add_comment     = add_comment
     ,bulk_invite     = bulk_invite
+    ,star            = star
+    ,unstar          = star
     )
 
 # Mime types that could generate HTTP POST requests
@@ -614,17 +633,18 @@ def handle(request): # HANDLER
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
-    if request.domain == config.server_name:
-        if request.is_secure and request.requester and request.requester.logged_in:
-            request.trusting = True
+    if request.is_secure and request.requester and request.requester.logged_in:
+        request.trusting = True
 
-        reqaction = request.form.get('action', False)
-        if reqaction:
-            r = actions.get(reqaction,
-                lambda _,__: raises(exceptions.BadRequest('action: '+reqaction))
-                )(request, response)
-            if type(r) == Response: return r
-            if r != None: return serve_json(response, r, as_text = True)
+    reqaction = request.form.get('action', False)
+    if reqaction:
+        r = actions.get(reqaction,
+            lambda _,__: raises(exceptions.BadRequest('action: '+reqaction))
+            )(request, response)
+        if type(r) == Response: return r
+        if r != None: return serve_json(response, r, as_text = True)
+
+    if request.domain == config.server_name:
 
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
@@ -707,7 +727,6 @@ def handle(request): # HANDLER
             return response
         elif p1 == 'comments':
             if not request.trusting: raise exceptions.BadRequest()
-            print request.args
             expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
             response.context['exp'] = response.context['expr'] = expr
             response.context['max_height'] = request.args.get('max_height')

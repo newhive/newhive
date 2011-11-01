@@ -176,12 +176,23 @@ function commentDialog(){
 }
 
 function starExpression(){
-    $.ajax({
-        type: 'POST'
-        , url: server_url
-        , data: {'domain': window.location.hostname, 'path': window.location.pathname}
-        , xhrFields: { withCredentials: true }
-    });
+    var btn = $('#btn_star')
+    if (! btn.hasClass('inactive')){
+        var action = $('#btn_star').hasClass('starred') ? 'unstar' : 'star'
+        btn.addClass('inactive')
+    $.post('', {'action': action, 'domain': window.location.hostname, 'path': window.location.pathname}, function(data){
+        var btn = $('#btn_star')
+        var countdiv = btn.next();
+        btn.removeClass('inactive');
+        if(data == "unstarred"){
+            btn.removeClass('starred');
+            countdiv.html(parseInt(countdiv.html())-1);
+        } else if (data == "starred"){
+            btn.addClass('starred');
+            countdiv.html(parseInt(countdiv.html())+1);
+        };
+    }, 'json');
+    }
 }
 
 function updateShareUrls(element, currentUrl) {

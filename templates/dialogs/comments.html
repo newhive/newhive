@@ -3,7 +3,11 @@
 <div id='dia_comments'>
   <div class='header'>
     <img class="icon" src='/lib/skin/1/discussion.png' title='Discussion Icon' />
+    {% if expr.comment_count > 0 %}
     <h3 class="title">Discussion<span class='comments_count'> ({{ expr.comment_count }})</span></h3>
+    {% else %}
+    <h3 class="title">Start the discussion <span class='comments_count'>:)</span></h3>
+    {% endif %}
     <form>
       <input type="hidden" name="action" value="add_comment" />
       <input type="hidden" name="expression" value="{{exp.id}}" />

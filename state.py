@@ -49,6 +49,7 @@ class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
 
     _starred_items = None
+    _starrers = None
     _feed = None
 
     def __init__(self, d, cname=None):
@@ -142,6 +143,12 @@ class Entity(dict):
           self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
         return self._starred_items
     starred_items = property(get_starred_items)
+
+    def get_starrers(self):
+        if not self._starrers:
+          self._starrers = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
+        return self._starrers
+    starrers = property(get_starrers)
 
 
 def fetch(cname, id, keyname='_id'):
@@ -340,10 +347,7 @@ class Expr(Entity):
 
 
     def get_star_count(self):
-        try:
-            return self['analytics']['Star']['count']
-        except KeyError:
-            return 0
+        return len(self.starrers)
     star_count = property(get_star_count)
 
     def get_share_count(self):
@@ -436,6 +440,11 @@ class Feed(Entity):
             spec.update({"class_name": cls.__name__})
         return super(Feed, cls).search(**spec)
 
+    def delete(self):
+        self.initiator.update_cmd({'$pull': {'feed': self.id}})
+        self.entity.update_cmd({'$pull': {'feed': self.id}})
+        return super(Feed, self).delete()
+
 class Comment(Feed):
     def create_me(self):
         assert self.has_key('text')
@@ -463,7 +472,12 @@ class Comment(Feed):
     thumb = property(get_thumb)
 
 class Star(Feed):
-    pass
+    @classmethod
+    def new(cls, initiator, entity, data={}):
+        if initiator.id in entity.starrers:
+            return True
+        else:
+            return super(Star, cls).new(initiator, entity, data)
 
 
 class Referral(Entity):
