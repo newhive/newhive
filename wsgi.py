@@ -736,13 +736,6 @@ def handle(request): # HANDLER
             response.content_type = 'text/csv; charset=utf-8'
             return response
         elif p1 == 'comments':
-<<<<<<< HEAD
-            ## Duffy: What's with request.trusting? Can't everybody read comments?
-            #if not request.trusting: raise exceptions.BadRequest()
-            print request.args
-=======
-            if not request.trusting: raise exceptions.BadRequest()
->>>>>>> master/comments
             expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
             response.context['exp'] = response.context['expr'] = expr
             response.context['max_height'] = request.args.get('max_height')
