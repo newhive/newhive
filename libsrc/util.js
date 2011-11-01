@@ -382,7 +382,8 @@ hover_menu = function(handle, drawer, options) {
         ,hover : true
     };
     $.extend(o.options, options);
-    if(!handle.length) throw("no handle"); if(!drawer.length) throw("no drawer");
+    if(!handle.length) throw("hover_menu has no handle");
+    if(!drawer.length) throw("hover_menu has no drawer");
     handle.get(0).hover_menu = o;
     //drawer.remove();
     //$(document.body).append(drawer);
@@ -551,7 +552,9 @@ var place_apps = function() {
        var s = e.parent().width() / 1000;
        if(!e.data('css')) {
            var c = {};
-           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height']);
+           map(function(p) { c[p] = parseFloat($(app_div).css(p)) }, ['left', 'top', 'width', 'height',
+               'border-left-width', 'border-top-width', 'border-right-width', 'border-bottom-width',
+               'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
            e.data('css', c);
