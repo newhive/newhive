@@ -131,7 +131,7 @@ class Entity(dict):
     feed = property(get_feed)
 
     def get_recent_feed(self):
-        return self.feed[-10:]
+        return self.feed[-8:]
     recent_feed = property(get_recent_feed)
 
     def get_notification_count(self):
@@ -414,6 +414,8 @@ class Feed(Entity):
         db.user.update({'_id': self['initiator']}, {'$push': {'feed': self.id}})
         self.entity.update_cmd({'$push': {'feed': self.id}})
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
+        if self['entity_class'] == "Expr":
+            db.user.update({'_id': self.entity['owner']}, {'$push': {'feed': self.id}})
         return self
 
     def get_entity(self):
