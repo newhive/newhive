@@ -48,6 +48,10 @@ def junkstr(length):
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
 
+    _starred_items = None
+    _starrers = None
+    _feed = None
+
     def __init__(self, d, cname=None):
         dict.update(self, d)
         if cname: self.cname = cname
@@ -116,6 +120,37 @@ class Entity(dict):
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
 
+    def get_feed(self):
+        if not self._feed:
+            feed = self.get('feed')
+            if feed:
+                self._feed = Feed.search(**{'_id': {'$in': self.get('feed')}})
+            else:
+                self._feed = []
+        return self._feed
+    feed = property(get_feed)
+
+    def get_recent_feed(self):
+        return self.feed[-10:]
+    recent_feed = property(get_recent_feed)
+
+    def get_notification_count(self):
+        return len(self.feed)
+    notification_count = property(get_notification_count)
+
+    def get_starred_items(self):
+        if not self._starred_items:
+          self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
+        return self._starred_items
+    starred_items = property(get_starred_items)
+
+    def get_starrers(self):
+        if not self._starrers:
+          self._starrers = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
+        return self._starrers
+    starrers = property(get_starrers)
+
+
 def fetch(cname, id, keyname='_id'):
     return Entity({}, cname=cname).fetch_me(id, keyname=keyname)
 def create(cname, **d): return Entity(d, cname=cname).create_me()
@@ -168,6 +203,10 @@ class User(Entity):
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
+
+    def get_url(self):
+        return abs_url(domain = self.get('sites', [config.server_name])[0]) + 'expressions'
+    url = property(get_url)
 
 
 def get_root(): return User.named('root')
@@ -282,6 +321,7 @@ class Expr(Entity):
         return 0
 
     def get_url(self): return abs_url(domain=self['domain']) + self['name']
+    url = property(get_url)
 
     def set_tld(self, domain):
         """ Sets the top level domain (everything following first dot) in domain attribute """
@@ -305,6 +345,18 @@ class Expr(Entity):
         except KeyError:
             return 0
     comment_count = property(get_comment_count)
+
+
+    def get_star_count(self):
+        return len(self.starrers)
+    star_count = property(get_star_count)
+
+    def get_share_count(self):
+        count = 0
+        for item in ["email", "gplus", "twitter", "facebook"]:
+            count += self.analytic_count(item)
+        return count
+    share_count = property(get_share_count)
 
 
 class File(Entity):
@@ -389,6 +441,11 @@ class Feed(Entity):
             spec.update({"class_name": cls.__name__})
         return super(Feed, cls).search(**spec)
 
+    def delete(self):
+        self.initiator.update_cmd({'$pull': {'feed': self.id}})
+        self.entity.update_cmd({'$pull': {'feed': self.id}})
+        return super(Feed, self).delete()
+
 class Comment(Feed):
     def create_me(self):
         assert self.has_key('text')
@@ -414,6 +471,14 @@ class Comment(Feed):
     def get_thumb(self):
         return self.initiator.get('profile_thumb')
     thumb = property(get_thumb)
+
+class Star(Feed):
+    @classmethod
+    def new(cls, initiator, entity, data={}):
+        if initiator.id in entity.starrers:
+            return True
+        else:
+            return super(Star, cls).new(initiator, entity, data)
 
 
 class Referral(Entity):
