@@ -13,7 +13,7 @@ from PIL import ImageOps
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star
 
 import webassets
 
@@ -261,6 +261,23 @@ def user_tag_update(request, response):
     if request.form.get('action') == 'user_tag_add': request.requester.update_cmd({'$addToSet':{'tags':tag}})
     else: request.requester.update_cmd({'$pull':{'tags':tag}})
     return True
+
+def star(request, response):
+    if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
+    expr = Expr.named(request.domain.lower(), request.path.lower())
+    if request.form.get('action') == "star":
+        s = Star.new(request.requester, expr)
+        if s or s.get('entity'):
+          return 'starred'
+        else:
+          return False
+    else:
+       s = Star.find(initiator=request.requester.id, entity=expr.id)
+       if s:
+           res = s.delete()
+           if not res['err']: return 'unstarred'
+       else:
+           return 'unstarred'
 
 def admin_update(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
@@ -555,6 +572,8 @@ actions = dict(
     ,add_comment     = add_comment
     ,bulk_invite     = bulk_invite
     ,profile_thumb_set  = profile_thumb_set
+    ,star            = star
+    ,unstar          = star
     )
 
 # Mime types that could generate HTTP POST requests
@@ -627,7 +646,7 @@ def handle(request): # HANDLER
     if request.domain == config.server_name:
         reqaction = request.form.get('action')
         if reqaction:
-            if not reqaction == 'login':
+            if not reqaction in ['login', 'star', 'unstar']:
                 if not (request.is_secure and request.requester.logged_in):
                     raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure or not logged in')
                 if not urlparse(request.headers.get('Referer')).hostname in request.requester['sites'] + [config.server_name]:
@@ -637,7 +656,6 @@ def handle(request): # HANDLER
             r = actions.get(reqaction)(request, response)
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
-
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
         p2 = lget(parts, 1)
@@ -718,12 +736,16 @@ def handle(request): # HANDLER
             response.content_type = 'text/csv; charset=utf-8'
             return response
         elif p1 == 'comments':
+<<<<<<< HEAD
             ## Duffy: What's with request.trusting? Can't everybody read comments?
             #if not request.trusting: raise exceptions.BadRequest()
             print request.args
+=======
+            if not request.trusting: raise exceptions.BadRequest()
+>>>>>>> master/comments
             expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
-            print expr
             response.context['exp'] = response.context['expr'] = expr
+            response.context['max_height'] = request.args.get('max_height')
             return serve_page(response, 'dialogs/comments.html')
          #else:
         #    # search for expressions with given tag

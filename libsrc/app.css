@@ -11,6 +11,39 @@
   z-index : 1; 
 }
 
+.nav .nav_icon.has_count {
+  position: relative;
+}
+.has_count .count {
+  color: #FFF;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  border-radius: 6px;
+  margin: 15px 5px 0 -10px;
+  padding: 2px 5px;
+  line-height: 13px;
+  font-size: 12px;
+  font-weight: bold;
+  float: left;
+  background: #696E76;
+}
+.has_count img {
+  float: left;
+}
+#btn_share {
+}
+#btn_star {
+  height: 50px;
+  float: left;
+  width: 67px;
+  background-image: url('/lib/skin/1/star.png');
+}
+#btn_star.starred {
+  background-image: url('/lib/skin/1/star_active.png');
+}
+#btn_star.starred.active, #btn_star.active {
+  background-image: url('/lib/skin/1/star-hover.png');
+}
 body.main #content{
   top: 50px
 }
@@ -46,6 +79,48 @@ body.home.logged_out .nav{
   display: inline-block;
   padding: 3px 5px 2px 5px;
   vertical-align: middle;
+}
+
+/* ==========================================
+   feed menu
+   ========================================== */
+#notifications {
+  width: 67px;
+  background-image: url('/lib/skin/1/feed.png');
+}
+#notifications.active {
+  background-image: url('/lib/skin/1/feed-hover.png');
+}
+#notifications.has_count .count {
+  margin: 0;
+  position: absolute;
+  top: 27px;
+  left: 40px;
+  background-color: #F72E4D;
+}
+
+#feed_menu .feed_item {
+  width: 350px;
+  clear: both;
+  overflow: auto;
+  color: #000;
+}
+#feed_menu .feed_item.active {
+  background-color: #96E2CE;
+}
+#feed_menu img {
+  margin: 5px;
+  width: 90px;
+  float: left;
+}
+#feed_menu .feed_text {
+  width: 240px;
+  float: left;
+  margin-left: 5px;
+}
+
+#feed_menu .feed_item .name {
+  color: #F72E4D;
 }
 
 /* ==========================================
@@ -251,7 +326,13 @@ input[type="text"].copy, textarea.copy {
 }
 #dia_comments .title {
   margin: 0;
-  font-size: 18px;
+  font-size: 26px;
+  font-weight: normal;
+  font-family: Museo, Helvetica, Arial, sans-serif;
+}
+#dia_comments .title .comments_count {
+    font-weight: bold;
+    color: #F72E4D;
 }
 #dia_comments textarea {
   width: 480px;
