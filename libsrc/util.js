@@ -245,10 +245,17 @@ function map2(f, list1, list2) {
     for(var i = 0; i < list1.length; i++) ret.push(f(list1[i], list2[i]));
     return ret;
 }
-function reduce(f, list, first) {
-    if(first === undefined) first = list.shift();
-    for(var i = 0; i < list.length; i++) first = f(first, list[i]);
-    return first;
+function propsin(o, plist) {
+    var ret = {};
+    for(var i = 0; i < plist.length; i++) ret[plist[i]] = o[plist[i]];
+    return ret;
+}
+// Combination of foldl and foldl1
+function reduce(f, list, left) {
+    var L = $.extend([], list), left;
+    if(left === undefined) left = L.shift();
+    while(right = L.shift()) left = f(left, right);
+    return left;
 }
 function zip(list1, list2) {
     var ret = [];
@@ -268,12 +275,6 @@ function bound(num, lower_bound, upper_bound) {
     return num;
 }
 
-function elem(tag, attrs) {
-    var e = document.createElement(tag);
-    for(name in attrs) e.setAttribute(name, attrs[name]);
-    return e;
-}
-
 function iconCounts() {
     $('.has_count').each(function(){
         var count = $(this).attr('data-count');
@@ -284,6 +285,7 @@ function iconCounts() {
         count_div.html(count);
     });
 };
+
 /*** puts alt attribute of input fields in to value attribute, clears
  * it when focused.
  * Adds hover events for elements with class='hoverable'
@@ -330,7 +332,6 @@ $(window).load(function() {
   place_apps();
   qtip_intialize();
 });
-
 
 
 
@@ -388,7 +389,7 @@ function asyncUpload(opts) {
 
 function hover_url(url) {
     var h = url.replace(/(.png)|(-.*)$/, '-hover.png');
-    var i = $(elem('img', { src : h, style : 'display : none' }));
+    var i = $("<img style='display:none'>").attr('src', h);
     $(document.body).append(i);
     return h;
 }
@@ -416,7 +417,8 @@ hover_menu = function(handle, drawer, options) {
         ,hover : true
     };
     $.extend(o.options, options);
-    if(!handle.length) throw("no handle"); if(!drawer.length) throw("no drawer");
+    if(!handle.length) throw("hover_menu has no handle");
+    if(!drawer.length) throw("hover_menu has no drawer");
     handle.get(0).hover_menu = o;
     //drawer.remove();
     //$(document.body).append(drawer);
@@ -585,7 +587,9 @@ var place_apps = function() {
        var s = e.parent().width() / 1000;
        if(!e.data('css')) {
            var c = {};
-           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height']);
+           map(function(p) { c[p] = parseFloat($(app_div).css(p)) }, ['left', 'top', 'width', 'height',
+               'border-left-width', 'border-top-width', 'border-right-width', 'border-bottom-width',
+               'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
            e.data('css', c);

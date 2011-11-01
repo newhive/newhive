@@ -1,5 +1,5 @@
-.ehapp { position : absolute; }
-.ehapp > * { position : absolute; }
+.ehapp, .ehapp > * { position : absolute; }
+.ehapp .content { width : 100%; height : 100%; }
 .ehapp .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
 .select_box { width : 100%; height : 100%; z-index : 1; top : -5px; left : -5px; padding : 0; }
 .app_select { position : absolute; }
@@ -15,14 +15,17 @@
 .control.resize_h { cursor : ew-resize; }
 .control.resize { cursor : se-resize; }
 .control.stack img { display : inline-block; margin-left : 5px; }
-.control.drawer { position : absolute; text-align : left;
-    background-color : white; display : none; margin-top : 5px; }
+.control.drawer { position : absolute; text-align : left; background-color : white; display : none; }
 .drawer { background-color : white; }
 
 .control.stack { white-space : nowrap; }
 .control.buttons .button { margin-right : 2px; }
 .control .button, .control .option { cursor : default; }
+.button.blank { display : inline-block; background-image : url('/lib/skin/1/button.png'); width : 28px; height : 28px; }
 .option.small { display : inline-block; }
+.drawer.bstyle { padding : 5px 5px 0 5px; }
+.bstyle .border { background-color : #54D3AC; border-color : #0A2655; border-width : 3px; width : 20px; height : 15px; margin-bottom : 10px; }
+.bstyle .border.none { width : 26px; height : 18px; }
 .drawer.fontname { width : 24em; }
 .drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 8em; height : 1em; }
 .align .option.small { margin : 5px; }

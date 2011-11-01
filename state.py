@@ -99,18 +99,18 @@ class Entity(dict):
         else: d['updated'] = now()
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d })
-    def update_cmd(self, d): return self._col.update({ '_id' : self.id }, d)
+    def update_cmd(self, d, **opts): return self._col.update({ '_id' : self.id }, d, **opts)
 
     def increment(self, d):
       """Increment counter(s) identified by a dict.
       For example {'foo': 2, 'bar': -1, 'baz.qux': 10}"""
-      return self._col.update({ '_id' : self.id }, {'$inc': d}, upsert=True)
+      return self.update_cmd({'$inc': d}, upsert=True)
 
     def flag(self, name):
-        return self._col.update({ '_id' : self.id }, {'$set': {'flags.' + name: True}})
+        return self.update_cmd({'$set': {'flags.' + name: True}})
 
     def unflag(self, name):
-        return self._col.update({ '_id' : self.id }, {'$set': {'flags.' + name: False}})
+        return self.update_cmd({'$set': {'flags.' + name: False}})
 
     def flagged(self, name):
         if self.has_key('flags'):
@@ -295,20 +295,20 @@ class Expr(Entity):
 
     def analytic_count(self, string):
       if string in ['facebook', 'gplus', 'twitter', 'stumble']:
-        count = None
+        count = 0
+        updated = 0
         try:
           updated = self['analytics'][string]['updated']
-        except (KeyError, TypeError):
-          updated = 0
+          count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
+        except: pass # (KeyError, TypeError):
 
         age = now() - updated
-        if age < 36000 or (string == 'stumble' and age < 1):
-          count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
-
-        if count == None:
-          count = getattr(social_stats, string + "_count")(self.qualified_url())
-          subdocument = 'analytics.' + string
-          self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+        if not (age < 36000 or (string == 'stumble' and age < 1)):
+          try:
+              count = getattr(social_stats, string + "_count")(self.qualified_url())
+              subdocument = 'analytics.' + string
+              self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+          except: pass
 
         return count
       if string in ['email']:
