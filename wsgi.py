@@ -643,7 +643,7 @@ def handle(request): # HANDLER
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
-    if request.domain == config.server_name:
+    if request.domain != "usercontent." + config.server_name and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
             if not reqaction in ['login', 'star', 'unstar']:
@@ -656,6 +656,7 @@ def handle(request): # HANDLER
             r = actions.get(reqaction)(request, response)
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
+    if request.domain == config.server_name:
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
         p2 = lget(parts, 1)
