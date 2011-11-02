@@ -27,6 +27,9 @@
   float: left;
   background: #696E76;
 }
+.has_count .count.zero {
+    display: none;
+}
 .has_count img {
   float: left;
 }

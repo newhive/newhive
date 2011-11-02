@@ -290,6 +290,7 @@ function iconCounts() {
         if (count_div.length == 0){
             count_div = $(this).append('<div class="count"></div>').children().last();
         }
+        if (count == "0") count_div.addClass('zero');
         count_div.html(count);
     });
 };

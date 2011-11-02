@@ -32,7 +32,10 @@
       { offsetY: 10 }
     );
     hover_menu($('#notifications'), $('#feed_menu'), {
-      open: function(){$('#notifications .count').html('0'); logAction('notifications_open');}
+      open: function(){
+        $('#notifications .count').addClass('zero');
+        logAction('notifications_open');
+      }
     });
     $('#feed_menu .feed_item').hover(function(){$(this).addClass('active');}, function(){$(this).removeClass('active');})
     .click(function(){window.location = $(this).find('.entity_url').attr('href')});
