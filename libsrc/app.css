@@ -456,4 +456,5 @@ a.tag_label:hover { color : #F73627; background : #FFF673; }
 
 #tags { clear:both; }
 
+#btn_help { color : #696E76; }
 #btn_help.active { color : white; }
