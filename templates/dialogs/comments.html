@@ -15,18 +15,26 @@
   </div>
   <div id="comments">
     {% for comment in expr.comments %}
-    <div class='comment'>
-      {% if comment.thumb %}
-      <a href='{{comment.initiator.url}}'><img class='comment_thumb' src='{{comment.thumb}}' title='{{comment.author}}'/></a>
-      {% else %}
-      <a href='{{comment.initiator.url}}'><div class='comment_thumb'></div></a>
-      {% endif %}
-      <div class="comment_content">
-        <p class='text'>{{comment.text|e}}</p>
-        <h3 class='author'><a href='{{comment.initiator.url}}'>{{comment.author|e}}</a></h3>
-        <h3 class='age'>{{comment.created|friendly_date}}</h3>
-      </div>
-    </div>
+    {% include "macros/comment.html" %}
     {% endfor %}
   </div>
 </div>
+<script>
+  function submitComment() {
+    $.post('', $('#dia_comments form').serialize(), function(data){
+      comment_count += 1;
+      $('#comments').append(data);
+      $('#dia_comments .comments_count').html(' (' + comment_count + ')');
+      $('#btn_comment .count').html(comment_count);
+    });
+  };
+  function commentSize(){
+    var header_height = $('#dia_comments .header').height();
+    var dialog_height = $('#dia_comments').height();
+    var window_height = $(window).height();
+    if (dialog_height > window_height * 0.8) {
+      $('#comments').height(window_height * 0.75 - header_height - 50);
+    };
+  };
+  commentSize();
+</script>

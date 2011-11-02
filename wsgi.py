@@ -326,9 +326,8 @@ def add_comment(request, response):
     commenter = request.requester
     expression = Expr.fetch(request.form.get('expression'))
     comment_text = request.form.get('comment')
-    comment = Comment.new(commenter, expression, {'text': comment_text}).to_json()
-    comment['created'] = friendly_date(comment['created'])
-    return serve_json(response, comment)
+    comment = Comment.new(commenter, expression, {'text': comment_text})
+    return serve_html(response, jinja_env.get_template("macros/comment.html").render({'comment': comment}))
 
 
 ######################################
@@ -658,7 +657,7 @@ def handle(request): # HANDLER
     if request.domain != "usercontent." + config.server_name and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            if not reqaction in ['login', 'star', 'unstar', 'log']:
+            if not reqaction in ['login', 'add_comment', 'star', 'unstar', 'log']:
                 if not (request.is_secure and request.requester.logged_in):
                     raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure or not logged in')
                 if not urlparse(request.headers.get('Referer')).hostname in request.requester['sites'] + [config.server_name]:
@@ -1000,6 +999,8 @@ def friendly_date(then):
 
     now = datetime.utcnow()
     dt = now - then
+    if dt.seconds < 60:
+        return "just now"
     months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     s = months[then.month] + ' ' + str(then.day)
     if then.year != now.year: s += ' ' + str(then.year)
