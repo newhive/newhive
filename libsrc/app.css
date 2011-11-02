@@ -341,8 +341,10 @@ input[type="text"].copy, textarea.copy {
 #dia_comments input[type=submit] {
   float: right;
 }
+#dia_comments .header {
+  overflow: auto;
+}
 #dia_comments #comments {
-  height: 515px;
   overflow: auto;  
   clear: both;
   width: 515px;

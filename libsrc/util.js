@@ -105,13 +105,17 @@ exprDialog.loaded = {};
 function loadDialog(url, opts) {
     $.extend({ absolute : true }, opts);
     var dia;
-    if(loadDialog.loaded[url]) dia = loadDialog.loaded[url];
-    else {
-        var html;
-        $.ajax({ url : url, success : function(h) { html = h }, async : false });
-        dia = loadDialog.loaded[url] = $(html);
+    if(loadDialog.loaded[url]) {
+        dia = loadDialog.loaded[url];
+        showDialog(dia,opts);
     }
-    return showDialog(dia, opts);
+    else {
+        $.ajax({ url : url, success : function(h) { 
+            var html = h;
+            dia = loadDialog.loaded[url] = $(html);
+            showDialog(dia,opts);
+        }});
+    }
 }
 loadDialog.loaded = {};
 
@@ -176,12 +180,7 @@ showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
 function commentDialog(){
-    var height = 200 + 150 * comment_count;
-    if (height > 650) height = 650;
-    secureDialog('comments', {'params': {'max_height': window.height * 0.8}, 'absolute': false, style: 'width: 550px; height: ' + height + 'px;'});
-    $(document).bind('message onmessage', function(e){
-        alert(e.domain + " said: " + e.data);
-    });
+    loadDialog('?dialog=comments');
 }
 
 function starExpression(){

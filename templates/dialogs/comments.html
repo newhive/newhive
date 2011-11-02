@@ -1,5 +1,3 @@
-{% extends "base.html" %}
-{% block main %}
 <div id='dia_comments'>
   <div class='header'>
     <img class="icon" src='/lib/skin/1/discussion.png' title='Discussion Icon' />
@@ -17,39 +15,26 @@
   </div>
   <div id="comments">
     {% for comment in expr.comments %}
-    <div class='comment'>
-      {% if comment.thumb %}
-      <a href='{{comment.initiator.url}}'><img class='comment_thumb' src='{{comment.thumb}}' title='{{comment.author}}'/></a>
-      {% else %}
-      <a href='{{comment.initiator.url}}'><div class='comment_thumb'></div></a>
-      {% endif %}
-      <div class="comment_content">
-        <p class='text'>{{comment.text|e}}</p>
-        <h3 class='author'><a href='{{comment.initiator.url}}'>{{comment.author|e}}</a></h3>
-        <h3 class='age'>{{comment.created|friendly_date}}</h3>
-      </div>
-    </div>
+    {% include "macros/comment.html" %}
     {% endfor %}
   </div>
 </div>
-{% endblock %}
-{% block head %}
 <script>
-  var max_height = {{ max_height if max_height else 450 }};
-  var submitComment = function(){
-    asyncSubmit($('#dia_comments form'), function(data){
-      window.location = window.location;
+  function submitComment() {
+    $.post('', $('#dia_comments form').serialize(), function(data){
+      comment_count += 1;
+      $('#comments').append(data);
+      $('#dia_comments .comments_count').html(' (' + comment_count + ')');
+      $('#btn_comment .count').html(comment_count);
     });
   };
-  var comment_count = {{expr.comment_count}};
-  $(function(){
-      var header_height = $('.header').height();
-      var max_comments_height = max_height - header_height;
-      var height = 150 * comment_count;
-      if (height > max_comments_height) height = max_comments_height;
-      $('#comments').css('height', height);
-      var message = $.param({'height': height + header_height});
-      parent.postMessage(message, '*');
-  });
+  function commentSize(){
+    var header_height = $('#dia_comments .header').height();
+    var dialog_height = $('#dia_comments').height();
+    var window_height = $(window).height();
+    if (dialog_height > window_height * 0.8) {
+      $('#comments').height(window_height * 0.75 - header_height - 50);
+    };
+  };
+  commentSize();
 </script>
-{% endblock %}
