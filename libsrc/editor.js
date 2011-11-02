@@ -1052,7 +1052,7 @@ Hive.set_bg_img = function(app) {
     Hive.Exp.background.url = app.content;
     Hive.Exp.background.opacity = app.opacity;
     Hive.update_bg_img();
-    setTimeout(place_apps, 1);
+    Hive.bg_div.find('img').load(function() { setTimeout(place_apps, 10) });
 };
 
 function remove_all_apps() {
