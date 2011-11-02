@@ -131,12 +131,18 @@ class Entity(dict):
     feed = property(get_feed)
 
     def get_recent_feed(self):
-        return self.feed[-10:]
+        return self.feed[-8:]
     recent_feed = property(get_recent_feed)
 
+    def set_notification_count(self, count):
+        self.update_cmd({'$set': {'notification_count': count}});
     def get_notification_count(self):
-        return len(self.feed)
-    notification_count = property(get_notification_count)
+        count = self.get('notification_count')
+        if not count and count != 0:
+           count = len(self.feed)
+           self.notification_count = count
+        return count
+    notification_count = property(get_notification_count, set_notification_count)
 
     def get_starred_items(self):
         if not self._starred_items:
@@ -401,6 +407,18 @@ class File(Entity):
 
         super(File, self).delete()
 
+class ActionLog(Entity):
+    cname = 'action_log'
+
+    @classmethod
+    def new(cls, user, action, data={}):
+        data.update({
+            'user': user.id
+            ,'user_name': user.get('name')
+            ,'action': action
+            })
+        return cls.create(**data)
+
 class Feed(Entity):
     cname = 'feed'
 
@@ -414,6 +432,8 @@ class Feed(Entity):
         db.user.update({'_id': self['initiator']}, {'$push': {'feed': self.id}})
         self.entity.update_cmd({'$push': {'feed': self.id}})
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
+        if self['entity_class'] == "Expr":
+            db.user.update({'_id': self.entity['owner']}, {'$push': {'feed': self.id}})
         return self
 
     def get_entity(self):
