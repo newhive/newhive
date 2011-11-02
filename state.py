@@ -134,9 +134,15 @@ class Entity(dict):
         return self.feed[-8:]
     recent_feed = property(get_recent_feed)
 
+    def set_notification_count(self, count):
+        self.update_cmd({'$set': {'notification_count': count}});
     def get_notification_count(self):
-        return len(self.feed)
-    notification_count = property(get_notification_count)
+        count = self.get('notification_count')
+        if not count and count != 0:
+           count = len(self.feed)
+           self.notification_count = count
+        return count
+    notification_count = property(get_notification_count, set_notification_count)
 
     def get_starred_items(self):
         if not self._starred_items:
@@ -400,6 +406,18 @@ class File(Entity):
         elif self.get('fs_path'): os.remove(self['fs_path'])
 
         super(File, self).delete()
+
+class ActionLog(Entity):
+    cname = 'action_log'
+
+    @classmethod
+    def new(cls, user, action, data={}):
+        data.update({
+            'user': user.id
+            ,'user_name': user.get('name')
+            ,'action': action
+            })
+        return cls.create(**data)
 
 class Feed(Entity):
     cname = 'feed'

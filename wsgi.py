@@ -13,7 +13,7 @@ from PIL import ImageOps
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog
 
 import webassets
 
@@ -549,6 +549,17 @@ def login(request, response):
     if auth.handle_login(request, response):
         return redirect(response, request.form.get('url', home_url(request.requester)))
 
+def log(request, response):
+    action = request.form.get('log_action')
+    user = request.requester
+    if action == "notifications_open":
+        user.notification_count = 0
+
+    data = json.loads(request.form.get('data', 'false'))
+    if not data:
+        data = {}
+    l = ActionLog.new(user, request.form.get('log_action'), data)
+
 # Possible values for the POST variable 'action'
 actions = dict(
      login           = login
@@ -574,6 +585,7 @@ actions = dict(
     ,profile_thumb_set  = profile_thumb_set
     ,star            = star
     ,unstar          = star
+    ,log             = log
     )
 
 # Mime types that could generate HTTP POST requests
@@ -646,7 +658,7 @@ def handle(request): # HANDLER
     if request.domain != "usercontent." + config.server_name and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            if not reqaction in ['login', 'star', 'unstar']:
+            if not reqaction in ['login', 'star', 'unstar', 'log']:
                 if not (request.is_secure and request.requester.logged_in):
                     raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure or not logged in')
                 if not urlparse(request.headers.get('Referer')).hostname in request.requester['sites'] + [config.server_name]:
