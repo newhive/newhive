@@ -180,12 +180,7 @@ showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
 function commentDialog(){
-    var height = 200 + 150 * comment_count;
-    if (height > 650) height = 650;
-    secureDialog('comments', {'params': {'max_height': window.height * 0.8}, 'absolute': false, style: 'width: 550px; height: ' + height + 'px;'});
-    $(document).bind('message onmessage', function(e){
-        alert(e.domain + " said: " + e.data);
-    });
+    loadDialog('?dialog=comments');
 }
 
 function starExpression(){
