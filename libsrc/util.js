@@ -105,13 +105,17 @@ exprDialog.loaded = {};
 function loadDialog(url, opts) {
     $.extend({ absolute : true }, opts);
     var dia;
-    if(loadDialog.loaded[url]) dia = loadDialog.loaded[url];
-    else {
-        var html;
-        $.ajax({ url : url, success : function(h) { html = h }, async : false });
-        dia = loadDialog.loaded[url] = $(html);
+    if(loadDialog.loaded[url]) {
+        dia = loadDialog.loaded[url];
+        showDialog(dia,opts);
     }
-    return showDialog(dia, opts);
+    else {
+        $.ajax({ url : url, success : function(h) { 
+            var html = h;
+            dia = loadDialog.loaded[url] = $(html);
+            showDialog(dia,opts);
+        }});
+    }
 }
 loadDialog.loaded = {};
 
