@@ -15,7 +15,7 @@
 {%- endmacro %}
 
 {% macro star_button(count=0, active=false) %}
-  <div class="hoverable nav_icon has_count {{"starred " if active}}"  title="{{"Un-star" if active else "Star"}} This Expression" data-count="{{count}}" onclick='starExpression();' >
-    <div id="btn_star" class="{{"starred " if active}}"></div>
+  <div id="btn_star" class="hoverable nav_icon has_count {{"starred " if active}}"  title="{{"Un-star" if active else "Star"}} This Expression" data-count="{{count}}" onclick='starExpression();' >
+    <div class="icon {{"starred " if active}}"></div>
   </div>
 {%- endmacro %}

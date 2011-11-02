@@ -184,23 +184,38 @@ function commentDialog(){
 }
 
 function starExpression(){
-    var btn = $('#btn_star')
+    var btn = $('#btn_star .icon')
     if (! btn.hasClass('inactive')){
-        var action = $('#btn_star').hasClass('starred') ? 'unstar' : 'star'
+        var action = btn.hasClass('starred') ? 'unstar' : 'star'
         btn.addClass('inactive')
     $.post('', {'action': action, 'domain': window.location.hostname, 'path': window.location.pathname}, function(data){
-        var btn = $('#btn_star')
+        var btn = $('#btn_star .icon')
         var countdiv = btn.next();
         btn.removeClass('inactive');
         if(data == "unstarred"){
             btn.removeClass('starred');
+            btn.parent().attr('title', 'Star This Expression');
             countdiv.html(parseInt(countdiv.html())-1);
         } else if (data == "starred"){
             btn.addClass('starred');
+            btn.parent().attr('title', 'Un-star This Expression');
             countdiv.html(parseInt(countdiv.html())+1);
         };
     }, 'json');
     }
+}
+function reloadFeed(){
+    $.get('?dialog=feed', function(data){
+        $('#feed_menu').html(data);
+        var count = $('#notification_count').html();
+        var count_div = $('#notifications .count').html(count);
+        if (count == "0"){
+            count_div.addClass('zero');
+        } else {
+            count_div.removeClass('zero');
+        }
+
+    });
 }
 
 function updateShareUrls(element, currentUrl) {

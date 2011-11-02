@@ -35,16 +35,16 @@
 }
 #btn_share {
 }
-#btn_star {
+#btn_star .icon {
   height: 50px;
   float: left;
   width: 67px;
   background-image: url('/lib/skin/1/star.png');
 }
-#btn_star.starred {
+#btn_star .icon.starred {
   background-image: url('/lib/skin/1/star_active.png');
 }
-#btn_star.starred.active, #btn_star.active {
+#btn_star.active .icon.starred, #btn_star.active .icon {
   background-image: url('/lib/skin/1/star-hover.png');
 }
 body.main #content{

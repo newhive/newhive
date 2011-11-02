@@ -26,6 +26,9 @@
       $('#comments').append(data);
       $('#dia_comments .comments_count').html(' (' + comment_count + ')');
       $('#btn_comment .count').html(comment_count);
+      $('#dia_comments textarea').val('');
+      commentSize();
+      reloadFeed();
     });
   };
   function commentSize(){
@@ -35,6 +38,7 @@
     if (dialog_height > window_height * 0.8) {
       $('#comments').height(window_height * 0.75 - header_height - 50);
     };
+    center($('#dia_comments'));
   };
   commentSize();
 </script>
