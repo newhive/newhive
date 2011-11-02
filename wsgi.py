@@ -327,7 +327,7 @@ def add_comment(request, response):
     expression = Expr.fetch(request.form.get('expression'))
     comment_text = request.form.get('comment')
     comment = Comment.new(commenter, expression, {'text': comment_text})
-    return serve_html(response, jinja_env.get_template("macros/comment.html").render({'comment': comment}))
+    return serve_html(response, jinja_env.get_template("partials/comment.html").render({'comment': comment}))
 
 
 ######################################
