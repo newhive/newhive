@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/main.html" import create_button, discussion_button %} 
+{% from "macros/main.html" import star_button, share_button, create_button, discussion_button %} 
 
 {% block body_classes %}{{ super() }} main{% endblock %}
 
@@ -10,11 +10,10 @@
  {% if user.logged_in %}
   <div class='nav_icon medbold' style='left : 50px; top : 0;'><a href='{{ home_url }}'>{{ user['name'] }}</a></div>
   <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
-  {% if user.referrals > 0 and user.flagged('new_referrals') %}
-    <div class='button rounded notification_count' style="background-color: {{colors['active']}}; color: white;">
-      {{ user.referrals }}
-    </div>
-  {% endif %}
+  <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}'></div>
+  <div id='feed_menu' class='menu border selected'>
+    {% include "dialogs/feed.html" %}
+  </div>
   <div id='user_menu' class='menu'>
    <form name='logout_form' action='{{ secure_server }}' method='POST'>
     <input name='action' value='logout' type='hidden'>
@@ -37,6 +36,9 @@
         {% endif %}
       }
     );
+    hover_menu($('#notifications'), $('#feed_menu'));
+    $('#feed_menu .feed_item').hover(function(){$(this).addClass('active');}, function(){$(this).removeClass('active');})
+    .click(function(){window.location = $(this).find('.entity_url').attr('href')});
   </script>
  {% else %}
   <a href='{{ server }}'><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>

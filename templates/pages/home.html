@@ -16,6 +16,7 @@
       background-color: {{ colors['highlight'] }};
       color: #000;
     }
+    .abs { position : absolute; }
   </style>
   <script>
     function homepage_header() {
@@ -33,9 +34,10 @@
         $(this).addClass('open');
         $('input[name=forward]').val(window.location);
       });
-      $(window).resize(homepage_header) 
+      $(window).resize(homepage_header);
       homepage_header();
     });
+    //$(document.body).load(function() { setTimeout(homepage_header, 500); });
   </script>
 {% endblock %}
 
@@ -47,23 +49,25 @@
   {{ create_button(create) }}
 </div>
 {% else %}
-<div id="homepage_header">
-  <div class="happ background" style="left:0px; top:0px; width:1000px; height: 247px; background-color: {{ colors['tan'] }}; z-index: 3;"></div>
-  <div class="happ" style="left: 48px; top: 40px; width: 420px; height: 56px; z-index: 3; font-size: 3.3em; font-weight: normal; font-family: Lobster;" data-scale="3.3">
+<div id="homepage_header" style='width:100%; height:247px; background-color: {{ colors['tan'] }};'>
+ <div style='position:relative; margin:0 auto; width:1000px; height:247px;'>
+  {#<div class="happ background" style="left:0px; top:0px; width:1000px; height: 247px; background-color: {{ colors['tan'] }}; z-index: 3;"></div>#}
+  <div class="abs" style="left: 48px; top: 40px; width: 420px; height: 56px; z-index: 3; font-size: 3.3em; font-weight: normal; font-family: Lobster;" data-scale="3.3">
     Express Your<span style="margin:-0.07em">self</span>
   </div>
-  <div class='happ' style='width:485px; height: 44px; left:48px; top: 113px; z-index: 3; font-size: 0.75em;' data-scale="0.75">
+  <div class='abs' style='width:485px; height: 44px; left:48px; top: 113px; z-index: 3; font-size: 0.75em;' data-scale="0.75">
     The New Hive makes it easy for anyone to express themselves
     online. The content you create is your own, and can be easily
     shared anywhere. We will never put ads on your expressions, and oh
     yeah, it's free! So get on board and express yourself :)
   </div>
-  <div class='happ rounded signup_button' style='width:87px; white-space: nowrap; padding: 3px 5px 10px 5px; height: 24px; left:48px; top: 180px; z-index: 3; font-size: 1.4em;' data-scale="1.4">
+  <div class='abs rounded signup_button' style='width:87px; white-space: nowrap; padding: 3px 5px 10px 5px; height: 24px; left:48px; top: 180px; z-index: 3; font-size: 1.4em;' data-scale="1.4">
     <span style="font-family: Museo;"><a href="" onclick="return false;">Sign up</a></span>
   </div>
-  <div id="h_2" class="happ" style="left: 585px; top: 10px; width: 365.802px; height: 206.727px; z-index:3;">
+  <div id="h_2" class="abs" style="left: 585px; top: 10px; width: 365.802px; height: 206.727px; z-index:3;">
     <iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0" width="100%" height="100%" frameborder="0" webkitAllowFullScreen allowFullScreen></iframe>
   </div>
+ </div>
 </div>
 
 

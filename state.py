@@ -48,6 +48,10 @@ def junkstr(length):
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
 
+    _starred_items = None
+    _starrers = None
+    _feed = None
+
     def __init__(self, d, cname=None):
         dict.update(self, d)
         if cname: self.cname = cname
@@ -95,18 +99,18 @@ class Entity(dict):
         else: d['updated'] = now()
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d })
-    def update_cmd(self, d): return self._col.update({ '_id' : self.id }, d)
+    def update_cmd(self, d, **opts): return self._col.update({ '_id' : self.id }, d, **opts)
 
     def increment(self, d):
       """Increment counter(s) identified by a dict.
       For example {'foo': 2, 'bar': -1, 'baz.qux': 10}"""
-      return self._col.update({ '_id' : self.id }, {'$inc': d}, upsert=True)
+      return self.update_cmd({'$inc': d}, upsert=True)
 
     def flag(self, name):
-        return self._col.update({ '_id' : self.id }, {'$set': {'flags.' + name: True}})
+        return self.update_cmd({'$set': {'flags.' + name: True}})
 
     def unflag(self, name):
-        return self._col.update({ '_id' : self.id }, {'$set': {'flags.' + name: False}})
+        return self.update_cmd({'$set': {'flags.' + name: False}})
 
     def flagged(self, name):
         if self.has_key('flags'):
@@ -115,6 +119,37 @@ class Entity(dict):
             return False
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
+
+    def get_feed(self):
+        if not self._feed:
+            feed = self.get('feed')
+            if feed:
+                self._feed = Feed.search(**{'_id': {'$in': self.get('feed')}})
+            else:
+                self._feed = []
+        return self._feed
+    feed = property(get_feed)
+
+    def get_recent_feed(self):
+        return self.feed[-10:]
+    recent_feed = property(get_recent_feed)
+
+    def get_notification_count(self):
+        return len(self.feed)
+    notification_count = property(get_notification_count)
+
+    def get_starred_items(self):
+        if not self._starred_items:
+          self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
+        return self._starred_items
+    starred_items = property(get_starred_items)
+
+    def get_starrers(self):
+        if not self._starrers:
+          self._starrers = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
+        return self._starrers
+    starrers = property(get_starrers)
+
 
 def fetch(cname, id, keyname='_id'):
     return Entity({}, cname=cname).fetch_me(id, keyname=keyname)
@@ -168,6 +203,10 @@ class User(Entity):
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
+
+    def get_url(self):
+        return abs_url(domain = self.get('sites', [config.server_name])[0]) + 'expressions'
+    url = property(get_url)
 
 
 def get_root(): return User.named('root')
@@ -256,20 +295,20 @@ class Expr(Entity):
 
     def analytic_count(self, string):
       if string in ['facebook', 'gplus', 'twitter', 'stumble']:
-        count = None
+        count = 0
+        updated = 0
         try:
           updated = self['analytics'][string]['updated']
-        except (KeyError, TypeError):
-          updated = 0
+          count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
+        except: pass # (KeyError, TypeError):
 
         age = now() - updated
-        if age < 36000 or (string == 'stumble' and age < 1):
-          count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
-
-        if count == None:
-          count = getattr(social_stats, string + "_count")(self.qualified_url())
-          subdocument = 'analytics.' + string
-          self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+        if not (age < 36000 or (string == 'stumble' and age < 1)):
+          try:
+              count = getattr(social_stats, string + "_count")(self.qualified_url())
+              subdocument = 'analytics.' + string
+              self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+          except: pass
 
         return count
       if string in ['email']:
@@ -282,6 +321,7 @@ class Expr(Entity):
         return 0
 
     def get_url(self): return abs_url(domain=self['domain']) + self['name']
+    url = property(get_url)
 
     def set_tld(self, domain):
         """ Sets the top level domain (everything following first dot) in domain attribute """
@@ -305,6 +345,18 @@ class Expr(Entity):
         except KeyError:
             return 0
     comment_count = property(get_comment_count)
+
+
+    def get_star_count(self):
+        return len(self.starrers)
+    star_count = property(get_star_count)
+
+    def get_share_count(self):
+        count = 0
+        for item in ["email", "gplus", "twitter", "facebook"]:
+            count += self.analytic_count(item)
+        return count
+    share_count = property(get_share_count)
 
 
 class File(Entity):
@@ -389,6 +441,11 @@ class Feed(Entity):
             spec.update({"class_name": cls.__name__})
         return super(Feed, cls).search(**spec)
 
+    def delete(self):
+        self.initiator.update_cmd({'$pull': {'feed': self.id}})
+        self.entity.update_cmd({'$pull': {'feed': self.id}})
+        return super(Feed, self).delete()
+
 class Comment(Feed):
     def create_me(self):
         assert self.has_key('text')
@@ -414,6 +471,14 @@ class Comment(Feed):
     def get_thumb(self):
         return self.initiator.get('profile_thumb')
     thumb = property(get_thumb)
+
+class Star(Feed):
+    @classmethod
+    def new(cls, initiator, entity, data={}):
+        if initiator.id in entity.starrers:
+            return True
+        else:
+            return super(Star, cls).new(initiator, entity, data)
 
 
 class Referral(Entity):
