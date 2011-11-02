@@ -82,6 +82,15 @@ function autoLink(string) {
     return string;
 }
 
+function logAction(action, data){
+    if (!data) data=false;
+    $.ajax({
+        url: '', 
+        type: 'POST',
+        data: {action: 'log', log_action: action, data: data}
+    });
+};
+
 function exprDialog(url, opts) {
     $.extend(opts, { layout : function(dia) {
         dia.css({ width : '80%' });

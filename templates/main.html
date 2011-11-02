@@ -27,16 +27,13 @@
   </div>
   <script>
     hover_menu(
-      $('#user_menu_handle').add('.notification_count'), 
+      $('#user_menu_handle'), 
       $('#user_menu'), 
-      {
-        offsetY: 10 
-        {% if user.referrals > 0 and user.flagged('new_referrals') %}
-        , open: function(){$('.notification_count').hide(); $.ajax({url: '{{server}}api/notifications_opened', xhrFields: { withCredentials: true }});}
-        {% endif %}
-      }
+      { offsetY: 10 }
     );
-    hover_menu($('#notifications'), $('#feed_menu'));
+    hover_menu($('#notifications'), $('#feed_menu'), {
+      open: function(){$('#notifications .count').html('0'); logAction('notifications_open');}
+    });
     $('#feed_menu .feed_item').hover(function(){$(this).addClass('active');}, function(){$(this).removeClass('active');})
     .click(function(){window.location = $(this).find('.entity_url').attr('href')});
   </script>

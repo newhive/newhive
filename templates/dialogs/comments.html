@@ -19,13 +19,13 @@
     {% for comment in expr.comments %}
     <div class='comment'>
       {% if comment.thumb %}
-      <img class='comment_thumb' src='{{comment.thumb}}' title='{{comment.author}}'/>
+      <a href='{{comment.initiator.url}}'><img class='comment_thumb' src='{{comment.thumb}}' title='{{comment.author}}'/></a>
       {% else %}
-      <div class='comment_thumb'></div>
+      <a href='{{comment.initiator.url}}'><div class='comment_thumb'></div></a>
       {% endif %}
       <div class="comment_content">
         <p class='text'>{{comment.text|e}}</p>
-        <h3 class='author'>{{comment.author|e}}</h3>
+        <h3 class='author'><a href='{{comment.initiator.url}}'>{{comment.author|e}}</a></h3>
         <h3 class='age'>{{comment.created|friendly_date}}</h3>
       </div>
     </div>
