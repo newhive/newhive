@@ -152,9 +152,14 @@ class Entity(dict):
 
     def get_starrers(self):
         if not self._starrers:
-          self._starrers = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
+          self._starrers = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Star' and i.get('entity') == self.id, self.feed)]
         return self._starrers
     starrers = property(get_starrers)
+
+    def get_star_count(self):
+        return len(self.starrers)
+    star_count = property(get_star_count)
+
 
 
 def fetch(cname, id, keyname='_id'):
@@ -352,10 +357,6 @@ class Expr(Entity):
             return 0
     comment_count = property(get_comment_count)
 
-
-    def get_star_count(self):
-        return len(self.starrers)
-    star_count = property(get_star_count)
 
     def get_share_count(self):
         count = 0

@@ -7,7 +7,11 @@
         {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}</a>
       {{ "commented on" if feed.class_name == "Comment" }} 
       {{ "starred" if feed.class_name == "Star" }} 
+      {% if feed.entity_class == "User" %}
+      <a href="{{feed.entity.url}}" class="entity_url">{{ "your" if feed.entity.id == user.id else feed.entity.name + "'s" }} profile</a>
+      {% else %}
       <a href="{{feed.entity.url}}" class="entity_url">{{ feed.entity.title }}</a>
+      {% endif %}
     </div>
   </div>
 {% endfor %}

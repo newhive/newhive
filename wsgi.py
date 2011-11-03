@@ -269,15 +269,22 @@ def user_tag_update(request, response):
 
 def star(request, response):
     if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
-    expr = Expr.named(request.domain.lower(), request.path.lower())
+    parts = request.path.split('/', 1)
+    p1 = lget(parts, 0)
+    if p1 == "expressions":
+        print p1
+        entity = User.find(sites=request.domain.lower())
+    else:
+        entity = Expr.named(request.domain.lower(), request.path.lower())
+    print entity;
     if request.form.get('action') == "star":
-        s = Star.new(request.requester, expr)
+        s = Star.new(request.requester, entity)
         if s or s.get('entity'):
           return 'starred'
         else:
           return False
     else:
-       s = Star.find(initiator=request.requester.id, entity=expr.id)
+       s = Star.find(initiator=request.requester.id, entity=entity.id)
        if s:
            res = s.delete()
            if not res['err']: return 'unstarred'
@@ -806,7 +813,6 @@ def handle(request): # HANDLER
         response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', [])
         response.context['tags'].insert(0, 'Starred')
-        print owner
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         response.context['profile_thumb'] = owner.get('profile_thumb')
 
