@@ -37,8 +37,6 @@
         logAction('notifications_open');
       }
     });
-    $('#feed_menu .feed_item').hover(function(){$(this).addClass('active');}, function(){$(this).removeClass('active');})
-    .click(function(){window.location = $(this).find('.entity_url').attr('href')});
   </script>
  {% else %}
   <a href='{{ server }}'><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
