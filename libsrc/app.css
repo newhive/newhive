@@ -134,7 +134,9 @@ body.home.logged_out .nav{
 #feed_menu .Expr .entity, #feed_menu .User .initiator{
   font-size: 17px;
   white-space: nowrap;
+  width: 240px;
   overflow: hidden;
+  display: inline-block;
   color: #000;
 }
 #feed_menu .User .line2{
@@ -168,11 +170,15 @@ body.home.logged_out .nav{
   color: #696E76;
 }
 #feed_menu #more_button {
-  width: 400px;
-  height: 20px;
+  width: 350px;
+  padding: 0;
+  margin: 10px;
   background-color: #696E76;
+  text-align: center;
 }
-
+#feed_menu #more_button:hover {
+  background-color: #FFF673;
+}
 
 /* ==========================================
    popup dialogs 
