@@ -37,9 +37,7 @@
     var header_height = $('#dia_comments .header').height();
     var dialog_height = $('#dia_comments').height();
     var window_height = $(window).height();
-    if (dialog_height > window_height * 0.8) {
-      $('#comments').height(window_height * 0.75 - header_height - 50);
-    };
+    $('#comments').height(window_height * 0.75 - header_height - 50);
     center($('#dia_comments'));
   };
   commentSize();

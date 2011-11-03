@@ -319,7 +319,7 @@ input[type="text"].copy, textarea.copy {
 
 /* Comments dialog */
 #dia_comments {
-  width: 500px;
+  width: 505px;
   padding: 20px;
 }
 
@@ -350,7 +350,7 @@ input[type="text"].copy, textarea.copy {
 #dia_comments #comments {
   overflow: auto;  
   clear: both;
-  width: 515px;
+  width: 520px;
 }
 
 #dia_comments .comment {
