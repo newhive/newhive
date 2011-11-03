@@ -251,8 +251,13 @@ def expr_tag_update(request, response):
     expr = Expr.fetch(id)
     action = request.form.get('action')
     if action == 'tag_add': new_tags = expr.get('tags', '') + ' ' + tag
-    elif action == 'tag_remove': new_tags = re.sub(tag, '', expr['tags'])
-    expr.update(tags=new_tags, updated=False)
+    elif action == 'tag_remove':
+        if request.form.get('value') == "Starred":
+            s = Star.find(initiator=request.requester.id, entity=id)
+            s.delete()
+        else:
+            new_tags = re.sub(tag, '', expr['tags'])
+            expr.update(tags=new_tags, updated=False)
     return True
 
 def user_tag_update(request, response):
@@ -790,11 +795,17 @@ def handle(request): # HANDLER
         page = int(request.args.get('page', 0))
         spec = { 'owner' : owner.id }
         tag = lget(request.path.split('/'), 1, '')
-        if tag: spec['tags_index'] = tag
+        if tag:
+          if tag == "Starred":
+            spec['_id'] = {'$in': owner.starred_items}
+            del spec['owner']
+          else:
+            spec['tags_index'] = tag
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', [])
+        response.context['tags'].insert(0, 'Starred')
         response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
         response.context['profile_thumb'] = owner.get('profile_thumb')
 

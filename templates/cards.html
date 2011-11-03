@@ -4,6 +4,6 @@
   <img src='{{ e.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
   <div class='title title{{ e.title_len }}'>{{ e.title|e }}</div>
   <div class='tags'>{% for t in e.tags %}<span class='tag' value='{{ t|e }}'>#{{ t }} </span> {% endfor %}</div>
-  <div class='other'>{{ e.owner_name if show_name else e.updated }}</div>
+  <div class='other'>{{ e.owner_name}}</div>
  </div></a>
 {% endfor %}

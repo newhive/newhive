@@ -27,9 +27,6 @@
   float: left;
   background: #696E76;
 }
-.has_count .count.zero {
-    display: none;
-}
 .has_count img {
   float: left;
 }
@@ -100,6 +97,9 @@ body.home.logged_out .nav{
   top: 27px;
   left: 40px;
   background-color: #F72E4D;
+}
+#notifications.has_count .count.zero {
+    display: none;
 }
 
 #feed_menu .feed_item {
