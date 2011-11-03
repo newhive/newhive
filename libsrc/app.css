@@ -167,6 +167,11 @@ body.home.logged_out .nav{
 #feed_menu .feed_item.Comment, #feed_menu .feed_item.Comment .initiator.name,#feed_menu .feed_item.Comment .entity {
   color: #696E76;
 }
+#feed_menu #more_button {
+  width: 400px;
+  height: 20px;
+  background-color: #696E76;
+}
 
 
 /* ==========================================
