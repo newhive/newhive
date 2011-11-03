@@ -1,7 +1,7 @@
 <div id="notification_count" style="display: none;">{{user.notification_count}}</div>
 {% for feed in user.recent_feed | reverse %}
   <div class="feed_item {{feed.entity_class}} {{feed.class_name}}">
-    <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png")}}'></a>
+    <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png", True)}}'></a>
     <div class="feed_text">
 
       {% if feed.entity_class == "User" %}
