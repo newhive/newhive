@@ -351,9 +351,8 @@ $(function () {
     }
   });
   $(window).resize(place_apps);
-  place_apps();
 });
-$(window).load(place_apps); // position background?
+$(window).load(function(){setTimeout(place_apps, 0)}); // position background?
 
 
 
@@ -361,6 +360,9 @@ function center(e, inside, opts) {
     var opts = $.extend({ absolute : false, minimum : true }, opts);
     var w = typeof(inside) == 'undefined' ? $(window) : inside;
     pos = { left : (w.width() - e.outerWidth()) / 2, 'top' : (w.height() - e.outerHeight()) / 2 };
+    console.log(e.width());
+    console.log(w.width());
+    if(!e.outerWidth()) pos = { left : 0, top : 0 };
     if(opts.minimum) {
         pos['left'] = Math.max(0, pos['left']);
         pos['top'] = Math.max(0, pos['top']);
@@ -406,7 +408,7 @@ function asyncUpload(opts) {
     var input = $("<input type='file'>").attr('name', opts.file_name).change(function() { opts.start(); form.submit() }).appendTo(form);
     for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
     form.appendTo(document.body);
-    input.click();
+    setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
 }
 
 function hover_url(url) {

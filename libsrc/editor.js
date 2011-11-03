@@ -1116,7 +1116,7 @@ Hive.set_bg_img = function(app) {
     else { imgs.hide(); return }
 
     if(img.attr('src') != url) {
-        img.load(function(){ setTimeout(place_apps, 10); });
+        img.load(function(){ setTimeout(place_apps, 0); });
         imgs.attr('src', url);
     }
     imgs.css('opacity', app.opacity);
