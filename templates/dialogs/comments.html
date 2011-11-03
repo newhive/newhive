@@ -22,12 +22,14 @@
 <script>
   function submitComment() {
     $.post('', $('#dia_comments form').serialize(), function(data){
+      var comments_div = $('#comments');
       comment_count += 1;
-      $('#comments').append(data);
+      comments_div.append(data);
       $('#dia_comments .comments_count').html(' (' + comment_count + ')');
       $('#btn_comment .count').html(comment_count);
       $('#dia_comments textarea').val('');
       commentSize();
+      comments_div[0].scrollByLines(100000);
       reloadFeed();
     });
   };
@@ -41,4 +43,5 @@
     center($('#dia_comments'));
   };
   commentSize();
+  setTimeout('commentSize();', 0);
 </script>
