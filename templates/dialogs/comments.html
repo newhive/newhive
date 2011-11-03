@@ -29,7 +29,7 @@
       $('#btn_comment .count').html(comment_count);
       $('#dia_comments textarea').val('');
       commentSize();
-      comments_div[0].scrollByLines(100000);
+      comments_div[0].scrollTop = 100000;
       reloadFeed();
     });
   };
