@@ -352,7 +352,6 @@ $(function () {
   });
   $(window).resize(place_apps);
   place_apps();
-  qtip_intialize();
 });
 $(window).load(place_apps); // position background?
 
