@@ -806,7 +806,8 @@ def handle(request): # HANDLER
         response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', [])
         response.context['tags'].insert(0, 'Starred')
-        response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
+        print owner
+        response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')

@@ -254,7 +254,7 @@ class Expr(Entity):
         return cls.named(domain, name)
 
     @classmethod
-    def list(cls, spec, requester=None, limit=300, page=0, sort='updated'):
+    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
         es = map(Expr, db.expr.find(
              spec = spec
             ,sort = [(sort, -1)]
@@ -263,7 +263,7 @@ class Expr(Entity):
             ))
 
         can_view = lambda e: (
-            requester == e['owner'] or (e.get('auth', 'public') == 'public'
+            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' 
             and len(e.get('apps', [])) ))
         return filter(can_view, es)
 
