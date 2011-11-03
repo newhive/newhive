@@ -351,18 +351,17 @@ $(function () {
     }
   });
   $(window).resize(place_apps);
+  place_apps();
 });
-$(window).load(function(){setTimeout(place_apps, 0)}); // position background?
+$(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
 
 
 function center(e, inside, opts) {
     var opts = $.extend({ absolute : false, minimum : true }, opts);
     var w = typeof(inside) == 'undefined' ? $(window) : inside;
+    if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
     pos = { left : (w.width() - e.outerWidth()) / 2, 'top' : (w.height() - e.outerHeight()) / 2 };
-    console.log(e.width());
-    console.log(w.width());
-    if(!e.outerWidth()) pos = { left : 0, top : 0 };
     if(opts.minimum) {
         pos['left'] = Math.max(0, pos['left']);
         pos['top'] = Math.max(0, pos['top']);

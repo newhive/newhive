@@ -1,5 +1,4 @@
 .ehapp, .ehapp > * { position : absolute; }
-.ehapp .content { width : 100%; height : 100%; }
 .ehapp .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
 .select_box { width : 100%; height : 100%; z-index : 1; top : -5px; left : -5px; padding : 0; }
 .app_select { position : absolute; }
@@ -7,6 +6,7 @@
 
 .text .select_box { padding : 5px; top : -10px; left : -10px; }
 .text .content { z-index : 2 }
+.content.rectangle { width : 100%; height : 100%; }
 
 .controls_src { display : none; }
 .drag { cursor : move; }
