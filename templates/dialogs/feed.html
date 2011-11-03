@@ -1,9 +1,10 @@
 <div id="notification_count" style="display: none;">{{user.notification_count}}</div>
 {% for feed in user.recent_feed | reverse %}
   <div class="feed_item">
-    <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("lib/skin/1/default_thumb.png")}}'></a>
+    <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png")}}'></a>
     <div class="feed_text">
-      <a href="{{feed.initiator.url}}" class='name'>{{ "You" if feed['initiator'] == user.id else feed.initiator_name}}</a>
+      <a href="{{feed.initiator.url}}" class='name {{"you" if feed['initiator'] == user.id}}'>
+        {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}</a>
       {{ "commented on" if feed.class_name == "Comment" }} 
       {{ "starred" if feed.class_name == "Star" }} 
       <a href="{{feed.entity.url}}" class="entity_url">{{ feed.entity.title }}</a>
