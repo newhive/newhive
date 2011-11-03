@@ -468,6 +468,22 @@ class Feed(Entity):
         self.entity.update_cmd({'$pull': {'feed': self.id}})
         return super(Feed, self).delete()
 
+    def get_owner_name(self):
+      if self['entity_class'] == "User":
+        return self.entity.get('name')
+      elif self['entity_class'] == "Expr":
+        return self.entity.get('owner_name')
+    owner_name = property(get_owner_name)
+
+    def get_owner_url(self):
+      if self['entity_class'] == "User":
+        return self.entity.url
+      elif self['entity_class'] == "Expr":
+        return abs_url(domain = self.entity.get('domain')) + "expressions"
+    owner_url = property(get_owner_url)
+
+
+
 class Comment(Feed):
     def create_me(self):
         assert self.has_key('text')

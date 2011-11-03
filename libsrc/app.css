@@ -103,14 +103,25 @@ body.home.logged_out .nav{
 }
 
 #feed_menu .feed_item {
-  font-weight: normal;
+  font-weight: bold;
+  font-size: 14px;
   width: 350px;
   clear: both;
   overflow: auto;
   color: #000;
+  margin: 10px;
+}
+#feed_menu .name {
+  color: #F72E4D;
+}
+#feed_menu .name.you {
+  color : #2D6A5D;
 }
 #feed_menu a {
   font-weight: bold;
+}
+#feed_menu p {
+  margin: 0;
 }
 #feed_menu .feed_item.active {
   background-color: #96E2CE;
@@ -120,18 +131,43 @@ body.home.logged_out .nav{
   width: 90px;
   float: left;
 }
-#feed_menu .feed_text {
+#feed_menu .Expr .entity, #feed_menu .User .initiator{
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  color: #000;
+}
+#feed_menu .User .line2{
+  color: #696E76;
+}
+#feed_menu .feed_text, #feed_menu .byline {
   width: 240px;
   float: left;
   margin-left: 5px;
 }
+#feed_menu .feed_text {
+  height: 59px;
+}
+#feed_menu .comment_text {
+  font-weight: normal;
+}
+#feed_menu .byline {
+  font-weight: normal;
+}
+#feed_menu .byline .name {
+  font-weight: bold;
+  font-size: 15px;
+  color: #696E76;
+}
 
-#feed_menu .feed_item .name {
-  color: #F72E4D;
+#feed_menu .byline .timestamp{
+  float: right;
+  color: #696E76;
 }
-#feed_menu .feed_item .name.you {
-  color : #2D6A5D;
+#feed_menu .feed_item.Comment, #feed_menu .feed_item.Comment .initiator.name,#feed_menu .feed_item.Comment .entity {
+  color: #696E76;
 }
+
 
 /* ==========================================
    popup dialogs 
