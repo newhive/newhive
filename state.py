@@ -131,7 +131,7 @@ class Entity(dict):
     feed = property(get_feed)
 
     def get_recent_feed(self):
-        return self.feed[-8:]
+        return self.feed[-5:]
     recent_feed = property(get_recent_feed)
 
     def set_notification_count(self, count):
@@ -218,6 +218,10 @@ class User(Entity):
     def get_url(self):
         return abs_url(domain = self.get('sites', [config.server_name])[0]) + 'expressions'
     url = property(get_url)
+
+    def get_thumb(self):
+        return self.get('profile_thumb')
+    thumb = property(get_thumb)
 
 
 def get_root(): return User.named('root')
