@@ -684,6 +684,7 @@ Hive.App.Image = function(common) {
     }
 
     o.resize = function(dims) {
+        if(!dims[0] || !dims[1]) return;
         var newWidth = dims[1] * o.aspectRatio;
         var dims = newWidth < dims[0] ? [newWidth, dims[1]] : [dims[0], dims[0] / o.aspectRatio];
         common.resize(dims);
@@ -910,7 +911,7 @@ var main = function() {
     hover_menu($('#insert_shape'), $('#menu_shape'));
     $('#insert_shape,#menu_shape').click(function(e) {
         Hive.new_app({ type : 'hive.rectangle', content : { color : colors[24],
-            'border-color' : 'black', 'border-width' : 0, 'border-style' : 'solid' } });
+            'border-color' : 'black', 'border-width' : 0, 'border-style' : 'solid', 'border-radius' : 0 } });
     });
     
     $('#btn_grid').click(Hive.toggle_grid);
@@ -1115,10 +1116,9 @@ Hive.set_bg_img = function(app) {
     if(url) imgs.show();
     else { imgs.hide(); return }
 
-    if(img.attr('src') != url) {
-        img.load(function(){ setTimeout(place_apps, 0); });
-        imgs.attr('src', url);
-    }
+    imgs.attr('src', url);
+    img.load(function(){ setTimeout(place_apps, 0); });
+    //img_fill('#bg_preview_img');
     imgs.css('opacity', app.opacity);
 };
 
