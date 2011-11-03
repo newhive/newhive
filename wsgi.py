@@ -73,6 +73,10 @@ def expr_save(request, response):
           new_expression = True
           res = request.requester.expr_create(upd)
           request.requester.flag('expr_new')
+          if request.requester.get('flags').get('add_invites_on_save'):
+              request.requester.unflag('add_invites_on_save')
+              request.requester.increment({'referrals':5})
+              request.requester.flag('show_invite')
         except DuplicateKeyError:
             if exp.get('overwrite'):
                 Expr.named(upd['domain'], upd['name']).delete()
@@ -185,10 +189,7 @@ def file_delete(request, response):
 
 
 def user_check(request, response):
-    if User.named(request.form['name']):
-        return False
-    else:
-        return True
+    return False if User.named(request.args.get('name')) else True
 
 def user_create(request, response):
     """ Checks if the referral code matches one found in database.
@@ -209,7 +210,7 @@ def user_create(request, response):
     args.update({
          'referrer' : referral['user']
         ,'sites'    : [args['name'].lower() + '.' + config.server_name]
-        ,'flags'    : { 'show_invite' : True }
+        ,'flags'    : { 'add_invites_on_save' : True }
     })
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
@@ -584,7 +585,6 @@ actions = dict(
     ,files_create    = files_create
     ,file_delete     = file_delete
     ,user_create     = user_create
-    ,user_check      = user_check
     ,mail_us         = mail_us
     ,mail_them       = mail_them
     ,mail_referral   = mail_referral
@@ -670,14 +670,15 @@ def handle(request): # HANDLER
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
-    if request.domain != "usercontent." + config.server_name and request.method == "POST":
+    content_domain = "usercontent." + config.server_name
+    if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            if not reqaction in ['login', 'add_comment', 'star', 'unstar', 'log']:
+            if not reqaction in ['login', 'add_comment', 'star', 'unstar', 'log', 'user_create']:
                 if not (request.is_secure and request.requester.logged_in):
                     raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure or not logged in')
-                if not urlparse(request.headers.get('Referer')).hostname in request.requester['sites'] + [config.server_name]:
-                    raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
+            if urlparse(request.headers.get('Referer')).hostname == content_domain:
+                raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
 
             if not actions.get(reqaction): raise exceptions.BadRequest('invalid action: '+reqaction)
             r = actions.get(reqaction)(request, response)
@@ -766,6 +767,7 @@ def handle(request): # HANDLER
             response.context['exp'] = response.context['expr'] = expr
             response.context['max_height'] = request.args.get('max_height')
             return serve_page(response, 'dialogs/comments.html')
+        elif p1 == 'user_check': return serve_json(response, user_check(request, response))
          #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
