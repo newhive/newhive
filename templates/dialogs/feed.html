@@ -1,20 +1,45 @@
 <div id="notification_count" style="display: none;">{{user.notification_count}}</div>
 {% for feed in user.recent_feed | reverse %}
-  <div class="feed_item">
+  <div class="feed_item {{feed.entity_class}} {{feed.class_name}}">
     <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png")}}'></a>
     <div class="feed_text">
-      <a href="{{feed.initiator.url}}" class='name {{"you" if feed['initiator'] == user.id}}'>
-        {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}</a>
+
+      {% if feed.entity_class == "User" %}
+      <p><a href="{{feed.initiator.url}}" class='initiator name {{"you" if feed['initiator'] == user.id}}'>
+        {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}
+      </a></p>
+      <p class="line2">starred 
+        <a href="{{feed.entity.url}}" class="entity">
+          {{ "your" if feed.entity.id == user.id else feed.entity.name + "'s" }} profile
+        </a>
+      </p>
+
+      {% else %}
+      <p><a href="{{feed.initiator.url}}" class='initiator name {{"you" if feed['initiator'] == user.id}}'>
+        {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}
+      </a>
       {{ "commented on" if feed.class_name == "Comment" }} 
       {{ "starred" if feed.class_name == "Star" }} 
-      {% if feed.entity_class == "User" %}
-      <a href="{{feed.entity.url}}" class="entity_url">{{ "your" if feed.entity.id == user.id else feed.entity.name + "'s" }} profile</a>
-      {% else %}
-      <a href="{{feed.entity.url}}" class="entity_url">{{ feed.entity.title }}</a>
+      </p>
+      <p>
+        <a class="entity" href="{{feed.entity.url}}">{{ feed.entity.title }}</a>
+      </p>
+      {% endif %}
+
+      {% if feed.class_name == "Comment" %}
+      <p class="comment_text">
+        "{{ feed.text | e | truncate(30) }}{{'"' if feed.text | length <= 30}}
+      </p>
       {% endif %}
     </div>
+    <div class="byline">
+      <a class="name" href="{{ feed.owner_url }}">{{ feed.owner_name }}</a><span class="timestamp">{{ feed.created | friendly_date }}</span>
+    </div>
   </div>
-{% endfor %}
-<div class="feed_item" style="text-align: right;">
+  {% endfor %}
   <a href="https://thenewhive.com/feed">more...</a>
 </div>
+<script>
+    $('#feed_menu .feed_item').hover(function(){$(this).addClass('active');}, function(){$(this).removeClass('active');})
+    .click(function(){window.location = $(this).find('.entity').attr('href')});
+</script>
