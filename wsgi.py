@@ -72,6 +72,7 @@ def expr_save(request, response):
         try:
           new_expression = True
           res = request.requester.expr_create(upd)
+          request.requester.flag('expr_new')
         except DuplicateKeyError:
             if exp.get('overwrite'):
                 Expr.named(upd['domain'], upd['name']).delete()
@@ -205,8 +206,11 @@ def user_create(request, response):
     assert 'tos' in request.form
 
     args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
-    args['referrer'] = referral['user']
-    args['sites'] = [args['name'].lower() + '.' + config.server_name]
+    args.update({
+         'referrer' : referral['user']
+        ,'sites'    : [args['name'].lower() + '.' + config.server_name]
+        ,'flags'    : { 'show_invite' : True }
+    })
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
@@ -780,6 +784,9 @@ def handle(request): # HANDLER
     if not d: return serve_404(request, response)
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
+    if is_owner:
+        if owner.get('flags',{}).get('expr_new'): owner.unflag('show_invite')
+        owner.unflag('expr_new')
 
     response.context.update(
          domain = request.domain
