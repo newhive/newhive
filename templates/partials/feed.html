@@ -2,25 +2,23 @@
     <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png", True)}}'></a>
     <div class="feed_text">
 
-      {% if feed.entity_class == "User" %}
-      <p><a href="{{feed.initiator.url}}" class='initiator name {{"you" if feed['initiator'] == user.id}}'>
-        {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}
-      </a></p>
-      <p class="line2">starred 
+      <p>
+        <a href="{{feed.initiator.url}}" class='initiator name {{"you" if feed['initiator'] == user.id}}'>
+          {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}
+        </a>
+        {{ "commented on" if feed.class_name == "Comment" }} 
+        {{ "starred" if feed.class_name == "Star" }} 
+      </p>
+
+      {% if feed.entity_class == "Expr" %}
+      <p class="title{{feed.entity.title | e | length_bucket}}">
+        <a class="entity" href="{{feed.entity.url}}">{{ feed.entity.title | e}}</a>
+      </p>
+      {% else %}
+      <p class="title_1">
         <a href="{{feed.entity.url}}" class="entity">
           {{ "your" if feed.entity.id == user.id else feed.entity.name + "'s" }} profile
         </a>
-      </p>
-
-      {% else %}
-      <p><a href="{{feed.initiator.url}}" class='initiator name {{"you" if feed['initiator'] == user.id}}'>
-        {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}
-      </a>
-      {{ "commented on" if feed.class_name == "Comment" }} 
-      {{ "starred" if feed.class_name == "Star" }} 
-      </p>
-      <p class="title{{feed.entity.title | e | length_bucket}}">
-        <a class="entity" href="{{feed.entity.url}}">{{ feed.entity.title | e}}</a>
       </p>
       {% endif %}
 
