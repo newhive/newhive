@@ -6,7 +6,9 @@
       {% endif %}
       <div class="comment_content">
         <p class='text'>{{comment.text|e}}</p>
-        <h3 class='author'><a href='{{comment.initiator.url}}'>{{comment.author|e}}</a></h3>
-        <h3 class='age'>{{comment.created|friendly_date}}</h3>
+        <div class="byline">
+          <a class="name" href='{{comment.initiator.url}}'>{{comment.author|e}}</a>
+          <span class='timestamp'>{{ comment.created | friendly_date}}</span>
+        </div>
       </div>
     </div>

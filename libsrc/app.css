@@ -185,13 +185,14 @@ body.home.logged_out .nav{
 .feed_item .byline {
   font-weight: normal;
 }
-.feed_item .byline .name {
+.feed_item .byline .name, .comment .byline .name {
   font-weight: bold;
   font-size: 15px;
   color: #696E76;
 }
 
-.feed_item .byline .timestamp{
+.feed_item .byline .timestamp, .comment .byline .timestamp {
+  font-size: 15px;
   float: right;
   color: #696E76;
 }
@@ -426,6 +427,7 @@ input[type="text"].copy, textarea.copy {
 }
 #dia_comments .header {
   overflow: auto;
+  min-height: 45px;
 }
 #dia_comments #comments {
   overflow: auto;  
@@ -443,6 +445,7 @@ input[type="text"].copy, textarea.copy {
   float: left;
 }
 #dia_comments .text {
+  min-height: 40px;
   margin: 0 0 10px 0;
 }
 #dia_comments .author, #dia_comments .age {
