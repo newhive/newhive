@@ -103,66 +103,87 @@ body.home.logged_out .nav{
 }
 
 #feed_menu .feed_item {
-  font-weight: bold;
-  font-size: 14px;
-  width: 350px;
+  width: 330px;
   clear: both;
   overflow: auto;
-  color: #000;
   margin: 10px;
 }
-#feed_menu .name {
+.feed_item {
+  font-weight: bold;
+  font-size: 14px;
+  color: #000;
+}
+.feed_item .name {
   color: #F72E4D;
 }
-#feed_menu .name.you {
+.feed_item .name.you {
   color : #2D6A5D;
 }
-#feed_menu a {
+.feed_item a {
   font-weight: bold;
 }
-#feed_menu p {
+.feed_item p {
   margin: 0;
 }
-#feed_menu .feed_item.active {
+.feed_item .feed_item.active {
   background-color: #96E2CE;
 }
-#feed_menu img {
+.home .feed_item img {
+  width: 124px;
+  margin-right: 10px;
+  float: left;
+}
+#feed_menu .feed_item img {
   margin: 5px;
   width: 90px;
   float: left;
 }
-#feed_menu .Expr .entity, #feed_menu .User .initiator{
+.home .feed_item .Expr .entity, .home .feed_item.User .initiator{
+  width: 181px;
+}
+#feed_menu .feed_item .Expr .entity, #feed_menu .feed_item.User .initiator{
+  width: 220px;
+}
+.feed_item .Expr .entity, .feed_item.User .initiator{
   font-size: 17px;
   white-space: nowrap;
-  width: 240px;
   overflow: hidden;
   display: inline-block;
   color: #000;
 }
-#feed_menu .User .line2{
+.feed_item.User .line2{
   color: #696E76;
 }
-#feed_menu .feed_text, #feed_menu .byline {
-  width: 240px;
+
+.home .feed_item .feed_text, .home .feed_item .byline {
+  width: 181px;
+}
+#feed_menu .feed_item .feed_text, #feed_menu .feed_item .byline {
+  width: 220px;
+}
+.feed_item .feed_text, .feed_item .byline {
   float: left;
   margin-left: 5px;
 }
-#feed_menu .feed_text {
+.home .feed_item .feed_text {
+  height: 76px;
+}
+#feed_menu .feed_item .feed_text {
   height: 59px;
 }
-#feed_menu .comment_text {
+.feed_item .comment_text {
   font-weight: normal;
 }
-#feed_menu .byline {
+.feed_item .byline {
   font-weight: normal;
 }
-#feed_menu .byline .name {
+.feed_item .byline .name {
   font-weight: bold;
   font-size: 15px;
   color: #696E76;
 }
 
-#feed_menu .byline .timestamp{
+.feed_item .byline .timestamp{
   float: right;
   color: #696E76;
 }
@@ -170,7 +191,7 @@ body.home.logged_out .nav{
   color: #696E76;
 }
 #feed_menu #more_button {
-  width: 350px;
+  width: 330px;
   padding: 0;
   margin: 10px;
   background-color: #696E76;

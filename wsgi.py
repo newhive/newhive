@@ -647,7 +647,6 @@ def expr_home_list(p2, request, response, limit=90):
         response.context['pages'] = Expr.list_count({});
     response.context['exprs'] = map(format_card, exprs)
     response.context['tag'] = tag
-    response.context['tags'] = root.get('tags', [])
     response.context['show_name'] = True
     response.context['page'] = page
 
@@ -739,8 +738,19 @@ def handle(request): # HANDLER
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'pages/minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 == '' or p1 == 'home':
-            expr_home_list(p2, request, response)
+        elif p1 == '' or p1 == 'home' or p1 == 'feed':
+            tags = get_root().get('tags', [])
+            response.context['tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
+            feed_tag = {'url': "/feed", "name": "Feed"}
+            if request.requester.logged_in:
+                response.context['tags'].append(feed_tag)
+            if p1 == 'feed':
+                if not request.requester.logged_in:
+                    return redirect(response, abs_url())
+                response.context['feed_items'] = request.requester.feed
+                response.context['tag'] = feed_tag
+            else:
+                expr_home_list(p2, request, response)
             if request.args.get('partial'): return serve_page(response, 'cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:

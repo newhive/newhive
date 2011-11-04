@@ -81,10 +81,18 @@
  </div>
  {% endif %}
  <div id='tags'>
-  {% for t in tags %}<a href='/home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
+  {% for t in tags %}<a href='{{ t.url|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t.name }}</a> {% endfor %}
  </div>
 
- <div id='feed'>{% include 'cards.html' %}</div>
+ <div id='feed'>
+   {% if feed_items %}
+   {% for feed in feed_items | reverse %}
+     {% include 'partials/feed.html' %}
+   {% endfor %}
+   {% else %}
+   {% include 'cards.html' %}
+   {% endif %}
+ </div>
 
  <script>
 var load_page = null;

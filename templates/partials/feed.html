@@ -1,4 +1,4 @@
-  <div class="feed_item {{feed.entity_class}} {{feed.class_name}}">
+  <div class="feed_item feed item {{feed.entity_class}} {{feed.class_name}}">
     <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png", True)}}'></a>
     <div class="feed_text">
 
@@ -19,8 +19,8 @@
       {{ "commented on" if feed.class_name == "Comment" }} 
       {{ "starred" if feed.class_name == "Star" }} 
       </p>
-      <p>
-        <a class="entity" href="{{feed.entity.url}}">{{ feed.entity.title }}</a>
+      <p class="title{{feed.entity.title | e | length_bucket}}">
+        <a class="entity" href="{{feed.entity.url}}">{{ feed.entity.title | e}}</a>
       </p>
       {% endif %}
 
