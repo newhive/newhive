@@ -15,7 +15,7 @@
         <a class="entity" href="{{feed.entity.url}}">{{ feed.entity.title | e}}</a>
       </p>
       {% else %}
-      <p class="title_1">
+      <p class="title{{(feed.entity.name ~ "'s profile") | length_bucket}}">
         <a href="{{feed.entity.url}}" class="entity">
           {{ "your" if feed.entity.id == user.id else feed.entity.name + "'s" }} profile
         </a>

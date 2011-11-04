@@ -102,11 +102,16 @@ body.home.logged_out .nav{
     display: none;
 }
 
+#feed_menu {
+  padding-top: 15px;
+}
 #feed_menu .feed_item {
-  width: 330px;
+  width: auto;
+  height: auto;
   clear: both;
   overflow: auto;
-  margin: 10px;
+  margin: 0;
+  color: #000;
 }
 .feed_item {
   font-weight: bold;
@@ -117,7 +122,7 @@ body.home.logged_out .nav{
   color: #F72E4D;
 }
 .feed_item .name.you {
-  color : #2D6A5D;
+  color: #000;
 }
 .feed_item a {
   font-weight: bold;
@@ -144,7 +149,7 @@ body.home.logged_out .nav{
 #feed_menu .feed_item .Expr .entity, #feed_menu .feed_item.User .initiator{
   width: 220px;
 }
-.feed_item .Expr .entity, .feed_item.User .initiator{
+.feed_item .Expr .entity {
   font-size: 17px;
   white-space: nowrap;
   overflow: hidden;
@@ -173,6 +178,8 @@ body.home.logged_out .nav{
 }
 .feed_item .comment_text {
   font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .feed_item .byline {
   font-weight: normal;
@@ -185,9 +192,6 @@ body.home.logged_out .nav{
 
 .feed_item .byline .timestamp{
   float: right;
-  color: #696E76;
-}
-#feed_menu .feed_item.Comment, #feed_menu .feed_item.Comment .initiator.name,#feed_menu .feed_item.Comment .entity {
   color: #696E76;
 }
 #feed_menu #more_button {
