@@ -180,6 +180,7 @@ body.home.logged_out .nav{
   font-weight: normal;
   white-space: nowrap;
   overflow: hidden;
+  margin-top: 5px;
 }
 .feed_item .byline {
   font-weight: normal;
