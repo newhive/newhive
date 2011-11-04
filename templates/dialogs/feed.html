@@ -2,7 +2,7 @@
 {% for feed in user.recent_feed | reverse %}
 {% include "partials/feed.html" %}
 {% endfor %}
-  <a href="https://thenewhive.com/feed">
+  <a href="{{server}}feed">
     <div id="more_button" class="btn black">more</div>
   </a>
 <script>
