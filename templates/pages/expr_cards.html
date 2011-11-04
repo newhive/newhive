@@ -37,7 +37,7 @@ iframe { border : none; }
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
- {{ star_button(owner.star_count, owner.id in user.starred_items), user.logged_in }}
+ {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in) }}
  {% if user.logged_in %}
  {{ create_button(create + ('?tags=' + tag if tag else '')) }}
  {% endif %}
