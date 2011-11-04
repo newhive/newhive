@@ -1041,8 +1041,8 @@ def friendly_date(then):
     if then.year != now.year: s += ' ' + str(then.year)
     if dt.days < 7:
         if not dt.days:
-            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'minute')
-            else: (t, u) = (dt.seconds / 3600, 'hour')
+            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
+            else: (t, u) = (dt.seconds / 3600, 'hr')
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
