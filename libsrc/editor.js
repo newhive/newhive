@@ -121,7 +121,6 @@ Hive.App = function(initState) {
         if(o.apps.focused) o.apps.focused.unfocus();
         o.apps.focused = o;
         if(!o.controls) o.controls = Hive.App.Controls(o);
-        qtip_intialize(o.controls.div);
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
@@ -228,7 +227,7 @@ Hive.App.Controls = function(app) {
     o.app = app;
 
     o.remove = function() {
-        o.c.remove.qtip('destroy');
+        o.c.remove;
         o.div.remove();
         o.select_box.remove();
         o.app.controls = false;
