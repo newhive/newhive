@@ -615,18 +615,16 @@ actions = dict(
 ##    , 'application/x-javascript'       : True
 #    }
 
-def format_card(e):
-    def title_len(t):
-        l = len(t)
-        if l < 10: return 1
-        if l < 20: return 2
-        return 3
+def length_bucket(t):
+    l = len(t)
+    if l < 10: return 1
+    if l < 20: return 2
+    return 3
 
+def format_card(e):
     dict.update(e
         ,updated = friendly_date(time_u(e['updated']))
         ,url = abs_url(domain=e['domain']) + e['name']
-        ,title_len = title_len(e['title'])
-        #,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
         ,tags = e.get('tags_index', [])
         )
     return e
@@ -1040,6 +1038,7 @@ def friendly_date(then):
     return s
 
 jinja_env.filters['friendly_date'] = friendly_date
+jinja_env.filters['length_bucket'] = length_bucket
 
 # run_simple is not so simple
 if __name__ == '__main__':
