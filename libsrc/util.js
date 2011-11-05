@@ -146,7 +146,7 @@ function showDialog(name, opts) {
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
             dialog.addClass('dialog border selected').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
             if(!o.opts.mandatory) {
-                dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
+                o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
                 o.shield.add(o.btn_close).click(o.close);
             }
             $(window).resize(function() { o.opts.layout(o.dialog) });
