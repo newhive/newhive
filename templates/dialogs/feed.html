@@ -6,6 +6,5 @@
     <div id="more_button" class="btn black">more</div>
   </a>
 <script>
-    $('#feed_menu .feed_item').hover(function(){$(this).addClass('active');}, function(){$(this).removeClass('active');})
-    .click(function(){window.location = $(this).find('.entity').attr('href')});
+    $('#feed_menu .feed_item').click(function(){window.location = $(this).find('.entity').attr('href')});
 </script>

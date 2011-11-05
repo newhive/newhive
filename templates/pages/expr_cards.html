@@ -70,8 +70,14 @@ iframe { border : none; }
  </div>
  
  <div id='tags'>
-  <a href='/expressions' class='tag_label {{ 'current' if not tag }}'>All</a>
-  {% for t in tags %}<a href='/expressions/{{ t|e }}' class='tag_label drag {{ 'current' if t == tag }}' draggable='false' value='{{ t|e }}'>{{ t }}</a>{% endfor %}
+   <div class='tag_label hoverable drag {{ 'current' if not tag }}'><a href='/expressions'><p>Expressions</p></a></div>
+   {% for t in tags %}<div class='tag_label hoverable drag {{ 'current' if t == tag }}'><a href='/expressions/{{ t|e }}' draggable='false' value='{{ t|e }}'>
+     {% if t == "Starred" %}
+     <img class="hoverable" src="/lib/skin/1/star_tab{{ '-down' if t == tag }}.png"></img>
+     {% else %}
+       <p>{{ t }}</p>
+    {% endif %}
+   </a></div>{% endfor %}
   {% if user_is_owner %}
    <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='vertical-align : bottom' title='Add Folder'>
    {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag|e }}"'>{% endif %}
@@ -132,7 +138,7 @@ iframe { border : none; }
      accept : '.feed.item', drop : function(target, dragged) { add_tag(dragged, target) } });
  $('.feed.item').droppable({ accept : '.tag_label.drag', drop : add_tag }).draggable();
  {% if tag %}
-  $('.feed.item').each(function() {
+  $('#feed .feed.item').each(function() {
       var del = $("<img src='/lib/skin/1/remove_tab.png' class='hoverable' style='position : absolute; bottom : 3px; right : 3px' title='Remove from \"{{ tag|e }}\"'>");
       var that = $(this);
       del.click(function() {

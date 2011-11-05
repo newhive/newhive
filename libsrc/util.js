@@ -424,7 +424,7 @@ function hover_add(o) {
         o.out = function() { if(!o.busy) o.src = o.src_d };
     }
     $(o).hover(o.over, o.out);
-    $(o).hover(function() { $(o).addClass('active'); }, function() { if(!o.busy) $(o).removeClass('active'); });
+    $(o).hover(function() { $(this).addClass('active'); }, function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
 hover_menu = function(handle, drawer, options) {
