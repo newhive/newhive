@@ -635,8 +635,9 @@ def expr_list(spec, **args):
 def expr_home_list(p2, request, response, limit=90):
     root = get_root()
     tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
+    tag = {'name': tag, 'url': '/home/' + tag}
     page = int(request.args.get('page', 0))
-    ids = root.get('tagged', {}).get(tag, [])
+    ids = root.get('tagged', {}).get(tag['name'], [])
     if ids:
         by_id = {}
         for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
