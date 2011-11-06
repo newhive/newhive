@@ -14,8 +14,8 @@ function user_check(user_name){
       return false;
   }
 
-  $.ajax({
-    type: "POST",
+  $.ajax('/user_check', {
+    type: "GET",
     dataType: 'json',
     data: {action: "user_check", name: user_name},
     success: function(data){
@@ -79,7 +79,7 @@ $(document).ready(function(){
 
  <form id='form' method='POST'>
   <div style='margin : 0 auto; width : 80%;'>
-   <div style='float : left; text-align:left; margin : 0 25px 50px 50px; vertical-align : top'>
+   <div style='float : left; clear : both; text-align:left; margin : 0 25px 50px 50px; vertical-align : top'>
     <input type='hidden' name='action' value='user_create'>
   
     <b>Username</b><br>

@@ -1,10 +1,8 @@
 {% extends "main.html" %}
+{% set intro_paragraph = "The New Hive makes it easy for you to express yourself online. You own the expressions you create and can share them any way you like. Plus we'll never put ads on your expressions. All that and it's free! So get on board and express yourself :)" %}
 
 {% block head%}
-  <meta name="description" content="The New Hive is a creative playground that
-  makes it easy for anyone to express themselves online.  THe content you
-  create is your own, and can be easily shared across the web.  We will never
-  put ads on your expressions, and oh yeah, its free!">
+  <meta name="description" content="{{intro_paragraph}}">
   <style>
     body.home.logged_out #nav_bg{background: {{colors['tan'] }}; }
     #homepage_header .signup_button {
@@ -15,6 +13,7 @@
       background-color: {{ colors['highlight'] }};
       color: #000;
     }
+    .abs { position : absolute; }
   </style>
   <script>
     function homepage_header() {
@@ -32,7 +31,7 @@
         $(this).addClass('open');
         $('input[name=forward]').val(window.location);
       });
-      $(window).resize(homepage_header) 
+      $(window).resize(homepage_header);
       homepage_header();
     });
   </script>
@@ -43,21 +42,18 @@
 
 {% if user.logged_in %}
 <div class='nav' style='right : 10px; top : 0px;'>
-  <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
+  {{ create_button(create) }}
 </div>
 {% else %}
-<div id="homepage_header">
+<div id="homepage_header" style='width:100%; background-color: {{ colors['tan'] }};'>
   <div class="happ background" style="left:0px; top:0px; width:1000px; height: 247px; background-color: {{ colors['tan'] }}; z-index: 3;"></div>
   <div class="happ" style="left: 48px; top: 40px; width: 420px; height: 56px; z-index: 3; font-size: 3.3em; font-weight: normal; font-family: Lobster;" data-scale="3.3">
     Express Your<span style="margin:-0.07em">self</span>
   </div>
   <div class='happ' style='width:485px; height: 44px; left:48px; top: 113px; z-index: 3; font-size: 0.75em;' data-scale="0.75">
-    The New Hive makes it easy for anyone to express themselves online.  The
-    content you create is your own, and can be easily shared anywhere.  We will
-    never put ads on your expressions, and oh yeah, it's free! So get on board
-    and express yourself!
+    {{ intro_paragraph }}
   </div>
-  <div class='happ rounded signup_button' style='width:87px; white-space: nowrap; padding: 3px 5px 10px 5px; height: 24px; left:48px; top: 180px; z-index: 3; font-size: 1.4em;' data-scale="1.4">
+  <div class='happ rounded signup_button' style='width:74px; white-space: nowrap; padding: 3px 5px 10px 5px; height: 21px; left:48px; top: 180px; z-index: 3; font-size: 1.2em;' data-scale="1.2">
     <span style="font-family: Museo;"><a href="" onclick="return false;">Sign up</a></span>
   </div>
   <div id="h_2" class="happ" style="left: 585px; top: 10px; width: 365.802px; height: 206.727px; z-index:3;">
@@ -79,10 +75,18 @@
  </div>
  {% endif %}
  <div id='tags'>
-  {% for t in tags %}<a href='/home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
+   {% for t in tags %}<div class='tag_label hoverable {{ 'current' if t == tag }}'><a href='{{ t.url|e }}'><p>{{ t.name }}</p></a></div> {% endfor %}
  </div>
 
- <div id='feed'>{% include 'cards.html' %}</div>
+ <div id='feed'>
+   {% if feed_items %}
+   {% for feed in feed_items | reverse %}
+     {% include 'partials/feed.html' %}
+   {% endfor %}
+   {% else %}
+   {% include 'cards.html' %}
+   {% endif %}
+ </div>
 
  <script>
 var load_page = null;

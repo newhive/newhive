@@ -5,6 +5,8 @@ server_name     = 'thenewhive.com'
 database        = 'hive'
 media_path      = '/home/domains/thenewhive.com'
 
+ssl_ca          = False
+
 aws_id          = False
 aws_secret      = False
 s3_buckets      = []

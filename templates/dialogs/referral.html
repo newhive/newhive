@@ -1,10 +1,10 @@
 <div id='dia_referral' class='dialog border selected'>
   <h3>
     Hi <span id='user_first_name'>{{ user.name }}</span>, good news!<br/>
-    You have <span id='referral_count'>{{ user.referrals }}</span> hive referrals.
+    You have <span id='referral_count'>{{ user.referrals }}</span> hive invites.
   </h3>
   <form id='referral_form' action='{{ secure_server}}' method='POST'>
-    <input type='hidden' name='forward' value='' />
+    <input type='hidden' name='forward' value='{{ url }}' />
     <input type='hidden' name='action' value='mail_referral'/>
     <div class="label">Enter your friend's contact info below <br/>to send an invitation</div>
     <div class="line first">
