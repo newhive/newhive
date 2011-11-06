@@ -82,6 +82,15 @@ function autoLink(string) {
     return string;
 }
 
+function logAction(action, data){
+    if (!data) data=false;
+    $.ajax({
+        url: '', 
+        type: 'POST',
+        data: {action: 'log', log_action: action, data: data}
+    });
+};
+
 function exprDialog(url, opts) {
     $.extend(opts, { layout : function(dia) {
         dia.css({ width : '80%' });
@@ -94,17 +103,31 @@ function exprDialog(url, opts) {
 exprDialog.loaded = {};
 
 function loadDialog(url, opts) {
-    $.extend(opts, { absolute : true });
+    $.extend({ absolute : true }, opts);
     var dia;
-    if(loadDialog.loaded[url]) dia = loadDialog.loaded[url];
-    else {
-        var html;
-        $.ajax({ url : url, success : function(h) { html = h }, async : false });
-        dia = loadDialog.loaded[url] = $(html);
+    if(loadDialog.loaded[url]) {
+        dia = loadDialog.loaded[url];
+        showDialog(dia,opts);
     }
-    return showDialog(dia, opts);
+    else {
+        $.ajax({ url : url, success : function(h) { 
+            var html = h;
+            dia = loadDialog.loaded[url] = $(html);
+            showDialog(dia,opts);
+        }});
+    }
 }
 loadDialog.loaded = {};
+
+function secureDialog(type, opts) {
+    var dia;
+    var params = $.extend({'domain': window.location.hostname, 'path': window.location.pathname}, opts.params)
+    if (loadDialog.loaded[type]) dia = loadDialog.loaded[type];
+    else {
+        dia = loadDialog.loaded[type] = '<iframe style="' + opts.style + '" src="' + server_url + type + '?' + $.param(params) + '" />';
+    }
+    return showDialog(dia, opts);
+};
 
 function showDialog(name, opts) {
     var dialog = $(name);
@@ -121,9 +144,9 @@ function showDialog(name, opts) {
                 mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
 
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
-            dialog.addClass('dialog').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            dialog.addClass('dialog border selected').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
             if(!o.opts.mandatory) {
-                dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
+                o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
                 o.shield.add(o.btn_close).click(o.close);
             }
             $(window).resize(function() { o.opts.layout(o.dialog) });
@@ -156,9 +179,49 @@ function showDialog(name, opts) {
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
+function commentDialog(){
+    loadDialog('?dialog=comments');
+}
+
+function starExpression(){
+    var btn = $('#btn_star .icon')
+    if (! btn.hasClass('inactive')){
+        var action = btn.hasClass('starred') ? 'unstar' : 'star'
+        btn.addClass('inactive')
+    $.post('', {'action': action, 'domain': window.location.hostname, 'path': window.location.pathname}, function(data){
+        var btn = $('#btn_star .icon')
+        var countdiv = btn.next();
+        btn.removeClass('inactive');
+        if(data == "unstarred"){
+            btn.removeClass('starred');
+            btn.parent().attr('title', 'Star This Expression');
+            countdiv.html(parseInt(countdiv.html())-1);
+        } else if (data == "starred"){
+            btn.addClass('starred');
+            btn.parent().attr('title', 'Un-star This Expression');
+            countdiv.html(parseInt(countdiv.html())+1);
+        };
+    }, 'json');
+    }
+}
+function reloadFeed(){
+    $.get('?dialog=feed', function(data){
+        $('#feed_menu').html(data);
+        var count = $('#notification_count').html();
+        var count_div = $('#notifications .count').html(count);
+        if (count == "0"){
+            count_div.addClass('zero');
+        } else {
+            count_div.removeClass('zero');
+        }
+
+    });
+}
+
 function updateShareUrls(element, currentUrl) {
     element = $(element);
     var encodedUrl = encodeURIComponent(currentUrl), total=0;
+    var encodedTitle = encodeURIComponent(document.title)
     element.find('.copy_url').val(currentUrl);
     element.find('.embed_code').val('<iframe src="' + currentUrl + '" style="width: 100%; height: 100%" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0"></iframe>');
     element.find('a.twitter')
@@ -169,6 +232,8 @@ function updateShareUrls(element, currentUrl) {
       .attr('href', 'http://www.reddit.com/submit?url=' + encodedUrl);
     element.find('.gplus_button')
       .attr('href', currentUrl);
+    element.find('a.stumble')
+      .attr('href', 'http://www.stumbleupon.com/submit?url=' + encodedUrl + '&title=' + encodedTitle);
 
     element.find('.count').each(function(){
       $(this).html($(this).html().replace(/^0$/, "-"))
@@ -203,10 +268,17 @@ function map2(f, list1, list2) {
     for(var i = 0; i < list1.length; i++) ret.push(f(list1[i], list2[i]));
     return ret;
 }
-function reduce(f, list, first) {
-    if(first === undefined) first = list.shift();
-    for(var i = 0; i < list.length; i++) first = f(first, list[i]);
-    return first;
+function propsin(o, plist) {
+    var ret = {};
+    for(var i = 0; i < plist.length; i++) ret[plist[i]] = o[plist[i]];
+    return ret;
+}
+// Combination of foldl and foldl1
+function reduce(f, list, left) {
+    var L = $.extend([], list), left;
+    if(left === undefined) left = L.shift();
+    while(right = L.shift()) left = f(left, right);
+    return left;
 }
 function zip(list1, list2) {
     var ret = [];
@@ -220,18 +292,30 @@ op = {
     '/' : function(a, b) { return a / b },
     '%' : function(a, b) { return a % b }
 }
-
-function elem(tag, attrs) {
-    var e = document.createElement(tag);
-    for(name in attrs) e.setAttribute(name, attrs[name]);
-    return e;
+function bound(num, lower_bound, upper_bound) {
+    if(num < lower_bound) return lower_bound;
+    if(num > upper_bound) return upper_bound;
+    return num;
 }
+
+function iconCounts() {
+    $('.has_count').each(function(){
+        var count = $(this).attr('data-count');
+        var count_div = $(this).find('.count');
+        if (count_div.length == 0){
+            count_div = $(this).append('<div class="count"></div>').children().last();
+        }
+        if (count == "0") count_div.addClass('zero');
+        count_div.html(count);
+    });
+};
 
 /*** puts alt attribute of input fields in to value attribute, clears
  * it when focused.
  * Adds hover events for elements with class='hoverable'
  * ***/
 $(function () {
+    iconCounts();
     $('#btn_share').click(function(){
         var dialog = $('#dia_share');
         if (dialog.length === 0 ) {
@@ -266,20 +350,22 @@ $(function () {
       });
     }
   });
-
-  $('#dia_referral input[name=forward]').val(window.location);
   $(window).resize(place_apps);
   place_apps();
 });
-
+$(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
 
 
 function center(e, inside, opts) {
-    var opts = $.extend({ absolute : false }, opts);
+    var opts = $.extend({ absolute : false, minimum : true }, opts);
     var w = typeof(inside) == 'undefined' ? $(window) : inside;
-    pos = { left : Math.max(0, w.width() / 2 - e.outerWidth() / 2),
-        'top' : Math.max(0, w.height() / 2 - e.outerHeight() / 2) };
+    if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
+    pos = { left : (w.width() - e.outerWidth()) / 2, 'top' : (w.height() - e.outerHeight()) / 2 };
+    if(opts.minimum) {
+        pos['left'] = Math.max(0, pos['left']);
+        pos['top'] = Math.max(0, pos['top']);
+    }
     if(opts.absolute) {
         pos['left'] += window.scrollX;
         pos['top'] += window.scrollY;
@@ -287,14 +373,46 @@ function center(e, inside, opts) {
     e.css(pos);
 }
 
+function img_fill(img) {
+    var e = $(img), w = e.parent().width(), h = e.parent().height();
+    if(!e.length) return;
+    e.css('position', 'absolute');
+    if(e.width() / e.height() > w / h) e.width('').height(h);
+    else e.width(w).height('');
+    center(e, e.parent(), { minimum : false });
+    return e;
+}
+
 function asyncSubmit(form, callback) {
     $.post(server_url, $(form).serialize(), callback);
     return false;
 }
 
+function asyncUpload(opts) {
+    var target, form, opts = $.extend({ json : true, file_name : 'file',
+        start : noop, success : noop, data : { action : 'files_create' } }, opts);
+
+    var onload = function() {
+        var frame = target.get(0);
+        if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
+        var resp = $(frame.contentDocument.body).text();
+        if(opts.json) resp = JSON.parse(resp);
+        opts.success(resp);
+        form.remove();
+    }
+
+    var tname = 'upload' + Math.random();
+    form = $("<form method='POST' enctype='multipart/form-data' action='/' style='position : absolute; left : -1000px'>").attr('target', tname);
+    target = $("<iframe style='position : absolute; left : -1000px'></iframe>").attr('name', tname).appendTo(form).load(onload);
+    var input = $("<input type='file'>").attr('name', opts.file_name).change(function() { opts.start(); form.submit() }).appendTo(form);
+    for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
+    form.appendTo(document.body);
+    setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
+}
+
 function hover_url(url) {
     var h = url.replace(/(.png)|(-.*)$/, '-hover.png');
-    var i = $(elem('img', { src : h, style : 'display : none' }));
+    var i = $("<img style='display:none'>").attr('src', h);
     $(document.body).append(i);
     return h;
 }
@@ -306,7 +424,7 @@ function hover_add(o) {
         o.out = function() { if(!o.busy) o.src = o.src_d };
     }
     $(o).hover(o.over, o.out);
-    $(o).hover(function() { $(o).addClass('active'); }, function() { if(!o.busy) $(o).removeClass('active'); });
+    $(o).hover(function() { $(this).addClass('active'); }, function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
 hover_menu = function(handle, drawer, options) {
@@ -322,7 +440,8 @@ hover_menu = function(handle, drawer, options) {
         ,hover : true
     };
     $.extend(o.options, options);
-    if(!handle.length) throw("no handle"); if(!drawer.length) throw("no drawer");
+    if(!handle.length) throw("hover_menu has no handle");
+    if(!drawer.length) throw("hover_menu has no drawer");
     handle.get(0).hover_menu = o;
     //drawer.remove();
     //$(document.body).append(drawer);
@@ -398,23 +517,6 @@ hover_menu = function(handle, drawer, options) {
     return o;
 }
 
-tool_tip = function(tool, tip, above) {
-    var o = { };
-    o.drawer = $('<div>').html(tip).addClass('tooltip');
-    o.tool = tool;
-    tool.after(o.drawer);
-
-    o.show = function() {
-        var x = tool.position().left + tool.outerWidth() / 2 - o.drawer.outerWidth() / 2;
-        var y = o.tool.position().top + (above ? -5 - o.drawer.outerHeight() : o.tool.outerHeight() + 5);
-        o.drawer.css({ 'left' : x, 'top' : y});
-        o.drawer.show();
-    }
-
-    tool.hover(o.show, function() { o.drawer.hide() });
-    return o;
-}
-
 var minimize = function(what, to, opts) {
     var o = $.extend({ 'to' : $(to).addClass('active'), 'what' : $(what), 'duration' : 700, 'complete' : noop }, opts);
     if(o.what.data('minimizing')) return;
@@ -443,16 +545,14 @@ function createCookie(name,value,days) {
         var expires = "; expires="+date.toGMTString();
     }
     else var expires = "";
-    document.cookie = name+"="+value+expires+"; path=/";
+    document.cookie = name+"="+escape(value)+expires+"; path=/";
 }
 
 function readCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1,c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    var pairs = document.cookie.split(';');
+    for(var i=0; i < pairs.length; i++) {
+        pair = pairs[i].trim().split('=');
+        if(pair[0] == name && pair.length > 1) return unescape(pair[1]);
     }
     return null;
 }
@@ -469,7 +569,9 @@ var place_apps = function() {
        var s = e.parent().width() / 1000;
        if(!e.data('css')) {
            var c = {};
-           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height']);
+           map(function(p) { c[p] = parseFloat($(app_div).css(p)) }, ['left', 'top', 'width', 'height',
+               'border-left-width', 'border-top-width', 'border-right-width', 'border-bottom-width',
+               'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
            e.data('css', c);
@@ -480,5 +582,10 @@ var place_apps = function() {
        for(var p in c) c[p] *= s;
        if(c['font-size']) c['font-size'] += 'em';
        e.css(c);
+   });
+   $('.happfill').each(function(i, div) {
+       var e = $(div);
+       e.width(e.parent().width()).height(e.parent().height());
+       img_fill(e.find('img'))
    });
 }

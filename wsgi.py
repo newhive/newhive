@@ -6,12 +6,14 @@ import os, re, json, mimetypes
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
+from urlparse import urlparse
 import jinja2
 import PIL.Image as Img
+from PIL import ImageOps
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog
 
 import webassets
 
@@ -28,6 +30,7 @@ assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'r
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
 assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
@@ -50,7 +53,6 @@ def expr_save(request, response):
     """ Parses JSON object from POST variable 'exp' and stores it in database.
         If the name (url) does not match record in database, create a new record."""
 
-    if not request.trusting: raise exceptions.BadRequest()
     try: exp = Expr(json.loads(request.form.get('exp', '0')))
     except: exp = False
     if not exp: raise ValueError('missing or malformed exp')
@@ -64,12 +66,17 @@ def expr_save(request, response):
         fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
         if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
     # Generate thumbnail from given image url
-    if exp.get('thumb_src'): upd['thumb'] = generate_thumb(request.requester, exp.get('thumb_src'))
+    if exp.get('thumb_src'): upd['thumb'] = generate_thumb_from_url(request.requester, exp.get('thumb_src'), size=(124,96))
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
           new_expression = True
           res = request.requester.expr_create(upd)
+          request.requester.flag('expr_new')
+          if request.requester.get('flags').get('add_invites_on_save'):
+              request.requester.unflag('add_invites_on_save')
+              request.requester.increment({'referrals':5})
+              request.requester.flag('show_invite')
         except DuplicateKeyError:
             if exp.get('overwrite'):
                 Expr.named(upd['domain'], upd['name']).delete()
@@ -83,7 +90,7 @@ def expr_save(request, response):
     return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
-def generate_thumb(owner, url):
+def generate_thumb_from_url(owner, url, size):
     # create file record in database, copy file to media directory via http
     try: response = urllib.urlopen(url)
     except: return
@@ -94,26 +101,23 @@ def generate_thumb(owner, url):
     f = open(path, 'w')
     f.write(response.read())
     f.close()
+    return generate_thumb(owner, path, size)
 
-    # resize and crop image to 124x96, preserving aspect ratio, save over original
+def generate_thumb(owner, path, size):
+    # resize and crop image to size set by size tuple, preserving aspect ratio, save over original
     try: imo = Img.open(path)
     except:
         os.remove(path)
-        return
-    ratio = float(imo.size[0]) / imo.size[1]
-    ratio_target = 124.0 / 96
-    new_size = (124, int(124 / ratio)) if ratio < ratio_target else (int(96 * ratio), 96)
-    imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-    imo = imo.crop((0, 0, 124, 96))
+        return False
+    imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     imo = imo.convert(mode='RGB')
     imo.save(path, format='jpeg')
 
-    res = File.create(owner=owner.id, path=path, name='thumb', mime=mime)
+    res = File.create(owner=owner.id, path=path, size=size, name='thumb', mime='image/jpeg')
     return res.get('url')
 
 
 def expr_delete(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     e = Expr.fetch(request.form.get('id'))
     if not e: return serve_404(request, response)
     if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
@@ -128,7 +132,6 @@ def files_create(request, response):
     Resamples images to 1600x1000 or smaller, sets JPEG quality to 70
     """
 
-    if not request.trusting: raise exceptions.BadRequest()
     request.max_content_length = 100000000
 
     for file_name in request.files:
@@ -180,17 +183,13 @@ def files_create(request, response):
         return app
 
 def file_delete(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     res = File.fetch(request.form.get('id'))
     if res: res.delete()
     return True
 
 
 def user_check(request, response):
-    if User.named(request.form['name']):
-        return False
-    else:
-        return True
+    return False if User.named(request.args.get('name')) else True
 
 def user_create(request, response):
     """ Checks if the referral code matches one found in database.
@@ -208,8 +207,11 @@ def user_create(request, response):
     assert 'tos' in request.form
 
     args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
-    args['referrer'] = referral['user']
-    args['sites'] = [args['name'].lower() + '.' + config.server_name]
+    args.update({
+         'referrer' : referral['user']
+        ,'sites'    : [args['name'].lower() + '.' + config.server_name]
+        ,'flags'    : { 'add_invites_on_save' : True }
+    })
     user = User.create(**args)
     referrer.update(referrals = referrer['referrals'] - 1)
     referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
@@ -230,25 +232,69 @@ def bad_referral(request, response):
     response.context['error'] = 'Log in if you already have an account'
     return serve_page(response, 'pages/error.html')
 
+def profile_thumb_set(request, response):
+    request.max_content_length = 10000000 # 10 megs
+    user = request.requester
+
+    file = request.files.get('profile_thumb')
+    path = os.tmpnam()
+    file.save(path)
+    mime = mimetypes.guess_type(file.filename)[0]
+
+    if mime in ['image/jpeg', 'image/png', 'image/gif']:
+        profile_thumb_url = generate_thumb(user, path, (275,200))
+        user.update(profile_thumb=profile_thumb_url)
+    else: 
+        response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
+
+    return redirect(response, request.form['forward'])
+
 
 def expr_tag_update(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     tag = lget(normalize(request.form.get('value', '')), 0)
     id = request.form.get('expr_id')
     expr = Expr.fetch(id)
     action = request.form.get('action')
     if action == 'tag_add': new_tags = expr.get('tags', '') + ' ' + tag
-    elif action == 'tag_remove': new_tags = re.sub(tag, '', expr['tags'])
-    expr.update(tags=new_tags, updated=False)
+    elif action == 'tag_remove':
+        if request.form.get('value') == "Starred":
+            s = Star.find(initiator=request.requester.id, entity=id)
+            s.delete()
+        else:
+            new_tags = re.sub(tag, '', expr['tags'])
+            expr.update(tags=new_tags, updated=False)
     return True
 
 def user_tag_update(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     tag = lget(normalize(request.form.get('value', '')), 0)
     if not tag: return False
     if request.form.get('action') == 'user_tag_add': request.requester.update_cmd({'$addToSet':{'tags':tag}})
     else: request.requester.update_cmd({'$pull':{'tags':tag}})
     return True
+
+def star(request, response):
+    if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
+    parts = request.path.split('/', 1)
+    p1 = lget(parts, 0)
+    if p1 == "expressions":
+        print p1
+        entity = User.find(sites=request.domain.lower())
+    else:
+        entity = Expr.named(request.domain.lower(), request.path.lower())
+    print entity;
+    if request.form.get('action') == "star":
+        s = Star.new(request.requester, entity)
+        if s or s.get('entity'):
+          return 'starred'
+        else:
+          return False
+    else:
+       s = Star.find(initiator=request.requester.id, entity=entity.id)
+       if s:
+           res = s.delete()
+           if not res['err']: return 'unstarred'
+       else:
+           return 'unstarred'
 
 def admin_update(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
@@ -271,7 +317,7 @@ def bulk_invite(request, resposne):
                     contact.update(referral_id=referral_id)
                 else:
                     print "email not sent to " + contact['email'] + " referral already exists"
-      
+
 def add_referral(request, response):
     if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
     form = request.form.copy()
@@ -290,6 +336,15 @@ def add_referral(request, response):
         user.increment({'referrals': number})
 
     return redirect(response, forward)
+
+def add_comment(request, response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
+    commenter = request.requester
+    expression = Expr.fetch(request.form.get('expression'))
+    comment_text = request.form.get('comment')
+    comment = Comment.new(commenter, expression, {'text': comment_text})
+    return serve_html(response, jinja_env.get_template("partials/comment.html").render({'comment': comment}))
 
 
 ######################################
@@ -345,7 +400,6 @@ def mail_us(request, response):
     return serve_page(response, 'dialogs/signup_thank_you.html')
 
 def mail_them(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     if not request.form.get('message') or not request.form.get('to'): return False
 
     response.context.update({
@@ -387,7 +441,6 @@ def mail_them(request, response):
     return redirect(response, request.form.get('forward'))
 
 def mail_referral(request, response):
-    if not request.trusting: raise exceptions.BadRequest()
     user = request.requester
     name = request.form.get('name')
     to_email = request.form.get('to')
@@ -512,6 +565,17 @@ def login(request, response):
     if auth.handle_login(request, response):
         return redirect(response, request.form.get('url', home_url(request.requester)))
 
+def log(request, response):
+    action = request.form.get('log_action')
+    user = request.requester
+    if action == "notifications_open":
+        user.notification_count = 0
+
+    data = json.loads(request.form.get('data', 'false'))
+    if not data:
+        data = {}
+    l = ActionLog.new(user, request.form.get('log_action'), data)
+
 # Possible values for the POST variable 'action'
 actions = dict(
      login           = login
@@ -521,7 +585,6 @@ actions = dict(
     ,files_create    = files_create
     ,file_delete     = file_delete
     ,user_create     = user_create
-    ,user_check      = user_check
     ,mail_us         = mail_us
     ,mail_them       = mail_them
     ,mail_referral   = mail_referral
@@ -532,7 +595,12 @@ actions = dict(
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
     ,add_referral    = add_referral
+    ,add_comment     = add_comment
     ,bulk_invite     = bulk_invite
+    ,profile_thumb_set  = profile_thumb_set
+    ,star            = star
+    ,unstar          = star
+    ,log             = log
     )
 
 # Mime types that could generate HTTP POST requests
@@ -547,18 +615,16 @@ actions = dict(
 ##    , 'application/x-javascript'       : True
 #    }
 
-def format_card(e):
-    def title_len(t):
-        l = len(t)
-        if l < 10: return 1
-        if l < 20: return 2
-        return 3
+def length_bucket(t):
+    l = len(t)
+    if l < 10: return 1
+    if l < 20: return 2
+    return 3
 
+def format_card(e):
     dict.update(e
         ,updated = friendly_date(time_u(e['updated']))
         ,url = abs_url(domain=e['domain']) + e['name']
-        ,title_len = title_len(e['title'])
-        #,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
         ,tags = e.get('tags_index', [])
         )
     return e
@@ -569,19 +635,19 @@ def expr_list(spec, **args):
 def expr_home_list(p2, request, response, limit=90):
     root = get_root()
     tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
+    tag = {'name': tag, 'url': '/home/' + tag}
     page = int(request.args.get('page', 0))
-    ids = root.get('tagged', {}).get(tag, [])
+    ids = root.get('tagged', {}).get(tag['name'], [])
     if ids:
         by_id = {}
         for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
-        exprs = [by_id[i] for i in ids]
+        exprs = [by_id[i] for i in ids if by_id.has_key(i)]
         response.context['pages'] = 0;
     else:
         exprs = Expr.list({}, sort='updated', limit=limit, page=page)
         response.context['pages'] = Expr.list_count({});
     response.context['exprs'] = map(format_card, exprs)
     response.context['tag'] = tag
-    response.context['tags'] = root.get('tags', [])
     response.context['show_name'] = True
     response.context['page'] = page
 
@@ -595,26 +661,28 @@ def handle(request): # HANDLER
 
     response = Response()
     request.requester = auth.authenticate_request(request, response)
-    request.trusting = False
-    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.base_url }
+    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
     response.user = request.requester
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
 
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
-    if request.domain == config.server_name:
-        if request.is_secure and request.requester and request.requester.logged_in:
-            request.trusting = True
-
-        reqaction = request.form.get('action', False)
+    content_domain = "usercontent." + config.server_name
+    if request.domain != content_domain and request.method == "POST":
+        reqaction = request.form.get('action')
         if reqaction:
-            r = actions.get(reqaction,
-                lambda _,__: raises(exceptions.BadRequest('action: '+reqaction))
-                )(request, response)
+            if not reqaction in ['login', 'add_comment', 'star', 'unstar', 'log', 'user_create']:
+                if not (request.is_secure and request.requester.logged_in):
+                    raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure or not logged in')
+            if urlparse(request.headers.get('Referer')).hostname == content_domain:
+                raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
+
+            if not actions.get(reqaction): raise exceptions.BadRequest('invalid action: '+reqaction)
+            r = actions.get(reqaction)(request, response)
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
-
+    if request.domain == config.server_name:
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
         p2 = lget(parts, 1)
@@ -647,9 +715,7 @@ def handle(request): # HANDLER
 
             if request.requester.get('flags'):
                 show_help = request.requester['flags'].get('default-instructional') < 1
-            else:
-               show_help = True
-
+            else: show_help = True
             if show_help:
                 request.requester.increment({'flags.default-instructional': 1})
             response.context.update({
@@ -673,8 +739,19 @@ def handle(request): # HANDLER
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'pages/minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 == '' or p1 == 'home':
-            expr_home_list(p2, request, response)
+        elif p1 == '' or p1 == 'home' or p1 == 'feed':
+            tags = get_root().get('tags', [])
+            response.context['tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
+            feed_tag = {'url': "/feed", "name": "Feed"}
+            if request.requester.logged_in:
+                response.context['tags'].append(feed_tag)
+            if p1 == 'feed':
+                if not request.requester.logged_in:
+                    return redirect(response, abs_url())
+                response.context['feed_items'] = request.requester.feed
+                response.context['tag'] = feed_tag
+            else:
+                expr_home_list(p2, request, response)
             if request.args.get('partial'): return serve_page(response, 'cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
@@ -694,7 +771,13 @@ def handle(request): # HANDLER
             response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
             response.content_type = 'text/csv; charset=utf-8'
             return response
-        #else:
+        elif p1 == 'comments':
+            expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
+            response.context['exp'] = response.context['expr'] = expr
+            response.context['max_height'] = request.args.get('max_height')
+            return serve_page(response, 'dialogs/comments.html')
+        elif p1 == 'user_check': return serve_json(response, user_check(request, response))
+         #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
         #    response.context['exprs'] = map(format_card, exprs)
@@ -705,13 +788,16 @@ def handle(request): # HANDLER
 
         return serve_404(request, response)
     elif request.domain.startswith('www.'):
-        return redirect(response, abs_url(secure=request.is_secure, domain=request.domain[4:]) + request.path + '?' + request.query_string)
+        return redirect(response, re.sub('www.', '', request.url, 1))
 
     d = resource = Expr.named(request.domain.lower(), request.path.lower())
     if not d: d = Expr.named(request.domain, '')
     if not d: return serve_404(request, response)
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
+    if is_owner:
+        if owner.get('flags',{}).get('expr_new'): owner.unflag('show_invite')
+        owner.unflag('expr_new')
 
     response.context.update(
          domain = request.domain
@@ -722,8 +808,10 @@ def handle(request): # HANDLER
         )
 
     if request.args.has_key('dialog'):
-        response.context.update(exp=resource)
-        return serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
+        dialog = request.args['dialog']
+        response.context.update(exp=resource, expr=resource)
+        return serve_page(response, 'dialogs/' + dialog + '.html')
+
 
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) + 'expressions' +
@@ -732,14 +820,19 @@ def handle(request): # HANDLER
         page = int(request.args.get('page', 0))
         spec = { 'owner' : owner.id }
         tag = lget(request.path.split('/'), 1, '')
-        if tag: spec['tags_index'] = tag
+        if tag:
+          if tag == "Starred":
+            spec['_id'] = {'$in': owner.starred_items}
+            del spec['owner']
+          else:
+            spec['tags_index'] = tag
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = owner.get('tags', [])
-        response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page)
-        response.context['view'] = request.args.get('view')
-        response.context['expr'] = dfilter(owner, ['background'])
+        response.context['tags'].insert(0, 'Starred')
+        response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
@@ -748,7 +841,7 @@ def handle(request): # HANDLER
     if not resource: return serve_404(request, response)
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
-    html = exp_to_html(resource)
+    html = expr_to_html(resource)
     auth_required = (resource.get('auth') == 'password' and resource.get('password')
         and request.form.get('password') != resource.get('password')
         and request.requester.id != resource['owner'])
@@ -833,39 +926,44 @@ application = handle_debug
 
 
 # www_expression -> String
-def exp_to_html(exp):
+def expr_to_html(exp):
     """Converts JSON object representing an expression to HTML"""
 
     apps = exp.get('apps')
     if not apps: return ''
 
     def css_for_app(app):
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f" % (
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
             app['position'][0],
             app['position'][1],
             app['dimensions'][0],
             app['dimensions'][1],
             'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
             app['z'],
-            # Added "or 1" in case "None" is stored in the database
             app.get('opacity', 1) or 1
             )
 
     def html_for_app(app):
         content = app.get('content', '')
-        if app.get('type', '') == 'hive.image':
+        more_css = ''
+        html = ''
+        if app.get('type') == 'hive.image':
             html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
+        elif app.get('type') == 'hive.rectangle':
+            c = app.get('content', {})
+            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
         else: html = content
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app), data, html)
+        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app) + more_css, data, html)
 
     return ''.join(map(html_for_app, apps))
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
+jinja_env.trim_blocks = True
 
 def serve_html(response, html):
     response.data = html
@@ -932,30 +1030,37 @@ class Forbidden(exceptions.Forbidden):
 
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
+    if type(then) == int:
+      then = time_u(then)
 
     now = datetime.utcnow()
     dt = now - then
+    if dt.seconds < 60:
+        return "just now"
     months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     s = months[then.month] + ' ' + str(then.day)
     if then.year != now.year: s += ' ' + str(then.year)
     if dt.days < 7:
         if not dt.days:
-            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'minute')
-            else: (t, u) = (dt.seconds / 3600, 'hour')
+            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
+            else: (t, u) = (dt.seconds / 3600, 'hr')
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
 
+jinja_env.filters['friendly_date'] = friendly_date
+jinja_env.filters['length_bucket'] = length_bucket
+
 # run_simple is not so simple
 if __name__ == '__main__':
+    """ This Werkzeug server is used only for development and debugging """
     from werkzeug import run_simple
     import OpenSSL.SSL as ssl
-    import os
-    import signal
 
     ctx = ssl.Context(ssl.SSLv3_METHOD)
-    ctx.use_certificate_file(config.ssl_cert)
     ctx.use_privatekey_file(config.ssl_key)
+    ctx.use_certificate_file(config.ssl_cert)
+    if config.ssl_ca: ctx.use_certificate_chain_file(config.ssl_ca)
 
     child = os.fork()
     if(child):

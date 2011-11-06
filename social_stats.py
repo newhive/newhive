@@ -42,3 +42,11 @@ def twitter_count(url, raw=False):
       return len(response['results'])
   except KeyError:
     raise Exception(response)
+
+def stumble_count(url):
+  response_stream = urllib2.urlopen("http://www.stumbleupon.com/services/1.01/badge.getinfo?url=" + urllib.quote(url))
+  response = json.loads(response_stream.read())
+  try:
+    return int(response['result'].get('views', 0))
+  except KeyError:
+    raise Exception(response)

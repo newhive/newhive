@@ -206,7 +206,7 @@ drag = $special.drag = {
 				
 				// if suppressing click events...
 				if ( dd.click === false && dd.dragging ){
-					jQuery.event.triggered = true;
+					jQuery.event.triggered = 'click';
 					setTimeout(function(){
 						jQuery.event.triggered = false;
 					}, 20 );

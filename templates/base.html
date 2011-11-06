@@ -11,17 +11,11 @@
  {% for item in assets_env["app.css"].urls() %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
- <style id='css_base'>
-html, body { margin : 0; padding : 0; font-family : Helvetica, sans-serif; font-size : 17px;
-    color : black; white-space-collapse : discard; }
-img { padding : 0; margin : 0; border : 0; }
-a { color : inherit; text-decoration : none; }
-.happ, .ehapp { line-height : 1.2em; }
+ <link id='css_base' rel='stylesheet' type='text/css' href='{{ assets_env['base.css'].urls()[0] }}'>
+ <style>
 input[type=text], input[type=password], textarea { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : {{ colors['selected'] }}; }
 input[type=button], input[type=submit] { border : none; }
-h1 { font-size : 40px; }
-form { display : inline; }
 .menu { display : none; border : 0px solid {{ colors['unselected'] }};
     background-color : white; z-index : 1100; font-size : 11pt; position : absolute;
     -moz-box-shadow: 05px 05px 05px #888;
@@ -53,36 +47,6 @@ form { display : inline; }
 .nav { position : fixed; margin : 0; }
 .menu, .top, .nav { z-index : 1; }
 .spacer { height : 10px; clear : both; }
-#bg { position : fixed; top : 0; left : 0; width : 99999px; height : 99999px; overflow : hidden; z-index : 0; background-color : white; }
-#body { position : absolute; top : 0; left : 0; min-width : 100%; min-height : 100%; z-index : 1; }
-#content { position : absolute; top : 0; left : 0; z-index : 0; min-width : 100%; }
-
-@font-face { src: url('/lib/fonts/Museo/Museo500-Regular.eot'); src: local("☺"), url('/lib/fonts/Museo/Museo500-Regular.ttf') format('opentype'); font-family: Museo; font-weight: 500; }
-@font-face { src: url('/lib/fonts/Museo/Museo700-Regular.eot'); src: local("☺"), url('/lib/fonts/Museo/Museo700-Regular.ttf') format('opentype'); font-family: Museo; font-weight: 700; }
-@font-face { src: url('/lib/fonts/BPscript/BPscript.eot'); src: local("☺"), url('/lib/fonts/BPscript/BPscript.ttf') format('opentype'); font-family: BPscript; font-weight : 500; }
-@font-face { src: url('/lib/fonts/code/CODE_Bold.eot'); src: local("☺"), url('/lib/fonts/code/CODE_Bold.ttf') format('opentype'); font-family: Code; font-weight : 700; }
-@font-face { src: url('/lib/fonts/code/CODE_Light.eot'); src: local("☺"), url('/lib/fonts/code/CODE_Light.ttf') format('opentype'); font-family: Code; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Comic-Zine-OT/comic_zine_ot.eot'); src: local("☺"), url('/lib/fonts/Comic-Zine-OT/comic_zine_ot.ttf') format('opentype'); font-family: Comic Zine; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folkoutline.eot'); src: local("☺"), url('/lib/fonts/Folk/Folkoutline.ttf') format('opentype'); font-family: Folk Outline; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folkshadow.eot'); src: local("☺"), url('/lib/fonts/Folk/Folkshadow.ttf') format('opentype'); font-family: Folk Shadow; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folksketches.eot'); src: local("☺"), url('/lib/fonts/Folk/Folksketches.ttf') format('opentype'); font-family: Folk Sketches; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folksolid.eot'); src: local("☺"), url('/lib/fonts/Folk/Folksolid.ttf') format('opentype'); font-family: Folk; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lane/LANENAR_.eot'); src: local("☺"), url('/lib/fonts/Lane/LANENAR_.ttf') format('truetype'); font-family: Lane; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lane/LANEPOSH.eot'); src: local("☺"), url('/lib/fonts/Lane/LANEPOSH.ttf') format('truetype'); font-family: Lane Posh; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lane/LANEUP__.eot'); src: local("☺"), url('/lib/fonts/Lane/LANEUP__.ttf') format('truetype'); font-family: Lane Up; font-weight : 500; }
-@font-face { src: url('/lib/fonts/League-Gothic/League_Gothic.eot'); src: local("☺"), url('/lib/fonts/League-Gothic/League_Gothic.ttf') format('opentype'); font-family: League Gothic; font-weight : 500; }
-@font-face { src: url('/lib/fonts/LemonChicken/LEMONCHI.eot'); src: local("☺"), url('/lib/fonts/LemonChicken/LEMONCHI.ttf') format('truetype'); font-family: Lemon Chi; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lilly/Lilly__.eot'); src: local("☺"), url('/lib/fonts/Lilly/Lilly__.ttf') format('truetype'); font-family: Lilly; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lobster/Lobster_1.3.eot'); src: local("☺"), url('/lib/fonts/Lobster/Lobster_1.3.ttf') format('opentype'); font-family: Lobster; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Matiz/Matiz.eot'); src: local("☺"), url('/lib/fonts/Matiz/Matiz.ttf') format('truetype'); font-family: Matiz; font-weight : 500; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold_Oblique.eot'); src: local("☺"), url('/lib/fonts/quicksand_2/Quicksand_Bold_Oblique.ttf') format('opentype'); font-family: Quicksand; font-weight : 700; font-style : italic; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold.eot'); src: local("☺"), url('/lib/fonts/quicksand_2/Quicksand_Bold.ttf') format('opentype'); font-family: Quicksand; font-weight : 700; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book_Oblique.eot'); src: local("☺"), url('/lib/fonts/quicksand_2/Quicksand_Book_Oblique.ttf') format('opentype'); font-family: Quicksand; font-weight : 500; font-style : italic; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book.eot'); src: local("☺"), url('/lib/fonts/quicksand_2/Quicksand_Book.ttf') format('opentype'); font-family: Quicksand; font-weight : 500; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBd.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMoBd.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 700; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBI.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMoBI.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 700; font-style : italic; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoIt.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMoIt.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; font-style : italic; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMono.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMono.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; }
 
 .feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }
  </style>
@@ -90,6 +54,13 @@ form { display : inline; }
 html, body { background-color : white; height : 100%; }
  </style>
 
+<!-- Begin Inspectlet Embed Code -->
+<script type="text/javascript" id="inspectletjs">
+  var __insp = __insp || [];
+  var __inspHost = (("https:" == document.location.protocol) ? "https://www.inspectlet.com" : "http://www.inspectlet.com");
+  document.write(unescape("%3Cscript id='inspsync' src='" + __inspHost + "/inspect_nojquery/1614263783.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<!-- End Inspectlet Embed Code -->
  <script>var server_name = '{{ server_name }}', server_url = '{{ secure_server }}', debug_mode = {{ 'true' if debug else 'false' }};</script>
  {% for item in assets_env["app.js"].urls() %}
    <script src='{{ item }}'></script>

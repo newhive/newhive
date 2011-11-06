@@ -11,6 +11,47 @@
   z-index : 1; 
 }
 
+.nav .nav_icon.has_count {
+  position: relative;
+}
+.has_count .count {
+  color: #FFF;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  border-radius: 6px;
+  margin: 15px 5px 0 -10px;
+  padding: 2px 5px;
+  line-height: 13px;
+  font-size: 12px;
+  font-weight: bold;
+  float: left;
+  background: #696E76;
+}
+.has_count img {
+  float: left;
+}
+#btn_share {
+}
+#btn_star .icon {
+  height: 50px;
+  float: left;
+  width: 67px;
+  background-image: url('/lib/skin/1/star.png');
+}
+#btn_star .icon.starred {
+  background-image: url('/lib/skin/1/star_active.png');
+}
+#btn_star.active .icon.starred, #btn_star.active .icon {
+  background-image: url('/lib/skin/1/star-hover.png');
+}
+
+#tags .star_tab {
+  background-image: url("/lib/skin/1/star_tab.png");
+}
+#tags .star_tab:hover {
+  background-image: url("/lib/skin/1/star_tab-hover.png");
+}
+
 body.main #content{
   top: 50px
 }
@@ -46,6 +87,134 @@ body.home.logged_out .nav{
   display: inline-block;
   padding: 3px 5px 2px 5px;
   vertical-align: middle;
+}
+
+/* ==========================================
+   feed menu
+   ========================================== */
+#notifications {
+  width: 67px;
+  background-image: url('/lib/skin/1/feed.png');
+}
+#notifications.active {
+  background-image: url('/lib/skin/1/feed-hover.png');
+}
+#notifications.has_count .count {
+  margin: 0;
+  position: absolute;
+  top: 27px;
+  left: 40px;
+  background-color: #F72E4D;
+}
+#notifications.has_count .count.zero {
+    display: none;
+}
+
+#feed_menu {
+  padding-top: 15px;
+}
+#feed_menu .feed_item {
+  width: auto;
+  height: auto;
+  clear: both;
+  overflow: hidden;
+  margin: 0;
+  color: #000;
+}
+.feed_item {
+  font-weight: bold;
+  font-size: 14px;
+  color: #000;
+}
+.feed_item .name {
+  color: #F72E4D;
+}
+.feed_item .name.you {
+  color: #000;
+}
+.feed_item a {
+  font-weight: bold;
+}
+.feed_item p {
+  margin: 0;
+}
+.feed_item .feed_item.active {
+  background-color: #96E2CE;
+}
+.home .feed_item img {
+  width: 124px;
+  margin-right: 10px;
+  float: left;
+}
+#feed_menu .feed_item img {
+  margin: 5px;
+  width: 90px;
+  float: left;
+}
+.home .feed_item .Expr .entity, .home .feed_item.User .initiator{
+  width: 181px;
+}
+#feed_menu .feed_item .Expr .entity, #feed_menu .feed_item.User .initiator{
+  width: 220px;
+}
+.feed_item .Expr .entity {
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  color: #000;
+}
+.feed_item.User .line2{
+  color: #696E76;
+}
+
+.home .feed_item .feed_text, .home .feed_item .byline {
+  width: 181px;
+}
+#feed_menu .feed_item .feed_text, #feed_menu .feed_item .byline {
+  width: 220px;
+}
+.feed_item .feed_text, .feed_item .byline {
+  float: left;
+  margin-left: 5px;
+}
+.home .feed_item .feed_text {
+  height: 76px;
+  color: #000;
+}
+#feed_menu .feed_item .feed_text {
+  height: 59px;
+  white-space: nowrap;
+}
+.feed_item .comment_text {
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-top: 5px;
+}
+.feed_item .byline {
+  font-weight: normal;
+}
+.feed_item .byline .name, .comment .byline .name {
+  font-weight: bold;
+  font-size: 15px;
+  color: #696E76;
+}
+
+.feed_item .byline .timestamp, .comment .byline .timestamp {
+  font-size: 15px;
+  float: right;
+  color: #696E76;
+}
+#feed_menu #more_button {
+  width: 330px;
+  padding: 0;
+  margin: 10px;
+  background-color: #696E76;
+  text-align: center;
+}
+#feed_menu #more_button:hover {
+  background-color: #FFF673;
 }
 
 /* ==========================================
@@ -167,29 +336,29 @@ input[type="text"].copy, textarea.copy {
 #dia_referral .medbold { line-height: 1em; }
 #dia_referral .label .small { font-size: 12px; font-weight: normal }
 
-/* firefox warning dialog */
-#firefox_warning, #ie_warning {
+/* Editor browser warning dialog */
+#editor_browsers, #ie_warning {
   padding: 20px 50px;
   text-align: center;
 }
-#firefox_warning h1, #ie_warning h1{
+#editor_browsers h1, #ie_warning h1{
   font-family: Lobster, serif;
   font-weight: normal;
   color: red;
   margin: 8px 0 0 0;
   font-size: 38px;
 }
-#firefox_warning h2, #ie_warning h2{
+#editor_browsers h2, #ie_warning h2{
   font-family: Helvetica, Arial, sans-serif;
   font-size: 18px;
   margin: 0;
 }
 
-#firefox_warning h3, #ie_warning h3{
+#editor_browsers h3, #ie_warning h3{
   font-size: 25px;
   margin: 20px 0;
 }
-#firefox_warning a {
+#editor_browsers a {
   text-decoration: underline;
 }
 
@@ -239,6 +408,75 @@ input[type="text"].copy, textarea.copy {
   width: 280px; 
 }
 
+/* Comments dialog */
+#dia_comments {
+  width: 505px;
+  padding: 20px;
+}
+
+#dia_comments .icon {
+  float: left;
+  margin: -10px;
+}
+#dia_comments .title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: normal;
+  font-family: Museo, Helvetica, Arial, sans-serif;
+}
+#dia_comments .title .comments_count {
+    font-weight: bold;
+    color: #F72E4D;
+}
+#dia_comments textarea {
+  width: 480px;
+  margin-top: 10px;
+}
+#dia_comments input[type=submit] {
+  float: right;
+}
+#dia_comments .header {
+  overflow: auto;
+  min-height: 45px;
+}
+#dia_comments #comments {
+  overflow: auto;  
+  clear: both;
+  width: 520px;
+}
+
+#dia_comments .comment {
+  clear: both;
+  padding-top: 20px;
+  overflow: auto;
+}
+#dia_comments .comment_content {
+  width: 390px;
+  float: left;
+}
+#dia_comments .text {
+  min-height: 40px;
+  margin: 0 0 10px 0;
+}
+#dia_comments .author, #dia_comments .age {
+  font-size: 20px;
+  margin: 0;
+}
+#dia_comments .author {
+  color: blue;
+  float: left;
+}
+#dia_comments .age {
+  float: right;
+}
+#dia_comments .comment_thumb {
+  width: 99px;
+  height: 72px;
+  background-color: #aaa;
+  float: left;
+  margin-right: 10px;
+}
+
 /* ==========================================
    login menu
    ========================================== */
@@ -286,12 +524,13 @@ input[type="text"].copy, textarea.copy {
 
 /* === Expression cards and category labels, profile and homepage === */
 
-a.tag_label:hover { color : #F73627; background : #FFF673; }
-.tag_label.current { background-color : #96E2CE; color : black; padding : 6px 20px; }
-.tag_label { font-weight : bold; color : #696E76; padding : 6px 15px; margin-right : 5px; background-color : #EDEBE1; }
-#tags { margin : 50px 50px 25px 50px; }
+.tag_label { height: 31px; float: left; font-weight : bold; color : #696E76; margin-right : 5px; background-color : #EDEBE1; }
+.tag_label.active, .tag_label.current.active { color : #F73627; background : #FFF673; }
+.tag_label.current { padding: 0 5px; background-color : #96E2CE; color : black;}
+.tag_label p {font-weight : bold; padding: 6px 15px; margin: 0}
+#tags { clear:both; overflow: auto; height: 32px; margin : 50px 50px 25px 50px; }
 
-#feed { width : auto; margin : 0 50px 50px 50px; } /*left : 124px; width : 776px; padding : 0; }*/
+#feed { clear: both; width : auto; margin : 0 0px 50px 50px; } /*left : 124px; width : 776px; padding : 0; }*/
 .feed.item { position : relative; padding : 5px; margin : 0 5px 5px 0; width : 330px; height : 96px;
     float : left; background-image : url('/lib/skin/1/feed_item.png'); }
 /*.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }*/
@@ -304,11 +543,16 @@ a.tag_label:hover { color : #F73627; background : #FFF673; }
 .feed .tags { height : 2.4em; overflow : hidden; text-overflow : ellipsis; }
 .feed .other { position : absolute; left : 139px; bottom : 5px; font-weight : bold; }
 
-.fathead { font-family : Museo, Helvetica, sans-serif; font-size : 3em; font-weight : bold; margin : 60px 50px 60px 50px; }
+.fathead { float: left; font-family : Museo, Helvetica, sans-serif; font-size : 3em; font-weight : bold; margin : 60px 50px 60px 50px; width: auto;}
+.fathead.hasthumb { margin: 75px 50px 0 50px; }
 .fathead img { margin : 8px 0; vertical-align : top; }
 
+#profile_thumb { float: right; width: auto; }
+#profile_thumb img, #profile_thumb .placeholder{ margin: 25px 40px 20px 0; height: 200px; }
+#profile_thumb .placeholder{ height: 20px; width: 275px; padding: 90px 0;}
+.placeholder { border: 1px dashed #CCC; text-align:center; }
+#profile_thumb .message {position: absolute; top: 225px; font-size: 12px;}
 
-/* === Expression pages === */
 
-.happ { position : absolute; }
-.happ img { width : 100%; }
+#btn_help { color : #696E76; }
+#btn_help.active { color : white; }

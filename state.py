@@ -48,6 +48,10 @@ def junkstr(length):
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
 
+    _starred_items = None
+    _starrers = None
+    _feed = None
+
     def __init__(self, d, cname=None):
         dict.update(self, d)
         if cname: self.cname = cname
@@ -95,18 +99,18 @@ class Entity(dict):
         else: d['updated'] = now()
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d })
-    def update_cmd(self, d): return self._col.update({ '_id' : self.id }, d)
+    def update_cmd(self, d, **opts): return self._col.update({ '_id' : self.id }, d, **opts)
 
     def increment(self, d):
       """Increment counter(s) identified by a dict.
       For example {'foo': 2, 'bar': -1, 'baz.qux': 10}"""
-      return self._col.update({ '_id' : self.id }, {'$inc': d}, upsert=True)
+      return self.update_cmd({'$inc': d}, upsert=True)
 
     def flag(self, name):
-        return self._col.update({ '_id' : self.id }, {'$set': {'flags.' + name: True}})
+        return self.update_cmd({'$set': {'flags.' + name: True}})
 
     def unflag(self, name):
-        return self._col.update({ '_id' : self.id }, {'$set': {'flags.' + name: False}})
+        return self.update_cmd({'$set': {'flags.' + name: False}})
 
     def flagged(self, name):
         if self.has_key('flags'):
@@ -115,6 +119,48 @@ class Entity(dict):
             return False
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
+
+    def get_feed(self):
+        if not self._feed:
+            feed = self.get('feed')
+            if feed:
+                self._feed = Feed.search(**{'_id': {'$in': self.get('feed')}})
+            else:
+                self._feed = []
+        return self._feed
+    feed = property(get_feed)
+
+    def get_recent_feed(self):
+        return self.feed[-5:]
+    recent_feed = property(get_recent_feed)
+
+    def set_notification_count(self, count):
+        self.update_cmd({'$set': {'notification_count': count}});
+    def get_notification_count(self):
+        count = self.get('notification_count')
+        if not count and count != 0:
+           count = len(self.feed)
+           self.notification_count = count
+        return count
+    notification_count = property(get_notification_count, set_notification_count)
+
+    def get_starred_items(self):
+        if not self._starred_items:
+          self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
+        return self._starred_items
+    starred_items = property(get_starred_items)
+
+    def get_starrers(self):
+        if not self._starrers:
+          self._starrers = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Star' and i.get('entity') == self.id, self.feed)]
+        return self._starrers
+    starrers = property(get_starrers)
+
+    def get_star_count(self):
+        return len(self.starrers)
+    star_count = property(get_star_count)
+
+
 
 def fetch(cname, id, keyname='_id'):
     return Entity({}, cname=cname).fetch_me(id, keyname=keyname)
@@ -137,7 +183,7 @@ class User(Entity):
     #    ,sites = [str]
 
     def expr_create(self, d):
-        doc = dict(owner = self.id, name = '', domain = self['sites'][0]) 
+        doc = dict(owner = self.id, name = '', domain = self['sites'][0])
         doc.update(d)
         return Expr.create(**doc)
 
@@ -168,6 +214,14 @@ class User(Entity):
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
+
+    def get_url(self):
+        return abs_url(domain = self.get('sites', [config.server_name])[0]) + 'expressions'
+    url = property(get_url)
+
+    def get_thumb(self):
+        return self.get('profile_thumb')
+    thumb = property(get_thumb)
 
 
 def get_root(): return User.named('root')
@@ -209,7 +263,7 @@ class Expr(Entity):
         return cls.named(domain, name)
 
     @classmethod
-    def list(cls, spec, requester=None, limit=300, page=0, sort='updated'):
+    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
         es = map(Expr, db.expr.find(
              spec = spec
             ,sort = [(sort, -1)]
@@ -218,7 +272,7 @@ class Expr(Entity):
             ))
 
         can_view = lambda e: (
-            requester == e['owner'] or (e.get('auth', 'public') == 'public'
+            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' 
             and len(e.get('apps', [])) ))
         return filter(can_view, es)
 
@@ -255,20 +309,21 @@ class Expr(Entity):
       return "http://" + self['domain'] + "/" + self['name']
 
     def analytic_count(self, string):
-      if string in ['facebook', 'gplus', 'twitter']:
-        count = None
+      if string in ['facebook', 'gplus', 'twitter', 'stumble']:
+        count = 0
+        updated = 0
         try:
           updated = self['analytics'][string]['updated']
-        except (KeyError, TypeError):
-          updated = 0
-
-        if (now() - updated) < 36000:
           count = self['analytics'][string]['count'] #return the value from the db if newer than 10 hours
+        except: pass # (KeyError, TypeError):
 
-        if count == None:
-          count = getattr(social_stats, string + "_count")(self.qualified_url())
-          subdocument = 'analytics.' + string
-          self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+        age = now() - updated
+        if not (age < 36000 or (string == 'stumble' and age < 1)):
+          try:
+              count = getattr(social_stats, string + "_count")(self.qualified_url())
+              subdocument = 'analytics.' + string
+              self._col.update({'_id': self.id}, {'$set': {subdocument + '.count': count, subdocument + '.updated': now()}})
+          except: pass
 
         return count
       if string in ['email']:
@@ -281,10 +336,38 @@ class Expr(Entity):
         return 0
 
     def get_url(self): return abs_url(domain=self['domain']) + self['name']
+    url = property(get_url)
 
     def set_tld(self, domain):
         """ Sets the top level domain (everything following first dot) in domain attribute """
         return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
+
+    def get_comments(self):
+        if not self.has_key('feed'): return []
+        comments = Comment.search(**{'_id': {'$in': self['feed']}})
+        try:
+            comments_accurate = len(comments) == self['analytics']['Comment']['count']
+        except KeyError:
+            comments_accurate = False
+        if not comments_accurate:
+            self.update_cmd({'$set': {'analytics.Comment.count': len(comments)}})
+        return comments
+    comments = property(get_comments)
+
+    def get_comment_count(self):
+        try:
+            return self['analytics']['Comment']['count']
+        except KeyError:
+            return 0
+    comment_count = property(get_comment_count)
+
+
+    def get_share_count(self):
+        count = 0
+        for item in ["email", "gplus", "twitter", "facebook"]:
+            count += self.analytic_count(item)
+        return count
+    share_count = property(get_share_count)
 
 
 class File(Entity):
@@ -329,6 +412,116 @@ class File(Entity):
 
         super(File, self).delete()
 
+class ActionLog(Entity):
+    cname = 'action_log'
+
+    @classmethod
+    def new(cls, user, action, data={}):
+        data.update({
+            'user': user.id
+            ,'user_name': user.get('name')
+            ,'action': action
+            })
+        return cls.create(**data)
+
+class Feed(Entity):
+    cname = 'feed'
+
+    def create_me(self):
+        for key in ['initiator', 'entity', 'entity_class']:
+            assert self.has_key(key)
+
+        class_name = type(self).__name__
+        self.update(class_name=class_name)
+        super(Feed, self).create_me()
+        db.user.update({'_id': self['initiator']}, {'$push': {'feed': self.id}})
+        self.entity.update_cmd({'$push': {'feed': self.id}})
+        self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
+        if self['entity_class'] == "Expr":
+            if not self.entity['owner'] == self['initiator']: # don't double-count commenting on your own expression
+                db.user.update({'_id': self.entity['owner']}, {'$inc': {'notification_count': 1}, '$push': {'feed': self.id}})
+        return self
+
+    def get_entity(self):
+        return globals()[self['entity_class']].fetch(self['entity'])
+
+    def get_initiator(self):
+        return User.fetch(self['initiator'])
+
+    entity = property(get_entity)
+    initiator = property(get_initiator)
+
+    @classmethod
+    def new(cls, initiator, entity, data={}):
+        data.update({
+            'initiator': initiator.id
+            ,'initiator_name': initiator.get('name')
+            ,'entity': entity.id
+            ,'entity_class': entity.__class__.__name__
+            })
+        return cls.create(**data)
+
+    @classmethod
+    def search(cls, **spec):
+        if not cls == Feed:
+            spec.update({"class_name": cls.__name__})
+        return super(Feed, cls).search(**spec)
+
+    def delete(self):
+        self.initiator.update_cmd({'$pull': {'feed': self.id}})
+        self.entity.update_cmd({'$pull': {'feed': self.id}})
+        return super(Feed, self).delete()
+
+    def get_owner_name(self):
+      if self['entity_class'] == "User":
+        return self.entity.get('name')
+      elif self['entity_class'] == "Expr":
+        return self.entity.get('owner_name')
+    owner_name = property(get_owner_name)
+
+    def get_owner_url(self):
+      if self['entity_class'] == "User":
+        return self.entity.url
+      elif self['entity_class'] == "Expr":
+        return abs_url(domain = self.entity.get('domain')) + "expressions"
+    owner_url = property(get_owner_url)
+
+
+
+class Comment(Feed):
+    def create_me(self):
+        assert self.has_key('text')
+        super(Comment, self).create_me()
+        return self
+
+    def get_author(self):
+        author = self.get('initiator_name')
+        if not author:
+            author = self.initiator['name']
+            self.update_cmd({'$set': {'initiator_name': author}})
+        return author
+    author = property(get_author)
+
+    def to_json(self):
+        return {
+            'text': self.get('text')
+            , 'author': self.author
+            , 'created': self.get('created')
+            , 'thumb': self.initiator.get('thumb')
+            }
+
+    def get_thumb(self):
+        return self.initiator.get('profile_thumb')
+    thumb = property(get_thumb)
+
+class Star(Feed):
+    @classmethod
+    def new(cls, initiator, entity, data={}):
+        if initiator.id in entity.starrers:
+            return True
+        else:
+            return super(Star, cls).new(initiator, entity, data)
+
 
 class Referral(Entity):
     cname = 'referral'
@@ -341,7 +534,6 @@ class Referral(Entity):
 class Contact(Entity):
     cname = 'contact_log'
 
-        
 def abs_url(secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 

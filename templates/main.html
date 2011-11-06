@@ -1,44 +1,43 @@
 {% extends "base.html" %}
+{% from "macros/main.html" import star_button, share_button, create_button, discussion_button %} 
 
-{% block body_classes %}{{ super() }} main{% endblock%}
+{% block body_classes %}{{ super() }} main{% endblock %}
 
 {% block main %}
-<div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
->{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
-
 <div class='nav' id='nav_bg'></div>
 <div class='nav' style='font-weight : bold'>
- <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
+  <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
+
  {% if user.logged_in %}
   <div class='nav_icon medbold' style='left : 50px; top : 0;'><a href='{{ home_url }}'>{{ user['name'] }}</a></div>
   <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
-  {% if user.referrals > 0 and user.flagged('new_referrals') %}
-    <div class='button rounded notification_count' style="background-color: {{colors['active']}}; color: white;">
-      {{ user.referrals }}
-    </div>
-  {% endif %}
+  <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}'></div>
+  <div id='feed_menu' class='menu border selected'>
+    {% include "dialogs/feed.html" %}
+  </div>
   <div id='user_menu' class='menu'>
-   <form name='logout_form' action='{{ secure_server }}' method='POST'>
-    <input name='action' value='logout' type='hidden'>
-   </form>
-   <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
-   {% if user.referrals > 0 %}
-   <div class='menu_item' onclick='showDialog("#dia_referral")'>Referrals <div style="float: right; color:{{colors['active']}};">{{ user.referrals }}</div></div>
-  {% endif %}
-   <!--<div class='menu_item'>Change&nbsp;icon</div>
-   <div class='menu_item'>Settings</div>-->
+    <form name='logout_form' action='{{ secure_server }}' method='POST'>
+      <input name='action' value='logout' type='hidden'>
+    </form>
+    <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
+    {% if user.referrals > 0 %}
+      <div class='menu_item' onclick='showDialog("#dia_referral")'>
+        Invites <div style="float: right; color:{{colors['active']}};">{{ user.referrals }}</div>
+      </div>
+    {% endif %}
   </div>
   <script>
     hover_menu(
-      $('#user_menu_handle').add('.notification_count'), 
+      $('#user_menu_handle'), 
       $('#user_menu'), 
-      {
-        offsetY: 10 
-        {% if user.referrals > 0 and user.flagged('new_referrals') %}
-        , open: function(){$('.notification_count').hide(); $.ajax({url: '{{server}}api/notifications_opened', xhrFields: { withCredentials: true }});}
-        {% endif %}
-      }
+      { offsetY: 10 }
     );
+    hover_menu($('#notifications'), $('#feed_menu'), {
+      open: function(){
+        $('#notifications .count').addClass('zero');
+        logAction('notifications_open');
+      }
+    });
   </script>
  {% else %}
   <a href='{{ server }}'><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
@@ -89,7 +88,7 @@
 <div id='content'>{% block content %}{% endblock %}</div>
 
 {% if user.logged_in %}
- <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable' title='Send feedback'>
+ <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable tip_none' title='Send feedback'>
  <script>
   $('#feedback_btn').click(function() {
       new_window('{{ server }}feedback?url=' + window.location, 470, 400);
