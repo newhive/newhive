@@ -6,7 +6,8 @@
 {% block main %}
 <div class='nav' id='nav_bg'></div>
 <div class='nav' style='font-weight : bold'>
- <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
+  <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
+
  {% if user.logged_in %}
   <div class='nav_icon medbold' style='left : 50px; top : 0;'><a href='{{ home_url }}'>{{ user['name'] }}</a></div>
   <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
@@ -15,15 +16,15 @@
     {% include "dialogs/feed.html" %}
   </div>
   <div id='user_menu' class='menu'>
-   <form name='logout_form' action='{{ secure_server }}' method='POST'>
-    <input name='action' value='logout' type='hidden'>
-   </form>
-   <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
-   {% if user.referrals > 0 %}
-   <div class='menu_item' onclick='showDialog("#dia_referral")'>Invites <div style="float: right; color:{{colors['active']}};">{{ user.referrals }}</div></div>
-  {% endif %}
-   <!--<div class='menu_item'>Change&nbsp;icon</div>
-   <div class='menu_item'>Settings</div>-->
+    <form name='logout_form' action='{{ secure_server }}' method='POST'>
+      <input name='action' value='logout' type='hidden'>
+    </form>
+    <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
+    {% if user.referrals > 0 %}
+      <div class='menu_item' onclick='showDialog("#dia_referral")'>
+        Invites <div style="float: right; color:{{colors['active']}};">{{ user.referrals }}</div>
+      </div>
+    {% endif %}
   </div>
   <script>
     hover_menu(

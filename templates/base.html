@@ -54,6 +54,13 @@ input[type=button], input[type=submit] { border : none; }
 html, body { background-color : white; height : 100%; }
  </style>
 
+<!-- Begin Inspectlet Embed Code -->
+<script type="text/javascript" id="inspectletjs">
+  var __insp = __insp || [];
+  var __inspHost = (("https:" == document.location.protocol) ? "https://www.inspectlet.com" : "http://www.inspectlet.com");
+  document.write(unescape("%3Cscript id='inspsync' src='" + __inspHost + "/inspect_nojquery/1614263783.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<!-- End Inspectlet Embed Code -->
  <script>var server_name = '{{ server_name }}', server_url = '{{ secure_server }}', debug_mode = {{ 'true' if debug else 'false' }};</script>
  {% for item in assets_env["app.js"].urls() %}
    <script src='{{ item }}'></script>

@@ -23,7 +23,7 @@ if config.webassets_debug:
     assets_env.updater = "always"
     assets_env.set_url('/lib/libsrc')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
-assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js', 'jquery.qtip-1.0.0-rc3.js',
+assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
@@ -615,18 +615,16 @@ actions = dict(
 ##    , 'application/x-javascript'       : True
 #    }
 
-def format_card(e):
-    def title_len(t):
-        l = len(t)
-        if l < 10: return 1
-        if l < 20: return 2
-        return 3
+def length_bucket(t):
+    l = len(t)
+    if l < 10: return 1
+    if l < 20: return 2
+    return 3
 
+def format_card(e):
     dict.update(e
         ,updated = friendly_date(time_u(e['updated']))
         ,url = abs_url(domain=e['domain']) + e['name']
-        ,title_len = title_len(e['title'])
-        #,title = e['title'][0:50] + '...' if len(e['title']) > 50 else e['title']
         ,tags = e.get('tags_index', [])
         )
     return e
@@ -637,8 +635,9 @@ def expr_list(spec, **args):
 def expr_home_list(p2, request, response, limit=90):
     root = get_root()
     tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
+    tag = {'name': tag, 'url': '/home/' + tag}
     page = int(request.args.get('page', 0))
-    ids = root.get('tagged', {}).get(tag, [])
+    ids = root.get('tagged', {}).get(tag['name'], [])
     if ids:
         by_id = {}
         for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
@@ -649,7 +648,6 @@ def expr_home_list(p2, request, response, limit=90):
         response.context['pages'] = Expr.list_count({});
     response.context['exprs'] = map(format_card, exprs)
     response.context['tag'] = tag
-    response.context['tags'] = root.get('tags', [])
     response.context['show_name'] = True
     response.context['page'] = page
 
@@ -741,8 +739,19 @@ def handle(request): # HANDLER
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'pages/minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 == '' or p1 == 'home':
-            expr_home_list(p2, request, response)
+        elif p1 == '' or p1 == 'home' or p1 == 'feed':
+            tags = get_root().get('tags', [])
+            response.context['tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
+            feed_tag = {'url': "/feed", "name": "Feed"}
+            if request.requester.logged_in:
+                response.context['tags'].append(feed_tag)
+            if p1 == 'feed':
+                if not request.requester.logged_in:
+                    return redirect(response, abs_url())
+                response.context['feed_items'] = request.requester.feed
+                response.context['tag'] = feed_tag
+            else:
+                expr_home_list(p2, request, response)
             if request.args.get('partial'): return serve_page(response, 'cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
@@ -1033,13 +1042,14 @@ def friendly_date(then):
     if then.year != now.year: s += ' ' + str(then.year)
     if dt.days < 7:
         if not dt.days:
-            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'minute')
-            else: (t, u) = (dt.seconds / 3600, 'hour')
+            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
+            else: (t, u) = (dt.seconds / 3600, 'hr')
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
 
 jinja_env.filters['friendly_date'] = friendly_date
+jinja_env.filters['length_bucket'] = length_bucket
 
 # run_simple is not so simple
 if __name__ == '__main__':

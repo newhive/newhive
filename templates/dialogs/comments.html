@@ -6,12 +6,14 @@
     {% else %}
     <h3 class="title">Start the discussion <span class='comments_count'>:)</span></h3>
     {% endif %}
+    {% if user.logged_in %}
     <form>
       <input type="hidden" name="action" value="add_comment" />
       <input type="hidden" name="expression" value="{{exp.id}}" />
       <textarea name="comment"></textarea>
       <input type="submit" class="btn black rounded" value="Enter" onclick="submitComment(); return false;"/>
     </form>
+    {% endif %}
   </div>
   <div id="comments">
     {% for comment in expr.comments %}
@@ -37,7 +39,10 @@
     var header_height = $('#dia_comments .header').height();
     var dialog_height = $('#dia_comments').height();
     var window_height = $(window).height();
-    $('#comments').height(window_height * 0.75 - header_height - 50);
+    var new_height = window_height * 0.75 - header_height - 50;
+    if ($('#comments').height() > new_height) {
+      $('#comments').height(new_height);
+    }
     center($('#dia_comments'));
   };
   commentSize();

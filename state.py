@@ -434,7 +434,7 @@ class Feed(Entity):
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create_me()
-        db.user.update({'_id': self['initiator']}, {'$inc': {'notification_count': 1}, '$push': {'feed': self.id}})
+        db.user.update({'_id': self['initiator']}, {'$push': {'feed': self.id}})
         self.entity.update_cmd({'$push': {'feed': self.id}})
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
         if self['entity_class'] == "Expr":

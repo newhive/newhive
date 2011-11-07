@@ -146,7 +146,7 @@ function showDialog(name, opts) {
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
             dialog.addClass('dialog border selected').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
             if(!o.opts.mandatory) {
-                dialog.prepend(o.btn_close = $('<div class="btn_dialog_close"></div>'));
+                o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
                 o.shield.add(o.btn_close).click(o.close);
             }
             $(window).resize(function() { o.opts.layout(o.dialog) });
@@ -424,7 +424,7 @@ function hover_add(o) {
         o.out = function() { if(!o.busy) o.src = o.src_d };
     }
     $(o).hover(o.over, o.out);
-    $(o).hover(function() { $(o).addClass('active'); }, function() { if(!o.busy) $(o).removeClass('active'); });
+    $(o).hover(function() { $(this).addClass('active'); }, function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
 hover_menu = function(handle, drawer, options) {
@@ -515,47 +515,6 @@ hover_menu = function(handle, drawer, options) {
     });
 
     return o;
-}
-
-qtip_intialize = function (elements) {
-    if (!elements) var elements = '*';
-    elements = $(elements).find('.hoverable[title]');
-    var qtipOptions = {
-        style: { 
-            background: "#96E2CE",
-            color: "black",
-            padding: 3,
-            border: {width: 3, radius: 3, color: "#96E2CE"},
-            name: 'green', 
-            "font-family": "Museo, Helvetica, Verdana, sans-serif",
-            tip: true } ,
-        position: { 
-            adjust: { screen: true }
-        }
-    };
-    var pos = {
-        N: { target: "topMiddle", tooltip: "bottomMiddle"}
-        , NE: { target: "topRight", tooltip: "bottomLeft"}
-        , E: { target: "rightMiddle", tooltip: "leftMiddle"}
-        , SE: { target: "bottomRight", tooltip: "topLeft"}
-        , S: { target: "bottomMiddle", tooltip: "topMiddle"}
-        , SW: { target: "bottomLeft", tooltip: "topRight"}
-        , W: { target: "leftMiddle", tooltip: "rightMiddle"}
-        , NW: { target: "topLeft", tooltip: "bottomRight"}
-    };
-    // Loop through directions and filter elements having "tip_N", etc.. class
-    $.each(pos, function(key, value){
-        var current = elements.filter('.tip_' + key);
-        elements = elements.not(current);
-        qtipOptions.position.corner = value;
-        current.qtip(qtipOptions);
-    });
-    // filter out elements that we don't want custom tooltips for
-    elements = elements.not('.tip_none');
-    // For all elements not matched by above filters, default tooltip to S
-    qtipOptions.position.corner = pos.S;
-    elements.qtip(qtipOptions);
-
 }
 
 var minimize = function(what, to, opts) {
