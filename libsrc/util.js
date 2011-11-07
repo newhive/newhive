@@ -210,9 +210,9 @@ function reloadFeed(){
         var count = $('#notification_count').html();
         var count_div = $('#notifications .count').html(count);
         if (count == "0"){
-            count_div.addClass('zero');
+            count_div.parent('.has_count').andSelf().addClass('zero');
         } else {
-            count_div.removeClass('zero');
+            count_div.parent('.has_count').andSelf().removeClass('zero');
         }
 
     });
@@ -305,7 +305,7 @@ function iconCounts() {
         if (count_div.length == 0){
             count_div = $(this).append('<div class="count"></div>').children().last();
         }
-        if (count == "0") count_div.addClass('zero');
+        if (count == "0") count_div.parent('.has_count').andSelf().addClass('zero');
         count_div.html(count);
     });
 };
