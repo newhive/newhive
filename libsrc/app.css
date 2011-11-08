@@ -27,6 +27,12 @@
   float: left;
   background: #696E76;
 }
+.has_count .count.zero {
+  display: none;
+}
+.has_count.zero {
+  margin-right: -8px;
+}
 .has_count img {
   float: left;
 }
