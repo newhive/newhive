@@ -305,7 +305,11 @@ function iconCounts() {
         if (count_div.length == 0){
             count_div = $(this).append('<div class="count"></div>').children().last();
         }
-        if (count == "0") count_div.parent('.has_count').andSelf().addClass('zero');
+        if (count == "0") {
+            count_div.parent('.has_count').andSelf().addClass('zero');
+        } else {
+            count_div.parent('.has_count').andSelf().removeClass('zero');
+        }
         count_div.html(count);
     });
 };
