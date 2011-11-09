@@ -190,15 +190,16 @@ function starExpression(){
         btn.addClass('inactive')
     $.post('', {'action': action, 'domain': window.location.hostname, 'path': window.location.pathname}, function(data){
         var btn = $('#btn_star .icon')
+        var btn_wrapper = btn.parent();
         var countdiv = btn.next();
         btn.removeClass('inactive');
         if(data == "unstarred"){
             btn.removeClass('starred');
-            btn.parent().attr('title', 'Star This Expression');
+            btn_wrapper.attr('title', btn_wrapper.attr('data-title-inactive'));
             countdiv.html(parseInt(countdiv.html())-1);
         } else if (data == "starred"){
             btn.addClass('starred');
-            btn.parent().attr('title', 'Un-star This Expression');
+            btn_wrapper.attr('title', btn_wrapper.attr('data-title-active'));
             countdiv.html(parseInt(countdiv.html())+1);
         };
     }, 'json');

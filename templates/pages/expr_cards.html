@@ -27,6 +27,7 @@ iframe { border : none; }
   };
 </script>
 {% endblock %}
+{% block body_classes %}{{ super() }} expr_cards{% endblock %}
 {% block body %}
 
 <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
@@ -37,7 +38,7 @@ iframe { border : none; }
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
- {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in) }}
+ {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}) }}
  {% if user.logged_in %}
  {{ create_button(create + ('?tags=' + tag if tag else '')) }}
  {% endif %}
@@ -72,8 +73,8 @@ iframe { border : none; }
  <div id='tags'>
    <div class='tag_label hoverable drag {{ 'current' if not tag }}'><a href='/expressions'><p>Expressions</p></a></div>
    {% for t in tags %}<div class='tag_label hoverable drag {{ 'current' if t.name == tag }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t|e }}'>
-     {% if t.name == "Starred" %}
-     <img class="hoverable" src="/lib/skin/1/star_tab{{ '-down' if t.name == tag }}.png"></img>
+     {% if t.img %}
+     <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}"></img>
      {% else %}
        <p>{{ t.name }}</p>
     {% endif %}

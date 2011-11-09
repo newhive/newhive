@@ -50,13 +50,19 @@
 #btn_star.active .icon.starred, #btn_star.active .icon {
   background-image: url('/lib/skin/1/star-hover.png');
 }
+.expr_cards #btn_star .icon {
+  background-image: url('/lib/skin/1/people.png');
+}
+.expr_cards #btn_star .icon.starred {
+  background-image: url('/lib/skin/1/people_active.png');
+}
+.expr_cards #btn_star.active .icon {
+  background-image: url('/lib/skin/1/people-hover.png');
+}
+.expr_cards #btn_star.active .icon.starred {
+  background-image: url('/lib/skin/1/people_active-hover.png');
+}
 
-#tags .star_tab {
-  background-image: url("/lib/skin/1/star_tab.png");
-}
-#tags .star_tab:hover {
-  background-image: url("/lib/skin/1/star_tab-hover.png");
-}
 
 body.main #content{
   top: 50px
@@ -534,7 +540,7 @@ input[type="text"].copy, textarea.copy {
 .tag_label.active, .tag_label.current.active { color : #F73627; background : #FFF673; }
 .tag_label.current { padding: 0 5px; background-color : #96E2CE; color : black;}
 .tag_label p {font-weight : bold; padding: 6px 15px; margin: 0}
-#tags { clear:both; overflow: auto; height: 32px; margin : 50px 50px 25px 50px; }
+#tags { clear:both; overflow: auto; height: 34px; margin : 50px 50px 25px 50px; }
 
 #feed { clear: both; width : auto; margin : 0 0px 50px 50px; } /*left : 124px; width : 776px; padding : 0; }*/
 .feed.item { position : relative; padding : 5px; margin : 0 5px 5px 0; width : 330px; height : 96px;

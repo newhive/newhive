@@ -276,7 +276,7 @@ def star(request, response):
     if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
-    if p1 == "expressions":
+    if p1 in ["expressions", "starred", "listening"]:
         entity = User.find(sites=request.domain.lower())
     else:
         entity = Expr.named(request.domain.lower(), request.path.lower())
@@ -857,14 +857,14 @@ def handle(request): # HANDLER
             tag = "Starred"
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'listening':
-            tag = "People"
+            tag = "Listening"
             response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
-        response.context['tags'].insert(0, {'name': 'People', 'url': "/listening"})
-        response.context['tags'].insert(0, {'name': 'Starred', 'url': "/starred"})
+        response.context['tags'].insert(0, {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "Listening" else "") + ".png" })
+        response.context['tags'].insert(0, {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "Starred" else "") + ".png"})
         response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')
