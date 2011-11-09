@@ -1,4 +1,31 @@
+{# paragraph styles #}
+{% set p_basic="font-size: 14px; line-height: 21px; margin: 0 0 20px 0;" %}
+{% set p_outside_box= p_basic ~ "padding: 0 57px;" %}
+{% set basic_title="font-size: 25px; color: #f73627; margin: 0px;"%}
+{% set basic_h2="font-size: 29px; margin: 0 0 30px 0;"%}
+{% set basic_h1="background-color: #FFF673; font-size: 35px; margin: 43px 0 20px 45px; padding-left: 12px; width: 462px;"%}
+
+{% macro p(title=False, class=p_basic, title_class=basic_title) %}
+{% if title %}
+<h3 style="{{title_class}}">{{title}}</h3>
+{% endif %}
+<p style="{{ class }}">
+{{ caller() }}
+</p>
+{%- endmacro %}
+
+{% macro h2(class=basic_h2) -%}
+<h2 style="{{class}}">{{ caller() }}</h2>
+{%- endmacro %}
+
+{% macro h1(class=basic_h1, style="") -%}
+<h1 style="{{class}} {{style}}">
+  {{ caller() }}
+</h1>
+{%- endmacro %}
+
 {% set table_width = 'width="586px"' %}
+
 <html>
 <head></head>
 

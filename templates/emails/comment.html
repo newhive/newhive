@@ -1,0 +1,41 @@
+{% extends "emails/base.html" %}
+{% block body %}
+{% call h1() -%}
+Hi {{ user_name }},
+{%- endcall %}
+
+{% call h1(style="background-color: #ffffff; margin-top: 20px; margin-bottom: 5px;") -%}
+<span style="color: #F72E4D;">{{ initiator_name }}</span> commented
+{%- endcall %}
+{% call h1(style="background-color: #ffffff; margin-top: 5px;") -%}
+on your expression.
+{%- endcall %}
+
+<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;">
+  "{{ message | e }}"
+</p>
+<table width="484px;" style="margin: 20px 0 0 45px; background-color: #ffffff;">
+  <tr>
+    <td width="158px;" rowspan="2">
+      <a style="text-decoration: none;" href="{{ url }}">
+        <img style="margin: 16px;" src="{{ thumbnail_url }}" />
+      </a>
+    </td>
+    <td width="314px;">
+      <a style="color: #000000; text-decoration: none;" href="{{ url }}">
+        <h3 style="margin: 16px 0 0 0; font-size: 22px;">{{ title }}</h3>
+      </a>
+      <h4 style="margin: 10px 0 0 0; font-size: 17px; font-weight: normal;">{{ tags }}</h4>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a style="color: #000000; text-decoration: none;" href="{{ user_url }}" style="color: #7ba008;">
+        <h3 style="margin: 0; font-size: 22px;">{{ user_name }}</h3>
+      </a>
+    </td>
+  </tr>
+</table>
+<div style="height: 50px;"></div>
+
+{% endblock %}

@@ -1,29 +1,11 @@
 {% extends "emails/base.html" %}
 
-{# paragraph styles #}
-{% set p_basic="font-size: 14px; line-height: 21px; margin: 0 0 20px 0;" %}
-{% set p_outside_box= p_basic ~ "padding: 0 57px;" %}
-{% set basic_title="font-size: 25px; color: #f73627; margin: 0px;"%}
-{% set basic_h2="font-size: 29px; margin: 0 0 30px 0;"%}
-
-{% macro p(title=False, class=p_basic, title_class=basic_title) %}
-{% if title %}
-<h3 style="{{title_class}}">{{title}}</h3>
-{% endif %}
-<p style="{{ class }}">
-{{ caller() }}
-</p>
-{%- endmacro %}
-
-{% macro h2(class=basic_h2) %}
-<h2 style="{{class}}">{{ caller() }}</h2>
-{%- endmacro %}
-
 {% block body %}
 
-<h1 style="background-color: #FFF673; font-size: 35px; margin: 43px 0 20px 45px; padding-left: 12px; width: 484px;">
+{% call h1() %}
 Dear New Hive community,
-</h1>
+{% endcall %}
+
 <div style="margin: 0 0 30px 0; padding: 0; width: 100%; text-align: center;">
   <img src="/lib/skin/1/collage.png" />
 </div>
