@@ -239,6 +239,15 @@ class User(Entity):
         return self.get('profile_thumb')
     thumb = property(get_thumb)
 
+    @classmethod
+    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
+        return map(User, db.user.find(
+             spec = spec
+            ,sort = [(sort, -1)]
+            ,limit = limit
+            ,skip = limit * page
+            ))
+
 
 def get_root(): return User.named('root')
 if not get_root():
@@ -289,7 +298,7 @@ class Expr(Entity):
             ))
 
         can_view = lambda e: (
-            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' 
+            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public'
             and len(e.get('apps', [])) ))
         return filter(can_view, es)
 

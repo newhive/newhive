@@ -845,22 +845,28 @@ def handle(request): # HANDLER
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) + 'expressions' +
             ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
-    if request.path.startswith('expressions'):
+    if request.path.startswith('expressions') or request.path == 'starred' or request.path == 'listening':
         page = int(request.args.get('page', 0))
-        spec = { 'owner' : owner.id }
-        tag = lget(request.path.split('/'), 1, '')
-        if tag:
-          if tag == "Starred":
-            spec['_id'] = {'$in': owner.starred_items}
-            del spec['owner']
-          else:
-            spec['tags_index'] = tag
+        tags = owner.get('tags', [])
+        if request.path.startswith('expressions'):
+            spec = { 'owner' : owner.id }
+            tag = lget(request.path.split('/'), 1, '')
+            if tag:
+                spec['tags_index'] = tag
+            response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        elif request.path == 'starred':
+            spec = {'_id': {'$in': owner.starred_items}}
+            tag = "Starred"
+            response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        elif request.path == 'listening':
+            tag = "People"
+            response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
-        response.context['tags'] = owner.get('tags', [])
-        response.context['tags'].insert(0, 'Starred')
-        response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
+        response.context['tags'].insert(0, {'name': 'People', 'url': "/listening"})
+        response.context['tags'].insert(0, {'name': 'Starred', 'url': "/starred"})
         response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')

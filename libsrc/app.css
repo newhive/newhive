@@ -544,7 +544,7 @@ input[type="text"].copy, textarea.copy {
 .feed .title1 { font-size : 1.3em; }
 .feed .title2 { font-size : 1.1em; }
 .feed .title3 { font-size : .9em; }
-.feed .thumb { float : left; margin-right : 10px; }
+.feed .thumb { float : left; margin-right : 10px; width: 124px;}
 .feed .other, .feed .tags { font-size : .8em }
 .feed .tags { height : 2.4em; overflow : hidden; text-overflow : ellipsis; }
 .feed .other { position : absolute; left : 139px; bottom : 5px; font-weight : bold; }
