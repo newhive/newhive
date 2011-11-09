@@ -277,11 +277,9 @@ def star(request, response):
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
     if p1 == "expressions":
-        print p1
         entity = User.find(sites=request.domain.lower())
     else:
         entity = Expr.named(request.domain.lower(), request.path.lower())
-    print entity;
     if request.form.get('action') == "star":
         s = Star.new(request.requester, entity)
         if s or s.get('entity'):
