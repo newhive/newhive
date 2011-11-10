@@ -340,7 +340,7 @@ def add_comment(request, response):
     comment_text = request.form.get('comment')
     comment = Comment.new(commenter, expression, {'text': comment_text})
     if comment.initiator.id != expression.owner.id:
-      mail_comment(comment, expression.owner)
+      mail_feed(comment, expression.owner)
     return serve_html(response, jinja_env.get_template("partials/comment.html").render({'comment': comment}))
 
 
@@ -488,28 +488,29 @@ def mail_invite(email, name=False, force_resend=False):
     send_mail(heads, body)
     return referral.id
 
-def mail_comment(comment, recipient):
-  initiator_name = comment.get('initiator_name')
+def mail_feed(feed, recipient):
+  initiator_name = feed.get('initiator_name')
   recipient_name = recipient.get('name')
-  expression_title = comment.entity.get('title')
+  expression_title = feed.entity.get('title')
   context = {
       'user_name' : recipient_name
       , 'user_url' : recipient.url
       , 'initiator_name': initiator_name
-      , 'initiator_url': comment.initiator.url
-      , 'message': comment.get('text')
-      , 'url': comment.entity.url
-      , 'thumbnail_url': comment.entity.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
+      , 'initiator_url': feed.initiator.url
+      , 'url': feed.entity.url
+      , 'thumbnail_url': feed.entity.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
       , 'title': expression_title
       }
+  if type(feed) == Comment:
+      context['message'] = feed.get('text')
   heads = {
       'To': recipient.get('email')
-      , 'From' : 'The New Hive <noreply+comment@thenewhive.com>'
+      , 'From' : 'The New Hive <noreply@thenewhive.com>'
       , 'Subject': initiator_name + " commented on " + expression_title
       }
   body = {
-      'plain': jinja_env.get_template("emails/comment.txt").render(context)
-      , 'html': jinja_env.get_template("emails/comment.html").render(context)
+      'plain': jinja_env.get_template("emails/feed.txt").render(context)
+      , 'html': jinja_env.get_template("emails/feed.html").render(context)
       }
   if recipient_name in config.admins or ( not config.debug_mode ):
       send_mail(heads, body)
