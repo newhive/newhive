@@ -1,6 +1,9 @@
 {% extends "main.html" %}
-{% set intro_paragraph = "The New Hive makes it easy for you to express yourself online. You own the expressions you create and can share them any way you like. Plus we'll never put ads on your expressions. All that and it's free! So get on board and express yourself :)" %}
+{% set intro_paragraph = "The New Hive makes it easy for you to express yourself online. Whether it's a journal, collection of recipes, portfolio or flyer, it's fun and easy to create and update all of your media and ideas in an one ad-free space. Keep your expressions private or public, and decide what you want to share to the community, the world and all of your social media. It's a reflection of you...online." %}
 
+{% block meta %}
+ <meta property="og:image" content='http://thenewhive.com/lib/skin/1/logo_medium.png' />
+{% endblock %}
 {% block head%}
   <meta name="description" content="{{intro_paragraph}}">
   <style>
@@ -55,6 +58,10 @@
   </div>
   <div class='happ rounded signup_button' style='width:74px; white-space: nowrap; padding: 3px 5px 10px 5px; height: 21px; left:48px; top: 180px; z-index: 3; font-size: 1.2em;' data-scale="1.2">
     <span style="font-family: Museo;"><a href="" onclick="return false;">Sign up</a></span>
+  </div>
+  <div class='happ' style='left: 150px; top: 187px; width: 400px; z-index: 3;'>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://thenewhive.com" data-text="The New Hive is the easiest way to express yourself online. #expression" data-count="horizontal" data-via="thenewhive">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
+    <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fthenewhive.com&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:180px; height:20px;" allowTransparency="true"></iframe>
   </div>
   <div id="h_2" class="happ" style="left: 585px; top: 10px; width: 365.802px; height: 206.727px; z-index:3;">
     <iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0" width="100%" height="100%" frameborder="0" webkitAllowFullScreen allowFullScreen></iframe>
