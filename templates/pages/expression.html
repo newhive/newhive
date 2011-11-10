@@ -22,7 +22,7 @@
  <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
   {% if not user_is_owner %}
    <div id='info' class='medbold' style='text-align : right'>
-    <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
+     <div id='exp_owner'><a title="{{owner.name}}'s profile" href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
     <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
    </div>
   {% endif %}

@@ -14,10 +14,10 @@
   </div>
 {%- endmacro %}
 
-{% macro star_button(count=0, active=False, logged_in=True) %}
-<div id="btn_star" data-count="{{count}}" 
+{% macro star_button(count=0, active=False, logged_in=True, class="Expr", title={"active": "Un-Star This Expression", "inactive": "Star This Expression"}) %}
+<div id="btn_star" data-count="{{count}}" data-title-active="{{title.active}}" data-title-inactive="{{title.inactive}}"
     class="{{'hoverable ' if logged_in}}nav_icon has_count {{'starred ' if active}}"  
-    title={% if logged_in %}"{{'Un-star' if active else 'Star'}} This Expression"{% else %}"Stars"{% endif %}
+    title={% if logged_in %}"{{ title.active if active else title.inactive}}"{% else %}"Stars"{% endif %}
     {{ "onclick='starExpression();'" if logged_in }} >
     <div class="icon {{"starred " if active}}"></div>
   </div>
