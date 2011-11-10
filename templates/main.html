@@ -9,7 +9,7 @@
   <a href='{{ server }}' title="Explore Expressions"><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
 
  {% if user.logged_in %}
-  <div class='nav_icon medbold' style='left : 50px; top : 0;'><a href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
+  <div class='nav_icon medbold' style='left : 50px; top : 0;'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
   <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
   <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}'></div>
   <div id='feed_menu' class='menu border selected'>

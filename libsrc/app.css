@@ -36,6 +36,9 @@
 .has_count img {
   float: left;
 }
+.nav_icon .username:hover {
+  background: #FFF673;
+}
 #btn_share {
 }
 #btn_star .icon {
