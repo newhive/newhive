@@ -110,7 +110,7 @@ def generate_thumb(owner, path, size):
         return False
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     imo = imo.convert(mode='RGB')
-    imo.save(path, format='jpeg')
+    imo.save(path, format='jpeg', quality=70)
 
     res = File.create(owner=owner.id, path=path, size=size, name='thumb', mime='image/jpeg')
     return res.get('url')
@@ -133,6 +133,7 @@ def files_create(request, response):
 
     request.max_content_length = 100000000
 
+    # TODO: separate image optimization from file upload logic
     for file_name in request.files:
         file = request.files[file_name]
         mime = mimetypes.guess_type(file.filename)[0]
@@ -239,9 +240,12 @@ def profile_thumb_set(request, response):
     path = os.tmpnam()
     file.save(path)
     mime = mimetypes.guess_type(file.filename)[0]
+    # TODO: remove tmp file deletion from File.create, create two
+    # File records, one for original sized image, one for resampled
+    #res = File.create(owner=user.id, path=path, size=size, name='thumb', mime='image/jpeg')
 
     if mime in ['image/jpeg', 'image/png', 'image/gif']:
-        profile_thumb_url = generate_thumb(user, path, (275,200))
+        profile_thumb_url = generate_thumb(user, path, (600,465))
         user.update(profile_thumb=profile_thumb_url)
     else: 
         response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
