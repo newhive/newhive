@@ -574,7 +574,10 @@ class Star(Feed):
             return super(Star, cls).new(initiator, entity, data)
 
 class InviteNote(Feed):
-    pass
+    def create_me(self):
+        super(InviteNote, self).create_me()
+        self.entity.increment({'notification_count': 1})
+        return self
 
 class NewExpr(Feed):
     def create_me(self):
