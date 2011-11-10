@@ -34,8 +34,12 @@
     );
     hover_menu($('#notifications'), $('#feed_menu'), {
       open: function(){
-        $('#notifications .count').addClass('zero');
-        logAction('notifications_open');
+        var div = $('#notifications');
+        if ( div.attr('data-count') != "0" ) {
+          div.attr('data-count', 0);
+          iconCounts();
+          logAction('notifications_open');
+        }
       }
     });
   </script>
