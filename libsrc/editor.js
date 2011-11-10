@@ -765,19 +765,19 @@ Hive.App.Rectangle = function(common) {
         o.addControls($('#controls_rectangle'));
         append_color_picker(o.div.find('.drawer.fill'), o.app.css_setter('color'), state.color);
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
-        append_color_picker(o.div.find('.drawer.stroke'), function(v) {
-            if(!state['border-width']) o.app.set_css({'border-width':'5px'});
-            o.layout();
-            o.app.set_css({'border-color':v});
-        }, state['border-color']);
-        o.hover_menu(o.div.find('.button.stroke'), o.div.find('.drawer.stroke'), { auto_close : false });
+        //append_color_picker(o.div.find('.drawer.stroke'), function(v) {
+        //    if(!state['border-width']) o.app.set_css({'border-width':'5px'});
+        //    o.layout();
+        //    o.app.set_css({'border-color':v});
+        //}, state['border-color']);
+        //o.hover_menu(o.div.find('.button.stroke'), o.div.find('.drawer.stroke'), { auto_close : false });
 
         return o;
     };
     o.make_controls.push(controls);
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
-    Hive.App.add_slider_menu(o, '.bwidth', function(v) { o.set_css({'border-width':v+'px'}); }, function() { return parseInt(state['border-width']) });
+    //Hive.App.add_slider_menu(o, '.bwidth', function(v) { o.set_css({'border-width':v+'px'}); }, function() { return parseInt(state['border-width']) });
     Hive.App.add_slider_menu(o, '.rounding', function(v) { o.set_css({'border-radius':v+'px'}); }, function() { return parseInt(state['border-radius']) });
 
     o.rect = $("<div class='content rectangle drag'>").appendTo(o.div);
