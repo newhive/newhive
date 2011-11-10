@@ -5,7 +5,7 @@
 <style>
 .tag_label { color : #696E76; background-color : #EDEBE1; }
 a.tag_label:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}; }
-.tag_label.current { background-color : black; color : white; }
+.tag_label.user.current { background-color : black; color : white; }
 #tags { margin : 0px 50px 25px 50px; }
 iframe { border : none; }
 </style>
@@ -72,7 +72,7 @@ iframe { border : none; }
  
  <div id='tags'>
    <div class='tag_label hoverable drag {{ 'current' if not tag }}'><a href='/expressions'><p>Expressions</p></a></div>
-   {% for t in tags %}<div class='tag_label hoverable drag {{ 'current' if t.name == tag }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t|e }}'>
+   {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t|e }}'>
      {% if t.img %}
      <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
      {% else %}
