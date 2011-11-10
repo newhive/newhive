@@ -1,16 +1,31 @@
-{% set header_boxes = [
-{'color': '#f73627', 'width': '11px'},
-{'color': '#f72e4d', 'width': '54px'},
-{'color': '#f45518', 'width': '56px'},
-{'color': '#e87c25', 'width': '95px'},
-{'color': '#f9a818', 'width': '94px'},
-{'color': '#7ba008', 'width': '65px'},
-{'color': '#1ea616', 'width': '47px'},
-{'color': '#4a969e', 'width': '73px'},
-{'color': '#698293', 'width': '91px'}
-]
-%}
+{# paragraph styles #}
+{% set p_basic="font-size: 14px; line-height: 21px; margin: 0 0 20px 0;" %}
+{% set p_outside_box= p_basic ~ "padding: 0 57px;" %}
+{% set basic_title="font-size: 25px; color: #f73627; margin: 0px;"%}
+{% set basic_h2="font-size: 29px; margin: 0 0 30px 0;"%}
+{% set basic_h1="background-color: #FFF673; font-size: 35px; margin: 43px 0 20px 45px; padding-left: 12px; width: 462px;"%}
+
+{% macro p(title=False, class=p_basic, title_class=basic_title) %}
+{% if title %}
+<h3 style="{{title_class}}">{{title}}</h3>
+{% endif %}
+<p style="{{ class }}">
+{{ caller() }}
+</p>
+{%- endmacro %}
+
+{% macro h2(class=basic_h2) -%}
+<h2 style="{{class}}">{{ caller() }}</h2>
+{%- endmacro %}
+
+{% macro h1(class=basic_h1, style="") -%}
+<h1 style="{{class}} {{style}}">
+  {{ caller() }}
+</h1>
+{%- endmacro %}
+
 {% set table_width = 'width="586px"' %}
+
 <html>
 <head></head>
 
@@ -19,15 +34,10 @@
   {# Main layout table #}
   <table {{ table_width }} style="border-collapse: collapse; border-spacing: 0;">
     <tr><td {{ table_width }} style="padding: 0;">
-      {% block header %}
       <table {{ table_width }} style="border-collapse: collapse; border-spacing: 0;" border="0">
 
-        {# Colored boxes in header #}
-        <tr height="60px">
-          {% for item in header_boxes %}
-          <td width="{{ item['width'] }}" style="background-color: {{ item['color'] }};"></td>
-          {% endfor %}
-        </tr>
+      {% block header %}
+      {% endblock %}
 
         {# logotype approximation #}
         <tr height="50px">
@@ -37,9 +47,8 @@
         </tr>
 
       </table>
-      {% endblock %}
     </td></tr>
-    <tr><td style="background-color: #f1f0e8;" {{ table_width }} >
+    <tr><td style="background-color: {% block body_color %}#D0E0F0{% endblock %};" {{ table_width }} >
       {% block body %}
       {% endblock %}
     </td></tr>

@@ -1,0 +1,83 @@
+{% extends "emails/base.html" %}
+
+{% block body %}
+
+{% call h1() %}
+Dear New Hive community,
+{% endcall %}
+
+<div style="margin: 0 0 30px 0; padding: 0; width: 100%; text-align: center;">
+  <img src="/lib/skin/1/collage.png" />
+</div>
+
+{% call p(class=p_outside_box) %}
+We're excited to announce some new features, fixes and a bunch of new
+expressions (thanks to everyone in the New Hive community)!
+{% endcall %}
+
+{% call p(class=p_outside_box) %}
+Things are changing fast around here.  We haven't "launched" publicly, but the
+time has come to open up our little community to the rest of the net.
+{% endcall %}
+
+<table style="margin: 0 0 43px 0;">
+  <tr>
+    <td width="45px"></td>
+    <td width="{{ 586 - (2*45) }}px" style="background-color: #ffffff; padding: 20px 12px;">
+{% call h2() %}
+Check out the new features we're rolling out this week:
+{% endcall %}
+
+{% call p("Invite Your Friends") %}
+If you dig The New Hive, pass it on! The next time you log
+in you'll see a pink box in the upper left hand corner.  Click it and you can
+send New Hive invites to your friends.
+{% endcall %}
+
+{% call p("Star and Follow Features") %}
+In the upper right hand corner you will see a star
+icon which will allow you to keep track of any person or expression that you
+like. By starring you are subscribing to any new expressions or updates from
+the starred user. This information will show up in your feed on the homepage.
+{% endcall %}
+
+{% call p("Discussions" ) %}
+There's a new icon in the upper right hand corner of every
+expression and by clicking it you can show some
+appreciation to the creator.
+{% endcall %}
+
+{% call p("Shapes") %}
+You can now draw simple shapes to add to your expressions.
+{% endcall %}
+
+{% call p("Background Images") %}
+Click "Background" under the image drop down to customize
+your expressions with full screen background images and colors.
+{% endcall %}
+
+{% call p() %}
+And remember that if you ever want to share an expression with your friends via
+email, Facebook, Twitter, Reddit, or Google+ just use the little paper airplane
+in the upper right hand corner.  You can also check out the number of views
+your expression has or embed your expressions using this nifty tool.
+{% endcall %}
+
+{% call p() %}
+Want a feature? Email info@thenewhive.com or click the "feedback" button in
+the lower right hand corner.
+{% endcall %}
+
+{% call p() %}
+You make us a community, thank you!
+{% endcall %}
+
+<p style="font-weight: bold; font-size: 18px;">
+  Keep rocking,<br/> 
+  The New Hive team
+</p>
+</td>
+<td width="45px"></td>
+</tr>
+</table>
+{% endblock %}

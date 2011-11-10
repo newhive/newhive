@@ -28,11 +28,12 @@
       comment_count += 1;
       comments_div.append(data);
       $('#dia_comments .comments_count').html(' (' + comment_count + ')');
-      $('#btn_comment .count').html(comment_count);
+      $('#btn_comment').attr('data-count', comment_count);
       $('#dia_comments textarea').val('');
       commentSize();
       comments_div[0].scrollTop = 100000;
       reloadFeed();
+      iconCounts();
     });
   };
   function commentSize(){
@@ -46,5 +47,5 @@
     center($('#dia_comments'));
   };
   commentSize();
-  setTimeout('commentSize();', 0);
+  setTimeout('commentSize(); $("#comments")[0].scrollTop = 100000;', 0);
 </script>

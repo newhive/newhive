@@ -16,8 +16,8 @@
         </a>
         {{ "commented on" if feed.class_name == "Comment" }} 
         {{ "starred" if feed.class_name == "Star" }} 
-        {% if feed.class_name == 'InviteNote' %}
-        {% endif %}
+        {{ "created a new expression" if feed.class_name == "NewExpr" }} 
+        {{ "updated the expression" if feed.class_name == "UpdatedExpr" }} 
       </p>
 
       {% if feed.entity_class == "Expr" %}

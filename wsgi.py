@@ -276,11 +276,9 @@ def star(request, response):
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
     if p1 == "expressions":
-        print p1
         entity = User.find(sites=request.domain.lower())
     else:
         entity = Expr.named(request.domain.lower(), request.path.lower())
-    print entity;
     if request.form.get('action') == "star":
         s = Star.new(request.requester, entity)
         if s or s.get('entity'):
@@ -341,6 +339,8 @@ def add_comment(request, response):
     expression = Expr.fetch(request.form.get('expression'))
     comment_text = request.form.get('comment')
     comment = Comment.new(commenter, expression, {'text': comment_text})
+    if comment.initiator.id != expression.owner.id:
+      mail_comment(comment, expression.owner)
     return serve_html(response, jinja_env.get_template("partials/comment.html").render({'comment': comment}))
 
 
@@ -487,6 +487,33 @@ def mail_invite(email, name=False, force_resend=False):
         }
     send_mail(heads, body)
     return referral.id
+
+def mail_comment(comment, recipient):
+  initiator_name = comment.get('initiator_name')
+  recipient_name = recipient.get('name')
+  expression_title = comment.entity.get('title')
+  context = {
+      'user_name' : recipient_name
+      , 'user_url' : recipient.url
+      , 'initiator_name': initiator_name
+      , 'initiator_url': comment.initiator.url
+      , 'message': comment.get('text')
+      , 'url': comment.entity.url
+      , 'thumbnail_url': comment.entity.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
+      , 'title': expression_title
+      }
+  heads = {
+      'To': recipient.get('email')
+      , 'From' : 'The New Hive <noreply+comment@thenewhive.com>'
+      , 'Subject': initiator_name + " commented on " + expression_title
+      }
+  body = {
+      'plain': jinja_env.get_template("emails/comment.txt").render(context)
+      , 'html': jinja_env.get_template("emails/comment.html").render(context)
+      }
+  if recipient_name in config.admins or ( not config.debug_mode ):
+      send_mail(heads, body)
+
 
 
 def mail_signup_thank_you(form):
@@ -810,21 +837,28 @@ def handle(request): # HANDLER
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) + 'expressions' +
             ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
-    if request.path.startswith('expressions'):
+    if request.path.startswith('expressions') or request.path == 'starred' or request.path == 'listening':
         page = int(request.args.get('page', 0))
-        spec = { 'owner' : owner.id }
-        tag = lget(request.path.split('/'), 1, '')
-        if tag:
-          if tag == "Starred":
-            spec = { '_id' : {'$in': owner.starred_items} }
-          else:
-            spec['tags_index'] = tag
+        tags = owner.get('tags', [])
+        if request.path.startswith('expressions'):
+            spec = { 'owner' : owner.id }
+            tag = lget(request.path.split('/'), 1, '')
+            if tag:
+                spec['tags_index'] = tag
+            response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        elif request.path == 'starred':
+            spec = {'_id': {'$in': owner.starred_items}}
+            tag = "Starred"
+            response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        elif request.path == 'listening':
+            tag = "People"
+            response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
-        response.context['tags'] = owner.get('tags', [])
-        response.context['tags'].insert(0, 'Starred')
-        response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
+        response.context['tags'].insert(0, {'name': 'People', 'url': "/listening"})
+        response.context['tags'].insert(0, {'name': 'Starred', 'url': "/starred"})
         response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')

@@ -1,15 +1,18 @@
-{% extends "emails/colorful.html" %}
-{% block body%}
+{% extends "emails/base.html" %}
+{% block body %}
+{% call h1() -%}
+Hi {{ user_name }},
+{%- endcall %}
 
-<h2 style="margin: 20px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
-  <a href="{{ sender_url }}" style="color: #f72e4d; text-decoration: none;">{{ sender_fullname }}</a>
-</h2>
-<h2 style="margin:  5px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
-  sent you an expression.
-</h2>
+{% call h1(style="background-color: #ffffff; margin-top: 20px; margin-bottom: 5px;") -%}
+<span style="color: #F72E4D;">{{ initiator_name }}</span> commented
+{%- endcall %}
+{% call h1(style="background-color: #ffffff; margin-top: 5px;") -%}
+on your expression.
+{%- endcall %}
 
 <p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;">
-  {{ message | e }}
+  "{{ message | e }}"
 </p>
 <table width="484px;" style="margin: 20px 0 0 45px; background-color: #ffffff;">
   <tr>
@@ -33,13 +36,6 @@
     </td>
   </tr>
 </table>
-<h3 style="color: #7ba008; margin: 10px 0 0 57px; font-size: 22px;">{{ short_url }}</h3>
-<p style="font-size: 15px; padding: 0 57px; line-height: 21px; margin: 30px 0;">
-  Want to learn more about The New Hive? Or sign</br>
-  up for an account? 
-  <a href="http://thenewhive.com" style="text-decoration: none; color: #222222; font-weight: bold;">
-    Click here to get started.
-  </a>
-</p>
+<div style="height: 50px;"></div>
 
 {% endblock %}

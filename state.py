@@ -48,9 +48,7 @@ def junkstr(length):
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
 
-    _starred_items = None
-    _starrers = None
-    _feed = None
+    _starred_items = _starrers = _commenters = _feed = None
 
     def __init__(self, d, cname=None):
         dict.update(self, d)
@@ -80,6 +78,11 @@ class Entity(dict):
     def search(cls, **spec):
         self = cls({})
         return map(cls, self._col.find(spec=spec))
+
+    @classmethod
+    def last(cls):
+        self = cls({})
+        return cls(self._col.find_one(sort=[('created', -1)]))
 
     @classmethod
     def create(cls, **d):
@@ -156,10 +159,23 @@ class Entity(dict):
         return self._starrers
     starrers = property(get_starrers)
 
+    def get_commenters(self):
+        if not self._commenters:
+          self._commenters = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Comment' and i.get('entity') == self.id, self.feed)]
+        return self._commenters
+    commenters = property(get_commenters)
+
     def get_star_count(self):
         return len(self.starrers)
     star_count = property(get_star_count)
 
+    def get_comment_count(self):
+        return len(self.commenters)
+    comment_count = property(get_comment_count)
+
+    def notify(self, type, feed_item_id):
+        notifyees = getattr(self, type)
+        return db.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
 
 
 def fetch(cname, id, keyname='_id'):
@@ -226,6 +242,15 @@ class User(Entity):
         return self.get('profile_thumb')
     thumb = property(get_thumb)
 
+    @classmethod
+    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
+        return map(User, db.user.find(
+             spec = spec
+            ,sort = [(sort, -1)]
+            ,limit = limit
+            ,skip = limit * page
+            ))
+
 
 def get_root(): return User.named('root')
 if not get_root():
@@ -253,6 +278,7 @@ db.expr.ensure_index([('tags_index', 1)])
 class Expr(Entity):
     cname = 'expr'
     counters = ['owner_views', 'views', 'emails']
+    _owner = None
 
     @classmethod
     def named(cls, domain, name):
@@ -275,7 +301,7 @@ class Expr(Entity):
             ))
 
         can_view = lambda e: (
-            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' 
+            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public'
             and len(e.get('apps', [])) ))
         return filter(can_view, es)
 
@@ -283,9 +309,17 @@ class Expr(Entity):
     def list_count(cls, spec):
         return db.expr.find(spec = spec).count()
 
+    def get_owner(self):
+        if not self._owner:
+            self._owner = User.fetch(self.get('owner'))
+        return self._owner
+    owner = property(get_owner)
+
     def update(self, **d):
         if d.get('tags'): d['tags_index'] = normalize(d['tags'])
-        return super(Expr, self).update(**d)
+        super(Expr, self).update(**d)
+        feed = UpdatedExpr.new(self.owner, self)
+        return self
 
     def create_me(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
@@ -293,7 +327,9 @@ class Expr(Entity):
         self['domain'] = self['domain'].lower()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
-        return super(Expr, self).create_me()
+        super(Expr, self).create_me()
+        feed = NewExpr.new(self.owner, self)
+        return self
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
@@ -437,12 +473,12 @@ class Feed(Entity):
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create_me()
-        db.user.update({'_id': self['initiator']}, {'$push': {'feed': self.id}})
-        self.entity.update_cmd({'$push': {'feed': self.id}})
+        db.user.update({'_id': self['initiator']}, {'$addToSet': {'feed': self.id}})
+        self.entity.update_cmd({'$addToSet': {'feed': self.id}})
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
         if self['entity_class'] == "Expr":
             if not self.entity['owner'] == self['initiator']: # don't double-count commenting on your own expression
-                db.user.update({'_id': self.entity['owner']}, {'$inc': {'notification_count': 1}, '$push': {'feed': self.id}})
+                db.user.update({'_id': self.entity['owner']}, {'$inc': {'notification_count': 1}, '$addToSet': {'feed': self.id}})
         return self
 
     def get_entity(self):
@@ -495,6 +531,8 @@ class Comment(Feed):
     def create_me(self):
         assert self.has_key('text')
         super(Comment, self).create_me()
+        self.entity.notify('commenters', self.id)
+        self.entity.notify('starrers', self.id)
         return self
 
     def get_author(self):
@@ -528,6 +566,18 @@ class Star(Feed):
 class InviteNote(Feed):
     pass
 
+class NewExpr(Feed):
+    def create_me(self):
+        super(NewExpr, self).create_me()
+        self.entity.owner.notify('starrers', self.id)
+        return self
+
+class UpdatedExpr(Feed):
+    def create_me(self):
+        super(UpdatedExpr, self).create_me()
+        self.entity.notify('starrers', self.id)
+        self.entity.owner.notify('starrers', self.id)
+        return self
 
 class Referral(Entity):
     cname = 'referral'

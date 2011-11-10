@@ -54,7 +54,7 @@ iframe { border : none; }
 {% endif %}
 #}
 <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
-  <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag if tag }}{% endif %}</div>
+  <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag if tag }}{% endif %}</div>
  <div id='profile_thumb'>
    {% if user_is_owner %}
    <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
@@ -71,11 +71,11 @@ iframe { border : none; }
  
  <div id='tags'>
    <div class='tag_label hoverable drag {{ 'current' if not tag }}'><a href='/expressions'><p>Expressions</p></a></div>
-   {% for t in tags %}<div class='tag_label hoverable drag {{ 'current' if t == tag }}'><a href='/expressions/{{ t|e }}' draggable='false' value='{{ t|e }}'>
-     {% if t == "Starred" %}
-     <img class="hoverable" src="/lib/skin/1/star_tab{{ '-down' if t == tag }}.png">
+   {% for t in tags %}<div class='tag_label hoverable drag {{ 'current' if t.name == tag }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t|e }}'>
+     {% if t.name == "Starred" %}
+     <img class="hoverable" src="/lib/skin/1/star_tab{{ '-down' if t.name == tag }}.png">
      {% else %}
-       <p>{{ t }}</p>
+       <p>{{ t.name }}</p>
     {% endif %}
    </a></div>{% endfor %}
   {% if user_is_owner %}
