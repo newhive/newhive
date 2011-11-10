@@ -1,3 +1,13 @@
+{% set listening = True if feed.class_name == "Star" and feed.entity_class == "User" %}
+{% if feed.class_name == 'InviteNote' %}
+  <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}" onclick="showDialog('#dia_referral')">
+    <img src='/lib/skin/1/logo_thumb.png'>
+    <div class='feed_text'>You have been given <br/>{{ feed.count }} invites!</div>
+    <div class="byline">
+      <a class="name" href="{{ feed.initiator.url }}">{{ feed.initiator_name }}</a><span class="timestamp">{{ feed.created | friendly_date }}</span>
+    </div>
+  </div>
+{% else %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}">
     <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png", True)}}'></a>
     <div class="feed_text">
@@ -7,7 +17,13 @@
           {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}
         </a>
         {{ "commented on" if feed.class_name == "Comment" }} 
-        {{ "starred" if feed.class_name == "Star" }} 
+        {% if feed.class_name == "Star" %}
+          {% if feed.entity_class == "User" %}
+          {{ "are" if feed['initiator'] == user.id else "is" }} listening to
+          {% else %}
+          starred
+          {% endif %}
+        {% endif %}
         {{ "created a new expression" if feed.class_name == "NewExpr" }} 
         {{ "updated the expression" if feed.class_name == "UpdatedExpr" }} 
       </p>
@@ -17,21 +33,27 @@
         <a class="entity" href="{{feed.entity.url}}">{{ feed.entity.title | e}}</a>
       </p>
       {% else %}
-      <p class="title{{(feed.entity.name ~ "'s profile") | length_bucket}}">
+      <p class="title{{(feed.entity.name ~ ("" if listening else "'s profile")) | length_bucket}}">
         <a href="{{feed.entity.url}}" class="entity">
+          {% if listening %}
+          {{ "you" if feed.entity.id == user.id else feed.entity.name }}
+          {% else %}
           {{ "your" if feed.entity.id == user.id else feed.entity.name + "'s" }} profile
+          {% endif %}
         </a>
       </p>
       {% endif %}
 
       {% if feed.class_name == "Comment" %}
-      <p class="comment_text">
-        "{{ feed.text | e | truncate(30) }}{{'"' if feed.text | length <= 30}}
-      </p>
+       <p class="comment_text">
+         "{{ feed.text | e | truncate(30) }}{{'"' if feed.text | length <= 30}}
+       </p>
+      {% elif feed.class_name == 'InviteNote' %}
+       Meeep meep new invites.
       {% endif %}
     </div>
     <div class="byline">
       <a class="name" href="{{ feed.owner_url }}">{{ feed.owner_name }}</a><span class="timestamp">{{ feed.created | friendly_date }}</span>
     </div>
   </div>
-
+{% endif %}

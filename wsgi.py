@@ -75,8 +75,7 @@ def expr_save(request, response):
           request.requester.flag('expr_new')
           if request.requester.get('flags').get('add_invites_on_save'):
               request.requester.unflag('add_invites_on_save')
-              request.requester.increment({'referrals':5})
-              request.requester.flag('show_invite')
+              request.requester.give_invites(5)
         except DuplicateKeyError:
             if exp.get('overwrite'):
                 Expr.named(upd['domain'], upd['name']).delete()
@@ -257,7 +256,7 @@ def expr_tag_update(request, response):
     action = request.form.get('action')
     if action == 'tag_add': new_tags = expr.get('tags', '') + ' ' + tag
     elif action == 'tag_remove':
-        if request.form.get('value') == "Starred":
+        if request.form.get('value') == "starred":
             s = Star.find(initiator=request.requester.id, entity=id)
             s.delete()
         else:
@@ -329,9 +328,7 @@ def add_referral(request, response):
         for key in form:
             users.append(User.fetch(key))
 
-    for user in users:
-        user.flag('new_referrals')
-        user.increment({'referrals': number})
+    for user in users: user.give_invites(number)
 
     return redirect(response, forward)
 
@@ -343,7 +340,7 @@ def add_comment(request, response):
     comment_text = request.form.get('comment')
     comment = Comment.new(commenter, expression, {'text': comment_text})
     if comment.initiator.id != expression.owner.id:
-      mail_comment(comment, expression.owner)
+      mail_feed(comment, expression.owner)
     return serve_html(response, jinja_env.get_template("partials/comment.html").render({'comment': comment}))
 
 
@@ -491,28 +488,29 @@ def mail_invite(email, name=False, force_resend=False):
     send_mail(heads, body)
     return referral.id
 
-def mail_comment(comment, recipient):
-  initiator_name = comment.get('initiator_name')
+def mail_feed(feed, recipient):
+  initiator_name = feed.get('initiator_name')
   recipient_name = recipient.get('name')
-  expression_title = comment.entity.get('title')
+  expression_title = feed.entity.get('title')
   context = {
       'user_name' : recipient_name
       , 'user_url' : recipient.url
       , 'initiator_name': initiator_name
-      , 'initiator_url': comment.initiator.url
-      , 'message': comment.get('text')
-      , 'url': comment.entity.url
-      , 'thumbnail_url': comment.entity.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
+      , 'initiator_url': feed.initiator.url
+      , 'url': feed.entity.url
+      , 'thumbnail_url': feed.entity.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
       , 'title': expression_title
       }
+  if type(feed) == Comment:
+      context['message'] = feed.get('text')
   heads = {
       'To': recipient.get('email')
-      , 'From' : 'The New Hive <noreply+comment@thenewhive.com>'
+      , 'From' : 'The New Hive <noreply@thenewhive.com>'
       , 'Subject': initiator_name + " commented on " + expression_title
       }
   body = {
-      'plain': jinja_env.get_template("emails/comment.txt").render(context)
-      , 'html': jinja_env.get_template("emails/comment.html").render(context)
+      'plain': jinja_env.get_template("emails/feed.txt").render(context)
+      , 'html': jinja_env.get_template("emails/feed.html").render(context)
       }
   if recipient_name in config.admins or ( not config.debug_mode ):
       send_mail(heads, body)
@@ -719,7 +717,6 @@ def handle(request): # HANDLER
                 origin = request.headers.get('origin')
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 response.headers.add('Access-Control-Allow-Origin', origin)
-                request.requester.unflag('new_referrals')
                 return serve_json(response, True)
         if p1 == 'file':
             res = File.fetch(p2)
@@ -748,7 +745,7 @@ def handle(request): # HANDLER
             response.context.update({
                  'title'     : 'Editing: ' + exp['title']
                 ,'sites'     : request.requester.get('sites')
-                ,'exp_js'    : json.dumps(exp)
+                ,'exp_js'    : re.sub('</script>', '<\\/script>', json.dumps(exp))
                 ,'exp'       : exp
                 ,'show_help' : show_help
             })
@@ -822,9 +819,7 @@ def handle(request): # HANDLER
     if not d: return serve_404(request, response)
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
-    if is_owner:
-        if owner.get('flags',{}).get('expr_new'): owner.unflag('show_invite')
-        owner.unflag('expr_new')
+    if is_owner: owner.unflag('expr_new')
 
     response.context.update(
          domain = request.domain
@@ -841,7 +836,7 @@ def handle(request): # HANDLER
 
 
     if lget(request.path, 0) == '*':
-        return redirect(response, home_url(owner) + 'expressions' +
+        return redirect(response, home_url(owner) +
             ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
     if request.path.startswith('expressions') or request.path == 'starred' or request.path == 'listening':
         page = int(request.args.get('page', 0))
@@ -854,17 +849,17 @@ def handle(request): # HANDLER
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'starred':
             spec = {'_id': {'$in': owner.starred_items}}
-            tag = "Starred"
+            tag = "starred"
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'listening':
-            tag = "Listening"
+            tag = "listening"
             response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
-        response.context['tags'].insert(0, {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "Listening" else "") + ".png" })
-        response.context['tags'].insert(0, {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "Starred" else "") + ".png"})
+        response.context['tags'].insert(0, {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "listening" else "") + ".png" })
+        response.context['tags'].insert(0, {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "starred" else "") + ".png"})
         response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')
