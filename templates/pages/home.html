@@ -7,7 +7,8 @@
 {% block head%}
   <meta name="description" content="{{intro_paragraph}}">
   <style>
-    body.home.logged_out #nav_bg{background: {{colors['tan'] }}; }
+    body.home #nav_bg{background: {{colors['tan'] }}; }
+    body.home .fathead{background: {{colors['tan'] }}; }
     #homepage_header .signup_button {
       background-color: {{ colors['active'] }}; 
       color:#fff;
@@ -36,6 +37,7 @@
       });
       $(window).resize(homepage_header);
       homepage_header();
+      $('.fathead').width($(window).width()-50);
     });
   </script>
 {% endblock %}
