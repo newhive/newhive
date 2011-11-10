@@ -405,6 +405,7 @@ class Expr(Entity):
         return count
     share_count = property(get_share_count)
 
+    public = property(lambda self: self.get('auth') == "public")
 
 class File(Entity):
     cname = 'file'
@@ -563,14 +564,16 @@ class Star(Feed):
 class NewExpr(Feed):
     def create_me(self):
         super(NewExpr, self).create_me()
-        self.entity.owner.notify('starrers', self.id)
+        if self.entity.public:
+            self.entity.owner.notify('starrers', self.id)
         return self
 
 class UpdatedExpr(Feed):
     def create_me(self):
         super(UpdatedExpr, self).create_me()
         self.entity.notify('starrers', self.id)
-        self.entity.owner.notify('starrers', self.id)
+        if self.entity.public:
+            self.entity.owner.notify('starrers', self.id)
         return self
 
 class Referral(Entity):
