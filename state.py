@@ -202,6 +202,9 @@ class User(Entity):
             self.update(referrals=self['referrals'] - 1)
             d.update(user = self.id)
             return Referral.create(**d)
+    def give_invites(count):
+        self.increment({'referrals':count})
+        InviteNote.new(User.named(config.site_user), self, data={'count':count})
 
     @classmethod
     def named(cls, name):
@@ -521,6 +524,9 @@ class Star(Feed):
             return True
         else:
             return super(Star, cls).new(initiator, entity, data)
+
+class InviteNote(Feed):
+    pass
 
 
 class Referral(Entity):

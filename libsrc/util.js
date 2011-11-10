@@ -342,7 +342,7 @@ $(function () {
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
   $('a').each(function() {
     var a = new RegExp(server_name);
-    if(!a.test(this.href)) {
+    if(this.href.indexOf('http') == 0 && !a.test(this.href)) {
       $(this).click(function(event) {
         event.preventDefault();
         event.stopPropagation();

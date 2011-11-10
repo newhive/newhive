@@ -73,7 +73,7 @@ iframe { border : none; }
    <div class='tag_label hoverable drag {{ 'current' if not tag }}'><a href='/expressions'><p>Expressions</p></a></div>
    {% for t in tags %}<div class='tag_label hoverable drag {{ 'current' if t == tag }}'><a href='/expressions/{{ t|e }}' draggable='false' value='{{ t|e }}'>
      {% if t == "Starred" %}
-     <img class="hoverable" src="/lib/skin/1/star_tab{{ '-down' if t == tag }}.png"></img>
+     <img class="hoverable" src="/lib/skin/1/star_tab{{ '-down' if t == tag }}.png">
      {% else %}
        <p>{{ t }}</p>
     {% endif %}

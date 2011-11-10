@@ -1,3 +1,11 @@
+{% if feed.class_name == 'InviteNote' %}
+  <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}" onclick="showDialog('#dia_referral')">
+    {% set link = "<span >" %}
+    {{link}}<img src='/lib/skin/1/logo.png'></span>
+    <a href="{{feed.initiator.url}}" class='initiator name'>{{ feed.initiator_name }}</a>
+    {{link}}has given you {{ feed.count }} invites!</span>
+  </div>
+{% else %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}">
     <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png", True)}}'></a>
     <div class="feed_text">
@@ -8,6 +16,8 @@
         </a>
         {{ "commented on" if feed.class_name == "Comment" }} 
         {{ "starred" if feed.class_name == "Star" }} 
+        {% if feed.class_name == 'InviteNote' %}
+        {% endif %}
       </p>
 
       {% if feed.entity_class == "Expr" %}
@@ -23,13 +33,15 @@
       {% endif %}
 
       {% if feed.class_name == "Comment" %}
-      <p class="comment_text">
-        "{{ feed.text | e | truncate(30) }}{{'"' if feed.text | length <= 30}}
-      </p>
+       <p class="comment_text">
+         "{{ feed.text | e | truncate(30) }}{{'"' if feed.text | length <= 30}}
+       </p>
+      {% elif feed.class_name == 'InviteNote' %}
+       Meeep meep new invites.
       {% endif %}
     </div>
     <div class="byline">
       <a class="name" href="{{ feed.owner_url }}">{{ feed.owner_name }}</a><span class="timestamp">{{ feed.created | friendly_date }}</span>
     </div>
   </div>
-
+{% endif %}

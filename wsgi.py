@@ -75,8 +75,7 @@ def expr_save(request, response):
           request.requester.flag('expr_new')
           if request.requester.get('flags').get('add_invites_on_save'):
               request.requester.unflag('add_invites_on_save')
-              request.requester.increment({'referrals':5})
-              request.requester.flag('show_invite')
+              request.requester.give_invites(5)
         except DuplicateKeyError:
             if exp.get('overwrite'):
                 Expr.named(upd['domain'], upd['name']).delete()
@@ -331,9 +330,7 @@ def add_referral(request, response):
         for key in form:
             users.append(User.fetch(key))
 
-    for user in users:
-        user.flag('new_referrals')
-        user.increment({'referrals': number})
+    for user in users: user.give_invites(number)
 
     return redirect(response, forward)
 
@@ -692,7 +689,6 @@ def handle(request): # HANDLER
                 origin = request.headers.get('origin')
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 response.headers.add('Access-Control-Allow-Origin', origin)
-                request.requester.unflag('new_referrals')
                 return serve_json(response, True)
         if p1 == 'file':
             res = File.fetch(p2)
@@ -795,9 +791,7 @@ def handle(request): # HANDLER
     if not d: return serve_404(request, response)
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
-    if is_owner:
-        if owner.get('flags',{}).get('expr_new'): owner.unflag('show_invite')
-        owner.unflag('expr_new')
+    if is_owner: owner.unflag('expr_new')
 
     response.context.update(
          domain = request.domain
@@ -822,8 +816,7 @@ def handle(request): # HANDLER
         tag = lget(request.path.split('/'), 1, '')
         if tag:
           if tag == "Starred":
-            spec['_id'] = {'$in': owner.starred_items}
-            del spec['owner']
+            spec = { '_id' : {'$in': owner.starred_items} }
           else:
             spec['tags_index'] = tag
 

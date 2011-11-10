@@ -53,7 +53,6 @@
   {% if owner.flags.expr_new %}<script>$(function() {
    updateShareUrls('#dia_share', window.location);  
    showDialog('#dia_share', { minimize_to : '#btn_share' } );
-   {% if owner.flags.show_invite %}showDialog('#dia_referral', {minimize_to : '#user_menu_handle'});{% endif %}
   })</script>{% endif %}
  {% endif %}
  </div>

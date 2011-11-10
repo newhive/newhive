@@ -1149,6 +1149,7 @@ Hive.rte = function(options) {
         o.doc = o.win.document;
         if(o.css) $(o.doc).find('head').append(o.css);
         o.doc.body.style.overflow = 'hidden';
+        //$(o.doc.body).bind('paste', function(e){ window.e = e; return false; });
         //o.editor_cmd('styleWithCSS', true);
         if(o.load) o.load();
     }
