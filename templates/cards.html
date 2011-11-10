@@ -1,3 +1,4 @@
+{% if exprs %}
 {% for e in exprs %}
  <a href='{{ e.url|e }}' target='_top'><div class='feed item' draggable='false'>
   <input type='hidden' class='expr_id' value='{{ e.id }}'>
@@ -7,3 +8,13 @@
   <div class='other'>{{ e.owner_name}}</div>
  </div></a>
 {% endfor %}
+{% elif users %}
+{% for u in users %}
+ <a href='{{ u.url|e }}' target='_top'><div class='feed item' draggable='false'>
+  <input type='hidden' class='expr_id' value='{{ u.id }}'>
+  <img src='{{ u.profile_thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
+  <div class='title title{{ u.fullname | e | length_bucket }}'>{{ u.fullname|e }}</div>
+  <div class='other'>{{ u.name }}</div>
+ </div></a>
+{% endfor %}
+{% endif %}

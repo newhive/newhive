@@ -80,9 +80,11 @@ class Entity(dict):
         return map(cls, self._col.find(spec=spec))
 
     @classmethod
-    def last(cls):
+    def last(cls, **spec):
         self = cls({})
-        return cls(self._col.find_one(sort=[('created', -1)]))
+        r = self._col.find_one(spec, sort=[('created', -1)])
+        if not r: return None
+        return cls(r)
 
     @classmethod
     def create(cls, **d):
@@ -218,6 +220,9 @@ class User(Entity):
             self.update(referrals=self['referrals'] - 1)
             d.update(user = self.id)
             return Referral.create(**d)
+    def give_invites(self, count):
+        self.increment({'referrals':count})
+        InviteNote.new(User.named(config.site_user), self, data={'count':count})
 
     @classmethod
     def named(cls, name):
@@ -238,6 +243,15 @@ class User(Entity):
     def get_thumb(self):
         return self.get('profile_thumb')
     thumb = property(get_thumb)
+
+    @classmethod
+    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
+        return map(User, db.user.find(
+             spec = spec
+            ,sort = [(sort, -1)]
+            ,limit = limit
+            ,skip = limit * page
+            ))
 
 
 def get_root(): return User.named('root')
@@ -289,7 +303,7 @@ class Expr(Entity):
             ))
 
         can_view = lambda e: (
-            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' 
+            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public'
             and len(e.get('apps', [])) ))
         return filter(can_view, es)
 
@@ -306,7 +320,9 @@ class Expr(Entity):
     def update(self, **d):
         if d.get('tags'): d['tags_index'] = normalize(d['tags'])
         super(Expr, self).update(**d)
-        feed = UpdatedExpr.new(self.owner, self)
+        last_update = UpdatedExpr.last(initiator=self['owner'])
+        if not last_update or now() - last_update['created'] > 14400:
+            feed = UpdatedExpr.new(self.owner, self)
         return self
 
     def create_me(self):
@@ -396,6 +412,7 @@ class Expr(Entity):
         return count
     share_count = property(get_share_count)
 
+    public = property(lambda self: self.get('auth') == "public")
 
 class File(Entity):
     cname = 'file'
@@ -494,6 +511,11 @@ class Feed(Entity):
             spec.update({"class_name": cls.__name__})
         return super(Feed, cls).search(**spec)
 
+    @classmethod
+    def last(cls, **spec):
+        spec.update(class_name=cls.__name__)
+        return super(Feed, cls).last(**spec)
+        
     def delete(self):
         self.initiator.update_cmd({'$pull': {'feed': self.id}})
         self.entity.update_cmd({'$pull': {'feed': self.id}})
@@ -551,17 +573,22 @@ class Star(Feed):
         else:
             return super(Star, cls).new(initiator, entity, data)
 
+class InviteNote(Feed):
+    pass
+
 class NewExpr(Feed):
     def create_me(self):
         super(NewExpr, self).create_me()
-        self.entity.owner.notify('starrers', self.id)
+        if self.entity.public:
+            self.entity.owner.notify('starrers', self.id)
         return self
 
 class UpdatedExpr(Feed):
     def create_me(self):
         super(UpdatedExpr, self).create_me()
         self.entity.notify('starrers', self.id)
-        self.entity.owner.notify('starrers', self.id)
+        if self.entity.public:
+            self.entity.owner.notify('starrers', self.id)
         return self
 
 class Referral(Entity):

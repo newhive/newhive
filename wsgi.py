@@ -75,8 +75,7 @@ def expr_save(request, response):
           request.requester.flag('expr_new')
           if request.requester.get('flags').get('add_invites_on_save'):
               request.requester.unflag('add_invites_on_save')
-              request.requester.increment({'referrals':5})
-              request.requester.flag('show_invite')
+              request.requester.give_invites(5)
         except DuplicateKeyError:
             if exp.get('overwrite'):
                 Expr.named(upd['domain'], upd['name']).delete()
@@ -257,7 +256,7 @@ def expr_tag_update(request, response):
     action = request.form.get('action')
     if action == 'tag_add': new_tags = expr.get('tags', '') + ' ' + tag
     elif action == 'tag_remove':
-        if request.form.get('value') == "Starred":
+        if request.form.get('value') == "starred":
             s = Star.find(initiator=request.requester.id, entity=id)
             s.delete()
         else:
@@ -276,12 +275,10 @@ def star(request, response):
     if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
-    if p1 == "expressions":
-        print p1
+    if p1 in ["expressions", "starred", "listening"]:
         entity = User.find(sites=request.domain.lower())
     else:
         entity = Expr.named(request.domain.lower(), request.path.lower())
-    print entity;
     if request.form.get('action') == "star":
         s = Star.new(request.requester, entity)
         if s or s.get('entity'):
@@ -331,9 +328,7 @@ def add_referral(request, response):
         for key in form:
             users.append(User.fetch(key))
 
-    for user in users:
-        user.flag('new_referrals')
-        user.increment({'referrals': number})
+    for user in users: user.give_invites(number)
 
     return redirect(response, forward)
 
@@ -721,7 +716,6 @@ def handle(request): # HANDLER
                 origin = request.headers.get('origin')
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 response.headers.add('Access-Control-Allow-Origin', origin)
-                request.requester.unflag('new_referrals')
                 return serve_json(response, True)
         if p1 == 'file':
             res = File.fetch(p2)
@@ -750,7 +744,7 @@ def handle(request): # HANDLER
             response.context.update({
                  'title'     : 'Editing: ' + exp['title']
                 ,'sites'     : request.requester.get('sites')
-                ,'exp_js'    : json.dumps(exp)
+                ,'exp_js'    : re.sub('</script>', '<\\/script>', json.dumps(exp))
                 ,'exp'       : exp
                 ,'show_help' : show_help
             })
@@ -824,9 +818,7 @@ def handle(request): # HANDLER
     if not d: return serve_404(request, response)
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
-    if is_owner:
-        if owner.get('flags',{}).get('expr_new'): owner.unflag('show_invite')
-        owner.unflag('expr_new')
+    if is_owner: owner.unflag('expr_new')
 
     response.context.update(
          domain = request.domain
@@ -843,24 +835,30 @@ def handle(request): # HANDLER
 
 
     if lget(request.path, 0) == '*':
-        return redirect(response, home_url(owner) + 'expressions' +
+        return redirect(response, home_url(owner) +
             ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
-    if request.path.startswith('expressions'):
+    if request.path.startswith('expressions') or request.path == 'starred' or request.path == 'listening':
         page = int(request.args.get('page', 0))
-        spec = { 'owner' : owner.id }
-        tag = lget(request.path.split('/'), 1, '')
-        if tag:
-          if tag == "Starred":
-            spec['_id'] = {'$in': owner.starred_items}
-            del spec['owner']
-          else:
-            spec['tags_index'] = tag
+        tags = owner.get('tags', [])
+        if request.path.startswith('expressions'):
+            spec = { 'owner' : owner.id }
+            tag = lget(request.path.split('/'), 1, '')
+            if tag:
+                spec['tags_index'] = tag
+            response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        elif request.path == 'starred':
+            spec = {'_id': {'$in': owner.starred_items}}
+            tag = "starred"
+            response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        elif request.path == 'listening':
+            tag = "listening"
+            response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
-        response.context['tags'] = owner.get('tags', [])
-        response.context['tags'].insert(0, 'Starred')
-        response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+        response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
+        response.context['tags'].insert(0, {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "listening" else "") + ".png" })
+        response.context['tags'].insert(0, {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "starred" else "") + ".png"})
         response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')

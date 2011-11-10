@@ -6,5 +6,8 @@
     <div id="more_button" class="btn black">more</div>
   </a>
 <script>
-    $('#feed_menu .feed_item').click(function(){window.location = $(this).find('.entity').attr('href')});
+    $('#feed_menu .feed_item').each(function() {
+        var l = $(this).find('.entity');
+        if(l.length) $(this).click(function(){window.location = l.attr('href')});
+    });
 </script>

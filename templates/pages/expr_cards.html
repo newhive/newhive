@@ -5,7 +5,7 @@
 <style>
 .tag_label { color : #696E76; background-color : #EDEBE1; }
 a.tag_label:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}; }
-.tag_label.current { background-color : black; color : white; }
+.tag_label.user.current { background-color : black; color : white; }
 #tags { margin : 0px 50px 25px 50px; }
 iframe { border : none; }
 </style>
@@ -27,6 +27,7 @@ iframe { border : none; }
   };
 </script>
 {% endblock %}
+{% block body_classes %}{{ super() }} expr_cards{% endblock %}
 {% block body %}
 
 <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
@@ -37,7 +38,7 @@ iframe { border : none; }
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
- {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in) }}
+ {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}) }}
  {% if user.logged_in %}
  {{ create_button(create + ('?tags=' + tag if tag else '')) }}
  {% endif %}
@@ -54,7 +55,7 @@ iframe { border : none; }
 {% endif %}
 #}
 <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
-  <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag if tag }}{% endif %}</div>
+  <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag if tag }}{% endif %}</div>
  <div id='profile_thumb'>
    {% if user_is_owner %}
    <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
@@ -71,11 +72,11 @@ iframe { border : none; }
  
  <div id='tags'>
    <div class='tag_label hoverable drag {{ 'current' if not tag }}'><a href='/expressions'><p>Expressions</p></a></div>
-   {% for t in tags %}<div class='tag_label hoverable drag {{ 'current' if t == tag }}'><a href='/expressions/{{ t|e }}' draggable='false' value='{{ t|e }}'>
-     {% if t == "Starred" %}
-     <img class="hoverable" src="/lib/skin/1/star_tab{{ '-down' if t == tag }}.png"></img>
+   {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t|e }}'>
+     {% if t.img %}
+     <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
      {% else %}
-       <p>{{ t }}</p>
+       <p>{{ t.name }}</p>
     {% endif %}
    </a></div>{% endfor %}
   {% if user_is_owner %}
@@ -84,7 +85,7 @@ iframe { border : none; }
   {% endif %}
  </div>
 </div>
-<div style='position : absolute; top : {{"300" if profile_thumb or user_is_owner else "250"}}px'>
+<div style='position : absolute; top : {{"306" if profile_thumb or user_is_owner else "250"}}px'>
 <div id='feed'>{% include 'cards.html' %}</div>
 </div>
 
