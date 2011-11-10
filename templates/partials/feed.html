@@ -1,7 +1,7 @@
 {% if feed.class_name == 'InviteNote' %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}" onclick="showDialog('#dia_referral')">
     {% set link = "<span >" %}
-    {{link}}<img src='/lib/skin/1/logo.png'></span>
+    {{link}}<img src='/lib/skin/1/logo_thumb.png'></span>
     <a href="{{feed.initiator.url}}" class='initiator name'>{{ feed.initiator_name }}</a>
     {{link}}has given you {{ feed.count }} invites!</span>
   </div>

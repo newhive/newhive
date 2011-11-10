@@ -80,9 +80,11 @@ class Entity(dict):
         return map(cls, self._col.find(spec=spec))
 
     @classmethod
-    def last(cls):
+    def last(cls, **spec):
         self = cls({})
-        return cls(self._col.find_one(sort=[('created', -1)]))
+        r = self._col.find_one(spec, sort=[('created', -1)])
+        if not r: return None
+        return cls(r)
 
     @classmethod
     def create(cls, **d):
@@ -318,7 +320,9 @@ class Expr(Entity):
     def update(self, **d):
         if d.get('tags'): d['tags_index'] = normalize(d['tags'])
         super(Expr, self).update(**d)
-        feed = UpdatedExpr.new(self.owner, self)
+        last_update = UpdatedExpr.last(initiator=self['owner'])
+        if not last_update or now() - last_update['created'] > 14400:
+            feed = UpdatedExpr.new(self.owner, self)
         return self
 
     def create_me(self):
@@ -507,6 +511,11 @@ class Feed(Entity):
             spec.update({"class_name": cls.__name__})
         return super(Feed, cls).search(**spec)
 
+    @classmethod
+    def last(cls, **spec):
+        spec.update(class_name=cls.__name__)
+        return super(Feed, cls).last(**spec)
+        
     def delete(self):
         self.initiator.update_cmd({'$pull': {'feed': self.id}})
         self.entity.update_cmd({'$pull': {'feed': self.id}})
