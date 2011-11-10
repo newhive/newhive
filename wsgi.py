@@ -835,7 +835,7 @@ def handle(request): # HANDLER
 
 
     if lget(request.path, 0) == '*':
-        return redirect(response, home_url(owner) + 'expressions' +
+        return redirect(response, home_url(owner) +
             ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
     if request.path.startswith('expressions') or request.path == 'starred' or request.path == 'listening':
         page = int(request.args.get('page', 0))

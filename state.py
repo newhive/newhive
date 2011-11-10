@@ -218,7 +218,7 @@ class User(Entity):
             self.update(referrals=self['referrals'] - 1)
             d.update(user = self.id)
             return Referral.create(**d)
-    def give_invites(count):
+    def give_invites(self, count):
         self.increment({'referrals':count})
         InviteNote.new(User.named(config.site_user), self, data={'count':count})
 
