@@ -6,10 +6,10 @@
 {% block main %}
 <div class='nav' id='nav_bg'></div>
 <div class='nav' style='font-weight : bold'>
-  <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
+  <a href='{{ server }}' title="Explore Expressions"><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
 
  {% if user.logged_in %}
-  <div class='nav_icon medbold' style='left : 50px; top : 0;'><a href='{{ home_url }}'>{{ user['name'] }}</a></div>
+  <div class='nav_icon medbold' style='left : 50px; top : 0;'><a href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
   <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
   <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}'></div>
   <div id='feed_menu' class='menu border selected'>
@@ -40,7 +40,7 @@
     });
   </script>
  {% else %}
-  <a href='{{ server }}'><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  <a href='{{ server }}' title="Explore Expressions"><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
  {% endif %}
 </div>
 
