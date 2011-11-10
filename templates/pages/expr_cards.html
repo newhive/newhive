@@ -38,7 +38,7 @@ iframe { border : none; }
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
- {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}) }}
+ {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}) if not owner.id == user.id}}
  {% if user.logged_in %}
  {{ create_button(create + ('?tags=' + tag if tag else '')) }}
  {% endif %}
@@ -85,7 +85,7 @@ iframe { border : none; }
   {% endif %}
  </div>
 </div>
-<div style='position : absolute; top : {{"300" if profile_thumb or user_is_owner else "250"}}px'>
+<div style='position : absolute; top : {{"306" if profile_thumb or user_is_owner else "250"}}px'>
 <div id='feed'>{% include 'cards.html' %}</div>
 </div>
 
