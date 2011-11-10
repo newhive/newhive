@@ -256,7 +256,7 @@ def expr_tag_update(request, response):
     action = request.form.get('action')
     if action == 'tag_add': new_tags = expr.get('tags', '') + ' ' + tag
     elif action == 'tag_remove':
-        if request.form.get('value') == "Starred":
+        if request.form.get('value') == "starred":
             s = Star.find(initiator=request.requester.id, entity=id)
             s.delete()
         else:
@@ -848,17 +848,17 @@ def handle(request): # HANDLER
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'starred':
             spec = {'_id': {'$in': owner.starred_items}}
-            tag = "Starred"
+            tag = "starred"
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'listening':
-            tag = "Listening"
+            tag = "listening"
             response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
-        response.context['tags'].insert(0, {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "Listening" else "") + ".png" })
-        response.context['tags'].insert(0, {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "Starred" else "") + ".png"})
+        response.context['tags'].insert(0, {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "listening" else "") + ".png" })
+        response.context['tags'].insert(0, {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "starred" else "") + ".png"})
         response.context['profile_thumb'] = owner.get('profile_thumb')
 
         return serve_page(response, 'pages/expr_cards.html')
