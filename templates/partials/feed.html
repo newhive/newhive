@@ -1,10 +1,11 @@
 {% set listening = True if feed.class_name == "Star" and feed.entity_class == "User" %}
 {% if feed.class_name == 'InviteNote' %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}" onclick="showDialog('#dia_referral')">
-    {% set link = "<span >" %}
-    {{link}}<img src='/lib/skin/1/logo_thumb.png'></span>
-    <a href="{{feed.initiator.url}}" class='initiator name'>{{ feed.initiator_name }}</a>
-    {{link}}has given you<br/> {{ feed.count }} invites!</span>
+    <img src='/lib/skin/1/logo_thumb.png'>
+    <div class='feed_text'>You have been given <br/>{{ feed.count }} invites!</div>
+    <div class="byline">
+      <a class="name" href="{{ feed.initiator.url }}">{{ feed.initiator_name }}</a><span class="timestamp">{{ feed.created | friendly_date }}</span>
+    </div>
   </div>
 {% else %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}">
