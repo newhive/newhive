@@ -492,7 +492,7 @@ def mail_invite(email, name=False, force_resend=False):
     send_mail(heads, body)
     return referral.id
 
-def mail_feed(feed, recipient):
+def mail_feed(feed, recipient, dry_run=False):
   initiator_name = feed.get('initiator_name')
   recipient_name = recipient.get('name')
   expression_title = feed.entity.get('title')
@@ -510,14 +510,21 @@ def mail_feed(feed, recipient):
   heads = {
       'To': recipient.get('email')
       , 'From' : 'The New Hive <noreply@thenewhive.com>'
-      , 'Subject': initiator_name + " commented on " + expression_title
       }
+  if type(feed) == Comment:
+      context['message'] = feed.get('text')
+      heads['Subject'] = initiator_name + " commented on " + expression_title
+  elif type(feed) == Star:
+      heads['Subject'] = "Someone starred your stuff"
   body = {
       'plain': jinja_env.get_template("emails/feed.txt").render(context)
       , 'html': jinja_env.get_template("emails/feed.html").render(context)
       }
-  if recipient_name in config.admins or ( not config.debug_mode ):
+  if dry_run:
+      return body['html']
+  elif recipient_name in config.admins or ( not config.debug_mode ):
       send_mail(heads, body)
+      return True
 
 
 
