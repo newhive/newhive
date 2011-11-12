@@ -714,7 +714,7 @@ def handle(request): # HANDLER
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            if not reqaction in ['login', 'add_comment', 'star', 'unstar', 'log', 'user_create']:
+            if not reqaction in ['login', 'add_comment', 'star', 'unstar', 'log', 'user_create', 'mail_us']:
                 if not (request.is_secure and request.requester.logged_in):
                     raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure or not logged in')
             if urlparse(request.headers.get('Referer')).hostname == content_domain:

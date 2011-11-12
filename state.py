@@ -252,6 +252,10 @@ class User(Entity):
             ,skip = limit * page
             ))
 
+    def get_files(self):
+        return File.search(owner = self.id)
+    files = property(get_files)
+
 
 def get_root(): return User.named('root')
 if not get_root():
