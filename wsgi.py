@@ -502,29 +502,35 @@ def mail_feed(feed, recipient, dry_run=False):
       , 'initiator_name': initiator_name
       , 'initiator_url': feed.initiator.url
       , 'url': feed.entity.url
-      , 'thumbnail_url': feed.entity.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
+      , 'thumbnail_url': feed.entity.thumb
       , 'title': expression_title
+      , 'type': feed['class_name']
+      , 'entity_type': feed['entity_class']
       }
-  if type(feed) == Comment:
-      context['message'] = feed.get('text')
   heads = {
       'To': recipient.get('email')
       , 'From' : 'The New Hive <noreply@thenewhive.com>'
       }
   if type(feed) == Comment:
       context['message'] = feed.get('text')
-      heads['Subject'] = initiator_name + " commented on " + expression_title
+      heads['Subject'] = initiator_name + ' commented on "' + expression_title + '"'
   elif type(feed) == Star:
-      heads['Subject'] = "Someone starred your stuff"
+      if feed['entity_class'] == "Expr":
+          heads['Subject'] = initiator_name + ' starred "' + expression_title + '"'
+      elif feed['entity_class'] == "User":
+          context['title'] = feed.initiator.get('fullname')
+          context['url'] = feed.initiator.url
+          context['thumbnail_url'] = feed.initiator.thumb
+          heads['Subject'] = initiator_name + " is now listening to you"
   body = {
       'plain': jinja_env.get_template("emails/feed.txt").render(context)
       , 'html': jinja_env.get_template("emails/feed.html").render(context)
       }
   if dry_run:
-      return body['html']
+      return heads
   elif recipient_name in config.admins or ( not config.debug_mode ):
       send_mail(heads, body)
-      return True
+      return heads
 
 
 

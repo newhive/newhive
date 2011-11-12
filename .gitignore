@@ -3,3 +3,4 @@
 /lib/libsrc
 /config.py
 *.pyc
+/log
