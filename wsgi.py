@@ -1008,6 +1008,7 @@ def render_template(response, template):
     context.update(
          home_url = home_url(response.user)
         ,user = response.user
+        ,admin = response.user.get('name') in config.admins
         ,create = abs_url(secure = True) + 'edit'
         ,server = abs_url()
         ,secure_server = abs_url(secure = True)
