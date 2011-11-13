@@ -624,7 +624,7 @@ def tags_by_frequency(**query):
             for t in d.get('tags_index'): tags[t] = tags.get(t, 0) + 1
     counts = [[tags[t], t] for t in tags]
     counts.sort(reverse=True)
-    return [c[1] for c in counts]
+    return counts
 
 def count(L):
     c = {}
