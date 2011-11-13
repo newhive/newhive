@@ -240,8 +240,7 @@ class User(Entity):
         return abs_url(domain = self.get('sites', [config.server_name])[0]) + 'expressions'
     url = property(get_url)
 
-    def get_thumb(self):
-        return self.get('profile_thumb')
+    def get_thumb(self): return self.get('profile_thumb', abs_url() + '/lib/skin/1/thumb_person.png')
     thumb = property(get_thumb)
 
     @classmethod
@@ -385,6 +384,9 @@ class Expr(Entity):
     def get_url(self): return abs_url(domain=self['domain']) + self['name']
     url = property(get_url)
 
+    def get_thumb(self): return self.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
+    thumb = property(get_thumb)
+
     def set_tld(self, domain):
         """ Sets the top level domain (everything following first dot) in domain attribute """
         return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
@@ -474,6 +476,7 @@ class ActionLog(Entity):
 
 class Feed(Entity):
     cname = 'feed'
+    _initiator = _entity = None
 
     def create_me(self):
         for key in ['initiator', 'entity', 'entity_class']:
@@ -491,10 +494,14 @@ class Feed(Entity):
         return self
 
     def get_entity(self):
-        return globals()[self['entity_class']].fetch(self['entity'])
+        if not self._entity:
+            self._entity = globals()[self['entity_class']].fetch(self['entity'])
+        return self._entity
 
     def get_initiator(self):
-        return User.fetch(self['initiator'])
+        if not self._initiator:
+            self._initiator = User.fetch(self['initiator'])
+        return self._initiator
 
     entity = property(get_entity)
     initiator = property(get_initiator)
@@ -566,7 +573,7 @@ class Comment(Feed):
             }
 
     def get_thumb(self):
-        return self.initiator.get('profile_thumb')
+        return self.initiator.thumb
     thumb = property(get_thumb)
 
 class Star(Feed):
