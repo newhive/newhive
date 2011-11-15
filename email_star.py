@@ -1,10 +1,10 @@
 #!/usr/bin/python
-import time, optparse
+import time, optparse, os
 import wsgi
 from state import now
 
 def main():
-    logfile = open('log/email_star.log', 'a')
+    logfile = open(os.path.dirname(os.path.realpath(__file__)) + '/log/email_star.log', 'a')
     parser = optparse.OptionParser()
     parser.add_option("-s", "--start", dest="start", type="int", help="how far back to look for star feed items, in minutes")
     parser.add_option("-e", "--end", dest="end", type="int", help="delay for star feed items, in minutes from present")
