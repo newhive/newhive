@@ -87,6 +87,20 @@ class Entity(dict):
         return cls(r)
 
     @classmethod
+    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
+        es = map(cls, getattr(db, cls.cname).find(
+             spec = spec
+            ,sort = [(sort, -1)]
+            ,limit = limit
+            ,skip = limit * page
+            ))
+        return es
+
+    @classmethod
+    def list_count(cls, spec):
+        return getattr(db, cls.cname).find(spec = spec).count()
+
+    @classmethod
     def create(cls, **d):
         self = cls(d)
         self['_id'] = self.id = guid()
@@ -243,15 +257,6 @@ class User(Entity):
     def get_thumb(self): return self.get('profile_thumb', abs_url() + '/lib/skin/1/thumb_person.png')
     thumb = property(get_thumb)
 
-    @classmethod
-    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
-        return map(User, db.user.find(
-             spec = spec
-            ,sort = [(sort, -1)]
-            ,limit = limit
-            ,skip = limit * page
-            ))
-
     def get_files(self):
         return File.search(owner = self.id)
     files = property(get_files)
@@ -298,21 +303,11 @@ class Expr(Entity):
 
     @classmethod
     def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
-        es = map(Expr, db.expr.find(
-             spec = spec
-            ,sort = [(sort, -1)]
-            ,limit = limit
-            ,skip = limit * page
-            ))
-
+        es = super(Expr, cls).list(spec, requester, limit, page, sort)
         can_view = lambda e: (
-            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public'
-            and len(e.get('apps', [])) ))
+            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' and len(e.get('apps', [])) )
+            )
         return filter(can_view, es)
-
-    @classmethod
-    def list_count(cls, spec):
-        return db.expr.find(spec = spec).count()
 
     def get_owner(self):
         if not self._owner:

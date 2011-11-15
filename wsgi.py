@@ -682,23 +682,25 @@ def format_card(e):
 def expr_list(spec, **args):
     return map(format_card, Expr.list(spec, **args))
 
-def expr_home_list(p2, request, response, limit=90):
+def expr_home_list(p2, request, response, limit=90, type=Expr):
     root = get_root()
     tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
     tag = {'name': tag, 'url': '/home/' + tag}
     page = int(request.args.get('page', 0))
-    ids = root.get('tagged', {}).get(tag['name'], [])
+    ids = root.get('tagged', {}).get(tag['name'], []) if type == Expr else []
     if ids:
         by_id = {}
-        for e in Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
-        exprs = [by_id[i] for i in ids if by_id.has_key(i)]
+        for e in type.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
+        entities = [by_id[i] for i in ids if by_id.has_key(i)]
         response.context['pages'] = 0;
     else:
-        exprs = Expr.list({}, sort='updated', limit=limit, page=page)
-        response.context['pages'] = Expr.list_count({});
-    response.context['exprs'] = map(format_card, exprs)
-    response.context['tag'] = tag
-    response.context['show_name'] = True
+        entities = type.list({}, sort='updated', limit=limit, page=page)
+        response.context['pages'] = type.list_count({});
+    if type==Expr:
+        response.context['exprs'] = map(format_card, entities)
+        response.context['tag'] = tag
+        response.context['show_name'] = True
+    elif type==User: response.context['users'] = entities
     response.context['page'] = page
 
 def handle(request): # HANDLER
@@ -792,10 +794,12 @@ def handle(request): # HANDLER
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'pages/minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 == '' or p1 == 'home' or p1 == 'feed':
+        elif p1 in ['', 'home', 'feed', 'people']:
             tags = get_root().get('tags', [])
             response.context['tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
             feed_tag = {'url': "/feed", "name": "Feed"}
+            people_tag = {'url': '/people', 'name': 'People'}
+            response.context['tags'].append(people_tag)
             if request.requester.logged_in:
                 response.context['tags'].append(feed_tag)
             if p1 == 'feed':
@@ -804,7 +808,12 @@ def handle(request): # HANDLER
                 response.context['feed_items'] = request.requester.feed
                 response.context['tag'] = feed_tag
             else:
-                expr_home_list(p2, request, response)
+                if p1 == 'people':
+                    response.context['tag'] = people_tag
+                    type = User
+                else:
+                    type = Expr
+                expr_home_list(p2, request, response, type=type)
             if request.args.get('partial'): return serve_page(response, 'cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
