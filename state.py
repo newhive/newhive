@@ -151,7 +151,7 @@ class Entity(dict):
 
     def get_starred_items(self):
         if not self._starred_items:
-          self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
+          self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star' and i.get('initiator') == self.id, self.feed)]
         return self._starred_items
     starred_items = property(get_starred_items)
 

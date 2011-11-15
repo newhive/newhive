@@ -257,16 +257,24 @@ def expr_tag_update(request, response):
     tag = lget(normalize(request.form.get('value', '')), 0)
     id = request.form.get('expr_id')
     expr = Expr.fetch(id)
+    if request.requester.id != expr.owner.id and not tag == "starred": return False
     action = request.form.get('action')
-    if action == 'tag_add': new_tags = expr.get('tags', '') + ' ' + tag
+    if action == 'tag_add':
+        if tag == "starred":
+            s = Star.new(request.requester, expr)
+            return True
+        else:
+            new_tags = expr.get('tags', '') + ' ' + tag
     elif action == 'tag_remove':
-        if request.form.get('value') == "starred":
+        if tag == "starred":
             s = Star.find(initiator=request.requester.id, entity=id)
-            s.delete()
+            res = s.delete()
+            if not res['err']: return True
+            else: return res
         else:
             new_tags = re.sub(tag, '', expr['tags'])
-            expr.update(tags=new_tags, updated=False)
-    return True
+    expr.update(tags=new_tags, updated=False)
+    return tag
 
 def user_tag_update(request, response):
     tag = lget(normalize(request.form.get('value', '')), 0)
@@ -714,9 +722,13 @@ def handle(request): # HANDLER
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            if not reqaction in ['login', 'add_comment', 'star', 'unstar', 'log', 'user_create', 'mail_us']:
-                if not (request.is_secure and request.requester.logged_in):
-                    raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure or not logged in')
+            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add']
+            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us']
+            if not request.is_secure and not reqaction in insecure_actions:
+                raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
+            if not request.requester.logged_in and not reqaction in non_logged_in_actions:
+                raise exceptions.BadRequest('post request action "' + reqaction + '" is not logged_in')
+
             if urlparse(request.headers.get('Referer')).hostname == content_domain:
                 raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
 
