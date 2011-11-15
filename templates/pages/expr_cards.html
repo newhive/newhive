@@ -122,7 +122,7 @@ iframe { border : none; }
      // check if tag is already there (blehck)
      if(tags.children().filter(function() { return $(this).attr('value') == v }).length) return;
      var updateHtml = function(data){
-       if (data & typeof(data) == "string"){
+       if (data && typeof(data) == "string"){
          tags.append($("<span class='tag'>").attr('value', data).append('#' + data + ' '));
          tags.append(' ');
        }
