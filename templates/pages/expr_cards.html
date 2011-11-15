@@ -40,7 +40,7 @@ iframe { border : none; }
  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
  {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}) if not owner.id == user.id}}
  {% if user.logged_in %}
- {{ create_button(create + ('?tags=' + tag if tag else '')) }}
+ {{ create_button(create) }}
  {% endif %}
 </div>
 
@@ -72,7 +72,7 @@ iframe { border : none; }
  
  <div id='tags'>
    <div class='tag_label hoverable drag {{ 'current' if not tag }}'><a href='/expressions'><p>Expressions</p></a></div>
-   {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t|e }}'>
+   {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
      {% if t.img %}
      <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
      {% else %}
@@ -116,15 +116,18 @@ iframe { border : none; }
      $('#upload_target').load(function() { window.location = '{{ home_url }}' });
  }
  function add_tag(item, tag) {
+     tag = $(tag).find('a')[0];
      var tags = $(item).find('.tags'), v = $(tag).attr('value');
+     if ( v == "listening") return;
      // check if tag is already there (blehck)
      if(tags.children().filter(function() { return $(this).attr('value') == v }).length) return;
-     tags.append($("<span class='tag'>").attr('value', v).append('#' + v + ' '));
-     tags.append(' ');
-     $('#action_input').val('tag_add');
-     $('#id_input').val($(item).find('.expr_id').val());
-     $('#value_input').val(v);
-     $('#upload_form').submit();
+     var updateHtml = function(data){
+       if (data && typeof(data) == "string"){
+         tags.append($("<span class='tag'>").attr('value', data).append('#' + data + ' '));
+         tags.append(' ');
+       }
+     }
+     $.post('', {action:'tag_add', expr_id: $(item).find('.expr_id').val(), value: v}, updateHtml, 'json')
      return false;
  }
  function remove_tag(item) {
