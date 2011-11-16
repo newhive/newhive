@@ -810,10 +810,10 @@ def handle(request): # HANDLER
             else:
                 if p1 == 'people':
                     response.context['tag'] = people_tag
-                    type = User
+                    rtype = User
                 else:
-                    type = Expr
-                expr_home_list(p2, request, response, type=type)
+                    rtype = Expr
+                expr_home_list(p2, request, response, type=rtype)
             if request.args.get('partial'): return serve_page(response, 'cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
