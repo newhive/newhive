@@ -1,4 +1,5 @@
 {% set listening = True if feed.class_name == "Star" and feed.entity_class == "User" %}
+{% set entity_url = feed.entity.url + ("?loadDialog=comments" if feed.class_name == "Comment" else "") %}
 {% if feed.class_name == 'InviteNote' %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}" onclick="showDialog('#dia_referral')">
     <img src='/lib/skin/1/logo_thumb.png'>
@@ -9,7 +10,7 @@
   </div>
 {% else %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}">
-    <a href="{{feed.entity.url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png", True)}}'></a>
+    <a href="{{entity_url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png", True)}}'></a>
     <div class="feed_text">
 
       <p>
@@ -30,7 +31,7 @@
 
       {% if feed.entity_class == "Expr" %}
       <p class="title{{feed.entity.title | e | length_bucket}}">
-        <a class="entity" href="{{feed.entity.url}}">{{ feed.entity.title | e}}</a>
+        <a class="entity" href="{{entity_url}}">{{ feed.entity.title | e}}</a>
       </p>
       {% else %}
       <p class="title{{(feed.entity.name ~ ("" if listening else "'s profile")) | length_bucket}}">
