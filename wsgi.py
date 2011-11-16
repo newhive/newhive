@@ -451,28 +451,29 @@ def mail_them(request, response):
 
 def mail_referral(request, response):
     user = request.requester
-    name = request.form.get('name')
-    to_email = request.form.get('to')
-    if not user['referrals'] > 0: return False
-    referral = user.new_referral({'name': name, 'to': to_email})
+    for i in range(0,4):
+        name = request.form.get('name_' + str(i))
+        to_email = request.form.get('to_' + str(i))
+        if user['referrals'] <= 0 or not name or not to_email or len(name) == 0 or len(to_email) == 0: break
+        referral = user.new_referral({'name': name, 'to': to_email})
 
-    heads = {
-         'To' : to_email
-        ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
-        ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
-        ,'Reply-to' : user.get('email', '')
-        }
-    context = {
-         'referrer_url': home_url(user)
-        ,'referrer_name': user.get('fullname')
-        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + to_email)
-        ,'name': name
-        }
-    body = {
-         'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
-        ,'html': jinja_env.get_template("emails/user_invitation.html").render(context)
-        }
-    send_mail(heads, body)
+        heads = {
+             'To' : to_email
+            ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
+            ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
+            ,'Reply-to' : user.get('email', '')
+            }
+        context = {
+             'referrer_url': home_url(user)
+            ,'referrer_name': user.get('fullname')
+            ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + to_email)
+            ,'name': name
+            }
+        body = {
+             'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
+            ,'html': jinja_env.get_template("emails/user_invitation.html").render(context)
+            }
+        send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
 
 def mail_invite(email, name=False, force_resend=False):
@@ -722,7 +723,7 @@ def handle(request): # HANDLER
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral']
             non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')

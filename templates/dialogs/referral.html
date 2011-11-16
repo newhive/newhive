@@ -6,15 +6,16 @@
   <form id='referral_form' action='{{ secure_server}}' method='POST'>
     <input type='hidden' name='forward' value='{{ url }}' />
     <input type='hidden' name='action' value='mail_referral'/>
-    <div class="label">Enter your friend's contact info below <br/>to send an invitation</div>
-    <div class="line first">
+    <div class="label">Enter contact info below to send invitation(s)</div>
+    {% set referral_lines = user.referrals if user.referrals <= 5 else 5 %}
+    {% for i in range(0, referral_lines) %}
+    <div class="line{{" first" if i == 0 }}">
       <div class='medbold label align'>Name</div>
-      <input type="text" name="name"/>
+      <input type="text" name="name_{{i}}"/>
+      <div class='medbold label align' style="margin-left: 20px;">Email</div>
+      <input type="text" name="to_{{i}}"/>
     </div>
-    <div class="line">
-      <div class='medbold label align'>Email</div>
-      <input type="text" name="to"/>
-    </div>
+    {% endfor %}
 {#
     <div class="line">
       <div class="label medbold align">Message<br/><span class="small">(optional)</span></div>

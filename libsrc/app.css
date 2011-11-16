@@ -328,7 +328,7 @@ input[type="text"].copy, textarea.copy {
 
 /* Referral Dialog */
 #dia_referral {
-  width: 430px;
+  width: 490px;
   padding: 20px 40px 20px 50px;
   text-align: left;
 }
@@ -336,15 +336,11 @@ input[type="text"].copy, textarea.copy {
   margin: 20px 0;
 }
 #referral_count { color: red; }
-#dia_referral input[type="text"], #dia_referral textarea { width: 305px; }
+#dia_referral input[type="text"], #dia_referral textarea { width: 150px; float: left; }
 #dia_referral input[type="submit"] { 
   float: right; 
   font-size: 18px; 
   margin: 5px 12px; 
-}
-
-#dia_referral .align {
-  width: 88px;
 }
 
 #dia_referral .line.first { margin-top: 27px; }
