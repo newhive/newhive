@@ -360,18 +360,24 @@ def add_comment(request, response):
 ########### mail functions ###########
 ######################################
 
+from cStringIO import StringIO
 from smtplib import SMTP
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.header import Header
+from email.generator import Generator
+from email import Charset
 
+Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
 def send_mail(headers, body):
     msg = MIMEMultipart('alternative')
-    for k in ['Subject', 'From', 'To']:
-      msg[k] = headers[k]
+    msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
+    msg['To'] = headers['To']
+    msg['From'] = headers['From']
 
     if type(body) == dict:
-        plain = MIMEText(body['plain'], 'plain')
-        html = MIMEText(body['html'], 'html')
+        plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
+        html = MIMEText(body['html'].encode('utf-8'), 'html')
         msg.attach(plain); msg.attach(html)
     else:
         part1 = MIMEText(body, 'plain')
@@ -379,9 +385,15 @@ def send_mail(headers, body):
 
     smtp = SMTP(config.email_server)
     if config.email_user and config.email_password:
-      smtp.login(config.email_user, config.email_password)
+        smtp.login(config.email_user, config.email_password)
 
-    return smtp.sendmail(msg['From'], msg['To'].split(','), msg.as_string())
+    # Unicode support is super wonky.  see http://radix.twistedmatrix.com/2010/07/how-to-send-good-unicode-email-with.html
+    io = StringIO()
+    g = Generator(io, False) # second argument means "should I mangle From?"
+    g.flatten(msg)
+    encoded_msg = io.getvalue()
+
+    return smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
 
 def mail_us(request, response):
     if not request.form.get('email'): return False
@@ -523,6 +535,7 @@ def mail_feed(feed, recipient, dry_run=False):
   if type(feed) == Comment:
       context['message'] = feed.get('text')
       heads['Subject'] = initiator_name + ' commented on "' + expression_title + '"'
+      context['url'] = context['url'] + "?loadDialog=comments"
   elif type(feed) == Star:
       if feed['entity_class'] == "Expr":
           heads['Subject'] = initiator_name + ' starred "' + expression_title + '"'
