@@ -1,0 +1,7 @@
+ <a href='{{ user.url|e }}' target='_top'><div class='feed item' draggable='false'>
+  <input type='hidden' class='expr_id' value='{{ user.id }}'>
+  <img src='{{ user.thumb if user.profile_thumb else "/lib/skin/1/thumb_person_mask.png" }}' style='background: {{ colors[range(32)|random] }};' class='thumb'>
+  <div class='title title{{ user.fullname | e | length_bucket }}'>{{ user.fullname|e }}</div>
+  <div class='tags'>{% if user.expr_count > 0 %}{{ user.expr_count ~ " expression" ~ ("s" if user.expr_count > 1) }}{% endif %}</div>
+  <div class='other'>{{ user.name }}</div>
+ </div></a>
