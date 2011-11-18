@@ -19,6 +19,7 @@ iframe { border : none; }
       $('#profile_thumb_upload_form input[name="forward"]').val(window.location);
       $('#profile_thumb_upload_form').submit();
     });
+    hover_menu("#btn_star", "#dia_starrers");
   });
 
   var profile_thumb_choose = function(){
@@ -42,6 +43,7 @@ iframe { border : none; }
  {% if user.logged_in %}
  {{ create_button(create) }}
  {% endif %}
+ {% include "dialogs/starrers.html" %}
 </div>
 
 {% endblock %}
@@ -165,5 +167,4 @@ iframe { border : none; }
 </form>
 {% endif %}
 
-{% include "dialogs/starrers.html" %}
 {% endblock %}

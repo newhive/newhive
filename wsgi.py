@@ -903,6 +903,8 @@ def handle(request): # HANDLER
 
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
+    else:
+        response.context['starrers'] = map(User.fetch, resource.starrers)
 
 
     if not resource: return serve_404(request, response)
