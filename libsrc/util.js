@@ -446,6 +446,7 @@ hover_menu = function(handle, drawer, options) {
         ,offsetY : 0
         ,click_persist : false
         ,hover : true
+        ,open_condition : function(){ return true }
     };
     $.extend(o.options, options);
     if(!handle.length) throw("hover_menu has no handle");
@@ -480,6 +481,7 @@ hover_menu = function(handle, drawer, options) {
     }
     o.open = function() {
         o.cancel_close();
+        if (!o.options.open_condition()) return;
         if(o.opened) return;
 
         o.opened = true;
