@@ -1,4 +1,4 @@
-<div id="dia_starrers" class='menu border selected'>
+<div id="dia_starrers" class='menu border selected' data-starrer-count='{{ starrers|length }}'>
 {% for user in starrers %}
 {% include "partials/user_card.html" %}
 {% endfor %}
