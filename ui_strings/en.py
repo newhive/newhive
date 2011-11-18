@@ -1,0 +1,2 @@
+embed_code_description = """Have media you'd like to share from another site? Paste in the URL's from vimeo or youtube here to include them in your expression. Or enter "embed" code found on the "share button" of many sites including- Grooveshark, googlemaps, soundcloud, bandcamp, tokbox, Flickr, paypal buttons, Ted Talks, and More! We also support iframes!"""
+embed_code_textarea = """Paste your url or embed code here."""

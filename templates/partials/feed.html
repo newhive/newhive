@@ -1,5 +1,7 @@
 {% set listening = True if feed.class_name == "Star" and feed.entity_class == "User" %}
+{% if feed.entity %}
 {% set entity_url = feed.entity.url + ("?loadDialog=comments" if feed.class_name == "Comment" else "") %}
+{% endif %}
 {% if feed.class_name == 'InviteNote' %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}}" onclick="showDialog('#dia_referral')">
     <img src='/lib/skin/1/logo_thumb.png'>
