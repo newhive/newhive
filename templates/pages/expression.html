@@ -55,6 +55,9 @@
    showDialog('#dia_share', { minimize_to : '#btn_share' } );
   })</script>{% endif %}
  {% endif %}
+ {% include "dialogs/starrers.html" %}
+ <script>hover_menu("#btn_star", "#dia_starrers");</script>
+    
  </div>
  {% include 'expr_background.html' %}
 {% endblock %}

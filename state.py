@@ -261,6 +261,19 @@ class User(Entity):
         return File.search(owner = self.id)
     files = property(get_files)
 
+    def get_expr_count(self, force_update=False):
+        count = False
+        if not force_update:
+            tmp = self.get('analytics')
+            if tmp: tmp = tmp.get('expressions')
+            if tmp: count = tmp.get('count')
+
+        if not count:
+            count = db.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
+            self.update_cmd({"$set": {'analytics.expressions.count': count}})
+        return count
+    expr_count = property(get_expr_count)
+
 
 def get_root(): return User.named('root')
 if not get_root():
@@ -321,6 +334,7 @@ class Expr(Entity):
         last_update = UpdatedExpr.last(initiator=self['owner'])
         if not last_update or now() - last_update['created'] > 14400:
             feed = UpdatedExpr.new(self.owner, self)
+        self.owner.get_expr_count(force_update=True)
         return self
 
     def create_me(self):
@@ -331,7 +345,13 @@ class Expr(Entity):
         self.setdefault('auth', 'public')
         super(Expr, self).create_me()
         feed = NewExpr.new(self.owner, self)
+        self.owner.get_expr_count(force_update=True)
         return self
+
+    def delete(self):
+        self.owner.get_expr_count(force_update=True)
+        return super(Expr, self).delete()
+
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
