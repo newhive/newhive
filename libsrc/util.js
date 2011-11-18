@@ -437,7 +437,9 @@ function hover_add(o) {
         o.over = function() { o.src = o.src_h };
         o.out = function() { if(!o.busy) o.src = o.src_d };
     }
-    $(o).hover(o.over, o.out);
+    if (o.over && o.out) {
+        $(o).hover(o.over, o.out);
+    };
     $(o).hover(function() { $(this).addClass('active'); }, function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
