@@ -1,36 +1,90 @@
 {% extends "base.html" %}
+{% from "macros/main.html" import star_button, share_button, create_button, discussion_button %} 
+
+{% block body_classes %}{{ super() }} main{% endblock %}
 
 {% block main %}
-<div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
->{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
-
-<div id='dialog_shield'></div>
-{% include 'dialogs/share.html' %}
-{% if user.logged_in %}
-  {% include 'dialogs/referral.html' %}
-{% endif %}
 <div class='nav' id='nav_bg'></div>
 <div class='nav' style='font-weight : bold'>
- <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
+  <a href='{{ server }}home/Recent' title="Explore Expressions"><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
+
  {% if user.logged_in %}
-  <div class='nav_icon medbold' style='left : 50px; top : 0;'><a href='{{ home_url }}'>{{ user['name'] }}</a></div>
+  <div class='nav_icon medbold' style='left : 50px; top : 0;'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
   <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
-  <div id='user_menu' class='menu'>
-   <form name='logout_form' action='{{ secure_server }}' method='POST'>
-    <input name='action' value='logout' type='hidden'>
-   </form>
-   <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
-   {% if user.referrals > 0 %}
-     <div class='menu_item' onclick='showDialog("#dia_referral")'>Referrals</div>
-  {% endif %}
-   <!--<div class='menu_item'>Change&nbsp;icon</div>
-   <div class='menu_item'>Settings</div>-->
+  <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}'></div>
+  <div id='feed_menu' class='menu border selected'>
+    {% include "dialogs/feed.html" %}
   </div>
-  <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
+  <div id='user_menu' class='menu'>
+    <form name='logout_form' action='{{ secure_server }}' method='POST'>
+      <input name='action' value='logout' type='hidden'>
+    </form>
+    <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
+    {% if user.referrals > 0 %}
+      <div class='menu_item' onclick='showDialog("#dia_referral")'>
+        Invites <div style="float: right; color:{{colors['active']}};">{{ user.referrals }}</div>
+      </div>
+    {% endif %}
+  </div>
+  <script>
+    hover_menu(
+      $('#user_menu_handle'), 
+      $('#user_menu'), 
+      { offsetY: 10 }
+    );
+    hover_menu($('#notifications'), $('#feed_menu'), {
+      open: function(){
+        var div = $('#notifications');
+        if ( div.attr('data-count') != "0" ) {
+          div.attr('data-count', 0);
+          iconCounts();
+          logAction('notifications_open');
+        }
+      }
+    });
+  </script>
  {% else %}
-  <a href='{{ server }}'><div style='left : 50px; top : 0px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  <a href='{{ server }}' title="Explore Expressions"><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
  {% endif %}
 </div>
+
+{% if not user.logged_in %}
+ <div class='nav' style='right : 10px; top : 0px;'>
+  <div id='login_btn' class='btn hoverable nav_icon text'>Log In</div>
+  <div id='login_menu' class='menu top'>
+   <form id='login_form' action='{{ secure_server }}' method='POST'>
+    {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
+    <b>Username</b><br>
+    <input id='username' type='text' name='username' value='{{ user['name'] }}'>
+    <div class='spacer'></div>
+    <b>Password</b><br>
+    <input type='password' name='secret'><br>
+    <div class='spacer'></div>
+    <div style='float : left'>
+      <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:.75em'> Remember me</label>
+    </div>
+    <div style='float : right;'>
+     <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
+    </div>
+    <input type='hidden' name='action' value='login'>
+    {# <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile --> #}
+   </form>
+   <div class='spacer'></div>
+   <div style='white-space : nowrap'><span id='signup_button'>Sign up for an account</span>
+    <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
+   </div>
+  </div>
+ </div>
+
+ <script>
+  $(function() {
+   var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
+       { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
+         close_delay : 1000, auto_close : false, click_persist : '#login_menu' });
+   {% if error %} login_menu.options.hover_close = false; login_menu.open(); {% endif %}
+  });
+ </script>
+{% endif %}
 
 {% block body %}
 {% endblock %}
@@ -38,14 +92,21 @@
 <div id='content'>{% block content %}{% endblock %}</div>
 
 {% if user.logged_in %}
- <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable' title='Send feedback'>
+ <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable tip_none' title='Send feedback'>
  <script>
-$('#feedback_btn').click(function() {
-    new_window('{{ server }}feedback', 470, 400);
-});
+  $('#feedback_btn').click(function() {
+      new_window('{{ secure_server }}feedback?url=' + window.location, 470, 400);
+  });
  </script>
 {% endif%}
 
+<div id='dialogs'>
+  {% if user.logged_in %}
+    {% include 'dialogs/referral.html' %}
+  {% endif %}
+  {% include 'dialogs/password.html' %}
+  {% include 'dialogs/signup.html' %}
+  {% include 'dialogs/ie_warning.html' %}
+  {% include 'dialogs/share.html' %}
 </div>
-
 {% endblock %}

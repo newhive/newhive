@@ -1,0 +1,35 @@
+{% extends "main.html" %}
+
+{% block head %}
+ <style>
+.toolbtn { margin-left : 20px }
+#meta { position : absolute; right : 20px; top : 27px; }
+#exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
+#bg { background-color: {{ colors[34] }} }
+ </style>
+{% endblock %}
+
+{% block body %}
+<div class='happfill' id='bg'></div>
+{% endblock %}
+
+{% block content %}
+ <div
+ class='happ' style='left:322.246859px; top:110.125647px;
+ width:354.005168px; height:333.333333px; ; z-index : 1;'><img
+ src='/lib/skin/1/floating_island.png'></div>
+ {% if user_is_owner %}
+  <div
+  class='happ' style='left:356.515373px; top:57.833089px;
+  width:49.048316px; height:36.603221px; ; z-index : 2;'>{{ create_button((create + "?name=" + path|e), title="Create a new expression with this URL", classes="hoverable")}}</div><div
+  class='happ' style='left:403.367496px; top:61.493411px;
+  width:270.863836px; height:30.014641px; font-size : 1.44120864659em;
+  z-index : 0;' data-scale='1.44120864659'><a href='{{ create }}?name={{ path|e }}' title='create'><span style="font-family:
+  League Gothic;">THIS PAGE ONLY EXISTS IN THE FUTURE</span></a></div>
+ {% else %}
+  <div class='happ' style='left:356px; top:61.493411px;
+  width:270.863836px; height:30.014641px; font-size : 1.44120864659em;
+  z-index : 0; text-align : center' data-scale='1.44120864659'><span style="font-family:
+  League Gothic;">NOTHING IS HERE</span></div>
+ {% endif %}
+{% endblock %}

@@ -1,14 +1,27 @@
 <div id='dia_referral' class='dialog border selected'>
-  <div class="btn_dialog_close"></div>
   <h3>
     Hi <span id='user_first_name'>{{ user.name }}</span>, good news!<br/>
-    You have <span id='referral_count'>{{ user.referrals }}</span> hive referrals.
+    You have <span id='referral_count'>{{ user.referrals }}</span> hive invites.
   </h3>
-  <div class="medbold label">Type in email address(es) to send an invite</div>
-  <input type="text" name="to"></input>
-  <div class="line">
-    <div class="label medbold">Message</div>
-    <textarea name="message"></textarea>
-    <input type='submit' class='btn black rounded' value='Send'></input>
-  </div>
+  <form id='referral_form' action='{{ secure_server}}' method='POST'>
+    <input type='hidden' name='forward' value='{{ url }}' />
+    <input type='hidden' name='action' value='mail_referral'/>
+    <div class="label">Enter contact info below to send invitation(s)</div>
+    {% set referral_lines = user.referrals if user.referrals <= 5 else 5 %}
+    {% for i in range(0, referral_lines) %}
+    <div class="line{{" first" if i == 0 }}">
+      <div class='medbold label align'>Name</div>
+      <input type="text" name="name_{{i}}"/>
+      <div class='medbold label align' style="margin-left: 20px;">Email</div>
+      <input type="text" name="to_{{i}}"/>
+    </div>
+    {% endfor %}
+{#
+    <div class="line">
+      <div class="label medbold align">Message<br/><span class="small">(optional)</span></div>
+      <textarea name="message"></textarea>
+    </div>
+#}
+<input type='submit' class='btn black rounded' value='Send'/>
+  </form>
 </div>

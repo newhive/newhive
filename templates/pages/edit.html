@@ -1,17 +1,17 @@
 {% extends "main.html" %}
 
 {% block head %}
- <script src='/lib/ee/main.js?v=2020'></script>
- <script src='/lib/filedrop.js?v=1' ></script>
+ {% for item in assets_env["edit.js"].urls() %}
+  <script src='{{ item }}'></script>
+ {% endfor %}
+ <link rel='stylesheet' type='text/css' href='{{ assets_env["editor.css"].urls()[0] }}'>
 
  <script>
   Hive.Exp = {{ exp_js }}; // current expression from server
  </script>
 
- <link rel='stylesheet' type='text/css' href='/lib/ee/main.css?v=1'>
-
  <style>
- input, textarea { font-size : inherit }
+input, textarea { font-size : inherit }
 
 .drawer { z-index : 1100, white-space : nowrap;  }
 
@@ -27,14 +27,13 @@
 .dialogue_handle { background-color : {{ colors.selected }}; }
 #loading { position : fixed; z-index : 1200; display : none; }
 #app_btns { top : 0; left : 300px; width : 402px; height : 50px; }
-#app_btns .menu { }
 #nav_bg { min-width : 620px; }
  </style>
 {% endblock %}
 
 {% block body %}
 
-{% include 'dialogs/firefox_warning.html' %}
+{% include 'dialogs/editor_browsers.html' %}
 
 <div id='app_btns' class='nav'>
  <img id='insert_text'  class='hoverable nav_icon' src='/lib/skin/1/text.png'
@@ -45,7 +44,7 @@
  ><img id='insert_shape' class='hoverable nav_icon' src='/lib/skin/1/shapes.png'>
  
  <div id='menu_text' class='menu medbold'>
-  <div id='text_default' class='menu_item'>Default</div>
+  <div id='text_default' class='menu_item'>Normal</div>
   <div id='text_header' class='menu_item'>Header</div>
   <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
  </div>
@@ -71,19 +70,22 @@
   <div class='spacer'></div>
   <textarea id='embed_code' style='width : 14em; height : 2.25em;' alt='Paste your url or embed code here.'></textarea>
   <div class='spacer'></div>
-  <div style='text-align : center'><input id='embed_done' type='submit' class='btn black' value='Enter'></div>
+  <div style='text-align : center'><input id='embed_done' type='submit' class='btn black rounded' value='Enter'></div>
  </div>
  
  <div id='menu_shape' class='menu medbold'>
-  <div class='menu_item menu_hover'><nobr>Drawing tools coming soon</nobr></div>
+  <div class='menu_item menu_hover'>Rectangle</div>
  </div>
 </div>
 
 <div class='nav' style='right : 10px; top : 0; white-space : nowrap;'>
- <div id='btn_share' style='display:none'>
-   <img  src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
- </div>
- <img id='btn_grid' class='hoverable' src='/lib/skin/1/grid-off.png' style='vertical-align : middle'>
+ <div class='nav_icon text hoverable medbold' title="Editor Help" style='margin-right : 15px;' id='btn_help'>?</div>
+ <script>
+  (function() { var b = $('#btn_help');
+    b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to : b } ) });
+    {% if show_help %}$('#btn_help').click(){% endif %} })();
+ </script>
+ <img id='btn_grid' title="Show Grid" class='hoverable' src='/lib/skin/1/grid-off.png' style='vertical-align : middle'>
  &nbsp;
  <div id='btn_save' class='medbold nav_icon hoverable text'>
   <nobr>Save <img class='scale' src='/lib/skin/1/drop_arrow.png'></nobr>
@@ -100,7 +102,7 @@
   <div class='spacer'></div>
 
   <div class='medbold'>Tags</div>
-  <input id='tags' type='text' value='{{ exp.tags|e }}'>
+  <input id='tags_input' type='text' value='{{ exp.tags|e }}'>
   <div class='spacer'></div>
   <div class='spacer'></div>
 
@@ -120,6 +122,9 @@
    <b>Optional password</b><br>
    <input type='text' id='password' value='{{ exp.password }}'>
   </div>
+  <div class='spacer'></div>
+
+  <nobr><span id='btn_thumbnail' class='hoverable'>Choose thumbnail <img class='scale' src='/lib/skin/1/drop_arrow.png'></span></nobr>
  </div>
 </div>
 
@@ -127,16 +132,17 @@
 
 <div id='controls_common' class='controls_src'>
  <!--<img class='control undo   hoverable' src='/lib/skin/1/undo.png'>-->
- <img class='control copy   hoverable' src='/lib/skin/1/copy.png' title='copy'>
- <img class='control remove hoverable' src='/lib/skin/1/delete_sm.png' title='delete, no undo!'>
+ <img class='control copy   hoverable tip_N' src='/lib/skin/1/copy.png' title='Duplicate Element'>
+ <img class='control remove hoverable tip_NE' src='/lib/skin/1/delete_sm.png' title='Delete, no undo!'>
  <div class='control stack'><img class='stack_up hoverable' src='/lib/skin/1/stack_up.png' title='move to front'><img class='stack_down hoverable' src='/lib/skin/1/stack_down.png' title='move to back'></div>
- <img class='control resize hoverable' src='/lib/skin/1/resize.png'>
+ <img class='control resize hoverable tip_SE' src='/lib/skin/1/resize.png' title="Resize">
+ <img class='control resize_h hoverable tip_E' src='/lib/skin/1/resize_h.png' title='Resize width' style='display:none'>
 </div>
 
 <div id='controls_text' class='controls_src'>
- <img class='control resize_h hoverable' src='/lib/skin/1/resize_h.png'>
+ <img class='control resize_h hoverable tip_E' src='/lib/skin/1/resize_h.png' title="Resize Text Box">
  <div class='control buttons'
-  ><img class='button link hoverable'     src='/lib/skin/1/link.png' title='link'
+  ><img class='button link hoverable tip_W'     src='/lib/skin/1/link.png' title='Link'
   ><!--<img class='button fontsize hoverable' src='/lib/skin/1/text_size.png'
   >--><img class='button fontname'           src='/lib/skin/1/font.png'
   ><img class='button color'              src='/lib/skin/1/color.png'
@@ -194,33 +200,68 @@
 
 <div id='controls_image' class='controls_src'>
  <div class='control buttons'
-  ><img class='button link'     src='/lib/skin/1/link.png'   
-  ><img class='button opacity'  src='/lib/skin/1/opacity.png'
-  ><input class='control drawer opacity' type='text' size='3'
+  ><img class='button link hoverable tip_W' src='/lib/skin/1/link.png' title='Link'
+  ><img class='button opacity tip_N' src='/lib/skin/1/opacity.png' title='Opacity'
+  ><img class='button set_bg hoverable' src='/lib/skin/1/fullscreen.png' title='make background'
  ></div
 ></div>
 
 <div id='controls_html' class='controls_src'>
  <div class='control buttons'
-  ><img class='button opacity'  src='/lib/skin/1/opacity.png'
-  ><input class='control drawer opacity' type='text' size='3'
+  ><img class='button opacity tip_N' title='Opacity' src='/lib/skin/1/opacity.png' title='Opacity'
  ></div
 ></div>
 
-<div id='shape_src' class='controls_src'>
- <div class='control buttons control'
-  ><div class='button color fill'><img src='/lib/skin/1/color.png'  ></div
-  ><div class='button color stroke'><img src='/lib/skin/1/color.png'  ></div
- ></div
- ><div class='control drawer border color fill'></div
- ><div class='control drawer border color stroke'></div>
+<div id='controls_rectangle' class='controls_src'>
+ <div class='control buttons'
+  {#><img class='button link hoverable tip_W'     src='/lib/skin/1/link.png' title='Link'#}
+  ><img class='button fill hoverable tip_N' src='/lib/skin/1/color.png' title='Fill color'
+  ><img class='button opacity tip_N' src='/lib/skin/1/opacity.png' title='Opacity'
+  {#><img class='button stroke hoverable tip_N' src='/lib/skin/1/border_color.png' title='Border color'#}
+  {#><img class='button blank bwidth hoverable tip_N' src='/lib/skin/1/border_width.png' title='Border width'#}
+  {#><div class='button blank bstyle hoverable' title='Border style'></div#}
+  ><img class='button blank rounding hoverable tip_N' src='/lib/skin/1/rounded_corners.png' title='Corner rounding'
+
+  ><div class='control drawer fill border'></div
+  ><div class='control drawer stroke border'></div
+  {#><div class='control drawer bstyle'
+   ><div class='border hoverable' style='border-style : solid;' title='Solid border'></div
+   ><div class='border hoverable' style='border-style : dashed;' title='Dashed border'></div
+   ><div class='border none hoverable' style='border-style : none;' title='No border'></div
+  ></div#}
+ ></div>
 </div>
 
-<form id='upload_form' method='POST' enctype='multipart/form-data' action='/' style='position : absolute; left : -1000px' target='upload_target'>
- <input name='file' id='file_input' type='file'>
- <input type='hidden' name='action' value='files_create'>
- <input type='hidden' name='expr_id' value='{{ exp.id }}'>
- <iframe id='upload_target' name='upload_target' style='position : absolute; left : -1000px'></iframe>
-</form>
+<div id='dia_edit_bg' class='dialog border selected' style='padding : 20px'>
+ <h2>Edit Background</h2>
+ <div id='edit_bg_image'>
+  <div id='bg_preview' class='border'><img id='bg_preview_img'></div>
+  <div id='bg_opacity_label' class='small_text'>opacity: <input id='bg_opacity' type='text' size='3' value='100%'></div>
+  <div id='bg_upload' class='btn black small_text rounded'>Upload Image</div>
+  <div id='bg_remove' class='btn black small_text rounded'>Clear</div>
+ </div>
+ <div id='color_pick' style='float : right; position : relative;'></div>
+</div>
 
+<div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
+ <h2>Overwrite?</h2>
+ You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
+ <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
+ <input id='save_overwrite' type='button' class='btn black rounded' value='No' onclick='closeDialog()'>
+</div>
+<div id='dia_thumbnail' class='dialog border selected center'>
+ <h2>Choose thumbnail</h2>
+ <span id='expr_images'></span>
+ <span id='default_thumbs'>
+  <img src='/lib/skin/1/thumb_0.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_1.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_2.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_3.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_4.png' class='thumb'>
+  <img src='/lib/skin/1/thumb_5.png' class='thumb'>
+ </span>
+</div> 
+
+{% include 'expr_background.html' %}
+<div id='grid_guide'></div>
 {% endblock %}

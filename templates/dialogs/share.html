@@ -1,40 +1,65 @@
+{% set zero_count_string = "" %}
 <div id='dia_share' class='dialog border selected' >
-    <div class="btn_dialog_close"></div>
     <div id="congrats_message" class="line center">
         <h1>Share this expression:</h1>
     </div>
     <div class="line">
         <div class="label medbold">Link</div>
-        <input type="text" class="copy copy_url" id="expression_url" onfocus="this.select()" onclick="this.select()" readonly="readonly"></input>
+        <input type="text" class="copy copy_url" id="expression_url" onfocus="this.select()" onclick="this.select()" readonly="readonly">
     </div>
     <div class="line"></div>
     <div id="like_buttons" class="line center">
-      <a class='twitter' onclick="_gaq.push(['_trackEvent', 'share', 'twitter']); ">
-        <img src='/lib/skin/1/twitter.png' title='Share on Twitter' style='width:32px;height:32px' />
-      </a>
-      <a class='facebook' onclick="_gaq.push(['_trackEvent', 'share', 'facebook']);">
-        <img src='/lib/skin/1/facebook.png' title='Share on Facebook' style='width:32px;height:32px'/>
-      </a>
-      <a class='reddit' onclick="_gaq.push(['_trackEvent', 'share', 'reddit']);">
-        <img src="/lib/skin/1/reddit.png" alt="submit to reddit" border="0" />
-      </a>
-      <g:plusone class = 'gplus' count="false" onclick="_gaq.push(['_trackEvent', 'share', 'plusone']);"></g:plusone>
+      <div class="like_button twitter">
+        <a class='twitter' onclick="_gaq.push(['_trackEvent', 'share', 'twitter']); ">
+          <img src='/lib/skin/1/twitter.png' title='Share on Twitter' style='width:32px;height:32px' />
+        </a>
+        <div class="count">{{ exp.analytic_count("twitter") if exp and exp.id else zero_count_string }}</div>
+      </div>
+      <div class="like_button facebook">
+        <a class='facebook' onclick="_gaq.push(['_trackEvent', 'share', 'facebook']);">
+          <img src='/lib/skin/1/facebook.png' title='Share on Facebook' style='width:32px;height:32px'/>
+        </a>
+        <div class="count">{{ exp.analytic_count('facebook') if exp and exp.id else zero_count_string }}</div>
+      </div>
+      <div class="like_button reddit">
+        <a class='reddit' onclick="_gaq.push(['_trackEvent', 'share', 'reddit']);">
+          <img src="/lib/skin/1/reddit.png" alt="submit to reddit" border="0" />
+        </a>
+        <div class="count">{{ exp.analytic_count("reddit") if exp and exp.id else zero_count_string }}</div>
+      </div>
+      <div class="like_button gplus">
+        <g:plusone class='gplus gplus_button' count="false" onclick="_gaq.push(['_trackEvent', 'share', 'plusone']);"></g:plusone>
+        <div class="count">{{ exp.analytic_count('gplus') if exp and exp.id else zero_count_string }}</div>
+      </div>
+      <div class="like_button stumble">
+        <a class='stumble' onclick="_gaq.push(['_trackEvent', 'share', 'stumble']);">
+          <img src="/lib/skin/1/stumbleupon.png" alt="submit to stumbleupon" border="0" />
+        </a>
+        <div class="count">{{ exp.analytic_count("stumble") if exp and exp.id else zero_count_string }}</div>
+      </div>
+      <div class="like_button email">
+        <img src="/lib/skin/1/share_square.png" alt="emails sent" border="0" />
+        <div class="count">{{ exp.analytic_count("email") if exp and exp.id else zero_count_string }}</div>
+      </div>
+      <div class="like_button views">
+        <div style="width:32px; height:32px; font-family: Lobster; font-size: 28px; display: inline;">Views</div>
+        <div class="count">{{ exp.views() if exp and exp.id else zero_count_string }}</div>
+      </div>
     </div>
     {% if user.logged_in %}
     <form id='mail_form' action='{{ secure_server }}' method='POST'>
         <input type='hidden' name='forward' value='{{ url|e }}'/>
+        <input type='hidden' name='id' value='{{ exp.id if exp }}'/>
         <input type='hidden' name='action' value='mail_them'/>
         <input type='hidden' name='subject' value='{{ user.fullname|e }} has sent you an expression'/>
         <div class="line">
-            <div class='medbold label'>Email(s) </div>
+            <div class='medbold label align'>Email(s) </div>
             <input id='email_to' type='text' size='35' name='to'/>
             <input id='send_copy' type='checkbox' name='send_copy' checked><label for='send_copy'> Send me a copy</label>
         </div>
         <div class="line">
-            <div class='medbold label'>Message</div>
-            <textarea id='email_message' class="element" cols='40' rows='4' name='message'>Check out this expression:
-
-{{ url }}</textarea>
+            <div class='medbold label align'>Message</div>
+            <textarea cols='40' rows='2' name='message' class='element' id="email_message">Check out this expression.</textarea>
             <input id='email_send' type='submit' class='btn black rounded' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
         </div>
     </form>
@@ -42,7 +67,7 @@
     
     <div class="line"></div>
     <div class="line embed">
-        <div class="label medbold">Embed</div>
+        <div class="label medbold align">Embed</div>
         <textarea class="copy embed_code" onfocus="this.select()" onclick="this.select()" readonly="readonly" id="expression_embed_code"></textarea>
     </div>
 

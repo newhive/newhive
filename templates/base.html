@@ -1,22 +1,21 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE HTML>
+<html xmlns:og="http://ogp.me/ns#" xmlns:fb="http://www.facebook.com/2008/fbml">
 <head>
  <title>{{ 'The New Hive' if not title else title }}</title>
- <link rel='shortcut icon' type='image/png' href={{ icon }}>
+ {% block meta %}
+ {% endblock %}
+ <meta property="og:site_name" content='The New Hive' />
+ <meta property="fb:app_id" content="153421698080835" />
+ <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
 
- <link rel='stylesheet' type='text/css' href='/lib/app.css'></link>
- <style id='css_base'>
-html, body { margin : 0; padding : 0; font-family : Helvetica, sans-serif; font-size : 17px;
-    color : black; white-space-collapse : discard; }
-img { padding : 0; margin : 0; border : 0; }
-a { color : inherit; text-decoration : none; }
-.happ { line-height : 1.2em; }
-.happ a { text-decoration : underline; }
-#tos, input[type=text], input[type=password], textarea { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
+ {% for item in assets_env["app.css"].urls() %}
+   <link rel='stylesheet' type='text/css' href='{{ item }}'>
+ {% endfor %}
+ <link id='css_base' rel='stylesheet' type='text/css' href='{{ assets_env['base.css'].urls()[0] }}'>
+ <style>
+input[type=text], input[type=password], textarea { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : {{ colors['selected'] }}; }
 input[type=button], input[type=submit] { border : none; }
-h1 { font-size : 40px; }
-form { display : inline; }
 .menu { display : none; border : 0px solid {{ colors['unselected'] }};
     background-color : white; z-index : 1100; font-size : 11pt; position : absolute;
     -moz-box-shadow: 05px 05px 05px #888;
@@ -33,6 +32,7 @@ form { display : inline; }
 .selected { border-color : {{ colors['selected'] }}; }
 .medbold { font-weight : bold; font-size : 1.2em; }
 .btn { padding:5px 10px; font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default;}
+.btn.inactive { background-color : {{ colors[24] }}; }
 .rounded {
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
@@ -41,57 +41,37 @@ form { display : inline; }
 }
 .black { background-color : black; color : white; }
 .btn.black:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}; }
-.error { color : {{ colors['active'] }}; }
+.error, .active { color : {{ colors['active'] }}; }
+.inactive { color : {{ colors[24] }}; }
 #user { position : fixed; display : inline-block; }
 .nav { position : fixed; margin : 0; }
-#nav_bg { top : 0; left : 0; width : 100%; height : 50px; background-image : url('/lib/skin/1/nav_gradient.png'); z-index : 1; }
 .menu, .top, .nav { z-index : 1; }
-.spacer { height : 10px; }
-#bg { position : fixed; top : 0; left : 0; width : 99999px; height : 99999px; overflow : hidden z-index : 0; background-color : white; }
-#body { position : absolute; top : 0; left : 0; min-width : 100%; min-height : 100%; z-index : 1; }
-#content { position : absolute; top : 50px; left : 0; z-index : 0; min-width : 100%; }
-#feedback_msg { display : inline-block; }
+.spacer { height : 10px; clear : both; }
 
-@font-face { src: url('/lib/fonts/Museo/Museo500-Regular.eot'); src: url('/lib/fonts/Museo/Museo500-Regular.otf') format('opentype'); font-family: Museo; font-weight: 500; }
-@font-face { src: url('/lib/fonts/Museo/Museo700-Regular.eot'); src: url('/lib/fonts/Museo/Museo700-Regular.otf') format('opentype'); font-family: Museo; font-weight: 700; }
-@font-face { src: url('/lib/fonts/BPscript/BPscript.eot'); src: url('/lib/fonts/BPscript/BPscript.otf') format('opentype'); font-family: BPscript; font-weight : 500; }
-@font-face { src: url('/lib/fonts/code/CODE_Bold.eot'); src: url('/lib/fonts/code/CODE_Bold.otf') format('opentype'); font-family: Code; font-weight : 700; }
-@font-face { src: url('/lib/fonts/code/CODE_Light.eot'); src: url('/lib/fonts/code/CODE_Light.otf') format('opentype'); font-family: Code; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Comic-Zine-OT/comic_zine_ot.eot'); src: url('/lib/fonts/Comic-Zine-OT/comic_zine_ot.otf') format('opentype'); font-family: Comic Zine; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folkoutline.eot'); src: url('/lib/fonts/Folk/Folkoutline.otf') format('opentype'); font-family: Folk Outline; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folkshadow.eot'); src: url('/lib/fonts/Folk/Folkshadow.otf') format('opentype'); font-family: Folk Shadow; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folksketches.eot'); src: url('/lib/fonts/Folk/Folksketches.otf') format('opentype'); font-family: Folk Sketches; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Folk/Folksolid.eot'); src: url('/lib/fonts/Folk/Folksolid.otf') format('opentype'); font-family: Folk; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lane/LANENAR_.eot'); src: url('/lib/fonts/Lane/LANENAR_.ttf') format('truetype'); font-family: Lane; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lane/LANEPOSH.eot'); src: url('/lib/fonts/Lane/LANEPOSH.ttf') format('truetype'); font-family: Lane Posh; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lane/LANEUP__.eot'); src: url('/lib/fonts/Lane/LANEUP__.ttf') format('truetype'); font-family: Lane Up; font-weight : 500; }
-@font-face { src: url('/lib/fonts/League-Gothic/League_Gothic.eot'); src: url('/lib/fonts/League-Gothic/League_Gothic.otf') format('opentype'); font-family: League Gothic; font-weight : 500; }
-@font-face { src: url('/lib/fonts/LemonChicken/LEMONCHI.eot'); src: url('/lib/fonts/LemonChicken/LEMONCHI.ttf') format('truetype'); font-family: Lemon Chi; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lilly/Lilly__.eot'); src: url('/lib/fonts/Lilly/Lilly__.ttf') format('truetype'); font-family: Lilly; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Lobster/Lobster_1.3.eot'); src: url('/lib/fonts/Lobster/Lobster_1.3.otf') format('opentype'); font-family: Lobster; font-weight : 500; }
-@font-face { src: url('/lib/fonts/Matiz/Matiz.eot'); src: url('/lib/fonts/Matiz/Matiz.ttf') format('truetype'); font-family: Matiz; font-weight : 500; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold_Oblique.eot'); src: url('/lib/fonts/quicksand_2/Quicksand_Bold_Oblique.otf') format('opentype'); font-family: Quicksand; font-weight : 700; font-style : italic; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Bold.eot'); src: url('/lib/fonts/quicksand_2/Quicksand_Bold.otf') format('opentype'); font-family: Quicksand; font-weight : 700; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book_Oblique.eot'); src: url('/lib/fonts/quicksand_2/Quicksand_Book_Oblique.otf') format('opentype'); font-family: Quicksand; font-weight : 500; font-style : italic; }
-@font-face { src: url('/lib/fonts/quicksand_2/Quicksand_Book.eot'); src: url('/lib/fonts/quicksand_2/Quicksand_Book.otf') format('opentype'); font-family: Quicksand; font-weight : 500; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBd.eot'); src: url('/lib/fonts/bitstream-vera/VeraMoBd.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 700; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBI.eot'); src: url('/lib/fonts/bitstream-vera/VeraMoBI.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 700; font-style : italic; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMoIt.eot'); src: url('/lib/fonts/bitstream-vera/VeraMoIt.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; font-style : italic; }
-@font-face { src: url('/lib/fonts/bitstream-vera/VeraMono.eot'); src: url('/lib/fonts/bitstream-vera/VeraMono.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; }
-
+.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }
  </style>
  <style>
 html, body { background-color : white; height : 100%; }
-#content { padding-bottom : 20px; }
  </style>
 
- <script src='/lib/jquery.js'></script>
- <script src='/lib/jquery-ui.color.js'></script>
- <script src='/lib/util.js?v=11'></script>
- <script src='/lib/zeroclipboard/ZeroClipboard.js'></script>
+ <script>var server_name = '{{ server_name }}', server_url = '{{ secure_server }}', debug_mode = {{ 'true' if debug else 'false' }};</script>
+ {% for item in assets_env["app.js"].urls() %}
+   <script src='{{ item }}'></script>
+ {% endfor %}
+  {% if not debug and not admin %}
+    <!-- Begin Inspectlet Embed Code -->
+    <script type="text/javascript" id="inspectletjs">
+      var __insp = __insp || [];
+      var __inspHost = (("https:" == document.location.protocol) ? "https://www.inspectlet.com" : "http://www.inspectlet.com");
+      document.write(unescape("%3Cscript id='inspsync' src='" + __inspHost + "/inspect_nojquery/1614263783.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <!-- End Inspectlet Embed Code -->
+  {% endif %}
+
+
  {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_classes %}{{'logged_out' if not user.logged_in }}{{' admin' if admin}}{% endblock %}" >
  {% block main %}{% endblock %}
  <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -101,7 +81,7 @@ html, body { background-color : white; height : 100%; }
   _gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
   _gaq.push(['_setCustomVar', 2, 'wave{{ user['signup_group']|default('0') }}', '{{ user['name'] }}', 1]);
  
-  {% if not debug %}
+  {% if use_ga %}
    (function() {
      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';

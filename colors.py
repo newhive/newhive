@@ -1,4 +1,3 @@
-#      '#1F1C1C'
 palette = [
      '#000000'
     ,'#F73627'
@@ -44,5 +43,6 @@ colors = {
     , 'unselected' : palette[30]
     , 'active'     : palette[19]
     , 'highlight'  : palette[32]
+    , 'tan'        : palette[30]
     }
-for n in range(len(palette)): colors[n] = palette[n]
+for i, x in enumerate(palette): colors[i] = x

@@ -1,48 +1,42 @@
 {% extends "main.html" %}
 
+{% block meta %}
+ <meta property="og:title" content='{{ title |e }}' />
+ <meta property="og:type" content="article" />
+ <meta property="og:url" content='{{ "http://" + domain + "/" + exp["name"] }}' />
+ <meta property="og:image" content='{{ exp.thumb|default('http://thenewhive.com/lib/skin/1/thumb_0.png') | e }}' />
+ <meta property="fb:admins" content="1007003" />
+{% endblock %}
 {% block head %}
  <style>
-  .happ { position : absolute; }
-  .happ img { width : 100%; }
-  #private_expr { background-color: white; border: 5px solid #EDEBE1; padding: 5px; }
-  #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
   #exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
   #datetime { font-size : .7em; color : {{ colors[12] }}; line-height : .5em; }
-  #feed { position : absolute; bottom : 0; left : 0; width : 100%; border : none; height : 100px; }
-  {{ css }}
+  #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
  </style>
- <meta id="og_title" class="og_title" property="og:title" content='{{ title }}'>
- <meta id="og_image" class="og_image" property="og:image" content='{{ exp.thumb|default('/lib/skin/1/default_thumb.png') }}'>
- <meta id="og_url" class="og_url"     property="og:url" content='{{ secure_server }}'>
- <!--
- <meta id="og_desc" class="og_desc"   property="og:description" content='blahblah'>
- <meta id="fb_admin" class="fb_admin" property="fb:admins" content=__optional, a facebook user id__/>
- -->
- <meta property="og:type" content="website" />
- <meta property="og:site_name" content='The New Hive'>
+ <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
+ <script type='text/javascript'>var comment_count = {{exp.comment_count}};</script>
 {% endblock %}
 
 {% block body %}
- <div class='nav' style='right : 10px; top : 0px;'>
+ <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
+ <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
   {% if not user_is_owner %}
    <div id='info' class='medbold' style='text-align : right'>
-    <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
-    <div id='datetime'><nobr>{{ mtime }}</nobr></div>
+     <div id='exp_owner'><a title="{{owner.name}}'s profile" href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
+    <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
    </div>
   {% endif %}
 
-  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
-  <script>
-    $('#expression_url').html(window.location.href);
-    //share_menu = click_dialogue($('#btn_share'), $('#dia_share'));
-  </script>
- 
+  {{ share_button(exp.share_count) }}
+  {{ star_button(exp.star_count, exp.id in user.starred_items, user.logged_in) }} 
+  {{ discussion_button(exp.comment_count) }}
   {% if user.logged_in %}
-   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
+  {{ create_button(create) }}  
   {% endif %}
  
  {% if user_is_owner %}
-   <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' title='edit'></a>
+  <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' title='edit'></a>
+  {% if path %}
    <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable nav_icon' title='delete'>
    <div id='dia_delete' class='menu medbold' style='padding : 10px; width : 13em;'>
     Are you sure you want
@@ -51,41 +45,29 @@
     <form method='POST' action='{{ secure_server }}'>
      <input type='hidden' name='action' value='expr_delete'>
      <input type='hidden' name='id' value='{{ exp.id }}'>
-     <div style='text-align : right'><input type='submit' value='Yes' class='btn black medbold'></div>
+     <div style='text-align : right'><input type='submit' value='Yes' class='btn black rounded medbold'></div>
     </form>
    </div>
-   <script>click_dialogue($('#btn_delete'), $('#dia_delete'));</script>
+   <script>hover_menu($('#btn_delete'), $('#dia_delete'), { hover : false });</script>
   {% endif %}
+  {% if owner.flags.expr_new %}<script>$(function() {
+   updateShareUrls('#dia_share', window.location);  
+   showDialog('#dia_share', { minimize_to : '#btn_share' } );
+  })</script>{% endif %}
+ {% endif %}
  </div>
+ {% include 'expr_background.html' %}
 {% endblock %}
 
 {% block content %}
  {% if auth_required %}
-  <center>
-   <form method='POST'>
-    <br> <br> <br> <br>
-    <div id="private_expr"><h2>This is a private expression</h2>
-    Enter password to view:<div><br>
-    <input type='password' name='password'>
-    <input type='image' src='/lib/skin/1/sm_arrow.png' class='hoverable' style='vertical-align : middle'> 
-   </form>
-  </center>
+  <script>
+   $(function() {
+       showDialog('#dia_password');
+       $('#password_input').select();
+   });
+  </script>
  {% else %}
   {{ body }}
  {% endif %}
- 
- <script>
- var exp = {{ exp_js }};
- $(window).resize(function() {
-    var s = $(window).width() / 1000;
-    $.map(exp.apps, function(a, i) {
-        var e = $('#h_' + i);
-        e.css({ left : a.position[0] * s, top : a.position[1] * s,
-            width : a.dimensions[0] * s, height : a.dimensions[1] * s,
-            'font-size' : a.scale * s + 'em', opacity : a.opacity });
-        if(a.angle) e.rotate(a.angle);
-    });
- });
- $(window).resize();
- </script>
 {% endblock %}

@@ -1,0 +1,13 @@
+<div id="notification_count" style="display: none;">{{user.notification_count}}</div>
+{% for feed in user.recent_feed | reverse %}
+{% include "partials/feed.html" %}
+{% endfor %}
+  <a href="{{server}}feed">
+    <div id="more_button" class="btn black">more</div>
+  </a>
+<script>
+    $('#feed_menu .feed_item').each(function() {
+        var l = $(this).find('.entity');
+        if(l.length) $(this).click(function(){window.location = l.attr('href')});
+    });
+</script>
