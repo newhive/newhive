@@ -66,9 +66,10 @@ input, textarea { font-size : inherit }
  </div>
  
  <div id='menu_embed' class='menu' style='padding : .5em; width : 16em;'>
-  <span class='medbold'>Embed</span><br>
+  <span class='medbold'>Embed:</span><br>
   <div class='spacer'></div>
-  <textarea id='embed_code' style='width : 14em; height : 2.25em;' alt='Paste your url or embed code here.'></textarea>
+  <div class='description'>{{ ui.embed_code_description }}</div>
+  <textarea id='embed_code' style='width : 14em; height : 2.25em;' alt='{{ui.embed_code_textarea}}'></textarea>
   <div class='spacer'></div>
   <div style='text-align : center'><input id='embed_done' type='submit' class='btn black rounded' value='Enter'></div>
  </div>
