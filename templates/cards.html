@@ -9,13 +9,7 @@
  </div></a>
 {% endfor %}
 {% elif users %}
-{% for u in users %}
- <a href='{{ u.url|e }}' target='_top'><div class='feed item' draggable='false'>
-  <input type='hidden' class='expr_id' value='{{ u.id }}'>
-  <img src='{{ u.thumb if u.profile_thumb else "/lib/skin/1/thumb_person_mask.png" }}' style='background: {{ colors[range(32)|random] }};' class='thumb'>
-  <div class='title title{{ u.fullname | e | length_bucket }}'>{{ u.fullname|e }}</div>
-  <div class='tags'>{% if u.expr_count > 0 %}{{ u.expr_count ~ " expression" ~ ("s" if u.expr_count > 1) }}{% endif %}</div>
-  <div class='other'>{{ u.name }}</div>
- </div></a>
+{% for user in users %}
+{% include "partials/user_card.html" %}
 {% endfor %}
 {% endif %}

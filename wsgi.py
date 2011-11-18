@@ -899,6 +899,7 @@ def handle(request): # HANDLER
         response.context['tags'].insert(0, {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "listening" else "") + ".png" })
         response.context['tags'].insert(0, {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "starred" else "") + ".png"})
         response.context['profile_thumb'] = owner.get('profile_thumb')
+        response.context['starrers'] = map(User.fetch, owner.starrers)
 
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page

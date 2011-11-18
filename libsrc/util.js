@@ -433,6 +433,7 @@ function hover_add(o) {
 }
 
 hover_menu = function(handle, drawer, options) {
+    handle = $(handle); drawer = $(drawer);
     var o = { handle : handle, drawer : drawer };
     o.options = {
          open : noop
