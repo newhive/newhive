@@ -14,6 +14,7 @@ from PIL import ImageOps
 import config, auth
 from colors import colors
 from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog
+import ui_strings.en as ui
 
 import webassets
 
@@ -1057,6 +1058,7 @@ def render_template(response, template):
         ,debug = config.debug_mode
         ,assets_env = assets_env
         ,use_ga = config.use_ga
+        ,ui = ui
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
     return jinja_env.get_template(template).render(context)
