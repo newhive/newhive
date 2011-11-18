@@ -21,4 +21,15 @@
     {{ "onclick='starExpression();'" if logged_in }} >
     <div class="icon {{"starred " if active}}"></div>
   </div>
+  <script>$(function(){
+    var opts = {
+      open_condition: function(){ return parseInt($('#btn_star').attr('data-count')) > 0 } 
+      , open: function(){ 
+          var dia = $('#dia_starrers');
+          var max_height = ( $(window).height() - 50 ) * 0.8;
+          if ( dia.height() > max_height )  dia.height(max_height); 
+        }
+    }
+    hover_menu("#btn_star", "#dia_starrers", opts);
+    });</script>
 {%- endmacro %}
