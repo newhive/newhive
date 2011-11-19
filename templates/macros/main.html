@@ -14,11 +14,22 @@
   </div>
 {%- endmacro %}
 
-{% macro star_button(count=0, active=False, logged_in=True, class="Expr", title={"active": "Un-Star This Expression", "inactive": "Star This Expression"}) %}
+{% macro star_button(count=0, active=False, logged_in=True, class="Expr", title={"active": "Un-Star This Expression", "inactive": "Star This Expression"}, user_is_owner=False) %}
 <div id="btn_star" data-count="{{count}}" data-title-active="{{title.active}}" data-title-inactive="{{title.inactive}}"
     class="{{'hoverable ' if logged_in}}nav_icon has_count {{'starred ' if active}}"  
-    title={% if logged_in %}"{{ title.active if active else title.inactive}}"{% else %}"Stars"{% endif %}
-    {{ "onclick='starExpression();'" if logged_in }} >
-    <div class="icon {{"starred " if active}}"></div>
+    title={% if logged_in and not user_is_owner %}"{{ title.active if active else title.inactive}}"{% else %}"Stars"{% endif %}
+    {{ "onclick='starExpression();'" if logged_in and not user_is_owner }} >
+    <div class="icon {{"starred " if active or user_is_owner }}"></div>
   </div>
+  <script>$(function(){
+    var opts = {
+      open_condition: function(){ return parseInt($('#btn_star').attr('data-count')) > 0 } 
+      , open: function(){ 
+          var dia = $('#dia_starrers');
+          var max_height = ( $(window).height() - 50 ) * 0.8;
+          if ( dia.height() > max_height )  dia.height(max_height); 
+        }
+    }
+    hover_menu("#btn_star", "#dia_starrers", opts);
+    });</script>
 {%- endmacro %}

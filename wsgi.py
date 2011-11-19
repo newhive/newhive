@@ -14,6 +14,7 @@ from PIL import ImageOps
 import config, auth
 from colors import colors
 from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog
+import ui_strings.en as ui
 
 import webassets
 
@@ -867,7 +868,7 @@ def handle(request): # HANDLER
         return redirect(response, re.sub('www.', '', request.url, 1))
 
     d = resource = Expr.named(request.domain.lower(), request.path.lower())
-    if not d: d = Expr.named(request.domain, '')
+    if not d: d = resource =Expr.named(request.domain, '')
     if not d: return serve_404(request, response)
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
@@ -913,9 +914,12 @@ def handle(request): # HANDLER
         response.context['tags'].insert(0, {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "listening" else "") + ".png" })
         response.context['tags'].insert(0, {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "starred" else "") + ".png"})
         response.context['profile_thumb'] = owner.get('profile_thumb')
+        response.context['starrers'] = map(User.fetch, owner.starrers)
 
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
+    else:
+        response.context['starrers'] = map(User.fetch, resource.starrers)
 
 
     if not resource: return serve_404(request, response)
@@ -1066,6 +1070,7 @@ def render_template(response, template):
         ,debug = config.debug_mode
         ,assets_env = assets_env
         ,use_ga = config.use_ga
+        ,ui = ui
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
     return jinja_env.get_template(template).render(context)

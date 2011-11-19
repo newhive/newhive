@@ -234,6 +234,30 @@ body.home.logged_out .nav{
 }
 
 /* ==========================================
+   starrers menu
+   ========================================== */
+
+#dia_starrers {
+  width: 320px;
+  overflow: auto;
+}
+#dia_starrers .item {
+  width: 310px;
+}
+#dia_starrers .feed .thumb {
+  width: 90px;
+}
+
+#dia_starrers .feed.item {
+  height: auto;
+}
+#dia_starrers .feed .other {
+}
+#dia_starrers .feed div {
+  position: static;
+}
+
+/* ==========================================
    popup dialogs 
    ========================================== */
 
