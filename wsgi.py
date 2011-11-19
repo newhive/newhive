@@ -14,6 +14,7 @@ from PIL import ImageOps
 import config, auth
 from colors import colors
 from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog
+import ui_strings.en as ui
 
 import webassets
 
@@ -360,18 +361,24 @@ def add_comment(request, response):
 ########### mail functions ###########
 ######################################
 
+from cStringIO import StringIO
 from smtplib import SMTP
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.header import Header
+from email.generator import Generator
+from email import Charset
 
+Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
 def send_mail(headers, body):
     msg = MIMEMultipart('alternative')
-    for k in ['Subject', 'From', 'To']:
-      msg[k] = headers[k]
+    msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
+    msg['To'] = headers['To']
+    msg['From'] = headers['From']
 
     if type(body) == dict:
-        plain = MIMEText(body['plain'], 'plain')
-        html = MIMEText(body['html'], 'html')
+        plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
+        html = MIMEText(body['html'].encode('utf-8'), 'html')
         msg.attach(plain); msg.attach(html)
     else:
         part1 = MIMEText(body, 'plain')
@@ -379,9 +386,15 @@ def send_mail(headers, body):
 
     smtp = SMTP(config.email_server)
     if config.email_user and config.email_password:
-      smtp.login(config.email_user, config.email_password)
+        smtp.login(config.email_user, config.email_password)
 
-    return smtp.sendmail(msg['From'], msg['To'].split(','), msg.as_string())
+    # Unicode support is super wonky.  see http://radix.twistedmatrix.com/2010/07/how-to-send-good-unicode-email-with.html
+    io = StringIO()
+    g = Generator(io, False) # second argument means "should I mangle From?"
+    g.flatten(msg)
+    encoded_msg = io.getvalue()
+
+    return smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
 
 def mail_us(request, response):
     if not request.form.get('email'): return False
@@ -451,28 +464,29 @@ def mail_them(request, response):
 
 def mail_referral(request, response):
     user = request.requester
-    name = request.form.get('name')
-    to_email = request.form.get('to')
-    if not user['referrals'] > 0: return False
-    referral = user.new_referral({'name': name, 'to': to_email})
+    for i in range(0,4):
+        name = request.form.get('name_' + str(i))
+        to_email = request.form.get('to_' + str(i))
+        if user['referrals'] <= 0 or not name or not to_email or len(name) == 0 or len(to_email) == 0: break
+        referral = user.new_referral({'name': name, 'to': to_email})
 
-    heads = {
-         'To' : to_email
-        ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
-        ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
-        ,'Reply-to' : user.get('email', '')
-        }
-    context = {
-         'referrer_url': home_url(user)
-        ,'referrer_name': user.get('fullname')
-        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + to_email)
-        ,'name': name
-        }
-    body = {
-         'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
-        ,'html': jinja_env.get_template("emails/user_invitation.html").render(context)
-        }
-    send_mail(heads, body)
+        heads = {
+             'To' : to_email
+            ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
+            ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
+            ,'Reply-to' : user.get('email', '')
+            }
+        context = {
+             'referrer_url': home_url(user)
+            ,'referrer_name': user.get('fullname')
+            ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + to_email)
+            ,'name': name
+            }
+        body = {
+             'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
+            ,'html': jinja_env.get_template("emails/user_invitation.html").render(context)
+            }
+        send_mail(heads, body)
     return redirect(response, request.form.get('forward'))
 
 def mail_invite(email, name=False, force_resend=False):
@@ -522,6 +536,7 @@ def mail_feed(feed, recipient, dry_run=False):
   if type(feed) == Comment:
       context['message'] = feed.get('text')
       heads['Subject'] = initiator_name + ' commented on "' + expression_title + '"'
+      context['url'] = context['url'] + "?loadDialog=comments"
   elif type(feed) == Star:
       if feed['entity_class'] == "Expr":
           heads['Subject'] = initiator_name + ' starred "' + expression_title + '"'
@@ -682,25 +697,25 @@ def format_card(e):
 def expr_list(spec, **args):
     return map(format_card, Expr.list(spec, **args))
 
-def expr_home_list(p2, request, response, limit=90, type=Expr):
+def expr_home_list(p2, request, response, limit=90, klass=Expr):
     root = get_root()
     tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
     tag = {'name': tag, 'url': '/home/' + tag}
     page = int(request.args.get('page', 0))
-    ids = root.get('tagged', {}).get(tag['name'], []) if type == Expr else []
+    ids = root.get('tagged', {}).get(tag['name'], []) if klass == Expr else []
     if ids:
         by_id = {}
-        for e in type.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
+        for e in klass.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
         entities = [by_id[i] for i in ids if by_id.has_key(i)]
         response.context['pages'] = 0;
     else:
-        entities = type.list({}, sort='updated', limit=limit, page=page)
-        response.context['pages'] = type.list_count({});
-    if type==Expr:
+        entities = klass.list({}, sort='updated', limit=limit, page=page)
+        response.context['pages'] = klass.list_count({});
+    if klass==Expr:
         response.context['exprs'] = map(format_card, entities)
         response.context['tag'] = tag
         response.context['show_name'] = True
-    elif type==User: response.context['users'] = entities
+    elif klass==User: response.context['users'] = entities
     response.context['page'] = page
 
 def handle(request): # HANDLER
@@ -724,7 +739,7 @@ def handle(request): # HANDLER
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral']
             non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
@@ -801,10 +816,10 @@ def handle(request): # HANDLER
             response.context['tags'].append(people_tag)
             if p1 == 'people':
                 response.context['tag'] = people_tag
-                type = User
+                klass = User
             else:
-                type = Expr
-            expr_home_list(p2, request, response, type=type)
+                klass = Expr
+            expr_home_list(p2, request, response, klass=klass)
             if request.args.get('partial'): return serve_page(response, 'cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
@@ -1058,6 +1073,7 @@ def render_template(response, template):
         ,debug = config.debug_mode
         ,assets_env = assets_env
         ,use_ga = config.use_ga
+        ,ui = ui
         )
     context.setdefault('icon', '/lib/skin/1/logo.png')
     return jinja_env.get_template(template).render(context)

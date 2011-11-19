@@ -179,10 +179,6 @@ function showDialog(name, opts) {
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
-function commentDialog(){
-    loadDialog('?dialog=comments');
-}
-
 function starExpression(){
     var btn = $('#btn_star .icon')
     if (! btn.hasClass('inactive')){
@@ -315,6 +311,18 @@ function iconCounts() {
     });
 };
 
+var urlParams = {};
+(function () {
+    var e,
+        a = /\+/g,  // Regex for replacing addition symbol with a space
+        r = /([^&=]+)=?([^&]*)/g,
+        d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
+        q = window.location.search.substring(1);
+
+    while (e = r.exec(q))
+       urlParams[d(e[1])] = d(e[2]);
+})();
+
 /*** puts alt attribute of input fields in to value attribute, clears
  * it when focused.
  * Adds hover events for elements with class='hoverable'
@@ -326,11 +334,11 @@ $(function () {
         if (dialog.length === 0 ) {
             $.get("?dialog=share", function(data){
                 showDialog(data, { 'select' : '#expression_url' } );
-                updateShareUrls('#dia_share', window.location);
+                updateShareUrls('#dia_share', window.location.origin + window.location.pathname);
             });
         } else {
             showDialog('#dia_share', { 'select' : '#expression_url' });
-            updateShareUrls('#dia_share', window.location);
+            updateShareUrls('#dia_share', window.location.origin + window.location.pathname);
         }
     });
 
@@ -357,6 +365,7 @@ $(function () {
   });
   $(window).resize(place_apps);
   place_apps();
+  if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
