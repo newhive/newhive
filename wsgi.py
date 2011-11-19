@@ -608,9 +608,9 @@ def mail_user_register_thankyou(user):
 ########### End of mail functions ###########
 
 
-def home_url(user):
+def home_url(user, path='expressions'):
     """ Returns default URL for given state.User """
-    return abs_url(domain = user.get('sites', [config.server_name])[0]) + 'expressions'
+    return abs_url(domain = user.get('sites', [config.server_name])[0]) + path
 def login(request, response):
     if auth.handle_login(request, response):
         return redirect(response, request.form.get('url', home_url(request.requester)))
@@ -898,7 +898,7 @@ def handle(request): # HANDLER
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
         response.context['tags'].insert(0, people_tag)
         response.context['tags'].insert(0, star_tag)
-        if request.requester.logged_in:
+        if request.requester.logged_in and is_owner:
             response.context['tags'].append(feed_tag)
         response.context['profile_thumb'] = owner.get('profile_thumb')
         response.context['starrers'] = map(User.fetch, owner.starrers)
@@ -1046,6 +1046,7 @@ def render_template(response, template):
     context = response.context
     context.update(
          home_url = home_url(response.user)
+        ,feed_url = home_url(response.user, path='feed')
         ,user = response.user
         ,admin = response.user.get('name') in config.admins
         ,create = abs_url(secure = True) + 'edit'
