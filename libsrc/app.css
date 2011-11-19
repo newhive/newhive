@@ -157,7 +157,7 @@ body.home.logged_out .nav{
 .feed_item .feed_item.active {
   background-color: #96E2CE;
 }
-.home .feed_item img {
+.expr_cards .feed_item img {
   width: 124px;
   margin-right: 10px;
   float: left;
@@ -167,7 +167,7 @@ body.home.logged_out .nav{
   width: 90px;
   float: left;
 }
-.home .feed_item .Expr .entity, .home .feed_item.User .initiator{
+.expr_cards .feed_item .Expr .entity, .expr_cards .feed_item.User .initiator{
   width: 181px;
 }
 #feed_menu .feed_item .Expr .entity, #feed_menu .feed_item.User .initiator{
@@ -184,7 +184,7 @@ body.home.logged_out .nav{
   color: #696E76;
 }
 
-.home .feed_item .feed_text, .home .feed_item .byline {
+.expr_cards .feed_item .feed_text, .expr_cards .feed_item .byline {
   width: 181px;
 }
 #feed_menu .feed_item .feed_text, #feed_menu .feed_item .byline {
@@ -194,7 +194,7 @@ body.home.logged_out .nav{
   float: left;
   margin-left: 5px;
 }
-.home .feed_item .feed_text {
+.expr_cards .feed_item .feed_text {
   height: 76px;
   color: #000;
 }
