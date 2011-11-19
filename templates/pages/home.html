@@ -88,13 +88,7 @@
  </div>
 
  <div id='feed'>
-   {% if feed_items %}
-   {% for feed in feed_items | reverse %}
-     {% include 'partials/feed.html' %}
-   {% endfor %}
-   {% else %}
    {% include 'cards.html' %}
-   {% endif %}
  </div>
 
  <script>

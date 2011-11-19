@@ -794,26 +794,17 @@ def handle(request): # HANDLER
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'pages/minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 in ['', 'home', 'feed', 'people']:
+        elif p1 in ['', 'home', 'people']:
             tags = get_root().get('tags', [])
             response.context['tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
-            feed_tag = {'url': "/feed", "name": "Feed"}
             people_tag = {'url': '/people', 'name': 'People'}
             response.context['tags'].append(people_tag)
-            if request.requester.logged_in:
-                response.context['tags'].append(feed_tag)
-            if p1 == 'feed':
-                if not request.requester.logged_in:
-                    return redirect(response, abs_url())
-                response.context['feed_items'] = request.requester.feed
-                response.context['tag'] = feed_tag
+            if p1 == 'people':
+                response.context['tag'] = people_tag
+                type = User
             else:
-                if p1 == 'people':
-                    response.context['tag'] = people_tag
-                    type = User
-                else:
-                    type = Expr
-                expr_home_list(p2, request, response, type=type)
+                type = Expr
+            expr_home_list(p2, request, response, type=type)
             if request.args.get('partial'): return serve_page(response, 'cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
@@ -876,28 +867,39 @@ def handle(request): # HANDLER
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) +
             ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
-    if request.path.startswith('expressions') or request.path == 'starred' or request.path == 'listening':
+    if request.path.startswith('expressions') or request.path in ['starred', 'listening', 'feed']:
         page = int(request.args.get('page', 0))
         tags = owner.get('tags', [])
+        feed_tag = {'url': "/feed", "name": "Feed"}
+        star_tag = {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
+        people_tag = {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
         if request.path.startswith('expressions'):
             spec = { 'owner' : owner.id }
             tag = lget(request.path.split('/'), 1, '')
+            if tag: tag = {'name': tag, 'url': "/expressions/" + tag}
             if tag:
-                spec['tags_index'] = tag
+                spec['tags_index'] = tag.name
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'starred':
             spec = {'_id': {'$in': owner.starred_items}}
-            tag = "starred"
+            tag = star_tag
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'listening':
-            tag = "listening"
+            tag = people_tag
             response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
+        elif request.path == 'feed':
+            if not request.requester.logged_in:
+                return redirect(response, abs_url())
+            response.context['feed_items'] = request.requester.feed
+            tag = feed_tag
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
-        response.context['tags'].insert(0, {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "listening" else "") + ".png" })
-        response.context['tags'].insert(0, {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "starred" else "") + ".png"})
+        response.context['tags'].insert(0, people_tag)
+        response.context['tags'].insert(0, star_tag)
+        if request.requester.logged_in:
+            response.context['tags'].append(feed_tag)
         response.context['profile_thumb'] = owner.get('profile_thumb')
         response.context['starrers'] = map(User.fetch, owner.starrers)
 
