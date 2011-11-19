@@ -844,7 +844,7 @@ def handle(request): # HANDLER
         return redirect(response, re.sub('www.', '', request.url, 1))
 
     d = resource = Expr.named(request.domain.lower(), request.path.lower())
-    if not d: d = Expr.named(request.domain, '')
+    if not d: d = resource =Expr.named(request.domain, '')
     if not d: return serve_404(request, response)
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
