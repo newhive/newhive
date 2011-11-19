@@ -697,25 +697,25 @@ def format_card(e):
 def expr_list(spec, **args):
     return map(format_card, Expr.list(spec, **args))
 
-def expr_home_list(p2, request, response, limit=90, type=Expr):
+def expr_home_list(p2, request, response, limit=90, klass=Expr):
     root = get_root()
     tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
     tag = {'name': tag, 'url': '/home/' + tag}
     page = int(request.args.get('page', 0))
-    ids = root.get('tagged', {}).get(tag['name'], []) if type == Expr else []
+    ids = root.get('tagged', {}).get(tag['name'], []) if klass == Expr else []
     if ids:
         by_id = {}
-        for e in type.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
+        for e in klass.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
         entities = [by_id[i] for i in ids if by_id.has_key(i)]
         response.context['pages'] = 0;
     else:
-        entities = type.list({}, sort='updated', limit=limit, page=page)
-        response.context['pages'] = type.list_count({});
-    if type==Expr:
+        entities = klass.list({}, sort='updated', limit=limit, page=page)
+        response.context['pages'] = klass.list_count({});
+    if klass==Expr:
         response.context['exprs'] = map(format_card, entities)
         response.context['tag'] = tag
         response.context['show_name'] = True
-    elif type==User: response.context['users'] = entities
+    elif klass==User: response.context['users'] = entities
     response.context['page'] = page
 
 def handle(request): # HANDLER
@@ -819,7 +819,7 @@ def handle(request): # HANDLER
                 klass = User
             else:
                 klass = Expr
-            expr_home_list(p2, request, response, type=type)
+            expr_home_list(p2, request, response, klass=klass)
             if request.args.get('partial'): return serve_page(response, 'cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
