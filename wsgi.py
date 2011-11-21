@@ -911,10 +911,10 @@ def handle(request): # HANDLER
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
+        if request.requester.logged_in and is_owner:
+            response.context['tags'].insert(0, feed_tag)
         response.context['tags'].insert(0, people_tag)
         response.context['tags'].insert(0, star_tag)
-        if request.requester.logged_in and is_owner:
-            response.context['tags'].append(feed_tag)
         response.context['profile_thumb'] = owner.get('profile_thumb')
         response.context['starrers'] = map(User.fetch, owner.starrers)
 
