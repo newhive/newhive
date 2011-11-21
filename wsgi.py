@@ -893,7 +893,7 @@ def handle(request): # HANDLER
             tag = lget(request.path.split('/'), 1, '')
             if tag: tag = {'name': tag, 'url': "/expressions/" + tag}
             if tag:
-                spec['tags_index'] = tag.name
+                spec['tags_index'] = tag['name']
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'starred':
             spec = {'_id': {'$in': owner.starred_items}}
