@@ -1,0 +1,42 @@
+{% extends "main.html" %}
+
+{% block meta %}
+ <meta property="og:image" content='http://thenewhive.com/lib/skin/1/logo_medium.png' />
+{% endblock %}
+
+{% block body %}
+
+{% if user.logged_in %}
+ <div class='nav' style='right : 10px; top : 0px;'>
+   {{ create_button(create) }}
+ </div>
+{% endif %}
+
+{% endblock %}
+
+
+{% block content %}
+
+ <div class='fathead'>
+   #{{ tag }}
+ </div>
+
+ <div id='feed'>
+  {% include 'cards.html' %}
+ </div>
+
+ <script>
+var load_page = null;
+var next_page = 1;
+var pages = {{ pages }};
+$(window).scroll(function() {
+    if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page < pages) {
+        load_page = $.get('', { partial : true, page : next_page }, function(data) {
+            load_page = null;
+            next_page ++;
+            $('#feed').append(data);
+        });
+    }
+});
+ </script>
+{% endblock %}

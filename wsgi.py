@@ -797,7 +797,9 @@ def handle(request): # HANDLER
             })
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'tag':
-            pass
+            response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
+            response.context['tag'] = p2
+            return serve_page(response, 'pages/tag_search.html')
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral or referral.get('used'): return bad_referral(request, response)
