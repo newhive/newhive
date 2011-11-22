@@ -4,9 +4,14 @@ def shared_user_data(result):
     for item in result:
       user = state.User.fetch(item['owner'])
       if user:
-        item['name'] = user['name']
+        item['name'] = user.get('name')
         item['age'] = (time.time() - user['created']) / 3600 /24
         item['updated'] = user['updated']
+        try:
+          item['first_month'] = user['analytics']['first_month']
+        except KeyError:
+          item['first_month'] = None
+      else: item['name'] = item['owner']
     return result
 
 
@@ -75,4 +80,11 @@ def user_snapshot_load():
     state.db.user_snapshot.insert({"date": current_time, "snapshot": snapshot})
     current_time += 60*60*24
 
-
+def user_first_month(reference_date=time.time()):
+  res = []
+  oldest_missing_first_month = state.db.user.find_one({'analytics.first_month.total': {'$exists': False}}, {'created': 1}, sort=[('created', 1)])['created']
+  print oldest_missing_first_month
+  for u in map(state.User, state.db.user.find({'created': {"$lt": reference_date - 30 * 24 * 60 * 60, "$gte": oldest_missing_first_month}})):
+    exprs = state.Expr.search(created = {"$lt": u['created'] + 30 * 24 * 60 * 60}, owner = u.id)
+    public = filter(lambda x: x.get('auth') == 'public', exprs)
+    u.update_cmd({'$unset': {'analytics.first_month.expressions.all': True}, '$set': {'analytics.first_month.expressions.total': len(exprs), 'analytics.first_month.expressions.public': len(public), 'analytics.first_month.expressions.private': len(exprs) - len(public) }})
