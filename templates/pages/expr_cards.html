@@ -38,10 +38,11 @@ iframe { border : none; }
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
- {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}) if not owner.id == user.id}}
+ {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}, user_is_owner=(owner.id == user.id))}}
  {% if user.logged_in %}
- {{ create_button(create + ('?tags=' + tag if tag else '')) }}
+ {{ create_button(create) }}
  {% endif %}
+ {% include "dialogs/starrers.html" %}
 </div>
 
 {% endblock %}
@@ -55,7 +56,7 @@ iframe { border : none; }
 {% endif %}
 #}
 <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
-  <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag if tag }}{% endif %}</div>
+  <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag.name if tag }}{% endif %}</div>
  <div id='profile_thumb'>
    {% if user_is_owner %}
    <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
@@ -72,7 +73,7 @@ iframe { border : none; }
  
  <div id='tags'>
    <div class='tag_label hoverable drag {{ 'current' if not tag }}'><a href='/expressions'><p>Expressions</p></a></div>
-   {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t|e }}'>
+   {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag.name }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
      {% if t.img %}
      <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
      {% else %}
@@ -81,12 +82,19 @@ iframe { border : none; }
    </a></div>{% endfor %}
   {% if user_is_owner %}
    <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='vertical-align : bottom' title='Add Folder'>
-   {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag|e }}"'>{% endif %}
+   {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag.name|e }}"'>{% endif %}
   {% endif %}
  </div>
 </div>
 <div style='position : absolute; top : {{"306" if profile_thumb or user_is_owner else "250"}}px'>
-<div id='feed'>{% include 'cards.html' %}</div>
+  <div id='feed'>
+   {% if feed_items %}
+   {% for feed in feed_items | reverse %}
+     {% include 'partials/feed.html' %}
+   {% endfor %}
+   {% else %}
+   {% include 'cards.html' %}</div>
+   {% endif %}
 </div>
 
 {#
@@ -101,7 +109,7 @@ iframe { border : none; }
   <iframe id='upload_target' name='upload_target'></iframe>
  </form>
  <script>
- var current_tag = '{{ tag|e }}';
+ var current_tag = '{{ tag.name|e }}';
  function folder_add() {
      var tag = prompt('New Folder');
      $('#action_input').val('user_tag_add');
@@ -116,15 +124,18 @@ iframe { border : none; }
      $('#upload_target').load(function() { window.location = '{{ home_url }}' });
  }
  function add_tag(item, tag) {
+     tag = $(tag).find('a')[0];
      var tags = $(item).find('.tags'), v = $(tag).attr('value');
+     if ( v == "listening") return;
      // check if tag is already there (blehck)
      if(tags.children().filter(function() { return $(this).attr('value') == v }).length) return;
-     tags.append($("<span class='tag'>").attr('value', v).append('#' + v + ' '));
-     tags.append(' ');
-     $('#action_input').val('tag_add');
-     $('#id_input').val($(item).find('.expr_id').val());
-     $('#value_input').val(v);
-     $('#upload_form').submit();
+     var updateHtml = function(data){
+       if (data && typeof(data) == "string"){
+         tags.append($("<span class='tag'>").attr('value', data).append('#' + data + ' '));
+         tags.append(' ');
+       }
+     }
+     $.post('', {action:'tag_add', expr_id: $(item).find('.expr_id').val(), value: v}, updateHtml, 'json')
      return false;
  }
  function remove_tag(item) {
@@ -138,9 +149,9 @@ iframe { border : none; }
  $('.tag_label.drag').draggable().droppable({
      accept : '.feed.item', drop : function(target, dragged) { add_tag(dragged, target) } });
  $('.feed.item').droppable({ accept : '.tag_label.drag', drop : add_tag }).draggable();
- {% if tag %}
+ {% if tag and not feed_items %}
   $('#feed .feed.item').each(function() {
-      var del = $("<img src='/lib/skin/1/remove_tab.png' class='hoverable' style='position : absolute; bottom : 3px; right : 3px' title='Remove from \"{{ tag|e }}\"'>");
+      var del = $("<img src='/lib/skin/1/remove_tab.png' class='hoverable' style='position : absolute; bottom : 3px; right : 3px' title='Remove from \"{{ tag.name|e }}\"'>");
       var that = $(this);
       del.click(function() {
           remove_tag(that);

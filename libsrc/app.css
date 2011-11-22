@@ -157,7 +157,7 @@ body.home.logged_out .nav{
 .feed_item .feed_item.active {
   background-color: #96E2CE;
 }
-.home .feed_item img {
+.expr_cards .feed_item img {
   width: 124px;
   margin-right: 10px;
   float: left;
@@ -167,7 +167,7 @@ body.home.logged_out .nav{
   width: 90px;
   float: left;
 }
-.home .feed_item .Expr .entity, .home .feed_item.User .initiator{
+.expr_cards .feed_item .Expr .entity, .expr_cards .feed_item.User .initiator{
   width: 181px;
 }
 #feed_menu .feed_item .Expr .entity, #feed_menu .feed_item.User .initiator{
@@ -184,7 +184,7 @@ body.home.logged_out .nav{
   color: #696E76;
 }
 
-.home .feed_item .feed_text, .home .feed_item .byline {
+.expr_cards .feed_item .feed_text, .expr_cards .feed_item .byline {
   width: 181px;
 }
 #feed_menu .feed_item .feed_text, #feed_menu .feed_item .byline {
@@ -194,7 +194,7 @@ body.home.logged_out .nav{
   float: left;
   margin-left: 5px;
 }
-.home .feed_item .feed_text {
+.expr_cards .feed_item .feed_text {
   height: 76px;
   color: #000;
 }
@@ -231,6 +231,30 @@ body.home.logged_out .nav{
 }
 #feed_menu #more_button:hover {
   background-color: #FFF673;
+}
+
+/* ==========================================
+   starrers menu
+   ========================================== */
+
+#dia_starrers {
+  width: 320px;
+  overflow: auto;
+}
+#dia_starrers .item {
+  width: 310px;
+}
+#dia_starrers .feed .thumb {
+  width: 90px;
+}
+
+#dia_starrers .feed.item {
+  height: auto;
+}
+#dia_starrers .feed .other {
+}
+#dia_starrers .feed div {
+  position: static;
 }
 
 /* ==========================================
@@ -328,7 +352,7 @@ input[type="text"].copy, textarea.copy {
 
 /* Referral Dialog */
 #dia_referral {
-  width: 430px;
+  width: 490px;
   padding: 20px 40px 20px 50px;
   text-align: left;
 }
@@ -336,15 +360,11 @@ input[type="text"].copy, textarea.copy {
   margin: 20px 0;
 }
 #referral_count { color: red; }
-#dia_referral input[type="text"], #dia_referral textarea { width: 305px; }
+#dia_referral input[type="text"], #dia_referral textarea { width: 150px; float: left; }
 #dia_referral input[type="submit"] { 
   float: right; 
   font-size: 18px; 
   margin: 5px 12px; 
-}
-
-#dia_referral .align {
-  width: 88px;
 }
 
 #dia_referral .line.first { margin-top: 27px; }
@@ -560,7 +580,7 @@ input[type="text"].copy, textarea.copy {
 .feed .tags { height : 2.4em; overflow : hidden; text-overflow : ellipsis; }
 .feed .other { position : absolute; left : 139px; bottom : 5px; font-weight : bold; }
 
-.fathead { float: left; font-family : Museo, Helvetica, sans-serif; font-size : 3em; font-weight : bold; margin : 60px 50px 60px 50px; width: auto;}
+.fathead { float: left; font-family : Museo, Helvetica, sans-serif; font-size : 2.8em; font-weight : bold; margin : 60px 50px 60px 50px; width: auto;}
 .home .fathead { float: left; font-family : Museo, Helvetica, sans-serif; font-size : 3em; font-weight : bold; margin : 0 0 20px 0; padding: 60px 0 80px 50px; width: 95%;}
 .expr_cards .fathead { font-weight: normal; }
 .fathead.hasthumb { margin: 75px 50px 0 50px; }

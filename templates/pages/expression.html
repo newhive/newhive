@@ -1,7 +1,7 @@
 {% extends "main.html" %}
 
 {% block meta %}
- <meta property="og:title" content='{{ title }}' />
+ <meta property="og:title" content='{{ title |e }}' />
  <meta property="og:type" content="article" />
  <meta property="og:url" content='{{ "http://" + domain + "/" + exp["name"] }}' />
  <meta property="og:image" content='{{ exp.thumb|default('http://thenewhive.com/lib/skin/1/thumb_0.png') | e }}' />
@@ -55,6 +55,8 @@
    showDialog('#dia_share', { minimize_to : '#btn_share' } );
   })</script>{% endif %}
  {% endif %}
+ {% include "dialogs/starrers.html" %}
+    
  </div>
  {% include 'expr_background.html' %}
 {% endblock %}

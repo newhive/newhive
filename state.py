@@ -87,6 +87,20 @@ class Entity(dict):
         return cls(r)
 
     @classmethod
+    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
+        es = map(cls, getattr(db, cls.cname).find(
+             spec = spec
+            ,sort = [(sort, -1)]
+            ,limit = limit
+            ,skip = limit * page
+            ))
+        return es
+
+    @classmethod
+    def list_count(cls, spec):
+        return getattr(db, cls.cname).find(spec = spec).count()
+
+    @classmethod
     def create(cls, **d):
         self = cls(d)
         self['_id'] = self.id = guid()
@@ -151,7 +165,7 @@ class Entity(dict):
 
     def get_starred_items(self):
         if not self._starred_items:
-          self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star', self.feed)]
+          self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star' and i.get('initiator') == self.id, self.feed)]
         return self._starred_items
     starred_items = property(get_starred_items)
 
@@ -243,18 +257,22 @@ class User(Entity):
     def get_thumb(self): return self.get('profile_thumb', abs_url() + '/lib/skin/1/thumb_person.png')
     thumb = property(get_thumb)
 
-    @classmethod
-    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
-        return map(User, db.user.find(
-             spec = spec
-            ,sort = [(sort, -1)]
-            ,limit = limit
-            ,skip = limit * page
-            ))
-
     def get_files(self):
         return File.search(owner = self.id)
     files = property(get_files)
+
+    def get_expr_count(self, force_update=False):
+        count = False
+        if not force_update:
+            tmp = self.get('analytics')
+            if tmp: tmp = tmp.get('expressions')
+            if tmp: count = tmp.get('count')
+
+        if not count:
+            count = db.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
+            self.update_cmd({"$set": {'analytics.expressions.count': count}})
+        return count
+    expr_count = property(get_expr_count)
 
 
 def get_root(): return User.named('root')
@@ -298,21 +316,11 @@ class Expr(Entity):
 
     @classmethod
     def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
-        es = map(Expr, db.expr.find(
-             spec = spec
-            ,sort = [(sort, -1)]
-            ,limit = limit
-            ,skip = limit * page
-            ))
-
+        es = super(Expr, cls).list(spec, requester, limit, page, sort)
         can_view = lambda e: (
-            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public'
-            and len(e.get('apps', [])) ))
+            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' and len(e.get('apps', [])) )
+            )
         return filter(can_view, es)
-
-    @classmethod
-    def list_count(cls, spec):
-        return db.expr.find(spec = spec).count()
 
     def get_owner(self):
         if not self._owner:
@@ -326,6 +334,7 @@ class Expr(Entity):
         last_update = UpdatedExpr.last(initiator=self['owner'])
         if not last_update or now() - last_update['created'] > 14400:
             feed = UpdatedExpr.new(self.owner, self)
+        self.owner.get_expr_count(force_update=True)
         return self
 
     def create_me(self):
@@ -336,7 +345,13 @@ class Expr(Entity):
         self.setdefault('auth', 'public')
         super(Expr, self).create_me()
         feed = NewExpr.new(self.owner, self)
+        self.owner.get_expr_count(force_update=True)
         return self
+
+    def delete(self):
+        self.owner.get_expr_count(force_update=True)
+        return super(Expr, self).delete()
+
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)

@@ -179,10 +179,6 @@ function showDialog(name, opts) {
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
-function commentDialog(){
-    loadDialog('?dialog=comments');
-}
-
 function starExpression(){
     var btn = $('#btn_star .icon')
     if (! btn.hasClass('inactive')){
@@ -315,6 +311,18 @@ function iconCounts() {
     });
 };
 
+var urlParams = {};
+(function () {
+    var e,
+        a = /\+/g,  // Regex for replacing addition symbol with a space
+        r = /([^&=]+)=?([^&]*)/g,
+        d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
+        q = window.location.search.substring(1);
+
+    while (e = r.exec(q))
+       urlParams[d(e[1])] = d(e[2]);
+})();
+
 /*** puts alt attribute of input fields in to value attribute, clears
  * it when focused.
  * Adds hover events for elements with class='hoverable'
@@ -357,6 +365,7 @@ $(function () {
   });
   $(window).resize(place_apps);
   place_apps();
+  if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
@@ -428,11 +437,14 @@ function hover_add(o) {
         o.over = function() { o.src = o.src_h };
         o.out = function() { if(!o.busy) o.src = o.src_d };
     }
-    $(o).hover(o.over, o.out);
+    if (o.over && o.out) {
+        $(o).hover(o.over, o.out);
+    };
     $(o).hover(function() { $(this).addClass('active'); }, function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
 hover_menu = function(handle, drawer, options) {
+    handle = $(handle); drawer = $(drawer);
     var o = { handle : handle, drawer : drawer };
     o.options = {
          open : noop
@@ -443,6 +455,7 @@ hover_menu = function(handle, drawer, options) {
         ,offsetY : 0
         ,click_persist : false
         ,hover : true
+        ,open_condition : function(){ return true }
     };
     $.extend(o.options, options);
     if(!handle.length) throw("hover_menu has no handle");
@@ -477,6 +490,7 @@ hover_menu = function(handle, drawer, options) {
     }
     o.open = function() {
         o.cancel_close();
+        if (!o.options.open_condition()) return;
         if(o.opened) return;
 
         o.opened = true;

@@ -52,8 +52,8 @@
 {% else %}
 <div id="homepage_header" style='width:100%; background-color: {{ colors['tan'] }};'>
   <div class="happ background" style="left:0px; top:0px; width:1000px; height: 247px; background-color: {{ colors['tan'] }}; z-index: 3;"></div>
-  <div class="happ" style="left: 48px; top: 40px; width: 420px; height: 56px; z-index: 3; font-size: 3.3em; font-weight: normal; font-family: Lobster;" data-scale="3.3">
-    Express Your<span style="margin:-0.07em">self</span>
+  <div class="happ" style="left: 48px; top: 40px; width: 700px; height: 56px; z-index: 3; font-size: 3.3em; font-weight: normal; font-family: Lobster;" data-scale="3.3">
+    Express Your<span style="margin:-0.04em">self</span>
   </div>
   <div class='happ' style='width:510px; height: 44px; left:48px; top: 110px; z-index: 3; font-size: 0.75em;' data-scale="0.75">
     {{ intro_paragraph }}
@@ -88,13 +88,7 @@
  </div>
 
  <div id='feed'>
-   {% if feed_items %}
-   {% for feed in feed_items | reverse %}
-     {% include 'partials/feed.html' %}
-   {% endfor %}
-   {% else %}
    {% include 'cards.html' %}
-   {% endif %}
  </div>
 
  <script>
