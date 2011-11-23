@@ -11,6 +11,9 @@
  {% for item in assets_env["app.css"].urls() %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
+ {% for item in assets_env["scss.css"].urls() %}
+   <link rel='stylesheet' type='text/css' href='{{ item }}'>
+ {% endfor %}
  <link id='css_base' rel='stylesheet' type='text/css' href='{{ assets_env['base.css'].urls()[0] }}'>
  <style>
 input[type=text], input[type=password], textarea { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }

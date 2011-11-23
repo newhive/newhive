@@ -17,6 +17,9 @@ from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u
 import ui_strings.en as ui
 
 import webassets
+import configdir.scss_config as scss_config
+from webassets.filter import register_filter
+register_filter(scss_config.ScssFilter)
 
 assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
@@ -34,6 +37,7 @@ assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.
 assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
+assets_env.register('scss.css', 'scss/test.scss', filters='pyScss', output='../lib/test.css', debug=False)
 
 
 
