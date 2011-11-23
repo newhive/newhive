@@ -19,7 +19,7 @@
 
 {% block body %}
  <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
- <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
+ <div class='nav' style='right : {{ '10' if user.logged_in else '197' }}px; top : 0px;'>
   {% if not user_is_owner %}
    <div id='info' class='medbold' style='text-align : right'>
      <div id='exp_owner'><a title="{{owner.name}}'s profile" href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
