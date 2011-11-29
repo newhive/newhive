@@ -623,9 +623,9 @@ def mail_user_register_thankyou(user):
 ########### End of mail functions ###########
 
 
-def home_url(user):
+def home_url(user, path='expressions'):
     """ Returns default URL for given state.User """
-    return abs_url(domain = user.get('sites', [config.server_name])[0]) + 'expressions'
+    return abs_url(domain = user.get('sites', [config.server_name])[0]) + path
 def login(request, response):
     if auth.handle_login(request, response):
         return redirect(response, request.form.get('url', home_url(request.requester)))
@@ -697,25 +697,25 @@ def format_card(e):
 def expr_list(spec, **args):
     return map(format_card, Expr.list(spec, **args))
 
-def expr_home_list(p2, request, response, limit=90, type=Expr):
+def expr_home_list(p2, request, response, limit=90, klass=Expr):
     root = get_root()
     tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
     tag = {'name': tag, 'url': '/home/' + tag}
     page = int(request.args.get('page', 0))
-    ids = root.get('tagged', {}).get(tag['name'], []) if type == Expr else []
+    ids = root.get('tagged', {}).get(tag['name'], []) if klass == Expr else []
     if ids:
         by_id = {}
-        for e in type.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
+        for e in klass.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
         entities = [by_id[i] for i in ids if by_id.has_key(i)]
         response.context['pages'] = 0;
     else:
-        entities = type.list({}, sort='updated', limit=limit, page=page)
-        response.context['pages'] = type.list_count({});
-    if type==Expr:
+        entities = klass.list({}, sort='updated', limit=limit, page=page)
+        response.context['pages'] = klass.list_count({});
+    if klass==Expr:
         response.context['exprs'] = map(format_card, entities)
         response.context['tag'] = tag
         response.context['show_name'] = True
-    elif type==User: response.context['users'] = entities
+    elif klass==User: response.context['users'] = entities
     response.context['page'] = page
 
 def handle(request): # HANDLER
@@ -809,26 +809,17 @@ def handle(request): # HANDLER
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'pages/minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 in ['', 'home', 'feed', 'people']:
+        elif p1 in ['', 'home', 'people']:
             tags = get_root().get('tags', [])
             response.context['tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
-            feed_tag = {'url': "/feed", "name": "Feed"}
             people_tag = {'url': '/people', 'name': 'People'}
             response.context['tags'].append(people_tag)
-            if request.requester.logged_in:
-                response.context['tags'].append(feed_tag)
-            if p1 == 'feed':
-                if not request.requester.logged_in:
-                    return redirect(response, abs_url())
-                response.context['feed_items'] = request.requester.feed
-                response.context['tag'] = feed_tag
+            if p1 == 'people':
+                response.context['tag'] = people_tag
+                klass = User
             else:
-                if p1 == 'people':
-                    response.context['tag'] = people_tag
-                    rtype = User
-                else:
-                    rtype = Expr
-                expr_home_list(p2, request, response, type=rtype)
+                klass = Expr
+            expr_home_list(p2, request, response, klass=klass)
             if request.args.get('partial'): return serve_page(response, 'cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
@@ -891,28 +882,39 @@ def handle(request): # HANDLER
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) +
             ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
-    if request.path.startswith('expressions') or request.path == 'starred' or request.path == 'listening':
+    if request.path.startswith('expressions') or request.path in ['starred', 'listening', 'feed']:
         page = int(request.args.get('page', 0))
         tags = owner.get('tags', [])
+        feed_tag = {'url': "/feed", "name": "Feed"}
+        star_tag = {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
+        people_tag = {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
         if request.path.startswith('expressions'):
             spec = { 'owner' : owner.id }
             tag = lget(request.path.split('/'), 1, '')
+            if tag: tag = {'name': tag, 'url': "/expressions/" + tag}
             if tag:
-                spec['tags_index'] = tag
+                spec['tags_index'] = tag.name
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'starred':
             spec = {'_id': {'$in': owner.starred_items}}
-            tag = "starred"
+            tag = star_tag
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'listening':
-            tag = "listening"
+            tag = people_tag
             response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
+        elif request.path == 'feed':
+            if not request.requester.logged_in:
+                return redirect(response, abs_url())
+            response.context['feed_items'] = request.requester.feed
+            tag = feed_tag
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
-        response.context['tags'].insert(0, {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if tag == "listening" else "") + ".png" })
-        response.context['tags'].insert(0, {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if tag == "starred" else "") + ".png"})
+        if request.requester.logged_in and is_owner:
+            response.context['tags'].insert(0, feed_tag)
+        response.context['tags'].insert(0, people_tag)
+        response.context['tags'].insert(0, star_tag)
         response.context['profile_thumb'] = owner.get('profile_thumb')
         response.context['starrers'] = map(User.fetch, owner.starrers)
 
@@ -1059,6 +1061,7 @@ def render_template(response, template):
     context = response.context
     context.update(
          home_url = home_url(response.user)
+        ,feed_url = home_url(response.user, path='feed')
         ,user = response.user
         ,admin = response.user.get('name') in config.admins
         ,create = abs_url(secure = True) + 'edit'
