@@ -460,6 +460,12 @@ input[type="text"].copy, textarea.copy {
   font-weight: normal;
   font-family: Museo, Helvetica, Arial, sans-serif;
 }
+#dia_comments .title.sub {
+  margin: 0;
+  font-size: 20px;
+  font-weight: normal;
+  font-family: Museo, Helvetica, Arial, sans-serif;
+}
 #dia_comments .title .comments_count {
     font-weight: bold;
     color: #F72E4D;
