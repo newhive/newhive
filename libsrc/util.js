@@ -334,11 +334,11 @@ $(function () {
         if (dialog.length === 0 ) {
             $.get("?dialog=share", function(data){
                 showDialog(data, { 'select' : '#expression_url' } );
-                updateShareUrls('#dia_share', window.location.origin + window.location.pathname);
+                updateShareUrls('#dia_share', window.location);
             });
         } else {
             showDialog('#dia_share', { 'select' : '#expression_url' });
-            updateShareUrls('#dia_share', window.location.origin + window.location.pathname);
+            updateShareUrls('#dia_share', window.location);
         }
     });
 

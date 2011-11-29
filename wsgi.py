@@ -797,7 +797,9 @@ def handle(request): # HANDLER
             })
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'tag':
-            pass
+            response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
+            response.context['tag'] = p2
+            return serve_page(response, 'pages/tag_search.html')
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral or referral.get('used'): return bad_referral(request, response)
@@ -893,7 +895,7 @@ def handle(request): # HANDLER
             tag = lget(request.path.split('/'), 1, '')
             if tag: tag = {'name': tag, 'url': "/expressions/" + tag}
             if tag:
-                spec['tags_index'] = tag.name
+                spec['tags_index'] = tag['name']
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'starred':
             spec = {'_id': {'$in': owner.starred_items}}
