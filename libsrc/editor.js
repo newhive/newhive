@@ -1067,11 +1067,17 @@ Hive.save = function() {
         else if(ret.location) window.location = ret.location;
     }
 
+    var on_error = function(ret) {
+        alert("Your expression failed to save.  It is possible you've been logged off.  Without closing this tab, open thenewhive in another tab and try logging in again, then hit 'Save' again."); 
+        $('#save_submit').removeClass('disabled');
+    }
+
     $.ajax( {
         type : "POST",
         dataType : 'json',
         data : { action : 'expr_save', exp : JSON.stringify(Hive.get_state()) },
-        success : on_response
+        success : on_response,
+        error: on_error
     } );
 };
 
