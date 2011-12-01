@@ -17,15 +17,14 @@ from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u
 import ui_strings.en as ui
 
 import webassets
-import configdir.scss_config as scss_config
-from webassets.filter import register_filter
-register_filter(scss_config.ScssFilter)
 
 assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
     assets_env.set_url('/lib/libsrc')
+
+scss = webassets.Bundle('scss/base.scss', filters='scss', output='../lib/scss.css', debug=False)
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
@@ -33,11 +32,10 @@ assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
-assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', scss, 'app.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
-assets_env.register('scss.css', 'scss/test.scss', filters='pyScss', output='../lib/test.css', debug=False)
 
 
 

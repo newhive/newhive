@@ -2,84 +2,12 @@
    layout
    ========================================== */
 
-#nav_bg {
-  top : 0; 
-  left : 0; 
-  width : 100%; 
-  height : 50px; 
-  background-image : url('/lib/skin/1/nav_gradient.png'); 
-  z-index : 1; 
-}
-
-.nav .nav_icon.has_count {
-  position: relative;
-}
-.has_count .count {
-  color: #FFF;
-  -moz-border-radius: 6px;
-  -webkit-border-radius: 6px;
-  border-radius: 6px;
-  margin: 15px 5px 0 -10px;
-  padding: 2px 5px;
-  line-height: 13px;
-  font-size: 12px;
-  font-weight: bold;
-  float: left;
-  background: #696E76;
-}
-.has_count .count.zero {
-  display: none;
-}
-.has_count.zero {
-  margin-right: -8px;
-}
-.has_count img {
-  float: left;
-}
-.nav_icon .username:hover {
-  background: #FFF673;
-}
-#btn_share {
-}
-#btn_star .icon {
-  height: 50px;
-  float: left;
-  width: 67px;
-  background-image: url('/lib/skin/1/star.png');
-}
-#btn_star .icon.starred {
-  background-image: url('/lib/skin/1/star_active.png');
-}
-#btn_star.active .icon.starred, #btn_star.active .icon {
-  background-image: url('/lib/skin/1/star-hover.png');
-}
-.expr_cards #btn_star .icon {
-  background-image: url('/lib/skin/1/people.png');
-}
-.expr_cards #btn_star .icon.starred {
-  background-image: url('/lib/skin/1/people_active.png');
-}
-.expr_cards #btn_star.active .icon {
-  background-image: url('/lib/skin/1/people-hover.png');
-}
-.expr_cards #btn_star.active .icon.starred {
-  background-image: url('/lib/skin/1/people_active-hover.png');
-}
-
-
 body.main #content{
   top: 50px
 }
 
-body.home.logged_out #nav_bg {
-}
-
 body.home.logged_out #content{
   top: 320px;
-}
-
-body.home.logged_out .nav{
-  position: absolute;
 }
 
 #homepage_header {
@@ -98,11 +26,6 @@ body.home.logged_out .nav{
   width: 130px;
 }
 
-.nav .notification_count {
-  display: inline-block;
-  padding: 3px 5px 2px 5px;
-  vertical-align: middle;
-}
 
 /* ==========================================
    feed menu
