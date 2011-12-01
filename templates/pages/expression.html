@@ -21,6 +21,7 @@
  <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
  <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
   {% if not user_is_owner %}
+   {{ listen_button(active=owner.id in user.starred_items, title='Listen to ' + owner.fullname, active_title='Stop listening') if user.logged_in }}
    <div id='info' class='medbold' style='text-align : right'>
      <div id='exp_owner'><a title="{{owner.name}}'s profile" href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
     <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>

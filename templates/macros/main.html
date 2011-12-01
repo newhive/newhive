@@ -18,8 +18,8 @@
 <div id="btn_star" data-count="{{count}}" data-title-active="{{title.active}}" data-title-inactive="{{title.inactive}}"
     class="{{'hoverable ' if logged_in}}nav_icon has_count {{'starred ' if active}}"  
     title={% if logged_in and not user_is_owner %}"{{ title.active if active else title.inactive}}"{% else %}"Stars"{% endif %}
-    {{ "onclick='starExpression();'" if logged_in and not user_is_owner }} >
-    <div class="icon {{"starred " if active or user_is_owner }}"></div>
+    {{ "onclick='btn_star_click(this);'" if logged_in and not user_is_owner }} >
+    <div class="icon"></div>
   </div>
   <script>$(function(){
     var opts = {
@@ -32,4 +32,8 @@
     }
     hover_menu("#btn_star", "#dia_starrers", opts);
     });</script>
+{%- endmacro %}
+
+{% macro listen_button(active=False, title='', active_title='') %}
+    <div class='listen_small{{ ' starred' if active }}' onclick='btn_listen_click(this)' title='{{ active_title if active else title }}'></div>
 {%- endmacro %}
