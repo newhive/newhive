@@ -576,7 +576,7 @@ Hive.App.Text = function(common) {
 
     o.div.addClass('text');
     o.set_shield();
-    o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div, change : throttle(o.refresh_size, 200),
+    o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div, change : throttle(function() { setTimeout(o.refresh_size, 10) }, 200),
         'class' : 'content', load : o.load, click : function() { o.controls.close() } });
     
     return o;
@@ -1158,15 +1158,15 @@ Hive.rte = function(options) {
         // TODO: clone body node?
         o.cache_content = function() { o.previous_content = $(o.doc.body).text(); }
         o.cache_content();
-        $(o.doc.body).bind('keypress', o.cache_content);
-        $(o.doc.body).bind('paste', function() { setTimeout(function(e){
+        $(o.win).bind('keypress', o.cache_content);
+        $(o.win).bind('paste', function() { setTimeout(function(e){
             // TODO: determine which part was actually pasted, if
             // pasting with existing text
             if(o.previous_content.trim() == "") $(o.doc.body).text($(o.doc.body).text());
             o.change();
         }, 10)});
 
-        $(o.doc.body).bind('keypress', o.change);
+        $(o.win).bind('keypress', o.change);
 
         //o.editor_cmd('styleWithCSS', true);
         if(o.load) o.load();
