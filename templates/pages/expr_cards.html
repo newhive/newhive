@@ -28,33 +28,27 @@ iframe { border : none; }
 </script>
 {% endblock %}
 {% block body_classes %}{{ super() }} expr_cards{% endblock %}
-{% block body %}
-
-<div class='nav' style='right : {{ '10' if user.logged_in else '197' }}px; top : 0px;'>
- <div class='nav_icon text hoverable medbold' onclick="" title="Help with your profile" style='margin-right : 8px;' id='btn_help'>?</div>
- <script>
-  (function() { var b = $('#btn_help');
-    b.click(function() { exprDialog('{{ site_pages['profile-help'] }}', { minimize_to : b } ) });
-    {% if show_help %}$('#btn_help').click(){% endif %} })();
- </script>
- <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
- {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}, user_is_owner=(owner.id == user.id))}}
- {% if user.logged_in %}
- {{ create_button(create) }}
- {% endif %}
- {% include "dialogs/starrers.html" %}
-</div>
-
-{% endblock %}
+{% block nav %}
+  {{ super() }}
+  
+  <div class='nav' style='right : {{ '10' if user.logged_in else '197' }}px; top : 0px;'>
+   <div class='nav_icon text hoverable medbold' onclick="" title="Help with your profile" style='margin-right : 8px;' id='btn_help'>?</div>
+   <script>
+    (function() { var b = $('#btn_help');
+      b.click(function() { exprDialog('{{ site_pages['profile-help'] }}', { minimize_to : b } ) });
+      {% if show_help %}$('#btn_help').click(){% endif %} })();
+   </script>
+   <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
+   {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}, user_is_owner=(owner.id == user.id))}}
+   {% if user.logged_in %}
+   {{ create_button(create) }}
+   {% endif %}
+   {% include "dialogs/starrers.html" %}
+  </div>
+  
+{% endblock nav %}
 {% block content %}
 
-{#
-{% if page %}
- <a href='?p={{ page - 1 }}'><img id='feed_prev' src='/lib/skin/1/page_prev.png' class='feed hoverable'></a>
-{% else %}
- <img id='feed_prev' src='/lib/skin/1/page_prev-disabled.png' class='feed'>
-{% endif %}
-#}
 <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
   <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag.name if tag }}{% endif %}</div>
  <div id='profile_thumb'>
