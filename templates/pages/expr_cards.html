@@ -50,7 +50,7 @@ iframe { border : none; }
 {% endblock nav %}
 
 {% block header %}
-  <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
+  <div>
     <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag.name if tag }}{% endif %}</div>
     <div id='profile_thumb'>
       {% if user_is_owner %}
@@ -80,7 +80,6 @@ iframe { border : none; }
 {% endblock left_column %}
 
 {% block right_column %}
-<div style='position : absolute; top : {{"306" if profile_thumb or user_is_owner else "250"}}px'>
   <div id='feed'>
     {% if feed_items %}
     {% for feed in feed_items | reverse %}
@@ -90,6 +89,5 @@ iframe { border : none; }
     {% include 'cards.html' %}
     {% endif %}
   </div>
-</div>
 {% endblock right_column %}
 

@@ -25,7 +25,7 @@
     function homepage_header() {
         var header = $('#homepage_header')
         if (header.length > 0) {
-            $('#content').css('top',
+            $('#header').height(
               parseInt(header.find(' .background').css('height')) + 50
             );
         }
@@ -55,6 +55,19 @@
 {% endblock nav %}
 
 {% block body %}
+{% endblock body%}
+
+{% block left_column %}
+  {% include "page_parts/tags.html" %}
+{% endblock left_column %}
+
+
+{% block header %}
+  {% if user.logged_in %}
+    <div class='fathead'>
+      <a href='http://thenewhive.thenewhive.com'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
+    </div>
+  {% endif %}
   {% if not user.logged_in %}
     <div id="homepage_header" style='width:100%; background-color: {{ colors['tan'] }};'>
       <div class="happ background" style="left:0px; top:0px; width:1000px; height: 247px; background-color: {{ colors['tan'] }}; z-index: 3;"></div>
@@ -76,20 +89,11 @@
       </div>
     </div>
   {% endif %}
-{% endblock body%}
+
+{% endblock header %}
 
 
-{% block content %}
-
-{% if user.logged_in %}
- <div class='fathead'>
-   <a href='http://thenewhive.thenewhive.com'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
- </div>
- {% endif %}
- <div id='tags'>
-   {% for t in tags %}<div class='tag_label hoverable {{t.name|e}} {{ 'current' if t == tag }}'><a href='{{ t.url|e }}'><p>{{ t.name }}</p></a></div> {% endfor %}
- </div>
-
+{% block right_column %}
  <div id='feed'>
    {% include 'cards.html' %}
  </div>
@@ -108,4 +112,4 @@ $(window).scroll(function() {
     }
 });
  </script>
-{% endblock %}
+{% endblock right_column %}

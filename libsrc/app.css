@@ -7,12 +7,9 @@ body.main #content{
 }
 
 body.home.logged_out #content{
-  top: 320px;
 }
 
 #homepage_header {
-  position: relative;
-  top: 50px;
   z-index: 0;
 }
 
@@ -216,7 +213,6 @@ body.home.logged_out #content{
 .tag_label p {font-weight : bold; padding: 6px 12px; margin: 0}
 #tags { clear:both; height: 32px; margin : 50px 50px 25px 50px; }
 
-#feed { clear: both; width : auto; margin : 0 0px 50px 50px; } /*left : 124px; width : 776px; padding : 0; }*/
 .feed.item { position : relative; padding : 5px; margin : 0 5px 5px 0; width : 330px; height : 96px;
     float : left; background-image : url('/lib/skin/1/feed_item.png'); }
 /*.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }*/
