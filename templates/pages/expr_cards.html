@@ -1,4 +1,5 @@
 {% extends "main.html" %}
+{% block body_classes %}{{ super() }} expr_cards{% endblock %}
 
 {% block head %}
  {{ super() }}
@@ -27,7 +28,7 @@ iframe { border : none; }
   };
 </script>
 {% endblock %}
-{% block body_classes %}{{ super() }} expr_cards{% endblock %}
+
 {% block nav %}
   {{ super() }}
   
@@ -47,124 +48,48 @@ iframe { border : none; }
   </div>
   
 {% endblock nav %}
-{% block content %}
 
-<div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
-  <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag.name if tag }}{% endif %}</div>
- <div id='profile_thumb'>
-   {% if user_is_owner %}
-   <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
-   {% endif %}
-   {% if profile_thumb %}
-   <img src='{{ profile_thumb }}' alt={{ owner.fullname }}/>
-   {% elif user_is_owner %}
-   <div class='placeholder rounded'>Click Here to<br/>Upload A Profile Image</div>
-   {% endif %}
-   {% if user_is_owner %}
-   </a>
-   {% endif %}
- </div>
+{% block header %}
+  <div style='{{ 'position : fixed;' if user_is_owner }} top : 50px; background-color : white; z-index : 1; width : 100%; opacity : 0.95;'>
+    <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag.name if tag }}{% endif %}</div>
+    <div id='profile_thumb'>
+      {% if user_is_owner %}
+        <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
+      {% endif %}
+      {% if profile_thumb %}
+        <img src='{{ profile_thumb }}' alt="{{ owner.fullname }}"/>
+      {% elif user_is_owner %}
+        <div class='placeholder rounded'>Click Here to<br/>Upload A Profile Image</div>
+      {% endif %}
+      {% if user_is_owner %}
+        </a>
+        <form id='profile_thumb_upload_form' method='POST' enctype='multipart/form-data' action='{{ secure_server }}' style='position : absolute; left : -1000px'>
+          <input name='profile_thumb' id='profile_thumb_file_input' type='file'>
+          <input type='hidden' name='action' value='profile_thumb_set'>
+          <input type='hidden' name='forward' value=''>
+          <iframe id='profile_thumb_upload_target' name='profile_thumb_upload_target' style='position : absolute; left : -1000px'></iframe>
+        </form>
+      {% endif %}
+    </div>
+
+  </div>
+{% endblock header %}
  
- <div id='tags'>
-   <div class='tag_label hoverable drag {{ 'current' if not tag }}'><a href='/expressions'><p>Expressions</p></a></div>
-   {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag.name }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
-     {% if t.img %}
-     <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
-     {% else %}
-       <p>{{ t.name }}</p>
-    {% endif %}
-   </a></div>{% endfor %}
-  {% if user_is_owner %}
-   <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='vertical-align : bottom' title='Add Folder'>
-   {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag.name|e }}"'>{% endif %}
-  {% endif %}
- </div>
-</div>
+{% block left_column %}
+  {% include "page_parts/tags.html" %}
+{% endblock left_column %}
+
+{% block right_column %}
 <div style='position : absolute; top : {{"306" if profile_thumb or user_is_owner else "250"}}px'>
   <div id='feed'>
-   {% if feed_items %}
-   {% for feed in feed_items | reverse %}
-     {% include 'partials/feed.html' %}
-   {% endfor %}
-   {% else %}
-   {% include 'cards.html' %}</div>
-   {% endif %}
+    {% if feed_items %}
+    {% for feed in feed_items | reverse %}
+      {% include 'partials/feed.html' %}
+    {% endfor %}
+    {% else %}
+    {% include 'cards.html' %}
+    {% endif %}
+  </div>
 </div>
+{% endblock right_column %}
 
-{#
-<a href='?p={{ page + 1 }}'><img id='feed_next' src='/lib/skin/1/page_next.png' class='feed hoverable'></a>
-#}
-
-{% if user_is_owner %}
- <form id='upload_form' method='POST' action='{{ secure_server }}' style='position : absolute; left : -1000px' target='upload_target'>
-  <input type='hidden' name='action' id='action_input'>
-  <input type='hidden' name='expr_id' id='id_input'>
-  <input type='hidden' name='value' id='value_input'>
-  <iframe id='upload_target' name='upload_target'></iframe>
- </form>
- <script>
- var current_tag = '{{ tag.name|e }}';
- function folder_add() {
-     var tag = prompt('New Folder');
-     $('#action_input').val('user_tag_add');
-     $('#value_input').val(tag);
-     $('#upload_form').submit();
-     $('#upload_target').load(function() { window.location = window.location });
- }
- function folder_remove() {
-     $('#action_input').val('user_tag_remove');
-     $('#value_input').val(current_tag);
-     $('#upload_form').submit();
-     $('#upload_target').load(function() { window.location = '{{ home_url }}' });
- }
- function add_tag(item, tag) {
-     tag = $(tag).find('a')[0];
-     var tags = $(item).find('.tags'), v = $(tag).attr('value');
-     if ( v == "listening") return;
-     // check if tag is already there (blehck)
-     if(tags.children().filter(function() { return $(this).attr('value') == v }).length) return;
-     var updateHtml = function(data){
-       if (data && typeof(data) == "string"){
-         tags.append($("<span class='tag'>").attr('value', data).append('#' + data + ' '));
-         tags.append(' ');
-       }
-     }
-     $.post('', {action:'tag_add', expr_id: $(item).find('.expr_id').val(), value: v}, updateHtml, 'json')
-     return false;
- }
- function remove_tag(item) {
-     $('#action_input').val('tag_remove');
-     $('#id_input').val($(item).find('.expr_id').val());
-     $('#value_input').val(current_tag);
-     $('#upload_form').submit();
-     return false;
- }
- 
- $('.tag_label.drag').draggable().droppable({
-     accept : '.feed.item', drop : function(target, dragged) { add_tag(dragged, target) } });
- $('.feed.item').droppable({ accept : '.tag_label.drag', drop : add_tag }).draggable();
- {% if tag and not feed_items %}
-  $('#feed .feed.item').each(function() {
-      var del = $("<img src='/lib/skin/1/remove_tab.png' class='hoverable' style='position : absolute; bottom : 3px; right : 3px' title='Remove from \"{{ tag.name|e }}\"'>");
-      var that = $(this);
-      del.click(function() {
-          remove_tag(that);
-          that.remove();
-          return false;
-      });
-      $(this).append(del);
-  });
- {% endif %}
- </script>
-{% endif %}
-
-{% if user_is_owner %}
-<form id='profile_thumb_upload_form' method='POST' enctype='multipart/form-data' action='{{ secure_server }}' style='position : absolute; left : -1000px'>
- <input name='profile_thumb' id='profile_thumb_file_input' type='file'>
- <input type='hidden' name='action' value='profile_thumb_set'>
- <input type='hidden' name='forward' value=''>
- <iframe id='profile_thumb_upload_target' name='profile_thumb_upload_target' style='position : absolute; left : -1000px'></iframe>
-</form>
-{% endif %}
-
-{% endblock %}

@@ -1,3 +1,4 @@
+<!-- Begin Nav Template -->
 <div class='nav' id='nav_bg'></div>
 <div class='nav' style='font-weight : bold'>
   <a href='{{ server }}home/Recent' title="Explore Expressions"><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
@@ -37,34 +38,34 @@
       }
     });
   </script>
- {% else %}
-  <a href='{{ server }}' title="Explore Expressions"><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
- {% endif %}
+  {% else %}
+    <a href='{{ server }}' title="Explore Expressions"><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+  {% endif %}
 </div>
 
 {% if not user.logged_in %}
- <div class='nav' style='right : 10px; top : 0px;'>
+<div class='nav' style='right : 10px; top : 0px;'>
   <div id='signup_btn' class='btn hoverable nav_icon text signup_button'>Sign Up</div><div id='login_btn' class='btn hoverable nav_icon text'>Log In</div>
   <div id='login_menu' class='menu top'>
-   <form id='login_form' action='{{ secure_server }}' method='POST'>
-    {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
-    <b>Username</b><br>
-    <input id='username' type='text' name='username' value='{{ user['name'] }}'>
-    <div class='spacer'></div>
-    <b>Password</b><br>
-    <input type='password' name='secret'><br>
-    <div class='spacer'></div>
-    <div style='float : left'>
-      <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:.75em'> Remember me</label>
-    </div>
-    <div style='float : right;'>
-     <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
-    </div>
-    <input type='hidden' name='action' value='login'>
-    {# <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile --> #}
-   </form>
+    <form id='login_form' action='{{ secure_server }}' method='POST'>
+      {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
+      <b>Username</b><br>
+      <input id='username' type='text' name='username' value='{{ user['name'] }}'>
+      <div class='spacer'></div>
+      <b>Password</b><br>
+      <input type='password' name='secret'><br>
+      <div class='spacer'></div>
+      <div style='float : left'>
+        <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:.75em'> Remember me</label>
+      </div>
+      <div style='float : right;'>
+        <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
+      </div>
+      <input type='hidden' name='action' value='login'>
+      {# <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile --> #}
+    </form>
   </div>
- </div>
+</div>
 
  <script>
   $(function() {
@@ -76,3 +77,4 @@
  </script>
 {% endif %}
 
+<!-- End Nav Template -->

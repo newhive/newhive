@@ -4,14 +4,30 @@
 {% block body_classes %}{{ super() }} main{% endblock body_classes%}
 
 {% block main %}
-  {% block nav %}
-    {% include "page_parts/nav.html" %}
-  {% endblock nav %}
+  <div id="nav">
+    {% block nav %}
+      {% include "page_parts/nav.html" %}
+    {% endblock nav %}
+  </div>
 
   {% block body %}
   {% endblock body %}
 
-  <div id='content'>{% block content %}{% endblock content %}</div>
+  <div id='content'>
+    {% block content %}
+      <div id="header">
+        {% block header %}{% endblock %}
+      </div>
+      <div id="primary_content">
+        <div id="left_column">
+          {% block left_column %}{% endblock %}
+        </div>
+        <div id="right_column">
+          {% block right_column %}{% endblock %}
+        </div>
+      </div>
+    {% endblock content %}
+  </div>
 
   {% if user.logged_in %}
     <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable tip_none' title='Send feedback'>
