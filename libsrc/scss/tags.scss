@@ -1,8 +1,11 @@
-#tags { margin-left : 50px; }
+#tags { 
+  margin: 0 10px 0 50px; 
+}
 .tag_label { font-weight : bold; color : #696E76; background-color : #EDEBE1; }
 .tag_label.active, .tag_label.current.active, .tag_label.current.Feed.active { color : #F73627; background : #FFF673; }
 .tag_label.current { background-color : #96E2CE; color : black;}
 .tag_label.current.Feed { background-color: #E87B25; color: white;}
+#user_tags{ padding-top: 30px; }
 .tag_label {
   p { margin: 0; }
   &.user { 
@@ -11,12 +14,13 @@
     background-color: $color_2; 
     color: white;
     padding: 0 3px;
-    margin: 3px 0;
+    margin: 5px 0;
     font-weight: normal;
     font-size: 16px;
   }
   &.system {
     height: 31px;
+    margin-top: 7px;
     p {
       font-weight: bold; 
       padding: 6px 12px;

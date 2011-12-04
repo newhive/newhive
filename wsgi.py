@@ -816,9 +816,9 @@ def handle(request): # HANDLER
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
         elif p1 in ['', 'home', 'people']:
             tags = get_root().get('tags', [])
-            response.context['tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
+            response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
             people_tag = {'url': '/people', 'name': 'People'}
-            response.context['tags'].append(people_tag)
+            response.context['system_tags'].append(people_tag)
             if p1 == 'people':
                 response.context['tag'] = people_tag
                 klass = User

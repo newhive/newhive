@@ -1,18 +1,20 @@
  <div id='tags'>
-   {% for t in system_tags %}<div class='tag_label hoverable drag system{{ 'current' if t.name == tag.name }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
+   {% for t in system_tags %}<div class='tag_label hoverable drag system {{ 'current' if t.name == tag.name }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
      {% if t.img %}
        <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
      {% else %}
        <p>{{ t.name }}</p>
     {% endif %}
    </a></div>{% endfor %}
-   {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag.name }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
-     {% if t.img %}
-       <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
-     {% else %}
-       <p>#{{ t.name }}</p>
-    {% endif %}
-   </a></div>{% endfor %}
+   <div id="user_tags">
+     {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag.name }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
+       {% if t.img %}
+         <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
+       {% else %}
+         <p>#{{ t.name }}</p>
+      {% endif %}
+     </a></div>{% endfor %}
+   </div>
   {% if user_is_owner %}
    <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='vertical-align : bottom' title='Add Folder'>
    {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag.name|e }}"'>{% endif %}
