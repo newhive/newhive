@@ -206,13 +206,6 @@ body.home.logged_out #content{
 
 /* === Expression cards and category labels, profile and homepage === */
 
-.tag_label { height: 31px; float: left; font-weight : bold; color : #696E76; margin-right : 5px; background-color : #EDEBE1; }
-.tag_label.active, .tag_label.current.active, .tag_label.current.Feed.active { color : #F73627; background : #FFF673; }
-.tag_label.current { padding: 0 5px; background-color : #96E2CE; color : black;}
-.tag_label.current.Feed { background-color: #E87B25; color: white;}
-.tag_label p {font-weight : bold; padding: 6px 12px; margin: 0}
-#tags { clear:both; height: 32px; margin : 50px 50px 25px 50px; }
-
 .feed.item { position : relative; padding : 5px; margin : 0 5px 5px 0; width : 330px; height : 96px;
     float : left; background-image : url('/lib/skin/1/feed_item.png'); }
 /*.feed.item:hover { background-color : {{ colors.selected }}; opacity : 1; }*/

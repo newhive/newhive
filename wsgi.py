@@ -825,7 +825,7 @@ def handle(request): # HANDLER
             else:
                 klass = Expr
             expr_home_list(p2, request, response, klass=klass)
-            if request.args.get('partial'): return serve_page(response, 'cards.html')
+            if request.args.get('partial'): return serve_page(response, 'page_parts/cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()
@@ -890,9 +890,11 @@ def handle(request): # HANDLER
     if request.path.startswith('expressions') or request.path in ['starred', 'listening', 'feed']:
         page = int(request.args.get('page', 0))
         tags = owner.get('tags', [])
+        expressions_tag = {'url': '/expressions', 'name': 'Expressions'}
         feed_tag = {'url': "/feed", "name": "Feed"}
         star_tag = {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         people_tag = {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
+        response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
         if request.path.startswith('expressions'):
             spec = { 'owner' : owner.id }
             tag = lget(request.path.split('/'), 1, '')
@@ -917,9 +919,7 @@ def handle(request): # HANDLER
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
         if request.requester.logged_in and is_owner:
-            response.context['tags'].insert(0, feed_tag)
-        response.context['tags'].insert(0, people_tag)
-        response.context['tags'].insert(0, star_tag)
+            response.context['system_tags'].insert(1, feed_tag)
         response.context['profile_thumb'] = owner.get('profile_thumb')
         response.context['starrers'] = map(User.fetch, owner.starrers)
 

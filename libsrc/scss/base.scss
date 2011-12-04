@@ -1,7 +1,9 @@
 @import "compass/utilities";
 @import "compass/css3";
+@import "colors";
 @import "nav";
 @import "dialogs";
+@import "tags";
 
 // Page Layout
 $nav_height: 50px;
@@ -22,3 +24,6 @@ $left_column_width: 210px;
 #feed {
   @include pie-clearfix;
 }
+
+// Resets
+iframe { border: none; }
