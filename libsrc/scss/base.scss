@@ -1,0 +1,29 @@
+@import "compass/utilities";
+@import "compass/css3";
+@import "colors";
+@import "nav";
+@import "dialogs";
+@import "tags";
+
+// Page Layout
+$nav_height: 50px;
+$left_column_width: 210px;
+
+#nav{ height: $nav_height; }
+#primary_content{ clear: both; }
+#left_column, #right_column, #header{ 
+  @include pie-clearfix;
+}
+#left_column {
+  float: left; 
+  width: $left_column_width;
+}
+#right_column {
+  margin-left: $left_column_width;
+}
+#feed {
+  @include pie-clearfix;
+}
+
+// Resets
+iframe { border: none; }

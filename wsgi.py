@@ -17,12 +17,15 @@ from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u
 import ui_strings.en as ui
 
 import webassets
+from webassets.filter import get_filter
 
 assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
     assets_env.set_url('/lib/libsrc')
+
+scss = webassets.Bundle('scss/base.scss', filters=get_filter('scss', compass=True), output='../lib/scss.css', debug=False)
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
@@ -30,7 +33,7 @@ assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
-assets_env.register('app.css', 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', scss, 'app.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
@@ -813,16 +816,16 @@ def handle(request): # HANDLER
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
         elif p1 in ['', 'home', 'people']:
             tags = get_root().get('tags', [])
-            response.context['tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
+            response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
             people_tag = {'url': '/people', 'name': 'People'}
-            response.context['tags'].append(people_tag)
+            response.context['system_tags'].append(people_tag)
             if p1 == 'people':
                 response.context['tag'] = people_tag
                 klass = User
             else:
                 klass = Expr
             expr_home_list(p2, request, response, klass=klass)
-            if request.args.get('partial'): return serve_page(response, 'cards.html')
+            if request.args.get('partial'): return serve_page(response, 'page_parts/cards.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()
@@ -887,9 +890,11 @@ def handle(request): # HANDLER
     if request.path.startswith('expressions') or request.path in ['starred', 'listening', 'feed']:
         page = int(request.args.get('page', 0))
         tags = owner.get('tags', [])
+        expressions_tag = {'url': '/expressions', 'name': 'Expressions'}
         feed_tag = {'url': "/feed", "name": "Feed"}
         star_tag = {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         people_tag = {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
+        response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
         if request.path.startswith('expressions'):
             spec = { 'owner' : owner.id }
             tag = lget(request.path.split('/'), 1, '')
@@ -914,9 +919,7 @@ def handle(request): # HANDLER
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
         if request.requester.logged_in and is_owner:
-            response.context['tags'].insert(0, feed_tag)
-        response.context['tags'].insert(0, people_tag)
-        response.context['tags'].insert(0, star_tag)
+            response.context['system_tags'].insert(1, feed_tag)
         response.context['profile_thumb'] = owner.get('profile_thumb')
         response.context['starrers'] = map(User.fetch, owner.starrers)
 
@@ -954,7 +957,7 @@ def handle(request): # HANDLER
         return serve_html(response, html)
     else: return serve_page(response, 'pages/' + template + '.html')
 
-def route_admin(request, response):            
+def route_admin(request, response):
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
     p2 = lget(parts, 1)
@@ -964,9 +967,18 @@ def route_admin(request, response):
     if p2 == 'referrals':
         response.context['users'] = User.search()
         return serve_page(response, 'pages/admin/referrals.html')
+    if p2 == 'thumbnail_relink':
+      response.context['exprs'] = []
+      exprs = Expr.search(**{'thumb': {'$exists': True, '$ne': None}})
+      exprs = exprs[0:10]
+      for e in exprs:
+          image_apps = filter(lambda i: i.get('type') == 'hive.image', e.get('apps'))
+          image_apps = [{'file_id': image.get('file_id'), 'url': image.get('content')} for image in image_apps]
+          response.context['exprs'].append({'id': e.id, 'url': e.url, 'thumb': e.get('thumb'), 'images': image_apps})
+      return serve_page(response, 'pages/admin/thumbnail_relink.html')
 
 
-def route_analytics(request, response):            
+def route_analytics(request, response):
     import analytics
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)

@@ -1,0 +1,29 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+  <style>
+    img.thumbnail { width: 124px; }
+    .img_wrapper { padding: 5px; }
+    .incomplete { background: #FFCCCC; }
+    .complete { background: #CCFFCC; }
+  </style>
+{% endblock %}
+
+{% block table_head %}
+  <tr width='2000px'>
+    <td>Expression Thumbnails</td>
+    <td width='10px'>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  {% for expr in exprs %}
+  <tr>
+    <td><a href='{{expr.url}}'><img class='thumbnail' src='{{expr.thumb}}'/></a></td>
+    <td></td>{# spacer #}
+    {% for image in expr.images %}
+    <td><div class='incomplete img_wrapper'><img class='thumbnail' src='{{image.url}}'/></div></td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+{% endblock %}
