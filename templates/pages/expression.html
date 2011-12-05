@@ -21,6 +21,7 @@
  <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
  <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
   {% if not user_is_owner %}
+   {{ listen_button(active=owner.id in user.starred_items, title='Listen to ' + owner['name'], active_title='Stop listening') if user.logged_in }}
    <div id='info' class='medbold' style='text-align : right'>
      <div id='exp_owner'><a title="{{owner.name}}'s profile" href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
     <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
@@ -34,29 +35,29 @@
   {{ create_button(create) }}  
   {% endif %}
  
- {% if user_is_owner %}
-  <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' title='edit'></a>
-  {% if path %}
-   <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable nav_icon' title='delete'>
-   <div id='dia_delete' class='menu medbold' style='padding : 10px; width : 13em;'>
-    Are you sure you want
-    to delete this page?
-    <br>
-    <form method='POST' action='{{ secure_server }}'>
-     <input type='hidden' name='action' value='expr_delete'>
-     <input type='hidden' name='id' value='{{ exp.id }}'>
-     <div style='text-align : right'><input type='submit' value='Yes' class='btn black rounded medbold'></div>
-    </form>
-   </div>
-   <script>hover_menu($('#btn_delete'), $('#dia_delete'), { hover : false });</script>
+  {% if user_is_owner %}
+   <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' title='edit'></a>
+   {% if path %}
+    <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable nav_icon' title='delete'>
+    <div id='dia_delete' class='menu medbold' style='padding : 10px; width : 13em;'>
+     Are you sure you want
+     to delete this page?
+     <br>
+     <form method='POST' action='{{ secure_server }}'>
+      <input type='hidden' name='action' value='expr_delete'>
+      <input type='hidden' name='id' value='{{ exp.id }}'>
+      <div style='text-align : right'><input type='submit' value='Yes' class='btn black rounded medbold'></div>
+     </form>
+    </div>
+    <script>hover_menu($('#btn_delete'), $('#dia_delete'), { hover : false });</script>
+   {% endif %}
+   {% if owner.flags.expr_new %}<script>$(function() {
+    updateShareUrls('#dia_share', window.location);  
+    showDialog('#dia_share', { minimize_to : '#btn_share' } );
+   })</script>{% endif %}
   {% endif %}
-  {% if owner.flags.expr_new %}<script>$(function() {
-   updateShareUrls('#dia_share', window.location);  
-   showDialog('#dia_share', { minimize_to : '#btn_share' } );
-  })</script>{% endif %}
- {% endif %}
- {% include "dialogs/starrers.html" %}
-    
+  {% include "dialogs/starrers.html" %}
+  {% include "dialogs/listeners.html" %}
  </div>
  {% include 'expr_background.html' %}
 {% endblock %}

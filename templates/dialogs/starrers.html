@@ -1,4 +1,5 @@
-<div id="dia_starrers" class='menu border selected' data-starrer-count='{{ starrers|length }}'>
+<div id="dia_starrers" class='menu feed_menu border selected' data-count='{{ starrers|length }}'>
+People listening to {{ owner['name'] }}
 {% for user in starrers %}
 {% include "partials/user_card.html" %}
 {% endfor %}

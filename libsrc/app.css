@@ -65,6 +65,8 @@
 .expr_cards #btn_star.active .icon.starred {
   background-image: url('/lib/skin/1/people_active-hover.png');
 }
+.listen_small { display:inline-block; width:32px; height:24px; background-image: url('/lib/skin/1/people_small.png'); }
+.listen_small.starred { background-image: url('/lib/skin/1/people_small_active.png'); }
 
 
 body.main #content{
@@ -88,7 +90,7 @@ body.home.logged_out .nav{
   z-index: 0;
 }
 
-
+.menu { overflow : auto; }
 
 /* ==========================================
    user menu
@@ -162,7 +164,7 @@ body.home.logged_out .nav{
   margin-right: 10px;
   float: left;
 }
-#feed_menu .feed_item img {
+.feed_menu .feed_item img, .feed_menu .feed.item img {
   margin: 5px;
   width: 90px;
   float: left;
