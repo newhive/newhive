@@ -50,7 +50,7 @@
 
 {% if not user.logged_in %}
  <div class='nav' style='right : 10px; top : 0px;'>
-  <div id='login_btn' class='btn hoverable nav_icon text'>Log In</div>
+  <div id='signup_btn' class='btn hoverable nav_icon text signup_button'>Sign Up</div><div id='login_btn' class='btn hoverable nav_icon text'>Log In</div>
   <div id='login_menu' class='menu top'>
    <form id='login_form' action='{{ secure_server }}' method='POST'>
     {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
@@ -69,10 +69,6 @@
     <input type='hidden' name='action' value='login'>
     {# <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile --> #}
    </form>
-   <div class='spacer'></div>
-   <div style='white-space : nowrap'><span id='signup_button'>Sign up for an account</span>
-    <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
-   </div>
   </div>
  </div>
 

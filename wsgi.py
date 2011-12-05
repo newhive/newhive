@@ -972,6 +972,7 @@ def route_analytics(request, response):
     p1 = lget(parts, 0)
     p2 = lget(parts, 1)
     if p2 == 'active_users':
+        analytics.user_first_month()
         if request.args.has_key('start') and request.args.has_key('end'):
             active_users = analytics.active_users()
         else:

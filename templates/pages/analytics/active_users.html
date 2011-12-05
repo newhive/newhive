@@ -12,7 +12,7 @@
     <th width="5%">Age in weeks</th>
     <th width="10%">Last Login</th>
     {% for auth in ["public", "private", "total"] %}
-    {% for timerange in ["day", "week", "month", "total"] %}
+    {% for timerange in ["1st mo", "week", "month", "total"] %}
     <th width="4%">{{ timerange }}</th>
     {% endfor %}
     <th width="5%">Per Wk</th>
@@ -24,13 +24,14 @@
   {% for user in active_users %}
   <tr>
     <td><a href="http://{{ user['name'] }}.thenewhive.com">{{ user['name'] }}</a></td>
-    <td>{{ (user['age']/7) | round(0,'ceil') | int}}</td>
+    <td>{{ (user.age/7 ) | round(0,'ceil') | int if user.age}}</td>
     <td data-type="epoch_date">{{ user.updated }}</td>
     {% for auth in ["public", "private", "total"] %}
-    {% for timerange in ["day", "week", "month", "total"] %}
+    <td>{{ user.first_month.expressions[auth] if user and user.first_month and user.first_month.expressions }}</td>
+    {% for timerange in ["week", "month", "total"] %}
     <td>{{ user[auth][timerange] | int }}</td>
     {% endfor %}
-    <td>{{ (user[auth]['total'] / (user['age']/7)|round(0, 'ceil')) | round(2) }} </td>
+    <td>{{ (user[auth]['total'] / (user['age']/7)|round(0, 'ceil')) | round(2) if user.age }} </td>
     {% endfor %}
   </tr>
   {% endfor %}

@@ -535,24 +535,6 @@ input[type="text"].copy, textarea.copy {
   padding : 2px 5px;
 }
 
-#signup_button_wrapper {
-  clear: both;
-  padding-top: 10px;
-}
-
-#signup_button { 
-  font-weight : bold; 
-  padding : 2px 5px; 
-  background-color : #FFF673; 
-  cursor : pointer; 
-  display: inline-block;
-}
-
-#signup_button:hover, #signup_button.open { 
-  color : red; 
-  background-color : white; 
-}
-
 /* ==========================================
    form validation
    ========================================== */
