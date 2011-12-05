@@ -956,7 +956,7 @@ def handle(request): # HANDLER
         return serve_html(response, html)
     else: return serve_page(response, 'pages/' + template + '.html')
 
-def route_admin(request, response):            
+def route_admin(request, response):
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
     p2 = lget(parts, 1)
@@ -966,9 +966,18 @@ def route_admin(request, response):
     if p2 == 'referrals':
         response.context['users'] = User.search()
         return serve_page(response, 'pages/admin/referrals.html')
+    if p2 == 'thumbnail_relink':
+      response.context['exprs'] = []
+      exprs = Expr.search(**{'thumb': {'$exists': True, '$ne': None}})
+      exprs = exprs[0:10]
+      for e in exprs:
+          image_apps = filter(lambda i: i.get('type') == 'hive.image', e.get('apps'))
+          image_apps = [{'file_id': image.get('file_id'), 'url': image.get('content')} for image in image_apps]
+          response.context['exprs'].append({'id': e.id, 'url': e.url, 'thumb': e.get('thumb'), 'images': image_apps})
+      return serve_page(response, 'pages/admin/thumbnail_relink.html')
 
 
-def route_analytics(request, response):            
+def route_analytics(request, response):
     import analytics
     parts = request.path.split('/', 1)
     p1 = lget(parts, 0)
