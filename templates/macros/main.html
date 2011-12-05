@@ -21,19 +21,11 @@
     {{ "onclick='btn_star_click(this);'" if logged_in and not user_is_owner }} >
     <div class="icon"></div>
   </div>
-  <script>$(function(){
-    var opts = {
-      open_condition: function(){ return parseInt($('#btn_star').attr('data-count')) > 0 } 
-      , open: function(){ 
-          var dia = $('#dia_starrers');
-          var max_height = ( $(window).height() - 50 ) * 0.8;
-          if ( dia.height() > max_height )  dia.height(max_height); 
-        }
-    }
-    hover_menu("#btn_star", "#dia_starrers", opts);
-    });</script>
+  <script>$(function(){ hover_menu("#btn_star", "#dia_starrers", { open_condition: function(){ return parseInt($('#btn_star').attr('data-count')) > 0 } }); });</script>
 {%- endmacro %}
 
 {% macro listen_button(active=False, title='', active_title='') %}
-    <div class='listen_small{{ ' starred' if active }}' onclick='btn_listen_click(this)' title='{{ active_title if active else title }}'></div>
+ <div class='listen_small hoverable{{ ' starred' if active }}' onclick='btn_listen_click(this)' title='{{ active_title if active else title }}'
+  data-title-active='{{active_title}}' data-title-inactive='{{title}}'></div>
+ <script>$(function(){ hover_menu(".listen_small", "#dia_listeners", { open_condition: function(){ return parseInt($('#dia_listeners').attr('data-count')) > 0 } }); });</script>
 {%- endmacro %}

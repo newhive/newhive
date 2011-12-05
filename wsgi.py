@@ -924,6 +924,7 @@ def handle(request): # HANDLER
         #response.context['page'] = page
     else:
         response.context['starrers'] = map(User.fetch, resource.starrers)
+        response.context['listeners'] = map(User.fetch, owner.starrers)
 
 
     if not resource: return serve_404(request, response)

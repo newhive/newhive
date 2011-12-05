@@ -188,10 +188,10 @@ function btn_listen_click(btn) {
             btn.removeClass('inactive');
             if(data == "unstarred") {
                 btn.removeClass('starred');
-                btn.attr('title', btn_wrapper.attr('data-title-inactive'));
+                btn.attr('title', btn.attr('data-title-inactive'));
             } else if (data == "starred") {
                 btn.addClass('starred');
-                btn.attr('title', btn_wrapper.attr('data-title-active'));
+                btn.attr('title', btn.attr('data-title-active'));
             };
         }, 'json');
     }
@@ -447,12 +447,11 @@ function hover_url(url) {
     return h;
 }
 function hover_add(o) {
-    if(o.src) {
-        o.src_d = o.src;
-        o.src_h = hover_url(o.src_d);
-        o.over = function() { o.src = o.src_h };
-        o.out = function() { if(!o.busy) o.src = o.src_d };
-    }
+    if(o.src) o.src_d = o.src;
+    else return; 
+    o.src_h = hover_url(o.src_d);
+    o.over = function() { o.src = o.src_h };
+    o.out = function() { if(!o.busy) o.src = o.src_d };
     if (o.over && o.out) {
         $(o).hover(o.over, o.out);
     };
@@ -525,7 +524,8 @@ hover_menu = function(handle, drawer, options) {
             hp.top - drawer.outerHeight() - o.options.offsetY : hp.top + oy;
         var left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
             hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
-        drawer.css({ left : left, top : top });
+        var drawer_height = bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
+        drawer.css({ left : left, top : top, height : drawer_height });
         o.options.open();
     }
 
