@@ -70,7 +70,7 @@ html, body { background-color : white; height : 100%; }
 
  {% block head %}{% endblock %}
 </head>
-<body class="{% block body_classes %}{{'logged_out' if not user.logged_in }}{{' admin' if admin}}{% endblock %}" >
+<body class="{% block body_classes %}{{'logged_in' if user.logged_in else "logged_out"}}{{' admin' if admin}} {% endblock %}" >
  {% block main %}{% endblock %}
  <script type="text/javascript">
   var _gaq = _gaq || [];

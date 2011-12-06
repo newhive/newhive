@@ -63,11 +63,6 @@
 
 
 {% block header %}
-  {% if user.logged_in %}
-    <div class='fathead'>
-      <a href='http://thenewhive.thenewhive.com'><img src='/lib/skin/1/plus_lg.png'>A New Creative Playground</a>
-    </div>
-  {% endif %}
   {% if not user.logged_in %}
     <div id="homepage_header" style='width:100%; background-color: {{ colors['tan'] }};'>
       <div class="happ background" style="left:0px; top:0px; width:1000px; height: 247px; background-color: {{ colors['tan'] }}; z-index: 3;"></div>
