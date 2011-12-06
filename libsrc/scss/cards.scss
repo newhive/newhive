@@ -1,0 +1,48 @@
+.card {
+    &.item { 
+        position: relative; 
+        padding: 4px; 
+        width: 190px; 
+        height: 275px;
+        float: left; 
+        background-image: url('/lib/skin/1/feed_item.png'); 
+    }
+    &.item:hover { 
+        //background-color: $color_selected; 
+        opacity : 1; 
+        .thumb {
+            @include opacity(0.6);
+        }
+
+    }
+    .thumb {
+        @include border-radius(7px);
+        width: 190px;
+        height: 190px;
+    }
+   .title { 
+        font-weight : bold; 
+        max-height : 2.5em; 
+        overflow : hidden; 
+        text-overflow : ellipsis; 
+        &:hover { background: $color_highlight; }
+    }
+    .title1 { font-size : 1.2em; }
+    .title2 { font-size : 1.0em; }
+    .title3 { font-size : 0.8em; }
+    .other, .tags { 
+        font-size : 0.7em; 
+        color: $color_grey_medium; 
+    }
+    .tags { 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        max-height: 29px;
+        margin-bottom: 5px;
+        .tag:hover { background: $color_selected; }
+    }
+    .other {
+        font-weight: bold;
+        &:hover { color: $color_0; }
+    }
+}

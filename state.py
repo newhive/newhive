@@ -399,6 +399,9 @@ class Expr(Entity):
     def get_url(self): return abs_url(domain=self['domain']) + self['name']
     url = property(get_url)
 
+    def get_owner_url(self): return abs_url(domain = self.get('domain')) + 'expressions'
+    owner_url = property(get_owner_url)
+
     def get_thumb(self): return self.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
     thumb = property(get_thumb)
 

@@ -1,12 +1,6 @@
 {% if exprs %}
-{% for e in exprs %}
- <a href='{{ e.url|e }}' target='_top'><div class='feed item' draggable='false'>
-  <input type='hidden' class='expr_id' value='{{ e.id }}'>
-  <img src='{{ e.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
-  <div class='title title{{ e.title | e | length_bucket }}'>{{ e.title|e }}</div>
-  <div class='tags'>{% for t in e.tags %}<span class='tag' value='{{ t|e }}'>#{{ t }} </span> {% endfor %}</div>
-  <div class='other'>{{ e.owner_name}}</div>
- </div></a>
+{% for expr in exprs %}
+{% include "partials/expr_card.html" %}
 {% endfor %}
 {% elif users %}
 {% for user in users %}
