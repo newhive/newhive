@@ -2,7 +2,7 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
-import os, re, json, mimetypes
+import os, re, json, mimetypes, math
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
@@ -1143,8 +1143,18 @@ def friendly_date(then):
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
 
+def large_number(number):
+    if number < 10000: return str(number)
+    elif 10000 <= number < 1000000:
+        return str(int(number/1000)) + "K"
+    elif 1000000 <= number < 10000000:
+        return str(math.floor(number/100000)/10) + "M"
+    elif 10000000 <= number:
+        return str(int(number/1000000)) + "M"
+
 jinja_env.filters['friendly_date'] = friendly_date
 jinja_env.filters['length_bucket'] = length_bucket
+jinja_env.filters['large_number'] = large_number
 
 # run_simple is not so simple
 if __name__ == '__main__':
