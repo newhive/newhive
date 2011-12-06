@@ -322,6 +322,12 @@ class Expr(Entity):
             )
         return filter(can_view, es)
 
+    @classmethod
+    def random(cls):
+        rand = random.random()
+        print rand
+        return cls.find(random = {'$gte': rand}, auth='public', apps={'$exists': True})
+
     def get_owner(self):
         if not self._owner:
             self._owner = User.fetch(self.get('owner'))
@@ -341,6 +347,7 @@ class Expr(Entity):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = User.fetch(self['owner'])['name']
         self['domain'] = self['domain'].lower()
+        self['random'] = random.random()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         super(Expr, self).create_me()

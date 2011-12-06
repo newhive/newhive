@@ -847,6 +847,9 @@ def handle(request): # HANDLER
             response.context['max_height'] = request.args.get('max_height')
             return serve_page(response, 'dialogs/comments.html')
         elif p1 == 'user_check': return serve_json(response, user_check(request, response))
+        elif p1 == 'random':
+            expr = Expr.random()
+            return redirect(response, expr.url)
          #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
