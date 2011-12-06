@@ -799,10 +799,6 @@ def handle(request): # HANDLER
                 ,'show_help' : show_help
             })
             return serve_page(response, 'pages/edit.html')
-        elif p1 == 'tag':
-            response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
-            response.context['tag'] = p2
-            return serve_page(response, 'pages/tag_search.html')
         elif p1 == 'signup':
             referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral or referral.get('used'): return bad_referral(request, response)
@@ -814,7 +810,7 @@ def handle(request): # HANDLER
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'pages/minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 in ['', 'home', 'people']:
+        elif p1 in ['', 'home', 'people', 'tag']:
             tags = get_root().get('tags', [])
             response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
             people_tag = {'url': '/people', 'name': 'People'}
@@ -825,7 +821,11 @@ def handle(request): # HANDLER
             else:
                 klass = Expr
             expr_home_list(p2, request, response, klass=klass)
+            if p1 == 'tag':
+                response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
+                response.context['tag'] = p2
             if request.args.get('partial'): return serve_page(response, 'page_parts/cards.html')
+            elif p1 == 'tag': return serve_page(response, 'pages/tag_search.html')
             else: return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()

@@ -92,19 +92,22 @@
  <div id='feed'>
    {% include 'page_parts/cards.html' %}
  </div>
-
- <script>
-var load_page = null;
-var next_page = 1;
-var pages = {{ pages }};
-$(window).scroll(function() {
-    if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page < pages) {
-        load_page = $.get('', { partial : true, page : next_page }, function(data) {
-            load_page = null;
-            next_page ++;
-            $('#feed').append(data);
-        });
-    }
-});
- </script>
 {% endblock right_column %}
+
+{% block footer_scripts %}
+  {{ super() }}
+  <script>
+    var load_page = null;
+    var next_page = 1;
+    var pages = {{ pages }};
+    $(window).scroll(function() {
+        if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page < pages) {
+            load_page = $.get('', { partial : true, page : next_page }, function(data) {
+                load_page = null;
+                next_page ++;
+                $('#feed').append(data);
+            });
+        }
+    });
+  </script>
+{% endblock footer_scripts %}

@@ -72,6 +72,7 @@ html, body { background-color : white; height : 100%; }
 </head>
 <body class="{% block body_classes %}{{'logged_in' if user.logged_in else "logged_out"}}{{' admin' if admin}} {% endblock %}" >
  {% block main %}{% endblock %}
+ {% block footer_scripts %}{% endblock %}
  <script type="text/javascript">
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-22827299-2']);
