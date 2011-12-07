@@ -2,7 +2,7 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
-import os, re, json, mimetypes, math
+import os, re, json, mimetypes, math, time
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
@@ -983,15 +983,32 @@ def handle(request): # HANDLER
     else: return serve_page(response, 'pages/' + template + '.html')
 
 def route_admin(request, response):            
-    parts = request.path.split('/', 1)
+    parts = request.path.split('/')
     p1 = lget(parts, 0)
     p2 = lget(parts, 1)
+    p3 = lget(parts, 2)
+    print parts
     if p2 == 'contact_log':
         response.context['contacts'] = Contact.search()
         return serve_page(response, 'pages/admin/contact_log.html')
     if p2 == 'referrals':
         response.context['users'] = User.search()
         return serve_page(response, 'pages/admin/referrals.html')
+    if p2 == 'users':
+        if not p3:
+            response.context['users'] = User.search()
+            return serve_page(response, 'pages/admin/users.html')
+        else:
+            user = User.named(p3)
+            expressions = Expr.search(owner=user.id)
+            public_expressions = filter(lambda e: e.get('auth') == 'public', expressions)
+            private_expressions = filter(lambda e: e.get('auth') == 'password', expressions)
+            response.context['user_object'] = user
+            response.context['public_expressions'] = public_expressions
+            response.context['private_expressions'] = private_expressions
+            response.context['action_log'] = ActionLog.search(user=user.id, created={'$gt': time.time() - 60*60*24*30})
+            response.context['expression_counts'] = {'public': len(public_expressions), 'private': len(private_expressions), 'total': len(expressions)}
+            return serve_page(response, 'pages/admin/user.html')
 
 
 def route_analytics(request, response):            
