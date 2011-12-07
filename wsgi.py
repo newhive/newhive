@@ -429,6 +429,8 @@ def mail_us(request, response):
 def mail_them(request, response):
     if not request.form.get('message') or not request.form.get('to'): return False
 
+    log_data = {'service': 'email', 'to': request.form.get('to')}
+
     response.context.update({
          'message': request.form.get('message')
         ,'url': request.form.get('forward')
@@ -442,6 +444,7 @@ def mail_them(request, response):
     if exp:
         exp.increment({'analytics.email.count': 1})
         owner = User.fetch(exp.get('owner'))
+        log_data['expr_id'] = exp.id
         response.context.update({
           'short_url': (exp.get('domain') + '/' + exp.get('name'))
           ,'tags': exp.get('tags')
@@ -450,6 +453,8 @@ def mail_them(request, response):
           ,'user_name': owner.get('name')
           ,'title': exp.get('title')
           })
+    else:
+        log_data['url'] = request.form.get('forward')
 
     heads = {
          'To' : request.form.get('to')
@@ -462,6 +467,7 @@ def mail_them(request, response):
         ,'html': render_template(response, "emails/share.html")
         }
     send_mail(heads, body)
+    ActionLog.new(request.requester, 'share', data=log_data)
     if request.form.get('send_copy'):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
@@ -645,6 +651,7 @@ def log(request, response):
     if not data:
         data = {}
     l = ActionLog.new(user, request.form.get('log_action'), data)
+    return True
 
 # Possible values for the POST variable 'action'
 actions = dict(
@@ -758,6 +765,9 @@ def handle(request): # HANDLER
             r = actions.get(reqaction)(request, response)
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
+            elif reqaction != 'logout':
+               print "************************would return status 204 here*************************"
+               #return Response(status=204) # 204 status = no content
     if request.domain == config.server_name:
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)

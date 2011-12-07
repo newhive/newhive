@@ -10,29 +10,29 @@
     <div class="line"></div>
     <div id="like_buttons" class="line center">
       <div class="like_button twitter">
-        <a class='twitter' onclick="_gaq.push(['_trackEvent', 'share', 'twitter']); ">
+        <a class='twitter' onClick="logShare('twitter');" target="_blank">
           <img src='/lib/skin/1/twitter.png' title='Share on Twitter' style='width:32px;height:32px' />
         </a>
         <div class="count">{{ exp.analytic_count("twitter") | large_number if exp and exp.id else zero_count_string }}</div>
       </div>
       <div class="like_button facebook">
-        <a class='facebook' onclick="_gaq.push(['_trackEvent', 'share', 'facebook']);">
+        <a class='facebook' onClick="logShare('facebook');" target="_blank">
           <img src='/lib/skin/1/facebook.png' title='Share on Facebook' style='width:32px;height:32px'/>
         </a>
         <div class="count">{{ exp.analytic_count('facebook') | large_number if exp and exp.id else zero_count_string }}</div>
       </div>
       <div class="like_button reddit">
-        <a class='reddit' onclick="_gaq.push(['_trackEvent', 'share', 'reddit']);">
+        <a class='reddit' onClick="logShare('reddit');" target="_blank">
           <img src="/lib/skin/1/reddit.png" alt="submit to reddit" border="0" />
         </a>
         <div class="count">{{ exp.analytic_count("reddit") | large_number if exp and exp.id else zero_count_string }}</div>
       </div>
       <div class="like_button gplus">
-        <g:plusone class='gplus gplus_button' count="false" onclick="_gaq.push(['_trackEvent', 'share', 'plusone']);"></g:plusone>
+        <g:plusone class='gplus gplus_button' count="false" onClick="logShare('gplus');"></g:plusone>
         <div class="count">{{ exp.analytic_count('gplus') | large_number if exp and exp.id else zero_count_string }}</div>
       </div>
       <div class="like_button stumble">
-        <a class='stumble' onclick="_gaq.push(['_trackEvent', 'share', 'stumble']);">
+        <a class='stumble' onClick="logShare('stumble');" target="_blank">
           <img src="/lib/skin/1/stumbleupon.png" alt="submit to stumbleupon" border="0" />
         </a>
         <div class="count">{{ exp.analytic_count("stumble") | large_number if exp and exp.id else zero_count_string }}</div>

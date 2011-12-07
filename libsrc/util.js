@@ -87,8 +87,15 @@ function logAction(action, data){
     $.ajax({
         url: '', 
         type: 'POST',
-        data: {action: 'log', log_action: action, data: data}
+        data: {action: 'log', log_action: action, data: JSON.stringify(data)}
     });
+};
+
+function logShare(service){
+    var data = {'service': service};
+    if (typeof(expr_id) != 'undefined') data.expr_id = expr_id
+    logAction('share', data);
+    _gaq.push(['_trackEvent', 'share', service]);
 };
 
 function exprDialog(url, opts) {
@@ -330,6 +337,7 @@ var urlParams = {};
 $(function () {
     iconCounts();
     $('#btn_share').click(function(){
+        logAction('share_button_click');
         var dialog = $('#dia_share');
         if (dialog.length === 0 ) {
             $.get("?dialog=share", function(data){

@@ -14,7 +14,10 @@
   #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
  </style>
  <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
- <script type='text/javascript'>var comment_count = {{exp.comment_count}};</script>
+ <script type='text/javascript'>
+     var expr_id = '{{exp.id}}';
+     var comment_count = {{exp.comment_count}};
+ </script>
 {% endblock %}
 
 {% block body %}
