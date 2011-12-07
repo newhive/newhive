@@ -73,6 +73,7 @@ def expr_save(request, response):
         try:
           new_expression = True
           res = request.requester.expr_create(upd)
+          ActionLog.new(request.requester, "new_expression_save", data={'expr_id': res.id})
           request.requester.flag('expr_new')
           if request.requester.get('flags').get('add_invites_on_save'):
               request.requester.unflag('add_invites_on_save')
@@ -81,12 +82,16 @@ def expr_save(request, response):
             if exp.get('overwrite'):
                 Expr.named(upd['domain'], upd['name']).delete()
                 res = request.requester.expr_create(upd)
-            else: return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
+                ActionLog.new(request.requester, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+            else:
+                return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
+                ActionLog.new(request.requester, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
     else:
         if not res['owner'] == request.requester.id:
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
         new_expression = False
+        ActionLog.new(request.requester, "update_expression", data={'expr_id': res.id})
     return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
@@ -779,7 +784,10 @@ def handle(request): # HANDLER
                 exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
-            else: exp = Expr.fetch(p2)
+                ActionLog.new(request.requester, "new_expression_edit")
+            else:
+                exp = Expr.fetch(p2)
+                ActionLog.new(request.requester, "existing_expression_edit", data={'expr_id': exp.id})
 
             if not exp: return serve_404(request, response)
 
@@ -845,10 +853,14 @@ def handle(request): # HANDLER
             expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
             response.context['exp'] = response.context['expr'] = expr
             response.context['max_height'] = request.args.get('max_height')
+            if request.requester.logged_in:
+                ActionLog.new(request.requester, "view_comments", data={'expr_id': expr.id})
             return serve_page(response, 'dialogs/comments.html')
         elif p1 == 'user_check': return serve_json(response, user_check(request, response))
         elif p1 == 'random':
             expr = Expr.random()
+            if request.requester.logged_in:
+                ActionLog.new(request.requester, "view_random_expression", data={'expr_id': expr.id})
             return redirect(response, expr.url)
          #else:
         #    # search for expressions with given tag
@@ -951,9 +963,13 @@ def handle(request): # HANDLER
 
     template = resource.get('template', request.args.get('template', 'expression'))
 
+    if request.requester.logged_in:
+        ActionLog.new(request.requester, "view_expression", data={'expr_id': resource.id})
+
     if template == 'none':
         if auth_required: return Forbidden()
         return serve_html(response, html)
+
     else: return serve_page(response, 'pages/' + template + '.html')
 
 def route_admin(request, response):            
@@ -1125,7 +1141,7 @@ class Forbidden(exceptions.Forbidden):
 
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
-    if type(then) == int:
+    if type(then) in [int, float]:
       then = time_u(then)
 
     now = datetime.utcnow()
