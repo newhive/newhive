@@ -14,12 +14,19 @@
   &.user { 
     float: right;
     clear: both;
-    background-color: $color_2; 
     color: white;
     padding: 0 3px;
     margin: 5px 0;
     font-weight: normal;
     font-size: 16px;
+    &.tag_0 { background-color: $color_tag_0; }
+    &.tag_1 { background-color: $color_tag_1; }
+    &.tag_2 { background-color: $color_tag_2; }
+    &.tag_3 { background-color: $color_tag_3; }
+    &.tag_4 { background-color: $color_tag_4; }
+    &.tag_5 { background-color: $color_tag_5; }
+    &.tag_6 { background-color: $color_tag_6; }
+    &.tag_7 { background-color: $color_tag_7; }
   }
   &.system {
     font-size: 21px;

@@ -1156,6 +1156,8 @@ def friendly_date(then):
 jinja_env.filters['friendly_date'] = friendly_date
 jinja_env.filters['length_bucket'] = length_bucket
 
+jinja_env.filters['mod'] = lambda x, y: x % y
+
 # run_simple is not so simple
 if __name__ == '__main__':
     """ This Werkzeug server is used only for development and debugging """
