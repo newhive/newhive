@@ -8,8 +8,6 @@ from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
 from urlparse import urlparse
 import jinja2
-import PIL.Image as Img
-from PIL import ImageOps
 
 import config, auth
 from colors import colors
@@ -89,34 +87,6 @@ def expr_save(request, response):
         new_expression = False
     return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
-import urllib, random
-def generate_thumb_from_url(owner, url, size):
-    # create file record in database, copy file to media directory via http
-    try: response = urllib.urlopen(url)
-    except: return
-    if response.getcode() != 200: return
-    mime = response.headers.getheader('Content-Type')
-
-    path = os.tmpnam()
-    f = open(path, 'w')
-    f.write(response.read())
-    f.close()
-    return generate_thumb(owner, path, size)
-
-def generate_thumb(owner, path, size):
-    # resize and crop image to size set by size tuple, preserving aspect ratio, save over original
-    try: imo = Img.open(path)
-    except:
-        os.remove(path)
-        return False
-    imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
-    imo = imo.convert(mode='RGB')
-    imo.save(path, format='jpeg', quality=70)
-
-    res = File.create(owner=owner.id, path=path, size=size, name='thumb', mime='image/jpeg')
-    return res.get('url')
-
-
 def expr_delete(request, response):
     e = Expr.fetch(request.form.get('id'))
     if not e: return serve_404(request, response)
@@ -147,23 +117,8 @@ def files_create(request, response):
 
         path = os.tmpnam()
         file.save(path)
-
-        if mime in ['image/jpeg', 'image/png', 'image/gif']:
-            try: imo = Img.open(path)
-            except:
-                res.delete()
-                return False
-            if imo.size[0] > 1600 or imo.size[1] > 1000:
-                ratio = float(imo.size[0]) / imo.size[1]
-                new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
-                imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-            opts = {}
-            if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
-            if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
-            if mime == 'image/gif': opts.update(format = 'GIF')
-            imo.save(path, **opts)
-
         res = File.create(owner=request.requester.id, path=path, name=file.filename, mime=mime)
+        os.remove(path)
         url = res.get('url')
         app['file_id'] = res.id
 
@@ -235,22 +190,16 @@ def bad_referral(request, response):
 
 def profile_thumb_set(request, response):
     request.max_content_length = 10000000 # 10 megs
-    user = request.requester
-
     file = request.files.get('profile_thumb')
-    path = os.tmpnam()
-    file.save(path)
     mime = mimetypes.guess_type(file.filename)[0]
-    # TODO: remove tmp file deletion from File.create, create two
-    # File records, one for original sized image, one for resampled
-    #res = File.create(owner=user.id, path=path, size=size, name='thumb', mime='image/jpeg')
-
-    if mime in ['image/jpeg', 'image/png', 'image/gif']:
-        profile_thumb_url = generate_thumb(user, path, (600,465))
-        user.update(profile_thumb=profile_thumb_url)
-    else: 
+    if not mime in ['image/jpeg', 'image/png', 'image/gif']:
         response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
 
+    path = os.tmpnam()
+    file.save(path)
+    res = File.create(owner=request.requester.id, path=path, name=file.filename, mime=mime)
+    os.remove(path)
+    request.requester.update(profile_thumb_id = res.id, profile_thumb=res.get_thumb(190,190))
     return redirect(response, request.form['forward'])
 
 
