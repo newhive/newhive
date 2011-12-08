@@ -123,10 +123,11 @@ def files_create(request, response):
             app['content'] = file.stream.read()
             return app
 
-        path = os.tmpnam()
-        file.save(path)
-        res = File.create(owner=request.requester.id, path=path, name=file.filename, mime=mime)
-        os.remove(path)
+        tmp_file = os.tmpfile()
+        file.save(tmp_file)
+        tmp_file.seek(0)
+        res = File.create(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime)
+        tmp_file.close()
         url = res.get('url')
         app['file_id'] = res.id
 
@@ -203,10 +204,10 @@ def profile_thumb_set(request, response):
     if not mime in ['image/jpeg', 'image/png', 'image/gif']:
         response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
 
-    path = os.tmpnam()
-    file.save(path)
-    res = File.create(owner=request.requester.id, path=path, name=file.filename, mime=mime)
-    os.remove(path)
+    tmp_file = os.tmpfile()
+    file.save(tmp_file)
+    res = File.create(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime)
+    tmp_file.close()
     request.requester.update(profile_thumb_id = res.id, profile_thumb=res.get_thumb(190,190))
     return redirect(response, request.form['forward'])
 

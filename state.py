@@ -327,7 +327,6 @@ class Expr(Entity):
     @classmethod
     def random(cls):
         rand = random.random()
-        print rand
         return cls.find(random = {'$gte': rand}, auth='public', apps={'$exists': True})
 
     def get_owner(self):
@@ -448,28 +447,72 @@ class Expr(Entity):
     public = property(lambda self: self.get('auth') == "public")
 
 
-def generate_thumb(path, size):
+def generate_thumb(file, size):
     # resize and crop image to size tuple, preserving aspect ratio, save over original
-    try: imo = Img.open(path)
-    except: return False
+    try:
+        file.seek(0)
+        imo = Img.open(file)
+    except:
+        print "failed to opem image file " + str(file)
+        return False
+    print "Thumbnail Generation:   initial size: " + str(imo.size),
+    t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     imo = imo.convert(mode='RGB')
-    imo.save(path, format='jpeg', quality=70)
-    return True
+    dt = time.time() - t0
+    print "   final size:   " + str(imo.size),
+    print "   conversion took " + str(dt*1000) + " ms"
+
+    output = os.tmpfile()
+    imo.save(output, format='jpeg', quality=70)
+    return output
 
 class File(Entity):
     cname = 'file'
+    _file = None #temporary path
 
-    def get_thumb(self, w, h):
+    def __del__(self):
+        if hasattr(self, "_file") and type(self._file) == file and (not self._file.closed):
+            self._file.close()
+
+    def download(self):
+        try: response = urllib.urlopen(self['url'])
+        except:
+            print 'urlopen fail: ' + self['url']
+            return False
+        if response.getcode() != 200:
+            print 'http fail ' + str(response.getcode()) + ': ' + self['url']
+            return False
+        self._file = os.tmpfile()
+        self._file.write(response.read())
+        return True
+
+    def set_thumb(self, w, h, file=False):
         name = str(w) + 'x' + str(h)
-        if not self.get('thumbs', {}).get(name): return False
+        if not (self._file or file): self.download()
+        if not file: file = self._file
+
+        thumb = generate_thumb(file, (w,h))
+        self.store_aws(thumb, self.id + '_' + name, 'thumb_' + name)
+
+        if not self.has_key('thumbs'): self['thumbs'] = {}
+        self['thumbs'][name] = True
+        return {'url': self['url'] + '_' + name, 'file': thumb}
+
+    def get_thumb(self, w, h, generate=False):
+        name = str(w) + 'x' + str(h)
+        if not self.get('thumbs', {}).get(name):
+            if not generate: return False
+            else: return set_thumb(w,h)['url']
+
         return self['url'] + '_' + name
 
-    def store_aws(self, path, id, name):
+
+    def store_aws(self, file, id, name, bucket='random'):
         b = s3_con.get_bucket(self.get('s3_bucket', random.choice(s3_buckets).name))
         k = S3Key(b)
         k.name = id
-        k.set_contents_from_filename(path,
+        k.set_contents_from_file(file,
             headers={ 'Content-Disposition' : 'inline; filename=' + name, 'Content-Type' : self['mime'] })
         k.make_public()
         return k.generate_url(86400 * 3600, query_auth=False)
@@ -480,15 +523,15 @@ class File(Entity):
         """
 
         self['owner']
-        tmp_path = self['path']
-        del self['path']
+        self._file = self['tmp_file']
+        del self['tmp_file']
 
         # Image optimization
         if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
-            try: imo = Img.open(tmp_path)
-            except:
-                res.delete()
-                return False
+            imo = Img.open(self._file)
+            #except:
+            #    res.delete()
+            #    return False
             updated = False
             if imo.size[0] > 1600 or imo.size[1] > 1000:
                 ratio = float(imo.size[0]) / imo.size[1]
@@ -500,24 +543,22 @@ class File(Entity):
             if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
             if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
             if mime == 'image/gif' and updated: opts.update(format = 'GIF')
-            if opts: imo.save(tmp_path, **opts)
+            if opts:
+                newfile = os.tmpfile()
+                imo.save(newfile, **opts)
+                self._file.close()
+                self._file = newfile
 
         if config.aws_id:
-            url = self.store_aws(tmp_path, self.id, urllib.quote_plus(self['name'].encode('utf8')))
+            dict.update(self, s3_bucket=random.choice(s3_buckets).name)
+            url = self.store_aws(self._file, self.id, urllib.quote_plus(self['name'].encode('utf8')))
+            dict.update(self, url=url)
             if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
-                generate_thumb(tmp_path, (190,190))
-                self.store_aws(tmp_path, self.id + '_190x190', 'thumb_190x190')
-                generate_thumb(tmp_path, (70,70))
-                self.store_aws(tmp_path, self.id + '_70x70', 'thumb_70x70')
-                dict.update(self, { 'thumbs' : { '190x190' : True, '70x70' : True } })
+                self.set_thumb(124,96)
+                thumb190 = self.set_thumb(190,190)['file']
+                self.set_thumb(70,70, file=thumb190)
         else:
             raise 'local server storage not implemented for now'
-            owner = User.fetch(self['owner'])
-            fs_name = self.id + mimetypes.guess_extension(self['mime'])
-            path = media_path(owner, fs_name)
-            os.renames(tmp_path, path)
-            dict.update(self, fs_path=path)
-            url =  abs_url() + 'file/' + owner['name'] + '/' + fs_name
 
         dict.update(self, url=url)
         return super(File, self).create_me()
