@@ -4,6 +4,8 @@ from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 import config
 import social_stats
+import PIL.Image as Img
+from PIL import ImageOps
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
@@ -445,8 +447,32 @@ class Expr(Entity):
 
     public = property(lambda self: self.get('auth') == "public")
 
+
+def generate_thumb(path, size):
+    # resize and crop image to size tuple, preserving aspect ratio, save over original
+    try: imo = Img.open(path)
+    except: return False
+    imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
+    imo = imo.convert(mode='RGB')
+    imo.save(path, format='jpeg', quality=70)
+    return True
+
 class File(Entity):
     cname = 'file'
+
+    def get_thumb(self, w, h):
+        name = str(w) + 'x' + str(h)
+        if not self.get('thumbs', {}).get(name): return False
+        return self['url'] + '_' + name
+
+    def store_aws(self, path, id, name):
+        b = s3_con.get_bucket(self.get('s3_bucket', random.choice(s3_buckets).name))
+        k = S3Key(b)
+        k.name = id
+        k.set_contents_from_filename(path,
+            headers={ 'Content-Disposition' : 'inline; filename=' + name, 'Content-Type' : self['mime'] })
+        k.make_public()
+        return k.generate_url(86400 * 3600, query_auth=False)
 
     def create_me(self):
         """ Uploads file to s3 if config.aws_id is defined, otherwise
@@ -456,19 +482,36 @@ class File(Entity):
         self['owner']
         tmp_path = self['path']
         del self['path']
-        name = urllib.quote_plus(self['name'].encode('utf8'))
+
+        # Image optimization
+        if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
+            try: imo = Img.open(tmp_path)
+            except:
+                res.delete()
+                return False
+            updated = False
+            if imo.size[0] > 1600 or imo.size[1] > 1000:
+                ratio = float(imo.size[0]) / imo.size[1]
+                new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
+                imo = imo.resize(new_size, resample=Img.ANTIALIAS)
+                updated = True
+            opts = {}
+            mime = self['mime']
+            if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
+            if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
+            if mime == 'image/gif' and updated: opts.update(format = 'GIF')
+            if opts: imo.save(tmp_path, **opts)
 
         if config.aws_id:
-            b = random.choice(s3_buckets)
-            self['s3_bucket'] = b.name
-            k = S3Key(b)
-            k.name = self.id
-            k.set_contents_from_filename(tmp_path,
-                headers={ 'Content-Disposition' : 'inline; filename=' + name, 'Content-Type' : self['mime'] })
-            k.make_public()
-            url = k.generate_url(86400 * 3600, query_auth=False)
-            os.remove(tmp_path)
+            url = self.store_aws(tmp_path, self.id, urllib.quote_plus(self['name'].encode('utf8')))
+            if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
+                generate_thumb(tmp_path, (190,190))
+                self.store_aws(tmp_path, self.id + '_190x190', 'thumb_190x190')
+                generate_thumb(tmp_path, (70,70))
+                self.store_aws(tmp_path, self.id + '_70x70', 'thumb_70x70')
+                dict.update(self, { 'thumbs' : { '190x190' : True, '70x70' : True } })
         else:
+            raise 'local server storage not implemented for now'
             owner = User.fetch(self['owner'])
             fs_name = self.id + mimetypes.guess_extension(self['mime'])
             path = media_path(owner, fs_name)

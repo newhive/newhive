@@ -1,4 +1,5 @@
 from state import db, Expr
+import random
 
 def random_seed_expression():
   exprs = Expr.search()
