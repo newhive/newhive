@@ -1,4 +1,4 @@
-import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes
+import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
@@ -32,7 +32,7 @@ def init_connections(config):
         s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
 
 
-def now(): return time_s(datetime.utcnow())
+def now(): return time.time()
 def time_s(t): return int(t.strftime('%s'))
 def time_u(t): return datetime.utcfromtimestamp(t)
 def guid(): return str(pymongo.objectid.ObjectId())
@@ -322,6 +322,12 @@ class Expr(Entity):
             )
         return filter(can_view, es)
 
+    @classmethod
+    def random(cls):
+        rand = random.random()
+        print rand
+        return cls.find(random = {'$gte': rand}, auth='public', apps={'$exists': True})
+
     def get_owner(self):
         if not self._owner:
             self._owner = User.fetch(self.get('owner'))
@@ -341,6 +347,7 @@ class Expr(Entity):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = User.fetch(self['owner'])['name']
         self['domain'] = self['domain'].lower()
+        self['random'] = random.random()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         super(Expr, self).create_me()

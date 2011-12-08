@@ -39,8 +39,9 @@
     });
   </script>
   {% else %}
-    <a href='{{ server }}' title="Explore Expressions"><div style='left : 44px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+    <a href='{{ server }}' title="Explore Expressions"><div style='position: relative; left : -11px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
   {% endif %}
+  <a href='{{server}}random'><img style="position: relative; left: {{'0' if user.logged_in else '-24px'}}; top: 0;" class="nav nav_icon hoverable" src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
 </div>
 
 {% if not user.logged_in %}

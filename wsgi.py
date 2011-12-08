@@ -2,7 +2,7 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
-import os, re, json, mimetypes
+import os, re, json, mimetypes, math, time
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
@@ -76,6 +76,7 @@ def expr_save(request, response):
         try:
           new_expression = True
           res = request.requester.expr_create(upd)
+          ActionLog.new(request.requester, "new_expression_save", data={'expr_id': res.id})
           request.requester.flag('expr_new')
           if request.requester.get('flags').get('add_invites_on_save'):
               request.requester.unflag('add_invites_on_save')
@@ -84,12 +85,16 @@ def expr_save(request, response):
             if exp.get('overwrite'):
                 Expr.named(upd['domain'], upd['name']).delete()
                 res = request.requester.expr_create(upd)
-            else: return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
+                ActionLog.new(request.requester, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+            else:
+                return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
+                ActionLog.new(request.requester, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
     else:
         if not res['owner'] == request.requester.id:
             raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         res.update(**upd)
         new_expression = False
+        ActionLog.new(request.requester, "update_expression", data={'expr_id': res.id})
     return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 import urllib, random
@@ -427,6 +432,8 @@ def mail_us(request, response):
 def mail_them(request, response):
     if not request.form.get('message') or not request.form.get('to'): return False
 
+    log_data = {'service': 'email', 'to': request.form.get('to')}
+
     response.context.update({
          'message': request.form.get('message')
         ,'url': request.form.get('forward')
@@ -440,6 +447,7 @@ def mail_them(request, response):
     if exp:
         exp.increment({'analytics.email.count': 1})
         owner = User.fetch(exp.get('owner'))
+        log_data['expr_id'] = exp.id
         response.context.update({
           'short_url': (exp.get('domain') + '/' + exp.get('name'))
           ,'tags': exp.get('tags')
@@ -448,6 +456,8 @@ def mail_them(request, response):
           ,'user_name': owner.get('name')
           ,'title': exp.get('title')
           })
+    else:
+        log_data['url'] = request.form.get('forward')
 
     heads = {
          'To' : request.form.get('to')
@@ -460,6 +470,7 @@ def mail_them(request, response):
         ,'html': render_template(response, "emails/share.html")
         }
     send_mail(heads, body)
+    ActionLog.new(request.requester, 'share', data=log_data)
     if request.form.get('send_copy'):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
@@ -643,6 +654,7 @@ def log(request, response):
     if not data:
         data = {}
     l = ActionLog.new(user, request.form.get('log_action'), data)
+    return True
 
 # Possible values for the POST variable 'action'
 actions = dict(
@@ -756,6 +768,9 @@ def handle(request): # HANDLER
             r = actions.get(reqaction)(request, response)
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
+            elif reqaction != 'logout':
+               print "************************would return status 204 here*************************"
+               #return Response(status=204) # 204 status = no content
     if request.domain == config.server_name:
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
@@ -782,7 +797,10 @@ def handle(request): # HANDLER
                 exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
                 exp['title'] = 'Untitled'
                 exp['auth'] = 'public'
-            else: exp = Expr.fetch(p2)
+                ActionLog.new(request.requester, "new_expression_edit")
+            else:
+                exp = Expr.fetch(p2)
+                ActionLog.new(request.requester, "existing_expression_edit", data={'expr_id': exp.id})
 
             if not exp: return serve_404(request, response)
 
@@ -848,8 +866,15 @@ def handle(request): # HANDLER
             expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
             response.context['exp'] = response.context['expr'] = expr
             response.context['max_height'] = request.args.get('max_height')
+            if request.requester.logged_in:
+                ActionLog.new(request.requester, "view_comments", data={'expr_id': expr.id})
             return serve_page(response, 'dialogs/comments.html')
         elif p1 == 'user_check': return serve_json(response, user_check(request, response))
+        elif p1 == 'random':
+            expr = Expr.random()
+            if request.requester.logged_in:
+                ActionLog.new(request.requester, "view_random_expression", data={'expr_id': expr.id})
+            return redirect(response, expr.url)
          #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
@@ -952,15 +977,21 @@ def handle(request): # HANDLER
 
     template = resource.get('template', request.args.get('template', 'expression'))
 
+    if request.requester.logged_in:
+        ActionLog.new(request.requester, "view_expression", data={'expr_id': resource.id})
+
     if template == 'none':
         if auth_required: return Forbidden()
         return serve_html(response, html)
+
     else: return serve_page(response, 'pages/' + template + '.html')
 
 def route_admin(request, response):
-    parts = request.path.split('/', 1)
+    parts = request.path.split('/')
     p1 = lget(parts, 0)
     p2 = lget(parts, 1)
+    p3 = lget(parts, 2)
+    print parts
     if p2 == 'contact_log':
         response.context['contacts'] = Contact.search()
         return serve_page(response, 'pages/admin/contact_log.html')
@@ -976,6 +1007,21 @@ def route_admin(request, response):
           image_apps = [{'file_id': image.get('file_id'), 'url': image.get('content')} for image in image_apps]
           response.context['exprs'].append({'id': e.id, 'url': e.url, 'thumb': e.get('thumb'), 'images': image_apps})
       return serve_page(response, 'pages/admin/thumbnail_relink.html')
+    if p2 == 'users':
+        if not p3:
+            response.context['users'] = User.search()
+            return serve_page(response, 'pages/admin/users.html')
+        else:
+            user = User.named(p3)
+            expressions = Expr.search(owner=user.id)
+            public_expressions = filter(lambda e: e.get('auth') == 'public', expressions)
+            private_expressions = filter(lambda e: e.get('auth') == 'password', expressions)
+            response.context['user_object'] = user
+            response.context['public_expressions'] = public_expressions
+            response.context['private_expressions'] = private_expressions
+            response.context['action_log'] = ActionLog.search(user=user.id, created={'$gt': time.time() - 60*60*24*30})
+            response.context['expression_counts'] = {'public': len(public_expressions), 'private': len(private_expressions), 'total': len(expressions)}
+            return serve_page(response, 'pages/admin/user.html')
 
 
 def route_analytics(request, response):
@@ -1135,7 +1181,7 @@ class Forbidden(exceptions.Forbidden):
 
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
-    if type(then) == int:
+    if type(then) in [int, float]:
       then = time_u(then)
 
     now = datetime.utcnow()
@@ -1153,8 +1199,18 @@ def friendly_date(then):
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
 
+def large_number(number):
+    if number < 10000: return str(number)
+    elif 10000 <= number < 1000000:
+        return str(int(number/1000)) + "K"
+    elif 1000000 <= number < 10000000:
+        return str(math.floor(number/100000)/10) + "M"
+    elif 10000000 <= number:
+        return str(int(number/1000000)) + "M"
+
 jinja_env.filters['friendly_date'] = friendly_date
 jinja_env.filters['length_bucket'] = length_bucket
+jinja_env.filters['large_number'] = large_number
 
 jinja_env.filters['mod'] = lambda x, y: x % y
 
