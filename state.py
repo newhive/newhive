@@ -410,7 +410,13 @@ class Expr(Entity):
     def get_owner_url(self): return abs_url(domain = self.get('domain')) + 'expressions'
     owner_url = property(get_owner_url)
 
-    def get_thumb(self): return self.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
+    def get_thumb(self):
+        if self.get('thumb_file_id'):
+            file = File.fetch(self['thumb_file_id'])
+            if file:
+                thumb = file.get_thumb(190,190)
+                if thumb: return thumb
+        return self.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
     thumb = property(get_thumb)
 
     def set_tld(self, domain):
