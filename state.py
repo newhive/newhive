@@ -113,7 +113,7 @@ class Entity(dict):
         self._col.insert(self, safe=True)
         return self
 
-    #def save(self): return self.update(**self)
+    def save(self): return self.update_cmd(self)
 
     def update(self, **d):
         if d.has_key('updated'): del d['updated']
@@ -505,7 +505,11 @@ class File(Entity):
             if not generate: return False
             else: return set_thumb(w,h)['url']
 
-        return self['url'] + '_' + name
+        return self['url'].split('?')[0] + '_' + name
+
+    def get_default_thumb(self):
+        return self.get_thumb(124,96)
+    default_thumb = property(get_default_thumb)
 
 
     def store_aws(self, file, id, name, bucket='random'):

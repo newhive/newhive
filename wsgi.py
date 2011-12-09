@@ -606,6 +606,14 @@ def log(request, response):
     l = ActionLog.new(user, request.form.get('log_action'), data)
     return True
 
+def thumbnail_relink(request, response):
+    expr = Expr.fetch(request.form.get('expr'))
+    file = File.fetch(request.form.get('file'))
+    if expr and file:
+        expr.update(thumb_file_id=file.id, updated=False)
+        return {'file': file.id, 'expr': expr.id}
+    else: return False
+
 # Possible values for the POST variable 'action'
 actions = dict(
      login           = login
@@ -631,6 +639,7 @@ actions = dict(
     ,star            = star
     ,unstar          = star
     ,log             = log
+    ,thumbnail_relink= thumbnail_relink
     )
 
 # Mime types that could generate HTTP POST requests
@@ -949,14 +958,16 @@ def route_admin(request, response):
         response.context['users'] = User.search()
         return serve_page(response, 'pages/admin/referrals.html')
     if p2 == 'thumbnail_relink':
-      response.context['exprs'] = []
-      exprs = Expr.search(**{'thumb': {'$exists': True, '$ne': None}})
-      exprs = exprs[0:10]
-      for e in exprs:
-          image_apps = filter(lambda i: i.get('type') == 'hive.image', e.get('apps'))
-          image_apps = [{'file_id': image.get('file_id'), 'url': image.get('content')} for image in image_apps]
-          response.context['exprs'].append({'id': e.id, 'url': e.url, 'thumb': e.get('thumb'), 'images': image_apps})
-      return serve_page(response, 'pages/admin/thumbnail_relink.html')
+        response.context['exprs'] = []
+        exprs = Expr.search(**{'thumb': {'$exists': True, '$ne': None}, 'thumb_file_id': {'$exists': False}})
+        if len(exprs) > 170:
+            exprs = exprs[70:170]
+        else: exprs = exprs[0:100]
+        for e in exprs:
+            image_apps = filter(lambda i: i.get('type') == 'hive.image', e.get('apps'))
+            image_apps = [File.fetch(image.get('file_id')) for image in image_apps]
+            response.context['exprs'].append({'id': e.id, 'url': e.url, 'thumb': e.get('thumb'), 'images': image_apps})
+        return serve_page(response, 'pages/admin/thumbnail_relink.html')
     if p2 == 'users':
         if not p3:
             response.context['users'] = User.search()
