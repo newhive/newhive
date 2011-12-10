@@ -25,7 +25,7 @@
 {%- endmacro %}
 
 {% macro listen_button(active=False, title='', active_title='') %}
- <div class='listen_small hoverable{{ ' starred' if active }}' onclick='btn_listen_click(this)' title='{{ active_title if active else title }}'
-  data-title-active='{{active_title}}' data-title-inactive='{{title}}'></div>
- <script>$(function(){ hover_menu(".listen_small", "#dia_listeners", { open_condition: function(){ return parseInt($('#dia_listeners').attr('data-count')) > 0 } }); });</script>
+<div class="nav_icon hoverable listen_small"><div class='listen_small icon hoverable{{ ' starred' if active }}' onclick='btn_listen_click(this)' title='{{ active_title if active else title }}'
+    data-title-active='{{active_title}}' data-title-inactive='{{title}}'></div></div>
+ <script>$(function(){ hover_menu(".nav_icon.listen_small", "#dia_listeners", { open_condition: function(){ return parseInt($('#dia_listeners').attr('data-count')) > 0 } }); });</script>
 {%- endmacro %}

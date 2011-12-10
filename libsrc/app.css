@@ -1,5 +1,3 @@
-.listen_small { display:inline-block; width:32px; height:24px; background-image: url('/lib/skin/1/people_small.png'); }
-.listen_small.starred { background-image: url('/lib/skin/1/people_small_active.png'); }
 
 body.main #content{
   top: 50px

@@ -874,17 +874,18 @@ def handle(request): # HANDLER
     if request.path.startswith('expressions') or request.path in ['starred', 'listening', 'feed']:
         page = int(request.args.get('page', 0))
         tags = owner.get('tags', [])
-        expressions_tag = {'url': '/expressions', 'name': 'Expressions'}
+        expressions_tag = {'url': '/expressions', 'name': 'Expressions', 'show_name': False}
         feed_tag = {'url': "/feed", "name": "Feed"}
-        star_tag = {'name': 'starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
-        people_tag = {'name': 'listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
+        star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
+        people_tag = {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
         response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
         if request.path.startswith('expressions'):
             spec = { 'owner' : owner.id }
             tag = lget(request.path.split('/'), 1, '')
-            if tag: tag = {'name': tag, 'url': "/expressions/" + tag}
             if tag:
+                tag = {'name': tag, 'url': "/expressions/" + tag}
                 spec['tags_index'] = tag['name']
+            else: tag = expressions_tag
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
         elif request.path == 'starred':
             spec = {'_id': {'$in': owner.starred_items}}
@@ -904,7 +905,7 @@ def handle(request): # HANDLER
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
         if request.requester.logged_in and is_owner:
             response.context['system_tags'].insert(1, feed_tag)
-        response.context['profile_thumb'] = owner.get('profile_thumb')
+        response.context['profile_thumb'] = owner.thumb
         response.context['starrers'] = map(User.fetch, owner.starrers)
 
         return serve_page(response, 'pages/expr_cards.html')
@@ -960,14 +961,17 @@ def route_admin(request, response):
     if p2 == 'thumbnail_relink':
         response.context['exprs'] = []
         exprs = Expr.search(**{'thumb': {'$exists': True, '$ne': None}, 'thumb_file_id': {'$exists': False}})
-        if len(exprs) > 170:
-            exprs = exprs[70:170]
-        else: exprs = exprs[0:100]
+        if len(exprs) > 200:
+            exprs = exprs[0:100]
         for e in exprs:
             image_apps = filter(lambda i: i.get('type') == 'hive.image', e.get('apps'))
             image_apps = [File.fetch(image.get('file_id')) for image in image_apps]
             response.context['exprs'].append({'id': e.id, 'url': e.url, 'thumb': e.get('thumb'), 'images': image_apps})
         return serve_page(response, 'pages/admin/thumbnail_relink.html')
+    if p2 == 'tags':
+        popular_tags = Expr.popular_tags()
+        response.context['popular_tags'] = popular_tags[0:100]
+        return serve_page(response, 'pages/admin/tags.html')
     if p2 == 'users':
         if not p3:
             response.context['users'] = User.search()

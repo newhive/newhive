@@ -1,10 +1,9 @@
  <div id='tags'>
-   {% for t in system_tags %}<div class='tag_label hoverable drag system {{ 'current' if t.name == tag.name }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
+   {% for t in system_tags %}<div class='tag_label hoverable drag system {{ 'current' if t.name == tag.name }} {{ t.name}} '><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
      {% if t.img %}
-       <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
-     {% else %}
-       <p>{{ t.name }}</p>
+     {#<img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">#}
     {% endif %}
+    {{ t.name }}
    </a></div>{% endfor %}
    <div id="user_tags">
      {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag.name }} tag_{{loop.index0 | mod(8) }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>

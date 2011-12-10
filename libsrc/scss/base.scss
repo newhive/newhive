@@ -20,8 +20,9 @@ $left_column_width: 210px;
 
 #nav{ height: $nav_height; }
 
+.logged_in #header { padding-top: 37px; padding-left: $left_padding; }
 #primary_content{ clear: both; }
-.logged_in #primary_content{ padding-top: 20px; }
+.logged_in #primary_content{ padding-top: 27px; }
 
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;

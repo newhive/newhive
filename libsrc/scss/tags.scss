@@ -7,7 +7,7 @@
   color: $color_12; 
   background-color: $color_tan;
   text-align: right;
-  &.active, &.current.active, &.current.Feed.active { color: $color_bright_red; background : $color_highlight; }
+  &.active, &.current.active, &.current.Feed.active { color: $color_bright_red; background-color : $color_highlight; }
   &.current { background-color : $color_selected; color : black;}
   &.current.Feed { background-color: $color_2; color: white;}
   p { margin: 0; }
@@ -29,12 +29,35 @@
     &.tag_7 { background-color: $color_tag_7; }
   }
   &.system {
+    background-repeat: no-repeat;
+    background-position: right;
     font-size: 21px;
     height: 31px;
     margin-top: 7px;
-    p {
-      font-weight: bold; 
-      padding: 4px 12px;
+    font-weight: bold; 
+    padding: 0px 12px;
+    a { display: inline-block; margin-top: 4px; }
+    &.Starred, &.Listening { a { padding-right: 18px; } }
+    &.current { 
     }
+    &.Starred {
+      background-image: url('/lib/skin/1/star_tab.png');
+      &.current:hover { background-image: url('/lib/skin/1/star_tab.png'); }
+      &:hover { background-image: url('/lib/skin/1/star_tab-hover.png'); }
+    }
+    &.Listening {
+      background-image: url('/lib/skin/1/people_tab.png');
+      &:hover { background-image: url('/lib/skin/1/people_tab-hover.png'); }
+    }
+  }
+}
+
+.expr_cards {
+  .tag_label.system.current {
+    background-color: white;
+    font-family: Lobster, Helvetica, sans-serif;
+    font-size: 1.6em;
+    color: black;
+    a {font-weight: normal;}
   }
 }

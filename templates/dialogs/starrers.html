@@ -1,6 +1,10 @@
-<div id="dia_starrers" class='menu feed_menu border selected' data-count='{{ starrers|length }}'>
+<div id="dia_{{collection.id}}" class='menu feed_menu border selected' data-count='{{ starrers|length }}'>
+{% if collection.type == "listeners" %}
 People listening to {{ owner['name'] }}
-{% for user in starrers %}
+{% elif collection.type == "starrers" %}
+People who starred {{ exp.title }}
+{% endif %}
+{% for user in collection.data %}
 {% include "partials/user_card.html" %}
 {% endfor %}
 </div>

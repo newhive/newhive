@@ -1,6 +1,4 @@
 #header { 
-  padding-left: $left_padding; 
-  padding-top: 30px;
   h1 { 
     margin: 58px; 
     margin-left: 30px;
@@ -16,7 +14,7 @@
 }
 #profile_thumb .placeholder{ height: 30px; padding: 85px 0;}
 .placeholder { border: 1px dashed #CCC; text-align:center; }
-#profile_thumb .message {position: absolute; top: 220px; font-size: 12px;}
+#profile_thumb .message {position: absolute; top: 230px; font-size: 12px;}
 
 .expr_cards .fathead { font-weight: normal; }
 .fathead.hasthumb { margin: 75px 50px 0 50px; }

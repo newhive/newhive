@@ -4,4 +4,4 @@
   <div class='title'>{{ user.fullname|e }}</div></a>
   <div class='tags'>{% if user.expr_count > 0 %}{{ user.expr_count ~ " expression" ~ ("s" if user.expr_count > 1) }}{% endif %}</div>
   <a href='{{ user.url|e }}' target='_top'><div class='other'><span>{{ user.name }}</span></div></a>
-</div></a>
+</div>

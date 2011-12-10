@@ -59,8 +59,10 @@
     showDialog('#dia_share', { minimize_to : '#btn_share' } );
    })</script>{% endif %}
   {% endif %}
+  {% for collection in [{'data': starrers, 'type': 'starrers', 'id': 'starrers'}, {'data': listeners, 'type': 'listeners', 'id': 'listeners'}] %}
   {% include "dialogs/starrers.html" %}
-  {% include "dialogs/listeners.html" %}
+  {% endfor %}
+  {# include "dialogs/listeners.html" #}
  </div>
  {% include 'expr_background.html' %}
 {% endblock %}

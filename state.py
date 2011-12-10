@@ -6,6 +6,7 @@ import config
 import social_stats
 import PIL.Image as Img
 from PIL import ImageOps
+from bson.code import Code
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
@@ -256,7 +257,13 @@ class User(Entity):
         return abs_url(domain = self.get('sites', [config.server_name])[0]) + 'expressions'
     url = property(get_url)
 
-    def get_thumb(self): return self.get('profile_thumb', abs_url() + '/lib/skin/1/thumb_person.png')
+    def get_thumb(self):
+        if self.get('thumb_file_id'):
+            file = File.fetch(self['thumb_file_id'])
+            if file:
+                thumb = file.get_thumb(190,190)
+                if thumb: return thumb
+        return self.get('profile_thumb', abs_url() + '/lib/skin/1/thumb_person.png')
     thumb = property(get_thumb)
 
     def get_files(self):
@@ -310,6 +317,23 @@ class Expr(Entity):
         self = cls({})
         return self.find_me(domain=domain, name=name.lower())
 
+    @classmethod
+    def popular_tags(cls):
+        map_js = Code("function () {"
+                   "  if (!this.tags_index || this.auth != 'public') return;"
+                   "  for (index in this.tags_index) {"
+                   "    emit(this.tags_index[index], 1);"
+                   "  };"
+                   "}")
+        reduce_js = Code("function (prev, current) {"
+               "  var total = 0;"
+               "  for (index in current) {"
+               "    total += current[index];"
+               "  }"
+               "  return total;"
+               "}")
+        result = db.expr.map_reduce(map_js, reduce_js, "popular_tags")
+        return map(dict, result.find(sort=[('value', -1)]))
     @classmethod
     def with_url(cls, url):
         """ Convenience utility function not used in production, retrieve Expr from full URL """
