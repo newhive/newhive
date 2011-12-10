@@ -1,0 +1,23 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+{{ super()}}
+<style>
+  table { width: auto}
+</style>
+{% endblock head %}
+{% block table_head %}
+<tr>
+  <th>Tag Name</th>
+  <th>Count</th>
+</tr>
+{% endblock table_head %}
+
+{% block table_body %}
+{% for tag in popular_tags %}
+<tr>
+  <td><a href="/tag/{{tag._id}}">{{tag._id}}</a></td>
+  <td>{{tag.value}}</td>
+</tr>
+{% endfor %}
+{% endblock table_body %}
