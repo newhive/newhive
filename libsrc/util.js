@@ -633,3 +633,19 @@ var place_apps = function() {
        img_fill(e.find('img'))
    });
 }
+
+var fix_borders = function(items){
+    var items = $(items);
+    var initial_offset = $(items[0]).offset().left;
+    var i = 1;
+    while (i < items.length && $(items[i]).offset().left != initial_offset) i++;
+    var columns = i;
+    var remainder = items.length % columns
+
+    items.each(function(i,el){
+        if ( (i + 1) % columns == 0 ) $(el).removeClass('border_right');
+        if ( i > items.length - remainder - 1 || items.length == 1 ) $(el).removeClass('border_bottom');
+    });
+}
+
+
