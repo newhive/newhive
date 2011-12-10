@@ -455,14 +455,15 @@ function hover_url(url) {
     return h;
 }
 function hover_add(o) {
-    if(o.src) o.src_d = o.src;
-    else return; 
-    o.src_h = hover_url(o.src_d);
-    o.over = function() { o.src = o.src_h };
-    o.out = function() { if(!o.busy) o.src = o.src_d };
-    if (o.over && o.out) {
-        $(o).hover(o.over, o.out);
-    };
+    if(o.src) { 
+        o.src_d = o.src;
+        o.src_h = hover_url(o.src_d);
+        o.over = function() { o.src = o.src_h };
+        o.out = function() { if(!o.busy) o.src = o.src_d };
+        if (o.over && o.out) {
+            $(o).hover(o.over, o.out);
+        };
+    }
     $(o).hover(function() { $(this).addClass('active'); }, function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
