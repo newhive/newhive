@@ -1,29 +1,38 @@
 @import "compass/utilities";
 @import "compass/css3";
 @import "colors";
+
+$nav_height: 50px;
+$left_padding: 30px;
+$left_column_width: 210px;
+
+// Imports
 @import "nav";
 @import "dialogs";
 @import "tags";
 @import "cards";
 
 // Page Layout
-$nav_height: 50px;
-$left_column_width: 210px;
+.expr_cards {
+  @import "profile";
+}
+
 
 #nav{ height: $nav_height; }
 
 #primary_content{ clear: both; }
 .logged_in #primary_content{ padding-top: 20px; }
 
-#left_column, #right_column, #header{ 
+#left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;
 }
 #left_column {
   float: left; 
   width: $left_column_width;
+  padding-left: $left_padding;
 }
 #right_column {
-  margin-left: $left_column_width;
+  margin-left: $left_column_width + $left_padding;
 }
 
 // Resets

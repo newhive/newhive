@@ -1,18 +1,24 @@
 .card {
     &.item { 
         position: relative; 
-        padding: 4px; 
+        padding: 9px 9px 5px 9px; 
         width: 190px; 
-        height: 275px;
+        height: 285px;
         float: left; 
         background-image: url('/lib/skin/1/feed_item.png'); 
+        &.border_right {
+            border-right: 1px solid #D1D1D1;
+        }
+        &.border_bottom {
+            border-bottom: 1px solid #D1D1D1;
+        }
     }
     &.item:hover { 
         //background-color: $color_selected; 
         opacity : 1; 
-        .thumb {
-            @include opacity(0.6);
-        }
+        .thumb { @include opacity(0.75); }
+        .title { background: $color_highlight; } 
+        .other span { padding: 0 2px; background: $color_blue; color: white; }
 
     }
     .thumb {
@@ -21,18 +27,19 @@
         height: 190px;
     }
    .title { 
+        font-size: 1.1em;
         font-weight : bold; 
         max-height : 2.5em; 
         overflow : hidden; 
         text-overflow : ellipsis; 
         &:hover { background: $color_highlight; }
     }
-    .title1 { font-size : 1.2em; }
-    .title2 { font-size : 1.0em; }
-    .title3 { font-size : 0.8em; }
+    //.title1 { font-size : 1.2em; }
+    //.title2 { font-size : 1.0em; }
+    //.title3 { font-size : 0.8em; }
     .other, .tags { 
         font-size : 0.7em; 
-        color: $color_grey_medium; 
+        //color: $color_grey_medium; 
     }
     .tags { 
         overflow: hidden; 
@@ -43,6 +50,6 @@
     }
     .other {
         font-weight: bold;
-        &:hover { color: $color_0; }
+        &:hover span { background: $color_1 !important; color: white; }
     }
 }

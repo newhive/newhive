@@ -43,8 +43,6 @@
 {% endblock nav %}
 
 {% block header %}
-  <div>
-    <div class='fathead{{" hasthumb" if profile_thumb}}'><a href='/'>{{ owner.fullname }}</a>{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag.name if tag }}{% endif %}</div>
     <div id='profile_thumb'>
       {% if user_is_owner %}
         <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
@@ -64,8 +62,8 @@
         </form>
       {% endif %}
     </div>
+    <h1 class="index">{{ owner.fullname }}{% if tag.name == "Starred" %}: <img style="margin-top: -4px;" src="/lib/skin/1/star_large.png" />{% else %}{{ ': ' + tag.name if tag }}{% endif %}</h1>
 
-  </div>
 {% endblock header %}
  
 {% block left_column %}

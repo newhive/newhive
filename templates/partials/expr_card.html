@@ -1,8 +1,8 @@
-<div class='expr card item' draggable='false'>
+<div class='expr card item border_right border_bottom' draggable='false'>
   <input type='hidden' class='expr_id' value='{{ expr.id }}'>
   <a href='{{ expr.url|e }}' target='_top'><img src='{{ expr.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
-  <div class='title title{{ expr.title | e | length_bucket }}'>{{ expr.title|e }}</div></a>
+  <div class='title'>{{ expr.title|e }}</div></a>
   <div class='tags'>{% for t in expr.tags %}<a href='{{ server }}tag/{{ t|e }}' class='tag' value='{{ t|e }}'>#{{ t }} </span> {% endfor %}</div>
-  <a href="{{expr.owner_url}}"><div class='other'>{{ expr.owner_name}}</div><a/>
+  <a href="{{expr.owner_url}}"><div class='other'><span>{{ expr.owner_name}}</span></div></a>
 </div>
 
