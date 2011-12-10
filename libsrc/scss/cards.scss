@@ -1,3 +1,4 @@
+#feed {
 .card {
     &.item { 
         position: relative; 
@@ -34,9 +35,6 @@
         text-overflow : ellipsis; 
         &:hover { background: $color_highlight; }
     }
-    //.title1 { font-size : 1.2em; }
-    //.title2 { font-size : 1.0em; }
-    //.title3 { font-size : 0.8em; }
     .other, .tags { 
         font-size : 0.7em; 
         //color: $color_grey_medium; 
@@ -52,4 +50,28 @@
         font-weight: bold;
         &:hover span { background: $color_1 !important; color: white; }
     }
+}
+}
+#dia_starrers, #dia_listeners {
+  width: 300px;
+  overflow: auto;
+  .card {
+    @include clearfix;
+    padding : 5px; margin : 0 5px 5px 0; 
+    clear: both;
+    width: 290px;
+    &:hover { background-color: $color_selected; }
+    img { 
+      width: 70px; 
+      height: 70px;
+      float: left;
+      margin-right: 10px;
+    }
+    .title { font-weight : bold; max-height : 2.5em; overflow : hidden; text-overflow : ellipsis; margin-bottom : 5px; }
+    .other, .tags { font-size : .8em }
+    .other { 
+      margin-top: 10px;
+      font-weight : bold;
+    }
+  }
 }
