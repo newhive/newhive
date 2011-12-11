@@ -8,8 +8,6 @@
 
 {% block head %}
   <style>
-    body.home #nav_bg{background: {{colors['tan'] }}; }
-    body.home .fathead{background: {{colors['tan'] }}; }
     #homepage_header .signup_button {
       background-color: {{ colors['active'] }}; 
       color:#fff;
@@ -25,7 +23,7 @@
         var header = $('#homepage_header')
         if (header.length > 0) {
             $('#header').height(
-              parseInt(header.find(' .background').css('height')) + 50
+              parseInt(header.find(' .background').css('height')) + 30
             );
         }
     }
@@ -64,7 +62,7 @@
 {% block header %}
   {% if not user.logged_in %}
     <div id="homepage_header" style='width:100%; background-color: {{ colors['tan'] }};'>
-      <div class="happ background" style="left:0px; top:0px; width:1000px; height: 247px; background-color: {{ colors['tan'] }}; z-index: 3;"></div>
+      <div class="happ background" style="left:0px; top:0px; width:1000px; height: 217px; {#background-color: {{ colors['tan'] }}; #}z-index: 3;"></div>
       <div class="happ" style="left: 48px; top: 40px; width: 700px; height: 56px; z-index: 3; font-size: 3.3em; font-weight: normal; font-family: Lobster;" data-scale="3.3">
         Express Your<span style="margin:-0.04em">self</span>
       </div>
@@ -108,5 +106,6 @@
             });
         }
     });
+    $(function(){ fix_borders('#feed .item') });
   </script>
 {% endblock footer_scripts %}

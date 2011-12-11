@@ -21,7 +21,7 @@ $left_column_width: 210px;
 
 #nav{ height: $nav_height; }
 
-.logged_in #header { padding-top: 37px; padding-left: $left_padding; }
+.logged_in.expr_cards #header { padding-top: 37px; padding-left: $left_padding; }
 #primary_content{ clear: both; }
 .logged_in #primary_content{ padding-top: 27px; }
 

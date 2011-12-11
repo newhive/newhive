@@ -84,6 +84,7 @@
 {% endblock right_column %}
 
 {% block footer_scripts %}
+  {{ super () }}
   <script>
     $(function(){ fix_borders('#feed .item') });
   </script>
