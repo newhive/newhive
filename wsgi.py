@@ -788,10 +788,12 @@ def handle(request): # HANDLER
             return serve_page(response, 'pages/minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
         elif p1 in ['', 'home', 'people', 'tag']:
+            featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story"]
             tags = get_root().get('tags', [])
             response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
             people_tag = {'url': '/people', 'name': 'People'}
             response.context['system_tags'].append(people_tag)
+            response.context['tags'] = [{'url': '/tag/' + t, 'name': t} for t in featured_tags ]
             if p1 == 'people':
                 response.context['tag'] = people_tag
                 klass = User

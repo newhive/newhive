@@ -51,10 +51,14 @@
   margin-right: 10px;
   float: left;
 }
-.feed_menu .feed_item img, .feed_menu .feed.item img {
+#feed_menu .feed_item img, #feed_menu .feed.item img {
   margin: 5px;
   width: 90px;
+  height: 90px;
   float: left;
+}
+#feed_menu .feed_item:hover {
+  background-color: $color_selected;
 }
 .expr_cards .feed_item .Expr .entity, .expr_cards .feed_item.User .initiator{
   width: 181px;

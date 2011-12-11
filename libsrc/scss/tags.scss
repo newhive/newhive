@@ -1,7 +1,7 @@
 #tags { 
-  margin: 30px 20px 0 0; 
+  margin: 10px 20px 0 0; 
 }
-#user_tags{ padding-top: 30px; }
+#user_tags{ padding-top: 45px; }
 .tag_label {
   font-weight: bold; 
   color: $color_12; 
@@ -15,7 +15,8 @@
     float: right;
     clear: both;
     color: white;
-    padding: 0 3px;
+    padding: 0 8px;
+    &:hover { padding-left: 33px }
     margin: 5px 0;
     font-weight: normal;
     font-size: 16px;
@@ -27,6 +28,7 @@
     &.tag_5 { background-color: $color_tag_5; }
     &.tag_6 { background-color: $color_tag_6; }
     &.tag_7 { background-color: $color_tag_7; }
+    &.tag_8 { background-color: $color_tag_8; }
   }
   &.system {
     background-repeat: no-repeat;
