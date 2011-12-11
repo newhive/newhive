@@ -263,7 +263,7 @@ class User(Entity):
             if file:
                 thumb = file.get_thumb(190,190)
                 if thumb: return thumb
-        return self.get('profile_thumb', abs_url() + '/lib/skin/1/thumb_person.png')
+        return self.get('profile_thumb')
     thumb = property(get_thumb)
 
     def get_files(self):
@@ -440,7 +440,9 @@ class Expr(Entity):
             if file:
                 thumb = file.get_thumb(190,190)
                 if thumb: return thumb
-        return self.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
+        thumb = self.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png') + '?v=2'
+        thumb = re.sub('https?://thenewhive.com(:\d+)?', abs_url(), thumb)
+        return thumb
     thumb = property(get_thumb)
 
     def set_tld(self, domain):
