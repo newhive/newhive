@@ -53,13 +53,21 @@
 }
 }
 #dia_starrers, #dia_listeners {
-  width: 300px;
+  width: 310px;
+  $card_width: 290px;
   overflow: auto;
+  .dialog_title { 
+    width: $card_width;
+    background-color: $color_selected;
+    margin: 4px 0;
+    padding: 4px 6px;;
+    font-weight: bold;
+  }
   .card {
     @include clearfix;
     padding : 5px; margin : 0 5px 5px 0; 
     clear: both;
-    width: 290px;
+    width: $card_width;
     &:hover { background-color: $color_selected; }
     img { 
       width: 70px; 
