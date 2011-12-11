@@ -15,8 +15,8 @@
      </a></div>{% endfor %}
    </div>
   {% if user_is_owner %}
-   <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='vertical-align : bottom' title='Add Folder'>
-   {% if tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='vertical-align : bottom' title='Remove folder "{{ tag.name|e }}"'>{% endif %}
+   <img src='/lib/skin/1/add_tab.png' class='hoverable' onclick='folder_add()' style='float: right; clear: both;' title='Add Folder'>
+   {% if tag and tag.type == 'user'  %}<img src='/lib/skin/1/remove_tab.png' class='hoverable' onclick='folder_remove()' style='float: right; clear: both;' title='Remove folder "{{ tag.name|e }}"'>{% endif %}
   {% endif %}
 </div>
 

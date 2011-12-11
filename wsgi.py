@@ -884,7 +884,7 @@ def handle(request): # HANDLER
             spec = { 'owner' : owner.id }
             tag = lget(request.path.split('/'), 1, '')
             if tag:
-                tag = {'name': tag, 'url': "/expressions/" + tag}
+                tag = {'name': tag, 'url': "/expressions/" + tag, 'type': 'user'}
                 spec['tags_index'] = tag['name']
             else: tag = expressions_tag
             response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
@@ -903,7 +903,7 @@ def handle(request): # HANDLER
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
-        response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t}, tags)
+        response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
         if request.requester.logged_in and is_owner:
             response.context['system_tags'].insert(1, feed_tag)
         response.context['profile_thumb'] = owner.thumb
