@@ -125,7 +125,6 @@ def files_create(request, response):
 
         tmp_file = os.tmpfile()
         file.save(tmp_file)
-        tmp_file.seek(0)
         res = File.create(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime)
         tmp_file.close()
         url = res.get('url')
@@ -208,7 +207,7 @@ def profile_thumb_set(request, response):
     file.save(tmp_file)
     res = File.create(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime)
     tmp_file.close()
-    request.requester.update(profile_thumb_id = res.id, profile_thumb=res.get_thumb(190,190))
+    request.requester.update(thumb_file_id = res.id, profile_thumb=res.get_thumb(190,190))
     return redirect(response, request.form['forward'])
 
 

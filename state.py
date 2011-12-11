@@ -564,6 +564,7 @@ class File(Entity):
 
         # Image optimization
         if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
+            self._file.seek(0)
             imo = Img.open(self._file)
             #except:
             #    res.delete()
