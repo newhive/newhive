@@ -54,4 +54,7 @@ def add_file_ids_to_image_apps(e):
     if updated: e.update_cmd(e)
 
 def update_all_exprs():
-    for e in Expr.search(): add_file_ids_to_image_apps(e)
+    for e in Expr.search(apps={'$exists': True}):
+      print;
+      print e.url;
+      add_file_ids_to_image_apps(e)
