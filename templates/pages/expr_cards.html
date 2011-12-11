@@ -86,6 +86,9 @@
 {% block footer_scripts %}
   {{ super () }}
   <script>
-    $(function(){ fix_borders('#feed .item') });
+    $(function(){ 
+      fix_borders('#feed .item');
+      $(window).resize(function(){fix_borders('#feed .item');});
+    });
   </script>
 {% endblock %}

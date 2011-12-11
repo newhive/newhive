@@ -103,9 +103,13 @@
                 load_page = null;
                 next_page ++;
                 $('#feed').append(data);
+                fix_borders('#feed .item');
             });
         }
     });
-    $(function(){ fix_borders('#feed .item') });
+    $(function(){ 
+      fix_borders('#feed .item');
+      $(window).resize(function(){fix_borders('#feed .item');});
+    });
   </script>
 {% endblock footer_scripts %}
