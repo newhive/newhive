@@ -643,8 +643,16 @@ var fix_borders = function(items){
     var remainder = items.length % columns
 
     items.each(function(i,el){
-        if ( (i + 1) % columns == 0 ) $(el).removeClass('border_right');
-        if ( i > items.length - remainder - 1 || items.length == 1 ) $(el).removeClass('border_bottom');
+        if ( (i + 1) % columns == 0 ) {
+            $(el).removeClass('border_right');
+        } else {
+            $(el).addClass('border_right');
+        }
+        if ( i > items.length - remainder - 1 || items.length == 1 ) {
+            $(el).removeClass('border_bottom');
+        } else {
+            $(el).addClass('border_bottom');
+        }
     });
 }
 
