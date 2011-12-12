@@ -529,7 +529,7 @@ hover_menu = function(handle, drawer, options) {
         var oy = handle.outerHeight() + o.options.offsetY;
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
-        var css_opts = {}
+        var css_opts = {};
         css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
             && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
             hp.top - drawer.outerHeight() - o.options.offsetY : hp.top + oy;
