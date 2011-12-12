@@ -191,7 +191,7 @@ function btn_listen_click(btn) {
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
         btn.addClass('inactive');
-        $.post('', {'action': action, 'domain': window.location.hostname, 'path': '/' }, function(data) {
+        $.post('', {'action': action, 'domain': window.location.hostname, 'path': '/expressions' }, function(data) {
             btn.removeClass('inactive');
             if(data == "unstarred") {
                 btn.removeClass('starred');

@@ -249,8 +249,8 @@ def user_tag_update(request, response):
 
 def star(request, response):
     if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
-    parts = request.path.split('/', 1)
-    p1 = lget(parts, 0)
+    parts = request.form.get('path').split('/')
+    p1 = lget(parts, 1)
     if p1 in ["expressions", "starred", "listening"]:
         entity = User.find(sites=request.domain.lower())
     else:
@@ -958,7 +958,6 @@ def route_admin(request, response):
     p1 = lget(parts, 0)
     p2 = lget(parts, 1)
     p3 = lget(parts, 2)
-    print parts
     if p2 == 'contact_log':
         response.context['contacts'] = Contact.search()
         return serve_page(response, 'pages/admin/contact_log.html')
