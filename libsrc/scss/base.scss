@@ -22,9 +22,13 @@ $left_column_width: 210px;
 
 #nav{ height: $nav_height; }
 
-.logged_in.expr_cards #header { padding-top: 37px; padding-left: $left_padding; padding-bottom: 10px }
+.expr_cards #header { 
+  padding-top: 48px; 
+  padding-left: $left_padding; 
+  padding-bottom: 23px;
+  }
 #primary_content{ clear: both; }
-.logged_in #primary_content{ padding-top: 27px; }
+.logged_in #primary_content, .tag_search #primary_content { padding-top: 12px; }
 
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;

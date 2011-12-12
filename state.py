@@ -440,8 +440,9 @@ class Expr(Entity):
             if file:
                 thumb = file.get_thumb(190,190)
                 if thumb: return thumb
-        thumb = self.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png') + '?v=2'
-        thumb = re.sub('https?://thenewhive.com(:\d+)?', abs_url(), thumb)
+        thumb = self.get('thumb')
+        if not thumb: thumb = abs_url() + '/lib/skin/1/thumb_0.png'
+        thumb = re.sub('https?://thenewhive.com(:\d+)?', abs_url(), thumb) + '?v=2'
         return thumb
     thumb = property(get_thumb)
 

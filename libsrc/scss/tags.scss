@@ -1,5 +1,5 @@
 #tags { 
-  margin: 10px 20px 0 0; 
+  margin: 35px 20px 0 0; 
 }
 #user_tags{ padding-top: 45px; }
 .tag_label {
@@ -29,6 +29,9 @@
     &.tag_6 { background-color: $color_tag_6; }
     &.tag_7 { background-color: $color_tag_7; }
     &.tag_8 { background-color: $color_tag_8; }
+    &.tag_9 { background-color: $color_tag_9; }
+    &.tag_10 { background-color: $color_tag_10; }
+    &.tag_11 { background-color: $color_tag_11; }
   }
   &.system {
     background-repeat: no-repeat;
@@ -38,6 +41,7 @@
     margin-top: 7px;
     font-weight: bold; 
     padding: 0px 12px;
+    margin-left: 22px;
     a { display: inline-block; margin-top: 4px; }
     &.Starred, &.Listening { a { padding-right: 18px; } }
     &.current { 

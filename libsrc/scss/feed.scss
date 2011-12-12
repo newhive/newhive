@@ -29,6 +29,9 @@
       border-bottom: 1px solid #D1D1D1;
   }
 }
+#feed_menu .feed_item.border_right {
+  border: 0px;
+}
 
 .feed_item .name {
   color: #F72E4D;
@@ -88,6 +91,7 @@
   margin-left: 5px;
 }
 .expr_cards .feed_item .feed_text {
+  margin-top: 14px;
   height: 76px;
   color: #000;
 }

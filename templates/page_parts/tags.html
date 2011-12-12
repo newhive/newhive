@@ -1,12 +1,12 @@
  <div id='tags'>
-   {% for t in system_tags %}<div class='tag_label hoverable drag system {{ 'current' if t.name == tag.name }} {{ t.name}} '><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
+   {% for t in system_tags %}<div class='tag_label hoverable system {{ 'current' if t.name == tag.name }} {{ t.name}} '><a href='{{ t.url |e }}' value='{{ t.name|e }}'>
      {% if t.img %}
      {#<img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">#}
     {% endif %}
     {{ t.name }}
    </a></div>{% endfor %}
    <div id="user_tags">
-     {% for t in tags %}<div class='tag_label hoverable drag user {{ 'current' if t.name == tag.name }} tag_{{loop.index0 | mod(9) }}'><a href='{{ t.url |e }}' draggable='false' value='{{ t.name|e }}'>
+     {% for t in tags %}<div class='tag_label hoverable user {{ 'current' if t.name == tag.name }} tag_{{loop.index0 | mod(12) }}'><a href='{{ t.url |e }}' value='{{ t.name|e }}'>
        {% if t.img %}
          <img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">
        {% else %}
@@ -66,9 +66,9 @@
      return false;
  }
  
- $('.tag_label.drag').draggable().droppable({
-     accept : '.feed.item', drop : function(target, dragged) { add_tag(dragged, target) } });
- $('.feed.item').droppable({ accept : '.tag_label.drag', drop : add_tag }).draggable();
+ $('.tag_label.user').draggable().droppable({
+     accept : '.expr.card img', drop : function(target, dragged) { add_tag(dragged, target) } });
+ $('.expr.card img').droppable({ accept : '.tag_label.user', drop : add_tag }).draggable();
  {% if tag and not feed_items %}
   $('#feed .feed.item').each(function() {
       var del = $("<img src='/lib/skin/1/remove_tab.png' class='hoverable' style='position : absolute; bottom : 3px; right : 3px' title='Remove from \"{{ tag.name|e }}\"'>");
