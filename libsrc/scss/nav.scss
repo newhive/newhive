@@ -35,22 +35,18 @@ body.home.logged_out .nav{
   width: 67px;
   background-image: url("/lib/skin/1/star.png");
 }
-#btn_star .icon.starred {
+#btn_star.starred .icon {
   background-image: url("/lib/skin/1/star_active.png");
 }
-#btn_star.active .icon.starred, #btn_star.active .icon {
+#btn_star.active.starred .icon, #btn_star.active .icon {
   background-image: url("/lib/skin/1/star-hover.png");
 }
 .expr_cards {
     #btn_star { 
-        .icon {
-            background-image: url("/lib/skin/1/people.png");
-            &.starred { background-image: url("/lib/skin/1/people_active.png"); }
-        }
-        &.active .icon {
-            background-image: url("/lib/skin/1/people-hover.png");
-            &.starred { background-image: url("/lib/skin/1/people_active-hover.png"); }
-        }
+        .icon { background-image: url("/lib/skin/1/people.png"); }
+        &.active .icon { background-image: url("/lib/skin/1/people-hover.png"); }
+        &.starred .icon { background-image: url("/lib/skin/1/people_active.png"); }
+        &.starred.active .icon { background-image: url("/lib/skin/1/people_active-hover.png"); }
     }
 }
 .listen_small.icon { 

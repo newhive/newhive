@@ -39,12 +39,12 @@ body.home.logged_out .nav {
 }
 
 /* line 38, /home/duffy/2newhive/libsrc/scss/nav.scss */
-#btn_star .icon.starred {
+#btn_star.starred .icon {
   background-image: url("/lib/skin/1/star_active.png");
 }
 
 /* line 41, /home/duffy/2newhive/libsrc/scss/nav.scss */
-#btn_star.active .icon.starred, #btn_star.active .icon {
+#btn_star.active.starred .icon, #btn_star.active .icon {
   background-image: url("/lib/skin/1/star-hover.png");
 }
 
@@ -52,20 +52,20 @@ body.home.logged_out .nav {
 .expr_cards #btn_star .icon {
   background-image: url("/lib/skin/1/people.png");
 }
-/* line 48, /home/duffy/2newhive/libsrc/scss/nav.scss */
-.expr_cards #btn_star .icon.starred {
-  background-image: url("/lib/skin/1/people_active.png");
-}
-/* line 50, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 47, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .expr_cards #btn_star.active .icon {
   background-image: url("/lib/skin/1/people-hover.png");
 }
-/* line 52, /home/duffy/2newhive/libsrc/scss/nav.scss */
-.expr_cards #btn_star.active .icon.starred {
+/* line 48, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.expr_cards #btn_star.starred .icon {
+  background-image: url("/lib/skin/1/people_active.png");
+}
+/* line 49, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.expr_cards #btn_star.starred.active .icon {
   background-image: url("/lib/skin/1/people_active-hover.png");
 }
 
-/* line 56, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 52, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_small.icon {
   position: relative;
   top: 2px;
@@ -73,21 +73,21 @@ body.home.logged_out .nav {
   height: 31px;
   background-image: url("/lib/skin/1/people_small.png");
 }
-/* line 62, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 58, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_small.icon:hover {
   background-image: url("/lib/skin/1/people_small-hover.png");
 }
 
-/* line 64, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 60, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_small.starred.icon {
   background-image: url("/lib/skin/1/people_small_active.png");
 }
-/* line 66, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 62, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_small.starred.icon:hover {
   background-image: url("/lib/skin/1/people_small_active-hover.png");
 }
 
-/* line 69, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 65, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count .count {
   color: #FFF;
   -moz-border-radius: 6px;
@@ -102,17 +102,17 @@ body.home.logged_out .nav {
   background: #696E76;
 }
 
-/* line 82, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 78, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count .count.zero {
   display: none;
 }
 
-/* line 85, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 81, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count.zero {
   margin-right: -8px;
 }
 
-/* line 88, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 84, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count img {
   float: left;
 }
