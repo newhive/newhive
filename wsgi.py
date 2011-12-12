@@ -68,7 +68,13 @@ def expr_save(request, response):
         fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
         if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
     # Generate thumbnail from given image url
-    if exp.get('thumb_src'): upd['thumb'] = generate_thumb_from_url(request.requester, exp.get('thumb_src'), size=(124,96))
+    thumb_src = exp.get('thumb_src')
+    if thumb_src:
+        if re.match('https?://..-thenewhive.s3.amazonaws.com', thumb_src):
+            upd['thumb_file_id'] = thumb_src.split('/')[-1]
+        else:
+            upd['thumb'] = thumb_src
+            upd['thumb_file_id'] = None
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
