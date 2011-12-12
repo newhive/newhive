@@ -925,7 +925,7 @@ var main = function() {
         }
     }
 
-    hover_menu($('#btn_save'), $('#menu_save'), { hover : false });
+    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false });
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');

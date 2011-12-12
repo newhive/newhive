@@ -480,6 +480,7 @@ hover_menu = function(handle, drawer, options) {
         ,click_persist : false
         ,hover : true
         ,open_condition : function(){ return true }
+        ,auto_height : true
     };
     $.extend(o.options, options);
     if(!handle.length) throw("hover_menu has no handle");
@@ -528,13 +529,14 @@ hover_menu = function(handle, drawer, options) {
         var oy = handle.outerHeight() + o.options.offsetY;
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
-        var top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
+        var css_opts = {}
+        css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
             && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
             hp.top - drawer.outerHeight() - o.options.offsetY : hp.top + oy;
-        var left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
+        css_opts.left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
             hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
-        var drawer_height = bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
-        drawer.css({ left : left, top : top, height : drawer_height });
+        if (o.options.auto_height) css_opts.drawer_height = bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
+        drawer.css(css_opts);
         o.options.open();
     }
 
