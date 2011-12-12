@@ -1,0 +1,1132 @@
+/* line 3, /home/duffy/2newhive/libsrc/scss/nav.scss */
+#nav_bg {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background-image: url("/lib/skin/1/nav_gradient.png");
+  z-index: 1;
+}
+
+/* line 12, /home/duffy/2newhive/libsrc/scss/nav.scss */
+body.home.logged_out .nav {
+  position: absolute;
+}
+
+/* line 17, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.nav .nav_icon.has_count {
+  position: relative;
+}
+
+/* line 21, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.nav .notification_count {
+  display: inline-block;
+  padding: 3px 5px 2px 5px;
+  vertical-align: middle;
+}
+
+/* line 27, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.nav_icon .username:hover {
+  background: #FFF673;
+}
+
+/* line 32, /home/duffy/2newhive/libsrc/scss/nav.scss */
+#btn_star .icon {
+  height: 50px;
+  float: left;
+  width: 67px;
+  background-image: url("/lib/skin/1/star.png");
+}
+
+/* line 38, /home/duffy/2newhive/libsrc/scss/nav.scss */
+#btn_star .icon.starred {
+  background-image: url("/lib/skin/1/star_active.png");
+}
+
+/* line 41, /home/duffy/2newhive/libsrc/scss/nav.scss */
+#btn_star.active .icon.starred, #btn_star.active .icon {
+  background-image: url("/lib/skin/1/star-hover.png");
+}
+
+/* line 46, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.expr_cards #btn_star .icon {
+  background-image: url("/lib/skin/1/people.png");
+}
+/* line 48, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.expr_cards #btn_star .icon.starred {
+  background-image: url("/lib/skin/1/people_active.png");
+}
+/* line 50, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.expr_cards #btn_star.active .icon {
+  background-image: url("/lib/skin/1/people-hover.png");
+}
+/* line 52, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.expr_cards #btn_star.active .icon.starred {
+  background-image: url("/lib/skin/1/people_active-hover.png");
+}
+
+/* line 56, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.listen_small.icon {
+  position: relative;
+  top: 2px;
+  width: 37px;
+  height: 31px;
+  background-image: url("/lib/skin/1/people_small.png");
+}
+/* line 62, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.listen_small.icon:hover {
+  background-image: url("/lib/skin/1/people_small-hover.png");
+}
+
+/* line 64, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.listen_small.starred.icon {
+  background-image: url("/lib/skin/1/people_small_active.png");
+}
+/* line 66, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.listen_small.starred.icon:hover {
+  background-image: url("/lib/skin/1/people_small_active-hover.png");
+}
+
+/* line 69, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.has_count .count {
+  color: #FFF;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  border-radius: 6px;
+  margin: 15px 5px 0 -10px;
+  padding: 2px 5px;
+  line-height: 13px;
+  font-size: 12px;
+  font-weight: bold;
+  float: left;
+  background: #696E76;
+}
+
+/* line 82, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.has_count .count.zero {
+  display: none;
+}
+
+/* line 85, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.has_count.zero {
+  margin-right: -8px;
+}
+
+/* line 88, /home/duffy/2newhive/libsrc/scss/nav.scss */
+.has_count img {
+  float: left;
+}
+
+/* ==========================================
+   popup dialogs 
+   ========================================== */
+/* === Container element === */
+/* line 7, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dialogs {
+  display: none;
+}
+
+/* === click shield element === */
+/* line 10, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dialog_shield {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+/* line 16, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dialog_shield.fade {
+  background-color: black;
+  opacity: 0.23;
+}
+
+/* === General === */
+/* line 19, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.dialog {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  background-color: white;
+  -moz-box-shadow: 05px 05px 05px #666;
+  -webkit-box-shadow: 05px 05px 05px #666;
+  box-shadow: 05px 05px 05px #666;
+}
+/* line 27, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.dialog .center, .dialog.center {
+  text-align: center;
+}
+/* line 28, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.dialog .line {
+  margin: 7px 0;
+  clear: both;
+}
+/* line 29, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.dialog .line .element {
+  float: left;
+}
+/* line 30, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.dialog .line .label {
+  float: left;
+  margin-top: 6px;
+  margin-right: 4px;
+}
+
+/* line 33, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.btn_dialog_close, #btn_dialog_close {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-image: url("/lib/skin/1/close.png");
+  right: 10px;
+  top: 5px;
+  z-index: 100;
+}
+
+/* line 35, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.btn_dialog_close:hover, #btn_dialog_close:hover {
+  background-image: url("/lib/skin/1/close-hover.png");
+}
+
+/* line 36, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+input[type="text"].copy, textarea.copy {
+  border: none;
+  font-family: helvetica, verdana, sans-serif;
+  white-space: pre-wrap;
+}
+
+/* line 41, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.dialog h3 {
+  font-family: Museo, serif;
+  font-weight: normal;
+  font-size: 28px;
+}
+
+/* Share dialog */
+/* line 48, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#email_send {
+  margin-top: 26px;
+  margin-left: 20px;
+  font-family: Arial;
+  font-size: 17px;
+}
+
+/* line 49, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#congrats_message h1 {
+  font-weight: lighter;
+  font-family: Museo;
+  display: inline;
+  font-size: 33px;
+}
+
+/* line 50, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#congrats_message strong {
+  font-weight: normal;
+  color: red;
+}
+
+/* line 51, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#expression_url {
+  display: block;
+  float: left;
+  font-size: 14px;
+  padding: 7px;
+  margin: 3px auto auto 10px;
+  width: 470px;
+  background-color: #FFF673;
+}
+
+/* line 60, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#expression_embed_code {
+  overflow: auto;
+  display: block;
+  float: left;
+  font-size: 12px;
+  padding: 7px;
+  margin: 0;
+  width: 439px;
+  height: 60px;
+  background-color: #D0E0F0;
+}
+
+/* line 71, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#btn_url_copy {
+  background-image: url("/lib/skin/1/copy_clipboard.png");
+  float: right;
+  width: 20px;
+  height: 24px;
+  margin: 5px 5px 0 0;
+}
+
+/* line 72, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#btn_url_copy.hover {
+  background-image: url("/lib/skin/1/copy_clipboard-hover.png");
+}
+
+/* line 73, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_share {
+  width: 555px;
+  padding: 20px;
+}
+
+/* line 77, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#like_buttons {
+  margin: 20px 0;
+}
+
+/* line 78, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#like_buttons .like_button {
+  display: inline-block;
+  margin: 10px;
+}
+
+/* line 82, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_share #email_message {
+  width: 350px;
+}
+
+/* line 83, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_share #email_to {
+  width: 301px;
+}
+
+/* line 84, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_share .line.embed {
+  padding-top: 20px;
+}
+
+/* line 85, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_share label {
+  font-size: 14px;
+}
+
+/* line 86, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_share .count {
+  font-family: League Gothic, sans-serif;
+  font-size: 55px;
+}
+
+/* line 90, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_share .label.align {
+  width: 89px;
+}
+
+/* Referral Dialog */
+/* line 96, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_referral {
+  width: 490px;
+  padding: 20px 40px 20px 50px;
+  text-align: left;
+}
+
+/* line 101, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_referral h3 {
+  margin: 20px 0;
+}
+
+/* line 104, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#referral_count {
+  color: red;
+}
+
+/* line 105, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_referral input[type="text"], #dia_referral textarea {
+  width: 150px;
+  float: left;
+}
+
+/* line 106, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_referral input[type="submit"] {
+  float: right;
+  font-size: 18px;
+  margin: 5px 12px;
+}
+
+/* line 112, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_referral .line.first {
+  margin-top: 27px;
+}
+
+/* line 114, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_referral .medbold {
+  line-height: 1em;
+}
+
+/* line 115, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_referral .label .small {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+/* Editor browser warning dialog */
+/* line 118, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#editor_browsers, #ie_warning {
+  padding: 20px 50px;
+  text-align: center;
+}
+
+/* line 122, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#editor_browsers h1, #ie_warning h1 {
+  font-family: Lobster, serif;
+  font-weight: normal;
+  color: red;
+  margin: 8px 0 0 0;
+  font-size: 38px;
+}
+
+/* line 129, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#editor_browsers h2, #ie_warning h2 {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  margin: 0;
+}
+
+/* line 135, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#editor_browsers h3, #ie_warning h3 {
+  font-size: 25px;
+  margin: 20px 0;
+}
+
+/* line 139, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#editor_browsers a {
+  text-decoration: underline;
+}
+
+/* signup thank-you dialog */
+/* line 144, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#signup_thank_you {
+  width: 400px;
+  padding: 20px 50px;
+  margin: 0;
+}
+
+/* line 150, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#signup_thank_you h1 {
+  font-family: League Gothic, sans-serif;
+  font-weight: normal;
+  font-size: 62px;
+  color: #13A507;
+  margin: 20px;
+}
+
+/* line 158, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#signup_thank_you h3 {
+  margin-top: 10px;
+}
+
+/* line 162, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#signup_thank_you h4 {
+  margin-top: 10px;
+  font-family: Museo, serif;
+  font-size: 20px;
+}
+
+/* line 168, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#signup_thank_you h4 a:hover {
+  color: #419DD6;
+}
+
+/* password for private expression */
+/* line 174, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_password {
+  padding: 0 10px 20px 10px;
+}
+
+/* signup dialog */
+/* line 179, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_signup {
+  font-size: 15px;
+  width: 300px;
+  padding: 0 30px 10px 30px;
+}
+
+/* line 185, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_signup input[type=text] {
+  width: 280px;
+}
+
+/* Comments dialog */
+/* line 190, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments {
+  width: 505px;
+  padding: 20px;
+}
+
+/* line 195, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .icon {
+  float: left;
+  margin: -10px;
+}
+
+/* line 199, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .title.sub {
+  margin: 0;
+  font-size: 20px;
+  font-weight: normal;
+  font-family: Museo, Helvetica, Arial, sans-serif;
+}
+
+/* line 205, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: normal;
+  font-family: Museo, Helvetica, Arial, sans-serif;
+}
+
+/* line 211, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .title .comments_count {
+  font-weight: bold;
+  color: #F72E4D;
+}
+
+/* line 215, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments textarea {
+  width: 480px;
+  margin-top: 10px;
+}
+
+/* line 219, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments input[type=submit] {
+  float: right;
+}
+
+/* line 222, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .header {
+  overflow: auto;
+  min-height: 45px;
+}
+
+/* line 226, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments #comments {
+  overflow: auto;
+  clear: both;
+  width: 520px;
+}
+
+/* line 232, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .comment {
+  clear: both;
+  padding-top: 20px;
+  overflow: auto;
+}
+
+/* line 237, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .comment_content {
+  width: 390px;
+  float: left;
+}
+
+/* line 241, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .text {
+  min-height: 40px;
+  margin: 0 0 10px 0;
+}
+
+/* line 245, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .author, #dia_comments .age {
+  font-size: 20px;
+  margin: 0;
+}
+
+/* line 249, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .author {
+  color: blue;
+  float: left;
+}
+
+/* line 253, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .age {
+  float: right;
+}
+
+/* line 256, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_comments .comment_thumb {
+  width: 99px;
+  height: 72px;
+  background-color: #aaa;
+  float: left;
+  margin-right: 10px;
+}
+
+/* line 1, /home/duffy/2newhive/libsrc/scss/tags.scss */
+#tags {
+  margin: 35px 20px 0 0;
+}
+
+/* line 4, /home/duffy/2newhive/libsrc/scss/tags.scss */
+#user_tags {
+  padding-top: 45px;
+}
+
+/* line 5, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label {
+  font-weight: bold;
+  color: #696e76;
+  background-color: #edebe1;
+  text-align: right;
+}
+/* line 10, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.active, .tag_label.current.active, .tag_label.current.Feed.active {
+  color: #f73627;
+  background-color: #fff673;
+}
+/* line 11, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.current {
+  background-color: #96e2ce;
+  color: black;
+}
+/* line 12, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.current.Feed {
+  background-color: #e87b25;
+  color: white;
+}
+/* line 13, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label p {
+  margin: 0;
+}
+/* line 14, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user {
+  float: right;
+  clear: both;
+  color: white;
+  padding: 0 8px;
+  margin: 5px 0;
+  font-weight: normal;
+  font-size: 16px;
+}
+/* line 19, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user:hover {
+  padding-left: 33px;
+}
+/* line 23, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_0 {
+  background-color: #f73627;
+}
+/* line 24, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_1 {
+  background-color: #f72e4d;
+}
+/* line 25, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_2 {
+  background-color: #f45519;
+}
+/* line 26, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_3 {
+  background-color: #e87b25;
+}
+/* line 27, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_4 {
+  background-color: #7ba009;
+}
+/* line 28, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_5 {
+  background-color: #13a507;
+}
+/* line 29, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_6 {
+  background-color: #2d6a5d;
+}
+/* line 30, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_7 {
+  background-color: #698293;
+}
+/* line 31, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_8 {
+  background-color: #9196a7;
+}
+/* line 32, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_9 {
+  background-color: #7f4799;
+}
+/* line 33, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_10 {
+  background-color: #696e76;
+}
+/* line 34, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_11 {
+  background-color: #810032;
+}
+/* line 36, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.system {
+  background-repeat: no-repeat;
+  background-position: right;
+  font-size: 21px;
+  height: 31px;
+  margin-top: 7px;
+  font-weight: bold;
+  padding: 0px 12px;
+  margin-left: 22px;
+}
+/* line 45, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.system a {
+  display: inline-block;
+  margin-top: 4px;
+}
+/* line 46, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.system.Starred a, .tag_label.system.Listening a {
+  padding-right: 18px;
+}
+/* line 49, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.system.Starred {
+  background-image: url("/lib/skin/1/star_tab.png");
+}
+/* line 51, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.system.Starred.current:hover {
+  background-image: url("/lib/skin/1/star_tab.png");
+}
+/* line 52, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.system.Starred:hover {
+  background-image: url("/lib/skin/1/star_tab-hover.png");
+}
+/* line 54, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.system.Listening {
+  background-image: url("/lib/skin/1/people_tab.png");
+}
+/* line 56, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.tag_label.system.Listening:hover {
+  background-image: url("/lib/skin/1/people_tab-hover.png");
+}
+
+/* line 62, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.expr_cards .tag_label.system.current {
+  background-color: white;
+  font-family: Lobster, Helvetica, sans-serif;
+  font-size: 1.6em;
+  color: black;
+}
+/* line 67, /home/duffy/2newhive/libsrc/scss/tags.scss */
+.expr_cards .tag_label.system.current a {
+  font-weight: normal;
+}
+
+/* line 3, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card.item {
+  position: relative;
+  padding: 9px 9px 5px 9px;
+  width: 190px;
+  height: 285px;
+  float: left;
+  background-image: url("/lib/skin/1/feed_item.png");
+}
+/* line 10, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card.item.border_right {
+  border-right: 1px solid #D1D1D1;
+}
+/* line 13, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card.item.border_bottom {
+  border-bottom: 1px solid #D1D1D1;
+}
+/* line 17, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card.item:hover {
+  opacity: 1;
+}
+/* line 20, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card.item:hover .thumb {
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=75);
+  opacity: 0.75;
+}
+/* line 21, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card.item:hover .title {
+  background: #fff673;
+}
+/* line 22, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card.item:hover .other span {
+  padding: 0 2px;
+  background: #698293;
+  color: white;
+}
+/* line 25, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card .thumb {
+  -moz-border-radius: 7px;
+  -webkit-border-radius: 7px;
+  -o-border-radius: 7px;
+  -ms-border-radius: 7px;
+  -khtml-border-radius: 7px;
+  border-radius: 7px;
+  width: 190px;
+  height: 190px;
+}
+/* line 30, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card .title {
+  font-size: 1.1em;
+  font-weight: bold;
+  max-height: 2.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* line 36, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card .title:hover {
+  background: #fff673;
+}
+/* line 38, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card .other, #feed .card .tags {
+  font-size: 0.7em;
+}
+/* line 42, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card .tags {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 29px;
+  margin-bottom: 5px;
+}
+/* line 47, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card .tags .tag:hover {
+  background: #96e2ce;
+}
+/* line 49, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card .other {
+  font-weight: bold;
+}
+/* line 51, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#feed .card .other:hover span {
+  background: #f73627 !important;
+  color: white;
+}
+
+/* line 55, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_starrers, #dia_listeners {
+  width: 316px;
+  overflow: auto;
+}
+/* line 59, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_starrers .dialog_title, #dia_listeners .dialog_title {
+  width: 290px;
+  background-color: #d0e0f0;
+  margin: 4px 0;
+  padding: 4px 6px;
+  font-weight: bold;
+}
+/* line 66, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_starrers .card, #dia_listeners .card {
+  overflow: hidden;
+  *zoom: 1;
+  padding: 5px;
+  margin: 0 5px 5px 0;
+  clear: both;
+  width: 290px;
+}
+/* line 71, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_starrers .card:hover, #dia_listeners .card:hover {
+  background-color: #96e2ce;
+}
+/* line 72, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_starrers .card img, #dia_listeners .card img {
+  width: 70px;
+  height: 70px;
+  float: left;
+  margin-right: 10px;
+}
+/* line 78, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_starrers .card .title, #dia_listeners .card .title {
+  font-weight: bold;
+  max-height: 2.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 5px;
+}
+/* line 79, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_starrers .card .other, #dia_starrers .card .tags, #dia_listeners .card .other, #dia_listeners .card .tags {
+  font-size: .8em;
+}
+/* line 80, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_starrers .card .other, #dia_listeners .card .other {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+/* line 1, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu {
+  padding-top: 15px;
+  width: 370px;
+}
+
+/* line 5, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu .feed_item {
+  width: auto;
+  height: auto;
+  clear: both;
+  overflow: hidden;
+  margin: 0;
+  color: #000;
+  cursor: pointer;
+}
+
+/* line 14, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item {
+  font-weight: bold;
+  font-size: 14px;
+  color: #000;
+}
+
+/* line 19, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.expr_cards .feed_item {
+  overflow: hidden;
+  *zoom: 1;
+  float: left;
+  width: 330px;
+  height: 120px;
+  padding: 8px;
+}
+/* line 25, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.expr_cards .feed_item.border_right {
+  border-right: 1px solid #D1D1D1;
+}
+/* line 28, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.expr_cards .feed_item.border_bottom {
+  border-bottom: 1px solid #D1D1D1;
+}
+
+/* line 32, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu .feed_item.border_right {
+  border: 0px;
+}
+
+/* line 36, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item .name {
+  color: #F72E4D;
+}
+
+/* line 39, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item .name.you {
+  color: #000;
+}
+
+/* line 42, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item a {
+  font-weight: bold;
+}
+
+/* line 45, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item p {
+  margin: 0;
+}
+
+/* line 48, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item .feed_item.active {
+  background-color: #96E2CE;
+}
+
+/* line 51, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.expr_cards .feed_item img {
+  width: 120px;
+  height: 120px;
+  margin-right: 10px;
+  float: left;
+}
+
+/* line 57, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu .feed_item img, #feed_menu .feed.item img {
+  margin: 5px;
+  width: 90px;
+  height: 90px;
+  float: left;
+}
+
+/* line 63, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu .feed_item:hover {
+  background-color: #96e2ce;
+}
+
+/* line 66, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.expr_cards .feed_item .Expr .entity, .expr_cards .feed_item.User .initiator {
+  width: 181px;
+}
+
+/* line 69, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu .feed_item .Expr .entity, #feed_menu .feed_item.User .initiator {
+  width: 220px;
+}
+
+/* line 72, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item .Expr .entity {
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  color: #000;
+}
+
+/* line 79, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item.User .line2 {
+  color: #696E76;
+}
+
+/* line 83, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.expr_cards .feed_item .feed_text, .expr_cards .feed_item .byline {
+  width: 181px;
+}
+
+/* line 86, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu .feed_item .feed_text, #feed_menu .feed_item .byline {
+  width: 220px;
+}
+
+/* line 89, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item .feed_text, .feed_item .byline {
+  float: left;
+  margin-left: 5px;
+}
+
+/* line 93, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.expr_cards .feed_item .feed_text {
+  margin-top: 14px;
+  height: 76px;
+  color: #000;
+}
+
+/* line 98, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu .feed_item .feed_text {
+  height: 59px;
+  white-space: nowrap;
+}
+
+/* line 102, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item .comment_text {
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+/* line 108, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item .byline {
+  font-weight: normal;
+}
+
+/* line 111, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item .byline .name, .comment .byline .name {
+  font-weight: bold;
+  font-size: 15px;
+  color: #696E76;
+}
+
+/* line 117, /home/duffy/2newhive/libsrc/scss/feed.scss */
+.feed_item .byline .timestamp, .comment .byline .timestamp {
+  font-size: 15px;
+  float: right;
+  color: #696E76;
+}
+
+/* line 122, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu #more_button {
+  width: 330px;
+  padding: 0;
+  margin: 10px;
+  background-color: #696E76;
+  text-align: center;
+}
+
+/* line 129, /home/duffy/2newhive/libsrc/scss/feed.scss */
+#feed_menu #more_button:hover {
+  background-color: #FFF673;
+}
+
+/* line 1, /home/duffy/2newhive/libsrc/scss/home.scss */
+#tag_header h1 {
+  margin: 27px 0 26px 6px;
+  font-family: Museo, Helvetica, sans-serif;
+  font-size: 2.5em;
+  font-weight: bold;
+}
+
+/* line 2, /home/duffy/2newhive/libsrc/scss/profile.scss */
+.expr_cards #header h1 {
+  margin: 58px;
+  margin-left: 30px;
+}
+/* line 7, /home/duffy/2newhive/libsrc/scss/profile.scss */
+.expr_cards #profile_thumb {
+  width: auto;
+}
+/* line 10, /home/duffy/2newhive/libsrc/scss/profile.scss */
+.expr_cards #profile_thumb img, .expr_cards #profile_thumb .placeholder {
+  float: left;
+  height: 190px;
+  width: 190px;
+  -moz-border-radius: 7px;
+  -webkit-border-radius: 7px;
+  -o-border-radius: 7px;
+  -ms-border-radius: 7px;
+  -khtml-border-radius: 7px;
+  border-radius: 7px;
+}
+/* line 15, /home/duffy/2newhive/libsrc/scss/profile.scss */
+.expr_cards #profile_thumb .placeholder {
+  height: 30px;
+  padding: 85px 0;
+}
+/* line 16, /home/duffy/2newhive/libsrc/scss/profile.scss */
+.expr_cards .placeholder {
+  border: 1px dashed #CCC;
+  text-align: center;
+}
+/* line 17, /home/duffy/2newhive/libsrc/scss/profile.scss */
+.expr_cards #profile_thumb .message {
+  position: absolute;
+  top: 240px;
+  font-size: 12px;
+}
+/* line 19, /home/duffy/2newhive/libsrc/scss/profile.scss */
+.expr_cards .expr_cards .fathead {
+  font-weight: normal;
+}
+/* line 20, /home/duffy/2newhive/libsrc/scss/profile.scss */
+.expr_cards .fathead.hasthumb {
+  margin: 75px 50px 0 50px;
+}
+/* line 21, /home/duffy/2newhive/libsrc/scss/profile.scss */
+.expr_cards .fathead img {
+  margin: 8px 0;
+  vertical-align: top;
+}
+
+/* line 23 */
+#nav {
+  height: 50px;
+}
+
+/* line 25 */
+.expr_cards #header {
+  padding-top: 48px;
+  padding-left: 30px;
+  padding-bottom: 23px;
+}
+
+/* line 30 */
+#primary_content {
+  clear: both;
+}
+
+/* line 31 */
+.logged_in #primary_content, .tag_search #primary_content {
+  padding-top: 12px;
+}
+
+/* line 33 */
+#left_column, #right_column, #header, #feed {
+  *zoom: 1;
+}
+/* line 38, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/general/_clearfix.scss */
+#left_column:after, #right_column:after, #header:after, #feed:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* line 36 */
+#left_column {
+  float: left;
+  width: 210px;
+  padding-left: 30px;
+}
+
+/* line 41 */
+#right_column {
+  margin-left: 240px;
+}
+
+/* line 46 */
+iframe {
+  border: none;
+}
