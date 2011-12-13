@@ -805,7 +805,7 @@ def handle(request): # HANDLER
             else:
                 klass = Expr
             expr_home_list(p2, request, response, klass=klass)
-            response.context['expr_context'] = {'tag': p2.lower() }
+            if p2: response.context['expr_context'] = {'tag': p2.lower() }
             if p1 == 'tag':
                 response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
                 response.context['tag'] = p2
@@ -862,6 +862,8 @@ def handle(request): # HANDLER
     is_owner = request.requester.logged_in and owner.id == request.requester.id
     if is_owner: owner.unflag('expr_new')
     if request.args.has_key('tag'):
+        db.expr.ensure_index( [('updated', -1)] )
+        root = get_root()
         tag = re.sub('[^a-z]', '', request.args.get('tag').lower())
         if tag in [key for key in root.get('tagged', {})]:
             ids = root.get('tagged', {}).get(tag, [])
@@ -1244,6 +1246,7 @@ if __name__ == '__main__':
           , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
           , static_files = {
                '/lib' : joinpath(config.src_home, 'lib')
+              ,'/images' : joinpath(config.src_home, 'libsrc/scss/images')
               ,'/file' : config.media_path
             }
           , processes = 0

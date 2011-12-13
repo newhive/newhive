@@ -1030,6 +1030,44 @@ input[type="text"].copy, textarea.copy {
   font-weight: bold;
 }
 
+/* line 45, /home/duffy/2newhive/libsrc/scss/_pagethrough.scss */
+.pagethrough-sprite, .pagethrough-next, .pagethrough-prev {
+  background: url('/images/pagethrough-s51a6e89999.png') no-repeat;
+}
+
+/* line 60, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+.pagethrough-next {
+  background-position: 0 0;
+}
+/* line 43, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+.pagethrough-next:hover, .pagethrough-next.next_hover, .pagethrough-next.next-hover {
+  background-position: 0 -47px;
+}
+
+/* line 60, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+.pagethrough-prev {
+  background-position: 0 -94px;
+}
+/* line 43, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+.pagethrough-prev:hover, .pagethrough-prev.prev_hover, .pagethrough-prev.prev-hover {
+  background-position: 0 -141px;
+}
+
+/* line 4, /home/duffy/2newhive/libsrc/scss/expression.scss */
+#pagethrough_prev, #pagethrough_next {
+  top: 500px;
+}
+
+/* line 5, /home/duffy/2newhive/libsrc/scss/expression.scss */
+#pagethrough_prev {
+  left: 50px;
+}
+
+/* line 8, /home/duffy/2newhive/libsrc/scss/expression.scss */
+#pagethrough_next {
+  right: 50px;
+}
+
 /* line 2, /home/duffy/2newhive/libsrc/scss/profile.scss */
 .expr_cards #header h1 {
   margin: 58px;
@@ -1081,29 +1119,29 @@ input[type="text"].copy, textarea.copy {
   vertical-align: top;
 }
 
-/* line 23 */
+/* line 24 */
 #nav {
   height: 50px;
 }
 
-/* line 25 */
+/* line 26 */
 .expr_cards #header {
   padding-top: 48px;
   padding-left: 30px;
   padding-bottom: 23px;
 }
 
-/* line 30 */
+/* line 31 */
 #primary_content {
   clear: both;
 }
 
-/* line 31 */
+/* line 32 */
 .logged_in #primary_content, .tag_search #primary_content {
   padding-top: 12px;
 }
 
-/* line 33 */
+/* line 34 */
 #left_column, #right_column, #header, #feed {
   *zoom: 1;
 }
@@ -1114,19 +1152,19 @@ input[type="text"].copy, textarea.copy {
   clear: both;
 }
 
-/* line 36 */
+/* line 37 */
 #left_column {
   float: left;
   width: 210px;
   padding-left: 30px;
 }
 
-/* line 41 */
+/* line 42 */
 #right_column {
   margin-left: 240px;
 }
 
-/* line 46 */
+/* line 47 */
 iframe {
   border: none;
 }

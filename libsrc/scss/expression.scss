@@ -1,0 +1,10 @@
+@import "pagethrough";
+@include all-pagethrough-sprites;
+
+#pagethrough_prev, #pagethrough_next { top: 500px; }
+#pagethrough_prev { 
+  left: 50px;
+}
+#pagethrough_next { 
+  right: 50px;
+}

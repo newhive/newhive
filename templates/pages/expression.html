@@ -22,6 +22,8 @@
 
 {% block body %}
  <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
+ <div id="pagethrough_prev" class='nav'><a href='{{pagethrough.prev}}' class='pagethrough-prev' >prev</a></div>
+ <div id="pagethrough_next" class='nav'><a href='{{pagethrough.next}}' class='pagethrough-next' >next</a></div>
  <div class='nav' style='right : {{ '10' if user.logged_in else '197' }}px; top : 0px;'>
   {% if not user_is_owner %}
    {{ listen_button(active=owner.id in user.starred_items, title='Listen to ' + owner['name'], active_title='Stop listening') if user.logged_in }}
