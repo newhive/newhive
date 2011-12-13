@@ -11,7 +11,7 @@ import jinja2
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog, db
 import ui_strings.en as ui
 
 import webassets
@@ -805,6 +805,7 @@ def handle(request): # HANDLER
             else:
                 klass = Expr
             expr_home_list(p2, request, response, klass=klass)
+            response.context['expr_context'] = {'tag': p2.lower() }
             if p1 == 'tag':
                 response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
                 response.context['tag'] = p2
@@ -860,6 +861,34 @@ def handle(request): # HANDLER
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
     if is_owner: owner.unflag('expr_new')
+    if request.args.has_key('tag'):
+        tag = re.sub('[^a-z]', '', request.args.get('tag').lower())
+        if tag in [key for key in root.get('tagged', {})]:
+            ids = root.get('tagged', {}).get(tag, [])
+        shared_spec = {'auth': 'public'}
+        if not tag in ['recent']: shared_spec['tags_index'] = tag
+        try:
+            spec = {'updated':{'$lt': d['updated']}}
+            spec.update(shared_spec)
+            next = Expr(db.expr.find(spec).hint([('updated', -1)]).limit(1)[0])
+        except IndexError:
+            try:
+                next =  Expr(db.expr.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
+            except IndexError: next = None
+        try:
+            spec = {'updated':{'$gt': d['updated']}}
+            spec.update(shared_spec)
+            prev = Expr(db.expr.find(spec).hint([('updated', 1)]).limit(1)[0])
+        except IndexError:
+            try:
+                prev =  Expr(db.expr.find(shared_spec).sort([('updated',1)]).limit(1)[0])
+            except IndexError: prev = None
+
+        pagethrough = {}
+        if next: pagethrough['next'] = next.url + querystring({'tag': tag})
+        if prev: pagethrough['prev'] = prev.url + querystring({'tag': tag})
+        response.context.update(pagethrough = pagethrough)
+
 
     response.context.update(
          domain = request.domain
@@ -1179,11 +1208,19 @@ def large_number(number):
     elif 10000000 <= number:
         return str(int(number/1000000)) + "M"
 
+def querystring(d):
+    out = "?"
+    for key, val in d.items():
+        out = out + key + "=" + val + "&"
+    return out[:-1]
+
+
 jinja_env.filters['friendly_date'] = friendly_date
 jinja_env.filters['length_bucket'] = length_bucket
 jinja_env.filters['large_number'] = large_number
 
 jinja_env.filters['mod'] = lambda x, y: x % y
+jinja_env.filters['querystring'] = querystring
 
 # run_simple is not so simple
 if __name__ == '__main__':
