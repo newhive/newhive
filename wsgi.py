@@ -805,7 +805,7 @@ def handle(request): # HANDLER
             else:
                 klass = Expr
             expr_home_list(p2, request, response, klass=klass)
-            if p2: response.context['expr_context'] = {'tag': p2.lower() }
+            if p2: response.context['expr_context'] = {'tag': p2 }
             if p1 == 'tag':
                 response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
                 response.context['tag'] = p2
@@ -862,33 +862,22 @@ def handle(request): # HANDLER
     is_owner = request.requester.logged_in and owner.id == request.requester.id
     if is_owner: owner.unflag('expr_new')
     if request.args.has_key('tag'):
-        db.expr.ensure_index( [('updated', -1)] )
+        pagethrough = {'next': None, 'prev': None}
         root = get_root()
-        tag = re.sub('[^a-z]', '', request.args.get('tag').lower())
-        if tag in [key for key in root.get('tagged', {})]:
+        tag = re.sub('[^A-Za-z]', '', request.args.get('tag')) #prevent injection hacks
+        root_tags = [key for key in root.get('tagged', {})]
+        if tag in root_tags:
             ids = root.get('tagged', {}).get(tag, [])
-        shared_spec = {'auth': 'public'}
-        if not tag in ['recent']: shared_spec['tags_index'] = tag
-        try:
-            spec = {'updated':{'$lt': d['updated']}}
-            spec.update(shared_spec)
-            next = Expr(db.expr.find(spec).hint([('updated', -1)]).limit(1)[0])
-        except IndexError:
-            try:
-                next =  Expr(db.expr.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
-            except IndexError: next = None
-        try:
-            spec = {'updated':{'$gt': d['updated']}}
-            spec.update(shared_spec)
-            prev = Expr(db.expr.find(spec).hint([('updated', 1)]).limit(1)[0])
-        except IndexError:
-            try:
-                prev =  Expr(db.expr.find(shared_spec).sort([('updated',1)]).limit(1)[0])
-            except IndexError: prev = None
+            shared_spec = ids
+        else:
+            tag = tag.lower()
+            if tag in ['recent']: shared_spec = {}
+            else:  shared_spec = {'tags_index': tag}
+        pagethrough['next'] = d.next(shared_spec)
+        pagethrough['prev'] = d.prev(shared_spec)
 
-        pagethrough = {}
-        if next: pagethrough['next'] = next.url + querystring({'tag': tag})
-        if prev: pagethrough['prev'] = prev.url + querystring({'tag': tag})
+        if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring({'tag': tag})
+        if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring({'tag': tag})
         response.context.update(pagethrough = pagethrough)
 
 

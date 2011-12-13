@@ -196,6 +196,53 @@ class Entity(dict):
         notifyees = getattr(self, type)
         return db.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
 
+    def next(self, spec={}):
+        if type(spec) == dict:
+            shared_spec = spec
+            self._col.ensure_index([('updated', -1)])
+            try:
+                spec = {'updated':{'$lt': self['updated']}}
+                spec.update(shared_spec)
+                return self.__class__(self._col.find(spec).hint([('updated', -1)]).limit(1)[0])
+            except IndexError:
+                try:
+                    return self.__class__(self._col.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
+                except IndexError: return None
+        elif type(spec) == list:
+            try:
+                index = spec.index(self.id)
+            except ValueError:
+                return None
+            try:
+                return Expr.fetch(spec[index+1])
+            except IndexError:
+                return Expr.fetch(spec[0])
+        else: raise "argument must be a mongodb spec dicionary or a list of object ids"
+
+    def prev(self, spec={}):
+        if type(spec) == dict:
+            shared_spec = spec
+            self._col.ensure_index([('updated', 1)])
+            try:
+                spec = {'updated':{'$gt': self['updated']}}
+                spec.update(shared_spec)
+                return self.__class__(self._col.find(spec).hint([('updated', 1)]).limit(1)[0])
+            except IndexError:
+                try:
+                    return self.__class__(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
+                except IndexError: return None
+        elif type(spec) == list:
+            try:
+                index = spec.index(self.id)
+            except ValueError:
+                return None
+            try:
+                return Expr.fetch(spec[index-1])
+            except IndexError:
+                return Expr.fetch(spec[-1])
+        else: raise "argument must be a mongodb spec dicionary or a list of object ids"
+
+
 
 def fetch(cname, id, keyname='_id'):
     return Entity({}, cname=cname).fetch_me(id, keyname=keyname)
@@ -352,6 +399,20 @@ class Expr(Entity):
     def random(cls):
         rand = random.random()
         return cls.find(random = {'$gte': rand}, auth='public', apps={'$exists': True})
+
+    def next(self, spec={}):
+        if type(spec) == dict:
+            shared_spec = spec.copy()
+            shared_spec.update({'auth': 'public'})
+        else: shared_spec = spec
+        return super(Expr, self).next(shared_spec)
+
+    def prev(self, spec={}):
+        if type(spec) == dict:
+            shared_spec = spec.copy()
+            shared_spec.update({'auth': 'public'})
+        else: shared_spec = spec
+        return super(Expr, self).prev(shared_spec)
 
     def get_owner(self):
         if not self._owner:
