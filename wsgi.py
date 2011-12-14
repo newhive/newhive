@@ -861,23 +861,31 @@ def handle(request): # HANDLER
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
     if is_owner: owner.unflag('expr_new')
-    if request.args.has_key('tag'):
+    if request.args.has_key('tag') or request.args.has_key('user'):
         pagethrough = {'next': None, 'prev': None}
+        shared_spec = {}
+        url_args = {}
         root = get_root()
-        tag = re.sub('[^A-Za-z]', '', request.args.get('tag')) #prevent injection hacks
-        root_tags = [key for key in root.get('tagged', {})]
-        if tag in root_tags:
-            ids = root.get('tagged', {}).get(tag, [])
-            shared_spec = ids
-        else:
-            tag = tag.lower()
-            if tag in ['recent']: shared_spec = {}
-            else:  shared_spec = {'tags_index': tag}
+        if request.args.has_key('user'):
+            user = re.sub('[^A-Za-z]', '', request.args.get('user')) #prevent injection hacks
+            shared_spec.update({'owner_name': user})
+            url_args.update({'user': user})
+        if request.args.has_key('tag'):
+            tag = re.sub('[^A-Za-z]', '', request.args.get('tag')) #prevent injection hacks
+            root_tags = [key for key in root.get('tagged', {})]
+            if tag in root_tags:
+                ids = root.get('tagged', {}).get(tag, [])
+                shared_spec = ids
+            else:
+                tag = tag.lower()
+                if tag in ['recent']: shared_spec = {}
+                else:  shared_spec.update({'tags_index': tag})
+            url_args.update({'tag': tag})
         pagethrough['next'] = d.next(shared_spec)
         pagethrough['prev'] = d.prev(shared_spec)
 
-        if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring({'tag': tag})
-        if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring({'tag': tag})
+        if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring(url_args)
+        if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
         response.context.update(pagethrough = pagethrough)
 
 
@@ -906,10 +914,12 @@ def handle(request): # HANDLER
         star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         people_tag = {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
         response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
+        response.context['expr_context'] = {'user': owner.get('name')}
         if request.path.startswith('expressions'):
             spec = { 'owner' : owner.id }
             tag = lget(request.path.split('/'), 1, '')
             if tag:
+                response.context['expr_context'].update({'tag': tag})
                 tag = {'name': tag, 'url': "/expressions/" + tag, 'type': 'user'}
                 spec['tags_index'] = tag['name']
             else: tag = expressions_tag

@@ -196,7 +196,7 @@ class Entity(dict):
         notifyees = getattr(self, type)
         return db.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
 
-    def next(self, spec={}):
+    def next(self, spec={}, loop=True):
         if type(spec) == dict:
             shared_spec = spec
             self._col.ensure_index([('updated', -1)])
@@ -205,21 +205,21 @@ class Entity(dict):
                 spec.update(shared_spec)
                 return self.__class__(self._col.find(spec).hint([('updated', -1)]).limit(1)[0])
             except IndexError:
-                try:
-                    return self.__class__(self._col.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
-                except IndexError: return None
+                if loop:
+                    try: return self.__class__(self._col.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
+                    except IndexError: return None
+                else: return None
         elif type(spec) == list:
-            try:
-                index = spec.index(self.id)
-            except ValueError:
-                return None
-            try:
-                return Expr.fetch(spec[index+1])
+            try: index = spec.index(self.id)
+            except ValueError: return None #in this case the expression isn't in the collection to begin with
+
+            try: return Expr.fetch(spec[index+1])
             except IndexError:
-                return Expr.fetch(spec[0])
+                if loop: return Expr.fetch(spec[0])
+                else: return None
         else: raise "argument must be a mongodb spec dicionary or a list of object ids"
 
-    def prev(self, spec={}):
+    def prev(self, spec={}, loop=True):
         if type(spec) == dict:
             shared_spec = spec
             self._col.ensure_index([('updated', 1)])
@@ -228,18 +228,18 @@ class Entity(dict):
                 spec.update(shared_spec)
                 return self.__class__(self._col.find(spec).hint([('updated', 1)]).limit(1)[0])
             except IndexError:
-                try:
-                    return self.__class__(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
-                except IndexError: return None
+                if loop:
+                    try: return self.__class__(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
+                    except IndexError: return None
+                else: return None
         elif type(spec) == list:
-            try:
-                index = spec.index(self.id)
-            except ValueError:
-                return None
-            try:
-                return Expr.fetch(spec[index-1])
+            try: index = spec.index(self.id)
+            except ValueError: return None #in this case the expression isn't in the collection to begin with
+
+            try: return Expr.fetch(spec[index-1])
             except IndexError:
-                return Expr.fetch(spec[-1])
+                if loop: return Expr.fetch(spec[-1])
+                else: return None
         else: raise "argument must be a mongodb spec dicionary or a list of object ids"
 
 
@@ -400,19 +400,19 @@ class Expr(Entity):
         rand = random.random()
         return cls.find(random = {'$gte': rand}, auth='public', apps={'$exists': True})
 
-    def next(self, spec={}):
+    def next(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()
             shared_spec.update({'auth': 'public'})
         else: shared_spec = spec
-        return super(Expr, self).next(shared_spec)
+        return super(Expr, self).next(shared_spec, **kwargs)
 
-    def prev(self, spec={}):
+    def prev(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()
             shared_spec.update({'auth': 'public'})
         else: shared_spec = spec
-        return super(Expr, self).prev(shared_spec)
+        return super(Expr, self).prev(shared_spec, **kwargs)
 
     def get_owner(self):
         if not self._owner:
