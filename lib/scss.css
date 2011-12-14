@@ -542,8 +542,8 @@ input[type="text"].copy, textarea.copy {
 
 /* line 256, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .comment_thumb {
-  width: 99px;
-  height: 72px;
+  width: 70px;
+  height: 70px;
   background-color: #aaa;
   float: left;
   margin-right: 10px;
