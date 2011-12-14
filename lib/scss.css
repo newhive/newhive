@@ -1032,7 +1032,7 @@ input[type="text"].copy, textarea.copy {
 
 /* line 45, /home/duffy/2newhive/libsrc/scss/_pagethrough.scss */
 .pagethrough-sprite, .pagethrough-next, .pagethrough-prev {
-  background: url('/images/pagethrough-s51a6e89999.png') no-repeat;
+  background: url('/images/pagethrough-sc84cb4d0fa.png') no-repeat;
 }
 
 /* line 60, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
@@ -1041,31 +1041,56 @@ input[type="text"].copy, textarea.copy {
 }
 /* line 43, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
 .pagethrough-next:hover, .pagethrough-next.next_hover, .pagethrough-next.next-hover {
-  background-position: 0 -47px;
+  background-position: 0 -60px;
 }
 
 /* line 60, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
 .pagethrough-prev {
-  background-position: 0 -94px;
+  background-position: 0 -120px;
 }
 /* line 43, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
 .pagethrough-prev:hover, .pagethrough-prev.prev_hover, .pagethrough-prev.prev-hover {
-  background-position: 0 -141px;
+  background-position: 0 -180px;
 }
 
 /* line 4, /home/duffy/2newhive/libsrc/scss/expression.scss */
+#left_hover_area, #right_hover_area {
+  width: 0px;
+  top: 100px;
+  height: 70%;
+}
+
+/* line 9, /home/duffy/2newhive/libsrc/scss/expression.scss */
+#left_hover_area {
+  left: 0;
+}
+
+/* line 10, /home/duffy/2newhive/libsrc/scss/expression.scss */
+#right_hover_area {
+  right: 0;
+}
+
+/* line 11, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #pagethrough_prev, #pagethrough_next {
-  top: 500px;
+  display: none;
+}
+/* line 13, /home/duffy/2newhive/libsrc/scss/expression.scss */
+#pagethrough_prev a, #pagethrough_next a {
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
+  opacity: 0.8;
+  display: block;
+  width: 66px;
+  height: 60px;
 }
 
-/* line 5, /home/duffy/2newhive/libsrc/scss/expression.scss */
+/* line 20, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #pagethrough_prev {
-  left: 50px;
+  left: 0;
 }
 
-/* line 8, /home/duffy/2newhive/libsrc/scss/expression.scss */
+/* line 23, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #pagethrough_next {
-  right: 50px;
+  right: 0;
 }
 
 /* line 2, /home/duffy/2newhive/libsrc/scss/profile.scss */

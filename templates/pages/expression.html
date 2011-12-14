@@ -22,8 +22,12 @@
 
 {% block body %}
  <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
- <div id="pagethrough_prev" class='nav'><a href='{{pagethrough.prev}}' class='pagethrough-prev' >prev</a></div>
- <div id="pagethrough_next" class='nav'><a href='{{pagethrough.next}}' class='pagethrough-next' >next</a></div>
+ {% if pagethrough and pagethrough.prev %}
+   <div id="pagethrough_prev" class='nav pagethrough'><a href='{{pagethrough.prev}}' class='pagethrough-prev' ></a></div>
+ {% endif %}
+ {% if pagethrough and pagethrough.next %}
+   <div id="pagethrough_next" class='nav pagethrough'><a href='{{pagethrough.next}}' class='pagethrough-next' ></a></div>
+ {% endif %}
  <div class='nav' style='right : {{ '10' if user.logged_in else '197' }}px; top : 0px;'>
   {% if not user_is_owner %}
    {{ listen_button(active=owner.id in user.starred_items, title='Listen to ' + owner['name'], active_title='Stop listening') if user.logged_in }}
@@ -81,3 +85,21 @@
   {{ body }}
  {% endif %}
 {% endblock %}
+
+{% block footer_scripts %}
+<script>
+  $(function(){
+    pagethrough_btns = $('.pagethrough');
+    pagethrough_btns.css('top', ($(window).height() - pagethrough_btns.height())/2)
+    var hover_width = 150;
+    $(window).mousemove(function(event){
+      if ($(window).width() - event.pageX < hover_width) {
+        $('#pagethrough_next').show();
+      } else { $('#pagethrough_next').hide(); }
+      if (event.pageX < hover_width) {
+        $('#pagethrough_prev').show();
+      } else { $('#pagethrough_prev').hide(); }
+    });
+  });
+</script>
+{% endblock footer_scripts %}
