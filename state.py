@@ -307,6 +307,7 @@ db.expr.ensure_index([('owner', 1), ('updated', 1)])
 db.expr.ensure_index([('updated', 1)])
 db.expr.ensure_index([('created', 1)])
 db.expr.ensure_index([('tags_index', 1)])
+db.expr.ensure_index([('random', 1)])
 class Expr(Entity):
     cname = 'expr'
     counters = ['owner_views', 'views', 'emails']
