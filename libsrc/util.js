@@ -658,19 +658,26 @@ var fix_borders = function(items){
     });
 }
 
-var context_to_string = function(){
+var context_to_string = function(opt_arg){
+    var opts = {'plural': true};
+    $.extend(opts, opt_arg);
     var rv = "";
+    var tag = (urlParams.tag? urlParams.tag.toLowerCase(): '')
     if (typeof(urlParams) == "object") {
-        if (urlParams.tag == 'recent' || urlParams.tag == 'featured'){
-            rv += urlParams.tag + " expressions";
+        if (tag == 'recent' || tag == 'featured'){
+            rv += tag + " expression" + (opts.plural? "s": "" );
         } else if (urlParams.user) {
-            rv += urlParams.user + "'s expressions";
+            if (opts.plural){
+                rv += urlParams.user + "'s expressions";
+            } else {
+                rv += "expression by " + urlParams.user;
+            }
         } else {
-            rv += "all expressions";
+            rv += (opts.plural? "all expressions": "expression");
         }
-        if (urlParams.tag){
-            if (!(urlParams.tag == "recent" || urlParams.tag == "featured")) {
-                rv += " tagged " + urlParams.tag;
+        if (tag){
+            if (!(tag == "recent" || tag == "featured")) {
+                rv += " tagged " + tag;
             }
         }
         return rv;
