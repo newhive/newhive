@@ -811,7 +811,9 @@ def handle(request): # HANDLER
                 response.context['tag'] = p2
             if request.args.get('partial'): return serve_page(response, 'page_parts/cards.html')
             elif p1 == 'tag': return serve_page(response, 'pages/tag_search.html')
-            else: return serve_page(response, 'pages/home.html')
+            else:
+                response.context['expr_context'] = {'tag': 'Featured'}
+                return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()
             if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
