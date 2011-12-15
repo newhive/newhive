@@ -1,4 +1,4 @@
-import state, time, datetime
+import state, time, datetime, re
 
 def shared_user_data(result):
     for item in result:
@@ -88,3 +88,18 @@ def user_first_month(reference_date=time.time()):
     exprs = state.Expr.search(created = {"$lt": u['created'] + 30 * 24 * 60 * 60}, owner = u.id)
     public = filter(lambda x: x.get('auth') == 'public', exprs)
     u.update_cmd({'$unset': {'analytics.first_month.expressions.all': True}, '$set': {'analytics.first_month.expressions.total': len(exprs), 'analytics.first_month.expressions.public': len(public), 'analytics.first_month.expressions.private': len(exprs) - len(public) }})
+
+def app_count():
+    rv = {}
+    for e in state.Expr.search():
+        if not e.get('apps'): continue
+        for app in e.get('apps'):
+            type = app.get('type')
+            if not type: continue
+            if type == 'hive.html':
+                if re.search(r'player\.swf', app.get('content')): type = 'mp3'
+            if rv.has_key(type):
+                rv[type] = rv[type] + 1
+            else:
+                rv[type] = 1
+    return rv

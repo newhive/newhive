@@ -1,0 +1,10 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block header %}
+<h1>{{title}}</h1>
+{% endblock %}
+{% block table_body %}
+{% for key, val in data %}
+<tr><td>{{key}}</td><td>{{val}}</td></tr>
+{% endfor %}
+{% endblock %}

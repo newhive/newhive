@@ -1024,6 +1024,10 @@ def route_analytics(request, response):
 
         response.context['invites'] = invites
         return serve_page(response, 'pages/analytics/invites.html')
+    elif p2 == 'app_count':
+        response.context['data'] = analytics.app_count().items()
+        response.context['title'] = 'App Type Count'
+        return serve_page(response, 'pages/analytics/generic.html')
     else:
         return serve_404(request, response)
 
