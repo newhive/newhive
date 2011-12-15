@@ -658,4 +658,21 @@ var fix_borders = function(items){
     });
 }
 
-
+var context_to_string = function(){
+    var rv = "";
+    if (typeof(urlParams) == "object") {
+        if (urlParams.tag == 'recent' || urlParams.tag == 'featured'){
+            rv += urlParams.tag + " expressions";
+        } else if (urlParams.user) {
+            rv += urlParams.user + "'s expressions";
+        } else {
+            rv += "all expressions";
+        }
+        if (urlParams.tag){
+            if (!(urlParams.tag == "recent" || urlParams.tag == "featured")) {
+                rv += " tagged " + urlParams.tag;
+            }
+        }
+        return rv;
+    }
+};
