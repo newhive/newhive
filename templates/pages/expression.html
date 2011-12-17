@@ -90,8 +90,16 @@
   $(function(){
     pagethrough_btns = $('.pagethrough');
     pagethrough_btns.css('top', ($(window).height() - pagethrough_btns.height())/2)
-    pagethrough_btns.find('a.pagethrough-prev').attr('title', "previous " + context_to_string({plural: false}));
-    pagethrough_btns.find('a.pagethrough-next').attr('title', "next " + context_to_string({plural: false}));
+    pagethrough_btns.find('a.pagethrough-prev').attr('title', "previous " + context_to_string({plural: false})).click(function(){
+      logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'prev'});
+      setTimeout("window.location = '" + $(this).attr('href') + "'", 100);
+      return false;
+    });
+    pagethrough_btns.find('a.pagethrough-next').attr('title', "next " + context_to_string({plural: false})).click(function(){
+      logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'next'});
+      setTimeout("window.location = '" + $(this).attr('href') + "'", 100);
+      return false;
+    });
     var hover_width = 150;
     $(window).mousemove(function(event){
       if ($(window).width() - event.pageX < hover_width) {
