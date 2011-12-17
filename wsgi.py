@@ -11,7 +11,7 @@ import jinja2
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog, db
 import ui_strings.en as ui
 
 import webassets
@@ -805,12 +805,15 @@ def handle(request): # HANDLER
             else:
                 klass = Expr
             expr_home_list(p2, request, response, klass=klass)
+            if p2: response.context['expr_context'] = {'tag': p2 }
             if p1 == 'tag':
                 response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
                 response.context['tag'] = p2
             if request.args.get('partial'): return serve_page(response, 'page_parts/cards.html')
             elif p1 == 'tag': return serve_page(response, 'pages/tag_search.html')
-            else: return serve_page(response, 'pages/home.html')
+            else:
+                response.context['expr_context'] = {'tag': 'Featured'}
+                return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()
             if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
@@ -860,6 +863,33 @@ def handle(request): # HANDLER
     owner = User.fetch(d['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
     if is_owner: owner.unflag('expr_new')
+    if request.args.has_key('tag') or request.args.has_key('user'):
+        pagethrough = {'next': None, 'prev': None}
+        shared_spec = {}
+        url_args = {}
+        root = get_root()
+        if request.args.has_key('user'):
+            user = re.sub('[^A-Za-z]', '', request.args.get('user')) #prevent injection hacks
+            shared_spec.update({'owner_name': user})
+            url_args.update({'user': user})
+        if request.args.has_key('tag'):
+            tag = re.sub('[^A-Za-z]', '', request.args.get('tag')) #prevent injection hacks
+            root_tags = [key for key in root.get('tagged', {})]
+            if tag in root_tags:
+                ids = root.get('tagged', {}).get(tag, [])
+                shared_spec = ids
+            else:
+                tag = tag.lower()
+                if tag in ['recent']: shared_spec = {}
+                else:  shared_spec.update({'tags_index': tag})
+            url_args.update({'tag': tag})
+        pagethrough['next'] = d.next(shared_spec)
+        pagethrough['prev'] = d.prev(shared_spec)
+
+        if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring(url_args)
+        if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
+        response.context.update(pagethrough = pagethrough)
+
 
     response.context.update(
          domain = request.domain
@@ -886,10 +916,12 @@ def handle(request): # HANDLER
         star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         people_tag = {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
         response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
+        response.context['expr_context'] = {'user': owner.get('name')}
         if request.path.startswith('expressions'):
             spec = { 'owner' : owner.id }
             tag = lget(request.path.split('/'), 1, '')
             if tag:
+                response.context['expr_context'].update({'tag': tag})
                 tag = {'name': tag, 'url': "/expressions/" + tag, 'type': 'user'}
                 spec['tags_index'] = tag['name']
             else: tag = expressions_tag
@@ -1183,11 +1215,19 @@ def large_number(number):
     elif 10000000 <= number:
         return str(int(number/1000000)) + "M"
 
+def querystring(d):
+    out = "?"
+    for key, val in d.items():
+        out = out + key + "=" + val + "&"
+    return out[:-1]
+
+
 jinja_env.filters['friendly_date'] = friendly_date
 jinja_env.filters['length_bucket'] = length_bucket
 jinja_env.filters['large_number'] = large_number
 
 jinja_env.filters['mod'] = lambda x, y: x % y
+jinja_env.filters['querystring'] = querystring
 
 # run_simple is not so simple
 if __name__ == '__main__':
@@ -1211,6 +1251,7 @@ if __name__ == '__main__':
           , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
           , static_files = {
                '/lib' : joinpath(config.src_home, 'lib')
+              ,'/images' : joinpath(config.src_home, 'libsrc/scss/images')
               ,'/file' : config.media_path
             }
           , processes = 0

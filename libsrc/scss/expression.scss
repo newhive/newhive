@@ -1,0 +1,25 @@
+@import "pagethrough";
+@include all-pagethrough-sprites;
+
+#left_hover_area, #right_hover_area {
+  width: 0px;
+  top: 100px;
+  height: 70%;
+}
+#left_hover_area { left: 0; }
+#right_hover_area { right: 0; }
+#pagethrough_prev, #pagethrough_next { 
+  display: none;
+  a { 
+    @include opacity(0.8);
+    display: block;
+    width: image-width("pagethrough/next.png");
+    height: image-height("pagethrough/next.png");
+  }
+}
+#pagethrough_prev { 
+  left: 0;
+}
+#pagethrough_next { 
+  right: 0;
+}

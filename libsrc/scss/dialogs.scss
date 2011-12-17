@@ -48,6 +48,11 @@ input[type="text"].copy, textarea.copy {
 #email_send {margin-top: 26px; margin-left:20px; font-family:Arial; font-size:17px;}
 #congrats_message h1 {font-weight:lighter; font-family:Museo; display:inline; font-size: 33px;}
 #congrats_message strong {font-weight:normal; color: red; }
+#dia_share .share_context_explanation { 
+    font-size: 13px;
+    padding: 0 40px;
+    input { float: left; }
+}
 #expression_url { 
     display:block; 
     float: left; 
