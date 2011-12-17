@@ -75,7 +75,8 @@ input, textarea { font-size : inherit }
  </div>
  
  <div id='menu_shape' class='menu medbold'>
-  <div class='menu_item menu_hover'>Rectangle</div>
+  <div id='shape_rectangle' class='menu_item'>Rectangle</div>
+  <div id='shape_sketch' class='menu_item'>Sketch</div>
  </div>
 </div>
 
@@ -225,6 +226,43 @@ input, textarea { font-size : inherit }
 
   ><div class='control drawer fill border'></div
   ><div class='control drawer stroke border'></div
+  {#><div class='control drawer bstyle'
+   ><div class='border hoverable' style='border-style : solid;' title='Solid border'></div
+   ><div class='border hoverable' style='border-style : dashed;' title='Dashed border'></div
+   ><div class='border none hoverable' style='border-style : none;' title='No border'></div
+  ></div#}
+ ></div>
+</div>
+
+<div id='controls_sketch' class='controls_src'>
+ <div class='control buttons'
+  {#><img class='button link hoverable tip_W'     src='/lib/skin/1/link.png' title='Link'#}
+  ><img class='button fill hoverable tip_N' src='/lib/skin/1/color.png' title='Fill color'
+  ><div class='button brush blank rounding hoverable tip_N' title='brush'>B</div
+  ><div class='button size blank rounding hoverable tip_N' title='brush size'>S</div
+  ><img class='button opacity tip_N' src='/lib/skin/1/opacity.png' title='Opacity'
+  ><div class='button about blank rounding hoverable tip_N' title='About'>?</div
+
+  ><div class='control drawer fill border'></div
+  ><div class='control drawer border brush'
+   ><div class='option' val="sketchy">sketchy</div
+   ><div class='option' val="shaded" >shaded </div
+   ><div class='option' val="chrome" >chrome </div
+   ><div class='option' val="fur"    >fur    </div
+   ><div class='option' val="longfur">longfur</div
+   ><div class='option' val="web"    >web    </div
+   ><div class='option' val="simple" >simple </div
+   ><div class='option' val="squares">squares</div
+   ><div class='option' val="ribbon" >ribbon </div
+   ><div class='option' val="circles">circles</div
+   ><div class='option' val="grid"   >grid   </div
+  ></div
+  ><div class='control drawer border about'>
+blah blah
+  </div
+  {#><img class='button stroke hoverable tip_N' src='/lib/skin/1/border_color.png' title='Border color'#}
+  {#><img class='button blank bwidth hoverable tip_N' src='/lib/skin/1/border_width.png' title='Border width'#}
+  {#><div class='button blank bstyle hoverable' title='Border style'></div#}
   {#><div class='control drawer bstyle'
    ><div class='border hoverable' style='border-style : solid;' title='Solid border'></div
    ><div class='border hoverable' style='border-style : dashed;' title='Dashed border'></div

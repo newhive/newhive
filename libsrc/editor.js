@@ -145,8 +145,8 @@ Hive.App = function(initState) {
         if(o.angle && o.angle() != 0) o.state.angle = o.angle();
         return o.state;
     }
-    o.win = $(window);
-    o.sf = function() { return 1000 / o.win.width(); }
+    var win = $(window);
+    o.sf = function() { return 1000 / win.width(); }
     o.pos = function(pos) {
         if(typeof(pos) == 'undefined')
             return [ parseInt(o.div.position().left), parseInt(o.div.position().top) ];
@@ -171,7 +171,7 @@ Hive.App = function(initState) {
     }
     o.dims_n = function(dims) { o.div.width(Math.round(dims[0] * 1/o.sf())); o.div.height(Math.round(dims[1] * 1/o.sf())); }
     o.scale = function(scale) {
-        s = 1000 / o.win.width();
+        s = 1000 / win.width();
         o.state.scale = scale * s;
         //o.div.css('font-size', scale + 'em');
     }
@@ -181,7 +181,7 @@ Hive.App = function(initState) {
         if(o.controls) o.controls.layout();
     }
     o.center = function() {
-        o.pos([o.win.width() / 2 - o.dims()[0] / 2 + o.win.scrollLeft(), o.win.height() / 2 - o.dims()[1] / 2 + o.win.scrollTop()]);
+        o.pos([win.width() / 2 - o.dims()[0] / 2 + win.scrollLeft(), win.height() / 2 - o.dims()[1] / 2 + win.scrollTop()]);
     }
 
     o.opacity = function(s) {
@@ -192,9 +192,8 @@ Hive.App = function(initState) {
     }
 
     o.load = Funcs(function() {
-        o.content_element = o.div.find('.content');
         o.opacity(o.state.opacity);
-        o.content_element.click(function(e) { o.focus(); });
+        o.content_element.addClass('content').click(function(e) { o.focus(); });
         if(o.state.load) o.state.load(o);
         delete o.state.create;
     });
@@ -403,9 +402,9 @@ Hive.App.Html = function(common) {
         return o.embed.outerHTML();
     }
 
-    o.embed = $(o.state.content).addClass('content');
-    o.div.append(o.embed);
-    if(o.embed.is('object') || o.embed.is('embed') || o.embed.is('iframe')) {
+    o.content_element = $(o.state.content).addClass('content');
+    o.div.append(o.content_element);
+    if(o.content_element.is('object') || o.content_element.is('embed') || o.content_element.is('iframe')) {
         Hive.App.has_shield(o);
         o.set_shield = function() { o.shield(); }
         o.shield();
@@ -576,8 +575,9 @@ Hive.App.Text = function(common) {
 
     o.div.addClass('text');
     o.set_shield();
-    o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div, change : throttle(function() { setTimeout(o.refresh_size, 10) }, 200),
-        'class' : 'content', load : o.load, click : function() { o.controls.close() } });
+    o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
+        change : throttle(function() { setTimeout(o.refresh_size, 10) }, 200), load : o.load, click : function() { o.controls.close() } });
+    o.content_element = $(o.rte.iframe);
     
     return o;
 }
@@ -623,7 +623,7 @@ Hive.App.has_rotate = function(o) {
 
 //Hive.App.has_percent_
 
-Hive.App.add_slider_menu = function(o, handle, callback, init) {
+Hive.App.has_slider_menu = function(o, handle, callback, init) {
     function controls(common) {
         var o = $.extend({}, common);
 
@@ -642,7 +642,7 @@ Hive.App.add_slider_menu = function(o, handle, callback, init) {
     o.make_controls.push(controls);
 }
 Hive.App.has_opacity = function(o) {
-    Hive.App.add_slider_menu(o, '.opacity', function(v) { o.opacity(v/100) },
+    Hive.App.has_slider_menu(o, '.opacity', function(v) { o.opacity(v/100) },
         function() { return Math.round(o.opacity() * 100) });
 }
 
@@ -662,7 +662,7 @@ Hive.App.Image = function(common) {
 
     o.image_src = function(src) {
         if(o.img) o.img.remove();
-        o.img = $("<img class='content drag'>");
+        o.content_element = o.img = $("<img class='content drag'>");
         o.img.hide();
         o.img.attr('src', src);
         o.div.append(o.img);
@@ -731,7 +731,7 @@ Hive.App.Rectangle = function(common) {
     o.content = function(content) { return $.extend({}, state); };
     o.set_css = function(props) {
         props['background-color'] = props.color || props['background-color'];
-        o.rect.css(props);
+        o.content_element.css(props);
         $.extend(state, props);
         if(o.controls) o.controls.layout();
     }
@@ -776,16 +776,73 @@ Hive.App.Rectangle = function(common) {
     o.make_controls.push(controls);
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
-    //Hive.App.add_slider_menu(o, '.bwidth', function(v) { o.set_css({'border-width':v+'px'}); }, function() { return parseInt(state['border-width']) });
-    Hive.App.add_slider_menu(o, '.rounding', function(v) { o.set_css({'border-radius':v+'px'}); }, function() { return parseInt(state['border-radius']) });
+    //Hive.App.has_slider_menu(o, '.bwidth', function(v) { o.set_css({'border-width':v+'px'}); }, function() { return parseInt(state['border-width']) });
+    Hive.App.has_slider_menu(o, '.rounding', function(v) { o.set_css({'border-radius':v+'px'}); }, function() { return parseInt(state['border-radius']) });
 
-    o.rect = $("<div class='content rectangle drag'>").appendTo(o.div);
+    o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
     o.set_css(o.state.content);
-    setTimeout(function(){common.load()},1);
+    setTimeout(function(){o.load()},1);
 
     return o;
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
+
+
+Hive.App.Sketch = function(common) {
+    var o = $.extend({}, common);
+    Hive.App.has_resize(o);
+
+    var state = {};
+    o.content = function(content) { return $.extend({}, state); };
+
+    function controls(common) {
+        var o = $.extend({}, common);
+        
+        o.layout = function() {
+            common.layout();
+            var p = o.padding;
+            var dims = o.get_dims();
+            if(!o.rotateHandle) o.rotateHandle = o.div.find('.rotate');
+            if(!o.resizeHandle) o.resizeHandle = o.div.find('.resize_h');
+            //o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 40, dims[1] - 100) });
+            //o.resizeHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2     , dims[1] -  60) });
+            o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+        };
+
+        o.addControls($('#controls_sketch'));
+        append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, state.color);
+        o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
+        o.hover_menu(o.div.find('.button.brush'), o.div.find('.drawer.brush'));
+        o.div.find('.drawer.brush .option').each(function(i, e) { $(e).click(function() {
+            o.app.win.set_brush($(e).attr('val'));
+        }); })
+
+        return o;
+    };
+    o.make_controls.push(controls);
+    Hive.App.has_rotate(o);
+    Hive.App.has_opacity(o);
+    Hive.App.has_shield(o);
+    Hive.App.has_slider_menu(o, '.size', function(v) { o.win.BRUSH_SIZE = v; },
+        function() { return o.win.BRUSH_SIZE; });
+
+    o.content_element = $('<iframe>').attr('src', asset('harmony_sketch.html')).css({'width':'100%','height':'100%','position':'absolute'});
+    o.iframe = o.content_element.get(0);
+    o.fill_color = function(hex, rgb) { o.win.COLOR = rgb; }
+    o.div.append(o.content_element);
+
+    o.wait_for_doc = function() {
+        if(o.iframe.contentWindow && o.iframe.contentWindow.document) {
+            o.win = o.content_element.get(0).contentWindow;
+            o.load();
+            clearTimeout(o.doc_poll);
+        }
+    }
+    o.doc_poll = setTimeout(o.wait_for_doc, 1);
+
+    return o;
+};
+Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 
 
 // For selecting multilpe Apps. Not implemented
@@ -907,9 +964,12 @@ var main = function() {
     var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code') } );
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
     hover_menu($('#insert_shape'), $('#menu_shape'));
-    $('#insert_shape,#menu_shape').click(function(e) {
+    $('#insert_shape,#shape_rectangle').click(function(e) {
         Hive.new_app({ type : 'hive.rectangle', content : { color : colors[24],
             'border-color' : 'black', 'border-width' : 0, 'border-style' : 'solid', 'border-radius' : 0 } });
+    });
+    $('#shape_sketch').click(function(e) {
+        Hive.new_app({ type : 'hive.sketch' });
     });
     
     $('#btn_grid').click(Hive.toggle_grid);
@@ -1138,7 +1198,6 @@ Hive.rte = function(options) {
     o.create_editor = function() {
         o.iframe = $("<iframe style='border : none; width : 100%; height : 100%;'>").get(0);
         o.iframe.src = 'javascript:void(0)';
-        if(o['class']) $(o.iframe).addClass(o['class']);
         $(o.parent).append(o.iframe);
         o.doc_poll = setTimeout(o.wait_for_doc, 1);
     }
@@ -1342,7 +1401,7 @@ var append_color_picker = function(container, callback, init_color) {
 
     var make_picker = function(c) {
         var d = $('<div>').addClass('color_select');
-        d.css('background-color', c).attr('val', c).click(function() { set_color(c); manual_input.val(c); callback(c) });
+        d.css('background-color', c).attr('val', c).click(function() { set_color(c); manual_input.val(c); callback(c, to_rgb(c)) });
         return d.get(0);
     }
     var make_row = function(cs) {
@@ -1363,8 +1422,7 @@ var append_color_picker = function(container, callback, init_color) {
     var update_hex = function() {
         var v = manual_input.val();
         var c = $('<div>').css('color', v).css('color');
-        set_color(c);
-        callback(c);
+        callback(c, to_rgb(c));
     };
     manual_input.change(update_hex).keyup(update_hex);
 
@@ -1377,8 +1435,11 @@ var append_color_picker = function(container, callback, init_color) {
     }
     bar.click(get_hue).drag(get_hue);
 
+    var to_rgb = function(c) {
+        return map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
+    }
     var set_color = function(c) {
-        var rgb = map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
+        var rgb = to_rgb(c);
         hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
     }
@@ -1396,7 +1457,7 @@ var append_color_picker = function(container, callback, init_color) {
         var color = hsvToRgb(hsv[0], hsv[1], hsv[2]);
         var hex = '#' + map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
         manual_input.val(hex);
-        callback(hex);
+        callback(hex, color);
     }
 
     e.append(bar);

@@ -2,8 +2,8 @@ const REV = 6,
        BRUSHES = ["sketchy", "shaded", "chrome", "fur", "longfur", "web", "", "simple", "squares", "ribbon", "", "circles", "grid"],
        USER_AGENT = navigator.userAgent.toLowerCase();
 
-var SCREEN_WIDTH = 1200, //window.innerWidth,
-    SCREEN_HEIGHT = 1000, //window.innerHeight,
+var SCREEN_WIDTH = 1400, //window.innerWidth,
+    SCREEN_HEIGHT = 875, //window.innerHeight,
     BRUSH_SIZE = 1,
     BRUSH_PRESSURE = 1,
     COLOR = [0, 0, 0],
@@ -16,7 +16,7 @@ var SCREEN_WIDTH = 1200, //window.innerWidth,
     mouseX = 0,
     mouseY = 0,
     container,
-    foregroundColorSelector,
+    //foregroundColorSelector,
     //backgroundColorSelector,
     menu,
     about,
@@ -59,6 +59,8 @@ function init()
      */
 
     canvas = document.createElement("canvas");
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
     canvas.width = SCREEN_WIDTH;
     canvas.height = SCREEN_HEIGHT;
     canvas.style.cursor = 'crosshair';
@@ -70,31 +72,31 @@ function init()
     flattenCanvas.width = SCREEN_WIDTH;
     flattenCanvas.height = SCREEN_HEIGHT;
     
-    palette = new Palette();
+    //palette = new Palette();
     
-    foregroundColorSelector = new ColorSelector(palette);
-    foregroundColorSelector.addEventListener('change', onForegroundColorSelectorChange, false);
-    container.appendChild(foregroundColorSelector.container);
+    //foregroundColorSelector = new ColorSelector(palette);
+    //foregroundColorSelector.addEventListener('change', onForegroundColorSelectorChange, false);
+    //container.appendChild(foregroundColorSelector.container);
 
     //backgroundColorSelector = new ColorSelector(palette);
     //backgroundColorSelector.addEventListener('change', onBackgroundColorSelectorChange, false);
     //container.appendChild(backgroundColorSelector.container);	
     
-    menu = new Menu();
-    menu.foregroundColor.addEventListener('click', onMenuForegroundColor, false);
-    menu.foregroundColor.addEventListener('touchend', onMenuForegroundColor, false);
+    //menu = new Menu();
+    //menu.foregroundColor.addEventListener('click', onMenuForegroundColor, false);
+    //menu.foregroundColor.addEventListener('touchend', onMenuForegroundColor, false);
     //menu.backgroundColor.addEventListener('click', onMenuBackgroundColor, false);
     //menu.backgroundColor.addEventListener('touchend', onMenuBackgroundColor, false);
-    menu.selector.addEventListener('change', onMenuSelectorChange, false);
-    menu.save.addEventListener('click', onMenuSave, false);
-    menu.save.addEventListener('touchend', onMenuSave, false);
-    menu.clear.addEventListener('click', onMenuClear, false);
-    menu.clear.addEventListener('touchend', onMenuClear, false);
-    menu.about.addEventListener('click', onMenuAbout, false);
-    menu.about.addEventListener('touchend', onMenuAbout, false);
-    menu.container.addEventListener('mouseover', onMenuMouseOver, false);
-    menu.container.addEventListener('mouseout', onMenuMouseOut, false);
-    container.appendChild(menu.container);
+    //menu.selector.addEventListener('change', onMenuSelectorChange, false);
+    //menu.save.addEventListener('click', onMenuSave, false);
+    //menu.save.addEventListener('touchend', onMenuSave, false);
+    //menu.clear.addEventListener('click', onMenuClear, false);
+    //menu.clear.addEventListener('touchend', onMenuClear, false);
+    //menu.about.addEventListener('click', onMenuAbout, false);
+    //menu.about.addEventListener('touchend', onMenuAbout, false);
+    //menu.container.addEventListener('mouseover', onMenuMouseOver, false);
+    //menu.container.addEventListener('mouseout', onMenuMouseOut, false);
+    //container.appendChild(menu.container);
 
     if (STORAGE)
     {
@@ -126,24 +128,9 @@ function init()
         //}
     }
 
-    foregroundColorSelector.setColor( COLOR );
+    //foregroundColorSelector.setColor( COLOR );
     //backgroundColorSelector.setColor( BACKGROUND_COLOR );
     
-    if (window.location.hash)
-    {
-        hash = window.location.hash.substr(1,window.location.hash.length);
-
-        for (i = 0; i < BRUSHES.length; i++)
-        {
-            if (hash == BRUSHES[i])
-            {
-                brush = eval("new " + BRUSHES[i] + "(context)");
-                menu.selector.selectedIndex = i;
-                break;
-            }
-        }
-    }
-
     if (!brush)
     {
         brush = eval("new " + BRUSHES[0] + "(context)");
@@ -153,7 +140,6 @@ function init()
     container.appendChild(about.container);
     
     window.addEventListener('mousemove', onWindowMouseMove, false);
-    window.addEventListener('resize', onWindowResize, false);
     window.addEventListener('keydown', onWindowKeyDown, false);
     window.addEventListener('keyup', onWindowKeyUp, false);
     window.addEventListener('blur', onWindowBlur, false);
@@ -168,29 +154,11 @@ function init()
     canvas.addEventListener('mousedown', onCanvasMouseDown, false);
     canvas.addEventListener('touchstart', onCanvasTouchStart, false);
     
-    onWindowResize(null);
-
     return container;
 }
 
-
-// WINDOW
-
-//function get_position( event )
-//{
-//    var poff = $(container).offset();
-//    return [event.clientX - poff.left, event.clientY - poff.top];
-//}
-
-function onWindowResize()
-{
-    SCREEN_WIDTH = window.innerWidth;
-    SCREEN_HEIGHT = window.innerHeight;
-    
-    menu.container.style.left = ((SCREEN_WIDTH - menu.container.offsetWidth) / 2) + 'px';
-    
-    about.container.style.left = ((SCREEN_WIDTH - about.container.offsetWidth) / 2) + 'px';
-    about.container.style.top = ((SCREEN_HEIGHT - about.container.offsetHeight) / 2) + 'px';
+function set_brush(name) {
+    brush = new window[name](context);
 }
 
 function onWindowKeyDown( event )
@@ -202,10 +170,10 @@ function onWindowKeyDown( event )
     {
         case 16: // Shift
             shiftKeyIsDown = true;
-            foregroundColorSelector.container.style.left = mouseX - 125 + 'px';
-            foregroundColorSelector.container.style.top = mouseY - 125 + 'px';
-            foregroundColorSelector.container.style.visibility = 'visible';
-            break;
+        //    foregroundColorSelector.container.style.left = mouseX - 125 + 'px';
+        //    foregroundColorSelector.container.style.top = mouseY - 125 + 'px';
+        //    foregroundColorSelector.container.style.visibility = 'visible';
+        //    break;
             
         case 18: // Alt
             altKeyIsDown = true;
@@ -225,10 +193,10 @@ function onWindowKeyUp( event )
 {
     switch(event.keyCode)
     {
-        case 16: // Shift
-            shiftKeyIsDown = false;
-            foregroundColorSelector.container.style.visibility = 'hidden';			
-            break;
+        //case 16: // Shift
+        //    shiftKeyIsDown = false;
+        //    foregroundColorSelector.container.style.visibility = 'hidden';			
+        //    break;
             
         case 18: // Alt
             altKeyIsDown = false;
@@ -300,19 +268,19 @@ function onDocumentDragOver( event )
 
 // COLOR SELECTORS
 
-function onForegroundColorSelectorChange( event )
-{
-    COLOR = foregroundColorSelector.getColor();
-    
-    menu.setForegroundColor( COLOR );
-
-    if (STORAGE)
-    {
-        localStorage.brush_color_red = COLOR[0];
-        localStorage.brush_color_green = COLOR[1];
-        localStorage.brush_color_blue = COLOR[2];		
-    }
-}
+//function onForegroundColorSelectorChange( event )
+//{
+//    COLOR = foregroundColorSelector.getColor();
+//    
+//    menu.setForegroundColor( COLOR );
+//
+//    if (STORAGE)
+//    {
+//        localStorage.brush_color_red = COLOR[0];
+//        localStorage.brush_color_green = COLOR[1];
+//        localStorage.brush_color_blue = COLOR[2];		
+//    }
+//}
 
 //function onBackgroundColorSelectorChange( event )
 //{
@@ -333,16 +301,16 @@ function onForegroundColorSelectorChange( event )
 
 // MENU
 
-function onMenuForegroundColor()
-{
-    cleanPopUps();
-    
-    foregroundColorSelector.show();
-    foregroundColorSelector.container.style.left = ((SCREEN_WIDTH - foregroundColorSelector.container.offsetWidth) / 2) + 'px';
-    foregroundColorSelector.container.style.top = ((SCREEN_HEIGHT - foregroundColorSelector.container.offsetHeight) / 2) + 'px';
-
-    isFgColorSelectorVisible = true;
-}
+//function onMenuForegroundColor()
+//{
+//    cleanPopUps();
+//    
+//    foregroundColorSelector.show();
+//    foregroundColorSelector.container.style.left = ((SCREEN_WIDTH - foregroundColorSelector.container.offsetWidth) / 2) + 'px';
+//    foregroundColorSelector.container.style.top = ((SCREEN_HEIGHT - foregroundColorSelector.container.offsetHeight) / 2) + 'px';
+//
+//    isFgColorSelectorVisible = true;
+//}
 
 //function onMenuBackgroundColor()
 //{
@@ -378,9 +346,8 @@ function onMenuMouseOut()
 
 function onMenuSave()
 {
-    // window.open(canvas.toDataURL('image/png'),'mywindow');
     flatten();
-    window.open(flattenCanvas.toDataURL('image/png'),'mywindow');
+    window.open(flattenCanvas.toDataURL('image/jpeg'),'mywindow');
 }
 
 function onMenuClear()
@@ -406,11 +373,12 @@ function onMenuAbout()
 
 
 // CANVAS
+function get_x(e) { return event.clientX * (SCREEN_WIDTH / window.innerWidth); }
+function get_y(e) { return event.clientY * (SCREEN_HEIGHT / window.innerHeight); }
 
 function onWindowMouseMove(e) {
-    //var p = get_position(e);
-    mouseX = e.clientX; //p[0];
-    mouseY = e.clientY; //p[1];
+    mouseX = get_x(e);
+    mouseY = get_y(e);
 }
 
 function onCanvasMouseDown( event )
@@ -425,16 +393,16 @@ function onCanvasMouseDown( event )
         flatten();
         
         data = flattenCanvas.getContext("2d").getImageData(0, 0, flattenCanvas.width, flattenCanvas.height).data;
-        position = (event.clientX + (event.clientY * canvas.width)) * 4;
+        position = (get_x(event) + (get_y(event) * canvas.width)) * 4;
         
-        foregroundColorSelector.setColor( [ data[position], data[position + 1], data[position + 2] ] );
+        COLOR = [ data[position], data[position + 1], data[position + 2] ];
         
         return;
     }
     
     BRUSH_PRESSURE = wacom && wacom.isWacom ? wacom.pressure : 1;
     
-    brush.strokeStart( event.clientX, event.clientY );
+    brush.strokeStart(get_x(event), get_y(event));
 
     window.addEventListener('mousemove', onCanvasMouseMove, false);
     window.addEventListener('mouseup', onCanvasMouseUp, false);
@@ -444,7 +412,7 @@ function onCanvasMouseMove( event )
 {
     BRUSH_PRESSURE = wacom && wacom.isWacom ? wacom.pressure : 1;
     
-    brush.stroke( event.clientX, event.clientY );
+    brush.stroke(get_x(event), get_y(event));
 }
 
 function onCanvasMouseUp()
@@ -642,384 +610,7 @@ Menu.prototype =
     //    context.fillRect(0, 0, this.backgroundColor.width, 1);		
     //}
 }
-function Palette()
-{
-    var canvas, context, offsetx, offsety, radius = 90,
-    count = 1080, oneDivCount = 1 / count, countDiv360 = count / 360, degreesToRadians = Math.PI / 180,
-    i, angle, angle_cos, angle_sin, gradient;
-    
-    canvas = document.createElement("canvas");
-    canvas.width = 250;
-    canvas.height = 250;
-    
-    offsetx = canvas.width / 2;
-    offsety = canvas.height / 2;
-    
-    context = canvas.getContext("2d");
-    context.lineWidth = 1;
-    
-    // http://www.boostworthy.com/blog/?p=226
-    
-    for(i = 0; i < count; i++)
-    {
-        angle = i / countDiv360 * degreesToRadians;
-        angle_cos = Math.cos(angle);
-        angle_sin = Math.sin(angle);
-        
-        context.strokeStyle = "hsl(" + Math.floor( (i * oneDivCount) * 360 ) + ", 100%, 50%)";
-        context.beginPath();
-        context.moveTo(angle_cos + offsetx, angle_sin + offsety);
-        context.lineTo(angle_cos * radius + offsetx, angle_sin * radius + offsety);
-        context.stroke();
-    }
-    
-    gradient = context.createRadialGradient(offsetx, offsetx, 0, offsetx, offsetx, radius);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    
-    return canvas;
-}
-function ColorSelector( gradient )
-{
-    this.init( gradient );
-}
 
-function HSB2RGB(hue, sat, val)
-{
-    var red, green, blue,
-    i, f, p, q, t;
-
-    if (val == 0)
-        return [ 0, 0, 0 ];
-    
-    hue *= 0.016666667; // /= 60;
-    sat *= 0.01; // /= 100;
-    val *= 0.01; // /= 100;
-        
-    i = Math.floor(hue);
-    f = hue - i;
-    p = val * (1 - sat);
-    q = val * (1 - (sat * f));
-    t = val * (1 - (sat * (1 - f)));
-    
-    switch(i)
-    {
-        case 0: red = val; green = t; blue = p; break;
-        case 1: red = q; green = val; blue = p; break;
-        case 2: red = p; green = val; blue = t; break;
-        case 3: red = p; green = q; blue = val; break;
-        case 4: red = t; green = p; blue = val; break;
-        case 5: red = val; green = p; blue = q; break;
-    }
-    
-    return [red, green, blue];
-}
-
-function RGB2HSB(red, green, blue)
-{
-    var x, f, i, hue, sat, val;
-
-    x = Math.min( Math.min( red, green ), blue );
-    val = Math.max( Math.max( red, green ), blue );
-
-    if (x==val)
-        return [0, 0, val*100];
-
-    f = (red == x) ? green - blue : ((green == x) ? blue - red : red - green);
-    i = (red == x) ? 3 : ((green == x) ? 5 : 1);
-    
-    hue = Math.floor((i - f / (val - x)) * 60) % 360;
-    sat = Math.floor(((val - x) / val) * 100);
-    val = Math.floor(val * 100);
-    
-    return [hue, sat, val];
-}
-
-ColorSelector.prototype =
-{
-    container: null,
-    color: [0, 0, 0],
-
-    hueSelector: null,
-    luminosity: null,
-    luminosityData: null,	
-    luminositySelector: null,
-    luminosityPosition: null,
-
-    dispatcher: null,
-    changeEvent: null,
-    
-    init: function(gradient)
-    {
-        var scope = this, context, hue, hueData;
-
-        this.container = document.createElement('div');
-        this.container.style.position = 'absolute';
-        this.container.style.width = '250px';
-        this.container.style.height = '250px';
-        this.container.style.visibility = 'hidden';
-        this.container.style.cursor = 'pointer';
-        this.container.addEventListener('mousedown', onMouseDown, false);
-        this.container.addEventListener('touchstart', onTouchStart, false);
-
-        hue = document.createElement("canvas");
-        hue.width = gradient.width;
-        hue.height = gradient.height;
-        
-        context = hue.getContext("2d");
-        context.drawImage(gradient, 0, 0, hue.width, hue.height);
-
-        hueData = context.getImageData(0, 0, hue.width, hue.height).data;	
-        
-        this.container.appendChild(hue);
-        
-        this.luminosity = document.createElement("canvas");
-        this.luminosity.style.position = 'absolute';
-        this.luminosity.style.left = '0px';
-        this.luminosity.style.top = '0px';
-        this.luminosity.width = 250;
-        this.luminosity.height = 250;
-
-        this.container.appendChild(this.luminosity);
-
-        this.hueSelector = document.createElement("canvas");
-        this.hueSelector.style.position = 'absolute';
-        this.hueSelector.style.left = ((hue.width - 15) / 2 ) + 'px';
-        this.hueSelector.style.top = ((hue.height - 15) / 2 ) + 'px';
-        this.hueSelector.width = 15;
-        this.hueSelector.height = 15;
-        
-        context = this.hueSelector.getContext("2d");
-        context.lineWidth = 2;
-        context.strokeStyle = "rgba(0, 0, 0, 0.5)";
-        context.beginPath();
-        context.arc(8, 8, 6, 0, Math.PI * 2, true);
-        context.stroke();
-        context.strokeStyle = "rgba(256, 256, 256, 0.8)";
-        context.beginPath();
-        context.arc(7, 7, 6, 0, Math.PI * 2, true);
-        context.stroke();
-
-        this.container.appendChild( this.hueSelector );
-        
-        this.luminosityPosition = [ (gradient.width - 15), (gradient.height - 15) / 2 ];
-        
-        this.luminositySelector = document.createElement("canvas");
-        this.luminositySelector.style.position = 'absolute';
-        this.luminositySelector.style.left = (this.luminosityPosition[0] - 7) + 'px';
-        this.luminositySelector.style.top = (this.luminosityPosition[1] - 7) + 'px';
-        this.luminositySelector.width = 15;
-        this.luminositySelector.height = 15;
-        
-        context = this.luminositySelector.getContext("2d");
-        context.drawImage(this.hueSelector, 0, 0, this.luminositySelector.width, this.luminositySelector.height);
-        
-        this.container.appendChild(this.luminositySelector);
-        
-        this.dispatcher = document.createElement('div'); // this could be better handled...
-        
-        this.changeEvent = document.createEvent('Events');
-        this.changeEvent.initEvent('change', true, true);
-        
-        //
-        
-        function onMouseDown( event )
-        {
-            window.addEventListener('mousemove', onMouseMove, false);
-            window.addEventListener('mouseup', onMouseUp, false);
-            
-            update( event.clientX - scope.container.offsetLeft, event.clientY - scope.container.offsetTop );
-        }
-        
-        function onMouseMove( event )
-        {
-            update( event.clientX - scope.container.offsetLeft, event.clientY - scope.container.offsetTop );
-        }
-
-        function onMouseUp( event )
-        {
-            window.removeEventListener('mousemove', onMouseMove, false);
-            window.removeEventListener('mouseup', onMouseUp, false);
-        
-            update( event.clientX - scope.container.offsetLeft, event.clientY - scope.container.offsetTop );
-        }
-        
-        function onTouchStart( event )
-        {
-            if(event.touches.length == 1)
-            {
-                event.preventDefault();
-
-                window.addEventListener('touchmove', onTouchMove, false);
-                window.addEventListener('touchend', onTouchEnd, false);
-        
-                update( event.touches[0].pageX - scope.container.offsetLeft, event.touches[0].pageY - scope.container.offsetTop );
-            }
-        }
-
-        function onTouchMove( event )
-        {
-            if(event.touches.length == 1)
-            {
-                event.preventDefault();
-            
-                update( event.touches[0].pageX - scope.container.offsetLeft, event.touches[0].pageY - scope.container.offsetTop );
-            }
-        }
-
-        function onTouchEnd( event )
-        {
-            if(event.touches.length == 0)
-            {
-                event.preventDefault();
-            
-                window.removeEventListener('touchmove', onTouchMove, false);
-                window.removeEventListener('touchend', onTouchEnd, false);
-            }
-        }
-        
-        //
-        
-        function update(x, y)
-        {
-            var dx, dy, d, nx, ny;
-            
-            dx = x - 125;
-            dy = y - 125;
-            d = Math.sqrt( dx * dx + dy * dy );
-
-            if (d < 90)
-            {
-                scope.hueSelector.style.left = (x - 7) + 'px';
-                scope.hueSelector.style.top = (y - 7) + 'px';
-                scope.updateLuminosity( [ hueData[(x + (y * 250)) * 4], hueData[(x + (y * 250)) * 4 + 1], hueData[(x + (y * 250)) * 4 + 2] ] );
-            }
-            else if (d > 100)
-            {
-                nx = dx / d;
-                ny = dy / d;
-            
-                scope.luminosityPosition[0] = (nx * 110) + 125;
-                scope.luminosityPosition[1] = (ny * 110) + 125;
-            
-                scope.luminositySelector.style.left = ( scope.luminosityPosition[0] - 7) + 'px';
-                scope.luminositySelector.style.top = ( scope.luminosityPosition[1] - 7) + 'px';
-            }
-            
-            x = Math.floor(scope.luminosityPosition[0]);
-            y = Math.floor(scope.luminosityPosition[1]);
-        
-            scope.color[0] = scope.luminosityData[(x + (y * 250)) * 4];
-            scope.color[1] = scope.luminosityData[(x + (y * 250)) * 4 + 1];
-            scope.color[2] = scope.luminosityData[(x + (y * 250)) * 4 + 2];			
-        
-            scope.dispatchEvent( scope.changeEvent );
-        }
-    },
-    
-    
-    //
-    
-    show: function()
-    {
-        this.container.style.visibility = 'visible';
-    },
-    
-    hide: function()
-    {
-        this.container.style.visibility = 'hidden';		
-    },
-    
-    getColor: function()
-    {
-        return this.color;
-    },
-    
-    setColor: function( color )
-    {
-        // Ok, this is super dirty. The whole class needs some refactoring, again! :/
-        
-        var hsb, angle, distance, rgb, degreesToRadians = Math.PI / 180
-    
-        this.color = color;
-        
-        hsb = RGB2HSB(color[0] / 255, color[1] / 255, color[2] / 255);
-
-        angle = hsb[0] * degreesToRadians;
-        distance = (hsb[1] / 100) * 90;
-
-        this.hueSelector.style.left = ( ( Math.cos(angle) * distance + 125 ) - 7 ) + 'px';
-        this.hueSelector.style.top = ( ( Math.sin(angle) * distance + 125 ) - 7 ) + 'px';
-
-        rgb = HSB2RGB(hsb[0], hsb[1], 100);
-        rgb[0] *= 255; rgb[1] *= 255; rgb[2] *= 255;
-        
-        this.updateLuminosity( rgb );
-        
-        angle = (hsb[2] / 100) * 360 * degreesToRadians;
-        
-        this.luminosityPosition[0] = ( Math.cos(angle) * 110 ) + 125;
-        this.luminosityPosition[1] = ( Math.sin(angle) * 110 ) + 125;
-        
-        this.luminositySelector.style.left = ( this.luminosityPosition[0] - 7 ) + 'px';
-        this.luminositySelector.style.top = ( this.luminosityPosition[1] - 7 ) + 'px';
-        
-        this.dispatchEvent( this.changeEvent );
-    },
-    
-    //
-    
-    updateLuminosity: function( color )
-    {
-        var context, angle, angle_cos, angle_sin, shade, offsetx, offsety,
-        inner_radius = 100, outter_radius = 120, i, count = 1080 / 2, oneDivCount = 1 / count, degreesToRadians = Math.PI / 180,
-        countDiv360 = (count / 360);
-    
-        offsetx = this.luminosity.width / 2;
-        offsety = this.luminosity.height / 2;
-    
-        context = this.luminosity.getContext("2d");
-        context.lineWidth = 3;
-        context.clearRect(0, 0, this.luminosity.width, this.luminosity.height);
-    
-        for(i = 0; i < count; i++)
-        {
-            angle = i / countDiv360 * degreesToRadians;
-            angle_cos = Math.cos(angle);
-            angle_sin = Math.sin(angle);
-
-            shade = 255 - (i * oneDivCount /* / count */) * 255;
-        
-            context.strokeStyle = "rgb(" + Math.floor( color[0] - shade ) + "," + Math.floor( color[1] - shade ) + "," + Math.floor( color[2] - shade ) + ")";
-            context.beginPath();
-            context.moveTo(angle_cos * inner_radius + offsetx, angle_sin * inner_radius + offsety);
-            context.lineTo(angle_cos * outter_radius + offsetx, angle_sin * outter_radius + offsety);
-            context.stroke();
-        }
-        
-        this.luminosityData = context.getImageData(0, 0, this.luminosity.width, this.luminosity.height).data;	
-    },
-    
-    //
-    
-    addEventListener: function( type, listener, useCapture )
-    {
-        this.dispatcher.addEventListener(type, listener, useCapture);
-    },
-    
-    dispatchEvent: function( event )
-    {
-        this.dispatcher.dispatchEvent(event);
-    },
-    
-    removeEventListener: function( type, listener, useCapture )
-    {
-        this.dispatcher.removeEventListener(type, listener, useCapture);
-    }
-}
 function chrome( context )
 {
     this.init( context );
@@ -1786,15 +1377,6 @@ About.prototype =
 
         text = document.createElement("p");
         text.innerHTML = '<em>Sketchy</em>, <em>Shaded</em>, <em>Chrome</em>, <em>Fur</em>, <em>LongFur</em> and <em>Web</em> are all variations of the neighbour points connection concept. First implemented in <a href="http://www.zefrank.com/scribbler/" target="_blank">The Scribbler</a>.';
-        containerText.appendChild(text);
-        
-        text = document.createElement("p");
-        text.innerHTML = 'If you like the tool, you can use this button to share your love ;)';
-        containerText.appendChild(text);
-        
-        text = document.createElement("p");
-        text.style.textAlign = 'center';
-        text.innerHTML = '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="hosted_button_id" value="VY7767JMMMYM4"><input type="image" src="https://www.paypal.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online."><img alt="" border="0" src="https://www.paypal.com/en_GB/i/scr/pixel.gif" width="1" height="1"></form>';
         containerText.appendChild(text);
     },
     
