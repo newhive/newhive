@@ -806,13 +806,14 @@ def handle(request): # HANDLER
                 klass = Expr
             expr_home_list(p2, request, response, klass=klass)
             if p2: response.context['expr_context'] = {'tag': p2 }
+            elif p1 == '':
+                response.context['expr_context'] = {'tag': 'Featured'}
             if p1 == 'tag':
                 response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
                 response.context['tag'] = p2
             if request.args.get('partial'): return serve_page(response, 'page_parts/cards.html')
             elif p1 == 'tag': return serve_page(response, 'pages/tag_search.html')
             else:
-                response.context['expr_context'] = {'tag': 'Featured'}
                 return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
             root = get_root()
