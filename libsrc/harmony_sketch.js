@@ -82,22 +82,6 @@ function init()
     //backgroundColorSelector.addEventListener('change', onBackgroundColorSelectorChange, false);
     //container.appendChild(backgroundColorSelector.container);	
     
-    //menu = new Menu();
-    //menu.foregroundColor.addEventListener('click', onMenuForegroundColor, false);
-    //menu.foregroundColor.addEventListener('touchend', onMenuForegroundColor, false);
-    //menu.backgroundColor.addEventListener('click', onMenuBackgroundColor, false);
-    //menu.backgroundColor.addEventListener('touchend', onMenuBackgroundColor, false);
-    //menu.selector.addEventListener('change', onMenuSelectorChange, false);
-    //menu.save.addEventListener('click', onMenuSave, false);
-    //menu.save.addEventListener('touchend', onMenuSave, false);
-    //menu.clear.addEventListener('click', onMenuClear, false);
-    //menu.clear.addEventListener('touchend', onMenuClear, false);
-    //menu.about.addEventListener('click', onMenuAbout, false);
-    //menu.about.addEventListener('touchend', onMenuAbout, false);
-    //menu.container.addEventListener('mouseover', onMenuMouseOver, false);
-    //menu.container.addEventListener('mouseout', onMenuMouseOut, false);
-    //container.appendChild(menu.container);
-
     if (STORAGE)
     {
         if (localStorage.canvas)
@@ -135,9 +119,6 @@ function init()
     {
         brush = eval("new " + BRUSHES[0] + "(context)");
     }
-    
-    about = new About();
-    container.appendChild(about.container);
     
     window.addEventListener('mousemove', onWindowMouseMove, false);
     window.addEventListener('keydown', onWindowKeyDown, false);
@@ -363,18 +344,10 @@ function onMenuClear()
     brush = eval("new " + BRUSHES[menu.selector.selectedIndex] + "(context)");
 }
 
-function onMenuAbout()
-{
-    cleanPopUps();
-
-    isAboutVisible = true;
-    about.show();
-}
-
 
 // CANVAS
-function get_x(e) { return event.clientX * (SCREEN_WIDTH / window.innerWidth); }
-function get_y(e) { return event.clientY * (SCREEN_HEIGHT / window.innerHeight); }
+function get_x(e) { return Math.round(event.clientX * (SCREEN_WIDTH / window.innerWidth)); }
+function get_y(e) { return Math.round(event.clientY * (SCREEN_HEIGHT / window.innerHeight)); }
 
 function onWindowMouseMove(e) {
     mouseX = get_x(e);
@@ -469,8 +442,6 @@ function onCanvasTouchEnd( event )
     }
 }
 
-//
-
 function saveToLocalStorage()
 {
     localStorage.canvas = canvas.toDataURL('image/png');
@@ -504,111 +475,6 @@ function cleanPopUps()
         about.hide();
         isAboutVisible = false;
     }
-}
-function Menu()
-{	
-    this.init();
-}
-
-Menu.prototype = 
-{
-    container: null,
-    
-    foregroundColor: null,
-    backgroundColor: null,
-    
-    selector: null,
-    save: null,
-    clear: null,
-    about: null,
-    
-    init: function()
-    {
-        var option, space, separator, color_width = 15, color_height = 15;
-
-        this.container = document.createElement("div");
-        this.container.className = 'gui';
-        this.container.style.position = 'absolute';
-        this.container.style.top = '0px';
-        
-        this.foregroundColor = document.createElement("canvas");
-        this.foregroundColor.style.marginBottom = '-3px';
-        this.foregroundColor.style.cursor = 'pointer';
-        this.foregroundColor.width = color_width;
-        this.foregroundColor.height = color_height;
-        this.container.appendChild(this.foregroundColor);
-        
-        this.setForegroundColor( COLOR );
-        
-        space = document.createTextNode(" ");
-        this.container.appendChild(space);
-
-        this.backgroundColor = document.createElement("canvas");
-        this.backgroundColor.style.marginBottom = '-3px';
-        this.backgroundColor.style.cursor = 'pointer';
-        this.backgroundColor.width = color_width;
-        this.backgroundColor.height = color_height;
-        this.container.appendChild(this.backgroundColor);
-
-        //this.setBackgroundColor( BACKGROUND_COLOR );
-        
-        space = document.createTextNode(" ");
-        this.container.appendChild(space);		
-        
-        this.selector = document.createElement("select");
-
-        for (i = 0; i < BRUSHES.length; i++)
-        {
-            option = document.createElement("option");
-            option.id = i;
-            option.innerHTML = BRUSHES[i].toUpperCase();
-            this.selector.appendChild(option);
-        }
-
-        this.container.appendChild(this.selector);
-
-        space = document.createTextNode(" ");
-        this.container.appendChild(space);
-        
-        this.save = document.createElement("span"); //getElementById('save');
-        this.save.className = 'button';
-        this.save.innerHTML = 'Save';
-        this.container.appendChild(this.save);
-        
-        space = document.createTextNode(" ");
-        this.container.appendChild(space);
-        
-        this.clear = document.createElement("Clear");
-        this.clear.className = 'button';
-        this.clear.innerHTML = 'Clear';
-        this.container.appendChild(this.clear);
-
-        separator = document.createTextNode(" | ");
-        this.container.appendChild(separator);
-
-        this.about = document.createElement("About");
-        this.about.className = 'button';
-        this.about.innerHTML = 'About';
-        this.container.appendChild(this.about);
-    },
-    
-    setForegroundColor: function( color )
-    {
-        var context = this.foregroundColor.getContext("2d");
-        context.fillStyle = 'rgb(' + color[0] + ', ' + color[1] +', ' + color[2] + ')';
-        context.fillRect(0, 0, this.foregroundColor.width, this.foregroundColor.height);
-        context.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        context.fillRect(0, 0, this.foregroundColor.width, 1);
-    },
-    
-    //setBackgroundColor: function( color )
-    //{
-    //    var context = this.backgroundColor.getContext("2d");
-    //    context.fillStyle = 'rgb(' + color[0] + ', ' + color[1] +', ' + color[2] + ')';
-    //    context.fillRect(0, 0, this.backgroundColor.width, this.backgroundColor.height);
-    //    context.fillStyle = 'rgba(0, 0, 0, 0.1)';
-    //    context.fillRect(0, 0, this.backgroundColor.width, 1);		
-    //}
 }
 
 function chrome( context )
@@ -1331,63 +1197,6 @@ web.prototype =
     strokeEnd: function()
     {
         
-    }
-}
-function About()
-{
-    this.init();	
-}
-
-About.prototype = 
-{
-    container: null,
-
-    init: function()
-    {
-        var text, containerText;
-        
-        this.container = document.createElement("div");
-        this.container.className = 'gui';
-        this.container.style.position = 'absolute';
-        this.container.style.top = '0px';
-        this.container.style.visibility = 'hidden';
-        
-        containerText = document.createElement("div");
-        containerText.style.margin = '10px 10px';
-        containerText.style.textAlign = 'left';
-        this.container.appendChild(containerText);
-
-        text = document.createElement("p");
-        text.style.textAlign = 'center';		
-        text.innerHTML = '<strong>HARMONY</strong> <a href="changelog.txt" target="_blank">r' + REV + '</a> by <a href="http://twitter.com/mrdoob" target="_blank">Mr.doob</a>';
-        containerText.appendChild(text);
-
-        text = document.createElement("p");
-        text.style.textAlign = 'center';
-        text.innerHTML = 'Brush: <span class="key">d</span><span class="key">f</span> size, <span class="key">r</span> reset<br />Color: <span class="key">shift</span> wheel, <span class="key">alt</span> picker<br />';
-        containerText.appendChild(text);
-
-        text = document.createElement("p");
-        text.style.textAlign = 'center';
-        text.innerHTML = '<a href="http://mrdoob.com/blog/post/689" target="_blank">Info</a> - <a href="http://github.com/mrdoob/harmony" target="_blank">Source Code</a>';
-        containerText.appendChild(text);
-
-        text = document.createElement("hr");
-        containerText.appendChild(text);
-
-        text = document.createElement("p");
-        text.innerHTML = '<em>Sketchy</em>, <em>Shaded</em>, <em>Chrome</em>, <em>Fur</em>, <em>LongFur</em> and <em>Web</em> are all variations of the neighbour points connection concept. First implemented in <a href="http://www.zefrank.com/scribbler/" target="_blank">The Scribbler</a>.';
-        containerText.appendChild(text);
-    },
-    
-    show: function()
-    {
-        this.container.style.visibility = 'visible';		
-    },
-    
-    hide: function()
-    {
-        this.container.style.visibility = 'hidden';
     }
 }
 

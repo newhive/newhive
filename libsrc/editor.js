@@ -795,6 +795,8 @@ Hive.App.Sketch = function(common) {
     var state = {};
     o.content = function(content) { return $.extend({}, state); };
 
+    o.focus.add(function() { o.win.focus() });
+
     function controls(common) {
         var o = $.extend({}, common);
         
