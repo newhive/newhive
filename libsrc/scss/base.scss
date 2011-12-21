@@ -47,7 +47,43 @@ $left_column_width: 210px;
 iframe { border: none; }
 
 // Misc (move to own files when this gets too long)
-.email_confirmation #content a {
-  color: $color_blue;
-  &:hover { color: $color_active; }
+.user_settings, .email_confirmation{
+  .fathead {
+    margin: 50px; 
+    div { 
+      background: url('/lib/skin/1/plus_lg.png') no-repeat; 
+      height: 44px;
+    }
+    h1 { 
+      margin: 0 0 0 50px; 
+      display:inline;
+      font-family: Museo, Helvetica, sans-serif;
+    }
+  }
+}
+.user_settings {
+  .required { 
+    color: $color_active; 
+    font-size: 0.7em;
+  }
+  .form_validation_info { width: 215px; }
+  .user_name_change_text {
+    width: 215px;
+    font-size: 0.75em;
+  }
+}
+.email_confirmation {
+//  .fathead { 
+//    margin: 100px 0 0 15%;
+//    width: 70%;
+//  }
+  .fathead { 
+    margin-bottom: 100px; 
+    p {margin-left: 50px; }
+  } 
+
+  #content a {
+    color: $color_blue;
+    &:hover { color: $color_active; }
+  }
 }

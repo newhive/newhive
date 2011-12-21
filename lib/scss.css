@@ -1141,7 +1141,7 @@ input[type="text"].copy, textarea.copy {
   font-size: 12px;
 }
 /* line 19, /home/duffy/2newhive/libsrc/scss/profile.scss */
-.expr_cards .expr_cards .fathead {
+.expr_cards .fathead {
   font-weight: normal;
 }
 /* line 20, /home/duffy/2newhive/libsrc/scss/profile.scss */
@@ -1204,11 +1204,50 @@ iframe {
   border: none;
 }
 
-/* line 50 */
+/* line 51 */
+.user_settings .fathead, .email_confirmation .fathead {
+  margin: 50px;
+}
+/* line 53 */
+.user_settings .fathead div, .email_confirmation .fathead div {
+  background: url("/lib/skin/1/plus_lg.png") no-repeat;
+  height: 44px;
+}
+/* line 57 */
+.user_settings .fathead h1, .email_confirmation .fathead h1 {
+  margin: 0 0 0 50px;
+  display: inline;
+  font-family: Museo, Helvetica, sans-serif;
+}
+
+/* line 65 */
+.user_settings .required {
+  color: #f72e4d;
+  font-size: 0.7em;
+}
+/* line 69 */
+.user_settings .form_validation_info {
+  width: 215px;
+}
+/* line 70 */
+.user_settings .user_name_change_text {
+  width: 215px;
+  font-size: 0.75em;
+}
+
+/* line 80 */
+.email_confirmation .fathead {
+  margin-bottom: 100px;
+}
+/* line 82 */
+.email_confirmation .fathead p {
+  margin-left: 50px;
+}
+/* line 85 */
 .email_confirmation #content a {
   color: #698293;
 }
-/* line 52 */
+/* line 87 */
 .email_confirmation #content a:hover {
   color: #f72e4d;
 }
