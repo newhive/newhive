@@ -870,7 +870,9 @@ def handle(request): # HANDLER
         shared_spec = {}
         url_args = {}
         root = get_root()
+        loop = False
         if request.args.has_key('user'):
+            loop = True
             user = re.sub('[^A-Za-z]', '', request.args.get('user')) #prevent injection hacks
             shared_spec.update({'owner_name': user})
             url_args.update({'user': user})
@@ -885,8 +887,8 @@ def handle(request): # HANDLER
                 if tag in ['recent']: shared_spec = {}
                 else:  shared_spec.update({'tags_index': tag})
             url_args.update({'tag': tag})
-        pagethrough['next'] = d.next(shared_spec)
-        pagethrough['prev'] = d.prev(shared_spec)
+        pagethrough['next'] = d.next(shared_spec, loop=loop)
+        pagethrough['prev'] = d.prev(shared_spec, loop=loop)
 
         if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring(url_args)
         if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
