@@ -3,6 +3,8 @@
   <a href='{{ expr.url |e }}{{ expr_context | querystring if expr_context}}' target='_top'><img src='{{ expr.thumb|default('/lib/skin/1/default_thumb.png') }}' class='thumb'>
   <div class='title'>{{ expr.title|e }}</div></a>
   <div class='tags'>{% for t in expr.tags %}<a href='{{ server }}tag/{{ t|e }}' class='tag' value='{{ t|e }}'>#{{ t }} </a> {% endfor %}</div>
-  <a href="{{expr.owner_url}}"><div class='other'><span>{{ expr.owner_name}}</span></div></a>
+  {% if expr.owner_name %}
+    <a href="{{expr.owner_url}}"><div class='other'><span>{{ expr.owner_name}}</span></div></a>
+  {% endif %}
 </div>
 

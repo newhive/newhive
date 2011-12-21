@@ -901,6 +901,7 @@ def handle(request): # HANDLER
         ,owner_url = home_url(owner)
         ,path = request.path
         ,user_is_owner = is_owner
+        ,create_expr_card = re.match('expressions', request.path)
         )
 
     if request.args.has_key('dialog'):

@@ -1,10 +1,22 @@
 {% if exprs %}
-{% for expr in exprs %}
-{% include "partials/expr_card.html" %}
-{% endfor %}
+  {% for expr in exprs %}
+  {% include "partials/expr_card.html" %}
+  {% endfor %}
 {% elif users %}
-{% for user in users %}
-{% include "partials/user_card.html" %}
-{% endfor %}
+  {% for user in users %}
+  {% include "partials/user_card.html" %}
+  {% endfor %}
+{% endif %}
+{% if create_expr_card %}
+  {% set expr = {
+      'title': "Create A New Expression",
+      'url': create, 
+      'thumb': "/lib/skin/1/create_expr_card.png", 
+      'tags': [], 
+      'owner_name': None,
+      'id': None
+  } %} 
+  {% set expr_context = None %}
+  {% include "partials/expr_card.html" %}
 {% endif %}
 
