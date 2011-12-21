@@ -5,9 +5,11 @@
  {{ super() }}
 <script>
   $(function(){
-    var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
-    var hoverout = function(){ $('#profile_thumb .message').remove(); };
-    $('#profile_thumb img').hover(hoverin, hoverout);
+    {% if user_is_owner %}
+      var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
+      var hoverout = function(){ $('#profile_thumb .message').remove(); };
+      $('#profile_thumb img').hover(hoverin, hoverout);
+    {% endif %}
 
     $('#profile_thumb_file_input').change(function() {
       $('#profile_thumb_upload_form input[name="forward"]').val(window.location);
