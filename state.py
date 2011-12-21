@@ -404,7 +404,7 @@ class Expr(Entity):
     def next(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()
-            shared_spec.update({'auth': 'public'})
+            shared_spec.update({'auth': 'public', 'apps': {'$exists': True}})
         else: shared_spec = spec
         return super(Expr, self).next(shared_spec, **kwargs)
 
