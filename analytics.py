@@ -90,8 +90,9 @@ def user_first_month(reference_date=time.time()):
     u.update_cmd({'$unset': {'analytics.first_month.expressions.all': True}, '$set': {'analytics.first_month.expressions.total': len(exprs), 'analytics.first_month.expressions.public': len(public), 'analytics.first_month.expressions.private': len(exprs) - len(public) }})
 
 def app_count():
-    rv = {}
-    for e in state.Expr.search():
+    exprs = state.Expr.search(apps={'$exists': True})
+    rv = {'expr_count': len(exprs)}
+    for e in exprs:
         if not e.get('apps'): continue
         for app in e.get('apps'):
             type = app.get('type')
