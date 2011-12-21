@@ -14,6 +14,7 @@
     <form name='logout_form' action='{{ secure_server }}' method='POST'>
       <input name='action' value='logout' type='hidden'>
     </form>
+    <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
     <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>

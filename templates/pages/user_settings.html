@@ -1,4 +1,5 @@
 {% extends "main.html" %}
+{% set update = True if action == 'update' %}
 
 {% block head %}
 <script>
@@ -29,61 +30,86 @@ function user_check(user_name){
   });
 }
 
-function validate() {
-    var n = $('#name').val().trim().toLowerCase();
-    $('#name').val(n);
-    if( $('#name').val().length < 3 ) {
-        alert('Please enter username of at least 3 letters, thank you.');
-        return false;
-    }
-    if( ! n.match(/^[a-z][a-z0-9]{2,}$/i) ) {
-        alert('Username must be only letters and numbers, and start with a letter (no spaces or punctuation, thank you).');
-        return false;
-    }
-    if( ! $('#name_availability').hasClass('valid') ) {
-        alert("Your username isn't avaialable, please try again.");
-        return false;
+function validate(opts) {
+    opts = $.extend({}, opts);
+    if (! opts.update) {
+        var n = $('#name').val().trim().toLowerCase();
+        $('#name').val(n);
+        if( $('#name').val().length < 3 ) {
+            alert('Please enter username of at least 3 letters, thank you.');
+            return false;
+        }
+        if( ! n.match(/^[a-z][a-z0-9]{2,}$/i) ) {
+            alert('Username must be only letters and numbers, and start with a letter (no spaces or punctuation, thank you).');
+            return false;
+        }
+        if( ! $('#name_availability').hasClass('valid') ) {
+            alert("Your username isn't avaialable, please try again.");
+            return false;
+        }
+        if( ! $('[name=tos]').is(':checked') ) {
+            alert('Please agree to Terms of Service.');
+            return false;
+        }
+    } else {
+        if( ! $('#p0').val().length > 0) {
+            alert('Old Password is required to change any profile settings')
+            return false;
+        }
     }
 
-    if( $('#p1').val().length < 4 ) {
-        alert('Password too short');
-        return false;
+    if (!opts.update || $('#p1').val().length > 0) {
+        if( $('#p1').val().length < 5 ) {
+            alert((opts.update ? 'New ' : '') + 'Password is too short. Password must be at least 5 characters.');
+            return false;
+        }
+        if( $('#p1').val() != $('#p2').val() ) {
+            alert('Passwords do not match');
+            return false;
+        }
+        if( ! $('[name=email]').val().match(/^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+[a-zA-Z0-9]{2,4}$/) ) {
+            alert('Please enter valid email address.');
+            return false;
+        }
     }
-    if( $('#p1').val() != $('#p2').val() ) {
-        alert('Passwords do not match');
-        return false;
-    }
-    if( ! $('[name=email]').val().match(/^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+[a-zA-Z0-9]{2,4}$/) ) {
-        alert('Please enter valid email address.');
-        return false;
-    }
-    if( ! $('[name=tos]').is(':checked') ) {
-        alert('Please agree to Terms of Service.');
-        return false;
-    }
-}
+    return true;
+};
+
+function post_update() {
+    callback = function(data){
+      console.log(data);
+      alert(data.message);
+    };
+    asyncSubmit($('#form'), callback);
+};
 
 $(document).ready(function(){
+  {% if update %}
+  var update = true;
+  {% else %} {% endif %}
   $('#name').blur(function(){
     user_check($(this).val());
   });
-  $('#form').submit(validate);
+  $('#form').submit(function(){
+    if (! validate({'update': update})) { return false }
+    if (update) { post_update(); return false }
+  });
 });
 </script>
-{% endblock %}
+{% endblock head %}
 
 {% block content %}
  <div class='fathead'>
-  <img src='/lib/skin/1/plus_lg.png'> Create your account
+   <img src='/lib/skin/1/plus_lg.png'> {{ ui.create_account_title if action == 'create' else ui.update_account_title }}
  </div>
 
  <form id='form' method='POST'>
   <div style='margin : 0 auto; width : 80%;'>
    <div style='float : left; clear : both; text-align:left; margin : 0 25px 50px 50px; vertical-align : top'>
-    <input type='hidden' name='action' value='user_create'>
+    <input type='hidden' name='action' value='{{"user_update" if update else "user_create"}}'>
   
     <b>Username</b><br>
-    <input id='name' type='text' name='name' value='{{f.name}}'><br>
+    <input id='name' type='text' name='name' value='{{f.name}}' {{'disabled="disabled"' if update}}><br>
     <div class="form_validation_info" id="name_availability" style="width : 215px; display:none">Sorry, that name isn't available</div>
     <br>
   
@@ -91,18 +117,25 @@ $(document).ready(function(){
     <input type='text' name='fullname' value='{{f.fullname}}'><br>
     <br>
   
-    <b>Password</b><br>
+    {% if update %}
+    <b>Old Password</b><br>
+    <input id='p0' type='password' name='old_password' value='{{f.secret}}'><br>
+    <br>
+    {% endif %}
+
+    <b>{{'New ' if update}}Password</b><br>
     <input id='p1' type='password' name='password' value='{{f.secret}}'><br>
     <br>
 
-    <b>Repeat Password</b><br>
+    <b>Repeat {{'New ' if update}}Password</b><br>
     <input id='p2' type='password' value='{{f.secret}}'><br>
     <br>
     
     <b>Email</b><br>
-    <input type='text' name='email' value='{{q.email}}'><br>
+    <input type='text' name='email' value='{{q.email if q.email else f.email}}'><br>
     <br>
-   </div><div style='float : left; margin : 0 0 50px 100px; vertical-align : top'>
+    </div><div style='float : left; margin : 0 0 50px 100px; vertical-align : top'>
+    {% if not update %}
     <b class='error'>Terms of Service</b><br>
     <br>
 
@@ -120,8 +153,13 @@ $(document).ready(function(){
     <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
     <br>
     <br>
+    {% endif %}
   
-    <input class='black btn rounded' type='submit' value='Create Account'>
+    {% if update %}
+      <input class='black btn rounded' type='submit' value='Update Profile' >
+    {% else %}
+      <input class='black btn rounded' type='submit' value='Create Account'>
+    {% endif %}
    </div>
   </div>
  </form>

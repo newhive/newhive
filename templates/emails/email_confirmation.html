@@ -1,0 +1,24 @@
+{% extends "emails/colorful.html" %}
+{% block body %}
+<h2 style="margin: 20px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
+  Hi <span style="color: #f72e4d;">{{user_fullname}}</span>,
+</h2>
+<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;">
+  You have requested to change the e-mail address for {{ user_name }} on thenewhive.
+</p>
+
+<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;">
+  If you did not initiate this request, please ignore this message.
+</p>
+
+<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;">
+  If this is your account and you want to confirm this as your email address, please visit 
+  <a href="{{ link }}" style="text-decoration: none; color: #7ba008;">this confirmation link</a> 
+  in your browser.
+</p>
+
+<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px; margin-bottom: 50px;">
+  <strong>Thank you,</strong><br/> 
+  The New Hive team
+</p>
+{% endblock %}

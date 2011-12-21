@@ -45,3 +45,9 @@ $left_column_width: 210px;
 
 // Resets
 iframe { border: none; }
+
+// Misc (move to own files when this gets too long)
+.email_confirmation #content a {
+  color: $color_blue;
+  &:hover { color: $color_active; }
+}

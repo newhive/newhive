@@ -1,0 +1,12 @@
+Hi {{ user_fullname }},
+
+You have requested to change the e-mail address for {{ user_name }} on thenewhive.com.
+
+If you did not initiate this request, please ignore this message.
+
+If this is your account and you want to confirm your email address, please visit {{link}} in your browser.
+
+Thank you,
+The New Hive team
+
+

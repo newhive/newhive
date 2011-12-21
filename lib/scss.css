@@ -1203,3 +1203,12 @@ input[type="text"].copy, textarea.copy {
 iframe {
   border: none;
 }
+
+/* line 50 */
+.email_confirmation #content a {
+  color: #698293;
+}
+/* line 52 */
+.email_confirmation #content a:hover {
+  color: #f72e4d;
+}
