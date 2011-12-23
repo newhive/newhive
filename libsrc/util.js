@@ -549,8 +549,6 @@ hover_menu = function(handle, drawer, options) {
     $(o.options.click_persist).bind('click contextmenu keydown', function() { o.options.hover_close = false; });
 
     if(o.options.auto_close) drawer.click(o.close);
-    if(o.options.auto_close) handle.click(o.close);
-
     $(window).click(function(e) {
         if(handle.get(0) == e.target
             || $.contains(handle.get(0), e.target)

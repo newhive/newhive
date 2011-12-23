@@ -2,7 +2,7 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
-import os, re, json, mimetypes, math, time
+import os, re, json, mimetypes, math, time, base64
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
@@ -76,6 +76,20 @@ def expr_save(request, response):
         else:
             upd['thumb'] = thumb_src
             upd['thumb_file_id'] = None
+
+    # deal with inline base64 encoded images from Sketch app
+    for app in upd['apps']:
+        if app['type'] != 'hive.sketch': continue
+        data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
+        f = os.tmpfile()
+        f.write(data)
+        res = File.create(owner=request.requester.id, tmp_file=f, name='sketch', mime='image/png')
+        f.close()
+        app.update({
+             'type' : 'hive.image'
+            ,'content' : res['url']
+            ,'file_id' : res.id
+        })
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
@@ -1071,6 +1085,8 @@ def expr_to_html(exp):
             html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
+        elif app.get('type') == 'hive.sketch':
+            html = "<img src='%s'>" % content.get('src')
         elif app.get('type') == 'hive.rectangle':
             c = app.get('content', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])

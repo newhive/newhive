@@ -8,31 +8,23 @@ var SCREEN_WIDTH = 1400, //window.innerWidth,
     BRUSH_PRESSURE = 1,
     COLOR = [0, 0, 0],
     //BACKGROUND_COLOR = [250, 250, 250],
-    STORAGE = window.localStorage,
+    //STORAGE = window.localStorage,
     brush,
-    saveTimeOut,
+    brush_name,
+    //saveTimeOut,
     wacom,
-    i,
     mouseX = 0,
     mouseY = 0,
     container,
-    //foregroundColorSelector,
-    //backgroundColorSelector,
-    menu,
-    about,
     canvas,
     flattenCanvas,
     context,
-    isFgColorSelectorVisible = false,
-    //isBgColorSelectorVisible = false,
-    isAboutVisible = false,
-    isMenuMouseOver = false,
     shiftKeyIsDown = false,
     altKeyIsDown = false;
 
 function init()
 {
-    var hash, palette, embed, localStorageImage;
+    var embed;
     
     if (USER_AGENT.search("android") > -1 || USER_AGENT.search("iphone") > -1)
         BRUSH_SIZE = 2;	
@@ -72,60 +64,13 @@ function init()
     flattenCanvas.width = SCREEN_WIDTH;
     flattenCanvas.height = SCREEN_HEIGHT;
     
-    //palette = new Palette();
-    
-    //foregroundColorSelector = new ColorSelector(palette);
-    //foregroundColorSelector.addEventListener('change', onForegroundColorSelectorChange, false);
-    //container.appendChild(foregroundColorSelector.container);
-
-    //backgroundColorSelector = new ColorSelector(palette);
-    //backgroundColorSelector.addEventListener('change', onBackgroundColorSelectorChange, false);
-    //container.appendChild(backgroundColorSelector.container);	
-    
-    if (STORAGE)
-    {
-        if (localStorage.canvas)
-        {
-            localStorageImage = new Image();
-        
-            localStorageImage.addEventListener("load", function(event)
-            {
-                localStorageImage.removeEventListener(event.type, arguments.callee, false);
-                context.drawImage(localStorageImage,0,0);
-            }, false);
-            
-            localStorageImage.src = localStorage.canvas;			
-        }
-        
-        if (localStorage.brush_color_red)
-        {
-            COLOR[0] = localStorage.brush_color_red;
-            COLOR[1] = localStorage.brush_color_green;
-            COLOR[2] = localStorage.brush_color_blue;
-        }
-
-        //if (localStorage.background_color_red)
-        //{
-        //    BACKGROUND_COLOR[0] = localStorage.background_color_red;
-        //    BACKGROUND_COLOR[1] = localStorage.background_color_green;
-        //    BACKGROUND_COLOR[2] = localStorage.background_color_blue;
-        //}
-    }
-
-    //foregroundColorSelector.setColor( COLOR );
-    //backgroundColorSelector.setColor( BACKGROUND_COLOR );
-    
-    if (!brush)
-    {
-        brush = eval("new " + BRUSHES[0] + "(context)");
-    }
+    if (!brush) set_brush(BRUSHES[0]);
     
     window.addEventListener('mousemove', onWindowMouseMove, false);
     window.addEventListener('keydown', onWindowKeyDown, false);
     window.addEventListener('keyup', onWindowKeyUp, false);
     window.addEventListener('blur', onWindowBlur, false);
     
-    document.addEventListener('mousedown', onDocumentMouseDown, false);
     document.addEventListener('mouseout', onDocumentMouseOut, false);
     
     document.addEventListener("dragenter", onDocumentDragEnter, false);  
@@ -139,7 +84,22 @@ function init()
 }
 
 function set_brush(name) {
+    brush_name = name;
+    if(brush) brush.destroy();
     brush = new window[name](context);
+}
+function get_brush() { return brush_name }
+
+function get_image(src) {
+    return canvas.toDataURL('image/png');
+}
+function set_image(src) {
+    var img = new Image();
+    img.addEventListener("load", function(event) {
+        img.removeEventListener(event.type, arguments.callee, false);
+        context.drawImage(img,0,0);
+    }, false);
+    img.src = src;			
 }
 
 function onWindowKeyDown( event )
@@ -151,19 +111,13 @@ function onWindowKeyDown( event )
     {
         case 16: // Shift
             shiftKeyIsDown = true;
-        //    foregroundColorSelector.container.style.left = mouseX - 125 + 'px';
-        //    foregroundColorSelector.container.style.top = mouseY - 125 + 'px';
-        //    foregroundColorSelector.container.style.visibility = 'visible';
-        //    break;
-            
+            break;
         case 18: // Alt
             altKeyIsDown = true;
             break;
-            
         case 68: // d
             if(BRUSH_SIZE > 1) BRUSH_SIZE --;
             break;
-        
         case 70: // f
             BRUSH_SIZE ++;
             break;			
@@ -174,18 +128,14 @@ function onWindowKeyUp( event )
 {
     switch(event.keyCode)
     {
-        //case 16: // Shift
-        //    shiftKeyIsDown = false;
-        //    foregroundColorSelector.container.style.visibility = 'hidden';			
-        //    break;
-            
+        case 16: // Shift
+            shiftKeyIsDown = false;
+            break;
         case 18: // Alt
             altKeyIsDown = false;
             break;
-
         case 82: // r
-            brush.destroy();
-            brush = eval("new " + BRUSHES[menu.selector.selectedIndex] + "(context)");
+            set_brush(brush_name);
             break;
         case 66: // b
             document.body.style.backgroundImage = null;
@@ -204,12 +154,6 @@ function onWindowBlur( event )
 
 // DOCUMENT
 
-function onDocumentMouseDown( event )
-{
-    if (!isMenuMouseOver)
-        event.preventDefault();
-}
-
 function onDocumentMouseOut( event )
 {
     onCanvasMouseUp();
@@ -227,127 +171,15 @@ function onDocumentDragOver( event )
     event.preventDefault();
 }
 
-//function onDocumentDrop( event )
-//{
-//    event.stopPropagation();  
-//    event.preventDefault();
-//    
-//    var file = event.dataTransfer.files[0];
-//    
-//    if (file.type.match(/image.*/))
-//    {
-//        /*
-//         * TODO: This seems to work on Chromium. But not on Firefox.
-//         * Better wait for proper FileAPI?
-//         */
-//
-//        var fileString = event.dataTransfer.getData('text').split("\n");
-//        document.body.style.backgroundImage = 'url(' + fileString[0] + ')';
-//    }
-//}
-
-
-// COLOR SELECTORS
-
-//function onForegroundColorSelectorChange( event )
-//{
-//    COLOR = foregroundColorSelector.getColor();
-//    
-//    menu.setForegroundColor( COLOR );
-//
-//    if (STORAGE)
-//    {
-//        localStorage.brush_color_red = COLOR[0];
-//        localStorage.brush_color_green = COLOR[1];
-//        localStorage.brush_color_blue = COLOR[2];		
-//    }
-//}
-
-//function onBackgroundColorSelectorChange( event )
-//{
-//    BACKGROUND_COLOR = backgroundColorSelector.getColor();
-//    
-//    menu.setBackgroundColor( BACKGROUND_COLOR );
-//    
-//    document.body.style.backgroundColor = 'rgb(' + BACKGROUND_COLOR[0] + ', ' + BACKGROUND_COLOR[1] + ', ' + BACKGROUND_COLOR[2] + ')';
-//    
-//    if (STORAGE)
-//    {
-//        localStorage.background_color_red = BACKGROUND_COLOR[0];
-//        localStorage.background_color_green = BACKGROUND_COLOR[1];
-//        localStorage.background_color_blue = BACKGROUND_COLOR[2];				
-//    }
-//}
-
-
-// MENU
-
-//function onMenuForegroundColor()
-//{
-//    cleanPopUps();
-//    
-//    foregroundColorSelector.show();
-//    foregroundColorSelector.container.style.left = ((SCREEN_WIDTH - foregroundColorSelector.container.offsetWidth) / 2) + 'px';
-//    foregroundColorSelector.container.style.top = ((SCREEN_HEIGHT - foregroundColorSelector.container.offsetHeight) / 2) + 'px';
-//
-//    isFgColorSelectorVisible = true;
-//}
-
-//function onMenuBackgroundColor()
-//{
-//    cleanPopUps();
-//
-//    backgroundColorSelector.show();
-//    backgroundColorSelector.container.style.left = ((SCREEN_WIDTH - backgroundColorSelector.container.offsetWidth) / 2) + 'px';
-//    backgroundColorSelector.container.style.top = ((SCREEN_HEIGHT - backgroundColorSelector.container.offsetHeight) / 2) + 'px';
-//
-//    isBgColorSelectorVisible = true;
-//}
-
-function onMenuSelectorChange()
-{
-    if (BRUSHES[menu.selector.selectedIndex] == "")
-        return;
-
-    brush.destroy();
-    brush = eval("new " + BRUSHES[menu.selector.selectedIndex] + "(context)");
-
-    window.location.hash = BRUSHES[menu.selector.selectedIndex];
-}
-
-function onMenuMouseOver()
-{
-    isMenuMouseOver = true;
-}
-
-function onMenuMouseOut()
-{
-    isMenuMouseOver = false;
-}
-
-function onMenuSave()
-{
-    flatten();
-    window.open(flattenCanvas.toDataURL('image/jpeg'),'mywindow');
-}
-
-function onMenuClear()
-{
-    if (!confirm("Are you sure?"))
-        return;
-        
+function clear() {
     context.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    saveToLocalStorage();
-
-    brush.destroy();
-    brush = eval("new " + BRUSHES[menu.selector.selectedIndex] + "(context)");
+    set_brush(brush_name);
 }
 
 
 // CANVAS
-function get_x(e) { return Math.round(event.clientX * (SCREEN_WIDTH / window.innerWidth)); }
-function get_y(e) { return Math.round(event.clientY * (SCREEN_HEIGHT / window.innerHeight)); }
+function get_x(e) { return Math.round(e.clientX * (SCREEN_WIDTH / window.innerWidth)); }
+function get_y(e) { return Math.round(e.clientY * (SCREEN_WIDTH / window.innerWidth)); }
 
 function onWindowMouseMove(e) {
     mouseX = get_x(e);
@@ -358,7 +190,7 @@ function onCanvasMouseDown( event )
 {
     var data, position;
 
-    clearTimeout(saveTimeOut);
+    //clearTimeout(saveTimeOut);
     cleanPopUps();
     
     if (altKeyIsDown)
@@ -395,11 +227,11 @@ function onCanvasMouseUp()
     window.removeEventListener('mousemove', onCanvasMouseMove, false);
     window.removeEventListener('mouseup', onCanvasMouseUp, false);
     
-    if (STORAGE)
-    {
-        clearTimeout(saveTimeOut);
-        saveTimeOut = setTimeout(saveToLocalStorage, 2000, true);
-    }
+    //if (STORAGE)
+    //{
+    //    clearTimeout(saveTimeOut);
+    //    saveTimeOut = setTimeout(saveToLocalStorage, 2000, true);
+    //}
 }
 
 
@@ -444,7 +276,7 @@ function onCanvasTouchEnd( event )
 
 function saveToLocalStorage()
 {
-    localStorage.canvas = canvas.toDataURL('image/png');
+    localStorage.canvas = canvas.toDataURL('image/jpeg');
 }
 
 function flatten()
@@ -458,23 +290,6 @@ function flatten()
 
 function cleanPopUps()
 {
-    if (isFgColorSelectorVisible)
-    {
-        foregroundColorSelector.hide();
-        isFgColorSelectorVisible = false;
-    }
-        
-    //if (isBgColorSelectorVisible)
-    //{
-    //    backgroundColorSelector.hide();
-    //    isBgColorSelectorVisible = false;
-    //}
-    
-    if (isAboutVisible)
-    {
-        about.hide();
-        isAboutVisible = false;
-    }
 }
 
 function chrome( context )

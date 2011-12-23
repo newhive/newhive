@@ -127,6 +127,8 @@ Hive.App = function(initState) {
         o.apps.focused = null;
     });
     o.focused = function() { return o.apps.focused == o }
+    o.dragstart = Funcs(function() { o.dragging = true; });
+    o.dragend = Funcs(function() { o.dragging = false; });
     
     // stacking order of aps
     o.layer = function(n) {
@@ -355,9 +357,10 @@ Hive.App.has_shield = function(o) {
     o.div.drag('end', function() {
         o.dragging = false;
         o.set_shield();
-        o.resize(o.dims());
         return false;
     });
+    o.dragstart.add(o.set_shield);
+    o.dragend.add(o.set_shield);
 }
 
 Hive.App.has_resize = function(o) {
@@ -497,8 +500,6 @@ Hive.App.Text = function(common) {
         common.load();
     }
 
-    Hive.App.has_shield(o);
-
     function controls(common) {
         var o = $.extend({}, common);
 
@@ -572,6 +573,7 @@ Hive.App.Text = function(common) {
         return o;
     }
     o.make_controls.push(controls);
+    Hive.App.has_shield(o);
 
     o.div.addClass('text');
     o.set_shield();
@@ -609,11 +611,12 @@ Hive.App.has_rotate = function(o) {
         o.rotateHandle.drag('start', function(e, dd) {
             refAngle = angle;
             offsetAngle = o.getAngle(e);
+            o.app.dragstart();
         }).drag(function(e, dd) {
             angle = o.getAngle(e) - offsetAngle + refAngle;
             o.app.angle(angle);
             o.select_box.rotate(angle);
-        });
+        }).drag('end', function(e, dd) { o.app.dragend(); });
         o.select_box.rotate(o.app.angle());
 
         return o;
@@ -793,7 +796,24 @@ Hive.App.Sketch = function(common) {
     Hive.App.has_resize(o);
 
     var state = {};
-    o.content = function(content) { return $.extend({}, state); };
+    o.content = function() { return {
+         'src' : o.win.get_image()
+        ,'fill_color' : o.win.COLOR
+        ,'brush' : o.win.get_brush()
+        ,'brush_size' : o.win.BRUSH_SIZE
+    }; };
+    o.set_content = function(c) {
+        o.win.set_image(c.src);
+        o.win.set_brush(c.brush);
+        o.win.COLOR = c.fill_color;
+        o.win.BRUSH_SIZE = c.brush_size;
+    };
+
+    o.resize = function(dims) {
+        var aspect = o.win.SCREEN_WIDTH / o.win.SCREEN_HEIGHT;
+        var width = Math.max(dims[0], Math.round(dims[1] * aspect));
+        common.resize([width, Math.round(width / aspect)]);
+    };
 
     o.focus.add(function() { o.win.focus() });
 
@@ -812,7 +832,7 @@ Hive.App.Sketch = function(common) {
         };
 
         o.addControls($('#controls_sketch'));
-        append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, state.color);
+        append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, '#000000');
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
         o.hover_menu(o.div.find('.button.brush'), o.div.find('.drawer.brush'));
         o.div.find('.drawer.brush .option').each(function(i, e) { $(e).click(function() {
@@ -832,15 +852,12 @@ Hive.App.Sketch = function(common) {
     o.iframe = o.content_element.get(0);
     o.fill_color = function(hex, rgb) { o.win.COLOR = rgb; }
     o.div.append(o.content_element);
-
-    o.wait_for_doc = function() {
-        if(o.iframe.contentWindow && o.iframe.contentWindow.document) {
-            o.win = o.content_element.get(0).contentWindow;
-            o.load();
-            clearTimeout(o.doc_poll);
-        }
-    }
-    o.doc_poll = setTimeout(o.wait_for_doc, 1);
+    o.content_element.load(function() {
+        o.win = o.content_element.get(0).contentWindow;
+        o.load();
+        o.set_content(o.state.content);
+    });
+    o.set_shield();
 
     return o;
 };
@@ -886,8 +903,14 @@ Hive.new_app = function(s) {
 };
 
 var main = function() {
-    // Warn the user if they leave the page by any route other than the save button TODO: actually check if they've made any changes
-    if(!debug_mode) window.onbeforeunload = function(){ return "If you leave this page any unsaved changes to your expression will be lost." }
+    //setInterval(Hive.set_draft, 5000);
+    window.onbeforeunload = function(){
+        //try { Hive.set_draft(); }
+        //catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
+        return "If you leave this page any unsaved changes to your expression will be lost.";
+    };
+    //var draft = Hive.get_draft();
+    //if(draft) Hive.Exp = draft;
 
     if(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) && parseInt(RegExp.$1) < 5)
         if(confirm("You're using an oldish version of Firefox. Click OK to get the newest version"))
@@ -987,7 +1010,7 @@ var main = function() {
         }
     }
 
-    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false });
+    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false, auto_close : false });
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');
@@ -1055,7 +1078,6 @@ var main = function() {
     });
     if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 
-    
     Hive.Apps(Hive.Exp.apps);
 }
 $(main);
@@ -1126,7 +1148,10 @@ Hive.save = function() {
             showDialog('#dia_overwrite');
             $('#save_submit').removeClass('disabled');
         }
-        else if(ret.location) window.location = ret.location;
+        else if(ret.location) {
+            //Hive.del_draft();
+            window.location = ret.location;
+        }
     }
 
     var on_error = function(ret) {
@@ -1142,6 +1167,10 @@ Hive.save = function() {
         error: on_error
     } );
 };
+Hive.get_draft = function() { return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
+Hive.set_draft = function() { localStorage.expr_draft = JSON.stringify(Hive.get_state()); }
+Hive.del_draft = function() { delete localStorage.expr_draft; }
+
 
 Hive.get_state = function() {
     //Hive.Exp.domain = $('#domain').val();
