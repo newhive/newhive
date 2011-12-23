@@ -28,7 +28,7 @@ assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters=
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 
-assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
+assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
 assets_env.register('app.css', scss, 'app.css', filters='yui_css', output='../lib/app.css')
@@ -1065,6 +1065,22 @@ def route_analytics(request, response):
         response.context['data'] = analytics.app_count().items()
         response.context['title'] = 'App Type Count'
         return serve_page(response, 'pages/analytics/generic.html')
+    elif p2 == 'user_growth':
+        users = User.search()
+        res = []
+        dates = []
+        counts = []
+        c = 0
+        for u in users:
+            c = c+1
+            created = u.get('created')
+            dates.append(created)
+            counts.append(c)
+            res.append([created, c])
+        response.context['data'] = res
+        response.context['json_data'] = json.dumps({'dates': dates, 'counts': counts})
+        response.context['title'] = 'User Growth: (' + str(len(users)) + ' users)'
+        return serve_page(response, 'pages/analytics/user_growth.html')
     else:
         return serve_404(request, response)
 

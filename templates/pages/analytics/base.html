@@ -10,13 +10,17 @@
   <script type='text/javascript'>
     var paper;
 
-    var epochToDate = function(epoch){
+    var epochToDate = function(epoch, opts){
+      opts = $.extend({'time': true}, opts);
       if (typeof(epoch) !== 'undefined' && epoch != "") {
+        var rv = ""
         var d = new Date(epoch*1000);
         var minutes = d.getMinutes() + "";
         if (minutes.length == 1) { minutes = "0" + minutes }
 
-        return d.toDateString() + " " + d.getHours() + ":" + minutes;
+        rv += d.toDateString();
+        if (opts.time){rv += " " + d.getHours() + ":" + minutes;}
+        return rv;
       }
     };
 
@@ -34,6 +38,7 @@
   </script>
 <style type='text/css'>
 #content{ padding: 0 10px 0 10px; }
+#header h1{ float: none; }
 /* tables */
 table {
   font-family:arial;
