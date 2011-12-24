@@ -803,10 +803,10 @@ Hive.App.Sketch = function(common) {
         ,'brush_size' : o.win.BRUSH_SIZE
     }; };
     o.set_content = function(c) {
-        o.win.set_image(c.src);
-        o.win.set_brush(c.brush);
-        o.win.COLOR = c.fill_color;
-        o.win.BRUSH_SIZE = c.brush_size;
+        if(c.src) o.win.set_image(c.src);
+        if(c.brush) o.win.set_brush(c.brush);
+        if(c.fill_color) o.win.COLOR = c.fill_color;
+        if(c.brush_size) o.win.BRUSH_SIZE = c.brush_size;
     };
 
     o.resize = function(dims) {
@@ -855,7 +855,7 @@ Hive.App.Sketch = function(common) {
     o.content_element.load(function() {
         o.win = o.content_element.get(0).contentWindow;
         o.load();
-        o.set_content(o.state.content);
+        if(o.state.content) o.set_content(o.state.content);
     });
     o.set_shield();
 
@@ -994,7 +994,7 @@ var main = function() {
             'border-color' : 'black', 'border-width' : 0, 'border-style' : 'solid', 'border-radius' : 0 } });
     });
     $('#shape_sketch').click(function(e) {
-        Hive.new_app({ type : 'hive.sketch' });
+        Hive.new_app({ type : 'hive.sketch', dimensions : [700, 700 / 1.6] });
     });
     
     $('#btn_grid').click(Hive.toggle_grid);
