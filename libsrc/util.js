@@ -684,5 +684,5 @@ var context_to_string = function(opt_arg){
 };
 
 var asset = function(path) {
-    return debug_mode ? '/lib/' + path : '/lib/libsrc/' + path;
+    return debug_mode ? '/lib/libsrc/' + path : '/lib/' + path;
 }
