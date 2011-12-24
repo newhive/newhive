@@ -657,5 +657,5 @@ var fix_borders = function(items){
 }
 
 var asset = function(path) {
-    return debug_mode ? '/lib/' + path : '/lib/libsrc/' + path;
+    return debug_mode ? '/lib/libsrc/' + path : '/lib/' + path;
 }
