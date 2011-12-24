@@ -884,4 +884,4 @@ Raphael.g = {
             return (+val).toFixed(0);
         }
     }
-}
+};
