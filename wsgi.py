@@ -1067,6 +1067,7 @@ def route_analytics(request, response):
         return serve_page(response, 'pages/analytics/generic.html')
     elif p2 == 'user_growth':
         users = User.search()
+        users.sort(lambda a,b: cmp(a.get('created'), b.get('created')))
         res = []
         dates = []
         counts = []
