@@ -559,6 +559,11 @@ input[type="text"].copy, textarea.copy {
   margin-right: 10px;
 }
 
+/* line 269, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_password_recovery {
+  padding: 0px 35px 22px 35px;
+}
+
 /* line 1, /home/duffy/2newhive/libsrc/scss/tags.scss */
 #tags {
   margin: 35px 20px 0 0;

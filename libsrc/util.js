@@ -422,7 +422,8 @@ function img_fill(img) {
 }
 
 function asyncSubmit(form, callback) {
-    $.post(server_url, $(form).serialize(), callback);
+    var url = $(form).attr('action')? $(form).attr('action') : server_url
+    $.post(url, $(form).serialize(), callback);
     return false;
 }
 

@@ -673,6 +673,16 @@ def user_update(request, response):
         message = message + ui.email_change_success_message + " "
     return serve_json(response, {'success': True, 'message': message})
 
+def password_recovery(request, response):
+    email = request.form.get('email')
+    name = request.form.get('name')
+    user = User.find(email=email, name=name)
+    if user:
+        mail_temporary_password(user)
+        return serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
+    else:
+        return serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
+
 
 # Possible values for the POST variable 'action'
 actions = dict(
@@ -684,6 +694,7 @@ actions = dict(
     ,file_delete     = file_delete
     ,user_create     = user_create
     ,user_update     = user_update
+    ,password_recovery = password_recovery
     ,mail_us         = mail_us
     ,mail_them       = mail_them
     ,mail_referral   = mail_referral
@@ -774,8 +785,8 @@ def handle(request): # HANDLER
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral']
-            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery']
+            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
             if not request.requester.logged_in and not reqaction in non_logged_in_actions:
