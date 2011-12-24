@@ -64,7 +64,7 @@ function init()
     flattenCanvas.width = SCREEN_WIDTH;
     flattenCanvas.height = SCREEN_HEIGHT;
     
-    if (!brush) set_brush(BRUSHES[0]);
+    if (!brush) set_brush('chrome');
     
     window.addEventListener('mousemove', onWindowMouseMove, false);
     window.addEventListener('keydown', onWindowKeyDown, false);
