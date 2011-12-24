@@ -2,7 +2,7 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
-import os, re, json, mimetypes, math, time
+import os, re, json, mimetypes, math, time, base64
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
@@ -27,6 +27,7 @@ else: scss = 'scss.css'
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
+assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
@@ -75,6 +76,20 @@ def expr_save(request, response):
         else:
             upd['thumb'] = thumb_src
             upd['thumb_file_id'] = None
+
+    # deal with inline base64 encoded images from Sketch app
+    for app in upd['apps']:
+        if app['type'] != 'hive.sketch': continue
+        data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
+        f = os.tmpfile()
+        f.write(data)
+        res = File.create(owner=request.requester.id, tmp_file=f, name='sketch', mime='image/png')
+        f.close()
+        app.update({
+             'type' : 'hive.image'
+            ,'content' : res['url']
+            ,'file_id' : res.id
+        })
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
@@ -1127,6 +1142,8 @@ def expr_to_html(exp):
             html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
+        elif app.get('type') == 'hive.sketch':
+            html = "<img src='%s'>" % content.get('src')
         elif app.get('type') == 'hive.rectangle':
             c = app.get('content', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])

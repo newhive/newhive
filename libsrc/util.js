@@ -548,9 +548,7 @@ hover_menu = function(handle, drawer, options) {
     handle.click(o.open);
     $(o.options.click_persist).bind('click contextmenu keydown', function() { o.options.hover_close = false; });
 
-    //if(o.options.auto_close) drawer.click(o.close);
-    //if(o.options.auto_close) handle.click(o.close);
-
+    if(o.options.auto_close) drawer.click(o.close);
     $(window).click(function(e) {
         if(handle.get(0) == e.target
             || $.contains(handle.get(0), e.target)
@@ -683,3 +681,7 @@ var context_to_string = function(opt_arg){
         return rv;
     }
 };
+
+var asset = function(path) {
+    return debug_mode ? '/lib/' + path : '/lib/libsrc/' + path;
+}
