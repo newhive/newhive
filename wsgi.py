@@ -864,7 +864,7 @@ def handle(request): # HANDLER
             })
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'signup':
-            response.context['action'] == 'create'
+            response.context['action'] = 'create'
             referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral or referral.get('used'): return bad_referral(request, response)
             return serve_page(response, 'pages/user_settings.html')
