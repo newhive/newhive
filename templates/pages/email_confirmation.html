@@ -1,0 +1,16 @@
+{% extends "main.html" %}
+{% block body_classes %}{{super()}} email_confirmation{% endblock %}
+
+{% block content %}
+<div class='fathead'>
+  {% if err %}
+  <h1>Email confimation was unsuccessful</h1>
+  <p>If you have sent multiple e-mail change requests, make sure you are using the link from the <em>most recent</em> email, and that you have not modified the confirmation url in any way.</p>
+  <p>Make sure you are logged in and then go to <a href='{{secure_server}}settings'>settings</a> to try sending a new confirmation email.</p>
+  {% else %}
+  <div class='icon'><h1>Email update successful</h1></div>
+  <p>The email address <em>{{email}}</em> has been confirmed for account <em>{{user.name}}</em>.</p>
+  <p><a href='{{user.url}}'>Click here</a> to go to your profile</p>
+  {% endif %}
+</div>
+{% endblock content %}

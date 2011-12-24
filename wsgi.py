@@ -2,7 +2,7 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
-import os, re, json, mimetypes, math, time
+import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
@@ -11,7 +11,7 @@ import jinja2
 
 import config, auth
 from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog, db
+from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog, db, junkstr
 import ui_strings.en as ui
 
 import webassets
@@ -27,6 +27,7 @@ else: scss = 'scss.css'
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
+assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
@@ -75,6 +76,20 @@ def expr_save(request, response):
         else:
             upd['thumb'] = thumb_src
             upd['thumb_file_id'] = None
+
+    # deal with inline base64 encoded images from Sketch app
+    for app in upd['apps']:
+        if app['type'] != 'hive.sketch': continue
+        data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
+        f = os.tmpfile()
+        f.write(data)
+        res = File.create(owner=request.requester.id, tmp_file=f, name='sketch', mime='image/png')
+        f.close()
+        app.update({
+             'type' : 'hive.image'
+            ,'content' : res['url']
+            ,'file_id' : res.id
+        })
 
     if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
         try:
@@ -338,7 +353,7 @@ def send_mail(headers, body):
     msg = MIMEMultipart('alternative')
     msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
     msg['To'] = headers['To']
-    msg['From'] = headers['From']
+    msg['From'] = headers.get('From', 'The New Hive <noreply@thenewhive.com>')
 
     if type(body) == dict:
         plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
@@ -417,7 +432,6 @@ def mail_them(request, response):
 
     heads = {
          'To' : request.form.get('to')
-        ,'From' : 'The New Hive <noreply+share@thenewhive.com>'
         ,'Subject' : request.form.get('subject', '')
         ,'Reply-to' : request.requester.get('email', '')
         }
@@ -442,7 +456,6 @@ def mail_referral(request, response):
 
         heads = {
              'To' : to_email
-            ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
             ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
             ,'Reply-to' : user.get('email', '')
             }
@@ -469,7 +482,6 @@ def mail_invite(email, name=False, force_resend=False):
 
     heads = {
         'To': email
-        ,'From' : 'The New Hive <noreply+signup@thenewhive.com>'
         ,'Subject' : "You have a beta invitation to thenewhive.com"
         }
 
@@ -501,7 +513,6 @@ def mail_feed(feed, recipient, dry_run=False):
       }
   heads = {
       'To': recipient.get('email')
-      , 'From' : 'The New Hive <noreply@thenewhive.com>'
       }
   if type(feed) == Comment:
       context['message'] = feed.get('text')
@@ -535,7 +546,6 @@ def mail_signup_thank_you(form):
         }
     heads = {
         'To': form.get('email')
-        ,'From': 'The New Hive <noreply@thenewhive.com>'
         ,'Subject': 'Thank you for signing up for a beta account on The New Hive'
         }
     body = {
@@ -572,7 +582,6 @@ def mail_user_register_thankyou(user):
     user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
     heads = {
         'To' : user['email']
-        , 'From' : 'The New Hive <noreply@thenewhive.com'
         , 'Subject' : 'Thank you for creating an account on thenewhive.com'
         }
     context = {
@@ -587,6 +596,45 @@ def mail_user_register_thankyou(user):
         ,'html': jinja_env.get_template("emails/thank_you_register.html").render(context)
         }
     send_mail(heads, body)
+
+
+def mail_email_confirmation(user, email):
+    secret = crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date'))))
+    link = abs_url(secure=True) + "email_confirmation?user=" + user.id + "&email=" + urllib.quote(email) + "&secret=" + urllib.quote(secret)
+    heads = {
+        'To' : email
+        , 'Subject' : 'Confirm change of e-mail address for thenewhive.com'
+        }
+    context = {
+        'user_fullname' : user['fullname']
+        ,'user_name': user['name']
+        ,'link' : link
+        }
+    body = {
+        'plain': jinja_env.get_template("emails/email_confirmation.txt").render(context)
+        ,'html': jinja_env.get_template("emails/email_confirmation.html").render(context)
+        }
+    send_mail(heads, body)
+
+def mail_temporary_password(user):
+    password = junkstr(8)
+    heads = {
+        'To' : user.get('email')
+        , 'Subject' : 'Password recovery for thenewhive.com'
+        }
+    context = {
+        'password': password
+        ,'user_fullname' : user['fullname']
+        ,'user_name': user['name']
+        }
+    body = {
+        'plain': jinja_env.get_template("emails/password_recovery.txt").render(context)
+        ,'html': jinja_env.get_template("emails/password_recovery.html").render(context)
+        }
+    send_mail(heads, body)
+    user.set_password(password)
+    user.save()
+
 
 
 
@@ -620,6 +668,37 @@ def thumbnail_relink(request, response):
         return {'file': file.id, 'expr': expr.id}
     else: return False
 
+def user_update(request, response):
+    message = ''
+    user = request.requester
+    if not user.cmp_password(request.form.get('old_password')): return serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
+    if request.form.get('password'):
+        if auth.password_change(request, response):
+            message = message + ui.password_change_success_message + " "
+        else:
+            return serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
+    fullname = request.form.get('fullname')
+    if fullname and fullname != request.requester.get('fullname'):
+        user.update(fullname=fullname)
+        message = message + ui.fullname_change_success_message + " "
+    email = request.form.get('email')
+    if email and email != request.requester.get('email'):
+        user.update(email_confirmation_request_date=time.time())
+        mail_email_confirmation(user, email)
+        message = message + ui.email_change_success_message + " "
+    return serve_json(response, {'success': True, 'message': message})
+
+def password_recovery(request, response):
+    email = request.form.get('email')
+    name = request.form.get('name')
+    user = User.find(email=email, name=name)
+    if user:
+        mail_temporary_password(user)
+        return serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
+    else:
+        return serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
+
+
 # Possible values for the POST variable 'action'
 actions = dict(
      login           = login
@@ -629,6 +708,8 @@ actions = dict(
     ,files_create    = files_create
     ,file_delete     = file_delete
     ,user_create     = user_create
+    ,user_update     = user_update
+    ,password_recovery = password_recovery
     ,mail_us         = mail_us
     ,mail_them       = mail_them
     ,mail_referral   = mail_referral
@@ -719,8 +800,8 @@ def handle(request): # HANDLER
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral']
-            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery']
+            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
             if not request.requester.logged_in and not reqaction in non_logged_in_actions:
@@ -783,9 +864,15 @@ def handle(request): # HANDLER
             })
             return serve_page(response, 'pages/edit.html')
         elif p1 == 'signup':
+            response.context['action'] == 'create'
             referral = Referral.fetch(request.args.get('key'), keyname='key')
             if not referral or referral.get('used'): return bad_referral(request, response)
             return serve_page(response, 'pages/user_settings.html')
+        elif p1 == 'settings':
+            if request.requester.logged_in and request.is_secure:
+                response.context['action'] = 'update'
+                response.context['f'] = request.requester
+                return serve_page(response, 'pages/user_settings.html')
         elif p1 == 'referral' and request.requester.logged_in:
             if(request.requester['referrals'] <= 0):
                 return no_more_referrals(request.requester['name'], request, response)
@@ -793,6 +880,18 @@ def handle(request): # HANDLER
             response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
             return serve_page(response, 'pages/minimal.html')
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
+        elif p1 == 'email_confirmation':
+            user = User.fetch(request.args.get('user'))
+            email = request.args.get('email')
+            if not user:
+                response.context.update({'err': 'user record does not exist'})
+            if not request.args.get('secret') == crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date')))):
+                response.context.update({'err': 'secret does not match email'})
+            else:
+                user.flag('confirmed_email')
+                user.update(email=email)
+                response.context.update({'user': user, 'email': email})
+            return serve_page(response, "pages/email_confirmation.html")
         elif p1 in ['', 'home', 'people', 'tag']:
             featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story"]
             tags = get_root().get('tags', [])
@@ -1128,6 +1227,8 @@ def expr_to_html(exp):
             html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
+        elif app.get('type') == 'hive.sketch':
+            html = "<img src='%s'>" % content.get('src')
         elif app.get('type') == 'hive.rectangle':
             c = app.get('content', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])

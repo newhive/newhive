@@ -347,7 +347,7 @@ def normalize(ws):
 
 def media_path(user, f_id=None):
     p = joinpath(config.media_path, user['name'])
-    return joinpath(p, f_id) if p else p
+    return joinpath(p, f_id) if f_id else p
 
 db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
 db.expr.ensure_index([('owner', 1), ('updated', 1)])
@@ -658,7 +658,14 @@ class File(Entity):
                 thumb190 = self.set_thumb(190,190)['file']
                 self.set_thumb(70,70, file=thumb190)
         else:
-            raise 'local server storage not implemented for now'
+            owner = User.fetch(self['owner'])
+            name = self.id + mimetypes.guess_extension(mime)
+            fs_path = media_path(owner) + '/' + name
+            f = open(fs_path, 'w')
+            self._file.seek(0)
+            f.write(self._file.read())
+            f.close()
+            url = abs_url() + 'file/' + owner['name'] + '/' + name
 
         dict.update(self, url=url)
         return super(File, self).create_me()
