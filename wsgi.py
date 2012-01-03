@@ -958,10 +958,9 @@ def handle(request): # HANDLER
     elif request.domain.startswith('www.'):
         return redirect(response, re.sub('www.', '', request.url, 1))
 
-    d = resource = Expr.named(request.domain.lower(), request.path.lower())
-    if not d: d = resource =Expr.named(request.domain, '')
-    if not d: return serve_404(request, response)
-    owner = User.fetch(d['owner'])
+    resource_requested = resource = Expr.named(request.domain.lower(), request.path.lower())
+    if not resource: resource = Expr.named(request.domain, '')
+    owner = User.fetch(resource['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
     if is_owner: owner.unflag('expr_new')
     if request.args.has_key('tag') or request.args.has_key('user'):
@@ -1058,7 +1057,7 @@ def handle(request): # HANDLER
         response.context['listeners'] = map(User.fetch, owner.starrers)
 
 
-    if not resource: return serve_404(request, response)
+    if not resource_requested: return serve_404(request, response)
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
     html = expr_to_html(resource)
