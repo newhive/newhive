@@ -985,8 +985,8 @@ def handle(request): # HANDLER
                 if tag in ['recent']: shared_spec = {}
                 else:  shared_spec.update({'tags_index': tag})
             url_args.update({'tag': tag})
-        pagethrough['next'] = d.next(shared_spec, loop=loop)
-        pagethrough['prev'] = d.prev(shared_spec, loop=loop)
+        pagethrough['next'] = resource.next(shared_spec, loop=loop)
+        pagethrough['prev'] = resource.prev(shared_spec, loop=loop)
 
         if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring(url_args)
         if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
