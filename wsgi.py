@@ -893,7 +893,8 @@ def handle(request): # HANDLER
                 response.context.update({'user': user, 'email': email})
             return serve_page(response, "pages/email_confirmation.html")
         elif p1 in ['', 'home', 'people', 'tag']:
-            featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story"]
+            featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story",
+                '2012', 'photography', 'poetry', 'words', 'food', 'travel', 'inspiration']
             tags = get_root().get('tags', [])
             response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
             people_tag = {'url': '/people', 'name': 'People'}
