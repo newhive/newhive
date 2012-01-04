@@ -930,7 +930,7 @@ def handle(request): # HANDLER
             return route_analytics(request, response)
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
             response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
-            response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
+            response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in Contact.search()])
             response.content_type = 'text/csv; charset=utf-8'
             return response
         elif p1 == 'comments':
