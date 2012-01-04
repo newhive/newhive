@@ -986,7 +986,7 @@ var main = function() {
     hover_menu($('#insert_image'), $('#menu_image'));
     hover_menu($('#insert_audio'), $('#menu_audio'));
     hover_menu($('#insert_file'), $('#menu_file'));
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code') } );
+    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code'), auto_close : false } );
     $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
     hover_menu($('#insert_shape'), $('#menu_shape'));
     $('#insert_shape,#shape_rectangle').click(function(e) {
