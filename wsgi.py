@@ -893,7 +893,8 @@ def handle(request): # HANDLER
                 response.context.update({'user': user, 'email': email})
             return serve_page(response, "pages/email_confirmation.html")
         elif p1 in ['', 'home', 'people', 'tag']:
-            featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story"]
+            featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story",
+                '2012', 'photography', 'poetry', 'words', 'food', 'travel', 'inspiration']
             tags = get_root().get('tags', [])
             response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
             people_tag = {'url': '/people', 'name': 'People'}
@@ -929,7 +930,7 @@ def handle(request): # HANDLER
             return route_analytics(request, response)
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
             response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
-            response.data = "\n".join([','.join(map(json.dumps, [time_u(o['created']).strftime('%Y-%m-%d %H:%M'), o.get('email',''), o.get('msg','')])) for o in Contact.search()])
+            response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in Contact.search()])
             response.content_type = 'text/csv; charset=utf-8'
             return response
         elif p1 == 'comments':
@@ -958,10 +959,9 @@ def handle(request): # HANDLER
     elif request.domain.startswith('www.'):
         return redirect(response, re.sub('www.', '', request.url, 1))
 
-    d = resource = Expr.named(request.domain.lower(), request.path.lower())
-    if not d: d = resource =Expr.named(request.domain, '')
-    if not d: return serve_404(request, response)
-    owner = User.fetch(d['owner'])
+    resource_requested = resource = Expr.named(request.domain.lower(), request.path.lower())
+    if not resource: resource = Expr.named(request.domain, '')
+    owner = User.fetch(resource['owner'])
     is_owner = request.requester.logged_in and owner.id == request.requester.id
     if is_owner: owner.unflag('expr_new')
     if request.args.has_key('tag') or request.args.has_key('user'):
@@ -986,8 +986,8 @@ def handle(request): # HANDLER
                 if tag in ['recent']: shared_spec = {}
                 else:  shared_spec.update({'tags_index': tag})
             url_args.update({'tag': tag})
-        pagethrough['next'] = d.next(shared_spec, loop=loop)
-        pagethrough['prev'] = d.prev(shared_spec, loop=loop)
+        pagethrough['next'] = resource.next(shared_spec, loop=loop)
+        pagethrough['prev'] = resource.prev(shared_spec, loop=loop)
 
         if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring(url_args)
         if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
@@ -1058,7 +1058,7 @@ def handle(request): # HANDLER
         response.context['listeners'] = map(User.fetch, owner.starrers)
 
 
-    if not resource: return serve_404(request, response)
+    if not resource_requested: return serve_404(request, response)
     if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
 
     html = expr_to_html(resource)
