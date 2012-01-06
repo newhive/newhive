@@ -1,6 +1,33 @@
 {% extends "pages/analytics/base.html" %}
 
-{% block header %}{{custom_histogram}}{% endblock header %}
+{% set auths = ["public", "private", "total"] %}
+{% block header %}
+{{ super() }}
+{% if start %}
+<h3>Expressions created by user in custom date range {{start}} to {{end}}</h3>
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Users</th>
+      {% for i in range(1,11) %}
+      <th>{{i}}+</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for auth in auths %}
+    <tr>
+      <td>{{auth}}</td>
+      {% for i in range(11) %}
+      <td>{{custom_histogram[auth][i]}}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock header %}
 {% block table_head %}
   <tr>
     <th colspan=3></th>

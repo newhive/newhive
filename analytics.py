@@ -2,6 +2,9 @@ import state, time, datetime, re
 
 def shared_user_data(result, start=None):
     custom_counts = {}
+    auths = ['public', 'private', 'total']
+    for auth in auths:
+        custom_counts[auth] = {}
     for item in result:
       user = state.User.fetch(item['owner'])
       if user:
@@ -11,11 +14,12 @@ def shared_user_data(result, start=None):
         if start and start != 0:
             if user['created'] < start: 
                 item['include_custom'] = True
-                for i in range(int(item['public']['custom'])+1):
-                    if custom_counts.has_key(i):
-                        custom_counts[i] += 1
-                    else:
-                        custom_counts[i] = 1
+                for auth in auths:
+                    for i in range(min(int(item[auth]['custom']), 10) +1):
+                        if custom_counts[auth].has_key(i):
+                            custom_counts[auth][i] += 1
+                        else:
+                            custom_counts[auth][i] = 1
         try:
           item['first_month'] = user['analytics']['first_month']
         except KeyError:

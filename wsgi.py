@@ -1139,9 +1139,10 @@ def route_analytics(request, response):
     if p2 == 'active_users':
         analytics.user_first_month()
         if request.args.has_key('start') and request.args.has_key('end'):
+            response.context['start'] = request.args.get('start')
+            response.context['end'] = request.args.get('end')
             start = int(time.mktime(time.strptime(request.args.get('start'), "%Y-%m-%d")))
             end = int(time.mktime(time.strptime(request.args.get('end'), "%Y-%m-%d")))
-            print [start, end]
             active_users, custom_histogram = analytics.active_users(start=start, end=end)
         else:
             event = request.args.get('event')
