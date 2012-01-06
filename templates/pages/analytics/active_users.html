@@ -10,7 +10,7 @@
     <tr>
       <th></th>
       <th>Users</th>
-      {% for i in range(1,11) %}
+      {% for i in range(1,31) %}
       <th>{{i}}+</th>
       {% endfor %}
     </tr>
@@ -19,7 +19,7 @@
     {% for auth in auths %}
     <tr>
       <td>{{auth}}</td>
-      {% for i in range(11) %}
+      {% for i in range(31) %}
       <td>{{custom_histogram[auth][i]}}</td>
       {% endfor %}
     </tr>

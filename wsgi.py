@@ -1165,6 +1165,23 @@ def route_analytics(request, response):
 
         response.context['invites'] = invites
         return serve_page(response, 'pages/analytics/invites.html')
+    elif p2 == 'funnel1':
+        start = 1320537600 # Sunday Nov 6 2011
+        week = 3600*24*7
+        now = time.time()
+        i = 0
+        res = {}
+        while (start + i*week < now):
+            invites = db.referral.find({'created': {'$lt': start + i*week, '$gt': start + (i-1)*week}})
+            invites_used = filter(lambda x: x.has_key('user_created'), invites)
+            res[start+i*week] = {
+                'users': db.user.find({'created': {'$lt': start + i*week}}).count()
+                ,'invites': invites.count()
+                ,'invites_used': len(invites_used)
+                }
+            i += 1
+        response.context['data'] = res
+        return serve_page(response, 'pages/analytics/funnel1.html')
     elif p2 == 'app_count':
         response.context['data'] = analytics.app_count().items()
         response.context['title'] = 'App Type Count'

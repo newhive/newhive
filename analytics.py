@@ -15,7 +15,7 @@ def shared_user_data(result, start=None):
             if user['created'] < start: 
                 item['include_custom'] = True
                 for auth in auths:
-                    for i in range(min(int(item[auth]['custom']), 10) +1):
+                    for i in range(min(int(item[auth]['custom']), 30) +1):
                         if custom_counts[auth].has_key(i):
                             custom_counts[auth][i] += 1
                         else:

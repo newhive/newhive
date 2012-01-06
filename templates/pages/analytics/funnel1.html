@@ -1,0 +1,31 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block header %}
+<h1>Funnel 1</h1>
+{% endblock header %}
+
+{% block table_head %}
+  <tr>
+    <th>Week of</th>
+    {% for item in 'users', 'invites', 'invites_used' %}
+    <th>{{item}}</th>
+    {% endfor %}
+    <th>Invites/User</th>
+    <th>Invite Convertion Rate</th>
+    <th>Conversions/User</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+{% for key in data %}
+  <tr>
+    <td data-type="epoch_date">{{key}}</td>
+    {% for item in 'users', 'invites', 'invites_used' %}
+    <td>{{data[key][item]}}</td>
+    {% endfor %}
+    <td>{{data[key]['invites'] / data[key]['users']}}</td>
+    <td>{{data[key]['invites_used'] / data[key]['invites']}}</td>
+    <td>{{data[key]['invites_used'] / data[key]['users']}}</td>
+  </tr>
+{% endfor %}
+{% endblock %}
