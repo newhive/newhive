@@ -1139,16 +1139,20 @@ def route_analytics(request, response):
     if p2 == 'active_users':
         analytics.user_first_month()
         if request.args.has_key('start') and request.args.has_key('end'):
-            active_users = analytics.active_users()
+            start = int(time.mktime(time.strptime(request.args.get('start'), "%Y-%m-%d")))
+            end = int(time.mktime(time.strptime(request.args.get('end'), "%Y-%m-%d")))
+            print [start, end]
+            active_users, custom_histogram = analytics.active_users(start=start, end=end)
         else:
             event = request.args.get('event')
             if event:
-                active_users = analytics.active_users(event=event)
+                active_users, custom_histogram = analytics.active_users(event=event)
             else:
-                active_users = analytics.active_users()
-            response.context['active_users'] = active_users
-            response.context['active_users_js'] = json.dumps(active_users)
-            return serve_page(response, 'pages/analytics/active_users.html')
+                active_users, custom_histogram = analytics.active_users()
+        response.context['active_users'] = active_users
+        response.context['custom_histogram'] = custom_histogram
+        response.context['active_users_js'] = json.dumps(active_users)
+        return serve_page(response, 'pages/analytics/active_users.html')
     if p2 == 'invites':
         invites = Referral.search()
         cache = {}
