@@ -50,6 +50,7 @@ def dfilter(d, keys):
     for k in keys:
         if k in d: r[k] = d[k]
     return r
+def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
 
 
 def expr_save(request, response):
@@ -1166,23 +1167,33 @@ def route_analytics(request, response):
         response.context['invites'] = invites
         return serve_page(response, 'pages/analytics/invites.html')
     elif p2 == 'funnel1':
-        start = int(time.mktime(time.strptime("2011-11-6", "%Y-%m-%d")))
-        week = 3600*24*7
-        now = time.time()
-        i = 0
-        res = {}
         exclude = [get_root().id]
         exclude = exclude + [User.named(name).id for name in config.admins]
-        while (start + i*week < now):
-            invites = db.referral.find({'created': {'$lt': start + i*week, '$gt': start + (i-1)*week}, 'user': {'$nin': exclude}})
+        weekly = {}
+        def invites_subr(res_dict, time0, time1):
+            invites = db.referral.find({'created': {'$lt': time1, '$gt': time0}, 'user': {'$nin': exclude}})
             invites_used = filter(lambda x: x.has_key('user_created'), invites)
-            res[start+i*week] = {
-                'users': db.user.find({'created': {'$lt': start + i*week}}).count()
+            res_dict[time0] = {
+                'users': int((db.user.find({'created': {'$lt': time1}}).count() + db.user.find({'created': {'$lt': time0}}).count()) / 2)
                 ,'invites': invites.count()
                 ,'invites_used': len(invites_used)
                 }
+        start = date_to_epoch(2011, 11, 6)
+        week = 3600*24*7
+        now = time.time()
+        i = 0
+        while (start + i*week < now):
+            invites_subr(weekly, start + i*week, start + (i+1)*week)
             i += 1
-        response.context['data'] = res
+        monthly = {}
+        y0 = 2011; m0 = 11;
+        while (date_to_epoch(y0,m0,1) < now):
+            if m0 == 12: m1 = 1; y1 = y0 + 1
+            else: m1 = m0 + 1; y1 = y0
+            invites_subr(monthly, date_to_epoch(y0,m0,1), date_to_epoch(y1,m1,1))
+            y0 = y1; m0 = m1
+        response.context['data'] = weekly
+        response.context['monthly'] = monthly
         return serve_page(response, 'pages/analytics/funnel1.html')
     elif p2 == 'app_count':
         response.context['data'] = analytics.app_count().items()

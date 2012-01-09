@@ -17,15 +17,46 @@
 {% endblock %}
 
 {% block table_body %}
-{% for key in data %}
+{% for item in data | dictsort %}
   <tr>
-    <td data-type="epoch_date">{{key}}</td>
-    {% for item in 'users', 'invites', 'invites_used' %}
-    <td>{{data[key][item]}}</td>
+    <td data-type="epoch_date_utc">{{item[0]}}</td>
+    {% for attr in 'users', 'invites', 'invites_used' %}
+    <td>{{item[1][attr]}}</td>
     {% endfor %}
-    <td>{{data[key]['invites'] / data[key]['users']}}</td>
-    <td>{{data[key]['invites_used'] / data[key]['invites']}}</td>
-    <td>{{data[key]['invites_used'] / data[key]['users']}}</td>
+    <td>{{item[1]['invites'] / item[1]['users']}}</td>
+    <td>{{item[1]['invites_used'] / item[1]['invites']}}</td>
+    <td>{{item[1]['invites_used'] / item[1]['users']}}</td>
   </tr>
 {% endfor %}
 {% endblock %}
+
+{% block content %}
+{{super()}}
+{% set data = monthly %}
+<table class="tablesorter" style="width: 100%">
+  <thead>
+  <tr>
+    <th>Month of</th>
+    {% for item in 'users', 'invites', 'invites_used' %}
+    <th>{{item}}</th>
+    {% endfor %}
+    <th>Invites/User</th>
+    <th>Invite Convertion Rate</th>
+    <th>Conversions/User</th>
+  </tr>
+</tbody>
+  <tbody>
+  {% for item in data | dictsort %}
+  <tr>
+    <td data-type="epoch_date_utc">{{item[0]}}</td>
+    {% for attr in 'users', 'invites', 'invites_used' %}
+    <td>{{item[1][attr]}}</td>
+    {% endfor %}
+    <td>{{item[1]['invites'] / item[1]['users']}}</td>
+    <td>{{item[1]['invites_used'] / item[1]['invites']}}</td>
+    <td>{{item[1]['invites_used'] / item[1]['users']}}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}
