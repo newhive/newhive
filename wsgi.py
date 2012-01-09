@@ -1166,13 +1166,15 @@ def route_analytics(request, response):
         response.context['invites'] = invites
         return serve_page(response, 'pages/analytics/invites.html')
     elif p2 == 'funnel1':
-        start = 1320537600 # Sunday Nov 6 2011
+        start = int(time.mktime(time.strptime("2011-11-6", "%Y-%m-%d")))
         week = 3600*24*7
         now = time.time()
         i = 0
         res = {}
+        exclude = [get_root().id]
+        exclude = exclude + [User.named(name).id for name in config.admins]
         while (start + i*week < now):
-            invites = db.referral.find({'created': {'$lt': start + i*week, '$gt': start + (i-1)*week}})
+            invites = db.referral.find({'created': {'$lt': start + i*week, '$gt': start + (i-1)*week}, 'user': {'$nin': exclude}})
             invites_used = filter(lambda x: x.has_key('user_created'), invites)
             res[start+i*week] = {
                 'users': db.user.find({'created': {'$lt': start + i*week}}).count()
