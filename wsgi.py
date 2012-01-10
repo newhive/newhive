@@ -572,7 +572,7 @@ def mail_feedback(request, response):
         + 'User-Agent: ' + request.headers.get('User-Agent', '') + "\n"
         + 'From: ' + request.requester.get('email', '')
         )
-    send_mail(heads, body)
+    print send_mail(heads, body)
     if request.form.get('send_copy'):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
