@@ -1,32 +1,47 @@
 import state, time, datetime, re
 
-def shared_user_data(result):
+def shared_user_data(result, start=None):
+    custom_counts = {}
+    auths = ['public', 'private', 'total']
+    for auth in auths:
+        custom_counts[auth] = {}
     for item in result:
       user = state.User.fetch(item['owner'])
       if user:
         item['name'] = user.get('name')
         item['age'] = (time.time() - user['created']) / 3600 /24
         item['updated'] = user['updated']
+        if start and start != 0:
+            if user['created'] < start: 
+                item['include_custom'] = True
+                for auth in auths:
+                    for i in range(min(int(item[auth]['custom']), 30) +1):
+                        if custom_counts[auth].has_key(i):
+                            custom_counts[auth][i] += 1
+                        else:
+                            custom_counts[auth][i] = 1
         try:
           item['first_month'] = user['analytics']['first_month']
         except KeyError:
           item['first_month'] = None
       else: item['name'] = item['owner']
-    return result
+    return [result, custom_counts]
 
 
-def active_users(reference_date=time.time(), event='created'):
+def active_users(reference_date=time.time(), event='created', start=0, end=0):
     col = state.db['expr']
     key={"owner": 1}
     condition = {}
     initial = {
-        "total": {"total":0, "day":0, "week": 0, "month": 0}, 
-        "private": {"total":0, "day":0, "week": 0, "month": 0}, 
-        "public": {"total":0, "day":0, "week": 0, "month": 0}
+        "total": {"total":0, "day":0, "week": 0, "month": 0, "custom": 0},
+        "private": {"total":0, "day":0, "week": 0, "month": 0, "custom": 0},
+        "public": {"total":0, "day":0, "week": 0, "month": 0, "custom": 0}
         }
     reducejs = """
         function(obj,prev) { 
-            var age = %(now)d - obj.%(event)s
+            var age = %(now)d - obj.%(event)s;
+            var start = %(start)d;
+            var end = %(end)d;
 
             var authSlice = function(timerange) {
               if (obj.auth === 'password') { 
@@ -42,14 +57,14 @@ def active_users(reference_date=time.time(), event='created'):
               if (0 < age && age < 3600*24) { authSlice('day'); }
               if (0 < age && age < 3600*24*7) { authSlice('week'); }
               if (0 < age && age < 3600*24*7*4) { authSlice('month'); }
+              if (start != 0 && start < obj.%(event)s && obj.%(event)s < end) { authSlice('custom'); }
               authSlice('total');
             }
-            
         }
-    """ % {'now': reference_date, 'event': event}
+    """ % {'now': reference_date, 'event': event, 'start': start, 'end': end}
 
     res = col.group(key, condition, initial, reducejs)
-    return shared_user_data(res)
+    return shared_user_data(res, start=start)
 
 def user_snapshot(reference_date):
   col = state.db['expr']

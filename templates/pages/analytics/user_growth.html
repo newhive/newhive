@@ -4,20 +4,25 @@
 {{super()}}
 <style>table { width: 400px; }</style>
 <script>
-  var data = {{json_data}};
-  var r; var chart;
-  $(function(){
-  r = Raphael('canvas');
-  var chart = r.linechart(20,0,r.width - 40,r.height - 20,data.dates,data.counts, {'axis': '0 1 0 1'}).hoverColumn(function () {
+    var data = {{json_data}};
+    var r; var chart; var plot;
+    data.counts_log = $.map(data.counts, function(el){ return Math.log(el); });
+    data.dates = $.map(data.dates, function(el){ return (el - 1293840000)/(3600*24*7)});
+    $(function(){
+        r = Raphael('canvas');
+        plot = function(x,y){
+            r.clear();
+            return r.linechart(20,0,r.width - 40,r.height - 20,x, y, {'axis': '0 1 1 1'}).hoverColumn(function () {
                     this.tags = r.set();
-
                     for (var i = 0, ii = this.y.length; i < ii; i++) {
-                        this.tags.push(r.tag(this.x, this.y[i], epochToDate(data.dates[this.values[i] -1], {'time': false}) + ": " + this.values[i], 180, 10).insertBefore(this));
+                        this.tags.push(r.tag(this.x, this.y[i], epochToDate(this.axis*3600*24*7 + 1293840000, {'time': false}) + ": " + this.values[i], 180, 10).insertBefore(this));
                     }
                 }, function () {
                     this.tags && this.tags.remove();
                 });
-   });
+        };
+        chart = plot(data.dates, data.counts);
+    });
 </script>
 {% endblock head %}
 

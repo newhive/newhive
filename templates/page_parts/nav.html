@@ -5,7 +5,7 @@
 
  {% if user.logged_in %}
   <div class='nav_icon medbold' style='left : 50px; top : 0;'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
-  <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
+  <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png?v=2'>
   <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}'></div>
   <div id='feed_menu' class='menu feed_menu border selected'>
     {% include "dialogs/feed.html" %}
@@ -18,7 +18,7 @@
     <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
-        Invites <div style="float: right; color:{{colors['active']}};">{{ user.referrals }}</div>
+        Invites <span class="referral_count">{{ user.referrals }}</span>
       </div>
     {% endif %}
   </div>

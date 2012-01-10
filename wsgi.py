@@ -50,6 +50,7 @@ def dfilter(d, keys):
     for k in keys:
         if k in d: r[k] = d[k]
     return r
+def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
 
 
 def expr_save(request, response):
@@ -571,7 +572,7 @@ def mail_feedback(request, response):
         + 'User-Agent: ' + request.headers.get('User-Agent', '') + "\n"
         + 'From: ' + request.requester.get('email', '')
         )
-    send_mail(heads, body)
+    print send_mail(heads, body)
     if request.form.get('send_copy'):
         heads.update(To = request.requester.get('email', ''))
         send_mail(heads, body)
@@ -800,8 +801,8 @@ def handle(request): # HANDLER
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery']
-            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback']
+            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
             if not request.requester.logged_in and not reqaction in non_logged_in_actions:
@@ -1139,16 +1140,21 @@ def route_analytics(request, response):
     if p2 == 'active_users':
         analytics.user_first_month()
         if request.args.has_key('start') and request.args.has_key('end'):
-            active_users = analytics.active_users()
+            response.context['start'] = request.args.get('start')
+            response.context['end'] = request.args.get('end')
+            start = int(time.mktime(time.strptime(request.args.get('start'), "%Y-%m-%d")))
+            end = int(time.mktime(time.strptime(request.args.get('end'), "%Y-%m-%d")))
+            active_users, custom_histogram = analytics.active_users(start=start, end=end)
         else:
             event = request.args.get('event')
             if event:
-                active_users = analytics.active_users(event=event)
+                active_users, custom_histogram = analytics.active_users(event=event)
             else:
-                active_users = analytics.active_users()
-            response.context['active_users'] = active_users
-            response.context['active_users_js'] = json.dumps(active_users)
-            return serve_page(response, 'pages/analytics/active_users.html')
+                active_users, custom_histogram = analytics.active_users()
+        response.context['active_users'] = active_users
+        response.context['custom_histogram'] = custom_histogram
+        response.context['active_users_js'] = json.dumps(active_users)
+        return serve_page(response, 'pages/analytics/active_users.html')
     if p2 == 'invites':
         invites = Referral.search()
         cache = {}
@@ -1160,6 +1166,35 @@ def route_analytics(request, response):
 
         response.context['invites'] = invites
         return serve_page(response, 'pages/analytics/invites.html')
+    elif p2 == 'funnel1':
+        exclude = [get_root().id]
+        exclude = exclude + [User.named(name).id for name in config.admins]
+        weekly = {}
+        def invites_subr(res_dict, time0, time1):
+            invites = db.referral.find({'created': {'$lt': time1, '$gt': time0}, 'user': {'$nin': exclude}})
+            invites_used = filter(lambda x: x.has_key('user_created'), invites)
+            res_dict[time0] = {
+                'users': int((db.user.find({'created': {'$lt': time1}}).count() + db.user.find({'created': {'$lt': time0}}).count()) / 2)
+                ,'invites': invites.count()
+                ,'invites_used': len(invites_used)
+                }
+        start = date_to_epoch(2011, 11, 6)
+        week = 3600*24*7
+        now = time.time()
+        i = 0
+        while (start + i*week < now):
+            invites_subr(weekly, start + i*week, start + (i+1)*week)
+            i += 1
+        monthly = {}
+        y0 = 2011; m0 = 11;
+        while (date_to_epoch(y0,m0,1) < now):
+            if m0 == 12: m1 = 1; y1 = y0 + 1
+            else: m1 = m0 + 1; y1 = y0
+            invites_subr(monthly, date_to_epoch(y0,m0,1), date_to_epoch(y1,m1,1))
+            y0 = y1; m0 = m1
+        response.context['data'] = weekly
+        response.context['monthly'] = monthly
+        return serve_page(response, 'pages/analytics/funnel1.html')
     elif p2 == 'app_count':
         response.context['data'] = analytics.app_count().items()
         response.context['title'] = 'App Type Count'

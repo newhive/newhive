@@ -11,15 +11,19 @@
     var paper;
 
     var epochToDate = function(epoch, opts){
-      opts = $.extend({'time': true}, opts);
+      opts = $.extend({'time': true, 'utc': false}, opts);
       if (typeof(epoch) !== 'undefined' && epoch != "") {
         var rv = ""
         var d = new Date(epoch*1000);
         var minutes = d.getMinutes() + "";
         if (minutes.length == 1) { minutes = "0" + minutes }
 
-        rv += d.toDateString();
-        if (opts.time){rv += " " + d.getHours() + ":" + minutes;}
+        if (opts.utc) {
+          rv = d.toUTCString();
+        } else {
+          rv += d.toDateString();
+          if (opts.time){rv += " " + d.getHours() + ":" + minutes;}
+        }
         return rv;
       }
     };
@@ -31,6 +35,13 @@
           function(){
             $(this).html(
               epochToDate($(this).html())
+            );
+          }
+        );
+        $('[data-type="epoch_date_utc"]').each(
+          function(){
+            $(this).html(
+              epochToDate($(this).html(), {'utc': true})
             );
           }
         );
