@@ -29,7 +29,7 @@ assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
 
-assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
+assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
 assets_env.register('app.css', scss, 'app.css', filters='yui_css', output='../lib/app.css')
@@ -1216,6 +1216,26 @@ def route_analytics(request, response):
         response.context['json_data'] = json.dumps({'dates': dates, 'counts': counts})
         response.context['title'] = 'User Growth: (' + str(len(users)) + ' users)'
         return serve_page(response, 'pages/analytics/user_growth.html')
+    elif p2 == 'last_login':
+        act_log = ActionLog.search()
+        res = {}
+        for a in act_log:
+            user = a['user']
+            if res.has_key(user):
+                if res[user] < a['created']: res[user] = a['created']
+            else:
+                res[user] = a['created']
+        now = time.time()
+        days_ago = range(1,67)
+        timeslice = []
+        for i, day_ago in enumerate(days_ago):
+            time0 = now if i==0 else now - 3600*24*days_ago[i-1]
+            time1 = now - 3600*24*day_ago
+            timeslice.append(len(filter(lambda x: x[1] < time0 and x[1] > time1, res.iteritems())))
+        response.context['days_ago'] = days_ago
+        response.context['timeslice'] = timeslice
+        response.context['data'] = json.dumps({'days_ago': days_ago, 'timeslice': timeslice})
+        return serve_page(response, 'pages/analytics/last_login.html')
     else:
         return serve_404(request, response)
 

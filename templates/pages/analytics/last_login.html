@@ -1,0 +1,27 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+{{ super() }}
+<script>
+  var data = {{data}};
+  var chart;
+  $(function(){
+    chart = d3.select("body").append("svg").attr("class", "chart").attr("width", 1300).attr("height", 600);
+    var x = d3.scale.linear().domain([0, d3.max(data.timeslice)]).range([0,500]);
+    var y = function(d,i) { return Math.floor(1300/data.timeslice.length) * i };
+    y.rangeBand = function() { return 1300/data.timeslice.length };
+    chart.selectAll("line").data(x.ticks(10)).enter().append("line").attr("x2", 0).attr("x1", 1300).attr("y2", function(d){ return 600 - x(d)}).attr("y1", function(d){ return 600 - x(d)}).style("stroke", "#ccc");
+    //chart.selectAll(".rule").data(x.ticks(10)).enter().append("text");
+    chart.selectAll("rect").data(data.timeslice).enter().append("rect")
+      .attr("x", y).attr("width", y.rangeBand() - 1).attr("height", x).attr("y", function(d) { return 600 - x(d) });
+  });
+</script>
+{% endblock %}
+
+{% block table_classes %}{% endblock %}
+{% block table_head %}
+<tr>{% for day in days_ago %}<th>{{day}}</th>{% endfor %}</tr>
+{% endblock %}
+{% block table_body %}
+<tr>{% for count in timeslice %}<td>{{count}}</td>{% endfor %}</tr>
+{% endblock %}
