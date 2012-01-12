@@ -19,7 +19,7 @@ body.home.logged_out .nav {
 /* line 19, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu_handle {
   position: relative;
-  top: 10px;
+  top: 8px;
   left: 2px;
 }
 
