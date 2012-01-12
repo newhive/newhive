@@ -1295,6 +1295,7 @@ def expr_to_html(exp):
     return ''.join(map(html_for_app, apps))
 
 
+print joinpath(config.src_home, 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
 
@@ -1407,45 +1408,3 @@ jinja_env.filters['large_number'] = large_number
 jinja_env.filters['mod'] = lambda x, y: x % y
 jinja_env.filters['querystring'] = querystring
 
-# run_simple is not so simple
-if __name__ == '__main__':
-    """ This Werkzeug server is used only for development and debugging """
-    from werkzeug import run_simple
-    import OpenSSL.SSL as ssl
-
-    ctx = ssl.Context(ssl.SSLv3_METHOD)
-    ctx.use_privatekey_file(config.ssl_key)
-    ctx.use_certificate_file(config.ssl_cert)
-    if config.ssl_ca: ctx.use_certificate_chain_file(config.ssl_ca)
-
-    child = os.fork()
-    if(child):
-        run_simple(
-            '0.0.0.0'
-          , config.plain_port
-          , application
-          , use_reloader = True
-          , use_debugger = config.debug_mode
-          , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-          , static_files = {
-               '/lib' : joinpath(config.src_home, 'lib')
-              ,'/images' : joinpath(config.src_home, 'libsrc/scss/images')
-              ,'/file' : config.media_path
-            }
-          , processes = 0
-          )
-    else:
-        run_simple(
-            '0.0.0.0'
-          , config.ssl_port
-          , application
-          , use_reloader = True
-          , use_debugger = config.debug_mode
-          , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-          , static_files = {
-               '/lib' : joinpath(config.src_home, 'lib')
-              ,'/file' : config.media_path
-            }
-          , ssl_context  = ctx
-          , processes = 0
-          )
