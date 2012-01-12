@@ -39,3 +39,74 @@ form { display : inline; }
 @font-face { src: url('/lib/fonts/bitstream-vera/VeraMoBI.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMoBI.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 700; font-style : italic; }
 @font-face { src: url('/lib/fonts/bitstream-vera/VeraMoIt.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMoIt.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; font-style : italic; }
 @font-face { src: url('/lib/fonts/bitstream-vera/VeraMono.eot'); src: local("☺"), url('/lib/fonts/bitstream-vera/VeraMono.ttf') format('truetype'); font-family: Bitstream Mono; font-weight : 500; }
+
+/*
+Folks
+Merge
+Bebas
+Arvo
+St Ryde
+Chunk Five
+Droid Serif
+Komika Title
+Banda
+Pacifico
+Fjord
+Josefin Slab
+Nevis
+Lobster Two
+Crimson
+Classic Round
+Novocentro
+*/
+@font-face { font-family:'Folks'; font-weight:500; src:url('/lib/fonts/Folks-Light/Folks-Normal.ttf'); }
+@font-face { font-family:'Folks'; font-weight:700; src:url('/lib/fonts/Folks-Light/Folks-Bold.ttf'); }
+/*@font-face { font-family:'aoeuaoeuaoeuaoeu'; font-weight:900; src:url('/lib/fonts/Folks-Light/Folks-Heavy.ttf'); }
+@font-face { font-family:'aoeuaoeuaoeuaoeu'; font-weight:300; src:url('/lib/fonts/Folks-Light/Folks-Light.ttf'); }*/
+@font-face { font-family:'Merge'; src:url('/lib/fonts/merge.otf'); }
+@font-face { font-family:'Bebas'; src:url('/lib/fonts/bebas/BEBAS___.TTF'); }
+@font-face { font-family:'Arvo'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/arvo/Arvo-Italic.ttf'); }
+@font-face { font-family:'Arvo'; font-weight:500; src:url('/lib/fonts/arvo/Arvo-Regular.ttf'); }
+@font-face { font-family:'Arvo'; font-weight:700; font-style:'italic'; src:url('/lib/fonts/arvo/Arvo-BoldItalic.ttf'); }
+@font-face { font-family:'Arvo'; font-weight:700; src:url('/lib/fonts/arvo/Arvo-Bold.ttf'); }
+@font-face { font-family:'St Ryde'; font-weight:500; src:url('/lib/fonts/st_ryde_regular/StRyde-Regular.otf'); }
+@font-face { font-family:'Chunk Five'; font-weight:500; src:url('/lib/fonts/ChunkFive/Chunkfive.otf'); }
+@font-face { font-family:'Droid Serif'; font-weight:500; src:url('/lib/fonts/Droid-Serif/DroidSerif-Regular.ttf'); }
+@font-face { font-family:'Droid Serif'; font-weight:700; src:url('/lib/fonts/Droid-Serif/DroidSerif-Bold.ttf'); }
+@font-face { font-family:'Droid Serif'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Droid-Serif/DroidSerif-Italic.ttf'); }
+@font-face { font-family:'Droid Serif'; font-weight:700; font-style:'italic'; src:url('/lib/fonts/Droid-Serif/DroidSerif-BoldItalic.ttf'); }
+@font-face { font-family:'Komika Title'; font-weight:500; src:url('/lib/fonts/Komika-Title/KomikaTitle.ttf'); }
+/*@font-face { font-family:'Komika Title'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Komika-Title/KomikaTitle-Wide.ttf'); }
+@font-face { font-family:'Komika Title'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Komika-Title/KomikaTitle-Paint.ttf'); }
+@font-face { font-family:'Komika Title'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Komika-Title/KomikaTitle-Axis.ttf'); }
+@font-face { font-family:'aoeuaoeuaoeuaoeu'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Komika-Title/KomikaTitle-Kaps.ttf'); }*/
+@font-face { font-family:'Banda'; font-weight:500; src:url('/lib/fonts/Banda_regular.otf'); }
+@font-face { font-family:'Pacifico'; font-weight:500; src:url('/lib/fonts/pacifico/Pacifico.ttf'); }
+@font-face { font-family:'Fjord'; font-weight:500; src:url('/lib/fonts/fjord/FjordOne-Regular.otf'); }
+@font-face { font-family:'Josefin Slab'; font-weight:500; src:url('/lib/fonts/josefin-slab/JosefinSlab-Regular.ttf'); }
+@font-face { font-family:'Josefin Slab'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/josefin-slab/JosefinSlab-Italic.ttf'); }
+@font-face { font-family:'Josefin Slab'; font-weight:700; src:url('/lib/fonts/josefin-slab/JosefinSlab-Bold.ttf'); }
+@font-face { font-family:'Josefin Slab'; font-weight:700; font-style:'italic'; src:url('/lib/fonts/josefin-slab/JosefinSlab-BoldItalic.ttf'); }
+/*@font-face { font-family:'Josefin Slab'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/josefin-slab/JosefinSlab-Light.ttf'); }
+@font-face { font-family:'Josefin Slab'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/josefin-slab/JosefinSlab-Thin.ttf'); }
+@font-face { font-family:'Josefin Slab'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/josefin-slab/JosefinSlab-ThinItalic.ttf'); }
+@font-face { font-family:'Josefin Slab'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/josefin-slab/JosefinSlab-SemiBold.ttf'); }
+@font-face { font-family:'Josefin Slab'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/josefin-slab/JosefinSlab-LightItalic.ttf'); }
+@font-face { font-family:'Josefin Slab'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/josefin-slab/JosefinSlab-SemiBoldItalic.ttf'); }*/
+@font-face { font-family:'Nevis'; font-weight:500; src:url('/lib/fonts/nevis.ttf'); }
+@font-face { font-family:'Lobster Two'; font-weight:500; src:url('/lib/fonts/lobster-two/LobsterTwo-Regular.otf'); }
+@font-face { font-family:'Lobster Two'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/lobster-two/LobsterTwo-Italic.otf'); }
+@font-face { font-family:'Lobster Two'; font-weight:700; font-style:'italic'; src:url('/lib/fonts/lobster-two/LobsterTwo-BoldItalic.otf'); }
+@font-face { font-family:'Lobster Two'; font-weight:700; src:url('/lib/fonts/lobster-two/LobsterTwo-Bold.otf'); }
+@font-face { font-family:'Crimson'; font-weight:500; src:url('/lib/fonts/Crimson/Crimson-Roman.otf'); }
+@font-face { font-family:'Crimson'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Crimson/Crimson-Italic.otf'); }
+@font-face { font-family:'Crimson'; font-weight:700; src:url('/lib/fonts/Crimson/Crimson-Bold.otf'); }
+@font-face { font-family:'Crimson'; font-weight:700; font-style:'italic'; src:url('/lib/fonts/Crimson/Crimson-BoldItalic.otf'); }
+/*@font-face { font-family:'Crimson'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Crimson/Crimson-SemiboldItalic.otf'); }
+@font-face { font-family:'Crimson'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Crimson/Crimson-Semibold.otf'); }*/
+@font-face { font-family:'Classic Round'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/DR_ClassicRound_Medium_114/ClassicRound-Medium.otf'); }
+@font-face { font-family:'Novecento'; font-weight:500; src:url('/lib/fonts/Novecento/Novecentowide-Medium.otf'); }
+@font-face { font-family:'Novecento'; font-weight:700; src:url('/lib/fonts/Novecento/Novecentowide-Bold.otf'); }
+/*@font-face { font-family:'Novecento'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Novecento/Novecentowide-DemiBold.otf'); }
+@font-face { font-family:'Novecento'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Novecento/Novecentowide-Light.otf'); }
+@font-face { font-family:'Novecento'; font-weight:500; font-style:'italic'; src:url('/lib/fonts/Novecento/Novecentowide-Book.otf'); }*/
