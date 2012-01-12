@@ -2,6 +2,7 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
+from newhive.controllers.shared import *
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
@@ -38,19 +39,6 @@ assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../li
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
 
-
-def lget(L, i, *default):
-    try: return L[i]
-    except: return default[0] if default else None
-def raises(e): raise e
-def dfilter(d, keys):
-    """ Accepts dictionary and list of keys, returns a new dictionary
-        with only the keys given """
-    r = {}
-    for k in keys:
-        if k in d: r[k] = d[k]
-    return r
-def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
 
 
 def expr_save(request, response):
