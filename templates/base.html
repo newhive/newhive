@@ -71,11 +71,7 @@ html, body { background-color : white; height : 100%; }
 
 
  {% block head %}{% endblock %}
-</head>
-<body class="{% block body_classes %}{{'logged_in' if user.logged_in else "logged_out"}}{{' admin' if admin}} {% endblock %}" >
- {% block main %}{% endblock %}
- {% block footer_scripts %}{% endblock %}
- <script type="text/javascript">
+<script type="text/javascript">
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-22827299-2']);
   _gaq.push(['_setDomainName', '.thenewhive.com']);
@@ -90,6 +86,10 @@ html, body { background-color : white; height : 100%; }
      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
    })();
   {% endif %}
- </script>
-</body>
+</script>
+</head>
+<body class="{% block body_classes %}{{'logged_in' if user.logged_in else "logged_out"}}{{' admin' if admin}} {% endblock %}" >
+ {% block main %}{% endblock %}
+ {% block footer_scripts %}{% endblock %}
+ </body>
 </html>
