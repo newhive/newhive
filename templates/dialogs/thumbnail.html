@@ -1,0 +1,11 @@
+<div id='dia_thumbnail' class='dialog border selected center'>
+ <h2>Choose thumbnail</h2>
+ <span id='expr_images'></span>
+ <span id='default_thumbs'>
+   {% for i in range(6) %}
+   <div class="thumb">
+     <img data-file-id="{{i}}" src='/lib/skin/1/thumb_{{i}}.png'>
+   </div>
+   {% endfor %}
+ </span>
+</div> 

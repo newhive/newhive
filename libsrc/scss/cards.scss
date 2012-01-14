@@ -83,3 +83,9 @@
     }
   }
 }
+#dia_thumbnail .thumb {
+  @include border-radius(7px);
+  background-color: #EEEEEE;
+  cursor: pointer;
+  img:hover { @include opacity(0.75); }
+}

@@ -866,6 +866,23 @@ input[type="text"].copy, textarea.copy {
   font-weight: bold;
 }
 
+/* line 86, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_thumbnail .thumb {
+  -moz-border-radius: 7px;
+  -webkit-border-radius: 7px;
+  -o-border-radius: 7px;
+  -ms-border-radius: 7px;
+  -khtml-border-radius: 7px;
+  border-radius: 7px;
+  background-color: #EEEEEE;
+  cursor: pointer;
+}
+/* line 90, /home/duffy/2newhive/libsrc/scss/cards.scss */
+#dia_thumbnail .thumb img:hover {
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=75);
+  opacity: 0.75;
+}
+
 /* line 1, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu {
   padding-top: 15px;

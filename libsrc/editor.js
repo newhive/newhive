@@ -1010,7 +1010,26 @@ var main = function() {
         }
     }
 
-    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false, auto_close : false });
+    var pickDefaultThumb = function(){
+        if (! (Hive.Exp.thumb_file_id || Hive.Exp.thumb)) {
+            var image_apps = $.map(Hive.get_state().apps, function(app){
+                if (app.type == 'hive.image' && app.file_id) { return app; }
+            });
+            if (image_apps.length > 0){
+                setThumb(image_apps[0]);
+            }
+        }
+    };
+
+    var setThumb = function(app){
+        // Set thumb_id property for the server to find the appropriate file object
+        // if a default thumb a pseudo file_id, id<10 is chosen. 
+        // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
+        Hive.Exp.thumb_file_id = app.file_id;
+        $('#current_thumb').attr('src', app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
+    };
+
+    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false, auto_close : false, open: pickDefaultThumb});
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');
@@ -1026,25 +1045,19 @@ var main = function() {
     });
     var dia_thumbnail;
     $('#btn_thumbnail').click(function() {
-        // Set thumb_src property for the server to generate a new thumb
         dia_thumbnail = showDialog('#dia_thumbnail');
-        $('#expr_images').empty().append(map(function(thumb) {
-            var img = $('<img>').attr('src', thumb.src);
-            var e = $("<div class='thumb'>").append(img).get(0);
-            return e;
-        }, $('.ehapp img')));
-        $('#expr_images .thumb img').each(function() { var img = $(this); setTimeout(function() { img_fill(img) }, 1) });
-        $('#expr_images img').click(function() {
-            Hive.Exp.thumb_src = this.src;
-            dia_thumbnail.close();
+        var user_thumbs = $.map(Hive.get_state().apps, function(app){
+            if ( app.type == 'hive.image' && app.file_id ) {
+                var img = $('<img>').attr('src', app.content + "_190x190").attr('data-file-id', app.file_id);
+                var e = $("<div class='thumb'>").append(img).get(0);
+                return e;
+            }
+        })
+        $('#expr_images').empty().append(user_thumbs);
+        $('#dia_thumbnail .thumb img').click(function() {
+            setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
             return false;
         });
-    });
-    $('#default_thumbs img').click(function() {
-        // The thumb property is set directly
-        Hive.Exp.thumb = this.src;
-        dia_thumbnail.close();
-        return false;
     });
     
     // Automatically update url unless it's an already saved expression or the user has modified the url manually

@@ -553,7 +553,10 @@ def generate_thumb(file, size):
     print "Thumbnail Generation:   initial size: " + str(imo.size),
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
-    imo = imo.convert(mode='RGB')
+    if imo.mode != 'RGB':
+        bg = Img.new("RGBA", imo.size, (255,255,255))
+        imo = imo.convert(mode='RGBA')
+        imo = Img.composite(imo, bg, imo)
     dt = time.time() - t0
     print "   final size:   " + str(imo.size),
     print "   conversion took " + str(dt*1000) + " ms"
@@ -603,7 +606,7 @@ class File(Entity):
         return self['url'].split('?')[0] + '_' + name
 
     def get_default_thumb(self):
-        return self.get_thumb(124,96)
+        return self.get_thumb(190,190)
     default_thumb = property(get_default_thumb)
 
 
