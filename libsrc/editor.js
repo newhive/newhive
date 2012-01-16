@@ -1402,10 +1402,13 @@ Hive.rte = function(options) {
 
     o.get_content = function() {
         o.doc.normalize();
-        return $(o.doc.body).html();
+        o.addBreaks();
+        return $(o.doc.body).wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
     }
     o.set_content = function(c) {
         return $(o.doc.body).html(c);
+        $(o.doc.body).find('.viewstyle').children().unwrap();
+        o.removeBreaks();
     }
 
     function rangeIntersectsNode(range, node) {
@@ -1419,6 +1422,39 @@ Hive.rte = function(options) {
 
         return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
                range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
+    }
+
+    // Text wrapping hack: insert explicit line breaks where text is
+    // soft-wrapped before saving, remove them on loading
+    o.eachTextNodeIn = function(node, fn) {
+        if(node.nodeType == 3) fn(node);
+        else {
+            for(var i = 0; i < node.childNodes.length; i++) o.eachTextNodeIn(node.childNodes[i], fn);
+        }
+    }
+    o.addBreaks = function() {
+        // wrap all words with spans
+        o.eachTextNodeIn(o.doc.body, function(n) {
+            $(n).replaceWith(n.nodeValue.replace(/(\w+)/g, "<span class='wordmark'>$1</span>"))
+        });
+
+        // TODO: iterate over wordmarks, add <br>s where line breaks occur
+        var y = 0;
+        $(o.doc.body).find('.wordmark').each(function(i, e) {
+            var ely = $(e).offset().top;
+            if(ely > y) {
+                var br = $('<br class="softbr">');
+                $(e).before(br);
+                if(ely != $(e).offset().top) br.remove(); // if element moves, oops, remove <br>
+            }
+            y = ely;
+        });
+
+        // unwrap all words
+        $(o.doc.body).find('.wordmark').each(function(i, e) { $(e).replaceWith($(e).text()) });
+    }
+    o.removeBreaks = function() {
+        $(o.doc.body).find('.softbr').remove();
     }
 
     o.create_editor();
