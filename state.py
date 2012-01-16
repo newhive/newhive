@@ -330,6 +330,10 @@ class User(Entity):
         return count
     expr_count = property(get_expr_count)
 
+    def _has_homepage(self):
+        return bool(db.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
+    has_homepage = property(_has_homepage)
+
 
 def get_root(): return User.named('root')
 if not get_root():

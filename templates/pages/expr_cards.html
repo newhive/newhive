@@ -65,7 +65,9 @@
         </form>
       {% endif %}
     </div>
-    <h1 class="index"><a href='/'>{{ owner.fullname }}</a>{{ ': ' + tag.name if tag and tag.show_name != False }}</h1>
+    <h1 class="index">
+      {% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + tag.name if tag and tag.show_name != False }}
+    </h1>
 
 {% endblock header %}
  
