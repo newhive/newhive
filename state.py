@@ -553,7 +553,10 @@ def generate_thumb(file, size):
     print "Thumbnail Generation:   initial size: " + str(imo.size),
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
-    imo = imo.convert(mode='RGB')
+    if imo.mode != 'RGB':
+        bg = Img.new("RGBA", imo.size, (255,255,255))
+        imo = imo.convert(mode='RGBA')
+        imo = Img.composite(imo, bg, imo)
     dt = time.time() - t0
     print "   final size:   " + str(imo.size),
     print "   conversion took " + str(dt*1000) + " ms"
@@ -590,9 +593,12 @@ class File(Entity):
         thumb = generate_thumb(file, (w,h))
         self.store_aws(thumb, self.id + '_' + name, 'thumb_' + name)
 
-        if not self.has_key('thumbs'): self['thumbs'] = {}
-        self['thumbs'][name] = True
-        return {'url': self['url'] + '_' + name, 'file': thumb}
+        thumbs = self.get('thumbs')
+        if not thumbs: thumbs = self['thumbs'] = {}
+        version = int(thumbs.get(name, 0)) + 1
+        thumbs[name] = version
+        url = "%s_%s?v=%s" % (self['url'], name, version)
+        return {'url': url, 'file': thumb}
 
     def get_thumb(self, w, h, generate=False):
         name = str(w) + 'x' + str(h)
@@ -600,10 +606,10 @@ class File(Entity):
             if not generate: return False
             else: return set_thumb(w,h)['url']
 
-        return self['url'].split('?')[0] + '_' + name
+        return "%s_%s%s" % (self['url'].split('?')[0], name, ('?v=' + str(self['thumbs'][name])) if type(self['thumbs'][name]) == int else '')
 
     def get_default_thumb(self):
-        return self.get_thumb(124,96)
+        return self.get_thumb(190,190)
     default_thumb = property(get_default_thumb)
 
 

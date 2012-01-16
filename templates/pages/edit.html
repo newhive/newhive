@@ -126,7 +126,11 @@ input, textarea { font-size : inherit }
   </div>
   <div class='spacer'></div>
 
-  <nobr><span id='btn_thumbnail' class='hoverable'>Choose thumbnail <img class='scale' src='/lib/skin/1/drop_arrow.png'></span></nobr>
+  <div id='btn_thumbnail_wrapper'>
+      <div id='btn_thumbnail' class='hoverable'>Choose thumbnail <img class='scale' src='/lib/skin/1/drop_arrow.png'></div>
+      <img id="current_thumb" width="70px" height="70px" src="{{exp.thumb}}">
+  </div>
+  
  </div>
 </div>
 
@@ -305,18 +309,7 @@ blah blah
  <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
  <input id='save_overwrite' type='button' class='btn black rounded' value='No' onclick='closeDialog()'>
 </div>
-<div id='dia_thumbnail' class='dialog border selected center'>
- <h2>Choose thumbnail</h2>
- <span id='expr_images'></span>
- <span id='default_thumbs'>
-  <img src='/lib/skin/1/thumb_0.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_1.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_2.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_3.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_4.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_5.png' class='thumb'>
- </span>
-</div> 
+{% include "dialogs/thumbnail.html" %}
 
 {% include 'expr_background.html' %}
 <div id='grid_guide'></div>
