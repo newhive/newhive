@@ -1,8 +1,8 @@
-from state import *
+import state
 from wsgi import date_to_epoch
 
 def cast_all_dates_to_numeric():
-    for klass in [state.File, state.User, state.Expr, state.Referral, state.Contact]:
+    for klass in [state.File, state.User, state.Expr, state.Referral, state.Contacti, state.Session]:
         baddates = klass.search(created={'$size': 6})
         for item in baddates:
             item['created'] = date_to_epoch(*item['created'])
