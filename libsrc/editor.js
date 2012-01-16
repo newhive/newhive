@@ -1056,6 +1056,7 @@ var main = function() {
         $('#expr_images').empty().append(user_thumbs);
         $('#dia_thumbnail .thumb img').click(function() {
             setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
+            dia_thumbnail.close();
             return false;
         });
     });
