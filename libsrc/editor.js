@@ -1062,7 +1062,7 @@ var main = function() {
     
     // Automatically update url unless it's an already saved expression or the user has modified the url manually
     $('#menu_save #title').bind('keydown keyup', function(){
-        if (!(Hive.Exp.home || Hive.Exp.name || $('#url').hasClass('modified') )){
+        if (!(Hive.Exp.home || Hive.Exp._id || $('#url').hasClass('modified') )){
             $('#url').val(
                 $('#title').val().replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").toLowerCase()
             );
