@@ -2,6 +2,7 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
+from newhive.controllers.shared import *
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
@@ -29,7 +30,7 @@ assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
 
-assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', output='../lib/admin.js')
+assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
 assets_env.register('app.css', scss, 'app.css', filters='yui_css', output='../lib/app.css')
@@ -38,19 +39,6 @@ assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../li
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
 
-
-def lget(L, i, *default):
-    try: return L[i]
-    except: return default[0] if default else None
-def raises(e): raise e
-def dfilter(d, keys):
-    """ Accepts dictionary and list of keys, returns a new dictionary
-        with only the keys given """
-    r = {}
-    for k in keys:
-        if k in d: r[k] = d[k]
-    return r
-def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
 
 
 def expr_save(request, response):
@@ -1216,6 +1204,26 @@ def route_analytics(request, response):
         response.context['json_data'] = json.dumps({'dates': dates, 'counts': counts})
         response.context['title'] = 'User Growth: (' + str(len(users)) + ' users)'
         return serve_page(response, 'pages/analytics/user_growth.html')
+    elif p2 == 'last_login':
+        act_log = ActionLog.search()
+        res = {}
+        for a in act_log:
+            user = a['user']
+            if res.has_key(user):
+                if res[user] < a['created']: res[user] = a['created']
+            else:
+                res[user] = a['created']
+        now = time.time()
+        days_ago = range(1,67)
+        timeslice = []
+        for i, day_ago in enumerate(days_ago):
+            time0 = now if i==0 else now - 3600*24*days_ago[i-1]
+            time1 = now - 3600*24*day_ago
+            timeslice.append(len(filter(lambda x: x[1] < time0 and x[1] > time1, res.iteritems())))
+        response.context['days_ago'] = days_ago
+        response.context['timeslice'] = timeslice
+        response.context['data'] = json.dumps({'days_ago': days_ago, 'timeslice': timeslice})
+        return serve_page(response, 'pages/analytics/last_login.html')
     else:
         return serve_404(request, response)
 
@@ -1275,6 +1283,7 @@ def expr_to_html(exp):
     return ''.join(map(html_for_app, apps))
 
 
+print joinpath(config.src_home, 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
 
@@ -1387,45 +1396,3 @@ jinja_env.filters['large_number'] = large_number
 jinja_env.filters['mod'] = lambda x, y: x % y
 jinja_env.filters['querystring'] = querystring
 
-# run_simple is not so simple
-if __name__ == '__main__':
-    """ This Werkzeug server is used only for development and debugging """
-    from werkzeug import run_simple
-    import OpenSSL.SSL as ssl
-
-    ctx = ssl.Context(ssl.SSLv3_METHOD)
-    ctx.use_privatekey_file(config.ssl_key)
-    ctx.use_certificate_file(config.ssl_cert)
-    if config.ssl_ca: ctx.use_certificate_chain_file(config.ssl_ca)
-
-    child = os.fork()
-    if(child):
-        run_simple(
-            '0.0.0.0'
-          , config.plain_port
-          , application
-          , use_reloader = True
-          , use_debugger = config.debug_mode
-          , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-          , static_files = {
-               '/lib' : joinpath(config.src_home, 'lib')
-              ,'/images' : joinpath(config.src_home, 'libsrc/scss/images')
-              ,'/file' : config.media_path
-            }
-          , processes = 0
-          )
-    else:
-        run_simple(
-            '0.0.0.0'
-          , config.ssl_port
-          , application
-          , use_reloader = True
-          , use_debugger = config.debug_mode
-          , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-          , static_files = {
-               '/lib' : joinpath(config.src_home, 'lib')
-              ,'/file' : config.media_path
-            }
-          , ssl_context  = ctx
-          , processes = 0
-          )

@@ -1,6 +1,6 @@
 /lib/*.js
 /lib/*.css
 /lib/libsrc
-/config.py
+/newhive/config.py
 *.pyc
 /log
