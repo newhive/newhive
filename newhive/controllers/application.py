@@ -42,4 +42,23 @@ class ApplicationController(object):
         context.setdefault('icon', '/lib/skin/1/logo.png')
         return self.jinja_env.get_template(template).render(context)
 
+    def serve_json(response, val, as_text = False):
+        """ as_text is used when content is received in an <iframe> by the client """
 
+        response.mimetype = 'application/json' if not as_text else 'text/plain'
+        response.data = json.dumps(val)
+        return response
+
+    def serve_404(request, response):
+        response.status_code = 404
+        return self.serve_page(response, 'pages/notfound.html')
+
+    def serve_error(request, msg):
+        response.status_code = 500
+        response.context['msg'] = msg
+        return self.serve_page(response, 'pages/error.html')
+
+    def redirect(response, location, permanent=False):
+        response.location = location
+        response.status_code = 301 if permanent else 303
+        return response

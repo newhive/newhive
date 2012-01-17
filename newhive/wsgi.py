@@ -5,6 +5,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.analytics import AnalyticsController
 from newhive.controllers.admin import AdminController
+from newhive.controllers.expression import ExpressionController
 
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
@@ -14,8 +15,8 @@ from urlparse import urlparse
 import jinja2
 
 import config, auth
-from colors import colors
-from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog, db, junkstr
+from newhive import colors
+from newhive.state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog, db, junkstr
 import newhive.state
 import ui_strings.en as ui
 
@@ -48,6 +49,7 @@ jinja_env.trim_blocks = True
 controllers = {
     'analytics':  AnalyticsController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     , 'admin':    AdminController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
+    , 'expression':    ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     }
 
 def expr_save(request, response):
@@ -836,31 +838,7 @@ def handle(request): # HANDLER
             with open(res['fs_path']) as f: response.data = f.read()
             return response
         elif p1 == 'edit' and request.requester.logged_in:
-            if not p2:
-                exp = { 'domain' : lget(request.requester.get('sites'), 0) }
-                exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
-                exp['title'] = 'Untitled'
-                exp['auth'] = 'public'
-                ActionLog.new(request.requester, "new_expression_edit")
-            else:
-                exp = Expr.fetch(p2)
-                ActionLog.new(request.requester, "existing_expression_edit", data={'expr_id': exp.id})
-
-            if not exp: return serve_404(request, response)
-
-            if request.requester.get('flags'):
-                show_help = request.requester['flags'].get('default-instructional') < 1
-            else: show_help = True
-            if show_help:
-                request.requester.increment({'flags.default-instructional': 1})
-            response.context.update({
-                 'title'     : 'Editing: ' + exp['title']
-                ,'sites'     : request.requester.get('sites')
-                ,'exp_js'    : re.sub('</script>', '<\\/script>', json.dumps(exp))
-                ,'exp'       : exp
-                ,'show_help' : show_help
-            })
-            return serve_page(response, 'pages/edit.html')
+            return controllers['expression'].default(request, response, {'method': 'edit'})
         elif p1 == 'signup':
             response.context['action'] = 'create'
             referral = Referral.fetch(request.args.get('key'), keyname='key')
