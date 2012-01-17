@@ -300,8 +300,8 @@ class User(Entity):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
 
-    def get_url(self):
-        return abs_url(domain = self.get('sites', [config.server_name])[0]) + 'expressions'
+    def get_url(self, path='expressions'):
+        return abs_url(domain = self.get('sites', [config.server_name])[0]) + path
     url = property(get_url)
 
     def get_thumb(self):

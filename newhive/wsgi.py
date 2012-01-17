@@ -3,6 +3,9 @@
 # thenewhive.com WSGI server version 0.2
 
 from newhive.controllers.shared import *
+from newhive.controllers.analytics import AnalyticsController
+from newhive.controllers.admin import AdminController
+
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
@@ -13,6 +16,7 @@ import jinja2
 import config, auth
 from colors import colors
 from state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog, db, junkstr
+import newhive.state
 import ui_strings.en as ui
 
 import webassets
@@ -38,8 +42,13 @@ assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/ba
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
+jinja_env.trim_blocks = True
 
-
+controllers = {
+    'analytics':  AnalyticsController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
+    , 'admin':    AdminController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
+    }
 
 def expr_save(request, response):
     """ Parses JSON object from POST variable 'exp' and stores it in database.
@@ -913,10 +922,10 @@ def handle(request): # HANDLER
 
             expr_home_list(p2, request, response, limit=900)
             return serve_page(response, 'pages/admin_home.html')
-        elif p1 == 'admin' and request.requester.get('name') in config.admins:
-            return route_admin(request, response)
-        elif p1 == 'analytics' and request.requester.get('name') in config.admins:
-            return route_analytics(request, response)
+        elif p1 == 'admin': # and request.requester.get('name') in config.admins:
+            return controllers['admin'].default(request, response, {'method': p2})
+        elif p1 == 'analytics': #and request.requester.get('name') in config.admins:
+            return controllers['analytics'].default(request, response, {'method': p2})
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
             response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
             response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in Contact.search()])
@@ -944,6 +953,7 @@ def handle(request): # HANDLER
         #    response.context['show_name'] = True
         #    return serve_page(response, 'pages/home.html')
 
+        print '\np1 = ' + p1
         return serve_404(request, response)
     elif request.domain.startswith('www.'):
         return redirect(response, re.sub('www.', '', request.url, 1))
@@ -1078,155 +1088,6 @@ def handle(request): # HANDLER
 
     else: return serve_page(response, 'pages/' + template + '.html')
 
-def route_admin(request, response):
-    parts = request.path.split('/')
-    p1 = lget(parts, 0)
-    p2 = lget(parts, 1)
-    p3 = lget(parts, 2)
-    if p2 == 'contact_log':
-        response.context['contacts'] = Contact.search()
-        return serve_page(response, 'pages/admin/contact_log.html')
-    if p2 == 'referrals':
-        response.context['users'] = User.search()
-        return serve_page(response, 'pages/admin/referrals.html')
-    if p2 == 'thumbnail_relink':
-        response.context['exprs'] = []
-        exprs = Expr.search(**{'thumb': {'$exists': True, '$ne': None}, 'thumb_file_id': {'$exists': False}})
-        if len(exprs) > 200:
-            exprs = exprs[0:100]
-        for e in exprs:
-            image_apps = filter(lambda i: i.get('type') == 'hive.image', e.get('apps'))
-            image_apps = [File.fetch(image.get('file_id')) for image in image_apps]
-            response.context['exprs'].append({'id': e.id, 'url': e.url, 'thumb': e.get('thumb'), 'images': image_apps})
-        return serve_page(response, 'pages/admin/thumbnail_relink.html')
-    if p2 == 'tags':
-        popular_tags = Expr.popular_tags()
-        response.context['popular_tags'] = popular_tags[0:100]
-        return serve_page(response, 'pages/admin/tags.html')
-    if p2 == 'users':
-        if not p3:
-            response.context['users'] = User.search()
-            return serve_page(response, 'pages/admin/users.html')
-        else:
-            user = User.named(p3)
-            expressions = Expr.search(owner=user.id)
-            public_expressions = filter(lambda e: e.get('auth') == 'public', expressions)
-            private_expressions = filter(lambda e: e.get('auth') == 'password', expressions)
-            response.context['user_object'] = user
-            response.context['public_expressions'] = public_expressions
-            response.context['private_expressions'] = private_expressions
-            response.context['action_log'] = ActionLog.search(user=user.id, created={'$gt': time.time() - 60*60*24*30})
-            response.context['expression_counts'] = {'public': len(public_expressions), 'private': len(private_expressions), 'total': len(expressions)}
-            return serve_page(response, 'pages/admin/user.html')
-
-
-def route_analytics(request, response):
-    import analytics
-    parts = request.path.split('/', 1)
-    p1 = lget(parts, 0)
-    p2 = lget(parts, 1)
-    if p2 == 'active_users':
-        analytics.user_first_month()
-        if request.args.has_key('start') and request.args.has_key('end'):
-            response.context['start'] = request.args.get('start')
-            response.context['end'] = request.args.get('end')
-            start = int(time.mktime(time.strptime(request.args.get('start'), "%Y-%m-%d")))
-            end = int(time.mktime(time.strptime(request.args.get('end'), "%Y-%m-%d")))
-            active_users, custom_histogram = analytics.active_users(start=start, end=end)
-        else:
-            event = request.args.get('event')
-            if event:
-                active_users, custom_histogram = analytics.active_users(event=event)
-            else:
-                active_users, custom_histogram = analytics.active_users()
-        response.context['active_users'] = active_users
-        response.context['custom_histogram'] = custom_histogram
-        response.context['active_users_js'] = json.dumps(active_users)
-        return serve_page(response, 'pages/analytics/active_users.html')
-    if p2 == 'invites':
-        invites = Referral.search()
-        cache = {}
-        for item in invites:
-            user_name = cache.get(item['user'])
-            if not user_name:
-                user_name = cache[item['user']] = User.fetch(item['user'])['name']
-            item['sender_name'] = user_name
-
-        response.context['invites'] = invites
-        return serve_page(response, 'pages/analytics/invites.html')
-    elif p2 == 'funnel1':
-        exclude = [get_root().id]
-        exclude = exclude + [User.named(name).id for name in config.admins]
-        weekly = {}
-        def invites_subr(res_dict, time0, time1):
-            invites = db.referral.find({'created': {'$lt': time1, '$gt': time0}, 'user': {'$nin': exclude}})
-            invites_used = filter(lambda x: x.has_key('user_created'), invites)
-            res_dict[time0] = {
-                'users': int((db.user.find({'created': {'$lt': time1}}).count() + db.user.find({'created': {'$lt': time0}}).count()) / 2)
-                ,'invites': invites.count()
-                ,'invites_used': len(invites_used)
-                }
-        start = date_to_epoch(2011, 11, 6)
-        week = 3600*24*7
-        now = time.time()
-        i = 0
-        while (start + i*week < now):
-            invites_subr(weekly, start + i*week, start + (i+1)*week)
-            i += 1
-        monthly = {}
-        y0 = 2011; m0 = 11;
-        while (date_to_epoch(y0,m0,1) < now):
-            if m0 == 12: m1 = 1; y1 = y0 + 1
-            else: m1 = m0 + 1; y1 = y0
-            invites_subr(monthly, date_to_epoch(y0,m0,1), date_to_epoch(y1,m1,1))
-            y0 = y1; m0 = m1
-        response.context['data'] = weekly
-        response.context['monthly'] = monthly
-        return serve_page(response, 'pages/analytics/funnel1.html')
-    elif p2 == 'app_count':
-        response.context['data'] = analytics.app_count().items()
-        response.context['title'] = 'App Type Count'
-        return serve_page(response, 'pages/analytics/generic.html')
-    elif p2 == 'user_growth':
-        users = User.search()
-        users.sort(lambda a,b: cmp(a.get('created'), b.get('created')))
-        res = []
-        dates = []
-        counts = []
-        c = 0
-        for u in users:
-            c = c+1
-            created = u.get('created')
-            dates.append(created)
-            counts.append(c)
-            res.append([created, c])
-        response.context['data'] = res
-        response.context['json_data'] = json.dumps({'dates': dates, 'counts': counts})
-        response.context['title'] = 'User Growth: (' + str(len(users)) + ' users)'
-        return serve_page(response, 'pages/analytics/user_growth.html')
-    elif p2 == 'last_login':
-        act_log = ActionLog.search()
-        res = {}
-        for a in act_log:
-            user = a['user']
-            if res.has_key(user):
-                if res[user] < a['created']: res[user] = a['created']
-            else:
-                res[user] = a['created']
-        now = time.time()
-        days_ago = range(1,67)
-        timeslice = []
-        for i, day_ago in enumerate(days_ago):
-            time0 = now if i==0 else now - 3600*24*days_ago[i-1]
-            time1 = now - 3600*24*day_ago
-            timeslice.append(len(filter(lambda x: x[1] < time0 and x[1] > time1, res.iteritems())))
-        response.context['days_ago'] = days_ago
-        response.context['timeslice'] = timeslice
-        response.context['data'] = json.dumps({'days_ago': days_ago, 'timeslice': timeslice})
-        return serve_page(response, 'pages/analytics/last_login.html')
-    else:
-        return serve_404(request, response)
-
 @Request.application
 def handle_safe(request):
     """Log exceptions thrown, display friendly error message.
@@ -1284,62 +1145,6 @@ def expr_to_html(exp):
 
 
 print joinpath(config.src_home, 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
-jinja_env.trim_blocks = True
-
-def serve_html(response, html):
-    response.data = html
-    response.content_type = 'text/html; charset=utf-8'
-    return response
-def serve_page(response, template):
-    return serve_html(response, render_template(response, template))
-def render_template(response, template):
-    context = response.context
-    context.update(
-         home_url = home_url(response.user)
-        ,feed_url = home_url(response.user, path='feed')
-        ,user = response.user
-        ,admin = response.user.get('name') in config.admins
-        ,create = abs_url(secure = True) + 'edit'
-        ,server = abs_url()
-        ,secure_server = abs_url(secure = True)
-        ,server_name = config.server_name
-        ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
-        ,colors = colors
-        ,debug = config.debug_mode
-        ,assets_env = assets_env
-        ,use_ga = config.use_ga
-        ,ui = ui
-        )
-    context.setdefault('icon', '/lib/skin/1/logo.png')
-    return jinja_env.get_template(template).render(context)
-
-def serve_json(response, val, as_text = False):
-    """ as_text is used when content is received in an <iframe> by the client """
-
-    response.mimetype = 'application/json' if not as_text else 'text/plain'
-    response.data = json.dumps(val)
-    return response
-# maybe merge with serve_json?
-#def serve_jsonp(request, response, val):
-#    response.mimetype = 'application/javascript'
-#    response.data = ( request.args.get('callback', 'alert')
-#        + '(' + json.dumps(val) +');' )
-#    return response
-
-def serve_404(request, response):
-    response.status_code = 404
-    return serve_page(response, 'pages/notfound.html')
-
-def serve_error(request, msg):
-    response.status_code = 500
-    response.context['msg'] = msg
-    return serve_page(response, 'pages/error.html')
-
-def redirect(response, location, permanent=False):
-    response.location = location
-    response.status_code = 301 if permanent else 303
-    return response
 
 class InternalServerError(exceptions.InternalServerError):
     def get_body(self, environ):

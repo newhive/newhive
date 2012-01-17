@@ -1,11 +1,10 @@
 from newhive.controllers.shared import *
+from newhive.controllers.application import ApplicationController
+from newhive import analytics
 
-def route_analytics(request, response):
-    import analytics
-    parts = request.path.split('/', 1)
-    p1 = lget(parts, 0)
-    p2 = lget(parts, 1)
-    if p2 == 'active_users':
+class AnalyticsController(ApplicationController):
+
+    def active_users(self, request, response):
         analytics.user_first_month()
         if request.args.has_key('start') and request.args.has_key('end'):
             response.context['start'] = request.args.get('start')
@@ -22,21 +21,23 @@ def route_analytics(request, response):
         response.context['active_users'] = active_users
         response.context['custom_histogram'] = custom_histogram
         response.context['active_users_js'] = json.dumps(active_users)
-        return serve_page(response, 'pages/analytics/active_users.html')
-    if p2 == 'invites':
-        invites = Referral.search()
+        return self.serve_page(response, 'pages/analytics/active_users.html')
+
+    def invites(self, request, response):
+        invites = self.db.Referral.search()
         cache = {}
         for item in invites:
             user_name = cache.get(item['user'])
             if not user_name:
-                user_name = cache[item['user']] = User.fetch(item['user'])['name']
+                user_name = cache[item['user']] = self.db.User.fetch(item['user'])['name']
             item['sender_name'] = user_name
 
         response.context['invites'] = invites
-        return serve_page(response, 'pages/analytics/invites.html')
-    elif p2 == 'funnel1':
+        return self.serve_page(response, 'pages/analytics/invites.html')
+
+    def funnel1(self, request, response):
         exclude = [get_root().id]
-        exclude = exclude + [User.named(name).id for name in config.admins]
+        exclude = exclude + [self.db.User.named(name).id for name in config.admins]
         weekly = {}
         def invites_subr(res_dict, time0, time1):
             invites = db.referral.find({'created': {'$lt': time1, '$gt': time0}, 'user': {'$nin': exclude}})
@@ -62,13 +63,15 @@ def route_analytics(request, response):
             y0 = y1; m0 = m1
         response.context['data'] = weekly
         response.context['monthly'] = monthly
-        return serve_page(response, 'pages/analytics/funnel1.html')
-    elif p2 == 'app_count':
+        return self.serve_page(response, 'pages/analytics/funnel1.html')
+
+    def app_count(self, request, response):
         response.context['data'] = analytics.app_count().items()
         response.context['title'] = 'App Type Count'
-        return serve_page(response, 'pages/analytics/generic.html')
-    elif p2 == 'user_growth':
-        users = User.search()
+        return self.serve_page(response, 'pages/analytics/generic.html')
+
+    def user_growth(self, request, response):
+        users = self.db.User.search()
         users.sort(lambda a,b: cmp(a.get('created'), b.get('created')))
         res = []
         dates = []
@@ -83,9 +86,10 @@ def route_analytics(request, response):
         response.context['data'] = res
         response.context['json_data'] = json.dumps({'dates': dates, 'counts': counts})
         response.context['title'] = 'User Growth: (' + str(len(users)) + ' users)'
-        return serve_page(response, 'pages/analytics/user_growth.html')
-    elif p2 == 'last_login':
-        act_log = ActionLog.search()
+        return self.serve_page(response, 'pages/analytics/user_growth.html')
+
+    def last_login(self, request, response):
+        act_log = self.db.ActionLog.search()
         res = {}
         for a in act_log:
             user = a['user']
@@ -103,8 +107,9 @@ def route_analytics(request, response):
         response.context['days_ago'] = days_ago
         response.context['timeslice'] = timeslice
         response.context['data'] = json.dumps({'days_ago': days_ago, 'timeslice': timeslice})
-        return serve_page(response, 'pages/analytics/last_login.html')
-    else:
-        return serve_404(request, response)
+        return self.serve_page(response, 'pages/analytics/last_login.html')
+
+    #else:
+    #    return serve_404(self, request, response)
 
 
