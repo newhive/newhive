@@ -1,6 +1,6 @@
 from werkzeug import exceptions
-import config
-from state import User, Session, junkstr
+import newhive.config
+from newhive.state import User, Session, junkstr
 
 def authenticate_request(request, response):
     """Read session id from 'identity' cookie, retrieve session record from db,

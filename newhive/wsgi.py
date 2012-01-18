@@ -15,7 +15,7 @@ from werkzeug import Request, Response, exceptions, url_unquote
 from urlparse import urlparse
 import jinja2
 
-import config, auth
+from newhive import config, auth
 from newhive import colors
 from newhive.state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog, db, junkstr
 import newhive.state

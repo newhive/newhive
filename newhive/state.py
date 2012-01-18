@@ -1,12 +1,12 @@
-import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time
+import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
-import config
-import social_stats
+from newhive import config, social_stats
 import PIL.Image as Img
 from PIL import ImageOps
 from bson.code import Code
+from crypt import crypt
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
@@ -239,7 +239,6 @@ def fetch(cname, id, keyname='_id'):
 def create(cname, **d): return Entity(d, cname=cname).create_me()
 
 
-from crypt import crypt
 db.user.ensure_index('name', unique=True)
 class User(Entity):
     cname = 'user'
@@ -329,7 +328,6 @@ def get_root():
     print "global function get_root is deprecated.  Use newhive.state.User.get_root()"
     return User.get_root()
 if not get_root():
-    import getpass
     print("Enter password for root user. You have one chance only:")
     secret = getpass.getpass()
     root = User.create(name='root', password=secret, referrer=None)
@@ -337,7 +335,6 @@ if not get_root():
 class Session(Entity):
     cname = 'session'
 
-import re
 def normalize(ws):
     return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
 
