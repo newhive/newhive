@@ -6,6 +6,7 @@ from newhive.controllers.shared import *
 from newhive.controllers.analytics import AnalyticsController
 from newhive.controllers.admin import AdminController
 from newhive.controllers.expression import ExpressionController
+from newhive.controllers.application import ApplicationController
 
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
@@ -51,6 +52,12 @@ controllers = {
     , 'admin':    AdminController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     , 'expression':    ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     }
+
+application_controller = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
+serve_page = application_controller.serve_page
+serve_404 = application_controller.serve_404
+#serve_html = application_controller.serve_html
+#serve_page = application_controller.serve_page
 
 def expr_save(request, response):
     """ Parses JSON object from POST variable 'exp' and stores it in database.
@@ -741,12 +748,6 @@ actions = dict(
 ##    , 'application/x-javascript'       : True
 #    }
 
-def length_bucket(t):
-    l = len(t)
-    if l < 10: return 1
-    if l < 20: return 2
-    return 3
-
 def format_card(e):
     dict.update(e
         ,updated = friendly_date(time_u(e['updated']))
@@ -931,45 +932,13 @@ def handle(request): # HANDLER
         #    response.context['show_name'] = True
         #    return serve_page(response, 'pages/home.html')
 
-        print '\np1 = ' + p1
         return serve_404(request, response)
     elif request.domain.startswith('www.'):
         return redirect(response, re.sub('www.', '', request.url, 1))
 
-    resource_requested = resource = Expr.named(request.domain.lower(), request.path.lower())
-    if not resource: resource = Expr.named(request.domain, '')
-    owner = User.fetch(resource['owner'])
+    owner = User.find(sites=request.domain.lower())
+    if not owner: return serve_404(request, response)
     is_owner = request.requester.logged_in and owner.id == request.requester.id
-    if is_owner: owner.unflag('expr_new')
-    if request.args.has_key('tag') or request.args.has_key('user'):
-        pagethrough = {'next': None, 'prev': None}
-        shared_spec = {}
-        url_args = {}
-        root = get_root()
-        loop = False
-        if request.args.has_key('user'):
-            loop = True
-            user = re.sub('[^A-Za-z]', '', request.args.get('user')) #prevent injection hacks
-            shared_spec.update({'owner_name': user})
-            url_args.update({'user': user})
-        if request.args.has_key('tag'):
-            tag = re.sub('[^A-Za-z]', '', request.args.get('tag')) #prevent injection hacks
-            root_tags = [key for key in root.get('tagged', {})]
-            if tag in root_tags:
-                ids = root.get('tagged', {}).get(tag, [])
-                shared_spec = ids
-            else:
-                tag = tag.lower()
-                if tag in ['recent']: shared_spec = {}
-                else:  shared_spec.update({'tags_index': tag})
-            url_args.update({'tag': tag})
-        pagethrough['next'] = resource.next(shared_spec, loop=loop)
-        pagethrough['prev'] = resource.prev(shared_spec, loop=loop)
-
-        if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring(url_args)
-        if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
-        response.context.update(pagethrough = pagethrough)
-
 
     response.context.update(
          domain = request.domain
@@ -980,15 +949,6 @@ def handle(request): # HANDLER
         ,create_expr_card = re.match('expressions', request.path) and is_owner
         )
 
-    if request.args.has_key('dialog'):
-        dialog = request.args['dialog']
-        response.context.update(exp=resource, expr=resource)
-        return serve_page(response, 'dialogs/' + dialog + '.html')
-
-
-    if lget(request.path, 0) == '*':
-        return redirect(response, home_url(owner) +
-            ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
     if request.path.startswith('expressions') or request.path in ['starred', 'listening', 'feed']:
         page = int(request.args.get('page', 0))
         tags = owner.get('tags', [])
@@ -1030,42 +990,20 @@ def handle(request): # HANDLER
 
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
-    else:
-        response.context['starrers'] = map(User.fetch, resource.starrers)
-        response.context['listeners'] = map(User.fetch, owner.starrers)
+
+    if request.args.has_key('dialog'):
+        dialog = request.args['dialog']
+        response.context.update(exp=resource, expr=resource)
+        return serve_page(response, 'dialogs/' + dialog + '.html')
 
 
-    if not resource_requested: return serve_404(request, response)
-    if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
+    if lget(request.path, 0) == '*':
+        return redirect(response, home_url(owner) +
+            ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
 
-    html = expr_to_html(resource)
-    auth_required = (resource.get('auth') == 'password' and resource.get('password')
-        and request.form.get('password') != resource.get('password')
-        and request.requester.id != resource['owner'])
-    response.context.update(
-         edit = abs_url(secure = True) + 'edit/' + resource.id
-        ,mtime = friendly_date(time_u(resource['updated']))
-        ,title = resource.get('title', False)
-        ,auth_required = auth_required
-        ,body = html
-        ,exp = resource
-        ,exp_js = json.dumps(resource)
-        )
+    #if not resource_requested: return serve_404(request, response)
 
-    resource.increment_counter('views')
-    if is_owner: resource.increment_counter('owner_views')
-
-    template = resource.get('template', request.args.get('template', 'expression'))
-
-    if request.requester.logged_in:
-        ActionLog.new(request.requester, "view_expression", data={'expr_id': resource.id})
-
-    if template == 'none':
-        if auth_required: return Forbidden()
-        return serve_html(response, html)
-
-    else: return serve_page(response, 'pages/' + template + '.html')
-
+    return controllers['expression'].show(request, response)
 @Request.application
 def handle_safe(request):
     """Log exceptions thrown, display friendly error message.
@@ -1083,44 +1021,6 @@ application = handle_debug
 #else: application = handle_safe
 
 
-# www_expression -> String
-def expr_to_html(exp):
-    """Converts JSON object representing an expression to HTML"""
-
-    apps = exp.get('apps')
-    if not apps: return ''
-
-    def css_for_app(app):
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
-            app['position'][0],
-            app['position'][1],
-            app['dimensions'][0],
-            app['dimensions'][1],
-            'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
-            app['z'],
-            app.get('opacity', 1) or 1
-            )
-
-    def html_for_app(app):
-        content = app.get('content', '')
-        more_css = ''
-        html = ''
-        if app.get('type') == 'hive.image':
-            html = "<img src='%s'>" % content
-            link = app.get('href')
-            if link: html = "<a href='%s'>%s</a>" % (link, html)
-        elif app.get('type') == 'hive.sketch':
-            html = "<img src='%s'>" % content.get('src')
-        elif app.get('type') == 'hive.rectangle':
-            c = app.get('content', {})
-            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-        else: html = content
-        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
-        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app) + more_css, data, html)
-
-    return ''.join(map(html_for_app, apps))
-
 
 print joinpath(config.src_home, 'templates')
 
@@ -1135,42 +1035,6 @@ class InternalServerError(exceptions.InternalServerError):
 class Forbidden(exceptions.Forbidden):
     def get_body(self, environ):
         return "You can no looky sorry"
-
-def friendly_date(then):
-    """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
-    if type(then) in [int, float]:
-      then = time_u(then)
-
-    now = datetime.utcnow()
-    dt = now - then
-    if dt.seconds < 60:
-        return "just now"
-    months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    s = months[then.month] + ' ' + str(then.day)
-    if then.year != now.year: s += ' ' + str(then.year)
-    if dt.days < 7:
-        if not dt.days:
-            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
-            else: (t, u) = (dt.seconds / 3600, 'hr')
-        else: (t, u) = (dt.days, 'day')
-        s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
-    return s
-
-def large_number(number):
-    if number < 10000: return str(number)
-    elif 10000 <= number < 1000000:
-        return str(int(number/1000)) + "K"
-    elif 1000000 <= number < 10000000:
-        return str(math.floor(number/100000)/10) + "M"
-    elif 10000000 <= number:
-        return str(int(number/1000000)) + "M"
-
-def querystring(d):
-    out = "?"
-    for key, val in d.items():
-        out = out + key + "=" + val + "&"
-    return out[:-1]
-
 
 jinja_env.filters['friendly_date'] = friendly_date
 jinja_env.filters['length_bucket'] = length_bucket

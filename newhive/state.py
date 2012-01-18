@@ -11,6 +11,7 @@ from bson.code import Code
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
+from newhive.utils import now, time_s, time_u, junkstr
 
 con = None
 db = None
@@ -35,18 +36,7 @@ def init_connections(config):
         s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
 
 
-def now(): return time.time()
-def time_s(t): return int(t.strftime('%s'))
-def time_u(t): return datetime.utcfromtimestamp(t)
 def guid(): return str(pymongo.objectid.ObjectId())
-
-def junkstr(length):
-    """Creates a random base 64 string"""
-
-    def chrange(c1, c2): return [chr(i) for i in range(ord(c1), ord(c2)+1)]
-    chrs = chrange('0', '9') + chrange('A', 'Z') + chrange('a', 'z') + ['.', '/']
-    return ''.join([chrs[random.randrange(0, 64)] for _ in range(length)])
-
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
@@ -293,6 +283,10 @@ class User(Entity):
         self = cls({})
         return self.fetch_me(name.lower(), keyname='name')
 
+    @classmethod
+    def get_root(cls):
+        return cls.named('root')
+
     def cmp_password(self, v):
         return crypt(v, self['password']) == self['password']
 
@@ -331,7 +325,9 @@ class User(Entity):
     expr_count = property(get_expr_count)
 
 
-def get_root(): return User.named('root')
+def get_root(): 
+    print "global function get_root is deprecated.  Use newhive.state.User.get_root()"
+    return User.get_root()
 if not get_root():
     import getpass
     print("Enter password for root user. You have one chance only:")
