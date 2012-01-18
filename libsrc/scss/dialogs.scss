@@ -269,3 +269,12 @@ input[type="text"].copy, textarea.copy {
 #dia_password_recovery {
   padding: 0px 35px 22px 35px;
 }
+
+// Thumbnail Dialog
+#dia_thumbnail .thumb {
+  @include border-radius(7px);
+  img { @include border-radius(7px); }
+  background-color: #EEEEEE;
+  cursor: pointer;
+  img:hover { @include opacity(0.75); }
+}

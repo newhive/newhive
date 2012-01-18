@@ -1015,7 +1015,26 @@ var main = function() {
         }
     }
 
-    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false, auto_close : false });
+    var pickDefaultThumb = function(){
+        if (! (Hive.Exp.thumb_file_id || Hive.Exp.thumb)) {
+            var image_apps = $.map(Hive.get_state().apps, function(app){
+                if (app.type == 'hive.image' && app.file_id) { return app; }
+            });
+            if (image_apps.length > 0){
+                setThumb(image_apps[0]);
+            }
+        }
+    };
+
+    var setThumb = function(app){
+        // Set thumb_id property for the server to find the appropriate file object
+        // if a default thumb a pseudo file_id, id<10 is chosen. 
+        // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
+        Hive.Exp.thumb_file_id = app.file_id;
+        $('#current_thumb').attr('src', app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
+    };
+
+    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false, auto_close : false, open: pickDefaultThumb});
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');
@@ -1031,25 +1050,20 @@ var main = function() {
     });
     var dia_thumbnail;
     $('#btn_thumbnail').click(function() {
-        // Set thumb_src property for the server to generate a new thumb
         dia_thumbnail = showDialog('#dia_thumbnail');
-        $('#expr_images').empty().append(map(function(thumb) {
-            var img = $('<img>').attr('src', thumb.src);
-            var e = $("<div class='thumb'>").append(img).get(0);
-            return e;
-        }, $('.ehapp img')));
-        $('#expr_images .thumb img').each(function() { var img = $(this); setTimeout(function() { img_fill(img) }, 1) });
-        $('#expr_images img').click(function() {
-            Hive.Exp.thumb_src = this.src;
+        var user_thumbs = $.map(Hive.get_state().apps, function(app){
+            if ( app.type == 'hive.image' && app.file_id ) {
+                var img = $('<img>').attr('src', app.content + "_190x190").attr('data-file-id', app.file_id);
+                var e = $("<div class='thumb'>").append(img).get(0);
+                return e;
+            }
+        })
+        $('#expr_images').empty().append(user_thumbs);
+        $('#dia_thumbnail .thumb img').click(function() {
+            setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
             dia_thumbnail.close();
             return false;
         });
-    });
-    $('#default_thumbs img').click(function() {
-        // The thumb property is set directly
-        Hive.Exp.thumb = this.src;
-        dia_thumbnail.close();
-        return false;
     });
     
     // Automatically update url unless it's an already saved expression or the user has modified the url manually
@@ -1106,9 +1120,20 @@ Hive.embed_code = function() {
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
 //http://player.vimeo.com/video/                                                   13110687
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>
-    else if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i))
-        app = { type : 'hive.image', content : c }
-    else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+    else if(m = c.match(/^https?:\/\/(.*)\/([^/]*)(jpg|jpeg|png|gif)$/i)) {
+        var callback = function(content) {
+            return function(data) {
+                if (data.err){ var app = {type: 'hive.image', content: content}; } 
+                else { var app = data; }
+                Hive.upload_finish();
+                Hive.new_app(app);
+                $('#embed_code').val('');
+            }
+        }
+        Hive.upload_start();
+        $.post(server_url, {action: "files_create", remote: true, url: m[0], filename: m[2] + m[3]}, callback(c), 'json');
+        return;
+    } else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
         var embed = stuffs.children().first();
@@ -1118,8 +1143,7 @@ Hive.embed_code = function() {
         embed.find('[width]').attr('width', '100%');
         embed.find('embed').attr('wmode', 'opaque');
         app = { type : 'hive.html', content : embed.outerHTML() };
-    }
-     else {
+    } else {
         var stuffs = $('<div>');
         stuffs.html(c);
         var embed = stuffs.children().first();
