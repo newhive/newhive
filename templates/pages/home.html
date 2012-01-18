@@ -40,6 +40,11 @@
     });
   </script>
 
+  {% block sopablackout %}
+  <script type="text/javascript">sopablackout_id = 'header';</script>
+  <script type="text/javascript" src="/lib/sopablackout.js"></script>
+  {% endblock %}
+
 {% endblock head %}
 
 {% block nav %}
