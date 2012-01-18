@@ -58,6 +58,8 @@ serve_page = application_controller.serve_page
 serve_404 = application_controller.serve_404
 #serve_html = application_controller.serve_html
 #serve_page = application_controller.serve_page
+expr_list = controllers['expression']._expr_list
+expr_home_list = controllers['expression']._expr_home_list
 
 def expr_save(request, response):
     """ Parses JSON object from POST variable 'exp' and stores it in database.
@@ -748,38 +750,6 @@ actions = dict(
 ##    , 'application/x-javascript'       : True
 #    }
 
-def format_card(e):
-    dict.update(e
-        ,updated = friendly_date(time_u(e['updated']))
-        ,url = abs_url(domain=e['domain']) + e['name']
-        ,tags = e.get('tags_index', [])
-        )
-    return e
-
-def expr_list(spec, **args):
-    return map(format_card, Expr.list(spec, **args))
-
-def expr_home_list(p2, request, response, limit=90, klass=Expr):
-    root = get_root()
-    tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
-    tag = {'name': tag, 'url': '/home/' + tag}
-    page = int(request.args.get('page', 0))
-    ids = root.get('tagged', {}).get(tag['name'], []) if klass == Expr else []
-    if ids:
-        by_id = {}
-        for e in klass.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
-        entities = [by_id[i] for i in ids if by_id.has_key(i)]
-        response.context['pages'] = 0;
-    else:
-        entities = klass.list({}, sort='updated', limit=limit, page=page)
-        response.context['pages'] = klass.list_count({});
-    if klass==Expr:
-        response.context['exprs'] = map(format_card, entities)
-        response.context['tag'] = tag
-        response.context['show_name'] = True
-    elif klass==User: response.context['users'] = entities
-    response.context['page'] = page
-
 def handle(request): # HANDLER
     """The HTTP handler, main entry point from Werkzeug.
        All POST requests must be sent to thenewhive.com, as opposed to
@@ -949,29 +919,10 @@ def handle(request): # HANDLER
         ,create_expr_card = re.match('expressions', request.path) and is_owner
         )
 
-    if request.path.startswith('expressions') or request.path in ['starred', 'listening', 'feed']:
-        page = int(request.args.get('page', 0))
-        tags = owner.get('tags', [])
-        expressions_tag = {'url': '/expressions', 'name': 'Expressions', 'show_name': False}
-        feed_tag = {'url': "/feed", "name": "Feed"}
-        star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
-        people_tag = {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
-        response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
-        response.context['expr_context'] = {'user': owner.get('name')}
-        if request.path.startswith('expressions'):
-            spec = { 'owner' : owner.id }
-            tag = lget(request.path.split('/'), 1, '')
-            if tag:
-                response.context['expr_context'].update({'tag': tag})
-                tag = {'name': tag, 'url': "/expressions/" + tag, 'type': 'user'}
-                spec['tags_index'] = tag['name']
-            else: tag = expressions_tag
-            response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
-        elif request.path == 'starred':
-            spec = {'_id': {'$in': owner.starred_items}}
-            tag = star_tag
-            response.context['exprs'] = expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
-        elif request.path == 'listening':
+    if request.path.startswith('expressions') or request.path == 'starred':
+        return controllers['expression'].index(request, response)
+    if request.path in ['listening', 'feed']:
+        if request.path == 'listening':
             tag = people_tag
             response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
         elif request.path == 'feed':
