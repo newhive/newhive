@@ -270,6 +270,7 @@ Hive.App.Controls = function(app) {
                 input.blur();
                 o.app.focus();
             }
+            ,auto_close : false
         });
         var set_link = function(){
             var v = input.val();
@@ -452,10 +453,14 @@ Hive.App.Text = function(common) {
         return o.rte.get_content();
     }
 
-    o.focus.add(function() { o.rte.editMode(true) });
+    o.focus.add(function() {
+        o.rte.removeBreaks();
+        o.rte.editMode(true);
+    });
     o.unfocus.add(function() {
-        o.rte.set_content(autoLink(o.rte.get_content()));
         o.rte.editMode(false);
+        o.rte.set_content(autoLink(o.rte.get_content()));
+        o.rte.addBreaks();
     });
     
     o.link = function(v) {
@@ -1245,14 +1250,13 @@ Hive.rte = function(options) {
         if(o.css) $(o.doc).find('head').append(o.css);
         o.doc.body.style.overflow = 'hidden';
         
-        // TODO: clone body node?
         o.cache_content = function() { o.previous_content = $(o.doc.body).text(); }
         o.cache_content();
         $(o.win).bind('keypress', o.cache_content);
         $(o.win).bind('paste', function() { setTimeout(function(e){
             // TODO: determine which part was actually pasted, if
             // pasting with existing text
-            if(o.previous_content.trim() == "") $(o.doc.body).text($(o.doc.body).text());
+            if(o.previous_content.trim() == "") o.unformat();
             o.change();
         }, 10)});
 
@@ -1260,6 +1264,13 @@ Hive.rte = function(options) {
 
         //o.editor_cmd('styleWithCSS', true);
         if(o.load) o.load();
+    }
+
+    o.unformat = function() {
+        // TODO: figure out how to splice out selection,
+        // and splice in unformatted text. Preserve newlines, and
+        // possibly create another unformat command to remove those too
+        $(o.doc.body).html($(o.doc.body).text());
     }
 
     o.editor_cmd = function(command, args) {
@@ -1297,6 +1308,10 @@ Hive.rte = function(options) {
         // boxes can scale like other Apps. A similar hack must be
         // done for all browsers, as they all use a slightly different
         // form of absolute text sizing.
+        // 
+        // This is currently unused due to significant layout
+        // inconsistencies with opposing font sizes in app container
+        // and inline tags
         if(command == 'fontsize') {
             var broken = $(o.doc.body).find('font[size]');
             $(broken).css('font-size', args);
@@ -1402,13 +1417,10 @@ Hive.rte = function(options) {
 
     o.get_content = function() {
         o.doc.normalize();
-        o.addBreaks();
-        return $(o.doc.body).wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
+        return $(o.doc.body).html();
     }
     o.set_content = function(c) {
         return $(o.doc.body).html(c);
-        $(o.doc.body).find('.viewstyle').children().unwrap();
-        o.removeBreaks();
     }
 
     function rangeIntersectsNode(range, node) {
@@ -1433,14 +1445,18 @@ Hive.rte = function(options) {
         }
     }
     o.addBreaks = function() {
+        // clone body to off-page element
+        var e = $(o.doc.body); //.clone();
+        //e.css({'left':-5000, width:$(o.iframe).width(), height:$(o.iframe).height()}).appendTo(document.body);
+
         // wrap all words with spans
-        o.eachTextNodeIn(o.doc.body, function(n) {
+        o.eachTextNodeIn(e.get(0), function(n) {
             $(n).replaceWith(n.nodeValue.replace(/(\w+)/g, "<span class='wordmark'>$1</span>"))
         });
 
         // TODO: iterate over wordmarks, add <br>s where line breaks occur
         var y = 0;
-        $(o.doc.body).find('.wordmark').each(function(i, e) {
+        e.find('.wordmark').each(function(i, e) {
             var ely = $(e).offset().top;
             if(ely > y) {
                 var br = $('<br class="softbr">');
@@ -1451,10 +1467,16 @@ Hive.rte = function(options) {
         });
 
         // unwrap all words
-        $(o.doc.body).find('.wordmark').each(function(i, e) { $(e).replaceWith($(e).text()) });
+        e.find('.wordmark').each(function(i, e) { $(e).replaceWith($(e).text()) });
+
+        var html = e.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
+        //e.remove();
+        return html;
     }
     o.removeBreaks = function() {
         $(o.doc.body).find('.softbr').remove();
+        var wrapper = $(o.doc.body).find('.viewstyle');
+        if(wrapper.length) $(o.doc.body).html(wrapper.html());
     }
 
     o.create_editor();
