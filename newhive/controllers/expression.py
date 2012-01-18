@@ -36,7 +36,7 @@ class ExpressionController(ApplicationController):
     def show(self, request, response):
         owner = response.context['owner']
         resource = self.db.Expr.find(owner=owner.id, name=request.path.lower())
-        if not resource: resource = Expr.named(request.domain, '')
+        if not resource: return self.serve_404(request, response) #resource = self.db.Expr.named(request.domain, '')
 
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
@@ -114,6 +114,81 @@ class ExpressionController(ApplicationController):
 
         return self.serve_page(response, 'pages/expr_cards.html')
 
+    def save(self, request, response):
+        """ Parses JSON object from POST variable 'exp' and stores it in database.
+            If the name (url) does not match record in database, create a new record."""
+
+        try: exp = self.db.Expr(json.loads(request.form.get('exp', '0')))
+        except: exp = False
+        if not exp: raise ValueError('missing or malformed exp')
+
+        res = self.db.Expr.fetch(exp.id)
+        upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
+        upd['name'] = upd['name'].lower().strip()
+
+        # if user has not picked a thumbnail, pick the latest image added
+        if not ((res and res.get('thumb')) or exp.get('thumb') or exp.get('thumb_src')):
+            fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
+            if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
+        # Generate thumbnail from given image url
+        thumb_src = exp.get('thumb_src')
+        if thumb_src:
+            if re.match('https?://..-thenewhive.s3.amazonaws.com', thumb_src):
+                upd['thumb_file_id'] = thumb_src.split('/')[-1]
+            else:
+                upd['thumb'] = thumb_src
+                upd['thumb_file_id'] = None
+
+        # deal with inline base64 encoded images from Sketch app
+        for app in upd['apps']:
+            if app['type'] != 'hive.sketch': continue
+            data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
+            f = os.tmpfile()
+            f.write(data)
+            res = self.db.File.create(owner=request.requester.id, tmp_file=f, name='sketch', mime='image/png')
+            f.close()
+            app.update({
+                 'type' : 'hive.image'
+                ,'content' : res['url']
+                ,'file_id' : res.id
+            })
+
+        if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
+            try:
+              new_expression = True
+              res = request.requester.expr_create(upd)
+              self.db.ActionLog.new(request.requester, "new_expression_save", data={'expr_id': res.id})
+              request.requester.flag('expr_new')
+              if request.requester.get('flags').get('add_invites_on_save'):
+                  request.requester.unflag('add_invites_on_save')
+                  request.requester.give_invites(5)
+            except DuplicateKeyError:
+                if exp.get('overwrite'):
+                    self.db.Expr.named(upd['domain'], upd['name']).delete()
+                    res = request.requester.expr_create(upd)
+                    self.db.ActionLog.new(request.requester, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+                else:
+                    return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
+                    self.db.ActionLog.new(request.requester, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+        else:
+            if not res['owner'] == request.requester.id:
+                raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+            res.update(**upd)
+            new_expression = False
+            self.db.ActionLog.new(request.requester, "update_expression", data={'expr_id': res.id})
+        return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
+
+
+    def delete(self, request, response):
+        e = self.db.Expr.fetch(request.form.get('id'))
+        if not e: return self.serve_404(request, response)
+        if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+        e.delete()
+        if e['name'] == '': request.requester.expr_create({ 'title' : 'Homepage', 'home' : True })
+        # TODO: garbage collect media files that are no longer referenced by expression
+        return self.redirect(response, request.requester.url)
+
+
     def _expr_list(self, spec, **args):
         return map(self._format_card, self.db.Expr.list(spec, **args))
 
@@ -147,9 +222,7 @@ class ExpressionController(ApplicationController):
         elif klass==self.db.User: response.context['users'] = entities
         response.context['page'] = page
 
-
-
-# www_expression -> String, this maybe should go in state.Expr
+    # www_expression -> String, this maybe should go in state.Expr
     def _expr_to_html(self, exp):
         """Converts JSON object representing an expression to HTML"""
 
@@ -216,6 +289,3 @@ class ExpressionController(ApplicationController):
         if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
 
         return pagethrough
-
-
-
