@@ -8,6 +8,7 @@ from newhive.controllers.admin import AdminController
 from newhive.controllers.expression import ExpressionController
 from newhive.controllers.application import ApplicationController
 from newhive.controllers.mail import MailController
+from newhive.controllers.user import UserController
 
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
@@ -51,6 +52,7 @@ jinja_env.trim_blocks = True
 controllers = {
     'analytics':  AnalyticsController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     , 'admin':    AdminController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
+    , 'user':    UserController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     , 'expression':    ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     , 'mail':     MailController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     }
@@ -115,40 +117,6 @@ def file_delete(request, response):
 def user_check(request, response):
     return False if User.named(request.args.get('name')) else True
 
-def user_create(request, response):
-    """ Checks if the referral code matches one found in database.
-        Decrements the referral count of the user who created the referral and checks if the count is > 0.
-        Creates user record.
-        Creates empty home expression, so user.thenewhive.com does not show 404.
-        Creates media directory for user.
-        emails thank you for registering to user
-        Logs new user in.
-        """
-
-    referral = Referral.fetch(request.args.get('key'), keyname='key')
-    if (not referral or referral.get('used')): return bad_referral(request, response)
-    referrer = User.fetch(referral['user'])
-    assert 'tos' in request.form
-
-    args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
-    args.update({
-         'referrer' : referral['user']
-        ,'sites'    : [args['name'].lower() + '.' + config.server_name]
-        #,'flags'    : { 'add_invites_on_save' : True }
-    })
-    user = User.create(**args)
-    referrer.update(referrals = referrer['referrals'] - 1)
-    referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
-    home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
-    user.give_invites(5)
-
-    try: mail_user_register_thankyou(user)
-    except: pass # TODO: log an error
-
-    request.form = dict(username = args['name'], secret = args['password'])
-    login(request, response)
-    return redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
-
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
     return serve_page(response, 'pages/minimal.html')
@@ -156,21 +124,6 @@ def bad_referral(request, response):
     response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
     response.context['error'] = 'Log in if you already have an account'
     return serve_page(response, 'pages/error.html')
-
-def profile_thumb_set(request, response):
-    request.max_content_length = 10000000 # 10 megs
-    file = request.files.get('profile_thumb')
-    mime = mimetypes.guess_type(file.filename)[0]
-    if not mime in ['image/jpeg', 'image/png', 'image/gif']:
-        response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
-
-    tmp_file = os.tmpfile()
-    file.save(tmp_file)
-    res = File.create(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime)
-    tmp_file.close()
-    request.requester.update(thumb_file_id = res.id, profile_thumb=res.get_thumb(190,190))
-    return redirect(response, request.form['forward'])
-
 
 def expr_tag_update(request, response):
     tag = lget(normalize(request.form.get('value', '')), 0)
@@ -301,36 +254,6 @@ def thumbnail_relink(request, response):
         return {'file': file.id, 'expr': expr.id}
     else: return False
 
-def user_update(request, response):
-    message = ''
-    user = request.requester
-    if not user.cmp_password(request.form.get('old_password')): return serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
-    if request.form.get('password'):
-        if auth.password_change(request, response):
-            message = message + ui.password_change_success_message + " "
-        else:
-            return serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
-    fullname = request.form.get('fullname')
-    if fullname and fullname != request.requester.get('fullname'):
-        user.update(fullname=fullname)
-        message = message + ui.fullname_change_success_message + " "
-    email = request.form.get('email')
-    if email and email != request.requester.get('email'):
-        user.update(email_confirmation_request_date=time.time())
-        mail_email_confirmation(user, email)
-        message = message + ui.email_change_success_message + " "
-    return serve_json(response, {'success': True, 'message': message})
-
-def password_recovery(request, response):
-    email = request.form.get('email')
-    name = request.form.get('name')
-    user = User.find(email=email, name=name)
-    if user:
-        mail_temporary_password(user)
-        return serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
-    else:
-        return serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
-
 
 # Possible values for the POST variable 'action'
 actions = dict(
@@ -340,9 +263,9 @@ actions = dict(
     ,expr_delete     = controllers['expression'].delete
     ,files_create    = files_create
     ,file_delete     = file_delete
-    ,user_create     = user_create
-    ,user_update     = user_update
-    ,password_recovery = password_recovery
+    ,user_create     = controllers['user'].create
+    ,user_update     = controllers['user'].create
+    ,password_recovery = controllers['user'].password_recovery
     ,mail_us         = controllers['mail'].mail_us
     ,mail_them       = controllers['mail'].mail_them
     ,mail_referral   = controllers['mail'].mail_referral
@@ -355,7 +278,7 @@ actions = dict(
     ,add_referral    = add_referral
     ,add_comment     = add_comment
     ,bulk_invite     = bulk_invite
-    ,profile_thumb_set  = profile_thumb_set
+    ,profile_thumb_set  = controllers['user'].profile_thumb_set
     ,star            = star
     ,unstar          = star
     ,log             = log
@@ -435,10 +358,7 @@ def handle(request): # HANDLER
         elif p1 == 'edit' and request.requester.logged_in:
             return controllers['expression'].default(request, response, {'method': 'edit'})
         elif p1 == 'signup':
-            response.context['action'] = 'create'
-            referral = Referral.fetch(request.args.get('key'), keyname='key')
-            if not referral or referral.get('used'): return bad_referral(request, response)
-            return serve_page(response, 'pages/user_settings.html')
+            return controllers['user'].new(request, response)
         elif p1 == 'settings':
             if request.requester.logged_in and request.is_secure:
                 response.context['action'] = 'update'

@@ -1,4 +1,5 @@
 from newhive.controllers.shared import *
+import newhive.mail
 
 class ApplicationController(object):
     from newhive.state import User
