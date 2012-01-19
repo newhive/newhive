@@ -92,3 +92,9 @@ class AdminController(ApplicationController):
         # TODO: revamp the admin home page so we can interactively click expressions to add to featured, etc
         #expr_home_list(p2, request, response, limit=900) 
         return self.serve_page(response, 'pages/admin_home.html')
+
+    def contacts(self, request, response):
+        response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
+        response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in self.db.Contact.search()])
+        response.content_type = 'text/csv; charset=utf-8'
+        return response

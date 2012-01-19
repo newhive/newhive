@@ -212,11 +212,6 @@ def handle(request): # HANDLER
             return controllers['admin'].default(request, response, {'method': p2})
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             return controllers['analytics'].default(request, response, {'method': p2})
-        elif p1 == 'contacts' and request.requester.get('name') in config.admins:
-            response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
-            response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in Contact.search()])
-            response.content_type = 'text/csv; charset=utf-8'
-            return response
         elif p1 == 'comments':
             expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
             response.context['exp'] = response.context['expr'] = expr
