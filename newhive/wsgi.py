@@ -67,11 +67,6 @@ redirect = application_controller.redirect
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
     return serve_page(response, 'pages/minimal.html')
-def bad_referral(request, response):
-    response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
-    response.context['error'] = 'Log in if you already have an account'
-    return serve_page(response, 'pages/error.html')
-
 def log(request, response):
     action = request.form.get('log_action')
     user = request.requester
@@ -144,6 +139,10 @@ def handle(request): # HANDLER
     request.path = request.path[1:] # drop leading '/'
     request.domain = request.host.split(':')[0].lower()
     content_domain = "usercontent." + config.server_name
+
+########################
+#     post handler     #
+########################
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
@@ -164,6 +163,7 @@ def handle(request): # HANDLER
             elif reqaction != 'logout':
                print "************************would return status 204 here*************************"
                #return Response(status=204) # 204 status = no content
+
     if request.domain == config.server_name:
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
@@ -175,43 +175,13 @@ def handle(request): # HANDLER
                 response.headers.add('Access-Control-Allow-Credentials', 'true')
                 response.headers.add('Access-Control-Allow-Origin', origin)
                 return serve_json(response, True)
-        if p1 == 'file':
-            res = File.fetch(p2)
-            if not res: return serve_404(request, response)
-            #if response.enforce_static and unsafe_mimes.get(resource['mime'], False):
-            #    raise DangerousContent()
-            response.content_type = res['mime']
-            response.headers.add('Content-Disposition', 'inline', filename=res['name'])
-            with open(res['fs_path']) as f: response.data = f.read()
-            return response
+        if p1 == 'file': return serve_404(request, response)
         elif p1 == 'edit' and request.requester.logged_in:
             return controllers['expression'].default(request, response, {'method': 'edit'})
-        elif p1 == 'signup':
-            return controllers['user'].new(request, response)
-        elif p1 == 'settings':
-            if request.requester.logged_in and request.is_secure:
-                response.context['action'] = 'update'
-                response.context['f'] = request.requester
-                return serve_page(response, 'pages/user_settings.html')
-        elif p1 == 'referral' and request.requester.logged_in:
-            if(request.requester['referrals'] <= 0):
-                return no_more_referrals(request.requester['name'], request, response)
-            res = Referral.create(user = request.requester.id)
-            response.context['content'] = abs_url(secure=True) + 'signup?key=' + res['key']
-            return serve_page(response, 'pages/minimal.html')
+        elif p1 == 'signup': return controllers['user'].new(request, response)
+        elif p1 == 'settings': return controllers['user'].edit(request, response)
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 == 'email_confirmation':
-            user = User.fetch(request.args.get('user'))
-            email = request.args.get('email')
-            if not user:
-                response.context.update({'err': 'user record does not exist'})
-            if not request.args.get('secret') == crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date')))):
-                response.context.update({'err': 'secret does not match email'})
-            else:
-                user.flag('confirmed_email')
-                user.update(email=email)
-                response.context.update({'user': user, 'email': email})
-            return serve_page(response, "pages/email_confirmation.html")
+        elif p1 == 'email_confirmation': return controllers['user'].email_confirmation(request, response)
         elif p1 in ['', 'home', 'people', 'tag']:
             featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story",
                 '2012', 'photography', 'poetry', 'words', 'food', 'travel', 'inspiration']
@@ -244,9 +214,9 @@ def handle(request): # HANDLER
 
             expr_home_list(p2, request, response, limit=900)
             return serve_page(response, 'pages/admin_home.html')
-        elif p1 == 'admin': # and request.requester.get('name') in config.admins:
+        elif p1 == 'admin' and request.requester.get('name') in config.admins:
             return controllers['admin'].default(request, response, {'method': p2})
-        elif p1 == 'analytics': #and request.requester.get('name') in config.admins:
+        elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             return controllers['analytics'].default(request, response, {'method': p2})
         elif p1 == 'contacts' and request.requester.get('name') in config.admins:
             response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
