@@ -1,4 +1,4 @@
-import time
+import time, random
 from datetime import datetime
 
 def now(): return time.time()

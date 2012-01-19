@@ -1,5 +1,5 @@
 from werkzeug import exceptions
-import newhive.config
+from newhive import config
 from newhive.state import User, Session, junkstr
 
 def authenticate_request(request, response):
