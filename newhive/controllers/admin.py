@@ -77,7 +77,7 @@ class AdminController(ApplicationController):
                     else:
                         print "email not sent to " + contact['email'] + " referral already exists"
 
-    def admin_update(self.request, response):
+    def admin_update(self, request, response):
         if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         for k in ['tags', 'tagged']:
             v = json.loads(request.form.get(k))
