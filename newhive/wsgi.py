@@ -212,13 +212,6 @@ def handle(request): # HANDLER
             return controllers['admin'].default(request, response, {'method': p2})
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             return controllers['analytics'].default(request, response, {'method': p2})
-        elif p1 == 'comments':
-            expr = Expr.named(request.args.get('domain'), request.args.get('path')[1:])
-            response.context['exp'] = response.context['expr'] = expr
-            response.context['max_height'] = request.args.get('max_height')
-            if request.requester.logged_in:
-                ActionLog.new(request.requester, "view_comments", data={'expr_id': expr.id})
-            return serve_page(response, 'dialogs/comments.html')
         elif p1 == 'user_check': return controllers['user'].user_check(request, response)
         elif p1 == 'random':
             expr = Expr.random()
