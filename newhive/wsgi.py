@@ -3,7 +3,7 @@
 # thenewhive.com WSGI server version 0.2
 
 from newhive.controllers.shared import *
-from newhive.controllers import ApplicationController, AnalyticsController, AdminController, ExpressionController, MailController, UserController, FileController
+from newhive.controllers import ApplicationController, AnalyticsController, AdminController, ExpressionController, MailController, UserController, FileController, StarController
 
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
@@ -51,6 +51,7 @@ controllers = {
     , 'file':    FileController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     , 'expression':    ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     , 'mail':     MailController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
+    , 'star':     StarController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
     }
 
 application_controller = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
@@ -70,28 +71,6 @@ def bad_referral(request, response):
     response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
     response.context['error'] = 'Log in if you already have an account'
     return serve_page(response, 'pages/error.html')
-
-def star(request, response):
-    if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
-    parts = request.form.get('path').split('/')
-    p1 = lget(parts, 1)
-    if p1 in ["expressions", "starred", "listening"]:
-        entity = User.find(sites=request.domain.lower())
-    else:
-        entity = Expr.named(request.domain.lower(), request.path.lower())
-    if request.form.get('action') == "star":
-        s = Star.new(request.requester, entity)
-        if s or s.get('entity'):
-          return 'starred'
-        else:
-          return False
-    else:
-       s = Star.find(initiator=request.requester.id, entity=entity.id)
-       if s:
-           res = s.delete()
-           if not res['err']: return 'unstarred'
-       else:
-           return 'unstarred'
 
 def log(request, response):
     action = request.form.get('log_action')
@@ -129,8 +108,8 @@ actions = dict(
     ,add_comment     = controllers['expression'].add_comment
     ,bulk_invite     = controllers['admin'].bulk_invite
     ,profile_thumb_set  = controllers['user'].profile_thumb_set
-    ,star            = star
-    ,unstar          = star
+    ,star            = controllers['star'].star
+    ,unstar          = controllers['star'].star
     ,log             = log
     ,thumbnail_relink= controllers['admin'].thumbnail_relink
     )
