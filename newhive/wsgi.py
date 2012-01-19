@@ -125,13 +125,9 @@ def star(request, response):
        else:
            return 'unstarred'
 
-
-def home_url(user, path='expressions'):
-    """ Returns default URL for given state.User """
-    return abs_url(domain = user.get('sites', [config.server_name])[0]) + path
 def login(request, response):
     if auth.handle_login(request, response):
-        return redirect(response, request.form.get('url', home_url(request.requester)))
+        return redirect(response, request.form.get('url', request.requester.url))
 
 def log(request, response):
     action = request.form.get('log_action')
@@ -347,7 +343,7 @@ def handle(request): # HANDLER
     response.context.update(
          domain = request.domain
         ,owner = owner
-        ,owner_url = home_url(owner)
+        ,owner_url = owner.url
         ,path = request.path
         ,user_is_owner = is_owner
         ,create_expr_card = re.match('expressions', request.path) and is_owner
@@ -376,7 +372,7 @@ def handle(request): # HANDLER
     if request.args.has_key('dialog'): return controllers['expression'].dialog(request, response)
 
     if lget(request.path, 0) == '*':
-        return redirect(response, home_url(owner) +
+        return redirect(response, owner.url +
             ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
 
     #if not resource_requested: return serve_404(request, response)
