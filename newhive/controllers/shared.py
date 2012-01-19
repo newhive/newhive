@@ -1,6 +1,6 @@
 import os, re, json, time, mimetypes
 from datetime import datetime
-from newhive import config, colors
+from newhive import config, colors, auth
 from newhive.state import abs_url
 import newhive.ui_strings.en as ui
 from newhive.utils import time_u

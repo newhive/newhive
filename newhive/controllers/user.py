@@ -115,4 +115,11 @@ class UserController(ApplicationController):
         else:
             return serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
 
+    def login(self, request, response):
+        if auth.handle_login(request, response):
+            return self.redirect(response, request.form.get('url', request.requester.url))
+
+    def logout(self, request, response):
+        auth.handle_logout(request, response)
+
 

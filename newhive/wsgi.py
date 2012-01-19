@@ -125,10 +125,6 @@ def star(request, response):
        else:
            return 'unstarred'
 
-def login(request, response):
-    if auth.handle_login(request, response):
-        return redirect(response, request.form.get('url', request.requester.url))
-
 def log(request, response):
     action = request.form.get('log_action')
     user = request.requester
@@ -143,8 +139,8 @@ def log(request, response):
 
 # Possible values for the POST variable 'action'
 actions = dict(
-     login           = login
-    ,logout          = auth.handle_logout
+     login           = controllers['user'].login
+    ,logout          = controllers['user'].logout
     ,expr_save       = controllers['expression'].save
     ,expr_delete     = controllers['expression'].delete
     ,files_create    = controllers['file'].create
