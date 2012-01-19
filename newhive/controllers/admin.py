@@ -82,3 +82,13 @@ class AdminController(ApplicationController):
         for k in ['tags', 'tagged']:
             v = json.loads(request.form.get(k))
             if v: self.db.User.get_root().update(**{ k : v })
+
+    def home(self, request, response):
+        root = self.db.User.get_root()
+        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+        response.context['tags_js'] = json.dumps(root.get('tags'))
+        response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
+
+        # TODO: revamp the admin home page so we can interactively click expressions to add to featured, etc
+        #expr_home_list(p2, request, response, limit=900) 
+        return self.serve_page(response, 'pages/admin_home.html')

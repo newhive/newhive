@@ -207,13 +207,7 @@ def handle(request): # HANDLER
             else:
                 return serve_page(response, 'pages/home.html')
         elif p1 == 'admin_home' and request.requester.logged_in:
-            root = get_root()
-            if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
-            response.context['tags_js'] = json.dumps(root.get('tags'))
-            response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
-
-            expr_home_list(p2, request, response, limit=900)
-            return serve_page(response, 'pages/admin_home.html')
+            return controllers['admin'].home(request, response)
         elif p1 == 'admin' and request.requester.get('name') in config.admins:
             return controllers['admin'].default(request, response, {'method': p2})
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
