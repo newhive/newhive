@@ -1,7 +1,7 @@
 import crypt, urllib
 from newhive.state import abs_url
 
-def mail_email_confirmation(self, jinja_env, user, email):
+def mail_email_confirmation(jinja_env, user, email):
     secret = crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date'))))
     link = abs_url(secure=True) + "email_confirmation?user=" + user.id + "&email=" + urllib.quote(email) + "&secret=" + urllib.quote(secret)
     heads = {
@@ -19,7 +19,7 @@ def mail_email_confirmation(self, jinja_env, user, email):
         }
     self.send_mail(heads, body)
 
-def mail_temporary_password(self, jinja_env, user, password):
+def mail_temporary_password(jinja_env, user, password):
     heads = {
         'To' : user.get('email')
         , 'Subject' : 'Password recovery for thenewhive.com'
