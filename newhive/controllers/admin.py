@@ -43,3 +43,42 @@ class AdminController(ApplicationController):
             response.context['action_log'] = self.db.ActionLog.search(user=user.id, created={'$gt': time.time() - 60*60*24*30})
             response.context['expression_counts'] = {'public': len(public_expressions), 'private': len(private_expressions), 'total': len(expressions)}
             return self.serve_page(response, 'pages/admin/user.html')
+
+    def add_referral(self, request, response):
+        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+        form = request.form.copy()
+        action = form.pop('action')
+        number = int(form.pop('number'))
+        forward = form.pop('forward')
+        if form.get('all'):
+            users = self.db.User.search();
+        else:
+            users = []
+            for key in form:
+                users.append(self.db.User.fetch(key))
+
+        for user in users: user.give_invites(number)
+
+        return self.redirect(response, forward)
+
+    def bulk_invite(self, request, resposne):
+        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+        form = request.form.copy()
+        for key in form:
+            parts = key.split('_')
+            if parts[0] == 'check':
+                id = parts[1]
+                contact = self.db.Contact.fetch(id)
+                name = form.get('name_' + id)
+                if contact.get('email'):
+                    referral_id = mail_invite(contact['email'], name)
+                    if referral_id:
+                        contact.update(referral_id=referral_id)
+                    else:
+                        print "email not sent to " + contact['email'] + " referral already exists"
+
+    def admin_update(self.request, response):
+        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
+        for k in ['tags', 'tagged']:
+            v = json.loads(request.form.get(k))
+            if v: self.db.User.get_root().update(**{ k : v })

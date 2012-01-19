@@ -125,44 +125,6 @@ def star(request, response):
        else:
            return 'unstarred'
 
-def admin_update(request, response):
-    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
-    for k in ['tags', 'tagged']:
-        v = json.loads(request.form.get(k))
-        if v: get_root().update(**{ k : v })
-
-def bulk_invite(request, resposne):
-    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
-    form = request.form.copy()
-    for key in form:
-        parts = key.split('_')
-        if parts[0] == 'check':
-            id = parts[1]
-            contact = Contact.fetch(id)
-            name = form.get('name_' + id)
-            if contact.get('email'):
-                referral_id = mail_invite(contact['email'], name)
-                if referral_id:
-                    contact.update(referral_id=referral_id)
-                else:
-                    print "email not sent to " + contact['email'] + " referral already exists"
-
-def add_referral(request, response):
-    if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
-    form = request.form.copy()
-    action = form.pop('action')
-    number = int(form.pop('number'))
-    forward = form.pop('forward')
-    if form.get('all'):
-        users = User.search();
-    else:
-        users = []
-        for key in form:
-            users.append(User.fetch(key))
-
-    for user in users: user.give_invites(number)
-
-    return redirect(response, forward)
 
 def home_url(user, path='expressions'):
     """ Returns default URL for given state.User """
@@ -183,15 +145,6 @@ def log(request, response):
     l = ActionLog.new(user, request.form.get('log_action'), data)
     return True
 
-def thumbnail_relink(request, response):
-    expr = Expr.fetch(request.form.get('expr'))
-    file = File.fetch(request.form.get('file'))
-    if expr and file:
-        expr.update(thumb_file_id=file.id, updated=False)
-        return {'file': file.id, 'expr': expr.id}
-    else: return False
-
-
 # Possible values for the POST variable 'action'
 actions = dict(
      login           = login
@@ -211,15 +164,15 @@ actions = dict(
     ,user_tag_remove = user_tag_update
     ,tag_remove      = expr_tag_update
     ,tag_add         = expr_tag_update
-    ,admin_update    = admin_update
-    ,add_referral    = add_referral
+    ,admin_update    = controllers['admin'].admin_update
+    ,add_referral    = controllers['admin'].add_referral
     ,add_comment     = controllers['expression'].add_comment
-    ,bulk_invite     = bulk_invite
+    ,bulk_invite     = controllers['admin'].bulk_invite
     ,profile_thumb_set  = controllers['user'].profile_thumb_set
     ,star            = star
     ,unstar          = star
     ,log             = log
-    ,thumbnail_relink= thumbnail_relink
+    ,thumbnail_relink= controllers['admin'].thumbnail_relink
     )
 
 # Mime types that could generate HTTP POST requests
