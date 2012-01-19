@@ -34,7 +34,7 @@ class ApplicationController(object):
             ,secure_server = abs_url(secure = True)
             ,server_name = config.server_name
             ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
-            ,colors = colors
+            ,colors = colors.colors
             ,debug = config.debug_mode
             ,assets_env = self.assets_env
             ,use_ga = config.use_ga
