@@ -62,9 +62,6 @@ expr_list = controllers['expression']._expr_list
 expr_home_list = controllers['expression']._expr_home_list
 redirect = application_controller.redirect
 
-def user_check(request, response):
-    return False if User.named(request.args.get('name')) else True
-
 def no_more_referrals(referrer, request, response):
     response.context['content'] = 'User %s has no more referrals' % referrer
     return serve_page(response, 'pages/minimal.html')
@@ -313,7 +310,7 @@ def handle(request): # HANDLER
             if request.requester.logged_in:
                 ActionLog.new(request.requester, "view_comments", data={'expr_id': expr.id})
             return serve_page(response, 'dialogs/comments.html')
-        elif p1 == 'user_check': return serve_json(response, user_check(request, response))
+        elif p1 == 'user_check': return controllers['user'].user_check(request, response)
         elif p1 == 'random':
             expr = Expr.random()
             if request.requester.logged_in:
