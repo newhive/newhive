@@ -32,7 +32,7 @@ class UserController(ApplicationController):
     def new(self, request, response):
         response.context['action'] = 'create'
         referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
-        if not referral or referral.get('used'): return bad_referral(request, response)
+        if not referral or referral.get('used'): return self._bad_referral(request, response)
         return self.serve_page(response, 'pages/user_settings.html')
 
     def create(self, request, response):
@@ -46,7 +46,7 @@ class UserController(ApplicationController):
             """
 
         referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
-        if (not referral or referral.get('used')): return bad_referral(request, response)
+        if (not referral or referral.get('used')): return self._bad_referral(request, response)
         referrer = self.db.User.fetch(referral['user'])
         assert 'tos' in request.form
 
@@ -69,15 +69,21 @@ class UserController(ApplicationController):
         login(request, response)
         return self.redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
+    def edit(self, request, response):
+        if request.requester.logged_in and request.is_secure:
+            response.context['action'] = 'update'
+            response.context['f'] = request.requester
+            return self.serve_page(response, 'pages/user_settings.html')
+
     def update(self, request, response):
         message = ''
         user = request.requester
-        if not user.cmp_password(request.form.get('old_password')): return serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
+        if not user.cmp_password(request.form.get('old_password')): return self.serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
         if request.form.get('password'):
             if auth.password_change(request, response):
                 message = message + ui.password_change_success_message + " "
             else:
-                return serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
+                return self.serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
         fullname = request.form.get('fullname')
         if fullname and fullname != request.requester.get('fullname'):
             user.update(fullname=fullname)
@@ -128,11 +134,30 @@ class UserController(ApplicationController):
         user_available = False if self.db.User.named(request.args.get('name')) else True
         return self.serve_json(response, user_available)
 
+    def confirm_email(self, request, response):
+        user = self.db.User.fetch(request.args.get('user'))
+        email = request.args.get('email')
+        if not user:
+            response.context.update({'err': 'user record does not exist'})
+        if not request.args.get('secret') == crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date')))):
+            response.context.update({'err': 'secret does not match email'})
+        else:
+            user.flag('confirmed_email')
+            user.update(email=email)
+            response.context.update({'user': user, 'email': email})
+        return self.serve_page(response, "pages/email_confirmation.html")
+
     def login(self, request, response):
         if auth.handle_login(request, response):
             return self.redirect(response, request.form.get('url', request.requester.url))
 
     def logout(self, request, response):
         auth.handle_logout(request, response)
+
+
+    def _bad_referral(self, request, response):
+        response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
+        response.context['error'] = 'Log in if you already have an account'
+        return self.serve_page(response, 'pages/error.html')
 
 
