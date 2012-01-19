@@ -70,29 +70,6 @@ def bad_referral(request, response):
     response.context['error'] = 'Log in if you already have an account'
     return serve_page(response, 'pages/error.html')
 
-def expr_tag_update(request, response):
-    tag = lget(normalize(request.form.get('value', '')), 0)
-    id = request.form.get('expr_id')
-    expr = Expr.fetch(id)
-    if request.requester.id != expr.owner.id and not tag == "starred": return False
-    action = request.form.get('action')
-    if action == 'tag_add':
-        if tag == "starred":
-            s = Star.new(request.requester, expr)
-            return True
-        else:
-            new_tags = expr.get('tags', '') + ' ' + tag
-    elif action == 'tag_remove':
-        if tag == "starred":
-            s = Star.find(initiator=request.requester.id, entity=id)
-            res = s.delete()
-            if not res['err']: return True
-            else: return res
-        else:
-            new_tags = re.sub(tag, '', expr['tags'])
-    expr.update(tags=new_tags, updated=False)
-    return tag
-
 def user_tag_update(request, response):
     tag = lget(normalize(request.form.get('value', '')), 0)
     if not tag: return False
@@ -151,8 +128,8 @@ actions = dict(
     ,mail_feedback   = controllers['mail'].mail_feedback
     ,user_tag_add    = user_tag_update
     ,user_tag_remove = user_tag_update
-    ,tag_remove      = expr_tag_update
-    ,tag_add         = expr_tag_update
+    ,tag_remove      = controllers['expression'].tag_update
+    ,tag_add         = controllers['expression'].tag_update
     ,admin_update    = controllers['admin'].admin_update
     ,add_referral    = controllers['admin'].add_referral
     ,add_comment     = controllers['expression'].add_comment
