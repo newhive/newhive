@@ -270,6 +270,7 @@ Hive.App.Controls = function(app) {
                 input.blur();
                 o.app.focus();
             }
+            ,auto_close : false
         });
         var set_link = function(){
             var v = input.val();
@@ -452,10 +453,14 @@ Hive.App.Text = function(common) {
         return o.rte.get_content();
     }
 
-    o.focus.add(function() { o.rte.editMode(true) });
+    o.focus.add(function() {
+        o.rte.removeBreaks();
+        o.rte.editMode(true);
+    });
     o.unfocus.add(function() {
-        o.rte.set_content(autoLink(o.rte.get_content()));
         o.rte.editMode(false);
+        o.rte.set_content(autoLink(o.rte.get_content()));
+        o.rte.addBreaks();
     });
     
     o.link = function(v) {
@@ -1010,7 +1015,26 @@ var main = function() {
         }
     }
 
-    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false, auto_close : false });
+    var pickDefaultThumb = function(){
+        if (! (Hive.Exp.thumb_file_id || Hive.Exp.thumb)) {
+            var image_apps = $.map(Hive.get_state().apps, function(app){
+                if (app.type == 'hive.image' && app.file_id) { return app; }
+            });
+            if (image_apps.length > 0){
+                setThumb(image_apps[0]);
+            }
+        }
+    };
+
+    var setThumb = function(app){
+        // Set thumb_id property for the server to find the appropriate file object
+        // if a default thumb a pseudo file_id, id<10 is chosen. 
+        // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
+        Hive.Exp.thumb_file_id = app.file_id;
+        $('#current_thumb').attr('src', app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
+    };
+
+    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false, auto_close : false, open: pickDefaultThumb});
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');
@@ -1026,32 +1050,27 @@ var main = function() {
     });
     var dia_thumbnail;
     $('#btn_thumbnail').click(function() {
-        // Set thumb_src property for the server to generate a new thumb
         dia_thumbnail = showDialog('#dia_thumbnail');
-        $('#expr_images').empty().append(map(function(thumb) {
-            var img = $('<img>').attr('src', thumb.src);
-            var e = $("<div class='thumb'>").append(img).get(0);
-            return e;
-        }, $('.ehapp img')));
-        $('#expr_images .thumb img').each(function() { var img = $(this); setTimeout(function() { img_fill(img) }, 1) });
-        $('#expr_images img').click(function() {
-            Hive.Exp.thumb_src = this.src;
+        var user_thumbs = $.map(Hive.get_state().apps, function(app){
+            if ( app.type == 'hive.image' && app.file_id ) {
+                var img = $('<img>').attr('src', app.content + "_190x190").attr('data-file-id', app.file_id);
+                var e = $("<div class='thumb'>").append(img).get(0);
+                return e;
+            }
+        })
+        $('#expr_images').empty().append(user_thumbs);
+        $('#dia_thumbnail .thumb img').click(function() {
+            setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
             dia_thumbnail.close();
             return false;
         });
     });
-    $('#default_thumbs img').click(function() {
-        // The thumb property is set directly
-        Hive.Exp.thumb = this.src;
-        dia_thumbnail.close();
-        return false;
-    });
     
     // Automatically update url unless it's an already saved expression or the user has modified the url manually
     $('#menu_save #title').bind('keydown keyup', function(){
-        if (!(Hive.Exp.home || Hive.Exp.name || $('#url').hasClass('modified') )){
+        if (!(Hive.Exp.home || Hive.Exp._id || $('#url').hasClass('modified') )){
             $('#url').val(
-                $('#title').val().replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").toLowerCase()
+                $('#title').val().replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").replace(/-$/, "").toLowerCase()
             );
         }
     }).keydown();
@@ -1101,9 +1120,20 @@ Hive.embed_code = function() {
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
 //http://player.vimeo.com/video/                                                   13110687
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>
-    else if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i))
-        app = { type : 'hive.image', content : c }
-    else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+    else if(m = c.match(/^https?:\/\/(.*)\/([^/]*)(jpg|jpeg|png|gif)$/i)) {
+        var callback = function(content) {
+            return function(data) {
+                if (data.err){ var app = {type: 'hive.image', content: content}; } 
+                else { var app = data; }
+                Hive.upload_finish();
+                Hive.new_app(app);
+                $('#embed_code').val('');
+            }
+        }
+        Hive.upload_start();
+        $.post(server_url, {action: "files_create", remote: true, url: m[0], filename: m[2] + m[3]}, callback(c), 'json');
+        return;
+    } else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
         var embed = stuffs.children().first();
@@ -1113,8 +1143,7 @@ Hive.embed_code = function() {
         embed.find('[width]').attr('width', '100%');
         embed.find('embed').attr('wmode', 'opaque');
         app = { type : 'hive.html', content : embed.outerHTML() };
-    }
-     else {
+    } else {
         var stuffs = $('<div>');
         stuffs.html(c);
         var embed = stuffs.children().first();
@@ -1245,14 +1274,13 @@ Hive.rte = function(options) {
         if(o.css) $(o.doc).find('head').append(o.css);
         o.doc.body.style.overflow = 'hidden';
         
-        // TODO: clone body node?
         o.cache_content = function() { o.previous_content = $(o.doc.body).text(); }
         o.cache_content();
         $(o.win).bind('keypress', o.cache_content);
         $(o.win).bind('paste', function() { setTimeout(function(e){
             // TODO: determine which part was actually pasted, if
             // pasting with existing text
-            if(o.previous_content.trim() == "") $(o.doc.body).text($(o.doc.body).text());
+            if(o.previous_content.trim() == "") o.unformat();
             o.change();
         }, 10)});
 
@@ -1260,6 +1288,13 @@ Hive.rte = function(options) {
 
         //o.editor_cmd('styleWithCSS', true);
         if(o.load) o.load();
+    }
+
+    o.unformat = function() {
+        // TODO: figure out how to splice out selection,
+        // and splice in unformatted text. Preserve newlines, and
+        // possibly create another unformat command to remove those too
+        $(o.doc.body).html($(o.doc.body).text());
     }
 
     o.editor_cmd = function(command, args) {
@@ -1297,6 +1332,10 @@ Hive.rte = function(options) {
         // boxes can scale like other Apps. A similar hack must be
         // done for all browsers, as they all use a slightly different
         // form of absolute text sizing.
+        // 
+        // This is currently unused due to significant layout
+        // inconsistencies with opposing font sizes in app container
+        // and inline tags
         if(command == 'fontsize') {
             var broken = $(o.doc.body).find('font[size]');
             $(broken).css('font-size', args);
@@ -1419,6 +1458,49 @@ Hive.rte = function(options) {
 
         return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
                range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
+    }
+
+    // Text wrapping hack: insert explicit line breaks where text is
+    // soft-wrapped before saving, remove them on loading
+    o.eachTextNodeIn = function(node, fn) {
+        if(node.nodeType == 3) fn(node);
+        else {
+            for(var i = 0; i < node.childNodes.length; i++) o.eachTextNodeIn(node.childNodes[i], fn);
+        }
+    }
+    o.addBreaks = function() {
+        // clone body to off-page element
+        var e = $(o.doc.body); //.clone();
+        //e.css({'left':-5000, width:$(o.iframe).width(), height:$(o.iframe).height()}).appendTo(document.body);
+
+        // wrap all words with spans
+        o.eachTextNodeIn(e.get(0), function(n) {
+            $(n).replaceWith(n.nodeValue.replace(/(\w+)/g, "<span class='wordmark'>$1</span>"))
+        });
+
+        // TODO: iterate over wordmarks, add <br>s where line breaks occur
+        var y = 0;
+        e.find('.wordmark').each(function(i, e) {
+            var ely = $(e).offset().top;
+            if(ely > y) {
+                var br = $('<br class="softbr">');
+                $(e).before(br);
+                if(ely != $(e).offset().top) br.remove(); // if element moves, oops, remove <br>
+            }
+            y = ely;
+        });
+
+        // unwrap all words
+        e.find('.wordmark').each(function(i, e) { $(e).replaceWith($(e).text()) });
+
+        var html = e.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
+        //e.remove();
+        return html;
+    }
+    o.removeBreaks = function() {
+        $(o.doc.body).find('.softbr').remove();
+        var wrapper = $(o.doc.body).find('.viewstyle');
+        if(wrapper.length) $(o.doc.body).html(wrapper.html());
     }
 
     o.create_editor();

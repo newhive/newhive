@@ -133,16 +133,15 @@ class ExpressionController(ApplicationController):
         upd['name'] = upd['name'].lower().strip()
 
         # if user has not picked a thumbnail, pick the latest image added
-        if not ((res and res.get('thumb')) or exp.get('thumb') or exp.get('thumb_src')):
-            fst_img = lget(filter(lambda a: a['type'] == 'hive.image', exp.get('apps', [])), -1)
-            if fst_img and fst_img.get('content'): exp['thumb_src'] = fst_img['content']
-        # Generate thumbnail from given image url
-        thumb_src = exp.get('thumb_src')
-        if thumb_src:
-            if re.match('https?://..-thenewhive.s3.amazonaws.com', thumb_src):
-                upd['thumb_file_id'] = thumb_src.split('/')[-1]
-            else:
-                upd['thumb'] = thumb_src
+        thumb_file_id = exp.get('thumb_file_id')
+        if thumb_file_id:
+            print "\n\n" + thumb_file_id + "\n\n"
+            file = file.fetch(thumb_file_id)
+            if file:
+                upd['thumb'] = file.get_default_thumb()
+                upd['thumb_file_id'] = thumb_file_id
+            elif len(thumb_file_id) == 1:
+                upd['thumb'] = "/lib/skin/1/thumb_%s.png" % (thumb_file_id)
                 upd['thumb_file_id'] = None
 
         # deal with inline base64 encoded images from Sketch app

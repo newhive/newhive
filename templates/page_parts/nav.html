@@ -5,7 +5,7 @@
 
  {% if user.logged_in %}
   <div class='nav_icon medbold' style='left : 50px; top : 0;'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
-  <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png?v=2'>
+  <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png'>
   <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}'></div>
   <div id='feed_menu' class='menu feed_menu border selected'>
     {% include "dialogs/feed.html" %}
@@ -14,13 +14,13 @@
     <form name='logout_form' action='{{ secure_server }}' method='POST'>
       <input name='action' value='logout' type='hidden'>
     </form>
-    <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
-    <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
         Invites <span class="referral_count">{{ user.referrals }}</span>
       </div>
     {% endif %}
+    <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
+    <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
   </div>
   <script>
     hover_menu(
@@ -42,7 +42,9 @@
   {% else %}
     <a href='{{ server }}' title="Explore Expressions"><div style='position: relative; left : -11px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
   {% endif %}
-  <a href='{{server}}random'><img style="position: relative; left: {{'0' if user.logged_in else '-24px'}}; top: 0;" class="nav nav_icon hoverable" src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
+  {% if not exp_js %} {# don't show random button in editor #}
+    <a href='{{server}}random'><img style="position: relative; left: {{'0' if user.logged_in else '-24px'}}; top: 0;" class="nav nav_icon hoverable" src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
+  {% endif %}
 </div>
 
 {% if not user.logged_in %}
@@ -65,7 +67,7 @@
         <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
       </div>
       <input type='hidden' name='action' value='login'>
-      {# <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile --> #}
+      <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile -->
     </form>
   </div>
 </div>

@@ -90,7 +90,7 @@ input, textarea { font-size : inherit }
  <img id='btn_grid' title="Show Grid" class='hoverable' src='/lib/skin/1/grid-off.png' style='vertical-align : middle'>
  &nbsp;
  <div id='btn_save' class='medbold nav_icon hoverable text'>
-  <nobr>Save <img class='scale' src='/lib/skin/1/drop_arrow.png'></nobr>
+  <nobr>Save <img class='scale' src='/lib/skin/1/drop_arrow_circle.png'></nobr>
  </div>
  
  <div id='menu_save' class='menu top'>
@@ -126,7 +126,11 @@ input, textarea { font-size : inherit }
   </div>
   <div class='spacer'></div>
 
-  <nobr><span id='btn_thumbnail' class='hoverable'>Choose thumbnail <img class='scale' src='/lib/skin/1/drop_arrow.png'></span></nobr>
+  <div id='btn_thumbnail'>
+      <div id='btn_thumbnail_text' class='hoverable'>Choose thumbnail <img class='scale' src='/lib/skin/1/drop_arrow.png'></div>
+      <img id="current_thumb" width="70px" height="70px" src="{{exp.thumb}}">
+  </div>
+  
  </div>
 </div>
 
@@ -184,6 +188,24 @@ input, textarea { font-size : inherit }
    ><div class='option' style='font-family:Matiz'           cmd='fontname' val='Matiz'          >Matiz         </div
    ><div class='option' style='font-family:Quicksand'       cmd='fontname' val='Quicksand'      >Quicksand     </div
    ><div class='option' style='font-family:Bitstream Mono'  cmd='fontname' val='Bitstream Mono' >Bitstream     </div
+
+   ><div class='option' style='font-family:Folks'           cmd='fontname' val='Folks'          >Folks        </div
+   ><div class='option' style='font-family:Merge'           cmd='fontname' val='Merge'          >Merge        </div
+   ><div class='option' style='font-family:Bebas'           cmd='fontname' val='Bebas'          >Bebas        </div
+   ><div class='option' style='font-family:Arvo'            cmd='fontname' val='Arvo'           >Arvo         </div
+   ><div class='option' style='font-family:St Ryde'         cmd='fontname' val='St Ryde'        >St Ryde      </div
+   ><div class='option' style='font-family:Chunk Five'      cmd='fontname' val='Chunk Five'     >Chunk Five   </div
+   ><div class='option' style='font-family:Droid Serif'     cmd='fontname' val='Droid Serif'    >Droid Serif  </div
+   ><div class='option' style='font-family:Komika Title'    cmd='fontname' val='Komika Title'   >Komika Title </div
+   ><div class='option' style='font-family:Banda'           cmd='fontname' val='Banda'          >Banda        </div
+   ><div class='option' style='font-family:Pacifico'        cmd='fontname' val='Pacifico'       >Pacifico     </div
+   ><div class='option' style='font-family:Fjord'           cmd='fontname' val='Fjord'          >Fjord        </div
+   ><div class='option' style='font-family:Josefin Slab'    cmd='fontname' val='Josefin Slab'   >Josefin Slab </div
+   ><div class='option' style='font-family:Nevis'           cmd='fontname' val='Nevis'          >Nevis        </div
+   ><div class='option' style='font-family:Lobster Two'     cmd='fontname' val='Lobster Two'    >Lobster Two  </div
+   ><div class='option' style='font-family:Crimson'         cmd='fontname' val='Crimson'        >Crimson      </div
+   ><div class='option' style='font-family:Classic Round'   cmd='fontname' val='Classic Round'  >Classic Round</div
+   ><div class='option' style='font-family:Novocentro'      cmd='fontname' val='Novocentro'     >Novocentro   </div
   ></div
   ><div class='control drawer border color'></div
   ><div class='control drawer border align'
@@ -287,18 +309,7 @@ blah blah
  <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
  <input id='save_overwrite' type='button' class='btn black rounded' value='No' onclick='closeDialog()'>
 </div>
-<div id='dia_thumbnail' class='dialog border selected center'>
- <h2>Choose thumbnail</h2>
- <span id='expr_images'></span>
- <span id='default_thumbs'>
-  <img src='/lib/skin/1/thumb_0.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_1.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_2.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_3.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_4.png' class='thumb'>
-  <img src='/lib/skin/1/thumb_5.png' class='thumb'>
- </span>
-</div> 
+{% include "dialogs/thumbnail.html" %}
 
 {% include 'expr_background.html' %}
 <div id='grid_guide'></div>
