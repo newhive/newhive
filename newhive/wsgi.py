@@ -164,6 +164,9 @@ def handle(request): # HANDLER
                print "************************would return status 204 here*************************"
                #return Response(status=204) # 204 status = no content
 
+########################
+#   site_url handler   #
+########################
     if request.domain == config.server_name:
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
