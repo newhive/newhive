@@ -1,4 +1,4 @@
-import time, random
+import time, random, re
 from datetime import datetime
 
 def now(): return time.time()
@@ -14,3 +14,5 @@ def junkstr(length):
     chrs = chrange('0', '9') + chrange('A', 'Z') + chrange('a', 'z') + ['.', '/']
     return ''.join([chrs[random.randrange(0, 64)] for _ in range(length)])
 
+def normalize(ws):
+    return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))

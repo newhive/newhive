@@ -13,7 +13,8 @@ from urlparse import urlparse
 import jinja2
 
 from newhive import config, auth, colors
-from newhive.state import Expr, File, User, Contact, Referral, DuplicateKeyError, time_u, normalize, get_root, abs_url, Comment, Star, ActionLog, db, junkstr
+from newhive.state import Expr, File, User, Contact, Referral, DuplicateKeyError, get_root, abs_url, Comment, Star, ActionLog, db, junkstr
+from newhive.utils import time_u, normalize, junkstr
 import newhive.state
 import ui_strings.en as ui
 
@@ -70,13 +71,6 @@ def bad_referral(request, response):
     response.context['error'] = 'Log in if you already have an account'
     return serve_page(response, 'pages/error.html')
 
-def user_tag_update(request, response):
-    tag = lget(normalize(request.form.get('value', '')), 0)
-    if not tag: return False
-    if request.form.get('action') == 'user_tag_add': request.requester.update_cmd({'$addToSet':{'tags':tag}})
-    else: request.requester.update_cmd({'$pull':{'tags':tag}})
-    return True
-
 def star(request, response):
     if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
     parts = request.form.get('path').split('/')
@@ -126,8 +120,8 @@ actions = dict(
     ,mail_them       = controllers['mail'].mail_them
     ,mail_referral   = controllers['mail'].mail_referral
     ,mail_feedback   = controllers['mail'].mail_feedback
-    ,user_tag_add    = user_tag_update
-    ,user_tag_remove = user_tag_update
+    ,user_tag_add    = controllers['user'].tag_update
+    ,user_tag_remove = controllers['user'].tag_update
     ,tag_remove      = controllers['expression'].tag_update
     ,tag_add         = controllers['expression'].tag_update
     ,admin_update    = controllers['admin'].admin_update

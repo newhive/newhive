@@ -11,7 +11,7 @@ from crypt import crypt
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr
+from newhive.utils import now, time_s, time_u, junkstr, normalize
 
 con = None
 db = None
@@ -338,9 +338,6 @@ if not get_root():
 
 class Session(Entity):
     cname = 'session'
-
-def normalize(ws):
-    return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
 
 def media_path(user, f_id=None):
     p = joinpath(config.media_path, user['name'])

@@ -1,5 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
+from newhive.utils import normalize
 
 class UserController(ApplicationController):
 
@@ -87,6 +88,14 @@ class UserController(ApplicationController):
             newhive.mail.mail_email_confirmation(self.jinja_env, user, email)
             message = message + ui.email_change_success_message + " "
         return self.serve_json(response, {'success': True, 'message': message})
+
+    def tag_update(self, request, response):
+        tag = lget(normalize(request.form.get('value', '')), 0)
+        if not tag: return False
+        if request.form.get('action') == 'user_tag_add': request.requester.update_cmd({'$addToSet':{'tags':tag}})
+        else: request.requester.update_cmd({'$pull':{'tags':tag}})
+        return True
+
 
     def profile_thumb_set(self, request, response):
         request.max_content_length = 10000000 # 10 megs
