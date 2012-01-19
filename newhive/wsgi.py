@@ -164,17 +164,6 @@ def add_referral(request, response):
 
     return redirect(response, forward)
 
-def add_comment(request, response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
-    commenter = request.requester
-    expression = Expr.fetch(request.form.get('expression'))
-    comment_text = request.form.get('comment')
-    comment = Comment.new(commenter, expression, {'text': comment_text})
-    if comment.initiator.id != expression.owner.id:
-      mail_feed(comment, expression.owner)
-    return serve_html(response, jinja_env.get_template("partials/comment.html").render({'comment': comment}))
-
 def home_url(user, path='expressions'):
     """ Returns default URL for given state.User """
     return abs_url(domain = user.get('sites', [config.server_name])[0]) + path
@@ -224,7 +213,7 @@ actions = dict(
     ,tag_add         = expr_tag_update
     ,admin_update    = admin_update
     ,add_referral    = add_referral
-    ,add_comment     = add_comment
+    ,add_comment     = controllers['expression'].add_comment
     ,bulk_invite     = bulk_invite
     ,profile_thumb_set  = controllers['user'].profile_thumb_set
     ,star            = star
@@ -413,15 +402,12 @@ def handle(request): # HANDLER
 
     if request.path.startswith('expressions') or request.path == 'starred':
         return controllers['expression'].index(request, response)
-    if request.path in ['listening', 'feed']:
-        if request.path == 'listening':
-            tag = people_tag
-            response.context['users'] = User.list({'_id': {'$in': owner.starred_items}})
-        elif request.path == 'feed':
-            if not request.requester.logged_in:
-                return redirect(response, abs_url())
-            response.context['feed_items'] = request.requester.feed
-            tag = feed_tag
+    if request.path == 'listening': return controllers['user'].index(request, response, {'listening': True})
+    if request.path == 'feed':
+        if not request.requester.logged_in:
+            return redirect(response, abs_url())
+        response.context['feed_items'] = request.requester.feed
+        tag = feed_tag
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
@@ -434,11 +420,7 @@ def handle(request): # HANDLER
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
 
-    if request.args.has_key('dialog'):
-        dialog = request.args['dialog']
-        response.context.update(exp=resource, expr=resource)
-        return serve_page(response, 'dialogs/' + dialog + '.html')
-
+    if request.args.has_key('dialog'): return controllers['expression'].dialog(request, response)
 
     if lget(request.path, 0) == '*':
         return redirect(response, home_url(owner) +

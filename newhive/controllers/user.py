@@ -3,6 +3,31 @@ from newhive.controllers.application import ApplicationController
 
 class UserController(ApplicationController):
 
+    def index(self, request, response, args={}):
+        page = int(request.args.get('page', 0))
+        owner = response.context['owner']
+        is_owner = request.requester.logged_in and owner.id == request.requester.id
+        tags = owner.get('tags', [])
+        expressions_tag = {'url': '/expressions', 'name': 'Expressions', 'show_name': False}
+        people_tag = {'url': '/people', 'name': 'People'}
+        star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
+        feed_tag = {'url': "/feed", "name": "Feed"}
+        response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
+        if args.get('listening'):
+            tag = people_tag
+            response.context['users'] = self.db.User.list({'_id': {'$in': owner.starred_items}})
+            response.context['title'] = owner['fullname']
+            response.context['tag'] = tag
+            response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
+            if request.requester.logged_in and is_owner:
+                response.context['system_tags'].insert(1, feed_tag)
+            response.context['profile_thumb'] = owner.thumb
+            response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
+
+            return self.serve_page(response, 'pages/expr_cards.html')
+        else:
+            pass
+
     def new(self, request, response):
         response.context['action'] = 'create'
         referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')

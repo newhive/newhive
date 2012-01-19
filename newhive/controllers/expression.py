@@ -77,6 +77,12 @@ class ExpressionController(ApplicationController):
 
         else: return self.serve_page(response, 'pages/' + template + '.html')
 
+    def dialog(self, request, response):
+        owner = response.context['owner']
+        exp = self.db.Expr.find(owner=owner.id, name=request.path.lower())
+        response.context.update(exp=exp, expr=exp)
+        return self.serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
+
     def index(self, request, response):
         owner = response.context['owner']
         is_owner = request.requester.logged_in and owner.id == request.requester.id
@@ -188,6 +194,17 @@ class ExpressionController(ApplicationController):
         # TODO: garbage collect media files that are no longer referenced by expression
         return self.redirect(response, request.requester.url)
 
+
+    def add_comment(self, request, response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
+        commenter = request.requester
+        expression = self.db.Expr.fetch(request.form.get('expression'))
+        comment_text = request.form.get('comment')
+        comment = self.db.Comment.new(commenter, expression, {'text': comment_text})
+        if comment.initiator.id != expression.owner.id:
+            newhive.mail.mail_feed(self.jinja_env, comment, expression.owner)
+        return self.serve_html(response, self.jinja_env.get_template("partials/comment.html").render({'comment': comment}))
 
     def _expr_list(self, spec, **args):
         return map(self._format_card, self.db.Expr.list(spec, **args))
