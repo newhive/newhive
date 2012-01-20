@@ -1,4 +1,6 @@
 from newhive.controllers.shared import *
+from newhive import auth, config
+from werkzeug import Response
 import newhive.mail
 
 class ApplicationController(object):
@@ -8,6 +10,19 @@ class ApplicationController(object):
         self.jinja_env = jinja_env
         self.assets_env = assets_env
         self.db = db
+        self.content_domain = config.content_domain
+
+    def pre_process(self, request, args={}):
+        response = Response()
+        request.requester = auth.authenticate_request(request, response)
+        response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
+        response.user = request.requester
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
+
+        request.path = request.path[1:] # drop leading '/'
+        request.domain = request.host.split(':')[0].lower()
+        return (request, response)
 
     def default(self, request, response, args):
         if not args.has_key('method'): raise "Default Method must include 'args' argument with key 'method'"

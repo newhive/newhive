@@ -129,16 +129,8 @@ def handle(request): # HANDLER
        Accepts werkzeug.Request, returns werkzeug.Response"""
 
 
-    response = Response()
-    request.requester = auth.authenticate_request(request, response)
-    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
-    response.user = request.requester
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
-
-    request.path = request.path[1:] # drop leading '/'
-    request.domain = request.host.split(':')[0].lower()
-    content_domain = "usercontent." + config.server_name
+    request, response = application_controller.pre_process(request)
+    content_domain = config.content_domain
 
 ########################
 #     post handler     #
