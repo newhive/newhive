@@ -154,6 +154,17 @@ class UserController(ApplicationController):
     def logout(self, request, response):
         auth.handle_logout(request, response)
 
+    def log(self, request, response):
+        action = request.form.get('log_action')
+        user = request.requester
+        if action == "notifications_open":
+            user.notification_count = 0
+
+        data = json.loads(request.form.get('data', 'false'))
+        if not data:
+            data = {}
+        l = self.db.ActionLog.new(user, request.form.get('log_action'), data)
+        return True
 
     def _bad_referral(self, request, response):
         response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'

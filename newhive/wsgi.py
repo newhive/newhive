@@ -9,6 +9,8 @@ import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
 from os.path  import dirname, exists, join as joinpath
 from werkzeug import Request, Response, exceptions, url_unquote
+from werkzeug.routing import Map, Rule
+from werkzeug.exceptions import HTTPException, NotFound
 from urlparse import urlparse
 import jinja2
 
@@ -21,6 +23,9 @@ import ui_strings.en as ui
 import webassets
 from webassets.filter import get_filter
 
+##############################################################################
+#                             webassets setup                                #
+##############################################################################
 assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
@@ -41,8 +46,17 @@ assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/ba
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
+##############################################################################
+#                                jinja setup                                 #
+##############################################################################
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
+jinja_env.filters['friendly_date'] = friendly_date
+jinja_env.filters['length_bucket'] = length_bucket
+jinja_env.filters['large_number'] = large_number
+
+jinja_env.filters['mod'] = lambda x, y: x % y
+jinja_env.filters['querystring'] = querystring
 
 controllers = {
     'analytics':  AnalyticsController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
@@ -58,26 +72,10 @@ application_controller = ApplicationController(jinja_env = jinja_env, assets_env
 serve_page = application_controller.serve_page
 serve_404 = application_controller.serve_404
 serve_json = application_controller.serve_json
-#serve_html = application_controller.serve_html
-#serve_page = application_controller.serve_page
 expr_list = controllers['expression']._expr_list
 expr_home_list = controllers['expression']._expr_home_list
 redirect = application_controller.redirect
 
-def no_more_referrals(referrer, request, response):
-    response.context['content'] = 'User %s has no more referrals' % referrer
-    return serve_page(response, 'pages/minimal.html')
-def log(request, response):
-    action = request.form.get('log_action')
-    user = request.requester
-    if action == "notifications_open":
-        user.notification_count = 0
-
-    data = json.loads(request.form.get('data', 'false'))
-    if not data:
-        data = {}
-    l = ActionLog.new(user, request.form.get('log_action'), data)
-    return True
 
 # Possible values for the POST variable 'action'
 actions = dict(
@@ -105,7 +103,7 @@ actions = dict(
     ,profile_thumb_set  = controllers['user'].profile_thumb_set
     ,star            = controllers['star'].star
     ,unstar          = controllers['star'].star
-    ,log             = log
+    ,log             = controllers['user'].log
     ,thumbnail_relink= controllers['admin'].thumbnail_relink
     )
 
@@ -128,13 +126,33 @@ def handle(request): # HANDLER
        response for thenewhive.com must not contain unsanitized user content.
        Accepts werkzeug.Request, returns werkzeug.Response"""
 
+    site_host = config.server_name + ":" + str(config.plain_port)
+    url_map = Map([
+        Rule('/', endpoint='expression/index', host=site_host),
+        Rule('/home/<tag>', endpoint='expression/index', host=site_host),
+        Rule('/tag/<tag>', endpoint='expression/index', host=site_host),
+        Rule('/admin/<page>', endpoint='admin', host=site_host),
+        Rule('/analytics/<page>', endpoint='analytics', host=site_host),
+        Rule('/<path:path>', endpoint='404', host=site_host),
+
+        Rule('/expressions', endpoint='user/expr_index', host='<host>'),
+        Rule('/expressions/<tag>', endpoint='user/expr_index', host='<host>'),
+        Rule('/<path:expr_path>', endpoint='expression/show', host='<host>')
+    ], host_matching=True)
+
+    print "\n"
+    try:
+        print url_map.bind_to_environ(request.environ).match()
+    except NotFound:
+        print "Route not found for " + request.host + request.path
+    print "\n"
 
     request, response = application_controller.pre_process(request)
     content_domain = config.content_domain
 
-########################
-#     post handler     #
-########################
+##############################################################################
+#                                post handler                                #
+##############################################################################
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
@@ -156,9 +174,9 @@ def handle(request): # HANDLER
                print "************************would return status 204 here*************************"
                #return Response(status=204) # 204 status = no content
 
-########################
-#   site_url handler   #
-########################
+##############################################################################
+#                             site_url handler                               #
+##############################################################################
     if request.domain == config.server_name:
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
@@ -226,6 +244,9 @@ def handle(request): # HANDLER
     elif request.domain.startswith('www.'):
         return redirect(response, re.sub('www.', '', request.url, 1))
 
+##############################################################################
+#                             user_url handler                               #
+##############################################################################
     owner = User.find(sites=request.domain.lower())
     if not owner: return serve_404(request, response)
     is_owner = request.requester.logged_in and owner.id == request.requester.id
@@ -268,6 +289,16 @@ def handle(request): # HANDLER
     #if not resource_requested: return serve_404(request, response)
 
     return controllers['expression'].show(request, response)
+
+
+##############################################################################
+#                       werkzeug / mod_wsgi entry point                      #
+##############################################################################
+@Request.application
+def handle_debug(request):
+    """Allow exceptions to be handled by werkzeug for debugging"""
+    return handle(request)
+
 @Request.application
 def handle_safe(request):
     """Log exceptions thrown, display friendly error message.
@@ -275,35 +306,4 @@ def handle_safe(request):
     try: return handle(request)
     except Exception as e: return serve_error(request, str(e))
 
-@Request.application
-def handle_debug(request):
-    """Allow exceptions to be handled by werkzeug for debugging"""
-    return handle(request)
-
 application = handle_debug
-#if config.debug_mode: application = handle_debug
-#else: application = handle_safe
-
-
-
-print joinpath(config.src_home, 'templates')
-
-class InternalServerError(exceptions.InternalServerError):
-    def get_body(self, environ):
-        return "Something's broken inside"
-
-#class DangerousContent(exceptions.UnsupportedMediaType):
-#    def get_body(self, environ):
-#        return "If you saw this, something bad could happen"
-
-class Forbidden(exceptions.Forbidden):
-    def get_body(self, environ):
-        return "You can no looky sorry"
-
-jinja_env.filters['friendly_date'] = friendly_date
-jinja_env.filters['length_bucket'] = length_bucket
-jinja_env.filters['large_number'] = large_number
-
-jinja_env.filters['mod'] = lambda x, y: x % y
-jinja_env.filters['querystring'] = querystring
-
