@@ -119,3 +119,24 @@ def app_count():
             else:
                 rv[type] = 1
     return rv
+
+def funnel2(start, end):
+    avg_users = (state.db.user.find({'created': {'$lt': start}}).count() + state.db.user.find({'created': {'$lt': end}}).count()) / 2
+
+    user_ids = [user['_id'] for user in state.db.user.find({'created': {'$lt': end}}, {'_id': True})]
+    exprs0 = state.db.expr.find({'created': {'$lt': start}, 'owner': {'$in': user_ids}, 'apps': {'$exists': True}}).count()
+    user_ids = [user['_id'] for user in state.db.user.find({'created': {'$lt': start}}, {'_id': True})]
+    exprs1 = state.db.expr.find({'created': {'$lt': end}, 'owner': {'$in': user_ids}, 'apps': {'$exists': True}}).count()
+    avg_exprs = (exprs0 + exprs1) / 2
+
+    state.db.contact_log.find({}).count()
+    signups = state.db.contact_log.find({'url': re.compile('[a-zA-Z0-9_]+\.thenewhive.com/(?!expressions)'), 'created': {'$lt': end, '$gt': start}})
+
+    referral_ids = [s.get('referral_id') for s in signups]
+    accounts_created = state.db.referral.find({'_id': {'$in': referral_ids}, 'user_created': {'$exists': True}})
+
+    return {'users': avg_users
+            , 'expressions': avg_exprs
+            , 'signups': signups.count()
+            , 'new_accounts': accounts_created.count()
+    }
