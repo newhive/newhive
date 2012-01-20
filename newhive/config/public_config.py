@@ -19,6 +19,8 @@ site_pages      = {
     ,'welcome'      : 'welcome'
     }
 
+content_domain_prefix = 'usercontent'
+
 email_server    = 'localhost'
 email_user      = False
 email_password  = False
@@ -31,4 +33,4 @@ debug_unsecure  = False
 webassets_debug = False
 
 from os.path import dirname, join, normpath
-src_home        = normpath(join(dirname(__file__), ".."))
+src_home        = normpath(join(dirname(__file__), "../.."))
