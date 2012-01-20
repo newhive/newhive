@@ -78,6 +78,12 @@ class ExpressionController(ApplicationController):
 
         else: return self.serve_page(response, 'pages/' + template + '.html')
 
+    def random(self, request, response):
+        expr = self.db.Expr.random()
+        if request.requester.logged_in:
+            self.db.ActionLog.new(request.requester, "view_random_expression", data={'expr_id': expr.id})
+        return self.redirect(response, expr.url)
+
     def dialog(self, request, response):
         owner = response.context['owner']
         exp = self.db.Expr.find(owner=owner.id, name=request.path.lower())

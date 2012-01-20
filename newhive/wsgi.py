@@ -181,13 +181,6 @@ def handle(request): # HANDLER
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
         p2 = lget(parts, 1)
-        if p1 == 'api':
-            if p2 == 'notifications_opened':
-                response = Response()
-                origin = request.headers.get('origin')
-                response.headers.add('Access-Control-Allow-Credentials', 'true')
-                response.headers.add('Access-Control-Allow-Origin', origin)
-                return serve_json(response, True)
         if p1 == 'file': return serve_404(request, response)
         elif p1 == 'edit' and request.requester.logged_in:
             return controllers['expression'].default(request, response, {'method': 'edit'})
@@ -226,11 +219,7 @@ def handle(request): # HANDLER
         elif p1 == 'analytics' and request.requester.get('name') in config.admins:
             return controllers['analytics'].default(request, response, {'method': p2})
         elif p1 == 'user_check': return controllers['user'].user_check(request, response)
-        elif p1 == 'random':
-            expr = Expr.random()
-            if request.requester.logged_in:
-                ActionLog.new(request.requester, "view_random_expression", data={'expr_id': expr.id})
-            return redirect(response, expr.url)
+        elif p1 == 'random': return controllers['expression'].random(request, response)
          #else:
         #    # search for expressions with given tag
         #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
