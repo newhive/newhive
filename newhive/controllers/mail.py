@@ -1,44 +1,10 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
-from cStringIO import StringIO
-from smtplib import SMTP
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.header import Header
-from email.generator import Generator
-from email import Charset
 from werkzeug import url_unquote
-from newhive.utils import junkstr
+from newhive.mail import send_mail
 
 
 class MailController(ApplicationController):
-
-    Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
-    def send_mail(self, headers, body):
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
-        msg['To'] = headers['To']
-        msg['From'] = headers.get('From', 'The New Hive <noreply@thenewhive.com>')
-
-        if type(body) == dict:
-            plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
-            html = MIMEText(body['html'].encode('utf-8'), 'html')
-            msg.attach(plain); msg.attach(html)
-        else:
-            part1 = MIMEText(body, 'plain')
-            msg.attach(part1)
-
-        smtp = SMTP(config.email_server)
-        if config.email_user and config.email_password:
-            smtp.login(config.email_user, config.email_password)
-
-        # Unicode support is super wonky.  see http://radix.twistedmatrix.com/2010/07/how-to-send-good-unicode-email-with.html
-        io = StringIO()
-        g = Generator(io, False) # second argument means "should I mangle From?"
-        g.flatten(msg)
-        encoded_msg = io.getvalue()
-
-        return smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
 
     def mail_us(self, request, response):
         if not request.form.get('email'): return False
@@ -58,7 +24,7 @@ class MailController(ApplicationController):
         body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
         form.update({'msg': body})
         if not config.debug_mode:
-            self.send_mail(heads, body)
+            send_mail(heads, body)
         self.db.Contact.create(**form)
 
         mail_signup_thank_you(form)
@@ -104,11 +70,11 @@ class MailController(ApplicationController):
              'plain': render_template(response, "emails/share.txt")
             ,'html': render_template(response, "emails/share.html")
             }
-        self.send_mail(heads, body)
+        send_mail(heads, body)
         self.db.ActionLog.new(request.requester, 'share', data=log_data)
         if request.form.get('send_copy'):
             heads.update(To = request.requester.get('email', ''))
-            self.send_mail(heads, body)
+            send_mail(heads, body)
         return redirect(response, request.form.get('forward'))
 
     def mail_referral(self, request, response):
@@ -134,48 +100,8 @@ class MailController(ApplicationController):
                  'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
                 ,'html': jinja_env.get_template("emails/user_invitation.html").render(context)
                 }
-            self.send_mail(heads, body)
+            send_mail(heads, body)
         return redirect(response, request.form.get('forward'))
-
-    def mail_invite(self, email, name=False, force_resend=False):
-        user = get_root()
-
-        if self.db.Referral.find(to=email) and not force_resend:
-            return False
-
-        referral = user.new_referral({'name': name, 'to': email})
-
-        heads = {
-            'To': email
-            ,'Subject' : "You have a beta invitation to thenewhive.com"
-            }
-
-        context = {
-            'name': name
-            ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + email)
-            }
-        body = {
-             'plain': jinja_env.get_template("emails/invitation.txt").render(context)
-            ,'html': jinja_env.get_template("emails/invitation.html").render(context)
-            }
-        self.send_mail(heads, body)
-        return referral.id
-
-    def mail_signup_thank_you(self, form):
-        context = {
-            'url': 'http://thenewhive.com'
-            ,'thumbnail_url': 'http://thenewhive.com/lib/skin/1/thumb_0.png'
-            ,'name': form.get('name')
-            }
-        heads = {
-            'To': form.get('email')
-            ,'Subject': 'Thank you for signing up for a beta account on The New Hive'
-            }
-        body = {
-             'plain': jinja_env.get_template("emails/thank_you_signup.txt").render(context)
-            ,'html': jinja_env.get_template("emails/thank_you_signup.html").render(context)
-            }
-        self.send_mail(heads,body)
 
 
     def mail_feedback(self, request, response):
@@ -194,30 +120,8 @@ class MailController(ApplicationController):
             + 'User-Agent: ' + request.headers.get('User-Agent', '') + "\n"
             + 'From: ' + request.requester.get('email', '')
             )
-        print self.send_mail(heads, body)
+        print send_mail(heads, body)
         if request.form.get('send_copy'):
             heads.update(To = request.requester.get('email', ''))
-            self.send_mail(heads, body)
+            send_mail(heads, body)
         response.context['success'] = True
-
-    def mail_user_register_thankyou(self, user):
-        user_profile_url = user.url
-        user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
-        heads = {
-            'To' : user['email']
-            , 'Subject' : 'Thank you for creating an account on thenewhive.com'
-            }
-        context = {
-            'user_fullname' : user['fullname']
-            , 'user_home_url' : user_home_url
-            , 'user_home_url_display' : re.sub(r'^https?://', '', user_home_url)
-            , 'user_profile_url' : user_profile_url
-            , 'user_profile_url_display' : re.sub(r'^https?://', '', user_profile_url)
-            }
-        body = {
-             'plain': jinja_env.get_template("emails/thank_you_register.txt").render(context)
-            ,'html': jinja_env.get_template("emails/thank_you_register.html").render(context)
-            }
-        self.send_mail(heads, body)
-
-

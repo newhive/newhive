@@ -62,7 +62,7 @@ class UserController(ApplicationController):
         home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
         user.give_invites(5)
 
-        try: mail_user_register_thankyou(user)
+        try: newhive.mail.mail_user_register_thankyou(self.jinja_env, user)
         except: pass # TODO: log an error
 
         request.form = dict(username = args['name'], secret = args['password'])
@@ -123,7 +123,7 @@ class UserController(ApplicationController):
         user = self.db.User.find(email=email, name=name)
         if user:
             password = junkstr(8)
-            newhive.mail.mail_temporary_password(jinja_env, user, password)
+            newhive.mail.mail_temporary_password(self.jinja_env, user, password)
             user.set_password(password)
             user.save()
             return serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})

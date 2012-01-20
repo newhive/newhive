@@ -1,5 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
+import newhive.mail
 
 class ExpressionController(ApplicationController):
 

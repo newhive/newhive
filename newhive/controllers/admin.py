@@ -71,7 +71,7 @@ class AdminController(ApplicationController):
                 contact = self.db.Contact.fetch(id)
                 name = form.get('name_' + id)
                 if contact.get('email'):
-                    referral_id = mail_invite(contact['email'], name)
+                    referral_id = mail_invite(self.jinja_env, self,db, contact['email'], name)
                     if referral_id:
                         contact.update(referral_id=referral_id)
                     else:
