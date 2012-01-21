@@ -90,7 +90,13 @@ class ExpressionController(ApplicationController):
         response.context.update(exp=exp, expr=exp)
         return self.serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
 
-    def index(self, request, response):
+    def index(self, request, response, args={}):
+        if args.get('owner'):
+            return self._user_index(request, response, args)
+        else:
+            return self._site_index(request, response, args)
+
+    def _user_index(self, request, response, args={}):
         owner = response.context['owner']
         is_owner = request.requester.logged_in and owner.id == request.requester.id
 
@@ -126,6 +132,34 @@ class ExpressionController(ApplicationController):
         response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
 
         return self.serve_page(response, 'pages/expr_cards.html')
+
+    def _site_index(self, request, response, args={}):
+        tag = args.get('tag')
+        p1 = args.get('p1')
+        featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story",
+            '2012', 'photography', 'poetry', 'words', 'food', 'travel', 'inspiration']
+        tags = self.db.User.get_root().get('tags', [])
+        response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
+        people_tag = {'url': '/people', 'name': 'People'}
+        response.context['system_tags'].append(people_tag)
+        response.context['tags'] = [{'url': '/tag/' + t, 'name': t} for t in featured_tags ]
+        if p1 == 'people':
+            response.context['tag'] = people_tag
+            klass = self.db.User
+        else:
+            klass = self.db.Expr
+        self._expr_home_list(args.get('tag'), request, response, klass=klass)
+        if tag: response.context['expr_context'] = {'tag': tag }
+        elif p1 == '':
+            response.context['expr_context'] = {'tag': 'Featured'}
+        if p1 == 'tag':
+            response.context['exprs'] = self._expr_list({'tags_index':tag.lower()}, page=int(request.args.get('page', 0)), limit=90)
+            response.context['tag'] = tag
+        if request.args.get('partial'): return self.serve_page(response, 'page_parts/cards.html')
+        elif p1 == 'tag': return self.serve_page(response, 'pages/tag_search.html')
+        else:
+            return self.serve_page(response, 'pages/home.html')
+
 
     def save(self, request, response):
         """ Parses JSON object from POST variable 'exp' and stores it in database.

@@ -188,30 +188,8 @@ def handle(request): # HANDLER
         elif p1 == 'settings': return controllers['user'].edit(request, response)
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
         elif p1 == 'email_confirmation': return controllers['user'].email_confirmation(request, response)
-        elif p1 in ['', 'home', 'people', 'tag']:
-            featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story",
-                '2012', 'photography', 'poetry', 'words', 'food', 'travel', 'inspiration']
-            tags = get_root().get('tags', [])
-            response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
-            people_tag = {'url': '/people', 'name': 'People'}
-            response.context['system_tags'].append(people_tag)
-            response.context['tags'] = [{'url': '/tag/' + t, 'name': t} for t in featured_tags ]
-            if p1 == 'people':
-                response.context['tag'] = people_tag
-                klass = User
-            else:
-                klass = Expr
-            expr_home_list(p2, request, response, klass=klass)
-            if p2: response.context['expr_context'] = {'tag': p2 }
-            elif p1 == '':
-                response.context['expr_context'] = {'tag': 'Featured'}
-            if p1 == 'tag':
-                response.context['exprs'] = expr_list({'tags_index':p2.lower()}, page=int(request.args.get('page', 0)), limit=90)
-                response.context['tag'] = p2
-            if request.args.get('partial'): return serve_page(response, 'page_parts/cards.html')
-            elif p1 == 'tag': return serve_page(response, 'pages/tag_search.html')
-            else:
-                return serve_page(response, 'pages/home.html')
+        elif p1 in ['', 'home', 'tag', 'people']:
+            return controllers['expression'].index(request, response, {'tag': p2, 'p1': p1})
         elif p1 == 'admin_home' and request.requester.logged_in:
             return controllers['admin'].home(request, response)
         elif p1 == 'admin' and request.requester.get('name') in config.admins:
@@ -220,16 +198,8 @@ def handle(request): # HANDLER
             return controllers['analytics'].default(request, response, {'method': p2})
         elif p1 == 'user_check': return controllers['user'].user_check(request, response)
         elif p1 == 'random': return controllers['expression'].random(request, response)
-         #else:
-        #    # search for expressions with given tag
-        #    exprs = Expr.list({'_id' : {'$in':ids}}, requester=request.requester.id, sort='created') if tag else Expr.list({}, sort='created')
-        #    response.context['exprs'] = map(format_card, exprs)
-        #    response.context['tag'] = tag
-        #    response.context['tags'] = root.get('tags', [])
-        #    response.context['show_name'] = True
-        #    return serve_page(response, 'pages/home.html')
+        else: return serve_404(request, response)
 
-        return serve_404(request, response)
     elif request.domain.startswith('www.'):
         return redirect(response, re.sub('www.', '', request.url, 1))
 
@@ -250,7 +220,7 @@ def handle(request): # HANDLER
         )
 
     if request.path.startswith('expressions') or request.path == 'starred':
-        return controllers['expression'].index(request, response)
+        return controllers['expression'].index(request, response, {'owner': owner})
     if request.path == 'listening': return controllers['user'].index(request, response, {'listening': True})
     if request.path == 'feed':
         if not request.requester.logged_in:
