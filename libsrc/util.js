@@ -317,7 +317,16 @@ function bound(num, lower_bound, upper_bound) {
     if(num > upper_bound) return upper_bound;
     return num;
 }
-
+function array_delete(arr, e) {
+    for(var n = 0; n < arr.length; n++) {
+        if(arr[n] == e) {
+            arr.splice(n, 1);
+            return true;
+        }
+    }
+    return false;
+}
+    
 function iconCounts() {
     $('.has_count').each(function(){
         var count = $(this).attr('data-count');
