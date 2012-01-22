@@ -1208,6 +1208,32 @@ def route_analytics(request, response):
         response.context['data'] = weekly
         response.context['monthly'] = monthly
         return serve_page(response, 'pages/analytics/funnel1.html')
+    elif p2 == 'funnel2':
+        def subroutine(res_dict, time0, time1):
+            res_dict[time0] = analytics.funnel2(time0, time1)
+        weekly = {}
+        start = date_to_epoch(2011, 11, 6)
+        week = 3600*24*7
+        now = time.time()
+        i = 0
+        while (start + i*week < now):
+            subroutine(weekly, start + i*week, start + (i+1)*week)
+            i += 1
+        monthly = {}
+        y0 = 2011; m0 = 11;
+        while (date_to_epoch(y0,m0,1) < now):
+            if m0 == 12: m1 = 1; y1 = y0 + 1
+            else: m1 = m0 + 1; y1 = y0
+            subroutine(monthly, date_to_epoch(y0,m0,1), date_to_epoch(y1,m1,1))
+            y0 = y1; m0 = m1
+        response.context['data'] = weekly
+        response.context['monthly'] = monthly
+        return serve_page(response, 'pages/analytics/funnel2.html')
+    #elif p2 == 'funnel2':
+    #    start = request.args.get('start')
+    #    end = request.args.get('end')
+    #    response.context.update(analytics.funnel2(date_to_epoch(start), date_to_epoch(end)))
+    #    return serve_page(response, 'pages/analytics/funnel2.html')
     elif p2 == 'app_count':
         response.context['data'] = analytics.app_count().items()
         response.context['title'] = 'App Type Count'
