@@ -126,27 +126,6 @@ def handle(request): # HANDLER
        response for thenewhive.com must not contain unsanitized user content.
        Accepts werkzeug.Request, returns werkzeug.Response"""
 
-    site_host = config.server_name + ":" + str(config.plain_port)
-    url_map = Map([
-        Rule('/', endpoint='expression/index', host=site_host),
-        Rule('/home/<tag>', endpoint='expression/index', host=site_host),
-        Rule('/tag/<tag>', endpoint='expression/index', host=site_host),
-        Rule('/admin/<page>', endpoint='admin', host=site_host),
-        Rule('/analytics/<page>', endpoint='analytics', host=site_host),
-        Rule('/<path:path>', endpoint='404', host=site_host),
-
-        Rule('/expressions', endpoint='user/expr_index', host='<host>'),
-        Rule('/expressions/<tag>', endpoint='user/expr_index', host='<host>'),
-        Rule('/<path:expr_path>', endpoint='expression/show', host='<host>')
-    ], host_matching=True)
-
-    print "\n"
-    try:
-        print url_map.bind_to_environ(request.environ).match()
-    except NotFound:
-        print "Route not found for " + request.host + request.path
-    print "\n"
-
     request, response = application_controller.pre_process(request)
     content_domain = config.content_domain
 
