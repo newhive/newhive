@@ -401,9 +401,10 @@ $(function () {
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
   else if (!logged_in) {
       var count = parseInt(readCookie('pageview_count'));
+      var signup = readCookie('signup_completed') == 'true';
       if (! count ) count = 0;
       count++;
-      if (count == 2 || count == 12) setTimeout("$('.signup_button').first().click();", 1000);
+      if ((count == 2 || count == 12) && (!signup)) setTimeout("$('.signup_button').first().click();", 1000);
       createCookie('pageview_count', count, 14);
   };
 });

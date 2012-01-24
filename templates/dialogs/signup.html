@@ -37,6 +37,7 @@ $(function() {
         if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
         else {
             $('#message').val('');
+            createCookie('signup_completed', true);
             dia.close();
             showDialog(data);
         }
