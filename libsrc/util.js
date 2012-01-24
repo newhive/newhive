@@ -399,6 +399,13 @@ $(function () {
   $(window).resize(place_apps);
   place_apps();
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
+  else if (!logged_in) {
+      var count = parseInt(readCookie('pageview_count'));
+      if (! count ) count = 0;
+      count++;
+      if (count == 2 || count == 12) setTimeout("$('.signup_button').first().click();", 1000);
+      createCookie('pageview_count', count, 14);
+  };
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
@@ -599,7 +606,7 @@ function createCookie(name,value,days) {
         var expires = "; expires="+date.toGMTString();
     }
     else var expires = "";
-    document.cookie = name+"="+escape(value)+expires+"; path=/";
+    document.cookie = name+"="+escape(value)+expires+"; path=/; domain=.thenewhive.com;";
 }
 
 function readCookie(name) {
