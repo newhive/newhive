@@ -7,98 +7,105 @@ import PIL.Image as Img
 from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
+from itertools import ifilter, imap
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
 from newhive.utils import now, time_s, time_u, junkstr, normalize
 
-con = None
-db = None
-s3_con = None
-s3_buckets = None
 
-con = pymongo.Connection()
-db = con[config.database]
+class Database:
+    entity_types = [] # list of entity classes
 
-# initialize s3 connection
-if config.aws_id:
-    s3_con = S3Connection(config.aws_id, config.aws_secret)
-    s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
+    @classmethod
+    def register(cls, entity_cls):
+        cls.entity_types.append(entity_cls)
+        return entity_cls
 
-def init_connections(config):
-    con = pymongo.Connection()
-    db = con[config.database]
+    def add_collection(self, col):
+        pass
 
-    # initialize s3 connection
-    if config.aws_id:
-        s3_con = S3Connection(config.aws_id, config.aws_secret)
-        s3_buckets = map(lambda b: s3_con.create_bucket(b), config.s3_buckets)
+    def __init__(self, config):
+        self.config = config
 
+        # initialize s3 connection
+        if config.aws_id:
+            self.s3_con = S3Connection(config.aws_id, config.aws_secret)
+            self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
 
-def guid(): return str(pymongo.objectid.ObjectId())
+        self.con = pymongo.Connection()
+        self._db = self.con[config.database]
+
+        self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
+        for col in self.collections:
+            setattr(self, col.entity.__name__, col)
+            for index in col.entity.indexes:
+                (key, opts) = index if isinstance(index, tuple) else (index, {})
+                key = map(lambda a: (a, 1), [key] if not isinstance(key, list) else key)
+                col._col.ensure_index(key, **opts)
+
+class Collection(object):
+    def __init__(self, db, entity):
+        self.db = db
+        self._col = db._db[entity.cname]
+        self.entity = entity
+
+    def fetch(self, key, keyname='_id'):
+        return self.find({keyname : key })
+
+    def find(self, spec, **opts):
+        r = self._col.find_one(spec, **opts)
+        if not r: return None
+        return self.entity(self, r)
+
+    def search(self, spec, **opts):
+        return Cursor(self, self._col.find(spec=spec, **opts))
+
+    def last(self, spec, **opts):
+        opts.update({'sort' : [('_id', -1)]})
+        return self.find(spec, **opts)
+
+    def list(self, spec, limit=300, page=0, sort='updated'):
+        return self.search(spec, sort=[(sort, -1)], limit=limit, skip=limit * page)
+
+    def count(self, spec): return self.search(spec).count()
+
+    def create(self, d):
+        new_entity = self.entity(self, d)
+        return new_entity.create()
+
+    def map_reduce(self, *a, **b): return self._col.map_reduce(*a, **b)
+
+class Cursor(object):
+    def __init__(self, collection, cursor): 
+        self.collection = collection
+        self._cur = cursor
+        for m in ['count', 'distinct', 'explain']:
+            wrapped = getattr(self._cur, m)
+            def wrap(o, *a, **b): return wrapped(self._cur, *a, **b)
+            setattr(self, m, wrap)
+
+    def __iter__(self): return self
+
+    def __getitem__(self, index): return self.collection.entity(self.collection, self._cur.__getitem__(index))
+    def next(self): return self.collection.entity(self.collection, self._cur.next())
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
+    
+    indexes = []
+    Collection = Collection
 
-    _starred_items = _starrers = _commenters = _feed = None
+    def __init__(self, col, doc):
+        dict.update(self, doc)
+        self.collection = col
+        self._col = col._col
+        self.db = col.db
+        self.id = doc.get('_id')
 
-    def __init__(self, d, cname=None):
-        dict.update(self, d)
-        if cname: self.cname = cname
-        self._col = db[self.cname]
-        self.id = d.get('_id')
-
-    @classmethod
-    def fetch(cls, *a, **b):
-        self = cls({})
-        return self.fetch_me(*a, **b)
-    def fetch_me(self, key, keyname='_id'):
-        return self.find_me(**{ keyname : key })
-
-    @classmethod
-    def find(cls, **spec):
-        self = cls({})
-        return self.find_me(**spec)
-    def find_me(self, **spec):
-        r = self._col.find_one(spec)
-        if not r: return None
-        dict.update(self, r)
-        self.id = self['_id']
-        return self
-
-    @classmethod
-    def search(cls, **spec):
-        self = cls({})
-        return map(cls, self._col.find(spec=spec))
-
-    @classmethod
-    def last(cls, **spec):
-        self = cls({})
-        r = self._col.find_one(spec, sort=[('created', -1)])
-        if not r: return None
-        return cls(r)
-
-    @classmethod
-    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
-        es = map(cls, getattr(db, cls.cname).find(
-             spec = spec
-            ,sort = [(sort, -1)]
-            ,limit = limit
-            ,skip = limit * page
-            ))
-        return es
-
-    @classmethod
-    def list_count(cls, spec):
-        return getattr(db, cls.cname).find(spec = spec).count()
-
-    @classmethod
-    def create(cls, **d):
-        self = cls(d)
-        self['_id'] = self.id = guid()
-        return self.create_me()
-    def create_me(self):
+    def create(self):
+        self.id = self['_id'] = str(pymongo.objectid.ObjectId())
         self['created'] = now()
         self['updated'] = now()
         self._col.insert(self, safe=True)
@@ -136,7 +143,7 @@ class Entity(dict):
         if not self._feed:
             feed = self.get('feed')
             if feed:
-                self._feed = Feed.search(**{'_id': {'$in': self.get('feed')}})
+                self._feed = self.db.Feed.search({ '_id': { '$in' : self.get('feed') } })
             else:
                 self._feed = []
         return self._feed
@@ -186,10 +193,9 @@ class Entity(dict):
         notifyees = getattr(self, type)
         return db.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
 
-    def next(self, spec={}, loop=True):
+    def related_next(self, spec={}, loop=True):
         if type(spec) == dict:
             shared_spec = spec
-            self._col.ensure_index([('updated', -1)])
             try:
                 spec = {'updated':{'$lt': self['updated']}}
                 spec.update(shared_spec)
@@ -209,10 +215,9 @@ class Entity(dict):
                 else: return None
         else: raise "argument must be a mongodb spec dicionary or a list of object ids"
 
-    def prev(self, spec={}, loop=True):
+    def related_prev(self, spec={}, loop=True):
         if type(spec) == dict:
             shared_spec = spec
-            self._col.ensure_index([('updated', 1)])
             try:
                 spec = {'updated':{'$gt': self['updated']}}
                 spec.update(shared_spec)
@@ -232,33 +237,42 @@ class Entity(dict):
                 else: return None
         else: raise "argument must be a mongodb spec dicionary or a list of object ids"
 
-
-
-def fetch(cname, id, keyname='_id'):
-    return Entity({}, cname=cname).fetch_me(id, keyname=keyname)
-def create(cname, **d): return Entity(d, cname=cname).create_me()
-
-
-db.user.ensure_index('name', unique=True)
+@Database.register
 class User(Entity):
     cname = 'user'
-    def __init__(self, d):
-        super(User, self).__init__(d)
-        self.logged_in = False
 
-    # structure
+    indexes = [ ('name', {'unique':True}) ]
+    
+    # fields = dict(
     #     name = str
     #    ,password = str
     #    ,fullname = str
-    #    ,referrer = User
     #    ,sites = [str]
+    #    ,feed = [Feed]
+    #    ,analytics = dict(
+    #         InviteNote = Counter
+    #        ,expressions = Counter
+    #    ,referrer = User
+    #    ,referrals = int
+    #    ,email = str
+    #    ,flags = { str : int|bool }
+    #    ,notification_count = int
+    # )
+
+    class Collection(Collection):
+        def named(self, name): return self.find({'name' : name})
+        def get_root(cls): return self.named('root')
+
+    def __init__(self, *a, **b):
+        super(User, self).__init__(*a, **b)
+        self.logged_in = False
 
     def expr_create(self, d):
         doc = dict(owner = self.id, name = '', domain = self['sites'][0])
         doc.update(d)
         return Expr.create(**doc)
 
-    def create_me(self):
+    def create(self):
         self['name'] = self['name'].lower()
         self['signup_group'] = config.signup_group
         assert re.match('[a-z][a-z0-9]{2,}$', self['name']) != None, 'Invalid username'
@@ -266,7 +280,7 @@ class User(Entity):
         self['fullname'] = self.get('fullname', self['name'])
         self['referrals'] = 0
         assert self.has_key('referrer')
-        return super(User, self).create_me()
+        return super(User, self).create()
 
     def new_referral(self, d):
         if self.get('referrals', 0) > 0 or self == get_root():
@@ -276,15 +290,6 @@ class User(Entity):
     def give_invites(self, count):
         self.increment({'referrals':count})
         InviteNote.new(User.named(config.site_user), self, data={'count':count})
-
-    @classmethod
-    def named(cls, name):
-        self = cls({})
-        return self.fetch_me(name.lower(), keyname='name')
-
-    @classmethod
-    def get_root(cls):
-        return cls.named('root')
 
     def cmp_password(self, v):
         return crypt(v, self['password']) == self['password']
@@ -328,86 +333,78 @@ class User(Entity):
     has_homepage = property(_has_homepage)
 
 
-def get_root(): 
-    print "global function get_root is deprecated.  Use newhive.state.User.get_root()"
-    return User.get_root()
-if not get_root():
-    print("Enter password for root user. You have one chance only:")
-    secret = getpass.getpass()
-    root = User.create(name='root', password=secret, referrer=None)
-
 class Session(Entity):
     cname = 'session'
+
 
 def media_path(user, f_id=None):
     p = joinpath(config.media_path, user['name'])
     return joinpath(p, f_id) if f_id else p
 
-db.expr.ensure_index([('domain', 1), ('name', 1)], unique=True)
-db.expr.ensure_index([('owner', 1), ('updated', 1)])
-db.expr.ensure_index([('updated', 1)])
-db.expr.ensure_index([('created', 1)])
-db.expr.ensure_index([('tags_index', 1)])
-db.expr.ensure_index([('random', 1)])
+@Database.register
 class Expr(Entity):
     cname = 'expr'
+
+    indexes = [
+         (['domain', 'name'], {'unique':True})
+        ,['owner', 'updated']
+        ,'updated'
+        ,'tags_index'
+        ,'random'
+    ]
+
     counters = ['owner_views', 'views', 'emails']
-    _owner = None
+    _owner = _starred_items = _starrers = _commenters = _feed = None
 
-    @classmethod
-    def named(cls, domain, name):
-        self = cls({})
-        return self.find_me(domain=domain, name=name.lower())
+    class Collection(Collection):
+        def named(self, name): return self.find({'name' : name})
 
-    @classmethod
-    def popular_tags(cls):
-        map_js = Code("function () {"
-                   "  if (!this.tags_index || this.auth != 'public') return;"
-                   "  for (index in this.tags_index) {"
-                   "    emit(this.tags_index[index], 1);"
-                   "  };"
+        def popular_tags(self):
+            map_js = Code("function () {"
+                       "  if (!this.tags_index || this.auth != 'public') return;"
+                       "  for (index in this.tags_index) {"
+                       "    emit(this.tags_index[index], 1);"
+                       "  };"
+                       "}")
+            reduce_js = Code("function (prev, current) {"
+                   "  var total = 0;"
+                   "  for (index in current) {"
+                   "    total += current[index];"
+                   "  }"
+                   "  return total;"
                    "}")
-        reduce_js = Code("function (prev, current) {"
-               "  var total = 0;"
-               "  for (index in current) {"
-               "    total += current[index];"
-               "  }"
-               "  return total;"
-               "}")
-        result = db.expr.map_reduce(map_js, reduce_js, "popular_tags")
-        return map(dict, result.find(sort=[('value', -1)]))
-    @classmethod
-    def with_url(cls, url):
-        """ Convenience utility function not used in production, retrieve Expr from full URL """
-        [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
-        return cls.named(domain, name)
+            result = self.map_reduce(map_js, reduce_js, "popular_tags")
+            return map(dict, result.find(sort=[('value', -1)]))
 
-    @classmethod
-    def list(cls, spec, requester=None, limit=300, page=0, sort='updated', context_owner=None):
-        es = super(Expr, cls).list(spec, requester, limit, page, sort)
-        can_view = lambda e: (
-            requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' and len(e.get('apps', [])) )
-            )
-        return filter(can_view, es)
+        def with_url(cls, url):
+            """ Convenience utility function not used in production, retrieve Expr from full URL """
+            [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
+            return cls.named(domain, name)
 
-    @classmethod
-    def random(cls):
-        rand = random.random()
-        return cls.find(random = {'$gte': rand}, auth='public', apps={'$exists': True})
+        def list(self, spec, requester=None, context_owner=None, **opts):
+            es = super(Expr.Collection, self).list(spec, **opts)
+            can_view = lambda e: (
+                requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' and len(e.get('apps', [])) )
+                )
+            return ifilter(can_view, es)
 
-    def next(self, spec={}, **kwargs):
+        def random(self):
+            rand = random.random()
+            return cls.find(dict(random = {'$gte': rand}, auth='public', apps={'$exists': True}))
+
+    def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()
             shared_spec.update({'auth': 'public', 'apps': {'$exists': True}})
         else: shared_spec = spec
-        return super(Expr, self).next(shared_spec, **kwargs)
+        return super(Expr, self).related_next(shared_spec, **kwargs)
 
-    def prev(self, spec={}, **kwargs):
+    def related_prev(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()
             shared_spec.update({'auth': 'public'})
         else: shared_spec = spec
-        return super(Expr, self).prev(shared_spec, **kwargs)
+        return super(Expr, self).related_prev(shared_spec, **kwargs)
 
     def get_owner(self):
         if not self._owner:
@@ -424,14 +421,14 @@ class Expr(Entity):
         self.owner.get_expr_count(force_update=True)
         return self
 
-    def create_me(self):
+    def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = User.fetch(self['owner'])['name']
         self['domain'] = self['domain'].lower()
         self['random'] = random.random()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
-        super(Expr, self).create_me()
+        super(Expr, self).create()
         feed = NewExpr.new(self.owner, self)
         self.owner.get_expr_count(force_update=True)
         return self
@@ -559,6 +556,7 @@ def generate_thumb(file, size):
     imo.save(output, format='jpeg', quality=70)
     return output
 
+@Database.register
 class File(Entity):
     cname = 'file'
     _file = None #temporary path
@@ -616,7 +614,7 @@ class File(Entity):
         k.make_public()
         return k.generate_url(86400 * 3600, query_auth=False)
 
-    def create_me(self):
+    def create(self):
         """ Uploads file to s3 if config.aws_id is defined, otherwise
         saves in config.media_path
         """
@@ -668,7 +666,7 @@ class File(Entity):
             url = abs_url() + 'file/' + owner['name'] + '/' + name
 
         dict.update(self, url=url)
-        return super(File, self).create_me()
+        return super(File, self).create()
 
     def delete(self):
         if self.get('s3_bucket'):
@@ -678,29 +676,51 @@ class File(Entity):
 
         super(File, self).delete()
 
+
+@Database.register
 class ActionLog(Entity):
     cname = 'action_log'
 
-    @classmethod
-    def new(cls, user, action, data={}):
-        data.update({
-            'user': user.id
-            ,'user_name': user.get('name')
-            ,'action': action
-            })
-        return cls.create(**data)
+    class Collection(Collection):
+        def new(self, user, action, data={}):
+            data.update({
+                'user': user.id
+                ,'user_name': user.get('name')
+                ,'action': action
+                })
+            return self.create(data)
 
+
+@Database.register
 class Feed(Entity):
     cname = 'feed'
     _initiator = _entity = None
 
-    def create_me(self):
+    class Collection(Collection):
+        def new(self, initiator, entity, data={}):
+            data.update({
+                'initiator': initiator.id
+                ,'initiator_name': initiator.get('name')
+                ,'entity': entity.id
+                ,'entity_class': entity.__class__.__name__
+                })
+            return self.create(data)
+
+        def search(self, spec):
+            if not cls == Feed: spec.update(class_name=self.entity.__name__)
+            return super(Feed, cls).search(spec)
+
+        def last(self, spec):
+            spec.update(class_name=self.entity.__name__)
+            return super(Feed.Collection, self).last(spec)
+
+    def create(self):
         for key in ['initiator', 'entity', 'entity_class']:
             assert self.has_key(key)
 
         class_name = type(self).__name__
         self.update(class_name=class_name)
-        super(Feed, self).create_me()
+        super(Feed, self).create()
         db.user.update({'_id': self['initiator']}, {'$addToSet': {'feed': self.id}})
         self.entity.update_cmd({'$addToSet': {'feed': self.id}})
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
@@ -721,27 +741,6 @@ class Feed(Entity):
 
     entity = property(get_entity)
     initiator = property(get_initiator)
-
-    @classmethod
-    def new(cls, initiator, entity, data={}):
-        data.update({
-            'initiator': initiator.id
-            ,'initiator_name': initiator.get('name')
-            ,'entity': entity.id
-            ,'entity_class': entity.__class__.__name__
-            })
-        return cls.create(**data)
-
-    @classmethod
-    def search(cls, **spec):
-        if not cls == Feed:
-            spec.update({"class_name": cls.__name__})
-        return super(Feed, cls).search(**spec)
-
-    @classmethod
-    def last(cls, **spec):
-        spec.update(class_name=cls.__name__)
-        return super(Feed, cls).last(**spec)
         
     def delete(self):
         self.initiator.update_cmd({'$pull': {'feed': self.id}})
@@ -762,12 +761,11 @@ class Feed(Entity):
         return abs_url(domain = self.entity.get('domain')) + "expressions"
     owner_url = property(get_owner_url)
 
-
-
+@Database.register
 class Comment(Feed):
-    def create_me(self):
+    def create(self):
         assert self.has_key('text')
-        super(Comment, self).create_me()
+        super(Comment, self).create()
         self.entity.notify('commenters', self.id)
         self.entity.notify('starrers', self.id)
         return self
@@ -792,45 +790,53 @@ class Comment(Feed):
         return self.initiator.thumb
     thumb = property(get_thumb)
 
+@Database.register
 class Star(Feed):
-    @classmethod
-    def new(cls, initiator, entity, data={}):
-        if initiator.id in entity.starrers:
-            return True
-        else:
-            return super(Star, cls).new(initiator, entity, data)
+    class Collection(Feed.Collection):
+        def new(self, initiator, entity, data={}):
+            if initiator.id in entity.starrers:
+                return True
+            else:
+                return super(Star, self).new(initiator, entity, data)
 
+@Database.register
 class InviteNote(Feed):
-    def create_me(self):
-        super(InviteNote, self).create_me()
+    def create(self):
+        super(InviteNote, self).create()
         self.entity.increment({'notification_count': 1})
         return self
 
+@Database.register
 class NewExpr(Feed):
-    def create_me(self):
-        super(NewExpr, self).create_me()
+    def create(self):
+        super(NewExpr, self).create()
         if self.entity.public:
             self.entity.owner.notify('starrers', self.id)
         return self
 
+@Database.register
 class UpdatedExpr(Feed):
-    def create_me(self):
-        super(UpdatedExpr, self).create_me()
+    def create(self):
+        super(UpdatedExpr, self).create()
         self.entity.notify('starrers', self.id)
         if self.entity.public:
             self.entity.owner.notify('starrers', self.id)
         return self
 
+
+@Database.register
 class Referral(Entity):
     cname = 'referral'
 
-    def create_me(self):
+    def create(self):
         self['key'] = junkstr(16)
-        return super(Referral, self).create_me()
+        return super(Referral, self).create()
 
 
+@Database.register
 class Contact(Entity):
     cname = 'contact_log'
+
 
 def abs_url(secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
