@@ -25,7 +25,7 @@ class MailController(ApplicationController):
         form.update({'msg': body})
         if not config.debug_mode:
             send_mail(heads, body)
-        self.db.Contact.create(**form)
+        self.db.Contact.create(form)
 
         mail_signup_thank_you(form)
 

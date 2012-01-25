@@ -1,11 +1,8 @@
 from newhive.controllers.shared import *
 from newhive import auth, config
 from werkzeug import Response
-import newhive.mail
 
 class ApplicationController(object):
-    from newhive.state import User
-
     def __init__(self, jinja_env, assets_env, db):
         self.jinja_env = jinja_env
         self.assets_env = assets_env
@@ -14,7 +11,7 @@ class ApplicationController(object):
 
     def pre_process(self, request, args={}):
         response = Response()
-        request.requester = auth.authenticate_request(request, response)
+        request.requester = auth.authenticate_request(self.db, request, response)
         response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
         response.user = request.requester
         response.headers.add('Access-Control-Allow-Origin', '*')

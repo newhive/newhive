@@ -28,7 +28,7 @@ class FileController(ApplicationController):
 
         tmp_file = os.tmpfile()
         tmp_file.write(file.read())
-        res = self.db.File.create(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime)
+        res = self.db.File.create(dict(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime))
         tmp_file.close()
         url = res.get('url')
         app['file_id'] = res.id

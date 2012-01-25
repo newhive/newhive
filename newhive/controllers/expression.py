@@ -1,6 +1,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 import newhive.mail
+from newhive import state
 
 class ExpressionController(ApplicationController):
 
@@ -36,7 +37,7 @@ class ExpressionController(ApplicationController):
 
     def show(self, request, response):
         owner = response.context['owner']
-        resource = self.db.Expr.find(owner=owner.id, name=request.path.lower())
+        resource = self.db.Expr.find(dict(domain=request.domain, name=request.path.lower()))
         if not resource: return self.serve_404(request, response) #resource = self.db.Expr.named(request.domain, '')
 
         is_owner = request.requester.logged_in and owner.id == request.requester.id
@@ -86,7 +87,7 @@ class ExpressionController(ApplicationController):
 
     def dialog(self, request, response):
         owner = response.context['owner']
-        exp = self.db.Expr.find(owner=owner.id, name=request.path.lower())
+        exp = self.db.Expr.find(dict(owner=owner.id, name=request.path.lower()))
         response.context.update(exp=exp, expr=exp)
         return self.serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
 
@@ -145,10 +146,10 @@ class ExpressionController(ApplicationController):
         response.context['tags'] = [{'url': '/tag/' + t, 'name': t} for t in featured_tags ]
         if p1 == 'people':
             response.context['tag'] = people_tag
-            klass = self.db.User
+            cname = 'user'
         else:
-            klass = self.db.Expr
-        self._expr_home_list(args.get('tag'), request, response, klass=klass)
+            cname = 'expr'
+        self._expr_home_list(args.get('tag'), request, response, cname=cname)
         if tag: response.context['expr_context'] = {'tag': tag }
         elif p1 == '':
             response.context['expr_context'] = {'tag': 'Featured'}
@@ -165,7 +166,7 @@ class ExpressionController(ApplicationController):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
 
-        try: exp = self.db.Expr(json.loads(request.form.get('exp', '0')))
+        try: exp = self.db.Expr.new(json.loads(request.form.get('exp', '0')))
         except: exp = False
         if not exp: raise ValueError('missing or malformed exp')
 
@@ -177,7 +178,7 @@ class ExpressionController(ApplicationController):
         thumb_file_id = exp.get('thumb_file_id')
         if thumb_file_id:
             print "\n\n" + thumb_file_id + "\n\n"
-            file = file.fetch(thumb_file_id)
+            file = self.db.File.fetch(thumb_file_id)
             if file:
                 upd['thumb'] = file.get_default_thumb()
                 upd['thumb_file_id'] = thumb_file_id
@@ -191,7 +192,7 @@ class ExpressionController(ApplicationController):
             data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
             f = os.tmpfile()
             f.write(data)
-            res = self.db.File.create(owner=request.requester.id, tmp_file=f, name='sketch', mime='image/png')
+            res = self.db.File.create(dict(owner=request.requester.id, tmp_file=f, name='sketch', mime='image/png'))
             f.close()
             app.update({
                  'type' : 'hive.image'
@@ -280,26 +281,26 @@ class ExpressionController(ApplicationController):
             )
         return e
 
-    def _expr_home_list(self, p2, request, response, limit=90, klass='expr'):
-        if klass == 'expr': klass = self.db.Expr
+    def _expr_home_list(self, p2, request, response, limit=90, cname='expr'):
         root = self.db.User.get_root()
         tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
         tag = {'name': tag, 'url': '/home/' + tag}
         page = int(request.args.get('page', 0))
-        ids = root.get('tagged', {}).get(tag['name'], []) if klass == self.db.Expr else []
+        ids = root.get('tagged', {}).get(tag['name'], []) if cname == 'expr' else []
+        cols = { 'expr' : self.db.Expr, 'user' : self.db.User }
         if ids:
             by_id = {}
-            for e in klass.list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
+            for e in cols[cname].list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
             entities = [by_id[i] for i in ids if by_id.has_key(i)]
             response.context['pages'] = 0;
         else:
-            entities = klass.list({}, sort='updated', limit=limit, page=page)
-            response.context['pages'] = klass.list_count({});
-        if klass==self.db.Expr:
+            entities = cols[cname].list({}, sort='updated', limit=limit, page=page)
+            response.context['pages'] = cols[cname].count({});
+        if cname=='expr':
             response.context['exprs'] = map(self._format_card, entities)
             response.context['tag'] = tag
             response.context['show_name'] = True
-        elif klass==self.db.User: response.context['users'] = entities
+        elif cname=='user': response.context['users'] = entities
         response.context['page'] = page
 
     # www_expression -> String, this maybe should go in state.Expr
@@ -362,8 +363,8 @@ class ExpressionController(ApplicationController):
                 if tag in ['recent']: shared_spec = {}
                 else:  shared_spec.update({'tags_index': tag})
             url_args.update({'tag': tag})
-        pagethrough['next'] = resource.next(shared_spec, loop=loop)
-        pagethrough['prev'] = resource.prev(shared_spec, loop=loop)
+        pagethrough['next'] = resource.related_next(shared_spec, loop=loop)
+        pagethrough['prev'] = resource.related_prev(shared_spec, loop=loop)
 
         if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring(url_args)
         if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)

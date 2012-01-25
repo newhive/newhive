@@ -1,9 +1,8 @@
 import os, re, json, time, mimetypes
 from datetime import datetime
 from newhive import config, colors, auth
-from newhive.state import abs_url
 import newhive.ui_strings.en as ui
-from newhive.utils import time_u
+from newhive.utils import time_u, abs_url
 
 def lget(L, i, *default):
     try: return L[i]
@@ -61,4 +60,3 @@ def length_bucket(t):
     if l < 10: return 1
     if l < 20: return 2
     return 3
-

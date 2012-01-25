@@ -56,7 +56,7 @@ class UserController(ApplicationController):
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]
             #,'flags'    : { 'add_invites_on_save' : True }
         })
-        user = self.db.User.create(**args)
+        user = self.db.User.create(args)
         referrer.update(referrals = referrer['referrals'] - 1)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
         home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
@@ -112,7 +112,7 @@ class UserController(ApplicationController):
 
         tmp_file = os.tmpfile()
         file.save(tmp_file)
-        res = self.db.File.create(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime)
+        res = self.db.File.create(dict(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime))
         tmp_file.close()
         request.requester.update(thumb_file_id = res.id, profile_thumb=res.get_thumb(190,190))
         return self.redirect(response, request.form['forward'])
@@ -120,7 +120,7 @@ class UserController(ApplicationController):
     def password_recovery(self, request, response):
         email = request.form.get('email')
         name = request.form.get('name')
-        user = self.db.User.find(email=email, name=name)
+        user = self.db.User.find(dict(email=email, name=name))
         if user:
             password = junkstr(8)
             newhive.mail.mail_temporary_password(self.jinja_env, user, password)
@@ -148,11 +148,11 @@ class UserController(ApplicationController):
         return self.serve_page(response, "pages/email_confirmation.html")
 
     def login(self, request, response):
-        if auth.handle_login(request, response):
+        if auth.handle_login(self.db, request, response):
             return self.redirect(response, request.form.get('url', request.requester.url))
 
     def logout(self, request, response):
-        auth.handle_logout(request, response)
+        auth.handle_logout(self.db, request, response)
 
     def log(self, request, response):
         action = request.form.get('log_action')

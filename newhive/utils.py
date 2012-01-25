@@ -1,5 +1,6 @@
 import time, random, re
 from datetime import datetime
+from newhive import config
 
 def now(): return time.time()
 
@@ -16,3 +17,12 @@ def junkstr(length):
 
 def normalize(ws):
     return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
+
+def abs_url(secure = False, domain = None, subdomain = None):
+    """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
+
+    proto = 'https' if secure else 'http'
+    port = config.ssl_port if secure else config.plain_port
+    port = '' if port == 80 or port == 443 else ':' + str(port)
+    return (proto + '://' + (subdomain + '.' if subdomain else '') +
+        (domain or config.server_name) + port + '/')

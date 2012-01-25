@@ -2,7 +2,7 @@ import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpa
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
-from newhive import config, social_stats
+from newhive import social_stats, config
 import PIL.Image as Img
 from PIL import ImageOps
 from bson.code import Code
@@ -12,7 +12,7 @@ from itertools import ifilter, imap
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize
+from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url
 
 
 class Database:
@@ -71,6 +71,7 @@ class Collection(object):
 
     def count(self, spec): return self.search(spec).count()
 
+    def new(self, d): return self.entity(self, d)
     def create(self, d):
         new_entity = self.entity(self, d)
         return new_entity.create()
@@ -81,21 +82,25 @@ class Cursor(object):
     def __init__(self, collection, cursor): 
         self.collection = collection
         self._cur = cursor
-        for m in ['count', 'distinct', 'explain']:
-            wrapped = getattr(self._cur, m)
-            def wrap(o, *a, **b): return wrapped(self._cur, *a, **b)
-            setattr(self, m, wrap)
 
-    def __iter__(self): return self
+        def mk_wrap(self, method):
+            wrapped = getattr(self._cur, m)
+            def wrap(*a, **b): return wrapped(self._cur, *a, **b)
+            return wrap
+        for m in ['count', 'distinct', 'explain']: setattr(self, m, mk_wrap(self, m))
+
+    def __len__(self): return self.count()
 
     def __getitem__(self, index): return self.collection.entity(self.collection, self._cur.__getitem__(index))
     def next(self): return self.collection.entity(self.collection, self._cur.next())
+    def __iter__(self): return self
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
     
     indexes = []
     Collection = Collection
+    _starred_items = _starrers = _commenters = _feed = None
 
     def __init__(self, col, doc):
         dict.update(self, doc)
@@ -143,7 +148,7 @@ class Entity(dict):
         if not self._feed:
             feed = self.get('feed')
             if feed:
-                self._feed = self.db.Feed.search({ '_id': { '$in' : self.get('feed') } })
+                self._feed = list(self.db.Feed.search({ '_id': { '$in' : self.get('feed') } }))
             else:
                 self._feed = []
         return self._feed
@@ -191,7 +196,7 @@ class Entity(dict):
 
     def notify(self, type, feed_item_id):
         notifyees = getattr(self, type)
-        return db.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
+        return self.db._db.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
 
     def related_next(self, spec={}, loop=True):
         if type(spec) == dict:
@@ -199,7 +204,7 @@ class Entity(dict):
             try:
                 spec = {'updated':{'$lt': self['updated']}}
                 spec.update(shared_spec)
-                return self.__class__(self._col.find(spec).hint([('updated', -1)]).limit(1)[0])
+                return self.collection.new(self._col.find(spec).hint([('updated', -1)]).limit(1)[0])
             except IndexError:
                 if loop:
                     try: return self.__class__(self._col.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
@@ -209,9 +214,9 @@ class Entity(dict):
             try: index = spec.index(self.id)
             except ValueError: return None #in this case the expression isn't in the collection to begin with
 
-            try: return Expr.fetch(spec[index+1])
+            try: return self.db.Expr.fetch(spec[index+1])
             except IndexError:
-                if loop: return Expr.fetch(spec[0])
+                if loop: return self.db.Expr.fetch(spec[0])
                 else: return None
         else: raise "argument must be a mongodb spec dicionary or a list of object ids"
 
@@ -221,7 +226,7 @@ class Entity(dict):
             try:
                 spec = {'updated':{'$gt': self['updated']}}
                 spec.update(shared_spec)
-                return self.__class__(self._col.find(spec).hint([('updated', 1)]).limit(1)[0])
+                return self.collection.new(self._col.find(spec).hint([('updated', 1)]).limit(1)[0])
             except IndexError:
                 if loop:
                     try: return self.__class__(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
@@ -231,9 +236,9 @@ class Entity(dict):
             try: index = spec.index(self.id)
             except ValueError: return None #in this case the expression isn't in the collection to begin with
 
-            try: return Expr.fetch(spec[index-1])
+            try: return self.db.Expr.fetch(spec[index-1])
             except IndexError:
-                if loop: return Expr.fetch(spec[-1])
+                if loop: return self.db.Expr.fetch(spec[-1])
                 else: return None
         else: raise "argument must be a mongodb spec dicionary or a list of object ids"
 
@@ -261,7 +266,7 @@ class User(Entity):
 
     class Collection(Collection):
         def named(self, name): return self.find({'name' : name})
-        def get_root(cls): return self.named('root')
+        def get_root(self): return self.named('root')
 
     def __init__(self, *a, **b):
         super(User, self).__init__(*a, **b)
@@ -270,7 +275,7 @@ class User(Entity):
     def expr_create(self, d):
         doc = dict(owner = self.id, name = '', domain = self['sites'][0])
         doc.update(d)
-        return Expr.create(**doc)
+        return self.db.Expr.create(**doc)
 
     def create(self):
         self['name'] = self['name'].lower()
@@ -286,10 +291,10 @@ class User(Entity):
         if self.get('referrals', 0) > 0 or self == get_root():
             self.update(referrals=self['referrals'] - 1)
             d.update(user = self.id)
-            return Referral.create(**d)
+            return self.db.Referral.create(d)
     def give_invites(self, count):
         self.increment({'referrals':count})
-        InviteNote.new(User.named(config.site_user), self, data={'count':count})
+        self.db.InviteNote.new(self.db.User.named(config.site_user), self, data={'count':count})
 
     def cmp_password(self, v):
         return crypt(v, self['password']) == self['password']
@@ -304,7 +309,7 @@ class User(Entity):
 
     def get_thumb(self):
         if self.get('thumb_file_id'):
-            file = File.fetch(self['thumb_file_id'])
+            file = self.db.File.fetch(self['thumb_file_id'])
             if file:
                 thumb = file.get_thumb(190,190)
                 if thumb: return thumb
@@ -312,7 +317,7 @@ class User(Entity):
     thumb = property(get_thumb)
 
     def get_files(self):
-        return File.search(owner = self.id)
+        return self.db.File.search({ 'owner' : self.id })
     files = property(get_files)
 
     def get_expr_count(self, force_update=False):
@@ -323,16 +328,17 @@ class User(Entity):
             if tmp: count = tmp.get('count')
 
         if not count:
-            count = db.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
+            count = self.db._db.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
             self.update_cmd({"$set": {'analytics.expressions.count': count}})
         return count
     expr_count = property(get_expr_count)
 
     def _has_homepage(self):
-        return bool(db.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
+        return bool(self.db._db.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
     has_homepage = property(_has_homepage)
 
 
+@Database.register
 class Session(Entity):
     cname = 'session'
 
@@ -354,7 +360,7 @@ class Expr(Entity):
     ]
 
     counters = ['owner_views', 'views', 'emails']
-    _owner = _starred_items = _starrers = _commenters = _feed = None
+    _owner = None
 
     class Collection(Collection):
         def named(self, name): return self.find({'name' : name})
@@ -408,28 +414,28 @@ class Expr(Entity):
 
     def get_owner(self):
         if not self._owner:
-            self._owner = User.fetch(self.get('owner'))
+            self._owner = self.db.User.fetch(self.get('owner'))
         return self._owner
     owner = property(get_owner)
 
     def update(self, **d):
         if d.get('tags'): d['tags_index'] = normalize(d['tags'])
         super(Expr, self).update(**d)
-        last_update = UpdatedExpr.last(initiator=self['owner'])
+        last_update = self.db.UpdatedExpr.last({ 'initiator' : self['owner'] })
         if not last_update or now() - last_update['created'] > 14400:
-            feed = UpdatedExpr.new(self.owner, self)
+            feed = self.db.UpdatedExpr.new(self.owner, self)
         self.owner.get_expr_count(force_update=True)
         return self
 
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
-        self['owner_name'] = User.fetch(self['owner'])['name']
+        self['owner_name'] = self.db.User.fetch(self['owner'])['name']
         self['domain'] = self['domain'].lower()
         self['random'] = random.random()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         super(Expr, self).create()
-        feed = NewExpr.new(self.owner, self)
+        feed = self.db.NewExpr.new(self.owner, self)
         self.owner.get_expr_count(force_update=True)
         return self
 
@@ -489,7 +495,7 @@ class Expr(Entity):
 
     def get_thumb(self):
         if self.get('thumb_file_id'):
-            file = File.fetch(self['thumb_file_id'])
+            file =  self.db.File.fetch(self['thumb_file_id'])
             if file:
                 thumb = file.get_thumb(190,190)
                 if thumb: return thumb
@@ -505,7 +511,7 @@ class Expr(Entity):
 
     def get_comments(self):
         if not self.has_key('feed'): return []
-        comments = Comment.search(**{'_id': {'$in': self['feed']}})
+        comments = self.db.Comment.search({ '_id': {'$in': self['feed']} })
         try:
             comments_accurate = len(comments) == self['analytics']['Comment']['count']
         except KeyError:
@@ -656,7 +662,7 @@ class File(Entity):
                 thumb190 = self.set_thumb(190,190)['file']
                 self.set_thumb(70,70, file=thumb190)
         else:
-            owner = User.fetch(self['owner'])
+            owner = self.db.User.fetch(self['owner'])
             name = self.id + mimetypes.guess_extension(mime)
             fs_path = media_path(owner) + '/' + name
             f = open(fs_path, 'w')
@@ -707,8 +713,8 @@ class Feed(Entity):
             return self.create(data)
 
         def search(self, spec):
-            if not cls == Feed: spec.update(class_name=self.entity.__name__)
-            return super(Feed, cls).search(spec)
+            if not self.__class__ == Feed: spec.update(class_name=self.entity.__name__)
+            return super(Feed.Collection, self).search(spec)
 
         def last(self, spec):
             spec.update(class_name=self.entity.__name__)
@@ -721,22 +727,22 @@ class Feed(Entity):
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create()
-        db.user.update({'_id': self['initiator']}, {'$addToSet': {'feed': self.id}})
+        self.db._db.user.update({'_id': self['initiator']}, {'$addToSet': {'feed': self.id}})
         self.entity.update_cmd({'$addToSet': {'feed': self.id}})
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
         if self['entity_class'] == "Expr":
             if not self.entity['owner'] == self['initiator']: # don't double-count commenting on your own expression
-                db.user.update({'_id': self.entity['owner']}, {'$inc': {'notification_count': 1}, '$addToSet': {'feed': self.id}})
+                self.db._db.user.update({'_id': self.entity['owner']}, {'$inc': {'notification_count': 1}, '$addToSet': {'feed': self.id}})
         return self
 
     def get_entity(self):
         if not self._entity:
-            self._entity = globals()[self['entity_class']].fetch(self['entity'])
+            self._entity = getattr(self.db, self['entity_class']).fetch(self['entity'])
         return self._entity
 
     def get_initiator(self):
         if not self._initiator:
-            self._initiator = User.fetch(self['initiator'])
+            self._initiator = self.db.User.fetch(self['initiator'])
         return self._initiator
 
     entity = property(get_entity)
@@ -837,15 +843,6 @@ class Referral(Entity):
 class Contact(Entity):
     cname = 'contact_log'
 
-
-def abs_url(secure = False, domain = None, subdomain = None):
-    """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
-
-    proto = 'https' if secure else 'http'
-    port = config.ssl_port if secure else config.plain_port
-    port = '' if port == 80 or port == 443 else ':' + str(port)
-    return (proto + '://' + (subdomain + '.' if subdomain else '') +
-        (domain or config.server_name) + port + '/')
 
 
 ## analytics utils

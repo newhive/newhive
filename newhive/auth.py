@@ -1,18 +1,18 @@
 from werkzeug import exceptions
 from newhive import config
-from newhive.state import User, Session, junkstr
+from newhive.utils import junkstr
 
-def authenticate_request(request, response):
+def authenticate_request(db, request, response):
     """Read session id from 'identity' cookie, retrieve session record from db,
        compare session secret with plain_secret or secure_secret, returns
        state.User object."""
 
     sessid = get_cookie(request, 'identity')
-    fail = User({})
+    fail = db.User.new({})
     if not sessid: return fail
-    session = Session.fetch(sessid)
+    session = db.Session.fetch(sessid)
     if not session: return fail
-    user = User.fetch(session['user'])
+    user = db.User.fetch(session['user'])
     user.update(session = session.id)
 
     user.logged_in = False
@@ -20,7 +20,7 @@ def authenticate_request(request, response):
         user.logged_in = True
     return user
 
-def handle_login(request, response):
+def handle_login(db, request, response):
     """Reads username and password from POST data, creates session,
        sets request.requester to state.User object, returns True if login succeeds"""
 
@@ -30,7 +30,7 @@ def handle_login(request, response):
     secret = args.get('secret', False)
     if not (username or secret): raise exceptions.BadRequest()
 
-    user = User.named(username)
+    user = db.User.named(username)
     if user and user.cmp_password(secret):
         # login
 
@@ -42,12 +42,12 @@ def handle_login(request, response):
         #    secure_secret = str
 
         expires = False if args.get('no_expires', False) else True
-        session = Session.create(
+        session = db.Session.create(dict(
              user = user.id
             ,active = True
             ,remember = args.get('remember', False)
             ,expires = expires
-            )
+            ))
         set_secret(session, True, response)
         set_secret(session, False, response)
         set_cookie(response, 'identity', session.id, expires = expires)
@@ -58,10 +58,10 @@ def handle_login(request, response):
     response.context['error'] = 'Invalid username or password'
     return False
 
-def handle_logout(request, response):
+def handle_logout(db, request, response):
     """Removes cookies, deletes session record, sets
        request.requester.logged_in to False"""
-    session = Session.fetch(request.requester['session'])
+    session = db.Session.fetch(request.requester['session'])
 
     rm_cookie(response, 'plain_secret')
     rm_cookie(response, 'secure_secret', True)

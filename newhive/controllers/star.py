@@ -8,7 +8,7 @@ class StarController(ApplicationController):
         parts = request.form.get('path').split('/')
         p1 = lget(parts, 1)
         if p1 in ["expressions", "starred", "listening"]:
-            entity = self.db.User.find(sites=request.domain.lower())
+            entity = self.db.User.find(dict(sites=request.domain.lower()))
         else:
             entity = self.db.Expr.named(request.domain.lower(), request.path.lower())
         if request.form.get('action') == "star":
@@ -18,7 +18,7 @@ class StarController(ApplicationController):
             else:
               return False
         else:
-           s = self.db.Star.find(initiator=request.requester.id, entity=entity.id)
+           s = self.db.Star.find(dict(initiator=request.requester.id, entity=entity.id))
            if s:
                res = s.delete()
                if not res['err']: return 'unstarred'

@@ -14,9 +14,9 @@ from werkzeug.exceptions import HTTPException, NotFound
 from urlparse import urlparse
 import jinja2
 
-from newhive import config, auth, colors
-from newhive.state import Expr, File, User, Contact, Referral, DuplicateKeyError, get_root, abs_url, Comment, Star, ActionLog, db, junkstr
-from newhive.utils import time_u, normalize, junkstr
+from newhive import config
+from newhive.state import User
+from newhive.utils import abs_url
 import newhive.state
 import ui_strings.en as ui
 
@@ -54,21 +54,22 @@ jinja_env.trim_blocks = True
 jinja_env.filters['friendly_date'] = friendly_date
 jinja_env.filters['length_bucket'] = length_bucket
 jinja_env.filters['large_number'] = large_number
-
+jinja_env.filters['json'] = json.dumps
 jinja_env.filters['mod'] = lambda x, y: x % y
 jinja_env.filters['querystring'] = querystring
 
+db = newhive.state.Database(config)
 controllers = {
-    'analytics':  AnalyticsController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
-    , 'admin':    AdminController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
-    , 'user':    UserController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
-    , 'file':    FileController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
-    , 'expression':    ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
-    , 'mail':     MailController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
-    , 'star':     StarController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
+    'analytics':  AnalyticsController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+    , 'admin':    AdminController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+    , 'user':    UserController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+    , 'file':    FileController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+    , 'expression':    ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+    , 'mail':     MailController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+    , 'star':     StarController(jinja_env = jinja_env, assets_env = assets_env, db = db)
     }
 
-application_controller = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db = newhive.state)
+application_controller = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db = db)
 serve_page = application_controller.serve_page
 serve_404 = application_controller.serve_404
 serve_json = application_controller.serve_json
@@ -185,7 +186,7 @@ def handle(request): # HANDLER
 ##############################################################################
 #                             user_url handler                               #
 ##############################################################################
-    owner = User.find(sites=request.domain.lower())
+    owner = db.User.find(dict(sites=request.domain.lower()))
     if not owner: return serve_404(request, response)
     is_owner = request.requester.logged_in and owner.id == request.requester.id
 
@@ -213,7 +214,7 @@ def handle(request): # HANDLER
         if request.requester.logged_in and is_owner:
             response.context['system_tags'].insert(1, feed_tag)
         response.context['profile_thumb'] = owner.thumb
-        response.context['starrers'] = map(User.fetch, owner.starrers)
+        response.context['starrers'] = map(db.User.fetch, owner.starrers)
 
         return serve_page(response, 'pages/expr_cards.html')
         #response.context['page'] = page
