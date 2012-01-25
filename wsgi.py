@@ -1275,6 +1275,9 @@ def route_analytics(request, response):
         response.context['timeslice'] = timeslice
         response.context['data'] = json.dumps({'days_ago': days_ago, 'timeslice': timeslice})
         return serve_page(response, 'pages/analytics/last_login.html')
+    elif p2 == 'signups_per_hour':
+        response.context['data'] = json.dumps(analytics.contacts_per_hour())
+        return serve_page(response, 'pages/analytics/signups_per_hour.html')
     else:
         return serve_404(request, response)
 

@@ -1,4 +1,5 @@
 import state, time, datetime, re
+from state import now
 
 def shared_user_data(result, start=None):
     custom_counts = {}
@@ -140,3 +141,17 @@ def funnel2(start, end):
             , 'signups': signups.count()
             , 'new_accounts': accounts_created.count()
     }
+
+def contacts_per_hour(end=now()):
+    import pandas
+    end = datetime.datetime.fromtimestamp(end)
+    end = end.replace(minute=0, second=0, microsecond=0)
+    hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=1), periods=80)
+    contacts = state.db.contact_log.find({'created':{'$gt': time.mktime(hourly[0].timetuple())}}, {'created': True})
+    contact_times = sorted([datetime.datetime.utcfromtimestamp(c['created']) for c in contacts])
+    data = pandas.Series(1, contact_times)
+    data = pandas.Series(data.groupby(hourly.asof).sum())
+
+    return {  'times': [time.mktime(x.timetuple()) for x in data.index.tolist()]
+            , 'values': data.values.tolist()
+            }
