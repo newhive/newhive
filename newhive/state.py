@@ -714,7 +714,7 @@ class Feed(Entity):
             return self.create(data)
 
         def search(self, spec):
-            if not self.__class__ == Feed: spec.update(class_name=self.entity.__name__)
+            if not self.entity == Feed: spec.update(class_name=self.entity.__name__)
             return super(Feed.Collection, self).search(spec)
 
         def last(self, spec):
