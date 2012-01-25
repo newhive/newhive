@@ -35,7 +35,7 @@ class Database:
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
 
         self.con = pymongo.Connection()
-        self._db = self.con[config.database]
+        self.mdb = self.con[config.database]
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
         for col in self.collections:
@@ -48,7 +48,7 @@ class Database:
 class Collection(object):
     def __init__(self, db, entity):
         self.db = db
-        self._col = db._db[entity.cname]
+        self._col = db.mdb[entity.cname]
         self.entity = entity
 
     def fetch(self, key, keyname='_id'):
@@ -107,6 +107,7 @@ class Entity(dict):
         self.collection = col
         self._col = col._col
         self.db = col.db
+        self.mdb = self.db.mdb
         self.id = doc.get('_id')
 
     def create(self):
@@ -196,7 +197,7 @@ class Entity(dict):
 
     def notify(self, type, feed_item_id):
         notifyees = getattr(self, type)
-        return self.db._db.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
+        return self.mdb.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
 
     def related_next(self, spec={}, loop=True):
         if type(spec) == dict:
@@ -328,13 +329,13 @@ class User(Entity):
             if tmp: count = tmp.get('count')
 
         if not count:
-            count = self.db._db.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
+            count = self.mdb.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
             self.update_cmd({"$set": {'analytics.expressions.count': count}})
         return count
     expr_count = property(get_expr_count)
 
     def _has_homepage(self):
-        return bool(self.db._db.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
+        return bool(self.mdb.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
     has_homepage = property(_has_homepage)
 
 
@@ -727,12 +728,12 @@ class Feed(Entity):
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create()
-        self.db._db.user.update({'_id': self['initiator']}, {'$addToSet': {'feed': self.id}})
+        self.mdb.user.update({'_id': self['initiator']}, {'$addToSet': {'feed': self.id}})
         self.entity.update_cmd({'$addToSet': {'feed': self.id}})
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
         if self['entity_class'] == "Expr":
             if not self.entity['owner'] == self['initiator']: # don't double-count commenting on your own expression
-                self.db._db.user.update({'_id': self.entity['owner']}, {'$inc': {'notification_count': 1}, '$addToSet': {'feed': self.id}})
+                self.mdb.user.update({'_id': self.entity['owner']}, {'$inc': {'notification_count': 1}, '$addToSet': {'feed': self.id}})
         return self
 
     def get_entity(self):
@@ -803,7 +804,7 @@ class Star(Feed):
             if initiator.id in entity.starrers:
                 return True
             else:
-                return super(Star, self).new(initiator, entity, data)
+                return super(Star.Collection, self).new(initiator, entity, data)
 
 @Database.register
 class InviteNote(Feed):

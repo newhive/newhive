@@ -10,7 +10,7 @@ class UserController(ApplicationController):
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         tags = owner.get('tags', [])
         expressions_tag = {'url': '/expressions', 'name': 'Expressions', 'show_name': False}
-        people_tag = {'url': '/people', 'name': 'People'}
+        people_tag = {'url': '/listening', 'name': 'Listening'}
         star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         feed_tag = {'url': "/feed", "name": "Feed"}
         response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
@@ -26,8 +26,22 @@ class UserController(ApplicationController):
             response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
 
             return self.serve_page(response, 'pages/expr_cards.html')
-        else:
-            pass
+        elif args.get('feed'):
+            if not request.requester.logged_in:
+                return redirect(response, abs_url())
+            response.context['feed_items'] = request.requester.feed
+            tag = feed_tag
+
+            response.context['title'] = owner['fullname']
+            response.context['tag'] = tag
+            response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
+            if request.requester.logged_in and is_owner:
+                response.context['system_tags'].insert(1, feed_tag)
+            response.context['profile_thumb'] = owner.thumb
+            response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
+
+            return self.serve_page(response, 'pages/expr_cards.html')
+            #response.context['page'] = page
 
     def new(self, request, response):
         response.context['action'] = 'create'

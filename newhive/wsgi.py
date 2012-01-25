@@ -202,30 +202,9 @@ def handle(request): # HANDLER
     if request.path.startswith('expressions') or request.path == 'starred':
         return controllers['expression'].index(request, response, {'owner': owner})
     if request.path == 'listening': return controllers['user'].index(request, response, {'listening': True})
-    if request.path == 'feed':
-        if not request.requester.logged_in:
-            return redirect(response, abs_url())
-        response.context['feed_items'] = request.requester.feed
-        tag = feed_tag
-
-        response.context['title'] = owner['fullname']
-        response.context['tag'] = tag
-        response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
-        if request.requester.logged_in and is_owner:
-            response.context['system_tags'].insert(1, feed_tag)
-        response.context['profile_thumb'] = owner.thumb
-        response.context['starrers'] = map(db.User.fetch, owner.starrers)
-
-        return serve_page(response, 'pages/expr_cards.html')
-        #response.context['page'] = page
+    if request.path == 'feed': return controllers['user'].index(request, response, {'feed': True})
 
     if request.args.has_key('dialog'): return controllers['expression'].dialog(request, response)
-
-    if lget(request.path, 0) == '*':
-        return redirect(response, owner.url +
-            ('/' + request.path[1:] if len(request.path) > 1 else ''), permanent=True)
-
-    #if not resource_requested: return serve_404(request, response)
 
     return controllers['expression'].show(request, response)
 

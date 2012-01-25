@@ -3,6 +3,9 @@ from newhive.controllers.application import ApplicationController
 from newhive import analytics
 
 class AnalyticsController(ApplicationController):
+    def __init__(self, *a, **b):
+        super(AnalyticsController, self).__init__(*a, **b)
+        self.mdb = b['db'].mdb # direct reference to pymongo db
 
     def active_users(self, request, response):
         analytics.user_first_month()
@@ -40,10 +43,10 @@ class AnalyticsController(ApplicationController):
         exclude = exclude + [self.db.User.named(name).id for name in config.admins]
         weekly = {}
         def invites_subr(res_dict, time0, time1):
-            invites = db.referral.find({'created': {'$lt': time1, '$gt': time0}, 'user': {'$nin': exclude}})
+            invites = self.mdb.referral.find({'created': {'$lt': time1, '$gt': time0}, 'user': {'$nin': exclude}})
             invites_used = filter(lambda x: x.has_key('user_created'), invites)
             res_dict[time0] = {
-                'users': int((db.user.find({'created': {'$lt': time1}}).count() + db.user.find({'created': {'$lt': time0}}).count()) / 2)
+                'users': int((self.mdb.user.find({'created': {'$lt': time1}}).count() + self.mdb.user.find({'created': {'$lt': time0}}).count()) / 2)
                 ,'invites': invites.count()
                 ,'invites_used': len(invites_used)
                 }

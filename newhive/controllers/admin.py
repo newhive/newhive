@@ -13,7 +13,7 @@ class AdminController(ApplicationController):
 
     def thumbnail_relink(self, request, response):
         response.context['exprs'] = []
-        exprs = self.db.Expr.search(**{'thumb': {'$exists': True, '$ne': None}, 'thumb_file_id': {'$exists': False}})
+        exprs = self.db.Expr.search({'thumb': {'$exists': True, '$ne': None}, 'thumb_file_id': {'$exists': False}})
         if len(exprs) > 200:
             exprs = exprs[0:100]
         for e in exprs:
@@ -34,13 +34,13 @@ class AdminController(ApplicationController):
             return self.serve_page(response, 'pages/admin/users.html')
         else:
             user = self.db.User.named(p3)
-            expressions = self.db.Expr.search(owner=user.id)
+            expressions = self.db.Expr.search(dict(owner=user.id))
             public_expressions = filter(lambda e: e.get('auth') == 'public', expressions)
             private_expressions = filter(lambda e: e.get('auth') == 'password', expressions)
             response.context['user_object'] = user
             response.context['public_expressions'] = public_expressions
             response.context['private_expressions'] = private_expressions
-            response.context['action_log'] = self.db.ActionLog.search(user=user.id, created={'$gt': time.time() - 60*60*24*30})
+            response.context['action_log'] = self.db.ActionLog.search(dict(user=user.id, created={'$gt': time.time() - 60*60*24*30}))
             response.context['expression_counts'] = {'public': len(public_expressions), 'private': len(private_expressions), 'total': len(expressions)}
             return self.serve_page(response, 'pages/admin/user.html')
 
@@ -71,7 +71,7 @@ class AdminController(ApplicationController):
                 contact = self.db.Contact.fetch(id)
                 name = form.get('name_' + id)
                 if contact.get('email'):
-                    referral_id = mail_invite(self.jinja_env, self,db, contact['email'], name)
+                    referral_id = mail_invite(self.jinja_env, self, self.db, contact['email'], name)
                     if referral_id:
                         contact.update(referral_id=referral_id)
                     else:
