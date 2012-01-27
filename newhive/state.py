@@ -208,7 +208,7 @@ class Entity(dict):
                 return self.collection.new(self._col.find(spec).hint([('updated', -1)]).limit(1)[0])
             except IndexError:
                 if loop:
-                    try: return self.__class__(self._col.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
+                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
                     except IndexError: return None
                 else: return None
         elif type(spec) == list:
@@ -230,7 +230,7 @@ class Entity(dict):
                 return self.collection.new(self._col.find(spec).hint([('updated', 1)]).limit(1)[0])
             except IndexError:
                 if loop:
-                    try: return self.__class__(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
+                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
                     except IndexError: return None
                 else: return None
         elif type(spec) == list:
@@ -364,7 +364,7 @@ class Expr(Entity):
     _owner = None
 
     class Collection(Collection):
-        def named(self, name): return self.find({'name' : name})
+        def named(self, domain, name): return self.find({'domain' : domain, 'name' : name})
 
         def popular_tags(self):
             map_js = Code("function () {"
@@ -628,7 +628,7 @@ class File(Entity):
 
         self._file = self['tmp_file']
         del self['tmp_file']
-        return super(File, self).create()
+        super(File, self).create()
         self['owner']
 
         # Image optimization
@@ -655,6 +655,7 @@ class File(Entity):
                 self._file.close()
                 self._file = newfile
 
+        url = None
         if config.aws_id:
             url = self.store_aws(self._file, self.id, urllib.quote_plus(self['name'].encode('utf8')))
             dict.update(self, url=url)
@@ -672,7 +673,8 @@ class File(Entity):
             f.close()
             url = abs_url() + 'file/' + owner['name'] + '/' + name
 
-        dict.update(self, url=url)
+        self.update(url=url)
+        return self
 
     def delete(self):
         if self.get('s3_bucket'):

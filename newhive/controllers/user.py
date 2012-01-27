@@ -1,6 +1,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
-from newhive.utils import normalize
+from newhive.utils import normalize, junkstr
+from newhive import mail
 
 class UserController(ApplicationController):
 
@@ -76,7 +77,7 @@ class UserController(ApplicationController):
         home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
         user.give_invites(5)
 
-        try: newhive.mail.mail_user_register_thankyou(self.jinja_env, user)
+        try: mail.mail_user_register_thankyou(self.jinja_env, user)
         except: pass # TODO: log an error
 
         request.form = dict(username = args['name'], secret = args['password'])
@@ -105,7 +106,7 @@ class UserController(ApplicationController):
         email = request.form.get('email')
         if email and email != request.requester.get('email'):
             user.update(email_confirmation_request_date=time.time())
-            newhive.mail.mail_email_confirmation(self.jinja_env, user, email)
+            mail.mail_email_confirmation(self.jinja_env, user, email)
             message = message + ui.email_change_success_message + " "
         return self.serve_json(response, {'success': True, 'message': message})
 
@@ -137,12 +138,12 @@ class UserController(ApplicationController):
         user = self.db.User.find(dict(email=email, name=name))
         if user:
             password = junkstr(8)
-            newhive.mail.mail_temporary_password(self.jinja_env, user, password)
+            mail.mail_temporary_password(self.jinja_env, user, password)
             user.set_password(password)
             user.save()
-            return serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
+            return self.serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
         else:
-            return serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
+            return self.serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
 
     def user_check(self, request, response):
         user_available = False if self.db.User.named(request.args.get('name')) else True

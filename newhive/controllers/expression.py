@@ -2,6 +2,8 @@ from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 import newhive.mail
 from newhive import state
+# TODO: handle this in model layer somehow
+from pymongo.connection import DuplicateKeyError
 
 class ExpressionController(ApplicationController):
 
