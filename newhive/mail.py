@@ -12,8 +12,8 @@ from email import Charset
 from werkzeug import url_unquote
 
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
-smtp = SMTP(config.email_server)
 def send_mail(headers, body):
+    smtp = SMTP(config.email_server)
     msg = MIMEMultipart('alternative')
     msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
     msg['To'] = headers['To']
