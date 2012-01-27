@@ -276,7 +276,7 @@ class User(Entity):
     def expr_create(self, d):
         doc = dict(owner = self.id, name = '', domain = self['sites'][0])
         doc.update(d)
-        return self.db.Expr.create(**doc)
+        return self.db.Expr.create(doc)
 
     def create(self):
         self['name'] = self['name'].lower()
@@ -848,9 +848,9 @@ class Contact(Entity):
 
 ## analytics utils
 
-def tags_by_frequency(**query):
+def tags_by_frequency(query):
     tags = {}
-    for d in Expr.search(**query):
+    for d in Expr.search(query):
         if d.get('tags_index'):
             for t in d.get('tags_index'): tags[t] = tags.get(t, 0) + 1
     counts = [[tags[t], t] for t in tags]

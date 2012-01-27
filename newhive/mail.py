@@ -40,11 +40,10 @@ def send_mail(headers, body):
 
 
 def mail_invite(jinja_env, db, email, name=False, force_resend=False):
-    user = get_root()
-
-    if db.Referral.find(to=email) and not force_resend:
+    if db.Referral.find(email, keyname='to') and not force_resend:
         return False
 
+    user = db.User.named(config.site_user)
     referral = user.new_referral({'name': name, 'to': email})
 
     heads = {

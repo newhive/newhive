@@ -27,7 +27,7 @@ class AnalyticsController(ApplicationController):
         return self.serve_page(response, 'pages/analytics/active_users.html')
 
     def invites(self, request, response):
-        invites = self.db.Referral.search()
+        invites = self.db.Referral.search({})
         cache = {}
         for item in invites:
             user_name = cache.get(item['user'])
@@ -74,7 +74,7 @@ class AnalyticsController(ApplicationController):
         return self.serve_page(response, 'pages/analytics/generic.html')
 
     def user_growth(self, request, response):
-        users = self.db.User.search()
+        users = self.db.User.search({})
         users.sort(lambda a,b: cmp(a.get('created'), b.get('created')))
         res = []
         dates = []
@@ -92,7 +92,7 @@ class AnalyticsController(ApplicationController):
         return self.serve_page(response, 'pages/analytics/user_growth.html')
 
     def last_login(self, request, response):
-        act_log = self.db.ActionLog.search()
+        act_log = self.db.ActionLog.search({})
         res = {}
         for a in act_log:
             user = a['user']

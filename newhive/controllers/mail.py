@@ -1,7 +1,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from werkzeug import url_unquote
-from newhive.mail import send_mail
+from newhive.mail import send_mail, mail_signup_thank_you
 
 
 class MailController(ApplicationController):
@@ -27,9 +27,9 @@ class MailController(ApplicationController):
             send_mail(heads, body)
         self.db.Contact.create(form)
 
-        mail_signup_thank_you(form)
+        mail_signup_thank_you(self.jinja_env, form)
 
-        return serve_page(response, 'dialogs/signup_thank_you.html')
+        return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
     def mail_them(self, request, response):
         if not request.form.get('message') or not request.form.get('to'): return False
@@ -97,8 +97,8 @@ class MailController(ApplicationController):
                 ,'name': name
                 }
             body = {
-                 'plain': jinja_env.get_template("emails/user_invitation.txt").render(context)
-                ,'html': jinja_env.get_template("emails/user_invitation.html").render(context)
+                 'plain': self.jinja_env.get_template("emails/user_invitation.txt").render(context)
+                ,'html': self.jinja_env.get_template("emails/user_invitation.html").render(context)
                 }
             send_mail(heads, body)
         return redirect(response, request.form.get('forward'))

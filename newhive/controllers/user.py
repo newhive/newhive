@@ -181,6 +181,7 @@ class UserController(ApplicationController):
         return True
 
     def _bad_referral(self, request, response):
+        if request.requester.logged_in: self.redirect(response, request.requester.get_url())
         response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
         response.context['error'] = 'Log in if you already have an account'
         return self.serve_page(response, 'pages/error.html')

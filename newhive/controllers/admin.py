@@ -1,14 +1,15 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
+from newhive.mail import mail_invite
 
 class AdminController(ApplicationController):
 
     def contact_log(self, request, response):
-        response.context['contacts'] = self.db.Contact.search()
+        response.context['contacts'] = self.db.Contact.search({})
         return self.serve_page(response, 'pages/admin/contact_log.html')
 
     def referrals(self, request, response):
-        response.context['users'] = self.db.User.search()
+        response.context['users'] = self.db.User.search({})
         return self.serve_page(response, 'pages/admin/referrals.html')
 
     def thumbnail_relink(self, request, response):
@@ -30,7 +31,7 @@ class AdminController(ApplicationController):
     def users(self, request, response):
         p3 = lget(request.path.split('/'), 2)
         if not p3:
-            response.context['users'] = self.db.User.search()
+            response.context['users'] = self.db.User.search({})
             return self.serve_page(response, 'pages/admin/users.html')
         else:
             user = self.db.User.named(p3)
@@ -51,7 +52,7 @@ class AdminController(ApplicationController):
         number = int(form.pop('number'))
         forward = form.pop('forward')
         if form.get('all'):
-            users = self.db.User.search();
+            users = self.db.User.search({});
         else:
             users = []
             for key in form:
@@ -71,7 +72,7 @@ class AdminController(ApplicationController):
                 contact = self.db.Contact.fetch(id)
                 name = form.get('name_' + id)
                 if contact.get('email'):
-                    referral_id = mail_invite(self.jinja_env, self, self.db, contact['email'], name)
+                    referral_id = mail_invite(self.jinja_env, self.db, contact['email'], name)
                     if referral_id:
                         contact.update(referral_id=referral_id)
                     else:
@@ -95,6 +96,6 @@ class AdminController(ApplicationController):
 
     def contacts(self, request, response):
         response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
-        response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in self.db.Contact.search()])
+        response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in self.db.Contact.search({})])
         response.content_type = 'text/csv; charset=utf-8'
         return response
