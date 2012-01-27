@@ -612,8 +612,8 @@ class File(Entity):
     default_thumb = property(get_default_thumb)
 
 
-    def store_aws(self, file, id, name, bucket='random'):
-        b = s3_con.get_bucket(self.get('s3_bucket', random.choice(s3_buckets).name))
+    def store_aws(self, file, id, name):
+        b = self.db.s3_con.get_bucket(self.get('s3_bucket', random.choice(self.db.s3_buckets).name))
         k = S3Key(b)
         k.name = id
         k.set_contents_from_file(file,
@@ -626,9 +626,10 @@ class File(Entity):
         saves in config.media_path
         """
 
-        self['owner']
         self._file = self['tmp_file']
         del self['tmp_file']
+        return super(File, self).create()
+        self['owner']
 
         # Image optimization
         if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
@@ -655,7 +656,6 @@ class File(Entity):
                 self._file = newfile
 
         if config.aws_id:
-            dict.update(self, s3_bucket=random.choice(s3_buckets).name)
             url = self.store_aws(self._file, self.id, urllib.quote_plus(self['name'].encode('utf8')))
             dict.update(self, url=url)
             if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
@@ -673,11 +673,10 @@ class File(Entity):
             url = abs_url() + 'file/' + owner['name'] + '/' + name
 
         dict.update(self, url=url)
-        return super(File, self).create()
 
     def delete(self):
         if self.get('s3_bucket'):
-            k = s3_con.get_bucket(self['s3_bucket']).get_key(self.id)
+            k = self.db.s3_con.get_bucket(self['s3_bucket']).get_key(self.id)
             if k: k.delete()
         elif self.get('fs_path'): os.remove(self['fs_path'])
 

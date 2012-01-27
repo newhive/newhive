@@ -101,7 +101,7 @@ class MailController(ApplicationController):
                 ,'html': self.jinja_env.get_template("emails/user_invitation.html").render(context)
                 }
             send_mail(heads, body)
-        return redirect(response, request.form.get('forward'))
+        return self.redirect(response, request.form.get('forward'))
 
 
     def mail_feedback(self, request, response):
