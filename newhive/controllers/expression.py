@@ -1,3 +1,4 @@
+import base64
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 import newhive.mail
