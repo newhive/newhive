@@ -142,7 +142,7 @@ class ExpressionController(ApplicationController):
         tag = args.get('tag')
         p1 = args.get('p1')
         featured_tags = ["art", "seattle", "music", "poem", "occupy", "love", "drawing", "life", "story",
-            '2012', 'photography', 'poetry', 'words', 'food', 'travel', 'inspiration']
+            '2012', 'community', 'photography', 'poetry', 'words', 'food', 'travel', 'inspiration']
         tags = self.db.User.get_root().get('tags', [])
         response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
         people_tag = {'url': '/people', 'name': 'People'}
