@@ -133,6 +133,10 @@ class AnalyticsController(ApplicationController):
         response.context['data'] = weekly
         response.context['monthly'] = monthly
         return self.serve_page(response, 'pages/analytics/funnel2.html')
+
+    def signups_per_hour(self, request, response, args={}):
+        response.context['data'] = json.dumps(analytics.contacts_per_hour(self.db.mdb))
+        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
      #else:
     #    return serve_404(self, request, response)
 

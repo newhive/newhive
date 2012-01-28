@@ -317,7 +317,16 @@ function bound(num, lower_bound, upper_bound) {
     if(num > upper_bound) return upper_bound;
     return num;
 }
-
+function array_delete(arr, e) {
+    for(var n = 0; n < arr.length; n++) {
+        if(arr[n] == e) {
+            arr.splice(n, 1);
+            return true;
+        }
+    }
+    return false;
+}
+    
 function iconCounts() {
     $('.has_count').each(function(){
         var count = $(this).attr('data-count');
@@ -390,6 +399,14 @@ $(function () {
   $(window).resize(place_apps);
   place_apps();
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
+  else if (!logged_in) {
+      var count = parseInt(readCookie('pageview_count'));
+      var signup = readCookie('signup_completed') == 'true';
+      if (! count ) count = 0;
+      count++;
+      if ((count == 2 || count == 12) && (!signup)) setTimeout("$('.signup_button').first().click();", 1000);
+      createCookie('pageview_count', count, 14);
+  };
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
@@ -590,7 +607,7 @@ function createCookie(name,value,days) {
         var expires = "; expires="+date.toGMTString();
     }
     else var expires = "";
-    document.cookie = name+"="+escape(value)+expires+"; path=/";
+    document.cookie = name+"="+escape(value)+expires+"; path=/; domain=.thenewhive.com;";
 }
 
 function readCookie(name) {
