@@ -1,13 +1,13 @@
 import state, time, datetime, re
 from state import now
 
-def shared_user_data(result, start=None):
+def shared_user_data(db, result, start=None):
     custom_counts = {}
     auths = ['public', 'private', 'total']
     for auth in auths:
         custom_counts[auth] = {}
     for item in result:
-      user = state.User.fetch(item['owner'])
+      user = db.User.fetch(item['owner'])
       if user:
         item['name'] = user.get('name')
         item['age'] = (time.time() - user['created']) / 3600 /24
@@ -29,8 +29,8 @@ def shared_user_data(result, start=None):
     return [result, custom_counts]
 
 
-def active_users(reference_date=time.time(), event='created', start=0, end=0):
-    col = state.db['expr']
+def active_users(db, reference_date=time.time(), event='created', start=0, end=0):
+    col = db.mdb['expr']
     key={"owner": 1}
     condition = {}
     initial = {
@@ -65,7 +65,7 @@ def active_users(reference_date=time.time(), event='created', start=0, end=0):
     """ % {'now': reference_date, 'event': event, 'start': start, 'end': end}
 
     res = col.group(key, condition, initial, reducejs)
-    return shared_user_data(res, start=start)
+    return shared_user_data(db, res, start=start)
 
 def user_snapshot(reference_date):
   col = state.db['expr']
@@ -96,18 +96,18 @@ def user_snapshot_load():
     state.db.user_snapshot.insert({"date": current_time, "snapshot": snapshot})
     current_time += 60*60*24
 
-def user_first_month(reference_date=time.time()):
-  res = []
-  oldest_missing_first_month = state.db.user.find_one({'analytics.first_month.total': {'$exists': False}}, {'created': 1}, sort=[('created', 1)])['created']
-  print oldest_missing_first_month
-  for u in map(state.User, state.db.user.find({'created': {"$lt": reference_date - 30 * 24 * 60 * 60, "$gte": oldest_missing_first_month}})):
-    exprs = state.Expr.search(created = {"$lt": u['created'] + 30 * 24 * 60 * 60}, owner = u.id)
-    public = filter(lambda x: x.get('auth') == 'public', exprs)
-    u.update_cmd({'$unset': {'analytics.first_month.expressions.all': True}, '$set': {'analytics.first_month.expressions.total': len(exprs), 'analytics.first_month.expressions.public': len(public), 'analytics.first_month.expressions.private': len(exprs) - len(public) }})
+def user_first_month(db, reference_date=time.time()):
+    res = []
+    oldest_missing_first_month = db.User.find({'analytics.first_month.total': {'$exists': False}}, sort=[('created', 1)])['created']
+    print oldest_missing_first_month
+    for u in db.User.search({'created': {"$lt": reference_date - 30 * 24 * 60 * 60, "$gte": oldest_missing_first_month}}):
+        exprs = db.Expr.search({'created': {"$lt": u['created'] + 30 * 24 * 60 * 60}, 'owner': u.id})
+        public = filter(lambda x: x.get('auth') == 'public', exprs)
+        u.update_cmd({'$unset': {'analytics.first_month.expressions.all': True}, '$set': {'analytics.first_month.expressions.total': len(exprs), 'analytics.first_month.expressions.public': len(public), 'analytics.first_month.expressions.private': len(exprs) - len(public) }})
 
-def app_count():
-    exprs = state.Expr.search(apps={'$exists': True})
-    rv = {'expr_count': len(exprs)}
+def app_count(db):
+    exprs = db.Expr.search({'apps': {'$exists': True}})
+    rv = {'expr_count': exprs.count()}
     for e in exprs:
         if not e.get('apps'): continue
         for app in e.get('apps'):
