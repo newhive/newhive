@@ -75,8 +75,7 @@ class AnalyticsController(ApplicationController):
         return self.serve_page(response, 'pages/analytics/generic.html')
 
     def user_growth(self, request, response):
-        users = self.db.User.search({})
-        users.sort(lambda a,b: cmp(a.get('created'), b.get('created')))
+        users = self.db.User.search({}, sort=[('created', 1)])
         res = []
         dates = []
         counts = []
