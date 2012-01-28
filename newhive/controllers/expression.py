@@ -40,7 +40,9 @@ class ExpressionController(ApplicationController):
     def show(self, request, response):
         owner = response.context['owner']
         resource = self.db.Expr.find(dict(domain=request.domain, name=request.path.lower()))
-        if not resource: return self.serve_404(request, response) #resource = self.db.Expr.named(request.domain, '')
+        if not resource:
+            if request.path == '': return self.redirect(response, owner.url)
+            return self.serve_404(request, response)
 
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
