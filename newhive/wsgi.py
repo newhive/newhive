@@ -167,7 +167,7 @@ def handle(request): # HANDLER
         elif p1 == 'signup': return controllers['user'].new(request, response)
         elif p1 == 'settings': return controllers['user'].edit(request, response)
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 == 'email_confirmation': return controllers['user'].email_confirmation(request, response)
+        elif p1 == 'email_confirmation': return controllers['user'].confirm_email(request, response)
         elif p1 in ['', 'home', 'tag', 'people']:
             return controllers['expression'].index(request, response, {'tag': p2, 'p1': p1})
         elif p1 == 'admin_home' and request.requester.logged_in:
