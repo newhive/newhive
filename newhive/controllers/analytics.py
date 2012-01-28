@@ -8,7 +8,7 @@ class AnalyticsController(ApplicationController):
         self.mdb = b['db'].mdb # direct reference to pymongo db
 
     def active_users(self, request, response):
-        analytics.user_first_month()
+        analytics.user_first_month(self.db)
         if request.args.has_key('start') and request.args.has_key('end'):
             response.context['start'] = request.args.get('start')
             response.context['end'] = request.args.get('end')
@@ -20,15 +20,16 @@ class AnalyticsController(ApplicationController):
             if event:
                 active_users, custom_histogram = analytics.active_users(event=event)
             else:
-                active_users, custom_histogram = analytics.active_users()
+                active_users, custom_histogram = analytics.active_users(self.db)
         response.context['active_users'] = active_users
         response.context['custom_histogram'] = custom_histogram
         response.context['active_users_js'] = json.dumps(active_users)
         return self.serve_page(response, 'pages/analytics/active_users.html')
 
     def invites(self, request, response):
-        invites = self.db.Referral.search({})
+        invites = list(self.db.Referral.search({}))
         cache = {}
+
         for item in invites:
             user_name = cache.get(item['user'])
             if not user_name:
@@ -39,7 +40,7 @@ class AnalyticsController(ApplicationController):
         return self.serve_page(response, 'pages/analytics/invites.html')
 
     def funnel1(self, request, response):
-        exclude = [get_root().id]
+        exclude = [self.db.User.get_root().id]
         exclude = exclude + [self.db.User.named(name).id for name in config.admins]
         weekly = {}
         def invites_subr(res_dict, time0, time1):
@@ -69,7 +70,7 @@ class AnalyticsController(ApplicationController):
         return self.serve_page(response, 'pages/analytics/funnel1.html')
 
     def app_count(self, request, response):
-        response.context['data'] = analytics.app_count().items()
+        response.context['data'] = analytics.app_count(self.db).items()
         response.context['title'] = 'App Type Count'
         return self.serve_page(response, 'pages/analytics/generic.html')
 
