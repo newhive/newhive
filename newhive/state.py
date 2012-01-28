@@ -85,9 +85,9 @@ class Cursor(object):
 
         def mk_wrap(self, method):
             wrapped = getattr(self._cur, m)
-            def wrap(*a, **b): return wrapped(self._cur, *a, **b)
+            def wrap(*a, **b): return wrapped(*a, **b)
             return wrap
-        for m in ['count', 'distinct', 'explain']: setattr(self, m, mk_wrap(self, m))
+        for m in ['count', 'distinct', 'explain', 'sort']: setattr(self, m, mk_wrap(self, m))
 
     def __len__(self): return self.count()
 
