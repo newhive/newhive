@@ -13,6 +13,7 @@ class AdminController(ApplicationController):
         return self.serve_page(response, 'pages/admin/referrals.html')
 
     def thumbnail_relink(self, request, response):
+        return self.serve_html(response, 'thumbnail relink is deprecated')
         response.context['exprs'] = []
         exprs = self.db.Expr.search({'thumb': {'$exists': True, '$ne': None}, 'thumb_file_id': {'$exists': False}})
         if len(exprs) > 200:
