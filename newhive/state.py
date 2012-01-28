@@ -598,6 +598,7 @@ class File(Entity):
         version = int(thumbs.get(name, 0)) + 1
         thumbs[name] = version
         url = "%s_%s?v=%s" % (self['url'], name, version)
+        self.update(thumbs=thumbs)
         return {'url': url, 'file': thumb}
 
     def get_thumb(self, w, h, generate=False):
