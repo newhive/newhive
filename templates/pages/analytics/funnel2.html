@@ -1,0 +1,80 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+    <script>
+      update_row = function(e){
+        var el = $(e.target);
+        var views = parseInt(el.val());
+        var row = el.parent().parent();
+        var expressions = parseInt(row.find('.expressions').html());
+        var signups = parseInt(row.find('.signups').html());
+        row.find('.views_per_expression').html((views/expressions).toFixed(0));
+        row.find('.signup_per_view').html((signups/views * 100).toPrecision(2) + "%");
+      };
+      $(function(){
+        $('input[type=text]').change(update_row);
+      });
+    </script>
+    {{super()}}
+{% endblock head %}
+
+{% block header %}
+<h1>Funnel 2</h1>
+{% endblock header %}
+
+{% block table_head %}
+  <tr>
+    <th>Views</th>
+    <th>Week of</th>
+    {% for item in 'Users', 'Expressions', 'Signups on Expressions', 'New accounts from signups on expressions', 'Expression/User', 'Views/Expression', 'Signups/View', 'New Accounts/Signup'%}
+    <th>{{item}}</th>
+    {% endfor %}
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+{% for item in data | dictsort %}
+  <tr>
+    <td><input type="text"/></td>
+    <td data-type="epoch_date_utc">{{item[0]}}</td>
+    {% for attr in 'users', 'expressions', 'signups', 'new_accounts' %}
+    <td class="{{attr}}">{{item[1][attr]}}</td>
+    {% endfor %}
+    <td class='exp_per_user'>{{(item[1]['expressions'] / item[1]['users'] )| round(2)}}</td>
+    <td class='views_per_expression'></td>
+    <td class='signup_per_view'></td>
+    <td class='new_account_per_signup'>{{(item[1]['new_accounts'] / item[1]['signups'] * 100) | round(1) if item[1]['signups']}}%</td>
+  </tr>
+{% endfor %}
+{% endblock %}
+
+{% block content %}
+{{super()}}
+{% set data = monthly %}
+<table class="tablesorter" style="width: 100%">
+  <thead>
+  <tr>
+    <th>Views</th>
+    <th>Month of</th>
+    {% for item in 'Users', 'Expressions', 'Signups on Expressions', 'New accounts from signups on expressions', 'Expression/User', 'Views/Expression', 'Signups/View', 'New Accounts/Signup'%}
+    <th>{{item}}</th>
+    {% endfor %}
+  </tr>
+</tbody>
+  <tbody>
+  {% for item in data | dictsort %}
+  <tr>
+    <td><input type="text"/></td>
+    <td data-type="epoch_date_utc">{{item[0]}}</td>
+    {% for attr in 'users', 'expressions', 'signups', 'new_accounts' %}
+    <td class="{{attr}}">{{item[1][attr]}}</td>
+    {% endfor %}
+    <td class='exp_per_user'>{{(item[1]['expressions'] / item[1]['users'] )| round(2)}}</td>
+    <td class='views_per_expression'></td>
+    <td class='signup_per_view'></td>
+    <td class='new_account_per_signup'>{{(item[1]['new_accounts'] / item[1]['signups'] * 100) | round(1) if item[1]['signups']}}%</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}

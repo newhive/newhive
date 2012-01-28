@@ -285,6 +285,7 @@ class User(Entity):
         self.set_password(self['password'])
         self['fullname'] = self.get('fullname', self['name'])
         self['referrals'] = 0
+        self['flags'] = {}
         assert self.has_key('referrer')
         return super(User, self).create()
 

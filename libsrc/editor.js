@@ -75,7 +75,8 @@ Hive.Apps = function(initial_state) {
     }
     
     o.remove = function(app) {
-        app.unfocus();
+        try { app.unfocus(); }
+        catch(e) { }
         array_delete(o, app);
         array_delete(o.stack, app);
     }

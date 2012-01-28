@@ -112,7 +112,32 @@ class AnalyticsController(ApplicationController):
         response.context['data'] = json.dumps({'days_ago': days_ago, 'timeslice': timeslice})
         return self.serve_page(response, 'pages/analytics/last_login.html')
 
-    #else:
+    def funnel2(self, request, response, args={}):
+        def subroutine(res_dict, time0, time1):
+            res_dict[time0] = analytics.funnel2(self.db.mdb, time0, time1)
+        weekly = {}
+        start = date_to_epoch(2011, 11, 6)
+        week = 3600*24*7
+        now = time.time()
+        i = 0
+        while (start + i*week < now):
+            subroutine(weekly, start + i*week, start + (i+1)*week)
+            i += 1
+        monthly = {}
+        y0 = 2011; m0 = 11;
+        while (date_to_epoch(y0,m0,1) < now):
+            if m0 == 12: m1 = 1; y1 = y0 + 1
+            else: m1 = m0 + 1; y1 = y0
+            subroutine(monthly, date_to_epoch(y0,m0,1), date_to_epoch(y1,m1,1))
+            y0 = y1; m0 = m1
+        response.context['data'] = weekly
+        response.context['monthly'] = monthly
+        return self.serve_page(response, 'pages/analytics/funnel2.html')
+
+    def signups_per_hour(self, request, response, args={}):
+        response.context['data'] = json.dumps(analytics.contacts_per_hour(self.db.mdb))
+        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
+     #else:
     #    return serve_404(self, request, response)
 
 

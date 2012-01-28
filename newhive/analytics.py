@@ -1,4 +1,5 @@
 import state, time, datetime, re
+from state import now
 
 def shared_user_data(result, start=None):
     custom_counts = {}
@@ -119,3 +120,38 @@ def app_count():
             else:
                 rv[type] = 1
     return rv
+
+def funnel2(db, start, end):
+    avg_users = (db.user.find({'created': {'$lt': start}}).count() + db.user.find({'created': {'$lt': end}}).count()) / 2
+
+    user_ids = [user['_id'] for user in db.user.find({'created': {'$lt': end}}, {'_id': True})]
+    exprs0 = db.expr.find({'created': {'$lt': start}, 'owner': {'$in': user_ids}, 'apps': {'$exists': True}}).count()
+    user_ids = [user['_id'] for user in db.user.find({'created': {'$lt': start}}, {'_id': True})]
+    exprs1 = db.expr.find({'created': {'$lt': end}, 'owner': {'$in': user_ids}, 'apps': {'$exists': True}}).count()
+    avg_exprs = (exprs0 + exprs1) / 2
+
+    db.contact_log.find({}).count()
+    signups = db.contact_log.find({'url': re.compile('[a-zA-Z0-9_]+\.thenewhive.com/(?!expressions)'), 'created': {'$lt': end, '$gt': start}})
+
+    referral_ids = [s.get('referral_id') for s in signups]
+    accounts_created = db.referral.find({'_id': {'$in': referral_ids}, 'user_created': {'$exists': True}})
+
+    return {'users': avg_users
+            , 'expressions': avg_exprs
+            , 'signups': signups.count()
+            , 'new_accounts': accounts_created.count()
+    }
+
+def contacts_per_hour(db, end=now()):
+    import pandas
+    end = datetime.datetime.fromtimestamp(end)
+    end = end.replace(minute=0, second=0, microsecond=0)
+    hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=1), periods=80)
+    contacts = db.contact_log.find({'created':{'$gt': time.mktime(hourly[0].timetuple())}}, {'created': True})
+    contact_times = sorted([datetime.datetime.utcfromtimestamp(c['created']) for c in contacts])
+    data = pandas.Series(1, contact_times)
+    data = pandas.Series(data.groupby(hourly.asof).sum())
+
+    return {  'times': [time.mktime(x.timetuple()) for x in data.index.tolist()]
+            , 'values': data.values.tolist()
+            }
