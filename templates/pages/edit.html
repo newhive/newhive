@@ -16,6 +16,7 @@ input, textarea { font-size : inherit }
 .drawer { z-index : 1100, white-space : nowrap;  }
 
 .fontsize .option { color : {{ colors[12] }}; vertical-align : bottom; }
+.menu label { color: {{colors[18]}}; }
 .fontsize .bigger .option.small { width : 70px; height : 135px; }
 .fontsize .option:hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }} }
 .drawer.fontname .option:hover { background-color : {{ colors['selected'] }}; }
@@ -52,6 +53,14 @@ input, textarea { font-size : inherit }
  <div id='menu_image' class='menu medbold'>
   <div id='image_upload' class='menu_item'>Upload image</div>
   <div id='image_background' class='menu_item'>Background</div>
+  <div id='image_from_url' class='menu_item'>Image URL</div>
+  <div id='image_embed_submenu' style='text-align: center; padding-bottom: 7px;'>
+    <textarea id='embed_code' class='embed_box' style='width : 325px; height: 1.2em;' alt='{{ui.image_embed_textarea}}'></textarea>
+    <div class='spacer'></div>
+    <!--<input type='checkbox' id='image_embed_as_background' name='image_embed_as_background' value='image_embed_as_background'/>
+    <label for='image_embed_as_background'>{{ui.image_embed_as_background}}</label>-->
+    <input id='embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
+  </div>
   <!--<div id='image_webcam' class='menu_item'>Take picture</div>
   <div id='image_search' class='menu_item'>Google images</div>-->
  </div>
@@ -65,13 +74,13 @@ input, textarea { font-size : inherit }
   <div class='menu_item menu_hover'>Upload file to link</div>
  </div>
  
- <div id='menu_embed' class='menu' style='padding : .5em; width : 16em;'>
+ <div id='menu_embed' class='menu' style='padding : .5em;'>
   <span class='medbold'>Embed:</span><br>
   <div class='spacer'></div>
   <div class='description'>{{ ui.embed_code_description }}</div>
-  <textarea id='embed_code' style='width : 14em; height : 2.25em;' alt='{{ui.embed_code_textarea}}'></textarea>
+  <textarea id='embed_code' class='embed_box' style='width : 14em; height : 2.25em;' alt='{{ui.embed_code_textarea}}'></textarea>
   <div class='spacer'></div>
-  <div style='text-align : center'><input id='embed_done' type='submit' class='btn black rounded' value='Enter'></div>
+  <div style='text-align : center'><input id='embed_done' type='submit' class='btn black rounded embed_button' value='Enter'></div>
  </div>
  
  <div id='menu_shape' class='menu medbold'>

@@ -988,6 +988,9 @@ var main = function() {
     $('#insert_file' ).click(pick_file);
     $('#menu_file'   ).click(pick_file);
 
+    hover_menu($('#image_from_url'), $('#image_embed_submenu'));
+    $('#image_embed_submenu').children().not('#embed_done').add('#image_from_url').click(function(e){e.stopPropagation();});
+
     hover_menu($('#insert_text'), $('#menu_text'));
     hover_menu($('#insert_image'), $('#menu_image'));
     hover_menu($('#insert_audio'), $('#menu_audio'));
