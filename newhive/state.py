@@ -658,6 +658,7 @@ class File(Entity):
 
         url = None
         if config.aws_id:
+            dict.update(self, s3_bucket=random.choice(config.s3_buckets))
             url = self.store_aws(self._file, self.id, urllib.quote_plus(self['name'].encode('utf8')))
             dict.update(self, url=url)
             if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
