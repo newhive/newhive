@@ -14,13 +14,14 @@ class StarController(ApplicationController):
         if request.form.get('action') == "star":
             s = self.db.Star.new(request.requester, entity)
             if s or s.get('entity'):
-              return 'starred'
+                response.context['user'] = request.requester
+                return self.render_template(response, 'partials/user_card.html')
             else:
-              return False
+                return False
         else:
            s = self.db.Star.find(dict(initiator=request.requester.id, entity=entity.id))
            if s:
                res = s.delete()
-               if not res['err']: return 'unstarred'
+               if not res['err']: return {'unstarred': request.requester.id}
            else:
-               return 'unstarred'
+               return {'unstarred': request.requester.id}
