@@ -843,6 +843,13 @@ class Referral(Entity):
         self['key'] = junkstr(16)
         return super(Referral, self).create()
 
+    @property
+    def url(self):
+        url = abs_url(secure=True) + 'signup?key=' + self.get('key')
+        if self.get('email'): url += '&email=' + self['email']
+        return url
+
+
 
 @Database.register
 class Contact(Entity):

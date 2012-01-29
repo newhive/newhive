@@ -53,7 +53,7 @@ def mail_invite(jinja_env, db, email, name=False, force_resend=False):
 
     context = {
         'name': name
-        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + email)
+        ,'url': referral.url
         }
     body = {
          'plain': jinja_env.get_template("emails/invitation.txt").render(context)
