@@ -22,12 +22,16 @@
                 });
         };
         chart = plot(data.dates, data.counts);
+        $('input[name=scaling]').change(function(e){ 
+            if ($(e.target).val() == "linear") chart = plot(data.dates, data.counts);
+            else if ($(e.target).val() == "log") chart = plot(data.dates, data.counts_log);
+        });
     });
 </script>
 {% endblock head %}
 
 {% block header %}
-<h1>{{title}}</h1>
+<h1 style="margin-bottom: 0;">{{title}}</h1><div style="margin-bottom: 10px;"><input type="radio" name="scaling" value="linear" checked="1"/>Linear &nbsp;&nbsp;&nbsp;<input type="radio" name="scaling" value="log"/>Log</div>
 <div style="width: 95%; height: 600px;" id="canvas"></div>
 {% endblock %}
 
