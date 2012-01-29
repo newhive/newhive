@@ -86,8 +86,10 @@ function post_update() {
 
 $(document).ready(function(){
   {% if update %}
-  var update = true;
-  {% else %} {% endif %}
+      var update = true;
+  {% else %} 
+      var update = false;
+  {% endif %}
   $('#name').blur(function(){
     user_check($(this).val());
   });
