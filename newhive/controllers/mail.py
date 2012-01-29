@@ -67,15 +67,15 @@ class MailController(ApplicationController):
             ,'Reply-to' : request.requester.get('email', '')
             }
         body = {
-             'plain': render_template(response, "emails/share.txt")
-            ,'html': render_template(response, "emails/share.html")
+             'plain': self.render_template(response, "emails/share.txt")
+            ,'html': self.render_template(response, "emails/share.html")
             }
         send_mail(heads, body)
         self.db.ActionLog.new(request.requester, 'share', data=log_data)
         if request.form.get('send_copy'):
             heads.update(To = request.requester.get('email', ''))
             send_mail(heads, body)
-        return redirect(response, request.form.get('forward'))
+        return self.redirect(response, request.form.get('forward'))
 
     def mail_referral(self, request, response):
         user = request.requester
