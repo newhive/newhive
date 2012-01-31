@@ -547,26 +547,27 @@ input[type="text"].copy, textarea.copy {
 #dia_comments .text {
   min-height: 40px;
   margin: 0 0 10px 0;
+  white-space: pre-wrap;
 }
 
-/* line 250, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 251, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .author, #dia_comments .age {
   font-size: 20px;
   margin: 0;
 }
 
-/* line 254, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 255, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .author {
   color: blue;
   float: left;
 }
 
-/* line 258, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 259, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .age {
   float: right;
 }
 
-/* line 261, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 262, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .comment_thumb {
   width: 70px;
   height: 70px;
@@ -575,12 +576,12 @@ input[type="text"].copy, textarea.copy {
   margin-right: 10px;
 }
 
-/* line 269, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 270, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_password_recovery {
   padding: 0px 35px 22px 35px;
 }
 
-/* line 274, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 275, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_thumbnail .thumb {
   -moz-border-radius: 7px;
   -webkit-border-radius: 7px;
@@ -591,7 +592,7 @@ input[type="text"].copy, textarea.copy {
   background-color: #EEEEEE;
   cursor: pointer;
 }
-/* line 276, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 277, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_thumbnail .thumb img {
   -moz-border-radius: 7px;
   -webkit-border-radius: 7px;
@@ -600,7 +601,7 @@ input[type="text"].copy, textarea.copy {
   -khtml-border-radius: 7px;
   border-radius: 7px;
 }
-/* line 279, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 280, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_thumbnail .thumb img:hover {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=75);
   opacity: 0.75;
