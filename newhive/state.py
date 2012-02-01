@@ -1,4 +1,4 @@
-import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass
+import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
@@ -41,15 +41,15 @@ class Database:
         for col in self.collections:
             setattr(self, col.entity.__name__, col)
             for index in col.entity.indexes:
-                (key, opts) = index if isinstance(index, tuple) else (index, {})
-                key = map(lambda a: (a, 1), [key] if not isinstance(key, list) else key)
+                (key, opts) = index if type(index) == tuple and type(index[1]) == dict else (index, {})
+                key = map(lambda a: a if type(a) == tuple else (a, 1), [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
 
 class Collection(object):
     def __init__(self, db, entity):
         self.db = db
         self._col = db.mdb[entity.cname]
-        self.entity = entity
+        if(not hasattr(self, 'entity')) self.entity = entity
 
     def fetch(self, key, keyname='_id'):
         return self.find({keyname : key })
@@ -243,6 +243,38 @@ class Entity(dict):
                 else: return None
         else: raise "argument must be a mongodb spec dicionary or a list of object ids"
 
+
+@Database.register
+class KeyWords(Entity):
+    cname = 'key_words'
+    indexes = [ ['words', ('weight', -1)], 'doc' ]
+    classes = { 'Expr' : Expr, 'User' : User }
+
+    class Collection(Collection):
+        def set_words(self, doc, texts):
+            """ Takes a dictionary of { weight : text } pairs """
+
+            assert(type(doc) in classes.values())
+            self._col.delete({ 'doc' : doc.id })
+            for (weight, text) in texts.items():
+                words = normalize(text)
+                self._col.insert({ 'words':words, 'weight':weight, 'doc':doc.id, doc_type:doc.__class__.__name__ })
+
+        def init(self, doc):
+            return classes[doc['doc_type']](doc)
+
+        def search(self, text)
+            words = normalize(text)
+            cursor = self.search({'words' = words}, sort=[('weight', -1)])
+
+def searchable(entity):
+
+class Searchable():
+    @property
+    def search_text(self):
+        raise exceptions.NotImplementedError('Must be overridden by specific class method')
+
+
 @Database.register
 class User(Entity):
     cname = 'user'
@@ -350,9 +382,8 @@ def media_path(user, f_id=None):
     return joinpath(p, f_id) if f_id else p
 
 @Database.register
-class Expr(Entity):
+class Expr(Entity, Searchable):
     cname = 'expr'
-
     indexes = [
          (['domain', 'name'], {'unique':True})
         ,['owner', 'updated']
@@ -360,7 +391,6 @@ class Expr(Entity):
         ,'tags_index'
         ,'random'
     ]
-
     counters = ['owner_views', 'views', 'emails']
     _owner = None
 
@@ -539,6 +569,10 @@ class Expr(Entity):
     share_count = property(get_share_count)
 
     public = property(lambda self: self.get('auth') == "public")
+
+    def search_keys(self):
+        return self.tags_index
+    #search_keys = property(search_keys)
 
 
 def generate_thumb(file, size):
