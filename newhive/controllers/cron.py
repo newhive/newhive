@@ -41,9 +41,7 @@ class CronController(ApplicationController):
             elif item.get('entity_class') == "Expr":
                 recipient = item.entity.owner
             if not item.initiator.id == recipient.id:
-                dry_run = config.debug_mode and not recipient.get('name') in config.admins
-                print [recipient.get('name'), dry_run]
-                headers = newhive.mail.mail_feed(self.jinja_env, item, recipient, dry_run = True)
+                headers = newhive.mail.mail_feed(self.jinja_env, item, recipient, dry_run = False)
                 logfile.write('\n' + time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(time.time())) + " " * 4 + headers['To'] + ' ' * ( 50 - len(headers['To']) )  + headers['Subject'] )
         logfile.close()
 
