@@ -205,10 +205,11 @@ class Entity(dict):
             try:
                 spec = {'updated':{'$lt': self['updated']}}
                 spec.update(shared_spec)
-                return self.collection.new(self._col.find(spec).hint([('updated', -1)]).limit(1)[0])
+                cur = self._col.find(spec).sort([('updated', -1)]).limit(1)
+                return self.collection.new(cur[0])
             except IndexError:
                 if loop:
-                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
+                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated', -1)]).limit(1)[0])
                     except IndexError: return None
                 else: return None
         elif type(spec) == list:
@@ -227,7 +228,8 @@ class Entity(dict):
             try:
                 spec = {'updated':{'$gt': self['updated']}}
                 spec.update(shared_spec)
-                return self.collection.new(self._col.find(spec).hint([('updated', 1)]).limit(1)[0])
+                cur = self._col.find(spec).sort([('updated', 1)]).limit(1)
+                return self.collection.new(cur[0])
             except IndexError:
                 if loop:
                     try: return self.collection.new(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
