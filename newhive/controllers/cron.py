@@ -1,5 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
+from newhive.utils import now
 import newhive.mail
 
 class CronController(ApplicationController):
@@ -16,27 +17,33 @@ class CronController(ApplicationController):
 
         t = datetime.now()
         crontab = [
-                ("*/2 *", "email_star", {'delay': 1, 'frequency': 2})
+                ("* *", "email_star", {'delay': 1, 'frequency': 1})
                 ]
 
+        log = "Cron ran the following commands: "
         for entry in crontab:
             if self._cronmatch(t, entry[0]):
+                log = log + entry[1] + ", "
                 getattr(self, entry[1])(entry[2])
+
+        return self.serve_json(response, log + "\n")
 
 
     def email_star(self, opts):
-        logfile = open(os.path.dirname(config.src_home + '/log/email_star.log', 'a'))
+        logfile = open(config.src_home + '/log/email_star.log', 'a')
         start = opts.get('delay') + opts.get('frequency')
         end = opts.get('delay')
         items = self.db.Star.search(
-                {'created': {"$gt": now() - 60 * start, "$lt": now() - 60 * end})
+                {'created': {"$gt": now() - 60 * start, "$lt": now() - 60 * end}})
         for item in items:
             if item.get('entity_class') == "User":
                 recipient = item.entity
             elif item.get('entity_class') == "Expr":
                 recipient = item.entity.owner
             if not item.initiator.id == recipient.id:
-                headers = newhive.mail.mail_feed(self.jinja_env, item, recipient, dry_run=False)
+                dry_run = config.debug_mode and not recipient.get('name') in config.admins
+                print [recipient.get('name'), dry_run]
+                headers = newhive.mail.mail_feed(self.jinja_env, item, recipient, dry_run = True)
                 logfile.write('\n' + time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(time.time())) + " " * 4 + headers['To'] + ' ' * ( 50 - len(headers['To']) )  + headers['Subject'] )
         logfile.close()
 
