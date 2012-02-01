@@ -270,6 +270,11 @@ class User(Entity):
     class Collection(Collection):
         def named(self, name): return self.find({'name' : name})
         def get_root(self): return self.named('root')
+        root_user = property(get_root)
+
+        @property
+        def site_user(self):
+            return self.named(config.site_user)
 
     def __init__(self, *a, **b):
         super(User, self).__init__(*a, **b)
@@ -292,7 +297,7 @@ class User(Entity):
         return super(User, self).create()
 
     def new_referral(self, d):
-        if self.get('referrals', 0) > 0 or self == get_root():
+        if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
             self.update(referrals=self['referrals'] - 1)
             d.update(user = self.id)
             return self.db.Referral.create(d)
