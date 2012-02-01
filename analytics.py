@@ -145,8 +145,8 @@ def funnel2(start, end):
 def contacts_per_hour(end=now()):
     import pandas
     end = datetime.datetime.fromtimestamp(end)
-    end = end.replace(minute=0, second=0, microsecond=0)
-    hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=1), periods=80)
+    end = end.replace(hour=8, minute=0, second=0, microsecond=0)
+    hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=24), periods=30)
     contacts = state.db.contact_log.find({'created':{'$gt': time.mktime(hourly[0].timetuple())}}, {'created': True})
     contact_times = sorted([datetime.datetime.utcfromtimestamp(c['created']) for c in contacts])
     data = pandas.Series(1, contact_times)
