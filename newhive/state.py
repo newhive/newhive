@@ -400,7 +400,7 @@ class Expr(Entity):
 
         def random(self):
             rand = random.random()
-            return cls.find(dict(random = {'$gte': rand}, auth='public', apps={'$exists': True}))
+            return self.find(dict(random = {'$gte': rand}, auth='public', apps={'$exists': True}))
 
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
