@@ -66,6 +66,7 @@ class MailController(ApplicationController):
             ,'Subject' : request.form.get('subject', '')
             ,'Reply-to' : request.requester.get('email', '')
             }
+
         body = {
              'plain': self.render_template(response, "emails/share.txt")
             ,'html': self.render_template(response, "emails/share.html")

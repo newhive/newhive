@@ -988,15 +988,18 @@ var main = function() {
     $('#insert_file' ).click(pick_file);
     $('#menu_file'   ).click(pick_file);
 
-    hover_menu($('#image_from_url'), $('#image_embed_submenu'));
-    $('#image_embed_submenu').children().not('#embed_done').add('#image_from_url').click(function(e){e.stopPropagation();});
+    var image_menu = hover_menu($('#insert_image'), $('#menu_image'), { click_persist : $('#image_embed_code'), auto_close: false});
+    var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'), { click_persist : $('#image_embed_code'), auto_close: false});
+    //$('#image_embed_submenu').children().not('#embed_done').add('#image_from_url').click(function(e){e.stopPropagation();});
+    $('#image_embed_done').click(function() { Hive.embed_code('#image_embed_code'); image_embed_menu.close(); image_menu.close(); });
 
     hover_menu($('#insert_text'), $('#menu_text'));
-    hover_menu($('#insert_image'), $('#menu_image'));
     hover_menu($('#insert_audio'), $('#menu_audio'));
     hover_menu($('#insert_file'), $('#menu_file'));
+
     var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code'), auto_close : false } );
-    $('#embed_done').click(function() { Hive.embed_code(); embed_menu.close(); });
+    $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
+
     hover_menu($('#insert_shape'), $('#menu_shape'));
     $('#insert_shape,#shape_rectangle').click(function(e) {
         Hive.new_app({ type : 'hive.rectangle', content : { color : colors[24],
@@ -1107,8 +1110,8 @@ $(main);
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to Hive.new_app.
-Hive.embed_code = function() {
-    var c = $('#embed_code').val().trim(), app;
+Hive.embed_code = function(element) {
+    var c = $(element).val().trim(), app;
 
     if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/)))
         app = { type : 'hive.html', content : 
@@ -1131,7 +1134,7 @@ Hive.embed_code = function() {
                 else { var app = data; }
                 Hive.upload_finish();
                 Hive.new_app(app);
-                $('#embed_code').val('');
+                $(element).val('');
             }
         }
         Hive.upload_start();
@@ -1160,7 +1163,7 @@ Hive.embed_code = function() {
     }
 
     Hive.new_app(app);
-    $('#embed_code').val('');
+    $(element).val('');
 } 
 
 Hive.upload_start = function() { center($('#loading').show()); }

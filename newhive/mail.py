@@ -36,7 +36,10 @@ def send_mail(headers, body):
     g.flatten(msg)
     encoded_msg = io.getvalue()
 
-    return smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
+    if config.debug_mode and not msg['To'] in config.admin_emails:
+        print "Not sending mail to %s in debug mode" % (msg['To'])
+    else:
+        return smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
 
 
 def mail_invite(jinja_env, db, email, name=False, force_resend=False):

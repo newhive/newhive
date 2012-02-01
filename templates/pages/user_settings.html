@@ -8,11 +8,13 @@ function user_check(user_name){
   var n = $('#name').val().trim().toLowerCase();
   $('#name').val(n);
   if( $('#name').val().length < 3 ) {
-      $('#name_availability').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');
+      $('#name_availability').html("Sorry, that username isn't available")
+                             .show().removeClass('valid').addClass('invalid');
       return false;
   }
   if( ! n.match(/^[a-z][a-z0-9]{2,}$/i) ) {
-      $('#name_availability').html("Username must be only letters and numbers, and start with a letter (no spaces or punctuation, thank you).").show().removeClass('valid').addClass('invalid');
+      $('#name_availability').html("Username must be only letters and numbers, and start with a letter (no spaces or punctuation, thank you).")
+                             .show().removeClass('valid').addClass('invalid');
       return false;
   }
 
@@ -22,12 +24,15 @@ function user_check(user_name){
     data: {action: "user_check", name: user_name},
     success: function(data){
       if (data) {
-        $('#name_availability').html("Your website will be:<br><code>" + user_name + ".{{ server_name }}</code>").show().addClass('valid').removeClass('invalid');
+          $('#name_availability').html("Your website will be:<br><code>" + user_name + ".{{ server_name }}</code>")
+                                 .show().addClass('valid').removeClass('invalid');
       } else {
-        $('#name_availability').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');
+          $('#name_availability').html("Sorry, that username isn't available")
+                                 .show().removeClass('valid').addClass('invalid');
       }
     },
-    error: function(){$('#name_unavailable').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');}
+    error: function(){$('#name_unavailable').html("Sorry, that username isn't available")
+                                            .show().removeClass('valid').addClass('invalid');}
   });
 }
 
@@ -73,6 +78,15 @@ function validate(opts) {
             return false;
         }
     }
+
+    var age = $('#age').val();
+    if (age){
+        if (!age.match(/^\d+$/) || parseInt(age) < 13 || parseInt(age) > 122){
+            alert('Age must be a number between 13 and 122');
+            return false;
+        }
+    }
+
     return true;
 };
 
@@ -107,66 +121,85 @@ $(document).ready(function(){
  </div>
 
  <form id='form' method='POST'>
-  <div style='margin : 0 auto; width : 80%;'>
-   <div style='float : left; clear : both; text-align:left; margin : 0 25px 50px 50px; vertical-align : top'>
-    <input type='hidden' name='action' value='{{"user_update" if update else "user_create"}}'>
-  
-    <b>Username</b><br>
-    <input id='name' type='text' name='name' value='{{f.name}}' {{'disabled="disabled"' if update}}><br>
-    {# if update %}
-    <div class="user_name_change_text">If you want to change your username and associated domain, please email <a href="mailto:info@thenewhive.com">info@thenewhive.com</a></div>
-    {% endif #}
-    <div class="form_validation_info" id="name_availability" style="display:none">Sorry, that name isn't available</div>
-    <br>
-  
-    <b>Display Name</b><br>
-    <input type='text' name='fullname' value='{{f.fullname}}'><br>
-    <br>
-  
-    {% if update %}
-    <b>Current Password</b> <span class='required'>*required</span><br>
-    <input id='p0' type='password' name='old_password' value='{{f.secret}}'><br>
-    <br>
-    {% endif %}
+   <div style='margin : 0 auto; width : 80%;'>
+     <div style='float : left; clear : both; text-align:left; margin : 0 25px 50px 50px; vertical-align : top'>
+       <input type='hidden' name='action' value='{{"user_update" if update else "user_create"}}'>
+   
+       <b>Username</b><br>
+       <input id='name' type='text' name='name' value='{{f.name}}' {{'disabled="disabled"' if update}}><br>
+       {# if update %}
+       <div class="user_name_change_text">If you want to change your username and associated domain, please email <a href="mailto:info@thenewhive.com">info@thenewhive.com</a></div>
+       {% endif #}
+       <div class="form_validation_info" id="name_availability" style="display:none">Sorry, that name isn't available</div>
+       <br>
+   
+       <b>Display Name</b><br>
+       <input type='text' name='fullname' value='{{f.fullname}}'><br>
+       <br>
+   
+       {% if update %}
+       <b>Current Password</b> <span class='required'>*required</span><br>
+       <input id='p0' type='password' name='old_password' value='{{f.secret}}'><br>
+       <br>
+       {% endif %}
 
-    <b>{{'New ' if update}}Password</b><br>
-    <input id='p1' type='password' name='password' value='{{f.secret}}'><br>
-    <br>
+       <b>{{'New ' if update}}Password</b><br>
+       <input id='p1' type='password' name='password' value='{{f.secret}}'><br>
+       <br>
 
-    <b>Repeat {{'New ' if update}}Password</b><br>
-    <input id='p2' type='password' value='{{f.secret}}'><br>
-    <br>
-    
-    <b>Email</b><br>
-    <input type='text' name='email' value='{{q.email if q.email else f.email}}'><br>
-    <br>
-    </div><div style='float : left; margin : 0 0 50px 100px; vertical-align : top'>
-    {% if not update %}
-    <b class='error'>Terms of Service</b><br>
-    <br>
+       <b>Repeat {{'New ' if update}}Password</b><br>
+       <input id='p2' type='password' value='{{f.secret}}'><br>
+       <br>
+       
+       <b>Email</b><br>
+       <input type='text' name='email' value='{{q.email if q.email else f.email}}'><br>
+       <br>
 
-    <b>
-     <span class='inactive'>1.</span> You own your information<br>
-     <span class='inactive'>2.</span> We'll never put ads on your expressions<br>
-     <span class='inactive'>3.</span> Have fun<br>
-     <span class='inactive'>4.</span> Don't be mean or obscene<br>
-     <span class='inactive'>5.</span> Encourage expression<br>
-    </b><br>
+       {% if not update %}
+       Optional:<br/>
+       <div id="gender_wrapper">
+         <b>Gender</b><br>
+         <select name="gender">
+           <option value=""></option>
+           <option value="M">Male</option>
+           <option value="F">Female</option>
+           <option value="O">Other/NA</option>
+         </select>
+         <br>
+       </div>
 
-    <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
-    <br>
-    
-    <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
-    <br>
-    <br>
-    {% endif %}
-  
-    {% if update %}
-      <input class='black btn rounded' type='submit' value='Update Profile' >
-    {% else %}
-      <input class='black btn rounded' type='submit' value='Create Account'>
-    {% endif %}
+       <b>Age</b><br>
+       <input id='age' type='text' name='age' value='{{q.age if q.age else f.age}}'><br>
+       <br>
+       {% endif %}
+     </div>
+     <div style='float : left; margin : 0 0 50px 100px; vertical-align : top'>
+       {% if not update %}
+       <b class='error'>Terms of Service</b><br>
+       <br>
+
+       <b>
+        <span class='inactive'>1.</span> You own your information<br>
+        <span class='inactive'>2.</span> We'll never put ads on your expressions<br>
+        <span class='inactive'>3.</span> Have fun<br>
+        <span class='inactive'>4.</span> Don't be mean or obscene<br>
+        <span class='inactive'>5.</span> Encourage expression<br>
+       </b><br>
+
+       <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
+       <br>
+       
+       <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
+       <br>
+       <br>
+       {% endif %}
+   
+       {% if update %}
+         <input class='black btn rounded' type='submit' value='Update Profile' >
+       {% else %}
+         <input class='black btn rounded' type='submit' value='Create Account'>
+       {% endif %}
+     </div>
    </div>
-  </div>
  </form>
 {% endblock %}
