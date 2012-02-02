@@ -11,7 +11,7 @@ aws_id          = False
 aws_secret      = False
 s3_buckets      = []
 
-admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach']
+admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack']
 admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
                    'cara@thenewhive.com', 'zach@thenewhive.com',
                    'duffy@thenewhive.com', 'info@thenewhive.com',
