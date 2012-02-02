@@ -51,6 +51,7 @@ class ApplicationController(object):
             ,assets_env = self.assets_env
             ,use_ga = config.use_ga
             ,ui = ui
+            ,template = template
             )
         context.setdefault('icon', '/lib/skin/1/logo.png')
         return self.jinja_env.get_template(template).render(context)
