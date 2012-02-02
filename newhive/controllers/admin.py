@@ -26,6 +26,7 @@ class AdminController(ApplicationController):
 
     def tags(self, request, response):
         popular_tags = self.db.Expr.popular_tags()
+        response.context['featured_tags'] = self.db.User.site_user['config']['featured_tags']
         response.context['popular_tags'] = popular_tags[0:100]
         return self.serve_page(response, 'pages/admin/tags.html')
 
@@ -84,12 +85,17 @@ class AdminController(ApplicationController):
         for k in ['tags', 'tagged']:
             v = json.loads(request.form.get(k))
             if v: self.db.User.get_root().update(**{ k : v })
+        featured_tags = json.loads(request.form.get('featured_tags'))
+        site_user = self.db.User.site_user
+        site_user['config']['featured_tags'] = featured_tags
+        site_user.save()
 
     def home(self, request, response):
         root = self.db.User.get_root()
         if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         response.context['tags_js'] = json.dumps(root.get('tags'))
         response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
+        response.context['featured_tags_js'] = json.dumps(self.db.User.site_user['config']['featured_tags'])
 
         # TODO: revamp the admin home page so we can interactively click expressions to add to featured, etc
         #expr_home_list(p2, request, response, limit=900) 
