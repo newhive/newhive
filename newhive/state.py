@@ -49,7 +49,7 @@ class Collection(object):
     def __init__(self, db, entity):
         self.db = db
         self._col = db.mdb[entity.cname]
-        if(not hasattr(self, 'entity')) self.entity = entity
+        self.entity = entity
 
     def fetch(self, key, keyname='_id'):
         return self.find({keyname : key })
@@ -248,7 +248,7 @@ class Entity(dict):
 class KeyWords(Entity):
     cname = 'key_words'
     indexes = [ ['words', ('weight', -1)], 'doc' ]
-    classes = { 'Expr' : Expr, 'User' : User }
+    #classes = { 'Expr' : Expr, 'User' : User }
 
     class Collection(Collection):
         def set_words(self, doc, texts):
@@ -263,11 +263,11 @@ class KeyWords(Entity):
         def init(self, doc):
             return classes[doc['doc_type']](doc)
 
-        def search(self, text)
+        def search(self, text):
             words = normalize(text)
-            cursor = self.search({'words' = words}, sort=[('weight', -1)])
+            cursor = self.search({'words':words}, sort=[('weight', -1)])
 
-def searchable(entity):
+#def searchable(entity):
 
 class Searchable():
     @property
