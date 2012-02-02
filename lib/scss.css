@@ -547,26 +547,27 @@ input[type="text"].copy, textarea.copy {
 #dia_comments .text {
   min-height: 40px;
   margin: 0 0 10px 0;
+  white-space: pre-wrap;
 }
 
-/* line 250, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 251, /home/abram/newhive/libsrc/scss/dialogs.scss */
 #dia_comments .author, #dia_comments .age {
   font-size: 20px;
   margin: 0;
 }
 
-/* line 254, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 255, /home/abram/newhive/libsrc/scss/dialogs.scss */
 #dia_comments .author {
   color: blue;
   float: left;
 }
 
-/* line 258, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 259, /home/abram/newhive/libsrc/scss/dialogs.scss */
 #dia_comments .age {
   float: right;
 }
 
-/* line 261, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 262, /home/abram/newhive/libsrc/scss/dialogs.scss */
 #dia_comments .comment_thumb {
   width: 70px;
   height: 70px;
@@ -575,12 +576,12 @@ input[type="text"].copy, textarea.copy {
   margin-right: 10px;
 }
 
-/* line 269, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 270, /home/abram/newhive/libsrc/scss/dialogs.scss */
 #dia_password_recovery {
   padding: 0px 35px 22px 35px;
 }
 
-/* line 274, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 275, /home/abram/newhive/libsrc/scss/dialogs.scss */
 #dia_thumbnail .thumb {
   -moz-border-radius: 7px;
   -webkit-border-radius: 7px;
@@ -591,7 +592,7 @@ input[type="text"].copy, textarea.copy {
   background-color: #EEEEEE;
   cursor: pointer;
 }
-/* line 276, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 277, /home/abram/newhive/libsrc/scss/dialogs.scss */
 #dia_thumbnail .thumb img {
   -moz-border-radius: 7px;
   -webkit-border-radius: 7px;
@@ -600,7 +601,7 @@ input[type="text"].copy, textarea.copy {
   -khtml-border-radius: 7px;
   border-radius: 7px;
 }
-/* line 279, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 280, /home/abram/newhive/libsrc/scss/dialogs.scss */
 #dia_thumbnail .thumb img:hover {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=75);
   opacity: 0.75;
@@ -674,37 +675,49 @@ input[type="text"].copy, textarea.copy {
 }
 /* line 27, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.user.tag_4 {
-  background-color: #7ba009;
+  background-color: #f9a819;
 }
 /* line 28, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.user.tag_5 {
-  background-color: #13a507;
+  background-color: #7ba009;
 }
 /* line 29, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.user.tag_6 {
-  background-color: #2d6a5d;
+  background-color: #13a507;
 }
 /* line 30, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.user.tag_7 {
-  background-color: #698293;
+  background-color: #069674;
 }
 /* line 31, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.user.tag_8 {
-  background-color: #9196a7;
+  background-color: #2d6a5d;
 }
 /* line 32, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.user.tag_9 {
-  background-color: #7f4799;
+  background-color: #419dd6;
 }
 /* line 33, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.user.tag_10 {
-  background-color: #696e76;
+  background-color: #698293;
 }
 /* line 34, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.user.tag_11 {
-  background-color: #810032;
+  background-color: #9196a7;
+}
+/* line 35, /home/abram/newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_12 {
+  background-color: #7f4799;
 }
 /* line 36, /home/abram/newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_13 {
+  background-color: #696e76;
+}
+/* line 37, /home/abram/newhive/libsrc/scss/tags.scss */
+.tag_label.user.tag_14 {
+  background-color: #810032;
+}
+/* line 39, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.system {
   background-repeat: no-repeat;
   background-position: right;
@@ -715,44 +728,44 @@ input[type="text"].copy, textarea.copy {
   padding: 0px 12px;
   margin-left: 22px;
 }
-/* line 45, /home/abram/newhive/libsrc/scss/tags.scss */
+/* line 48, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.system a {
   display: inline-block;
   margin-top: 4px;
 }
-/* line 46, /home/abram/newhive/libsrc/scss/tags.scss */
+/* line 49, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.system.Starred a, .tag_label.system.Listening a {
   padding-right: 18px;
 }
-/* line 49, /home/abram/newhive/libsrc/scss/tags.scss */
+/* line 52, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.system.Starred {
   background-image: url("/lib/skin/1/star_tab.png");
 }
-/* line 51, /home/abram/newhive/libsrc/scss/tags.scss */
+/* line 54, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.system.Starred.current:hover {
   background-image: url("/lib/skin/1/star_tab.png");
 }
-/* line 52, /home/abram/newhive/libsrc/scss/tags.scss */
+/* line 55, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.system.Starred:hover {
   background-image: url("/lib/skin/1/star_tab-hover.png");
 }
-/* line 54, /home/abram/newhive/libsrc/scss/tags.scss */
+/* line 57, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.system.Listening {
   background-image: url("/lib/skin/1/people_tab.png");
 }
-/* line 56, /home/abram/newhive/libsrc/scss/tags.scss */
+/* line 59, /home/abram/newhive/libsrc/scss/tags.scss */
 .tag_label.system.Listening:hover {
   background-image: url("/lib/skin/1/people_tab-hover.png");
 }
 
-/* line 62, /home/abram/newhive/libsrc/scss/tags.scss */
+/* line 65, /home/abram/newhive/libsrc/scss/tags.scss */
 .expr_cards .tag_label.system.current {
   background-color: white;
   font-family: Lobster, Helvetica, sans-serif;
   font-size: 1.6em;
   color: black;
 }
-/* line 67, /home/abram/newhive/libsrc/scss/tags.scss */
+/* line 70, /home/abram/newhive/libsrc/scss/tags.scss */
 .expr_cards .tag_label.system.current a {
   font-weight: normal;
 }
@@ -1150,6 +1163,20 @@ input[type="text"].copy, textarea.copy {
   right: 0;
 }
 
+/* line 2, /home/abram/newhive/libsrc/scss/settings.scss */
+.user_settings input[type="text"], .user_settings input[type="password"] {
+  width: 16em;
+}
+/* line 5, /home/abram/newhive/libsrc/scss/settings.scss */
+.user_settings #gender_wrapper {
+  width: 7em;
+  float: left;
+}
+/* line 9, /home/abram/newhive/libsrc/scss/settings.scss */
+.user_settings #age {
+  width: 7em;
+}
+
 /* line 2, /home/abram/newhive/libsrc/scss/profile.scss */
 .expr_cards #header h1 {
   margin: 58px;
@@ -1201,29 +1228,29 @@ input[type="text"].copy, textarea.copy {
   vertical-align: top;
 }
 
-/* line 24 */
+/* line 25 */
 #nav {
   height: 50px;
 }
 
-/* line 26 */
+/* line 27 */
 .expr_cards #header {
   padding-top: 48px;
   padding-left: 30px;
   padding-bottom: 23px;
 }
 
-/* line 31 */
+/* line 32 */
 #primary_content {
   clear: both;
 }
 
-/* line 32 */
+/* line 33 */
 .logged_in #primary_content, .tag_search #primary_content {
   padding-top: 12px;
 }
 
-/* line 34 */
+/* line 35 */
 #left_column, #right_column, #header, #feed {
   *zoom: 1;
 }
@@ -1234,67 +1261,67 @@ input[type="text"].copy, textarea.copy {
   clear: both;
 }
 
-/* line 37 */
+/* line 38 */
 #left_column {
   float: left;
   width: 210px;
   padding-left: 30px;
 }
 
-/* line 42 */
+/* line 43 */
 #right_column {
   margin-left: 240px;
 }
 
-/* line 47 */
+/* line 48 */
 iframe {
   border: none;
 }
 
-/* line 51 */
+/* line 52 */
 .user_settings .fathead, .email_confirmation .fathead {
   margin: 50px;
 }
-/* line 53 */
+/* line 54 */
 .user_settings .fathead div, .email_confirmation .fathead div {
   background: url("/lib/skin/1/plus_lg.png") no-repeat;
   height: 44px;
 }
-/* line 57 */
+/* line 58 */
 .user_settings .fathead h1, .email_confirmation .fathead h1 {
   margin: 0 0 0 50px;
   display: inline;
   font-family: Museo, Helvetica, sans-serif;
 }
 
-/* line 65 */
+/* line 66 */
 .user_settings .required {
   color: #f72e4d;
   font-size: 0.7em;
 }
-/* line 69 */
+/* line 70 */
 .user_settings .form_validation_info {
   width: 215px;
 }
-/* line 70 */
+/* line 71 */
 .user_settings .user_name_change_text {
   width: 215px;
   font-size: 0.75em;
 }
 
-/* line 80 */
+/* line 81 */
 .email_confirmation .fathead {
   margin-bottom: 100px;
 }
-/* line 82 */
+/* line 83 */
 .email_confirmation .fathead p {
   margin-left: 50px;
 }
-/* line 85 */
+/* line 86 */
 .email_confirmation #content a {
   color: #698293;
 }
-/* line 87 */
+/* line 88 */
 .email_confirmation #content a:hover {
   color: #f72e4d;
 }

@@ -3,7 +3,15 @@
 # thenewhive.com WSGI server version 0.2
 
 from newhive.controllers.shared import *
-from newhive.controllers import ApplicationController, AnalyticsController, AdminController, ExpressionController, MailController, UserController, FileController, StarController
+from newhive.controllers import ApplicationController
+from newhive.controllers import AnalyticsController
+from newhive.controllers import AdminController
+from newhive.controllers import ExpressionController
+from newhive.controllers import MailController
+from newhive.controllers import UserController
+from newhive.controllers import FileController
+from newhive.controllers import StarController
+from newhive.controllers import CronController
 
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
@@ -67,6 +75,7 @@ controllers = {
     , 'expression':    ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = db)
     , 'mail':     MailController(jinja_env = jinja_env, assets_env = assets_env, db = db)
     , 'star':     StarController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+    , 'cron':     CronController(jinja_env = jinja_env, assets_env = assets_env, db = db)
     }
 
 application_controller = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db = db)
@@ -161,13 +170,15 @@ def handle(request): # HANDLER
         parts = request.path.split('/', 1)
         p1 = lget(parts, 0)
         p2 = lget(parts, 1)
-        if p1 == 'file': return serve_404(request, response)
+        if p1 == 'cron' and request.remote_addr == "127.0.0.1": 
+            return controllers['cron'].cron(request, response)
+        elif p1 == 'file': return serve_404(request, response)
         elif p1 == 'edit' and request.requester.logged_in:
             return controllers['expression'].default(request, response, {'method': 'edit'})
         elif p1 == 'signup': return controllers['user'].new(request, response)
         elif p1 == 'settings': return controllers['user'].edit(request, response)
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
-        elif p1 == 'email_confirmation': return controllers['user'].email_confirmation(request, response)
+        elif p1 == 'email_confirmation': return controllers['user'].confirm_email(request, response)
         elif p1 in ['', 'home', 'tag', 'people']:
             return controllers['expression'].index(request, response, {'tag': p2, 'p1': p1})
         elif p1 == 'admin_home' and request.requester.logged_in:

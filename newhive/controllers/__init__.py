@@ -7,3 +7,4 @@ from mail import MailController
 from user import UserController
 from file import FileController
 from star import StarController
+from cron import CronController

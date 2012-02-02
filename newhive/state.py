@@ -205,10 +205,11 @@ class Entity(dict):
             try:
                 spec = {'updated':{'$lt': self['updated']}}
                 spec.update(shared_spec)
-                return self.collection.new(self._col.find(spec).hint([('updated', -1)]).limit(1)[0])
+                cur = self._col.find(spec).sort([('updated', -1)]).limit(1)
+                return self.collection.new(cur[0])
             except IndexError:
                 if loop:
-                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated',-1)]).limit(1)[0])
+                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated', -1)]).limit(1)[0])
                     except IndexError: return None
                 else: return None
         elif type(spec) == list:
@@ -227,7 +228,8 @@ class Entity(dict):
             try:
                 spec = {'updated':{'$gt': self['updated']}}
                 spec.update(shared_spec)
-                return self.collection.new(self._col.find(spec).hint([('updated', 1)]).limit(1)[0])
+                cur = self._col.find(spec).sort([('updated', 1)]).limit(1)
+                return self.collection.new(cur[0])
             except IndexError:
                 if loop:
                     try: return self.collection.new(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
@@ -428,7 +430,7 @@ class Expr(Entity, Searchable):
 
         def random(self):
             rand = random.random()
-            return cls.find(dict(random = {'$gte': rand}, auth='public', apps={'$exists': True}))
+            return self.find(dict(random = {'$gte': rand}, auth='public', apps={'$exists': True}))
 
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
@@ -632,6 +634,7 @@ class File(Entity):
         version = int(thumbs.get(name, 0)) + 1
         thumbs[name] = version
         url = "%s_%s?v=%s" % (self['url'], name, version)
+        self.update(thumbs=thumbs)
         return {'url': url, 'file': thumb}
 
     def get_thumb(self, w, h, generate=False):
@@ -692,6 +695,7 @@ class File(Entity):
 
         url = None
         if config.aws_id:
+            dict.update(self, s3_bucket=random.choice(config.s3_buckets))
             url = self.store_aws(self._file, self.id, urllib.quote_plus(self['name'].encode('utf8')))
             dict.update(self, url=url)
             if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
@@ -874,6 +878,13 @@ class Referral(Entity):
     def create(self):
         self['key'] = junkstr(16)
         return super(Referral, self).create()
+
+    @property
+    def url(self):
+        url = abs_url(secure=True) + 'signup?key=' + self.get('key')
+        if self.get('email'): url += '&email=' + self['email']
+        return url
+
 
 
 @Database.register

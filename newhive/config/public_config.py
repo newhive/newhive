@@ -12,7 +12,13 @@ aws_secret      = False
 s3_buckets      = []
 
 admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach']
+admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
+                   'cara@thenewhive.com', 'zach@thenewhive.com',
+                   'duffy@thenewhive.com', 'info@thenewhive.com',
+                   'duffy.tilleman@gmail.com', 'duffy@lumana.org',
+                   'straussss@gmail.com', 'quuxman@gmail.com']
 site_user       = 'thenewhive'
+admins.append(site_user)
 site_pages      = {
      'editor-help'  : 'default-instructional'
     ,'profile-help' : 'profile-help'
@@ -26,7 +32,7 @@ email_user      = False
 email_password  = False
 
 use_ga          = False
-signup_group    = 1
+signup_group    = 2
 
 debug_mode      = False
 debug_unsecure  = False

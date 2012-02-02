@@ -1,3 +1,4 @@
+import crypt
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.utils import normalize, junkstr
@@ -65,16 +66,17 @@ class UserController(ApplicationController):
         referrer = self.db.User.fetch(referral['user'])
         assert 'tos' in request.form
 
-        args = dfilter(request.form, ['name', 'password', 'email', 'fullname'])
+        args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender'])
         args.update({
              'referrer' : referral['user']
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]
             #,'flags'    : { 'add_invites_on_save' : True }
         })
+        if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})
+
         user = self.db.User.create(args)
         referrer.update(referrals = referrer['referrals'] - 1)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
-        home_expr = user.expr_create({ 'title' : 'Homepage', 'home' : True })
         user.give_invites(5)
 
         try: mail.mail_user_register_thankyou(self.jinja_env, user)

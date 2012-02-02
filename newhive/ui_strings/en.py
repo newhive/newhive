@@ -6,6 +6,8 @@ social media sites. What's your vision to change the world?"""
 
 embed_code_description = """Have media you'd like to share from another site? Paste in the URL's from vimeo or youtube here to include them in your expression. Or enter "embed" code found on the "share button" of many sites including- Grooveshark, googlemaps, soundcloud, bandcamp, tokbox, Flickr, paypal buttons, Ted Talks, and More! We also support iframes!"""
 embed_code_textarea = """Paste your url or embed code here."""
+image_embed_textarea = """Paste the web address for the image"""
+image_embed_as_background = """Set as background image"""
 
 # User Settings
 create_account_title = "Create your account"

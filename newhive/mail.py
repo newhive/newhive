@@ -36,7 +36,10 @@ def send_mail(headers, body):
     g.flatten(msg)
     encoded_msg = io.getvalue()
 
-    return smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
+    if config.debug_mode and not msg['To'] in config.admin_emails:
+        print "Not sending mail to %s in debug mode" % (msg['To'])
+    else:
+        return smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
 
 
 def mail_invite(jinja_env, db, email, name=False, force_resend=False):
@@ -53,7 +56,7 @@ def mail_invite(jinja_env, db, email, name=False, force_resend=False):
 
     context = {
         'name': name
-        ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + email)
+        ,'url': referral.url
         }
     body = {
          'plain': jinja_env.get_template("emails/invitation.txt").render(context)

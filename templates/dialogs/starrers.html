@@ -6,7 +6,9 @@ People listening to {{ owner['name'] }}
 People who starred {{ exp.title }}
 {% endif %}
 </div>
-{% for user in collection.data %}
-{% include "partials/user_card.html" %}
-{% endfor %}
+    <div class="user_cards">
+    {% for user in collection.data %}
+    {% include "partials/user_card.html" %}
+    {% endfor %}
+    </div>
 </div>

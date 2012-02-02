@@ -193,12 +193,15 @@ function btn_listen_click(btn) {
         btn.addClass('inactive');
         $.post('', {'action': action, 'domain': window.location.hostname, 'path': '/expressions' }, function(data) {
             btn.removeClass('inactive');
-            if(data == "unstarred") {
+            if (!data) alert("Something went wrong, please try again");
+            else if(data.unstarred) {
                 btn.removeClass('starred');
                 btn.attr('title', btn.attr('data-title-inactive'));
-            } else if (data == "starred") {
+                $('#dia_listeners .user_cards .' + data.unstarred).remove();
+            } else {
                 btn.addClass('starred');
                 btn.attr('title', btn.attr('data-title-active'));
+                $('#dia_listeners .user_cards').prepend(data);
             };
         }, 'json');
     }
@@ -209,17 +212,22 @@ function btn_star_click(btn) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
         btn.addClass('inactive');
         $.post('', {'action': action, 'domain': window.location.hostname, 'path': window.location.pathname }, function(data) {
+            var count = parseInt(btn.attr('data-count'));
             var btn_wrapper = btn.parent();
-            var countdiv = btn.next();
             btn.removeClass('inactive');
-            if(data == "unstarred") {
+            if (!data) alert("Something went wrong, please try again");
+            else if(data.unstarred) {
                 btn.removeClass('starred');
                 btn_wrapper.attr('title', btn_wrapper.attr('data-title-inactive'));
-                countdiv.html(parseInt(countdiv.html())-1);
-            } else if (data == "starred") {
+                btn.attr('data-count', count-1);
+                iconCounts();
+                $('#dia_starrers .user_cards .' + data.unstarred).remove();
+            } else {
                 btn.addClass('starred');
                 btn_wrapper.attr('title', btn_wrapper.attr('data-title-active'));
-                countdiv.html(parseInt(countdiv.html())+1);
+                btn.attr('data-count', count+1);
+                iconCounts();
+                $('#dia_starrers .user_cards').prepend(data);
             };
         }, 'json');
     }
