@@ -1,5 +1,6 @@
-import state, time, datetime, re
-from state import now
+import time, datetime, re, pandas
+from newhive import state, google_analytics
+from newhive.state import now
 
 def shared_user_data(db, result, start=None):
     custom_counts = {}
@@ -121,7 +122,13 @@ def app_count(db):
                 rv[type] = 1
     return rv
 
-def funnel2(db, start, end):
+def funnel2(db, start_datetime, end_datetime):
+    #GA seems to use dates inclusively, so instead of ending on Feb 1, end on Jan 31
+    ga_end_datetime = end_datetime - pandas.DateOffset(days=1)
+
+    # convert datetime into epoch
+    start = time.mktime(start_datetime.timetuple())
+    end = time.mktime(end_datetime.timetuple())
     avg_users = (db.user.find({'created': {'$lt': start}}).count() + db.user.find({'created': {'$lt': end}}).count()) / 2
 
     user_ids = [user['_id'] for user in db.user.find({'created': {'$lt': end}}, {'_id': True})]
@@ -136,10 +143,18 @@ def funnel2(db, start, end):
     referral_ids = [s.get('referral_id') for s in signups]
     accounts_created = db.referral.find({'_id': {'$in': referral_ids}, 'user_created': {'$exists': True}})
 
+    ga = google_analytics.GAClient()
+    views = ga.find_one({
+        'start_date': start_datetime.strftime("%Y-%m-%d")
+        , 'end_date': ga_end_datetime.strftime("%Y-%m-%d")
+        , 'metrics': 'ga:pageviews'
+        , 'filters': google_analytics.filters['expressions']
+        })
     return {'users': avg_users
             , 'expressions': avg_exprs
             , 'signups': signups.count()
             , 'new_accounts': accounts_created.count()
+            , 'views': int(views['ga:pageviews'])
     }
 
 def contacts_per_hour(db, end=now()):
