@@ -373,6 +373,10 @@ class User(Entity):
         return bool(self.mdb.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
     has_homepage = property(_has_homepage)
 
+    @property
+    def key_words(self):
+        return list(set(normalize(' '.join([self['name'], self['fullname']]))))
+
 
 @Database.register
 class Session(Entity):
@@ -384,7 +388,7 @@ def media_path(user, f_id=None):
     return joinpath(p, f_id) if f_id else p
 
 @Database.register
-class Expr(Entity, Searchable):
+class Expr(Entity):
     cname = 'expr'
     indexes = [
          (['domain', 'name'], {'unique':True})
@@ -572,9 +576,9 @@ class Expr(Entity, Searchable):
 
     public = property(lambda self: self.get('auth') == "public")
 
-    def search_keys(self):
-        return self.tags_index
-    #search_keys = property(search_keys)
+    @property
+    def key_words(self):
+        return list(set(normalize(' '.join([self['tags'], self['title'], self['name']]))))
 
 
 def generate_thumb(file, size):
