@@ -113,25 +113,39 @@ class AnalyticsController(ApplicationController):
         return self.serve_page(response, 'pages/analytics/last_login.html')
 
     def funnel2(self, request, response, args={}):
+        import pandas
+        weekly_range = pandas.DateRange(datetime(2011,11,6), end = datetime.now(), offset=pandas.DateOffset(days=7))
+        monthly_range = pandas.DateRange(datetime(2011,11,1), end = datetime.now(), offset=pandas.DateOffset(months=1))
+
         def subroutine(res_dict, time0, time1):
-            res_dict[time0] = analytics.funnel2(self.db.mdb, time0, time1)
-        weekly = {}
-        start = date_to_epoch(2011, 11, 6)
-        week = 3600*24*7
-        now = time.time()
-        i = 0
-        while (start + i*week < now):
-            subroutine(weekly, start + i*week, start + (i+1)*week)
-            i += 1
-        monthly = {}
-        y0 = 2011; m0 = 11;
-        while (date_to_epoch(y0,m0,1) < now):
-            if m0 == 12: m1 = 1; y1 = y0 + 1
-            else: m1 = m0 + 1; y1 = y0
-            subroutine(monthly, date_to_epoch(y0,m0,1), date_to_epoch(y1,m1,1))
-            y0 = y1; m0 = m1
-        response.context['data'] = weekly
-        response.context['monthly'] = monthly
+            res_dict[time.mktime(time0.timetuple())] = analytics.funnel2(self.db.mdb, time0, time1)
+
+        weekly_data = {}
+        for date in weekly_range:
+            subroutine(weekly_data, date, date + pandas.DateOffset(days=7))
+
+        monthly_data = {}
+        for date in monthly_range:
+            subroutine(monthly_data, date, date + pandas.DateOffset(months=1))
+
+        #weekly = {}
+        #start = date_to_epoch(2011, 11, 6)
+        #week = 3600*24*7
+        #now = time.time()
+        #i = 0
+        #while (start + i*week < now):
+        #    print time.localtime(start + i*week)
+        #    subroutine(weekly, start + i*week, start + (i+1)*week)
+        #    i += 1
+        #monthly = {}
+        #y0 = 2011; m0 = 11;
+        #while (date_to_epoch(y0,m0,1) < now):
+        #    if m0 == 12: m1 = 1; y1 = y0 + 1
+        #    else: m1 = m0 + 1; y1 = y0
+        #    subroutine(monthly, date_to_epoch(y0,m0,1), date_to_epoch(y1,m1,1))
+        #    y0 = y1; m0 = m1
+        response.context['data'] = weekly_data
+        response.context['monthly'] = monthly_data
         return self.serve_page(response, 'pages/analytics/funnel2.html')
 
     def signups_per_hour(self, request, response, args={}):
