@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import time, datetime, re, pandas
 from newhive import state, google_analytics
 from newhive.state import now
