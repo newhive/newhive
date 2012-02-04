@@ -711,3 +711,8 @@ var context_to_string = function(opt_arg){
 var asset = function(path) {
     return debug_mode ? '/lib/libsrc/' + path : '/lib/' + path;
 }
+
+var buildSearch = function(){
+  var search = $('#search_box').val();
+  return server_url + "search?q=" + escape(search);
+}

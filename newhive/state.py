@@ -67,7 +67,11 @@ class Collection(object):
         return self.find(spec, **opts)
 
     def list(self, spec, limit=300, page=0, sort='updated'):
-        return self.search(spec, sort=[(sort, -1)], limit=limit, skip=limit * page)
+        if type(spec) == dict:
+            return self.search(spec, sort=[(sort, -1)], limit=limit, skip=limit * page)
+        elif type(spec) == list:
+            items = dict([[item.id, item] for item in self.search({'_id': {'$in': spec}})])
+            return [items.get(s) for s in spec]
 
     def count(self, spec): return self.search(spec).count()
 
@@ -256,18 +260,22 @@ class KeyWords(Entity):
         def set_words(self, doc, texts):
             """ Takes a dictionary of { weight : text } pairs """
 
-            assert(type(doc) in classes.values())
-            self._col.delete({ 'doc' : doc.id })
+    #        assert(type(doc) in classes.values())
+            self._col.remove({ 'doc' : doc.id })
+            all = set()
             for (weight, text) in texts.items():
                 words = normalize(text)
-                self._col.insert({ 'words':words, 'weight':weight, 'doc':doc.id, doc_type:doc.__class__.__name__ })
+                all = all.union(words)
+                self._col.insert({ 'words':words, 'weight':weight, 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
+            self._col.insert({ 'words':list(all), 'weight':'all', 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
 
         def init(self, doc):
             return classes[doc['doc_type']](doc)
 
-        def search(self, text):
+        def text_search(self, text, weight='all'):
             words = normalize(text)
-            cursor = self.search({'words':words}, sort=[('weight', -1)])
+            cursor = self.search({'words': {'$all': words}, 'weight': weight}, sort=[('weight', -1)])
+            return cursor
 
 #def searchable(entity):
 

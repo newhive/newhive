@@ -189,6 +189,7 @@ def handle(request): # HANDLER
             return controllers['analytics'].default(request, response, {'method': p2})
         elif p1 == 'user_check': return controllers['user'].user_check(request, response)
         elif p1 == 'random': return controllers['expression'].random(request, response)
+        elif p1 == 'search': return controllers['expression'].search(request, response)
         else: return serve_404(request, response)
 
     elif request.domain.startswith('www.'):

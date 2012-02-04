@@ -96,6 +96,19 @@ class ExpressionController(ApplicationController):
         response.context.update(exp=exp, expr=exp)
         return self.serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
 
+    def search(self, request, response, args={}):
+        query = request.args.get('q')
+        request, response = self._homepage(request, response, args)
+        results = self.db.KeyWords.text_search(query)
+        ids = [res['doc'] for res in results]
+        expressions = self._expr_list(ids)
+        response.context['exprs'] = expressions
+        response.context['tag'] = {}
+        response.context['title'] = "Results for: " + query
+        response.context['query'] = query
+        response.context['pages'] = 1
+        return self.serve_page(response, 'pages/tag_search.html')
+
     def index(self, request, response, args={}):
         if args.get('owner'):
             return self._user_index(request, response, args)
@@ -139,7 +152,7 @@ class ExpressionController(ApplicationController):
 
         return self.serve_page(response, 'pages/expr_cards.html')
 
-    def _site_index(self, request, response, args={}):
+    def _homepage(self, request, response, args={}):
         tag = args.get('tag')
         p1 = args.get('p1')
         featured_tags = self.db.User.site_user['config']['featured_tags']
@@ -150,6 +163,13 @@ class ExpressionController(ApplicationController):
         response.context['tags'] = [{'url': '/tag/' + t, 'name': t} for t in featured_tags ]
         if p1 == 'people':
             response.context['tag'] = people_tag
+        return [request, response]
+
+    def _site_index(self, request, response, args={}):
+        tag = args.get('tag')
+        p1 = args.get('p1')
+        request, response = self._homepage(request, response, args)
+        if p1 == 'people':
             cname = 'user'
         else:
             cname = 'expr'
@@ -160,6 +180,7 @@ class ExpressionController(ApplicationController):
         if p1 == 'tag':
             response.context['exprs'] = self._expr_list({'tags_index':tag.lower()}, page=int(request.args.get('page', 0)), limit=90)
             response.context['tag'] = tag
+            response.context['title'] = "#" + tag
         if request.args.get('partial'): return self.serve_page(response, 'page_parts/cards.html')
         elif p1 == 'tag': return self.serve_page(response, 'pages/tag_search.html')
         else:
