@@ -257,16 +257,17 @@ class KeyWords(Entity):
     #classes = { 'Expr' : Expr, 'User' : User }
 
     class Collection(Collection):
-        def set_words(self, doc, texts):
+        def set_words(self, doc, texts, updated):
             """ Takes a dictionary of { weight : text } pairs """
 
     #        assert(type(doc) in classes.values())
             self._col.remove({ 'doc' : doc.id })
             all = set()
             for (weight, text) in texts.items():
-                words = normalize(text)
-                all = all.union(words)
-                self._col.insert({ 'words':words, 'weight':weight, 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
+                if text:
+                    words = normalize(text)
+                    all = all.union(words)
+                    self._col.insert({ 'updated': updated, 'words':words, 'weight':weight, 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
             self._col.insert({ 'words':list(all), 'weight':'all', 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
 
         def init(self, doc):
@@ -274,7 +275,7 @@ class KeyWords(Entity):
 
         def text_search(self, text, weight='all'):
             words = normalize(text)
-            cursor = self.search({'words': {'$all': words}, 'weight': weight}, sort=[('weight', -1)])
+            cursor = self.search({'words': {'$all': words}, 'weight': weight}).sort([('updated', -1)])
             return cursor
 
 #def searchable(entity):
@@ -469,6 +470,14 @@ class Expr(Entity):
         return self._owner
     owner = property(get_owner)
 
+    def build_search_index(self):
+        texts = {
+                'tags': self.get('tags')
+                , 'title': self.get('title')
+                }
+        self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
+
+
     def update(self, **d):
         if d.get('tags'): d['tags_index'] = normalize(d['tags'])
         super(Expr, self).update(**d)
@@ -476,6 +485,7 @@ class Expr(Entity):
         if not last_update or now() - last_update['created'] > 14400:
             feed = self.db.UpdatedExpr.new(self.owner, self)
         self.owner.get_expr_count(force_update=True)
+        self.build_search_index()
         return self
 
     def create(self):
@@ -488,6 +498,7 @@ class Expr(Entity):
         super(Expr, self).create()
         feed = self.db.NewExpr.new(self.owner, self)
         self.owner.get_expr_count(force_update=True)
+        self.build_search_index()
         return self
 
     def delete(self):

@@ -202,7 +202,6 @@ class ExpressionController(ApplicationController):
         # if user has not picked a thumbnail, pick the latest image added
         thumb_file_id = exp.get('thumb_file_id')
         if thumb_file_id:
-            print "\n\n" + thumb_file_id + "\n\n"
             file = self.db.File.fetch(thumb_file_id)
             if file:
                 upd['thumb'] = file.get_default_thumb()
