@@ -48,7 +48,7 @@
 </div>
 {% if template != "pages/edit.html" %} {# don't show random button in editor #}
 <div class="nav" id="search" style="left: 40%; padding: 6px 0 6px 10px;">
-    <input type="text" id="search_box" value="{{query}}" style="width: 250px;" onkeydown="if (event.keyCode == 13) $('#search_submit').click()"/>
+    <input type="text" id="search_box" placeholder="Search" value="{{query}}" style="width: 250px;" onkeydown="if (event.keyCode == 13) $('#search_submit').click()"/>
     <div id="search_submit" class="hoverable" onclick="window.location = buildSearch()"></div>
 </div>
 {% endif %}
