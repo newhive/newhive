@@ -133,6 +133,19 @@ body.home.logged_out .nav {
   float: left;
 }
 
+/* line 100, /home/duffy/2newhive/libsrc/scss/nav.scss */
+#search_submit {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  background-image: url("lib/skin/1/search_arrow.png");
+  vertical-align: middle;
+}
+/* line 106, /home/duffy/2newhive/libsrc/scss/nav.scss */
+#search_submit:hover {
+  background-image: url("lib/skin/1/search_arrow-hover.png");
+}
+
 /* ==========================================
    popup dialogs 
    ========================================== */

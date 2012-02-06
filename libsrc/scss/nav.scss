@@ -97,3 +97,11 @@ body.home.logged_out .nav{
 .has_count img {
   float: left;
 }
+#search_submit {
+  display: inline-block;
+  width: 22px;
+  height:22px;
+  background-image: url('lib/skin/1/search_arrow.png');
+  vertical-align: middle;
+  &:hover { background-image: url('lib/skin/1/search_arrow-hover.png');}
+}
