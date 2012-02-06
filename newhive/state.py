@@ -257,11 +257,14 @@ class KeyWords(Entity):
     #classes = { 'Expr' : Expr, 'User' : User }
 
     class Collection(Collection):
+        def remove_entries(self, doc):
+            self._col.remove({'doc' : doc.id })
+
         def set_words(self, doc, texts, updated):
             """ Takes a dictionary of { weight : text } pairs """
 
     #        assert(type(doc) in classes.values())
-            self._col.remove({ 'doc' : doc.id })
+            self.remove_entries(doc)
             all = set()
             for (weight, text) in texts.items():
                 if text:
@@ -507,6 +510,7 @@ class Expr(Entity):
 
     def delete(self):
         self.owner.get_expr_count(force_update=True)
+        self.db.KeyWords.remove_entries(self)
         return super(Expr, self).delete()
 
 
