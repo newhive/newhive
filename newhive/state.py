@@ -268,7 +268,7 @@ class KeyWords(Entity):
                     words = normalize(text)
                     all = all.union(words)
                     self._col.insert({ 'updated': updated, 'words':words, 'weight':weight, 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
-            self._col.insert({ 'words':list(all), 'weight':'all', 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
+            self._col.insert({ 'updated': updated, 'words':list(all), 'weight':'all', 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
 
         def init(self, doc):
             return classes[doc['doc_type']](doc)
