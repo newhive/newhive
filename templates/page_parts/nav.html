@@ -46,10 +46,12 @@
     <a href='{{server}}random'><img style="position: relative; left: {{'0' if user.logged_in else '-24px'}}; top: 0;" class="nav nav_icon hoverable" src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
   {% endif %}
 </div>
+{% if template != "pages/edit.html" %} {# don't show random button in editor #}
 <div class="nav" id="search" style="left: 40%; padding: 6px 0 6px 10px;">
     <input type="text" id="search_box" value="{{query}}" style="width: 250px;" onkeydown="if (event.keyCode == 13) $('#search_submit').click()"/>
     <div id="search_submit" class="hoverable" onclick="window.location = buildSearch()"></div>
 </div>
+{% endif %}
 
 {% if not user.logged_in %}
 <div class='nav' style='right : 10px; top : 0px;'>
