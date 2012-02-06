@@ -1,10 +1,11 @@
+{% if users %}
+  {% for user in users %}
+  {% include "partials/user_card.html" %}
+  {% endfor %}
+{% endif %}
 {% if exprs %}
   {% for expr in exprs %}
   {% include "partials/expr_card.html" %}
-  {% endfor %}
-{% elif users %}
-  {% for user in users %}
-  {% include "partials/user_card.html" %}
   {% endfor %}
 {% endif %}
 {% if create_expr_card %}

@@ -253,7 +253,7 @@ class Entity(dict):
 @Database.register
 class KeyWords(Entity):
     cname = 'key_words'
-    indexes = [ ['words', ('weight', -1)], 'doc' ]
+    indexes = [ ['doc_type', 'weight', 'words'], 'doc']
     #classes = { 'Expr' : Expr, 'User' : User }
 
     class Collection(Collection):
@@ -273,9 +273,9 @@ class KeyWords(Entity):
         def init(self, doc):
             return classes[doc['doc_type']](doc)
 
-        def text_search(self, text, weight='all'):
+        def text_search(self, text, weight='all', doc_type='Expr'):
             words = normalize(text)
-            cursor = self.search({'words': {'$all': words}, 'weight': weight}).sort([('updated', -1)])
+            cursor = self.search({'words': {'$all': words}, 'weight': weight, 'doc_type': doc_type}).sort([('updated', -1)])
             return cursor
 
 #def searchable(entity):
@@ -336,6 +336,10 @@ class User(Entity):
         self['flags'] = {}
         assert self.has_key('referrer')
         return super(User, self).create()
+
+    def build_search_index(self):
+        texts = {'name': self.get('name'), 'fullname': self.get('fullname')}
+        self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
 
     def new_referral(self, d):
         if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:

@@ -102,8 +102,12 @@ class ExpressionController(ApplicationController):
         results = self.db.KeyWords.text_search(query)
         ids = [res['doc'] for res in results]
         expressions = self._expr_list(ids)
+        results = self.db.KeyWords.text_search(query, doc_type='User')
+        ids = [res['doc'] for res in results]
+        users = self.db.User.list({'_id': {'$in': ids}})
         self.db.ActionLog.new(request.requester, "search", data={'query': query, 'result_size': len(expressions)})
         response.context['exprs'] = expressions
+        response.context['users'] = users
         response.context['tag'] = {}
         response.context['title'] = "Results for: " + query
         response.context['query'] = query
