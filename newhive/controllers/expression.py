@@ -101,7 +101,7 @@ class ExpressionController(ApplicationController):
         request, response = self._homepage(request, response, args)
         results = self.db.KeyWords.text_search(query, doc_type='Expr')
         ids = [res['doc'] for res in results]
-        expressions = self._expr_list(ids)
+        expressions = self._expr_list(ids, requester=request.requester.id)
         results = self.db.KeyWords.text_search(query, doc_type='User')
         ids = [res['doc'] for res in results]
         users = self.db.User.list({'_id': {'$in': ids}})
