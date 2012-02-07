@@ -649,8 +649,10 @@ var place_apps = function() {
            e.css('opacity', this.style.opacity);
        }
        var c = $.extend({}, e.data('css'));
-       for(var p in c) c[p] = Math.round(c[p] * s);
-       if(c['font-size']) c['font-size'] += 'em';
+       for(var p in c) {
+           if(p == 'font-size') c[p] = (c[p] * s) + 'em';
+           else c[p] = Math.round(c[p] * s);
+       }
        e.css(c);
    });
    $('.happfill').each(function(i, div) {
