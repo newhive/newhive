@@ -22,7 +22,7 @@ class ExpressionController(ApplicationController):
             exp = self.db.Expr.fetch(exp_id)
             self.db.ActionLog.new(request.requester, "existing_expression_edit", data={'expr_id': exp.id})
 
-        if not exp: return serve_404(request, response)
+        if not exp: return self.serve_404(request, response)
 
         if request.requester.get('flags'):
             show_help = request.requester['flags'].get('default-instructional') < 1
@@ -46,7 +46,7 @@ class ExpressionController(ApplicationController):
             return self.serve_404(request, response)
 
         is_owner = request.requester.logged_in and owner.id == request.requester.id
-        if resource.get('auth') == 'private' and not is_owner: return serve_404(request, response)
+        if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
 
         if is_owner: owner.unflag('expr_new')
 
