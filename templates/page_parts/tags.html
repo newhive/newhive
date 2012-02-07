@@ -1,5 +1,5 @@
  <div id='tags'>
-   {% for t in system_tags %}<div class='tag_label hoverable system {{ 'current' if t.name == tag.name }} {{ t.name}} '><a href='{{ t.url |e }}' value='{{ t.name|e }}'>
+   {% for t in system_tags %}<div class='tag_label hoverable system {{ 'current' if t.name == tag.name }} {{ t.name}} '><a href='{{ t.url |e }}' value='{{ t.name|e }}' alt='{{ t.name|e }}'>
      {% if t.img %}
      {#<img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">#}
     {% endif %}
