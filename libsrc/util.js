@@ -639,7 +639,7 @@ var place_apps = function() {
        var s = e.parent().width() / 1000;
        if(!e.data('css')) {
            var c = {};
-           map(function(p) { c[p] = parseFloat($(app_div).css(p)) }, ['left', 'top', 'width', 'height',
+           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height',
                'border-left-width', 'border-top-width', 'border-right-width', 'border-bottom-width',
                'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']);
            var scale = parseFloat(e.attr('data-scale'));
@@ -649,8 +649,10 @@ var place_apps = function() {
            e.css('opacity', this.style.opacity);
        }
        var c = $.extend({}, e.data('css'));
-       for(var p in c) c[p] *= s;
-       if(c['font-size']) c['font-size'] += 'em';
+       for(var p in c) {
+           if(p == 'font-size') c[p] = (c[p] * s) + 'em';
+           else c[p] = Math.round(c[p] * s);
+       }
        e.css(c);
    });
    $('.happfill').each(function(i, div) {
