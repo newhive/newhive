@@ -26,3 +26,19 @@ def abs_url(secure = False, domain = None, subdomain = None):
     port = '' if port == 80 or port == 443 else ':' + str(port)
     return (proto + '://' + (subdomain + '.' if subdomain else '') +
         (domain or config.server_name) + port + '/')
+
+def uniq(seq, idfun=None):
+    # order preserving 
+    if idfun is None: 
+        def idfun(x): return x 
+    seen = {} 
+    result = [] 
+    for item in seq: 
+        marker = idfun(item) 
+        # in old Python versions: 
+        # if seen.has_key(marker) 
+        # but in new ones: 
+        if marker in seen: continue 
+        seen[marker] = 1 
+        result.append(item) 
+    return result

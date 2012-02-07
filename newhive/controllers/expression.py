@@ -3,6 +3,7 @@ from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 import newhive.mail
 from newhive import state
+import newhive.utils
 # TODO: handle this in model layer somehow
 from pymongo.connection import DuplicateKeyError
 
@@ -184,6 +185,10 @@ class ExpressionController(ApplicationController):
             response.context['expr_context'] = {'tag': 'Featured'}
         if p1 == 'tag':
             response.context['exprs'] = self._expr_list({'tags_index':tag.lower()}, page=int(request.args.get('page', 0)), limit=90)
+            if int(request.args.get('page', 0)) == 0 and ExpressionController.featured.has_key(tag):
+                expr_list = self._expr_list(ExpressionController.featured[tag])
+                response.context['exprs'] += expr_list
+                response.context['exprs'] = newhive.utils.uniq(response.context['exprs'], lambda x: x.id)
             response.context['tag'] = tag
             response.context['title'] = "#" + tag
         if request.args.get('partial'): return self.serve_page(response, 'page_parts/cards.html')
@@ -303,11 +308,13 @@ class ExpressionController(ApplicationController):
         return map(self._format_card, self.db.Expr.list(spec, **args))
 
     def _format_card(self, e):
-        dict.update(e
-            ,updated = friendly_date(time_u(e['updated']))
-            ,url = abs_url(domain=e['domain']) + e['name']
-            ,tags = e.get('tags_index', [])
-            )
+        if not e.get('formatted_as_card'):
+            dict.update(e
+                ,updated = friendly_date(time_u(e['updated']))
+                ,url = abs_url(domain=e['domain']) + e['name']
+                ,tags = e.get('tags_index', [])
+                ,formatted_as_card = True
+                )
         return e
 
     def _expr_home_list(self, p2, request, response, limit=90, cname='expr'):
@@ -399,3 +406,37 @@ class ExpressionController(ApplicationController):
         if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
 
         return pagethrough
+
+    featured = {
+            'project': [
+                '4f1c4f08ba2839741f0000bf',
+                '4f149949ba28397ae300000d',
+                '4f1b7691ba283920a6000011',
+                '4f040705ba28390a870000e1',
+                '4f22dfa4ba283945d9000329',
+                '4f186b7fba283929fd000295',
+                '4f207c37ba283940b4000013',
+                '4f1b8269ba283920a600007b',
+                '4f2051abba28394fe900002e',
+                '4f2328e5ba2839283f000039',
+                '4f1e7aa6ba2839302c0000e4',
+                '4f234d79ba28391fe8000115',
+                '4f0d0be0ba283909eb000151',
+                '4f07b8afba2839255d0000f8',
+                '4f1b467bba28390d2b00023f',
+                '4f1ddbb5ba283939d5000008',
+                '4f1f2ef2ba2839689300001e',
+                '4f207176ba28392c34000002',
+                '4f206183ba283912bb000029',
+                '4f177b04ba28395b0a00016d',
+                '4f12533eba283932ae00000d',
+                '4f1ddbb5ba283939d5000008',
+                '4f1df138ba283939d500009a']
+            ,'wish' : [
+                '4f247c60ba283927490002b5',
+                '4f1c4c3bba283973250000ba',
+                '4f1b726eba283920a6000000',
+                '4f1a04f3ba283938500000c0',
+                '4f186b7fba283929fd000295',
+                '4f174437ba28394fc5000320']
+            }
