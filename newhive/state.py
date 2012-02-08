@@ -281,13 +281,6 @@ class KeyWords(Entity):
             cursor = self.search({'words': {'$all': words}, 'weight': weight, 'doc_type': doc_type}).sort([('updated', -1)])
             return cursor
 
-#def searchable(entity):
-
-class Searchable():
-    @property
-    def search_text(self):
-        raise exceptions.NotImplementedError('Must be overridden by specific class method')
-
 
 @Database.register
 class User(Entity):
@@ -338,7 +331,14 @@ class User(Entity):
         self['referrals'] = 0
         self['flags'] = {}
         assert self.has_key('referrer')
-        return super(User, self).create()
+        super(User, self).create()
+        self.build_search_index()
+        return self
+
+    def update(self, **d):
+        super(User, self).update(**d)
+        self.build_search_index()
+        return self
 
     def build_search_index(self):
         texts = {'name': self.get('name'), 'fullname': self.get('fullname')}

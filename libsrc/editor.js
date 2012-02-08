@@ -1178,6 +1178,7 @@ Hive.save = function() {
     }
 
     var on_response = function(ret) {
+        Hive.upload_finish();
         if(typeof(ret) != 'object') alert("Sorry, something is broken :(. Please send us feedback");
         if(ret.error == 'overwrite') {
             $('#expr_name').html(expr.name);
@@ -1191,10 +1192,12 @@ Hive.save = function() {
     }
 
     var on_error = function(ret) {
+        Hive.upload_finish();
         alert("Your expression failed to save.  It is possible you've been logged off.  Without closing this tab, open thenewhive in another tab and try logging in again, then hit 'Save' again."); 
         $('#save_submit').removeClass('disabled');
     }
 
+    Hive.upload_start();
     $.ajax( {
         type : "POST",
         dataType : 'json',
