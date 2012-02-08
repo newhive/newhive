@@ -1,7 +1,8 @@
-import crypt
+import crypt, pickle
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.utils import normalize, junkstr
+from newhive.oauth import FacebookClient
 from newhive import mail
 
 class UserController(ApplicationController):
@@ -90,7 +91,17 @@ class UserController(ApplicationController):
         if request.requester.logged_in and request.is_secure:
             response.context['action'] = 'update'
             response.context['f'] = request.requester
+            response.context['facebook_connect_url'] = FacebookClient().authorize_url('https://thenewhive.com:1718/oauth/facebook')
             return self.serve_page(response, 'pages/user_settings.html')
+
+    def facebook_connect(self, request, response, args={}):
+        code = request.args.get('code')
+        f = FacebookClient()
+        credentials = FacebookClient().exchange(request)
+        if not request.requester.has_key('oauth'): request.requester['oauth'] = {}
+        request.requester['oauth']['facebook'] = json.loads(credentials.to_json())
+        request.requester.save()
+        return self.serve_json(response, credentials.to_json())
 
     def update(self, request, response):
         message = ''

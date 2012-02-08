@@ -1,5 +1,5 @@
 import time, datetime, re, pandas
-from newhive import state, google_analytics
+from newhive import state, oauth
 from newhive.state import now
 
 def shared_user_data(db, result, start=None):
@@ -143,12 +143,12 @@ def funnel2(db, start_datetime, end_datetime):
     referral_ids = [s.get('referral_id') for s in signups]
     accounts_created = db.referral.find({'_id': {'$in': referral_ids}, 'user_created': {'$exists': True}})
 
-    ga = google_analytics.GAClient()
+    ga = oauth.GAClient()
     views = ga.find_one({
         'start_date': start_datetime.strftime("%Y-%m-%d")
         , 'end_date': ga_end_datetime.strftime("%Y-%m-%d")
         , 'metrics': 'ga:pageviews'
-        , 'filters': google_analytics.filters['expressions']
+        , 'filters': oauth.ga_filters['expressions']
         })
     return {'users': avg_users
             , 'expressions': avg_exprs
