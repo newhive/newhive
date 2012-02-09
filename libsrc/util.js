@@ -525,7 +525,8 @@ hover_menu = function(handle, drawer, options) {
         o.hover_src = hover_url(o.handle_src);
     }
 
-    o.delayed_close = function() {
+    o.delayed_close = function(e) {
+        o.e = e;
         if(o.options.hover_close) o.close_timer = setTimeout(o.close, o.options.close_delay);
     }
     o.cancel_close = function() { if(o.close_timer) clearTimeout(o.close_timer); }
