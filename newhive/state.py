@@ -484,9 +484,11 @@ class Expr(Entity):
                 }
         self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
 
+    def update_tags(self):
+        if self.get('tags'): self['tags_index'] = normalize(self['tags'])
 
     def update(self, **d):
-        if d.get('tags'): d['tags_index'] = normalize(d['tags'])
+        self.update_tags()
         super(Expr, self).update(**d)
         last_update = self.db.UpdatedExpr.last({ 'initiator' : self['owner'] })
         if not last_update or now() - last_update['created'] > 14400:
@@ -502,6 +504,7 @@ class Expr(Entity):
         self['random'] = random.random()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
+        self.update_tags()
         super(Expr, self).create()
         feed = self.db.NewExpr.new(self.owner, self)
         self.owner.get_expr_count(force_update=True)
