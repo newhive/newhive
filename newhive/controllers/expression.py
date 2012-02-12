@@ -1,9 +1,7 @@
 import base64
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
-import newhive.mail
-from newhive import state
-import newhive.utils
+from newhive import state, utils, mail
 # TODO: handle this in model layer somehow
 from pymongo.connection import DuplicateKeyError
 
@@ -188,7 +186,7 @@ class ExpressionController(ApplicationController):
             if int(request.args.get('page', 0)) == 0 and ExpressionController.featured.has_key(tag):
                 expr_list = self._expr_list(ExpressionController.featured[tag])
                 response.context['exprs'] += expr_list
-                response.context['exprs'] = newhive.utils.uniq(response.context['exprs'], lambda x: x.id)
+                response.context['exprs'] = utils.uniq(response.context['exprs'], lambda x: x.id)
             response.context['tag'] = tag
             response.context['title'] = "#" + tag
         if request.args.get('partial'): return self.serve_page(response, 'page_parts/cards.html')
@@ -278,7 +276,7 @@ class ExpressionController(ApplicationController):
         comment_text = request.form.get('comment')
         comment = self.db.Comment.new(commenter, expression, {'text': comment_text})
         if comment.initiator.id != expression.owner.id:
-            newhive.mail.mail_feed(self.jinja_env, comment, expression.owner)
+            mail.mail_feed(self.jinja_env, comment, expression.owner)
         return self.serve_html(response, self.jinja_env.get_template("partials/comment.html").render({'comment': comment}))
 
     def tag_update(self, request, response):

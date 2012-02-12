@@ -43,43 +43,20 @@ function urlValidate(value, method) {
 }
 
 function autoLink(string) {
-    var re = /(\s|\n|^)(https?:\/\/)?(([0-9a-z]+\.)+[0-9a-z]{2,}\/?[^ ]*)[,.;]? ?/ig;
-    // notes  1        2             34                                  5
-    // 1: this make sure that the match isn't preceded by anything other than whitespace or newline or the start of the string
-    //    this ends up excluding existing links <a href="foo.bar">foo.bar</a>
+    var re = /(\s|^)(https?:\/\/)?(([0-9a-z]+\.)+[0-9a-z]{2,3}(:\d+)?(\/[-\w.~:\/#\[\]@!$&'()*+,;=?]*?)?)([;,.?!]?(\s|$))/ig;
+    // groups 1        2             34                       5      6                                   7
+    // 1: this ends up excluding existing links <a href="foo.bar">foo.bar</a>
     // 2: optional http(s):// becomes capture group 2
-    // 3: capture group 3 is the url after the http://
-    // 5: don't including trailing punctuation.  this makes it so if somebody uses a url in a sentence it doesn't pick up the punctuation
-    var match;
-    function makeValid(matchArray, regex){
-        var href, linkText, completeLink, replaceStart, additionalChar = 0;
-        replaceStart = matchArray.index + matchArray[1].length; // if capture group 1 captured a whitespace character, don't count it for positioning
-        if (matchArray[3].charAt(matchArray[3].length-1).search(/[,.;]/) === 0) {
-            // removes trailing punctuation from url
-            matchArray[3] = matchArray[3].slice(0, matchArray[3].length -1);
-        }
-        if (matchArray[2] === undefined){
-            // prepend http:// if it's not already there
-            linkText = matchArray[3];
-            href = "http://" + linkText;
-            additionalChar = 7;
-        } else {
-            // but don't mess with the protocol if it is already there
-            linkText = matchArray[2] + matchArray[3];
-            href = linkText;
-        }
-        additionalChar += 15;
-        completeLink = "<a href='" + href + "'>" + linkText + "</a>";
-
-        // modify the string
-        string = string.slice(0,replaceStart) + completeLink + string.slice(replaceStart + linkText.length);
-        // move the starting point for the next regex search to past our newly lengthened string
-        regex.lastIndex += additionalChar;
+    // 3: The url after the http://
+    // 5: Optional path
+    // 7: Trailing punctuation to be excluded from URL. Note that the
+    //    path is non greedy, so this will fail to correctly match a valid but
+    //    uncommon case of a URL with a query string that ends in punctuation.
+    function linkify(m, m1, m2, m3, m4, m5, m6, m7) {
+        var href = ((m2 === '') ? 'http://' : m2) + m3; // prepend http:// if it's not already there
+        return m1 + $('<a>').attr('href', href).text(href).outerHTML() + m7; 
     }
-    while(match = re.exec(string)) {  // loop through all matches
-        makeValid(match, re);
-    }
-    return string;
+    return string.replace(re, linkify);
 }
 
 function logAction(action, data){
