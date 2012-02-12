@@ -198,6 +198,7 @@ Hive.App = function(initState) {
         o.opacity(o.state.opacity);
         o.content_element.addClass('content').click(function(e) { o.focus(); });
         if(o.state.load) o.state.load(o);
+        delete o.state.load;
         delete o.state.create;
     });
 
@@ -504,6 +505,7 @@ Hive.App.Text = function(common) {
         o.scale_n(refScale);
         o.content(content);
         common.load();
+        o.refresh_size();
     }
 
     function controls(common) {
@@ -908,6 +910,25 @@ Hive.new_app = function(s) {
     return false;
 };
 
+Hive.new_file = function(file, app) {
+    if(file.mime.match(/image\/(png|gif|jpeg)/)) $.extend(app, {
+         type: 'hive.image'
+        ,content: file.url
+    });
+    else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
+         content: ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
+             +"<param name='FlashVars' value='soundFile=" + file.url + "'>"
+             +"<param name='wmode' value='transparent'></object>"
+             )
+        ,type: 'hive.html'
+        ,dimensions: [200, 24]
+    });
+    else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
+
+    Hive.new_app(app);
+    return false;
+}
+
 var main = function() {
     //setInterval(Hive.set_draft, 5000);
     window.onbeforeunload = function(){
@@ -936,8 +957,10 @@ var main = function() {
     $(document.body).drag('end', function() { return false; });
 
     $(document.body).filedrop({
-         data : { action : 'files_create' }
-        ,uploadFinished : function(i, f, r) { Hive.new_app(r) }
+         data : { action : 'file_create' }
+        ,uploadFinished : function(i, f, data) {
+            Hive.new_file(data, { 'load' : Hive.upload_finish } );
+         }
         ,drop : Hive.upload_start
     });
 
@@ -976,17 +999,21 @@ var main = function() {
         Hive.set_bg_img(Hive.Exp.background);
     });
     $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start,
-        success : function(r) { Hive.set_bg_img(r); Hive.upload_finish() } }); });
+        success : function(data) { data['load'] = Hive.upload_finish; Hive.set_bg_img(data); } }); });
     Hive.set_bg_img(Hive.Exp.background);
     bg_set_color(Hive.Exp.background.color);
 
-    var pick_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_app }); };
-    $('#insert_image').click(pick_file);
-    $('#image_upload').click(pick_file);
-    $('#insert_audio').click(pick_file);
-    $('#audio_upload').click(pick_file);
-    $('#insert_file' ).click(pick_file);
-    $('#menu_file'   ).click(pick_file);
+    var new_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_file }); };
+    var new_link = function() { asyncUpload({ start : Hive.upload_start, success : function(data) {
+        if(data.error) { Hive.upload_finish(); alert('Sorry, your file failed to upload'); return }
+        Hive.new_app({ type: 'hive.text', content: $('<a>').attr('href', data.url).text(data.name).html() });
+    } }); }
+    $('#insert_image').click(new_file);
+    $('#image_upload').click(new_file);
+    $('#insert_audio').click(new_file);
+    $('#audio_upload').click(new_file);
+    $('#insert_file' ).click(new_link);
+    $('#menu_file'   ).click(new_link);
 
     var image_menu = hover_menu($('#insert_image'), $('#menu_image'), { click_persist : $('#image_embed_code'), auto_close: false});
     var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'), { click_persist : $('#image_embed_code'), auto_close: false});
@@ -1113,34 +1140,15 @@ $(main);
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app;
 
-    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/)))
+    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i)))
         app = { type : 'hive.html', content : 
               '<object type="application/x-shockwave-flash" style="width:100%; height:100%" data="http://www.youtube.com/v/' + m[1]
             + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1"><param name="movie" value="http://www.youtube.com/v/' + m[1]
             + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1"><param name="allowFullScreen" value="true"><param name="wmode" value="opaque"/></object>' };
-    else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/))
+    else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i))
         app = { type : 'hive.html', content :
             '<iframe src="http://player.vimeo.com/video/' + m[2] + '?title=0&amp;byline=0&amp;portrait=0" style="width:100%;height:100%;border:0"></iframe>' };
-    else if(m = c.match(/^https?:\/\/(.*)mp3$/i))
-        app = { type : 'hive.html', content : "<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
-            + "<param name='FlashVars' value='soundFile=" + c + "'><param name='wmode' value='transparent'></object>" }
-//<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
-//http://player.vimeo.com/video/                                                   13110687
-//<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>
-    else if(m = c.match(/^https?:\/\/(.*)\/([^/]*)(jpg|jpeg|png|gif)$/i)) {
-        var callback = function(content) {
-            return function(data) {
-                if (data.err){ var app = {type: 'hive.image', content: content}; } 
-                else { var app = data; }
-                Hive.upload_finish();
-                Hive.new_app(app);
-                $(element).val('');
-            }
-        }
-        Hive.upload_start();
-        $.post(server_url, {action: "files_create", remote: true, url: m[0], filename: m[2] + m[3]}, callback(c), 'json');
-        return;
-    } else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+    else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
         var embed = stuffs.children().first();
@@ -1150,7 +1158,22 @@ Hive.embed_code = function(element) {
         embed.find('[width]').attr('width', '100%');
         embed.find('embed').attr('wmode', 'opaque');
         app = { type : 'hive.html', content : embed.outerHTML() };
-    } else {
+    }
+    else if(c.match(/^https?:\/\//i)) {
+        var callback = function(data) {
+            if (data.error) {
+                alert('Sorry, failed to load url ' + c);
+                Hive.upload_finish();
+                return;
+            }
+            Hive.new_file(data, { load: Hive.upload_finish });
+            $(element).val('');
+        }
+        Hive.upload_start();
+        $.post(server_url, { action: 'file_create', remote: true, url: c }, callback, 'json');
+        return;
+    }
+    else {
         var stuffs = $('<div>');
         stuffs.html(c);
         var embed = stuffs.children().first();
@@ -1166,6 +1189,8 @@ Hive.embed_code = function(element) {
     $(element).val('');
 } 
 
+// TODO: create Hive.Task which returns an object with .start() and .finish()
+// to support multiple busy processes
 Hive.upload_start = function() { center($('#loading').show()); }
 Hive.upload_finish = function() { $('#loading').hide(); }
 
@@ -1244,16 +1269,16 @@ Hive.toggle_grid = function() {
 
 Hive.set_bg_img = function(app) {
     var url = Hive.Exp.background.url = app.content || app.url;
-    Hive.Exp.background.opacity = app.opacity;
+    if(app.opacity) Hive.Exp.background.opacity = app.opacity;
     var img = Hive.bg_div.find('img'), imgs = img.add('#bg_preview_img');
 
     if(url) imgs.show();
     else { imgs.hide(); return }
 
     imgs.attr('src', url);
-    img.load(function(){ setTimeout(place_apps, 0); });
+    img.load(function(){ setTimeout(place_apps, 0); if(app.load) app.load(); });
     //img_fill('#bg_preview_img');
-    imgs.css('opacity', app.opacity);
+    if(app.opacity) imgs.css('opacity', app.opacity);
 };
 
 function remove_all_apps() {

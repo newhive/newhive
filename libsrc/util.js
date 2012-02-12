@@ -54,7 +54,7 @@ function autoLink(string) {
     //    uncommon case of a URL with a query string that ends in punctuation.
     function linkify(m, m1, m2, m3, m4, m5, m6, m7) {
         var href = ((m2 === '') ? 'http://' : m2) + m3; // prepend http:// if it's not already there
-        return m1 + $('<a>').attr('href', href).text(href).outerHTML() + m7; 
+        return m1 + $('<a>').attr('href', href).text(m2 + m3).outerHTML() + m7; 
     }
     return string.replace(re, linkify);
 }
@@ -330,14 +330,11 @@ function iconCounts() {
 
 var urlParams = {};
 (function () {
-    var e,
-        a = /\+/g,  // Regex for replacing addition symbol with a space
-        r = /([^&=]+)=?([^&]*)/g,
-        d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
-        q = window.location.search.substring(1);
-
-    while (e = r.exec(q))
-       urlParams[d(e[1])] = d(e[2]);
+    var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
+    if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
+        var pair = v.split('=');
+        urlParams[d(pair[0])] = d(pair[1]);
+    });
 })();
 
 /*** puts alt attribute of input fields in to value attribute, clears
@@ -359,13 +356,6 @@ $(function () {
             updateShareUrls('#dia_share', window.location);
         }
     });
-
-  $("input[alt], textarea[alt]").each(function() {
-    var defaultValue = $(this).attr('alt');
-    this.onfocus = function() { if(this.value == defaultValue) this.value = ""; }
-    this.onblur = function() { if(this.value == "") this.value = defaultValue };
-    if(this.value == "") this.value = defaultValue;
-  });
 
   $(".hoverable").each(function() { hover_add(this) });
 
@@ -431,7 +421,7 @@ function asyncSubmit(form, callback) {
 
 function asyncUpload(opts) {
     var target, form, opts = $.extend({ json : true, file_name : 'file',
-        start : noop, success : noop, data : { action : 'files_create' } }, opts);
+        start : noop, success : noop, data : { action : 'file_create' } }, opts);
 
     var onload = function() {
         var frame = target.get(0);
