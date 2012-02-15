@@ -1068,7 +1068,7 @@ var main = function() {
         $('#current_thumb').attr('src', app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
     };
 
-    hover_menu($('#btn_save'), $('#menu_save'), { hover : false, auto_height : false, auto_close : false, open: pickDefaultThumb});
+    hover_menu($('#btn_save'), $('#menu_save'), { auto_height : false, auto_close : false, open: pickDefaultThumb, click_persist : '#menu_save' });
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');
