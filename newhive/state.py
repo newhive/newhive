@@ -398,6 +398,16 @@ class User(Entity):
     def key_words(self):
         return list(set(normalize(' '.join([self['name'], self['fullname']]))))
 
+    @property
+    def expressions(self):
+        return self.db.Expr.search({'owner': self.id})
+
+    def delete(self):
+        for e in self.expressions:
+            e.delete()
+        self.db.KeyWords.remove_entries(self)
+        return super(User, self).delete()
+
 
 @Database.register
 class Session(Entity):
