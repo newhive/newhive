@@ -910,7 +910,9 @@ Hive.new_app = function(s) {
     return false;
 };
 
-Hive.new_file = function(file, app) {
+Hive.new_file = function(file, opts) {
+    var app = $.extend({}, opts);
+
     if(file.mime.match(/image\/(png|gif|jpeg)/)) $.extend(app, {
          type: 'hive.image'
         ,content: file.url
