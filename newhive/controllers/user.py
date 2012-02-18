@@ -143,11 +143,18 @@ class UserController(ApplicationController):
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited?request_ids=' + str(request.args.get('request_ids')) + '";</script></html>')
 
     def invited_from_facebook(self, request, response, args={}):
+        fbc = FacebookClient()
         params = request.args
         request_ids = request.args.get('request_ids').split(',')
-        fbc = FacebookClient()
+        valid_request = False
+        for request_id in request_ids:
+            valid_request = valid_request or fbc.find("https://graph.facebook.com/" + str(request_id), app_access=True)
         response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True) + 'signup')
-        print response.context['facebook_connect_url']
+        if not valid_request:
+            msg = "This invite from facebook has already been used. If you " +\
+                  "think this is a mistake, please contact us at " +\
+                  '<a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
+            return self._bad_referral(request, response, msg=msg)
         return self.serve_page(response, 'pages/invited_from_facebook.html')
 
     def update(self, request, response):
@@ -241,9 +248,12 @@ class UserController(ApplicationController):
         l = self.db.ActionLog.new(user, request.form.get('log_action'), data)
         return True
 
-    def _bad_referral(self, request, response):
+    def _bad_referral(self, request, response, msg=None):
         if request.requester.logged_in: self.redirect(response, request.requester.get_url())
-        response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
+        if not msg: msg = "You have already signed up. If you think this is a " +\
+                          "mistake, please try signing up again, or contact us at " +\
+                          '<a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
+        response.context['msg'] = msg
         response.context['error'] = 'Log in if you already have an account'
         return self.serve_page(response, 'pages/error.html')
 
