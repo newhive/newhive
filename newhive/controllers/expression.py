@@ -265,7 +265,6 @@ class ExpressionController(ApplicationController):
         if not e: return self.serve_404(request, response)
         if e['owner'] != request.requester.id: raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
         e.delete()
-        if e['name'] == '': request.requester.expr_create({ 'title' : 'Homepage', 'home' : True })
         # TODO: garbage collect media files that are no longer referenced by expression
         return self.redirect(response, request.requester.url)
 
