@@ -6,6 +6,7 @@ from oauth2client.client import OAuth2WebServerFlow, OAuth2Credentials
 from oauth2client import tools
 
 from newhive import config
+from newhive.utils import abs_url
 
 ga_filters = {
         'expressions': 'ga:hostname!=thenewhive.com;' + ";".join(['ga:pagePath!~' + path for path in ['^/expressions', '^/feed', '^/listening', '^/starred']])
@@ -51,7 +52,9 @@ class FacebookClient(object):
         self.scope = 'email,publish_actions'
         self.auth_uri = 'https://www.facebook.com/dialog/oauth'
         self.token_uri = 'https://graph.facebook.com/oauth/access_token'
+        self.default_redirect_uri = abs_url(secure=True)
         self.user_agent = None
+        self._access_token = None
 
         self.flow = OAuth2WebServerFlow(
                 client_id=self.client_id
@@ -63,6 +66,23 @@ class FacebookClient(object):
 
     def authorize_url(self, redirect_url):
         return self.flow.step1_get_authorize_url(redirect_url)
+
+    @property
+    def access_token(self):
+        if not self._access_token:
+            http = httplib2.Http()
+            body = urllib.urlencode({
+                'grant_type': 'client_credentials',
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'redirect_uri': self.default_redirect_uri
+                })
+            resp, content = http.request(self.token_uri + "?" + body, method='GET')
+
+            if resp.status == 200:
+                d = dict([el.split('=') for el in content.split('&')])
+                self._access_token = d['access_token']
+        return self._access_token
 
     def exchange(self, request):
         code = request.args.get('code')
@@ -97,12 +117,16 @@ class FacebookClient(object):
                                     id_token=d.get('id_token', None))
            return self.credentials
 
-    def find(self, api_url, credentials=None):
+    def find(self, api_url, credentials=None, app_access=False):
         if credentials: self.credentials = credentials
+
         h = httplib2.Http()
-        h = self.credentials.authorize(h)
-        head, content = h.request(api_url)
-        if head.get('status') != '200': return [head, content]
+        if app_access:
+            head, content = h.request(api_url + "?access_token=" + self.access_token)
+        else:
+            h = self.credentials.authorize(h)
+            head, content = h.request(api_url)
+        if head.get('status') != '200': return False
         else: return json.loads(content)
 
     def fql(self, query, credentials = None):
