@@ -191,6 +191,8 @@ def handle(request): # HANDLER
         elif p1 == 'random': return controllers['expression'].random(request, response)
         elif p1 == 'search': return controllers['expression'].search(request, response)
         elif p1 == 'oauth':  return controllers['user'].facebook_connect(request, response)
+        elif p1 == 'fbcanvas':  return controllers['user'].facebook_canvas(request, response)
+        elif p1 == 'invited': return controllers['user'].invited_from_facebook(request, response)
         else: return serve_404(request, response)
 
     elif request.domain.startswith('www.'):

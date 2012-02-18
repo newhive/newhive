@@ -1,5 +1,5 @@
 from newhive.controllers.shared import *
-from newhive import auth, config
+from newhive import auth, config, oauth
 from werkzeug import Response
 
 class ApplicationController(object):
@@ -8,6 +8,7 @@ class ApplicationController(object):
         self.assets_env = assets_env
         self.db = db
         self.content_domain = config.content_domain
+        self.fb_client = oauth.FacebookClient()
 
     def pre_process(self, request, args={}):
         response = Response()
@@ -52,6 +53,7 @@ class ApplicationController(object):
             ,use_ga = config.use_ga
             ,ui = ui
             ,template = template
+            ,facebook_app_id = config.facebook_app_id
             )
         context.setdefault('icon', '/lib/skin/1/logo.png')
         return self.jinja_env.get_template(template).render(context)

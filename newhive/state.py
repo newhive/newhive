@@ -1,4 +1,4 @@
-import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions
+import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
@@ -8,6 +8,7 @@ from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
 from itertools import ifilter, imap
+from oauth2client.client import OAuth2Credentials
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
@@ -397,6 +398,24 @@ class User(Entity):
     @property
     def key_words(self):
         return list(set(normalize(' '.join([self['name'], self['fullname']]))))
+
+    @property
+    def facebook_credentials(self):
+        if not hasattr(self, '_facebook_credentials'):
+            if self.has_key('oauth') and self['oauth'].has_key('facebook'):
+                self._facebook_credentials = OAuth2Credentials.from_json(
+                                                    json.dumps(self['oauth']['facebook']))
+            else: return None
+        return self._facebook_credentials
+
+    @property
+    def facebook_id(self):
+        if self.has_key('facebook'): return self['facebook'].get('id')
+    @property
+    def facebook_thumbnail(self):
+        if self.has_key('facebook'):
+            return "https://graph.facebook.com/" + self.facebook_id + "/picture?type=square"
+
 
 
 @Database.register

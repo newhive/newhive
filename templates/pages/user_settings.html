@@ -111,6 +111,12 @@ $(document).ready(function(){
     if (! validate({'update': update})) { return false }
     if (update) { post_update(); return false }
   });
+  $('.friend .listen').click(function(){
+    $(this).toggleClass('active');
+    $('input[name=friends_to_listen]').val(
+      $('.friend .listen.active').map(function(){return $(this).attr('data-id')}).toArray().join(",")
+    );
+  });
 });
 </script>
 {% endblock head %}
@@ -120,9 +126,9 @@ $(document).ready(function(){
    <div class='icon'><h1>{{ ui.create_account_title if action == 'create' else ui.update_account_title }}</h1></div>
  </div>
 
- <form id='form' method='POST'>
-   <div style='margin : 0 auto; width : 80%;'>
-     <div style='float : left; clear : both; text-align:left; margin : 0 25px 50px 50px; vertical-align : top'>
+ <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
+
+     <div class="column" id="column_1" style='clear : both; text-align:left; margin : 0 0px 50px 0; vertical-align : top;'>
        <input type='hidden' name='action' value='{{"user_update" if update else "user_create"}}'>
    
        <b>Username</b><br>
@@ -136,7 +142,24 @@ $(document).ready(function(){
        <b>Display Name</b><br>
        <input type='text' name='fullname' value='{{f.fullname}}'><br>
        <br>
-   
+       <br>
+       <b class='error'>Terms of Service</b><br>
+       <br>
+       <b>
+         <span class='inactive'>1.</span> You own your information<br>
+         <span class='inactive'>2.</span> We'll never put ads on your<br>&nbsp;&nbsp;&nbsp;&nbsp;expressions<br>
+         <span class='inactive'>3.</span> Have fun<br>
+         <span class='inactive'>4.</span> Don't be mean or obscene<br>
+         <span class='inactive'>5.</span> Encourage expression<br>
+       </b><br>
+
+       <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
+       <br>
+       
+       <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
+ 
+     </div>
+     <div class="column" id="column_2">
        {% if update %}
        <b>Current Password</b> <span class='required'>*required</span><br>
        <input id='p0' type='password' name='old_password' value='{{f.secret}}'><br>
@@ -172,35 +195,30 @@ $(document).ready(function(){
        <input id='age' type='text' name='age' value='{{q.age if q.age else f.age}}'><br>
        <br>
        {% endif %}
-     </div>
-     <div style='float : left; margin : 0 0 50px 100px; vertical-align : top'>
-       {% if not update %}
-       <b class='error'>Terms of Service</b><br>
-       <br>
-
-       <b>
-        <span class='inactive'>1.</span> You own your information<br>
-        <span class='inactive'>2.</span> We'll never put ads on your expressions<br>
-        <span class='inactive'>3.</span> Have fun<br>
-        <span class='inactive'>4.</span> Don't be mean or obscene<br>
-        <span class='inactive'>5.</span> Encourage expression<br>
-       </b><br>
-
-       <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
-       <br>
-       
-       <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
-       <br>
-       <br>
+       <input type="hidden" name="friends_to_listen"/>
+       {% if f.facebook %}
+         <input type="hidden" val='{{f.facebook | json }}' name="facebook">
        {% endif %}
    
-       <a href='{{facebook_connect_url}}'>Connect With Facebook</a>
-       {% if update %}
-         <input class='black btn rounded' type='submit' value='Update Profile' >
-       {% else %}
-         <input class='black btn rounded' type='submit' value='Create Account'>
-       {% endif %}
-     </div>
+   {% if update %}
+   {% if not user.facebook %}<div><a href='{{facebook_connect_url}}'>Connect Your Facebook Account</a></div>{% endif %}
+     <input class='black btn rounded' type='submit' value='Update Profile' >
+   {% else %}
+     <input class='black btn rounded' type='submit' value='Create Account'>
+   {% endif %}
+   </div>
+   <div class="column" id="column_3">
+     {% if friends %}
+       <h3>Listen to your Friends:</h3>
+       <input type="checkbox" id='listen_to_friends'/><label for="listen_to_friends">Automatically listen to all of my friends from Facebook that are on The New Hive.</b></label>
+       {% for friend in friends -%}
+         <div class="friend">
+           <img src="{{friend.facebook_thumbnail}}"/>
+           {{- friend.facebook.name -}}
+           <div data-id="{{friend.facebook.id}}" class="listen"></div>
+         </div>
+       {% endfor %}
+     {% endif %}
    </div>
  </form>
 {% endblock %}

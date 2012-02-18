@@ -1198,17 +1198,53 @@ input[type="text"].copy, textarea.copy {
 }
 
 /* line 2, /home/duffy/2newhive/libsrc/scss/settings.scss */
+.user_settings .column {
+  float: left;
+  width: 300px;
+}
+/* line 5, /home/duffy/2newhive/libsrc/scss/settings.scss */
+.user_settings .column h3 {
+  margin-top: 0;
+}
+/* line 7, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings input[type="text"], .user_settings input[type="password"] {
   width: 217px;
 }
-/* line 5, /home/duffy/2newhive/libsrc/scss/settings.scss */
+/* line 10, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings #gender_wrapper {
   width: 120px;
   float: left;
 }
-/* line 9, /home/duffy/2newhive/libsrc/scss/settings.scss */
+/* line 14, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings #age {
   width: 93px;
+}
+/* line 17, /home/duffy/2newhive/libsrc/scss/settings.scss */
+.user_settings .friend {
+  padding: 3px;
+  border-top: 1px solid #d1d1d1;
+}
+/* line 20, /home/duffy/2newhive/libsrc/scss/settings.scss */
+.user_settings .friend img {
+  vertical-align: middle;
+  width: 32px;
+  margin-right: 6px;
+}
+/* line 25, /home/duffy/2newhive/libsrc/scss/settings.scss */
+.user_settings .friend .listen {
+  width: 37px;
+  height: 31px;
+  margin: 0;
+  float: right;
+  background: url("/lib/skin/1/people_small.png");
+}
+/* line 31, /home/duffy/2newhive/libsrc/scss/settings.scss */
+.user_settings .friend .listen:hover {
+  background: #423c3e url("/lib/skin/1/people_small-hover.png");
+}
+/* line 34, /home/duffy/2newhive/libsrc/scss/settings.scss */
+.user_settings .friend .listen.active {
+  background: url("/lib/skin/1/people_small_active.png");
 }
 
 /* line 2, /home/duffy/2newhive/libsrc/scss/profile.scss */
@@ -1262,29 +1298,47 @@ input[type="text"].copy, textarea.copy {
   vertical-align: top;
 }
 
-/* line 25 */
+/* line 23 */
+.centered {
+  text-align: center;
+}
+
+/* line 26 */
+img.centered {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* line 31 */
+.bright_headline {
+  font-family: Museo, sans-serif;
+  color: #f72e4d;
+}
+
+/* line 37 */
 #nav {
   height: 50px;
 }
 
-/* line 27 */
+/* line 39 */
 .expr_cards #header {
   padding-top: 48px;
   padding-left: 30px;
   padding-bottom: 23px;
 }
 
-/* line 32 */
+/* line 44 */
 #primary_content {
   clear: both;
 }
 
-/* line 33 */
+/* line 45 */
 .logged_in #primary_content, .tag_search #primary_content {
   padding-top: 12px;
 }
 
-/* line 35 */
+/* line 47 */
 #left_column, #right_column, #header, #feed {
   *zoom: 1;
 }
@@ -1295,67 +1349,67 @@ input[type="text"].copy, textarea.copy {
   clear: both;
 }
 
-/* line 38 */
+/* line 50 */
 #left_column {
   float: left;
   width: 210px;
   padding-left: 30px;
 }
 
-/* line 43 */
+/* line 55 */
 #right_column {
   margin-left: 240px;
 }
 
-/* line 48 */
+/* line 60 */
 iframe {
   border: none;
 }
 
-/* line 52 */
+/* line 64 */
 .user_settings .fathead, .email_confirmation .fathead {
   margin: 50px;
 }
-/* line 54 */
+/* line 66 */
 .user_settings .fathead div, .email_confirmation .fathead div {
   background: url("/lib/skin/1/plus_lg.png") no-repeat;
   height: 44px;
 }
-/* line 58 */
+/* line 70 */
 .user_settings .fathead h1, .email_confirmation .fathead h1 {
   margin: 0 0 0 50px;
   display: inline;
   font-family: Museo, Helvetica, sans-serif;
 }
 
-/* line 66 */
+/* line 78 */
 .user_settings .required {
   color: #f72e4d;
   font-size: 0.7em;
 }
-/* line 70 */
+/* line 82 */
 .user_settings .form_validation_info {
   width: 215px;
 }
-/* line 71 */
+/* line 83 */
 .user_settings .user_name_change_text {
   width: 215px;
   font-size: 0.75em;
 }
 
-/* line 81 */
+/* line 93 */
 .email_confirmation .fathead {
   margin-bottom: 100px;
 }
-/* line 83 */
+/* line 95 */
 .email_confirmation .fathead p {
   margin-left: 50px;
 }
-/* line 86 */
+/* line 98 */
 .email_confirmation #content a {
   color: #698293;
 }
-/* line 88 */
+/* line 100 */
 .email_confirmation #content a:hover {
   color: #f72e4d;
 }

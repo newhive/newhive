@@ -15,13 +15,25 @@ $left_column_width: 210px;
 @import "home";
 @import "expression";
 @import "settings";
+@import "signup_flow";
 
-// Page Layout
 .expr_cards {
   @import "profile";
 }
+.centered { 
+    text-align: center; 
+}
+img.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+.bright_headline { 
+    font-family: Museo, sans-serif; 
+    color: $color_active;
+    }
 
-
+// Page Layout
 #nav{ height: $nav_height; }
 
 .expr_cards #header { 

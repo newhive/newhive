@@ -48,8 +48,20 @@ class UserController(ApplicationController):
 
     def new(self, request, response):
         response.context['action'] = 'create'
-        referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
-        if not referral or referral.get('used'): return self._bad_referral(request, response)
+        if request.args.has_key('code'):
+            fbc = FacebookClient()
+            credentials = fbc.exchange(request)
+            user_data = fbc.find('https://graph.facebook.com/me')
+            response.context['f'] = dfilter(user_data, ['email'])
+            response.context['f']['fullname'] = user_data['name']
+            response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(user_data.get('gender'))
+            response.context['f']['facebook'] = user_data
+            friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", request.requester.facebook_credentials)['data']
+            users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
+            response.context['friends'] = users
+        else:
+            referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
+            if not referral or referral.get('used'): return self._bad_referral(request, response)
         return self.serve_page(response, 'pages/user_settings.html')
 
     def create(self, request, response):
@@ -62,21 +74,28 @@ class UserController(ApplicationController):
             Logs new user in.
             """
 
-        referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
-        if (not referral or referral.get('used')): return self._bad_referral(request, response)
-        referrer = self.db.User.fetch(referral['user'])
+        if request.args.has_key('key'):
+            referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
+            if (not referral or referral.get('used')): return self._bad_referral(request, response)
+            referrer = self.db.User.fetch(referral['user'])
+        elif request.args.has_key('code'):
+            referral = self.db.Referral.new({})
         assert 'tos' in request.form
 
-        args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender'])
+        args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender', 'facebook'])
         args.update({
-             'referrer' : referral['user']
+             'referrer' : referral.get('user')
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]
             #,'flags'    : { 'add_invites_on_save' : True }
         })
         if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})
 
         user = self.db.User.create(args)
-        referrer.update(referrals = referrer['referrals'] - 1)
+        friends = request.form.get('friends_to_listen')
+        if friends:
+            friends = friends.split(',')
+            for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
+                self.db.Star.new(user, friend)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
         user.give_invites(5)
 
@@ -87,21 +106,49 @@ class UserController(ApplicationController):
         self.login(request, response)
         return self.redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
+    def _save_credentials(self, request, fbc=FacebookClient()):
+        credentials = fbc.exchange(request)
+        if not request.requester.has_key('oauth'): request.requester['oauth'] = {}
+        if not request.requester.has_key('facebook'):
+            request.requester['facebook'] = fbc.find('https://graph.facebook.com/me')
+        request.requester['oauth']['facebook'] = json.loads(credentials.to_json())
+        request.requester.save()
+
     def edit(self, request, response):
         if request.requester.logged_in and request.is_secure:
             response.context['action'] = 'update'
             response.context['f'] = request.requester
-            response.context['facebook_connect_url'] = FacebookClient().authorize_url('https://thenewhive.com:1718/oauth/facebook')
+            response.context['facebook_connect_url'] = FacebookClient().authorize_url(abs_url(secure=True)+ 'settings')
+            fbc = FacebookClient()
+            if request.args.has_key('code'):
+                self._save_credentials(request, fbc)
+            if request.requester.facebook_credentials:
+                if request.requester.facebook_credentials.access_token_expired:
+                    return self.redirect(response, fbc.authorize_url(abs_url(secure=True) + "settings"))
+                friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", request.requester.facebook_credentials)['data']
+                users = self.db.User.search({'facebook.id': {'$in': [friend['uid'] for friend in friends]}})
+                response.context['friends'] = users
             return self.serve_page(response, 'pages/user_settings.html')
 
     def facebook_connect(self, request, response, args={}):
-        code = request.args.get('code')
         f = FacebookClient()
-        credentials = FacebookClient().exchange(request)
-        if not request.requester.has_key('oauth'): request.requester['oauth'] = {}
-        request.requester['oauth']['facebook'] = json.loads(credentials.to_json())
-        request.requester.save()
-        return self.serve_json(response, credentials.to_json())
+        self._save_credentials(request, f)
+        response.context['friends'] = f.find('https://graph.facebook.com/me/friends')['data']
+        friend_ids = [friend['id'] for friend in response.context['friends']]
+        response.context['fb_app_id'] = f.client_id
+        return self.serve_page(response, 'pages/facebook_connect.html')
+
+    def facebook_canvas(self, request, response, args={}):
+        params = request.args
+        return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited?request_ids=' + str(request.args.get('request_ids')) + '";</script></html>')
+
+    def invited_from_facebook(self, request, response, args={}):
+        params = request.args
+        request_ids = request.args.get('request_ids').split(',')
+        f = FacebookClient()
+        response.context['facebook_connect_url'] = f.authorize_url(abs_url(secure=True) + 'signup')
+        print response.context['facebook_connect_url']
+        return self.serve_page(response, 'pages/invited_from_facebook.html')
 
     def update(self, request, response):
         message = ''

@@ -1,4 +1,4 @@
-import httplib2, os, urllib, datetime
+import httplib2, os, urllib, datetime, json
 
 from apiclient.discovery import build
 from oauth2client.file import Storage
@@ -46,9 +46,9 @@ class GAClient(object):
 class FacebookClient(object):
 
     def __init__(self):
-        self.client_id = '153421698080835'
-        self.client_secret = '53168c0305074b8ff82cab217d5043f9'
-        self.scope = 'email,publish_stream'
+        self.client_id = config.facebook_app_id
+        self.client_secret = config.facebook_client_secret
+        self.scope = 'email,publish_actions'
         self.auth_uri = 'https://www.facebook.com/dialog/oauth'
         self.token_uri = 'https://graph.facebook.com/oauth/access_token'
         self.user_agent = None
@@ -91,8 +91,20 @@ class FacebookClient(object):
                token_expiry = datetime.datetime.utcnow() + datetime.timedelta(
                                                    seconds=int(d['expires']))
 
-           return OAuth2Credentials(access_token, self.client_id,
+           self.credentials = OAuth2Credentials(access_token, self.client_id,
                                     self.client_secret, refresh_token, token_expiry,
                                     self.token_uri, self.user_agent,
                                     id_token=d.get('id_token', None))
+           return self.credentials
+
+    def find(self, api_url, credentials=None):
+        if credentials: self.credentials = credentials
+        h = httplib2.Http()
+        h = self.credentials.authorize(h)
+        head, content = h.request(api_url)
+        if head.get('status') != '200': return [head, content]
+        else: return json.loads(content)
+
+    def fql(self, query, credentials = None):
+        return self.find('https://graph.facebook.com/fql?q=' + urllib.quote(query), credentials)
 
