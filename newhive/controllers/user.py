@@ -116,10 +116,10 @@ class UserController(ApplicationController):
 
     def edit(self, request, response):
         if request.requester.logged_in and request.is_secure:
+            fbc = FacebookClient()
             response.context['action'] = 'update'
             response.context['f'] = request.requester
-            response.context['facebook_connect_url'] = FacebookClient().authorize_url(abs_url(secure=True)+ 'settings')
-            fbc = FacebookClient()
+            response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True)+ 'settings')
             if request.args.has_key('code'):
                 self._save_credentials(request, fbc)
             if request.requester.facebook_credentials:
@@ -131,11 +131,11 @@ class UserController(ApplicationController):
             return self.serve_page(response, 'pages/user_settings.html')
 
     def facebook_connect(self, request, response, args={}):
-        f = FacebookClient()
-        self._save_credentials(request, f)
-        response.context['friends'] = f.find('https://graph.facebook.com/me/friends')['data']
+        fbc = FacebookClient()
+        self._save_credentials(request, fbc)
+        response.context['friends'] = fbc.find('https://graph.facebook.com/me/friends')['data']
         friend_ids = [friend['id'] for friend in response.context['friends']]
-        response.context['fb_app_id'] = f.client_id
+        response.context['fb_app_id'] = fbc.client_id
         return self.serve_page(response, 'pages/facebook_connect.html')
 
     def facebook_canvas(self, request, response, args={}):
@@ -145,8 +145,8 @@ class UserController(ApplicationController):
     def invited_from_facebook(self, request, response, args={}):
         params = request.args
         request_ids = request.args.get('request_ids').split(',')
-        f = FacebookClient()
-        response.context['facebook_connect_url'] = f.authorize_url(abs_url(secure=True) + 'signup')
+        fbc = FacebookClient()
+        response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True) + 'signup')
         print response.context['facebook_connect_url']
         return self.serve_page(response, 'pages/invited_from_facebook.html')
 
