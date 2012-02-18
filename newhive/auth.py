@@ -13,6 +13,12 @@ def authenticate_request(db, request, response):
     session = db.Session.fetch(sessid)
     if not session: return fail
     user = db.User.fetch(session['user'])
+    if not user:
+        rm_cookie(response, 'plain_secret')
+        rm_cookie(response, 'secure_secret', True)
+        rm_cookie(response, 'identity')
+        return fail
+
     user.update(session = session.id)
 
     user.logged_in = False
