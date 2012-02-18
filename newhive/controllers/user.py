@@ -75,7 +75,6 @@ class UserController(ApplicationController):
         if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})
 
         user = self.db.User.create(args)
-        referrer.update(referrals = referrer['referrals'] - 1)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
         user.give_invites(5)
 
