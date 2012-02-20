@@ -98,6 +98,15 @@ function post_update() {
     asyncSubmit($('#form'), callback);
 };
 
+var update_friends_to_listen = function(){
+  var id_map = function(i, el) {
+    return $(el).attr('data-id');
+  };
+  $('input[name=friends_to_listen]').val(
+    $('.friend .listen.active').map(id_map).toArray().join(",")
+  );
+};
+
 $(document).ready(function(){
   {% if update %}
       var update = true;
@@ -113,10 +122,23 @@ $(document).ready(function(){
   });
   $('.friend .listen').click(function(){
     $(this).toggleClass('active');
-    $('input[name=friends_to_listen]').val(
-      $('.friend .listen.active').map(function(){return $(this).attr('data-id')}).toArray().join(",")
-    );
+    update_friends_to_listen();
   });
+
+  $('#listen_to_friends').click(function(e){
+    if ($('#listen_to_friends').is(':checked')) {
+      $('.friend .listen').addClass('active');
+    } else { 
+      $('.friend .listen').removeClass('active');
+    };
+    update_friends_to_listen();
+  });
+  // Default to listening to all friends on initial signup
+  if (!update) {
+    $('#listen_to_friends').attr('checked', 'checked');
+    $('.friend .listen').addClass('active');
+    update_friends_to_listen();
+  }
 });
 </script>
 {% endblock head %}
@@ -210,7 +232,7 @@ $(document).ready(function(){
    <div class="column" id="column_3">
      {% if friends %}
        <h3>Listen to your Friends:</h3>
-       <input type="checkbox" id='listen_to_friends'/><label for="listen_to_friends">Automatically listen to all of my friends from Facebook that are on The New Hive.</b></label>
+       <input type="checkbox" id='listen_to_friends'/><label for="listen_to_friends">Listen to all of my friends from Facebook that are on The New Hive.</b></label>
        {% for friend in friends -%}
          <div class="friend">
            <img src="{{friend.facebook_thumbnail}}"/>
