@@ -416,6 +416,7 @@ class User(Entity):
         if self.has_key('facebook'):
             return "https://graph.facebook.com/" + self.facebook_id + "/picture?type=square"
 
+    @property
     def expressions(self):
         return self.db.Expr.search({'owner': self.id})
 
@@ -428,7 +429,7 @@ class User(Entity):
         self.db.KeyWords.remove_entries(self)
 
         # Feed Cleanup
-        for feed_item in db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
+        for feed_item in self.db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
             feed_item.delete()
 
         return super(User, self).delete()
