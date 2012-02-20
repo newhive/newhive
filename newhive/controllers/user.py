@@ -82,7 +82,7 @@ class UserController(ApplicationController):
             referral = self.db.Referral.new({})
         assert 'tos' in request.form
 
-        args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender', 'facebook'])
+        args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender'])
         args.update({
              'referrer' : referral.get('user')
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]
@@ -98,6 +98,7 @@ class UserController(ApplicationController):
                 self.db.Star.new(user, friend)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
         user.give_invites(5)
+        if request.args.has_key('code'): self._save_credentials(request, user)
 
         try: mail.mail_user_register_thankyou(self.jinja_env, user)
         except: pass # TODO: log an error
@@ -106,13 +107,13 @@ class UserController(ApplicationController):
         self.login(request, response)
         return self.redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
-    def _save_credentials(self, request, fbc=FacebookClient()):
+    def _save_credentials(self, request, user, fbc=FacebookClient()):
         credentials = fbc.exchange(request)
-        if not request.requester.has_key('oauth'): request.requester['oauth'] = {}
-        if not request.requester.has_key('facebook'):
-            request.requester['facebook'] = fbc.find('https://graph.facebook.com/me')
-        request.requester['oauth']['facebook'] = json.loads(credentials.to_json())
-        request.requester.save()
+        if not user.has_key('oauth'): user['oauth'] = {}
+        if not user.has_key('facebook'):
+            user['facebook'] = fbc.find('https://graph.facebook.com/me')
+        user['oauth']['facebook'] = json.loads(credentials.to_json())
+        user.save()
 
     def edit(self, request, response):
         if request.requester.logged_in and request.is_secure:
@@ -121,18 +122,18 @@ class UserController(ApplicationController):
             response.context['f'] = request.requester
             response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True)+ 'settings')
             if request.args.has_key('code'):
-                self._save_credentials(request, fbc)
+                self._save_credentials(request, request.requester, fbc)
             if request.requester.facebook_credentials:
                 if request.requester.facebook_credentials.access_token_expired:
                     return self.redirect(response, fbc.authorize_url(abs_url(secure=True) + "settings"))
                 friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", request.requester.facebook_credentials)['data']
-                users = self.db.User.search({'facebook.id': {'$in': [friend['uid'] for friend in friends]}})
+                users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
                 response.context['friends'] = users
             return self.serve_page(response, 'pages/user_settings.html')
 
     def facebook_connect(self, request, response, args={}):
         fbc = FacebookClient()
-        self._save_credentials(request, fbc)
+        self._save_credentials(request, request.requester, fbc)
         response.context['friends'] = fbc.find('https://graph.facebook.com/me/friends')['data']
         friend_ids = [friend['id'] for friend in response.context['friends']]
         response.context['fb_app_id'] = fbc.client_id

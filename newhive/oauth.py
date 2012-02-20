@@ -103,19 +103,20 @@ class FacebookClient(object):
         resp, content = http.request(self.token_uri, method='POST', body=body,
                                      headers=headers)
         if resp.status == 200:
-           d = dict([el.split('=') for el in content.split('&')])
-           access_token = d['access_token']
-           refresh_token = d.get('refresh_token', None)
-           token_expiry = None
-           if 'expires' in d:
-               token_expiry = datetime.datetime.utcnow() + datetime.timedelta(
-                                                   seconds=int(d['expires']))
+            d = dict([el.split('=') for el in content.split('&')])
+            access_token = d['access_token']
+            refresh_token = d.get('refresh_token', None)
+            token_expiry = None
+            if 'expires' in d:
+                token_expiry = datetime.datetime.utcnow() + datetime.timedelta(
+                                                    seconds=int(d['expires']))
 
-           self.credentials = OAuth2Credentials(access_token, self.client_id,
-                                    self.client_secret, refresh_token, token_expiry,
-                                    self.token_uri, self.user_agent,
-                                    id_token=d.get('id_token', None))
-           return self.credentials
+            self.credentials = OAuth2Credentials(access_token, self.client_id,
+                                     self.client_secret, refresh_token, token_expiry,
+                                     self.token_uri, self.user_agent,
+                                     id_token=d.get('id_token', None))
+            return self.credentials
+        else: raise Exception(str([resp, content]))
 
     def find(self, api_url, credentials=None, app_access=False):
         if credentials: self.credentials = credentials
@@ -129,6 +130,6 @@ class FacebookClient(object):
         if head.get('status') != '200': return False
         else: return json.loads(content)
 
-    def fql(self, query, credentials = None):
-        return self.find('https://graph.facebook.com/fql?q=' + urllib.quote(query), credentials)
+    def fql(self, query, credentials = None, app_access=False):
+        return self.find('https://graph.facebook.com/fql?q=' + urllib.quote(query), credentials, app_access)
 
