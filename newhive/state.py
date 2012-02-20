@@ -416,6 +416,14 @@ class User(Entity):
         if self.has_key('facebook'):
             return "https://graph.facebook.com/" + self.facebook_id + "/picture?type=square"
 
+    def expressions(self):
+        return self.db.Expr.search({'owner': self.id})
+
+    def delete(self):
+        for e in self.expressions:
+            e.delete()
+        self.db.KeyWords.remove_entries(self)
+        return super(User, self).delete()
 
 
 @Database.register
