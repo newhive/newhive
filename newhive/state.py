@@ -796,6 +796,7 @@ class ActionLog(Entity):
 @Database.register
 class Feed(Entity):
     cname = 'feed'
+    indexes = ['entity', 'initiator']
     _initiator = _entity = None
 
     class Collection(Collection):
@@ -845,8 +846,8 @@ class Feed(Entity):
     initiator = property(get_initiator)
         
     def delete(self):
-        self.initiator.update_cmd({'$pull': {'feed': self.id}})
-        self.entity.update_cmd({'$pull': {'feed': self.id}})
+        if self.initiator: self.initiator.update_cmd({'$pull': {'feed': self.id}})
+        if self.entity: self.entity.update_cmd({'$pull': {'feed': self.id}})
         return super(Feed, self).delete()
 
     def get_owner_name(self):

@@ -2,6 +2,6 @@
   <input type='hidden' class='expr_id' value='{{ user.id }}'>
   <a href='{{ user.url|e }}' target='_top'><img src='{{ user.thumb if user.profile_thumb else "/lib/skin/1/thumb_person_mask.png?v=2" }}' style='background: {{ colors[range(32)|random] }};' class='thumb'>
   <div class='title'>{{ user.fullname|e }}</div></a>
-  <div class='tags'>{% if user.expr_count > 0 %}{{ user.expr_count ~ " expression" ~ ("s" if user.expr_count > 1) }}{% endif %}</div>
+  <div class='tags'>{% if user and user.expr_count > 0 %}{{ user.expr_count ~ " expression" ~ ("s" if user.expr_count > 1) }}{% endif %}</div>
   <a href='{{ user.url|e }}' target='_top'><div class='other'><span>{{ user.name }}</span></div></a>
 </div>
