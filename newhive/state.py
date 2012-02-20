@@ -420,9 +420,17 @@ class User(Entity):
         return self.db.Expr.search({'owner': self.id})
 
     def delete(self):
+        # Expressions Cleanup
         for e in self.expressions:
             e.delete()
+
+        # Search Index Cleanup
         self.db.KeyWords.remove_entries(self)
+
+        # Feed Cleanup
+        for feed_item in db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
+            feed_item.delete()
+
         return super(User, self).delete()
 
 
