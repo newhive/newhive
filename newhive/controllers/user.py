@@ -30,7 +30,7 @@ class UserController(ApplicationController):
             return self.serve_page(response, 'pages/expr_cards.html')
         elif args.get('feed'):
             if not request.requester.logged_in:
-                return redirect(response, abs_url())
+                return self.redirect(response, abs_url())
             response.context['feed_items'] = request.requester.feed
             tag = feed_tag
 
@@ -175,7 +175,7 @@ class UserController(ApplicationController):
         action = request.form.get('log_action')
         user = request.requester
         if action == "notifications_open":
-            user.notification_count = 0
+            user.notification_count_reset()
 
         data = json.loads(request.form.get('data', 'false'))
         if not data:

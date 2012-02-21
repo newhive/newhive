@@ -149,59 +149,52 @@ class Entity(dict):
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
 
-    def get_feed(self):
+
+# Common code between User and Expr
+class HasSocial(Entity):
+    @property
+    def feed(self):
         if not self._feed:
+            #self._feed = self.db.Feed.search({
             feed = self.get('feed')
             if feed:
                 self._feed = list(self.db.Feed.search({ '_id': { '$in' : self.get('feed') } }))
             else:
                 self._feed = []
         return self._feed
-    feed = property(get_feed)
 
-    def get_recent_feed(self):
+    @property
+    def recent_feed(self):
         return self.feed[-5:]
-    recent_feed = property(get_recent_feed)
 
-    def set_notification_count(self, count):
-        self.update_cmd({'$set': {'notification_count': count}});
-    def get_notification_count(self):
-        count = self.get('notification_count')
-        if not count and count != 0:
-           count = len(self.feed)
-           self.notification_count = count
-        return count
-    notification_count = property(get_notification_count, set_notification_count)
+    def notify_all(self, type, feed_item_id):
+        notifyees = filter(lambda i: i != self.owner.id, getattr(self, type)) # don't notify self of own actions
+        return self.mdb.user.update({"_id": {"$in": notifyees}}, { '$addToSet': {'feed': feed_item_id} }, safe=True)
 
-    def get_starred_items(self):
+    @property
+    def starred_items(self):
         if not self._starred_items:
-          self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star' and i.get('initiator') == self.id, self.feed)]
+          self._starred_items = [i.get('entity') for i in self.feed if i['class_name'] == 'Star' and i['initiator'] == self.id]
         return self._starred_items
-    starred_items = property(get_starred_items)
 
-    def get_starrers(self):
+    @property
+    def starrers(self):
         if not self._starrers:
-          self._starrers = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Star' and i.get('entity') == self.id, self.feed)]
+          self._starrers = [i.get('initiator') for i in self.feed if i['class_name'] == 'Star' and i['entity'] == self.id]
         return self._starrers
-    starrers = property(get_starrers)
 
-    def get_commenters(self):
+    @property
+    def commenters(self):
         if not self._commenters:
-          self._commenters = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Comment' and i.get('entity') == self.id, self.feed)]
+          self._commenters = [i.get('initiator') for i in self.feed if
+              i['class_name'] == 'Comment' and i['entity'] == self.id]
         return self._commenters
-    commenters = property(get_commenters)
 
-    def get_star_count(self):
-        return len(self.starrers)
-    star_count = property(get_star_count)
+    @property
+    def star_count(self): return len(self.starrers)
 
-    def get_comment_count(self):
-        return len(self.commenters)
-    comment_count = property(get_comment_count)
-
-    def notify(self, type, feed_item_id):
-        notifyees = getattr(self, type)
-        return self.mdb.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
+    @property
+    def comment_count(self): return len(self.commenters)
 
     def related_next(self, spec={}, loop=True):
         if type(spec) == dict:
@@ -254,7 +247,6 @@ class Entity(dict):
 class KeyWords(Entity):
     cname = 'key_words'
     indexes = [ ['doc_type', 'weight', 'words'], 'doc']
-    #classes = { 'Expr' : Expr, 'User' : User }
 
     class Collection(Collection):
         def remove_entries(self, doc):
@@ -283,7 +275,7 @@ class KeyWords(Entity):
 
 
 @Database.register
-class User(Entity):
+class User(HasSocial):
     cname = 'user'
 
     indexes = [ ('name', {'unique':True}) ]
@@ -316,6 +308,7 @@ class User(Entity):
     def __init__(self, *a, **b):
         super(User, self).__init__(*a, **b)
         self.logged_in = False
+        self.owner = self
 
     def expr_create(self, d):
         doc = dict(owner = self.id, name = '', domain = self['sites'][0])
@@ -339,6 +332,15 @@ class User(Entity):
         super(User, self).update(**d)
         self.build_search_index()
         return self
+
+    @property
+    def notification_count(self):
+        count = self.get('notification_count')
+        if count == None:
+           count = len(self.feed)
+           self['notification_count'] = count
+        return count
+    def notification_count_reset(self): self.update(notification_count=0)
 
     def build_search_index(self):
         texts = {'name': self.get('name'), 'fullname': self.get('fullname')}
@@ -409,7 +411,7 @@ def media_path(user, f_id=None):
     return joinpath(p, f_id) if f_id else p
 
 @Database.register
-class Expr(Entity):
+class Expr(HasSocial):
     cname = 'expr'
     indexes = [
          (['domain', 'name'], {'unique':True})
@@ -807,12 +809,8 @@ class Feed(Entity):
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create()
-        self.mdb.user.update({'_id': self['initiator']}, {'$addToSet': {'feed': self.id}})
-        self.entity.update_cmd({'$addToSet': {'feed': self.id}})
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
-        if self['entity_class'] == "Expr":
-            if not self.entity['owner'] == self['initiator']: # don't double-count commenting on your own expression
-                self.mdb.user.update({'_id': self.entity['owner']}, {'$inc': {'notification_count': 1}, '$addToSet': {'feed': self.id}})
+        self.entity.owner.notify(self)
         return self
 
     def get_entity(self):
@@ -852,8 +850,9 @@ class Comment(Feed):
     def create(self):
         assert self.has_key('text')
         super(Comment, self).create()
-        self.entity.notify('commenters', self.id)
-        self.entity.notify('starrers', self.id)
+        self.entity.owner.notify(self.id)
+        self.entity.notify_all('starrers', self.id)
+        self.initiator.notify_all('starrers', self.id)
         return self
 
     def get_author(self):
@@ -889,7 +888,7 @@ class Star(Feed):
 class InviteNote(Feed):
     def create(self):
         super(InviteNote, self).create()
-        self.entity.increment({'notification_count': 1})
+        self.entity.notify(self.id)
         return self
 
 @Database.register
@@ -897,16 +896,14 @@ class NewExpr(Feed):
     def create(self):
         super(NewExpr, self).create()
         if self.entity.public:
-            self.entity.owner.notify('starrers', self.id)
+            self.entity.owner.notify_all('starrers', self.id)
         return self
 
 @Database.register
 class UpdatedExpr(Feed):
     def create(self):
         super(UpdatedExpr, self).create()
-        self.entity.notify('starrers', self.id)
-        if self.entity.public:
-            self.entity.owner.notify('starrers', self.id)
+        self.entity.notify_all('starrers', self.id)
         return self
 
 
@@ -923,7 +920,6 @@ class Referral(Entity):
         url = abs_url(secure=True) + 'signup?key=' + self.get('key')
         if self.get('email'): url += '&email=' + self['email']
         return url
-
 
 
 @Database.register
