@@ -297,7 +297,7 @@ class Searchable():
 class User(Entity):
     cname = 'user'
 
-    indexes = [ ('name', {'unique':True}) ]
+    indexes = [ ('name', {'unique':True}), 'facebook.id' ]
     
     # fields = dict(
     #     name = str
