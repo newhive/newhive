@@ -163,19 +163,9 @@ class HasSocial(Entity):
                 self._feed = []
         return self._feed
 
-    @property
-    def recent_feed(self):
-        return self.feed[-5:]
-
     def notify_all(self, type, feed_item_id):
         notifyees = filter(lambda i: i != self.owner.id, getattr(self, type)) # don't notify self of own actions
         return self.mdb.user.update({"_id": {"$in": notifyees}}, { '$addToSet': {'feed': feed_item_id} }, safe=True)
-
-    @property
-    def starred_items(self):
-        if not self._starred_items:
-          self._starred_items = [i.get('entity') for i in self.feed if i['class_name'] == 'Star' and i['initiator'] == self.id]
-        return self._starred_items
 
     @property
     def starrers(self):
@@ -341,6 +331,16 @@ class User(HasSocial):
            self['notification_count'] = count
         return count
     def notification_count_reset(self): self.update(notification_count=0)
+
+    @property
+    def recent_feed(self):
+        return self.feed[-5:]
+
+    @property
+    def starred_items(self):
+        if not self._starred_items:
+          self._starred_items = [i.get('entity') for i in self.feed if i['class_name'] == 'Star' and i['initiator'] == self.id]
+        return self._starred_items
 
     def build_search_index(self):
         texts = {'name': self.get('name'), 'fullname': self.get('fullname')}

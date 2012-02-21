@@ -190,6 +190,7 @@ def handle(request): # HANDLER
         elif p1 == 'user_check': return controllers['user'].user_check(request, response)
         elif p1 == 'random': return controllers['expression'].random(request, response)
         elif p1 == 'search': return controllers['expression'].search(request, response)
+        elif p1 == 'robots.txt' and config.debug_mode: return application_controller.serve_robots(response)
         else: return serve_404(request, response)
 
     elif request.domain.startswith('www.'):
@@ -215,6 +216,7 @@ def handle(request): # HANDLER
         return controllers['expression'].index(request, response, {'owner': owner})
     if request.path == 'listening': return controllers['user'].index(request, response, {'listening': True})
     if request.path == 'feed': return controllers['user'].index(request, response, {'feed': True})
+    if request.path == 'robots.txt' and config.debug_mode: return application_controller.serve_robots(response)
 
     if request.args.has_key('dialog'): return controllers['expression'].dialog(request, response)
 

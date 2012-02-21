@@ -26,10 +26,13 @@ class ApplicationController(object):
         method = args['method'].split('/')[0] #TODO: remove this method splitting hack once full routing is in place
         return getattr(self, method)(request, response)
 
-    def serve_html(self, response, html):
-        response.data = html
-        response.content_type = 'text/html; charset=utf-8'
+    def serve_data(self, response, mime, data):
+        response.mimetype = 'mime'
+        response.data = data
         return response
+
+    def serve_html(self, response, html):
+        return self.serve_data(response, 'text/html; charset=utf-8', html)
 
     def serve_page(self, response, template):
         return self.serve_html(response, self.render_template(response, template))
@@ -58,10 +61,7 @@ class ApplicationController(object):
 
     def serve_json(self, response, val, as_text = False):
         """ as_text is used when content is received in an <iframe> by the client """
-
-        response.mimetype = 'application/json' if not as_text else 'text/plain'
-        response.data = json.dumps(val)
-        return response
+        return self.serve_data(response, 'text/plain' if as_text else 'application/json', json.dumps(val))
 
     def serve_404(self, request, response):
         response.status_code = 404
@@ -71,6 +71,11 @@ class ApplicationController(object):
         response.status_code = 500
         response.context['msg'] = msg
         return self.serve_page(response, 'pages/error.html')
+
+    def serve_robots(self, response):
+        if config.debug_mode:
+            return self.serve_data(response, 'text/plain', "User-agent: *\nDisallow: /")
+        else: return self.serve_404(None, response)
 
     def redirect(self, response, location, permanent=False):
         response.location = location
