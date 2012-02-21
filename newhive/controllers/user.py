@@ -91,11 +91,7 @@ class UserController(ApplicationController):
         if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})
 
         user = self.db.User.create(args)
-        friends = request.form.get('friends_to_listen')
-        if friends:
-            friends = friends.split(',')
-            for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
-                self.db.Star.new(user, friend)
+        self._friends_to_listen(request, user)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
         user.give_invites(5)
         if request.args.has_key('code'): self._save_credentials(request, user)
@@ -106,6 +102,13 @@ class UserController(ApplicationController):
         request.form = dict(username = args['name'], secret = args['password'])
         self.login(request, response)
         return self.redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
+
+    def _friends_to_listen(self, request, user):
+        friends = request.form.get('friends_to_listen')
+        if friends:
+            friends = friends.split(',')
+            for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
+                self.db.Star.new(user, friend)
 
     def _save_credentials(self, request, user, fbc=FacebookClient()):
         credentials = fbc.exchange(request)
@@ -126,9 +129,18 @@ class UserController(ApplicationController):
             if request.requester.facebook_credentials:
                 if request.requester.facebook_credentials.access_token_expired:
                     return self.redirect(response, fbc.authorize_url(abs_url(secure=True) + "settings"))
-                friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", request.requester.facebook_credentials)['data']
+                try:
+                    friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", request.requester.facebook_credentials)['data']
+                except:
+                    return self.redirect(response, fbc.authorize_url(abs_url(secure=True) + "settings"))
                 users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
-                response.context['friends'] = users
+                response.context['listening_count'] = 0
+                response.context['friends'] = []
+                for user in users:
+                    if user.id in request.requester.starred_items:
+                        response.context['listening_count'] += 1
+                    else:
+                        response.context['friends'].append(user)
             return self.serve_page(response, 'pages/user_settings.html')
 
     def facebook_connect(self, request, response, args={}):
@@ -176,7 +188,13 @@ class UserController(ApplicationController):
             user.update(email_confirmation_request_date=time.time())
             mail.mail_email_confirmation(self.jinja_env, user, email)
             message = message + ui.email_change_success_message + " "
-        return self.serve_json(response, {'success': True, 'message': message})
+        if request.form.get('friends_to_listen'):
+            new_friends = len(request.form['friends_to_listen'].split(','))
+            self._friends_to_listen(request, user)
+            message = message + "You are now listening to " + str(new_friends) + " facebook friend" + ("s " if new_friends > 1 else " ")
+        response.context['message'] = message
+        request.requester.reload()
+        return self.edit(request, response)
 
     def tag_update(self, request, response):
         tag = lget(normalize(request.form.get('value', '')), 0)

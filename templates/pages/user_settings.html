@@ -118,7 +118,6 @@ $(document).ready(function(){
   });
   $('#form').submit(function(){
     if (! validate({'update': update})) { return false }
-    if (update) { post_update(); return false }
   });
   $('.friend .listen').click(function(){
     $(this).toggleClass('active');
@@ -145,6 +144,7 @@ $(document).ready(function(){
 
 {% block content %}
  <div class='fathead'>
+   <p class="active">{{message |e}}</p>
    <div class='icon'><h1>{{ ui.create_account_title if action == 'create' else ui.update_account_title }}</h1></div>
  </div>
 
@@ -178,7 +178,9 @@ $(document).ready(function(){
        <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
        <br>
        
+       {% if not update %}
        <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
+       {% endif %}
  
      </div>
      <div class="column" id="column_2">
@@ -230,8 +232,11 @@ $(document).ready(function(){
    {% endif %}
    </div>
    <div class="column" id="column_3">
-     {% if friends %}
+     {% if friends or listening_count %}
        <h3>Listen to your Friends:</h3>
+       {% if listening_count > 0 %}
+       <p>You are already listening to {{listening_count}} facebook friend{{"s" if listening_count>1}}</p>
+       {% endif %}
        <input type="checkbox" id='listen_to_friends'/><label for="listen_to_friends">Listen to all of my friends from Facebook that are on The New Hive.</b></label>
        {% for friend in friends -%}
          <div class="friend">

@@ -124,6 +124,9 @@ class Entity(dict):
 
     def save(self): return self.update_cmd(self)
 
+    def reload(self):
+        dict.update(self, self.db.User.fetch(self.id))
+
     def update(self, **d):
         if d.has_key('updated'): del d['updated']
         else: d['updated'] = now()
@@ -914,6 +917,7 @@ class Comment(Feed):
 class Star(Feed):
     class Collection(Feed.Collection):
         def new(self, initiator, entity, data={}):
+            #TODO: fix inconsistent behavior when feed is improperly deleted and exists in entity's feed but not initiator's
             if initiator.id in entity.starrers:
                 return True
             else:
