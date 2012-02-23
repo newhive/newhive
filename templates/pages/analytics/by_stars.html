@@ -1,0 +1,25 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block header %}
+<h2>Top 200 Expressions by Stars</h2>
+{% endblock %}
+
+{% block table_head %}
+  <tr>
+    <th>stars</th>
+    <th>expression</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  {% for expr in data %}
+  <tr>
+    <td>{{ expr.star_count }}</td>
+    <td><a href='{{ expr.get_url()|e }}'>{{ expr.get_url()|e }}</a></td>
+  </tr>
+  {% endfor %}
+{% endblock %}
