@@ -332,6 +332,16 @@ class User(HasSocial):
         return count
     def notification_count_reset(self): self.update(notification_count=0)
 
+    def feed_add(self, feed_item_id, notify):
+        if notify: self.increment({'notification_count':1})
+        return self.update_cmd({ '$addToSet': {'feed': feed_item_id} })
+
+    def feed_profile(self):
+        pass
+
+    def feed_network(self):
+        pass
+
     @property
     def recent_feed(self):
         return self.feed[-5:]
@@ -810,7 +820,7 @@ class Feed(Entity):
         self.update(class_name=class_name)
         super(Feed, self).create()
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
-        self.entity.owner.notify(self)
+        self.entity.owner.feed_add(self.id, self.entity['owner'] != self['initiator'])
         return self
 
     def get_entity(self):
@@ -850,7 +860,6 @@ class Comment(Feed):
     def create(self):
         assert self.has_key('text')
         super(Comment, self).create()
-        self.entity.owner.notify(self.id)
         self.entity.notify_all('starrers', self.id)
         self.initiator.notify_all('starrers', self.id)
         return self
@@ -886,10 +895,7 @@ class Star(Feed):
 
 @Database.register
 class InviteNote(Feed):
-    def create(self):
-        super(InviteNote, self).create()
-        self.entity.notify(self.id)
-        return self
+    pass
 
 @Database.register
 class NewExpr(Feed):
