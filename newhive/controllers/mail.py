@@ -72,7 +72,7 @@ class MailController(ApplicationController):
             ,'html': self.render_template(response, "emails/share.html")
             }
         send_mail(heads, body)
-        self.db.ActionLog.new(request.requester, 'share', data=log_data)
+        self.db.ActionLog.create(request.requester, 'share', data=log_data)
         if request.form.get('send_copy'):
             heads.update(To = request.requester.get('email', ''))
             send_mail(heads, body)

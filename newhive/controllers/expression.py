@@ -16,12 +16,11 @@ class ExpressionController(ApplicationController):
             exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
             exp['title'] = 'Untitled'
             exp['auth'] = 'public'
-            self.db.ActionLog.new(request.requester, "new_expression_edit")
+            self.db.ActionLog.create(request.requester, "new_expression_edit")
         else:
             exp = self.db.Expr.fetch(exp_id)
-            self.db.ActionLog.new(request.requester, "existing_expression_edit", data={'expr_id': exp.id})
-
-        if not exp: return self.serve_404(request, response)
+            if not exp: return self.serve_404(request, response)
+            self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': exp.id})
 
         if request.requester.get('flags'):
             show_help = request.requester['flags'].get('default-instructional') < 1
@@ -75,7 +74,7 @@ class ExpressionController(ApplicationController):
         template = resource.get('template', request.args.get('template', 'expression'))
 
         if request.requester.logged_in:
-            self.db.ActionLog.new(request.requester, "view_expression", data={'expr_id': resource.id})
+            self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
 
         if template == 'none':
             if auth_required: return Forbidden()
@@ -86,7 +85,7 @@ class ExpressionController(ApplicationController):
     def random(self, request, response):
         expr = self.db.Expr.random()
         if request.requester.logged_in:
-            self.db.ActionLog.new(request.requester, "view_random_expression", data={'expr_id': expr.id})
+            self.db.ActionLog.create(request.requester, "view_random_expression", data={'expr_id': expr.id})
         return self.redirect(response, expr.url)
 
     def dialog(self, request, response):
@@ -104,7 +103,7 @@ class ExpressionController(ApplicationController):
         results = self.db.KeyWords.text_search(query, doc_type='User')
         ids = [res['doc'] for res in results]
         users = self.db.User.list({'_id': {'$in': ids}})
-        self.db.ActionLog.new(request.requester, "search", data={'query': query, 'result_size': len(expressions)})
+        self.db.ActionLog.create(request.requester, "search", data={'query': query, 'result_size': len(expressions)})
         response.context['exprs'] = expressions
         response.context['users'] = users
         response.context['tag'] = {}
@@ -129,7 +128,7 @@ class ExpressionController(ApplicationController):
         feed_tag = {'url': "/feed", "name": "Feed"}
         star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         people_tag = {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
-        response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
+        response.context['system_tags'] = [expressions_tag, feed_tag, people_tag, star_tag]
         response.context['expr_context'] = {'user': owner.get('name')}
 
         if request.path.startswith('expressions'):
@@ -149,8 +148,6 @@ class ExpressionController(ApplicationController):
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
-        if request.requester.logged_in and is_owner:
-            response.context['system_tags'].insert(1, feed_tag)
         response.context['profile_thumb'] = owner.thumb
         response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
 
@@ -236,7 +233,7 @@ class ExpressionController(ApplicationController):
             try:
               new_expression = True
               res = request.requester.expr_create(upd)
-              self.db.ActionLog.new(request.requester, "new_expression_save", data={'expr_id': res.id})
+              self.db.ActionLog.create(request.requester, "new_expression_save", data={'expr_id': res.id})
               request.requester.flag('expr_new')
               if request.requester.get('flags').get('add_invites_on_save'):
                   request.requester.unflag('add_invites_on_save')
@@ -245,16 +242,16 @@ class ExpressionController(ApplicationController):
                 if exp.get('overwrite'):
                     self.db.Expr.named(upd['domain'], upd['name']).delete()
                     res = request.requester.expr_create(upd)
-                    self.db.ActionLog.new(request.requester, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+                    self.db.ActionLog.create(request.requester, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
                 else:
                     return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
-                    self.db.ActionLog.new(request.requester, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+                    self.db.ActionLog.create(request.requester, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
         else:
             if not res['owner'] == request.requester.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
             res.update(**upd)
             new_expression = False
-            self.db.ActionLog.new(request.requester, "update_expression", data={'expr_id': res.id})
+            self.db.ActionLog.create(request.requester, "update_expression", data={'expr_id': res.id})
         return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
 
 
@@ -274,7 +271,7 @@ class ExpressionController(ApplicationController):
         commenter = request.requester
         expression = self.db.Expr.fetch(request.form.get('expression'))
         comment_text = request.form.get('comment')
-        comment = self.db.Comment.new(commenter, expression, {'text': comment_text})
+        comment = self.db.Comment.create(commenter, expression, {'text': comment_text})
         if comment.initiator.id != expression.owner.id:
             mail.mail_feed(self.jinja_env, comment, expression.owner)
         return self.serve_html(response, self.jinja_env.get_template("partials/comment.html").render({'comment': comment}))
@@ -287,7 +284,7 @@ class ExpressionController(ApplicationController):
         action = request.form.get('action')
         if action == 'tag_add':
             if tag == "starred":
-                s = Star.new(request.requester, expr)
+                s = self.db.Star.create(request.requester, expr)
                 return True
             else:
                 new_tags = expr.get('tags', '') + ' ' + tag

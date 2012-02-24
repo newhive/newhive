@@ -25,7 +25,7 @@ site_pages      = {
     ,'welcome'      : 'welcome'
     }
 
-content_domain_prefix = 'usercontent'
+content_domain_prefix = 'user'
 
 email_server    = 'localhost'
 email_user      = False

@@ -47,12 +47,10 @@
       </p>
       {% endif %}
 
-      {% if feed.class_name == "Comment" %}
-       <p class="comment_text">
+      {% if feed.class_name == 'Comment' %}
+       <p class='comment_text'>
          "{{ feed.text | e | truncate(30) }}{{'"' if feed.text | length <= 30}}
        </p>
-      {% elif feed.class_name == 'InviteNote' %}
-       Meeep meep new invites.
       {% endif %}
     </div>
     <div class="byline">

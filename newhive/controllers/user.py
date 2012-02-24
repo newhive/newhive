@@ -15,30 +15,25 @@ class UserController(ApplicationController):
         people_tag = {'url': '/listening', 'name': 'Listening'}
         star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         feed_tag = {'url': "/feed", "name": "Feed"}
-        response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
+        response.context['system_tags'] = [expressions_tag, feed_tag, people_tag, star_tag]
+
         if args.get('listening'):
             tag = people_tag
-            response.context['users'] = self.db.User.list({'_id': {'$in': owner.starred_items}})
+            response.context['users'] = self.db.User.list({'_id': {'$in': owner.starred_users}})
             response.context['title'] = owner['fullname']
             response.context['tag'] = tag
             response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
-            if request.requester.logged_in and is_owner:
-                response.context['system_tags'].insert(1, feed_tag)
             response.context['profile_thumb'] = owner.thumb
             response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
 
             return self.serve_page(response, 'pages/expr_cards.html')
         elif args.get('feed'):
-            if not request.requester.logged_in:
-                return self.redirect(response, abs_url())
-            response.context['feed_items'] = request.requester.feed
+            response.context['feed_items'] = owner.feed_profile(request.requester)
             tag = feed_tag
 
             response.context['title'] = owner['fullname']
             response.context['tag'] = tag
             response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
-            if request.requester.logged_in and is_owner:
-                response.context['system_tags'].insert(1, feed_tag)
             response.context['profile_thumb'] = owner.thumb
             response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
 
@@ -180,7 +175,7 @@ class UserController(ApplicationController):
         data = json.loads(request.form.get('data', 'false'))
         if not data:
             data = {}
-        l = self.db.ActionLog.new(user, request.form.get('log_action'), data)
+        l = self.db.ActionLog.create(user, request.form.get('log_action'), data)
         return True
 
     def _bad_referral(self, request, response):

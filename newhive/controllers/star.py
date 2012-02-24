@@ -19,7 +19,7 @@ class StarController(ApplicationController):
         else:
             entity = self.db.Expr.named(request.domain.lower(), request.path.lower())
         if request.form.get('action') == "star":
-            s = self.db.Star.new(request.requester, entity)
+            s = self.db.Star.create(request.requester, entity)
             if s or s.get('entity'):
                 response.context['user'] = request.requester
                 return self.render_template(response, 'partials/user_card.html')
