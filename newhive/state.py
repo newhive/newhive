@@ -381,16 +381,19 @@ class User(Entity):
         return self.db.File.search({ 'owner' : self.id })
     files = property(get_files)
 
-    def get_expr_count(self, force_update=False):
-        count = False
-        if not force_update:
-            tmp = self.get('analytics')
-            if tmp: tmp = tmp.get('expressions')
-            if tmp: count = tmp.get('count')
+    def set_expr_count(self):
+        count = self.mdb.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
+        self.update_cmd({"$set": {'analytics.expressions.count': count}})
+        return count
 
-        if not count:
-            count = self.mdb.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
-            self.update_cmd({"$set": {'analytics.expressions.count': count}})
+    def get_expr_count(self, force_update=False):
+        if force_update:
+            count = self.set_expr_count
+        else:
+            try:
+                count = self['analytics']['expressions']['count']
+            except KeyError:
+                count = self.set_expr_count
         return count
     expr_count = property(get_expr_count)
 
