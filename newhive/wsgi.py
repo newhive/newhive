@@ -115,6 +115,7 @@ actions = dict(
     ,unstar          = controllers['star'].star
     ,log             = controllers['user'].log
     ,thumbnail_relink= controllers['admin'].thumbnail_relink
+    ,facebook_invite = controllers['user'].facebook_invite
     )
 
 # Mime types that could generate HTTP POST requests
@@ -145,7 +146,7 @@ def handle(request): # HANDLER
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite']
             non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
@@ -240,3 +241,11 @@ def handle_safe(request):
     except Exception as e: return serve_error(request, str(e))
 
 application = handle_debug
+
+if __name__ == '__main__':
+    from werkzeug.test import EnvironBuilder
+    from newhive.oauth import FacebookClient
+    get_builder = EnvironBuilder(method='GET', environ_overrides={'wsgi.url_scheme': 'https'})
+    get_request = lambda: Request(get_builder.get_environ())
+
+    duffy = db.User.named('duffy')

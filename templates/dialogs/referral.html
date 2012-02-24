@@ -43,6 +43,11 @@
       }
       
       function requestCallback(response) {
+        $('#dia_referral .btn_dialog_close').click();
+        if (response){
+          console.log(response);
+          $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
+        }
         // Handle callback here
       }
     </script>

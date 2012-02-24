@@ -79,7 +79,11 @@ class UserController(ApplicationController):
             if (not referral or referral.get('used')): return self._bad_referral(request, response)
             referrer = self.db.User.fetch(referral['user'])
         elif request.args.has_key('code'):
-            referral = self.db.Referral.new({})
+            fbc = FacebookClient()
+            credentials = fbc.exchange(request)
+            fb_info = fbc.find('https://graph.facebook.com/me')
+            request_id = request.path.split('/')[1]
+            referral = self.db.Referral.find({'request_id': request_id})
         assert 'tos' in request.form
 
         args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender'])
@@ -94,7 +98,7 @@ class UserController(ApplicationController):
         self._friends_to_listen(request, user)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
         user.give_invites(5)
-        if request.args.has_key('code'): self._save_credentials(request, user)
+        if request.args.has_key('code'): self._save_credentials(request, user, fbc)
 
         try: mail.mail_user_register_thankyou(self.jinja_env, user)
         except: pass # TODO: log an error
@@ -161,14 +165,25 @@ class UserController(ApplicationController):
         request_ids = request.args.get('request_ids').split(',')
         valid_request = False
         for request_id in request_ids:
-            valid_request = valid_request or fbc.find("https://graph.facebook.com/" + str(request_id), app_access=True)
-        response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True) + 'signup')
+            fb_request = fbc.find("https://graph.facebook.com/" + str(request_id), app_access=True)
+            if fb_request:
+                referral = self.db.Referral.find({'request_id': request_id})
+                if referral:
+                    fbc.delete("https://graph.facebook.com/" + request_id + "_" + referral.get('to'), app_access=True)
+            valid_request = valid_request or (fb_request and referral and not referral.get('used'))
+        response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True) + 'signup/' + request_id)
         if not valid_request:
             msg = "This invite from facebook has already been used. If you " +\
                   "think this is a mistake, please contact us at " +\
                   '<a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
             return self._bad_referral(request, response, msg=msg)
         return self.serve_page(response, 'pages/invited_from_facebook.html')
+
+    def facebook_invite(self, request, response, args={}):
+        request_id = request.form.get('request_id')
+        for invite in request.form.get('to').split(','):
+            request.requester.new_referral({'to': invite, 'request_id': request_id})
+        return self.serve_json(response, {'success': True})
 
     def update(self, request, response):
         message = ''

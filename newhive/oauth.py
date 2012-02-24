@@ -118,18 +118,32 @@ class FacebookClient(object):
             return self.credentials
         else: raise Exception(str([resp, content]))
 
-    def find(self, api_url, credentials=None, app_access=False):
+    def request(self, api_url, credentials=None, app_access=False, method="GET"):
         if credentials: self.credentials = credentials
 
         h = httplib2.Http()
         if app_access:
-            head, content = h.request(api_url + "?access_token=" + self.access_token)
+            head, content = h.request(api_url + "?access_token=" + self.access_token, method=method)
         else:
             h = self.credentials.authorize(h)
-            head, content = h.request(api_url)
+            head, content = h.request(api_url, method=method)
+        return (head, content)
+
+    get = request
+
+    def find(self, api_url, credentials=None, app_access=False):
+        head, content = self.get(api_url, credentials, app_access)
         if head.get('status') != '200': return False
-        else: return json.loads(content)
+        return json.loads(content)
+
+    def post(self, api_url, credentials=None, app_access=False):
+        return self.request(api_url, credentials, app_access, method="POST")
+
+    def delete(self, api_url, credentials=None, app_access=False):
+        return self.request(api_url, credentials, app_access, method="DELETE")
+
+    def put(self, api_url, credentials=None, app_access=False):
+        return self.request(api_url, credentials, app_access, method="PUT")
 
     def fql(self, query, credentials = None, app_access=False):
         return self.find('https://graph.facebook.com/fql?q=' + urllib.quote(query), credentials, app_access)
-
