@@ -99,7 +99,7 @@ class ExpressionController(ApplicationController):
         request, response = self._homepage(request, response, args)
         results = self.db.KeyWords.text_search(query, doc_type='Expr')
         ids = [res['doc'] for res in results]
-        expressions = self._expr_list(ids, requester=request.requester.id)
+        expressions = self._expr_list(ids, viewer=request.requester.id)
         results = self.db.KeyWords.text_search(query, doc_type='User')
         ids = [res['doc'] for res in results]
         users = self.db.User.list({'_id': {'$in': ids}})
@@ -140,7 +140,7 @@ class ExpressionController(ApplicationController):
                 tag = {'name': tag, 'url': "/expressions/" + tag, 'type': 'user'}
                 spec['tags_index'] = tag['name']
             else: tag = expressions_tag
-            response.context['exprs'] = self._expr_list(spec, requester=request.requester.id, page=page)
+            response.context['exprs'] = self._expr_list(spec, viewer=request.requester.id, page=page)
         elif request.path == 'starred':
             response.context['exprs'] = self.card_list(owner.starred_exprs(request.requester))
             tag = star_tag
