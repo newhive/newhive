@@ -1,5 +1,5 @@
 from werkzeug import exceptions
-from newhive import config
+from newhive import config, oauth
 from newhive.utils import junkstr
 
 def authenticate_request(db, request, response):
@@ -38,31 +38,55 @@ def handle_login(db, request, response):
 
     user = db.User.named(username)
     if user and user.cmp_password(secret):
-        # login
-
-        # session record looks like:
-        #    user = id
-        #    expires = bool
-        #    remember = bool
-        #    plain_secret = str
-        #    secure_secret = str
-
-        expires = False if args.get('no_expires', False) else True
-        session = db.Session.create(dict(
-             user = user.id
-            ,active = True
-            ,remember = args.get('remember', False)
-            ,expires = expires
-            ))
-        set_secret(session, True, response)
-        set_secret(session, False, response)
-        set_cookie(response, 'identity', session.id, expires = expires)
-        user.logged_in = True
-        request.requester = user
+        new_session(db, user, request, response)
         return True
 
     response.context['error'] = 'Invalid username or password'
     return False
+
+def facebook_login(db, request, response):
+    fbc = oauth.FacebookClient()
+    try:
+        fbc.exchange(request)
+        fb_profile = fbc.me()
+        user = db.User.find({'facebook.id': fb_profile.get('id')})
+    except Exception as e:
+        user = None
+        print type(e)
+        print e
+
+    if user:
+        session = new_session(db, user, request, response)
+        user.update(session = session.id)
+        user.logged_in = True
+        return user
+    else:
+        response.context['error'] = 'Either something went wrong with facebook login or your facebook account is not connect to The New Hive'
+        return db.User.new({})
+
+def new_session(db, user, request, response):
+    # login
+
+    # session record looks like:
+    #    user = id
+    #    expires = bool
+    #    remember = bool
+    #    plain_secret = str
+    #    secure_secret = str
+
+    expires = False if request.form.get('no_expires', False) else True
+    session = db.Session.create(dict(
+         user = user.id
+        ,active = True
+        ,remember = request.form.get('remember', False)
+        ,expires = expires
+        ))
+    set_secret(session, True, response)
+    set_secret(session, False, response)
+    set_cookie(response, 'identity', session.id, expires = expires)
+    user.logged_in = True
+    request.requester = user
+    return session
 
 def handle_logout(db, request, response):
     """Removes cookies, deletes session record, sets
