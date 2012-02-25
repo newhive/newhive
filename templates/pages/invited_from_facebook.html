@@ -1,9 +1,13 @@
 {% extends "main.html" %}
 {% block content %}
 
-<img class='centered' src="/lib/skin/1/logotype_beta_composite.png">
-<h1 class='centered bright_headline'>Congratulations!</h1>
-<h2 class='centered'>You've been invited to join The New Hive.</h3>
+<img class='centered' style="margin-top: 50px;" src="/lib/skin/1/logotype_beta_composite.png">
+<h1 class='centered bright_headline' style="margin-bottom: 10px;">Congratulations!</h1>
+<h2 class='centered' style="margin-top: 0">You've been invited to join The New Hive, your<br/>
+  radically simple, drag and drop, online blank canvas.
+</h2>
 <a href="{{facebook_connect_url}}"><img class='centered' src="/lib/skin/1/signupwithfacebook_btn.png"></a>
-
+<p class='centered disclaimer'>We never post to facebook without your permission.</p>
+<p class='centered signup_without_facebook'><a href="{{signup_without_facebook_url}}">Or, click here to create an account without facebook&gt;</a></p>
+<img class='centered' src="/lib/skin/1/congratulations_tnh.jpg">
 {% endblock content %}

@@ -172,6 +172,7 @@ class UserController(ApplicationController):
                     fbc.delete("https://graph.facebook.com/" + request_id + "_" + referral.get('to'), app_access=True)
             valid_request = valid_request or (fb_request and referral and not referral.get('used'))
         response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True) + 'signup/' + request_id)
+        response.context['signup_without_facebook_url'] = abs_url(secure=True) + 'signup/' + request_id
         if not valid_request:
             msg = "This invite from facebook has already been used. If you " +\
                   "think this is a mistake, please contact us at " +\

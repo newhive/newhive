@@ -1138,20 +1138,20 @@ input[type="text"].copy, textarea.copy {
   background: url('/images/pagethrough-sc84cb4d0fa.png') no-repeat;
 }
 
-/* line 60, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+/* line 60, /var/lib/gems/1.9.1/gems/compass-0.11.7/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
 .pagethrough-next {
   background-position: 0 0;
 }
-/* line 43, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+/* line 43, /var/lib/gems/1.9.1/gems/compass-0.11.7/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
 .pagethrough-next:hover, .pagethrough-next.next_hover, .pagethrough-next.next-hover {
   background-position: 0 -60px;
 }
 
-/* line 60, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+/* line 60, /var/lib/gems/1.9.1/gems/compass-0.11.7/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
 .pagethrough-prev {
   background-position: 0 -120px;
 }
-/* line 43, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+/* line 43, /var/lib/gems/1.9.1/gems/compass-0.11.7/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
 .pagethrough-prev:hover, .pagethrough-prev.prev_hover, .pagethrough-prev.prev-hover {
   background-position: 0 -180px;
 }
@@ -1244,6 +1244,19 @@ input[type="text"].copy, textarea.copy {
 /* line 34, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings .friend .listen.active {
   background: url("/lib/skin/1/people_small_active.png");
+}
+
+/* line 1, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
+.disclaimer {
+  color: #696e76;
+  font-size: 13px;
+  margin: 5px 0;
+}
+
+/* line 7, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
+.signup_without_facebook {
+  color: #696e76;
+  font-size: 15px;
 }
 
 /* line 2, /home/duffy/2newhive/libsrc/scss/profile.scss */
@@ -1341,7 +1354,7 @@ img.centered {
 #left_column, #right_column, #header, #feed {
   *zoom: 1;
 }
-/* line 38, /usr/local/rvm/gems/ruby-1.9.2-p290@newhive/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/general/_clearfix.scss */
+/* line 38, /var/lib/gems/1.9.1/gems/compass-0.11.7/frameworks/compass/stylesheets/compass/utilities/general/_clearfix.scss */
 #left_column:after, #right_column:after, #header:after, #feed:after {
   content: "";
   display: table;
