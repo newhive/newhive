@@ -1,4 +1,5 @@
 import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions
+import operator as op
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
@@ -12,7 +13,7 @@ from itertools import ifilter, imap
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url
+from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized
 
 
 class Database:
@@ -152,15 +153,16 @@ class Entity(dict):
 
 # Common code between User and Expr
 class HasSocial(Entity):
-    _starrers = None
-
+    _starrer_ids = None
     @property
-    def starrers(self):
-        if not self._starrers:
-            self._starrers = [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
-        return self._starrers
+    def starrer_ids(self):
+        if not self._starrer_ids:
+            self._starrer_ids = [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
+        return self._starrer_ids
     @property
-    def star_count(self): return len(self.starrers)
+    def starrers(self): return map(self.db.User.fetch, self.starrer_ids)
+    @property
+    def star_count(self): return len(self.starrer_ids)
 
     def related_next(self, spec={}, loop=True):
         if type(spec) == dict:
@@ -274,6 +276,7 @@ class User(HasSocial):
         super(User, self).__init__(*a, **b)
         self.logged_in = False
         self.owner = self
+        self['owner'] = self.id
 
     def expr_create(self, d):
         doc = dict(owner = self.id, name = '', domain = self['sites'][0])
@@ -309,25 +312,35 @@ class User(HasSocial):
     def notify(self, feed_item):
         self.increment({'notification_count':1})
 
-    _starred = None
     @property
-    def starred(self):
-        if not self._starred:
-            self._starred = self.db.Star.search({ 'initiator': self.id })
-        return self._starred
+    @memoized
+    def exprs(self): return self.db.Expr.search({'owner':self.id})
     @property
-    def starred_users(self): return [i['entity'] for i in self.starred if i['entity_class'] == 'User']
+    def expr_ids(self): return [e.id for e in self.exprs]
+
     @property
-    def starred_exprs(self): return [i['entity'] for i in self.starred if i['entity_class'] == 'Expr']
+    @memoized
+    def stars(self): return self.db.Star.search({ 'initiator': self.id })
+    @property
+    def starred_user_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'User']
+    @property
+    def starred_users(self): return map(self.db.User.fetch, self.starred_user_ids)
+    @property
+    def starred_expr_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'Expr']
+    def starred_exprs(self, viewer):
+        if type(viewer) == User: viewer = viewer.id
+        return filter(lambda i: i.can_view(viewer), map(self.db.Expr.fetch, self.starred_expr_ids))
 
     def feed_profile(self, viewer):
+        if type(viewer) == User: viewer = viewer.id
         res = self.db.Feed.search({ '$or' : [ {'entity_owner':self.id}, {'initiator':self.id} ] }, sort=[('created',-1)])
-        if viewer.id != self.id: res = filter(lambda i: i.entity.get('auth') == 'public', res)
+        if viewer != self.id: res = filter(lambda i: i.entity and i.entity.get('auth') == 'public', res)
         return res
 
     def feed_network(self, viewer):
-        spec = { '$or' : [ { 'initiator': {'$in': self.starred_users}, 'class_name': {'$in': ['NewExpr', 'Star', 'Comment']} },
-            { 'entity': {'$in': self.starred_exprs}, 'class_name': {'$in':['Comment', 'UpdatedExpr']} } ] }
+        if type(viewer) == User: viewer = viewer.id
+        spec = { '$or' : [ { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Star', 'Comment']} },
+            { 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']} } ] }
         res = filter(lambda i: i.entity.get('auth') == 'public', self.db.Feed.search(spec, sort=[('created',-1)]) )
         return res
 
@@ -433,13 +446,9 @@ class Expr(HasSocial):
             [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
             return cls.named(domain, name)
 
-        def list(self, spec, requester=None, context_owner=None, **opts):
+        def list(self, spec, requester=None, **opts):
             es = super(Expr.Collection, self).list(spec, **opts)
-            can_view = lambda e: (
-                (requester == e['owner']) or (requester in e.starrers and context_owner == requester) or
-                (e.get('auth', 'public') == 'public' and len(e.get('apps', [])) )
-            )
-            return ifilter(can_view, es)
+            return ifilter(lambda e: e.can_view(requester), es)
 
         def random(self):
             rand = random.random()
@@ -504,6 +513,8 @@ class Expr(HasSocial):
         self.db.KeyWords.remove_entries(self)
         return super(Expr, self).delete()
 
+    def can_view(self, user):
+        return (self.get('auth', 'public') == 'public') or (user == self['owner']) or (user in self.starrer_ids)
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
@@ -797,7 +808,7 @@ class Feed(Entity):
         self.update(class_name=class_name)
         super(Feed, self).create()
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
-        if self.entity['owner'] != self['initiator']: self.entity.owner.notify()
+        if self.entity['owner'] != self['initiator']: self.entity.owner.notify(self)
 
         return self
 
@@ -852,13 +863,14 @@ class Comment(Feed):
 class Star(Feed):
     class Collection(Feed.Collection):
         def create(self, initiator, entity, data={}):
-            if initiator.id in entity.starrers:
+            if initiator.id in entity.starrer_ids:
                 return True
             else:
                 return super(Star.Collection, self).create(initiator, entity, data)
 
     def create(self):
-        if self['entity'] == self['initiator']: raise "You mustn't star your own expressions"
+        if self.entity['owner'] == self['initiator']:
+            raise "You mustn't listen to yourself or star your own expressions"
         return super(Star, self).create()
 
 @Database.register

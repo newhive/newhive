@@ -29,7 +29,7 @@
  {% endif %}
  <div class='nav' style='right : {{ '10' if user.logged_in else '197' }}px; top : 0px;'>
   {% if not user_is_owner %}
-   {{ listen_button(active=owner.id in user.starred_items, title='Listen to ' + owner['name'], active_title='Stop listening') if user.logged_in }}
+   {{ listen_button(active=owner.id in user.starred_item_ids, title='Listen to ' + owner['name'], active_title='Stop listening') if user.logged_in }}
    <div id='info' class='medbold' style='text-align : right'>
      <div id='exp_owner'><a title="{{owner.name}}'s profile" href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
     <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
@@ -37,7 +37,7 @@
   {% endif %}
 
   {{ share_button(exp.share_count) }}
-  {{ star_button(exp.star_count, exp.id in user.starred_items, user.logged_in) }} 
+  {{ star_button(exp.star_count, exp.id in user.starred_item_ids, user.logged_in) }} 
   {{ discussion_button(exp.comment_count) }}
   {% if user.logged_in %}
   {{ create_button(create) }}  

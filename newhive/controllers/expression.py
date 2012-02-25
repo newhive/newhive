@@ -48,8 +48,8 @@ class ExpressionController(ApplicationController):
 
         if is_owner: owner.unflag('expr_new')
 
-        response.context['starrers'] = map(self.db.User.fetch, resource.starrers)
-        response.context['listeners'] = map(self.db.User.fetch, owner.starrers)
+        response.context['starrers'] = resource.starrers
+        response.context['listeners'] = owner.starrers
 
         if request.args.has_key('tag') or request.args.has_key('user'):
             response.context.update(pagethrough = self._pagethrough(request, response, resource))
@@ -139,17 +139,16 @@ class ExpressionController(ApplicationController):
                 tag = {'name': tag, 'url': "/expressions/" + tag, 'type': 'user'}
                 spec['tags_index'] = tag['name']
             else: tag = expressions_tag
-            response.context['exprs'] = self._expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
+            response.context['exprs'] = self._expr_list(spec, requester=request.requester.id, page=page)
         elif request.path == 'starred':
-            spec = {'_id': {'$in': owner.starred_items}}
+            response.context['exprs'] = self.card_list(owner.starred_exprs(request.requester.id))
             tag = star_tag
-            response.context['exprs'] = self._expr_list(spec, requester=request.requester.id, page=page, context_owner=owner.id)
 
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
         response.context['profile_thumb'] = owner.thumb
-        response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
+        response.context['starrers'] = owner.starrers
 
         return self.serve_page(response, 'pages/expr_cards.html')
 
@@ -301,6 +300,7 @@ class ExpressionController(ApplicationController):
 
     def _expr_list(self, spec, **args):
         return map(self._format_card, self.db.Expr.list(spec, **args))
+    def card_list(self, items, viewer): return map(self._format_card, items)
 
     def _format_card(self, e):
         if not e.get('formatted_as_card'):

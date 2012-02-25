@@ -19,23 +19,23 @@ class UserController(ApplicationController):
 
         if args.get('listening'):
             tag = people_tag
-            response.context['users'] = self.db.User.list({'_id': {'$in': owner.starred_users}})
+            response.context['users'] = owner.starred_users
             response.context['title'] = owner['fullname']
             response.context['tag'] = tag
             response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
             response.context['profile_thumb'] = owner.thumb
-            response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
+            response.context['starrers'] = owner.starrers
 
             return self.serve_page(response, 'pages/expr_cards.html')
         elif args.get('feed'):
-            response.context['feed_items'] = owner.feed_profile(request.requester)
+            response.context['feed_items'] = owner.feed_profile(request.requester.id)
             tag = feed_tag
 
             response.context['title'] = owner['fullname']
             response.context['tag'] = tag
             response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
             response.context['profile_thumb'] = owner.thumb
-            response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
+            response.context['starrers'] = owner.starrers
 
             return self.serve_page(response, 'pages/expr_cards.html')
             #response.context['page'] = page
@@ -183,5 +183,3 @@ class UserController(ApplicationController):
         response.context['msg'] = 'You have already signed up. If you think this is a mistake, please try signing up again, or contact us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
         response.context['error'] = 'Log in if you already have an account'
         return self.serve_page(response, 'pages/error.html')
-
-
