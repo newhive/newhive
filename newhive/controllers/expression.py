@@ -142,7 +142,7 @@ class ExpressionController(ApplicationController):
             else: tag = expressions_tag
             response.context['exprs'] = self._expr_list(spec, requester=request.requester.id, page=page)
         elif request.path == 'starred':
-            response.context['exprs'] = self.card_list(owner.starred_exprs(request.requester.id))
+            response.context['exprs'] = self.card_list(owner.starred_exprs(request.requester))
             tag = star_tag
 
         response.context['title'] = owner['fullname']
@@ -301,7 +301,7 @@ class ExpressionController(ApplicationController):
 
     def _expr_list(self, spec, **args):
         return map(self._format_card, self.db.Expr.list(spec, **args))
-    def card_list(self, items, viewer): return map(self._format_card, items)
+    def card_list(self, items): return map(self._format_card, items)
 
     def _format_card(self, e):
         if not e.get('formatted_as_card'):
@@ -322,7 +322,7 @@ class ExpressionController(ApplicationController):
         cols = { 'expr' : self.db.Expr, 'user' : self.db.User }
         if ids:
             by_id = {}
-            for e in cols[cname].list({'_id' : {'$in':ids}}, requester=request.requester.id): by_id[e['_id']] = e
+            for e in cols[cname].list({'_id' : {'$in':ids}}, viewer=request.requester.id): by_id[e['_id']] = e
             entities = [by_id[i] for i in ids if by_id.has_key(i)]
             response.context['pages'] = 0;
         else:

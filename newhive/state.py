@@ -155,10 +155,9 @@ class Entity(dict):
 class HasSocial(Entity):
     _starrer_ids = None
     @property
+    @memoized
     def starrer_ids(self):
-        if not self._starrer_ids:
-            self._starrer_ids = [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
-        return self._starrer_ids
+        return [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
     @property
     def starrers(self): return map(self.db.User.fetch, self.starrer_ids)
     @property
@@ -316,12 +315,6 @@ class User(HasSocial):
 
     @property
     @memoized
-    def exprs(self): return self.db.Expr.search({'owner':self.id})
-    @property
-    def expr_ids(self): return [e.id for e in self.exprs]
-
-    @property
-    @memoized
     def stars(self): return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
     @property
     def starred_user_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'User']
@@ -329,9 +322,10 @@ class User(HasSocial):
     def starred_users(self): return map(self.db.User.fetch, self.starred_user_ids)
     @property
     def starred_expr_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'Expr']
+
     def starred_exprs(self, viewer, **args):
         if type(viewer) == User: viewer = viewer.id
-        return filter(lambda i: i.can_view(viewer), self.db.Expr.list(self.starred_expr_ids, **args))
+        return self.db.Expr.list(self.starred_expr_ids, viewer=viewer, **args)
 
     def feed_profile(self, viewer, **args):
         if type(viewer) == User: viewer = viewer.id
@@ -448,9 +442,9 @@ class Expr(HasSocial):
             [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
             return cls.named(domain, name)
 
-        def list(self, spec, requester=None, **opts):
+        def list(self, spec, viewer=None, **opts):
             es = super(Expr.Collection, self).list(spec, **opts)
-            return ifilter(lambda e: e.can_view(requester), es)
+            return ifilter(lambda e: e.can_view(viewer), es)
 
         def random(self):
             rand = random.random()

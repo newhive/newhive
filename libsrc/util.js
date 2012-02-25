@@ -374,14 +374,16 @@ $(function () {
   $(window).resize(place_apps);
   place_apps();
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
-  else if (!logged_in) {
-      var count = parseInt(readCookie('pageview_count'));
-      var signup = readCookie('signup_completed') == 'true';
-      if (! count ) count = 0;
-      count++;
-      if ((count == 5 || count == 15) && (!signup)) setTimeout("$('.signup_button').first().click();", 1000);
-      createCookie('pageview_count', count, 14);
-  };
+  // This completely breaks the site on Ios, and is annoying
+  // Also very likely to be seen by logged out users
+  //else if (!logged_in) {
+  //    var count = parseInt(readCookie('pageview_count'));
+  //    var signup = readCookie('signup_completed') == 'true';
+  //    if (! count ) count = 0;
+  //    count++;
+  //    if ((count == 5 || count == 15) && (!signup)) setTimeout("$('.signup_button').first().click();", 1000);
+  //    createCookie('pageview_count', count, 14);
+  //};
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
