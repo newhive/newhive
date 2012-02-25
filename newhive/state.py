@@ -13,7 +13,7 @@ from itertools import ifilter, imap
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized
+from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, dedup
 
 
 class Database:
@@ -67,12 +67,12 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def list(self, spec, limit=300, page=0, sort='updated'):
+    def list(self, spec, limit=300, page=0, sort='updated', order=-1):
         if type(spec) == dict:
-            return self.search(spec, sort=[(sort, -1)], limit=limit, skip=limit * page)
+            return self.search(spec, sort=[(sort, order)], limit=limit, skip=limit * page)
         elif type(spec) == list:
-            items = dict([[item.id, item] for item in self.search({'_id': {'$in': spec}})])
-            return [items.get(s) for s in spec]
+            spec = dedup(spec)[ page * limit : (page + 1) * limit ]
+            return self.search({'_id': {'$in': spec}})
 
     def count(self, spec): return self.search(spec).count()
 
@@ -163,6 +163,8 @@ class HasSocial(Entity):
     def starrers(self): return map(self.db.User.fetch, self.starrer_ids)
     @property
     def star_count(self): return len(self.starrer_ids)
+
+    def can_view(self, viewer): return True
 
     def related_next(self, spec={}, loop=True):
         if type(spec) == dict:
@@ -320,28 +322,28 @@ class User(HasSocial):
 
     @property
     @memoized
-    def stars(self): return self.db.Star.search({ 'initiator': self.id })
+    def stars(self): return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
     @property
     def starred_user_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'User']
     @property
     def starred_users(self): return map(self.db.User.fetch, self.starred_user_ids)
     @property
     def starred_expr_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'Expr']
-    def starred_exprs(self, viewer):
+    def starred_exprs(self, viewer, **args):
         if type(viewer) == User: viewer = viewer.id
-        return filter(lambda i: i.can_view(viewer), map(self.db.Expr.fetch, self.starred_expr_ids))
+        return filter(lambda i: i.can_view(viewer), self.db.Expr.list(self.starred_expr_ids, **args))
 
-    def feed_profile(self, viewer):
+    def feed_profile(self, viewer, **args):
         if type(viewer) == User: viewer = viewer.id
-        res = self.db.Feed.search({ '$or' : [ {'entity_owner':self.id}, {'initiator':self.id} ] }, sort=[('created',-1)])
-        if viewer != self.id: res = filter(lambda i: i.entity and i.entity.get('auth') == 'public', res)
+        res = self.db.Feed.list({ '$or' : [ {'entity_owner':self.id}, {'initiator':self.id} ] }, sort='created', **args)
+        if viewer != self.id: res = filter(lambda i: i.entity and i.entity.can_view(viewer), res)
         return res
 
-    def feed_network(self, viewer):
+    def feed_network(self, viewer, **args):
         if type(viewer) == User: viewer = viewer.id
         spec = { '$or' : [ { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Star', 'Comment']} },
             { 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']} } ] }
-        res = filter(lambda i: i.entity.get('auth') == 'public', self.db.Feed.search(spec, sort=[('created',-1)]) )
+        res = filter(lambda i: i.entity and i.entity.can_view(viewer), self.db.Feed.list(spec, sort='created'))
         return res
 
     def build_search_index(self):

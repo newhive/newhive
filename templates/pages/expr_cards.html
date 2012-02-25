@@ -78,7 +78,7 @@
 {% block right_column %}
   <div id='feed'>
     {% if feed_items %}
-    {% for feed in feed_items | reverse %}
+    {% for feed in feed_items %}
       {% include 'partials/feed.html' %}
     {% endfor %}
     {% else %}

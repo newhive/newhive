@@ -216,6 +216,7 @@ def handle(request): # HANDLER
         return controllers['expression'].index(request, response, {'owner': owner})
     if request.path == 'listening': return controllers['user'].index(request, response, {'listening': True})
     if request.path == 'feed': return controllers['user'].index(request, response, {'feed': True})
+    if request.path == 'network': return controllers['user'].index(request, response, {'network': True})
     if request.path == 'robots.txt' and config.debug_mode: return application_controller.serve_robots(response)
 
     if request.args.has_key('dialog'): return controllers['expression'].dialog(request, response)

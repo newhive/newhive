@@ -68,3 +68,12 @@ class memoized(object):
    def __get__(self, obj, objtype):
       """Support instance methods."""
       return functools.partial(self.__call__, obj)
+
+def dedup(xs):
+    seen = set()
+    result = []
+    for x in xs:
+        if x not in seen:
+            seen.add(x)
+            result.append(x)
+    return result
