@@ -94,7 +94,7 @@ function loadDialog(url, opts) {
         showDialog(dia,opts);
     }
     else {
-        $.ajax({ url : url, success : function(h) { 
+        $.ajax({ url : url, dataType: 'text', success : function(h) { 
             var html = h;
             dia = loadDialog.loaded[url] = $(html);
             showDialog(dia,opts);
