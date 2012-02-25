@@ -56,12 +56,14 @@ class UserController(ApplicationController):
             response.context['f']['fullname'] = user_data['name']
             response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(user_data.get('gender'))
             response.context['f']['facebook'] = user_data
-            friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", request.requester.facebook_credentials)['data']
+            friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", credentials)['data']
             users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
             response.context['friends'] = users
-        else:
+        elif request.args.has_key('key'):
             referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
             if not referral or referral.get('used'): return self._bad_referral(request, response)
+        else:  #invited from facebook but chose not to sign up using facebook
+
         return self.serve_page(response, 'pages/user_settings.html')
 
     def create(self, request, response):
@@ -74,31 +76,32 @@ class UserController(ApplicationController):
             Logs new user in.
             """
 
+        assert 'tos' in request.form
         if request.args.has_key('key'):
             referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
-            if (not referral or referral.get('used')): return self._bad_referral(request, response)
-            referrer = self.db.User.fetch(referral['user'])
-        elif request.args.has_key('code'):
-            fbc = FacebookClient()
-            credentials = fbc.exchange(request)
-            fb_info = fbc.find('https://graph.facebook.com/me')
-            request_id = request.path.split('/')[1]
+        else
+            request_id = lget(request.path.split('/'),1)
             referral = self.db.Referral.find({'request_id': request_id})
-        assert 'tos' in request.form
+
+        if (not referral or referral.get('used')): return self._bad_referral(request, response)
+        referrer = self.db.User.fetch(referral['user'])
 
         args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender'])
         args.update({
              'referrer' : referral.get('user')
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]
-            #,'flags'    : { 'add_invites_on_save' : True }
         })
+        if request.args.has_key('code'):
+            args.update()
+                ,'oauth': {'facebook': json.loads(credentials.to_json())}
+                ,'facebook' : fb_profile
+            })
         if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})
 
         user = self.db.User.create(args)
         self._friends_to_listen(request, user)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
         user.give_invites(5)
-        if request.args.has_key('code'): self._save_credentials(request, user, fbc)
 
         try: mail.mail_user_register_thankyou(self.jinja_env, user)
         except: pass # TODO: log an error
