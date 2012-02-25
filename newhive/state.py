@@ -400,6 +400,12 @@ class User(HasSocial):
         return bool(self.mdb.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
     has_homepage = property(_has_homepage)
 
+    def delete(self):
+        for e in self.db.Expr.search({'owner': self.id}): e.delete()
+        self.db.KeyWords.remove_entries(self)
+        for e in self.stars: e.delete()
+        return super(User, self).delete()
+
 
 @Database.register
 class Session(Entity):
