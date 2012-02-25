@@ -47,6 +47,8 @@ class UserController(ApplicationController):
             #response.context['page'] = page
 
     def new(self, request, response):
+        referral = self._check_referral(request)
+        if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
         if request.args.has_key('code'):
             fbc = FacebookClient()
@@ -59,11 +61,6 @@ class UserController(ApplicationController):
             friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", credentials)['data']
             users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
             response.context['friends'] = users
-        elif request.args.has_key('key'):
-            referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
-            if not referral or referral.get('used'): return self._bad_referral(request, response)
-        else:  #invited from facebook but chose not to sign up using facebook
-
         return self.serve_page(response, 'pages/user_settings.html')
 
     def create(self, request, response):
@@ -77,12 +74,7 @@ class UserController(ApplicationController):
             """
 
         assert 'tos' in request.form
-        if request.args.has_key('key'):
-            referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
-        else
-            request_id = lget(request.path.split('/'),1)
-            referral = self.db.Referral.find({'request_id': request_id})
-
+        referral = self._check_referral(request)
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         referrer = self.db.User.fetch(referral['user'])
 
@@ -92,8 +84,11 @@ class UserController(ApplicationController):
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]
         })
         if request.args.has_key('code'):
-            args.update()
-                ,'oauth': {'facebook': json.loads(credentials.to_json())}
+            fbc = FacebookClient()
+            credentials = fbc.exchange(request)
+            fb_profile = fbc.find('https://graph.facebook.com/me')
+            args.update({
+                'oauth': {'facebook': json.loads(credentials.to_json())}
                 ,'facebook' : fb_profile
             })
         if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})
@@ -109,6 +104,15 @@ class UserController(ApplicationController):
         request.form = dict(username = args['name'], secret = args['password'])
         self.login(request, response)
         return self.redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
+
+    def _check_referral(self, request):
+        if request.args.has_key('key'):
+            referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
+        else:
+            #request id is handled as a path rather than querystring so it is preserved through fb redirect
+            request_id = lget(request.path.split('/'),1)
+            referral = self.db.Referral.find({'request_id': request_id})
+        return referral
 
     def _friends_to_listen(self, request, user):
         friends = request.form.get('friends_to_listen')
@@ -174,8 +178,10 @@ class UserController(ApplicationController):
                 if referral:
                     fbc.delete("https://graph.facebook.com/" + request_id + "_" + referral.get('to'), app_access=True)
             valid_request = valid_request or (fb_request and referral and not referral.get('used'))
-        response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True) + 'signup/' + request_id)
-        response.context['signup_without_facebook_url'] = abs_url(secure=True) + 'signup/' + request_id
+        #request id is handled as a path rather than querystring so it is preserved through fb redirect
+        signup_url = abs_url(secure=True) + 'signup/' + request_id
+        response.context['facebook_connect_url'] = fbc.authorize_url(signup_url)
+        response.context['signup_without_facebook_url'] = signup_url
         if not valid_request:
             msg = "This invite from facebook has already been used. If you " +\
                   "think this is a mistake, please contact us at " +\
