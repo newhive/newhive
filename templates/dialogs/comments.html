@@ -21,4 +21,38 @@
      <h4 class='sub title'>&nbsp; Please log in or or sign up to participate</h4>
     {% endif %}
   </div>
+  <div id="comments">
+    {% for comment in expr.comments %}
+    {% include "partials/comment.html" %}
+    {% endfor %}
+  </div>
 </div>
+<script>
+  function submitComment() {
+    $.post('', $('#dia_comments form').serialize(), function(data) {
+      var comments_div = $('#comments');
+      comment_count += 1;
+      comments_div.append(data);
+      $('#dia_comments .comments_count').html(' (' + comment_count + ')');
+      $('#btn_comment').attr('data-count', comment_count);
+      $('#dia_comments textarea').val('');
+      commentSize();
+      comments_div[0].scrollTop = 100000;
+      reloadFeed();
+      iconCounts();
+    });
+  };
+  function commentSize(){
+    var header_height = $('#dia_comments .header').height();
+    var dialog_height = $('#dia_comments').height();
+    var window_height = $(window).height();
+    var new_height = window_height * 0.75 - header_height - 50;
+    if ($('#comments').height() > new_height) {
+      $('#comments').height(new_height);
+    }
+    center($('#dia_comments'));
+  };
+  commentSize();
+  $('.comment_content .text').each(function(i, e) { $(e).html(autoLink($(e).html())) }); 
+  setTimeout('commentSize(); $("#comments")[0].scrollTop = 100000;', 0);
+</script>
