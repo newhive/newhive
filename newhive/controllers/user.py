@@ -167,6 +167,7 @@ class UserController(ApplicationController):
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited?request_ids=' + str(request.args.get('request_ids')) + '";</script></html>')
 
     def invited_from_facebook(self, request, response, args={}):
+        if request.requester.logged_in: return self.redirect(response, request.requester.url)
         fbc = FacebookClient()
         params = request.args
         request_ids = request.args.get('request_ids').split(',')

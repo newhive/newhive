@@ -45,13 +45,14 @@ def handle_login(db, request, response):
     return False
 
 def facebook_login(db, request, response):
-    fbc = oauth.FacebookClient()
+    request.fbc = oauth.FacebookClient()
     try:
-        fbc.exchange(request)
-        fb_profile = fbc.me()
-        user = db.User.find({'facebook.id': fb_profile.get('id')})
+        request.credentials = request.fbc.exchange(request)
+        request.fb_profile = request.fbc.me()
+        user = db.User.find({'facebook.id': request.fb_profile.get('id')})
     except Exception as e:
         user = None
+        response.context['error'] = 'Either something went wrong with facebook login or your facebook account is not connect to The New Hive'
         print type(e)
         print e
 
@@ -61,7 +62,6 @@ def facebook_login(db, request, response):
         user.logged_in = True
         return user
     else:
-        response.context['error'] = 'Either something went wrong with facebook login or your facebook account is not connect to The New Hive'
         return db.User.new({})
 
 def new_session(db, user, request, response):

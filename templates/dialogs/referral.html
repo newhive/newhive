@@ -38,7 +38,7 @@
         FB.ui({method: 'apprequests'
           , message: 'Join me on The New Hive'
           , title: 'Invite Friends to Join The New Hive'
-          , filter: 'app_non_user'
+          , filters: ['app_non_users']
         }, requestCallback);
       }
       
