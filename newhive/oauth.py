@@ -148,5 +148,5 @@ class FacebookClient(object):
     def fql(self, query, credentials = None, app_access=False):
         return self.find('https://graph.facebook.com/fql?q=' + urllib.quote(query), credentials, app_access)
 
-    def me(self, credentials = None):
-        return self.find('https://graph.facebook.com/me', credentials)
+    def me(self, query='', credentials = None):
+        return self.find(urllib.basejoin('https://graph.facebook.com/me', str(query)), credentials)
