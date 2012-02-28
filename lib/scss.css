@@ -1256,7 +1256,14 @@ input[type="text"].copy, textarea.copy {
 /* line 7, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
 .signup_without_facebook {
   color: #696e76;
-  font-size: 15px;
+  font-size: 18px;
+}
+
+/* line 12, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
+#example_expressions {
+  background: url("/lib/skin/1/congratulations_tnh.jpg") repeat-x;
+  height: 257px;
+  margin-top: 100px;
 }
 
 /* line 2, /home/duffy/2newhive/libsrc/scss/profile.scss */
