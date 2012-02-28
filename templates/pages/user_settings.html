@@ -150,7 +150,7 @@ $(document).ready(function(){
 var profile_thumb_choose = function(){
   asyncUpload({success: function(data){
     $('input[name=thumb_file_id]').val(data.file_id);
-    $('#profile_thumb img').attr('src', data.thumb);
+    $('#profile_thumb a').html('<img src="' + data.thumb + '"/>');
   }});
   return false;
 };
@@ -161,13 +161,7 @@ var profile_thumb_choose = function(){
  <div  class='fathead'>
    <p class="active" id="error">{{message |e}}</p>
    <div id='profile_thumb'>
-     <form id='profile_thumb_upload_form' method='POST' enctype='multipart/form-data' action='{{ secure_server }}' style='position : absolute; left : -1000px'>
-       <input name='profile_thumb' id='profile_thumb_file_input' type='file'>
-       <input type='hidden' name='action' value='profile_thumb_set'>
-       <input type='hidden' name='forward' value=''>
-       <iframe id='profile_thumb_upload_target' name='profile_thumb_upload_target' style='position : absolute; left : -1000px'></iframe>
-     </form>
-     <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
+     <a href="#" onclick="return profile_thumb_choose();" alt="Choose Picture">
        {% if f.thumb %}
          <img src="{{f.thumb}}"/>
        {% else %}

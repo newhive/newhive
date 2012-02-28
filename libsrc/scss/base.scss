@@ -73,6 +73,15 @@ iframe { border: none; }
       width: 70px;
       height: 70px;
     }
+    .placeholder {
+      $padding: 17px;
+      width: 70px;
+      height: 70px - 2*$padding;
+      border: 1px dashed #CCC; 
+      text-align:center; 
+      font-size: 10px;
+      padding: $padding 0;
+    }
   }
   .fathead {
     margin: 50px; 

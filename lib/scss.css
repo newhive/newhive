@@ -1397,44 +1397,53 @@ iframe {
   width: 70px;
   height: 70px;
 }
-/* line 77 */
+/* line 76 */
+.user_settings #profile_thumb .placeholder, .email_confirmation #profile_thumb .placeholder {
+  width: 70px;
+  height: 36px;
+  border: 1px dashed #CCC;
+  text-align: center;
+  font-size: 10px;
+  padding: 17px 0;
+}
+/* line 86 */
 .user_settings .fathead, .email_confirmation .fathead {
   margin: 50px;
 }
-/* line 83 */
+/* line 92 */
 .user_settings .fathead h1, .email_confirmation .fathead h1 {
   display: inline;
   font-family: Museo, Helvetica, sans-serif;
 }
 
-/* line 90 */
+/* line 99 */
 .user_settings .required {
   color: #f72e4d;
   font-size: 0.7em;
 }
-/* line 94 */
+/* line 103 */
 .user_settings .form_validation_info {
   width: 215px;
 }
-/* line 95 */
+/* line 104 */
 .user_settings .user_name_change_text {
   width: 215px;
   font-size: 0.75em;
 }
 
-/* line 105 */
+/* line 114 */
 .email_confirmation .fathead {
   margin-bottom: 100px;
 }
-/* line 107 */
+/* line 116 */
 .email_confirmation .fathead p {
   margin-left: 50px;
 }
-/* line 110 */
+/* line 119 */
 .email_confirmation #content a {
   color: #698293;
 }
-/* line 112 */
+/* line 121 */
 .email_confirmation #content a:hover {
   color: #f72e4d;
 }
