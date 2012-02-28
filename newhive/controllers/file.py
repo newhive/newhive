@@ -27,7 +27,7 @@ class FileController(ApplicationController):
         res = self.db.File.create(dict(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime))
         tmp_file.close()
 
-        return { 'name': file.filename, 'mime' : mime, 'file_id' : res.id, 'url' : res.get('url') }
+        return { 'name': file.filename, 'mime' : mime, 'file_id' : res.id, 'url' : res.get('url'), 'thumb': res.get_thumb(190,190) }
 
     def delete(self, request, response):
         res = self.db.File.fetch(request.form.get('id'))

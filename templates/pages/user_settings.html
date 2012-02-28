@@ -149,9 +149,8 @@ $(document).ready(function(){
 });
 var profile_thumb_choose = function(){
   asyncUpload({success: function(data){
-    console.log(data);
     $('input[name=thumb_file_id]').val(data.file_id);
-    $('#profile_thumb img').attr('src', data.content);
+    $('#profile_thumb img').attr('src', data.thumb);
   }});
   return false;
 };
@@ -258,7 +257,7 @@ var profile_thumb_choose = function(){
    
    {% if update %}
    {% if not user.facebook %}<div><a href='{{facebook_connect_url}}'>Connect Your Facebook Account</a></div>{% endif %}
-     <input class='black btn rounded' type='submit' value='Update Profile' >
+     <input class='black btn rounded' type='submit' value='Save Changes' >
    {% else %}
      <input class='black btn rounded' type='submit' value='Create Account'>
    {% endif %}
