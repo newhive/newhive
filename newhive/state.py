@@ -348,9 +348,10 @@ class User(Entity):
         texts = {'name': self.get('name'), 'fullname': self.get('fullname')}
         self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
 
-    def new_referral(self, d):
+    def new_referral(self, d, decrement=True):
         if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
-            self.update(referrals=self['referrals'] - 1)
+            if decrement:
+                self.update(referrals=self['referrals'] - 1)
             d.update(user = self.id)
             return self.db.Referral.create(d)
     def give_invites(self, count):

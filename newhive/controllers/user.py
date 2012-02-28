@@ -211,7 +211,7 @@ class UserController(ApplicationController):
     def facebook_invite(self, request, response, args={}):
         request_id = request.form.get('request_id')
         for invite in request.form.get('to').split(','):
-            request.requester.new_referral({'to': invite, 'request_id': request_id})
+            request.requester.new_referral({'to': invite, 'request_id': request_id}, decrement=False)
         return self.serve_json(response, {'success': True})
 
     def update(self, request, response):
