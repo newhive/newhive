@@ -285,13 +285,6 @@ class KeyWords(Entity):
             cursor = self.search({'words': {'$all': words}, 'weight': weight, 'doc_type': doc_type}).sort([('updated', -1)])
             return cursor
 
-#def searchable(entity):
-
-class Searchable():
-    @property
-    def search_text(self):
-        raise exceptions.NotImplementedError('Must be overridden by specific class method')
-
 
 @Database.register
 class User(Entity):
@@ -342,7 +335,14 @@ class User(Entity):
         self['referrals'] = 0
         self['flags'] = {}
         assert self.has_key('referrer')
-        return super(User, self).create()
+        super(User, self).create()
+        self.build_search_index()
+        return self
+
+    def update(self, **d):
+        super(User, self).update(**d)
+        self.build_search_index()
+        return self
 
     def build_search_index(self):
         texts = {'name': self.get('name'), 'fullname': self.get('fullname')}
@@ -526,9 +526,11 @@ class Expr(Entity):
                 }
         self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
 
+    def update_tags(self):
+        if self.get('tags'): self['tags_index'] = normalize(self['tags'])
 
     def update(self, **d):
-        if d.get('tags'): d['tags_index'] = normalize(d['tags'])
+        self.update_tags()
         super(Expr, self).update(**d)
         last_update = self.db.UpdatedExpr.last({ 'initiator' : self['owner'] })
         if not last_update or now() - last_update['created'] > 14400:
@@ -544,6 +546,7 @@ class Expr(Entity):
         self['random'] = random.random()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
+        self.update_tags()
         super(Expr, self).create()
         feed = self.db.NewExpr.new(self.owner, self)
         self.owner.get_expr_count(force_update=True)

@@ -43,43 +43,20 @@ function urlValidate(value, method) {
 }
 
 function autoLink(string) {
-    var re = /(\s|\n|^)(https?:\/\/)?(([0-9a-z]+\.)+[0-9a-z]{2,}\/?[^ ]*)[,.;]? ?/ig;
-    // notes  1        2             34                                  5
-    // 1: this make sure that the match isn't preceded by anything other than whitespace or newline or the start of the string
-    //    this ends up excluding existing links <a href="foo.bar">foo.bar</a>
+    var re = /(\s|^)(https?:\/\/)?(([0-9a-z-]+\.)+[0-9a-z-]{2,3}(:\d+)?(\/[-\w.~:\/#\[\]@!$&'()*+,;=?]*?)?)([;,.?!]?(\s|$))/ig;
+    // groups 1        2             34                       5      6                                   7
+    // 1: this ends up excluding existing links <a href="foo.bar">foo.bar</a>
     // 2: optional http(s):// becomes capture group 2
-    // 3: capture group 3 is the url after the http://
-    // 5: don't including trailing punctuation.  this makes it so if somebody uses a url in a sentence it doesn't pick up the punctuation
-    var match;
-    function makeValid(matchArray, regex){
-        var href, linkText, completeLink, replaceStart, additionalChar = 0;
-        replaceStart = matchArray.index + matchArray[1].length; // if capture group 1 captured a whitespace character, don't count it for positioning
-        if (matchArray[3].charAt(matchArray[3].length-1).search(/[,.;]/) === 0) {
-            // removes trailing punctuation from url
-            matchArray[3] = matchArray[3].slice(0, matchArray[3].length -1);
-        }
-        if (matchArray[2] === undefined){
-            // prepend http:// if it's not already there
-            linkText = matchArray[3];
-            href = "http://" + linkText;
-            additionalChar = 7;
-        } else {
-            // but don't mess with the protocol if it is already there
-            linkText = matchArray[2] + matchArray[3];
-            href = linkText;
-        }
-        additionalChar += 15;
-        completeLink = "<a href='" + href + "'>" + linkText + "</a>";
-
-        // modify the string
-        string = string.slice(0,replaceStart) + completeLink + string.slice(replaceStart + linkText.length);
-        // move the starting point for the next regex search to past our newly lengthened string
-        regex.lastIndex += additionalChar;
+    // 3: The url after the http://
+    // 5: Optional path
+    // 7: Trailing punctuation to be excluded from URL. Note that the
+    //    path is non greedy, so this will fail to correctly match a valid but
+    //    uncommon case of a URL with a query string that ends in punctuation.
+    function linkify(m, m1, m2, m3, m4, m5, m6, m7) {
+        var href = ((m2 === '') ? 'http://' : m2) + m3; // prepend http:// if it's not already there
+        return m1 + $('<a>').attr('href', href).text(m2 + m3).outerHTML() + m7; 
     }
-    while(match = re.exec(string)) {  // loop through all matches
-        makeValid(match, re);
-    }
-    return string;
+    return string.replace(re, linkify);
 }
 
 function logAction(action, data){
@@ -353,14 +330,11 @@ function iconCounts() {
 
 var urlParams = {};
 (function () {
-    var e,
-        a = /\+/g,  // Regex for replacing addition symbol with a space
-        r = /([^&=]+)=?([^&]*)/g,
-        d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
-        q = window.location.search.substring(1);
-
-    while (e = r.exec(q))
-       urlParams[d(e[1])] = d(e[2]);
+    var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
+    if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
+        var pair = v.split('=');
+        urlParams[d(pair[0])] = d(pair[1]);
+    });
 })();
 
 /*** puts alt attribute of input fields in to value attribute, clears
@@ -383,41 +357,33 @@ $(function () {
         }
     });
 
-  $("input[alt], textarea[alt]").each(function() {
-    var defaultValue = $(this).attr('alt');
-    this.onfocus = function() { if(this.value == defaultValue) this.value = ""; }
-    this.onblur = function() { if(this.value == "") this.value = defaultValue };
-    if(this.value == "") this.value = defaultValue;
-  });
-
   $(".hoverable").each(function() { hover_add(this) });
 
   // Cause external links to open in a new window
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
-  $('a').each(function() {
-    var a = new RegExp(server_name);
-    if(this.href.indexOf('http') == 0 && !a.test(this.href)) {
-      $(this).click(function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        window.open(this.href, '_blank');
-      });
-    }
-  });
+  $('a').each(link_target);
+
   $(window).resize(place_apps);
   place_apps();
+
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
-  else if (!logged_in) {
-      var count = parseInt(readCookie('pageview_count'));
-      var signup = readCookie('signup_completed') == 'true';
-      if (! count ) count = 0;
-      count++;
-      if ((count == 5 || count == 15) && (!signup)) setTimeout("$('.signup_button').first().click();", 1000);
-      createCookie('pageview_count', count, 14);
-  };
+  // The dialog this creates can't be dismissed on the Iphone browser
+  //else if (!logged_in) {
+  //    var count = parseInt(readCookie('pageview_count'));
+  //    var signup = readCookie('signup_completed') == 'true';
+  //    if (! count ) count = 0;
+  //    count++;
+  //    if ((count == 5 || count == 15) && (!signup)) setTimeout("$('.signup_button').first().click();", 1000);
+  //    createCookie('pageview_count', count, 14);
+  //};
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
+function link_target(i, a) {
+    var re = new RegExp(server_name), a = $(a), href = $(a).attr('href');
+    if(href && href.indexOf('http') == 0 && !re.test(href))
+        $(a).attr('target', '_blank');
+}
 
 
 function center(e, inside, opts) {
@@ -454,7 +420,7 @@ function asyncSubmit(form, callback) {
 
 function asyncUpload(opts) {
     var target, form, opts = $.extend({ json : true, file_name : 'file',
-        start : noop, success : noop, data : { action : 'files_create' } }, opts);
+        start : noop, success : noop, data : { action : 'file_create' } }, opts);
 
     var onload = function() {
         var frame = target.get(0);
@@ -525,7 +491,8 @@ hover_menu = function(handle, drawer, options) {
         o.hover_src = hover_url(o.handle_src);
     }
 
-    o.delayed_close = function() {
+    o.delayed_close = function(e) {
+        o.e = e;
         if(o.options.hover_close) o.close_timer = setTimeout(o.close, o.options.close_delay);
     }
     o.cancel_close = function() { if(o.close_timer) clearTimeout(o.close_timer); }
