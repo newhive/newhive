@@ -16,51 +16,7 @@
       <input type="text" name="to_{{i}}"/>
     </div>
     {% endfor %}
-    {% if user.facebook %}
-    <input type='submit' class='btn black rounded' value='Invite Facebook Friends' onclick="sendRequestViaMultiFriendSelector(); return false;"/>
-    <div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>
-    <script src="http://connect.facebook.net/en_US/all.js"></script>
    
-    <script>
-      FB.init({
-          appId  : '{{facebook_app_id}}',
-      });
-
-      function sendrequesttorecipients() {
-        var user_ids = document.getelementsbyname("user_ids")[0].value;
-        fb.ui({method: 'apprequests',
-          message: 'my great request',
-          to: user_ids, 
-        }, requestCallback);
-      }
-
-      function sendRequestViaMultiFriendSelector() {
-        FB.ui({method: 'apprequests'
-          , message: 'Join me on The New Hive'
-          , title: 'Invite Friends to Join The New Hive'
-          , filters: ['app_non_users']
-        }, requestCallback);
-      }
-      
-      function requestCallback(response) {
-        $('#dia_referral .btn_dialog_close').click();
-        if (response){
-          console.log(response);
-          $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
-        }
-        // Handle callback here
-      }
-    </script>
-    {% else %}
-    <a href='{{facebook_connect_url}}' class='btn black rounded' >Invite Facebook Friends</a>
-    {% endif %}
-
-{#
-    <div class="line">
-      <div class="label medbold align">Message<br/><span class="small">(optional)</span></div>
-      <textarea name="message"></textarea>
-    </div>
-#}
 <input type='submit' class='btn black rounded' value='Send'/>
   </form>
 </div>

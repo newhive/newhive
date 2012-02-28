@@ -14,9 +14,14 @@
     <form name='logout_form' action='{{ secure_server }}' method='POST'>
       <input name='action' value='logout' type='hidden'>
     </form>
+    {% if user.facebook %}
+    <div class='menu_item' id='fb_invite_menu_item' onclick='sendRequestViaMultiFriendSelector(); return false;'>
+      Invite Friends
+    </div>
+    {% endif %}
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
-        Invites <span class="referral_count">{{ user.referrals }}</span>
+        Invites via Email<span class="referral_count">{{ user.referrals }}</span>
       </div>
     {% endif %}
     <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>

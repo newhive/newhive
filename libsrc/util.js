@@ -685,3 +685,18 @@ var buildSearch = function(){
   var search = $('#search_box').val();
   return server_url + "search?q=" + escape(search);
 }
+
+function sendRequestViaMultiFriendSelector() {
+  function requestCallback(response) {
+    $('#dia_referral .btn_dialog_close').click();
+    if (response){
+      console.log(response);
+      $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
+    }
+  }
+  FB.ui({method: 'apprequests'
+    , message: 'Join me on The New Hive'
+    , title: 'Invite Friends to Join The New Hive'
+    , filters: ['app_non_users']
+  }, requestCallback);
+}

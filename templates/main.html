@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 {% from "macros/main.html" import star_button, share_button, create_button, discussion_button, listen_button, starrers_menu, context_to_string %} 
 
+{% block head %}
+<script>
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=153421698080835";
+      fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+  </script>
+{% endblock head %}
 {% block body_classes %}{{ super() }} main {% endblock body_classes%}
 
 {% block main %}
@@ -11,7 +22,7 @@
   </div>
   {% block body %}
   {% endblock body %}
-
+  <div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>
   <div id='content'>
     {% block content %}
       <div id="header">
