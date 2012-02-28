@@ -1,4 +1,4 @@
-import crypt, pickle
+import crypt, pickle, urllib
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.utils import normalize, junkstr
@@ -51,14 +51,29 @@ class UserController(ApplicationController):
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
         if request.args.has_key('code'):
-            fbc = FacebookClient()
-            credentials = fbc.exchange(request)
-            user_data = fbc.find('https://graph.facebook.com/me')
-            response.context['f'] = dfilter(user_data, ['email'])
-            response.context['f']['fullname'] = user_data['name']
-            response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(user_data.get('gender'))
-            response.context['f']['facebook'] = user_data
-            friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", credentials)['data']
+            profile_picture_url = 'https://graph.facebook.com/' + request.fb_profile.get('id') + '/picture?type=large&return_ssl_resources=1'
+            try:
+                #TODO: switch all uses of urllib to urllib2
+                profile_picture = urllib.urlopen(profile_picture_url)
+                with os.tmpfile() as tmp_file:
+                    tmp_file.write(profile_picture.read())
+                    profile_picture = self.db.File.create({
+                        'owner': None
+                        , 'name': 'profile_picture_for_' + request.fb_profile.get('name').replace(' ', '_')
+                        , 'tmp_file': tmp_file
+                        , 'mime': profile_picture.headers.type})
+            except IOError as e:
+                print "Error downloading fb profile picture " + profile_picture_url
+                print e
+                profile_picture = None
+            response.context['f'] = dfilter(request.fb_profile, ['email'])
+            response.context['f']['fullname'] = request.fb_profile['name']
+            response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(request.fb_profile.get('gender'))
+            response.context['f']['facebook'] = request.fb_profile
+            if profile_picture:
+                response.context['f']['thumb'] = profile_picture.get_thumb(190,190)
+                response.context['f']['thumb_file_id'] = profile_picture.id
+            friends = request.fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""")['data']
             users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
             response.context['friends'] = users
         return self.serve_page(response, 'pages/user_settings.html')
@@ -78,7 +93,7 @@ class UserController(ApplicationController):
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         referrer = self.db.User.fetch(referral['user'])
 
-        args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender'])
+        args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender', 'thumb', 'thumb_file_id'])
         args.update({
              'referrer' : referral.get('user')
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]

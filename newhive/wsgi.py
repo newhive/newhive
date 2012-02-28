@@ -147,7 +147,7 @@ def handle(request): # HANDLER
         reqaction = request.form.get('action')
         if reqaction:
             insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite']
-            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback']
+            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback', 'files_create']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
             if not request.requester.logged_in and not reqaction in non_logged_in_actions:

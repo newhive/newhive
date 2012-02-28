@@ -1379,49 +1379,62 @@ iframe {
 }
 
 /* line 64 */
+.user_settings .title, .email_confirmation .title {
+  padding-top: 10px;
+}
+/* line 65 */
+.user_settings #profile_thumb, .email_confirmation #profile_thumb {
+  float: left;
+  width: 90px;
+}
+/* line 68 */
+.user_settings #profile_thumb .message, .email_confirmation #profile_thumb .message {
+  color: #696e76;
+  font-size: 12px;
+}
+/* line 72 */
+.user_settings #profile_thumb img, .email_confirmation #profile_thumb img {
+  width: 70px;
+  height: 70px;
+}
+/* line 77 */
 .user_settings .fathead, .email_confirmation .fathead {
   margin: 50px;
 }
-/* line 66 */
-.user_settings .fathead div, .email_confirmation .fathead div {
-  background: url("/lib/skin/1/plus_lg.png") no-repeat;
-  height: 44px;
-}
-/* line 70 */
+/* line 83 */
 .user_settings .fathead h1, .email_confirmation .fathead h1 {
-  margin: 0 0 0 50px;
   display: inline;
   font-family: Museo, Helvetica, sans-serif;
 }
 
-/* line 78 */
+/* line 90 */
 .user_settings .required {
   color: #f72e4d;
   font-size: 0.7em;
 }
-/* line 82 */
+/* line 94 */
 .user_settings .form_validation_info {
   width: 215px;
 }
-/* line 83 */
+/* line 95 */
 .user_settings .user_name_change_text {
   width: 215px;
   font-size: 0.75em;
 }
 
-/* line 93 */
+/* line 105 */
 .email_confirmation .fathead {
   margin-bottom: 100px;
 }
-/* line 95 */
+/* line 107 */
 .email_confirmation .fathead p {
   margin-left: 50px;
 }
-/* line 98 */
+/* line 110 */
 .email_confirmation #content a {
   color: #698293;
 }
-/* line 100 */
+/* line 112 */
 .email_confirmation #content a:hover {
   color: #f72e4d;
 }

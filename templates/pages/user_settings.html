@@ -138,20 +138,52 @@ $(document).ready(function(){
     $('.friend .listen').addClass('active');
     update_friends_to_listen();
   }
+  // Set up hover events on profile picture change
+  var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
+  var hoverout = function(){ $('#profile_thumb .message').remove(); };
+  $('#profile_thumb img').hover(hoverin, hoverout);
+  $('#profile_thumb_file_input').click(function() {
+    //$('#profile_thumb_upload_form input[name="forward"]').val(window.location);
+
+  });
 });
+var profile_thumb_choose = function(){
+  asyncUpload({success: function(data){
+    console.log(data);
+    $('input[name=thumb_file_id]').val(data.file_id);
+    $('#profile_thumb img').attr('src', data.content);
+  }});
+  return false;
+};
 </script>
 {% endblock head %}
 
 {% block content %}
- <div class='fathead'>
-   <p class="active">{{message |e}}</p>
-   <div class='icon'><h1>{{ ui.create_account_title if action == 'create' else ui.update_account_title }}</h1></div>
+ <div  class='fathead'>
+   <p class="active" id="error">{{message |e}}</p>
+   <div id='profile_thumb'>
+     <form id='profile_thumb_upload_form' method='POST' enctype='multipart/form-data' action='{{ secure_server }}' style='position : absolute; left : -1000px'>
+       <input name='profile_thumb' id='profile_thumb_file_input' type='file'>
+       <input type='hidden' name='action' value='profile_thumb_set'>
+       <input type='hidden' name='forward' value=''>
+       <iframe id='profile_thumb_upload_target' name='profile_thumb_upload_target' style='position : absolute; left : -1000px'></iframe>
+     </form>
+     <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
+       {% if f.thumb %}
+         <img src="{{f.thumb}}"/>
+       {% else %}
+         <div class='placeholder rounded'>Click Here to<br/>Upload A Profile Image</div>
+       {% endif %}
+     </a>
+   </div>
+   <div class="title"><h1>{{ ui.create_account_title if action == 'create' else ui.update_account_title }}</h1></div>
  </div>
 
  <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
 
      <div class="column" id="column_1" style='clear : both; text-align:left; margin : 0 0px 50px 0; vertical-align : top;'>
        <input type='hidden' name='action' value='{{"user_update" if update else "user_create"}}'>
+       <input type='hidden' name='thumb_file_id' value='{{f.thumb_file_id}}'>
    
        <b>Username</b><br>
        <input id='name' type='text' name='name' value='{{f.name}}' {{'disabled="disabled"' if update}}><br>
