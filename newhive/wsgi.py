@@ -116,6 +116,7 @@ actions = dict(
     ,log             = controllers['user'].log
     ,thumbnail_relink= controllers['admin'].thumbnail_relink
     ,facebook_invite = controllers['user'].facebook_invite
+    ,facebook_disconnect = controllers['user'].facebook_disconnect
     )
 
 # Mime types that could generate HTTP POST requests

@@ -310,4 +310,7 @@ class UserController(ApplicationController):
         response.context['error'] = 'Log in if you already have an account'
         return self.serve_page(response, 'pages/error.html')
 
+    def facebook_disconnect(self, request, response):
+        request.requester.facebook_disconnect()
+        return True
 

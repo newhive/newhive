@@ -433,6 +433,9 @@ class User(Entity):
             return "https://graph.facebook.com/" + self.facebook_id + "/picture?type=square"
 
     def facebook_disconnect(self):
+        if self.facebook_credentials and not self.facebook_credentials.access_token_expired:
+            fbc = FacebookClient()
+            fbc.delete('https://graph.facebook.com/me/permissions', self.facebook_credentials)
         self.update_cmd({'$unset': {'facebook': 1, 'oauth.facebook': 1}})
 
     @property

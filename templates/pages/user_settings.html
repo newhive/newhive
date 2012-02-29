@@ -107,6 +107,13 @@ var update_friends_to_listen = function(){
   );
 };
 
+var disconnectFacebook = function(){
+  $.post('/', {action: 'facebook_disconnect'}, function(){
+    $('#column_3').hide();
+    $('#error').html('Your Facebook account has been disconnected');
+  });
+}
+
 $(document).ready(function(){
   {% if update %}
       var update = true;
@@ -251,16 +258,12 @@ var profile_thumb_choose = function(){
        {% endif %}
    
    {% if update %}
-   {% if not user.facebook or not user.oauth or not user.oauth.facebook%}<div><a href='{{facebook_connect_url}}'>Connect Your Facebook Account</a></div>{% endif %}
      <input class='black btn rounded' type='submit' value='Save Changes' >
    {% else %}
      <input class='black btn rounded' type='submit' value='Create Account'>
    {% endif %}
    </div>
    <div class="column" id="column_3">
-     {% if not user.facebook %}
-       <a href="{{facebook_authentication_url}}"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
-     {% endif %}
      {% if friends or listening_count %}
        <h3>Listen to your Friends:</h3>
        {% if listening_count and listening_count > 0 %}
@@ -275,6 +278,25 @@ var profile_thumb_choose = function(){
          </div>
        {% endfor %}
      {% endif %}
+     {% if update %}
+       {% if not user.facebook or not user.oauth or not user.oauth.facebook%}
+         <a href="{{facebook_authentication_url}}"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
+       {% else %}
+         <div style="margin-top:20px;">
+           <a href='/' onclick="showDialog('#dia_facebook_disconnect'); return false;">Disconnect your Facebook Account</a>
+         </div>
+       {% endif %}
+     {% endif %}
    </div>
  </form>
+{% endblock %}
+
+{% block dialogs %}
+{{super()}}
+<div id='dia_facebook_disconnect' class='dialog border selected center' style='width : 25em; padding : 20px'>
+ <h2>Disconnect Facebook</h2>
+ Are you sure you want to disconnect your Facebook account?<br><br>
+ <input id='save_overwrite' type='button' class='btn black rounded' value='Yes' onclick="disconnectFacebook();">&nbsp; &nbsp; &nbsp; 
+ <input id='save_overwrite' type='button' class='btn black rounded' value='No'>
+</div>
 {% endblock %}

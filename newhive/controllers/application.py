@@ -20,8 +20,6 @@ class ApplicationController(object):
             else:
                 request.requester = auth.facebook_login(self.db, request, response)
         response.context.update(facebook_authentication_url=self.fb_client.authorize_url(request.base_url))
-        print request.base_url
-        print self.fb_client.authorize_url(request.base_url)
         response.user = request.requester
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
