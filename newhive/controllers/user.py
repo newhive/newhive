@@ -139,22 +139,12 @@ class UserController(ApplicationController):
             for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
                 self.db.Star.new(user, friend)
 
-    def _save_credentials(self, request, user, fbc=FacebookClient()):
-        credentials = fbc.exchange(request)
-        if not user.has_key('oauth'): user['oauth'] = {}
-        if not user.has_key('facebook'):
-            user['facebook'] = fbc.find('https://graph.facebook.com/me')
-        user['oauth']['facebook'] = json.loads(credentials.to_json())
-        user.save()
-
     def edit(self, request, response):
         if request.requester.logged_in and request.is_secure:
             fbc = FacebookClient()
             response.context['action'] = 'update'
             response.context['f'] = request.requester
             response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True)+ 'settings')
-            if request.args.has_key('code'):
-                self._save_credentials(request, request.requester, fbc)
             if request.requester.facebook_credentials:
                 if request.requester.facebook_credentials.access_token_expired:
                     return self.redirect(response, fbc.authorize_url(abs_url(secure=True) + "settings"))

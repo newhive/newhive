@@ -15,13 +15,13 @@
       <input name='action' value='logout' type='hidden'>
     </form>
     {% if user.facebook %}
-    <div class='menu_item' id='fb_invite_menu_item' onclick='sendRequestViaMultiFriendSelector(); return false;'>
-      Invite Friends
+    <div class='menu_item' id='fb_invite_menu_item'>
+      Invite Fb Friends<div class="fb_icon"></div>
     </div>
     {% endif %}
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
-        Invites via Email<span class="referral_count">{{ user.referrals }}</span>
+        Invite via Email<span class="referral_count">{{ user.referrals }}</span>
       </div>
     {% endif %}
     <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
@@ -31,8 +31,16 @@
     hover_menu(
       $('#user_menu_handle'), 
       $('#user_menu'), 
-      { offsetY: 10 }
+      { offsetY: 10
+        , click_persist: '#fb_invite_menu_item'
+        , close: function(){$('#fb_invite_menu_item').removeClass('menu_hover');} 
+      }
     );
+    $('#fb_invite_menu_item').click(function(e){
+      e.stopPropagation();
+      $(this).addClass('menu_hover');
+      sendRequestViaMultiFriendSelector();
+    });
     hover_menu($('#notifications'), $('#feed_menu'), {
       open: function(){
         var div = $('#notifications');
@@ -62,7 +70,7 @@
   <div id='login_menu' class='menu top'>
     <form id='login_form' action='{{ secure_server }}' method='POST'>
       {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
-      <a href="{{login_with_facebook_url}}"><img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;"></a>
+      <a href="{{facebook_authentication_url}}"><img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;"></a>
       <b>Username</b><br>
       <input id='username' type='text' name='username' value='{{ user['name'] }}'>
       <div class='spacer'></div>

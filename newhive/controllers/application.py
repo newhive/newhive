@@ -13,12 +13,15 @@ class ApplicationController(object):
     def pre_process(self, request, args={}):
         response = Response()
         response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
+        request.requester = auth.authenticate_request(self.db, request, response)
         if request.args.has_key('code'):
-            request.requester = auth.facebook_login(self.db, request, response)
-        else:
-            request.requester = auth.authenticate_request(self.db, request, response)
-        if not request.requester.logged_in:
-            response.context.update(login_with_facebook_url=self.fb_client.authorize_url(request.base_url))
+            if request.requester.logged_in:
+                request.requester.save_credentials(request)
+            else:
+                request.requester = auth.facebook_login(self.db, request, response)
+        response.context.update(facebook_authentication_url=self.fb_client.authorize_url(request.base_url))
+        print request.base_url
+        print self.fb_client.authorize_url(request.base_url)
         response.user = request.requester
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')

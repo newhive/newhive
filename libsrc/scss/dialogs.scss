@@ -279,3 +279,11 @@ input[type="text"].copy, textarea.copy {
   cursor: pointer;
   img:hover { @include opacity(0.75); }
 }
+
+#dia_facebook_connect {
+  width: 700px;
+  padding: 0 40px 40px 40px;
+  h1 {
+      font-family: museo, helvetica, sans-serif;
+  }
+}

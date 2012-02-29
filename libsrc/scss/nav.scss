@@ -25,7 +25,13 @@ body.home.logged_out .nav{
   color: $color_active;
   padding-left: 30px;
 }
-
+#user_menu .fb_icon {
+  display: inline-block;
+  vertical-align: middle;
+  width: 40px;
+  height: 20px;
+  background: url('/lib/skin/1/facebook.png') no-repeat right;
+}
 
 .nav .nav_icon.has_count {
   position: relative;

@@ -155,13 +155,14 @@ var profile_thumb_choose = function(){
   return false;
 };
 </script>
+{{ super() }}
 {% endblock head %}
 
 {% block content %}
  <div  class='fathead'>
    <p class="active" id="error">{{message |e}}</p>
    <div id='profile_thumb'>
-     <a href="#" onclick="return profile_thumb_choose();" alt="Choose Picture">
+     <a href="#" onclick="profile_thumb_choose(); return false:" alt="Choose Picture">
        {% if f.thumb %}
          <img src="{{f.thumb}}"/>
        {% else %}
@@ -250,13 +251,16 @@ var profile_thumb_choose = function(){
        {% endif %}
    
    {% if update %}
-   {% if not user.facebook %}<div><a href='{{facebook_connect_url}}'>Connect Your Facebook Account</a></div>{% endif %}
+   {% if not user.facebook or not user.oauth or not user.oauth.facebook%}<div><a href='{{facebook_connect_url}}'>Connect Your Facebook Account</a></div>{% endif %}
      <input class='black btn rounded' type='submit' value='Save Changes' >
    {% else %}
      <input class='black btn rounded' type='submit' value='Create Account'>
    {% endif %}
    </div>
    <div class="column" id="column_3">
+     {% if not user.facebook %}
+       <a href="{{facebook_authentication_url}}"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
+     {% endif %}
      {% if friends or listening_count %}
        <h3>Listen to your Friends:</h3>
        {% if listening_count and listening_count > 0 %}

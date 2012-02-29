@@ -52,6 +52,7 @@
     {% block dialogs %}
       {% if user.logged_in %}
         {% include 'dialogs/referral.html' %}
+        {% include 'dialogs/facebook_connect.html' %}
       {% endif %}
       {% include 'dialogs/password.html' %}
       {% include 'dialogs/password_recovery.html' %}

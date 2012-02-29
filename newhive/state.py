@@ -9,6 +9,7 @@ from bson.code import Code
 from crypt import crypt
 from itertools import ifilter, imap
 from oauth2client.client import OAuth2Credentials
+from newhive.oauth import FacebookClient
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
@@ -415,6 +416,14 @@ class User(Entity):
             else: return None
         return self._facebook_credentials
 
+    def save_credentials(self, request, fbc=FacebookClient()):
+        credentials = fbc.exchange(request)
+        if not self.has_key('oauth'): self['oauth'] = {}
+        if not self.has_key('facebook'):
+            self['facebook'] = fbc.find('https://graph.facebook.com/me')
+        self['oauth']['facebook'] = json.loads(credentials.to_json())
+        self.save()
+
     @property
     def facebook_id(self):
         if self.has_key('facebook'): return self['facebook'].get('id')
@@ -422,6 +431,17 @@ class User(Entity):
     def facebook_thumbnail(self):
         if self.has_key('facebook'):
             return "https://graph.facebook.com/" + self.facebook_id + "/picture?type=square"
+
+    def facebook_disconnect(self):
+        self.update_cmd({'$unset': {'facebook': 1, 'oauth.facebook': 1}})
+
+    @property
+    def facebook_friends(self):
+        if not self.facebook_credentials or self.facebook_credentials.access_token_expired:
+            return None
+        fbc = FacebookClient()
+        friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", self.facebook_credentials)['data']
+        return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
 
     @property
     def expressions(self):
