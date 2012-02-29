@@ -103,6 +103,20 @@ function loadDialog(url, opts) {
 }
 loadDialog.loaded = {};
 
+function loadDialogPost(name, opts) {
+    var dia;
+    if(loadDialog.loaded[name]) {
+        dia = loadDialog.loaded[name];
+        showDialog(dia,opts);
+    } else {
+        $.post(window.location, {action: 'dialog', dialog: name}, function(h){
+            var html = h;
+            dia = loadDialog.loaded[name] = $(html);
+            showDialog(dia,opts);
+        });
+    }
+}
+
 function secureDialog(type, opts) {
     var dia;
     var params = $.extend({'domain': window.location.hostname, 'path': window.location.pathname}, opts.params)

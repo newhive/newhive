@@ -1,0 +1,10 @@
+<div id='dia_facebook_listen' class='dialog border selected'>
+   {% for friend in friends -%}
+     <div class="friend">
+       <img src="{{friend.facebook_thumbnail}}"/>
+       {{- friend.facebook.name -}}
+       <div data-id="{{friend.facebook.id}}" class="listen"></div>
+     </div>
+   {% endfor %}
+</div>
+

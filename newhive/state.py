@@ -438,12 +438,13 @@ class User(Entity):
             fbc.delete('https://graph.facebook.com/me/permissions', self.facebook_credentials)
         self.update_cmd({'$unset': {'facebook': 1, 'oauth.facebook': 1}})
 
-    @property
-    def facebook_friends(self):
-        if not self.facebook_credentials or self.facebook_credentials.access_token_expired:
-            return None
-        fbc = FacebookClient()
-        friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", self.facebook_credentials)['data']
+    def get_facebook_friends(self, fbc=None):
+        if not fbc:
+            if not self.facebook_credentials or self.facebook_credentials.access_token_expired:
+                return None
+            fbc = FacebookClient()
+            fbc.credentials = self.facebook_credentials
+        friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""")['data']
         return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
 
     @property

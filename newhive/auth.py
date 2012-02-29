@@ -1,6 +1,7 @@
+import json
 from werkzeug import exceptions
 from newhive import config, oauth
-from newhive.utils import junkstr
+from newhive.utils import junkstr, b64decode
 
 def authenticate_request(db, request, response):
     """Read session id from 'identity' cookie, retrieve session record from db,
@@ -19,6 +20,8 @@ def authenticate_request(db, request, response):
         rm_cookie(response, 'identity')
         return fail
 
+    request.fb_cookie = get_fb_cookie(request)
+    request.fb_code = request.fb_cookie.get('code')
     user.update(session = session.id)
 
     user.logged_in = False
@@ -150,3 +153,12 @@ def rm_cookie(response, name, secure = False): response.delete_cookie(name,
 class BadCookie(exceptions.BadRequest):
     def get_body(self, environ):
         return "there's some funky cookie business going on"
+
+def get_fb_cookie(request):
+    cookie = get_cookie(request, 'fbsr_' + config.facebook_app_id)
+    if cookie:
+        sig, data = [b64decode(str(el)) for el in cookie.split('.')]
+        #TODO: check data against signature hash
+        return json.loads(data)
+    else:
+        return None

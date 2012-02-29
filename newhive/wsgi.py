@@ -85,6 +85,9 @@ serve_json = application_controller.serve_json
 expr_list = controllers['expression']._expr_list
 expr_home_list = controllers['expression']._expr_home_list
 redirect = application_controller.redirect
+def dialog_map(request, response, args=None):
+    return dialogs.get(request.form['dialog'])(request, response, args)
+
 
 
 # Possible values for the POST variable 'action'
@@ -117,6 +120,12 @@ actions = dict(
     ,thumbnail_relink= controllers['admin'].thumbnail_relink
     ,facebook_invite = controllers['user'].facebook_invite
     ,facebook_disconnect = controllers['user'].facebook_disconnect
+    ,facebook_listen = controllers['user'].facebook_listen
+    ,dialog          = dialog_map
+    )
+
+dialogs = dict(
+    facebook_listen  = controllers['user'].facebook_listen
     )
 
 # Mime types that could generate HTTP POST requests
@@ -147,7 +156,7 @@ def handle(request): # HANDLER
     if request.domain != content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite', 'dialog']
             non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback', 'file_create']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')

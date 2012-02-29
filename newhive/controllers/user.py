@@ -314,3 +314,10 @@ class UserController(ApplicationController):
         request.requester.facebook_disconnect()
         return True
 
+    def facebook_listen(self, request, response, args=None):
+        fbc = FacebookClient()
+        fbc.exchange(code=request.fb_code, redirect_uri='')
+        #response.context['friends'] = request.requester.facebook_friends
+        response.context['friends'] = request.requester.get_facebook_friends(fbc)
+        return self.serve_page(response, 'dialogs/facebook_listen.html')
+

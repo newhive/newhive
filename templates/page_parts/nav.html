@@ -24,6 +24,11 @@
         Invite via Email<span class="referral_count">{{ user.referrals }}</span>
       </div>
     {% endif %}
+    {% if user.facebook %}
+    <div class='menu_item' id='fb_listen_menu_item'>
+      Find Friends to Listen<div class="fb_icon"></div>
+    </div>
+    {% endif %}
     <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
     <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
   </div>
@@ -33,13 +38,18 @@
       $('#user_menu'), 
       { offsetY: 10
         , click_persist: '#fb_invite_menu_item'
-        , close: function(){$('#fb_invite_menu_item').removeClass('menu_hover');} 
+        , close: function(){$('#fb_invite_menu_item, #fb_listen_menu_item').removeClass('menu_hover');} 
       }
     );
     $('#fb_invite_menu_item').click(function(e){
       e.stopPropagation();
       $(this).addClass('menu_hover');
       sendRequestViaMultiFriendSelector();
+    });
+    $('#fb_listen_menu_item').click(function(e){
+      e.stopPropagation();
+      $(this).addClass('menu_hover');
+      showDialog('#dia_facebook_listen');
     });
     hover_menu($('#notifications'), $('#feed_menu'), {
       open: function(){
