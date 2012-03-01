@@ -110,6 +110,7 @@ var update_friends_to_listen = function(){
 var disconnectFacebook = function(){
   $.post('/', {action: 'facebook_disconnect'}, function(){
     $('#column_3').hide();
+    $('#dia_facebook_disconnect .btn_dialog_close').click();
     $('#error').html('Your Facebook account has been disconnected');
   });
 }
@@ -296,7 +297,7 @@ var profile_thumb_choose = function(){
 <div id='dia_facebook_disconnect' class='dialog border selected center' style='width : 25em; padding : 20px'>
  <h2>Disconnect Facebook</h2>
  Are you sure you want to disconnect your Facebook account?<br><br>
- <input id='save_overwrite' type='button' class='btn black rounded' value='Yes' onclick="disconnectFacebook();">&nbsp; &nbsp; &nbsp; 
- <input id='save_overwrite' type='button' class='btn black rounded' value='No'>
+ <input id='disconnect_facebook_yes' type='button' class='btn black rounded' value='Yes' onclick="disconnectFacebook();">&nbsp; &nbsp; &nbsp; 
+ <input id='disconnect_facebook_no' type='button' class='btn black rounded' value='No' onclick="$('#dia_facebook_disconnect .btn_dialog_close').click();">
 </div>
 {% endblock %}
