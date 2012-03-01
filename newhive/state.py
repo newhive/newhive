@@ -400,6 +400,16 @@ class User(HasSocial):
         for e in self.stars: e.delete()
         return super(User, self).delete()
 
+    @property
+    def expressions(self):
+        return self.db.Expr.search({'owner': self.id})
+
+    def delete(self):
+        for e in self.expressions:
+            e.delete()
+        self.db.KeyWords.remove_entries(self)
+        return super(User, self).delete()
+
 
 @Database.register
 class Session(Entity):

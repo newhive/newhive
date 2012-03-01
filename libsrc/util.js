@@ -43,7 +43,7 @@ function urlValidate(value, method) {
 }
 
 function autoLink(string) {
-    var re = /(\s|^)(https?:\/\/)?(([0-9a-z]+\.)+[0-9a-z]{2,3}(:\d+)?(\/[-\w.~:\/#\[\]@!$&'()*+,;=?]*?)?)([;,.?!]?(\s|$))/ig;
+    var re = /(\s|^)(https?:\/\/)?(([0-9a-z-]+\.)+[0-9a-z-]{2,3}(:\d+)?(\/[-\w.~:\/#\[\]@!$&'()*+,;=?]*?)?)([;,.?!]?(\s|$))/ig;
     // groups 1        2             34                       5      6                                   7
     // 1: this ends up excluding existing links <a href="foo.bar">foo.bar</a>
     // 2: optional http(s):// becomes capture group 2
@@ -361,21 +361,14 @@ $(function () {
 
   // Cause external links to open in a new window
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
-  $('a').each(function() {
-    var a = new RegExp(server_name);
-    if(this.href.indexOf('http') == 0 && !a.test(this.href)) {
-      $(this).click(function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        window.open(this.href, '_blank');
-      });
-    }
-  });
+  $('a').each(link_target);
+
   $(window).resize(place_apps);
   place_apps();
+
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
   // This completely breaks the site on Ios, and is annoying
-  // Also very likely to be seen by logged out users
+  // Also likely to be seen by logged out users
   //else if (!logged_in) {
   //    var count = parseInt(readCookie('pageview_count'));
   //    var signup = readCookie('signup_completed') == 'true';
@@ -387,6 +380,11 @@ $(function () {
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
+function link_target(i, a) {
+    var re = new RegExp(server_name), a = $(a), href = $(a).attr('href');
+    if(href && href.indexOf('http') == 0 && !re.test(href))
+        $(a).attr('target', '_blank');
+}
 
 
 function center(e, inside, opts) {

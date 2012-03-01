@@ -1,6 +1,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive import analytics
+import operator as op
 
 class AnalyticsController(ApplicationController):
     def __init__(self, *a, **b):
@@ -139,4 +140,19 @@ class AnalyticsController(ApplicationController):
      #else:
     #    return serve_404(self, request, response)
 
+    def by_stars(self, request, response, args={}):
+        exprs = {}
+        for r in self.db.Feed.search({'class_name':'Star', 'entity_class':'Expr'}):
+            exprs[r['entity']] = exprs.get(r['entity'], []) + [r['initiator_name']]
+        expr_list = []
+        for i in exprs: expr_list.append({ 'id':i, 'star_count':len(exprs[i]), 'starred_by':exprs[i] })
+        expr_list.sort(key=op.itemgetter('star_count'), reverse=True)
+        data = []
+        for i in expr_list[0:200]:
+            e = self.db.Expr.fetch(i['id'])
+            if e:
+                dict.update(e, i)
+                data.append(e)
+        response.context['data'] = data
 
+        return self.serve_page(response, 'pages/analytics/by_stars.html')

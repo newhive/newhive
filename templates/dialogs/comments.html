@@ -53,6 +53,7 @@
     center($('#dia_comments'));
   };
   commentSize();
-  $('.comment_content .text').each(function(i, e) { $(e).html(autoLink($(e).html())) }); 
+  $('.comment_content .text').each(function(i, e) { $(e).html(autoLink($(e).html())) });
+  $('.comment_content a').each(link_target);
   setTimeout('commentSize(); $("#comments")[0].scrollTop = 100000;', 0);
 </script>
