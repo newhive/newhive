@@ -1,10 +1,22 @@
 <div id='dia_facebook_listen' class='dialog border selected'>
-   {% for friend in friends -%}
-     <div class="friend">
-       <img src="{{friend.facebook_thumbnail}}"/>
-       {{- friend.facebook.name -}}
-       <div data-id="{{friend.facebook.id}}" class="listen"></div>
-     </div>
-   {% endfor %}
+    <div class='line'>
+        <h1>Facebook friends:</h1>
+        <div class='invite_fb_link'>
+            <img src='/lib/skin/1/facebook.png' alt="Facebook Logo">
+            Invite friends from Facebook
+        </div>
+    </div>
+    <input type="checkbox" id='listen_to_friends'/>
+    <label for="listen_to_friends" class="active">{{ui.listen_to_all_friends | e}}</label>
+    <div class="fb-facepile" data-max-rows="1" data-width="300"></div>
+    <div class="friends">
+      {%- for friend in friends -%}
+        <div class="friend">
+          <img src="{{friend.facebook_thumbnail}}"/>
+          {{- friend.facebook.name -}}
+          <div data-id="{{friend.facebook.id}}" class="listen"></div>
+        </div>
+      {%- endfor -%}
+    </div>
 </div>
 

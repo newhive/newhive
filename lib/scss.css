@@ -655,6 +655,61 @@ input[type="text"].copy, textarea.copy {
   font-family: museo, helvetica, sans-serif;
 }
 
+/* line 291, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen {
+  padding: 20px;
+}
+/* line 293, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen h1 {
+  display: inline;
+  font-size: 35px;
+  font-family: Museo, Helvetica, Arial, sans-serif;
+}
+/* line 298, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen .friends {
+  width: 560px;
+  max-height: 400px;
+  overflow: auto;
+}
+/* line 303, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen .friend {
+  width: 250px;
+  padding: 7px;
+  padding-left: 0;
+  float: left;
+  margin-right: 20px;
+}
+/* line 309, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen .friend img {
+  vertical-align: middle;
+  margin-right: 5px;
+}
+/* line 314, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen .invite_fb_link {
+  float: right;
+  margin-top: 11px;
+}
+/* line 317, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen .invite_fb_link img {
+  vertical-align: middle;
+}
+/* line 319, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen .listen {
+  width: 37px;
+  height: 31px;
+  margin: 10px 0;
+  float: right;
+  background: url("/lib/skin/1/people_small.png");
+}
+/* line 325, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen .listen:hover {
+  background: #423c3e url("/lib/skin/1/people_small-hover.png");
+}
+/* line 328, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen .listen.active {
+  background: url("/lib/skin/1/people_small_active.png");
+}
+
 /* line 1, /home/duffy/2newhive/libsrc/scss/tags.scss */
 #tags {
   margin: 35px 20px 0 0;

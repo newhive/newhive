@@ -287,3 +287,46 @@ input[type="text"].copy, textarea.copy {
       font-family: museo, helvetica, sans-serif;
   }
 }
+
+#dia_facebook_listen {
+  padding: 20px;
+  h1 {
+      display: inline;
+      font-size: 35px;
+      font-family: Museo, Helvetica, Arial, sans-serif;
+  }
+  .friends {
+      width: 560px;
+      max-height: 400px;
+      overflow: auto;
+  }
+  .friend {
+      width: 250px;
+      padding: 7px;
+      padding-left: 0;
+      float: left;
+      margin-right: 20px;
+      img { 
+          vertical-align: middle; 
+          margin-right: 5px;
+      }
+  }
+  .invite_fb_link {
+      float: right;
+      margin-top: 11px;
+      img { vertical-align: middle; }
+  }
+  .listen {
+    width: 37px;
+    height: 31px;
+    margin: 10px 0;
+    float: right;
+    background: url("/lib/skin/1/people_small.png");
+    &:hover {
+      background: $color_charcoal url("/lib/skin/1/people_small-hover.png");
+    }
+    &.active {
+      background: url("/lib/skin/1/people_small_active.png");
+    }
+  }
+}
