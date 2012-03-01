@@ -90,19 +90,17 @@ class FacebookClient(object):
             self.redirect_uri = request.base_url
         else:
             self.redirect_uri = redirect_uri
-        data = {
+        body = urllib.urlencode({
             'grant_type': 'authorization_code',
             'client_id': self.client_id,
             'client_secret': self.client_secret,
             'code': code,
             'redirect_uri': self.redirect_uri,
             'scope': self.scope,
-            }
-        body = urllib.urlencode(data)
+            })
         headers = {
             'content-type': 'application/x-www-form-urlencoded',
         }
-        print "\n" + str(data) + "\n"
         http = httplib2.Http()
 
         resp, content = http.request(self.token_uri, method='POST', body=body,
@@ -125,7 +123,7 @@ class FacebookClient(object):
 
     def request(self, api_url, credentials=None, app_access=False, method="GET"):
         if credentials: self.credentials = credentials
-        if self.credentials.access_token_expired:
+        if not app_access and self.credentials.access_token_expired:
             raise httplib2.HttpLib2Error('Access token expired')
 
         h = httplib2.Http()
