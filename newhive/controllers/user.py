@@ -148,7 +148,7 @@ class UserController(ApplicationController):
                 response.context['listening_count'] = 0
                 response.context['friends'] = []
                 for user in users:
-                    if user.id in request.requester.starred_items:
+                    if user.id in request.requester.starred_user_ids:
                         response.context['listening_count'] += 1
                     else:
                         response.context['friends'].append(user)
