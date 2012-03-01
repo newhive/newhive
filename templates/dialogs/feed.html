@@ -1,5 +1,5 @@
 <div id="notification_count" style="display: none;">{{user.notification_count}}</div>
-{% for feed in user.recent_feed | reverse %}
+{% for feed in user.feed_profile(user) %}
 {% include "partials/feed.html" %}
 {% endfor %}
   <a href="{{feed_url}}">

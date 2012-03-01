@@ -94,7 +94,7 @@ function loadDialog(url, opts) {
         showDialog(dia,opts);
     }
     else {
-        $.ajax({ url : url, success : function(h) { 
+        $.ajax({ url : url, dataType: 'text', success : function(h) { 
             var html = h;
             dia = loadDialog.loaded[url] = $(html);
             showDialog(dia,opts);
@@ -381,7 +381,8 @@ $(function () {
   place_apps();
 
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
-  // The dialog this creates can't be dismissed on the Iphone browser
+  // This completely breaks the site on Ios, and is annoying
+  // Also likely to be seen by logged out users
   //else if (!logged_in) {
   //    var count = parseInt(readCookie('pageview_count'));
   //    var signup = readCookie('signup_completed') == 'true';

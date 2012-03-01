@@ -35,7 +35,7 @@
       {% if show_help %}$('#btn_help').click(){% endif %} })();
    </script>
    <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
-   {{ star_button(owner.star_count, owner.id in user.starred_items, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}, user_is_owner=(owner.id == user.id))}}
+   {{ star_button(owner.star_count, owner.id in user.starred_item_ids, user.logged_in, title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}, user_is_owner=(owner.id == user.id))}}
    {% if user.logged_in %}
    {{ create_button(create) }}
    {% endif %}
@@ -78,7 +78,7 @@
 {% block right_column %}
   <div id='feed'>
     {% if feed_items %}
-    {% for feed in feed_items | reverse %}
+    {% for feed in feed_items %}
       {% include 'partials/feed.html' %}
     {% endfor %}
     {% else %}

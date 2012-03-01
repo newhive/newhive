@@ -10,41 +10,33 @@ class UserController(ApplicationController):
     def index(self, request, response, args={}):
         page = int(request.args.get('page', 0))
         owner = response.context['owner']
-        is_owner = request.requester.logged_in and owner.id == request.requester.id
+
         tags = owner.get('tags', [])
         expressions_tag = {'url': '/expressions', 'name': 'Expressions', 'show_name': False}
         people_tag = {'url': '/listening', 'name': 'Listening'}
         star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         feed_tag = {'url': "/feed", "name": "Feed"}
-        response.context['system_tags'] = [expressions_tag, people_tag, star_tag]
+        network_tag = {'url': "/network", "name": "Network"}
+
         if args.get('listening'):
             tag = people_tag
-            response.context['users'] = self.db.User.list({'_id': {'$in': owner.starred_items}})
-            response.context['title'] = owner['fullname']
-            response.context['tag'] = tag
-            response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
-            if request.requester.logged_in and is_owner:
-                response.context['system_tags'].insert(1, feed_tag)
-            response.context['profile_thumb'] = owner.thumb
-            response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
+            response.context['users'] = owner.starred_users
 
-            return self.serve_page(response, 'pages/expr_cards.html')
         elif args.get('feed'):
-            if not request.requester.logged_in:
-                return redirect(response, abs_url())
-            response.context['feed_items'] = request.requester.feed
             tag = feed_tag
+            response.context['feed_items'] = owner.feed_profile(request.requester)
 
-            response.context['title'] = owner['fullname']
-            response.context['tag'] = tag
-            response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
-            if request.requester.logged_in and is_owner:
-                response.context['system_tags'].insert(1, feed_tag)
-            response.context['profile_thumb'] = owner.thumb
-            response.context['starrers'] = map(self.db.User.fetch, owner.starrers)
+        elif args.get('network'):
+            tag = network_tag
+            response.context['feed_items'] = owner.feed_network(request.requester)
 
-            return self.serve_page(response, 'pages/expr_cards.html')
-            #response.context['page'] = page
+        response.context['starrers'] = owner.starrers 
+        response.context['profile_thumb'] = owner.thumb
+        response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
+        response.context['system_tags'] = [expressions_tag, feed_tag, network_tag, people_tag, star_tag]
+        response.context['title'] = owner['fullname']
+        response.context['tag'] = tag
+        return self.serve_page(response, 'pages/expr_cards.html')
 
     def new(self, request, response):
         referral = self._check_referral(request)
@@ -137,7 +129,7 @@ class UserController(ApplicationController):
         if friends:
             friends = friends.split(',')
             for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
-                self.db.Star.new(user, friend)
+                self.db.Star.create(user, friend)
 
     def edit(self, request, response):
         if request.requester.logged_in and request.is_secure:
@@ -293,12 +285,12 @@ class UserController(ApplicationController):
         action = request.form.get('log_action')
         user = request.requester
         if action == "notifications_open":
-            user.notification_count = 0
+            user.notification_count_reset()
 
         data = json.loads(request.form.get('data', 'false'))
         if not data:
             data = {}
-        l = self.db.ActionLog.new(user, request.form.get('log_action'), data)
+        l = self.db.ActionLog.create(user, request.form.get('log_action'), data)
         return True
 
     def _bad_referral(self, request, response, msg=None):
@@ -320,4 +312,3 @@ class UserController(ApplicationController):
         #response.context['friends'] = request.requester.facebook_friends
         response.context['friends'] = request.requester.get_facebook_friends(fbc)
         return self.serve_page(response, 'dialogs/facebook_listen.html')
-

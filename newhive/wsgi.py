@@ -204,6 +204,7 @@ def handle(request): # HANDLER
         elif p1 == 'oauth':  return controllers['user'].facebook_connect(request, response)
         elif p1 == 'fbcanvas':  return controllers['user'].facebook_canvas(request, response)
         elif p1 == 'invited': return controllers['user'].invited_from_facebook(request, response)
+        elif p1 == 'robots.txt' and config.debug_mode: return application_controller.serve_robots(response)
         else: return serve_404(request, response)
 
     elif request.domain.startswith('www.'):
@@ -229,6 +230,8 @@ def handle(request): # HANDLER
         return controllers['expression'].index(request, response, {'owner': owner})
     if request.path == 'listening': return controllers['user'].index(request, response, {'listening': True})
     if request.path == 'feed': return controllers['user'].index(request, response, {'feed': True})
+    if request.path == 'network': return controllers['user'].index(request, response, {'network': True})
+    if request.path == 'robots.txt' and config.debug_mode: return application_controller.serve_robots(response)
 
     if request.args.has_key('dialog'): return controllers['expression'].dialog(request, response)
 

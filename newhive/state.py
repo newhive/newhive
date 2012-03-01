@@ -1,4 +1,5 @@
 import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
+import operator as op
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
@@ -14,7 +15,7 @@ from newhive.oauth import FacebookClient
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url
+from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, dedup
 
 
 class Database:
@@ -59,7 +60,7 @@ class Collection(object):
     def find(self, spec, **opts):
         r = self._col.find_one(spec, **opts)
         if not r: return None
-        return self.entity(self, r)
+        return self.new(r)
 
     def search(self, spec, **opts):
         return Cursor(self, self._col.find(spec=spec, **opts))
@@ -68,18 +69,20 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def list(self, spec, limit=300, page=0, sort='updated'):
+    def list(self, spec, limit=300, page=0, sort='updated', order=-1):
         if type(spec) == dict:
-            return self.search(spec, sort=[(sort, -1)], limit=limit, skip=limit * page)
+            return self.search(spec, sort=[(sort, order)], limit=limit, skip=limit * page)
         elif type(spec) == list:
-            items = dict([[item.id, item] for item in self.search({'_id': {'$in': spec}})])
-            return [items.get(s) for s in spec]
+            spec = dedup(spec)[ page * limit : (page + 1) * limit ]
+            return self.search({'_id': {'$in': spec}})
 
     def count(self, spec): return self.search(spec).count()
 
+    # self.new can be overridden to return custom object types
     def new(self, d): return self.entity(self, d)
+
     def create(self, d):
-        new_entity = self.entity(self, d)
+        new_entity = self.new(d)
         return new_entity.create()
 
     def map_reduce(self, *a, **b): return self._col.map_reduce(*a, **b)
@@ -97,16 +100,14 @@ class Cursor(object):
 
     def __len__(self): return self.count()
 
-    def __getitem__(self, index): return self.collection.entity(self.collection, self._cur.__getitem__(index))
-    def next(self): return self.collection.entity(self.collection, self._cur.next())
+    def __getitem__(self, index): return self.collection.new(self._cur.__getitem__(index))
+    def next(self): return self.collection.new(self._cur.next())
     def __iter__(self): return self
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
-    
     indexes = []
     Collection = Collection
-    _starred_items = _starrers = _commenters = _feed = None
 
     def __init__(self, col, doc):
         dict.update(self, doc)
@@ -154,59 +155,20 @@ class Entity(dict):
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
 
-    def get_feed(self):
-        if not self._feed:
-            feed = self.get('feed')
-            if feed:
-                self._feed = list(self.db.Feed.search({ '_id': { '$in' : self.get('feed') } }))
-            else:
-                self._feed = []
-        return self._feed
-    feed = property(get_feed)
 
-    def get_recent_feed(self):
-        return self.feed[-5:]
-    recent_feed = property(get_recent_feed)
+# Common code between User and Expr
+class HasSocial(Entity):
+    _starrer_ids = None
+    @property
+    @memoized
+    def starrer_ids(self):
+        return [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
+    @property
+    def starrers(self): return map(self.db.User.fetch, self.starrer_ids)
+    @property
+    def star_count(self): return len(self.starrer_ids)
 
-    def set_notification_count(self, count):
-        self.update_cmd({'$set': {'notification_count': count}});
-    def get_notification_count(self):
-        count = self.get('notification_count')
-        if not count and count != 0:
-           count = len(self.feed)
-           self.notification_count = count
-        return count
-    notification_count = property(get_notification_count, set_notification_count)
-
-    def get_starred_items(self):
-        if not self._starred_items:
-          self._starred_items = [item.get('entity') for item in filter(lambda i: i.get('class_name') == 'Star' and i.get('initiator') == self.id, self.feed)]
-        return self._starred_items
-    starred_items = property(get_starred_items)
-
-    def get_starrers(self):
-        if not self._starrers:
-          self._starrers = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Star' and i.get('entity') == self.id, self.feed)]
-        return self._starrers
-    starrers = property(get_starrers)
-
-    def get_commenters(self):
-        if not self._commenters:
-          self._commenters = [item.get('initiator') for item in filter(lambda i: i.get('class_name') == 'Comment' and i.get('entity') == self.id, self.feed)]
-        return self._commenters
-    commenters = property(get_commenters)
-
-    def get_star_count(self):
-        return len(self.starrers)
-    star_count = property(get_star_count)
-
-    def get_comment_count(self):
-        return len(self.commenters)
-    comment_count = property(get_comment_count)
-
-    def notify(self, type, feed_item_id):
-        notifyees = getattr(self, type)
-        return self.mdb.user.update({"_id": {"$in": notifyees}}, {'$addToSet': {'feed': feed_item_id}}, safe=True)
+    def can_view(self, viewer): return True
 
     def related_next(self, spec={}, loop=True):
         if type(spec) == dict:
@@ -259,7 +221,6 @@ class Entity(dict):
 class KeyWords(Entity):
     cname = 'key_words'
     indexes = [ ['doc_type', 'weight', 'words'], 'doc']
-    #classes = { 'Expr' : Expr, 'User' : User }
 
     class Collection(Collection):
         def remove_entries(self, doc):
@@ -288,9 +249,8 @@ class KeyWords(Entity):
 
 
 @Database.register
-class User(Entity):
+class User(HasSocial):
     cname = 'user'
-
     indexes = [ ('name', {'unique':True}), 'facebook.id' ]
     
     # fields = dict(
@@ -321,6 +281,8 @@ class User(Entity):
     def __init__(self, *a, **b):
         super(User, self).__init__(*a, **b)
         self.logged_in = False
+        self.owner = self
+        self['owner'] = self.id
 
     def expr_create(self, d):
         doc = dict(owner = self.id, name = '', domain = self['sites'][0])
@@ -345,6 +307,44 @@ class User(Entity):
         self.build_search_index()
         return self
 
+    @property
+    def notification_count(self):
+        count = self.get('notification_count')
+        if count == None:
+           count = len(self.feed)
+           self['notification_count'] = count
+        return count
+    def notification_count_reset(self): self.update(notification_count=0)
+    def notify(self, feed_item):
+        self.increment({'notification_count':1})
+
+    @property
+    @memoized
+    def stars(self): return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
+    @property
+    def starred_user_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'User']
+    @property
+    def starred_users(self): return map(self.db.User.fetch, self.starred_user_ids)
+    @property
+    def starred_expr_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'Expr']
+
+    def starred_exprs(self, viewer, **args):
+        if type(viewer) == User: viewer = viewer.id
+        return self.db.Expr.list(self.starred_expr_ids, viewer=viewer, **args)
+
+    def feed_profile(self, viewer, **args):
+        if type(viewer) == User: viewer = viewer.id
+        res = self.db.Feed.list({ '$or' : [ {'entity_owner':self.id}, {'initiator':self.id} ] }, sort='created', **args)
+        if viewer != self.id: res = filter(lambda i: i.entity and i.entity.can_view(viewer), res)
+        return res
+
+    def feed_network(self, viewer, **args):
+        if type(viewer) == User: viewer = viewer.id
+        spec = { '$or' : [ { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Star', 'Comment']} },
+            { 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']} } ] }
+        res = filter(lambda i: i.entity and i.entity.can_view(viewer), self.db.Feed.list(spec, sort='created'))
+        return res
+
     def build_search_index(self):
         texts = {'name': self.get('name'), 'fullname': self.get('fullname')}
         self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
@@ -357,7 +357,7 @@ class User(Entity):
             return self.db.Referral.create(d)
     def give_invites(self, count):
         self.increment({'referrals':count})
-        self.db.InviteNote.new(self.db.User.named(config.site_user), self, data={'count':count})
+        self.db.InviteNote.create(self.db.User.named(config.site_user), self, data={'count':count})
 
     def cmp_password(self, v):
         return crypt(v, self['password']) == self['password']
@@ -403,9 +403,11 @@ class User(Entity):
         return bool(self.mdb.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
     has_homepage = property(_has_homepage)
 
-    @property
-    def key_words(self):
-        return list(set(normalize(' '.join([self['name'], self['fullname']]))))
+    def delete(self):
+        for e in self.db.Expr.search({'owner': self.id}): e.delete()
+        self.db.KeyWords.remove_entries(self)
+        for e in self.stars: e.delete()
+        return super(User, self).delete()
 
     @property
     def facebook_credentials(self):
@@ -476,7 +478,7 @@ def media_path(user, f_id=None):
     return joinpath(p, f_id) if f_id else p
 
 @Database.register
-class Expr(Entity):
+class Expr(HasSocial):
     cname = 'expr'
     indexes = [
          (['domain', 'name'], {'unique':True})
@@ -513,12 +515,9 @@ class Expr(Entity):
             [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
             return cls.named(domain, name)
 
-        def list(self, spec, requester=None, context_owner=None, **opts):
+        def list(self, spec, viewer=None, **opts):
             es = super(Expr.Collection, self).list(spec, **opts)
-            can_view = lambda e: (
-                requester == e['owner'] or (requester in e.starrers and context_owner == requester) or (e.get('auth', 'public') == 'public' and len(e.get('apps', [])) )
-                )
-            return ifilter(can_view, es)
+            return ifilter(lambda e: e.can_view(viewer), es)
 
         def random(self):
             rand = random.random()
@@ -559,7 +558,7 @@ class Expr(Entity):
         super(Expr, self).update(**d)
         last_update = self.db.UpdatedExpr.last({ 'initiator' : self['owner'] })
         if not last_update or now() - last_update['created'] > 14400:
-            feed = self.db.UpdatedExpr.new(self.owner, self)
+            feed = self.db.UpdatedExpr.create(self.owner, self)
         self.owner.get_expr_count(force_update=True)
         self.build_search_index()
         return self
@@ -573,7 +572,7 @@ class Expr(Entity):
         self.setdefault('auth', 'public')
         self.update_tags()
         super(Expr, self).create()
-        feed = self.db.NewExpr.new(self.owner, self)
+        feed = self.db.NewExpr.create(self.owner, self)
         self.owner.get_expr_count(force_update=True)
         self.build_search_index()
         return self
@@ -583,6 +582,8 @@ class Expr(Entity):
         self.db.KeyWords.remove_entries(self)
         return super(Expr, self).delete()
 
+    def can_view(self, user):
+        return (self.get('auth', 'public') == 'public') or (user == self['owner']) or (user in self.starrer_ids)
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
@@ -627,11 +628,11 @@ class Expr(Entity):
       else:
         return 0
 
-    def get_url(self): return abs_url(domain=self['domain']) + self['name']
-    url = property(get_url)
+    @property
+    def url(self): return abs_url(domain=self['domain']) + self['name']
 
-    def get_owner_url(self): return abs_url(domain = self.get('domain')) + 'expressions'
-    owner_url = property(get_owner_url)
+    @property
+    def owner_url(self): return abs_url(domain = self.get('domain')) + 'expressions'
 
     def get_thumb(self):
         if self.get('thumb_file_id'):
@@ -651,7 +652,7 @@ class Expr(Entity):
 
     def get_comments(self):
         if not self.has_key('feed'): return []
-        comments = self.db.Comment.search({ '_id': {'$in': self['feed']} })
+        comments = self.db.Comment.search({'entity': self.id})
         try:
             comments_accurate = len(comments) == self['analytics']['Comment']['count']
         except KeyError:
@@ -661,13 +662,12 @@ class Expr(Entity):
         return comments
     comments = property(get_comments)
 
-    def get_comment_count(self):
+    @property
+    def comment_count(self):
         try:
             return self['analytics']['Comment']['count']
         except KeyError:
             return 0
-    comment_count = property(get_comment_count)
-
 
     def get_share_count(self):
         count = 0
@@ -677,10 +677,6 @@ class Expr(Entity):
     share_count = property(get_share_count)
 
     public = property(lambda self: self.get('auth') == "public")
-
-    @property
-    def key_words(self):
-        return list(set(normalize(' '.join([self['tags'], self['title'], self['name']]))))
 
 
 def generate_thumb(file, size):
@@ -805,7 +801,6 @@ class File(Entity):
             url = self.store_aws(self._file, self.id, urllib.quote_plus(self['name'].encode('utf8')))
             dict.update(self, url=url)
             if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
-                self.set_thumb(124,96)
                 thumb190 = self.set_thumb(190,190)['file']
                 self.set_thumb(70,70, file=thumb190)
         else:
@@ -835,38 +830,44 @@ class ActionLog(Entity):
     cname = 'action_log'
 
     class Collection(Collection):
-        def new(self, user, action, data={}):
+        def create(self, user, action, data={}):
             data.update({
                 'user': user.id
                 ,'user_name': user.get('name')
                 ,'action': action
                 })
-            return self.create(data)
+            return super(ActionLog.Collection, self).create(data)
 
 
 @Database.register
 class Feed(Entity):
     cname = 'feed'
-    indexes = ['entity', 'initiator']
+    indexes = [ ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
     _initiator = _entity = None
 
     class Collection(Collection):
-        def new(self, initiator, entity, data={}):
+        def new(self, d):
+            # override new only in this generic Feed class to return the specific subtype
+            if type(self) == Feed: return getattr(self.db, d['class_name']).entity(self, d)
+            else: return self.entity(self, d)
+
+        def create(self, initiator, entity, data={}):
             data.update({
                 'initiator': initiator.id
                 ,'initiator_name': initiator.get('name')
                 ,'entity': entity.id
                 ,'entity_class': entity.__class__.__name__
+                ,'entity_owner': entity.owner.id
                 })
-            return self.create(data)
+            return super(Feed.Collection, self).create(data)
 
-        def search(self, spec):
+        def search(self, spec, **opts):
             if not self.entity == Feed: spec.update(class_name=self.entity.__name__)
-            return super(Feed.Collection, self).search(spec)
+            return super(Feed.Collection, self).search(spec, **opts)
 
-        def last(self, spec):
-            spec.update(class_name=self.entity.__name__)
-            return super(Feed.Collection, self).last(spec)
+        def find(self, spec, **opts):
+            if not self.entity == Feed: spec.update(class_name=self.entity.__name__)
+            return super(Feed.Collection, self).find(spec, **opts)
 
     def create(self):
         for key in ['initiator', 'entity', 'entity_class']:
@@ -875,62 +876,45 @@ class Feed(Entity):
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create()
-        self.mdb.user.update({'_id': self['initiator']}, {'$addToSet': {'feed': self.id}})
-        self.entity.update_cmd({'$addToSet': {'feed': self.id}})
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
-        if self['entity_class'] == "Expr":
-            if not self.entity['owner'] == self['initiator']: # don't double-count commenting on your own expression
-                self.mdb.user.update({'_id': self.entity['owner']}, {'$inc': {'notification_count': 1}, '$addToSet': {'feed': self.id}})
+        if self.entity['owner'] != self['initiator']: self.entity.owner.notify(self)
+
         return self
 
-    def get_entity(self):
+    @property
+    def entity(self):
         if not self._entity:
             self._entity = getattr(self.db, self['entity_class']).fetch(self['entity'])
         return self._entity
 
-    def get_initiator(self):
+    @property
+    def initiator(self):
         if not self._initiator:
             self._initiator = self.db.User.fetch(self['initiator'])
         return self._initiator
 
-    entity = property(get_entity)
-    initiator = property(get_initiator)
-        
-    def delete(self):
-        if self.initiator: self.initiator.update_cmd({'$pull': {'feed': self.id}})
-        if self.entity: self.entity.update_cmd({'$pull': {'feed': self.id}})
-        return super(Feed, self).delete()
+    @property
+    def owner_name(self):
+        if self['entity_class'] == "User":
+            return self.entity.get('name')
+        elif self['entity_class'] == "Expr":
+            return self.entity.get('owner_name')
 
-    def get_owner_name(self):
-      if self['entity_class'] == "User":
-        return self.entity.get('name')
-      elif self['entity_class'] == "Expr":
-        return self.entity.get('owner_name')
-    owner_name = property(get_owner_name)
-
-    def get_owner_url(self):
-      if self['entity_class'] == "User":
-        return self.entity.url
-      elif self['entity_class'] == "Expr":
-        return abs_url(domain = self.entity.get('domain')) + "expressions"
-    owner_url = property(get_owner_url)
+    @property
+    def owner_url(self):
+        if self['entity_class'] == "User":
+            return self.entity.url
+        elif self['entity_class'] == "Expr":
+            return self.entity.owner_url
 
 @Database.register
 class Comment(Feed):
     def create(self):
         assert self.has_key('text')
-        super(Comment, self).create()
-        self.entity.notify('commenters', self.id)
-        self.entity.notify('starrers', self.id)
-        return self
+        return super(Comment, self).create()
 
-    def get_author(self):
-        author = self.get('initiator_name')
-        if not author:
-            author = self.initiator['name']
-            self.update_cmd({'$set': {'initiator_name': author}})
-        return author
-    author = property(get_author)
+    @property
+    def author(self): return self.get('initiator_name')
 
     def to_json(self):
         return {
@@ -947,36 +931,28 @@ class Comment(Feed):
 @Database.register
 class Star(Feed):
     class Collection(Feed.Collection):
-        def new(self, initiator, entity, data={}):
-            #TODO: fix inconsistent behavior when feed is improperly deleted and exists in entity's feed but not initiator's
-            if initiator.id in entity.starrers:
+        def create(self, initiator, entity, data={}):
+            if initiator.id in entity.starrer_ids:
                 return True
             else:
-                return super(Star.Collection, self).new(initiator, entity, data)
+                return super(Star.Collection, self).create(initiator, entity, data)
+
+    def create(self):
+        if self.entity['owner'] == self['initiator']:
+            raise "You mustn't listen to yourself or star your own expressions"
+        return super(Star, self).create()
 
 @Database.register
 class InviteNote(Feed):
-    def create(self):
-        super(InviteNote, self).create()
-        self.entity.increment({'notification_count': 1})
-        return self
+    pass
 
 @Database.register
 class NewExpr(Feed):
-    def create(self):
-        super(NewExpr, self).create()
-        if self.entity.public:
-            self.entity.owner.notify('starrers', self.id)
-        return self
+    pass
 
 @Database.register
 class UpdatedExpr(Feed):
-    def create(self):
-        super(UpdatedExpr, self).create()
-        self.entity.notify('starrers', self.id)
-        if self.entity.public:
-            self.entity.owner.notify('starrers', self.id)
-        return self
+    pass
 
 
 @Database.register
@@ -992,7 +968,6 @@ class Referral(Entity):
         url = abs_url(secure=True) + 'signup?key=' + self.get('key')
         if self.get('email'): url += '&email=' + self['email']
         return url
-
 
 
 @Database.register
