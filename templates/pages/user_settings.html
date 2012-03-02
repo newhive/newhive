@@ -181,7 +181,7 @@ var profile_thumb_choose = function(){
    <div class="title"><h1>{{ ui.create_account_title if action == 'create' else ui.update_account_title }}</h1></div>
  </div>
 
- <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
+ <form id='form' action="/settings" style="display: block; margin: 0 auto; width: 80%;" method='POST'>
 
      <div class="column" id="column_1" style='clear : both; text-align:left; margin : 0 0px 50px 0; vertical-align : top;'>
        <input type='hidden' name='action' value='{{"user_update" if update else "user_create"}}'>
@@ -284,7 +284,8 @@ var profile_thumb_choose = function(){
          <a href="{{facebook_authentication_url}}"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
        {% else %}
          <div style="margin-top:20px;">
-           <a href='/' onclick="showDialog('#dia_facebook_disconnect'); return false;">Disconnect your Facebook Account</a>
+           <input name="fb_disconnect" type="checkbox"><label for="fb_disconnect">Disconnect your Facebook Account</label>
+           <input name="fb_disconnect_allow_finding" type="hidden">
          </div>
        {% endif %}
      {% endif %}

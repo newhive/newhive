@@ -418,11 +418,14 @@ class User(HasSocial):
             else: return None
         return self._facebook_credentials
 
+    @facebook_credentials.setter
+    def facebook_credentials(self, value):
+        self._facebook_credentials = value
+
     def save_credentials(self, request, fbc=FacebookClient()):
         credentials = fbc.exchange(request)
         if not self.has_key('oauth'): self['oauth'] = {}
-        if not self.has_key('facebook'):
-            self['facebook'] = fbc.find('https://graph.facebook.com/me')
+        self['facebook'] = fbc.find('https://graph.facebook.com/me')
         self['oauth']['facebook'] = json.loads(credentials.to_json())
         self.save()
 
@@ -438,7 +441,13 @@ class User(HasSocial):
         if self.facebook_credentials and not self.facebook_credentials.access_token_expired:
             fbc = FacebookClient()
             fbc.delete('https://graph.facebook.com/me/permissions', self.facebook_credentials)
-        self.update_cmd({'$unset': {'facebook': 1, 'oauth.facebook': 1}})
+            self.facebook_credentials = None
+        self.update_cmd({'$set': {'facebook.disconnected': True}})
+        self.update_cmd({'$unset': {'oauth.facebook': 1}})
+
+    @property
+    def has_facebook(self):
+        return self.get('facebook') and not self['facebook'].get('disconnected')
 
     def get_facebook_friends(self, fbc=None):
         if not fbc:

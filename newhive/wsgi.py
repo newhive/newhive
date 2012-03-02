@@ -119,7 +119,6 @@ actions = dict(
     ,log             = controllers['user'].log
     ,thumbnail_relink= controllers['admin'].thumbnail_relink
     ,facebook_invite = controllers['user'].facebook_invite
-    ,facebook_disconnect = controllers['user'].facebook_disconnect
     ,facebook_listen = controllers['user'].facebook_listen
     ,dialog          = dialog_map
     )

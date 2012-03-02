@@ -14,7 +14,7 @@
     <form name='logout_form' action='{{ secure_server }}' method='POST'>
       <input name='action' value='logout' type='hidden'>
     </form>
-    {% if user.facebook %}
+    {% if user.has_facebook %}
     <div class='menu_item' id='fb_invite_menu_item'>
       Invite Fb Friends<div class="fb_icon"></div>
     </div>
@@ -24,7 +24,7 @@
         Invite via Email<span class="referral_count">{{ user.referrals }}</span>
       </div>
     {% endif %}
-    {% if user.facebook %}
+    {% if user.has_facebook %}
     <div class='menu_item' id='fb_listen_menu_item'>
       Find Friends to Listen<div class="fb_icon"></div>
     </div>
