@@ -162,14 +162,6 @@ class UserController(ApplicationController):
                         response.context['friends'].append(user)
             return self.serve_page(response, 'pages/user_settings.html')
 
-    def facebook_connect(self, request, response, args={}):
-        fbc = FacebookClient()
-        self._save_credentials(request, request.requester, fbc)
-        response.context['friends'] = fbc.find('https://graph.facebook.com/me/friends')['data']
-        friend_ids = [friend['id'] for friend in response.context['friends']]
-        response.context['fb_app_id'] = fbc.client_id
-        return self.serve_page(response, 'pages/facebook_connect.html')
-
     def facebook_canvas(self, request, response, args={}):
         params = request.args
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited?request_ids=' + str(request.args.get('request_ids')) + '";</script></html>')
