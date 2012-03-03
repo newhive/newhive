@@ -432,10 +432,16 @@ class User(HasSocial):
     @property
     def facebook_id(self):
         if self.has_key('facebook'): return self['facebook'].get('id')
+
     @property
-    def facebook_thumbnail(self):
+    def fb_thumb(self):
         if self.has_key('facebook'):
             return "https://graph.facebook.com/" + self.facebook_id + "/picture?type=square"
+
+    @property
+    def fb_name(self):
+        if self.has_key('facebook'):
+            return self['facebook']['name']
 
     def facebook_disconnect(self):
         if self.facebook_credentials and not self.facebook_credentials.access_token_expired:
@@ -463,6 +469,9 @@ class User(HasSocial):
         return self.db.Expr.search({'owner': self.id})
 
     def delete(self):
+        # Facebook Disconnect
+        self.facebook_disconnect()
+
         # Expressions Cleanup
         for e in self.expressions:
             e.delete()
@@ -961,6 +970,10 @@ class NewExpr(Feed):
 
 @Database.register
 class UpdatedExpr(Feed):
+    pass
+
+@Database.register
+class FriendJoined(Feed):
     pass
 
 

@@ -102,8 +102,12 @@ var update_friends_to_listen = function(){
   var id_map = function(i, el) {
     return $(el).attr('data-id');
   };
+  var friends = $('.friend .listen');
   $('input[name=friends_to_listen]').val(
-    $('.friend .listen.active').map(id_map).toArray().join(",")
+    friends.filter('.active').map(id_map).toArray().join(",")
+  );
+  $('input[name=friends_not_to_listen]').val(
+    friends.not('.active').map(id_map).toArray().join(",")
   );
 };
 
@@ -254,6 +258,7 @@ var profile_thumb_choose = function(){
        <br>
        {% endif %}
        <input type="hidden" name="friends_to_listen"/>
+       <input type="hidden" name="friends_not_to_listen"/>
        {% if f.facebook %}
          <input type="hidden" val='{{f.facebook | json }}' name="facebook">
        {% endif %}
@@ -273,7 +278,7 @@ var profile_thumb_choose = function(){
        <input type="checkbox" id='listen_to_friends'/><label for="listen_to_friends">{{ui.listen_to_all_friends | e}}</b></label>
        {% for friend in friends -%}
          <div class="friend">
-           <img src="{{friend.facebook_thumbnail}}"/>
+           <img src="{{friend.fb_thumb}}"/>
            {{- friend.facebook.name -}}
            <div data-id="{{friend.facebook.id}}" class="listen"></div>
          </div>

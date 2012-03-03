@@ -102,6 +102,7 @@ class UserController(ApplicationController):
 
         user = self.db.User.create(args)
         self._friends_to_listen(request, user)
+        self._friends_not_to_listen(request, user)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
         user.give_invites(5)
         if args.has_key('thumb_file_id'):
@@ -130,6 +131,13 @@ class UserController(ApplicationController):
             friends = friends.split(',')
             for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
                 self.db.Star.create(user, friend)
+
+    def _friends_not_to_listen(self, request, user):
+        friends = request.form.get('friends_not_to_listen')
+        if friends:
+            friends = friends.split(',')
+            for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
+                self.db.FriendJoined.create(user, friend)
 
     def edit(self, request, response):
         if request.requester.logged_in and request.is_secure:
