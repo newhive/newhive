@@ -281,10 +281,16 @@ input[type="text"].copy, textarea.copy {
 }
 
 #dia_facebook_connect {
-  width: 700px;
-  padding: 0 40px 40px 40px;
+  width: 560px;
+  padding: 0 40px 30px 40px;
   h1 {
       font-family: museo, helvetica, sans-serif;
+      font-size: 34px;
+  }
+  .list { font-weight: bold; }
+  .smallprint {
+      color: $color_grey_medium;
+      font-size: 15px;
   }
 }
 
