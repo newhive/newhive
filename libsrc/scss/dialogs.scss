@@ -289,41 +289,77 @@ input[type="text"].copy, textarea.copy {
 }
 
 #dia_facebook_listen {
-  padding: 20px;
+  padding: 20px 10px 20px 20px;
   h1 {
       display: inline;
       font-size: 35px;
       font-family: Museo, Helvetica, Arial, sans-serif;
   }
+  img.thumb {
+      width: 50px;
+      height: 50px;
+      &.tnh { display: none; }
+  }
   .friends {
-      width: 560px;
+      width: 671px;
       max-height: 400px;
       overflow: auto;
   }
   .friend {
-      width: 250px;
+      width: 300px;
       padding: 7px;
       padding-left: 0;
       float: left;
       margin-right: 20px;
+      font-size: 16px;
       img { 
           vertical-align: middle; 
           margin-right: 5px;
       }
   }
+  .names {
+      display: inline-block;
+      vertical-align: middle;
+      font-weight: bold;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 193px;
+  }
+  .facebook_name {
+      font-size: 19px;
+      margin-bottom: 3px;
+  }
+  .username {
+      font-size: 12px;
+  }
   .invite_fb_link {
       float: right;
-      margin-top: 11px;
+      font-weight: bold;
+      padding-right: 8px;
+      margin-top: 13px;
+      margin-right: 25px;
+      cursor: pointer;
       img { vertical-align: middle; }
+      &:hover { 
+          color: white;
+          background-color: $color_facebook; 
+      } 
   }
+  #listen_to_all {
+      font-size: 17px;
+      margin: 10px 0 17px 0;
+  }
+
   .listen {
     width: 37px;
     height: 31px;
     margin: 10px 0;
     float: right;
     background: url("/lib/skin/1/people_small.png");
+    @include border-radius(3px);
     &:hover {
-      background: $color_charcoal url("/lib/skin/1/people_small-hover.png");
+      background: $color_active url("/lib/skin/1/people_small-hover.png");
     }
     &.active {
       background: url("/lib/skin/1/people_small_active.png");

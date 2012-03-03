@@ -2,21 +2,46 @@
     <div class='line'>
         <h1>Facebook friends:</h1>
         <div class='invite_fb_link'>
-            <img src='/lib/skin/1/facebook.png' alt="Facebook Logo">
+            <img src='/lib/skin/1/facebook_flat_sm.png' alt="Facebook Logo">
             Invite friends from Facebook
         </div>
     </div>
-    <input type="checkbox" id='listen_to_friends'/>
-    <label for="listen_to_friends" class="active">{{ui.listen_to_all_friends | e}}</label>
+    <div class='line'>
+        <div class='btn hoverable black rounded' id="listen_to_all">Listen to all my friends</div>
+        {#<input type="checkbox" id='listen_to_friends'/>
+        <label for="listen_to_friends" class="active">{{ui.listen_to_all_friends | e}}</label>#}
+    </div>
     <div class="fb-facepile" data-max-rows="1" data-width="300"></div>
+    {#    <div class="no_friends">
+        None of your Facebook friends are connected to The New Hive
+    </div>
+    #}
     <div class="friends">
       {%- for friend in friends -%}
         <div class="friend">
-          <img src="{{friend.facebook_thumbnail}}"/>
-          {{- friend.facebook.name -}}
+          <img class="thumb facebook" src="{{friend.facebook_thumbnail}}"/>
+          <img class="thumb tnh" src="{{friend.thumb}}"/>
+          <div class="names">
+              <div class='facebook_name'>{{- friend.facebook.name -}}</div>
+              <div class='username'>{{- friend.name -}}</div>
+          </div>
           <div data-id="{{friend.facebook.id}}" class="listen"></div>
         </div>
       {%- endfor -%}
     </div>
+    <script>
+        $('#dia_facebook_listen .friend').hover(
+        function(){
+            $(this).find('.thumb.facebook').hide();
+            $(this).find('.thumb.tnh').show();
+        },
+        function(){
+            $(this).find('.thumb.facebook').show();
+            $(this).find('.thumb.tnh').hide();
+        });
+        $('.invite_fb_link').click(function(){
+            $('#dia_facebook_listen .btn_dialog_close').click();
+            sendRequestViaMultiFriendSelector();
+        });
+    </script>
 </div>
-
