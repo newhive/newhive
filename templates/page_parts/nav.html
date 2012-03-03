@@ -15,19 +15,17 @@
       <input name='action' value='logout' type='hidden'>
     </form>
     {% if user.has_facebook %}
-    <div class='menu_item' id='fb_invite_menu_item'>
-      Invite Fb Friends<div class="fb_icon"></div>
+    <div class='menu_item facebook' id='fb_listen_menu_item'>
+      <div class="fb_icon"></div>Find friends
+    </div>
+    <div class='menu_item facebook' id='fb_invite_menu_item'>
+      <div class="fb_icon"></div>Invite friends
     </div>
     {% endif %}
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
-        Invite via Email<span class="referral_count">{{ user.referrals }}</span>
+        Invitations<span class="referral_count">{{ user.referrals }}</span>
       </div>
-    {% endif %}
-    {% if user.has_facebook %}
-    <div class='menu_item' id='fb_listen_menu_item'>
-      Find Friends to Listen<div class="fb_icon"></div>
-    </div>
     {% endif %}
     <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
     <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
@@ -49,7 +47,7 @@
     $('#fb_listen_menu_item').click(function(e){
       e.stopPropagation();
       $(this).addClass('menu_hover');
-      showDialog('#dia_facebook_listen');
+      loadDialogPost('facebook_listen');
     });
     hover_menu($('#notifications'), $('#feed_menu'), {
       open: function(){

@@ -66,6 +66,8 @@
       {% if user.logged_in %}
         {% include 'dialogs/referral.html' %}
         {% include 'dialogs/facebook_connect.html' %}
+      {% else %}
+          {% include 'dialogs/sign_in_or_join.html' %}
       {% endif %}
       {% include 'dialogs/password.html' %}
       {% include 'dialogs/password_recovery.html' %}

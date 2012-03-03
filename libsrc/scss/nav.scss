@@ -28,9 +28,17 @@ body.home.logged_out .nav{
 #user_menu .fb_icon {
   display: inline-block;
   vertical-align: middle;
-  width: 40px;
+  width: 20px;
   height: 20px;
-  background: url('/lib/skin/1/facebook.png') no-repeat right;
+  margin-right: 5px;
+  background: url('/lib/skin/1/facebook.png') no-repeat;
+}
+
+#user_menu .menu_item.facebook{
+  &:hover {
+      background-color: $color_facebook;
+      color: white;
+  }
 }
 
 .nav .nav_icon.has_count {

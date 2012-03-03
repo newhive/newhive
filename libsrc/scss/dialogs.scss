@@ -366,3 +366,58 @@ input[type="text"].copy, textarea.copy {
     }
   }
 }
+
+#dia_sign_in_or_join {
+  padding: 20px;
+  img {
+      width: 70px;
+      height: 70px;
+  }
+  h3 {
+      text-align: center;
+      font-size: 22px;
+      .line1 {
+          font-weight: bold;
+      }
+      .line2 {
+          color: $color_active;
+      }
+  }
+  .main_fields {
+      height: 350px;
+  }
+  .field {
+      margin-left: auto;
+      margin-right: auto;
+      label {
+          display: block;
+          font-weight: bold;
+      }
+  }
+  #expires_and_recovery {
+      label, a {
+          display: inline;
+          font-weight: normal;
+          font-size: 12px;
+          color: $color_grey_medium;
+          margin-right: 12px;
+      }
+  }
+
+  input[type=submit] { float: right; }
+  .column {
+      overflow: auto;
+      float: left;
+      padding: 0 40px;
+  }
+  .left {
+      .field { width: 240px; }
+      input[type=text], input[type=password] { width: 220px; }
+      border-right: 1px solid #D1D1D1;
+  }
+  .right {
+      .field { width: 270px; }
+      input[type=text], input[type=password] { width: 250px; }
+  }
+  .name { display: none; }
+}
