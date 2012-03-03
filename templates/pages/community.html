@@ -1,0 +1,122 @@
+{% extends "main.html" %}
+
+{% if 'home' %}
+  {% block meta %}
+    <meta name="description" content="{{ui.intro_paragraph}}" />
+    <meta property="og:image" content='http://thenewhive.com/lib/skin/1/logo_medium.png' />
+  {% endblock meta %}
+{% endif %}
+
+{% block head %}
+ {{ super() }}
+<script>
+  $(function(){
+    {% if user_is_owner %}
+      var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
+      var hoverout = function(){ $('#profile_thumb .message').remove(); };
+      $('#profile_thumb img').hover(hoverin, hoverout);
+    {% endif %}
+
+    $('#profile_thumb_file_input').change(function() {
+      $('#profile_thumb_upload_form input[name="forward"]').val(window.location);
+      $('#profile_thumb_upload_form').submit();
+    });
+  });
+
+  var profile_thumb_choose = function(){
+    $('#profile_thumb_file_input').click();
+    return false;
+  };
+</script>
+{% endblock %}
+
+{% block body_classes %}{{ super() }} {{ 'home' if home else 'profile' }}{% endblock %}
+
+  {#<div class='nav_icon text hoverable medbold' onclick="" title="Help with your profile" style='margin-right : 8px;' id='btn_help'>?</div>
+  <script>
+    $('#btn_help').click(function() { exprDialog('{{ site_pages['profile-help'] }}', { minimize_to : $('#btn_help') } ) });
+    {% if show_help %}$('#btn_help').click();{% endif %}
+  </script>
+  #}
+{% block nav_right %}
+  {{ super() }}
+  {#{ star_button(owner.star_count, owner.id in user.starred_item_ids, user.logged_in,
+       title={"active": "Stop Listening", "inactive": "Listen to " + owner.fullname}, user_is_owner=(owner.id == user.id))#}
+{% endblock %}
+
+{% block header %}
+  {% if home %}
+    {% if not user.logged_in %}
+      <div id="homepage_header" style='width:100%; height:255px;'>
+        <div class="happ background" style="left:0px; top:0px; width:1000px; height: 255px; {#background-color: {{ colors['tan'] }};#} z-index: 3;"></div>
+        <div class="happ" style="left: 48px; top: 32px; width: 700px; height: 56px; z-index: 3; font-size: 3.3em; font-weight: normal; font-family: Lobster;" data-scale="3.3">
+          Express Your<span style="margin:-0.04em">self</span>
+        </div>
+        <div class='happ' style='width:510px; height: 44px; left:48px; top: 102px; z-index: 3; font-size: 0.75em;' data-scale="0.75">
+          {{ ui.intro_paragraph }}
+        </div>
+        <div class='happ rounded signup_button' style='width:74px; white-space: nowrap; padding: 3px 5px 10px 5px; height: 21px; left:48px; top: 190px; z-index: 3; font-size: 1.2em;' data-scale="1.2">
+          <span style="font-family: Museo;"><a href="" onclick="return false;">Sign up</a></span>
+        </div>
+        <div class='happ' style='left: 150px; top: 197px; width: 400px; z-index: 3;'>
+          <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://thenewhive.com" data-text="The New Hive is the easiest way to express yourself online. #expression" data-count="horizontal" data-via="newhive">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
+          <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fthenewhive.com&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:180px; height:20px;" allowTransparency="true"></iframe>
+        </div>
+        <div id="h_2" class="happ" style="left: 585px; top: 20px; width: 365.802px; height: 206.727px; z-index:3;">
+          <iframe src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0" width="100%" height="100%" frameborder="0" webkitAllowFullScreen allowFullScreen></iframe>
+        </div>
+      </div>
+    {% endif %}
+  {% else %}
+    <div id='profile_thumb'>
+      {% if user_is_owner %}
+        <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
+      {% endif %}
+      {% if owner.get_thumb() %}
+        <img src='{{ owner.get_thumb() }}' alt="{{ owner.fullname }}"/>
+      {% elif user_is_owner %}
+        <div class='placeholder rounded'>Click Here to<br/>Upload A Profile Image</div>
+      {% endif %}
+      {% if user_is_owner %}
+        </a>
+      {% endif %}
+    </div>
+    <h1 class="index">
+      {% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + tag.name if tag and tag.show_name != False }}
+    </h1>
+    <div id='top_tabs'>
+      foo bar baz
+    </div>
+  {% endif %}
+{% endblock header %}
+ 
+{% block left_column %}
+  <div id='left_tabs' class='{{ 'home' if home else 'profile' }}'>
+    {% if home %}
+      <div class='tab_label {{ 'current' if path[1] == 'expressions' else 'hoverable' }}'><a href='/home/expressions'>Expressions</a></div>
+      <div class='tab_label {{ 'current' if path[1] == 'activity' else 'hoverable' }}'><a href='/home/activity'>Activity</a></div>
+      <div class='tab_label {{ 'current' if path[1] == 'people' else 'hoverable' }}'><a href='/home/people'>People</a></div>
+      <div class='tab_label {{ 'current' if path[1] == 'about' else 'hoverable' }}'><a href='/home/about'>About</a></div>
+    {% else %}
+      <div class='tab_label {{ 'current' if path[1] == 'expressions' else 'hoverable' }}'><a href='/profile/expressions'>Expressions</a></div>
+      <div class='tab_label {{ 'current' if path[1] == 'activity' else 'hoverable' }}'><a href='/profile/activity'>{{ 'My ' if user_is_owner }}Activity</a></div>
+      <div class='tab_label {{ 'current' if path[1] == 'listening' else 'hoverable' }}'><a href='/profile/listening'>Listening</a></div>
+    {% endif %}
+  </div>
+{% endblock left_column %}
+
+{% block right_column %}
+  <div id='feed'>
+    {% include 'page_parts/cards.html' %}
+  </div>
+{% endblock right_column %}
+
+{% block footer_scripts %}
+  {{ super () }}
+  <script>
+    $(function(){ 
+      fix_borders('#feed .item');
+      $(window).resize(function(){fix_borders('#feed .item');});
+    });
+  </script>
+{% endblock %}
