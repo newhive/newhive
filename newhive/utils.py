@@ -2,6 +2,28 @@ import time, random, re
 from datetime import datetime
 from newhive import config
 
+
+def lget(L, i, *default):
+    try: return L[i]
+    except: return default[0] if default else None
+def lset(L, i, e, *default):
+    default = default[0] if default else [None]
+    if i < len(L): L[i] = e
+    else: L.extend(default * (i - len(L)) + [e])
+def index_of(L, f):
+    for i, e in enumerate(L):
+        if f(e): return i
+    return -1
+
+def dfilter(d, keys):
+    """ Accepts dictionary and list of keys, returns a new dictionary
+        with only the keys given """
+    r = {}
+    for k in keys:
+        if k in d: r[k] = d[k]
+    return r
+
+
 def now(): return time.time()
 
 def time_s(t): return int(t.strftime('%s'))
@@ -69,11 +91,7 @@ class memoized(object):
       """Support instance methods."""
       return functools.partial(self.__call__, obj)
 
-def dedup(xs):
-    seen = set()
-    result = []
-    for x in xs:
-        if x not in seen:
-            seen.add(x)
-            result.append(x)
-    return result
+def bound(num, lower_bound, upper_bound):
+    if num < lower_bound: return lower_bound
+    if num > upper_bound: return upper_bound
+    return num

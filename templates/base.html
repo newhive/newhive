@@ -24,14 +24,10 @@ input[type=button], input[type=submit] { border : none; }
     }
 .menu_item { color : {{ colors[18] }}; padding : 5px 8px; cursor : default; font-size : 15pt; white-space : nowrap; }
 .menu_item:hover, .menu_hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }}; }
-.nav_icon { height : 50px; line-height : 50px; vertical-align : middle; display : inline-block; cursor : default; }
-.nav_icon * { vertical-align : middle; }
-.nav_icon.active { color : white; background-color : {{ colors[12] }}; }
-.nav_icon.text { padding : 0 10px; }
 .border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 .selected { border-color : {{ colors['selected'] }}; }
 .medbold { font-weight : bold; font-size : 1.2em; }
-.btn { padding:5px 10px; font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default;}
+.btn { padding:5px 10px; font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default; }
 .btn.inactive { background-color : {{ colors[24] }}; }
 .rounded {
     -moz-border-radius: 5px;
@@ -47,7 +43,6 @@ input[type=button], input[type=submit] { border : none; }
 .nav { position : fixed; margin : 0; }
 .menu, .top, .nav { z-index : 1; }
 .spacer { height : 10px; clear : both; }
-
  </style>
  <style>
 html, body { background-color : white; height : 100%; }

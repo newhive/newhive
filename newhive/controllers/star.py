@@ -12,16 +12,14 @@ class StarController(ApplicationController):
         """
 
         if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
-        parts = request.form.get('path').split('/')
-        p1 = lget(parts, 1)
-        if p1 in ["expressions", "starred", "listening"]: #Means we're on profile
+        if lget(request.path_parts, 0) == 'profile': #Means we're on profile
             entity = self.db.User.find(dict(sites=request.domain.lower()))
         else:
             entity = self.db.Expr.named(request.domain.lower(), request.path.lower())
         if request.form.get('action') == "star":
             s = self.db.Star.create(request.requester, entity)
             if s or s.get('entity'):
-                response.context['user'] = request.requester
+                response.context['item'] = request.requester
                 return self.render_template(response, 'partials/user_card.html')
             else:
                 return False

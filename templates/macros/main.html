@@ -1,7 +1,3 @@
-{% macro create_button(url, title='Create a new expression', classes='hoverable nav_icon') %}
-<a href='{{ url }}'><img src='/lib/skin/1/create.png' class='{{classes}}' title='{{ title }}'></a>
-{%- endmacro %}
-
 {% macro discussion_button(count=0) %}
   <div id = "btn_comment" class="hoverable nav_icon has_count" data-count="{{count}}" onclick='loadDialog("?dialog=comments");'>
     <img src='/lib/skin/1/discussion.png' class='hoverable ' title="Discussions">
@@ -14,7 +10,8 @@
   </div>
 {%- endmacro %}
 
-{% macro star_button(count=0, active=False, logged_in=True, class="Expr", title={"active": "Un-Star This Expression", "inactive": "Star This Expression"}, user_is_owner=False) %}
+{% macro star_button(count=0, active=False, logged_in=True, class="Expr",
+    title={"active": "Un-Star This Expression", "inactive": "Star This Expression"}, user_is_owner=False) %}
 <div id="btn_star" data-count="{{count}}" data-title-active="{{title.active}}" data-title-inactive="{{title.inactive}}"
     class="{{'hoverable ' if logged_in}}nav_icon has_count {{'starred ' if active}}"  
     title={% if logged_in and not user_is_owner %}"{{ title.active if active else title.inactive}}"{% else %}"Stars"{% endif %}
@@ -36,7 +33,8 @@
 {%- endmacro %}
 
 {% macro listen_button(active=False, title='', active_title='') %}
-<div class="nav_icon hoverable listen_small"><div class='listen_small icon hoverable{{ ' starred' if active }}' onclick='btn_listen_click(this)' title='{{ active_title if active else title }}'
+<div class="nav_icon hoverable listen_small {{ ' starred' if active }}"><div class='icon'
+    onclick='btn_listen_click(this)' title='{{ active_title if active else title }}'
     data-title-active='{{active_title}}' data-title-inactive='{{title}}'></div></div>
 <script>$(function(){
     var opts = {

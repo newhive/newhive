@@ -76,13 +76,13 @@ function logShare(service){
 };
 
 function exprDialog(url, opts) {
-    $.extend(opts, { layout : function(dia) {
+    $.extend(opts, { absolute: true, layout : function(dia) {
         dia.css({ width : '80%' });
         dia.css({ height : dia.width() / parseFloat(dia.attr('data-aspect')) });
         place_apps();
         center(dia, $(window), opts);
     } });
-    return loadDialog(url + '?template=expr_div', opts);
+    return loadDialog(url + '?template=expr_iframe', opts);
 }
 exprDialog.loaded = {};
 
@@ -219,7 +219,6 @@ function reloadFeed(){
         } else {
             count_div.parent('.has_count').andSelf().removeClass('zero');
         }
-
     });
 }
 
@@ -450,7 +449,7 @@ function hover_url(url) {
     return h;
 }
 function hover_add(o) {
-    if(o.src) { 
+    if(o.src) {
         o.src_d = o.src;
         o.src_h = hover_url(o.src_d);
         o.over = function() { o.src = o.src_h };
@@ -627,7 +626,7 @@ var place_apps = function() {
    });
    $('.happfill').each(function(i, div) {
        var e = $(div);
-       e.width(e.parent().width()).height(e.parent().height());
+       //e.width(e.parent().width()).height(e.parent().height());
        img_fill(e.find('img'))
    });
 }

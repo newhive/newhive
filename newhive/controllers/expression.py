@@ -1,7 +1,7 @@
 import base64
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
-from newhive import state, utils, mail
+from newhive import utils, mail
 # TODO: handle this in model layer somehow
 from pymongo.connection import DuplicateKeyError
 
@@ -33,6 +33,7 @@ class ExpressionController(ApplicationController):
             ,'exp_js'    : re.sub('</script>', '<\\/script>', json.dumps(exp))
             ,'exp'       : exp
             ,'show_help' : show_help
+            ,'editing'   : True
         })
         return self.serve_page(response, 'pages/edit.html')
 
@@ -89,108 +90,10 @@ class ExpressionController(ApplicationController):
         return self.redirect(response, expr.url)
 
     def dialog(self, request, response):
-        owner = response.context['owner']
+        owner = request.owner
         exp = self.db.Expr.find(dict(owner=owner.id, name=request.path.lower()))
         response.context.update(exp=exp, expr=exp)
         return self.serve_page(response, 'dialogs/' + request.args['dialog'] + '.html')
-
-    def search(self, request, response, args={}):
-        query = request.args.get('q')
-        request, response = self._homepage(request, response, args)
-        results = self.db.KeyWords.text_search(query, doc_type='Expr')
-        ids = [res['doc'] for res in results]
-        expressions = self._expr_list(ids, viewer=request.requester.id)
-        results = self.db.KeyWords.text_search(query, doc_type='User')
-        ids = [res['doc'] for res in results]
-        users = self.db.User.list({'_id': {'$in': ids}})
-        self.db.ActionLog.create(request.requester, "search", data={'query': query, 'result_size': len(expressions)})
-        response.context['exprs'] = expressions
-        response.context['users'] = users
-        response.context['tag'] = {}
-        response.context['title'] = "Results for: " + query
-        response.context['query'] = query
-        response.context['pages'] = 1
-        return self.serve_page(response, 'pages/tag_search.html')
-
-    def index(self, request, response, args={}):
-        if args.get('owner'):
-            return self._user_index(request, response, args)
-        else:
-            return self._site_index(request, response, args)
-
-    def _user_index(self, request, response, args={}):
-        owner = response.context['owner']
-        is_owner = request.requester.logged_in and owner.id == request.requester.id
-
-        page = int(request.args.get('page', 0))
-        tags = owner.get('tags', [])
-        expressions_tag = {'url': '/expressions', 'name': 'Expressions', 'show_name': False}
-        feed_tag = {'url': "/feed", "name": "Feed"}
-        star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
-        people_tag = {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
-        network_tag = {'url': "/network", "name": "Network"}
-        response.context['system_tags'] = [expressions_tag, feed_tag, network_tag, people_tag, star_tag]
-        response.context['expr_context'] = {'user': owner.get('name')}
-
-        if request.path.startswith('expressions'):
-            spec = { 'owner' : owner.id }
-            tag = lget(request.path.split('/'), 1, '')
-            if tag:
-                response.context['expr_context'].update({'tag': tag})
-                tag = {'name': tag, 'url': "/expressions/" + tag, 'type': 'user'}
-                spec['tags_index'] = tag['name']
-            else: tag = expressions_tag
-            response.context['exprs'] = self._expr_list(spec, viewer=request.requester.id, page=page)
-        elif request.path == 'starred':
-            response.context['exprs'] = self.card_list(owner.starred_exprs(request.requester))
-            tag = star_tag
-
-        response.context['title'] = owner['fullname']
-        response.context['tag'] = tag
-        response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
-        response.context['profile_thumb'] = owner.thumb
-        response.context['starrers'] = owner.starrers
-
-        return self.serve_page(response, 'pages/expr_cards.html')
-
-    def _homepage(self, request, response, args={}):
-        tag = args.get('tag')
-        p1 = args.get('p1')
-        featured_tags = self.db.User.site_user['config']['featured_tags']
-        tags = self.db.User.get_root().get('tags', [])
-        response.context['system_tags'] = map(lambda t: {'url': "/home/" + t, 'name': t}, tags)
-        people_tag = {'url': '/people', 'name': 'People'}
-        response.context['system_tags'].append(people_tag)
-        response.context['tags'] = [{'url': '/tag/' + t, 'name': t} for t in featured_tags ]
-        if p1 == 'people':
-            response.context['tag'] = people_tag
-        return [request, response]
-
-    def _site_index(self, request, response, args={}):
-        tag = args.get('tag')
-        p1 = args.get('p1')
-        request, response = self._homepage(request, response, args)
-        if p1 == 'people':
-            cname = 'user'
-        else:
-            cname = 'expr'
-        self._expr_home_list(args.get('tag'), request, response, cname=cname)
-        if tag: response.context['expr_context'] = {'tag': tag }
-        elif p1 == '':
-            response.context['expr_context'] = {'tag': 'Featured'}
-        if p1 == 'tag':
-            response.context['exprs'] = self._expr_list({'tags_index':tag.lower()}, page=int(request.args.get('page', 0)), limit=90)
-            if int(request.args.get('page', 0)) == 0 and ExpressionController.featured.has_key(tag):
-                expr_list = self._expr_list(ExpressionController.featured[tag])
-                response.context['exprs'] += expr_list
-                response.context['exprs'] = utils.uniq(response.context['exprs'], lambda x: x.id)
-            response.context['tag'] = tag
-            response.context['title'] = "#" + tag
-        if request.args.get('partial'): return self.serve_page(response, 'page_parts/cards.html')
-        elif p1 == 'tag': return self.serve_page(response, 'pages/tag_search.html')
-        else:
-            return self.serve_page(response, 'pages/home.html')
-
 
     def save(self, request, response):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
@@ -298,42 +201,6 @@ class ExpressionController(ApplicationController):
                 new_tags = re.sub(tag, '', expr['tags'])
         expr.update(tags=new_tags, updated=False)
         return tag
-
-    def _expr_list(self, spec, **args):
-        return map(self._format_card, self.db.Expr.list(spec, **args))
-    def card_list(self, items): return map(self._format_card, items)
-
-    def _format_card(self, e):
-        if not e.get('formatted_as_card'):
-            dict.update(e
-                ,updated = friendly_date(time_u(e['updated']))
-                ,url = abs_url(domain=e['domain']) + e['name']
-                ,tags = e.get('tags_index', [])
-                ,formatted_as_card = True
-                )
-        return e
-
-    def _expr_home_list(self, p2, request, response, limit=90, cname='expr'):
-        root = self.db.User.get_root()
-        tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
-        tag = {'name': tag, 'url': '/home/' + tag}
-        page = int(request.args.get('page', 0))
-        ids = root.get('tagged', {}).get(tag['name'], []) if cname == 'expr' else []
-        cols = { 'expr' : self.db.Expr, 'user' : self.db.User }
-        if ids:
-            by_id = {}
-            for e in cols[cname].list({'_id' : {'$in':ids}}, viewer=request.requester.id): by_id[e['_id']] = e
-            entities = [by_id[i] for i in ids if by_id.has_key(i)]
-            response.context['pages'] = 0;
-        else:
-            entities = cols[cname].list({}, sort='updated', limit=limit, page=page)
-            response.context['pages'] = cols[cname].count({});
-        if cname=='expr':
-            response.context['exprs'] = map(self._format_card, entities)
-            response.context['tag'] = tag
-            response.context['show_name'] = True
-        elif cname=='user': response.context['users'] = entities
-        response.context['page'] = page
 
     # www_expression -> String, this maybe should go in state.Expr
     def _expr_to_html(self, exp):

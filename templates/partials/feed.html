@@ -11,7 +11,7 @@
     </div>
   </div>
 {% else %}
-  <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}} border_right border_bottom">
+  <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}} border_right border_bottom" onclick='window.location="{{feed.entity.url|e}}"'>
     <a href="{{entity_url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png", True)}}'></a>
     <div class="feed_text">
 

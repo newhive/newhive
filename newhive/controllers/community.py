@@ -8,17 +8,17 @@ class CommunityController(ApplicationController):
         super(CommunityController, self).__init__(*args)
 
         self.pages = {
-             'home/expressions/featured'  : self.expr_featured
+             'home/expressions'           : self.expr_featured
             ,'home/expressions/all'       : self.expr_all
-            ,'home/activity'              : self.feed_network
+            ,'home/network'               : self.home_feed
             ,'home/people'                : self.people
             ,'home/about'                 : self.learn
-            ,'profile/expressions/all'    : self.user_exprs
+            ,'profile/expressions'        : self.user_exprs
             ,'profile/expressions/public' : partial(self.user_exprs, auth='public')
             ,'profile/expressions/private': partial(self.user_exprs, auth='password')
-            ,'profile/activity/my'        : self.feed_profile
+            ,'profile/activity'           : self.feed_profile
             ,'profile/activity/network'   : self.feed_network
-            ,'profile/listening/listening': self.listening
+            ,'profile/listening'          : self.listening
             ,'profile/listening/listeners': self.listeners
         }
 
@@ -29,19 +29,19 @@ class CommunityController(ApplicationController):
             for i in range(len(p)):
                 if (i < len(path)) and (lget(path, i) != lget(p, i)): break
                 lset(path, i, p[i])
-        default('home', 'activity' if request.requester.logged_in else 'expressions')
-        default('home', 'expressions', 'featured')
-        default('profile', 'expressions', 'all')
-        default('profile', 'activity', 'my')
-        default('profile', 'listening', 'listening')
+        default('home', 'network' if request.requester.logged_in else 'expressions')
+        default('profile', 'expressions')
 
-        query = self.pages.get('/'.join(path), None)
+        res_path = '/'.join(path)
+        query = self.pages.get(res_path)
         if not query: return self.serve_404(request, response)
-
+        items = map(self.format_card, query(request))
         response.context.update(dict(
              home = path[0] == 'home'
-            ,path = path
-            ,cards = query(request)
+            ,path = res_path
+            ,path1 = '/'.join(path[0:2])
+            ,cards = items
+            ,pages = 10
         ))
         return self.serve_page(response, 'pages/community.html')
 
@@ -52,13 +52,14 @@ class CommunityController(ApplicationController):
     def expr_featured(self, request):
         return self.db.Expr.list(self.db.User.root_user['tagged']['Featured'], **self.query_args(request))
     def expr_all(self, request): return self.db.Expr.list({}, **self.query_args(request))
+    def home_feed(self, request): return request.requester.feed_network(**self.query_args(request))
     def people(self, request): return self.db.User.search({})
     def learn(self, request):
-        return self.db.Expr.list(self.db.User.root_user['tagged']['Featured'], **self.query_args(request))
+        return self.db.Expr.list(self.db.User.root_user['tagged']['Learn'], **self.query_args(request))
 
     def user_exprs(self, request, auth=None): return request.owner.exprs(auth=auth, **self.query_args(request))
     def feed_network(self, request): return request.owner.feed_network(**self.query_args(request))
-    def feed_profile(self, request): return request.owner.feed_profile(**self.query_args(request))
+    def feed_profile(self, request): return request.owner.feed_profile_exprs(**self.query_args(request))
     def listening(self, request): return request.owner.starred_users
     def listeners(self, request): return request.owner.starrers
 
@@ -109,15 +110,11 @@ class CommunityController(ApplicationController):
     def _expr_list(self, spec, **args):
         return map(self._format_card, self.db.Expr.list(spec, **args))
 
-    def expr_card_list(self, items): return map(self._format_expr_card, items)
-
-    def _format_expr_card(self, e):
-        if not e.get('formatted_as_card'):
-            dict.update(e
-                ,updated = friendly_date(time_u(e['updated']))
-                ,tags = e.get('tags_index', [])
-                ,formatted_as_card = True
-                )
+    def format_card(self, e):
+        dict.update(e
+            ,updated = friendly_date(time_u(e['updated']))
+            ,tags = e.get('tags_index', [])
+            )
         return e
 
     def _expr_home_list(self, p2, request, response, limit=90, cname='expr'):

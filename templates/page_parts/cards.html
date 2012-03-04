@@ -1,13 +1,10 @@
-{% if users %}
-  {% for user in users %}
-  {% include "partials/user_card.html" %}
-  {% endfor %}
-{% endif %}
-{% if exprs %}
-  {% for expr in exprs %}
-  {% include "partials/expr_card.html" %}
-  {% endfor %}
-{% endif %}
+{% for item in cards %}
+  {% if item.email %}
+    {% include "partials/user_card.html" %}
+  {% else %}
+    {% include "partials/expr_card.html" %}
+  {% endif %}
+{% endfor %}
 {% if create_expr_card %}
   {% set expr = {
       'title': "Create A New Expression",
@@ -20,4 +17,3 @@
   {% set expr_context = None %}
   {% include "partials/expr_card.html" %}
 {% endif %}
-

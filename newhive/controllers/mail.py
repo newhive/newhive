@@ -10,7 +10,7 @@ class MailController(ApplicationController):
         if not request.form.get('email'): return False
         form = {
             'name': request.form.get('name')
-            ,'email': request.form.get('email')
+            ,'email': request.form.get('email').lower()
             ,'referral': request.form.get('referral')
             ,'message': request.form.get('message')
             ,'url': request.form.get('forward')
@@ -119,7 +119,8 @@ class MailController(ApplicationController):
             + "\n\n----------------------------------------\n\n"
             + url + "\n"
             + 'User-Agent: ' + request.headers.get('User-Agent', '') + "\n"
-            + 'From: ' + request.requester.get('email', '')
+            + 'From: ' + request.requester.get('email', '') +' - '+ request.requester.url
+            + "\n\n"
             )
         print send_mail(heads, body)
         if request.form.get('send_copy'):

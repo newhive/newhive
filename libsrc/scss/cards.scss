@@ -1,5 +1,4 @@
-#feed {
-.card {
+#feed .card {
     &.item { 
         position: relative; 
         padding: 9px 9px 5px 9px; 
@@ -35,7 +34,7 @@
         text-overflow : ellipsis; 
         &:hover { background: $color_highlight; }
     }
-    .other, .tags { 
+    .other, .tags, .stats, .feed_info { 
         font-size : 0.7em; 
         //color: $color_grey_medium; 
     }
@@ -47,11 +46,36 @@
         .tag:hover { background: $color_selected; }
     }
     .other {
+        position: absolute;
+        bottom: 5px;
         font-weight: bold;
         &:hover span { background: $color_1 !important; color: white; }
     }
+    .feed_thumbs {
+        position: absolute;
+        bottom: 105px;
+        left: 15px;
+        width: 75px;
+        img { width: 35px; border: 1px solid white; }
+        img.first { display: block; }
+        img.big { width: 70px; }
+    }
+    .feed_info {
+        position: absolute;
+        bottom: 105px;
+        right: 15px;
+        font-weight: bold;
+        text-align: right;
+        div { background-color: $color_highlight; margin: 1px; display: inline-block; padding: 0 2px; }
+    }
+    .stats {
+        position: absolute;
+        bottom: 5px; right: 5px;
+        color: $color_grey_medium;
+        img { vertical-align: middle; }
+    }
 }
-}
+
 #dia_starrers, #dia_listeners {
   width: 316px;
   $card_width: 290px;

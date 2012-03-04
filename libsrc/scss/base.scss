@@ -9,29 +9,13 @@ $left_column_width: 210px;
 // Imports
 @import "nav";
 @import "dialogs";
-@import "tags";
+@import "community";
 @import "cards";
 @import "feed";
-@import "home";
 @import "expression";
 @import "settings";
 
-// Page Layout
-.expr_cards {
-  @import "profile";
-}
-
-
-#nav{ height: $nav_height; }
-
-.expr_cards #header { 
-  padding-top: 48px; 
-  padding-left: $left_padding; 
-  padding-bottom: 23px;
-  }
 #primary_content{ clear: both; }
-.logged_in #primary_content, .tag_search #primary_content { padding-top: 12px; }
-
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;
 }

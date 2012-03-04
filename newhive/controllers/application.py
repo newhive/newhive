@@ -9,21 +9,8 @@ class ApplicationController(object):
         self.db = db
         self.content_domain = config.content_domain
 
-    def pre_process(self, request, args={}):
-        response = Response()
-        request.requester = auth.authenticate_request(self.db, request, response)
-        response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
-        response.user = request.requester
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
-
-        request.path = request.path[1:] # drop leading '/'
-        request.domain = request.host.split(':')[0].lower()
-        return (request, response)
-
-    def default(self, request, response, args):
-        if not args.has_key('method'): raise "Default Method must include 'args' argument with key 'method'"
-        method = args['method'].split('/')[0] #TODO: remove this method splitting hack once full routing is in place
+    def default(self, request, response):
+        method = request.path_parts[0]
         return getattr(self, method)(request, response)
 
     def serve_data(self, response, mime, data):
@@ -36,12 +23,14 @@ class ApplicationController(object):
 
     def serve_page(self, response, template):
         return self.serve_html(response, self.render_template(response, template))
+    def page(self, template):
+        return lambda request, response: self.serve_page(response, template)
 
     def render_template(self, response, template):
         context = response.context
         context.update(
              home_url = response.user.get_url()
-            ,feed_url = response.user.get_url(path='feed')
+            ,feed_url = response.user.get_url(path='profile/activity')
             ,user = response.user
             ,admin = response.user.get('name') in config.admins
             ,create = abs_url(secure = True) + 'edit'
@@ -67,17 +56,18 @@ class ApplicationController(object):
         response.status_code = 404
         return self.serve_page(response, 'pages/notfound.html')
 
-    def serve_error(self, request, msg):
+    def serve_error(self, request, msg, code=500):
+        response = Response()
         response.status_code = 500
         response.context['msg'] = msg
         return self.serve_page(response, 'pages/error.html')
-
-    def serve_robots(self, response):
-        if config.debug_mode:
-            return self.serve_data(response, 'text/plain', "User-agent: *\nDisallow: /")
-        else: return self.serve_404(None, response)
 
     def redirect(self, response, location, permanent=False):
         response.location = location
         response.status_code = 301 if permanent else 303
         return response
+
+    def robots(self, request, response):
+        if config.debug_mode:
+            return self.serve_data(response, 'text/plain', "User-agent: *\nDisallow: /")
+        else: return self.serve_404(None, response)

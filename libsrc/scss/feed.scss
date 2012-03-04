@@ -7,30 +7,11 @@
   height: auto;
   clear: both;
   overflow: hidden;
-  margin: 0;
   color: #000;
   cursor: pointer;
-}
-.feed_item {
   font-weight: bold;
   font-size: 14px;
-  color: #000;
-}
-.expr_cards .feed_item {
-  @include clearfix;
-  float: left;
-  width: 330px;
-  height: 120px;
-  padding: 8px;
-  &.border_right {
-      border-right: 1px solid #D1D1D1;
-  }
-  &.border_bottom {
-      border-bottom: 1px solid #D1D1D1;
-  }
-}
-#feed_menu .feed_item.border_right {
-  border: 0px;
+  margin: 5px;
 }
 
 .feed_item .name {
@@ -48,23 +29,14 @@
 .feed_item .feed_item.active {
   background-color: #96E2CE;
 }
-.expr_cards .feed_item img {
-  width: 120px;
-  height: 120px;
-  margin-right: 10px;
-  float: left;
-}
-#feed_menu .feed_item img, #feed_menu .feed.item img {
+#feed_menu .feed_item img {
   margin: 5px;
-  width: 90px;
-  height: 90px;
+  width: 70px;
+  height: 70px;
   float: left;
 }
 #feed_menu .feed_item:hover {
   background-color: $color_selected;
-}
-.expr_cards .feed_item .Expr .entity, .expr_cards .feed_item.User .initiator{
-  width: 181px;
 }
 #feed_menu .feed_item .Expr .entity, #feed_menu .feed_item.User .initiator{
   width: 220px;
@@ -80,9 +52,10 @@
   color: #696E76;
 }
 
-.expr_cards .feed_item .feed_text, .expr_cards .feed_item .byline {
-  width: 181px;
+.feed_item .feed_text {
+  margin-left: 5px;
 }
+
 #feed_menu .feed_item .feed_text, #feed_menu .feed_item .byline {
   width: 220px;
 }
@@ -90,13 +63,8 @@
   float: left;
   margin-left: 5px;
 }
-.expr_cards .feed_item .feed_text {
-  margin-top: 14px;
-  height: 76px;
-  color: #000;
-}
 #feed_menu .feed_item .feed_text {
-  height: 59px;
+  height: 45px;
   white-space: nowrap;
 }
 .feed_item .comment_text {

@@ -1,73 +1,101 @@
-#tags { 
-  margin: 35px 20px 0 0; 
-}
-#user_tags{ padding-top: 45px; }
-.tag_label {
-  font-weight: bold; 
-  color: $color_12; 
-  background-color: $color_tan;
-  text-align: right;
-  &.active, &.current.active, &.current.Feed.active { color: $color_bright_red; background-color : $color_highlight; }
-  &.current { background-color : $color_selected; color : black;}
-  &.current.Feed { background-color: $color_2; color: white;}
-  p { margin: 0; }
-  &.user { 
-    float: right;
-    clear: both;
-    color: white;
-    padding: 0 8px;
-    &:hover { padding-left: 33px }
-    margin: 5px 0;
-    font-weight: normal;
-    font-size: 16px;
-    &.tag_0 { background-color: $color_tag_0; }
-    &.tag_1 { background-color: $color_tag_1; }
-    &.tag_2 { background-color: $color_tag_2; }
-    &.tag_3 { background-color: $color_tag_3; }
-    &.tag_4 { background-color: $color_tag_4; }
-    &.tag_5 { background-color: $color_tag_5; }
-    &.tag_6 { background-color: $color_tag_6; }
-    &.tag_7 { background-color: $color_tag_7; }
-    &.tag_8 { background-color: $color_tag_8; }
-    &.tag_9 { background-color: $color_tag_9; }
-    &.tag_10 { background-color: $color_tag_10; }
-    &.tag_11 { background-color: $color_tag_11; }
-    &.tag_12 { background-color: $color_tag_12; }
-    &.tag_13 { background-color: $color_tag_13; }
-    &.tag_14 { background-color: $color_tag_14; }
-    &.tag_15 { background-color: $color_tag_15; }
-  }
-  &.system {
-    background-repeat: no-repeat;
-    background-position: right;
-    font-size: 21px;
-    height: 31px;
-    margin-top: 7px;
-    font-weight: bold; 
-    padding: 0px 12px;
-    margin-left: 22px;
-    a { display: inline-block; margin-top: 4px; }
-    &.Starred, &.Listening { a { padding-right: 18px; } }
-    &.current { 
-    }
-    &.Starred {
-      background-image: url('/lib/skin/1/star_tab.png');
-      &.current:hover { background-image: url('/lib/skin/1/star_tab.png'); }
-      &:hover { background-image: url('/lib/skin/1/star_tab-hover.png'); }
-    }
-    &.Listening {
-      background-image: url('/lib/skin/1/people_tab.png');
-      &:hover { background-image: url('/lib/skin/1/people_tab-hover.png'); }
+body.profile {
+  #header { 
+    margin: 45px 0px 5px 35px;
+    position: relative;
+
+    h1 { 
+      margin: 58px; 
+      margin-left: 30px;
     }
   }
+
+  #profile_thumb { 
+    width: auto; 
+  }
+  #profile_thumb img, #profile_thumb .placeholder{ 
+    float: left;
+    height: 190px; width: 190px; 
+    @include border-radius(7px);
+  }
+  #profile_thumb .placeholder{ height: 30px; padding: 85px 0;}
+  .placeholder { border: 1px dashed #CCC; text-align:center; }
+  #profile_thumb .message {position: absolute; bottom: -20px; font-size: 12px;}
+  
+  .fathead { font-weight: normal; }
+  .fathead.hasthumb { margin: 75px 50px 0 50px; }
+  .fathead img { margin : 8px 0; vertical-align : top; }
 }
 
-.expr_cards {
-  .tag_label.system.current {
-    background-color: white;
-    font-family: Lobster, Helvetica, sans-serif;
-    font-size: 1.6em;
-    color: black;
-    a {font-weight: normal;}
-  }
+#homepage_header .signup_button {
+  background-color: $color_active;
+  color:#fff;
+}
+#homepage_header .signup_button:hover {
+  background-color: $color_highlight;
+  color: #000;
+}
+
+#top_tabs { height: 25px; margin: 18px 20px 2px; }
+body.profile #top_tabs {
+  position: absolute; bottom: 0; right: 0;
+}
+body.home #top_tabs { text-align: right; }
+
+#top_tabs .tab_label {
+  display: inline-block;
+  color: $color_active;
+  padding: 2px 10px;
+  &.current { color: white; background-color: black; cursor: default; }
+  &.active { color: white; background-color: $color_grey_medium; }
+}
+
+#left_tabs {
+  margin-top: 30px;
+}
+
+#left_tabs .tab_label {
+  font-size: 21px;
+  height: 31px;
+  margin: 7px 0 0 22px;
+  font-weight: bold; 
+  padding: 5px 12px 0 0;
+  color: $color_12; 
+  text-align: right;
+  &.active { color: $color_active; }
+  &.current { color : black; cursor: default; }
+}
+body.home #left_tabs .tab_label {
+  background-color: $color_tan;
+  &.active { background-color: $color_highlight; }
+  &.current { background-color: $color_selected; }
+}
+body.profile #left_tabs .tab_label.current {
+  font-family: Lobster, Helvetica, sans-serif;
+  font-size: 1.6em;
+  font-weight: normal;
+}
+
+.tag_label {
+  float: right;
+  clear: both;
+  color: white;
+  padding: 0 8px;
+  margin: 5px 0;
+  font-size: 16px;
+  &.tag_0 { background-color: $color_tag_0; }
+  &.tag_1 { background-color: $color_tag_1; }
+  &.tag_2 { background-color: $color_tag_2; }
+  &.tag_3 { background-color: $color_tag_3; }
+  &.tag_4 { background-color: $color_tag_4; }
+  &.tag_5 { background-color: $color_tag_5; }
+  &.tag_6 { background-color: $color_tag_6; }
+  &.tag_7 { background-color: $color_tag_7; }
+  &.tag_8 { background-color: $color_tag_8; }
+  &.tag_9 { background-color: $color_tag_9; }
+  &.tag_10 { background-color: $color_tag_10; }
+  &.tag_11 { background-color: $color_tag_11; }
+  &.tag_12 { background-color: $color_tag_12; }
+  &.tag_13 { background-color: $color_tag_13; }
+  &.tag_14 { background-color: $color_tag_14; }
+  &.tag_15 { background-color: $color_tag_15; }
 }

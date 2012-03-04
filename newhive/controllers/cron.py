@@ -5,7 +5,7 @@ import newhive.mail
 
 class CronController(ApplicationController):
 
-    def cron(self, request, response, args={}):
+    def cron(self, request, response):
         """ Reads intenal crontab, list of tuples of the format:
 
             (Cron Format String, Method Name, Method Options Dictionary)
@@ -14,6 +14,8 @@ class CronController(ApplicationController):
                 min hour
 
             """
+        if request.remote_addr != '127.0.0.1':
+            return self.serve_404(request, response)
 
         t = datetime.now()
         crontab = [

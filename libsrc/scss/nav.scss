@@ -1,5 +1,19 @@
 $nav_height: 50px;
 
+#nav{ height: $nav_height; }
+
+.nav a .nav_icon { cursor : pointer }
+.nav .nav_icon {
+    height : 50px;
+    vertical-align : middle;
+    display : inline-block;
+    cursor : default;
+    * { vertical-align : middle; }
+    &.active { color : white; background-color : $color_grey_medium; }
+    &.pad { padding : 0 8px; }
+}
+.nav .center { line-height: $nav_height }
+
 #nav_bg {
   top: 0; 
   left: 0; 
@@ -9,10 +23,14 @@ $nav_height: 50px;
   z-index: 1; 
 }
 
+#nav_right { right: 10px; top: 0px; }
+#nav_right .nav_icon { float: left; }
+
 body.home.logged_out .nav{
   position: absolute;
 }
 
+#logo { margin-left : 5px; vertical-align: middle; }
 /* ==========================================
    user menu
    ========================================== */
@@ -26,6 +44,9 @@ body.home.logged_out .nav{
   padding-left: 30px;
 }
 
+#exp_owner { background-color : $color_selected; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; vertical-align: top; }
+#datetime { font-size : .7em; color : $color_grey_medium; line-height : .5em; }
+#info { display : inline-block; text-align : right; margin-right : 10px; }
 
 .nav .nav_icon.has_count {
   position: relative;
@@ -62,17 +83,19 @@ body.home.logged_out .nav{
         &.starred.active .icon { background-image: url("/lib/skin/1/people_active-hover.png"); }
     }
 }
-.listen_small.icon { 
-  position: relative;
-  top: 2px;
-  width:37px; 
-  height:31px; 
-  background-image: url('/lib/skin/1/people_small.png'); 
-  &:hover { background-image: url('/lib/skin/1/people_small-hover.png'); }
+.listen_small {
+  .icon {
+      position: relative;
+      top: 2px;
+      width:37px; 
+      height:31px; 
+      background-image: url('/lib/skin/1/people_small.png'); 
+  }
+  &.active .icon { background-image: url('/lib/skin/1/people_small-hover.png'); }
 }
-.listen_small.starred.icon { 
-  background-image: url('/lib/skin/1/people_small_active.png');
-  &:hover { background-image: url('/lib/skin/1/people_small_active-hover.png'); }
+.listen_small.starred { 
+  .icon { background-image: url('/lib/skin/1/people_small_active.png'); }
+  &.active .icon { background-image: url('/lib/skin/1/people_small_active-hover.png'); }
 }
 
 .has_count .count {
