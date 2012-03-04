@@ -25,7 +25,7 @@
               <div class='facebook_name'>{{- friend.facebook.name -}}</div>
               <div class='username'>{{- friend.name -}}</div>
           </div>
-          <div data-id="{{friend.facebook.id}}" class="listen"></div>
+          <div data-id="{{friend.id}}" class="listen"></div>
         </div>
       {%- endfor -%}
     </div>
@@ -38,6 +38,13 @@
         function(){
             $(this).find('.thumb.facebook').show();
             $(this).find('.thumb.tnh').hide();
+        });
+        $('#dia_facebook_listen .listen').click(function(){
+            var action = ($(this).hasClass('active') ? 'unstar' : 'star' );
+            var entity = $(this).data('id');
+            $.post('', {action: action, entity: entity, entity_class: 'User'}, function(data){
+                console.log(data);
+            });
         });
         $('.invite_fb_link').click(function(){
             $('#dia_facebook_listen .btn_dialog_close').click();

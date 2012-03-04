@@ -391,12 +391,12 @@ class User(HasSocial):
 
     def get_expr_count(self, force_update=False):
         if force_update:
-            count = self.set_expr_count
+            count = self.set_expr_count()
         else:
             try:
                 count = self['analytics']['expressions']['count']
             except KeyError:
-                count = self.set_expr_count
+                count = self.set_expr_count()
         return count
     expr_count = property(get_expr_count)
 
