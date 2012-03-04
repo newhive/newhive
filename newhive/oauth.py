@@ -2,7 +2,7 @@ import httplib2, os, urllib, datetime, json
 
 from apiclient.discovery import build
 from oauth2client.file import Storage
-from oauth2client.client import OAuth2WebServerFlow, OAuth2Credentials
+from oauth2client.client import OAuth2WebServerFlow, OAuth2Credentials, FlowExchangeError
 from oauth2client import tools
 
 from newhive import config
@@ -46,7 +46,7 @@ class GAClient(object):
 
 class FacebookClient(object):
 
-    def __init__(self):
+    def __init__(self, code=None, redirect_uri=None, user=None):
         self.client_id = config.facebook_app_id
         self.client_secret = config.facebook_client_secret
         self.scope = 'email,publish_actions'
@@ -55,6 +55,10 @@ class FacebookClient(object):
         self.default_redirect_uri = abs_url(secure=True)
         self.user_agent = None
         self._access_token = None
+        self.redirect_uri = redirect_uri
+        self.code = code
+        self.user = user
+        self._credentials = None
 
         self.flow = OAuth2WebServerFlow(
                 client_id=self.client_id
@@ -84,18 +88,13 @@ class FacebookClient(object):
                 self._access_token = d['access_token']
         return self._access_token
 
-    def exchange(self, request=None, code=None, redirect_uri=None):
-        if request:
-            code = request.args.get('code')
-            self.redirect_uri = request.base_url
-        else:
-            self.redirect_uri = redirect_uri
+    def exchange(self, code=None, redirect_uri=None):
         body = urllib.urlencode({
             'grant_type': 'authorization_code',
             'client_id': self.client_id,
             'client_secret': self.client_secret,
-            'code': code,
-            'redirect_uri': self.redirect_uri,
+            'code': code or self.code,
+            'redirect_uri': redirect_uri or self.redirect_uri,
             'scope': self.scope,
             })
         headers = {
@@ -114,12 +113,32 @@ class FacebookClient(object):
                 token_expiry = datetime.datetime.utcnow() + datetime.timedelta(
                                                     seconds=int(d['expires']))
 
-            self.credentials = OAuth2Credentials(access_token, self.client_id,
+            self._credentials = OAuth2Credentials(access_token, self.client_id,
                                      self.client_secret, refresh_token, token_expiry,
                                      self.token_uri, self.user_agent,
                                      id_token=d.get('id_token', None))
-            return self.credentials
-        else: raise Exception(str([resp, content]))
+            return self._credentials
+        else: raise FlowExchangeError(str(content))
+
+    @property
+    def credentials(self):
+        if self._credentials and not self._credentials.access_token_expired:
+            return self._credentials
+        else:
+            #if self.ready_to_exchange:
+                credentials = self.exchange()
+                if self.user and credentials: self.user.save_credentials(credentials)
+                return self._credentials
+            #else:
+            #    raise oauth.
+
+    @credentials.setter
+    def credentials(self, value):
+        self._credentials = value
+
+    @property
+    def ready_to_exchange(self):
+        return self.code and self.redirect_uri != None
 
     def request(self, api_url, credentials=None, app_access=False, method="GET"):
         if credentials: self.credentials = credentials
@@ -155,3 +174,7 @@ class FacebookClient(object):
 
     def me(self, query='', credentials = None):
         return self.find(urllib.basejoin('https://graph.facebook.com/me', str(query)), credentials)
+
+    def friends(self):
+        if not self.credentials: raise Exception('Facebook credentials invalid')
+        return self.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""").get('data')

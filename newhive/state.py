@@ -281,6 +281,7 @@ class User(HasSocial):
     def __init__(self, *a, **b):
         super(User, self).__init__(*a, **b)
         self.logged_in = False
+        self.fb_client = None
         self.owner = self
         self['owner'] = self.id
 
@@ -422,10 +423,13 @@ class User(HasSocial):
     def facebook_credentials(self, value):
         self._facebook_credentials = value
 
-    def save_credentials(self, request, fbc=FacebookClient()):
-        credentials = fbc.exchange(request)
+    def save_credentials(self, credentials, profile=False):
+        # Do nothing if not an in-database user
+        if not self.id: return False
+
         if not self.has_key('oauth'): self['oauth'] = {}
-        self['facebook'] = fbc.find('https://graph.facebook.com/me')
+        if profile:
+            self['facebook'] = self.fb_client.me()
         self['oauth']['facebook'] = json.loads(credentials.to_json())
         self.save()
 
@@ -453,15 +457,13 @@ class User(HasSocial):
 
     @property
     def has_facebook(self):
-        return self.get('facebook') and not self['facebook'].get('disconnected')
+        if self.get('facebook') and not self['facebook'].get('disconnected'):
+            return True
+        else: return False
 
-    def get_facebook_friends(self, fbc=None):
-        if not fbc:
-            if not self.facebook_credentials or self.facebook_credentials.access_token_expired:
-                return None
-            fbc = FacebookClient()
-            fbc.credentials = self.facebook_credentials
-        friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""")['data']
+    @property
+    def facebook_friends(self):
+        friends = self.fb_client.friends()
         return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
 
     @property

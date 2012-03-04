@@ -21,6 +21,10 @@
     <div class='menu_item facebook' id='fb_invite_menu_item'>
       <div class="fb_icon"></div>Invite friends
     </div>
+    {% else %}
+    <div class='menu_item facebook' id='fb_connect_menu_item'>
+      <div class="fb_icon"></div>Connect with Facebook
+    </div>
     {% endif %}
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
@@ -43,6 +47,11 @@
       e.stopPropagation();
       $(this).addClass('menu_hover');
       sendRequestViaMultiFriendSelector();
+    });
+    $('#fb_connect_menu_item').click(function(e){
+      e.stopPropagation();
+      $(this).addClass('menu_hover');
+      showDialog('#dia_facebook_connect');
     });
     $('#fb_listen_menu_item').click(function(e){
       e.stopPropagation();

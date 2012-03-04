@@ -2,7 +2,7 @@ import crypt, pickle, urllib
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.utils import normalize, junkstr
-from newhive.oauth import FacebookClient
+from newhive.oauth import FacebookClient, FlowExchangeError
 from newhive import mail
 
 class UserController(ApplicationController):
@@ -43,7 +43,8 @@ class UserController(ApplicationController):
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
         if request.args.has_key('code'):
-            profile_picture_url = 'https://graph.facebook.com/' + request.fb_profile.get('id') + '/picture?type=large&return_ssl_resources=1'
+            fb_profile = request.requester.fb_client.me()
+            profile_picture_url = 'https://graph.facebook.com/' + fb_profile.get('id') + '/picture?type=large&return_ssl_resources=1'
             try:
                 #TODO: switch all uses of urllib to urllib2
                 profile_picture = urllib.urlopen(profile_picture_url)
@@ -51,23 +52,21 @@ class UserController(ApplicationController):
                     tmp_file.write(profile_picture.read())
                     profile_picture = self.db.File.create({
                         'owner': None
-                        , 'name': 'profile_picture_for_' + request.fb_profile.get('name').replace(' ', '_')
+                        , 'name': 'profile_picture_for_' + fb_profile.get('name').replace(' ', '_')
                         , 'tmp_file': tmp_file
                         , 'mime': profile_picture.headers.type})
             except IOError as e:
                 print "Error downloading fb profile picture " + profile_picture_url
                 print e
                 profile_picture = None
-            response.context['f'] = dfilter(request.fb_profile, ['email'])
-            response.context['f']['fullname'] = request.fb_profile['name']
-            response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(request.fb_profile.get('gender'))
-            response.context['f']['facebook'] = request.fb_profile
+            response.context['f'] = dfilter(fb_profile, ['email'])
+            response.context['f']['fullname'] = fb_profile['name']
+            response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(fb_profile.get('gender'))
+            response.context['f']['facebook'] = fb_profile
             if profile_picture:
                 response.context['f']['thumb'] = profile_picture.get_thumb(190,190)
                 response.context['f']['thumb_file_id'] = profile_picture.id
-            friends = request.fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""")['data']
-            users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
-            response.context['friends'] = users
+            response.context['friends'] = request.requester.facebook_friends
         return self.serve_page(response, 'pages/user_settings.html')
 
     def create(self, request, response):
@@ -92,7 +91,7 @@ class UserController(ApplicationController):
         })
         if request.args.has_key('code'):
             fbc = FacebookClient()
-            credentials = fbc.exchange(request)
+            credentials = fbc.exchange(code=request.args['code'], redirect_uri=request.base_url)
             fb_profile = fbc.find('https://graph.facebook.com/me')
             args.update({
                 'oauth': {'facebook': json.loads(credentials.to_json())}
@@ -141,17 +140,15 @@ class UserController(ApplicationController):
 
     def edit(self, request, response):
         if request.requester.logged_in and request.is_secure:
-            fbc = FacebookClient()
             response.context['action'] = 'update'
             response.context['f'] = request.requester
-            response.context['facebook_connect_url'] = fbc.authorize_url(abs_url(secure=True)+ 'settings')
-            if request.requester.facebook_credentials:
-                if request.requester.facebook_credentials.access_token_expired:
-                    return self.redirect(response, fbc.authorize_url(abs_url(secure=True) + "settings"))
+            response.context['facebook_connect_url'] = FacebookClient().authorize_url(
+                                                           abs_url(secure=True)+ 'settings')
+            if request.requester.has_facebook:
                 try:
-                    friends = fbc.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""", request.requester.facebook_credentials)['data']
-                except:
-                    return self.redirect(response, fbc.authorize_url(abs_url(secure=True) + "settings"))
+                    friends = request.requester.fb_client.friends()
+                except FlowExchangeError as e:
+                    return self.redirect(response, FacebookClient().authorize_url(abs_url(secure=True) + "settings"))
                 users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
                 response.context['listening_count'] = 0
                 response.context['friends'] = []
@@ -307,8 +304,6 @@ class UserController(ApplicationController):
         return self.serve_page(response, 'pages/error.html')
 
     def facebook_listen(self, request, response, args=None):
-        fbc = FacebookClient()
-        fbc.exchange(code=request.fb_code, redirect_uri='')
-        #response.context['friends'] = request.requester.facebook_friends
-        response.context['friends'] = request.requester.get_facebook_friends(fbc)
+        response.context['friends'] = request.requester.facebook_friends
+        #response.context['friends'] = request.requester.get_facebook_friends(fbc)
         return self.serve_page(response, 'dialogs/facebook_listen.html')

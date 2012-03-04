@@ -1,7 +1,7 @@
-import json
 from werkzeug import exceptions
 from newhive import config, oauth
-from newhive.utils import junkstr, b64decode
+from newhive.utils import junkstr
+from newhive.oauth import FacebookClient, FlowExchangeError
 
 def authenticate_request(db, request, response):
     """Read session id from 'identity' cookie, retrieve session record from db,
@@ -20,8 +20,6 @@ def authenticate_request(db, request, response):
         rm_cookie(response, 'identity')
         return fail
 
-    request.fb_cookie = get_fb_cookie(request)
-    request.fb_code = request.fb_cookie.get('code')
     user.update(session = session.id)
 
     user.logged_in = False
@@ -50,14 +48,11 @@ def handle_login(db, request, response):
 def facebook_login(db, request, response):
     request.fbc = oauth.FacebookClient()
     try:
-        request.credentials = request.fbc.exchange(request)
-        request.fb_profile = request.fbc.me()
-        user = db.User.find({'facebook.id': request.fb_profile.get('id')})
-    except Exception as e:
+        fb_profile = request.requester.fb_client.me()
+        user = db.User.find({'facebook.id': fb_profile.get('id')})
+    except FlowExchangeError as e:
         user = None
         response.context['error'] = 'Either something went wrong with facebook login or your facebook account is not connect to The New Hive'
-        print type(e)
-        print e
 
     if user:
         session = new_session(db, user, request, response)
@@ -65,7 +60,7 @@ def facebook_login(db, request, response):
         user.logged_in = True
         return user
     else:
-        return db.User.new({})
+        return request.requester
 
 def new_session(db, user, request, response):
     # login
@@ -153,12 +148,3 @@ def rm_cookie(response, name, secure = False): response.delete_cookie(name,
 class BadCookie(exceptions.BadRequest):
     def get_body(self, environ):
         return "there's some funky cookie business going on"
-
-def get_fb_cookie(request):
-    cookie = get_cookie(request, 'fbsr_' + config.facebook_app_id)
-    if cookie:
-        sig, data = [b64decode(str(el)) for el in cookie.split('.')]
-        #TODO: check data against signature hash
-        return json.loads(data)
-    else:
-        return None

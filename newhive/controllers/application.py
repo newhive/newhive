@@ -1,6 +1,8 @@
 from newhive.controllers.shared import *
 from newhive import auth, config, oauth
 from werkzeug import Response
+from newhive.oauth import FacebookClient
+from newhive.utils import b64decode
 
 class ApplicationController(object):
     def __init__(self, jinja_env, assets_env, db):
@@ -8,17 +10,24 @@ class ApplicationController(object):
         self.assets_env = assets_env
         self.db = db
         self.content_domain = config.content_domain
-        self.fb_client = oauth.FacebookClient()
+        self.fb_client = FacebookClient()
 
     def pre_process(self, request, args={}):
         response = Response()
         response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
         request.requester = auth.authenticate_request(self.db, request, response)
-        if request.args.has_key('code'):
+        self.process_facebook(request)
+        if request.args.has_key('code') and not request.form.get('fb_disconnect'):
             if request.requester.logged_in:
-                request.requester.save_credentials(request)
+                # if logged in, then connect facebook account if not already connected
+                if not request.requester.has_facebook:
+                    request.requester.save_credentials(request.requester.fb_client.exchange(), profile=True)
             else:
+                # if not logged in, try logging in with facebook credentials
+                fb_client = request.requester.fb_client
                 request.requester = auth.facebook_login(self.db, request, response)
+                fb_client.user = request.requester
+                request.requester.fb_client = fb_client
         response.context.update(facebook_authentication_url=self.fb_client.authorize_url(request.base_url))
         response.user = request.requester
         response.headers.add('Access-Control-Allow-Origin', '*')
@@ -89,3 +98,40 @@ class ApplicationController(object):
         response.location = location
         response.status_code = 301 if permanent else 303
         return response
+
+    def process_facebook(self, request):
+        # in order to get facebook credentials we use the following order of
+        # preference:
+        # 
+        # 1) use token stored in user record if still valid
+        # 2) get new token from fbsr cookie set by fb js sdk
+        # 3) if absolutely necessary get new token via redirect
+        user = request.requester
+        fb_cookie = self._get_fb_cookie(request)
+        user.fb_client = FacebookClient(user=user)
+
+        # if the user object has stored credentials from the database and they are
+        # still valid, give these to the fb_client
+        if user.facebook_credentials and not user.facebook_credentials.access_token_expired:
+            user.fb_client.credentials = user.facebook_credentials
+
+        # If user object has no valid credentials, and also as a backup, we store an
+        # oauth code, which can be exchanged later for an access token.  if the
+        # request includes a code in the argument, prefer this, because it probably
+        # just came from facebook via a redirect, rather than the cookie set by the
+        # javascript sdk, which could be older
+        if request.args.has_key('code'):
+            user.fb_client.code = request.args['code']
+            user.fb_client.redirect_uri = request.base_url
+        elif fb_cookie:
+            user.fb_client.code = fb_cookie.get('code')
+            user.fb_client.redirect_uri = ''
+
+    def _get_fb_cookie(self, request):
+        cookie = auth.get_cookie(request, 'fbsr_' + config.facebook_app_id)
+        if cookie:
+            sig, data = [b64decode(str(el)) for el in cookie.split('.')]
+            #TODO: check data against signature hash
+            return json.loads(data)
+        else:
+            return None
