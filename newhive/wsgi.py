@@ -26,7 +26,7 @@ from newhive import config
 from newhive.state import User
 from newhive.utils import abs_url
 import newhive.state
-import ui_strings.en as ui
+import newhive.ui_strings.en as ui
 
 import webassets
 from webassets.filter import get_filter
