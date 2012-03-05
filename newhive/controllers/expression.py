@@ -128,8 +128,7 @@ class ExpressionController(ApplicationController):
         feed_tag = {'url': "/feed", "name": "Feed"}
         star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         people_tag = {'name': 'Listening', 'url': "/listening", 'img': "/lib/skin/1/people_tab" + ("-down" if request.path == "listening" else "") + ".png" }
-        network_tag = {'url': "/network", "name": "Network"}
-        response.context['system_tags'] = [expressions_tag, feed_tag, network_tag, people_tag, star_tag]
+        response.context['system_tags'] = [expressions_tag, feed_tag, people_tag, star_tag]
         response.context['expr_context'] = {'user': owner.get('name')}
 
         if request.path.startswith('expressions'):

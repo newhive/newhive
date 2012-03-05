@@ -16,7 +16,6 @@ class UserController(ApplicationController):
         people_tag = {'url': '/listening', 'name': 'Listening'}
         star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
         feed_tag = {'url': "/feed", "name": "Feed"}
-        network_tag = {'url': "/network", "name": "Network"}
 
         if args.get('listening'):
             tag = people_tag
@@ -26,14 +25,10 @@ class UserController(ApplicationController):
             tag = feed_tag
             response.context['feed_items'] = owner.feed_profile(request.requester)
 
-        elif args.get('network'):
-            tag = network_tag
-            response.context['feed_items'] = owner.feed_network(request.requester)
-
         response.context['starrers'] = owner.starrers 
         response.context['profile_thumb'] = owner.thumb
         response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
-        response.context['system_tags'] = [expressions_tag, feed_tag, network_tag, people_tag, star_tag]
+        response.context['system_tags'] = [expressions_tag, feed_tag, people_tag, star_tag]
         response.context['title'] = owner['fullname']
         response.context['tag'] = tag
         return self.serve_page(response, 'pages/expr_cards.html')
