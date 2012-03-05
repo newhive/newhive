@@ -157,6 +157,11 @@ class Entity(dict):
 
 # Common code between User and Expr
 class HasSocial(Entity):
+    # TODO: remove this after migration for deleting feed attribute
+    def __init__(self, col, doc):
+        if doc.has_key('feed'): del doc['feed']
+        super(HasSocial, self).__init__(col, doc)
+
     _starrer_ids = None
     @property
     @memoized

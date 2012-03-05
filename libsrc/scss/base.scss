@@ -5,6 +5,7 @@
 $nav_height: 50px;
 $left_padding: 30px;
 $left_column_width: 210px;
+$right_column_x: $left_column_width + $left_padding;
 
 // Imports
 @import "nav";
@@ -24,9 +25,9 @@ $left_column_width: 210px;
   width: $left_column_width;
   padding-left: $left_padding;
 }
-#right_column {
-  margin-left: $left_column_width + $left_padding;
-}
+#right_column { margin-left: $right_column_x; }
+#header { position: relative; }
+#header .title { margin-left: $right_column_x; }
 
 // Resets
 iframe { border: none; }
@@ -58,10 +59,6 @@ iframe { border: none; }
   }
 }
 .email_confirmation {
-//  .fathead { 
-//    margin: 100px 0 0 15%;
-//    width: 70%;
-//  }
   .fathead { 
     margin-bottom: 100px; 
     p {margin-left: 50px; }

@@ -51,7 +51,7 @@
       {% if template != "pages/edit.html" %} {# don't show random button and search in editor #}
         <a href='{{server}}random'><img style="position: relative; left: {{'0' if user.logged_in else '-24px'}}; top: 0;" class="nav nav_icon hoverable" src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
         <div class="nav" id="search" >
-          <input type="text" id="search_box" placeholder="Search" value="{{query}}" onkeydown="if (event.keyCode == 13) $('#search_submit').click()"/>
+          <input type="text" id="search_box" placeholder="Search" value="{{q.q}}" onkeydown="if (event.keyCode == 13) $('#search_submit').click()"/>
           <div id="search_submit" class="hoverable" onclick="window.location = buildSearch()"></div>
         </div>
       {% endif %}

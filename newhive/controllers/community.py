@@ -1,6 +1,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from functools import partial
+from itertools import chain
 
 class CommunityController(ApplicationController):
 
@@ -27,17 +28,19 @@ class CommunityController(ApplicationController):
 
         def default(*p):
             for i in range(len(p)):
-                if (i < len(path)) and (lget(path, i) != lget(p, i)): break
+                if lget(path, i) and lget(path, i) != lget(p, i): break
                 lset(path, i, p[i])
         default('home', 'network' if request.requester.logged_in else 'expressions')
         default('profile', 'expressions')
+        print path
 
         res_path = '/'.join(path)
         query = self.pages.get(res_path)
         if not query: return self.serve_404(request, response)
-        items = map(self.format_card, query(request))
+        items = expr_list(query(request))
         response.context.update(dict(
              home = path[0] == 'home'
+            ,profile = path[0] == 'profile'
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
             ,cards = items
@@ -64,77 +67,37 @@ class CommunityController(ApplicationController):
     def listeners(self, request): return request.owner.starrers
 
 
-    def _site_index(self, request, response, args={}):
-        tag = args.get('tag')
-        p1 = args.get('p1')
-        request, response = self._homepage(request, response, args)
-        if p1 == 'people':
-            cname = 'user'
-        else:
-            cname = 'expr'
-        self._expr_home_list(args.get('tag'), request, response, cname=cname)
-        if tag: response.context['expr_context'] = {'tag': tag }
-        elif p1 == '':
-            response.context['expr_context'] = {'tag': 'Featured'}
-        if p1 == 'tag':
-            response.context['exprs'] = self._expr_list({'tags_index':tag.lower()}, page=int(request.args.get('page', 0)), limit=90)
-            if int(request.args.get('page', 0)) == 0 and ExpressionController.featured.has_key(tag):
-                expr_list = self._expr_list(ExpressionController.featured[tag])
-                response.context['exprs'] += expr_list
-                response.context['exprs'] = utils.uniq(response.context['exprs'], lambda x: x.id)
-            response.context['tag'] = tag
-            response.context['title'] = "#" + tag
-        if request.args.get('partial'): return self.serve_page(response, 'page_parts/cards.html')
-        elif p1 == 'tag': return self.serve_page(response, 'pages/tag_search.html')
-        else:
-            return self.serve_page(response, 'pages/home.html')
-
     def search(self, request, response, args={}):
         query = request.args.get('q')
-        request, response = self._homepage(request, response, args)
-        results = self.db.KeyWords.text_search(query, doc_type='Expr')
-        ids = [res['doc'] for res in results]
-        expressions = self._expr_list(ids, viewer=request.requester.id)
-        results = self.db.KeyWords.text_search(query, doc_type='User')
-        ids = [res['doc'] for res in results]
+        expr_res = self.db.KeyWords.text_search(query, doc_type='Expr')
+        ids = [res['doc'] for res in expr_res]
+        expressions = self.db.Expr.list(ids, viewer=request.requester.id)
+
+        user_res = self.db.KeyWords.text_search(query, doc_type='User')
+        ids = [res['doc'] for res in user_res]
         users = self.db.User.list({'_id': {'$in': ids}})
-        self.db.ActionLog.create(request.requester, "search", data={'query': query, 'result_size': len(expressions)})
-        response.context['exprs'] = expressions
-        response.context['users'] = users
-        response.context['tag'] = {}
-        response.context['title'] = "Results for: " + query
-        response.context['query'] = query
-        response.context['pages'] = 1
-        return self.serve_page(response, 'pages/tag_search.html')
 
-    def _expr_list(self, spec, **args):
-        return map(self._format_card, self.db.Expr.list(spec, **args))
+        self.db.ActionLog.create(request.requester, "search", data={'query': query,
+            'expr_count': expr_res.count(), 'user_count': user_res.count() })
 
-    def format_card(self, e):
-        dict.update(e
-            ,updated = friendly_date(time_u(e['updated']))
-            ,tags = e.get('tags_index', [])
-            )
-        return e
+        res = expr_list(chain(users, expressions))
 
-    def _expr_home_list(self, p2, request, response, limit=90, cname='expr'):
-        root = self.db.User.get_root()
-        tag = p2 if p2 else lget(root.get('tags'), 0) # make first tag/category default community page
-        tag = {'name': tag, 'url': '/home/' + tag}
-        page = int(request.args.get('page', 0))
-        ids = root.get('tagged', {}).get(tag['name'], []) if cname == 'expr' else []
-        cols = { 'expr' : self.db.Expr, 'user' : self.db.User }
-        if ids:
-            by_id = {}
-            for e in cols[cname].list({'_id' : {'$in':ids}}, viewer=request.requester.id): by_id[e['_id']] = e
-            entities = [by_id[i] for i in ids if by_id.has_key(i)]
-            response.context['pages'] = 0;
-        else:
-            entities = cols[cname].list({}, sort='updated', limit=limit, page=page)
-            response.context['pages'] = cols[cname].count({});
-        if cname=='expr':
-            response.context['exprs'] = map(self._format_card, entities)
-            response.context['tag'] = tag
-            response.context['show_name'] = True
-        elif cname=='user': response.context['users'] = entities
-        response.context['page'] = page
+        response.context.update(dict(
+             home = True
+            ,search = True
+            ,title = 'Results for: ' + query
+            ,path = 'home/search'
+            ,cards = res
+            ,pages = 10
+        ))
+        return self.serve_page(response, 'pages/community.html')
+
+
+def expr_list(res): return map(format_card, res)
+
+def format_card(e):
+    dict.update(e
+        ,updated = friendly_date(time_u(e['updated']))
+        ,tags = e.get('tags_index', [])
+        )
+    return e

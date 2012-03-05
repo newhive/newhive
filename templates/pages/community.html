@@ -23,7 +23,7 @@
       function homepage_header() {
           var header = $('#homepage_header')
           if (header.length > 0)
-              $('#header').height( parseInt(header.find('.background').css('height')) );
+              $('#homepage_header').height( parseInt(header.find('.background').css('height')) );
       }
       $(function(){
         var dia;
@@ -40,10 +40,10 @@
   {% endif %}
 {% endblock %}
 
-{% block body_classes %}{{ super() }} {{ 'home' if home else 'profile' }}{% endblock %}
+{% block body_classes %}{{ super() }}{{ ' home' if home }}{{ ' profile' if profile }}{% endblock %}
 
 {% block nav_right_left %}
-  {% if (not home) and user_is_owner %}
+  {% if profile and user_is_owner %}
     <div class='nav_icon text hoverable medbold center pad' onclick="" title="Help with your profile" style='margin-right : 8px;' id='btn_help'>?</div>
     <script>
       $('#btn_help').click(function() { exprDialog('{{ site_pages['profile-help'] }}', { minimize_to : $('#btn_help') } ) });
@@ -62,7 +62,7 @@
   {% if home %}
     {% if not user.logged_in %}
       <div id="homepage_header" style='width:100%; height:255px;'>
-        <div class="happ background" style="left:0px; top:0px; width:1000px; height: 255px; {#background-color: {{ colors['tan'] }};#} z-index: 3;"></div>
+        <div class="happ background" style="left:0px; top:0px; width:1000px; height: 245px; {#background-color: {{ colors['tan'] }};#} z-index: 3;"></div>
         <div class="happ" style="left: 48px; top: 32px; width: 700px; height: 56px; z-index: 3; font-size: 3.3em; font-weight: normal; font-family: Lobster;" data-scale="3.3">
           Express Your<span style="margin:-0.04em">self</span>
         </div>
@@ -81,30 +81,37 @@
         </div>
       </div>
     {% endif %}
+  {% endif %}
+  {% if profile %}
+    <div id='profile_header'>
+      <div id='profile_thumb'>
+        {% if user_is_owner %}
+          <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
+        {% endif %}
+        {% if owner.get_thumb() %}
+          <img src='{{ owner.get_thumb() }}' alt="{{ owner.fullname }}"/>
+        {% elif user_is_owner %}
+          <div class='placeholder rounded'>Click Here to<br/>Upload A Profile Image</div>
+        {% endif %}
+        {% if user_is_owner %}
+          </a>
+        {% endif %}
+      </div>
+      <h1 class="index">
+        {% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + tag.name if tag and tag.show_name != False }}
+      </h1>
+    </div>
+  {% endif %}
+  <div id='card_header'>
+    <div class='medbold title'>
+      {% if search %}{{ title|e }}{% endif %}
+    </div>
     <div id='top_tabs'>
       {% if path1 == 'home/expressions' %}
           {{ top_tab('home/expressions', 'Featured') }}
         | {{ top_tab('home/expressions/all', 'All') }}
       {% endif %}
-    </div>
-  {% else %}
-    <div id='profile_thumb'>
-      {% if user_is_owner %}
-        <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
-      {% endif %}
-      {% if owner.get_thumb() %}
-        <img src='{{ owner.get_thumb() }}' alt="{{ owner.fullname }}"/>
-      {% elif user_is_owner %}
-        <div class='placeholder rounded'>Click Here to<br/>Upload A Profile Image</div>
-      {% endif %}
-      {% if user_is_owner %}
-        </a>
-      {% endif %}
-    </div>
-    <h1 class="index">
-      {% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + tag.name if tag and tag.show_name != False }}
-    </h1>
-    <div id='top_tabs'>
+
       {% if (path1 == 'profile/expressions') and user_is_owner %}
         {{ top_tab('profile/expressions', 'All') }}
         | {{ top_tab('profile/expressions/public', 'Public') }}
@@ -117,7 +124,7 @@
         | {{ top_tab('profile/listening/listeners', 'Listening to me') }}
       {% endif %}
     </div>
-  {% endif %}
+  </div>
 {% endblock header %}
 
 {% macro left_tab(p1, label) %}
@@ -133,7 +140,8 @@
       {{ left_tab('home/network', 'Network') }}
       {{ left_tab('home/people', 'People') }}
       {{ left_tab('home/about', 'About') }}
-    {% else %}
+    {% endif %}
+    {% if profile %}
       {{ left_tab('profile/expressions', 'Expressions') }}
       {{ left_tab('profile/activity', 'Activity') }}
       {{ left_tab('profile/listening', 'Listening') }}

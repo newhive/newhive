@@ -1,12 +1,7 @@
 body.profile {
-  #header { 
+  #profile_header { 
     margin: 45px 0px 5px 35px;
-    position: relative;
-
-    h1 { 
-      margin: 58px; 
-      margin-left: 30px;
-    }
+    h1 { margin: 58px; margin-left: 30px; }
   }
 
   #profile_thumb { 
@@ -26,21 +21,22 @@ body.profile {
   .fathead img { margin : 8px 0; vertical-align : top; }
 }
 
-#homepage_header .signup_button {
-  background-color: $color_active;
-  color:#fff;
-}
-#homepage_header .signup_button:hover {
-  background-color: $color_highlight;
-  color: #000;
+body.home {
+  #homepage_header .signup_button {
+    background-color: $color_active;
+    color:#fff;
+  }
+  #homepage_header .signup_button:hover {
+    background-color: $color_highlight;
+    color: #000;
+  }
 }
 
-#top_tabs { height: 25px; margin: 18px 20px 2px; }
-body.profile #top_tabs {
-  position: absolute; bottom: 0; right: 0;
-}
-body.home #top_tabs { text-align: right; }
+#card_header { height: 25px; margin: 18px 20px 2px 0; position: relative; }
+body.profile #card_header { position: absolute; bottom: 0; right: 0; }
+#header .title { margin-left: $right_column_x + 9px; font-family: Museo,Helvetica,sans-serif; }
 
+#top_tabs { position: absolute; right: 0px; }
 #top_tabs .tab_label {
   display: inline-block;
   color: $color_active;
