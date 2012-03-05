@@ -173,8 +173,9 @@ var profile_thumb_choose = function(){
 {% block content %}
  <div  class='fathead'>
    <p class="active" id="error">{{message |e}}</p>
+   {% if not update %}
    <div id='profile_thumb'>
-     <a href="#" onclick="profile_thumb_choose(); return false:" alt="Choose Picture">
+     <a href="#" onclick="profile_thumb_choose(); return false;" alt="Choose Picture">
        {% if f.thumb %}
          <img src="{{f.thumb}}"/>
        {% else %}
@@ -182,7 +183,8 @@ var profile_thumb_choose = function(){
        {% endif %}
      </a>
    </div>
-   <div class="title"><h1>{{ ui.create_account_title if action == 'create' else ui.update_account_title }}</h1></div>
+   {% endif %}
+   <div class="title"><h1>{{ ui.create_account_title if action == 'create' else "+ " ~ ui.update_account_title }}</h1></div>
  </div>
 
  <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
@@ -213,7 +215,7 @@ var profile_thumb_choose = function(){
          <span class='inactive'>5.</span> Encourage expression<br>
        </b><br>
 
-       <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
+       <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false;" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
        <br>
        
        {% if not update %}
