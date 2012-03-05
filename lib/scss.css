@@ -1555,28 +1555,52 @@ img.centered {
 }
 
 /* line 37 */
+.btn {
+  padding: 5px 10px;
+  font-weight: bold;
+  font-size: 1.23em;
+  display: inline-block;
+  cursor: default;
+}
+/* line 43 */
+.btn.inactive {
+  background-color: #d1d1d1;
+  color: white;
+}
+/* line 44 */
+.btn.black:hover {
+  color: #f73627;
+  background-color: #fff673;
+}
+/* line 47 */
+.btn.black:hover.inactive {
+  background-color: #d1d1d1;
+  color: white;
+}
+
+/* line 52 */
 #nav {
   height: 50px;
 }
 
-/* line 39 */
+/* line 54 */
 .expr_cards #header {
   padding-top: 48px;
   padding-left: 30px;
   padding-bottom: 23px;
 }
 
-/* line 44 */
+/* line 59 */
 #primary_content {
   clear: both;
 }
 
-/* line 45 */
+/* line 60 */
 .logged_in #primary_content, .tag_search #primary_content {
   padding-top: 12px;
 }
 
-/* line 47 */
+/* line 62 */
 #left_column, #right_column, #header, #feed {
   *zoom: 1;
 }
@@ -1587,43 +1611,43 @@ img.centered {
   clear: both;
 }
 
-/* line 50 */
+/* line 65 */
 #left_column {
   float: left;
   width: 210px;
   padding-left: 30px;
 }
 
-/* line 55 */
+/* line 70 */
 #right_column {
   margin-left: 240px;
 }
 
-/* line 60 */
+/* line 75 */
 iframe {
   border: none;
 }
 
-/* line 64 */
+/* line 79 */
 .user_settings .title, .email_confirmation .title {
   padding-top: 10px;
 }
-/* line 65 */
+/* line 80 */
 .user_settings #profile_thumb, .email_confirmation #profile_thumb {
   float: left;
   width: 90px;
 }
-/* line 68 */
+/* line 83 */
 .user_settings #profile_thumb .message, .email_confirmation #profile_thumb .message {
   color: #696e76;
   font-size: 12px;
 }
-/* line 72 */
+/* line 87 */
 .user_settings #profile_thumb img, .email_confirmation #profile_thumb img {
   width: 70px;
   height: 70px;
 }
-/* line 76 */
+/* line 91 */
 .user_settings #profile_thumb .placeholder, .email_confirmation #profile_thumb .placeholder {
   width: 70px;
   height: 36px;
@@ -1632,44 +1656,44 @@ iframe {
   font-size: 10px;
   padding: 17px 0;
 }
-/* line 86 */
+/* line 101 */
 .user_settings .fathead, .email_confirmation .fathead {
   margin: 50px;
 }
-/* line 92 */
+/* line 107 */
 .user_settings .fathead h1, .email_confirmation .fathead h1 {
   display: inline;
   font-family: Museo, Helvetica, sans-serif;
 }
 
-/* line 99 */
+/* line 114 */
 .user_settings .required {
   color: #f72e4d;
   font-size: 0.7em;
 }
-/* line 103 */
+/* line 118 */
 .user_settings .form_validation_info {
   width: 215px;
 }
-/* line 104 */
+/* line 119 */
 .user_settings .user_name_change_text {
   width: 215px;
   font-size: 0.75em;
 }
 
-/* line 114 */
+/* line 129 */
 .email_confirmation .fathead {
   margin-bottom: 100px;
 }
-/* line 116 */
+/* line 131 */
 .email_confirmation .fathead p {
   margin-left: 50px;
 }
-/* line 119 */
+/* line 134 */
 .email_confirmation #content a {
   color: #698293;
 }
-/* line 121 */
+/* line 136 */
 .email_confirmation #content a:hover {
   color: #f72e4d;
 }

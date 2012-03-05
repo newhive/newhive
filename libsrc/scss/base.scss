@@ -33,6 +33,21 @@ img.centered {
     color: $color_active;
     }
 
+// Buttons
+.btn { 
+  padding:5px 10px; 
+  font-weight : bold; 
+  font-size : 1.23em; 
+  display : inline-block; 
+  cursor : default;
+  &.inactive { background-color : $color_24; color: white;}
+  &.black:hover { 
+    color : $color_1; 
+    background-color : $color_32;
+    &.inactive { background-color : $color_24; color: white;}
+  }
+}
+
 // Page Layout
 #nav{ height: $nav_height; }
 
