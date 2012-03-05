@@ -90,9 +90,8 @@ class UserController(ApplicationController):
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]
         })
         if request.args.has_key('code'):
-            fbc = FacebookClient()
-            credentials = fbc.exchange(code=request.args['code'], redirect_uri=request.base_url)
-            fb_profile = fbc.find('https://graph.facebook.com/me')
+            credentials = request.requester.fb_client.exchange()
+            fb_profile = request.requester.fb_client.me()
             args.update({
                 'oauth': {'facebook': json.loads(credentials.to_json())}
                 ,'facebook' : fb_profile
@@ -165,7 +164,7 @@ class UserController(ApplicationController):
 
     def invited_from_facebook(self, request, response, args={}):
         if request.requester.logged_in: return self.redirect(response, request.requester.url)
-        fbc = FacebookClient()
+        fbc = request.requester.fb_client
         params = request.args
         request_ids = request.args.get('request_ids').split(',')
         valid_request = False
@@ -305,5 +304,4 @@ class UserController(ApplicationController):
 
     def facebook_listen(self, request, response, args=None):
         response.context['friends'] = request.requester.facebook_friends
-        #response.context['friends'] = request.requester.get_facebook_friends(fbc)
         return self.serve_page(response, 'dialogs/facebook_listen.html')
