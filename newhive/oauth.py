@@ -58,6 +58,9 @@ class FacebookClient(object):
         self.redirect_uri = redirect_uri
         self.code = code
         self.user = user
+        if code and redirect_uri != None:
+            self.auth = [{'code': code, 'redirect_uri': redirect_uri}]
+        else: self.auth = []
         self._credentials = None
 
         self.flow = OAuth2WebServerFlow(
@@ -88,37 +91,46 @@ class FacebookClient(object):
                 self._access_token = d['access_token']
         return self._access_token
 
+    def add_auth(self, code, redirect_uri):
+        self.auth.append({'code': code, 'redirect_uri': redirect_uri})
+
     def exchange(self, code=None, redirect_uri=None):
-        body = urllib.urlencode({
-            'grant_type': 'authorization_code',
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
-            'code': code or self.code,
-            'redirect_uri': redirect_uri or self.redirect_uri,
-            'scope': self.scope,
-            })
-        headers = {
-            'content-type': 'application/x-www-form-urlencoded',
-        }
-        http = httplib2.Http()
+        if code and redirect_uri != None:
+            self.auth.prepend({'code': code, 'redirect_uri': redirect_uri})
 
-        resp, content = http.request(self.token_uri, method='POST', body=body,
-                                     headers=headers)
-        if resp.status == 200:
-            d = dict([el.split('=') for el in content.split('&')])
-            access_token = d['access_token']
-            refresh_token = d.get('refresh_token', None)
-            token_expiry = None
-            if 'expires' in d:
-                token_expiry = datetime.datetime.utcnow() + datetime.timedelta(
-                                                    seconds=int(d['expires']))
+        error = ''
+        for auth in self.auth:
+            body = urllib.urlencode({
+                'grant_type': 'authorization_code',
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'code': auth['code'],
+                'redirect_uri': auth['redirect_uri'],
+                'scope': self.scope
+                })
+            headers = {
+                'content-type': 'application/x-www-form-urlencoded',
+            }
+            http = httplib2.Http(timeout=1)
 
-            self._credentials = OAuth2Credentials(access_token, self.client_id,
-                                     self.client_secret, refresh_token, token_expiry,
-                                     self.token_uri, self.user_agent,
-                                     id_token=d.get('id_token', None))
-            return self._credentials
-        else: raise FlowExchangeError(str(content))
+            resp, content = http.request(self.token_uri, method='POST', body=body,
+                                         headers=headers)
+            if resp.status == 200:
+                d = dict([el.split('=') for el in content.split('&')])
+                access_token = d['access_token']
+                refresh_token = d.get('refresh_token', None)
+                token_expiry = None
+                if 'expires' in d:
+                    token_expiry = datetime.datetime.utcnow() + datetime.timedelta(
+                                                        seconds=int(d['expires']))
+
+                self._credentials = OAuth2Credentials(access_token, self.client_id,
+                                         self.client_secret, refresh_token, token_expiry,
+                                         self.token_uri, self.user_agent,
+                                         id_token=d.get('id_token', None))
+                return self._credentials
+            else: error = error + str(content) + "\n"
+        else: raise FlowExchangeError(error)
 
     @property
     def credentials(self):

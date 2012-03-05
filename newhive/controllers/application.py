@@ -121,11 +121,9 @@ class ApplicationController(object):
         # just came from facebook via a redirect, rather than the cookie set by the
         # javascript sdk, which could be older
         if request.args.has_key('code'):
-            user.fb_client.code = request.args['code']
-            user.fb_client.redirect_uri = request.base_url
-        elif fb_cookie:
-            user.fb_client.code = fb_cookie.get('code')
-            user.fb_client.redirect_uri = ''
+            user.fb_client.add_auth(request.args['code'], request.base_url)
+        if fb_cookie:
+            user.fb_client.add_auth(fb_cookie.get('code'), '')
 
     def _get_fb_cookie(self, request):
         cookie = auth.get_cookie(request, 'fbsr_' + config.facebook_app_id)
