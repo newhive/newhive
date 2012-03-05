@@ -14,17 +14,19 @@
     <form name='logout_form' action='{{ secure_server }}' method='POST'>
       <input name='action' value='logout' type='hidden'>
     </form>
-    {% if user.has_facebook %}
-    <div class='menu_item facebook' id='fb_listen_menu_item'>
-      <div class="fb_icon"></div>Find friends
-    </div>
-    <div class='menu_item facebook' id='fb_invite_menu_item'>
-      <div class="fb_icon"></div>Invite friends
-    </div>
-    {% else %}
-    <div class='menu_item facebook' id='fb_connect_menu_item'>
-      <div class="fb_icon"></div>Connect with Facebook
-    </div>
+    {% if admin %}
+        {% if user.has_facebook %}
+        <div class='menu_item facebook' id='fb_listen_menu_item'>
+          <div class="fb_icon"></div>Find friends
+        </div>
+        <div class='menu_item facebook' id='fb_invite_menu_item'>
+          <div class="fb_icon"></div>Invite friends
+        </div>
+        {% else %}
+        <div class='menu_item facebook' id='fb_connect_menu_item'>
+          <div class="fb_icon"></div>Connect with Facebook
+        </div>
+        {% endif %}
     {% endif %}
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
