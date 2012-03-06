@@ -31,6 +31,9 @@ email_server    = 'localhost'
 email_user      = False
 email_password  = False
 
+facebook_app_id = None
+facebook_client_secret = None
+
 use_ga          = False
 signup_group    = 2
 

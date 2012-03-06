@@ -43,7 +43,7 @@ class ApplicationController(object):
         return getattr(self, method)(request, response)
 
     def serve_data(self, response, mime, data):
-        response.mimetype = 'mime'
+        response.content_type = mime
         response.data = data
         return response
 
