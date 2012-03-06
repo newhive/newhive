@@ -71,7 +71,12 @@ class FacebookClient(object):
                 )
 
     def authorize_url(self, redirect_url):
-        return self.flow.step1_get_authorize_url(redirect_url)
+        body = urllib.urlencode({
+            'client_id': self.client_id
+            , 'redirect_uri': redirect_url
+            , 'scope': self.scope
+            })
+        return self.auth_uri + "?" + body
 
     @property
     def access_token(self):
