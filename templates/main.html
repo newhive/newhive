@@ -3,6 +3,7 @@
 
 {% block head %}
 <script>
+  var fb_logged_in = false;
   window.fbAsyncInit = function() {
     FB.init({
       appId      : {{facebook_app_id}}, // App ID
@@ -11,7 +12,11 @@
       cookie     : true, // enable cookies to allow the server to access the session
       xfbml      : true  // parse XFBML
     });
-
+    FB.getLoginStatus(function(data){
+        if (data.authResponse && data.authResponse.userID == fb_id) {
+            fb_logged_in = true;
+        }
+    });
     // Additional initialization code here
   };
 
