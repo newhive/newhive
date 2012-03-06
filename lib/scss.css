@@ -707,16 +707,17 @@ input[type="text"].copy, textarea.copy {
   width: 300px;
   padding: 7px;
   padding-left: 0;
+  border: none;
   float: left;
   margin-right: 20px;
   font-size: 16px;
 }
-/* line 321, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 322, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .friend img {
   vertical-align: middle;
   margin-right: 5px;
 }
-/* line 326, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 327, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .names {
   display: inline-block;
   vertical-align: middle;
@@ -726,16 +727,16 @@ input[type="text"].copy, textarea.copy {
   white-space: nowrap;
   width: 193px;
 }
-/* line 335, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 336, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .facebook_name {
   font-size: 19px;
   margin-bottom: 3px;
 }
-/* line 339, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 340, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .username {
   font-size: 12px;
 }
-/* line 342, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 343, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .invite_fb_link {
   float: right;
   font-weight: bold;
@@ -744,21 +745,21 @@ input[type="text"].copy, textarea.copy {
   margin-right: 25px;
   cursor: pointer;
 }
-/* line 349, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 350, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .invite_fb_link img {
   vertical-align: middle;
 }
-/* line 350, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 351, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .invite_fb_link:hover {
   color: white;
   background-color: #3c5a98;
 }
-/* line 355, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 356, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen #listen_to_all {
   font-size: 17px;
   margin: 10px 0 17px 0;
 }
-/* line 360, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 361, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .listen {
   width: 37px;
   height: 31px;
@@ -772,56 +773,56 @@ input[type="text"].copy, textarea.copy {
   -khtml-border-radius: 3px;
   border-radius: 3px;
 }
-/* line 367, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 368, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .listen:hover {
   background: #f72e4d url("/lib/skin/1/people_small-hover.png");
 }
-/* line 370, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 371, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .listen.active {
   background: url("/lib/skin/1/people_small_active.png");
 }
-/* line 372, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 373, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .listen.active:hover {
   background: #f72e4d url("/lib/skin/1/people_small_active-hover.png");
 }
 
-/* line 379, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 380, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join {
   padding: 20px;
 }
-/* line 381, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 382, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join img {
   width: 70px;
   height: 70px;
 }
-/* line 385, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 386, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join h3 {
   text-align: center;
   font-size: 22px;
 }
-/* line 388, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 389, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join h3 .line1 {
   font-weight: bold;
 }
-/* line 391, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 392, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join h3 .line2 {
   color: #f72e4d;
 }
-/* line 395, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 396, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .main_fields {
   height: 350px;
 }
-/* line 398, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 399, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .field {
   margin-left: auto;
   margin-right: auto;
 }
-/* line 401, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 402, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .field label {
   display: block;
   font-weight: bold;
 }
-/* line 407, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 408, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join #expires_and_recovery label, #dia_sign_in_or_join #expires_and_recovery a {
   display: inline;
   font-weight: normal;
@@ -829,37 +830,37 @@ input[type="text"].copy, textarea.copy {
   color: #696e76;
   margin-right: 12px;
 }
-/* line 416, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 417, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join input[type=submit] {
   float: right;
 }
-/* line 417, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 418, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .column {
   overflow: auto;
   float: left;
   padding: 0 40px;
 }
-/* line 422, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 423, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .left {
   border-right: 1px solid #D1D1D1;
 }
-/* line 423, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 424, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .left .field {
   width: 240px;
 }
-/* line 424, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 425, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .left input[type=text], #dia_sign_in_or_join .left input[type=password] {
   width: 220px;
 }
-/* line 428, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 429, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .right .field {
   width: 270px;
 }
-/* line 429, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 430, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .right input[type=text], #dia_sign_in_or_join .right input[type=password] {
   width: 250px;
 }
-/* line 431, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 432, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .name {
   display: none;
 }
