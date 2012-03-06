@@ -24,15 +24,22 @@ body.home.logged_out .nav{
 #user_menu .referral_count {
   color: $color_active;
   padding-left: 30px;
+  float: right;
 }
-#user_menu .fb_icon {
-  display: inline-block;
-  vertical-align: middle;
-  width: 25px;
-  height: 25px;
-  margin-right: 5px;
-  background: url('/lib/skin/1/facebook_flat_sm.png') no-repeat -1px -2px;
+#user_menu {
+  .fb_icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 25px;
+    height: 25px;
+    margin-right: 5px;
+    background: url('/lib/skin/1/facebook_flat_sm.png') no-repeat -1px -2px;
+  }
+  .fb_icon_title {
+      font-size: 19px;
+  }
 }
+
 
 #user_menu .menu_item.facebook{
   &:hover {

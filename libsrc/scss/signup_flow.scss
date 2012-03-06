@@ -9,8 +9,12 @@
   font-size: 18px;
 }
 
+body.invited{
+  background: url('/lib/skin/1/congratulations_tnh.jpg') repeat-x bottom;
+  min-height: 644px;
+}
+
 #example_expressions{
-  background: url('/lib/skin/1/congratulations_tnh.jpg') repeat-x;
   height: 257px;
-  margin-top: 100px;
+  margin-top: 50px;
 }

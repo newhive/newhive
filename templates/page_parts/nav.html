@@ -14,19 +14,17 @@
     <form name='logout_form' action='{{ secure_server }}' method='POST'>
       <input name='action' value='logout' type='hidden'>
     </form>
-    {% if admin %}
-        {% if user.has_facebook %}
-        <div class='menu_item facebook' id='fb_listen_menu_item'>
-          <div class="fb_icon"></div>Find friends
+    {% if user.has_facebook %}
+        <div class='menu_item facebook menu_hover' id='fb_invite_menu_item'>
+          <div class="fb_icon"></div><span class="fb_icon_title">Invite friends</span>
         </div>
-        <div class='menu_item facebook' id='fb_invite_menu_item'>
-          <div class="fb_icon"></div>Invite friends
+        <div class='menu_item facebook' id='fb_listen_menu_item'>
+          <div class="fb_icon"></div><span class="fb_icon_title">Find friends</span>
         </div>
         {% else %}
-        <div class='menu_item facebook' id='fb_connect_menu_item'>
-          <div class="fb_icon"></div>Connect with Facebook
+        <div class='menu_item facebook menu_hover' id='fb_connect_menu_item'>
+          <div class="fb_icon"></div><span class="fb_icon_title">Connect with Facebook</span>
         </div>
-        {% endif %}
     {% endif %}
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
@@ -89,7 +87,9 @@
   <div id='login_menu' class='menu top'>
     <form id='login_form' action='{{ secure_server }}' method='POST'>
       {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
-      {#<a href="{{facebook_authentication_url}}"><img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;"></a>#}
+      {#
+      <a href="{{facebook_authentication_url}}"><img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;"></a>
+      #}
       <b>Username</b><br>
       <input id='username' type='text' name='username' value='{{ user['name'] }}'>
       <div class='spacer'></div>

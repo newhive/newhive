@@ -2,7 +2,7 @@ import httplib2, os, urllib, datetime, json
 
 from apiclient.discovery import build
 from oauth2client.file import Storage
-from oauth2client.client import OAuth2WebServerFlow, OAuth2Credentials, FlowExchangeError
+from oauth2client.client import OAuth2WebServerFlow, OAuth2Credentials, FlowExchangeError, AccessTokenCredentialsError
 from oauth2client import tools
 
 from newhive import config
@@ -20,7 +20,6 @@ class GAClient(object):
         self.credentials = self.storage.get()
 
         if self.credentials is None or self.credentials.invalid == True:
-            print self.credentials
             flow = OAuth2WebServerFlow(
                 client_id='350420752663-ou6fksfmbv8cpf22ou6t5aebduc661km.apps.googleusercontent.com',
                 client_secret='sD5aL7o27yZAj-O7Ik08cKWO',
@@ -96,7 +95,7 @@ class FacebookClient(object):
 
     def exchange(self, code=None, redirect_uri=None):
         if code and redirect_uri != None:
-            self.auth.prepend({'code': code, 'redirect_uri': redirect_uri})
+            self.auth = [{'code': code, 'redirect_uri': redirect_uri}] + self.auth
 
         error = ''
         for auth in self.auth:
@@ -154,40 +153,48 @@ class FacebookClient(object):
     def ready_to_exchange(self):
         return self.code and self.redirect_uri != None
 
-    def request(self, api_url, credentials=None, app_access=False, method="GET"):
+    def request(self, api_url, query={}, credentials=None, app_access=False, method="GET"):
         if credentials: self.credentials = credentials
         if not app_access and self.credentials.access_token_expired:
             raise httplib2.HttpLib2Error('Access token expired')
 
         h = httplib2.Http()
         if app_access:
-            head, content = h.request(api_url + "?access_token=" + self.access_token, method=method)
+            request_url = api_url + "?access_token=" + self.access_token
         else:
-            h = self.credentials.authorize(h)
-            head, content = h.request(api_url, method=method)
-        return (head, content)
+            request_url = api_url + "?access_token=" + self.credentials.access_token
+
+        for item in query.iteritems():
+            request_url += '&' + str(item[0])+ '=' + str(item[1])
+
+        head, content = h.request(request_url, method=method)
+
+        if head.get('status') == '200':
+            return (head, content)
+        else:
+            print "Facebook Error: " + str(content)
+            raise AccessTokenCredentialsError(content)
 
     get = request
 
-    def find(self, api_url, credentials=None, app_access=False):
-        head, content = self.get(api_url, credentials, app_access)
-        if head.get('status') != '200': return False
+    def find(self, api_url, query={}, credentials=None, app_access=False):
+        head, content = self.get(api_url, query, credentials, app_access)
         return json.loads(content)
 
-    def post(self, api_url, credentials=None, app_access=False):
-        return self.request(api_url, credentials, app_access, method="POST")
+    def post(self, api_url, query={}, credentials=None, app_access=False):
+        return self.request(api_url, query, credentials, app_access, method="POST")
 
-    def delete(self, api_url, credentials=None, app_access=False):
-        return self.request(api_url, credentials, app_access, method="DELETE")
+    def delete(self, api_url, query={}, credentials=None, app_access=False):
+        return self.request(api_url, query, credentials, app_access, method="DELETE")
 
-    def put(self, api_url, credentials=None, app_access=False):
-        return self.request(api_url, credentials, app_access, method="PUT")
+    def put(self, api_url, query={}, credentials=None, app_access=False):
+        return self.request(api_url, query, credentials, app_access, method="PUT")
 
-    def fql(self, query, credentials = None, app_access=False):
-        return self.find('https://graph.facebook.com/fql?q=' + urllib.quote(query), credentials, app_access)
+    def fql(self, f_query, credentials = None, app_access=False):
+        return self.find('https://graph.facebook.com/fql' , {'q': urllib.quote(f_query)}, credentials, app_access)
 
-    def me(self, query='', credentials = None):
-        return self.find(urllib.basejoin('https://graph.facebook.com/me', str(query)), credentials)
+    def me(self, path='', query={}, credentials = None):
+        return self.find(urllib.basejoin('https://graph.facebook.com/me', str(path)), query, credentials)
 
     def friends(self):
         if not self.credentials: raise Exception('Facebook credentials invalid')

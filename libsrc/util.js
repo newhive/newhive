@@ -381,6 +381,8 @@ $(function () {
   place_apps();
 
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
+  if (dialog_to_show) { showDialog(dialog_to_show); };
+  if (new_fb_connect) { loadDialogPost('facebook_listen'); };
   // This completely breaks the site on Ios, and is annoying
   // Also likely to be seen by logged out users
   //else if (!logged_in) {
@@ -429,7 +431,7 @@ function img_fill(img) {
 
 function asyncSubmit(form, callback) {
     var url = $(form).attr('action')? $(form).attr('action') : server_url
-    $.post(url, $(form).serialize(), callback);
+    $.post(url, $(form).serialize(), callback, 'text');
     return false;
 }
 

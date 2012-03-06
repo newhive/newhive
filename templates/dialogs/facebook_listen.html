@@ -17,6 +17,7 @@
     </div>
     #}
     <div class="friends">
+      <p class="error">{{error | e}}</p>
       {%- for friend in friends -%}
         <div class="friend">
           <img class="thumb facebook" src="{{friend.fb_thumb}}"/>

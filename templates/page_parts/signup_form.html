@@ -1,5 +1,5 @@
- <form id="signup_form" action='{{ secure_server }}' method='POST'>
-  <input type='hidden' name='forward' value=''/>
+<form {% if form_id%}id="{{form_id}}"{% endif %} class='signup_form' action='{{ secure_server }}' method='POST'>
+  <input type='hidden' name='forward' value='{{url}}'/>
   <input type='hidden' name='action' value='mail_us'/>
   <div class="field name">
       <label for='name'>Name</label>
@@ -23,7 +23,29 @@
   </div>
   <div class="field submit">
       <div class='spacer'></div>
-      <div><input type='submit' id='send_msg' class='btn black rounded' value='Send'></div>
+      <div><input type='submit' id='send_msg' class='signup_submit btn black rounded' value='Send'></div>
   </div>
- </form>
+</form>
+<script>
+    $(function(){
+        $('.signup_form').submit(function() {
+            if($(this).hasClass('inactive')) { return false; }
+            $(this).addClass('inactive');
+            var callback = function(that){
+                return function(data){
+                    $(that).find('.signup_submit').removeClass('inactive');
+                    if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
+                    else {
+                        $(that).find('input[name=message]').val('');
+                        createCookie('signup_completed', true);
+                        $(that).parents('.dialog').find('.btn_dialog_close').click();
+                        showDialog(data);
+                    }
+                }
+            };
+            return asyncSubmit($(this), callback(this));
+         });
+    });
+</script>
+
 
