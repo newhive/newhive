@@ -16,14 +16,18 @@ class MailController(ApplicationController):
             ,'message': request.form.get('message')
             ,'url': request.form.get('forward')
             }
-        args = url_decode(form['url'].split('?')[1])
-        if args.has_key('code'):
-            try:
+
+        try: # this step is really not neccessary, so ignore errors
+            args = form['url'].split('?')
+            if len(args) > 1:
+                args = url_decode(args[1])
+            if hasattr(args, 'has_key') and args.has_key('code'):
                 request.requester.fb_client.exchange(code=args['code'], redirect_uri=form['url'])
                 form.update({'facebook': request.requester.fb_client.me()})
-            except Exception as e:
-                print e
-                pass # this step is really not neccessary, so ignore errors
+        except Exception as e:
+            print e
+            pass
+
         heads = {
              'To' : 'info@thenewhive.com'
             ,'From' : 'www-data@' + config.server_name
