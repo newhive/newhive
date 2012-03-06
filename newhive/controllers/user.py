@@ -303,4 +303,6 @@ class UserController(ApplicationController):
             response.context['friends'] = request.requester.facebook_friends
         except AccessTokenCredentialsError:
             response.context['error'] = 'Something went wrong finding your friends.  Either you have deauthorized The New Hive on your Facebook account or this is a temporary issue and you can try again later.'
+        except FlowExchangeError:
+            response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
         return self.serve_page(response, 'dialogs/facebook_listen.html')
