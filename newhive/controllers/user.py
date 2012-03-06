@@ -2,7 +2,7 @@ import crypt, pickle, urllib
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.utils import normalize, junkstr
-from newhive.oauth import FacebookClient, FlowExchangeError
+from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 from newhive import mail
 
 class UserController(ApplicationController):
@@ -143,24 +143,25 @@ class UserController(ApplicationController):
                     friends = request.requester.fb_client.friends()
                 except FlowExchangeError as e:
                     return self.redirect(response, FacebookClient().authorize_url(abs_url(secure=True) + "settings"))
-                users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
-                response.context['listening_count'] = 0
-                response.context['friends'] = []
-                for user in users:
-                    if user.id in request.requester.starred_user_ids:
-                        response.context['listening_count'] += 1
-                    else:
-                        response.context['friends'].append(user)
+                except AccessTokenCredentialsError as e:
+                    print e
+                else:
+                    users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
+                    response.context['listening_count'] = 0
+                    response.context['friends'] = []
+                    for user in users:
+                        if user.id in request.requester.starred_user_ids:
+                            response.context['listening_count'] += 1
+                        else:
+                            response.context['friends'].append(user)
             return self.serve_page(response, 'pages/user_settings.html')
 
     def facebook_canvas(self, request, response, args={}):
-        params = request.args
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited?request_ids=' + str(request.args.get('request_ids')) + '";</script></html>')
 
     def invited_from_facebook(self, request, response, args={}):
         if request.requester.logged_in: return self.redirect(response, request.requester.url)
         fbc = request.requester.fb_client
-        params = request.args
         request_ids = request.args.get('request_ids').split(',')
         valid_request = False
         for request_id in request_ids:
@@ -298,5 +299,8 @@ class UserController(ApplicationController):
         return self.serve_page(response, 'pages/error.html')
 
     def facebook_listen(self, request, response, args=None):
-        response.context['friends'] = request.requester.facebook_friends
+        try:
+            response.context['friends'] = request.requester.facebook_friends
+        except AccessTokenCredentialsError:
+            response.context['error'] = 'Something went wrong finding your friends.  Either you have deauthorized The New Hive on your Facebook account or this is a temporary issue and you can try again later.'
         return self.serve_page(response, 'dialogs/facebook_listen.html')

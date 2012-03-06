@@ -10,7 +10,7 @@ from bson.code import Code
 from crypt import crypt
 from itertools import ifilter, imap
 from oauth2client.client import OAuth2Credentials
-from newhive.oauth import FacebookClient
+from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
@@ -450,7 +450,10 @@ class User(HasSocial):
     def facebook_disconnect(self):
         if self.facebook_credentials and not self.facebook_credentials.access_token_expired:
             fbc = FacebookClient()
-            fbc.delete('https://graph.facebook.com/me/permissions', self.facebook_credentials)
+            try:
+                fbc.delete('https://graph.facebook.com/me/permissions', self.facebook_credentials)
+            except (FlowExchangeError, AccessTokenCredentialsError) as e:
+                print e
             self.facebook_credentials = None
         self.update_cmd({'$set': {'facebook.disconnected': True}})
         self.update_cmd({'$unset': {'oauth.facebook': 1}})
