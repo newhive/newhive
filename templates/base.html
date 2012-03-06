@@ -31,8 +31,6 @@ input[type=button], input[type=submit] { border : none; }
 .border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
 .selected { border-color : {{ colors['selected'] }}; }
 .medbold { font-weight : bold; font-size : 1.2em; }
-.btn { padding:5px 10px; font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default;}
-.btn.inactive { background-color : {{ colors[24] }}; }
 .rounded {
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
@@ -40,7 +38,6 @@ input[type=button], input[type=submit] { border : none; }
     border-radius: 5px;
 }
 .black { background-color : black; color : white; }
-.btn.black:hover { color : {{ colors[1] }}; background-color : {{ colors[32] }}; }
 .error, .active { color : {{ colors['active'] }}; }
 .inactive { color : {{ colors[24] }}; }
 #user { position : fixed; display : inline-block; }

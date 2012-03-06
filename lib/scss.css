@@ -27,9 +27,10 @@ body.home.logged_out .nav {
 #user_menu .referral_count {
   color: #f72e4d;
   padding-left: 30px;
+  float: right;
 }
 
-/* line 28, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 30, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .fb_icon {
   display: inline-block;
   vertical-align: middle;
@@ -38,31 +39,35 @@ body.home.logged_out .nav {
   margin-right: 5px;
   background: url("/lib/skin/1/facebook_flat_sm.png") no-repeat -1px -2px;
 }
-
 /* line 38, /home/duffy/2newhive/libsrc/scss/nav.scss */
+#user_menu .fb_icon_title {
+  font-size: 19px;
+}
+
+/* line 45, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .menu_item.facebook:hover {
   background-color: #3c5a98;
   color: white;
 }
 
-/* line 44, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 51, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .nav .nav_icon.has_count {
   position: relative;
 }
 
-/* line 48, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 55, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .nav .notification_count {
   display: inline-block;
   padding: 3px 5px 2px 5px;
   vertical-align: middle;
 }
 
-/* line 54, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 61, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .nav_icon .username:hover {
   background: #FFF673;
 }
 
-/* line 59, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 66, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #btn_star .icon {
   height: 50px;
   float: left;
@@ -70,34 +75,34 @@ body.home.logged_out .nav {
   background-image: url("/lib/skin/1/star.png");
 }
 
-/* line 65, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 72, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #btn_star.starred .icon {
   background-image: url("/lib/skin/1/star_active.png");
 }
 
-/* line 68, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 75, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #btn_star.active.starred .icon, #btn_star.active .icon {
   background-image: url("/lib/skin/1/star-hover.png");
 }
 
-/* line 73, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 80, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .expr_cards #btn_star .icon {
   background-image: url("/lib/skin/1/people.png");
 }
-/* line 74, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 81, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .expr_cards #btn_star.active .icon {
   background-image: url("/lib/skin/1/people-hover.png");
 }
-/* line 75, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 82, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .expr_cards #btn_star.starred .icon {
   background-image: url("/lib/skin/1/people_active.png");
 }
-/* line 76, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 83, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .expr_cards #btn_star.starred.active .icon {
   background-image: url("/lib/skin/1/people_active-hover.png");
 }
 
-/* line 79, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 86, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_small.icon {
   position: relative;
   top: 2px;
@@ -105,21 +110,21 @@ body.home.logged_out .nav {
   height: 31px;
   background-image: url("/lib/skin/1/people_small.png");
 }
-/* line 85, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 92, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_small.icon:hover {
   background-image: url("/lib/skin/1/people_small-hover.png");
 }
 
-/* line 87, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 94, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_small.starred.icon {
   background-image: url("/lib/skin/1/people_small_active.png");
 }
-/* line 89, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 96, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_small.starred.icon:hover {
   background-image: url("/lib/skin/1/people_small_active-hover.png");
 }
 
-/* line 92, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 99, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count .count {
   color: #FFF;
   -moz-border-radius: 6px;
@@ -134,38 +139,38 @@ body.home.logged_out .nav {
   background: #696E76;
 }
 
-/* line 105, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 112, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count .count.zero {
   display: none;
 }
 
-/* line 108, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 115, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count.zero {
   margin-right: -8px;
 }
 
-/* line 111, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 118, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count img {
   float: left;
 }
 
-/* line 114, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 121, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #search {
   position: relative;
   display: inline-block;
 }
 
-/* line 118, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 125, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .logged_out #search {
   left: -25px;
 }
 
-/* line 121, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 128, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #search_box {
   width: 200px;
 }
 
-/* line 124, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 131, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #search_submit {
   display: inline-block;
   width: 22px;
@@ -173,7 +178,7 @@ body.home.logged_out .nav {
   background-image: url("lib/skin/1/search_arrow.png");
   vertical-align: middle;
 }
-/* line 130, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 137, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #search_submit:hover {
   background-image: url("lib/skin/1/search_arrow-hover.png");
 }
@@ -1483,10 +1488,15 @@ input[type="text"].copy, textarea.copy {
 }
 
 /* line 12, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
+body.invited {
+  background: url("/lib/skin/1/congratulations_tnh.jpg") repeat-x bottom;
+  min-height: 644px;
+}
+
+/* line 17, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
 #example_expressions {
-  background: url("/lib/skin/1/congratulations_tnh.jpg") repeat-x;
   height: 257px;
-  margin-top: 100px;
+  margin-top: 50px;
 }
 
 /* line 2, /home/duffy/2newhive/libsrc/scss/profile.scss */
