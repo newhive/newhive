@@ -87,7 +87,9 @@
   <div id='login_menu' class='menu top'>
     <form id='login_form' action='{{ secure_server }}' method='POST'>
       {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
+      {#
       <a href="{{facebook_authentication_url}}"><img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;"></a>
+      #}
       <b>Username</b><br>
       <input id='username' type='text' name='username' value='{{ user['name'] }}'>
       <div class='spacer'></div>
