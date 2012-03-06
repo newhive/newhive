@@ -22,12 +22,15 @@ class ApplicationController(object):
                 # if logged in, then connect facebook account if not already connected
                 if not request.requester.has_facebook:
                     request.requester.save_credentials(request.requester.fb_client.exchange(), profile=True)
+                    response.context['new_fb_connect'] = True
             else:
                 # if not logged in, try logging in with facebook credentials
                 fb_client = request.requester.fb_client
                 request.requester = auth.facebook_login(self.db, request, response)
                 fb_client.user = request.requester
                 request.requester.fb_client = fb_client
+                if not request.requester.id:
+                    response.context['dialog_to_show'] = '#dia_sign_in_or_join'
         response.context.update(facebook_authentication_url=self.fb_client.authorize_url(request.base_url))
         response.user = request.requester
         response.headers.add('Access-Control-Allow-Origin', '*')

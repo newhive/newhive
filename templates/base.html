@@ -50,7 +50,11 @@ input[type=button], input[type=submit] { border : none; }
 html, body { background-color : white; height : 100%; }
  </style>
 
- <script>var logged_in = {{ 'true' if user.logged_in else 'false'}}, server_name = '{{ server_name }}', server_url = '{{ secure_server }}', debug_mode = {{ 'true' if debug else 'false' }};</script>
+ <script>
+     var logged_in = {{ 'true' if user.logged_in else 'false'}}, server_name = '{{ server_name }}', server_url = '{{ secure_server }}', debug_mode = {{ 'true' if debug else 'false' }};
+     var dialog_to_show = '{{dialog_to_show}}';
+     var new_fb_connect = {{ "true" if new_fb_connect else "false"}};
+ </script>
  {% for item in assets_env["app.js"].urls() %}
    <script src='{{ item }}'></script>
  {% endfor %}
