@@ -113,7 +113,7 @@ function loadDialogPost(name, opts) {
             var html = h;
             dia = loadDialog.loaded[name] = $(html);
             showDialog(dia,opts);
-        });
+        }, 'text');
     }
 }
 
