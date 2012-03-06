@@ -130,7 +130,9 @@ class FacebookClient(object):
                                          id_token=d.get('id_token', None))
                 return self._credentials
             else: error = error + str(content) + "\n"
-        else: raise FlowExchangeError(error)
+        else:
+            print error
+            raise FlowExchangeError(error)
 
     @property
     def credentials(self):
