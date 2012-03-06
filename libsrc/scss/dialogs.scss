@@ -369,6 +369,9 @@ input[type="text"].copy, textarea.copy {
     }
     &.active {
       background: url("/lib/skin/1/people_small_active.png");
+      &:hover {
+        background: $color_active url("/lib/skin/1/people_small_active-hover.png");
+      }
     }
   }
 }

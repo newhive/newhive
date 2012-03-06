@@ -7,8 +7,8 @@
         </div>
     </div>
     <div class='line'>
-        <div class='btn hoverable black rounded' id="listen_to_all">Listen to all my friends</div>
-        {#<input type="checkbox" id='listen_to_friends'/>
+        {#<div class='btn hoverable black rounded' id="listen_to_all">Listen to all my friends</div>
+        <input type="checkbox" id='listen_to_friends'/>
         <label for="listen_to_friends" class="active">{{ui.listen_to_all_friends | e}}</label>#}
     </div>
     <div class="fb-facepile" data-max-rows="1" data-width="300"></div>
@@ -25,7 +25,8 @@
               <div class='facebook_name'>{{- friend.facebook.name -}}</div>
               <div class='username'>{{- friend.name -}}</div>
           </div>
-          <div data-id="{{friend.id}}" class="listen"></div>
+          {% set listening = True if friend.id in user.starred_user_ids else False %}
+          <div data-id="{{friend.id}}" class="listen {{'active' if listening}}" title="{{'Stop' if listening else 'Start'}} Listening"></div>
         </div>
       {%- endfor -%}
     </div>
@@ -42,9 +43,17 @@
         $('#dia_facebook_listen .listen').click(function(){
             var action = ($(this).hasClass('active') ? 'unstar' : 'star' );
             var entity = $(this).data('id');
-            $.post('', {action: action, entity: entity, entity_class: 'User'}, function(data){
-                console.log(data);
-            });
+            var callback = function(that){
+                return function(data){
+                    if (data.state == 'starred') {
+                        $(that).addClass('active').attr('title', 'Stop Listening');
+                    }
+                    else if (data.state == 'unstarred') {
+                        $(that).removeClass('active').attr('title', 'Start Listening');
+                    };
+                }
+            };
+            $.post('', {action: action, entity: entity, entity_class: 'User', dataType: 'json'}, callback(this), 'json');
         });
         $('.invite_fb_link').click(function(){
             $('#dia_facebook_listen .btn_dialog_close').click();

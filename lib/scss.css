@@ -775,44 +775,48 @@ input[type="text"].copy, textarea.copy {
 #dia_facebook_listen .listen.active {
   background: url("/lib/skin/1/people_small_active.png");
 }
+/* line 372, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_facebook_listen .listen.active:hover {
+  background: #f72e4d url("/lib/skin/1/people_small_active-hover.png");
+}
 
-/* line 376, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 379, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join {
   padding: 20px;
 }
-/* line 378, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 381, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join img {
   width: 70px;
   height: 70px;
 }
-/* line 382, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 385, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join h3 {
   text-align: center;
   font-size: 22px;
 }
-/* line 385, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 388, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join h3 .line1 {
   font-weight: bold;
 }
-/* line 388, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 391, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join h3 .line2 {
   color: #f72e4d;
 }
-/* line 392, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 395, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .main_fields {
   height: 350px;
 }
-/* line 395, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 398, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .field {
   margin-left: auto;
   margin-right: auto;
 }
-/* line 398, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 401, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .field label {
   display: block;
   font-weight: bold;
 }
-/* line 404, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 407, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join #expires_and_recovery label, #dia_sign_in_or_join #expires_and_recovery a {
   display: inline;
   font-weight: normal;
@@ -820,37 +824,37 @@ input[type="text"].copy, textarea.copy {
   color: #696e76;
   margin-right: 12px;
 }
-/* line 413, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 416, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join input[type=submit] {
   float: right;
 }
-/* line 414, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 417, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .column {
   overflow: auto;
   float: left;
   padding: 0 40px;
 }
-/* line 419, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 422, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .left {
   border-right: 1px solid #D1D1D1;
 }
-/* line 420, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 423, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .left .field {
   width: 240px;
 }
-/* line 421, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 424, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .left input[type=text], #dia_sign_in_or_join .left input[type=password] {
   width: 220px;
 }
-/* line 425, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 428, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .right .field {
   width: 270px;
 }
-/* line 426, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 429, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .right input[type=text], #dia_sign_in_or_join .right input[type=password] {
   width: 250px;
 }
-/* line 428, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+/* line 431, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .name {
   display: none;
 }

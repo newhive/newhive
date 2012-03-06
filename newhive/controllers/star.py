@@ -28,17 +28,19 @@ class StarController(ApplicationController):
         else:
             entity = self.db.Expr.named(request.domain.lower(), request.path.lower())
 
+        s = self.db.Star.find({'initiator': request.requester.id, 'entity': entity.id})
+
         if request.form.get('action') == "star":
-            s = self.db.Star.create(request.requester, entity)
-            if s or s.get('entity'):
-                response.context['user'] = request.requester
-                return self.render_template(response, 'partials/user_card.html')
-            else:
-                return False
+            if not s: s = self.db.Star.create(request.requester, entity)
+            state = 'starred'
+        elif request.form.get('action') == "unstar":
+           if s: s.delete()
+           state = 'unstarred'
+
+        if request.form.get('dataType') == 'json':
+            return {'state': state}
         else:
-           s = self.db.Star.find(dict(initiator=request.requester.id, entity=entity.id))
-           if s:
-               res = s.delete()
-               if not res['err']: return {'unstarred': request.requester.id}
-           else:
-               return {'unstarred': request.requester.id}
+            if state == 'starred':
+                return self.render_template(response, 'partials/user_card.html')
+            elif state == 'unstarred':
+                return {'unstarred': request.requester.id}
