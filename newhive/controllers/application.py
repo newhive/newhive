@@ -125,7 +125,7 @@ class ApplicationController(object):
         # javascript sdk, which could be older
         if request.args.has_key('code'):
             user.fb_client.add_auth(request.args['code'], request.base_url)
-        if fb_cookie:
+        if fb_cookie and fb_cookie.get('user_id') == user.facebook_id:
             user.fb_client.add_auth(fb_cookie.get('code'), '')
 
     def _get_fb_cookie(self, request):
