@@ -37,7 +37,7 @@
   {% endif %}
 
   {{ share_button(exp.share_count) }}
-  {{ star_button(exp.star_count, exp.id in user.starred_item_ids, user.logged_in) }} 
+  {{ star_button(exp.star_count, exp.id in user.starred_expr_ids, user.logged_in) }} 
   {{ discussion_button(exp.comment_count) }}
   {% if user.logged_in %}
   {{ create_button(create) }}  
