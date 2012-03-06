@@ -1,6 +1,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from werkzeug import url_unquote
+from werkzeug.urls import url_decode
 from newhive.mail import send_mail, mail_signup_thank_you
 
 
@@ -15,6 +16,14 @@ class MailController(ApplicationController):
             ,'message': request.form.get('message')
             ,'url': request.form.get('forward')
             }
+        args = url_decode(form['url'].split('?')[1])
+        if args.has_key('code'):
+            try:
+                request.requester.fb_client.exchange(code=args['code'], redirect_uri=form['url'])
+                form.update({'facebook': request.requester.fb_client.me()})
+            except Exception as e:
+                print e
+                pass # this step is really not neccessary, so ignore errors
         heads = {
              'To' : 'info@thenewhive.com'
             ,'From' : 'www-data@' + config.server_name

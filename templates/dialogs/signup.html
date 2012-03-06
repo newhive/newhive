@@ -1,5 +1,6 @@
 <div id='dia_signup' class='dialog border selected' style='padding : 0px 30px 25px 30px; width : 350px'>
  <h2 style='font-family : Museo; font-size : 30px; white-space : nowrap;'>Want to join<br>The New Hive?<br>Request a beta account.</h2>
+ {% set form_id='signup_form' %}
  {% include 'page_parts/signup_form.html' %}
 </div>
 
@@ -12,19 +13,5 @@ $(function() {
      $('input[name=forward]').val(window.location);
  });
  
- $('#signup_form').submit(function() {
-    if($(this).hasClass('inactive')) { return false; }
-    $(this).addClass('inactive');
-    return asyncSubmit($('#signup_form'), function(data) {
-        $('#send_msg').removeClass('inactive');
-        if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
-        else {
-            $('#message').val('');
-            createCookie('signup_completed', true);
-            dia.close();
-            showDialog(data);
-        }
-    });
  });
-});
 </script>
