@@ -30,7 +30,7 @@
     {% endif %}
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
-        Invitations<span class="referral_count">{{ user.referrals }}</span>
+        <div class='invites'>Invitations</div><span class="referral_count">{{ user.referrals }}</span>
       </div>
     {% endif %}
     <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
