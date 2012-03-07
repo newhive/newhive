@@ -61,6 +61,12 @@
             };
             $.post('', {action: action, entity: entity, entity_class: 'User', dataType: 'json'}, callback(this), 'json');
         });
+        $('#listen_to_all').click(function(){
+            if (! $(this).hasClass('disabled') ) {
+                $('#listen_to_all').html('Thank you').addClass('disabled');
+                $('#dia_facebook_listen .listen').not('.active').click();
+            }
+        });
         if (new_fb_connect) {
             $('#dia_facebook_listen .congratulations').show();
         };

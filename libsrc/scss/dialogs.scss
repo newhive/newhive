@@ -363,7 +363,7 @@ input[type="text"].copy, textarea.copy {
       float: right;
       background-color: $color_active;
       color: white;
-      &:hover {
+      &:hover, &.disabled {
           background-color: $color_blue;
           color: white;
       }
