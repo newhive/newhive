@@ -1,6 +1,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive import analytics
+from newhive.utils import now
 import operator as op
 
 class AnalyticsController(ApplicationController):
@@ -28,7 +29,7 @@ class AnalyticsController(ApplicationController):
         return self.serve_page(response, 'pages/analytics/active_users.html')
 
     def invites(self, request, response):
-        invites = list(self.db.Referral.search({}))
+        invites = list(self.db.Referral.search({'created': {'$gt': now() - 60*60*24*30 } }))
         cache = {}
 
         for item in invites:
