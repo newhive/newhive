@@ -300,10 +300,19 @@ class UserController(ApplicationController):
         return self.serve_page(response, 'pages/error.html')
 
     def facebook_listen(self, request, response, args=None):
+        friends = None
         try:
-            response.context['friends'] = request.requester.facebook_friends
+            friends = list(request.requester.facebook_friends)
         except AccessTokenCredentialsError:
-            response.context['error'] = 'Something went wrong finding your friends.  Either you have deauthorized The New Hive on your Facebook account or this is a temporary issue and you can try again later.'
+            try:
+                credentials = request.requester.fb_client.exchange()
+                if credentials: request.requester.save_credentials(credentials)
+                friends = list(request.requester.facebook_friends)
+            except (AccessTokenCredentialsError, FlowExchangeError) as e:
+                print e
+                response.context['error'] = 'Something went wrong finding your friends.  Either you have deauthorized The New Hive on your Facebook account or this is a temporary issue and you can try again later.'
         except FlowExchangeError:
             response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
+        if friends and len(friends):
+            response.context['friends'] = friends
         return self.serve_page(response, 'dialogs/facebook_listen.html')
