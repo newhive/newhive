@@ -296,7 +296,7 @@ var profile_thumb_choose = function(){
      {% endif %}
      {% if update %}
        {% if not user.facebook or not user.oauth or not user.oauth.facebook%}
-         {% if admin %}
+         {% if beta_tester %}
          <a href="{{facebook_authentication_url}}"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
          {% endif %}
        {% else %}

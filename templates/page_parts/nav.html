@@ -14,7 +14,7 @@
     <form name='logout_form' action='{{ secure_server }}' method='POST'>
       <input name='action' value='logout' type='hidden'>
     </form>
-    {% if admin %}
+    {% if beta_tester %}
     {% if user.has_facebook %}
         <div class='menu_item facebook menu_hover' id='fb_invite_menu_item'>
           <div class="fb_icon"></div><span class="fb_icon_title">Invite friends</span>
