@@ -212,7 +212,7 @@ class UserController(ApplicationController):
             self._friends_to_listen(request, user)
             message = message + "You are now listening to " + str(new_friends) + " facebook friend" + ("s " if new_friends > 1 else " ")
         if request.form.get('fb_disconnect'):
-            message = message + "Your facebook account has been disconnected.  Sign in using your New Hive username and password from now on."
+            message = message + "Your facebook account has been disconnected. This means you'll have to sign in using your New Hive username and password in the future."
             user.facebook_disconnect()
             user.reload()
         response.context['message'] = message
