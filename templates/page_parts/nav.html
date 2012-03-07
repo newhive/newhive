@@ -14,6 +14,7 @@
     <form name='logout_form' action='{{ secure_server }}' method='POST'>
       <input name='action' value='logout' type='hidden'>
     </form>
+    {% if admin %}
     {% if user.has_facebook %}
         <div class='menu_item facebook menu_hover' id='fb_invite_menu_item'>
           <div class="fb_icon"></div><span class="fb_icon_title">Invite friends</span>
@@ -30,6 +31,7 @@
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
         Invitations<span class="referral_count">{{ user.referrals }}</span>
       </div>
+    {% endif %}
     {% endif %}
     <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
     <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
