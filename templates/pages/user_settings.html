@@ -266,13 +266,19 @@ var profile_thumb_choose = function(){
        {% endif %}
    
    {% if update %}
+     {% if user.has_facebook %}
+       <div style="margin-bottom:20px; font-size:13px;">
+         <input name="fb_disconnect" type="checkbox"><label for="fb_disconnect">Disconnect your Facebook Account</label>
+         <input name="fb_disconnect_allow_finding" type="hidden">
+       </div>
+     {% endif %}
      <input class='black btn rounded' type='submit' value='Save Changes' >
    {% else %}
      <input class='black btn rounded' type='submit' value='Create Account'>
    {% endif %}
    </div>
    <div class="column" id="column_3">
-     {% if friends or listening_count %}
+     {% if friends and not update%}
        <h3>Listen to your Friends:</h3>
        {% if listening_count and listening_count > 0 %}
        <p>You are already listening to {{listening_count}} facebook friend{{"s" if listening_count>1}}</p>
@@ -294,10 +300,6 @@ var profile_thumb_choose = function(){
          <a href="{{facebook_authentication_url}}"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
          {% endif %}
        {% else %}
-         <div style="margin-top:20px;">
-           <input name="fb_disconnect" type="checkbox"><label for="fb_disconnect">Disconnect your Facebook Account</label>
-           <input name="fb_disconnect_allow_finding" type="hidden">
-         </div>
        {% endif %}
      {% endif %}
    </div>

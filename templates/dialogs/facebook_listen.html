@@ -1,23 +1,28 @@
 <div id='dia_facebook_listen' class='dialog border selected'>
-    <div class='line'>
-        <h1>Facebook friends:</h1>
+    <div class='congratulations active line' style="display: none;">
+        <h1 style="font-size: 24px;">Your Facebook account is now connected.</h1>
+    </div>
+    <div class='line' style='margin-bottom:15px;'>
+        <h1>Listen to your Facebook friends:</h1>
+    </div>
+    <div class='line line2'>
         <div class='invite_fb_link'>
             <img src='/lib/skin/1/facebook_flat_sm.png' alt="Facebook Logo">
             Invite friends from Facebook
         </div>
+        {% if friends %}
+        <div class='btn black rounded' id='listen_to_all'>Listen to all my friends</div>
+        {% endif %}
     </div>
-    <div class='line'>
-        {#<div class='btn hoverable black rounded' id="listen_to_all">Listen to all my friends</div>
-        <input type="checkbox" id='listen_to_friends'/>
-        <label for="listen_to_friends" class="active">{{ui.listen_to_all_friends | e}}</label>#}
-    </div>
-    <div class="fb-facepile" data-max-rows="1" data-width="300"></div>
-    {#    <div class="no_friends">
-        None of your Facebook friends are connected to The New Hive
-    </div>
-    #}
     <div class="friends">
-      <p class="error">{{error | e}}</p>
+      {% if not friends %}
+        <p class="message" style="margin: 0;">None of your Facebook friends are currently signed
+            up on The New Hive (or they haven't connected their Facebook
+            accounts yet). Click the button above to invite your friends.</p>
+      {% endif %}
+      {% if error %}
+        <p class="error">{{error | e}}</p>
+      {% endif %}
       {%- for friend in friends -%}
         <div class="friend">
           <img class="thumb facebook" src="{{friend.fb_thumb}}"/>
@@ -56,6 +61,9 @@
             };
             $.post('', {action: action, entity: entity, entity_class: 'User', dataType: 'json'}, callback(this), 'json');
         });
+        if (new_fb_connect) {
+            $('#dia_facebook_listen .congratulations').show();
+        };
         $('.invite_fb_link').click(function(){
             $('#dia_facebook_listen .btn_dialog_close').click();
             sendRequestViaMultiFriendSelector();
