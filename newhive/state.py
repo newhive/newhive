@@ -709,7 +709,7 @@ def generate_thumb(file, size):
     except:
         print "failed to opem image file " + str(file)
         return False
-    print "Thumbnail Generation:   initial size: " + str(imo.size),
+    #print "Thumbnail Generation:   initial size: " + str(imo.size),
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     if imo.mode != 'RGB':
@@ -717,8 +717,8 @@ def generate_thumb(file, size):
         imo = imo.convert(mode='RGBA')
         imo = Img.composite(imo, bg, imo)
     dt = time.time() - t0
-    print "   final size:   " + str(imo.size),
-    print "   conversion took " + str(dt*1000) + " ms"
+    #print "   final size:   " + str(imo.size),
+    #print "   conversion took " + str(dt*1000) + " ms"
 
     output = os.tmpfile()
     imo.save(output, format='jpeg', quality=70)
