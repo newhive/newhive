@@ -100,7 +100,8 @@ class UserController(ApplicationController):
         user.give_invites(5)
         if args.has_key('thumb_file_id'):
             file = self.db.File.fetch(args.get('thumb_file_id'))
-            file.update(owner=user.id)
+            if file:
+                file.update(owner=user.id)
 
         try: mail.mail_user_register_thankyou(self.jinja_env, user)
         except: pass # TODO: log an error
