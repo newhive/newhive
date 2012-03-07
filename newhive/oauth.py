@@ -48,7 +48,7 @@ class FacebookClient(object):
     def __init__(self, code=None, redirect_uri=None, user=None):
         self.client_id = config.facebook_app_id
         self.client_secret = config.facebook_client_secret
-        self.scope = 'email,publish_actions'
+        self.scope = 'email'
         self.auth_uri = 'https://www.facebook.com/dialog/oauth'
         self.token_uri = 'https://graph.facebook.com/oauth/access_token'
         self.default_redirect_uri = abs_url(secure=True)
@@ -71,7 +71,12 @@ class FacebookClient(object):
                 )
 
     def authorize_url(self, redirect_url):
-        return self.flow.step1_get_authorize_url(redirect_url)
+        body = urllib.urlencode({
+            'client_id': self.client_id
+            , 'redirect_uri': redirect_url
+            , 'scope': self.scope
+            })
+        return self.auth_uri + "?" + body
 
     @property
     def access_token(self):
