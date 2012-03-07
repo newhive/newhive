@@ -21,6 +21,9 @@ body.home.logged_out .nav{
   top: 8px;
   left: 2px;
 }
+#user_menu .invites {
+  float: left;
+}
 #user_menu .referral_count {
   color: $color_active;
   padding-left: 30px;
@@ -38,6 +41,10 @@ body.home.logged_out .nav{
   .fb_icon_title {
       font-size: 19px;
   }
+  .menu_item {
+      clear: both;
+      overflow: hidden;
+      }
 }
 
 

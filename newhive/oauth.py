@@ -140,7 +140,7 @@ class FacebookClient(object):
 
     @property
     def credentials(self):
-        if self._credentials and not self._credentials.access_token_expired:
+        if self._credentials and not self._credentials.access_token_expired and not self._credentials.invalid:
             return self._credentials
         else:
             #if self.ready_to_exchange:
@@ -202,5 +202,4 @@ class FacebookClient(object):
         return self.find(urllib.basejoin('https://graph.facebook.com/me', str(path)), query, credentials)
 
     def friends(self):
-        if not self.credentials: raise Exception('Facebook credentials invalid')
         return self.fql("""SELECT name,uid FROM user WHERE is_app_user = '1' AND uid IN (SELECT uid2 FROM friend WHERE uid1 =me())""").get('data')

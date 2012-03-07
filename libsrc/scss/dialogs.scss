@@ -300,6 +300,7 @@ input[type="text"].copy, textarea.copy {
       display: inline;
       font-size: 35px;
       font-family: Museo, Helvetica, Arial, sans-serif;
+      margin-bottom: 15px;
   }
   img.thumb {
       width: 50px;
@@ -341,10 +342,9 @@ input[type="text"].copy, textarea.copy {
       font-size: 12px;
   }
   .invite_fb_link {
-      float: right;
+      float: left;
       font-weight: bold;
       padding-right: 8px;
-      margin-top: 13px;
       margin-right: 25px;
       cursor: pointer;
       img { vertical-align: middle; }
@@ -353,9 +353,20 @@ input[type="text"].copy, textarea.copy {
           background-color: $color_facebook; 
       } 
   }
+  .line2 {
+      margin-bottom: 22px;
+      overflow: auto;
+  }
   #listen_to_all {
       font-size: 17px;
-      margin: 10px 0 17px 0;
+      margin: 0 55px 0 0;
+      float: right;
+      background-color: $color_active;
+      color: white;
+      &:hover, &.disabled {
+          background-color: $color_blue;
+          color: white;
+      }
   }
 
   .listen {

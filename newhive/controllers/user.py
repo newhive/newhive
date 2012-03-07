@@ -212,7 +212,7 @@ class UserController(ApplicationController):
             self._friends_to_listen(request, user)
             message = message + "You are now listening to " + str(new_friends) + " facebook friend" + ("s " if new_friends > 1 else " ")
         if request.form.get('fb_disconnect'):
-            message = message + "Your facebook account has been disconnected.  Sign in using your New Hive username and password from now on."
+            message = message + "Your facebook account has been disconnected. This means you'll have to sign in using your New Hive username and password in the future."
             user.facebook_disconnect()
             user.reload()
         response.context['message'] = message
@@ -300,10 +300,19 @@ class UserController(ApplicationController):
         return self.serve_page(response, 'pages/error.html')
 
     def facebook_listen(self, request, response, args=None):
+        friends = None
         try:
-            response.context['friends'] = request.requester.facebook_friends
+            friends = list(request.requester.facebook_friends)
         except AccessTokenCredentialsError:
-            response.context['error'] = 'Something went wrong finding your friends.  Either you have deauthorized The New Hive on your Facebook account or this is a temporary issue and you can try again later.'
+            try:
+                credentials = request.requester.fb_client.exchange()
+                if credentials: request.requester.save_credentials(credentials)
+                friends = list(request.requester.facebook_friends)
+            except (AccessTokenCredentialsError, FlowExchangeError) as e:
+                print e
+                response.context['error'] = 'Something went wrong finding your friends.  Either you have deauthorized The New Hive on your Facebook account or this is a temporary issue and you can try again later.'
         except FlowExchangeError:
             response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
+        if friends and len(friends):
+            response.context['friends'] = friends
         return self.serve_page(response, 'dialogs/facebook_listen.html')
