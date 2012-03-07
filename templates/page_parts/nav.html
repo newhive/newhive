@@ -27,11 +27,11 @@
           <div class="fb_icon"></div><span class="fb_icon_title">Connect with Facebook</span>
         </div>
     {% endif %}
+    {% endif %}
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
         Invitations<span class="referral_count">{{ user.referrals }}</span>
       </div>
-    {% endif %}
     {% endif %}
     <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
     <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
