@@ -674,7 +674,6 @@ class Expr(HasSocial):
         return self.update(updated=False, domain=re.sub(r'([^.]+\.[^.]+)$', domain, self['domain']))
 
     def get_comments(self):
-        if not self.has_key('feed'): return []
         comments = self.db.Comment.search({'entity': self.id})
         try:
             comments_accurate = len(comments) == self['analytics']['Comment']['count']
