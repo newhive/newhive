@@ -33,6 +33,8 @@ beta_testers    = [
                   , 'v908'
                   , 'test'
                   ]
+beta_testers = admins + beta_testers
+
 site_user       = 'thenewhive'
 admins.append(site_user)
 site_pages      = {
