@@ -980,6 +980,23 @@ class UpdatedExpr(Feed):
 class FriendJoined(Feed):
     pass
 
+@Database.register
+class SystemMessage(Feed):
+    class Collection(Feed.Collection):
+        def create(self, image, message, entity=None, recipients=None):
+            initiator = self.db.User.get_root()
+            data = {'image': image, 'message': message}
+            if recipients == 'All':
+                recipients = self.db.User.search({})
+                count = 0
+                for entity in recipients:
+                    count += 1
+                    super(SystemMessage.Collection, self).create(initiator, entity, data)
+                return count
+            elif entity:
+                return super(SystemMessage.Collection, self).create(initiator, entity, data)
+
+
 
 @Database.register
 class Referral(Entity):
