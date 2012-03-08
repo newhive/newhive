@@ -3,6 +3,9 @@ from newhive import config, oauth
 from newhive.utils import junkstr
 from newhive.oauth import FacebookClient, FlowExchangeError
 
+import logging
+logger = logging.getLogger(__name__)
+
 def authenticate_request(db, request, response):
     """Read session id from 'identity' cookie, retrieve session record from db,
        compare session secret with plain_secret or secure_secret, returns
@@ -51,6 +54,7 @@ def facebook_login(db, request, response):
         fb_profile = request.requester.fb_client.me()
         user = db.User.find_by_facebook(fb_profile.get('id'))
     except FlowExchangeError as e:
+        logger.error("Flow exchange error during facebook login: %s", e)
         user = None
         response.context['error'] = 'Either something went wrong with facebook login or your facebook account is not connect to The New Hive'
 

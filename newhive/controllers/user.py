@@ -5,6 +5,9 @@ from newhive.utils import normalize, junkstr
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 from newhive import mail
 
+import logging
+logger = logging.getLogger(__name__)
+
 class UserController(ApplicationController):
 
     def index(self, request, response, args={}):
@@ -51,8 +54,7 @@ class UserController(ApplicationController):
                         , 'tmp_file': tmp_file
                         , 'mime': profile_picture.headers.type})
             except IOError as e:
-                print "Error downloading fb profile picture " + profile_picture_url
-                print e
+                logger.error("Error downloading fb profile picture '%s': %s", profile_picture_url, e)
                 profile_picture = None
             response.context['f'] = dfilter(fb_profile, ['email'])
             response.context['f']['fullname'] = fb_profile['name']
@@ -309,9 +311,10 @@ class UserController(ApplicationController):
                 if credentials: request.requester.save_credentials(credentials)
                 friends = list(request.requester.facebook_friends)
             except (AccessTokenCredentialsError, FlowExchangeError) as e:
-                print e
+                logger.error("Error generating friends to listen dialog for '%s': %s", request.requester['name'], e)
                 response.context['error'] = 'Something went wrong finding your friends.  Either you have deauthorized The New Hive on your Facebook account or this is a temporary issue and you can try again later.'
         except FlowExchangeError:
+            logger.error("Error generating friends to listen dialog for '%s': %s", request.requester['name'], e)
             response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
         if friends and len(friends):
             response.context['friends'] = friends
