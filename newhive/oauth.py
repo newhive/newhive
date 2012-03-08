@@ -106,6 +106,8 @@ class FacebookClient(object):
             self.auth = [{'code': code, 'redirect_uri': redirect_uri}] + self.auth
 
         error = ''
+        if len(self.auth) == 0:
+            raise FlowExchangeError("Can't exchange without auth code")
         for auth in self.auth:
             body = urllib.urlencode({
                 'grant_type': 'authorization_code',
