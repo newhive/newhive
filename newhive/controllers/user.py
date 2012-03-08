@@ -140,6 +140,7 @@ class UserController(ApplicationController):
             response.context['action'] = 'update'
             response.context['f'] = request.requester
             response.context['facebook_connect_url'] = FacebookClient().authorize_url(
+                                                           abs_url(secure=True)+ 'settings')
             return self.serve_page(response, 'pages/user_settings.html')
 
     def facebook_canvas(self, request, response, args={}):
