@@ -107,12 +107,18 @@ function loadDialogPost(name, opts) {
     var dia;
     if(loadDialog.loaded[name]) {
         dia = loadDialog.loaded[name];
+    } 
+    if (dia && !opts.reload) {
         showDialog(dia,opts);
     } else {
         $.post(window.location, {action: 'dialog', dialog: name}, function(h){
             var html = h;
-            dia = loadDialog.loaded[name] = $(html);
-            showDialog(dia,opts);
+            if (dia && opts.reload ) {
+                dia.filter('div').replaceWith($(html).filter('div'));
+            } else {
+                dia = loadDialog.loaded[name] = $(html);
+                showDialog(dia,opts);
+            }
         }, 'text');
     }
 }
