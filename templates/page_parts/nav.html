@@ -40,19 +40,12 @@
     hover_menu(
       $('#user_menu_handle'), 
       $('#user_menu'), 
-      { offsetY: 10
-        , click_persist: '#fb_invite_menu_item'
-        , close: function(){$('#fb_invite_menu_item, #fb_listen_menu_item').removeClass('menu_hover');} 
-      }
+      { offsetY: 10 }
     );
     $('#fb_invite_menu_item').click(function(e){
-      e.stopPropagation();
-      $(this).addClass('menu_hover');
       sendRequestViaMultiFriendSelector();
     });
     $('#fb_connect_menu_item').click(function(e){
-      e.stopPropagation();
-      $(this).addClass('menu_hover');
       showDialog('#dia_facebook_connect');
     });
     $('#fb_listen_menu_item').click(function(e){
