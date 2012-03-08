@@ -172,7 +172,6 @@ var profile_thumb_choose = function(){
 
 {% block content %}
  <div  class='fathead'>
-   <p class="active" id="error">{{message |e}}</p>
    {% if not update %}
    <div id='profile_thumb'>
      <a href="#" onclick="profile_thumb_choose(); return false;" alt="Choose Picture">
@@ -186,6 +185,7 @@ var profile_thumb_choose = function(){
    {% endif %}
    <div class="title"><h1>{{ ui.create_account_title if action == 'create' else "+ " ~ ui.update_account_title }}</h1></div>
  </div>
+ <p class="active" id="error">{{message |e}}</p>
 
  <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
 
