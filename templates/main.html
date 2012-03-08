@@ -82,6 +82,9 @@
       {% if dialog_to_show == '#dia_fb_account_duplicate' %}
           {% include 'dialogs/fb_account_duplicate.html' %}
       {% endif %}
+      {% if new_fb_connect or debug %}
+          {% include 'dialogs/fb_connect_landing.html' %}
+      {% endif %}
     {% endblock dialogs %}
   </div>
 {% endblock main %}

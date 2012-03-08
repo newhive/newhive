@@ -105,10 +105,11 @@ loadDialog.loaded = {};
 
 function loadDialogPost(name, opts) {
     var dia;
+    opts = $.extend({reload: false, hidden: false}, opts);
     if(loadDialog.loaded[name]) {
         dia = loadDialog.loaded[name];
     } 
-    if (dia && !opts.reload) {
+    if (dia && !opts.reload && !opts.hidden) {
         showDialog(dia,opts);
     } else {
         $.post(window.location, {action: 'dialog', dialog: name}, function(h){
@@ -117,7 +118,9 @@ function loadDialogPost(name, opts) {
                 dia.filter('div').replaceWith($(html).filter('div'));
             } else {
                 dia = loadDialog.loaded[name] = $(html);
-                showDialog(dia,opts);
+                if (!opts.hidden){
+                    showDialog(dia,opts);
+                }
             }
         }, 'text');
     }
@@ -148,7 +151,8 @@ function showDialog(name, opts) {
                 mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
 
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
-            dialog.addClass('dialog border selected').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            if (! dialog.hasClass('newdialog')) dialog.addClass('dialog border selected');
+            dialog.detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
             if(!o.opts.mandatory) {
                 o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
                 o.shield.add(o.btn_close).click(o.close);
@@ -388,7 +392,7 @@ $(function () {
 
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
   if (dialog_to_show) { showDialog(dialog_to_show); };
-  if (new_fb_connect) { loadDialogPost('facebook_listen'); };
+  if (new_fb_connect) { showDialog('#dia_fb_connect_landing'); };
   // This completely breaks the site on Ios, and is annoying
   // Also likely to be seen by logged out users
   //else if (!logged_in) {

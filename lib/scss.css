@@ -895,6 +895,83 @@ input[type="text"].copy, textarea.copy {
   display: none;
 }
 
+/* line 452, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.newdialog {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  max-width: 700px;
+  padding: 30px 20px;
+  background-color: white;
+  border: 5px solid #96e2ce;
+  -moz-box-shadow: 5px 5px 5px #666666;
+  -webkit-box-shadow: 5px 5px 5px #666666;
+  -o-box-shadow: 5px 5px 5px #666666;
+  box-shadow: 5px 5px 5px #666666;
+  text-align: center;
+}
+/* line 463, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.newdialog h1, .newdialog h2 {
+  font-family: Museo, sans-serif;
+  letter-spacing: -1px;
+  margin: 0;
+}
+/* line 468, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.newdialog h1 {
+  font-size: 42px;
+}
+/* line 469, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.newdialog h2 {
+  font-size: 34px;
+}
+/* line 470, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+.newdialog p {
+  margin: 10px 0 20px 0;
+}
+
+/* line 474, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_fb_connect_landing .line {
+  clear: both;
+  overflow: hidden;
+  *zoom: 1;
+  margin-top: 10px;
+}
+/* line 479, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_fb_connect_landing .button, #dia_fb_connect_landing .fb_icon {
+  float: left;
+}
+/* line 480, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_fb_connect_landing .fb_icon {
+  width: 50px;
+  height: 50px;
+}
+/* line 482, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_fb_connect_landing .button_wrapper {
+  width: 280px;
+}
+/* line 483, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_fb_connect_landing .button {
+  padding: 15px;
+  margin-left: 5px;
+  width: 194px;
+  height: 21px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 18px;
+  background-color: #3c5a98;
+  color: white;
+  cursor: default;
+}
+/* line 496, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_fb_connect_landing .button_wrapper:hover .button {
+  background-color: #fff673;
+  color: #f72e4d;
+}
+/* line 500, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
+#dia_fb_connect_landing p {
+  margin-bottom: 27px;
+}
+
 /* line 1, /home/duffy/2newhive/libsrc/scss/tags.scss */
 #tags {
   margin: 35px 20px 0 0;
@@ -1587,7 +1664,7 @@ body.invited {
 }
 
 /* line 26 */
-img.centered {
+img.centered, div.centered {
   display: block;
   margin-left: auto;
   margin-right: auto;

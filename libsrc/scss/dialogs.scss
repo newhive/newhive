@@ -4,7 +4,7 @@
 
 
 /* === Container element === */
-#dialogs { display : none; }
+#dialogs { display: none; }
 
 /* === click shield element === */
 #dialog_shield{
@@ -448,3 +448,55 @@ input[type="text"].copy, textarea.copy {
   }
   .name { display: none; }
 }
+
+.newdialog {
+    display: none; 
+    position: absolute;
+    z-index: 2; 
+    max-width: 700px;
+    padding: 30px 20px;
+    background-color : white;
+    border: 5px solid $color_selected;
+    @include box-shadow(05px 05px 05px #666);
+
+    text-align: center;
+    h1, h2 {
+        font-family: Museo, sans-serif;
+        letter-spacing: -1px;
+        margin: 0;
+    }
+    h1 { font-size: 42px; }
+    h2 { font-size: 34px; }
+    p { margin: 10px 0 20px 0; }
+}
+
+#dia_fb_connect_landing {
+  .line { 
+      clear: both;
+      @include clearfix;
+      margin-top: 10px;
+  }
+  .button, .fb_icon { float: left; }
+  .fb_icon { width: 50px; height: 50px; }
+  $button_width: 280px;
+  .button_wrapper { width: $button_width; }
+  .button { 
+      $padding: 15px;
+      padding: $padding;
+      margin-left: 5px;
+      width: $button_width - 56px - 2 * $padding; 
+      height: 51px - 2*$padding; 
+      text-align: left;
+      font-weight: bold;
+      font-size: 18px;
+      background-color: $color_facebook;
+      color: white;
+      cursor: default;
+  }
+  .button_wrapper:hover .button {
+      background-color: $color_highlight;
+      color: $color_active;
+  }
+  p { margin-bottom: 27px; }
+}
+
