@@ -469,7 +469,7 @@ class User(HasSocial):
     @property
     def facebook_friends(self):
         friends = self.fb_client.friends()
-        return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
+        return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}, 'facebook.disconnected': {'$exists': False}})
 
     @property
     def expressions(self):
