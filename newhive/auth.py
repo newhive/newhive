@@ -49,7 +49,7 @@ def facebook_login(db, request, response):
     request.fbc = oauth.FacebookClient()
     try:
         fb_profile = request.requester.fb_client.me()
-        user = db.User.find({'facebook.id': fb_profile.get('id'), 'facebook.disconnected': {'$exists': False}})
+        user = db.User.find_by_facebook(fb_profile.get('id'))
     except FlowExchangeError as e:
         user = None
         response.context['error'] = 'Either something went wrong with facebook login or your facebook account is not connect to The New Hive'

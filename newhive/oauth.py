@@ -121,6 +121,7 @@ class FacebookClient(object):
                                          headers=headers)
             if resp.status == 200:
                 d = dict([el.split('=') for el in content.split('&')])
+                print d
                 access_token = d['access_token']
                 refresh_token = d.get('refresh_token', None)
                 token_expiry = None

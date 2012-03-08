@@ -170,6 +170,7 @@ def handle(request): # HANDLER
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
             elif reqaction != 'logout':
+               print reqaction
                print "************************would return status 204 here*************************"
                #return Response(status=204) # 204 status = no content
 

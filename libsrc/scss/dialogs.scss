@@ -20,6 +20,7 @@
   display: none; 
   position:absolute;
   z-index:2; 
+  width: 500px;
   background-color : white;
   -moz-box-shadow: 05px 05px 05px #666;
   -webkit-box-shadow: 05px 05px 05px #666;
@@ -28,6 +29,10 @@
   .line { margin: 7px 0; clear: both;}
   .line .element { float: left; }
   .line .label {float:left; margin-top: 6px; margin-right:4px;}
+  h1 { 
+      font-family: Museo, serif;
+      text-align: center;
+  }
 }
 
 .btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png");

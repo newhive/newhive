@@ -79,6 +79,9 @@
       {% include 'dialogs/signup.html' %}
       {% include 'dialogs/ie_warning.html' %}
       {% include 'dialogs/share.html' %}
+      {% if dialog_to_show == '#dia_fb_account_duplicate' %}
+          {% include 'dialogs/fb_account_duplicate.html' %}
+      {% endif %}
     {% endblock dialogs %}
   </div>
 {% endblock main %}

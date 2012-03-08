@@ -271,6 +271,8 @@ class User(HasSocial):
 
     class Collection(Collection):
         def named(self, name): return self.find({'name' : name})
+        def find_by_facebook(self, id):
+            return self.find({'facebook.id': id, 'facebook.disconnected': {'$exists': False}}) 
         def get_root(self): return self.named('root')
         root_user = property(get_root)
 
