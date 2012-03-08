@@ -717,7 +717,7 @@ function sendRequestViaMultiFriendSelector() {
   function requestCallback(response) {
     $('#dia_referral .btn_dialog_close').click();
     if (response){
-      console.log(response);
+      showDialog('#dia_sent_invites_thanks');
       $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
     }
   }
