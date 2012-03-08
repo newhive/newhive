@@ -140,23 +140,6 @@ class UserController(ApplicationController):
             response.context['action'] = 'update'
             response.context['f'] = request.requester
             response.context['facebook_connect_url'] = FacebookClient().authorize_url(
-                                                           abs_url(secure=True)+ 'settings')
-            if request.requester.has_facebook:
-                try:
-                    friends = request.requester.fb_client.friends()
-                except FlowExchangeError as e:
-                    return self.redirect(response, FacebookClient().authorize_url(abs_url(secure=True) + "settings"))
-                except AccessTokenCredentialsError as e:
-                    print e
-                else:
-                    users = self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
-                    response.context['listening_count'] = 0
-                    response.context['friends'] = []
-                    for user in users:
-                        if user.id in request.requester.starred_user_ids:
-                            response.context['listening_count'] += 1
-                        else:
-                            response.context['friends'].append(user)
             return self.serve_page(response, 'pages/user_settings.html')
 
     def facebook_canvas(self, request, response, args={}):
