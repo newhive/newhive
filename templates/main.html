@@ -68,17 +68,27 @@
   
   <div id='dialogs'>
     {% block dialogs %}
-      {% if user.logged_in %}
-        {% include 'dialogs/referral.html' %}
-        {% include 'dialogs/facebook_connect.html' %}
-      {% else %}
-          {% include 'dialogs/sign_in_or_join.html' %}
-      {% endif %}
-      {% include 'dialogs/password.html' %}
-      {% include 'dialogs/password_recovery.html' %}
-      {% include 'dialogs/signup.html' %}
       {% include 'dialogs/ie_warning.html' %}
       {% include 'dialogs/share.html' %}
+
+      {% if user.logged_in %}
+          {% include 'dialogs/referral.html' %}
+          {% include 'dialogs/facebook_connect.html' %}
+          {% include 'dialogs/sent_invites_thanks.html' %}
+      {% else %}
+          {% include 'dialogs/sign_in_or_join.html' %}
+          {% include 'dialogs/signup.html' %}
+          {% include 'dialogs/password.html' %}
+          {% include 'dialogs/password_recovery.html' %}
+      {% endif %}
+
+      {% if dialog_to_show == '#dia_fb_account_duplicate' %}
+          {% include 'dialogs/fb_account_duplicate.html' %}
+      {% endif %}
+
+      {% if new_fb_connect %}
+          {% include 'dialogs/fb_connect_landing.html' %}
+      {% endif %}
     {% endblock dialogs %}
   </div>
 {% endblock main %}

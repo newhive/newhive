@@ -170,6 +170,7 @@ def handle(request): # HANDLER
             if type(r) == Response: return r
             if r != None: return serve_json(response, r, as_text = True)
             elif reqaction != 'logout':
+               print reqaction
                print "************************would return status 204 here*************************"
                #return Response(status=204) # 204 status = no content
 
@@ -185,7 +186,7 @@ def handle(request): # HANDLER
         elif p1 == 'file': return serve_404(request, response)
         elif p1 == 'edit' and request.requester.logged_in:
             return controllers['expression'].default(request, response, {'method': 'edit'})
-        elif p1 == 'signup': return controllers['user'].new(request, response)
+        elif p1 == 'create_account': return controllers['user'].new(request, response)
         elif p1 == 'settings': return controllers['user'].edit(request, response)
         elif p1 == 'feedback': return serve_page(response, 'pages/feedback.html')
         elif p1 == 'email_confirmation': return controllers['user'].confirm_email(request, response)
@@ -202,7 +203,8 @@ def handle(request): # HANDLER
         elif p1 == 'search': return controllers['expression'].search(request, response)
         elif p1 == 'oauth':  return controllers['user'].facebook_connect(request, response)
         elif p1 == 'fbcanvas':  return controllers['user'].facebook_canvas(request, response)
-        elif p1 == 'invited': return controllers['user'].invited_from_facebook(request, response)
+        elif p1 == 'invited': return controllers['user'].invited(request, response)
+        elif p1 == 'signup': return controllers['user'].invited(request, response)
         elif p1 == 'robots.txt' and config.debug_mode: return application_controller.serve_robots(response)
         else: return serve_404(request, response)
 
