@@ -14,9 +14,11 @@
     $(function(){
         loadDialogPost('facebook_listen', {hidden: true})
         $('#dia_fb_connect_landing .invite').click(function(){
+            _gaq.push(['_trackEvent', 'fb_connect', 'click_invite', 'landing_dialog']);
             $('#fb_invite_menu_item').click();
         });
         $('#dia_fb_connect_landing .find').click(function(){
+            _gaq.push(['_trackEvent', 'fb_connect', 'click_listen', 'landing_dialog']);
             $('#fb_listen_menu_item').click();
         });
     });

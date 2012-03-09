@@ -8,7 +8,9 @@
         <span class='active'>+</span> Find / be found by your facebook friends and listen to each other.<br/>
         <span class='active'>+</span> Share your expressions more easily and expand your audience.
     </p>
-    <a href="{{facebook_authentication_url}}"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
+    <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'dialog']);">
+        <img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/>
+    </a>
     <p class='centered smallprint'>
         We will NEVER post to Facebook without your permission, and you can
         easily change <br/>your settings at any time and disconnect your account if

@@ -61,6 +61,7 @@
             var callback = function(that){
                 return function(data){
                     if (data.state == 'starred') {
+                        _gaq.push(['_trackEvent', 'fb_connect', 'listen_to_freind', $(that).data('id')]);
                         $(that).addClass('active').attr('title', 'Stop Listening');
                     }
                     else if (data.state == 'unstarred') {
@@ -72,12 +73,14 @@
         });
         $('#listen_to_all').click(function(){
             if (! $(this).hasClass('disabled') ) {
+                _gaq.push(['_trackEvent', 'fb_connect', 'listen_to_all_freinds']);
                 $('#listen_to_all').html('Thank you').addClass('disabled');
                 $('#dia_facebook_listen .listen').not('.active').click();
             }
         });
         $('.invite_fb_link').click(function(){
             $('#dia_facebook_listen .btn_dialog_close').click();
+            _gaq.push(['_trackEvent', 'fb_connect', 'click_invite', 'listen_dialog']);
             sendRequestViaMultiFriendSelector();
         });
     </script>

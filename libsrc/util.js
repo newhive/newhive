@@ -392,7 +392,10 @@ $(function () {
 
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
   if (dialog_to_show) { showDialog(dialog_to_show); };
-  if (new_fb_connect) { showDialog('#dia_fb_connect_landing'); };
+  if (new_fb_connect) {
+      _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
+      showDialog('#dia_fb_connect_landing');
+  };
   // This completely breaks the site on Ios, and is annoying
   // Also likely to be seen by logged out users
   //else if (!logged_in) {
@@ -717,6 +720,7 @@ function sendRequestViaMultiFriendSelector() {
   function requestCallback(response) {
     $('#dia_referral .btn_dialog_close').click();
     if (response){
+      _gaq.push(['_trackEvent', 'fb_connect', 'invite_friends', undefined, response.to.length]);
       showDialog('#dia_sent_invites_thanks');
       $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
     }
