@@ -1,0 +1,25 @@
+<div id="dia_fb_connect_landing" class='newdialog centered'>
+    <h2>You are now connected to <span class=active>Facebook</span>!</h2>
+    <p>The party is always better if your freinds are there:</p>
+    <div class="line centered button_wrapper invite">
+        <img class='fb_icon' src='/lib/skin/1/facebook_flat_lg.png' alt='Facebook Icon'>
+        <div class='button'>Invite your friends</div>
+    </div>
+    <div class="line centered button_wrapper find">
+        <img class='fb_icon' src='/lib/skin/1/facebook_flat_lg.png' alt='Facebook Icon'>
+        <div class='button'>Find friends on TNH</div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        loadDialogPost('facebook_listen', {hidden: true})
+        $('#dia_fb_connect_landing .invite').click(function(){
+            _gaq.push(['_trackEvent', 'fb_connect', 'open_invite_dialog', 'landing_dialog']);
+            $('#fb_invite_menu_item').click();
+        });
+        $('#dia_fb_connect_landing .find').click(function(){
+            _gaq.push(['_trackEvent', 'fb_connect', 'open_listen_dialog', 'landing_dialog']);
+            $('#fb_listen_menu_item').click();
+        });
+    });
+</script>

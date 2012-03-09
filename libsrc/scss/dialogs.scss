@@ -4,7 +4,7 @@
 
 
 /* === Container element === */
-#dialogs { display : none; }
+#dialogs { display: none; }
 
 /* === click shield element === */
 #dialog_shield{
@@ -20,6 +20,7 @@
   display: none; 
   position:absolute;
   z-index:2; 
+  width: 500px;
   background-color : white;
   -moz-box-shadow: 05px 05px 05px #666;
   -webkit-box-shadow: 05px 05px 05px #666;
@@ -28,6 +29,10 @@
   .line { margin: 7px 0; clear: both;}
   .line .element { float: left; }
   .line .label {float:left; margin-top: 6px; margin-right:4px;}
+  h1 { 
+      font-family: Museo, serif;
+      text-align: center;
+  }
 }
 
 .btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png");
@@ -281,21 +286,18 @@ input[type="text"].copy, textarea.copy {
 }
 
 #dia_facebook_connect {
-  width: 560px;
-  padding: 0 40px 30px 40px;
-  h1 {
-      font-family: museo, helvetica, sans-serif;
-      font-size: 34px;
-  }
+  width: 860px;
   .list { font-weight: bold; }
   .smallprint {
       color: $color_grey_medium;
       font-size: 15px;
+      margin: 20px 0 0 0;
   }
 }
 
 #dia_facebook_listen {
   padding: 20px 10px 20px 20px;
+  width: auto;
   h1 {
       display: inline;
       font-size: 35px;
@@ -390,6 +392,7 @@ input[type="text"].copy, textarea.copy {
 
 #dia_sign_in_or_join {
   padding: 20px;
+  width: auto;
   img {
       width: 70px;
       height: 70px;
@@ -441,4 +444,65 @@ input[type="text"].copy, textarea.copy {
       input[type=text], input[type=password] { width: 250px; }
   }
   .name { display: none; }
+}
+
+.newdialog {
+    display: none; 
+    position: absolute;
+    z-index: 2; 
+    max-width: 700px;
+    padding: 30px 20px;
+    background-color : white;
+    border: 5px solid $color_selected;
+    @include box-shadow(05px 05px 05px #666);
+
+    h1, h2 {
+        font-family: Museo, sans-serif;
+        letter-spacing: -1px;
+        margin: 0;
+    }
+    h1 { font-size: 42px; }
+    h2 { font-size: 34px; }
+    h3 { 
+        margin: 30px 0 0 0;
+        letter-spacing: -1px;
+    }
+    p { margin: 10px 0 20px 0; }
+    &.centered {
+        text-align: center;
+    }
+}
+
+#dia_fb_connect_landing {
+  .line { 
+      clear: both;
+      @include clearfix;
+      margin-top: 10px;
+  }
+  .button, .fb_icon { float: left; }
+  .fb_icon { width: 50px; height: 50px; }
+  $button_width: 280px;
+  .button_wrapper { width: $button_width; }
+  .button { 
+      $padding: 15px;
+      padding: $padding;
+      margin-left: 5px;
+      width: $button_width - 56px - 2 * $padding; 
+      height: 51px - 2*$padding; 
+      text-align: left;
+      font-weight: bold;
+      font-size: 18px;
+      background-color: $color_facebook;
+      color: white;
+      cursor: default;
+  }
+  .button_wrapper:hover .button {
+      background-color: $color_highlight;
+      color: $color_active;
+  }
+  p { margin-bottom: 27px; }
+}
+
+#dia_fb_account_duplicate {
+    width: 640px;
 }

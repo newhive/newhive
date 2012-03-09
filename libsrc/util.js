@@ -105,14 +105,23 @@ loadDialog.loaded = {};
 
 function loadDialogPost(name, opts) {
     var dia;
+    opts = $.extend({reload: false, hidden: false}, opts);
     if(loadDialog.loaded[name]) {
         dia = loadDialog.loaded[name];
+    } 
+    if (dia && !opts.reload && !opts.hidden) {
         showDialog(dia,opts);
     } else {
         $.post(window.location, {action: 'dialog', dialog: name}, function(h){
             var html = h;
-            dia = loadDialog.loaded[name] = $(html);
-            showDialog(dia,opts);
+            if (dia && opts.reload ) {
+                dia.filter('div').replaceWith($(html).filter('div'));
+            } else {
+                dia = loadDialog.loaded[name] = $(html);
+                if (!opts.hidden){
+                    showDialog(dia,opts);
+                }
+            }
         }, 'text');
     }
 }
@@ -142,7 +151,8 @@ function showDialog(name, opts) {
                 mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
 
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
-            dialog.addClass('dialog border selected').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            if (! dialog.hasClass('newdialog')) dialog.addClass('dialog border selected');
+            dialog.detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
             if(!o.opts.mandatory) {
                 o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
                 o.shield.add(o.btn_close).click(o.close);
@@ -382,7 +392,10 @@ $(function () {
 
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
   if (dialog_to_show) { showDialog(dialog_to_show); };
-  if (new_fb_connect) { loadDialogPost('facebook_listen'); };
+  if (new_fb_connect) {
+      _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
+      showDialog('#dia_fb_connect_landing');
+  };
   // This completely breaks the site on Ios, and is annoying
   // Also likely to be seen by logged out users
   //else if (!logged_in) {
@@ -707,7 +720,8 @@ function sendRequestViaMultiFriendSelector() {
   function requestCallback(response) {
     $('#dia_referral .btn_dialog_close').click();
     if (response){
-      console.log(response);
+      _gaq.push(['_trackEvent', 'fb_connect', 'invite_friends', undefined, response.to.length]);
+      showDialog('#dia_sent_invites_thanks');
       $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
     }
   }

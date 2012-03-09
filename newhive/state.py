@@ -271,6 +271,8 @@ class User(HasSocial):
 
     class Collection(Collection):
         def named(self, name): return self.find({'name' : name})
+        def find_by_facebook(self, id):
+            return self.find({'facebook.id': id, 'facebook.disconnected': {'$exists': False}}) 
         def get_root(self): return self.named('root')
         root_user = property(get_root)
 
@@ -467,7 +469,7 @@ class User(HasSocial):
     @property
     def facebook_friends(self):
         friends = self.fb_client.friends()
-        return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}})
+        return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}, 'facebook.disconnected': {'$exists': False}})
 
     @property
     def expressions(self):
@@ -1001,6 +1003,7 @@ class SystemMessage(Feed):
 @Database.register
 class Referral(Entity):
     cname = 'referral'
+    indexes = [ 'key', 'request_id' ]
 
     def create(self):
         self['key'] = junkstr(16)

@@ -1,7 +1,4 @@
 <div id='dia_facebook_listen' class='dialog border selected'>
-    <div class='congratulations active line' style="display: none;">
-        <h1 style="font-size: 24px;">Your Facebook account is now connected.</h1>
-    </div>
     <div class='line' style='margin-bottom:15px;'>
         <h1>Listen to your Facebook friends:</h1>
     </div>
@@ -15,13 +12,25 @@
         {% endif %}
     </div>
     <div class="friends">
-      {% if not friends %}
+      {% if not friends and not error%}
         <p class="message" style="margin: 0;">None of your Facebook friends are currently signed
             up on The New Hive (or they haven't connected their Facebook
             accounts yet). Click the button above to invite your friends.</p>
       {% endif %}
       {% if error %}
-        <p class="error">{{error | e}}</p>
+        <p class="error">
+          {{error | e}}
+          <a href='' onclick='dia_facebook_listen_log_in(); return false;'>
+              Click here to try relogging in to facebook
+          </a>
+        </p>
+        <script>
+            function dia_facebook_listen_log_in() {
+                FB.login(function(){
+                    loadDialogPost("facebook_listen", {force: true});
+                });
+            }
+        </script>
       {% endif %}
       {%- for friend in friends -%}
         <div class="friend">
@@ -52,6 +61,7 @@
             var callback = function(that){
                 return function(data){
                     if (data.state == 'starred') {
+                        _gaq.push(['_trackEvent', 'fb_connect', 'listen_to_freind', $(that).data('id')]);
                         $(that).addClass('active').attr('title', 'Stop Listening');
                     }
                     else if (data.state == 'unstarred') {
@@ -63,15 +73,14 @@
         });
         $('#listen_to_all').click(function(){
             if (! $(this).hasClass('disabled') ) {
+                _gaq.push(['_trackEvent', 'fb_connect', 'listen_to_all_freinds']);
                 $('#listen_to_all').html('Thank you').addClass('disabled');
                 $('#dia_facebook_listen .listen').not('.active').click();
             }
         });
-        if (new_fb_connect) {
-            $('#dia_facebook_listen .congratulations').show();
-        };
         $('.invite_fb_link').click(function(){
             $('#dia_facebook_listen .btn_dialog_close').click();
+            _gaq.push(['_trackEvent', 'fb_connect', 'click_invite', 'listen_dialog']);
             sendRequestViaMultiFriendSelector();
         });
     </script>

@@ -8,6 +8,9 @@ from oauth2client import tools
 from newhive import config
 from newhive.utils import abs_url
 
+import logging
+logger = logging.getLogger(__name__)
+
 ga_filters = {
         'expressions': 'ga:hostname!=thenewhive.com;' + ";".join(['ga:pagePath!~' + path for path in ['^/expressions', '^/feed', '^/listening', '^/starred']])
         }
@@ -103,6 +106,8 @@ class FacebookClient(object):
             self.auth = [{'code': code, 'redirect_uri': redirect_uri}] + self.auth
 
         error = ''
+        if len(self.auth) == 0:
+            raise FlowExchangeError("Can't exchange without auth code")
         for auth in self.auth:
             body = urllib.urlencode({
                 'grant_type': 'authorization_code',
@@ -117,8 +122,10 @@ class FacebookClient(object):
             }
             http = httplib2.Http(timeout=1)
 
+            logger.info("Exchanging code for new token")
             resp, content = http.request(self.token_uri, method='POST', body=body,
                                          headers=headers)
+            logger.info("Token exchange response: %s", content)
             if resp.status == 200:
                 d = dict([el.split('=') for el in content.split('&')])
                 access_token = d['access_token']
@@ -135,12 +142,12 @@ class FacebookClient(object):
                 return self._credentials
             else: error = error + str(content) + "\n"
         else:
-            print error
             raise FlowExchangeError(error)
 
     @property
     def credentials(self):
         if self._credentials and not self._credentials.access_token_expired and not self._credentials.invalid:
+            logger.info("Using stored credentials")
             return self._credentials
         else:
             #if self.ready_to_exchange:
@@ -177,7 +184,7 @@ class FacebookClient(object):
         if head.get('status') == '200':
             return (head, content)
         else:
-            print "Facebook Error: " + str(content)
+            logger.error("AccessTokenCredentialsError: %s", content)
             raise AccessTokenCredentialsError(content)
 
     get = request

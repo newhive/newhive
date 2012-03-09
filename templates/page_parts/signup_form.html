@@ -38,7 +38,9 @@
                     else {
                         $(that).find('input[name=message]').val('');
                         createCookie('signup_completed', true);
-                        $(that).parents('.dialog').find('.btn_dialog_close').click();
+                        var dialog = $(that).parents('.dialog');
+                        _gaq.push(['_trackEvent', 'signup', 'submit', dialog.attr('id')]);
+                        dialog.find('.btn_dialog_close').click();
                         showDialog(data);
                     }
                 }

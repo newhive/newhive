@@ -3,6 +3,8 @@ from newhive import auth, config, oauth
 from werkzeug import Response
 from newhive.oauth import FacebookClient
 from newhive.utils import b64decode
+import logging
+logger = logging.getLogger(__name__)
 
 class ApplicationController(object):
     def __init__(self, jinja_env, assets_env, db):
@@ -21,8 +23,20 @@ class ApplicationController(object):
             if request.requester.logged_in:
                 # if logged in, then connect facebook account if not already connected
                 if not request.requester.has_facebook:
-                    request.requester.save_credentials(request.requester.fb_client.exchange(), profile=True)
-                    response.context['new_fb_connect'] = True
+                    credentials = request.requester.fb_client.exchange()
+                    profile = request.requester.fb_client.me()
+                    # Don't save credentials if a user already exists with this facebook id
+                    existing_user = self.db.User.find_by_facebook(profile.get('id'))
+                    if not existing_user:
+                        logger.info("Connecting facebook account '%s' to TNH account '%s'", profile['name'], request.requester['name'])
+                        request.requester.save_credentials(request.requester.fb_client.exchange(), profile=True)
+                        response.context['new_fb_connect'] = True
+                    else:
+                        logger.warn("Not connecting facebook account '%s' to TNH account '%s' because account is already connected to '%s'",
+                                                                         profile['name'], request.requester['name'], existing_user['name'])
+                        response.context['dialog_to_show'] = '#dia_fb_account_duplicate'
+                        response.context['existing_user'] = existing_user
+                        response.context['facebook_name'] = profile['name']
             else:
                 # if not logged in, try logging in with facebook credentials
                 fb_client = request.requester.fb_client
@@ -63,7 +77,7 @@ class ApplicationController(object):
             ,feed_url = response.user.get_url(path='feed')
             ,user = response.user
             ,admin = response.user.get('name') in config.admins
-            ,beta_tester = response.user.get('name') in config.beta_testers
+            ,beta_tester = config.debug_mode or response.user.get('name') in config.beta_testers
             ,create = abs_url(secure = True) + 'edit'
             ,server = abs_url()
             ,secure_server = abs_url(secure = True)
