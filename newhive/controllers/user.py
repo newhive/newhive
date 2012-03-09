@@ -180,7 +180,7 @@ class UserController(ApplicationController):
                         fbc.delete("https://graph.facebook.com/" + request_id + "_" + referral.get('to'), app_access=True)
                 valid_request = valid_request or (fb_request and referral and not referral.get('used'))
             #request id is handled as a path rather than querystring so it is preserved through fb redirect
-            signup_url = abs_url(secure=True) + 'signup/' + request_id
+            signup_url = abs_url(secure=True) + 'create_account/' + request_id
             response.context['facebook_connect_url'] = fbc.authorize_url(signup_url)
             response.context['signup_without_facebook_url'] = signup_url
             if not valid_request:
