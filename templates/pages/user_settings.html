@@ -184,8 +184,8 @@ var profile_thumb_choose = function(){
    </div>
    {% endif %}
    <div class="title"><h1>{{ ui.create_account_title if action == 'create' else "+ " ~ ui.update_account_title }}</h1></div>
+   <p class="active" id="error">{{message |e}}</p>
  </div>
- <p class="active" id="error">{{message |e}}</p>
 
  <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
 
@@ -297,7 +297,7 @@ var profile_thumb_choose = function(){
      {% if update %}
        {% if not user.facebook or not user.oauth or not user.oauth.facebook%}
          {% if beta_tester %}
-         <a href="{{facebook_authentication_url}}"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
+         <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'settings']);"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
          {% endif %}
        {% else %}
        {% endif %}
