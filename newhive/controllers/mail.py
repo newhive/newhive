@@ -107,7 +107,7 @@ class MailController(ApplicationController):
             context = {
                  'referrer_url': user.url
                 ,'referrer_name': user.get('fullname')
-                ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + to_email)
+                ,'url': (abs_url(secure=True) + 'invited?key=' + referral['key'] + '&email=' + to_email)
                 ,'name': name
                 }
             body = {

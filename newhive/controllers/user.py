@@ -37,7 +37,10 @@ class UserController(ApplicationController):
         return self.serve_page(response, 'pages/expr_cards.html')
 
     def new(self, request, response):
-        referral = self._check_referral(request)
+        referral = self._check_referral(request)[0]
+        response.context.pop('dialog_to_show')
+        if not referral:
+            referral = self._check_referral_2(request)[0]
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
         if request.args.has_key('code'):
@@ -77,7 +80,7 @@ class UserController(ApplicationController):
             """
 
         assert 'tos' in request.form
-        referral = self._check_referral(request)
+        referral = self._check_referral(request)[0] or self._check_referral_2(request)[0]
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         referrer = self.db.User.fetch(referral['user'])
 
@@ -114,12 +117,20 @@ class UserController(ApplicationController):
 
     def _check_referral(self, request):
         if request.args.has_key('key'):
-            referral = self.db.Referral.fetch(request.args.get('key'), keyname='key')
+            key_or_id = request.args.get('key')
+            referral = self.db.Referral.fetch(key_or_id, keyname='key')
         else:
             #request id is handled as a path rather than querystring so it is preserved through fb redirect
-            request_id = lget(request.path.split('/'),1)
-            referral = self.db.Referral.find({'request_id': request_id})
-        return referral
+            key_or_id = lget(request.path.split('/'),1)
+            referral = self.db.Referral.find({'request_id': key_or_id})
+        return (referral, key_or_id)
+
+    def _check_referral_2(self, request):
+        key_or_id = lget(request.path.split('/', 1),1)
+        referral = self.db.Referral.find({ '$or': [{'key': key_or_id}, {'request_id': key_or_id}]})
+        if not referral:
+            referral = self.db.Referral.find()
+        return (referral, key_or_id)
 
     def _friends_to_listen(self, request, user):
         friends = request.form.get('friends_to_listen')
@@ -146,27 +157,35 @@ class UserController(ApplicationController):
     def facebook_canvas(self, request, response, args={}):
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited?request_ids=' + str(request.args.get('request_ids')) + '";</script></html>')
 
-    def invited_from_facebook(self, request, response, args={}):
+    def invited(self, request, response):
         if request.requester.logged_in: return self.redirect(response, request.requester.url)
-        fbc = request.requester.fb_client
-        request_ids = request.args.get('request_ids').split(',')
-        valid_request = False
-        for request_id in request_ids:
-            fb_request = fbc.find("https://graph.facebook.com/" + str(request_id), app_access=True)
-            if fb_request:
-                referral = self.db.Referral.find({'request_id': request_id})
-                if referral:
-                    fbc.delete("https://graph.facebook.com/" + request_id + "_" + referral.get('to'), app_access=True)
-            valid_request = valid_request or (fb_request and referral and not referral.get('used'))
-        #request id is handled as a path rather than querystring so it is preserved through fb redirect
-        signup_url = abs_url(secure=True) + 'signup/' + request_id
-        response.context['facebook_connect_url'] = fbc.authorize_url(signup_url)
-        response.context['signup_without_facebook_url'] = signup_url
-        if not valid_request:
-            msg = "This invite from facebook has already been used. If you " +\
-                  "think this is a mistake, please contact us at " +\
-                  '<a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
-            return self._bad_referral(request, response, msg=msg)
+        if request.args.has_key('key'):
+            (referral, key_or_id) = self._check_referral(request) or self._check_referral2(request)
+            if (not referral or referral.get('used')):
+                return self._bad_referral(request, response)
+            signup_url = abs_url(secure=True) + 'create_account/' + key_or_id
+            response.context['facebook_connect_url'] = FacebookClient().authorize_url(signup_url)
+            response.context['signup_without_facebook_url'] = signup_url
+        else:
+            fbc = request.requester.fb_client
+            request_ids = request.args.get('request_ids').split(',')
+            valid_request = False
+            for request_id in request_ids:
+                fb_request = fbc.find("https://graph.facebook.com/" + str(request_id), app_access=True)
+                if fb_request:
+                    referral = self.db.Referral.find({'request_id': request_id})
+                    if referral:
+                        fbc.delete("https://graph.facebook.com/" + request_id + "_" + referral.get('to'), app_access=True)
+                valid_request = valid_request or (fb_request and referral and not referral.get('used'))
+            #request id is handled as a path rather than querystring so it is preserved through fb redirect
+            signup_url = abs_url(secure=True) + 'signup/' + request_id
+            response.context['facebook_connect_url'] = fbc.authorize_url(signup_url)
+            response.context['signup_without_facebook_url'] = signup_url
+            if not valid_request:
+                msg = "This invite from facebook has already been used. If you " +\
+                      "think this is a mistake, please contact us at " +\
+                      '<a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
+                return self._bad_referral(request, response, msg=msg)
         return self.serve_page(response, 'pages/invited_from_facebook.html')
 
     def facebook_invite(self, request, response, args={}):

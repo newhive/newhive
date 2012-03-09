@@ -1003,6 +1003,7 @@ class SystemMessage(Feed):
 @Database.register
 class Referral(Entity):
     cname = 'referral'
+    indexes = [ 'key', 'request_id' ]
 
     def create(self):
         self['key'] = junkstr(16)
