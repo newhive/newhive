@@ -317,7 +317,7 @@ class UserController(ApplicationController):
                 friends = list(request.requester.facebook_friends)
             except (AccessTokenCredentialsError, FlowExchangeError) as e:
                 logger.error("Error generating friends to listen dialog for '%s': %s", request.requester['name'], e)
-                response.context['error'] = 'Something went wrong finding your friends.  Either you have deauthorized The New Hive on your Facebook account or this is a temporary issue and you can try again later.'
+                response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
         except FlowExchangeError:
             logger.error("Error generating friends to listen dialog for '%s': %s", request.requester['name'], e)
             response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'

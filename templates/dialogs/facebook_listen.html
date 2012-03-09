@@ -3,10 +3,12 @@
         <h1>Listen to your Facebook friends:</h1>
     </div>
     <div class='line line2'>
+        {% if not error %}
         <div class='invite_fb_link'>
             <img src='/lib/skin/1/facebook_flat_sm.png' alt="Facebook Logo">
             Invite friends from Facebook
         </div>
+        {% endif %}
         {% if friends %}
         <div class='btn black rounded' id='listen_to_all'>Listen to all my friends</div>
         {% endif %}
@@ -20,9 +22,9 @@
       {% if error %}
         <p class="error">
           {{error | e}}
-          <a href='' onclick='dia_facebook_listen_log_in(); return false;'>
-              Click here to try relogging in to facebook
-          </a>
+          <strong><a href='' onclick='dia_facebook_listen_log_in(); return false;'>
+              Click here to try logging in to Facebook.
+          </a></strong>
         </p>
         <script>
             function dia_facebook_listen_log_in() {
