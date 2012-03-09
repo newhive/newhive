@@ -70,6 +70,7 @@
     {% block dialogs %}
       {% include 'dialogs/ie_warning.html' %}
       {% include 'dialogs/share.html' %}
+      {% include 'dialogs/password.html' %}
 
       {% if user.logged_in %}
           {% include 'dialogs/referral.html' %}
@@ -78,7 +79,6 @@
       {% else %}
           {% include 'dialogs/sign_in_or_join.html' %}
           {% include 'dialogs/signup.html' %}
-          {% include 'dialogs/password.html' %}
           {% include 'dialogs/password_recovery.html' %}
       {% endif %}
 
