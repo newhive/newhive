@@ -37,8 +37,10 @@ class UserController(ApplicationController):
         return self.serve_page(response, 'pages/expr_cards.html')
 
     def new(self, request, response):
+        if request.requester.logged_in: return self.redirect(response, request.requester.url)
         referral = self._check_referral(request)[0]
-        response.context.pop('dialog_to_show')
+        if response.context.has_key('dialog_to_show'):
+            response.context.pop('dialog_to_show')
         if not referral:
             referral = self._check_referral_2(request)[0]
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
