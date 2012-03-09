@@ -1,7 +1,4 @@
 <div id='dia_facebook_listen' class='dialog border selected'>
-    <div class='congratulations active line' style="display: none;">
-        <h1 style="font-size: 24px;">Your Facebook account is now connected.</h1>
-    </div>
     <div class='line' style='margin-bottom:15px;'>
         <h1>Listen to your Facebook friends:</h1>
     </div>
@@ -79,9 +76,6 @@
                 $('#dia_facebook_listen .listen').not('.active').click();
             }
         });
-        if (new_fb_connect) {
-            $('#dia_facebook_listen .congratulations').show();
-        };
         $('.invite_fb_link').click(function(){
             $('#dia_facebook_listen .btn_dialog_close').click();
             sendRequestViaMultiFriendSelector();

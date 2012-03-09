@@ -286,16 +286,12 @@ input[type="text"].copy, textarea.copy {
 }
 
 #dia_facebook_connect {
-  width: 560px;
-  padding: 0 40px 30px 40px;
-  h1 {
-      font-family: museo, helvetica, sans-serif;
-      font-size: 34px;
-  }
+  width: 860px;
   .list { font-weight: bold; }
   .smallprint {
       color: $color_grey_medium;
       font-size: 15px;
+      margin: 20px 0 0 0;
   }
 }
 
@@ -396,6 +392,7 @@ input[type="text"].copy, textarea.copy {
 
 #dia_sign_in_or_join {
   padding: 20px;
+  width: auto;
   img {
       width: 70px;
       height: 70px;
@@ -459,7 +456,6 @@ input[type="text"].copy, textarea.copy {
     border: 5px solid $color_selected;
     @include box-shadow(05px 05px 05px #666);
 
-    text-align: center;
     h1, h2 {
         font-family: Museo, sans-serif;
         letter-spacing: -1px;
@@ -467,7 +463,14 @@ input[type="text"].copy, textarea.copy {
     }
     h1 { font-size: 42px; }
     h2 { font-size: 34px; }
+    h3 { 
+        margin: 30px 0 0 0;
+        letter-spacing: -1px;
+    }
     p { margin: 10px 0 20px 0; }
+    &.centered {
+        text-align: center;
+    }
 }
 
 #dia_fb_connect_landing {
@@ -500,3 +503,6 @@ input[type="text"].copy, textarea.copy {
   p { margin-bottom: 27px; }
 }
 
+#dia_fb_account_duplicate {
+    width: 640px;
+}
