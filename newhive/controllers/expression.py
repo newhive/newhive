@@ -177,7 +177,8 @@ class ExpressionController(ApplicationController):
         comment = self.db.Comment.create(commenter, expression, {'text': comment_text})
         if comment.initiator.id != expression.owner.id:
             mail.mail_feed(self.jinja_env, comment, expression.owner)
-        return self.serve_html(response, self.jinja_env.get_template("partials/comment.html").render({'comment': comment}))
+        response.context['comment'] = comment
+        return self.serve_page(response, 'partials/comment.html')
 
     def tag_update(self, request, response):
         tag = lget(normalize(request.form.get('value', '')), 0)

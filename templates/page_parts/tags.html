@@ -1,10 +1,9 @@
- <div id='tags'>
-   {% for t in system_tags %}<div class='tag_label hoverable system {{ 'current' if t.name == tag.name }} {{ t.name}} '><a href='{{ t.url |e }}' value='{{ t.name|e }}' alt='{{ t.name|e }}'>
-     {% if t.img %}
-     {#<img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">#}
-    {% endif %}
-    {{ t.name }}
-   </a></div>{% endfor %}
+<div id='tabs' class='{{ 'home' if home else 'profile' }}'>
+ {% for t in tabs %}<div class='label hoverable {{ 'system ' if home }}{{ 'current' if t.name == tab.name }} {{ t.name}}'
+  ><a href='{{ t.url|e }}' value='{{ t.name|e }}'>
+   {% if profile and t.img %}{<img class="hoverable" style="margin-top: 1px;" src="{{t.img}}">}{% endif %} {{ t.label }}</a></div>
+ {% endfor %}
+</div>
    <div id="user_tags">
      {% for t in tags %}<div class='tag_label hoverable user {{ 'current' if t.name == tag.name }} tag_{{loop.index0 | mod(16) }}'><a href='{{ t.url |e }}' value='{{ t.name|e }}'>
        {% if t.img %}

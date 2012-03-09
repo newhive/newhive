@@ -13,6 +13,7 @@ from newhive.controllers import (
     ,UserController
     ,FileController
     ,StarController
+    ,BroadcastController
     ,CronController
 )
 
@@ -79,6 +80,7 @@ controllers = {
     , 'expression':  ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = db)
     , 'mail':        MailController(jinja_env = jinja_env, assets_env = assets_env, db = db)
     , 'star':        StarController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+    , 'broadcast':   BroadcastController(jinja_env = jinja_env, assets_env = assets_env, db = db)
     , 'cron':        CronController(jinja_env = jinja_env, assets_env = assets_env, db = db)
     }
 app = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db = db)
@@ -115,7 +117,7 @@ actions = dict(
     ,profile_thumb_set = controllers['user'].profile_thumb_set
     ,star              = controllers['star'].star
     ,unstar            = controllers['star'].star
-    ,broadcast         = controllers['star']
+    ,broadcast         = controllers['broadcast'].update
     ,log               = controllers['user'].log
     ,thumbnail_relink  = controllers['admin'].thumbnail_relink
 )
@@ -123,7 +125,8 @@ actions = dict(
 site_pages = {
      ''                    : controllers['community'].index
     ,'home'                : controllers['community'].index
-    ,'search'              : controllers['community'].search
+    ,'search'              : controllers['community'].index
+    ,'tag'                 : controllers['community'].tag
     ,'edit'                : controllers['expression'].edit
     ,'random'              : controllers['expression'].random
     ,'settings'            : controllers['user'].edit
@@ -164,7 +167,7 @@ def handle(request): # HANDLER
     if request.domain != config.content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback']
             non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')

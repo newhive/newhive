@@ -16,6 +16,9 @@
 
 {% block nav_right %}
   {{ star_button(exp.star_count, exp.id in user.starred_item_ids, user.logged_in) }} 
+  <div id = "btn_broadcast" class="hoverable nav_icon {{ 'enabled' if exp.id in user.broadcast_ids }}" onclick='btn_broadcast_click(this);' title="Broadcast">
+    <div class='icon'></div>
+  </div>
   {{ discussion_button(exp.comment_count) }}
  
   {% if user_is_owner %}

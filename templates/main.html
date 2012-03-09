@@ -6,13 +6,14 @@
 {% block main %}
   <div id="nav">
     <div class='nav' id='nav_bg'></div>
-    <div class='nav' style='font-weight : bold'>
-      <a href='{{ server }}home/{{ 'activity' if logged_in }}' title="Explore Expressions"><img id='logo' class='hoverable' src={{ icon }}></a>
+    <div class='nav' id='nav_left'>
+      <a href='{{ server }}home/{{ 'activity' if logged_in }}' title="Explore Expressions"><img id='logo' class='hoverable nav_icon' src={{ icon }}></a>
     
      {% if user.logged_in %}
       <div class='nav_icon medbold center'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
-      <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png'>
-      <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}' onclick='window.location="{{feed_url}}"'></div>
+      <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png' class='nav_icon'>
+      <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}' onclick='window.location="{{feed_url}}"'>
+      </div>
       <div id='feed_menu' class='menu feed_menu border selected'>
         {% include 'dialogs/feed.html' %}
       </div>
@@ -29,12 +30,8 @@
         <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
       </div>
       <script>
-        hover_menu(
-          $('#user_menu_handle'), 
-          $('#user_menu'), 
-          { offsetY: 10 }
-        );
-        hover_menu($('#notifications'), $('#feed_menu'), {
+        hover_menu( $('#user_menu_handle'), $('#user_menu') );
+        hover_menu( $('#notifications'), $('#feed_menu'), {
           open: function(){
             var div = $('#notifications');
             if ( div.attr('data-count') != "0" ) {
@@ -46,11 +43,11 @@
         });
       </script>
       {% else %}
-        <a href='{{ server }}' title="Explore Expressions"><div style='position: relative; left : -11px; top : -1px; width: 240px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
+        <a href='{{ server }}' title="Explore Expressions"><img src='/lib/skin/1/logotype_beta.png' class='nav_icon'></a>
       {% endif %}
       {% if template != "pages/edit.html" %} {# don't show random button and search in editor #}
-        <a href='{{server}}random'><img style="position: relative; left: {{'0' if user.logged_in else '-24px'}}; top: 0;" class="nav nav_icon hoverable" src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
-        <div class="nav" id="search" >
+        <a href='{{server}}random'><img class="nav_icon hoverable" src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
+        <div class="nav_icon center" id="search" >
           <input type="text" id="search_box" placeholder="Search" value="{{q.q}}" onkeydown="if (event.keyCode == 13) $('#search_submit').click()"/>
           <div id="search_submit" class="hoverable" onclick="window.location = buildSearch()"></div>
         </div>
@@ -66,9 +63,9 @@
            <div id='exp_owner'>{{ owner['name'] }}</div>
           <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
          </div>
-         <img class='nav_icon' src='{{owner.get_thumb(70)}}'>
+         {% if owner.get_thumb() %}<img id='owner_thumb' src='{{owner.get_thumb(70)}}'>{% endif %}
         </a>
-        <div class='nav_icon pad'>
+        <div class='nav_icon space'></div>
         <div id="dia_listeners" class='menu feed_menu border selected' data-count='{{ owner.starrers|length }}'>
           <h3 style='margin : 5px'>People listening to {{ owner.name }}</h3>
           {% for item in owner.starrers %}

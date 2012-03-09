@@ -97,14 +97,18 @@
           </a>
         {% endif %}
       </div>
-      <h1 class="index">
-        {% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + tag.name if tag and tag.show_name != False }}
-      </h1>
+      <span class='fathead'>{% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + tag.name if tag and tag.show_name != False }}</span>
     </div>
   {% endif %}
   <div id='card_header'>
     <div class='medbold title'>
-      {% if search %}{{ title|e }}{% endif %}
+      {% if network and cards|length < 10 %}
+        You needs more stuff
+      {% elif search %}
+        Results for: {{ q.q|e }}
+      {% elif tag_page %}
+        #{{ tag|e }}
+      {% endif %}
     </div>
     <div id='top_tabs'>
       {% if path1 == 'home/expressions' %}
@@ -137,15 +141,20 @@
   <div id='left_tabs' class='{{ 'home' if home else 'profile' }}'>
     {% if home %}
       {{ left_tab('home/expressions', 'Expressions') }}
-      {{ left_tab('home/network', 'Network') }}
+      {% if user.logged_in %}{{ left_tab('home/network', 'Network') }}{% endif %}
       {{ left_tab('home/people', 'People') }}
       {{ left_tab('home/about', 'About') }}
     {% endif %}
     {% if profile %}
       {{ left_tab('profile/expressions', 'Expressions') }}
-      {{ left_tab('profile/activity', 'Activity') }}
-      {{ left_tab('profile/listening', 'Listening') }}
+      {{ left_tab('profile/activity', '<img src="/lib/skin/1/activity_tab.png">Activity') }}
+      {{ left_tab('profile/listening', '<img src="/lib/skin/1/listening_tab.png">Listening') }}
     {% endif %}
+  </div>
+  <div id="user_tags">
+    {% for t in tags %}<div class='tag_label hoverable user {#{ 'current' if t.name == tag.name }#} tag_{{loop.index0 | mod(16) }}'>
+      <a href='{{ t.url |e }}' value='{{ t.name|e }}'>{{ t.name }}</a>
+    </div>{% endfor %}
   </div>
 {% endblock left_column %}
 

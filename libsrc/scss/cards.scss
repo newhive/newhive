@@ -1,8 +1,8 @@
 #feed .card {
     &.item { 
         position: relative; 
-        padding: 9px 9px 5px 9px; 
-        width: 190px; 
+        padding: 13px 13px 5px 13px; 
+        width: 180px; 
         height: 285px;
         float: left; 
         background-image: url('/lib/skin/1/feed_item.png'); 
@@ -17,14 +17,14 @@
         //background-color: $color_selected; 
         opacity : 1; 
         .thumb { @include opacity(0.75); }
-        .title { background: $color_highlight; } 
-        .other span { padding: 0 2px; background: $color_blue; color: white; }
+        .title { background: $color_selected; } 
+        .other span { background: $color_highlight; }
 
     }
     .thumb {
         @include border-radius(7px);
-        width: 190px;
-        height: 190px;
+        width: 180px;
+        height: 180px;
     }
    .title { 
         font-size: 1.1em;
@@ -32,7 +32,6 @@
         max-height : 2.5em; 
         overflow : hidden; 
         text-overflow : ellipsis; 
-        &:hover { background: $color_highlight; }
     }
     .other, .tags, .stats, .feed_info { 
         font-size : 0.7em; 
@@ -43,34 +42,40 @@
         text-overflow: ellipsis; 
         max-height: 29px;
         margin-bottom: 5px;
-        .tag:hover { background: $color_selected; }
+        .tag:hover { background: $color_bright_red; color: white; }
     }
     .other {
         position: absolute;
-        bottom: 5px;
+        bottom: 8px;
         font-weight: bold;
-        &:hover span { background: $color_1 !important; color: white; }
+        &:hover span { background: $color_blue !important; color: white; }
     }
     .feed_thumbs {
         position: absolute;
-        bottom: 105px;
-        left: 15px;
-        width: 75px;
-        img { width: 35px; border: 1px solid white; }
+        bottom: 115px;
+        left: 20px;
+        width: 65px;
+        img { width: 30px; border: 1px solid white; }
         img.first { display: block; }
-        img.big { width: 70px; }
+        img.big { width: 39px; }
+    }
+    .actions {
+        position: absolute;
+        right: 20px; top: 20px;
     }
     .feed_info {
         position: absolute;
-        bottom: 105px;
-        right: 15px;
+        bottom: 115px;
+        right: 20px;
         font-weight: bold;
         text-align: right;
-        div { background-color: $color_highlight; margin: 1px; display: inline-block; padding: 0 2px; }
+        width: 120px;
+        div { background-color: $color_highlight; margin: 1px; display: inline; padding: 0 5px; }
+        &.create div { background-color: white; }
     }
     .stats {
         position: absolute;
-        bottom: 5px; right: 5px;
+        bottom: 5px; right: 13px;
         color: $color_grey_medium;
         img { vertical-align: middle; }
     }

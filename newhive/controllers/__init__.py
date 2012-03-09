@@ -7,6 +7,7 @@ from mail          import MailController
 from user          import UserController
 from file          import FileController
 from star          import StarController
+from broadcast     import BroadcastController
 from cron          import CronController
 from community     import CommunityController
 

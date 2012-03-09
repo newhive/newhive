@@ -222,6 +222,26 @@ function reloadFeed(){
     });
 }
 
+function btn_broadcast_click(btn) {
+    var btn = $('#btn_broadcast');
+    if (! btn.hasClass('inactive')) {
+        btn.addClass('inactive');
+        $.post('', {'action': 'broadcast', 'domain': window.location.hostname, 'path': window.location.pathname }, function(data) {
+            var btn_wrapper = btn.parent();
+            btn.removeClass('inactive');
+            if (!data) { alert("Something went wrong, please try again"); return; }
+            btn.addClass('enabled');
+            //if(data.unstarred) {
+            //    btn.removeClass('starred');
+            //    btn_wrapper.attr('title', btn_wrapper.attr('data-title-inactive'));
+            //    btn.attr('data-count', count-1);
+            //    iconCounts();
+            //    $('#dia_starrers .user_cards .' + data.unstarred).remove();
+            //}
+        }, 'json');
+    }
+}
+
 function updateShareUrls(element, currentUrl) {
     element = $(element);
     var encodedUrl = encodeURIComponent(currentUrl), total=0;

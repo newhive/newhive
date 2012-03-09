@@ -11,7 +11,9 @@
   cursor: pointer;
   font-weight: bold;
   font-size: 14px;
-  margin: 5px;
+  margin: 0px;
+  padding: 3px;
+  position: relative;
 }
 
 .feed_item .name {
@@ -30,9 +32,9 @@
   background-color: #96E2CE;
 }
 #feed_menu .feed_item img {
-  margin: 5px;
-  width: 70px;
-  height: 70px;
+  margin: 2px;
+  width: 60px;
+  height: 60px;
   float: left;
 }
 #feed_menu .feed_item:hover {
@@ -75,10 +77,12 @@
 }
 .feed_item .byline {
   font-weight: normal;
+  position: absolute;
+  right: 5px; bottom: 5px;
 }
 .feed_item .byline .name, .comment .byline .name {
   font-weight: bold;
-  font-size: 15px;
+  font-size: 13px;
   color: #696E76;
 }
 

@@ -1,20 +1,23 @@
 body.profile {
   #profile_header { 
-    margin: 45px 0px 5px 35px;
-    h1 { margin: 58px; margin-left: 30px; }
+    margin: 35px 0px 5px 35px;
+    .fathead { font-family : Museo, Helvetica, sans-serif; font-size : 3em; }
   }
 
   #profile_thumb { 
     width: auto; 
+    display: inline-block;
+    margin-right: 10px;
+    position: relative;
   }
+  #profile_thumb img { vertical-align: middle; }
   #profile_thumb img, #profile_thumb .placeholder{ 
-    float: left;
-    height: 190px; width: 190px; 
+    height: 180px; width: 180px; 
     @include border-radius(7px);
   }
   #profile_thumb .placeholder{ height: 30px; padding: 85px 0;}
   .placeholder { border: 1px dashed #CCC; text-align:center; }
-  #profile_thumb .message {position: absolute; bottom: -20px; font-size: 12px;}
+  #profile_thumb .message {position: absolute; bottom: -18px; left: 5px; font-size: 12px;}
   
   .fathead { font-weight: normal; }
   .fathead.hasthumb { margin: 75px 50px 0 50px; }
@@ -33,15 +36,15 @@ body.home {
 }
 
 #card_header { height: 25px; margin: 18px 20px 2px 0; position: relative; }
-body.profile #card_header { position: absolute; bottom: 0; right: 0; }
+body.profile #card_header { margin-top: -10px; }
 #header .title { margin-left: $right_column_x + 9px; font-family: Museo,Helvetica,sans-serif; }
 
-#top_tabs { position: absolute; right: 0px; }
+#top_tabs { position: absolute; right: 0px; white-space: nowrap; }
 #top_tabs .tab_label {
   display: inline-block;
   color: $color_active;
   padding: 2px 10px;
-  &.current { color: white; background-color: black; cursor: default; }
+  &.current { color: white; background-color: black; cursor: default; font-weight: bold; }
   &.active { color: white; background-color: $color_grey_medium; }
 }
 
@@ -50,26 +53,34 @@ body.profile #card_header { position: absolute; bottom: 0; right: 0; }
 }
 
 #left_tabs .tab_label {
-  font-size: 21px;
+  font-size: 1.2em;
   height: 31px;
+  line-height: 31px;
   margin: 7px 0 0 22px;
   font-weight: bold; 
-  padding: 5px 12px 0 0;
+  padding: 2px 8px 0 0;
   color: $color_12; 
   text-align: right;
   &.active { color: $color_active; }
   &.current { color : black; cursor: default; }
+  img { vertical-align: middle; }
 }
 body.home #left_tabs .tab_label {
   background-color: $color_tan;
   &.active { background-color: $color_highlight; }
   &.current { background-color: $color_selected; }
 }
-body.profile #left_tabs .tab_label.current {
-  font-family: Lobster, Helvetica, sans-serif;
-  font-size: 1.6em;
-  font-weight: normal;
+body.profile #left_tabs .tab_label {
+  padding-top: 0;
+  margin-top: 3px;
+  &.current {
+    font-family: Lobster, Helvetica, sans-serif;
+    font-size: 1.6em;
+    font-weight: normal;
+  }
 }
+
+#user_tags { margin: 30px 0; }
 
 .tag_label {
   float: right;
@@ -78,6 +89,8 @@ body.profile #left_tabs .tab_label.current {
   padding: 0 8px;
   margin: 5px 0;
   font-size: 16px;
+  &.active:hover { color: white; padding-left: 30px; }
+
   &.tag_0 { background-color: $color_tag_0; }
   &.tag_1 { background-color: $color_tag_1; }
   &.tag_2 { background-color: $color_tag_2; }

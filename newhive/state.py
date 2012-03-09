@@ -335,6 +335,12 @@ class User(HasSocial):
     @property
     def starred_expr_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'Expr']
 
+    @property
+    @memoized
+    def broadcast(self): return self.db.Broadcast.search({ 'initiator': self.id })
+    @property
+    def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
+
     def can_view(self, expr):
         return expr and ( (expr.get('auth', 'public') == 'public') or
             (self.id == expr['owner']) or (expr.id in self.starred_expr_ids) )
@@ -348,8 +354,9 @@ class User(HasSocial):
     def feed_profile_exprs(self, **args):
         exprs = []
         for item in self.feed_profile(**args):
-            item.entity.feed = [item]
-            exprs.append(item.entity)
+            entity = item.initiator if item.entity.id == self.id else item.entity
+            entity.feed = [item]
+            exprs.append(entity)
         return exprs
 
     def feed_network(self, limit=40, **args):
@@ -607,11 +614,11 @@ class Expr(HasSocial):
     @property
     def owner_url(self): return abs_url(domain = self.get('domain')) + 'profile'
 
-    def get_thumb(self):
+    def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
             file =  self.db.File.fetch(self['thumb_file_id'])
             if file:
-                thumb = file.get_thumb(190,190)
+                thumb = file.get_thumb(size,size)
                 if thumb: return thumb
         thumb = self.get('thumb')
         if not thumb: thumb = abs_url() + '/lib/skin/1/thumb_0.png'
@@ -785,7 +792,7 @@ class File(Entity):
             f.close()
             url = abs_url() + 'file/' + owner['name'] + '/' + name
 
-        self.update(url=url)
+        self.update(url=url, s3_bucket=self.get('s3_bucket'))
         return self
 
     def delete(self):
@@ -904,7 +911,9 @@ class Comment(Feed):
 
 @Database.register
 class Star(Feed):
-    action_name = 'liked'
+    @property
+    def action_name(self):
+        return 'likes' if self['entity_class'] == 'Expr' else 'listening'
 
     def create(self):
         if self.entity['owner'] == self['initiator']:
@@ -920,7 +929,7 @@ class Broadcast(Feed):
         if self.entity['owner'] == self['initiator']:
             raise "You mustn't broadcast your own expression"
         if type(self.entity) != Expr: raise "You may only broadcast expressions"
-        if self['initialize'] in self.entity.starrer_ids: return True
+        if self['initiator'] in self.entity.starrer_ids: return True
         return super(Broadcast, self).create()
 
 @Database.register

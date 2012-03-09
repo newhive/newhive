@@ -12,7 +12,7 @@
   </div>
 {% else %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}} border_right border_bottom" onclick='window.location="{{feed.entity.url|e}}"'>
-    <a href="{{entity_url}}"><img src='{{feed.entity.thumb | default("/lib/skin/1/default_thumb.png", True)}}'></a>
+    <a href="{{entity_url}}"><img src='{{feed.entity.get_thumb(70) | default("/lib/skin/1/default_thumb.png", True)}}'></a>
     <div class="feed_text">
 
       <p>
@@ -22,9 +22,9 @@
         {{ "commented on" if feed.class_name == "Comment" }} 
         {% if feed.class_name == "Star" %}
           {% if feed.entity_class == "User" %}
-          {{ "are" if feed['initiator'] == user.id else "is" }} listening to
+            {{ "are" if feed['initiator'] == user.id else "is" }} listening to
           {% else %}
-          starred
+            like{{ 's' if feed['initiator'] != user.id }}
           {% endif %}
         {% endif %}
         {{ "created a new expression" if feed.class_name == "NewExpr" }} 
@@ -54,7 +54,7 @@
       {% endif %}
     </div>
     <div class="byline">
-      <a class="name" href="{{ feed.owner_url }}">{{ feed.owner_name }}</a><span class="timestamp">{{ feed.created | friendly_date }}</span>
+      <span class="timestamp">{{ feed.created | friendly_date }}</span>
     </div>
   </div>
 {% endif %}
