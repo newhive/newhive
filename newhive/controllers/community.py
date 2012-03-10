@@ -89,6 +89,7 @@ class CommunityController(ApplicationController):
         tags = request.owner.get('tags', []) if request.owner else self.db.User.site_user['config']['featured_tags']
         response.context.update(dict( tags =
             map(lambda t: {'url': '/tag/' + t, 'name': t, 'type': 'user'}, tags) ))
+        if request.owner: response.context.update({ 'title': request.owner['fullname'] })
         return self.serve_page(response, 'pages/community.html')
 
 

@@ -28,11 +28,12 @@
           {% endif %}
         {% endif %}
         {{ "created a new expression" if feed.class_name == "NewExpr" }} 
-        {{ "updated the expression" if feed.class_name == "UpdatedExpr" }} 
+        {{ "updated" if feed.class_name == "UpdatedExpr" }} 
+        {{ "broadcast" if feed.class_name == 'Broadcast' }}
       </p>
 
       {% if feed.entity_class == "Expr" %}
-      <p class="title{{feed.entity.title | e | length_bucket}}">
+      <p class="title title{{feed.entity.title | e | length_bucket}}">
         <a class="entity" href="{{entity_url}}">{{ feed.entity.title | e}}</a>
       </p>
       {% else %}
