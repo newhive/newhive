@@ -500,6 +500,23 @@ class User(HasSocial):
 
         return super(User, self).delete()
 
+    def has_group(self, groups):
+        if not self.has_key('groups'):
+            return False
+        if type(groups) == list:
+            rv = False
+            for group in groups:
+                rv = rv or group in self['groups']
+            return rv
+        else:
+            return self.has_key('groups') and groups in self['groups']
+
+    def add_group(self, group):
+        self.update_cmd({'$addToSet': {'groups': group}})
+
+    def remove_group(self, group):
+        self.update_cmd({'$pull': {'groups': group}})
+
 
 @Database.register
 class Session(Entity):
@@ -998,19 +1015,9 @@ class FriendJoined(Feed):
 @Database.register
 class SystemMessage(Feed):
     class Collection(Feed.Collection):
-        def create(self, image, message, entity=None, recipients=None):
+        def create(self, entity, data={}):
             initiator = self.db.User.get_root()
-            data = {'image': image, 'message': message}
-            if recipients == 'All':
-                recipients = self.db.User.search({})
-                count = 0
-                for entity in recipients:
-                    count += 1
-                    super(SystemMessage.Collection, self).create(initiator, entity, data)
-                return count
-            elif entity:
-                return super(SystemMessage.Collection, self).create(initiator, entity, data)
-
+            return super(SystemMessage.Collection, self).create(initiator, entity, data)
 
 
 @Database.register

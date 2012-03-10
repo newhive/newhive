@@ -1833,3 +1833,8 @@ iframe {
 .email_confirmation #content a:hover {
   color: #f72e4d;
 }
+
+/* line 139 */
+.css_compilation_test {
+  color: black;
+}
