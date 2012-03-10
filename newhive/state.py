@@ -335,11 +335,17 @@ class User(HasSocial):
         if type(viewer) == User: viewer = viewer.id
         return self.db.Expr.list(self.starred_expr_ids, viewer=viewer, **args)
 
-    def feed_profile(self, viewer, **args):
-        if type(viewer) == User: viewer = viewer.id
-        res = self.db.Feed.list({ '$or' : [ {'entity_owner':self.id}, {'initiator':self.id} ] }, sort='created', **args)
-        if viewer != self.id: res = filter(lambda i: i.entity and i.entity.can_view(viewer), res)
+    def feed_search(self, spec, viewer=None, page=None, limit=0):
+        if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
+        if page: spec['created'] = { '$lt': page }
+        res = self.db.Feed.search(spec, limit=limit, sort=[('created',-1)])
+        if viewer != self.id: res = ifilter( lambda i: i.entity and i.entity.can_view(viewer.id), res)
+        res = ifilter( lambda i: i.viewable(viewer), res)
         return res
+
+    def feed_profile(self, viewer, **args): return self.feed_search(
+            { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] }
+        , viewer, **args)
 
     def feed_network(self, viewer, **args):
         if type(viewer) == User: viewer = viewer.id
@@ -872,7 +878,7 @@ class Feed(Entity):
     class Collection(Collection):
         def new(self, d):
             # override new only in this generic Feed class to return the specific subtype
-            if type(self) == Feed: return getattr(self.db, d['class_name']).entity(self, d)
+            if self.entity == Feed: return getattr(self.db, d['class_name']).entity(self, d)
             else: return self.entity(self, d)
 
         def create(self, initiator, entity, data={}):
@@ -931,6 +937,9 @@ class Feed(Entity):
         elif self['entity_class'] == "Expr":
             return self.entity.owner_url
 
+    def viewable(self, viewer):
+        return True
+
 @Database.register
 class Comment(Feed):
     def create(self):
@@ -980,7 +989,9 @@ class UpdatedExpr(Feed):
 
 @Database.register
 class FriendJoined(Feed):
-    pass
+    def viewable(self, viewer):
+        return self['entity'] == viewer.id
+
 
 @Database.register
 class SystemMessage(Feed):
