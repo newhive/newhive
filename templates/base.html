@@ -79,7 +79,7 @@ html, body { background-color : white; height : 100%; }
   _gaq.push(['_setDomainName', '.thenewhive.com']);
   _gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
   //_gaq.push(['_setCustomVar', 2, 'wave{{ user['signup_group']|default('0') }}', '{{ user['name'] }}', 1]);
-  _gaq.push(['_setCustomVar', 2, 'join_date', 'te{{ user['created'] | int}}', 1]);
+  _gaq.push(['_setCustomVar', 2, 'join_date', '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
   _gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
   _gaq.push(['_trackPageview']);
  
