@@ -500,22 +500,28 @@ class User(HasSocial):
 
         return super(User, self).delete()
 
-    def has_group(self, groups):
-        if not self.has_key('groups'):
+    def has_group(self, group, level=None):
+        groups = self.get('groups')
+        if type(group) == list: return False
+        if not groups or not group in groups:
             return False
-        if type(groups) == list:
-            rv = False
-            for group in groups:
-                rv = rv or group in self['groups']
-            return rv
-        else:
-            return self.has_key('groups') and groups in self['groups']
+        return level == None or level == groups[group]
 
-    def add_group(self, group):
-        self.update_cmd({'$addToSet': {'groups': group}})
+    def add_group(self, group, level):
+        assert type(group) == str and len(group) <=3
+        if not self.has_key('groups'): self['groups'] = {}
+        self['groups'][group] = level
+        #TODO: add warning if groups are too long for google analytics
 
     def remove_group(self, group):
-        self.update_cmd({'$pull': {'groups': group}})
+        groups = self.get('groups')
+        if groups:
+            if groups.has_key(group): groups.pop(group)
+
+    def groups_to_string(self):
+        groups = self.get('groups')
+        if not groups: return ''
+        return ",".join(["%s%s" % item for item in groups.iteritems()])
 
 
 @Database.register
