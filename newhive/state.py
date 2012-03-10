@@ -17,6 +17,8 @@ from boto.s3.key import Key as S3Key
 
 from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, dedup
 
+import logging
+logger = logging.getLogger(__name__)
 
 class Database:
     entity_types = [] # list of entity classes
