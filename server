@@ -22,7 +22,7 @@ if __name__ == '__main__':
             '0.0.0.0'
           , config.plain_port
           , application
-          , use_reloader = False
+          , use_reloader = True
           , use_debugger = config.debug_mode
           , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
           , static_files = {

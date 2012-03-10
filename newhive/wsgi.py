@@ -262,4 +262,9 @@ if __name__ == '__main__':
     get_builder = EnvironBuilder(method='GET', environ_overrides={'wsgi.url_scheme': 'https'})
     get_request = lambda: Request(get_builder.get_environ())
 
+    cara = db.User.named('cara')
     duffy = db.User.named('duffy')
+    andrew = db.User.named('andrew')
+    abram = db.User.named('abram')
+    zach = db.User.named('zach')
+

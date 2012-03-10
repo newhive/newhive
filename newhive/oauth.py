@@ -147,7 +147,7 @@ class FacebookClient(object):
     @property
     def credentials(self):
         if self._credentials and not self._credentials.access_token_expired and not self._credentials.invalid:
-            logger.info("Using stored credentials")
+            logger.info("Using stored credentials for '%s'", self.user['name'] if self.user and self.user.has_key('name') else '')
             return self._credentials
         else:
             #if self.ready_to_exchange:
