@@ -1,1 +1,23 @@
-hello
+Hi {{ user_name }},
+{{ initiator_name }}{% if type == "Comment" %}
+  commented on your expression:
+  "{{ message }}"
+{% elif type == "Star" %}
+  {% if entity_type == "Expr" %}
+    likes your expression
+    Now they can keep track of your expression and be notified of updates and discussions.
+  {% elif entity_type == "User" %}
+    is now listening to you
+    Now they will receive updates about what you're creating, starring and discussing.
+  {% endif %}
+{% elif type == "Broadcast" %}
+  broadcast your expression
+  Your expression has been broadcast to their network of listeners.
+{% endif %}
+
+{{ url }}
+
+Visit their profile here:
+{{initiator_url}}
+
+

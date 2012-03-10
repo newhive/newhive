@@ -5,7 +5,7 @@
   {% set message='"' + message + '"' %}
 {% elif type == "Star" %}
   {% if entity_type == "Expr" %}
-    {% set line1="starred" %}
+    {% set line1="likes" %}
     {% set line2="your expression" %}
     {% set message="Now they can keep track of your expression and be notified of updates and discussions." %}
   {% elif entity_type == "User" %}
@@ -13,6 +13,10 @@
     {% set line2="listening to you" %}
     {% set message="Now they will receive updates about what you're creating, starring and discussing." %}
   {% endif %}
+{% elif type == "Broadcast" %}
+  {% set line1="broadcast" %}
+  {% set line2="your expression" %}
+  {% set message="Your expression has been broadcast to their network of listeners." %}
 {% endif %}
 
 {% block body %}

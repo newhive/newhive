@@ -1,4 +1,4 @@
-{{ sender_fullname }} has send you an expression!
+{{ sender_fullname }} has sent you an expression!
 
    {{ message }}
 
