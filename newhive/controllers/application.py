@@ -92,6 +92,15 @@ class ApplicationController(object):
             ,template = template
             ,facebook_app_id = config.facebook_app_id
             )
+        if response.user.flagged('fb_connect_dialog'):# and not response.user.has_facebook:
+            dia_opts = """{
+                open: function(){
+                    $('#user_menu_handle').click();
+                    _gaq.push(['_trackEvent', 'fb_connect', 'open_connect_dialog', 'auto']);
+                }
+                , minimize_to: '#user_menu_handle'}"""
+            context.update(dialog_to_show = '#dia_facebook_connect', dialog_to_show_opts=dia_opts)
+            response.user.unflag('fb_connect_dialog')
         context.setdefault('icon', '/lib/skin/1/logo.png')
         return self.jinja_env.get_template(template).render(context)
 

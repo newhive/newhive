@@ -296,9 +296,7 @@ var profile_thumb_choose = function(){
      {% endif %}
      {% if update %}
        {% if not user.has_facebook %}
-         {% if user.has_group('fbc') %}
          <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'settings']);"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
-         {% endif %}
        {% else %}
        {% endif %}
      {% endif %}
