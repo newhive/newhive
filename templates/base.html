@@ -52,7 +52,10 @@ html, body { background-color : white; height : 100%; }
 
  <script>
      var logged_in = {{ 'true' if user.logged_in else 'false'}}, server_name = '{{ server_name }}', server_url = '{{ secure_server }}', debug_mode = {{ 'true' if debug else 'false' }};
-     var dialog_to_show = '{{dialog_to_show}}';
+     var dialog_to_show = {
+       name: '{{dialog_to_show}}'
+       , opts: {{dialog_to_show_opts | default('{}')}}
+       };
      var new_fb_connect = {{ "true" if new_fb_connect else "false"}};
      var fb_id = '{{ user.facebook_id }}';
  </script>

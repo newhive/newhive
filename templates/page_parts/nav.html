@@ -14,7 +14,6 @@
     <form name='logout_form' action='{{ secure_server }}' method='POST'>
       <input name='action' value='logout' type='hidden'>
     </form>
-    {% if user.has_group('fbc') %}
     {% if user.has_facebook %}
         <div class='menu_item facebook menu_hover' id='fb_invite_menu_item'>
           <div class="fb_icon"></div><span class="fb_icon_title">Invite friends</span>
@@ -26,7 +25,6 @@
         <div class='menu_item facebook menu_hover' id='fb_connect_menu_item'>
           <div class="fb_icon"></div><span class="fb_icon_title">Connect with Facebook</span>
         </div>
-    {% endif %}
     {% endif %}
     {% if user.referrals > 0 %}
       <div class='menu_item' onclick='showDialog("#dia_referral")'>
@@ -40,7 +38,7 @@
     hover_menu(
       $('#user_menu_handle'), 
       $('#user_menu'), 
-      { offsetY: 10 }
+      { offsetY: 12 }
     );
     $('#fb_invite_menu_item').click(function(e){
       _gaq.push(['_trackEvent', 'fb_connect', 'open_invite_dialog', 'user_menu']);
