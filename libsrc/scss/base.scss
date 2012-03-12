@@ -16,7 +16,37 @@ $right_column_x: $left_padding + $left_column_width + $right_padding;
 @import "feed";
 @import "expression";
 @import "settings";
+@import "signup_flow";
 
+.centered { 
+    text-align: center; 
+}
+img.centered, div.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+.bright_headline { 
+    font-family: Museo, sans-serif; 
+    color: $color_active;
+    }
+
+// Buttons
+.btn { 
+  padding:5px 10px; 
+  font-weight : bold; 
+  font-size : 1.23em; 
+  display : inline-block; 
+  cursor : default;
+  &.inactive { background-color : $color_24; color: white;}
+  &.black:hover { 
+    color : $color_1; 
+    background-color : $color_32;
+    &.inactive { background-color : $color_24; color: white;}
+  }
+}
+
+// Page Layout
 #primary_content{ clear: both; }
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;
@@ -35,14 +65,35 @@ iframe { border: none; }
 
 // Misc (move to own files when this gets too long)
 .user_settings, .email_confirmation{
+  .title { padding-top: 10px; }
+  #profile_thumb {
+    float: left;
+    width: 90px;
+    .message {
+      color: $color_grey_medium;
+      font-size: 12px;
+    }
+    img {
+      width: 70px;
+      height: 70px;
+    }
+    .placeholder {
+      $padding: 17px;
+      width: 70px;
+      height: 70px - 2*$padding;
+      border: 1px dashed #CCC; 
+      text-align:center; 
+      font-size: 10px;
+      padding: $padding 0;
+    }
+  }
   .fathead {
     margin: 50px; 
     div { 
-      background: url('/lib/skin/1/plus_lg.png') no-repeat; 
-      height: 44px;
+      //background: url('/lib/skin/1/plus_lg.png') no-repeat; 
+      //height: 44px;
     }
     h1 { 
-      margin: 0 0 0 50px; 
       display:inline;
       font-family: Museo, Helvetica, sans-serif;
     }
@@ -69,4 +120,7 @@ iframe { border: none; }
     color: $color_blue;
     &:hover { color: $color_active; }
   }
+}
+.css_compilation_test{
+  color: black;
 }

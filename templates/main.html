@@ -1,6 +1,35 @@
 {% extends "base.html" %}
 {% from "macros/main.html" import listen_button, star_button, share_button, create_button, discussion_button, starrers_menu, context_to_string %} 
 
+{% block head %}
+<script>
+  var fb_logged_in = false;
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : {{facebook_app_id}}, // App ID
+      //channelUrl : '//WWW.YOUR_DOMAIN.COM/channel.html', // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+    FB.getLoginStatus(function(data){
+        if (data.authResponse && data.authResponse.userID == fb_id) {
+            fb_logged_in = true;
+        }
+    });
+    // Additional initialization code here
+  };
+
+  // Load the SDK Asynchronously
+  (function(d){
+     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement('script'); js.id = id; js.async = true;
+     js.src = "//connect.facebook.net/en_US/all.js";
+     ref.parentNode.insertBefore(js, ref);
+   }(document));
+</script>
+{% endblock head %}
 {% block body_classes %}{{ super() }} main {% endblock body_classes%}
 
 {% block main %}
@@ -21,9 +50,21 @@
         <form name='logout_form' action='{{ secure_server }}' method='POST'>
           <input name='action' value='logout' type='hidden'>
         </form>
+        {% if user.has_facebook %}
+            <div class='menu_item facebook menu_hover' id='fb_invite_menu_item'>
+              <div class="fb_icon"></div><span class="fb_icon_title">Invite friends</span>
+            </div>
+            <div class='menu_item facebook' id='fb_listen_menu_item'>
+              <div class="fb_icon"></div><span class="fb_icon_title">Find friends</span>
+            </div>
+            {% else %}
+            <div class='menu_item facebook menu_hover' id='fb_connect_menu_item'>
+              <div class="fb_icon"></div><span class="fb_icon_title">Connect with Facebook</span>
+            </div>
+        {% endif %}
         {% if user.referrals > 0 %}
           <div class='menu_item' onclick='showDialog("#dia_referral")'>
-            Invites <span class="referral_count">{{ user.referrals }}</span>
+            <div class='invites'>Invitations</div><span class="referral_count">{{ user.referrals }}</span>
           </div>
         {% endif %}
         <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
@@ -31,6 +72,20 @@
       </div>
       <script>
         hover_menu( $('#user_menu_handle'), $('#user_menu') );
+        $('#fb_invite_menu_item').click(function(e){
+          _gaq.push(['_trackEvent', 'fb_connect', 'open_invite_dialog', 'user_menu']);
+          sendRequestViaMultiFriendSelector();
+        });
+        $('#fb_connect_menu_item').click(function(e){
+          _gaq.push(['_trackEvent', 'fb_connect', 'open_connect_dialog', 'user_menu']);
+          showDialog('#dia_facebook_connect');
+        });
+        $('#fb_listen_menu_item').click(function(e){
+          _gaq.push(['_trackEvent', 'fb_connect', 'open_listen_dialog', 'user_menu']);
+          e.stopPropagation();
+          $(this).addClass('menu_hover');
+          loadDialogPost('facebook_listen');
+        });
         hover_menu( $('#notifications, #more_button'), $('#feed_menu'), {
           open: function(){
             var div = $('#notifications');
@@ -83,6 +138,9 @@
         <div id='login_menu' class='menu top'>
           <form id='login_form' action='{{ secure_server }}' method='POST'>
             {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
+            <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
+              <img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;">
+            </a>
             <b>Username</b><br>
             <input id='username' type='text' name='username' value='{{ user['name'] }}'>
             <div class='spacer'></div>
@@ -114,7 +172,7 @@
 
   {% block body %}
   {% endblock body %}
-
+  <div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>
   <div id='content'>
     {% block content %}
       <div id="header">
@@ -142,14 +200,27 @@
   
   <div id='dialogs'>
     {% block dialogs %}
-      {% if user.logged_in %}
-        {% include 'dialogs/referral.html' %}
-      {% endif %}
-      {% include 'dialogs/password.html' %}
-      {% include 'dialogs/password_recovery.html' %}
-      {% include 'dialogs/signup.html' %}
       {% include 'dialogs/ie_warning.html' %}
       {% include 'dialogs/share.html' %}
+      {% include 'dialogs/password.html' %}
+
+      {% if user.logged_in %}
+          {% include 'dialogs/referral.html' %}
+          {% include 'dialogs/facebook_connect.html' %}
+          {% include 'dialogs/sent_invites_thanks.html' %}
+      {% else %}
+          {% include 'dialogs/sign_in_or_join.html' %}
+          {% include 'dialogs/signup.html' %}
+          {% include 'dialogs/password_recovery.html' %}
+      {% endif %}
+
+      {% if dialog_to_show == '#dia_fb_account_duplicate' %}
+          {% include 'dialogs/fb_account_duplicate.html' %}
+      {% endif %}
+
+      {% if new_fb_connect %}
+          {% include 'dialogs/fb_connect_landing.html' %}
+      {% endif %}
     {% endblock dialogs %}
   </div>
 {% endblock main %}

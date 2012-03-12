@@ -1,6 +1,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from werkzeug import url_unquote
+from werkzeug.urls import url_decode
 from newhive.mail import send_mail, mail_signup_thank_you
 
 
@@ -15,6 +16,18 @@ class MailController(ApplicationController):
             ,'message': request.form.get('message')
             ,'url': request.form.get('forward')
             }
+
+        try: # this step is really not neccessary, so ignore errors
+            args = form['url'].split('?')
+            if len(args) > 1:
+                args = url_decode(args[1])
+            if hasattr(args, 'has_key') and args.has_key('code'):
+                request.requester.fb_client.exchange(code=args['code'], redirect_uri=form['url'])
+                form.update({'facebook': request.requester.fb_client.me()})
+        except Exception as e:
+            print e
+            pass
+
         heads = {
              'To' : 'info@thenewhive.com'
             ,'From' : 'www-data@' + config.server_name
@@ -94,7 +107,7 @@ class MailController(ApplicationController):
             context = {
                  'referrer_url': user.url
                 ,'referrer_name': user.get('fullname')
-                ,'url': (abs_url(secure=True) + 'signup?key=' + referral['key'] + '&email=' + to_email)
+                ,'url': (abs_url(secure=True) + 'invited?key=' + referral['key'] + '&email=' + to_email)
                 ,'name': name
                 }
             body = {

@@ -12,21 +12,30 @@ class StarController(ApplicationController):
         """
 
         if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
-        if lget(request.path_parts, 0) == 'profile': #Means we're on profile
+        entity = request.form.get('entity')
+        entity_class = request.form.get('entity_class')
+        if entity:
+            if entity_class == 'Expr':
+                entity = self.db.Expr.fetch(entity)
+            elif entity_class == 'User':
+                entity = self.db.User.fetch(entity)
+        elif lget(request.path_parts, 0) == 'profile':
             entity = self.db.User.find(dict(sites=request.domain.lower()))
         else:
             entity = self.db.Expr.named(request.domain.lower(), request.path.lower())
+
+        s = self.db.Star.find({'initiator': request.requester.id, 'entity': entity.id})
         if request.form.get('action') == "star":
-            s = self.db.Star.create(request.requester, entity)
-            if s or s.get('entity'):
-                response.context['item'] = request.requester
-                return self.render_template(response, 'partials/user_card.html')
-            else:
-                return False
+            if not s: s = self.db.Star.create(request.requester, entity)
+            state = 'starred'
+        elif request.form.get('action') == "unstar":
+           if s: s.delete()
+           state = 'unstarred'
+
+        if request.form.get('dataType') == 'json':
+            return {'state': state}
         else:
-           s = self.db.Star.find(dict(initiator=request.requester.id, entity=entity.id))
-           if s:
-               res = s.delete()
-               if not res['err']: return {'unstarred': request.requester.id}
-           else:
-               return {'unstarred': request.requester.id}
+            if state == 'starred':
+                return self.render_template(response, 'partials/user_card.html')
+            elif state == 'unstarred':
+                return {'unstarred': request.requester.id}

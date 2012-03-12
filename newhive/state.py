@@ -1,4 +1,4 @@
-import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions
+import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
 import operator as op
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
@@ -9,12 +9,16 @@ from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
 from itertools import ifilter, imap
+from oauth2client.client import OAuth2Credentials
+from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
 from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of
 
+import logging
+logger = logging.getLogger(__name__)
 
 class Database:
     entity_types = [] # list of entity classes
@@ -127,6 +131,9 @@ class Entity(dict):
         return self
 
     def save(self): return self.update_cmd(self)
+
+    def reload(self):
+        dict.update(self, self.db.User.fetch(self.id))
 
     def update(self, **d):
         if d.has_key('updated'): del d['updated']
@@ -257,7 +264,7 @@ class KeyWords(Entity):
 @Database.register
 class User(HasSocial):
     cname = 'user'
-    indexes = [ ('name', {'unique':True}), ('sites', {'unique':True}) ]
+    indexes = [ ('name', {'unique':True}), ('sites', {'unique':True}), 'facebook.id' ]
     
     # fields = dict(
     #     name = str
@@ -277,6 +284,8 @@ class User(HasSocial):
 
     class Collection(Collection):
         def named(self, name): return self.find({'name' : name})
+        def find_by_facebook(self, id):
+            return self.find({'facebook.id': id, 'facebook.disconnected': {'$exists': False}}) 
         def get_root(self): return self.named('root')
         root_user = property(get_root)
 
@@ -287,6 +296,7 @@ class User(HasSocial):
     def __init__(self, *a, **b):
         super(User, self).__init__(*a, **b)
         self.logged_in = False
+        self.fb_client = None
         self.owner = self
         self['owner'] = self.id
 
@@ -393,13 +403,19 @@ class User(HasSocial):
             if len(exprs) == limit: break
         return exprs
 
+        res = self.db.Feed.search(spec, limit=limit, sort=[('created',-1)])
+        if viewer != self.id: res = ifilter( lambda i: i.entity and i.entity.can_view(viewer.id), res)
+        res = ifilter( lambda i: i.viewable(viewer), res)
+        return res
+
     def build_search_index(self):
         texts = {'name': self.get('name'), 'fullname': self.get('fullname')}
         self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
 
-    def new_referral(self, d):
+    def new_referral(self, d, decrement=True):
         if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
-            self.update(referrals=self['referrals'] - 1)
+            if decrement:
+                self.update(referrals=self['referrals'] - 1)
             d.update(user = self.id)
             return self.db.Referral.create(d)
     def give_invites(self, count):
@@ -430,16 +446,19 @@ class User(HasSocial):
         return self.db.File.search({ 'owner' : self.id })
     files = property(get_files)
 
-    def get_expr_count(self, force_update=False):
-        count = False
-        if not force_update:
-            tmp = self.get('analytics')
-            if tmp: tmp = tmp.get('expressions')
-            if tmp: count = tmp.get('count')
+    def set_expr_count(self):
+        count = self.mdb.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
+        self.update_cmd({"$set": {'analytics.expressions.count': count}})
+        return count
 
-        if not count:
-            count = self.mdb.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
-            self.update_cmd({"$set": {'analytics.expressions.count': count}})
+    def get_expr_count(self, force_update=False):
+        if force_update:
+            count = self.set_expr_count()
+        else:
+            try:
+                count = self['analytics']['expressions']['count']
+            except KeyError:
+                count = self.set_expr_count()
         return count
     expr_count = property(get_expr_count)
 
@@ -452,6 +471,109 @@ class User(HasSocial):
         self.db.KeyWords.remove_entries(self)
         for e in self.stars: e.delete()
         return super(User, self).delete()
+
+    @property
+    def facebook_credentials(self):
+        if not hasattr(self, '_facebook_credentials'):
+            if self.has_key('oauth') and self['oauth'].has_key('facebook'):
+                self._facebook_credentials = OAuth2Credentials.from_json(
+                                                    json.dumps(self['oauth']['facebook']))
+            else: return None
+        return self._facebook_credentials
+
+    @facebook_credentials.setter
+    def facebook_credentials(self, value):
+        self._facebook_credentials = value
+
+    def save_credentials(self, credentials, profile=False):
+        # Do nothing if not an in-database user
+        if not self.id: return False
+
+        if not self.has_key('oauth'): self['oauth'] = {}
+        if profile:
+            self['facebook'] = self.fb_client.me()
+        self['oauth']['facebook'] = json.loads(credentials.to_json())
+        self.save()
+
+    @property
+    def facebook_id(self):
+        if self.has_key('facebook'): return self['facebook'].get('id')
+
+    @property
+    def fb_thumb(self):
+        if self.has_key('facebook'):
+            return "https://graph.facebook.com/" + self.facebook_id + "/picture?type=square"
+
+    @property
+    def fb_name(self):
+        if self.has_key('facebook'):
+            return self['facebook']['name']
+
+    def facebook_disconnect(self):
+        if self.facebook_credentials and not self.facebook_credentials.access_token_expired:
+            fbc = FacebookClient()
+            try:
+                fbc.delete('https://graph.facebook.com/me/permissions', self.facebook_credentials)
+            except (FlowExchangeError, AccessTokenCredentialsError) as e:
+                print e
+            self.facebook_credentials = None
+        self.update_cmd({'$set': {'facebook.disconnected': True}})
+        self.update_cmd({'$unset': {'oauth.facebook': 1}})
+
+    @property
+    def has_facebook(self):
+        if self.get('facebook') and not self['facebook'].get('disconnected'):
+            return True
+        else: return False
+
+    @property
+    def facebook_friends(self):
+        friends = self.fb_client.friends()
+        return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}, 'facebook.disconnected': {'$exists': False}})
+
+    @property
+    def expressions(self):
+        return self.db.Expr.search({'owner': self.id})
+
+    def delete(self):
+        # Facebook Disconnect
+        self.facebook_disconnect()
+
+        # Expressions Cleanup
+        for e in self.expressions:
+            e.delete()
+
+        # Search Index Cleanup
+        self.db.KeyWords.remove_entries(self)
+
+        # Feed Cleanup
+        for feed_item in self.db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
+            feed_item.delete()
+
+        return super(User, self).delete()
+
+    def has_group(self, group, level=None):
+        groups = self.get('groups')
+        if type(group) == list: return False
+        if not groups or not group in groups:
+            return False
+        return level == None or level == groups[group]
+
+    def add_group(self, group, level):
+        assert type(group) == str and len(group) <=3
+        if not self.has_key('groups'): self['groups'] = {}
+        self['groups'][group] = level
+        #TODO: add warning if groups are too long for google analytics
+
+    def remove_group(self, group):
+        groups = self.get('groups')
+        if groups:
+            if groups.has_key(group): groups.pop(group)
+
+    def groups_to_string(self):
+        groups = self.get('groups')
+        if not groups: return ''
+        return ",".join(["%s%s" % item for item in groups.iteritems()])
 
 
 @Database.register
@@ -670,7 +792,7 @@ def generate_thumb(file, size):
     except:
         print "failed to opem image file " + str(file)
         return False
-    print "Thumbnail Generation:   initial size: " + str(imo.size),
+    #print "Thumbnail Generation:   initial size: " + str(imo.size),
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     if imo.mode != 'RGB':
@@ -678,8 +800,8 @@ def generate_thumb(file, size):
         imo = imo.convert(mode='RGBA')
         imo = Img.composite(imo, bg, imo)
     dt = time.time() - t0
-    print "   final size:   " + str(imo.size),
-    print "   conversion took " + str(dt*1000) + " ms"
+    #print "   final size:   " + str(imo.size),
+    #print "   conversion took " + str(dt*1000) + " ms"
 
     output = os.tmpfile()
     imo.save(output, format='jpeg', quality=70)
@@ -890,6 +1012,9 @@ class Feed(Entity):
         elif self['entity_class'] == "Expr":
             return self.entity.owner_url
 
+    def viewable(self, viewer):
+        return True
+
 @Database.register
 class Comment(Feed):
     action_name = 'commented'
@@ -948,10 +1073,24 @@ class NewExpr(Feed):
 class UpdatedExpr(Feed):
     action_name = 'updated'
 
+@Database.register
+class FriendJoined(Feed):
+    def viewable(self, viewer):
+        return self['entity'] == viewer.id
+
+
+@Database.register
+class SystemMessage(Feed):
+    class Collection(Feed.Collection):
+        def create(self, entity, data={}):
+            initiator = self.db.User.get_root()
+            return super(SystemMessage.Collection, self).create(initiator, entity, data)
+
 
 @Database.register
 class Referral(Entity):
     cname = 'referral'
+    indexes = [ 'key', 'request_id' ]
 
     def create(self):
         self['key'] = junkstr(16)

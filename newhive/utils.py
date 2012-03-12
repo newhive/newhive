@@ -1,4 +1,4 @@
-import time, random, re
+import time, random, re, base64
 from datetime import datetime
 from newhive import config
 
@@ -64,6 +64,16 @@ def uniq(seq, idfun=None):
         seen[marker] = 1 
         result.append(item) 
     return result
+
+def b64decode(s, add_padding=True, url_safe=True):
+    if add_padding:
+        s1 = s + "=" * ((4 - len(s) % 4) % 4)
+    else:
+        s1 = s
+    if url_safe:
+        return base64.urlsafe_b64decode(s1)
+    else:
+        return base64.b64decode(s1)
 
 class memoized(object):
    """Decorator that caches a function's return value each time it is called.

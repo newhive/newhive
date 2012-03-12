@@ -1,6 +1,10 @@
 from werkzeug import exceptions
-from newhive import config
+from newhive import config, oauth
 from newhive.utils import junkstr
+from newhive.oauth import FacebookClient, FlowExchangeError
+
+import logging
+logger = logging.getLogger(__name__)
 
 def authenticate_request(db, request, response):
     """Read session id from 'identity' cookie, retrieve session record from db,
@@ -13,6 +17,12 @@ def authenticate_request(db, request, response):
     session = db.Session.fetch(sessid)
     if not session: return fail
     user = db.User.fetch(session['user'])
+    if not user:
+        rm_cookie(response, 'plain_secret')
+        rm_cookie(response, 'secure_secret', True)
+        rm_cookie(response, 'identity')
+        return fail
+
     user.update(session = session.id)
 
     user.logged_in = False
@@ -32,31 +42,53 @@ def handle_login(db, request, response):
 
     user = db.User.named(username)
     if user and user.cmp_password(secret):
-        # login
-
-        # session record looks like:
-        #    user = id
-        #    expires = bool
-        #    remember = bool
-        #    plain_secret = str
-        #    secure_secret = str
-
-        expires = False if args.get('no_expires', False) else True
-        session = db.Session.create(dict(
-             user = user.id
-            ,active = True
-            ,remember = args.get('remember', False)
-            ,expires = expires
-            ))
-        set_secret(session, True, response)
-        set_secret(session, False, response)
-        set_cookie(response, 'identity', session.id, expires = expires)
-        user.logged_in = True
-        request.requester = user
+        new_session(db, user, request, response)
         return True
 
     response.context['error'] = 'Invalid username or password'
     return False
+
+def facebook_login(db, request, response):
+    request.fbc = oauth.FacebookClient()
+    try:
+        fb_profile = request.requester.fb_client.me()
+        user = db.User.find_by_facebook(fb_profile.get('id'))
+    except FlowExchangeError as e:
+        logger.error("Flow exchange error during facebook login: %s", e)
+        user = None
+        response.context['error'] = 'Either something went wrong with facebook login or your facebook account is not connect to The New Hive'
+
+    if user:
+        session = new_session(db, user, request, response)
+        user.update(session = session.id)
+        user.logged_in = True
+        return user
+    else:
+        return request.requester
+
+def new_session(db, user, request, response):
+    # login
+
+    # session record looks like:
+    #    user = id
+    #    expires = bool
+    #    remember = bool
+    #    plain_secret = str
+    #    secure_secret = str
+
+    expires = False if request.form.get('no_expires', False) else True
+    session = db.Session.create(dict(
+         user = user.id
+        ,active = True
+        ,remember = request.form.get('remember', False)
+        ,expires = expires
+        ))
+    set_secret(session, True, response)
+    set_secret(session, False, response)
+    set_cookie(response, 'identity', session.id, expires = expires)
+    user.logged_in = True
+    request.requester = user
+    return session
 
 def handle_logout(db, request, response):
     """Removes cookies, deletes session record, sets

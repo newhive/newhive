@@ -17,6 +17,24 @@ admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
                    'duffy@thenewhive.com', 'info@thenewhive.com',
                    'duffy.tilleman@gmail.com', 'duffy@lumana.org',
                    'straussss@gmail.com', 'quuxman@gmail.com']
+
+beta_testers    = [
+                   'darkluna'
+                  , 'philco'
+                  , 'lolo'
+                  , 'roseanna'
+                  , 'anniesarah'
+                  , 'graham'
+                  , 'coo'
+                  , 'ashley'
+                  , 'ece'
+                  , 'sammie'
+                  , 'kaz'
+                  , 'v908'
+                  , 'test'
+                  ]
+beta_testers = admins + beta_testers
+
 site_user       = 'thenewhive'
 admins.append(site_user)
 site_pages      = {
@@ -30,6 +48,9 @@ content_domain_prefix = 'user'
 email_server    = 'localhost'
 email_user      = False
 email_password  = False
+
+facebook_app_id = ''
+facebook_client_secret = ''
 
 use_ga          = False
 signup_group    = 2

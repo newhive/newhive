@@ -43,7 +43,7 @@ function urlValidate(value, method) {
 }
 
 function autoLink(string) {
-    var re = /(\s|^)(https?:\/\/)?(([0-9a-z]+\.)+[0-9a-z]{2,3}(:\d+)?(\/[-\w.~:\/#\[\]@!$&'()*+,;=?]*?)?)([;,.?!]?(\s|$))/ig;
+    var re = /(\s|^)(https?:\/\/)?(([0-9a-z-]+\.)+[0-9a-z-]{2,3}(:\d+)?(\/[-\w.~:\/#\[\]@!$&'()*+,;=?]*?)?)([;,.?!]?(\s|$))/ig;
     // groups 1        2             34                       5      6                                   7
     // 1: this ends up excluding existing links <a href="foo.bar">foo.bar</a>
     // 2: optional http(s):// becomes capture group 2
@@ -103,6 +103,29 @@ function loadDialog(url, opts) {
 }
 loadDialog.loaded = {};
 
+function loadDialogPost(name, opts) {
+    var dia;
+    opts = $.extend({reload: false, hidden: false}, opts);
+    if(loadDialog.loaded[name]) {
+        dia = loadDialog.loaded[name];
+    } 
+    if (dia && !opts.reload && !opts.hidden) {
+        showDialog(dia,opts);
+    } else {
+        $.post(window.location, {action: 'dialog', dialog: name}, function(h){
+            var html = h;
+            if (dia && opts.reload ) {
+                dia.filter('div').replaceWith($(html).filter('div'));
+            } else {
+                dia = loadDialog.loaded[name] = $(html);
+                if (!opts.hidden){
+                    showDialog(dia,opts);
+                }
+            }
+        }, 'text');
+    }
+}
+
 function secureDialog(type, opts) {
     var dia;
     var params = $.extend({'domain': window.location.hostname, 'path': window.location.pathname}, opts.params)
@@ -128,7 +151,8 @@ function showDialog(name, opts) {
                 mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
 
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
-            dialog.addClass('dialog border selected').detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            if (! dialog.hasClass('newdialog')) dialog.addClass('dialog border selected');
+            dialog.detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
             if(!o.opts.mandatory) {
                 o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
                 o.shield.add(o.btn_close).click(o.close);
@@ -380,21 +404,19 @@ $(function () {
 
   // Cause external links to open in a new window
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
-  $('a').each(function() {
-    var a = new RegExp(server_name);
-    if(this.href.indexOf('http') == 0 && !a.test(this.href)) {
-      $(this).click(function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        window.open(this.href, '_blank');
-      });
-    }
-  });
+  $('a').each(link_target);
+
   $(window).resize(place_apps);
   place_apps();
+
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
+  if (dialog_to_show) { showDialog(dialog_to_show); };
+  if (new_fb_connect) {
+      _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
+      showDialog('#dia_fb_connect_landing');
+  };
   // This completely breaks the site on Ios, and is annoying
-  // Also very likely to be seen by logged out users
+  // Also likely to be seen by logged out users
   //else if (!logged_in) {
   //    var count = parseInt(readCookie('pageview_count'));
   //    var signup = readCookie('signup_completed') == 'true';
@@ -406,6 +428,11 @@ $(function () {
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
+function link_target(i, a) {
+    var re = new RegExp(server_name), a = $(a), href = $(a).attr('href');
+    if(href && href.indexOf('http') == 0 && !re.test(href))
+        $(a).attr('target', '_blank');
+}
 
 
 function center(e, inside, opts) {
@@ -436,7 +463,7 @@ function img_fill(img) {
 
 function asyncSubmit(form, callback) {
     var url = $(form).attr('action')? $(form).attr('action') : server_url
-    $.post(url, $(form).serialize(), callback);
+    $.post(url, $(form).serialize(), callback, 'text');
     return false;
 }
 
@@ -710,4 +737,20 @@ var asset = function(path) {
 var buildSearch = function(){
   var search = $('#search_box').val();
   return server_url + "search?q=" + escape(search);
+}
+
+function sendRequestViaMultiFriendSelector() {
+  function requestCallback(response) {
+    $('#dia_referral .btn_dialog_close').click();
+    if (response){
+      _gaq.push(['_trackEvent', 'fb_connect', 'invite_friends', undefined, response.to.length]);
+      showDialog('#dia_sent_invites_thanks');
+      $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
+    }
+  }
+  FB.ui({method: 'apprequests'
+    , message: 'Join me on The New Hive'
+    , title: 'Invite Friends to Join The New Hive'
+    , filters: ['app_non_users']
+  }, requestCallback);
 }

@@ -41,12 +41,37 @@ body.home.logged_out .nav{
 #user_menu .referral_count {
   color: $color_active;
   padding-left: 30px;
+  float: right;
+}
+#user_menu {
+  .fb_icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 25px;
+    height: 25px;
+    margin-right: 5px;
+    background: url('/lib/skin/1/facebook_flat_sm.png') no-repeat -1px -2px;
+  }
+  .fb_icon_title {
+      font-size: 19px;
+  }
+  .menu_item {
+      clear: both;
+      overflow: hidden;
+      }
 }
 
 #exp_owner { background-color : $color_selected; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; vertical-align: top; }
 #datetime { font-size : .7em; color : $color_grey_medium; line-height : .5em; }
 #info { display : inline-block; text-align : right; margin-right : 10px; }
 #owner_thumb { width: 39px; float: left; margin: 5px 0; }
+
+#user_menu .menu_item.facebook{
+  &:hover {
+      background-color: $color_facebook;
+      color: white;
+  }
+}
 
 .nav .notification_count {
   display: inline-block;

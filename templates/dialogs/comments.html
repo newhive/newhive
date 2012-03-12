@@ -29,18 +29,23 @@
 </div>
 <script>
   function submitComment() {
-    $.post('', $('#dia_comments form').serialize(), function(data) {
-      var comments_div = $('#comments');
-      comment_count += 1;
-      comments_div.append(data);
-      $('#dia_comments .comments_count').html(' (' + comment_count + ')');
-      $('#btn_comment').attr('data-count', comment_count);
-      $('#dia_comments textarea').val('');
-      commentSize();
-      comments_div[0].scrollTop = 100000;
-      reloadFeed();
-      iconCounts();
-    }, 'text');
+      var submit = $('#dia_comments input[type=submit]');
+      if (!submit.hasClass('inactive')) {
+          submit.addClass('inactive');
+          $.post('', $('#dia_comments form').serialize(), function(data) {
+              $('#dia_comments input[type=submit]').removeClass('inactive');
+              var comments_div = $('#comments');
+              comment_count += 1;
+              comments_div.append(data);
+              $('#dia_comments .comments_count').html(' (' + comment_count + ')');
+              $('#btn_comment').attr('data-count', comment_count);
+              $('#dia_comments textarea').val('');
+              commentSize();
+              comments_div[0].scrollTop = 100000;
+              reloadFeed();
+              iconCounts();
+          }, 'text');
+      }
   };
   function commentSize(){
     var header_height = $('#dia_comments .header').height();
@@ -53,6 +58,7 @@
     center($('#dia_comments'));
   };
   commentSize();
-  $('.comment_content .text').each(function(i, e) { $(e).html(autoLink($(e).html())) }); 
+  $('.comment_content .text').each(function(i, e) { $(e).html(autoLink($(e).html())) });
+  $('.comment_content a').each(link_target);
   setTimeout('commentSize(); $("#comments")[0].scrollTop = 100000;', 0);
 </script>

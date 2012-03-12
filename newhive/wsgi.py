@@ -90,6 +90,9 @@ def admins(server):
         return (server if request.requester.get('name') in config.admins else app.serve_404)(request, response, *arg)
     return access_controled
 
+def dialog_map(request, response, args=None):
+    return dialogs.get(request.form['dialog'])(request, response, args)
+
 
 # Possible values for the POST variable 'action'
 actions = dict(
@@ -120,6 +123,9 @@ actions = dict(
     ,broadcast         = controllers['broadcast'].update
     ,log               = controllers['user'].log
     ,thumbnail_relink  = controllers['admin'].thumbnail_relink
+    ,facebook_invite   = controllers['user'].facebook_invite
+    ,facebook_listen   = controllers['user'].facebook_listen
+    ,dialog            = dialog_map
 )
 
 site_pages = {
@@ -133,6 +139,7 @@ site_pages = {
     ,'signup'              : controllers['user'].new
     ,'user_check'          : controllers['user'].user_check
     ,'email_confirmation'  : controllers['user'].confirm_email
+    ,'fbcanvas'            : controllers['user'].facebook_canvas
     ,'feedback'            : app.page('pages/feedback.html')
     ,'file'                : app.serve_404
     ,'cron'                : controllers['cron'].cron
@@ -142,6 +149,10 @@ site_pages = {
     ,'robots.txt'          : app.robots
 }
 
+dialogs = dict(
+    facebook_listen = controllers['user'].facebook_listen
+)
+
 
 def handle(request): # HANDLER
     """The HTTP handler, main entry point from Werkzeug.
@@ -150,13 +161,7 @@ def handle(request): # HANDLER
        response for thenewhive.com must not contain unsanitized user content.
        Accepts werkzeug.Request, returns werkzeug.Response"""
 
-    response = Response()
-    response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
-    response.user = request.requester = auth.authenticate_request(db, request, response)
-    request.path = request.path[1:].strip('/') # drop leading and trailing '/'
-    request.domain = request.host.split(':')[0].lower()
+    request, response = app.pre_process(request)
     request.owner = None
     request.is_owner = False
     parts = request.path_parts = request.path.split('/')
@@ -167,8 +172,8 @@ def handle(request): # HANDLER
     if request.domain != config.content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback']
-            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite', 'dialog']
+            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback', 'file_create']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
             if not request.requester.logged_in and not reqaction in non_logged_in_actions:
@@ -182,6 +187,7 @@ def handle(request): # HANDLER
             if type(r) == Response: return r
             if r != None: return app.serve_json(response, r, as_text = True)
             elif reqaction != 'logout':
+               print reqaction
                print "************************would return status 204 here*************************"
                #return Response(status=204) # 204 status = no content
 
@@ -231,3 +237,16 @@ def handle_safe(request):
     except Exception as e: return app.serve_error(request, str(e))
 
 application = handle_debug
+
+if __name__ == '__main__':
+    from werkzeug.test import EnvironBuilder
+    from newhive.oauth import FacebookClient
+    get_builder = EnvironBuilder(method='GET', environ_overrides={'wsgi.url_scheme': 'https'})
+    get_request = lambda: Request(get_builder.get_environ())
+
+    cara = db.User.named('cara')
+    duffy = db.User.named('duffy')
+    andrew = db.User.named('andrew')
+    abram = db.User.named('abram')
+    zach = db.User.named('zach')
+
