@@ -101,13 +101,15 @@
     </div>
   {% endif %}
   <div id='card_header'>
-    <div class='medbold title'>
+    <div class='title'>
       {% if network and cards|length < 10 %}
-        You needs more stuff
+        <img src='/lib/skin/1/people_small.png' style='float: left; vertical-align: middle; margin-right: 10px;'>
+        <span class='info'>To listen to someone, click the person icon next to their name.<br>
+        Activity of the people you're listening to will appear on this page.</span>
       {% elif search %}
-        Results for: {{ q.q|e }}
+        <span class='head'>Results for: {{ q.q|e }}</span>
       {% elif tag_page %}
-        #{{ tag|e }}
+        <span class='head'>#{{ tag|e }}</span>
       {% endif %}
     </div>
     <div id='top_tabs'>
@@ -160,6 +162,11 @@
 
 {% block right_column %}
   <div id='feed'>
+    {% if network and cards|length < 10 %}
+      <div class='prompt'><img src='/lib/skin/1/prompt_allies.png'      class='hoverable'><div>Click the tags on the left to find people creating expressions about your interests.</div></div>
+      <div class='prompt'><img src='/lib/skin/1/prompt_expressions.png' class='hoverable'><div>Click here to connect to Facebook and follow / invite friends.</div></div>
+      <div class='prompt'><img src='/lib/skin/1/prompt_interests.png'   class='hoverable'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div>
+    {% endif %}
     {% include 'page_parts/cards.html' %}
   </div>
 {% endblock right_column %}

@@ -78,7 +78,7 @@ body.home.logged_out .nav{
   &.enabled .icon { background-image: url("/lib/skin/1/broadcast_active.png"); }
 }
 
-.listen_small {
+#listen_small {
   .icon {
       position: relative;
       top: 2px;
@@ -88,15 +88,15 @@ body.home.logged_out .nav{
   }
   &.active .icon { background-image: url('/lib/skin/1/people_small-hover.png'); }
 }
-.listen_small.starred { 
+#listen_small.starred { 
   .icon { background-image: url('/lib/skin/1/people_small_active.png'); }
   &.active .icon { background-image: url('/lib/skin/1/people_small_active-hover.png'); }
 }
 
 .nav .nav_icon.has_count {
   position: relative;
-  padding-right: 6px;
-  margin-right: -3px;
+  padding-right: 16px;
+  &.zero { padding-right: 0px; }
 }
 
 .has_count .count {
@@ -112,8 +112,8 @@ body.home.logged_out .nav{
   float: left;
   background: #696E76;
   position: absolute;
-  right: -5px;
-  bottom: 5px;
+  right: 0px;
+  top: 3px;
 }
 .has_count .count.zero {
   display: none;

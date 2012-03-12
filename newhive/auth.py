@@ -26,7 +26,7 @@ def handle_login(db, request, response):
 
     args = request.form
     if not request.is_secure: raise exceptions.BadRequest()
-    username = args.get('username', False)
+    username = args.get('username', False).lower()
     secret = args.get('secret', False)
     if not (username or secret): raise exceptions.BadRequest()
 

@@ -35,9 +35,11 @@ body.home {
   }
 }
 
-#card_header { height: 25px; margin: 18px 20px 2px 0; position: relative; }
+#card_header { min-height: 25px; margin: 18px 20px 2px 0; position: relative; }
 body.profile #card_header { margin-top: -10px; }
-#header .title { margin-left: $right_column_x + 9px; font-family: Museo,Helvetica,sans-serif; }
+#header .title { margin-left: $right_column_x + 9px; }
+#header .head { font-size: 2em; font-family: Museo,Helvetica,sans-serif; }
+#header .info { color: $color_grey_medium; }
 
 #top_tabs { position: absolute; right: 0px; white-space: nowrap; }
 #top_tabs .tab_label {
@@ -107,4 +109,19 @@ body.profile #left_tabs .tab_label {
   &.tag_13 { background-color: $color_tag_13; }
   &.tag_14 { background-color: $color_tag_14; }
   &.tag_15 { background-color: $color_tag_15; }
+}
+
+#feed .prompt {
+  display: inline-block;
+  width: 260px;
+  height: 260px;
+  position: relative;
+  margin: 5px;
+  cursor: pointer;
+  div {
+    position: absolute; left: 20px; top: 141px;
+    width: 230px;
+    font-weight: bold;
+  }
+  img { position: absolute; left: 0px; top: 0px; }
 }

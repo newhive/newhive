@@ -162,7 +162,6 @@ class HasSocial(Entity):
         if doc.has_key('feed'): del doc['feed']
         super(HasSocial, self).__init__(col, doc)
 
-    _starrer_ids = None
     @property
     @memoized
     def starrer_ids(self):
@@ -171,6 +170,11 @@ class HasSocial(Entity):
     def starrers(self): return map(self.db.User.fetch, self.starrer_ids)
     @property
     def star_count(self): return len(self.starrer_ids)
+
+    @property
+    @memoized
+    def broadcaster_count(self):
+        return self.db.Broadcast.search({ 'entity': self.id }).count()
 
     def related_next(self, spec={}, loop=True):
         if type(spec) == dict:

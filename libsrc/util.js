@@ -164,7 +164,7 @@ showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
 function btn_listen_click(btn) {
-    var btn = $(btn);
+    var btn = $('#listen_small');
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
         btn.addClass('inactive');
