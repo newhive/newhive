@@ -161,3 +161,23 @@ class AnalyticsController(ApplicationController):
     def active_users_cohort(self, request, response):
         response.context['data'] = analytics.visits_per_month(self.db)
         return self.serve_page(response, 'pages/analytics/active_users_cohort.html')
+
+    def expression_creates_cohort(self, request, response):
+        response.context['data'] = analytics.expressions_per_month(self.db)
+        response.context['title'] = 'Fraction of users who created an expression in the month, by cohort'
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
+
+    def referrals_cohort(self, request, response):
+        response.context['data'] = analytics.referrals_per_month(self.db)
+        response.context['title'] = 'Fraction of users who invited another user in the month (not necessarily used), by cohort'
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
+
+    def used_referrals_cohort(self, request, response):
+        response.context['data'] = analytics.used_referrals_per_month(self.db)
+        response.context['title'] = 'Fraction of users who invited another user and that person joined, by cohort'
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
+
+    def funnel2_cohort(self, request, response):
+        response.context['data'] = analytics.funnel2_per_month(self.db)
+        response.context['title'] = 'Funnel 2: Fraction of users who had a user signup on one of their expressions (not neccessarily created account), by cohort'
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
