@@ -172,7 +172,7 @@ def handle(request): # HANDLER
     if request.domain != config.content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite', 'dialog']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite', 'dialog', 'profile_thumb_set']
             non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback', 'file_create']
             if not request.is_secure and not reqaction in insecure_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')

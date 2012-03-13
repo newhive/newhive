@@ -386,7 +386,8 @@ class User(HasSocial):
     def feed_search(self, spec, viewer=None, page=None, limit=0):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
         if page: spec['created'] = { '$lt': page }
-        res = ifilter( lambda i: viewer.can_view(i.entity), self.db.Feed.search(spec, limit=limit, sort=[('created',-1)]) )
+        res = ifilter( lambda i: i.viewable(viewer) and viewer.can_view(i.entity),
+            self.db.Feed.search(spec, limit=limit, sort=[('created',-1)]) )
         return res
 
     def feed_group(self, res, limit, feed_limit=6):
@@ -402,11 +403,6 @@ class User(HasSocial):
                 exprs[i].feed.append(item)
             if len(exprs) == limit: break
         return exprs
-
-        res = self.db.Feed.search(spec, limit=limit, sort=[('created',-1)])
-        if viewer != self.id: res = ifilter( lambda i: i.entity and i.entity.can_view(viewer.id), res)
-        res = ifilter( lambda i: i.viewable(viewer), res)
-        return res
 
     def build_search_index(self):
         texts = {'name': self.get('name'), 'fullname': self.get('fullname')}

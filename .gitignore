@@ -5,4 +5,4 @@
 /newhive/config.py
 /newhive/config/private_config.py
 *.pyc
-/log
+/log/*

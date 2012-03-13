@@ -212,7 +212,7 @@ class UserController(ApplicationController):
 
     def profile_thumb_set(self, request, response):
         request.max_content_length = 10000000 # 10 megs
-        file = request.files.get('profile_thumb')
+        file = request.files.get('file')
         mime = mimetypes.guess_type(file.filename)[0]
         if not mime in ['image/jpeg', 'image/png', 'image/gif']:
             response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
@@ -222,7 +222,7 @@ class UserController(ApplicationController):
         res = self.db.File.create(dict(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime))
         tmp_file.close()
         request.requester.update(thumb_file_id = res.id, profile_thumb=res.get_thumb(190,190))
-        return self.redirect(response, request.form['forward'])
+        return { 'name': file.filename, 'mime' : mime, 'file_id' : res.id, 'url' : res.get('url'), 'thumb': res.get_thumb(190,190) }
 
     def password_recovery(self, request, response):
         email = request.form.get('email')
@@ -294,7 +294,7 @@ class UserController(ApplicationController):
             except (AccessTokenCredentialsError, FlowExchangeError) as e:
                 logger.error("Error generating friends to listen dialog for '%s': %s", request.requester['name'], e)
                 response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
-        except FlowExchangeError:
+        except FlowExchangeError as e:
             logger.error("Error generating friends to listen dialog for '%s': %s", request.requester['name'], e)
             response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
         if friends and len(friends):

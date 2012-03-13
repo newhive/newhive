@@ -468,8 +468,8 @@ function asyncSubmit(form, callback) {
 }
 
 function asyncUpload(opts) {
-    var target, form, opts = $.extend({ json : true, file_name : 'file',
-        start : noop, success : noop, data : { action : 'file_create' } }, opts);
+    var target, form, opts = $.extend({ json : true, file_name : 'file', action: '/',
+        start : noop, success : noop, data : { action : opts.post_action || 'file_create' } }, opts);
 
     var onload = function() {
         var frame = target.get(0);
@@ -481,7 +481,8 @@ function asyncUpload(opts) {
     }
 
     var tname = 'upload' + Math.random();
-    form = $("<form method='POST' enctype='multipart/form-data' action='/' style='position : absolute; left : -1000px'>").attr('target', tname);
+    form = $("<form method='POST' enctype='multipart/form-data' style='position : absolute; left : -1000px'>").
+        attr('target', tname).attr('action', opts.action);
     target = $("<iframe style='position : absolute; left : -1000px'></iframe>").attr('name', tname).appendTo(form).load(onload);
     var input = $("<input type='file'>").attr('name', opts.file_name).change(function() { opts.start(); form.submit() }).appendTo(form);
     for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);

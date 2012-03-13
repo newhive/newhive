@@ -6,7 +6,7 @@
   var fb_logged_in = false;
   window.fbAsyncInit = function() {
     FB.init({
-      appId      : {{facebook_app_id}}, // App ID
+      appId      : {{facebook_app_id|json}}, // App ID
       //channelUrl : '//WWW.YOUR_DOMAIN.COM/channel.html', // Channel File
       status     : true, // check login status
       cookie     : true, // enable cookies to allow the server to access the session
@@ -64,7 +64,7 @@
         {% endif %}
         {% if user.referrals > 0 %}
           <div class='menu_item' onclick='showDialog("#dia_referral")'>
-            <div class='invites'>Invitations</div><span class="referral_count">{{ user.referrals }}</span>
+            <div class='invites'>Invitations</div>
           </div>
         {% endif %}
         <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
