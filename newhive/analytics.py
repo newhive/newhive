@@ -181,7 +181,10 @@ def datetime_to_str(dt):
     return str(datetime_to_int(dt))
 
 
-def visits_per_month(db, force={}):
+def visits_per_month(db, force={}, cohort_users = None):
+    if not cohort_users:
+        cohort_users = _cohort_users(db)
+    cohort_users = cohort_users['names']
 
     map1 = """
         function() {
@@ -212,8 +215,6 @@ def visits_per_month(db, force={}):
     else:
         logger.info("Using cached map reduce stage 1")
 
-    end = datetime.datetime.utcnow()
-    end = end.replace(day=1, hour=12, minute=0, second=0, microsecond=0)
     monthly_range = pandas.DateRange(datetime.datetime(2011,11,1,12)
                                      , end = datetime.datetime.now()
                                      , offset = pandas.DateOffset(months=1)
@@ -236,20 +237,8 @@ def visits_per_month(db, force={}):
             logger.info("Using cached map reduce stage 2")
         mr2_dict[date] = mr2
 
-    cohort_range = pandas.DateRange(start = datetime.datetime(2011,4,1,12)
-                               , end = datetime.datetime.now()
-                               , offset = pandas.DateOffset(months=1)
-                               )
+        rv = OrderedDict()
 
-    cohort_users = OrderedDict()
-    for date in cohort_range:
-        cohort_users[date] = [u['name'] for u in db.User.search({
-                        'created': {
-                            '$gt': datetime_to_int(date)
-                            , '$lt': datetime_to_int(date + pandas.DateOffset(months=1))
-                            }
-                        })]
-    rv = OrderedDict()
     for cohort_name, users in cohort_users.iteritems():
         rv[cohort_name] = OrderedDict()
         for mr2_name, mr2 in mr2_dict.iteritems():
@@ -259,6 +248,160 @@ def visits_per_month(db, force={}):
                 rv[cohort_name][mr2_name] = {'size': cohort_size, 'active': active_count, 'active_fraction': active_count / cohort_size}
 
     return rv
+
+def expressions_per_month(db, cohort_users = None):
+    if not cohort_users:
+        cohort_users = _cohort_users(db)
+    cohort_users = cohort_users['ids']
+
+    map1 = """
+        function() {
+            if (typeof(this.apps) != "undefined" && this.apps.length > 0){
+                emit(this.owner, 1);
+            }
+        }"""
+
+    reduce = """
+        function(key, values) {
+            var total=0;
+            for (var i=0; i < values.length; i++) {
+                total += values[i];
+            }
+            return total;
+        }"""
+
+    monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
+                                     , end = datetime.datetime.now()
+                                     , offset = pandas.DateOffset(months=1)
+                                     )
+
+    mr_dict = _monthly_map_reduce(db, monthly_range, db.mdb.expr, 'created', map1, reduce, 'expressions_per_month')
+    return _cohort_analysis(cohort_users, mr_dict, {'value': {'$gte': 1}})
+
+def referrals_per_month(db, cohort_users = None):
+    if not cohort_users:
+        cohort_users = _cohort_users(db)
+    cohort_users = cohort_users['ids']
+
+    map = """
+        function() {
+            emit(this.user, 1);
+        }
+        """
+
+    monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
+                                     , end = datetime.datetime.now()
+                                     , offset = pandas.DateOffset(months=1)
+                                     )
+
+    mr_dict = _monthly_map_reduce(db, monthly_range, db.mdb.referral, 'created', map, None, 'referrals_per_month')
+    return _cohort_analysis(cohort_users, mr_dict, {'value': {'$gte': 1}})
+
+def used_referrals_per_month(db, cohort_users = None):
+    if not cohort_users:
+        cohort_users = _cohort_users(db)
+    cohort_users = cohort_users['ids']
+
+    map = """
+        function() {
+            if (this.used) {
+                emit(this.user, 1);
+            }
+        }
+        """
+
+    monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
+                                     , end = datetime.datetime.now()
+                                     , offset = pandas.DateOffset(months=1)
+                                     )
+
+    mr_dict = _monthly_map_reduce(db, monthly_range, db.mdb.referral, 'created', map, None, 'used_referrals_per_month')
+    return _cohort_analysis(cohort_users, mr_dict, {'value': {'$gte': 1}})
+
+def funnel2_per_month(db, cohort_users = None):
+    if not cohort_users:
+        cohort_users = _cohort_users(db)
+    cohort_users = cohort_users['names']
+
+    map = """
+        function() {
+            if (this.url ) {
+                emit(this.url.match(/([a-zA-Z0-9]+)?.?(thenewhive.com)/)[1], 1);
+            }
+        }"""
+
+    monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
+                                     , end = datetime.datetime.now()
+                                     , offset = pandas.DateOffset(months=1)
+                                     )
+
+    mr_dict = _monthly_map_reduce(db, monthly_range, db.mdb.contact_log, 'created', map, None, 'funnel2_per_month')
+    return _cohort_analysis(cohort_users, mr_dict, {'value': {'$gte': 1}})
+
+def _monthly_map_reduce(db, months, collection, date_key, map, reduce, name, force=False):
+    if not reduce:
+        reduce = """
+        function(key, values) {
+            var total=0;
+            for (var i=0; i < values.length; i++) {
+                total += values[i];
+            }
+            return total;
+        }"""
+
+    mr_dict = OrderedDict()
+    for date in months:
+        mr_name = '.'.join(('mr', name, datetime_to_str(date)))
+        mr = db.mdb[mr_name]
+        current_month = date + pandas.DateOffset(months=1) > datetime.datetime.now()
+        if force or mr.count() == 0 or current_month:
+            logger.info("Performing map reduce")
+            query = {date_key: {
+                        '$gt': datetime_to_int(date)
+                        , '$lt': datetime_to_int(date + pandas.DateOffset(months=1))
+                        }}
+            mr = collection.map_reduce(map, reduce, mr_name, query=query)
+        mr_dict[date] = mr
+
+    return mr_dict
+
+def _cohort_analysis(cohorts, mr_dict, condition):
+    rv = OrderedDict()
+    for cohort_name, users in cohorts.iteritems():
+        rv[cohort_name] = OrderedDict()
+        condition.update({'_id': {'$in': users}})
+        for mr_name, mr in mr_dict.iteritems():
+            incomplete = mr_name + pandas.DateOffset(months=1) > datetime.datetime.now()
+            if mr_name >= cohort_name:
+                cohort_size = float(len(users))
+                active_count = float(mr.find(condition).count())
+                rv[cohort_name][mr_name] = {'size': cohort_size
+                                             , 'active': active_count
+                                             , 'active_fraction': active_count / cohort_size
+                                             , 'incomplete': incomplete}
+    return rv
+
+
+def _cohort_users(db):
+    cohort_range = pandas.DateRange(start = datetime.datetime(2011,4,1,12)
+                               , end = datetime.datetime.now()
+                               , offset = pandas.DateOffset(months=1)
+                               )
+
+    cohort_users = {'names': OrderedDict(), 'ids': OrderedDict()}
+    for date in cohort_range:
+        cohort_users['names'][date] = []
+        cohort_users['ids'][date] = []
+        for u in db.User.search({
+                        'created': {
+                            '$gt': datetime_to_int(date)
+                            , '$lt': datetime_to_int(date + pandas.DateOffset(months=1))
+                            }
+                        }):
+            cohort_users['names'][date].append(u['name'])
+            cohort_users['ids'][date].append(u.id)
+    return cohort_users
+
 
 
 if __name__ == '__main__':
