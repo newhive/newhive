@@ -257,7 +257,6 @@ def visits_per_month(db, force={}):
                 cohort_size = float(len(users))
                 active_count = float(mr2.find({'_id': {'$in': users}, 'value': {'$gte': 2}}).count())
                 rv[cohort_name][mr2_name] = {'size': cohort_size, 'active': active_count, 'active_fraction': active_count / cohort_size}
-                print "Cohort %s,  visits in %s: %s twice or more" % (cohort_name, mr2_name, active_count/cohort_size)
 
     return rv
 
