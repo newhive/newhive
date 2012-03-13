@@ -17,6 +17,8 @@ from boto.s3.key import Key as S3Key
 
 from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, dedup
 
+import logging
+logger = logging.getLogger(__name__)
 
 class Database:
     entity_types = [] # list of entity classes
@@ -335,11 +337,17 @@ class User(HasSocial):
         if type(viewer) == User: viewer = viewer.id
         return self.db.Expr.list(self.starred_expr_ids, viewer=viewer, **args)
 
-    def feed_profile(self, viewer, **args):
-        if type(viewer) == User: viewer = viewer.id
-        res = self.db.Feed.list({ '$or' : [ {'entity_owner':self.id}, {'initiator':self.id} ] }, sort='created', **args)
-        if viewer != self.id: res = filter(lambda i: i.entity and i.entity.can_view(viewer), res)
+    def feed_search(self, spec, viewer=None, page=None, limit=0):
+        if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
+        if page: spec['created'] = { '$lt': page }
+        res = self.db.Feed.search(spec, limit=limit, sort=[('created',-1)])
+        if viewer != self.id: res = ifilter( lambda i: i.entity and i.entity.can_view(viewer.id), res)
+        res = ifilter( lambda i: i.viewable(viewer), res)
         return res
+
+    def feed_profile(self, viewer, **args): return self.feed_search(
+            { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] }
+        , viewer, **args)
 
     def feed_network(self, viewer, **args):
         if type(viewer) == User: viewer = viewer.id
@@ -491,6 +499,29 @@ class User(HasSocial):
             feed_item.delete()
 
         return super(User, self).delete()
+
+    def has_group(self, group, level=None):
+        groups = self.get('groups')
+        if type(group) == list: return False
+        if not groups or not group in groups:
+            return False
+        return level == None or level == groups[group]
+
+    def add_group(self, group, level):
+        assert type(group) == str and len(group) <=3
+        if not self.has_key('groups'): self['groups'] = {}
+        self['groups'][group] = level
+        #TODO: add warning if groups are too long for google analytics
+
+    def remove_group(self, group):
+        groups = self.get('groups')
+        if groups:
+            if groups.has_key(group): groups.pop(group)
+
+    def groups_to_string(self):
+        groups = self.get('groups')
+        if not groups: return ''
+        return ",".join(["%s%s" % item for item in groups.iteritems()])
 
 
 @Database.register
@@ -872,7 +903,7 @@ class Feed(Entity):
     class Collection(Collection):
         def new(self, d):
             # override new only in this generic Feed class to return the specific subtype
-            if type(self) == Feed: return getattr(self.db, d['class_name']).entity(self, d)
+            if self.entity == Feed: return getattr(self.db, d['class_name']).entity(self, d)
             else: return self.entity(self, d)
 
         def create(self, initiator, entity, data={}):
@@ -931,6 +962,9 @@ class Feed(Entity):
         elif self['entity_class'] == "Expr":
             return self.entity.owner_url
 
+    def viewable(self, viewer):
+        return True
+
 @Database.register
 class Comment(Feed):
     def create(self):
@@ -980,24 +1014,16 @@ class UpdatedExpr(Feed):
 
 @Database.register
 class FriendJoined(Feed):
-    pass
+    def viewable(self, viewer):
+        return self['entity'] == viewer.id
+
 
 @Database.register
 class SystemMessage(Feed):
     class Collection(Feed.Collection):
-        def create(self, image, message, entity=None, recipients=None):
+        def create(self, entity, data={}):
             initiator = self.db.User.get_root()
-            data = {'image': image, 'message': message}
-            if recipients == 'All':
-                recipients = self.db.User.search({})
-                count = 0
-                for entity in recipients:
-                    count += 1
-                    super(SystemMessage.Collection, self).create(initiator, entity, data)
-                return count
-            elif entity:
-                return super(SystemMessage.Collection, self).create(initiator, entity, data)
-
+            return super(SystemMessage.Collection, self).create(initiator, entity, data)
 
 
 @Database.register
