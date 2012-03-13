@@ -882,6 +882,7 @@ class File(Entity):
 
 @Database.register
 class ActionLog(Entity):
+    indexes = ['created', 'user']
     cname = 'action_log'
 
     class Collection(Collection):

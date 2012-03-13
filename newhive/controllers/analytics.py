@@ -157,3 +157,7 @@ class AnalyticsController(ApplicationController):
         response.context['data'] = data
 
         return self.serve_page(response, 'pages/analytics/by_stars.html')
+
+    def active_users_cohort(self, request, response):
+        response.context['data'] = analytics.visits_per_month(self.db)
+        return self.serve_page(response, 'pages/analytics/active_users_cohort.html')

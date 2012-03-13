@@ -1,6 +1,10 @@
-import time, datetime, re, pandas
+import time, datetime, re, pandas, newhive, pandas
 from newhive import state, oauth
 from newhive.state import now
+from brownie.datastructures import OrderedDict
+
+import logging
+logger = logging.getLogger(__name__)
 
 def shared_user_data(db, result, start=None):
     custom_counts = {}
@@ -158,7 +162,6 @@ def funnel2(db, start_datetime, end_datetime):
     }
 
 def contacts_per_hour(db, end=now()):
-    import pandas
     end = datetime.datetime.fromtimestamp(end)
     end = end.replace(hour=8, minute=0, second=0, microsecond=0)
     hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=24), periods=30)
@@ -170,3 +173,101 @@ def contacts_per_hour(db, end=now()):
     return {  'times': [time.mktime(x.timetuple()) for x in data.index.tolist()]
             , 'values': data.values.tolist()
             }
+
+def datetime_to_int(dt):
+    return int(time.mktime(dt.timetuple()))
+
+def datetime_to_str(dt):
+    return str(datetime_to_int(dt))
+
+
+def visits_per_month(db, force={}):
+
+    map1 = """
+        function() {
+            date = new Date((this.created - 12*3600) * 1000);
+            day = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+            emit({name: this.user_name, date: day/1000}, 1);
+        }"""
+
+    map2 = """
+        function() {
+            emit(this._id.name, 1);
+        }"""
+
+    reduce = """
+        function(key, values) {
+            var total=0;
+            for (var i=0; i < values.length; i++) {
+                total += values[i];
+            }
+            return total;
+        }"""
+
+    mr1_name = 'mr.actions_per_user_per_day'
+    mr1 = db.mdb[mr1_name]
+    if mr1.count() == 0 or force.has_key(1):
+        logger.info("Performing map reduce stage 1")
+        mr_collection = db.ActionLog._col.map_reduce(map1, reduce, mr1_name)
+    else:
+        logger.info("Using cached map reduce stage 1")
+
+    end = datetime.datetime.utcnow()
+    end = end.replace(day=1, hour=12, minute=0, second=0, microsecond=0)
+    monthly_range = pandas.DateRange(datetime.datetime(2011,11,1,12)
+                                     , end = datetime.datetime.now()
+                                     , offset = pandas.DateOffset(months=1)
+                                     )
+
+    mr2_dict = OrderedDict()
+    for date in monthly_range:
+        logger.info("Visits per month for %s", date)
+        mr2_name = 'mr.visits_per_month.' + datetime_to_str(date)
+        mr2 = db.mdb[mr2_name]
+        current_month = date + pandas.DateOffset(months=1) > datetime.datetime.now()
+        if mr2.count() == 0 or (force.has_key(1) and current_month) or force.has_key(2):
+            logger.info("Performing map reduce stage 2")
+            query = {'_id.date': {
+                        '$gt': datetime_to_int(date)
+                        , '$lt': datetime_to_int(date + pandas.DateOffset(months=1))
+                        }}
+            mr2 = mr1.map_reduce(map2, reduce, mr2_name, query=query)
+        else:
+            logger.info("Using cached map reduce stage 2")
+        mr2_dict[date] = mr2
+
+    cohort_range = pandas.DateRange(start = datetime.datetime(2011,4,1,12)
+                               , end = datetime.datetime.now()
+                               , offset = pandas.DateOffset(months=1)
+                               )
+
+    cohort_users = OrderedDict()
+    for date in cohort_range:
+        cohort_users[date] = [u['name'] for u in db.User.search({
+                        'created': {
+                            '$gt': datetime_to_int(date)
+                            , '$lt': datetime_to_int(date + pandas.DateOffset(months=1))
+                            }
+                        })]
+    rv = OrderedDict()
+    for cohort_name, users in cohort_users.iteritems():
+        rv[cohort_name] = OrderedDict()
+        for mr2_name, mr2 in mr2_dict.iteritems():
+            if mr2_name >= cohort_name:
+                cohort_size = float(len(users))
+                active_count = float(mr2.find({'_id': {'$in': users}, 'value': {'$gte': 2}}).count())
+                rv[cohort_name][mr2_name] = {'size': cohort_size, 'active': active_count, 'active_fraction': active_count / cohort_size}
+                print "Cohort %s,  visits in %s: %s twice or more" % (cohort_name, mr2_name, active_count/cohort_size)
+
+    return rv
+
+
+if __name__ == '__main__':
+    from newhive.state import Database
+    import newhive.config
+    db = Database(newhive.config)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.debug)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
