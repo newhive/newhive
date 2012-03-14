@@ -1,3 +1,4 @@
+import datetime, pandas
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive import analytics
@@ -181,3 +182,25 @@ class AnalyticsController(ApplicationController):
         response.context['data'] = analytics.funnel2_per_month(self.db)
         response.context['title'] = 'Funnel 2: Fraction of users who had a user signup on one of their expressions (not neccessarily created account), by cohort'
         return self.serve_page(response, 'pages/analytics/cohort_base.html')
+
+    def cohort_dashboard(self, request, response):
+        url_parts = request.path.split('/')
+        print url_parts
+        year = int(lget(url_parts, 2))
+        month = int(lget(url_parts, 3))
+        if not year or not month:
+            date = datetime.now() - pandas.DateOffset(months=1)
+            year = date.year
+            month = date.month
+        date = datetime(year, month, 1, 12)
+        cohort_users = analytics._cohort_users(self.db, date)
+        response.context['date'] = date
+        response.context['cohorts'] = cohort_users['names']
+        response.context['data'] = [
+                ('visits', analytics.visits_per_month(self.db, cohort_users, year, month))
+                , ('expressions', analytics.expressions_per_month(self.db, cohort_users, year, month))
+                , ('referrals', analytics.referrals_per_month(self.db, cohort_users, year, month))
+                , ('used referrals', analytics.used_referrals_per_month(self.db, cohort_users, year, month))
+                , ('funnel2 referrals', analytics.funnel2_per_month(self.db, cohort_users, year, month))
+                ]
+        return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')
