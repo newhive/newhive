@@ -196,11 +196,21 @@ class AnalyticsController(ApplicationController):
         cohort_users = analytics._cohort_users(self.db, date)
         response.context['date'] = date
         response.context['cohorts'] = cohort_users['names']
-        response.context['data'] = [
-                ('visits', analytics.visits_per_month(self.db, cohort_users, year, month))
-                , ('expressions', analytics.expressions_per_month(self.db, cohort_users, year, month))
-                , ('referrals', analytics.referrals_per_month(self.db, cohort_users, year, month))
-                , ('used referrals', analytics.used_referrals_per_month(self.db, cohort_users, year, month))
-                , ('funnel2 referrals', analytics.funnel2_per_month(self.db, cohort_users, year, month))
+        response.context['metrics'] = [
+                {'name': 'Visited 2+ days'
+                    , 'data': analytics.visits_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/active_users_cohort'}
+                , {'name': 'Created an expression'
+                    , 'data': analytics.expressions_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/expression_creates_cohort'}
+                , {'name': 'Invited a friend'
+                    , 'data': analytics.referrals_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/referrals_cohort'}
+                , {'name': 'Had an invite convert'
+                    , 'data': analytics.used_referrals_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/used_referrals_cohort'}
+                , {'name': "Signup on user's expression (funnel 2)"
+                    , 'data': analytics.funnel2_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/funnel2_cohort'}
                 ]
         return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')

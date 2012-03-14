@@ -16,11 +16,12 @@
 {% endblock table_head %}
 
 {% block table_body %}
-  {% for metric in data %}
+  {% for metric in metrics %}
   <tr>
-    <th>{{metric[0]}}</th>
-    {% for item in metric[1].values() | reverse %}
-    <td>{{item.values()[0]['active_fraction']}}</th>
+      <th><a href="{{metric['url']}}">{{metric['name']}}</a></th>
+    {% for item in metric['data'].values() | reverse %}
+    {% set val = item.values()[0] %}
+    <td title="Total: {{val.size | int}}, Active: {{val.active | int}}">{{val.active_fraction | percentage | round(1)}}%{{"*" if val.incomplete else ''}}</td>
     {% endfor %}
   </tr>
   {% endfor %}
