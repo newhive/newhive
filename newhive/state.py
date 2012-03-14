@@ -383,10 +383,8 @@ class User(HasSocial):
     def feed_network(self, limit=40, **args):
         res = self.feed_search({ '$or': [
             { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
-            ,{ '$and': [
-                { 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']} }
-                ,{ 'initiator': { '$not': self.id } }
-            ] }
+            ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
+                'initiator': { '$ne': self.id } }
         ] } , **args)
         return self.feed_group(res, limit)
 

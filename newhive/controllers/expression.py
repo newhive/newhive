@@ -49,9 +49,6 @@ class ExpressionController(ApplicationController):
 
         if is_owner: owner.unflag('expr_new')
 
-        response.context['starrers'] = resource.starrers
-        response.context['listeners'] = owner.starrers
-
         if request.args.has_key('tag') or request.args.has_key('user'):
             response.context.update(pagethrough = self._pagethrough(request, response, resource))
 
@@ -63,6 +60,7 @@ class ExpressionController(ApplicationController):
              edit = abs_url(secure = True) + 'edit/' + resource.id
             ,mtime = friendly_date(time_u(resource['updated']))
             ,title = resource.get('title', False)
+            ,starrers = resource.starrers
             ,auth_required = auth_required
             ,body = html
             ,exp = resource
