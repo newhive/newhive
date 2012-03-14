@@ -337,9 +337,10 @@ class User(HasSocial):
     def notify(self, feed_item):
         self.increment({'notification_count':1})
 
-    def exprs(self, auth=None, **args):
-        spec = {'owner':self.id}
-        if auth: spec.update(auth=auth)
+    def exprs(self, auth=None, tag=None, **args):
+        spec = {'owner': self.id}
+        if auth: spec.update({'auth': auth})
+        if tag: spec.update({'tags_index': tag})
         return self.db.Expr.list(spec, **args)
 
     @property

@@ -50,7 +50,7 @@ class ApplicationController(object):
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
 
-        request.path = request.path[1:] # drop leading '/'
+        request.path = request.path.strip('/') # drop leading and trailing '/'s
         request.domain = request.host.split(':')[0].lower()
         return (request, response)
 

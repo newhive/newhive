@@ -39,7 +39,6 @@ body.home {
 body.profile #card_header { margin-top: -10px; }
 #header .title { margin-left: $right_column_x + 9px; }
 #header .head { font-size: 2em; font-family: Museo,Helvetica,sans-serif; }
-#header .info { color: $color_grey_medium; }
 
 #top_tabs { position: absolute; right: 0px; white-space: nowrap; }
 #top_tabs .tab_label {
@@ -82,7 +81,7 @@ body.profile #left_tabs .tab_label {
   }
 }
 
-#user_tags { margin: 30px 0; }
+#tag_links { margin: 30px 0; }
 
 .tag_label {
   float: right;

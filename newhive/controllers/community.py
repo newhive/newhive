@@ -53,13 +53,14 @@ class CommunityController(ApplicationController):
 
     def expr_featured(self, request):
         return self.db.Expr.list(self.db.User.root_user['tagged']['Featured'], **query_args(request))
-    def expr_all(self, request): return self.db.Expr.list({}, **query_args(request))
+    def expr_all(self, request): return self.db.Expr.list({'auth': 'public'}, **query_args(request))
     def home_feed(self, request): return request.requester.feed_network(**query_args(request))
     def people(self, request): return self.db.User.list({})
     def learn(self, request):
         return self.db.Expr.list(self.db.User.root_user['tagged']['Learn'], **query_args(request))
 
-    def user_exprs(self, request, auth=None): return request.owner.exprs(auth=auth, **query_args(request))
+    def user_exprs(self, request, auth=None):
+        return request.owner.exprs(auth=auth, tag=request.args.get('tag'), **query_args(request))
     def feed_network(self, request): return request.owner.feed_network(**query_args(request))
     def feed_profile(self, request): return request.owner.feed_profile_entities(**query_args(request))
     def listening(self, request): return request.owner.starred_users
@@ -86,9 +87,9 @@ class CommunityController(ApplicationController):
         return self.page(request, response)
 
     def page(self, request, response):
-        tags = request.owner.get('tags', []) if request.owner else self.db.User.site_user['config']['featured_tags']
-        response.context.update(dict( tags =
-            map(lambda t: {'url': '/tag/' + t, 'name': t, 'type': 'user'}, tags) ))
+        if request.owner: tags = map(lambda t: {'url': '/profile/expressions?tag=' + t, 'name': t}, request.owner.get('tags', []))
+        else: tags = map(lambda t: {'url': '/tag/' + t, 'name': t}, self.db.User.site_user['config']['featured_tags'])
+        response.context.update({'tags': tags, 'user_tag': request.args.get('tag') })
         if request.owner: response.context.update({ 'title': request.owner['fullname'] })
         return self.serve_page(response, 'pages/community.html')
 

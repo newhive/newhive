@@ -204,7 +204,7 @@ input[type="text"].copy, textarea.copy {
 
 #dia_comments .icon {
   float: left;
-  margin: -10px;
+  margin: -10px 0 0 -10px;
 }
 #dia_comments .title.sub {
   margin: 0;
@@ -228,6 +228,7 @@ input[type="text"].copy, textarea.copy {
 }
 #dia_comments input[type=submit] {
   float: right;
+  margin: 5px;
 }
 #dia_comments .header {
   overflow: auto;
@@ -236,12 +237,12 @@ input[type="text"].copy, textarea.copy {
 #dia_comments #comments {
   clear: both;
   width: 520px;
+  overflow: auto;
 }
 
 #dia_comments .comment {
   clear: both;
   padding-top: 20px;
-  overflow: auto;
 }
 #dia_comments .comment_content {
   width: 390px;

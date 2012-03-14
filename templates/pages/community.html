@@ -99,14 +99,14 @@
           </a>
         {% endif %}
       </div>
-      <span class='fathead'>{% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + tag.name if tag and tag.show_name != False }}</span>
+      <span class='fathead'>{% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + user_tag if user_tag }}</span>
     </div>
   {% endif %}
   <div id='card_header'>
     <div class='title'>
       {% if network and cards|length < 10 %}
         <img src='/lib/skin/1/people_small.png' style='float: left; vertical-align: middle; margin-right: 10px;'>
-        <span class='info'>To listen to someone, click the person icon next to their name.<br>
+        <span class='info'><span class='active'>To listen</span> to someone, click the person icon next to their name.<br>
         Activity of the people you're listening to will appear on this page.</span>
       {% elif search %}
         <span class='head'>Results for: {{ q.q|e }}</span>
@@ -136,9 +136,8 @@
 {% endblock header %}
 
 {% macro left_tab(p1, label) %}
-  {% set current = True if p1 == path1 %}
-  <div class='tab_label {{ 'current' if current else 'hoverable' }}'
-    >{% if current %}{{ label }}{% else %}<a href='/{{ p1 }}'>{{ label }}</a>{% endif %}</div>
+  <div class='tab_label {{ 'current' if p1 == path1 else 'hoverable' }}'
+    ><a href='/{{ p1 }}'>{{ label }}</a></div>
 {%- endmacro %}
 
 {% block left_column %}
@@ -155,19 +154,32 @@
       {{ left_tab('profile/listening', '<img src="/lib/skin/1/listening_tab.png">Listening') }}
     {% endif %}
   </div>
-  <div id="user_tags">
+  <div id="tag_links">
     {% for t in tags %}<div class='tag_label hoverable user {#{ 'current' if t.name == tag.name }#} tag_{{loop.index0 | mod(16) }}'>
       <a href='{{ t.url |e }}' value='{{ t.name|e }}'>{{ t.name }}</a>
     </div>{% endfor %}
   </div>
+  {% if user_is_owner %}
+    <img src='/lib/skin/1/add_tab.png' class='hoverable tag_label' onclick='folder_add()' title='Add Folder'><br>
+    {% if user_tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable tag_label' onclick='folder_remove()'
+      title='Remove folder "{{ user_tag }}"'>{% endif %}
+    <form id='upload_form' method='POST' action='{{ secure_server }}' style='position : absolute; left : -1000px' target='upload_target'>
+     <input type='hidden' name='action' id='action_input'>
+     <input type='hidden' name='expr_id' id='id_input'>
+     <input type='hidden' name='value' id='value_input'>
+     <iframe id='upload_target' name='upload_target'></iframe>
+    </form>
+  {% endif %}
 {% endblock left_column %}
 
 {% block right_column %}
   <div id='feed'>
     {% if network and cards|length < 10 %}
-      <div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div>
-      <div class='prompt link hoverable' id='prompt_allies'><div>Click here to connect to Facebook and follow / invite friends.</div></div>
-      <a href='{{server}}home/expressions'><div class='prompt hoverable' id='prompt_expressions'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div></a>
+      <div>
+        <div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div>
+        <div class='prompt link hoverable' id='prompt_allies'><div>Click here to connect to Facebook and follow / invite friends.</div></div>
+        <a href='{{server}}home/expressions'><div class='prompt hoverable' id='prompt_expressions'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div></a>
+      </div>
     {% endif %}
     {% include 'page_parts/cards.html' %}
   </div>
@@ -176,23 +188,37 @@
 {% block footer_scripts %}
   {{ super () }}
   <script>
-    //var load_page = null;
-    //var next_page = 1;
-    //var pages = {{ pages }};
-    //$(window).scroll(function() {
-    //    if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page < pages) {
-    //        load_page = $.get('', { partial : true, page : next_page }, function(data) {
-    //            load_page = null;
-    //            next_page ++;
-    //            $('#feed').append(data);
-    //            fix_borders('#feed .item');
-    //        });
-    //    }
-    //});
+     //var load_page = null;
+     //var next_page = 1;
+     //var pages = {{ pages }};
+     //$(window).scroll(function() {
+     //    if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page < pages) {
+     //        load_page = $.get('', { partial : true, page : next_page }, function(data) {
+     //            load_page = null;
+     //            next_page ++;
+     //            $('#feed').append(data);
+     //            fix_borders('#feed .item');
+     //        });
+     //    }
+     //});
 
-    $(function(){ 
-      fix_borders('#feed .item');
-      $(window).resize(function(){fix_borders('#feed .item');});
-    });
+     var current_tag = {{ user_tag|json }};
+     function folder_add() {
+         var tag = prompt('New Folder');
+         $('#action_input').val('user_tag_add');
+         $('#value_input').val(tag);
+         $('#upload_form').submit();
+         $('#upload_target').load(function() { window.location = window.location });
+     }
+     function folder_remove() {
+         $('#action_input').val('user_tag_remove');
+         $('#value_input').val(current_tag);
+         $('#upload_form').submit();
+         $('#upload_target').load(function() { window.location = '{{ home_url }}' });
+     }
+     $(function(){ 
+       fix_borders('#feed .item');
+       $(window).resize(function(){fix_borders('#feed .item');});
+     });
   </script>
 {% endblock %}

@@ -172,15 +172,15 @@ def handle(request): # HANDLER
     if request.domain != config.content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite', 'dialog', 'profile_thumb_set']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite', 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
             non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback', 'file_create']
-            if not request.is_secure and not reqaction in insecure_actions:
-                raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
+            if not reqaction in insecure_actions:
+                if not request.is_secure: raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
+                # erroneously catches logout, possibly other posts
+                #if urlparse(request.headers.get('Referer')).hostname != config.server_name:
+                #    raise exceptions.BadRequest('Invalid cross site post request from: ' + request.headers.get('Referer'))
             if not request.requester.logged_in and not reqaction in non_logged_in_actions:
                 raise exceptions.BadRequest('post request action "' + reqaction + '" is not logged_in')
-
-            if urlparse(request.headers.get('Referer')).hostname == config.content_domain:
-                raise exceptions.BadRequest('invalid cross site post request from: ' + request.headers.get('Referer'))
 
             if not actions.get(reqaction): raise exceptions.BadRequest('invalid action: '+reqaction)
             r = actions.get(reqaction)(request, response)
