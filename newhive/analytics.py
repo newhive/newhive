@@ -243,18 +243,7 @@ def visits_per_month(db, cohort_users = None, year=None, month=None, force={}):
             logger.info("Using cached map reduce stage 2")
         mr2_dict[date] = mr2
 
-        rv = OrderedDict()
-
-    for cohort_name, users in cohort_users.iteritems():
-        if mr2_dict.keys()[-1] >= cohort_name:
-            rv[cohort_name] = OrderedDict()
-        for mr2_name, mr2 in mr2_dict.iteritems():
-            if mr2_name >= cohort_name:
-                cohort_size = float(len(users))
-                active_count = float(mr2.find({'_id': {'$in': users}, 'value': {'$gte': 2}}).count())
-                rv[cohort_name][mr2_name] = {'size': cohort_size, 'active': active_count, 'active_fraction': active_count / cohort_size}
-
-    return rv
+    return _cohort_analysis(cohort_users, mr2_dict, {'value': {'$gte': 2}})
 
 def expressions_per_month(db, cohort_users = None, year=None, month=None):
     if not cohort_users:
