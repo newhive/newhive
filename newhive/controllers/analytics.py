@@ -186,8 +186,8 @@ class AnalyticsController(ApplicationController):
     def cohort_dashboard(self, request, response):
         url_parts = request.path.split('/')
         print url_parts
-        year = int(lget(url_parts, 2))
-        month = int(lget(url_parts, 3))
+        year = int(lget(url_parts, 2, 0))
+        month = int(lget(url_parts, 3, 0))
         if not year or not month:
             date = datetime.now() - pandas.DateOffset(months=1)
             year = date.year
