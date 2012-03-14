@@ -181,7 +181,7 @@ def datetime_to_str(dt):
     return str(datetime_to_int(dt))
 
 
-def visits_per_month(db, force={}, cohort_users = None):
+def visits_per_month(db, cohort_users = None, year=None, month=None, force={}):
     if not cohort_users:
         cohort_users = _cohort_users(db)
     cohort_users = cohort_users['names']
@@ -215,10 +215,16 @@ def visits_per_month(db, force={}, cohort_users = None):
     else:
         logger.info("Using cached map reduce stage 1")
 
-    monthly_range = pandas.DateRange(datetime.datetime(2011,11,1,12)
-                                     , end = datetime.datetime.now()
-                                     , offset = pandas.DateOffset(months=1)
-                                     )
+    if year and month:
+        monthly_range = pandas.DateRange(datetime.datetime(year,month,1,12)
+                                         , periods = 1
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
+    else:
+        monthly_range = pandas.DateRange(datetime.datetime(2011,11,1,12)
+                                         , end = datetime.datetime.now()
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
 
     mr2_dict = OrderedDict()
     for date in monthly_range:
@@ -240,7 +246,8 @@ def visits_per_month(db, force={}, cohort_users = None):
         rv = OrderedDict()
 
     for cohort_name, users in cohort_users.iteritems():
-        rv[cohort_name] = OrderedDict()
+        if mr2_dict.keys()[-1] >= cohort_name:
+            rv[cohort_name] = OrderedDict()
         for mr2_name, mr2 in mr2_dict.iteritems():
             if mr2_name >= cohort_name:
                 cohort_size = float(len(users))
@@ -249,7 +256,7 @@ def visits_per_month(db, force={}, cohort_users = None):
 
     return rv
 
-def expressions_per_month(db, cohort_users = None):
+def expressions_per_month(db, cohort_users = None, year=None, month=None):
     if not cohort_users:
         cohort_users = _cohort_users(db)
     cohort_users = cohort_users['ids']
@@ -270,15 +277,21 @@ def expressions_per_month(db, cohort_users = None):
             return total;
         }"""
 
-    monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
-                                     , end = datetime.datetime.now()
-                                     , offset = pandas.DateOffset(months=1)
-                                     )
+    if year and month:
+        monthly_range = pandas.DateRange(datetime.datetime(year,month,1,12)
+                                         , periods = 1
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
+    else:
+        monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
+                                         , end = datetime.datetime.now()
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
 
     mr_dict = _monthly_map_reduce(db, monthly_range, db.mdb.expr, 'created', map1, reduce, 'expressions_per_month')
     return _cohort_analysis(cohort_users, mr_dict, {'value': {'$gte': 1}})
 
-def referrals_per_month(db, cohort_users = None):
+def referrals_per_month(db, cohort_users = None, year=None, month=None):
     if not cohort_users:
         cohort_users = _cohort_users(db)
     cohort_users = cohort_users['ids']
@@ -289,15 +302,21 @@ def referrals_per_month(db, cohort_users = None):
         }
         """
 
-    monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
-                                     , end = datetime.datetime.now()
-                                     , offset = pandas.DateOffset(months=1)
-                                     )
+    if year and month:
+        monthly_range = pandas.DateRange(datetime.datetime(year,month,1,12)
+                                         , periods = 1
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
+    else:
+        monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
+                                         , end = datetime.datetime.now()
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
 
     mr_dict = _monthly_map_reduce(db, monthly_range, db.mdb.referral, 'created', map, None, 'referrals_per_month')
     return _cohort_analysis(cohort_users, mr_dict, {'value': {'$gte': 1}})
 
-def used_referrals_per_month(db, cohort_users = None):
+def used_referrals_per_month(db, cohort_users = None, year=None, month=None):
     if not cohort_users:
         cohort_users = _cohort_users(db)
     cohort_users = cohort_users['ids']
@@ -310,15 +329,21 @@ def used_referrals_per_month(db, cohort_users = None):
         }
         """
 
-    monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
-                                     , end = datetime.datetime.now()
-                                     , offset = pandas.DateOffset(months=1)
-                                     )
+    if year and month:
+        monthly_range = pandas.DateRange(datetime.datetime(year,month,1,12)
+                                         , periods = 1
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
+    else:
+        monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
+                                         , end = datetime.datetime.now()
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
 
     mr_dict = _monthly_map_reduce(db, monthly_range, db.mdb.referral, 'created', map, None, 'used_referrals_per_month')
     return _cohort_analysis(cohort_users, mr_dict, {'value': {'$gte': 1}})
 
-def funnel2_per_month(db, cohort_users = None):
+def funnel2_per_month(db, cohort_users = None, year=None, month=None):
     if not cohort_users:
         cohort_users = _cohort_users(db)
     cohort_users = cohort_users['names']
@@ -330,10 +355,16 @@ def funnel2_per_month(db, cohort_users = None):
             }
         }"""
 
-    monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
-                                     , end = datetime.datetime.now()
-                                     , offset = pandas.DateOffset(months=1)
-                                     )
+    if year and month:
+        monthly_range = pandas.DateRange(datetime.datetime(year,month,1,12)
+                                         , periods = 1
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
+    else:
+        monthly_range = pandas.DateRange(datetime.datetime(2011,4,1,12)
+                                         , end = datetime.datetime.now()
+                                         , offset = pandas.DateOffset(months=1)
+                                         )
 
     mr_dict = _monthly_map_reduce(db, monthly_range, db.mdb.contact_log, 'created', map, None, 'funnel2_per_month')
     return _cohort_analysis(cohort_users, mr_dict, {'value': {'$gte': 1}})
@@ -368,7 +399,8 @@ def _monthly_map_reduce(db, months, collection, date_key, map, reduce, name, for
 def _cohort_analysis(cohorts, mr_dict, condition):
     rv = OrderedDict()
     for cohort_name, users in cohorts.iteritems():
-        rv[cohort_name] = OrderedDict()
+        if mr_dict.keys()[-1] >= cohort_name:
+            rv[cohort_name] = OrderedDict()
         condition.update({'_id': {'$in': users}})
         for mr_name, mr in mr_dict.iteritems():
             incomplete = mr_name + pandas.DateOffset(months=1) > datetime.datetime.now()
@@ -382,9 +414,9 @@ def _cohort_analysis(cohorts, mr_dict, condition):
     return rv
 
 
-def _cohort_users(db):
+def _cohort_users(db, stop_date=datetime.datetime.now()):
     cohort_range = pandas.DateRange(start = datetime.datetime(2011,4,1,12)
-                               , end = datetime.datetime.now()
+                               , end = stop_date
                                , offset = pandas.DateOffset(months=1)
                                )
 

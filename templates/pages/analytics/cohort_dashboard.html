@@ -1,0 +1,28 @@
+{% extends "pages/analytics/base.html" %}
+{% block header %}
+<h2>Cohort Dashboard for {{date.strftime("%B %Y")}}</h2>
+{% endblock %}
+{% block table_head %}
+  <tr>
+    <th></th>
+    <th colspan={{cohorts | count}}>Cohort</th>
+  </tr>
+  <tr>
+    <th></th>
+    {% for date in cohorts.keys() | reverse %}
+    <th>{{date.strftime("%b %y")}}</th>
+    {% endfor %}
+  </tr>
+{% endblock table_head %}
+
+{% block table_body %}
+  {% for metric in data %}
+  <tr>
+    <th>{{metric[0]}}</th>
+    {% for item in metric[1].values() | reverse %}
+    <td>{{item.values()[0]['active_fraction']}}</th>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+{% endblock %}
+
