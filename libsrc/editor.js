@@ -1008,7 +1008,8 @@ var main = function() {
     var new_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_file }); };
     var new_link = function() { asyncUpload({ start : Hive.upload_start, success : function(data) {
         if(data.error) { Hive.upload_finish(); alert('Sorry, your file failed to upload'); return }
-        Hive.new_app({ type: 'hive.text', content: $('<a>').attr('href', data.url).text(data.name).html() });
+        var app = { type: 'hive.text', content: $('<a>').attr('href', data.url).text(data.name).outerHTML() };
+        Hive.new_app(app);
     } }); }
     $('#insert_image').click(new_file);
     $('#image_upload').click(new_file);

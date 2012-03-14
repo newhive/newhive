@@ -32,7 +32,6 @@
     <div class='feed_thumbs'>{% for f in item.feed %}{% if f.class_name != 'NewExpr' and f.class_name != 'UpdatedExpr' %}<img
       src='{{ f.initiator.get_thumb(70)|default("/lib/skin/1/thumb_person_mask.png?v=2", True) }}'
       title='{{ f.initiator.name }} {{ f.action_name }}'
-      {% if loop.index == 1 and item.feed|length is odd %}style='display:block'{% endif %}
       {% if item.feed|length == 1 %}class='big'{% endif %}
     >{% endif %}{% endfor %}</div>
     <div class='feed_info{{ " create" if item.feed[0].class_name == "NewExpr" or item.feed[0].class_name == "UpdatedExpr" }}'>
