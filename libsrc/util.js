@@ -187,12 +187,12 @@ function showDialog(name, opts) {
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
-function btn_listen_click(btn) {
+function btn_listen_click(entity, btn) {
     var btn = $('#listen_small');
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
         btn.addClass('inactive');
-        $.post('', {'action': action, 'domain': window.location.hostname, 'path': '/expressions' }, function(data) {
+        $.post('', {action: action, entity: entity }, function(data) {
             btn.removeClass('inactive');
             if (!data) alert("Something went wrong, please try again");
             else if(data.unstarred) {
@@ -207,12 +207,12 @@ function btn_listen_click(btn) {
         }, 'json');
     }
 }
-function btn_star_click(btn) {
+function btn_star_click(entity, btn) {
     var btn = $(btn);
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
         btn.addClass('inactive');
-        $.post('', {'action': action, 'domain': window.location.hostname, 'path': window.location.pathname }, function(data) {
+        $.post('', {action: action, entity: entity}, function(data) {
             var count = parseInt(btn.attr('data-count'));
             var btn_wrapper = btn.parent();
             btn.removeClass('inactive');
@@ -500,13 +500,11 @@ function hover_add(o) {
     if(o.src) {
         o.src_d = o.src;
         o.src_h = hover_url(o.src_d);
-        o.over = function() { o.src = o.src_h };
-        o.out = function() { if(!o.busy) o.src = o.src_d };
-        if (o.over && o.out) {
-            $(o).hover(o.over, o.out);
-        };
+        $(o).hover(function() { o.src = o.src_h },
+            function() { if(!o.busy) o.src = o.src_d })
     }
-    $(o).hover(function() { $(this).addClass('active'); }, function() { if(!this.busy) $(this).removeClass('active'); });
+    $(o).hover(function() { $(this).addClass('active'); },
+        function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
 hover_menu = function(handle, drawer, options) {

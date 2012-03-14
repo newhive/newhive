@@ -112,7 +112,10 @@
     <div class='nav' id='nav_right'>
       {% block nav_right_left %}{% endblock %}
       {% if owner and not user_is_owner %}
-        {{ listen_button(active=owner.id in user.starred_user_ids, title='Listen to ' + owner['name'], active_title='Stop listening') if user.logged_in }}
+        {{ listen_button(owner.id, active=owner.id in user.starred_user_ids, title='Listen to ' + owner['name'], active_title='Stop listening') }}
+        {% for collection in [{'data': listeners, 'type': 'listeners', 'id': 'listeners'}] %}
+          {% include "dialogs/starrers.html" %}
+        {% endfor %}
         <a title="{{owner.name}}'s profile" href='{{ owner_url }}'>
          <div id='info' class='medbold nav_icon' style='text-align : right'>
            <div id='exp_owner'>{{ owner['name'] }}</div>
@@ -121,12 +124,6 @@
          {% if owner.get_thumb() %}<img id='owner_thumb' src='{{owner.get_thumb(70)}}'>{% endif %}
         </a>
         <div class='nav_icon space'></div>
-        <div id="dia_listeners" class='menu feed_menu border selected' data-count='{{ owner.starrers|length }}'>
-          <h3 style='margin : 5px'>People listening to {{ owner.name }}</h3>
-          {% for item in owner.starrers %}
-            {% include "partials/user_card.html" %}
-          {% endfor %}
-        </div>
       {% endif %}
       {% if user.logged_in and not editing %}
         <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='Create new expression'></a>

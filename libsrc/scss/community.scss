@@ -117,11 +117,23 @@ body.profile #left_tabs .tab_label {
   height: 260px;
   position: relative;
   margin: 5px;
-  cursor: pointer;
   div {
     position: absolute; left: 20px; top: 141px;
     width: 230px;
     font-weight: bold;
   }
   img { position: absolute; left: 0px; top: 0px; }
+  &.link { cursor: pointer; }
+}
+#prompt_interests {
+  background-image: url('/lib/skin/1/prompt_interests.png');
+  &.active { background-image: url('/lib/skin/1/prompt_interests-hover.png'); }
+}
+#prompt_allies {
+  background-image: url('/lib/skin/1/prompt_allies.png');
+  &.active { background-image: url('/lib/skin/1/prompt_allies-hover.png'); }
+}
+#prompt_expressions {
+  background-image: url('/lib/skin/1/prompt_expressions.png');
+  &.active { background-image: url('/lib/skin/1/prompt_expressions-hover.png'); }
 }

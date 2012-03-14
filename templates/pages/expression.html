@@ -16,17 +16,23 @@
 {% endblock %}
 
 {% block nav_right %}
-  {{ star_button(exp.star_count, exp.id in user.starred_expr_ids, user.logged_in) }} 
+  {{ star_button(exp.id, exp.star_count, exp.id in user.starred_expr_ids, user.logged_in) }} 
+  {% for collection in [{'data': starrers, 'type': 'starrers', 'id': 'starrers'}] %}
+    {% include "dialogs/starrers.html" %}
+  {% endfor %}
+
   {% if exp.auth == 'public' %}
     <div id = "btn_broadcast" class="hoverable nav_icon has_count{{ ' enabled' if exp.id in user.broadcast_ids }}"
       onclick='btn_broadcast_click(this);' title="Broadcast" data-count='{{ exp.broadcaster_count }}'>
       <div class='icon'></div>
     </div>
   {% endif %}
+
   {{ discussion_button(exp.comment_count) }}
 
   {% if user_is_owner %}
    <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' title='edit'></a>
+
    <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable nav_icon' title='delete'>
    <div id='dia_delete' class='menu medbold' style='padding : 10px; width : 13em;'>
     Are you sure you want
@@ -44,9 +50,6 @@
     showDialog('#dia_share', { minimize_to : '#btn_share' } );
    })</script>{% endif %}
   {% endif %}
-  {% for collection in [{'data': starrers, 'type': 'starrers', 'id': 'starrers'}, {'data': listeners, 'type': 'listeners', 'id': 'listeners'}] %}
-    {% include "dialogs/starrers.html" %}
-  {% endfor %}
 {% endblock %}
 
 {% block body %}

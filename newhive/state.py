@@ -1112,6 +1112,13 @@ class Contact(Entity):
 
 
 
+## utils
+
+def get_id(entity_or_id):
+    return entity_or_id if type(entity_or_id) == str else entity_or_id.id
+
+
+
 ## analytics utils
 
 def tags_by_frequency(query):
