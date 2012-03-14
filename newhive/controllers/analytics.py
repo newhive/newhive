@@ -161,7 +161,8 @@ class AnalyticsController(ApplicationController):
 
     def active_users_cohort(self, request, response):
         response.context['data'] = analytics.visits_per_month(self.db)
-        return self.serve_page(response, 'pages/analytics/active_users_cohort.html')
+        response.context['title'] = "Active Users (visted 2+ visits in month) by cohort"
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
 
     def expression_creates_cohort(self, request, response):
         response.context['data'] = analytics.expressions_per_month(self.db)
