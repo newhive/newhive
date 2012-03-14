@@ -7,10 +7,10 @@
         float: left; 
         background-image: url('/lib/skin/1/feed_item.png'); 
         &.border_right {
-            border-right: 1px solid #D1D1D1;
+            border-right: 1px solid $color_light_grey;
         }
         &.border_bottom {
-            border-bottom: 1px solid #D1D1D1;
+            border-bottom: 1px solid $color_light_grey;
         }
     }
     &.item:hover { 

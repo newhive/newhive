@@ -10,8 +10,10 @@
   cursor: pointer;
   font-weight: bold;
   margin: 0px;
-  padding: 3px;
+  padding: 2px;
   position: relative;
+  border-top: 1px solid $color_light_grey;
+  &:first-child { border-top: none; }
 }
 
 .feed_item .name {
@@ -51,19 +53,16 @@
   color: #696E76;
 }
 
-.feed_item .feed_text {
-  margin-left: 5px;
-}
-
 #feed_menu .feed_item .feed_text, #feed_menu .feed_item .byline {
   width: 220px;
 }
 .feed_item .feed_text, .feed_item .byline {
   float: left;
   margin-left: 5px;
-  font-size: 12px;
+  font-size: 13px;
 }
 #feed_menu .feed_item .feed_text {
+  margin: 5px;
   height: 45px;
   white-space: nowrap;
 }

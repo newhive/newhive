@@ -117,12 +117,12 @@ class UserController(ApplicationController):
             for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
                 self.db.Star.create(user, friend)
 
-    def _friends_not_to_listen(self, request, user):
+    def _friends_not_to_listen(self, request, new_user):
         friends = request.form.get('friends_not_to_listen')
         if friends:
             friends = friends.split(',')
             for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
-                self.db.FriendJoined.create(user, friend)
+                self.db.FriendJoined.create(new_user, friend)
 
     def edit(self, request, response):
         if request.requester.logged_in and request.is_secure:

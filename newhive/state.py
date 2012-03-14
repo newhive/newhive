@@ -115,6 +115,9 @@ class Entity(dict):
     indexes = []
     Collection = Collection
 
+    @property
+    def type(self): return self.__class__.__name__
+
     def __init__(self, col, doc):
         dict.update(self, doc)
         self.collection = col
@@ -365,13 +368,17 @@ class User(HasSocial):
     def feed_profile(self, **args): return self.feed_search(
             { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] }
         , **args)
-    def feed_profile_exprs(self, **args):
-        exprs = []
+    def feed_profile_entities(self, **args):
+        items = []
         for item in self.feed_profile(**args):
+            if item.type == 'SystemMessage' or item.type == 'FriendJoined':
+                items.append(item)
+                continue
+
             entity = item.initiator if item.entity.id == self.id else item.entity
             entity.feed = [item]
-            exprs.append(entity)
-        return exprs
+            items.append(entity)
+        return items
 
     def feed_network(self, limit=40, **args):
         res = self.feed_search({ '$or': [

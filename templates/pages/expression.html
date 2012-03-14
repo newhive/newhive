@@ -17,10 +17,12 @@
 
 {% block nav_right %}
   {{ star_button(exp.star_count, exp.id in user.starred_expr_ids, user.logged_in) }} 
-  <div id = "btn_broadcast" class="hoverable nav_icon has_count{{ ' enabled' if exp.id in user.broadcast_ids }}"
-    onclick='btn_broadcast_click(this);' title="Broadcast" data-count='{{ exp.broadcaster_count }}'>
-    <div class='icon'></div>
-  </div>
+  {% if exp.auth == 'public' %}
+    <div id = "btn_broadcast" class="hoverable nav_icon has_count{{ ' enabled' if exp.id in user.broadcast_ids }}"
+      onclick='btn_broadcast_click(this);' title="Broadcast" data-count='{{ exp.broadcaster_count }}'>
+      <div class='icon'></div>
+    </div>
+  {% endif %}
   {{ discussion_button(exp.comment_count) }}
 
   {% if user_is_owner %}
@@ -37,7 +39,7 @@
     </form>
    </div>
    <script>hover_menu($('#btn_delete'), $('#dia_delete'), { hover : false });</script>
-   {% if owner.flags.expr_new and owner.analytics.expressions.count < 2 %}<script>$(function() {
+   {% if owner.flags.expr_new and owner.expr_count < 2 %}<script>$(function() {
     updateShareUrls('#dia_share', window.location);  
     showDialog('#dia_share', { minimize_to : '#btn_share' } );
    })</script>{% endif %}

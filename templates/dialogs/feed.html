@@ -1,4 +1,3 @@
-<div id="notification_count" style="display: none;">{{user.notification_count}}</div>
 {% for feed in user.feed_profile(viewer=user, limit=7) %}
   {% include "partials/feed.html" %}
 {% endfor %}
