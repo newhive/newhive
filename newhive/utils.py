@@ -15,6 +15,20 @@ def junkstr(length):
     chrs = chrange('0', '9') + chrange('A', 'Z') + chrange('a', 'z') + ['.', '/']
     return ''.join([chrs[random.randrange(0, 64)] for _ in range(length)])
 
+def lget(L, i, *default):
+    try: return L[i]
+    except: return default[0] if default else None
+
+def raises(e): raise e
+
+def dfilter(d, keys):
+    """ Accepts dictionary and list of keys, returns a new dictionary
+        with only the keys given """
+    r = {}
+    for k in keys:
+        if k in d: r[k] = d[k]
+    return r
+
 def normalize(ws):
     return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
 
