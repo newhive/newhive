@@ -75,6 +75,8 @@ class Collection(object):
         return self.find(spec, **opts)
 
     def list(self, spec, limit=40, page=0, sort='updated', order=-1, viewer=None):
+        if not page: page = 0
+        page = int(page)
         if type(spec) == dict:
             return self.search(spec, sort=[(sort, order)], limit=limit, skip=limit * page)
         elif type(spec) == list:
@@ -395,7 +397,7 @@ class User(HasSocial):
 
     def feed_search(self, spec, viewer=None, page=None, limit=0):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-        if page: spec['created'] = { '$lt': page }
+        if page: spec['created'] = { '$lt': float(page) }
         res = ifilter( lambda i: i.viewable(viewer) and viewer.can_view(i.entity),
             self.db.Feed.search(spec, limit=limit, sort=[('created',-1)]) )
         return res

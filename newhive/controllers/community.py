@@ -98,7 +98,7 @@ class CommunityController(ApplicationController):
 
 
 def query_args(request):
-    return {'page': int(request.args.get('page', 0)), 'viewer': request.requester}
+    return {'page': request.args.get('page'), 'viewer': request.requester}
 
 def expr_list(res): return map(format_card, res)
 
