@@ -55,7 +55,7 @@ class CommunityController(ApplicationController):
         return self.db.Expr.list(self.db.User.root_user['tagged']['Featured'], **query_args(request))
     def expr_all(self, request): return self.db.Expr.list({'auth': 'public'}, **query_args(request))
     def home_feed(self, request): return request.requester.feed_network(**query_args(request))
-    def people(self, request): return self.db.User.list({})
+    def people(self, request): return self.db.User.list({}, **query_args(request))
     def learn(self, request):
         return self.db.Expr.list(self.db.User.root_user['tagged']['Learn'], **query_args(request))
 
@@ -87,6 +87,9 @@ class CommunityController(ApplicationController):
         return self.page(request, response)
 
     def page(self, request, response):
+        if request.args.get('partial'):
+            return self.serve_page(response, 'page_parts/cards.html')
+
         if request.owner: tags = map(lambda t: {'url': '/profile/expressions?tag=' + t, 'name': t}, request.owner.get('tags', []))
         else: tags = map(lambda t: {'url': '/tag/' + t, 'name': t}, self.db.User.site_user['config']['featured_tags'])
         response.context.update({'tags': tags, 'user_tag': request.args.get('tag') })
@@ -95,7 +98,7 @@ class CommunityController(ApplicationController):
 
 
 def query_args(request):
-    return {'page': request.args.get('page', 0), 'viewer': request.requester}
+    return {'page': int(request.args.get('page', 0)), 'viewer': request.requester}
 
 def expr_list(res): return map(format_card, res)
 
