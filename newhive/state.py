@@ -80,7 +80,11 @@ class Collection(object):
             return self.search(spec, sort=[(sort, order)], limit=limit, skip=limit * page)
         elif type(spec) == list:
             spec = uniq(spec)[ page * limit : (page + 1) * limit ]
-            return self.search({'_id': {'$in': spec}})
+            items = {}
+            for e in self.search({'_id': {'$in': spec}}): items[e.id] = e
+            res = []
+            for i in spec: res.append(items[i])
+            return res
 
     def count(self, spec): return self.search(spec).count()
 
@@ -1061,7 +1065,7 @@ class Broadcast(Feed):
         if self.entity['owner'] == self['initiator']:
             raise "You mustn't broadcast your own expression"
         if type(self.entity) != Expr: raise "You may only broadcast expressions"
-        if self['initiator'] in self.entity.starrer_ids: return True
+        if self.db.Broadcast.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         return super(Broadcast, self).create()
 
 @Database.register
