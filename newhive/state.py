@@ -74,8 +74,7 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def list(self, spec, limit=40, page=0, sort='updated', order=-1):
-        limit = bound(limit, 1, 100)
+    def list(self, spec, limit=40, page=0, sort='updated', order=-1, viewer=None):
         if type(spec) == dict:
             return self.search(spec, sort=[(sort, order)], limit=limit, skip=limit * page)
         elif type(spec) == list:
@@ -83,7 +82,8 @@ class Collection(object):
             items = {}
             for e in self.search({'_id': {'$in': spec}}): items[e.id] = e
             res = []
-            for i in spec: res.append(items[i])
+            for i in spec:
+                if items.has_key(i): res.append(items[i])
             return res
 
     def count(self, spec): return self.search(spec).count()
