@@ -7,6 +7,9 @@ from newhive.utils import *
 
 def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
 
+def epoch_to_string(epoch_time):
+    return time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(epoch_time))
+
 def querystring(d):
     out = "?"
     for key, val in d.items():

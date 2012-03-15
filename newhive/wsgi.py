@@ -69,6 +69,7 @@ jinja_env.filters['large_number'] = large_number
 jinja_env.filters['json'] = json.dumps
 jinja_env.filters['mod'] = lambda x, y: x % y
 jinja_env.filters['querystring'] = querystring
+jinja_env.filters['percentage'] = lambda x: x*100
 
 db = newhive.state.Database(config)
 controllers = {
