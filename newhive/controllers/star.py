@@ -12,24 +12,12 @@ class StarController(ApplicationController):
         """
 
         if not request.requester and request.requester.logged_in: raise exceptions.BadRequest()
-        path = request.form.get('path')
-        if path:
-            parts = path.split('/')
-            p1 = lget(parts, 1)
-        entity = request.form.get('entity')
-        entity_class = request.form.get('entity_class')
-        if entity:
-            if entity_class == 'Expr':
-                entity = self.db.Expr.fetch(entity)
-            elif entity_class == 'User':
-                entity = self.db.User.fetch(entity)
-        elif p1 in ["expressions", "starred", "listening"]: #Means we're on profile
-            entity = self.db.User.find(dict(sites=request.domain.lower()))
-        else:
-            entity = self.db.Expr.named(request.domain.lower(), request.path.lower())
+        eid = request.form.get('entity')
+        entity = self.db.Expr.fetch(eid)
+        if not entity: entity = self.db.User.fetch(eid)
+        if not entity: self.serve_404(request, response)
 
         s = self.db.Star.find({'initiator': request.requester.id, 'entity': entity.id})
-
         if request.form.get('action') == "star":
             if not s: s = self.db.Star.create(request.requester, entity)
             state = 'starred'
@@ -41,6 +29,7 @@ class StarController(ApplicationController):
             return {'state': state}
         else:
             if state == 'starred':
+                response.context['item'] = request.requester
                 return self.render_template(response, 'partials/user_card.html')
             elif state == 'unstarred':
                 return {'unstarred': request.requester.id}

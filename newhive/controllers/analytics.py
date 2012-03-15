@@ -115,7 +115,7 @@ class AnalyticsController(ApplicationController):
         response.context['data'] = json.dumps({'days_ago': days_ago, 'timeslice': timeslice})
         return self.serve_page(response, 'pages/analytics/last_login.html')
 
-    def funnel2(self, request, response, args={}):
+    def funnel2(self, request, response):
         import pandas
         weekly_range = pandas.DateRange(datetime(2011,11,6), end = datetime.now(), offset=pandas.DateOffset(days=7))
         monthly_range = pandas.DateRange(datetime(2011,11,1), end = datetime.now(), offset=pandas.DateOffset(months=1))
@@ -136,7 +136,7 @@ class AnalyticsController(ApplicationController):
 
         return self.serve_page(response, 'pages/analytics/funnel2.html')
 
-    def signups_per_hour(self, request, response, args={}):
+    def signups_per_hour(self, request, response):
         response.context['data'] = json.dumps(analytics.contacts_per_hour(self.db.mdb))
         return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
      #else:

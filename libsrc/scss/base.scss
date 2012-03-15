@@ -4,22 +4,20 @@
 
 $nav_height: 50px;
 $left_padding: 30px;
-$left_column_width: 210px;
+$right_padding: 12px;
+$left_column_width: 178px;
+$right_column_x: $left_padding + $left_column_width + $right_padding;
 
 // Imports
 @import "nav";
 @import "dialogs";
-@import "tags";
+@import "community";
 @import "cards";
 @import "feed";
-@import "home";
 @import "expression";
 @import "settings";
 @import "signup_flow";
 
-.expr_cards {
-  @import "profile";
-}
 .centered { 
     text-align: center; 
 }
@@ -49,16 +47,7 @@ img.centered, div.centered {
 }
 
 // Page Layout
-#nav{ height: $nav_height; }
-
-.expr_cards #header { 
-  padding-top: 48px; 
-  padding-left: $left_padding; 
-  padding-bottom: 23px;
-  }
 #primary_content{ clear: both; }
-.logged_in #primary_content, .tag_search #primary_content { padding-top: 12px; }
-
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;
 }
@@ -66,10 +55,10 @@ img.centered, div.centered {
   float: left; 
   width: $left_column_width;
   padding-left: $left_padding;
+  padding-right: $right_padding;
 }
-#right_column {
-  margin-left: $left_column_width + $left_padding;
-}
+#right_column { margin-left: $right_column_x; }
+#header { position: relative; }
 
 // Resets
 iframe { border: none; }
@@ -122,10 +111,6 @@ iframe { border: none; }
   }
 }
 .email_confirmation {
-//  .fathead { 
-//    margin: 100px 0 0 15%;
-//    width: 70%;
-//  }
   .fathead { 
     margin-bottom: 100px; 
     p {margin-left: 50px; }

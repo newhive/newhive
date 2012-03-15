@@ -1,0 +1,22 @@
+{% if item.type == 'SystemMessage' %}
+  <div class='user card item border_right border_bottom {{ item.id }}' draggable='false' onclick='{{ item.onclick|e }}'>
+    <input type='hidden' class='entity_id' value='{{ item.id }}'>
+    <a href='{{ item.url|e }}' target='_top'><img src='{{ item.image }}' alt='{{ item.image_alt }}' class='thumb'>
+    <div class='title'>The New Hive</div></a>
+    <div class='tags'>{{ item.message }}</div>
+    <a href='{{ item.url|e }}' target='_top'><div class='other'><span>{{ item.name }}</span></div></a>
+  </div>
+{% elif item.type == 'FriendJoined' %}
+  <div class='user card item border_right border_bottom {{ item.id }}' draggable='false' onclick="loadDialogPost('facebook_listen')">
+    <input type='hidden' class='entity_id' value='{{ item.id }}'>
+    <a href='{{ item.url|e }}' target='_top'><img src='{{ item.initiator.thumb }}' alt='{{ item.initiator.fullname }}' class='thumb'>
+    <div class='title'>The New Hive</div></a>
+    <div class='tags'>
+      Your friend {{ item.initiator.fullname }}<br/>
+      joined The New Hive
+    </div>
+    <a href='{{ item.url|e }}' target='_top'><div class='other'><span>{{ item.name }}</span></div></a>
+  </div>
+{% endif %}
+
+

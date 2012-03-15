@@ -15,7 +15,7 @@ from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredenti
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, dedup
+from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of
 
 import logging
 logger = logging.getLogger(__name__)
@@ -56,9 +56,12 @@ class Collection(object):
         self._col = db.mdb[entity.cname]
         self.entity = entity
 
-    def fetch(self, key, keyname='_id'):
-        return self.find({keyname : key })
+    def fetch_empty(self, key, keyname='_id'): return self.find_empty({ keyname : key })
+    def fetch(self, key, keyname='_id'): return self.find({ keyname : key })
 
+    def find_empty(self, spec, **opts):
+        res = self.find(spec, **opts)
+        return res if res else self.new({})
     def find(self, spec, **opts):
         r = self._col.find_one(spec, **opts)
         if not r: return None
@@ -71,11 +74,12 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def list(self, spec, limit=300, page=0, sort='updated', order=-1):
+    def list(self, spec, limit=40, page=0, sort='updated', order=-1):
+        limit = bound(limit, 1, 100)
         if type(spec) == dict:
             return self.search(spec, sort=[(sort, order)], limit=limit, skip=limit * page)
         elif type(spec) == list:
-            spec = dedup(spec)[ page * limit : (page + 1) * limit ]
+            spec = uniq(spec)[ page * limit : (page + 1) * limit ]
             return self.search({'_id': {'$in': spec}})
 
     def count(self, spec): return self.search(spec).count()
@@ -111,6 +115,9 @@ class Entity(dict):
     indexes = []
     Collection = Collection
 
+    @property
+    def type(self): return self.__class__.__name__
+
     def __init__(self, col, doc):
         dict.update(self, doc)
         self.collection = col
@@ -135,7 +142,7 @@ class Entity(dict):
         if d.has_key('updated'): del d['updated']
         else: d['updated'] = now()
         dict.update(self, d)
-        return self._col.update({ '_id' : self.id }, { '$set' : d })
+        return self._col.update({ '_id' : self.id }, { '$set' : d }, safe=True)
     def update_cmd(self, d, **opts): return self._col.update({ '_id' : self.id }, d, **opts)
 
     def increment(self, d):
@@ -160,7 +167,11 @@ class Entity(dict):
 
 # Common code between User and Expr
 class HasSocial(Entity):
-    _starrer_ids = None
+    # TODO: remove this after migration for deleting feed attribute
+    def __init__(self, col, doc):
+        if doc.has_key('feed'): del doc['feed']
+        super(HasSocial, self).__init__(col, doc)
+
     @property
     @memoized
     def starrer_ids(self):
@@ -170,7 +181,10 @@ class HasSocial(Entity):
     @property
     def star_count(self): return len(self.starrer_ids)
 
-    def can_view(self, viewer): return True
+    @property
+    @memoized
+    def broadcaster_count(self):
+        return self.db.Broadcast.search({ 'entity': self.id }).count()
 
     def related_next(self, spec={}, loop=True):
         if type(spec) == dict:
@@ -253,7 +267,7 @@ class KeyWords(Entity):
 @Database.register
 class User(HasSocial):
     cname = 'user'
-    indexes = [ ('name', {'unique':True}), 'facebook.id' ]
+    indexes = [ ('name', {'unique':True}), ('sites', {'unique':True}), 'facebook.id' ]
     
     # fields = dict(
     #     name = str
@@ -323,6 +337,12 @@ class User(HasSocial):
     def notify(self, feed_item):
         self.increment({'notification_count':1})
 
+    def exprs(self, auth=None, tag=None, **args):
+        spec = {'owner': self.id}
+        if auth: spec.update({'auth': auth})
+        if tag: spec.update({'tags_index': tag})
+        return self.db.Expr.list(spec, **args)
+
     @property
     @memoized
     def stars(self): return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
@@ -333,28 +353,62 @@ class User(HasSocial):
     @property
     def starred_expr_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'Expr']
 
-    def starred_exprs(self, viewer, **args):
-        if type(viewer) == User: viewer = viewer.id
-        return self.db.Expr.list(self.starred_expr_ids, viewer=viewer, **args)
+    @property
+    @memoized
+    def broadcast(self): return self.db.Broadcast.search({ 'initiator': self.id })
+    @property
+    def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
+
+    def can_view(self, expr):
+        return expr and ( (expr.get('auth', 'public') == 'public') or
+            (self.id == expr['owner']) or (expr.id in self.starred_expr_ids) )
+
+    def starred_exprs(self, **args):
+        return self.db.Expr.list(self.starred_expr_ids, **args)
+
+    def feed_profile(self, **args): return self.feed_search(
+            { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] }
+        , **args)
+    def feed_profile_entities(self, **args):
+        items = []
+        for item in self.feed_profile(**args):
+            if item.type == 'SystemMessage' or item.type == 'FriendJoined':
+                items.append(item)
+                continue
+
+            entity = item.initiator if item.entity.id == self.id else item.entity
+            entity.feed = [item]
+            items.append(entity)
+        return items
+
+    def feed_network(self, limit=40, **args):
+        res = self.feed_search({ '$or': [
+            { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
+            ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
+                'initiator': { '$ne': self.id } }
+        ] } , **args)
+        return self.feed_group(res, limit)
 
     def feed_search(self, spec, viewer=None, page=None, limit=0):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
         if page: spec['created'] = { '$lt': page }
-        res = self.db.Feed.search(spec, limit=limit, sort=[('created',-1)])
-        if viewer != self.id: res = ifilter( lambda i: i.entity and i.entity.can_view(viewer.id), res)
-        res = ifilter( lambda i: i.viewable(viewer), res)
+        res = ifilter( lambda i: i.viewable(viewer) and viewer.can_view(i.entity),
+            self.db.Feed.search(spec, limit=limit, sort=[('created',-1)]) )
         return res
 
-    def feed_profile(self, viewer, **args): return self.feed_search(
-            { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] }
-        , viewer, **args)
-
-    def feed_network(self, viewer, **args):
-        if type(viewer) == User: viewer = viewer.id
-        spec = { '$or' : [ { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Star', 'Comment']} },
-            { 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']} } ] }
-        res = filter(lambda i: i.entity and i.entity.can_view(viewer), self.db.Feed.list(spec, sort='created'))
-        return res
+    def feed_group(self, res, limit, feed_limit=6):
+        """" group feed items by expression """
+        exprs = []
+        for item in res:
+            i = index_of(exprs, lambda e: e.id == item['entity'])
+            if i == -1:
+                item.entity.feed = [item]
+                exprs.append(item.entity)
+            elif len(exprs[i].feed) < feed_limit:
+                if index_of(exprs[i].feed, lambda e: e['initiator'] == item['initiator']) != -1: continue
+                exprs[i].feed.append(item)
+            if len(exprs) == limit: break
+        return exprs
 
     def build_search_index(self):
         texts = {'name': self.get('name'), 'fullname': self.get('fullname')}
@@ -377,15 +431,15 @@ class User(HasSocial):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
 
-    def get_url(self, path='expressions'):
+    def get_url(self, path='profile'):
         return abs_url(domain = self.get('sites', [config.server_name])[0]) + path
     url = property(get_url)
 
-    def get_thumb(self):
+    def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
             file = self.db.File.fetch(self['thumb_file_id'])
             if file:
-                thumb = file.get_thumb(190,190)
+                thumb = file.get_thumb(size,size)
                 if thumb: return thumb
         return self.get('profile_thumb')
     thumb = property(get_thumb)
@@ -465,7 +519,8 @@ class User(HasSocial):
             except (FlowExchangeError, AccessTokenCredentialsError) as e:
                 print e
             self.facebook_credentials = None
-        self.update_cmd({'$set': {'facebook.disconnected': True}})
+        #self.update_cmd({'$set': {'facebook.disconnected': True}}) # WTF? this doesn't actually disconnect you
+        self.update_cmd({'$unset': {'facebook': 1}}) # this seems to work
         self.update_cmd({'$unset': {'oauth.facebook': 1}})
 
     @property
@@ -572,8 +627,9 @@ class Expr(HasSocial):
             return cls.named(domain, name)
 
         def list(self, spec, viewer=None, **opts):
+            if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
             es = super(Expr.Collection, self).list(spec, **opts)
-            return ifilter(lambda e: e.can_view(viewer), es)
+            return ifilter(lambda e: viewer.can_view(e), es)
 
         def random(self):
             rand = random.random()
@@ -638,9 +694,6 @@ class Expr(HasSocial):
         self.db.KeyWords.remove_entries(self)
         return super(Expr, self).delete()
 
-    def can_view(self, user):
-        return (self.get('auth', 'public') == 'public') or (user == self['owner']) or (user in self.starrer_ids)
-
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
         return self.increment({counter: 1})
@@ -688,13 +741,13 @@ class Expr(HasSocial):
     def url(self): return abs_url(domain=self['domain']) + self['name']
 
     @property
-    def owner_url(self): return abs_url(domain = self.get('domain')) + 'expressions'
+    def owner_url(self): return abs_url(domain = self.get('domain')) + 'profile'
 
-    def get_thumb(self):
+    def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
             file =  self.db.File.fetch(self['thumb_file_id'])
             if file:
-                thumb = file.get_thumb(190,190)
+                thumb = file.get_thumb(size,size)
                 if thumb: return thumb
         thumb = self.get('thumb')
         if not thumb: thumb = abs_url() + '/lib/skin/1/thumb_0.png'
@@ -868,7 +921,7 @@ class File(Entity):
             f.close()
             url = abs_url() + 'file/' + owner['name'] + '/' + name
 
-        self.update(url=url)
+        self.update(url=url, s3_bucket=self.get('s3_bucket'))
         return self
 
     def delete(self):
@@ -968,6 +1021,8 @@ class Feed(Entity):
 
 @Database.register
 class Comment(Feed):
+    action_name = 'commented'
+
     def create(self):
         assert self.has_key('text')
         return super(Comment, self).create()
@@ -989,29 +1044,38 @@ class Comment(Feed):
 
 @Database.register
 class Star(Feed):
-    class Collection(Feed.Collection):
-        def create(self, initiator, entity, data={}):
-            if initiator.id in entity.starrer_ids:
-                return True
-            else:
-                return super(Star.Collection, self).create(initiator, entity, data)
+    @property
+    def action_name(self):
+        return 'likes' if self['entity_class'] == 'Expr' else 'listening'
 
     def create(self):
         if self.entity['owner'] == self['initiator']:
             raise "You mustn't listen to yourself or star your own expressions"
+        if self['initiator'] in self.entity.starrer_ids: return True
         return super(Star, self).create()
 
 @Database.register
+class Broadcast(Feed):
+    action_name = 'broadcast'
+
+    def create(self):
+        if self.entity['owner'] == self['initiator']:
+            raise "You mustn't broadcast your own expression"
+        if type(self.entity) != Expr: raise "You may only broadcast expressions"
+        if self['initiator'] in self.entity.starrer_ids: return True
+        return super(Broadcast, self).create()
+
+@Database.register
 class InviteNote(Feed):
-    pass
+    action_name = 'gave invites'
 
 @Database.register
 class NewExpr(Feed):
-    pass
+    action_name = 'created'
 
 @Database.register
 class UpdatedExpr(Feed):
-    pass
+    action_name = 'updated'
 
 @Database.register
 class FriendJoined(Feed):
@@ -1046,6 +1110,13 @@ class Referral(Entity):
 @Database.register
 class Contact(Entity):
     cname = 'contact_log'
+
+
+
+## utils
+
+def get_id(entity_or_id):
+    return entity_or_id if type(entity_or_id) == str else entity_or_id.id
 
 
 

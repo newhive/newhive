@@ -12,41 +12,6 @@ body.home.logged_out #content{
 
 .menu { overflow : auto; }
 
-/* ==========================================
-   feed menu
-   ========================================== */
-#notifications {
-  width: 67px;
-  background-image: url('/lib/skin/1/feed.png');
-}
-#notifications.active {
-  background-image: url('/lib/skin/1/feed-hover.png');
-}
-#notifications.has_count .count {
-  margin: 0;
-  position: absolute;
-  top: 27px;
-  left: 40px;
-  background-color: #F72E4D;
-}
-#notifications.has_count .count.zero {
-    display: none;
-}
-
-
-/* ==========================================
-   login menu
-   ========================================== */
-#login_menu { width: 190px; padding : 10px; }
-
-#login_menu input[type=text], #login_menu input[type=password] { width: 170px; }
-
-#signup_link {
-  font-weight: bold; 
-  font-size: 13px;
-  text-align: center;
-  padding : 2px 5px;
-}
 
 /* ==========================================
    form validation
@@ -61,7 +26,6 @@ body.home.logged_out #content{
 }
 
 
-#header h1 { float: left; font-family : Museo, Helvetica, sans-serif; font-size : 3em; font-weight : normal; width: auto;}
 .home .fathead { float: left; font-family : Museo, Helvetica, sans-serif; font-size : 3em; font-weight : bold; margin : 0 0 20px 0; padding: 60px 0 80px 50px; width: 95%;}
 
 

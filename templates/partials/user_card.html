@@ -1,7 +1,24 @@
-<div class='user card item border_right border_bottom {{user.id}}' draggable='false'>
-  <input type='hidden' class='expr_id' value='{{ user.id }}'>
-  <a href='{{ user.url|e }}' target='_top'><img src='{{ user.thumb if user.thumb else "/lib/skin/1/thumb_person_mask.png?v=2" }}' style='background: {{ colors[range(32)|random] }};' class='thumb'>
-  <div class='title'>{{ user.fullname|e }}</div></a>
-  <div class='tags'>{% if user and user.expr_count > 0 %}{{ user.expr_count ~ " expression" ~ ("s" if user.expr_count > 1) }}{% endif %}</div>
-  <a href='{{ user.url|e }}' target='_top'><div class='other'><span>{{ user.name }}</span></div></a>
+<div class='user card item border_right border_bottom {{ item.id }}' draggable='false'>
+  <input type='hidden' class='entity_id' value='{{ item.id }}'>
+  <a href='{{ item.url|e }}' target='_top'><img src='{{ item.thumb if item.thumb else "/lib/skin/1/thumb_person_mask.png?v=2" }}' style='background: {{ colors[range(32)|random] }};' class='thumb'>
+  <div class='title'>{{ item.fullname|e }}</div></a>
+  <div class='tags'>{% if item and item.expr_count > 0 %}{{ item.expr_count ~ " expression" ~ ("s" if item.expr_count > 1) }}{% endif %}</div>
+  <a href='{{ item.url|e }}' target='_top'><div class='other'><span>{{ item.name }}</span></div></a>
+  {% if item.feed %}
+    <div class='actions'>
+      <img src='/lib/skin/1/listen_highlight.png'>
+    </div>
+    <div class='feed_info'>
+      {% if item.feed[0].class_name == 'Star' and item.feed[0].initiator == user %}
+        <div>you're listening to {{ item.feed[0].entity.name }}</div>
+      {% elif item.feed[0].class_name == 'Star' and item.feed[0].entity == user %}
+        <div>{{ item.feed[0].initiator.name }} is listening to you</div>
+      {% elif item.feed[0].class_name == 'Star' %}
+        <div>{{ item.feed[0].initiator.name }} is listening to {{ item.feed[0].entity.name }}</div>
+      {% else %}
+        <div>{{ 'you' if item.feed[0].initiator == user else item.feed[0].initiator.name }}
+          {{ item.feed[0].action_name }}</div>
+      {% endif %}
+    </div>
+  {% endif %}
 </div>

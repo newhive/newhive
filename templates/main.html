@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% from "macros/main.html" import star_button, share_button, create_button, discussion_button, listen_button, starrers_menu, context_to_string %} 
+{% from "macros/main.html" import listen_button, star_button, share_button, create_button, discussion_button, starrers_menu, context_to_string %} 
 
 {% block head %}
 <script>
   var fb_logged_in = false;
   window.fbAsyncInit = function() {
     FB.init({
-      appId      : {{facebook_app_id}}, // App ID
+      appId      : {{facebook_app_id|json}}, // App ID
       //channelUrl : '//WWW.YOUR_DOMAIN.COM/channel.html', // Channel File
       status     : true, // check login status
       cookie     : true, // enable cookies to allow the server to access the session
@@ -34,10 +34,139 @@
 
 {% block main %}
   <div id="nav">
-    {% block nav %}
-      {% include "page_parts/nav.html" %}
-    {% endblock nav %}
+    <div class='nav' id='nav_bg'></div>
+    <div class='nav' id='nav_left'>
+      <a href='{{ server }}home/{{ 'activity' if logged_in }}' title="Explore Expressions"><img id='logo' class='hoverable nav_icon' src={{ icon }}></a>
+    
+     {% if user.logged_in %}
+      <div class='nav_icon medbold center'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
+      <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png' class='nav_icon'>
+      <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}' onclick='window.location="{{feed_url}}"'>
+      </div>
+      <div id='feed_menu' class='menu feed_menu border selected'>
+        {% include 'dialogs/feed.html' %}
+      </div>
+      <div id='user_menu' class='menu'>
+        <form name='logout_form' action='{{ secure_server }}' method='POST'>
+          <input name='action' value='logout' type='hidden'>
+        </form>
+        {% if user.has_facebook %}
+            <div class='menu_item facebook menu_hover' id='fb_invite_menu_item'>
+              <div class="fb_icon"></div><span class="fb_icon_title">Invite friends</span>
+            </div>
+            <div class='menu_item facebook' id='fb_listen_menu_item'>
+              <div class="fb_icon"></div><span class="fb_icon_title">Find friends</span>
+            </div>
+            {% else %}
+            <div class='menu_item facebook menu_hover' id='fb_connect_menu_item'>
+              <div class="fb_icon"></div><span class="fb_icon_title">Connect with Facebook</span>
+            </div>
+        {% endif %}
+        {% if user.referrals > 0 %}
+          <div class='menu_item' onclick='showDialog("#dia_referral")'>
+            <div class='invites'>Invitations</div>
+          </div>
+        {% endif %}
+        <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
+        <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
+      </div>
+      <script>
+        hover_menu( $('#user_menu_handle'), $('#user_menu') );
+        $('#fb_invite_menu_item').click(function(e){
+          _gaq.push(['_trackEvent', 'fb_connect', 'open_invite_dialog', 'user_menu']);
+          sendRequestViaMultiFriendSelector();
+        });
+        $('#fb_connect_menu_item').click(function(e){
+          _gaq.push(['_trackEvent', 'fb_connect', 'open_connect_dialog', 'user_menu']);
+          showDialog('#dia_facebook_connect');
+        });
+        $('#fb_listen_menu_item').click(function(e){
+          _gaq.push(['_trackEvent', 'fb_connect', 'open_listen_dialog', 'user_menu']);
+          e.stopPropagation();
+          $(this).addClass('menu_hover');
+          loadDialogPost('facebook_listen');
+        });
+        hover_menu( $('#notifications'), $('#feed_menu'), {
+          open: function(){
+            var div = $('#notifications');
+            if ( div.attr('data-count') != "0" ) {
+              div.attr('data-count', 0);
+              iconCounts();
+              logAction('notifications_open');
+            }
+          }
+        });
+      </script>
+      {% else %}
+        <a href='{{ server }}' title="Explore Expressions"><img src='/lib/skin/1/logotype_beta.png' class='nav_icon'></a>
+      {% endif %}
+      {% if template != "pages/edit.html" %} {# don't show random button and search in editor #}
+        <a href='{{server}}random'><img class="nav_icon hoverable" src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
+        <div class="nav_icon center" id="search" >
+          <input type="text" id="search_box" placeholder="Search" value="{{q.q}}" onkeydown="if (event.keyCode == 13) $('#search_submit').click()"/>
+          <div id="search_submit" class="hoverable" onclick="window.location = buildSearch()"></div>
+        </div>
+      {% endif %}
+    </div>
+    
+    <div class='nav' id='nav_right'>
+      {% block nav_right_left %}{% endblock %}
+      {% if owner and not user_is_owner %}
+        {{ listen_button(owner.id, active=owner.id in user.starred_user_ids, title='Listen to ' + owner['name'], active_title='Stop listening') }}
+        {% for collection in [{'data': listeners, 'type': 'listeners', 'id': 'listeners'}] %}
+          {% include "dialogs/starrers.html" %}
+        {% endfor %}
+        <a title="{{owner.name}}'s profile" href='{{ owner_url }}'>
+         <div id='info' class='medbold nav_icon' style='text-align : right'>
+           <div id='exp_owner'>{{ owner['name'] }}</div>
+          <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
+         </div>
+         {% if owner.get_thumb() %}<img id='owner_thumb' src='{{owner.get_thumb(70)}}'>{% endif %}
+        </a>
+        <div class='nav_icon space'></div>
+      {% endif %}
+      {% if user.logged_in and not editing %}
+        <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='Create new expression'></a>
+        <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
+      {% endif %}
+      {% block nav_right %}{% endblock %}
+      {% if not user.logged_in %}
+        <div id='signup_btn' class='hoverable nav_icon medbold center pad signup_button'>Sign Up</div><div id='login_btn' class='hoverable nav_icon medbold center pad'>Log In</div>
+        <div id='login_menu' class='menu top'>
+          <form id='login_form' action='{{ secure_server }}' method='POST'>
+            {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
+            <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
+              <img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;">
+            </a>
+            <b>Username</b><br>
+            <input id='username' type='text' name='username' value='{{ user['name'] }}'>
+            <div class='spacer'></div>
+            <b>Password</b><br>
+            <input type='password' name='secret'><br>
+            <a href="#" id='password_recovery_link' onclick="showDialog('#dia_password_recovery'); return false;">Forgot Password?</a>
+            <div class='spacer'></div>
+            <div style='float : left'>
+              <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:.75em'> Remember me</label>
+            </div>
+            <div style='float : right;'>
+              <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
+            </div>
+            <input type='hidden' name='action' value='login'>
+            <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile -->
+          </form>
+        </div>
+        <script>
+         $(function() {
+          var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
+              { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
+                close_delay : 1000, auto_close : false, click_persist : '#login_menu' });
+          {% if error %} login_menu.options.hover_close = false; login_menu.open(); {% endif %}
+         });
+        </script>
+      {% endif %}
+    </div>
   </div>
+
   {% block body %}
   {% endblock body %}
   <div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>

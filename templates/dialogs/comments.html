@@ -23,14 +23,14 @@
   </div>
   <div id="comments">
     {% for comment in expr.comments %}
-    {% include "partials/comment.html" %}
+      {% include "partials/comment.html" %}
     {% endfor %}
   </div>
 </div>
 <script>
   function submitComment() {
       var submit = $('#dia_comments input[type=submit]');
-      if (!submit.hasClass('inactive')){
+      if (!submit.hasClass('inactive')) {
           submit.addClass('inactive');
           $.post('', $('#dia_comments form').serialize(), function(data) {
               $('#dia_comments input[type=submit]').removeClass('inactive');

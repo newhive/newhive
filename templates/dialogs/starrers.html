@@ -1,14 +1,14 @@
 <div id="dia_{{collection.id}}" class='menu feed_menu border selected' data-count='{{ starrers|length }}'>
   <div class="dialog_title">
-{% if collection.type == "listeners" %}
-People listening to {{ owner['name'] }}
-{% elif collection.type == "starrers" %}
-People who starred {{ exp.title }}
-{% endif %}
-</div>
-    <div class="user_cards">
-    {% for user in collection.data %}
-    {% include "partials/user_card.html" %}
+    {% if collection.type == "listeners" %}
+      People listening to {{ owner['name'] }}
+    {% elif collection.type == "starrers" %}
+      People who like {{ exp.title }}
+    {% endif %}
+  </div>
+  <div class="user_cards">
+    {% for item in collection.data %}
+      {% include "partials/user_card.html" %}
     {% endfor %}
-    </div>
+  </div>
 </div>

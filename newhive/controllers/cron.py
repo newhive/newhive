@@ -1,3 +1,4 @@
+from itertools import chain
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.utils import now
@@ -5,7 +6,7 @@ import newhive.mail
 
 class CronController(ApplicationController):
 
-    def cron(self, request, response, args={}):
+    def cron(self, request, response):
         """ Reads intenal crontab, list of tuples of the format:
 
             (Cron Format String, Method Name, Method Options Dictionary)
@@ -14,10 +15,12 @@ class CronController(ApplicationController):
                 min hour
 
             """
+        if request.remote_addr != '127.0.0.1':
+            return self.serve_404(request, response)
 
         t = datetime.now()
         crontab = [
-                ("* *", "email_star", {'delay': 1, 'frequency': 1})
+                ("* *", "email_star_broadcast", {'delay': 1, 'frequency': 1})
                 ]
 
         log = "Cron ran the following commands: "
@@ -29,20 +32,19 @@ class CronController(ApplicationController):
         return self.serve_json(response, log + "\n")
 
 
-    def email_star(self, opts):
+    def email_star_broadcast(self, opts):
         logfile = open(config.src_home + '/log/email_star.log', 'a')
         start = opts.get('delay') + opts.get('frequency')
         end = opts.get('delay')
         items = self.db.Star.search(
                 {'created': {"$gt": now() - 60 * start, "$lt": now() - 60 * end}})
-        for item in items:
-            if item.get('entity_class') == "User":
-                recipient = item.entity
-            elif item.get('entity_class') == "Expr":
-                recipient = item.entity.owner
-            if not item.initiator.id == recipient.id:
-                headers = newhive.mail.mail_feed(self.jinja_env, item, recipient, dry_run = False)
-                logfile.write('\n' + time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(time.time())) + " " * 4 + headers['To'] + ' ' * ( 50 - len(headers['To']) )  + headers['Subject'] )
+        items2 = self.db.Broadcast.search(
+                {'created': {"$gt": now() - 60 * start, "$lt": now() - 60 * end}})
+        for item in chain(items, items2):
+            recipient = item.entity.owner
+            if item.initiator.id == recipient.id: continue
+            headers = newhive.mail.mail_feed(self.jinja_env, item, recipient, dry_run = False)
+            logfile.write('\n' + time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(time.time())) + " " * 4 + headers['To'] + ' ' * ( 50 - len(headers['To']) )  + headers['Subject'] )
         logfile.close()
 
     def _cronmatch(self, time, string):

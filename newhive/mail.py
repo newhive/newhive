@@ -139,12 +139,14 @@ def mail_feed(jinja_env, feed, recipient, dry_run=False):
         context['url'] = context['url'] + "?loadDialog=comments"
     elif type(feed) == newhive.state.Star:
         if feed['entity_class'] == "Expr":
-            heads['Subject'] = initiator_name + ' starred "' + expression_title + '"'
+            heads['Subject'] = initiator_name + ' likes "' + expression_title + '"'
         elif feed['entity_class'] == "User":
             context['title'] = feed.initiator.get('fullname')
             context['url'] = feed.initiator.url
             context['thumbnail_url'] = feed.initiator.thumb
             heads['Subject'] = initiator_name + " is now listening to you"
+    elif type(feed) == newhive.state.Broadcast:
+        heads['Subject'] = initiator_name + ' broadcast "' + expression_title + '"'
     body = {
         'plain': jinja_env.get_template("emails/feed.txt").render(context)
         , 'html': jinja_env.get_template("emails/feed.html").render(context)

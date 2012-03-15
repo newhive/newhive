@@ -10,32 +10,6 @@ logger = logging.getLogger(__name__)
 
 class UserController(ApplicationController):
 
-    def index(self, request, response, args={}):
-        page = int(request.args.get('page', 0))
-        owner = response.context['owner']
-
-        tags = owner.get('tags', [])
-        expressions_tag = {'url': '/expressions', 'name': 'Expressions', 'show_name': False}
-        people_tag = {'url': '/listening', 'name': 'Listening'}
-        star_tag = {'name': 'Starred', 'url': "/starred", 'img': "/lib/skin/1/star_tab" + ("-down" if request.path == "starred" else "") + ".png"}
-        feed_tag = {'url': "/feed", "name": "Feed"}
-
-        if args.get('listening'):
-            tag = people_tag
-            response.context['users'] = owner.starred_users
-
-        elif args.get('feed'):
-            tag = feed_tag
-            response.context['feed_items'] = owner.feed_profile(request.requester)
-
-        response.context['starrers'] = owner.starrers 
-        response.context['profile_thumb'] = owner.thumb
-        response.context['tags'] = map(lambda t: {'url': "/expressions/" + t, 'name': t, 'type': 'user'}, tags)
-        response.context['system_tags'] = [expressions_tag, feed_tag, people_tag, star_tag]
-        response.context['title'] = owner['fullname']
-        response.context['tag'] = tag
-        return self.serve_page(response, 'pages/expr_cards.html')
-
     def new(self, request, response):
         if request.requester.logged_in: return self.redirect(response, request.requester.url)
         referral = self._check_referral(request)[0]
@@ -90,6 +64,8 @@ class UserController(ApplicationController):
         args.update({
              'referrer' : referral.get('user')
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]
+            ,'email'    : args.get('email').lower()
+            #,'flags'    : { 'add_invites_on_save' : True }
         })
         if request.args.has_key('code'):
             credentials = request.requester.fb_client.exchange()
@@ -141,12 +117,12 @@ class UserController(ApplicationController):
             for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
                 self.db.Star.create(user, friend)
 
-    def _friends_not_to_listen(self, request, user):
+    def _friends_not_to_listen(self, request, new_user):
         friends = request.form.get('friends_not_to_listen')
         if friends:
             friends = friends.split(',')
             for friend in self.db.User.search({'facebook.id': {'$in': friends}}):
-                self.db.FriendJoined.create(user, friend)
+                self.db.FriendJoined.create(new_user, friend)
 
     def edit(self, request, response):
         if request.requester.logged_in and request.is_secure:
@@ -236,7 +212,7 @@ class UserController(ApplicationController):
 
     def profile_thumb_set(self, request, response):
         request.max_content_length = 10000000 # 10 megs
-        file = request.files.get('profile_thumb')
+        file = request.files.get('file')
         mime = mimetypes.guess_type(file.filename)[0]
         if not mime in ['image/jpeg', 'image/png', 'image/gif']:
             response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
@@ -246,7 +222,7 @@ class UserController(ApplicationController):
         res = self.db.File.create(dict(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime))
         tmp_file.close()
         request.requester.update(thumb_file_id = res.id, profile_thumb=res.get_thumb(190,190))
-        return self.redirect(response, request.form['forward'])
+        return { 'name': file.filename, 'mime' : mime, 'file_id' : res.id, 'url' : res.get('url'), 'thumb': res.get_thumb(190,190) }
 
     def password_recovery(self, request, response):
         email = request.form.get('email')
@@ -318,7 +294,7 @@ class UserController(ApplicationController):
             except (AccessTokenCredentialsError, FlowExchangeError) as e:
                 logger.error("Error generating friends to listen dialog for '%s': %s", request.requester['name'], e)
                 response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
-        except FlowExchangeError:
+        except FlowExchangeError as e:
             logger.error("Error generating friends to listen dialog for '%s': %s", request.requester['name'], e)
             response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
         if friends and len(friends):

@@ -1,5 +1,25 @@
 $nav_height: 50px;
 
+#nav{ height: $nav_height; }
+
+.nav { font-weight: bold; }
+.nav a .nav_icon { cursor : pointer }
+#nav_left .nav_icon { margin-right: 3px; }
+.nav .nav_icon {
+    display : inline-block;
+    height: $nav_height;
+    float: left;
+    cursor : default;
+    &.active { color : white; background-color : $color_grey_medium; }
+    &.pad { padding : 0 8px; }
+    &.space { padding : 0 4px; }
+}
+.nav .center {
+    line-height: $nav_height;
+    vertical-align: middle;
+    * { vertical-align: middle; }
+}
+
 #nav_bg {
   top: 0; 
   left: 0; 
@@ -9,21 +29,15 @@ $nav_height: 50px;
   z-index: 1; 
 }
 
+#nav_right { right: 0px; top: 0px; margin-right: 5px; }
+
 body.home.logged_out .nav{
   position: absolute;
 }
 
-/* ==========================================
-   user menu
-   ========================================== */
-#user_menu_handle {
-  position: relative;
-  top: 8px;
-  left: 2px;
-}
-#user_menu .invites {
-  float: left;
-}
+#logo { vertical-align: middle; }
+
+#user_menu_handle.active { background: none;  }
 #user_menu .referral_count {
   color: $color_active;
   padding-left: 30px;
@@ -47,6 +61,10 @@ body.home.logged_out .nav{
       }
 }
 
+#exp_owner { background-color : $color_selected; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; vertical-align: top; }
+#datetime { font-size : .7em; color : $color_grey_medium; line-height : .5em; }
+#info { display : inline-block; text-align : right; margin-right : 10px; }
+#owner_thumb { width: 39px; float: left; margin: 5px 0; }
 
 #user_menu .menu_item.facebook{
   &:hover {
@@ -55,52 +73,49 @@ body.home.logged_out .nav{
   }
 }
 
-.nav .nav_icon.has_count {
-  position: relative;
-}
-
 .nav .notification_count {
   display: inline-block;
   padding: 3px 5px 2px 5px;
   vertical-align: middle;
 }
 
-.nav_icon .username:hover {
-  background: #FFF673;
-}
-#btn_share {
+.nav_icon .username {
+  &:hover { background: #FFF673; }
 }
 #btn_star .icon {
   height: $nav_height;
-  float: left;
-  width: 67px;
-  background-image: url("/lib/skin/1/star.png");
+  width: 44px;
+  background-image: url("/lib/skin/1/like.png");
 }
 #btn_star.starred .icon {
-  background-image: url("/lib/skin/1/star_active.png");
+  background-image: url("/lib/skin/1/like-active.png");
 }
 #btn_star.active.starred .icon, #btn_star.active .icon {
-  background-image: url("/lib/skin/1/star-hover.png");
+  background-image: url("/lib/skin/1/like-hover.png");
 }
-.expr_cards {
-    #btn_star { 
-        .icon { background-image: url("/lib/skin/1/people.png"); }
-        &.active .icon { background-image: url("/lib/skin/1/people-hover.png"); }
-        &.starred .icon { background-image: url("/lib/skin/1/people_active.png"); }
-        &.starred.active .icon { background-image: url("/lib/skin/1/people_active-hover.png"); }
-    }
+
+#btn_broadcast {
+  .icon {
+    height: $nav_height;
+    width: 44px;
+    background-image: url("/lib/skin/1/broadcast.png");
+  }
+  &.enabled .icon { background-image: url("/lib/skin/1/broadcast_active.png"); }
 }
-.listen_small.icon { 
-  position: relative;
-  top: 2px;
-  width:37px; 
-  height:31px; 
-  background-image: url('/lib/skin/1/people_small.png'); 
-  &:hover { background-image: url('/lib/skin/1/people_small-hover.png'); }
+
+#listen_small {
+  .icon {
+      position: relative;
+      top: 2px;
+      width:37px; 
+      height:31px; 
+      background-image: url('/lib/skin/1/people_small.png'); 
+  }
+  &.active .icon { background-image: url('/lib/skin/1/people_small-hover.png'); }
 }
-.listen_small.starred.icon { 
-  background-image: url('/lib/skin/1/people_small_active.png');
-  &:hover { background-image: url('/lib/skin/1/people_small_active-hover.png'); }
+#listen_small.starred { 
+  .icon { background-image: url('/lib/skin/1/people_small_active.png'); }
+  &.active .icon { background-image: url('/lib/skin/1/people_small_active-hover.png'); }
 }
 
 .has_count .count {
@@ -108,38 +123,69 @@ body.home.logged_out .nav{
   -moz-border-radius: 6px;
   -webkit-border-radius: 6px;
   border-radius: 6px;
-  margin: 15px 5px 0 -10px;
-  padding: 2px 5px;
+  margin: 15px 2px 0 -9px;
+  padding: 2px 4px;
   line-height: 13px;
   font-size: 12px;
   font-weight: bold;
-  float: left;
-  background: #696E76;
+  display: inline-block;
+  background: $color_grey_medium;
 }
 .has_count .count.zero {
   display: none;
 }
-.has_count.zero {
-  margin-right: -8px;
+.has_count .icon {
+  display: inline-block;
+  vertical-align: top;
 }
-.has_count img {
-  float: left;
-}
+
 #search {
    position: relative;
    display: inline-block;
 }
-.logged_out #search {
-    left: -25px;
-}
 #search_box {
-    width: 200px;
+    width: 150px;
 }
 #search_submit {
   display: inline-block;
   width: 22px;
-  height:22px;
+  height: 22px;
   background-image: url('lib/skin/1/search_arrow.png');
   vertical-align: middle;
   &:hover { background-image: url('lib/skin/1/search_arrow-hover.png');}
+}
+
+
+/* ==========================================
+   feed menu
+   ========================================== */
+#notifications {
+  width: 44px;
+  background-image: url('/lib/skin/1/feed.png');
+  background-position: 50%;
+}
+#notifications.active {
+  background-image: url('/lib/skin/1/feed-hover.png');
+}
+#notifications .count {
+  margin: 27px 0 0 27px;
+  background-color: $color_active;
+}
+#notifications.has_count .count.zero {
+    display: none;
+}
+
+
+/* ==========================================
+   login menu
+   ========================================== */
+#login_menu { width: 190px; padding : 10px; }
+
+#login_menu input[type=text], #login_menu input[type=password] { width: 170px; }
+
+#signup_link {
+  font-weight: bold; 
+  font-size: 13px;
+  text-align: center;
+  padding : 2px 5px;
 }
