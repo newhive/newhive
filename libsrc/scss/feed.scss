@@ -89,11 +89,12 @@
 #feed_menu #more_button {
   padding: 3px;
   margin-top: 3px;
-  background-color: $color_selected;
-  color: black;
+  background-color: black;
+  color: white;
   text-align: center;
+  font-weight: bold;
 }
-#feed_menu #more_button:hover, #more_button.active {
+#feed_menu #more_button:hover, #feed_menu #more_button.active {
   background-color: $color_highlight;
   color: $color_bright_red;
 }

@@ -679,6 +679,7 @@ var place_apps = function() {
 
 var fix_borders = function(items){
     var items = $(items);
+    if(!items.length) return;
     var initial_offset = $(items[0]).offset().left;
     var i = 1;
     while (i < items.length && $(items[i]).offset().left != initial_offset) i++;

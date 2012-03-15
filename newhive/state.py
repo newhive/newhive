@@ -519,7 +519,8 @@ class User(HasSocial):
             except (FlowExchangeError, AccessTokenCredentialsError) as e:
                 print e
             self.facebook_credentials = None
-        self.update_cmd({'$set': {'facebook.disconnected': True}})
+        #self.update_cmd({'$set': {'facebook.disconnected': True}}) # WTF? this doesn't actually disconnect you
+        self.update_cmd({'$unset': {'facebook': 1}}) # this seems to work
         self.update_cmd({'$unset': {'oauth.facebook': 1}})
 
     @property

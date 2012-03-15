@@ -106,7 +106,7 @@
     <div class='title'>
       {% if network and cards|length < 10 %}
         <img src='/lib/skin/1/people_small.png' style='float: left; vertical-align: middle; margin-right: 10px;'>
-        <span class='info'><span class='active'>To listen</span> to someone, click the person icon next to their name.<br>
+        <span class='info'>To <span class='active'>listen to someone</span>, click the person icon next to their name.<br>
         Activity of the people you're listening to will appear on this page.</span>
       {% elif search %}
         <span class='head'>Results for: {{ q.q|e }}</span>
@@ -176,9 +176,9 @@
   <div id='feed'>
     {% if network and cards|length < 10 %}
       <div>
-        <div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div>
-        <div class='prompt link hoverable' id='prompt_allies'><div>Click here to connect to Facebook and follow / invite friends.</div></div>
-        <a href='{{server}}home/expressions'><div class='prompt hoverable' id='prompt_expressions'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div></a>
+        <a href='{{server}}home/expressions'><div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div></a>
+        <div class='prompt link hoverable' id='prompt_allies' onclick='fb_listen_or_connect()'><div>Click here to connect to Facebook and follow / invite friends.</div></div>
+        <a href='{{server}}home/expressions/all'><div class='prompt hoverable' id='prompt_expressions'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div></a>
       </div>
     {% endif %}
     {% include 'page_parts/cards.html' %}
@@ -201,6 +201,11 @@
      //        });
      //    }
      //});
+
+     function fb_listen_or_connect() {
+         if(fb_logged_in) loadDialogPost('facebook_listen');
+         else showDialog('#dia_facebook_connect');
+     }
 
      var current_tag = {{ user_tag|json }};
      function folder_add() {
