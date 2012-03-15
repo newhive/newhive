@@ -377,7 +377,6 @@ Hive.App.has_resize = function(o) {
             o.refDims = o.app.dims();
             o.dragging = e.target;
             o.dragging.busy = true;
-            o.dragging.over();
             o.app.div.drag('start');
         });
         resize.drag(function(e, dd) {
@@ -389,7 +388,6 @@ Hive.App.has_resize = function(o) {
         //resize_h.drag(function(e, dd) { o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1]]); });
         ctrls.drag('end', function(e, dd) {
             o.dragging.busy = false;
-            o.dragging.out();
             o.app.div.drag('end');
         });
 
@@ -563,7 +561,6 @@ Hive.App.Text = function(common) {
             o.refDims = o.app.dims();
             o.dragging = e.target;
             o.dragging.busy = true;
-            o.dragging.over();
             o.app.div.drag('start');
         });
         o.refDims = null;
@@ -574,7 +571,6 @@ Hive.App.Text = function(common) {
         o.c.resize_h.drag(function(e, dd) { o.app.resize_h([o.refDims[0] + dd.deltaX, o.refDims[1]]); });
         d.find('.resize, .resize_h').drag('end', function(e, dd) {
             o.dragging.busy = false;
-            o.dragging.out();
             o.app.div.drag('end');
         });
 
