@@ -6,7 +6,8 @@
 <script>
     var data = {{json_data}};
     var r; var chart; var plot;
-    data.counts_log = $.map(data.counts, function(el){ return Math.log(el); });
+    var log10 = Math.log(10);
+    data.counts_log = $.map(data.counts, function(el){ return Math.log(el)/log10; });
     data.dates = $.map(data.dates, function(el){ return (el - 1293840000)/(3600*24*7)});
     $(function(){
         r = Raphael('canvas');

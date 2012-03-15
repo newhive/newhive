@@ -1,3 +1,4 @@
+import datetime, pandas
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive import analytics
@@ -157,3 +158,60 @@ class AnalyticsController(ApplicationController):
         response.context['data'] = data
 
         return self.serve_page(response, 'pages/analytics/by_stars.html')
+
+    def active_users_cohort(self, request, response):
+        response.context['data'] = analytics.visits_per_month(self.db)
+        response.context['title'] = "Active Users (visted 2+ visits in month) by cohort"
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
+
+    def expression_creates_cohort(self, request, response):
+        response.context['data'] = analytics.expressions_per_month(self.db)
+        response.context['title'] = 'Fraction of users who created an expression in the month, by cohort'
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
+
+    def referrals_cohort(self, request, response):
+        response.context['data'] = analytics.referrals_per_month(self.db)
+        response.context['title'] = 'Fraction of users who invited another user in the month (not necessarily used), by cohort'
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
+
+    def used_referrals_cohort(self, request, response):
+        response.context['data'] = analytics.used_referrals_per_month(self.db)
+        response.context['title'] = 'Fraction of users who invited another user and that person joined, by cohort'
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
+
+    def funnel2_cohort(self, request, response):
+        response.context['data'] = analytics.funnel2_per_month(self.db)
+        response.context['title'] = 'Funnel 2: Fraction of users who had a user signup on one of their expressions (not neccessarily created account), by cohort'
+        return self.serve_page(response, 'pages/analytics/cohort_base.html')
+
+    def cohort_dashboard(self, request, response):
+        url_parts = request.path.split('/')
+        print url_parts
+        year = int(lget(url_parts, 2, 0))
+        month = int(lget(url_parts, 3, 0))
+        if not year or not month:
+            date = datetime.now() - pandas.DateOffset(months=1)
+            year = date.year
+            month = date.month
+        date = datetime(year, month, 1, 12)
+        cohort_users = analytics._cohort_users(self.db, date)
+        response.context['date'] = date
+        response.context['cohorts'] = cohort_users['names']
+        response.context['metrics'] = [
+                {'name': 'Visited 2+ days'
+                    , 'data': analytics.visits_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/active_users_cohort'}
+                , {'name': 'Created an expression'
+                    , 'data': analytics.expressions_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/expression_creates_cohort'}
+                , {'name': 'Invited a friend'
+                    , 'data': analytics.referrals_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/referrals_cohort'}
+                , {'name': 'Had an invite convert'
+                    , 'data': analytics.used_referrals_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/used_referrals_cohort'}
+                , {'name': "Signup on user's expression (funnel 2)"
+                    , 'data': analytics.funnel2_per_month(self.db, cohort_users, year, month)
+                    , 'url': '/analytics/funnel2_cohort'}
+                ]
+        return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')
