@@ -1099,6 +1099,9 @@ class FriendJoined(Feed):
     def viewable(self, viewer):
         return self['entity'] == viewer.id
 
+    def create(self):
+        if self.db.FriendJoined.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
+        return super(FriendJoined, self).create()
 
 @Database.register
 class SystemMessage(Feed):

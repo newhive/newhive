@@ -8,7 +8,7 @@ from pymongo.connection import DuplicateKeyError
 class ExpressionController(ApplicationController):
 
     def edit(self, request, response):
-        if not request.requester.logged_in: return self.serve_404()
+        if not request.requester.logged_in: return self.serve_404(request, response)
 
         exp_id = lget(request.path.split('/'), 1) #TODO: remove this hack once full routing is in place
         if not exp_id:
