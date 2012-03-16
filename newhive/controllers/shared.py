@@ -3,6 +3,7 @@ from datetime import datetime
 from newhive import config, colors, auth
 import newhive.ui_strings.en as ui
 from newhive.utils import *
+import urllib
 
 
 def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
@@ -10,11 +11,11 @@ def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
 def epoch_to_string(epoch_time):
     return time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(epoch_time))
 
-def querystring(d):
-    out = "?"
-    for key, val in d.items():
-        out = out + key + "=" + val + "&"
-    return out[:-1]
+def querystring(args):
+    if not args: return ''
+    parms = []
+    for a in args: parms.append((a, args[a]))
+    return '?' + urllib.urlencode(parms)
 
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """

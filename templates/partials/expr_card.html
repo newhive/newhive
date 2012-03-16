@@ -1,6 +1,6 @@
 <div class='expr card item border_right border_bottom' draggable='false'>
   <input type='hidden' class='item_id' value='{{ item.id }}'>
-  <a href='{{ item.url |e }}{{ collection | querystring if collection }}' target='_top'><img src='{{ item.thumb|default('/lib/skin/1/thumb_0.png') }}' class='thumb'>
+  <a href='{{ item.url + args }}{{ collection | querystring if collection }}' target='_top'><img src='{{ item.thumb|default('/lib/skin/1/thumb_0.png') }}' class='thumb'>
   <div class='title'>{{ item.title|e }}</div></a>
   <div class='tags'>
     {% if item.feed and item.feed[0].text %}
