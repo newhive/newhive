@@ -64,7 +64,7 @@ class CommunityController(ApplicationController):
     def user_exprs(self, request, auth=None):
         return request.owner.exprs(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
     def feed_network(self, request): return request.owner.feed_network(**query_args(request))
-    def feed_profile(self, request): return request.owner.feed_profile_entities(**query_args(request)), {'user': request.owner['name']}
+    def feed_profile(self, request): return request.owner.feed_profile_entities(**query_args(request))
     def listening(self, request): return request.owner.starred_users
     def listeners(self, request): return request.owner.starrers
 
