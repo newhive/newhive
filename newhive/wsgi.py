@@ -137,7 +137,9 @@ site_pages = {
     ,'edit'                : controllers['expression'].edit
     ,'random'              : controllers['expression'].random
     ,'settings'            : controllers['user'].edit
-    ,'signup'              : controllers['user'].new
+    ,'signup'              : controllers['user'].invited # old invites in the wild may go here
+    ,'invited'             : controllers['user'].invited
+    ,'create_account'      : controllers['user'].new
     ,'user_check'          : controllers['user'].user_check
     ,'email_confirmation'  : controllers['user'].confirm_email
     ,'fbcanvas'            : controllers['user'].facebook_canvas

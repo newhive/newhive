@@ -16,7 +16,7 @@ class UserController(ApplicationController):
         if response.context.has_key('dialog_to_show'):
             response.context.pop('dialog_to_show')
         if not referral:
-            referral = self._check_referral_2(request)[0]
+            referral = self._check_referral(request)[0]
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
         if request.args.has_key('code'):
@@ -56,13 +56,14 @@ class UserController(ApplicationController):
             """
 
         assert 'tos' in request.form
-        referral = self._check_referral(request)[0] or self._check_referral_2(request)[0]
+        referral = self._check_referral(request)[0]
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         referrer = self.db.User.fetch(referral['user'])
+        assert referrer, 'Referring user not found'
 
         args = dfilter(request.form, ['name', 'password', 'email', 'fullname', 'gender', 'thumb', 'thumb_file_id'])
         args.update({
-             'referrer' : referral.get('user')
+             'referrer' : referrer.id
             ,'sites'    : [args['name'].lower() + '.' + config.server_name]
             ,'email'    : args.get('email').lower()
             #,'flags'    : { 'add_invites_on_save' : True }
@@ -77,6 +78,8 @@ class UserController(ApplicationController):
         if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})
 
         user = self.db.User.create(args)
+        if user.get('referrer') != self.db.User.site_user.id:
+            self.db.FriendJoined.create(user, referrer)
         self._friends_to_listen(request, user)
         self._friends_not_to_listen(request, user)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
@@ -94,21 +97,9 @@ class UserController(ApplicationController):
         return self.redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
 
     def _check_referral(self, request):
-        if request.args.has_key('key'):
-            key_or_id = request.args.get('key')
-            referral = self.db.Referral.fetch(key_or_id, keyname='key')
-        else:
-            #request id is handled as a path rather than querystring so it is preserved through fb redirect
-            key_or_id = lget(request.path.split('/'),1)
-            referral = self.db.Referral.find({'request_id': key_or_id})
-        return (referral, key_or_id)
-
-    def _check_referral_2(self, request):
-        key_or_id = lget(request.path.split('/', 1),1)
-        referral = self.db.Referral.find({ '$or': [{'key': key_or_id}, {'request_id': key_or_id}]})
-        if not referral:
-            referral = self.db.Referral.find()
-        return (referral, key_or_id)
+        # Get either key of a Referral object in our db, or a facebook id
+        key_or_id = request.args.get('key') or lget(request.path.split('/', 1),1)
+        return self.db.Referral.find({ '$or': [{'key': key_or_id}, {'request_id': key_or_id}]}), key_or_id
 
     def _friends_to_listen(self, request, user):
         friends = request.form.get('friends_to_listen')
@@ -133,12 +124,12 @@ class UserController(ApplicationController):
             return self.serve_page(response, 'pages/user_settings.html')
 
     def facebook_canvas(self, request, response, args={}):
-        return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited?request_ids=' + str(request.args.get('request_ids')) + '";</script></html>')
+        return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited' + querystring({'request_ids': request.args.get('request_ids','')}) + '";</script></html>')
 
     def invited(self, request, response):
         if request.requester.logged_in: return self.redirect(response, request.requester.url)
         if request.args.has_key('key'):
-            (referral, key_or_id) = self._check_referral(request) or self._check_referral2(request)
+            (referral, key_or_id) = self._check_referral(request)
             if (not referral or referral.get('used')):
                 return self._bad_referral(request, response)
             signup_url = abs_url(secure=True) + 'create_account/' + key_or_id
@@ -146,9 +137,10 @@ class UserController(ApplicationController):
             response.context['signup_without_facebook_url'] = signup_url
         else:
             fbc = request.requester.fb_client
-            request_ids = request.args.get('request_ids').split(',')
+            request_ids = request.args.get('request_ids', '').split(',')
             valid_request = False
             for request_id in request_ids:
+                if not request_id: continue
                 fb_request = fbc.find("https://graph.facebook.com/" + str(request_id), app_access=True)
                 if fb_request:
                     referral = self.db.Referral.find({'request_id': request_id})
@@ -159,11 +151,7 @@ class UserController(ApplicationController):
             signup_url = abs_url(secure=True) + 'create_account/' + request_id
             response.context['facebook_connect_url'] = fbc.authorize_url(signup_url)
             response.context['signup_without_facebook_url'] = signup_url
-            if not valid_request:
-                msg = "This invite from facebook has already been used. If you " +\
-                      "think this is a mistake, please contact us at " +\
-                      '<a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
-                return self._bad_referral(request, response, msg=msg)
+            if not valid_request: return self._bad_referral(request, response)
         return self.serve_page(response, 'pages/invited_from_facebook.html')
 
     def facebook_invite(self, request, response, args={}):
@@ -275,7 +263,7 @@ class UserController(ApplicationController):
 
     def _bad_referral(self, request, response, msg=None):
         if request.requester.logged_in: self.redirect(response, request.requester.get_url())
-        if not msg: msg = "You have already signed up. If you think this is a " +\
+        if not msg: msg = "This invite has already been used. If you think this is a " +\
                           "mistake, please try signing up again, or contact us at " +\
                           '<a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
         response.context['msg'] = msg
