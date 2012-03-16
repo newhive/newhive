@@ -52,7 +52,8 @@ def dfilter(d, keys):
     return r
 
 def normalize(ws):
-    return filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
+    ret = filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
+    return ret if len(ret) else ['']
 
 def abs_url(secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """

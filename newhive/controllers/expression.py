@@ -245,19 +245,19 @@ class ExpressionController(ApplicationController):
         url_args = {}
         root = self.db.User.get_root()
         loop = False
-        if request.args.has_key('user'):
+        user = request.args.get('user')
+        if user:
             loop = True
-            user = re.sub('[^A-Za-z]', '', request.args.get('user')) #prevent injection hacks
-            shared_spec.update({'owner_name': user})
+            shared_spec.update({'owner_name': request.args.get('user')})
             url_args.update({'user': user})
         if request.args.has_key('tag'):
-            tag = re.sub('[^A-Za-z]', '', request.args.get('tag')) #prevent injection hacks
-            root_tags = [key for key in root.get('tagged', {})]
-            if tag in root_tags:
-                ids = root.get('tagged', {}).get(tag, [])
+            tag = request.args.get('tag', '')
+            root_tags = root.get('tagged', {})
+            if root_tags.has_key(tag):
+                ids = root_tags.get(tag, [])
                 shared_spec = ids
             else:
-                tag = tag.lower()
+                tag = normalize(tag)[0]
                 if tag in ['recent']: shared_spec = {}
                 else:  shared_spec.update({'tags_index': tag})
             url_args.update({'tag': tag})

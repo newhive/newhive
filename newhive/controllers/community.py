@@ -37,7 +37,8 @@ class CommunityController(ApplicationController):
         res_path = '/'.join(path)
         query = self.pages.get(res_path)
         if not query: return self.serve_404(request, response)
-        items = expr_list(query(request))
+        items_and_args = query(request)
+        items, args = items_and_args if type(items_and_args) == tuple else (items_and_args, None)
         response.context.update(dict(
              home = path[0] != 'profile'
             ,search = path[0] == 'search'
@@ -45,24 +46,25 @@ class CommunityController(ApplicationController):
             ,network = lget(path, 1) == 'network'
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
-            ,cards = items
+            ,cards = expr_list(items)
+            ,args = querystring(args)
             ,pages = 10
         ))
         return self.page(request, response)
 
 
     def expr_featured(self, request):
-        return self.db.Expr.list(self.db.User.root_user['tagged']['Featured'], **query_args(request))
-    def expr_all(self, request): return self.db.Expr.list({'auth': 'public'}, **query_args(request))
+        return self.db.Expr.list(self.db.User.root_user['tagged']['Featured'], **query_args(request)), {'tag': 'Featured'}
+    def expr_all(self, request): return self.db.Expr.list({'auth': 'public'}, **query_args(request)), {'tag': 'Recent'}
     def home_feed(self, request): return request.requester.feed_network(**query_args(request))
     def people(self, request): return self.db.User.list({}, **query_args(request))
     def learn(self, request):
-        return self.db.Expr.list(self.db.User.root_user['tagged']['Learn'], **query_args(request))
+        return self.db.Expr.list(self.db.User.root_user['tagged']['Learn'], **query_args(request)), {'tag': 'Learn'}
 
     def user_exprs(self, request, auth=None):
-        return request.owner.exprs(auth=auth, tag=request.args.get('tag'), **query_args(request))
+        return request.owner.exprs(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
     def feed_network(self, request): return request.owner.feed_network(**query_args(request))
-    def feed_profile(self, request): return request.owner.feed_profile_entities(**query_args(request))
+    def feed_profile(self, request): return request.owner.feed_profile_entities(**query_args(request)), {'user': request.owner['name']}
     def listening(self, request): return request.owner.starred_users
     def listeners(self, request): return request.owner.starrers
 
@@ -78,12 +80,20 @@ class CommunityController(ApplicationController):
 
         self.db.ActionLog.create(request.requester, "search", data={'query': query,
             'expr_count': expr_res.count(), 'user_count': user_res.count() })
+
+        # TODO: if search matches one or more tags, return tags argument
         return chain(users, expressions)
 
     def tag(self, request, response):
         tag = lget(request.path_parts, 1)
         items = self.db.Expr.list({ 'tags_index': tag }, **query_args(request))
-        response.context.update(dict( cards = expr_list(items), tag_page = True, tag = tag ))
+        response.context.update(dict(
+            cards = expr_list(items),
+            tag_page = True,
+            tag = tag,
+            home = True,
+            args=querystring({'tag': tag})
+        ))
         return self.page(request, response)
 
     def page(self, request, response):

@@ -36,7 +36,7 @@
   <div id="nav">
     <div class='nav' id='nav_bg'></div>
     <div class='nav' id='nav_left'>
-      <a href='{{ server }}home/{{ 'activity' if logged_in }}' title="Explore Expressions"><img id='logo' class='hoverable nav_icon' src={{ icon }}></a>
+      <a href='{{ server }}home' title="{{ 'Your network' if user.logged_in else 'Explore expressions'}}"><img id='logo' class='hoverable nav_icon' src={{ icon }}></a>
     
      {% if user.logged_in %}
       <div class='nav_icon medbold center'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>

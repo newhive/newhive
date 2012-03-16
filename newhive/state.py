@@ -186,6 +186,11 @@ class HasSocial(Entity):
     def starrers(self): return map(self.db.User.fetch, self.starrer_ids)
     @property
     def star_count(self): return len(self.starrer_ids)
+    
+    def stars(self, spec={}):
+        """ Feed records indicating who is listening to or likes this entity """
+        spec.update({'entity': self.id })
+        return self.db.Star.search(spec)
 
     @property
     @memoized
@@ -317,7 +322,7 @@ class User(HasSocial):
     def create(self):
         self['name'] = self['name'].lower()
         self['signup_group'] = config.signup_group
-        assert re.match('[a-z][a-z0-9]{2,}$', self['name']) != None, 'Invalid username'
+        assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, 'Invalid username'
         self.set_password(self['password'])
         self['fullname'] = self.get('fullname', self['name'])
         self['referrals'] = 0
@@ -351,13 +356,15 @@ class User(HasSocial):
 
     @property
     @memoized
-    def stars(self): return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
+    def my_stars(self):
+        """ Feed records indicating what expressions a user likes and who they're listening to """
+        return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
     @property
-    def starred_user_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'User']
+    def starred_user_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
     @property
     def starred_users(self): return map(self.db.User.fetch, self.starred_user_ids)
     @property
-    def starred_expr_ids(self): return [i['entity'] for i in self.stars if i['entity_class'] == 'Expr']
+    def starred_expr_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
 
     @property
     @memoized
@@ -372,7 +379,7 @@ class User(HasSocial):
     def starred_exprs(self, **args):
         return self.db.Expr.list(self.starred_expr_ids, **args)
 
-    def feed_profile(self, **args): return self.feed_search(
+    def feed_profile(self, **args): return self.feed_list(
             { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] }
         , **args)
     def feed_profile_entities(self, **args):
@@ -388,14 +395,14 @@ class User(HasSocial):
         return items
 
     def feed_network(self, limit=40, **args):
-        res = self.feed_search({ '$or': [
+        res = self.feed_list({ '$or': [
             { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
             ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
                 'initiator': { '$ne': self.id } }
         ] } , **args)
         return self.feed_group(res, limit)
 
-    def feed_search(self, spec, viewer=None, page=None, limit=0):
+    def feed_list(self, spec, viewer=None, page=None, limit=0):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
         if page: spec['created'] = { '$lt': float(page) }
         res = ifilter( lambda i: i.viewable(viewer) and viewer.can_view(i.entity),
@@ -477,7 +484,7 @@ class User(HasSocial):
     def delete(self):
         for e in self.db.Expr.search({'owner': self.id}): e.delete()
         self.db.KeyWords.remove_entries(self)
-        for e in self.stars: e.delete()
+        for e in self.my_stars: e.delete()
         return super(User, self).delete()
 
     @property
@@ -1055,8 +1062,8 @@ class Star(Feed):
         return 'likes' if self['entity_class'] == 'Expr' else 'listening'
 
     def create(self):
-        if self.entity['owner'] == self['initiator']:
-            raise "You mustn't listen to yourself or star your own expressions"
+        if self['entity_class'] == 'User' and self.entity['owner'] == self['initiator']:
+            raise "You mustn't listen to yourself. It is confusing."
         if self['initiator'] in self.entity.starrer_ids: return True
         return super(Star, self).create()
 
