@@ -675,11 +675,15 @@ class Expr(HasSocial):
                 }
         self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
 
-    def update_tags(self):
-        if self.get('tags'): self['tags_index'] = normalize(self['tags'])
+    def update_tags(self, d={}):
+        upd = {}
+        tags = d.get('tags') or self.get('tags', '')
+        if tags: upd['tags_index'] = normalize(tags)
+        dict.update(self, upd)
+        return upd
 
     def update(self, **d):
-        self.update_tags()
+        d.update(self.update_tags(d))
         super(Expr, self).update(**d)
         last_update = self.db.UpdatedExpr.last({ 'initiator' : self['owner'] })
         if not last_update or now() - last_update['created'] > 14400:
