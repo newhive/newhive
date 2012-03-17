@@ -55,7 +55,8 @@ class ApplicationController(object):
         return (request, response)
 
     def default(self, request, response):
-        method = request.path_parts[0]
+        method = lget(request.path_parts, 1, '')
+        if not hasattr(self, method): return self.serve_404(request, response)
         return getattr(self, method)(request, response)
 
     def serve_data(self, response, mime, data):
