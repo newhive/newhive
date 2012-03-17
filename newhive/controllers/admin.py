@@ -5,7 +5,7 @@ from newhive.mail import mail_invite
 class AdminController(ApplicationController):
 
     def contact_log(self, request, response):
-        response.context['contacts'] = self.db.Contact.search({})
+        response.context['contacts'] = self.db.Contact.list({}, limit=500, sort='created')
         return self.serve_page(response, 'pages/admin/contact_log.html')
 
     def referrals(self, request, response):
