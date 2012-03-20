@@ -406,7 +406,7 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_network(self, **args):
+    def feed_network(self, limit=40, **args):
         res = self.feed_search({ '$or': [
             { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
             ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
