@@ -46,37 +46,37 @@ class CommunityController(ApplicationController):
             ,network = lget(path, 1) == 'network'
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
-            ,cards = expr_list(items)
+            ,cards = card_list(items)
+            ,page = items.next
             ,args = querystring(args)
-            ,pages = 10
         ))
         return self.page(request, response)
 
 
     def expr_featured(self, request):
-        return self.db.Expr.list(self.db.User.root_user['tagged']['Featured'], **query_args(request)), {'tag': 'Featured'}
-    def expr_all(self, request): return self.db.Expr.list({'auth': 'public'}, **query_args(request)), {'tag': 'Recent'}
+        return self.db.Expr.page(self.db.User.root_user['tagged']['Featured'], **query_args(request)), {'tag': 'Featured'}
+    def expr_all(self, request): return self.db.Expr.page({'auth': 'public'}, **query_args(request)), {'tag': 'Recent'}
     def home_feed(self, request): return request.requester.feed_network(**query_args(request))
-    def people(self, request): return self.db.User.list({}, **query_args(request))
+    def people(self, request): return self.db.User.page({}, **query_args(request))
     def learn(self, request):
-        return self.db.Expr.list(self.db.User.root_user['tagged']['Learn'], **query_args(request)), {'tag': 'Learn'}
+        return self.db.Expr.page(self.db.User.root_user['tagged']['Learn'], **query_args(request)), {'tag': 'Learn'}
 
     def user_exprs(self, request, auth=None):
-        return request.owner.exprs(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
+        return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
     def feed_network(self, request): return request.owner.feed_network(**query_args(request))
     def feed_profile(self, request): return request.owner.feed_profile_entities(**query_args(request))
-    def listening(self, request): return request.owner.starred_users
+    def listening(self, request): return request.owner.starred_user_page(**query_args(request))
     def listeners(self, request): return request.owner.starrers
 
     def search(self, request):
         query = request.args.get('q')
         expr_res = self.db.KeyWords.text_search(query, doc_type='Expr')
         ids = [res['doc'] for res in expr_res]
-        expressions = self.db.Expr.list(ids, viewer=request.requester.id)
+        expressions, blah = self.db.Expr.page(ids, viewer=request.requester.id)
 
         user_res = self.db.KeyWords.text_search(query, doc_type='User')
         ids = [res['doc'] for res in user_res]
-        users = self.db.User.list({'_id': {'$in': ids}})
+        users, blah = self.db.User.page({'_id': {'$in': ids}})
 
         self.db.ActionLog.create(request.requester, "search", data={'query': query,
             'expr_count': expr_res.count(), 'user_count': user_res.count() })
@@ -86,9 +86,10 @@ class CommunityController(ApplicationController):
 
     def tag(self, request, response):
         tag = lget(request.path_parts, 1)
-        items = self.db.Expr.list({ 'tags_index': tag }, **query_args(request))
+        items = self.db.Expr.page({ 'tags_index': tag }, **query_args(request))
         response.context.update(dict(
-            cards = expr_list(items),
+            cards = card_list(items),
+            page = items.next,
             tag_page = True,
             tag = tag,
             home = True,
@@ -110,7 +111,7 @@ class CommunityController(ApplicationController):
 def query_args(request):
     return {'page': request.args.get('page'), 'viewer': request.requester}
 
-def expr_list(res): return map(format_card, res)
+def card_list(res): return map(format_card, res)
 
 def format_card(e):
     dict.update(e

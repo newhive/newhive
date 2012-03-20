@@ -7,6 +7,7 @@
     {% include "partials/expr_card.html" %}
   {% endif %}
 {% endfor %}
+{% if page %}<a href='?partial=t&page={{page}}' class='next_page hide'>Next page</a>{% endif %}
 {% if create_expr_card %}
   {% set expr = {
       'title': "Create A New Expression",
