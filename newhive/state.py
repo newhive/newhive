@@ -4,7 +4,7 @@ from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 from newhive import social_stats, config
-from itertools import ifilter
+from itertools import ifilter, islice
 import PIL.Image as Img
 from PIL import ImageOps
 from bson.code import Code
@@ -366,12 +366,12 @@ class User(HasSocial):
     def notify(self, feed_item):
         self.increment({'notification_count':1})
 
-    def expr_page(self, auth=None, tag=None, viewer='', **args):
+    def expr_page(self, auth=None, tag=None, viewer=None, **args):
         spec = {'owner': self.id}
         if auth: spec.update({'auth': auth})
         if tag: spec.update({'tags_index': tag})
-        if get_id(viewer) != self.id: spec.update({'auth': 'public'})
-        return self.db.Expr.page(spec, **args)
+        if (not viewer) or (get_id(viewer) != self.id): spec.update({'auth': 'public'})
+        return self.db.Expr.page(spec, viewer=viewer, **args)
 
     @property
     @memoized
@@ -397,10 +397,7 @@ class User(HasSocial):
 
     def feed_profile(self, limit=40, **args):
         res = self.feed_search( { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] } , **args)
-        page = Page()
-        for i, e in enumerate(res):
-            if i == limit: break
-            page.append(e)
+        page = Page(islice(res, limit))
         page.next = page[-1]['created'] if len(page) == limit else None
         return page
     def feed_profile_entities(self, **args):
