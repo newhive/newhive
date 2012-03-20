@@ -417,14 +417,15 @@ class User(HasSocial):
             { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
             ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
                 'initiator': { '$ne': self.id } }
-        ] } , **args)
+        ] } , auth='public', **args)
         page = Page(self.feed_group(res, limit))
         page.next = page[-1].feed[-1]['created'] if len(page) == limit else None
         return page
 
-    def feed_search(self, spec, viewer=None, **args):
+    def feed_search(self, spec, viewer=None, auth=None, **args):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
         res = self.db.Feed.page(spec, limit=0, **args)
+        if auth: res = ifilter(lambda i: i.entity and i.entity.get('auth', auth) == auth, res)
         return ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
 
     def feed_group(self, res, limit, feed_limit=6):
