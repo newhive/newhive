@@ -366,10 +366,11 @@ class User(HasSocial):
     def notify(self, feed_item):
         self.increment({'notification_count':1})
 
-    def expr_page(self, auth=None, tag=None, **args):
+    def expr_page(self, auth=None, tag=None, viewer='', **args):
         spec = {'owner': self.id}
         if auth: spec.update({'auth': auth})
         if tag: spec.update({'tags_index': tag})
+        if get_id(viewer) != self.id: spec.update({'auth': 'public'})
         return self.db.Expr.page(spec, **args)
 
     @property
@@ -382,7 +383,7 @@ class User(HasSocial):
     @property
     def starred_expr_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
 
-    def starred_user_page(self, **args): return self.page(self.starred_user_ids, **args)
+    def starred_user_page(self, **args): return self.collection.page(self.starred_user_ids, **args)
 
     @property
     @memoized
@@ -394,9 +395,14 @@ class User(HasSocial):
         return expr and ( (expr.get('auth', 'public') == 'public') or
             (self.id == expr['owner']) or (expr.id in self.starred_expr_ids) )
 
-    def feed_profile(self, **args): return self.feed_search(
-            { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] }
-        , **args)
+    def feed_profile(self, limit=40, **args):
+        res = self.feed_search( { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] } , **args)
+        page = Page()
+        for i, e in enumerate(res):
+            if i == limit: break
+            page.append(e)
+        page.next = page[-1]['created'] if len(page) == limit else None
+        return page
     def feed_profile_entities(self, **args):
         res = self.feed_profile(**args)
         for i, item in enumerate(res):
@@ -411,17 +417,15 @@ class User(HasSocial):
             { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
             ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
                 'initiator': { '$ne': self.id } }
-        ] } , limit=0, **args)
+        ] } , **args)
         page = Page(self.feed_group(res, limit))
-        page.next = page[-1].feed[-1]['updated'] if len(page) == limit else None
+        page.next = page[-1].feed[-1]['created'] if len(page) == limit else None
         return page
 
-    def feed_search(self, spec, viewer=None, limit=40, **args):
+    def feed_search(self, spec, viewer=None, **args):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-        res = self.db.Feed.page(spec, **args)
-        f = filter if limit else ifilter
-        res[:] = f( lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
-        return res
+        res = self.db.Feed.page(spec, limit=0, **args)
+        return ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
 
     def feed_group(self, res, limit, feed_limit=6):
         """" group feed items by expression """

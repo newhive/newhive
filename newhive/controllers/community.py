@@ -66,7 +66,7 @@ class CommunityController(ApplicationController):
     def feed_network(self, request): return request.owner.feed_network(**query_args(request))
     def feed_profile(self, request): return request.owner.feed_profile_entities(**query_args(request))
     def listening(self, request): return request.owner.starred_user_page(**query_args(request))
-    def listeners(self, request): return request.owner.starrers
+    def listeners(self, request): return request.owner.starrer_page(**query_args(request))
 
     def search(self, request):
         query = request.args.get('q')
