@@ -127,8 +127,8 @@
       {% endif %}
       {% if user.logged_in and not editing %}
         <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='Create new expression'></a>
-        <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
       {% endif %}
+      <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
       {% block nav_right %}{% endblock %}
       {% if not user.logged_in %}
         <div id='signup_btn' class='hoverable nav_icon medbold center pad signup_button'>Sign Up</div><div id='login_btn' class='hoverable nav_icon medbold center pad'>Log In</div>

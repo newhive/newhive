@@ -21,7 +21,7 @@
     {% include "dialogs/starrers.html" %}
   {% endfor %}
 
-  {% if exp.auth == 'public' %}
+  {% if user.logged_in and exp.auth == 'public' %}
     <div id = "btn_broadcast" class="hoverable nav_icon has_count{{ ' enabled' if exp.id in user.broadcast_ids }}"
       onclick='btn_broadcast_click(this);' title="Broadcast" data-count='{{ exp.broadcaster_count }}'>
       <div class='icon'></div>

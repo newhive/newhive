@@ -197,7 +197,7 @@ class HasSocial(Entity):
     @property
     def star_count(self): return len(self.starrer_ids)
     
-    def starrer_page(self, **args): return self.collection.page(self.starrer_ids, **args)
+    def starrer_page(self, **args): return self.db.User.page(self.starrer_ids, **args)
 
     def stars(self, spec={}):
         """ Feed records indicating who is listening to or likes this entity """
