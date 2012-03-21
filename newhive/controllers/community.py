@@ -47,7 +47,7 @@ class CommunityController(ApplicationController):
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
             ,cards = card_list(items)
-            ,page = items.next
+            ,next_page = next_page(request, items.next)
             ,args = querystring(args)
         ))
         return self.page(request, response)
@@ -69,27 +69,32 @@ class CommunityController(ApplicationController):
     def listeners(self, request): return request.owner.starrer_page(**query_args(request))
 
     def search(self, request):
-        query = request.args.get('q')
-        expr_res = self.db.KeyWords.text_search(query, doc_type='Expr')
-        ids = [res['doc'] for res in expr_res]
-        expressions, blah = self.db.Expr.page(ids, viewer=request.requester.id)
+        query = request.args.get('q', '')
+        res = self.db.KeyWords.search_page(query, **query_args(request))
+        entities = { 'User': self.db.User, 'Expr': self.db.Expr }
+        for i, e in enumerate(res): res[i] = entities[e['doc_type']].fetch(e['doc'])
+        res[:] = filter(lambda e: e and request.requester.can_view(e), res)
 
-        user_res = self.db.KeyWords.text_search(query, doc_type='User')
-        ids = [res['doc'] for res in user_res]
-        users, blah = self.db.User.page({'_id': {'$in': ids}})
+        #expr_res = self.db.KeyWords.text_search(query, doc_type='Expr')
+        #ids = [res['doc'] for res in expr_res]
+        #expressions = self.db.Expr.page(ids, viewer=request.requester.id)
 
-        self.db.ActionLog.create(request.requester, "search", data={'query': query,
-            'expr_count': expr_res.count(), 'user_count': user_res.count() })
+        #user_res = self.db.KeyWords.text_search(query, doc_type='User')
+        #ids = [res['doc'] for res in user_res]
+        #users = self.db.User.page({'_id': {'$in': ids}})
+
+        self.db.ActionLog.create(request.requester, "search", data={ 'query': query })
 
         # TODO: if search matches one or more tags, return tags argument
-        return chain(users, expressions)
+        #return chain(users, expressions)
+        return res
 
     def tag(self, request, response):
         tag = lget(request.path_parts, 1)
         items = self.db.Expr.page({ 'tags_index': tag }, **query_args(request))
         response.context.update(dict(
             cards = card_list(items),
-            page = items.next,
+            next_page = next_page(request, items.next),
             tag_page = True,
             tag = tag,
             home = True,
@@ -110,6 +115,11 @@ class CommunityController(ApplicationController):
 
 def query_args(request):
     return {'page': request.args.get('page'), 'viewer': request.requester}
+
+def next_page(request, page):
+    if not page: return None
+    next_page = {'partial': 't', 'page': page, 'q': request.args.get('q')}
+    return querystring(next_page)
 
 def card_list(res): return map(format_card, res)
 
