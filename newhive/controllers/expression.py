@@ -60,7 +60,7 @@ class ExpressionController(ApplicationController):
              edit = abs_url(secure = True) + 'edit/' + resource.id
             ,mtime = friendly_date(time_u(resource['updated']))
             ,title = resource.get('title', False)
-            ,starrers = resource.starrers
+            ,starrers = resource.starrer_page()
             ,auth_required = auth_required
             ,body = html
             ,exp = resource

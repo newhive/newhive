@@ -215,7 +215,7 @@ def handle(request): # HANDLER
         ,owner_url = owner.url
         ,path = request.path
         ,user_is_owner = request.is_owner
-        ,listeners = owner.starrers
+        ,listeners = owner.starrer_page()
         )
 
     if parts[0] == 'profile': return controllers['community'].index(request, response)

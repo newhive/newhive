@@ -188,19 +188,23 @@
 {% block footer_scripts %}
   {{ super () }}
   <script>
-     //var load_page = null;
-     //var next_page = 1;
-     //var pages = {{ pages }};
-     //$(window).scroll(function() {
-     //    if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page < pages) {
-     //        load_page = $.get('', { partial : true, page : next_page }, function(data) {
-     //            load_page = null;
-     //            next_page ++;
-     //            $('#feed').append(data);
-     //            fix_borders('#feed .item');
-     //        });
-     //    }
-     //});
+     var load_page = null;
+     var next_page = true;
+     $(window).scroll(function() {
+         if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page) {
+             var next = $('.next_page').attr('href');
+             if(!next) {
+                 next_page = false;
+                 return;
+             }
+             load_page = $.get(next, {}, function(data) {
+                 load_page = null;
+                 $('.next_page').remove();
+                 $('#feed').append(data);
+                 fix_borders('#feed .item');
+             });
+         }
+     });
 
      function fb_listen_or_connect() {
          if(fb_logged_in) loadDialogPost('facebook_listen');

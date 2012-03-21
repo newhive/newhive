@@ -4,11 +4,11 @@ from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 from newhive import social_stats, config
+from itertools import ifilter, islice
 import PIL.Image as Img
 from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
-from itertools import ifilter, imap
 from oauth2client.client import OAuth2Credentials
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 
@@ -74,16 +74,24 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def list(self, spec, limit=40, page=0, sort='updated', order=-1, viewer=None):
-        if not page: page = 0
-        page = int(page)
+    def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None):
         if type(spec) == dict:
-            return self.search(spec, sort=[(sort, order)], limit=limit, skip=limit * page)
+            if page: spec[sort] = { '$lt' if order == -1 else '$gt': float(page) }
+            res = self.search(spec, sort=[(sort, order)], limit=limit)
+            # if there's a limit, collapse to list, get sort value of last item
+            if limit:
+                res = Page(res)
+                res.next = res[-1][sort] if len(res) == limit else None
+            return res
         elif type(spec) == list:
-            spec = uniq(spec)[ page * limit : (page + 1) * limit ]
+            if not page: page = 0
+            page = int(page)
+            end = (page + 1) * limit
+            spec = uniq(spec)
             items = {}
-            for e in self.search({'_id': {'$in': spec}}): items[e.id] = e
-            res = []
+            for e in self.search({'_id': {'$in': spec[ page * limit : end ] }}): items[e.id] = e
+            res = Page()
+            res.next = page + 1 if end <= len(spec) else None
             for i in spec:
                 if items.has_key(i): res.append(items[i])
             return res
@@ -115,6 +123,10 @@ class Cursor(object):
     def __getitem__(self, index): return self.collection.new(self._cur.__getitem__(index))
     def next(self): return self.collection.new(self._cur.next())
     def __iter__(self): return self
+
+# helper class for a "page" (a list of entities)
+class Page(list):
+    next = None
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
@@ -183,10 +195,10 @@ class HasSocial(Entity):
     def starrer_ids(self):
         return [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
     @property
-    def starrers(self): return map(self.db.User.fetch, self.starrer_ids)
-    @property
     def star_count(self): return len(self.starrer_ids)
     
+    def starrer_page(self, **args): return self.db.User.page(self.starrer_ids, **args)
+
     def stars(self, spec={}):
         """ Feed records indicating who is listening to or likes this entity """
         spec.update({'entity': self.id })
@@ -274,6 +286,12 @@ class KeyWords(Entity):
             cursor = self.search({'words': {'$all': words}, 'weight': weight, 'doc_type': doc_type}).sort([('updated', -1)])
             return cursor
 
+        def search_page(self, text, doc_type=None, weight='all', **args):
+            words = normalize(text)
+            spec = {'words': {'$all': words}, 'weight': weight }
+            if doc_type: spec.update({'doc_type': doc_type})
+            return self.page(spec, **args)
+
 
 @Database.register
 class User(HasSocial):
@@ -348,11 +366,12 @@ class User(HasSocial):
     def notify(self, feed_item):
         self.increment({'notification_count':1})
 
-    def exprs(self, auth=None, tag=None, **args):
+    def expr_page(self, auth=None, tag=None, viewer=None, **args):
         spec = {'owner': self.id}
         if auth: spec.update({'auth': auth})
         if tag: spec.update({'tags_index': tag})
-        return self.db.Expr.list(spec, **args)
+        if (not viewer) or (get_id(viewer) != self.id): spec.update({'auth': 'public'})
+        return self.db.Expr.page(spec, viewer=viewer, **args)
 
     @property
     @memoized
@@ -362,9 +381,9 @@ class User(HasSocial):
     @property
     def starred_user_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
     @property
-    def starred_users(self): return map(self.db.User.fetch, self.starred_user_ids)
-    @property
     def starred_expr_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
+
+    def starred_user_page(self, **args): return self.collection.page(self.starred_user_ids, **args)
 
     @property
     @memoized
@@ -376,38 +395,35 @@ class User(HasSocial):
         return expr and ( (expr.get('auth', 'public') == 'public') or
             (self.id == expr['owner']) or (expr.id in self.starred_expr_ids) )
 
-    def starred_exprs(self, **args):
-        return self.db.Expr.list(self.starred_expr_ids, **args)
-
-    def feed_profile(self, **args): return self.feed_list(
-            { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] }
-        , **args)
+    def feed_profile(self, limit=40, **args):
+        res = self.feed_search( { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] } , **args)
+        page = Page(islice(res, limit))
+        page.next = page[-1]['created'] if len(page) == limit else None
+        return page
     def feed_profile_entities(self, **args):
-        items = []
-        for item in self.feed_profile(**args):
-            if item.type == 'SystemMessage' or item.type == 'FriendJoined':
-                items.append(item)
-                continue
-
+        res = self.feed_profile(**args)
+        for i, item in enumerate(res):
+            if item.type == 'SystemMessage' or item.type == 'FriendJoined': continue
             entity = item.initiator if item.entity.id == self.id else item.entity
             entity.feed = [item]
-            items.append(entity)
-        return items
+            res[i] = entity
+        return res
 
     def feed_network(self, limit=40, **args):
-        res = self.feed_list({ '$or': [
+        res = self.feed_search({ '$or': [
             { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
             ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
                 'initiator': { '$ne': self.id } }
-        ] } , **args)
-        return self.feed_group(res, limit)
+        ] } , auth='public', **args)
+        page = Page(self.feed_group(res, limit))
+        page.next = page[-1].feed[-1]['created'] if len(page) == limit else None
+        return page
 
-    def feed_list(self, spec, viewer=None, page=None, limit=0):
+    def feed_search(self, spec, viewer=None, auth=None, **args):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-        if page: spec['created'] = { '$lt': float(page) }
-        res = ifilter( lambda i: i.viewable(viewer) and viewer.can_view(i.entity),
-            self.db.Feed.search(spec, limit=limit, sort=[('created',-1)]) )
-        return res
+        res = self.db.Feed.page(spec, limit=0, **args)
+        if auth: res = ifilter(lambda i: i.entity and i.entity.get('auth', auth) == auth, res)
+        return ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
 
     def feed_group(self, res, limit, feed_limit=6):
         """" group feed items by expression """
@@ -639,10 +655,11 @@ class Expr(HasSocial):
             [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
             return cls.named(domain, name)
 
-        def list(self, spec, viewer=None, **opts):
+        def page(self, spec, viewer=None, **opts):
             if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-            es = super(Expr.Collection, self).list(spec, **opts)
-            return ifilter(lambda e: viewer.can_view(e), es)
+            es = super(Expr.Collection, self).page(spec, **opts)
+            es[:] = filter(lambda e: viewer.can_view(e), es)
+            return es
 
         def random(self):
             rand = random.random()

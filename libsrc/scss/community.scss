@@ -62,6 +62,7 @@ body.profile #card_header { margin-top: -10px; }
   padding: 2px 8px 0 0;
   color: $color_12; 
   text-align: right;
+  white-space: nowrap;
   &.active { color: $color_active; }
   &.current { color : black; cursor: default; }
   img { vertical-align: middle; }
