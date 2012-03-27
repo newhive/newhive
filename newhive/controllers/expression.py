@@ -52,7 +52,7 @@ class ExpressionController(ApplicationController):
         if request.args.has_key('tag') or request.args.has_key('user'):
             response.context.update(pagethrough = self._pagethrough(request, response, resource))
 
-        html = self._expr_to_html(resource)
+        html = expr_to_html(resource)
         auth_required = (resource.get('auth') == 'password' and resource.get('password')
             and request.form.get('password') != resource.get('password')
             and request.requester.id != resource['owner'])
@@ -201,44 +201,6 @@ class ExpressionController(ApplicationController):
         expr.update(tags=new_tags, updated=False)
         return tag
 
-    # www_expression -> String, this maybe should go in state.Expr
-    def _expr_to_html(self, exp):
-        """Converts JSON object representing an expression to HTML"""
-
-        apps = exp.get('apps')
-        if not apps: return ''
-
-        def css_for_app(app):
-            return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
-                app['position'][0],
-                app['position'][1],
-                app['dimensions'][0],
-                app['dimensions'][1],
-                'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
-                app['z'],
-                app.get('opacity', 1) or 1
-                )
-
-        def html_for_app(app):
-            content = app.get('content', '')
-            more_css = ''
-            html = ''
-            if app.get('type') == 'hive.image':
-                html = "<img src='%s'>" % content
-                link = app.get('href')
-                if link: html = "<a href='%s'>%s</a>" % (link, html)
-            elif app.get('type') == 'hive.sketch':
-                html = "<img src='%s'>" % content.get('src')
-            elif app.get('type') == 'hive.rectangle':
-                c = app.get('content', {})
-                more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-            else: html = content
-            data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
-            data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-            return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app) + more_css, data, html)
-
-        return ''.join(map(html_for_app, apps))
-
     def _pagethrough(self, request, response, resource):
         pagethrough = {'next': None, 'prev': None}
         shared_spec = {}
@@ -302,3 +264,44 @@ class ExpressionController(ApplicationController):
                 '4f186b7fba283929fd000295',
                 '4f174437ba28394fc5000320']
             }
+
+
+
+# www_expression -> String, this maybe should go in state.Expr
+def expr_to_html(exp):
+    """Converts JSON object representing an expression to HTML"""
+
+    if not exp: return exp
+    apps = exp.get('apps', [])
+
+    def css_for_app(app):
+        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
+            app['position'][0],
+            app['position'][1],
+            app['dimensions'][0],
+            app['dimensions'][1],
+            'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
+            app['z'],
+            app.get('opacity', 1) or 1
+            )
+
+    def html_for_app(app):
+        content = app.get('content', '')
+        more_css = ''
+        html = ''
+        if app.get('type') == 'hive.image':
+            html = "<img src='%s'>" % content
+            link = app.get('href')
+            if link: html = "<a href='%s'>%s</a>" % (link, html)
+        elif app.get('type') == 'hive.sketch':
+            html = "<img src='%s'>" % content.get('src')
+        elif app.get('type') == 'hive.rectangle':
+            c = app.get('content', {})
+            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
+        else: html = content
+        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
+        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
+        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app) + more_css, data, html)
+
+    return ''.join(map(html_for_app, apps))
+

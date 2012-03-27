@@ -281,7 +281,7 @@ class KeyWords(Entity):
         def init(self, doc):
             return classes[doc['doc_type']](doc)
 
-        def text_search(self, text, weight='all', doc_type='Expr'):
+        def text_search(self, text, weight='all', doc_type='Expr', **args):
             words = normalize(text)
             cursor = self.search({'words': {'$all': words}, 'weight': weight, 'doc_type': doc_type}).sort([('updated', -1)])
             return cursor
@@ -412,6 +412,7 @@ class User(HasSocial):
     def feed_network(self, limit=40, **args):
         res = self.feed_search({ '$or': [
             { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
+            ,{ 'initiator': self.id, 'class_name': 'Broadcast' }
             ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
                 'initiator': { '$ne': self.id } }
         ] } , auth='public', **args)

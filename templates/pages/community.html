@@ -146,7 +146,7 @@
       {{ left_tab('home/expressions', 'Expressions') }}
       {% if user.logged_in %}{{ left_tab('home/network', 'Network') }}{% endif %}
       {{ left_tab('home/people', 'People') }}
-      {{ left_tab('home/about', 'About') }}
+      {{ left_tab('home/page', 'About') }}
     {% endif %}
     {% if profile %}
       {{ left_tab('profile/expressions', 'Expressions') }}
@@ -182,6 +182,7 @@
       </div>
     {% endif %}
     {% include 'page_parts/cards.html' %}
+    <div style='position:relative'>{{ content }}</div>
   </div>
 {% endblock right_column %}
 

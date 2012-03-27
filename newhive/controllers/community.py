@@ -1,7 +1,9 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
+from newhive.controllers.expression import expr_to_html
 from functools import partial
 from itertools import chain
+from newhive.state import Page
 
 class CommunityController(ApplicationController):
 
@@ -14,7 +16,7 @@ class CommunityController(ApplicationController):
             ,'home/expressions/all'       : self.expr_all
             ,'home/network'               : self.home_feed
             ,'home/people'                : self.people
-            ,'home/about'                 : self.learn
+            ,'home/page'                  : self.expr_page
             ,'profile/expressions'        : self.user_exprs
             ,'profile/expressions/public' : partial(self.user_exprs, auth='public')
             ,'profile/expressions/private': partial(self.user_exprs, auth='password')
@@ -34,11 +36,17 @@ class CommunityController(ApplicationController):
         default('home', 'network' if request.requester.logged_in else 'expressions')
         default('profile', 'expressions')
 
-        res_path = '/'.join(path)
-        query = self.pages.get(res_path)
+        match_extent = len(path)
+        while match_extent > 0:
+            res_path = '/'.join(path[0:match_extent])
+            query = self.pages.get(res_path)
+            if query: break
+            match_extent -= 1
         if not query: return self.serve_404(request, response)
+
         items_and_args = query(request)
-        items, args = items_and_args if type(items_and_args) == tuple else (items_and_args, None)
+        content, args = items_and_args if type(items_and_args) == tuple else (items_and_args, None)
+        if not content: return self.serve_404(request, response)
         response.context.update(dict(
              home = path[0] != 'profile'
             ,search = path[0] == 'search'
@@ -46,10 +54,13 @@ class CommunityController(ApplicationController):
             ,network = lget(path, 1) == 'network'
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
-            ,cards = card_list(items)
-            ,next_page = next_page(request, items.next)
             ,args = querystring(args)
         ))
+        response.context.update({
+            'cards': card_list(content)
+            ,'next_page': next_page(request, content.next)
+        } if hasattr(content, 'next') else {'content': content})
+
         return self.page(request, response)
 
 
@@ -58,8 +69,7 @@ class CommunityController(ApplicationController):
     def expr_all(self, request): return self.db.Expr.page({'auth': 'public'}, **query_args(request)), {'tag': 'Recent'}
     def home_feed(self, request): return request.requester.feed_network(**query_args(request))
     def people(self, request): return self.db.User.page({}, **query_args(request))
-    def learn(self, request):
-        return self.db.Expr.page(self.db.User.root_user['tagged']['Learn'], **query_args(request)), {'tag': 'Learn'}
+    def expr_page(self, request): return expr_to_html(self.db.Expr.named('thenewhive.thenewhive.com', lget(request.path_parts, 2, 'about')))
 
     def user_exprs(self, request, auth=None):
         return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
@@ -75,18 +85,9 @@ class CommunityController(ApplicationController):
         for i, e in enumerate(res): res[i] = entities[e['doc_type']].fetch(e['doc'])
         res[:] = filter(lambda e: e and request.requester.can_view(e), res)
 
-        #expr_res = self.db.KeyWords.text_search(query, doc_type='Expr')
-        #ids = [res['doc'] for res in expr_res]
-        #expressions = self.db.Expr.page(ids, viewer=request.requester.id)
-
-        #user_res = self.db.KeyWords.text_search(query, doc_type='User')
-        #ids = [res['doc'] for res in user_res]
-        #users = self.db.User.page({'_id': {'$in': ids}})
-
         self.db.ActionLog.create(request.requester, "search", data={ 'query': query })
 
         # TODO: if search matches one or more tags, return tags argument
-        #return chain(users, expressions)
         return res
 
     def tag(self, request, response):
