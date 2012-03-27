@@ -63,7 +63,7 @@ assets_env.register('expression.js', 'expression.js', filters='yui_js', output='
 ##############################################################################
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
-jinja_env.filters['friendly_date'] = friendly_date
+jinja_env.filters['time'] = friendly_date
 jinja_env.filters['length_bucket'] = length_bucket
 jinja_env.filters['large_number'] = large_number
 jinja_env.filters['json'] = json.dumps

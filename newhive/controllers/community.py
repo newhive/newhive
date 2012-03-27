@@ -57,7 +57,7 @@ class CommunityController(ApplicationController):
             ,args = querystring(args)
         ))
         response.context.update({
-            'cards': card_list(content)
+            'cards': content
             ,'next_page': next_page(request, content.next)
         } if hasattr(content, 'next') else {'content': content})
 
@@ -121,15 +121,6 @@ def next_page(request, page):
     if not page: return None
     next_page = {'partial': 't', 'page': page, 'q': request.args.get('q')}
     return querystring(next_page)
-
-def card_list(res): return map(format_card, res)
-
-def format_card(e):
-    dict.update(e
-        ,updated = friendly_date(time_u(e['updated']))
-        ,tags = e.get('tags_index', [])
-        )
-    return e
 
 #def action_text(feed, user):
 #    def person(p): return 'you' if p.id == user.id else p['name']

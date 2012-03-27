@@ -8,7 +8,7 @@
     <p class='text'>{{comment.text|e}}</p>
     <div class="byline">
       <a class="name" href='{{comment.initiator.url}}'>{{comment.author|e}}</a>
-      <span class='timestamp'>{{ comment.created | friendly_date}}</span>
+      <span class='timestamp'>{{ comment.created|time }}</span>
     </div>
   </div>
 </div>

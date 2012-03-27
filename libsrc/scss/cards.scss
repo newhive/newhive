@@ -16,10 +16,10 @@
     &.item:hover { 
         //background-color: $color_selected; 
         opacity : 1; 
+        &.with_feed .thumb { @include opacity(1) }
         .thumb { @include opacity(0.75); }
         .title { background: $color_selected; } 
         .other span { background: $color_highlight; }
-
     }
     .thumb {
         @include border-radius(7px);
@@ -33,11 +33,11 @@
         overflow : hidden; 
         text-overflow : ellipsis; 
     }
-    .other, .tags, .stats, .feed_info { 
+    .other, .tags, .stats, .feed_info, .comment { 
         font-size : 0.7em; 
         //color: $color_grey_medium; 
     }
-    .tags { 
+    .tags, .comment { 
         overflow: hidden; 
         text-overflow: ellipsis; 
         max-height: 29px;
@@ -52,7 +52,7 @@
     }
     .feed_thumbs {
         position: absolute;
-        bottom: 115px;
+        bottom: 113px;
         left: 20px;
         width: 65px;
         img { width: 30px; border: 1px solid white; }
@@ -65,7 +65,7 @@
     }
     .feed_info {
         position: absolute;
-        bottom: 115px;
+        bottom: 118px;
         right: 20px;
         font-weight: bold;
         text-align: right;
@@ -79,6 +79,9 @@
         color: $color_grey_medium;
         img { vertical-align: middle; }
     }
+    .feed { display: none; }
+    &.item:hover .feed { display: block; }
+    &.with_feed:hover .feed_hide { display: none; }
 }
 
 #dia_starrers, #dia_listeners {
