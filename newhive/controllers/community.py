@@ -46,7 +46,7 @@ class CommunityController(ApplicationController):
 
         items_and_args = query(request)
         content, args = items_and_args if type(items_and_args) == tuple else (items_and_args, None)
-        if not content: return self.serve_404(request, response)
+        if content == None: return self.serve_404(request, response)
         response.context.update(dict(
              home = path[0] != 'profile'
             ,search = path[0] == 'search'
