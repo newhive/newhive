@@ -94,7 +94,7 @@ class CommunityController(ApplicationController):
         tag = lget(request.path_parts, 1)
         items = self.db.Expr.page({ 'tags_index': tag }, **query_args(request))
         response.context.update(dict(
-            cards = card_list(items),
+            cards = items,
             next_page = next_page(request, items.next),
             tag_page = True,
             tag = tag,

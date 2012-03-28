@@ -26,7 +26,8 @@ def dfilter(d, keys):
 
 def now(): return time.time()
 
-def time_s(t): return int(t.strftime('%s'))
+def time_s(t):
+    return int(t.strftime('%s')) if (type(t) == datetime) else t
 
 def time_u(t): return datetime.utcfromtimestamp(t)
 
