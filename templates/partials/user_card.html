@@ -1,13 +1,13 @@
-<div class='user card item border_right border_bottom {{ item.id }}' draggable='false'>
+{% from "macros/main.html" import person_thumb, listen_button %} 
+
+<a href='{{ item.url }}'><div class='user card item border_right border_bottom {{ item.id }} with_hide' draggable='false'>
   <input type='hidden' class='entity_id' value='{{ item.id }}'>
-  <a href='{{ item.url|e }}' target='_top'><img src='{{ item.thumb if item.thumb else "/lib/skin/1/thumb_person_mask.png?v=2" }}' style='background: {{ colors[range(32)|random] }};' class='thumb'>
-  <div class='title'>{{ item.fullname|e }}</div></a>
+  <img src='{{ item.thumb if item.thumb else "/lib/skin/1/thumb_person_mask.png?v=2" }}' style='background: {{ colors[range(32)|random] }};' class='thumb'>
+  <div class='title'>{{ item.fullname|e }}</div>
   <div class='tags'>{% if item and item.expr_count > 0 %}{{ item.expr_count ~ " expression" ~ ("s" if item.expr_count > 1) }}{% endif %}</div>
-  <a href='{{ item.url|e }}' target='_top'><div class='other'><span>{{ item.name }}</span></div></a>
+  <div class='other'><span>{{ item.name }}</span></div>
+  {% if item != user %}<div class='stats inactive_hide'>{{ listen_button(item, user) }}</div>{% endif %}
   {% if item.feed %}
-    <div class='actions'>
-      <img src='/lib/skin/1/listen_highlight.png'>
-    </div>
     <div class='feed_info'>
       {% if item.feed[0].class_name == 'Star' and item.feed[0].initiator == user %}
         <div>you're listening to {{ item.feed[0].entity.name }}</div>
@@ -21,4 +21,4 @@
       {% endif %}
     </div>
   {% endif %}
-</div>
+</div></a>

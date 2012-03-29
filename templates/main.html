@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/main.html" import listen_button, star_button, share_button, create_button, discussion_button, starrers_menu, context_to_string %} 
+{% from "macros/main.html" import listen_button, star_button, share_button, create_button, discussion_button, starrers_menu, context_to_string, person_thumb %} 
 
 {% block head %}
 <script>
@@ -112,7 +112,18 @@
     <div class='nav' id='nav_right'>
       {% block nav_right_left %}{% endblock %}
       {% if owner and not user_is_owner %}
-        {{ listen_button(owner.id, active=owner.id in user.starred_user_ids, title='Listen to ' + owner['name'], active_title='Stop listening') }}
+        {{ listen_button(owner, user, class='nav_icon nav_listen_button') }}
+        <script>$(function(){
+          var opts = {
+            open_condition: function(){ return $('#dia_listeners .user_cards .item').length > 0 } 
+            , open: function(){ 
+                var dia = $('#dia_listeners');
+                var max_height = ( $(window).height() - 50 ) * 0.8;
+                if ( dia.height() > max_height )  dia.height(max_height); 
+              }
+          }
+          hover_menu(".nav_listen_button", "#dia_listeners", opts);
+        });</script>
         {% for collection in [{'data': listeners, 'type': 'listeners', 'id': 'listeners'}] %}
           {% include "dialogs/starrers.html" %}
         {% endfor %}

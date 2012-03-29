@@ -126,7 +126,7 @@
         | {{ top_tab('profile/expressions/private', 'Private') }}
       {% elif path1 == 'profile/activity' %}
         {{ top_tab('profile/activity', 'My activity') }}
-        | {{ top_tab('profile/activity/network', 'Network') }}
+        | {{ top_tab('profile/activity/network', 'My Network') }}
       {% elif path1 == 'profile/listening' %}
         {{ top_tab('profile/listening', 'I\'m listening to') }}
         | {{ top_tab('profile/listening/listeners', 'Listening to me') }}
@@ -144,7 +144,7 @@
   <div id='left_tabs' class='{{ 'home' if home else 'profile' }}'>
     {% if home %}
       {{ left_tab('home/expressions', 'Expressions') }}
-      {% if user.logged_in %}{{ left_tab('home/network', 'Network') }}{% endif %}
+      {% if user.logged_in %}{{ left_tab('home/network', 'My Network') }}{% endif %}
       {{ left_tab('home/people', 'People') }}
       {{ left_tab('home/page', 'About') }}
     {% endif %}
@@ -155,7 +155,7 @@
     {% endif %}
   </div>
   <div id="tag_links">
-    {% for t in tags %}<div class='tag_label hoverable user {#{ 'current' if t.name == tag.name }#} tag_{{loop.index0 | mod(16) }}'>
+    {% for t in tags %}<div class='tag_label {#{ 'current' if t.name == tag.name }#} tag_{{loop.index0 | mod(16) }}'>
       <a href='{{ t.url |e }}' value='{{ t.name|e }}'>{{ t.name }}</a>
     </div>{% endfor %}
   </div>

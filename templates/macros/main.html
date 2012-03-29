@@ -32,19 +32,16 @@
 </script>
 {%- endmacro %}
 
-{% macro listen_button(entity, active=False, title='', active_title='') %}
-  <div class="nav_icon hoverable{{ ' starred' if active }}" id='listen_small'><div class='icon'
-    onclick='btn_listen_click({{entity|json}}, this)' title='{{ active_title if active else title }}'
-    data-title-active='{{active_title}}' data-title-inactive='{{title}}'></div></div>
-  <script>$(function(){
-    var opts = {
-      open_condition: function(){ return $('#dia_listeners .user_cards .item').length > 0 } 
-      , open: function(){ 
-          var dia = $('#dia_listeners');
-          var max_height = ( $(window).height() - 50 ) * 0.8;
-          if ( dia.height() > max_height )  dia.height(max_height); 
-        }
-    }
-    hover_menu("#listen_small", "#dia_listeners", opts);
-  });</script>
+{% macro listen_button(entity, user, class='') %}
+  {% set active = entity.id in user.starred_user_ids %}
+  {% set active_title = 'Stop listening to ' + entity['name'] %}
+  {% set title = 'Listen to ' + entity['name'] %}
+  <div class="listen_button {{ 'starred' if active }} {{ class }} {{ entity.id }}"
+    onclick='return btn_listen_click({{ entity.id|json }})' title='{{ active_title if active else title }}'
+    data-title-active='{{active_title}}' data-title-inactive='{{title}}'><div class='icon rounded'></div></div>
+{%- endmacro %}
+
+{% macro person_thumb(url, name) %}
+  <img src='{{ url | default("/lib/skin/1/thumb_person_mask.png", True) }}'
+    style='background: {{ colors[range(32)|random] }};' class='thumb' alt='{{ name | e }}'>
 {%- endmacro %}
