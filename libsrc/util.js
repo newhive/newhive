@@ -187,8 +187,8 @@ function showDialog(name, opts) {
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
-function btn_listen_click(entity, btn) {
-    var btn = $('#listen_small');
+function btn_listen_click(entity) {
+    btn = $('.listen_button.' + entity); // grab all listen buttons for this user
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
         btn.addClass('inactive');
@@ -206,6 +206,7 @@ function btn_listen_click(entity, btn) {
             };
         }, 'json');
     }
+    return false;
 }
 function btn_star_click(entity, btn) {
     var btn = $(btn);

@@ -29,6 +29,7 @@ import jinja2
 from newhive import config
 from newhive.state import User
 from newhive.utils import abs_url
+import newhive.colors
 import newhive.state
 import newhive.ui_strings.en as ui
 
@@ -70,6 +71,7 @@ jinja_env.filters['json'] = json.dumps
 jinja_env.filters['mod'] = lambda x, y: x % y
 jinja_env.filters['querystring'] = querystring
 jinja_env.filters['percentage'] = lambda x: x*100
+jinja_env.globals['colors'] = newhive.colors.colors
 
 db = newhive.state.Database(config)
 controllers = {

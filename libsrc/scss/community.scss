@@ -91,7 +91,7 @@ body.profile #left_tabs .tab_label {
   padding: 0 8px;
   margin: 5px 0;
   font-size: 16px;
-  &.active:hover { color: white; padding-left: 30px; }
+  &:hover { color: white; padding-left: 30px; }
 
   &.tag_0 { background-color: $color_tag_0; }
   &.tag_1 { background-color: $color_tag_1; }

@@ -16,7 +16,7 @@
     &.item:hover { 
         //background-color: $color_selected; 
         opacity : 1; 
-        &.with_feed .thumb { @include opacity(1) }
+        &.hide_feed .thumb { @include opacity(1) }
         .thumb { @include opacity(0.75); }
         .title { background: $color_selected; } 
         .other span { background: $color_highlight; }
@@ -73,15 +73,20 @@
         div { background-color: $color_highlight; margin: 1px; display: inline; padding: 0 5px; }
         &.create div { background-color: white; }
     }
+}
+
+.card {
+    position: relative;
     .stats {
         position: absolute;
         bottom: 5px; right: 13px;
         color: $color_grey_medium;
         img { vertical-align: middle; }
+        .listen_button:hover { background-color: $color_active }
     }
-    .feed { display: none; }
-    &.item:hover .feed { display: block; }
-    &.with_feed:hover .feed_hide { display: none; }
+    &.with_hide .inactive_hide { display: none; }
+    &.with_hide:hover .inactive_hide { display: block; }
+    &.with_hide:hover .active_hide { display: none; }
 }
 
 #dia_starrers, #dia_listeners {
