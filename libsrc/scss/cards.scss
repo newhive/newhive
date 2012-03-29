@@ -19,7 +19,7 @@
         &.hide_feed .thumb { @include opacity(1) }
         .thumb { @include opacity(0.75); }
         .title { background: $color_selected; } 
-        .other span { background: $color_highlight; }
+        .other { background: $color_highlight; }
     }
     .thumb {
         @include border-radius(7px);
@@ -48,7 +48,7 @@
         position: absolute;
         bottom: 8px;
         font-weight: bold;
-        &:hover span { background: $color_blue !important; color: white; }
+        &:hover { background: $color_blue !important; color: white; }
     }
     .feed_thumbs {
         position: absolute;
