@@ -1,5 +1,6 @@
 from newhive.utils import *
 from newhive import config, state
+import csv
 
 db = state.Database(config)
 
@@ -7,12 +8,12 @@ def time_range(start, end):
     return { '$gt': time_s(start), '$lt': time_s(end) }
 
 def month_range(year, month):
-    return time_range(datetime(year, month, 01), datetime(year, month + 1, 1))
+    return time_range(datetime(year, month, 01), datetime(year + month / 12, (month + 1) % 12, 1))
 
 def users_from(year, month):
     return [u.id for u in db.User.search({'created':month_range(year, month)})]
 
-months = [(2011, n) for n in range(6, 12)] + [(2012, n) for n in range(1, 4)]
+months = [(2011, n) for n in range(6, 13)] + [(2012, n) for n in range(1, 4)]
 
 def analyze(span):
     data = []
@@ -49,9 +50,14 @@ def analyze(span):
 
     return data
 
-dd = analyze(1)
-with open('/tmp/cohort_activity_daily.csv', 'w') as f: csv.writer(f).writerows(dd)
-dw = analyze(7)
-with open('/tmp/cohort_activity_weekly.csv', 'w') as f: csv.writer(f).writerows(dw)
-dm = analyze(30)
-with open('/tmp/cohort_activity_monthly.csv', 'w') as f: csv.writer(f).writerows(dm)
+
+if __name__ == '__main__':
+    dd = analyze(1)
+    print 'writing daily'
+    with open('/tmp/cohort_activity_daily.csv', 'w') as f: csv.writer(f).writerows(dd)
+    dw = analyze(7)
+    print 'writing weekly'
+    with open('/tmp/cohort_activity_weekly.csv', 'w') as f: csv.writer(f).writerows(dw)
+    dm = analyze(30)
+    print 'writing monthly'
+    with open('/tmp/cohort_activity_monthly.csv', 'w') as f: csv.writer(f).writerows(dm)
