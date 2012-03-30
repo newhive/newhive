@@ -43,10 +43,22 @@ body.profile #card_header { margin-top: -10px; }
 #top_tabs { position: absolute; right: 0px; white-space: nowrap; }
 #top_tabs .tab_label {
   display: inline-block;
+  vertical-align: middle;
   color: $color_active;
-  padding: 2px 10px;
-  &.current { color: white; background-color: black; cursor: default; font-weight: bold; }
-  &.active { color: white; background-color: $color_grey_medium; }
+  &.text { padding: 2px 10px; }
+  &.text:hover { color: white; background-color: $color_grey_medium; }
+  &.current.text { color: white; background-color: black; cursor: default; font-weight: bold; }
+  
+  &.icon { width: 25px; height: 25px; }
+  &.tab_like { background-image: url('/lib/skin/1/tab_like.png'); }
+  &.tab_like:hover { background-image: url('/lib/skin/1/tab_like-hover.png'); }
+  &.current.tab_like { background-image: url('/lib/skin/1/tab_like-selected.png'); }
+  &.tab_discussion { background-image: url('/lib/skin/1/tab_discussion.png'); }
+  &.tab_discussion:hover { background-image: url('/lib/skin/1/tab_discussion-hover.png'); }
+  &.current.tab_discussion { background-image: url('/lib/skin/1/tab_discussion-selected.png'); }
+  &.tab_broadcast { background-image: url('/lib/skin/1/tab_broadcast.png'); }
+  &.tab_broadcast:hover { background-image: url('/lib/skin/1/tab_broadcast-hover.png'); }
+  &.current.tab_broadcast { background-image: url('/lib/skin/1/tab_broadcast-selected.png'); }
 }
 
 #left_tabs {
