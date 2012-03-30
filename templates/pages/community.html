@@ -52,10 +52,10 @@
   {% endif %}
 {% endblock %}
 
-{% macro top_tab(p, label) %}
+{% macro top_tab(p, label, class, text=True) %}
   {% set current = True if p == path %}
-  <div class='tab_label {{ 'current' if current else 'hoverable' }}'
-    >{% if current %}{{ label }}{% else %}<a href='/{{ p }}'>{{ label }}</a>{% endif %}</div>
+  {% if not current %}<a href='/{{ p }}'>{% endif %}<div class='tab_label {{ 'current' if current }} {{ class }} {{ 'text' if text else 'icon' }}'
+    {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
 
 {% block header %}
@@ -126,6 +126,9 @@
         | {{ top_tab('profile/expressions/private', 'Private') }}
       {% elif path1 == 'profile/activity' %}
         {{ top_tab('profile/activity', 'My activity') }}
+        | {{ top_tab('profile/activity/like', 'I like', 'icon tab_like', text=False) }}
+        | {{ top_tab('profile/activity/discussion', 'Discussion', 'icon tab_discussion', text=False) }}
+        | {{ top_tab('profile/activity/broadcast', 'Broadcasts', 'icon tab_broadcast', text=False) }}
         | {{ top_tab('profile/activity/network', 'My Network') }}
       {% elif path1 == 'profile/listening' %}
         {{ top_tab('profile/listening', 'I\'m listening to') }}
