@@ -21,19 +21,21 @@
     {% include "dialogs/starrers.html" %}
   {% endfor %}
 
-  {% if user.logged_in and exp.auth == 'public' %}
+  {% if exp.auth == 'public' %}
     <div id = "btn_broadcast" class="hoverable nav_icon has_count{{ ' enabled' if exp.id in user.broadcast_ids }}"
       onclick='btn_broadcast_click(this);' title="Broadcast" data-count='{{ exp.broadcaster_count }}'>
-      <div class='icon'></div>
+      <div class='full icon scale'></div>
     </div>
   {% endif %}
 
-  {{ discussion_button(exp.comment_count) }}
+  <div id = "btn_comment" class="hoverable nav_icon has_count" data-count='{{ exp.comment_count }}' onclick='loadDialog("?dialog=comments");'>
+    <img src='/lib/skin/1/discussion.png' class='hoverable icon full scale' title="Discussions">
+  </div>
 
   {% if user_is_owner %}
-   <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' title='edit'></a>
+   <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon scale' title='edit'></a>
 
-   <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable nav_icon' title='delete'>
+   <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable nav_icon scale' title='delete'>
    <div id='dia_delete' class='menu medbold' style='padding : 10px; width : 13em;'>
     Are you sure you want
     to delete this page?

@@ -36,13 +36,12 @@
   <div id="nav">
     <div class='nav' id='nav_bg'></div>
     <div class='nav' id='nav_left'>
-      <a href='{{ server }}home' title="{{ 'Your network' if user.logged_in else 'Explore expressions'}}"><img id='logo' class='hoverable nav_icon' src={{ icon }}></a>
+      <a href='{{ server }}home' title="{{ 'Your network' if user.logged_in else 'Explore expressions'}}"><img id='logo' class='hoverable nav_icon scale' src={{ icon }}></a>
     
      {% if user.logged_in %}
       <div class='nav_icon medbold center'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
-      <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png' class='nav_icon'>
-      <div id='notifications' class='nav_icon has_count' data-count='{{user.notification_count or 0}}' onclick='window.location="{{feed_url}}"'>
-      </div>
+      <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png' class='nav_icon hoverable scale'>
+      <a href='{{ feed_url }}'><div id='notifications' class='nav_icon full icon has_count hoverable scale' data-count='{{user.notification_count or 0}}'></div></a>
       <div id='feed_menu' class='menu feed_menu border selected'>
         {% include 'dialogs/feed.html' %}
       </div>
@@ -100,11 +99,13 @@
       {% else %}
         <a href='{{ server }}' title="Explore Expressions"><img src='/lib/skin/1/logotype_beta.png' class='nav_icon'></a>
       {% endif %}
-      {% if template != "pages/edit.html" %} {# don't show random button and search in editor #}
-        <a href='{{server}}random'><img class="nav_icon hoverable" src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
+      {% if not editing %} {# don't show random button and search in editor #}
+        <a href='{{ server }}random'><img class='nav_icon hoverable scale' src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
         <div class="nav_icon center" id="search" >
-          <input type="text" id="search_box" placeholder="Search" value="{{q.q}}" onkeydown="if (event.keyCode == 13) $('#search_submit').click()"/>
-          <div id="search_submit" class="hoverable" onclick="window.location = buildSearch()"></div>
+          <form method='GET' action='{{ server }}search' name='search_form'>
+            <input type="text" id="search_box" placeholder="Search" name='q' value="{{q.q}}" class='scale'/>
+            <div id='search_submit' class='hoverable icon scale' title='Submit search' onclick='document.forms.search_form.submit()'></div>
+          </form>
         </div>
       {% endif %}
     </div>
@@ -112,7 +113,7 @@
     <div class='nav' id='nav_right'>
       {% block nav_right_left %}{% endblock %}
       {% if owner and not user_is_owner %}
-        {{ listen_button(owner, user, class='nav_icon nav_listen_button') }}
+        {{ listen_button(owner, user, class='nav_icon nav_listen_button icon scale') }}
         <script>$(function(){
           var opts = {
             open_condition: function(){ return $('#dia_listeners .user_cards .item').length > 0 } 
@@ -132,14 +133,14 @@
            <div id='exp_owner'>{{ owner['name'] }}</div>
           <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
          </div>
-         {% if owner.get_thumb() %}<img id='owner_thumb' src='{{owner.get_thumb(70)}}'>{% endif %}
+         {% if owner.get_thumb() %}<img id='owner_thumb' src='{{owner.get_thumb(70)}}' class='scale'>{% endif %}
         </a>
         <div class='nav_icon space'></div>
       {% endif %}
-      {% if user.logged_in and not editing %}
-        <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='Create new expression'></a>
+      {% if not editing %}
+        <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon scale' title='Create new expression'></a>
+        <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon scale' title='share'>
       {% endif %}
-      <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
       {% block nav_right %}{% endblock %}
       {% if not user.logged_in %}
         <div id='signup_btn' class='hoverable nav_icon medbold center pad signup_button'>Sign Up</div><div id='login_btn' class='hoverable nav_icon medbold center pad'>Log In</div>

@@ -501,11 +501,11 @@ function hover_add(o) {
     if(o.src) {
         o.src_d = o.src;
         o.src_h = hover_url(o.src_d);
-        $(o).hover(function() { o.src = o.src_h },
-            function() { if(!o.busy) o.src = o.src_d })
+        $(o).mouseenter(function() { o.src = o.src_h }).
+            mouseleave(function() { if(!o.busy) o.src = o.src_d });
     }
-    $(o).hover(function() { $(this).addClass('active'); },
-        function() { if(!this.busy) $(this).removeClass('active'); });
+    $(o).mouseenter(function() { $(this).addClass('active'); })
+        .mouseleave(function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
 hover_menu = function(handle, drawer, options) {
@@ -649,6 +649,24 @@ function eraseCookie(name) {
 
 function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
 
+var scale_nav = function(s) {
+    $('#nav .scale').each(function(i, app_div) {
+       var e = $(this);
+       if(!e.data('css')) {
+           var c = {
+               'width': e.width(),
+               'height': e.height(),
+               'font-size': e.css('font-size')
+           }
+           e.data('css', c);
+       }
+       var c = $.extend({}, e.data('css'));
+       for(var p in c) c[p] = Math.round(c[p] * s);
+       e.css(c);
+   });
+   $('#nav, #search_box ').css('font-size', s + 'em');
+}
+
 var place_apps = function() {
    $('.happ').each(function(i, app_div) {
        var e = $(this);
@@ -656,7 +674,6 @@ var place_apps = function() {
        if(!e.data('css')) {
            var c = {};
            map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height',
-               'border-left-width', 'border-top-width', 'border-right-width', 'border-bottom-width',
                'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
@@ -733,11 +750,6 @@ var context_to_string = function(opt_arg){
 
 var asset = function(path) {
     return debug_mode ? '/lib/libsrc/' + path : '/lib/' + path;
-}
-
-var buildSearch = function(){
-  var search = $('#search_box').val();
-  return server_url + "search?q=" + escape(search);
 }
 
 function sendRequestViaMultiFriendSelector() {

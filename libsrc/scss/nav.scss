@@ -1,20 +1,24 @@
-$nav_height: 50px;
+$nav_height: 40px;
 
-#nav{ height: $nav_height; }
+#nav { height: $nav_height; }
+#nav, #search_box { font-size: .8em; }
 
-.nav { font-weight: bold; }
-.nav a .nav_icon { cursor : pointer }
+#nav { font-weight: bold; }
 #nav_left .nav_icon { margin-right: 3px; }
-.nav .nav_icon {
+#nav .nav_icon {
     display : inline-block;
     height: $nav_height;
     float: left;
-    cursor : default;
     &.active { color : white; background-color : $color_grey_medium; }
     &.pad { padding : 0 8px; }
     &.space { padding : 0 4px; }
 }
-.nav .center {
+#nav .icon {
+    background-repeat: no-repeat;
+    background-size: 100%;
+    &.full { width: 35px; height: $nav_height; }
+}
+#nav .center {
     line-height: $nav_height;
     vertical-align: middle;
     * { vertical-align: middle; }
@@ -37,7 +41,7 @@ body.home.logged_out .nav{
 
 #logo { vertical-align: middle; }
 
-#user_menu_handle.active { background: none;  }
+#user_menu_handle.active { background: none !important; }
 #user_menu .referral_count {
   color: $color_active;
   padding-left: 30px;
@@ -64,7 +68,7 @@ body.home.logged_out .nav{
 #exp_owner { background-color : $color_selected; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; vertical-align: top; }
 #datetime { font-size : .7em; color : $color_grey_medium; line-height : .5em; }
 #info { display : inline-block; text-align : right; margin-right : 10px; }
-#owner_thumb { width: 39px; float: left; margin: 5px 0; }
+#owner_thumb { width: $nav_height - 10; float: left; margin: 5px 0; }
 
 #user_menu .menu_item.facebook{
   &:hover {
@@ -82,52 +86,40 @@ body.home.logged_out .nav{
 .nav_icon .username {
   &:hover { background: #FFF673; }
 }
-#btn_star .icon {
-  height: $nav_height;
-  width: 44px;
-  background-image: url("/lib/skin/1/like.png");
-}
-#btn_star.starred .icon {
-  background-image: url("/lib/skin/1/like-active.png");
-}
-#btn_star.active.starred .icon, #btn_star.active .icon {
-  background-image: url("/lib/skin/1/like-hover.png");
+
+#btn_star {
+  .icon { background-image: url("/lib/skin/1/like.png"); }
+  &.starred .icon { background-image: url("/lib/skin/1/like-active.png"); }
+  &:hover .icon { background-image: url("/lib/skin/1/like-hover.png"); }
 }
 
 #btn_broadcast {
-  .icon {
-    height: $nav_height;
-    width: 44px;
-    background-image: url("/lib/skin/1/broadcast.png");
-  }
+  .icon { background-image: url("/lib/skin/1/broadcast.png"); }
   &.enabled .icon { background-image: url("/lib/skin/1/broadcast_active.png"); }
 }
 
 .listen_button {
-  .icon {
-      position: relative;
-      top: 2px;
-      width:37px; 
-      height:31px; 
-      background-image: url('/lib/skin/1/people_small.png'); 
-  }
-  &:hover .icon { background-image: url('/lib/skin/1/people_small-hover.png'); }
-}
-.listen_button.starred { 
-  .icon { background-image: url('/lib/skin/1/people_small_active.png'); }
-  &:hover .icon { background-image: url('/lib/skin/1/people_small_active-hover.png'); }
+    position: relative;
+    top: 2px;
+    width:37px; 
+    height:31px; 
+    background-image: url('/lib/skin/1/people_small.png'); 
+    &:hover { background-image: url('/lib/skin/1/people_small-hover.png'); }
+    &.starred { 
+        background-image: url('/lib/skin/1/people_small_active.png');
+        &:hover { background-image: url('/lib/skin/1/people_small_active-hover.png'); }
+    }
 }
 
 .has_count .count {
   color: #FFF;
-  -moz-border-radius: 6px;
-  -webkit-border-radius: 6px;
-  border-radius: 6px;
-  margin: 15px 2px 0 -9px;
-  padding: 2px 4px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  margin: 18px 2px 0 -9px;
+  padding: 0px 3px;
   line-height: 13px;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 10px;
   display: inline-block;
   background: $color_grey_medium;
 }
@@ -144,7 +136,7 @@ body.home.logged_out .nav{
    display: inline-block;
 }
 #search_box {
-    width: 150px;
+    width: $nav_height * 3;
 }
 #search_submit {
   display: inline-block;
@@ -156,29 +148,16 @@ body.home.logged_out .nav{
 }
 
 
-/* ==========================================
-   feed menu
-   ========================================== */
 #notifications {
-  width: 44px;
-  background-image: url('/lib/skin/1/feed.png');
-  background-position: 50%;
-}
-#notifications.active {
-  background-image: url('/lib/skin/1/feed-hover.png');
-}
-#notifications .count {
-  margin: 27px 0 0 27px;
-  background-color: $color_active;
-}
-#notifications.has_count .count.zero {
-    display: none;
+    background-image: url('/lib/skin/1/feed.png');
+    &.active { background-image: url('/lib/skin/1/feed-hover.png'); }
+    .count {
+        margin: 27px 0 0 27px;
+        background-color: $color_active;
+    }
 }
 
 
-/* ==========================================
-   login menu
-   ========================================== */
 #login_menu { width: 190px; padding : 10px; }
 
 #login_menu input[type=text], #login_menu input[type=password] { width: 170px; }
