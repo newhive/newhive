@@ -21,9 +21,9 @@ class CommunityController(ApplicationController):
             ,'profile/expressions/public' : partial(self.user_exprs, auth='public')
             ,'profile/expressions/private': partial(self.user_exprs, auth='password')
             ,'profile/activity'           : self.feed_profile
-            ,'profile/activity/like'      : partial(self.feed_profile, class_name='Star', entity_class='Expr')
-            ,'profile/activity/discussion': partial(self.feed_profile, class_name='Comment')
-            ,'profile/activity/broadcast' : partial(self.feed_profile, class_name='Broadcast')
+            ,'profile/activity/like'      : partial(self.feed_profile, by_owner=True, spec={'class_name':'Star', 'entity_class':'Expr'})
+            ,'profile/activity/discussion': partial(self.feed_profile, spec={'class_name':'Comment'})
+            ,'profile/activity/broadcast' : partial(self.feed_profile, by_owner=True, spec={'class_name':'Broadcast'})
             ,'profile/activity/network'   : self.feed_network
             ,'profile/listening'          : self.listening
             ,'profile/listening/listeners': self.listeners
@@ -78,9 +78,10 @@ class CommunityController(ApplicationController):
     def user_exprs(self, request, auth=None):
         return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
     def feed_network(self, request): return request.owner.feed_network(**query_args(request))
-    def feed_profile(self, request, **args):
+    def feed_profile(self, request, by_owner=False, spec={}, **args):
         args.update(query_args(request))
-        return request.owner.feed_profile_entities(**args)
+        if by_owner: spec.update({'initiator': request.owner.id})
+        return request.owner.feed_profile_entities(spec=spec, **args)
     def listening(self, request): return request.owner.starred_user_page(**query_args(request))
     def listeners(self, request): return request.owner.starrer_page(**query_args(request))
 
