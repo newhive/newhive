@@ -1,28 +1,26 @@
-$nav_height: 40px;
-
+$nav_height: 50px;
 #nav { height: $nav_height; }
-#nav, #search_box { font-size: .8em; }
 
 #nav { font-weight: bold; }
-#nav_left .nav_icon { margin-right: 3px; }
 #nav .nav_icon {
     display : inline-block;
     height: $nav_height;
     float: left;
     &.active { color : white; background-color : $color_grey_medium; }
     &.pad { padding : 0 8px; }
+    &.padsm { padding-right: 3px; }
     &.space { padding : 0 4px; }
 }
 #nav .icon {
     background-repeat: no-repeat;
     background-size: 100%;
-    &.full { width: 35px; height: $nav_height; }
+    &.full { width: $nav_height * .88; height: $nav_height; }
 }
 #nav .center {
     line-height: $nav_height;
     vertical-align: middle;
-    * { vertical-align: middle; }
 }
+#nav .center img { vertical-align: middle; }
 
 #nav_bg {
   top: 0; 
@@ -101,8 +99,8 @@ body.home.logged_out .nav{
 .listen_button {
     position: relative;
     top: 2px;
-    width:37px; 
-    height:31px; 
+    width: 37px;
+    height: 31px !important;
     background-image: url('/lib/skin/1/people_small.png'); 
     &:hover { background-image: url('/lib/skin/1/people_small-hover.png'); }
     &.starred { 
@@ -116,10 +114,10 @@ body.home.logged_out .nav{
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
-  margin: 18px 2px 0 -9px;
-  padding: 0px 3px;
+  margin: 16px 2px 0 -9px;
+  padding: 2px 4px;
   line-height: 13px;
-  font-size: 10px;
+  font-size: 12px;
   display: inline-block;
   background: $color_grey_medium;
 }
@@ -137,11 +135,13 @@ body.home.logged_out .nav{
 }
 #search_box {
     width: $nav_height * 3;
+   border-width: $nav_height * .1;
+   padding: $nav_height * .1;
 }
 #search_submit {
   display: inline-block;
-  width: 22px;
-  height: 22px;
+  width: .44 * $nav_height;
+  height: .44 * $nav_height;
   background-image: url('lib/skin/1/search_arrow.png');
   vertical-align: middle;
   &:hover { background-image: url('lib/skin/1/search_arrow-hover.png');}
@@ -159,12 +159,15 @@ body.home.logged_out .nav{
 
 
 #login_menu { width: 190px; padding : 10px; }
-
 #login_menu input[type=text], #login_menu input[type=password] { width: 170px; }
-
-#signup_link {
-  font-weight: bold; 
-  font-size: 13px;
-  text-align: center;
-  padding : 2px 5px;
+#signup_btn {
+  &:hover { background-color: $color_active; color: white; }
 }
+#password_recovery_link {
+    font-weight: normal;
+    font-size: 12px;
+    color: black;
+    margin-right: 3px;
+    white-space: nowrap;
+}
+#login_submit { float: right; }

@@ -460,6 +460,9 @@ class User(HasSocial):
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
+    def update_password(self, v):
+        self.set_password(v)
+        self.update(password=self['password'])
 
     def get_url(self, path='profile'):
         return abs_url(domain = self.get('sites', [config.server_name])[0]) + path

@@ -187,7 +187,7 @@ function showDialog(name, opts) {
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
-function btn_listen_click(entity) {
+var btn_listen_click = require_login(function(entity) {
     btn = $('.listen_button.' + entity); // grab all listen buttons for this user
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
@@ -207,8 +207,8 @@ function btn_listen_click(entity) {
         }, 'json');
     }
     return false;
-}
-function btn_star_click(entity, btn) {
+});
+var btn_star_click = require_login(function(entity, btn) {
     var btn = $(btn);
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
@@ -233,7 +233,7 @@ function btn_star_click(entity, btn) {
             };
         }, 'json');
     }
-}
+});
 function reloadFeed(){
     $.get('?dialog=feed', function(data){
         $('#feed_menu').html(data);
@@ -247,7 +247,7 @@ function reloadFeed(){
     });
 }
 
-function btn_broadcast_click(btn) {
+var btn_broadcast_click = require_login(function(btn) {
     var btn = $('#btn_broadcast');
     if (! btn.hasClass('inactive')) {
         btn.addClass('inactive');
@@ -265,7 +265,7 @@ function btn_broadcast_click(btn) {
             //}
         }, 'json');
     }
-}
+});
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);
@@ -766,4 +766,15 @@ function sendRequestViaMultiFriendSelector() {
     , title: 'Invite Friends to Join The New Hive'
     , filters: ['app_non_users']
   }, requestCallback);
+}
+
+// works as handler or function modifier
+function require_login(fn) {
+    var check = function() {
+        if(logged_in) return fn.apply(null, arguments);
+        showDialog('#dia_must_login');
+        return false;
+    }
+    if(fn) return check;
+    else return check();
 }

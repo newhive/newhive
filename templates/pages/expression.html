@@ -16,7 +16,7 @@
 {% endblock %}
 
 {% block nav_right %}
-  {{ star_button(exp.id, exp.star_count, exp.id in user.starred_expr_ids, user.logged_in) }} 
+  {{ star_button(exp.id, exp.star_count, exp.id in user.starred_expr_ids) }} 
   {% for collection in [{'data': starrers, 'type': 'starrers', 'id': 'starrers'}] %}
     {% include "dialogs/starrers.html" %}
   {% endfor %}

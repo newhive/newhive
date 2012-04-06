@@ -39,9 +39,9 @@
       <a href='{{ server }}home' title="{{ 'Your network' if user.logged_in else 'Explore expressions'}}"><img id='logo' class='hoverable nav_icon scale' src={{ icon }}></a>
     
      {% if user.logged_in %}
-      <div class='nav_icon medbold center'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
-      <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png' class='nav_icon hoverable scale'>
-      <a href='{{ feed_url }}'><div id='notifications' class='nav_icon full icon has_count hoverable scale' data-count='{{user.notification_count or 0}}'></div></a>
+      <div class='nav_icon medbold center padsm'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
+      <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png' class='nav_icon hoverable scale padsm'>
+      <a href='{{ feed_url }}'><div id='notifications' class='nav_icon full icon has_count hoverable scale padsm' data-count='{{user.notification_count or 0}}'></div></a>
       <div id='feed_menu' class='menu feed_menu border selected'>
         {% include 'dialogs/feed.html' %}
       </div>
@@ -97,10 +97,10 @@
         });
       </script>
       {% else %}
-        <a href='{{ server }}' title="Explore Expressions"><img src='/lib/skin/1/logotype_beta.png' class='nav_icon'></a>
+        <a href='{{ server }}' title="Explore Expressions"><img src='/lib/skin/1/logo{{ 'type' if not exp }}_beta.png' class='nav_icon'></a>
       {% endif %}
       {% if not editing %} {# don't show random button and search in editor #}
-        <a href='{{ server }}random'><img class='nav_icon hoverable scale' src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
+        <a href='{{ server }}random'><img class='nav_icon hoverable scale padsm' src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
         <div class="nav_icon center" id="search" >
           <form method='GET' action='{{ server }}search' name='search_form'>
             <input type="text" id="search_box" placeholder="Search" name='q' value="{{q.q}}" class='scale'/>
@@ -138,34 +138,19 @@
         <div class='nav_icon space'></div>
       {% endif %}
       {% if not editing %}
-        <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon scale' title='Create new expression'></a>
-        <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon scale' title='share'>
+        <a href='{{ create }}' onclick='return require_login()'><img src='/lib/skin/1/create.png'
+          class='hoverable nav_icon scale' title='Create new expression' style='padding: 0 2px'></a>
+        <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon scale' title='share' style='padding: 0 2px'>
       {% endif %}
       {% block nav_right %}{% endblock %}
       {% if not user.logged_in %}
-        <div id='signup_btn' class='hoverable nav_icon medbold center pad signup_button'>Sign Up</div><div id='login_btn' class='hoverable nav_icon medbold center pad'>Log In</div>
+        <div class='nav_icon center pad'><div id='signup_btn' class='btn rounded black hoverable medbold'>Sign Up</div></div>
+        <div id='login_btn' class='hoverable nav_icon medbold center pad btn'>Log In</div>
         <div id='login_menu' class='menu top'>
-          <form id='login_form' action='{{ secure_server }}' method='POST'>
-            {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
-            <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
-              <img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;">
-            </a>
-            <b>Username</b><br>
-            <input id='username' type='text' name='username' value='{{ user['name'] }}'>
-            <div class='spacer'></div>
-            <b>Password</b><br>
-            <input type='password' name='secret'><br>
-            <a href="#" id='password_recovery_link' onclick="showDialog('#dia_password_recovery'); return false;">Forgot Password?</a>
-            <div class='spacer'></div>
-            <div style='float : left'>
-              <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:.75em'> Remember me</label>
-            </div>
-            <div style='float : right;'>
-              <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
-            </div>
-            <input type='hidden' name='action' value='login'>
-            <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile -->
-          </form>
+          <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
+            <img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;">
+          </a>
+          {% include 'page_parts/log_in.html' %}
         </div>
         <script>
          $(function() {
@@ -221,6 +206,7 @@
           {% include 'dialogs/sign_in_or_join.html' %}
           {% include 'dialogs/signup.html' %}
           {% include 'dialogs/password_recovery.html' %}
+          {% include 'dialogs/must_login.html' %}
       {% endif %}
 
       {% if dialog_to_show == '#dia_fb_account_duplicate' %}
