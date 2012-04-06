@@ -267,6 +267,7 @@ def funnel2_per_month(db, cohort_users = None, year=None, month=None):
         }"""
     ca.name = 'funnel2_per_month'
     ca.collection = db.mdb.referral
+    ca.user_identifier = 'names'
     return ca.analysis(year, month)
 
 class CohortAnalysis:
@@ -276,7 +277,7 @@ class CohortAnalysis:
         self.reduce = None
         self.active_condition = {'value': {'$gte': 1}}
         self.date_key = 'created'
-        self.user_identifier = 'names'
+        self.user_identifier = 'ids'
 
         if cohort_users:
             self.cohort_users = cohort_users
