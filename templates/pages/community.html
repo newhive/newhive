@@ -52,10 +52,10 @@
   {% endif %}
 {% endblock %}
 
-{% macro top_tab(p, label, attr='') %}
+{% macro top_tab(p, label, class, text=True, attr='') %}
   {% set current = True if p == path %}
-  <div class='tab_label {{ 'current' if current else 'hoverable' }}' {{ attr }}
-    >{% if current %}{{ label }}{% else %}<a href='/{{ p }}'>{{ label }}</a>{% endif %}</div>
+  {% if not current %}<a href='/{{ p }}' {{ attr }}>{% endif %}<div class='tab_label {{ 'current' if current }} {{ class }} {{ 'text' if text else 'icon' }}'
+    {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
 
 {% block header %}
@@ -72,7 +72,7 @@
         <div class='happ rounded signup_link' style='width:74px; white-space: nowrap; padding: 3px 5px 10px 5px; width: 150px; height: 21px; left:48px; top: 190px; z-index: 3; font-size: 1.2em;' data-scale="1.2">
           <span style="font-family: Museo;"><a href="" onclick="return false;">Request Invite</a></span>
         </div>
-        <div class='happ' style='left: 260px; top: 197px; width: 300px; z-index: 3;'>
+        <div class='happ' style='left: 230px; top: 197px; width: 300px; z-index: 3;'>
           <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://thenewhive.com" data-text="The New Hive is the easiest way to express yourself online. #expression" data-count="horizontal" data-via="newhive">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
           <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fthenewhive.com&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:180px; height:20px;" allowTransparency="true"></iframe>
           {#<div class="fb-facepile" data-max-rows="1" data-width="300"></div>#}
@@ -126,6 +126,9 @@
         | {{ top_tab('profile/expressions/private', 'Private') }}
       {% elif path1 == 'profile/activity' %}
         {{ top_tab('profile/activity', 'My activity') }}
+        | {{ top_tab('profile/activity/like', 'I like', 'icon tab_like', text=False) }}
+        | {{ top_tab('profile/activity/discussion', 'Discussion', 'icon tab_discussion', text=False) }}
+        | {{ top_tab('profile/activity/broadcast', 'I broadcast', 'icon tab_broadcast', text=False) }}
         | {{ top_tab('profile/activity/network', 'My Network') }}
       {% elif path1 == 'profile/listening' %}
         {{ top_tab('profile/listening', 'I\'m listening to') }}

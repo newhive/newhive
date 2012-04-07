@@ -1270,28 +1270,73 @@ body.profile #card_header {
 /* line 33, /home/abram/newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label {
   display: inline-block;
+  vertical-align: middle;
   color: #f72e4d;
-  padding: 2px 10px;
 }
 /* line 37, /home/abram/newhive/libsrc/scss/community.scss */
-#top_tabs .tab_label.current {
+#top_tabs .tab_label.text {
+  padding: 2px 10px;
+}
+/* line 38, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.text:hover {
+  color: white;
+  background-color: #696e76;
+}
+/* line 39, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.current.text {
   color: white;
   background-color: black;
   cursor: default;
   font-weight: bold;
 }
-/* line 38, /home/abram/newhive/libsrc/scss/community.scss */
-#top_tabs .tab_label.active {
-  color: white;
-  background-color: #696e76;
+/* line 41, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.icon {
+  width: 25px;
+  height: 25px;
+}
+/* line 42, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.tab_like {
+  background-image: url("/lib/skin/1/tab_like.png");
+}
+/* line 43, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.tab_like:hover {
+  background-image: url("/lib/skin/1/tab_like-hover.png");
+}
+/* line 44, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.current.tab_like {
+  background-image: url("/lib/skin/1/tab_like-selected.png");
+}
+/* line 45, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.tab_discussion {
+  background-image: url("/lib/skin/1/tab_discussion.png");
+}
+/* line 46, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.tab_discussion:hover {
+  background-image: url("/lib/skin/1/tab_discussion-hover.png");
+}
+/* line 47, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.current.tab_discussion {
+  background-image: url("/lib/skin/1/tab_discussion-selected.png");
+}
+/* line 48, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.tab_broadcast {
+  background-image: url("/lib/skin/1/tab_broadcast.png");
+}
+/* line 49, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.tab_broadcast:hover {
+  background-image: url("/lib/skin/1/tab_broadcast-hover.png");
+}
+/* line 50, /home/abram/newhive/libsrc/scss/community.scss */
+#top_tabs .tab_label.current.tab_broadcast {
+  background-image: url("/lib/skin/1/tab_broadcast-selected.png");
 }
 
-/* line 41, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 53, /home/abram/newhive/libsrc/scss/community.scss */
 #left_tabs {
   margin-top: 30px;
 }
 
-/* line 45, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 57, /home/abram/newhive/libsrc/scss/community.scss */
 #left_tabs .tab_label {
   font-size: 1.2em;
   height: 31px;
@@ -1303,51 +1348,51 @@ body.profile #card_header {
   text-align: right;
   white-space: nowrap;
 }
-/* line 55, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 67, /home/abram/newhive/libsrc/scss/community.scss */
 #left_tabs .tab_label.active {
   color: #f72e4d;
 }
-/* line 56, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 68, /home/abram/newhive/libsrc/scss/community.scss */
 #left_tabs .tab_label.current {
   color: black;
   cursor: default;
 }
-/* line 57, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 69, /home/abram/newhive/libsrc/scss/community.scss */
 #left_tabs .tab_label img {
   vertical-align: middle;
 }
 
-/* line 59, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 71, /home/abram/newhive/libsrc/scss/community.scss */
 body.home #left_tabs .tab_label {
   background-color: #edebe1;
 }
-/* line 61, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 73, /home/abram/newhive/libsrc/scss/community.scss */
 body.home #left_tabs .tab_label.active {
   background-color: #fff673;
 }
-/* line 62, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 74, /home/abram/newhive/libsrc/scss/community.scss */
 body.home #left_tabs .tab_label.current {
   background-color: #96e2ce;
 }
 
-/* line 64, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 76, /home/abram/newhive/libsrc/scss/community.scss */
 body.profile #left_tabs .tab_label {
   padding-top: 0;
   margin-top: 3px;
 }
-/* line 67, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 79, /home/abram/newhive/libsrc/scss/community.scss */
 body.profile #left_tabs .tab_label.current {
   font-family: Lobster, Helvetica, sans-serif;
   font-size: 1.6em;
   font-weight: normal;
 }
 
-/* line 74, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 86, /home/abram/newhive/libsrc/scss/community.scss */
 #tag_links {
   margin: 30px 0;
 }
 
-/* line 76, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 88, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label {
   float: right;
   clear: both;
@@ -1356,77 +1401,77 @@ body.profile #left_tabs .tab_label.current {
   margin: 5px 0;
   font-size: 16px;
 }
-/* line 83, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 95, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label:hover {
   color: white;
   padding-left: 30px;
 }
-/* line 85, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 97, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_0 {
   background-color: #f73627;
 }
-/* line 86, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 98, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_1 {
   background-color: #f72e4d;
 }
-/* line 87, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 99, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_2 {
   background-color: #f45519;
 }
-/* line 88, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 100, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_3 {
   background-color: #e87b25;
 }
-/* line 89, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 101, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_4 {
   background-color: #f9a819;
 }
-/* line 90, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 102, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_5 {
   background-color: #7ba009;
 }
-/* line 91, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 103, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_6 {
   background-color: #13a507;
 }
-/* line 92, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 104, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_7 {
   background-color: #069674;
 }
-/* line 93, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 105, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_8 {
   background-color: #2d6a5d;
 }
-/* line 94, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 106, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_9 {
   background-color: #419dd6;
 }
-/* line 95, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 107, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_10 {
   background-color: #698293;
 }
-/* line 96, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 108, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_11 {
   background-color: #9196a7;
 }
-/* line 97, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 109, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_12 {
   background-color: #7f4799;
 }
-/* line 98, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 110, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_13 {
   background-color: #696e76;
 }
-/* line 99, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 111, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_14 {
   background-color: #423c3e;
 }
-/* line 100, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 112, /home/abram/newhive/libsrc/scss/community.scss */
 .tag_label.tag_15 {
   background-color: #810032;
 }
 
-/* line 103, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 115, /home/abram/newhive/libsrc/scss/community.scss */
 #feed .prompt {
   display: inline-block;
   width: 260px;
@@ -1434,7 +1479,7 @@ body.profile #left_tabs .tab_label.current {
   position: relative;
   margin: 5px;
 }
-/* line 109, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 121, /home/abram/newhive/libsrc/scss/community.scss */
 #feed .prompt div {
   position: absolute;
   left: 20px;
@@ -1442,53 +1487,53 @@ body.profile #left_tabs .tab_label.current {
   width: 230px;
   font-weight: bold;
 }
-/* line 114, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 126, /home/abram/newhive/libsrc/scss/community.scss */
 #feed .prompt img {
   position: absolute;
   left: 0px;
   top: 0px;
 }
-/* line 115, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 127, /home/abram/newhive/libsrc/scss/community.scss */
 #feed .prompt.link {
   cursor: pointer;
 }
 
-/* line 117, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 129, /home/abram/newhive/libsrc/scss/community.scss */
 #prompt_interests {
   background-image: url("/lib/skin/1/prompt_interests.png");
 }
-/* line 119, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 131, /home/abram/newhive/libsrc/scss/community.scss */
 #prompt_interests.active {
   background-image: url("/lib/skin/1/prompt_interests-hover.png");
 }
 
-/* line 121, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 133, /home/abram/newhive/libsrc/scss/community.scss */
 #prompt_allies {
   background-image: url("/lib/skin/1/prompt_allies.png");
 }
-/* line 123, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 135, /home/abram/newhive/libsrc/scss/community.scss */
 #prompt_allies.active {
   background-image: url("/lib/skin/1/prompt_allies-hover.png");
 }
 
-/* line 125, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 137, /home/abram/newhive/libsrc/scss/community.scss */
 #prompt_expressions {
   background-image: url("/lib/skin/1/prompt_expressions.png");
 }
-/* line 127, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 139, /home/abram/newhive/libsrc/scss/community.scss */
 #prompt_expressions.active {
   background-image: url("/lib/skin/1/prompt_expressions-hover.png");
 }
 
-/* line 130, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 142, /home/abram/newhive/libsrc/scss/community.scss */
 .signup_link {
   font-weight: bold;
   text-align: center;
   padding: 2px 5px;
-  background-color: #f72e4d;
+  background-color: #f73627;
   color: white;
 }
-/* line 136, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 148, /home/abram/newhive/libsrc/scss/community.scss */
 .signup_link:hover {
   background-color: #698293;
 }
