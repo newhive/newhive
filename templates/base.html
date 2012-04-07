@@ -12,42 +12,6 @@
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
  <link id='css_base' rel='stylesheet' type='text/css' href='{{ assets_env['base.css'].urls()[0] }}'>
- <style>
-input[type=text], input[type=password], textarea { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
-input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : {{ colors['selected'] }}; }
-input[type=button], input[type=submit] { border : none; }
-.hide { display: none !important; }
-.menu { display : none; border : 0px solid {{ colors['unselected'] }};
-    background-color : white; z-index : 1100; font-size : 11pt; position : absolute;
-    -moz-box-shadow: 05px 05px 05px #888;
-    -webkit-box-shadow: 05px 05px 05px #888;
-    box-shadow: 05px 05px 05px #888;
-    }
-.menu_item { color : {{ colors[18] }}; padding : 5px 8px; cursor : default; font-size : 15pt; white-space : nowrap; }
-.menu_item:hover, .menu_hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }}; }
-.border { border : 5px solid {{ colors['unselected'] }}; padding : 5px; }
-.selected { border-color : {{ colors['selected'] }}; }
-.medbold { font-weight : bold; font-size : 1.2em; }
-.btn { padding:5px 10px; font-weight : bold; font-size : 1.23em; display : inline-block; cursor : default; }
-.btn.inactive { background-color : {{ colors[24] }}; }
-.rounded {
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
-    -khtml-border-radius: 5px;
-    border-radius: 5px;
-}
-.black { background-color : black; color : white; }
-.error, .active { color : {{ colors['active'] }}; }
-.inactive { color : {{ colors[24] }}; }
-#user { position : fixed; display : inline-block; }
-.nav { position : fixed; margin : 0; }
-.menu, .top, .nav { z-index : 1; }
-.spacer { height : 10px; clear : both; }
- </style>
- <style>
-html, body { background-color : white; height : 100%; }
- </style>
-
  <script>
      var logged_in = {{ 'true' if user.logged_in else 'false'}}, server_name = '{{ server_name }}', server_url = '{{ secure_server }}', debug_mode = {{ 'true' if debug else 'false' }};
      var dialog_to_show = {

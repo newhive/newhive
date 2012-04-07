@@ -1,9 +1,3 @@
-{% macro discussion_button(count=0) %}
-  <div id = "btn_comment" class="hoverable nav_icon has_count" data-count="{{count}}" onclick='loadDialog("?dialog=comments");'>
-    <img src='/lib/skin/1/discussion.png' class='hoverable icon' title="Discussions">
-  </div>
-{%- endmacro %}
-
 {% macro share_button(count=0) %}
   <div id="btn_share" class="hoverable nav_icon has_count" data-count="{{count}}" >
     <img src='/lib/skin/1/share.png' class='hoverable ' title="Share This Expression">
@@ -12,24 +6,24 @@
 
 {% macro star_button(entity, count=0, active=False, logged_in=True,
     title={"active": "Stop liking this expression", "inactive": "Like this expression"}, user_is_owner=False) %}
-<div id="btn_star" data-count="{{count}}" data-title-active="{{title.active}}" data-title-inactive="{{title.inactive}}"
-    class="{{'hoverable ' if logged_in}}nav_icon has_count {{'starred ' if active}}"  
-    title={% if logged_in and not user_is_owner %}"{{ title.active if active else title.inactive}}"{% else %}"Likes"{% endif %}
-    {% if logged_in and not user_is_owner %}onclick='btn_star_click({{entity|json}}, this)'{% endif %} >
-    <div class="icon"></div>
-</div>
-<script>$(function(){
-    var opts = {
-      open_condition: function(){ return parseInt($('#btn_star').attr('data-count')) > 0 } 
-      , open: function(){ 
-          var dia = $('#dia_starrers');
-          var max_height = ( $(window).height() - 50 ) * 0.8;
-          if ( dia.height() > max_height )  dia.height(max_height); 
-        }
-    }
-    hover_menu("#btn_star", "#dia_starrers", opts);
-    });
-</script>
+  <div id="btn_star" data-count="{{count}}" data-title-active="{{title.active}}" data-title-inactive="{{title.inactive}}"
+      class="hoverable nav_icon has_count {{'starred ' if active}}"
+      title={% if not user_is_owner %}"{{ title.active if active else title.inactive}}"{% else %}"Likes"{% endif %}
+      {% if not user_is_owner %}onclick='btn_star_click({{entity|json}}, this)'{% endif %} >
+      <div class='full icon scale'></div>
+  </div>
+  <script>$(function(){
+      var opts = {
+        open_condition: function(){ return parseInt($('#btn_star').attr('data-count')) > 0 } 
+        , open: function(){ 
+            var dia = $('#dia_starrers');
+            var max_height = ( $(window).height() - 50 ) * 0.8;
+            if ( dia.height() > max_height )  dia.height(max_height); 
+          }
+      }
+      hover_menu("#btn_star", "#dia_starrers", opts);
+      });
+  </script>
 {%- endmacro %}
 
 {% macro listen_button(entity, user, class='') %}
@@ -38,7 +32,7 @@
   {% set title = 'Listen to ' + entity['name'] %}
   <div class="listen_button {{ 'starred' if active }} {{ class }} {{ entity.id }}"
     onclick='return btn_listen_click({{ entity.id|json }})' title='{{ active_title if active else title }}'
-    data-title-active='{{active_title}}' data-title-inactive='{{title}}'><div class='icon rounded'></div></div>
+    data-title-active='{{active_title}}' data-title-inactive='{{title}}'></div>
 {%- endmacro %}
 
 {% macro person_thumb(url, name) %}

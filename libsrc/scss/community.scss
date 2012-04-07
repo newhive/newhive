@@ -24,17 +24,6 @@ body.profile {
   .fathead img { margin : 8px 0; vertical-align : top; }
 }
 
-body.home {
-  #homepage_header .signup_button {
-    background-color: $color_active;
-    color:#fff;
-  }
-  #homepage_header .signup_button:hover {
-    background-color: $color_highlight;
-    color: #000;
-  }
-}
-
 #card_header { min-height: 25px; margin: 18px 20px 2px 0; position: relative; }
 body.profile #card_header { margin-top: -10px; }
 #header .title { margin-left: $right_column_x + 9px; }
@@ -148,4 +137,13 @@ body.profile #left_tabs .tab_label {
 #prompt_expressions {
   background-image: url('/lib/skin/1/prompt_expressions.png');
   &.active { background-image: url('/lib/skin/1/prompt_expressions-hover.png'); }
+}
+
+.signup_link {
+    font-weight: bold;
+    text-align: center;
+    padding : 2px 5px;
+    background-color: $color_bright_red;
+    color: white;
+    &:hover { background-color: $color_blue; }
 }

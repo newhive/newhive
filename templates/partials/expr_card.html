@@ -32,11 +32,12 @@
         <img src='/lib/skin/1/edit_highlight.png'>
       {% endif %}
     </div>
-    <div class='feed_thumbs {{ "inactive_hide" if network }}'>{% for f in item.feed %}{% if f.class_name != 'NewExpr' and f.class_name != 'UpdatedExpr' %}<img
-      src='{{ f.initiator.get_thumb(70)|default("/lib/skin/1/thumb_person_mask.png?v=2", True) }}'
-      title='{{ f.initiator.name }} {{ f.action_name }}'
-      {% if item.feed|length == 1 %}class='big'{% endif %}
-    >{% endif %}{% endfor %}</div>
+    <div class='feed_thumbs {{ "inactive_hide" if network }}'>{% for f in item.feed %}{%
+        if f.class_name != 'NewExpr' and f.class_name != 'UpdatedExpr' %}<a href='{{ f.initiator.url }}'><img
+        src='{{ f.initiator.get_thumb(70)|default("/lib/skin/1/thumb_person_mask.png?v=2", True) }}'
+        title='{{ f.initiator.name }} {{ f.action_name }}'
+        {% if item.feed|length == 1 %}class='big'{% endif %}
+    ></a>{% endif %}{% endfor %}</div>
     <div class='feed_info{{ " create" if item.feed[0].class_name == "NewExpr" or item.feed[0].class_name == "UpdatedExpr" }} {{ "inactive_hide" if network }}'>
       <div><a href='{{ item.feed[0].initiator.url }}'>{{ item.feed[0].initiator.name }}</a>
         {{ item.feed[0].action_name }}</div>

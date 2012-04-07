@@ -52,9 +52,9 @@
   {% endif %}
 {% endblock %}
 
-{% macro top_tab(p, label, class, text=True) %}
+{% macro top_tab(p, label, class, text=True, attr='') %}
   {% set current = True if p == path %}
-  {% if not current %}<a href='/{{ p }}'>{% endif %}<div class='tab_label {{ 'current' if current }} {{ class }} {{ 'text' if text else 'icon' }}'
+  {% if not current %}<a href='/{{ p }}' {{ attr }}>{% endif %}<div class='tab_label {{ 'current' if current }} {{ class }} {{ 'text' if text else 'icon' }}'
     {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
 
@@ -69,10 +69,10 @@
         <div class='happ' style='width:510px; height: 44px; left:48px; top: 102px; z-index: 3; font-size: 0.75em;' data-scale="0.75">
           {{ ui.intro_paragraph }}
         </div>
-        <div class='happ rounded signup_button' style='width:74px; white-space: nowrap; padding: 3px 5px 10px 5px; height: 21px; left:48px; top: 190px; z-index: 3; font-size: 1.2em;' data-scale="1.2">
-          <span style="font-family: Museo;"><a href="" onclick="return false;">Sign up</a></span>
+        <div class='happ rounded signup_link' style='width:74px; white-space: nowrap; padding: 3px 5px 10px 5px; width: 150px; height: 21px; left:48px; top: 190px; z-index: 3; font-size: 1.2em;' data-scale="1.2">
+          <span style="font-family: Museo;"><a href="" onclick="return false;">Request Invite</a></span>
         </div>
-        <div class='happ' style='left: 150px; top: 197px; width: 400px; z-index: 3;'>
+        <div class='happ' style='left: 230px; top: 197px; width: 300px; z-index: 3;'>
           <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://thenewhive.com" data-text="The New Hive is the easiest way to express yourself online. #expression" data-count="horizontal" data-via="newhive">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
           <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fthenewhive.com&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:180px; height:20px;" allowTransparency="true"></iframe>
           {#<div class="fb-facepile" data-max-rows="1" data-width="300"></div>#}
@@ -117,7 +117,7 @@
     <div id='top_tabs'>
       {% if path1 == 'home/expressions' %}
           {{ top_tab('home/expressions', 'Featured') }}
-        | {{ top_tab('home/expressions/all', 'All') }}
+        | {{ top_tab('home/expressions/all', 'All', attr="onclick='return require_login()'") }}
       {% endif %}
 
       {% if (path1 == 'profile/expressions') and user_is_owner %}
@@ -176,17 +176,21 @@
 {% endblock left_column %}
 
 {% block right_column %}
-  <div id='feed'>
-    {% if network and cards|length < 10 %}
-      <div>
-        <a href='{{server}}home/expressions'><div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div></a>
-        <div class='prompt link hoverable' id='prompt_allies' onclick='fb_listen_or_connect()'><div>Click here to connect to Facebook and follow / invite friends.</div></div>
-        <a href='{{server}}home/expressions/all'><div class='prompt hoverable' id='prompt_expressions'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div></a>
-      </div>
-    {% endif %}
-    {% include 'page_parts/cards.html' %}
-    <div style='position:relative'>{{ content }}</div>
-  </div>
+  {% if require_login and not user.logged_in %}
+    <script>$(function() { require_login(); });</script>
+  {% else %}
+    <div id='feed'>
+      {% if network and cards|length < 10 %}
+        <div>
+          <a href='{{server}}home/expressions'><div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div></a>
+          <div class='prompt link hoverable' id='prompt_allies' onclick='fb_listen_or_connect()'><div>Click here to connect to Facebook and follow / invite friends.</div></div>
+          <a href='{{server}}home/expressions/all'><div class='prompt hoverable' id='prompt_expressions'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div></a>
+        </div>
+      {% endif %}
+      {% include 'page_parts/cards.html' %}
+      <div style='position:relative'>{{ content }}</div>
+    </div>
+  {% endif %}
 {% endblock right_column %}
 
 {% block footer_scripts %}

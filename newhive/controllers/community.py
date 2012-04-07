@@ -56,6 +56,7 @@ class CommunityController(ApplicationController):
             ,profile = path[0] == 'profile'
             ,network = path[-1] == 'network'
             ,activity = lget(path, 1) == 'activity'
+            ,require_login = path == ['home','expressions','all']
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
             ,args = querystring(args)

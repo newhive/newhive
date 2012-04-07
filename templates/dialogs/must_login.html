@@ -1,0 +1,29 @@
+<div id='dia_must_login' class='dialog border selected'>
+  <div class="column left">
+    <h3>
+      <span class='line1'>Have an account?</span><br>
+      <span class='line2'>Please log in.</span><br>
+    </h3>
+
+    <div class='center'>
+      <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
+        <img src="/lib/skin/1/fb_sign_in.png">
+      </a>
+      {% include "page_parts/log_in.html" %}
+    </div>
+  </div>
+  <div class='column right separator'>
+    <h3>
+      <span class="line1">Don't have an account?</span><br/>
+      <span class="line2">Request a beta invite:</span>
+    </h3>
+    {% include "page_parts/signup_form.html" %}
+  </div><br>
+  <div class='spacer'></div>
+  <div class='spacer'></div>
+  <div class='center'><span class='description medbold'>&nbsp;The New Hive is your radically simple,&nbsp;<br>
+    &nbsp;drag <span class='active'>+</span> drop, blank canvas <span class='active'>+</span> self publishing tool.&nbsp;</span></div>
+  <div class='spacer'></div>
+  <div class='spacer'></div>
+  <img src='/lib/skin/1/log_in_overlay.png'>
+</div>
