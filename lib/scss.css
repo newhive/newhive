@@ -1532,8 +1532,9 @@ body.profile #left_tabs .tab_label.current {
   padding: 2px 5px;
   background-color: #f73627;
   color: white;
+  padding: 3px 5px 8px;
 }
-/* line 148, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 149, /home/abram/newhive/libsrc/scss/community.scss */
 .signup_link:hover {
   background-color: #698293;
 }
