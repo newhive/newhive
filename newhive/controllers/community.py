@@ -56,6 +56,7 @@ class CommunityController(ApplicationController):
             ,profile = path[0] == 'profile'
             ,network = path[-1] == 'network'
             ,activity = lget(path, 1) == 'activity'
+            ,hide_feed = (path[-1] != 'activity') and (path[-1] != 'discussion')
             ,require_login = path == ['home','expressions','all']
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
