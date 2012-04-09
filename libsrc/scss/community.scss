@@ -145,5 +145,6 @@ body.profile #left_tabs .tab_label {
     padding : 2px 5px;
     background-color: $color_bright_red;
     color: white;
+    padding: 3px 5px 10px 5px;
     &:hover { background-color: $color_blue; }
 }

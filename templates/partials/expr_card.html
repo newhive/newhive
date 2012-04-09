@@ -1,5 +1,5 @@
 {% set link = item.url + args %}
-<div class='expr card item border_right border_bottom with_hide }}' draggable='false'>
+<div class='expr card item border_right border_bottom with_hide' draggable='false'>
   <input type='hidden' class='item_id' value='{{ item.id }}'>
   <a href='{{ link }}'><img src='{{ item.thumb|default('/lib/skin/1/thumb_0.png') }}' class='thumb'>
   <div class='title'>{{ item.title|e }}</div></a>
@@ -21,7 +21,7 @@
     <span class='inactive_hide'>{{ (item.feed[0]['created'] if item.feed else item['updated']) | time }}</span>
   </div>
   {% if item.feed %}
-    <div class='actions {{ "inactive_hide" if network }}'>
+    <div class='actions {{ "inactive_hide" if hide_feed }}'>
       {% if item.feed[0].class_name == 'Star' %}
         <img src='/lib/skin/1/like_highlight.png'>
       {% elif item.feed[0].class_name == 'Comment' %}
@@ -32,13 +32,13 @@
         <img src='/lib/skin/1/edit_highlight.png'>
       {% endif %}
     </div>
-    <div class='feed_thumbs {{ "inactive_hide" if network }}'>{% for f in item.feed %}{%
+    <div class='feed_thumbs {{ "inactive_hide" if hide_feed }}'>{% for f in item.feed %}{%
         if f.class_name != 'NewExpr' and f.class_name != 'UpdatedExpr' %}<a href='{{ f.initiator.url }}'><img
         src='{{ f.initiator.get_thumb(70)|default("/lib/skin/1/thumb_person_mask.png?v=2", True) }}'
         title='{{ f.initiator.name }} {{ f.action_name }}'
         {% if item.feed|length == 1 %}class='big'{% endif %}
     ></a>{% endif %}{% endfor %}</div>
-    <div class='feed_info{{ " create" if item.feed[0].class_name == "NewExpr" or item.feed[0].class_name == "UpdatedExpr" }} {{ "inactive_hide" if network }}'>
+    <div class='feed_info{{ " create" if item.feed[0].class_name == "NewExpr" or item.feed[0].class_name == "UpdatedExpr" }} {{ "inactive_hide" if hide_feed }}'>
       <div><a href='{{ item.feed[0].initiator.url }}'>{{ item.feed[0].initiator.name }}</a>
         {{ item.feed[0].action_name }}</div>
     </div>
