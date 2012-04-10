@@ -1,65 +1,65 @@
-/* line 63, /home/abram/newhive/libsrc/scss/colors.scss */
+/* line 63, /home/duffy/2newhive/libsrc/scss/colors.scss */
 .color_grey_medium {
   color: #696e76;
 }
 
-/* line 2, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 2, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav {
   height: 50px;
 }
 
-/* line 4, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 4, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav {
   font-weight: bold;
 }
 
-/* line 5, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 5, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon {
   display: inline-block;
   height: 50px;
   float: left;
 }
-/* line 9, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 9, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon.active {
   color: white;
   background-color: #696e76;
 }
-/* line 10, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 10, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon.pad {
   padding: 0 8px;
 }
-/* line 11, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 11, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon.padsm {
   padding-right: 3px;
 }
-/* line 12, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 12, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon.space {
   padding: 0 4px;
 }
 
-/* line 14, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 14, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .icon {
   background-repeat: no-repeat;
   background-size: 100%;
 }
-/* line 17, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 17, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .icon.full {
   width: 44px;
   height: 50px;
 }
 
-/* line 19, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 19, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .center {
   line-height: 50px;
   vertical-align: middle;
 }
 
-/* line 23, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 23, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .center img {
   vertical-align: middle;
 }
 
-/* line 25, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 25, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav_bg {
   top: 0;
   left: 0;
@@ -69,36 +69,36 @@
   z-index: 1;
 }
 
-/* line 34, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 34, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav_right {
   right: 0px;
   top: 0px;
   margin-right: 5px;
 }
 
-/* line 36, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 36, /home/duffy/2newhive/libsrc/scss/nav.scss */
 body.home.logged_out .nav {
   position: absolute;
 }
 
-/* line 40, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 40, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #logo {
   vertical-align: middle;
 }
 
-/* line 42, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 42, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu_handle.active {
   background: none !important;
 }
 
-/* line 43, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 43, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .referral_count {
   color: #f72e4d;
   padding-left: 30px;
   float: right;
 }
 
-/* line 49, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 49, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .fb_icon {
   display: inline-block;
   vertical-align: middle;
@@ -107,17 +107,17 @@ body.home.logged_out .nav {
   margin-right: 5px;
   background: url("/lib/skin/1/facebook_flat_sm.png") no-repeat -1px -2px;
 }
-/* line 57, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 57, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .fb_icon_title {
   font-size: 19px;
 }
-/* line 60, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 60, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .menu_item {
   clear: both;
   overflow: hidden;
 }
 
-/* line 66, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 66, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #exp_owner {
   background-color: #96e2ce;
   margin: 5px 0 5px;
@@ -126,68 +126,68 @@ body.home.logged_out .nav {
   vertical-align: top;
 }
 
-/* line 67, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 67, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #datetime {
   font-size: .7em;
   color: #696e76;
   line-height: .5em;
 }
 
-/* line 68, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 68, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #info {
   display: inline-block;
   text-align: right;
   margin-right: 10px;
 }
 
-/* line 69, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 69, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #owner_thumb {
   width: 40px;
   float: left;
   margin: 5px 0;
 }
 
-/* line 72, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 72, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .menu_item.facebook:hover {
   background-color: #3c5a98;
   color: white;
 }
 
-/* line 78, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 78, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .nav .notification_count {
   display: inline-block;
   padding: 3px 5px 2px 5px;
   vertical-align: middle;
 }
 
-/* line 85, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 85, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .nav_icon .username:hover {
   background: #FFF673;
 }
 
-/* line 89, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 89, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #btn_star .icon {
   background-image: url("/lib/skin/1/like.png");
 }
-/* line 90, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 90, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #btn_star.starred .icon {
   background-image: url("/lib/skin/1/like-active.png");
 }
-/* line 91, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 91, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #btn_star:hover .icon {
   background-image: url("/lib/skin/1/like-hover.png");
 }
 
-/* line 95, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 95, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #btn_broadcast .icon {
   background-image: url("/lib/skin/1/broadcast.png");
 }
-/* line 96, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 96, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #btn_broadcast.enabled .icon {
   background-image: url("/lib/skin/1/broadcast_active.png");
 }
 
-/* line 99, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 99, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_button {
   position: relative;
   top: 2px;
@@ -195,20 +195,20 @@ body.home.logged_out .nav {
   height: 31px !important;
   background-image: url("/lib/skin/1/people_small.png");
 }
-/* line 105, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 105, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_button:hover {
   background-image: url("/lib/skin/1/people_small-hover.png");
 }
-/* line 106, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 106, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_button.starred {
   background-image: url("/lib/skin/1/people_small_active.png");
 }
-/* line 108, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 108, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .listen_button.starred:hover {
   background-image: url("/lib/skin/1/people_small_active-hover.png");
 }
 
-/* line 112, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 112, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count .count {
   color: #FFF;
   -moz-border-radius: 5px;
@@ -222,31 +222,31 @@ body.home.logged_out .nav {
   background: #696e76;
 }
 
-/* line 124, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 124, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count .count.zero {
   display: none;
 }
 
-/* line 127, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 127, /home/duffy/2newhive/libsrc/scss/nav.scss */
 .has_count .icon {
   display: inline-block;
   vertical-align: top;
 }
 
-/* line 132, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 132, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #search {
   position: relative;
   display: inline-block;
 }
 
-/* line 136, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 136, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #search_box {
   width: 150px;
   border-width: 5px;
   padding: 5px;
 }
 
-/* line 141, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 141, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #search_submit {
   display: inline-block;
   width: 22px;
@@ -254,43 +254,43 @@ body.home.logged_out .nav {
   background-image: url("lib/skin/1/search_arrow.png");
   vertical-align: middle;
 }
-/* line 147, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 147, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #search_submit:hover {
   background-image: url("lib/skin/1/search_arrow-hover.png");
 }
 
-/* line 151, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 151, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #notifications {
   background-image: url("/lib/skin/1/feed.png");
 }
-/* line 153, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 153, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #notifications.active {
   background-image: url("/lib/skin/1/feed-hover.png");
 }
-/* line 154, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 154, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #notifications .count {
   margin: 27px 0 0 27px;
   background-color: #f72e4d;
 }
 
-/* line 161, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 161, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #login_menu {
   width: 190px;
   padding: 10px;
 }
 
-/* line 162, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 162, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #login_menu input[type=text], #login_menu input[type=password] {
   width: 170px;
 }
 
-/* line 164, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 164, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #signup_btn:hover {
   background-color: #f72e4d;
   color: white;
 }
 
-/* line 166, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 166, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #password_recovery_link {
   font-weight: normal;
   font-size: 12px;
@@ -299,7 +299,7 @@ body.home.logged_out .nav {
   white-space: nowrap;
 }
 
-/* line 173, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 173, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #login_submit {
   float: right;
 }
@@ -308,13 +308,13 @@ body.home.logged_out .nav {
    popup dialogs 
    ========================================== */
 /* === Container element === */
-/* line 7, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 7, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dialogs {
   display: none;
 }
 
 /* === click shield element === */
-/* line 10, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 10, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dialog_shield {
   position: fixed;
   width: 100%;
@@ -323,14 +323,14 @@ body.home.logged_out .nav {
   top: 0;
 }
 
-/* line 17, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 17, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dialog_shield.fade {
   background-color: black;
   opacity: 0.6;
 }
 
 /* === General === */
-/* line 22, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 22, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .dialog {
   display: none;
   position: absolute;
@@ -341,32 +341,32 @@ body.home.logged_out .nav {
   -webkit-box-shadow: 05px 05px 05px #666;
   box-shadow: 05px 05px 05px #666;
 }
-/* line 31, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 31, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .dialog .center, .dialog.center {
   text-align: center;
 }
-/* line 32, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 32, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .dialog .line {
   margin: 7px 0;
   clear: both;
 }
-/* line 33, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 33, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .dialog .line .element {
   float: left;
 }
-/* line 34, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 34, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .dialog .line .label {
   float: left;
   margin-top: 6px;
   margin-right: 4px;
 }
-/* line 35, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 35, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .dialog h1 {
   font-family: Museo, Helvetica, Arial, sans-serif;
   text-align: center;
 }
 
-/* line 41, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 41, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .btn_dialog_close, #btn_dialog_close {
   position: absolute;
   width: 20px;
@@ -377,19 +377,19 @@ body.home.logged_out .nav {
   z-index: 100;
 }
 
-/* line 43, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 43, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .btn_dialog_close:hover, #btn_dialog_close:hover {
   background-image: url("/lib/skin/1/close-hover.png");
 }
 
-/* line 44, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 44, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 input[type="text"].copy, textarea.copy {
   border: none;
   font-family: helvetica, verdana, sans-serif;
   white-space: pre-wrap;
 }
 
-/* line 49, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 49, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .dialog h3 {
   font-family: Museo, Helvetica, Arial, sans-serif;
   font-weight: normal;
@@ -397,7 +397,7 @@ input[type="text"].copy, textarea.copy {
 }
 
 /* Share dialog */
-/* line 56, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 56, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #email_send {
   margin-top: 26px;
   margin-left: 20px;
@@ -405,7 +405,7 @@ input[type="text"].copy, textarea.copy {
   font-size: 17px;
 }
 
-/* line 57, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 57, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #congrats_message h1 {
   font-weight: lighter;
   font-family: Museo, Helvetica, Arial, sans-serif;
@@ -413,23 +413,23 @@ input[type="text"].copy, textarea.copy {
   font-size: 33px;
 }
 
-/* line 58, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 58, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #congrats_message strong {
   font-weight: normal;
   color: red;
 }
 
-/* line 59, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 59, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_share .share_context_explanation {
   font-size: 13px;
   padding: 0 40px;
 }
-/* line 62, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 62, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_share .share_context_explanation input {
   float: left;
 }
 
-/* line 64, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 64, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #expression_url {
   display: block;
   float: left;
@@ -440,7 +440,7 @@ input[type="text"].copy, textarea.copy {
   background-color: #FFF673;
 }
 
-/* line 73, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 73, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #expression_embed_code {
   overflow: auto;
   display: block;
@@ -453,7 +453,7 @@ input[type="text"].copy, textarea.copy {
   background-color: #D0E0F0;
 }
 
-/* line 84, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 84, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #btn_url_copy {
   background-image: url("/lib/skin/1/copy_clipboard.png");
   float: right;
@@ -462,114 +462,114 @@ input[type="text"].copy, textarea.copy {
   margin: 5px 5px 0 0;
 }
 
-/* line 85, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 85, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #btn_url_copy.hover {
   background-image: url("/lib/skin/1/copy_clipboard-hover.png");
 }
 
-/* line 86, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 86, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_share {
   width: 555px;
   padding: 20px;
 }
 
-/* line 90, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 90, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #like_buttons {
   margin: 20px 0;
 }
 
-/* line 91, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 91, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #like_buttons .like_button {
   display: inline-block;
   margin: 10px;
 }
 
-/* line 95, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 95, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_share #email_message {
   width: 350px;
 }
 
-/* line 96, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 96, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_share #email_to {
   width: 301px;
 }
 
-/* line 97, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 97, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_share .line.embed {
   padding-top: 20px;
 }
 
-/* line 98, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 98, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_share label {
   font-size: 14px;
 }
 
-/* line 99, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 99, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_share .count {
   font-family: League Gothic, sans-serif;
   font-size: 55px;
 }
 
-/* line 103, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 103, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_share .label.align {
   width: 89px;
 }
 
 /* Referral Dialog */
-/* line 109, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 109, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_referral {
   width: 490px;
   padding: 20px 40px 20px 50px;
   text-align: left;
 }
 
-/* line 114, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 114, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_referral h3 {
   margin: 20px 0;
 }
 
-/* line 117, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 117, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #referral_count {
   color: red;
 }
 
-/* line 118, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 118, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_referral input[type="text"], #dia_referral textarea {
   width: 150px;
   float: left;
 }
 
-/* line 119, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 119, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_referral input[type="submit"] {
   float: right;
   font-size: 18px;
   margin: 5px 12px;
 }
 
-/* line 125, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 125, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_referral .line.first {
   margin-top: 27px;
 }
 
-/* line 127, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 127, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_referral .medbold {
   line-height: 1em;
 }
 
-/* line 128, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 128, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_referral .label .small {
   font-size: 12px;
   font-weight: normal;
 }
 
 /* Editor browser warning dialog */
-/* line 131, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 131, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #editor_browsers, #ie_warning {
   padding: 20px 50px;
   text-align: center;
 }
 
-/* line 135, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 135, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #editor_browsers h1, #ie_warning h1 {
   font-family: Lobster, serif;
   font-weight: normal;
@@ -578,33 +578,33 @@ input[type="text"].copy, textarea.copy {
   font-size: 38px;
 }
 
-/* line 142, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 142, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #editor_browsers h2, #ie_warning h2 {
   font-family: Helvetica, Arial, sans-serif;
   font-size: 18px;
   margin: 0;
 }
 
-/* line 148, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 148, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #editor_browsers h3, #ie_warning h3 {
   font-size: 25px;
   margin: 20px 0;
 }
 
-/* line 152, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 152, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #editor_browsers a {
   text-decoration: underline;
 }
 
 /* signup thank-you dialog */
-/* line 157, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 157, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #signup_thank_you {
   width: 400px;
   padding: 20px 50px;
   margin: 0;
 }
 
-/* line 163, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 163, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #signup_thank_you h1 {
   font-family: League Gothic, sans-serif;
   font-weight: normal;
@@ -613,85 +613,85 @@ input[type="text"].copy, textarea.copy {
   margin: 20px;
 }
 
-/* line 171, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 171, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #signup_thank_you h3 {
   margin-top: 10px;
 }
 
-/* line 175, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 175, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #signup_thank_you h4 {
   margin-top: 10px;
   font-family: Museo, Helvetica, Arial, sans-serif;
   font-size: 20px;
 }
 
-/* line 181, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 181, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #signup_thank_you h4 a:hover {
   color: #419DD6;
 }
 
 /* password for private expression */
-/* line 187, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 187, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_password {
   padding: 0 10px 20px 10px;
 }
 
 /* signup dialog */
-/* line 192, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 192, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_signup {
   width: auto;
   padding: 20px 35px;
 }
-/* line 195, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 195, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_signup .field {
   margin: 0 auto;
 }
-/* line 196, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 196, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_signup .column {
   float: left;
 }
-/* line 197, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 197, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_signup .column.left {
   float: left;
   padding-right: 20px;
 }
-/* line 198, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 198, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_signup .column.right {
   float: right;
   padding-left: 20px;
 }
-/* line 199, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 199, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_signup .line1 {
   font-weight: bold;
 }
-/* line 200, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 200, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_signup .line2 {
   color: #f72e4d;
 }
-/* line 202, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 202, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_signup input[type=text] {
   width: 290px;
 }
-/* line 203, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 203, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_signup h3 {
   text-align: left;
   margin: 10px 0;
 }
 
 /* Comments dialog */
-/* line 207, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 207, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments {
   width: 505px;
   padding: 20px;
 }
 
-/* line 212, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 212, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .icon {
   float: left;
   margin: -10px 0 0 -10px;
 }
 
-/* line 216, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 216, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .title.sub {
   margin: 0;
   font-size: 20px;
@@ -699,7 +699,7 @@ input[type="text"].copy, textarea.copy {
   font-family: Museo, Helvetica, Arial, sans-serif;
 }
 
-/* line 222, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 222, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .title {
   margin: 0;
   font-size: 26px;
@@ -707,74 +707,74 @@ input[type="text"].copy, textarea.copy {
   font-family: Museo, Helvetica, Arial, sans-serif;
 }
 
-/* line 228, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 228, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .title .comments_count {
   font-weight: bold;
   color: #F72E4D;
 }
 
-/* line 232, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 232, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments textarea {
   width: 480px;
   margin-top: 10px;
 }
 
-/* line 236, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 236, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments input[type=submit] {
   float: right;
   margin: 5px;
 }
 
-/* line 240, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 240, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .header {
   overflow: auto;
   min-height: 45px;
 }
 
-/* line 244, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 244, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments #comments {
   clear: both;
   width: 520px;
   overflow: auto;
 }
 
-/* line 250, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 250, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .comment {
   clear: both;
   padding-top: 20px;
 }
 
-/* line 254, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 254, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .comment_content {
   width: 390px;
   float: left;
 }
 
-/* line 258, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 258, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .text {
   min-height: 40px;
   margin: 0 0 10px 0;
   white-space: pre-wrap;
 }
 
-/* line 263, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 263, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .author, #dia_comments .age {
   font-size: 20px;
   margin: 0;
 }
 
-/* line 267, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 267, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .author {
   color: blue;
   float: left;
 }
 
-/* line 271, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 271, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .age {
   float: right;
 }
 
-/* line 274, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 274, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_comments .comment_thumb {
   width: 70px;
   height: 70px;
@@ -783,12 +783,12 @@ input[type="text"].copy, textarea.copy {
   margin-right: 10px;
 }
 
-/* line 282, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 282, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_password_recovery {
   padding: 0px 35px 22px 35px;
 }
 
-/* line 287, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 287, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_thumbnail .thumb {
   -moz-border-radius: 7px;
   -webkit-border-radius: 7px;
@@ -799,7 +799,7 @@ input[type="text"].copy, textarea.copy {
   background-color: #EEEEEE;
   cursor: pointer;
 }
-/* line 289, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 289, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_thumbnail .thumb img {
   -moz-border-radius: 7px;
   -webkit-border-radius: 7px;
@@ -808,55 +808,55 @@ input[type="text"].copy, textarea.copy {
   -khtml-border-radius: 7px;
   border-radius: 7px;
 }
-/* line 292, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 292, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_thumbnail .thumb img:hover {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=75);
   opacity: 0.75;
 }
 
-/* line 295, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 295, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_connect {
   width: 860px;
 }
-/* line 297, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 297, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_connect .list {
   font-weight: bold;
 }
-/* line 298, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 298, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_connect .smallprint {
   color: #696e76;
   font-size: 15px;
   margin: 20px 0 0 0;
 }
 
-/* line 305, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 305, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen {
   padding: 20px 10px 20px 20px;
   width: auto;
 }
-/* line 308, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 308, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen h1 {
   display: inline;
   font-size: 35px;
   font-family: Museo, Helvetica, Arial, sans-serif;
   margin-bottom: 15px;
 }
-/* line 314, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 314, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen img.thumb {
   width: 50px;
   height: 50px;
 }
-/* line 317, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 317, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen img.thumb.tnh {
   display: none;
 }
-/* line 319, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 319, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .friends {
   width: 671px;
   max-height: 400px;
   overflow: auto;
 }
-/* line 324, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 324, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .friend {
   width: 300px;
   padding: 7px;
@@ -866,12 +866,12 @@ input[type="text"].copy, textarea.copy {
   margin-right: 20px;
   font-size: 16px;
 }
-/* line 332, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 332, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .friend img {
   vertical-align: middle;
   margin-right: 5px;
 }
-/* line 337, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 337, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .names {
   display: inline-block;
   vertical-align: middle;
@@ -881,16 +881,16 @@ input[type="text"].copy, textarea.copy {
   white-space: nowrap;
   width: 193px;
 }
-/* line 346, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 346, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .facebook_name {
   font-size: 19px;
   margin-bottom: 3px;
 }
-/* line 350, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 350, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .username {
   font-size: 12px;
 }
-/* line 353, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 353, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .invite_fb_link {
   float: left;
   font-weight: bold;
@@ -898,21 +898,21 @@ input[type="text"].copy, textarea.copy {
   margin-right: 25px;
   cursor: pointer;
 }
-/* line 359, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 359, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .invite_fb_link img {
   vertical-align: middle;
 }
-/* line 360, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 360, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .invite_fb_link:hover {
   color: white;
   background-color: #3c5a98;
 }
-/* line 365, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 365, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .line2 {
   margin-bottom: 22px;
   overflow: auto;
 }
-/* line 369, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 369, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen #listen_to_all {
   font-size: 17px;
   margin: 0 55px 0 0;
@@ -920,12 +920,12 @@ input[type="text"].copy, textarea.copy {
   background-color: #f72e4d;
   color: white;
 }
-/* line 375, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 375, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen #listen_to_all:hover, #dia_facebook_listen #listen_to_all.disabled {
   background-color: #698293;
   color: white;
 }
-/* line 381, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 381, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .listen {
   width: 37px;
   height: 31px;
@@ -939,92 +939,92 @@ input[type="text"].copy, textarea.copy {
   -khtml-border-radius: 3px;
   border-radius: 3px;
 }
-/* line 388, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 388, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .listen:hover {
   background: #f72e4d url("/lib/skin/1/people_small-hover.png");
 }
-/* line 391, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 391, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .listen.active {
   background: url("/lib/skin/1/people_small_active.png");
 }
-/* line 393, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 393, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_facebook_listen .listen.active:hover {
   background: #f72e4d url("/lib/skin/1/people_small_active-hover.png");
 }
 
-/* line 400, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 400, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join {
   padding: 20px;
   width: auto;
 }
-/* line 403, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 403, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join img {
   width: 70px;
   height: 70px;
 }
-/* line 407, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 407, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join h3 {
   text-align: center;
   font-size: 22px;
 }
-/* line 410, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 410, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join h3 .line1 {
   font-weight: bold;
 }
-/* line 413, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 413, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join h3 .line2 {
   color: #f72e4d;
 }
-/* line 417, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 417, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .main_fields {
   height: 350px;
 }
-/* line 420, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 420, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .field {
   margin-left: auto;
   margin-right: auto;
 }
-/* line 423, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 423, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .field label {
   display: block;
   font-weight: bold;
 }
-/* line 429, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 429, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join input[type=submit] {
   float: right;
 }
-/* line 430, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 430, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .column {
   overflow: auto;
   float: left;
   padding: 0 40px;
 }
-/* line 435, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 435, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .left {
   border-right: 1px solid #D1D1D1;
 }
-/* line 436, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 436, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .left .field {
   width: 240px;
 }
-/* line 437, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 437, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .left input[type=text], #dia_sign_in_or_join .left input[type=password] {
   width: 220px;
 }
-/* line 441, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 441, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .right .field {
   width: 270px;
 }
-/* line 442, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 442, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .right input[type=text], #dia_sign_in_or_join .right input[type=password] {
   width: 250px;
 }
-/* line 444, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 444, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_sign_in_or_join .name {
   display: none;
 }
 
-/* line 447, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 447, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .newdialog {
   display: none;
   position: absolute;
@@ -1038,55 +1038,55 @@ input[type="text"].copy, textarea.copy {
   -o-box-shadow: 5px 5px 5px #666666;
   box-shadow: 5px 5px 5px #666666;
 }
-/* line 457, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 457, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .newdialog h1, .newdialog h2 {
   font-family: Museo, Helvetica, Arial, sans-serif;
   letter-spacing: -1px;
   margin: 0;
 }
-/* line 462, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 462, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .newdialog h1 {
   font-size: 42px;
 }
-/* line 463, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 463, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .newdialog h2 {
   font-size: 34px;
 }
-/* line 464, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 464, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .newdialog h3 {
   margin: 30px 0 0 0;
   letter-spacing: -1px;
 }
-/* line 468, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 468, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .newdialog p {
   margin: 10px 0 20px 0;
 }
-/* line 469, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 469, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 .newdialog.centered {
   text-align: center;
 }
 
-/* line 475, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 475, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_fb_connect_landing .line {
   clear: both;
   overflow: hidden;
   *zoom: 1;
   margin-top: 10px;
 }
-/* line 480, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 480, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_fb_connect_landing .button, #dia_fb_connect_landing .fb_icon {
   float: left;
 }
-/* line 481, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 481, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_fb_connect_landing .fb_icon {
   width: 50px;
   height: 50px;
 }
-/* line 483, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 483, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_fb_connect_landing .button_wrapper {
   width: 280px;
 }
-/* line 484, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 484, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_fb_connect_landing .button {
   padding: 15px;
   margin-left: 5px;
@@ -1099,103 +1099,103 @@ input[type="text"].copy, textarea.copy {
   color: white;
   cursor: default;
 }
-/* line 497, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 497, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_fb_connect_landing .button_wrapper:hover .button {
   background-color: #fff673;
   color: #f72e4d;
 }
-/* line 501, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 501, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_fb_connect_landing p {
   margin-bottom: 27px;
 }
 
-/* line 504, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 504, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_fb_account_duplicate {
   width: 640px;
 }
 
-/* line 508, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 508, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login {
   width: auto;
 }
-/* line 510, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 510, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .field {
   margin: 0 auto;
 }
-/* line 511, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 511, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .column {
   float: left;
   padding: 10px 35px 0;
   margin-top: 10px;
 }
-/* line 512, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 512, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login input[type=text], #dia_must_login input[type=password] {
   width: 220px;
 }
-/* line 513, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 513, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .right.separator {
   border-left: 1px solid #D1D1D1;
 }
-/* line 514, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 514, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login h1, #dia_must_login h2, #dia_must_login h3, #dia_must_login h4 {
   margin: 0 0 20px 0;
   text-align: center;
 }
-/* line 515, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 515, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .line1 {
   font-weight: bold;
 }
-/* line 516, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 516, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .line2 {
   color: #f72e4d;
 }
-/* line 517, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 517, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .description {
   background-color: #fff673;
   padding: 2px;
 }
-/* line 519, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 519, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login #send_msg {
   float: right;
 }
-/* line 520, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 520, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .right input[type=text], #dia_must_login .right input[type=password] {
   width: 290px;
 }
-/* line 521, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 521, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .description {
   font-family: Helvetica, Arial, sans-serif;
 }
-/* line 522, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 522, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .field.username {
   margin-top: 30px;
 }
-/* line 523, /home/abram/newhive/libsrc/scss/dialogs.scss */
+/* line 523, /home/duffy/2newhive/libsrc/scss/dialogs.scss */
 #dia_must_login .field.login.submit {
   margin-top: 20px;
 }
 
-/* line 2, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 2, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #profile_header {
   margin: 35px 0px 5px 35px;
 }
-/* line 4, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 4, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #profile_header .fathead {
   font-family: Museo, Helvetica, sans-serif;
   font-size: 3em;
 }
-/* line 7, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 7, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #profile_thumb {
   width: auto;
   display: inline-block;
   margin-right: 10px;
   position: relative;
 }
-/* line 13, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 13, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #profile_thumb img {
   vertical-align: middle;
 }
-/* line 14, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 14, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #profile_thumb img, body.profile #profile_thumb .placeholder {
   height: 180px;
   width: 180px;
@@ -1206,137 +1206,137 @@ body.profile #profile_thumb img, body.profile #profile_thumb .placeholder {
   -khtml-border-radius: 7px;
   border-radius: 7px;
 }
-/* line 18, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 18, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #profile_thumb .placeholder {
   height: 30px;
   padding: 85px 0;
 }
-/* line 19, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 19, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile .placeholder {
   border: 1px dashed #CCC;
   text-align: center;
 }
-/* line 20, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 20, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #profile_thumb .message {
   position: absolute;
   bottom: -18px;
   left: 5px;
   font-size: 12px;
 }
-/* line 22, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 22, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile .fathead {
   font-weight: normal;
 }
-/* line 23, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 23, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile .fathead.hasthumb {
   margin: 75px 50px 0 50px;
 }
-/* line 24, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 24, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile .fathead img {
   margin: 8px 0;
   vertical-align: top;
 }
 
-/* line 27, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 27, /home/duffy/2newhive/libsrc/scss/community.scss */
 #card_header {
   min-height: 25px;
   margin: 18px 20px 2px 0;
   position: relative;
 }
 
-/* line 28, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 28, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #card_header {
   margin-top: -10px;
 }
 
-/* line 29, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 29, /home/duffy/2newhive/libsrc/scss/community.scss */
 #header .title {
   margin-left: 229px;
 }
 
-/* line 30, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 30, /home/duffy/2newhive/libsrc/scss/community.scss */
 #header .head {
   font-size: 2em;
   font-family: Museo,Helvetica,sans-serif;
 }
 
-/* line 32, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 32, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs {
   position: absolute;
   right: 0px;
   white-space: nowrap;
 }
 
-/* line 33, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 33, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label {
   display: inline-block;
   vertical-align: middle;
   color: #f72e4d;
 }
-/* line 37, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 37, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.text {
   padding: 2px 10px;
 }
-/* line 38, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 38, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.text:hover {
   color: white;
   background-color: #696e76;
 }
-/* line 39, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 39, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.current.text {
   color: white;
   background-color: black;
   cursor: default;
   font-weight: bold;
 }
-/* line 41, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 41, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.icon {
   width: 25px;
   height: 25px;
 }
-/* line 42, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 42, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.tab_like {
   background-image: url("/lib/skin/1/tab_like.png");
 }
-/* line 43, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 43, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.tab_like:hover {
   background-image: url("/lib/skin/1/tab_like-hover.png");
 }
-/* line 44, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 44, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.current.tab_like {
   background-image: url("/lib/skin/1/tab_like-selected.png");
 }
-/* line 45, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 45, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.tab_discussion {
   background-image: url("/lib/skin/1/tab_discussion.png");
 }
-/* line 46, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 46, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.tab_discussion:hover {
   background-image: url("/lib/skin/1/tab_discussion-hover.png");
 }
-/* line 47, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 47, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.current.tab_discussion {
   background-image: url("/lib/skin/1/tab_discussion-selected.png");
 }
-/* line 48, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 48, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.tab_broadcast {
   background-image: url("/lib/skin/1/tab_broadcast.png");
 }
-/* line 49, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 49, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.tab_broadcast:hover {
   background-image: url("/lib/skin/1/tab_broadcast-hover.png");
 }
-/* line 50, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 50, /home/duffy/2newhive/libsrc/scss/community.scss */
 #top_tabs .tab_label.current.tab_broadcast {
   background-image: url("/lib/skin/1/tab_broadcast-selected.png");
 }
 
-/* line 53, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 53, /home/duffy/2newhive/libsrc/scss/community.scss */
 #left_tabs {
   margin-top: 30px;
 }
 
-/* line 57, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 57, /home/duffy/2newhive/libsrc/scss/community.scss */
 #left_tabs .tab_label {
   font-size: 1.2em;
   height: 31px;
@@ -1348,51 +1348,51 @@ body.profile #card_header {
   text-align: right;
   white-space: nowrap;
 }
-/* line 67, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 67, /home/duffy/2newhive/libsrc/scss/community.scss */
 #left_tabs .tab_label.active {
   color: #f72e4d;
 }
-/* line 68, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 68, /home/duffy/2newhive/libsrc/scss/community.scss */
 #left_tabs .tab_label.current {
   color: black;
   cursor: default;
 }
-/* line 69, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 69, /home/duffy/2newhive/libsrc/scss/community.scss */
 #left_tabs .tab_label img {
   vertical-align: middle;
 }
 
-/* line 71, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 71, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.home #left_tabs .tab_label {
   background-color: #edebe1;
 }
-/* line 73, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 73, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.home #left_tabs .tab_label.active {
   background-color: #fff673;
 }
-/* line 74, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 74, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.home #left_tabs .tab_label.current {
   background-color: #96e2ce;
 }
 
-/* line 76, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 76, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #left_tabs .tab_label {
   padding-top: 0;
   margin-top: 3px;
 }
-/* line 79, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 79, /home/duffy/2newhive/libsrc/scss/community.scss */
 body.profile #left_tabs .tab_label.current {
   font-family: Lobster, Helvetica, sans-serif;
   font-size: 1.6em;
   font-weight: normal;
 }
 
-/* line 86, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 86, /home/duffy/2newhive/libsrc/scss/community.scss */
 #tag_links {
   margin: 30px 0;
 }
 
-/* line 88, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 88, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label {
   float: right;
   clear: both;
@@ -1401,77 +1401,77 @@ body.profile #left_tabs .tab_label.current {
   margin: 5px 0;
   font-size: 16px;
 }
-/* line 95, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 95, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label:hover {
   color: white;
   padding-left: 30px;
 }
-/* line 97, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 97, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_0 {
   background-color: #f73627;
 }
-/* line 98, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 98, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_1 {
   background-color: #f72e4d;
 }
-/* line 99, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 99, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_2 {
   background-color: #f45519;
 }
-/* line 100, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 100, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_3 {
   background-color: #e87b25;
 }
-/* line 101, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 101, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_4 {
   background-color: #f9a819;
 }
-/* line 102, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 102, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_5 {
   background-color: #7ba009;
 }
-/* line 103, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 103, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_6 {
   background-color: #13a507;
 }
-/* line 104, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 104, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_7 {
   background-color: #069674;
 }
-/* line 105, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 105, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_8 {
   background-color: #2d6a5d;
 }
-/* line 106, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 106, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_9 {
   background-color: #419dd6;
 }
-/* line 107, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 107, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_10 {
   background-color: #698293;
 }
-/* line 108, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 108, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_11 {
   background-color: #9196a7;
 }
-/* line 109, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 109, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_12 {
   background-color: #7f4799;
 }
-/* line 110, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 110, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_13 {
   background-color: #696e76;
 }
-/* line 111, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 111, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_14 {
   background-color: #423c3e;
 }
-/* line 112, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 112, /home/duffy/2newhive/libsrc/scss/community.scss */
 .tag_label.tag_15 {
   background-color: #810032;
 }
 
-/* line 115, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 115, /home/duffy/2newhive/libsrc/scss/community.scss */
 #feed .prompt {
   display: inline-block;
   width: 260px;
@@ -1479,7 +1479,7 @@ body.profile #left_tabs .tab_label.current {
   position: relative;
   margin: 5px;
 }
-/* line 121, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 121, /home/duffy/2newhive/libsrc/scss/community.scss */
 #feed .prompt div {
   position: absolute;
   left: 20px;
@@ -1487,59 +1487,59 @@ body.profile #left_tabs .tab_label.current {
   width: 230px;
   font-weight: bold;
 }
-/* line 126, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 126, /home/duffy/2newhive/libsrc/scss/community.scss */
 #feed .prompt img {
   position: absolute;
   left: 0px;
   top: 0px;
 }
-/* line 127, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 127, /home/duffy/2newhive/libsrc/scss/community.scss */
 #feed .prompt.link {
   cursor: pointer;
 }
 
-/* line 129, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 129, /home/duffy/2newhive/libsrc/scss/community.scss */
 #prompt_interests {
   background-image: url("/lib/skin/1/prompt_interests.png");
 }
-/* line 131, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 131, /home/duffy/2newhive/libsrc/scss/community.scss */
 #prompt_interests.active {
   background-image: url("/lib/skin/1/prompt_interests-hover.png");
 }
 
-/* line 133, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 133, /home/duffy/2newhive/libsrc/scss/community.scss */
 #prompt_allies {
   background-image: url("/lib/skin/1/prompt_allies.png");
 }
-/* line 135, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 135, /home/duffy/2newhive/libsrc/scss/community.scss */
 #prompt_allies.active {
   background-image: url("/lib/skin/1/prompt_allies-hover.png");
 }
 
-/* line 137, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 137, /home/duffy/2newhive/libsrc/scss/community.scss */
 #prompt_expressions {
   background-image: url("/lib/skin/1/prompt_expressions.png");
 }
-/* line 139, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 139, /home/duffy/2newhive/libsrc/scss/community.scss */
 #prompt_expressions.active {
   background-image: url("/lib/skin/1/prompt_expressions-hover.png");
 }
 
-/* line 142, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 142, /home/duffy/2newhive/libsrc/scss/community.scss */
 .signup_link {
   font-weight: bold;
   text-align: center;
   padding: 2px 5px;
-  background-color: #f73627;
+  background-color: #f72e4d;
   color: white;
-  padding: 3px 5px 8px;
+  padding: 5px 0px 6px;
 }
-/* line 149, /home/abram/newhive/libsrc/scss/community.scss */
+/* line 149, /home/duffy/2newhive/libsrc/scss/community.scss */
 .signup_link:hover {
   background-color: #698293;
 }
 
-/* line 2, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 2, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card.item {
   position: relative;
   padding: 13px 13px 5px 13px;
@@ -1548,37 +1548,37 @@ body.profile #left_tabs .tab_label.current {
   float: left;
   background-image: url("/lib/skin/1/feed_item.png");
 }
-/* line 9, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 9, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card.item.border_right {
   border-right: 1px solid #d1d1d1;
 }
-/* line 12, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 12, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card.item.border_bottom {
   border-bottom: 1px solid #d1d1d1;
 }
-/* line 16, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 16, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card.item:hover {
   opacity: 1;
 }
-/* line 19, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 19, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card.item:hover.hide_feed .thumb {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
   opacity: 1;
 }
-/* line 20, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 20, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card.item:hover .thumb {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=75);
   opacity: 0.75;
 }
-/* line 21, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 21, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card.item:hover .title {
   background: #96e2ce;
 }
-/* line 22, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 22, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card.item:hover .other {
   background: #fff673;
 }
-/* line 24, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 24, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .thumb {
   -moz-border-radius: 7px;
   -webkit-border-radius: 7px;
@@ -1589,7 +1589,7 @@ body.profile #left_tabs .tab_label.current {
   width: 180px;
   height: 180px;
 }
-/* line 29, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 29, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .title {
   font-size: 1.1em;
   font-weight: bold;
@@ -1597,61 +1597,61 @@ body.profile #left_tabs .tab_label.current {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* line 36, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 36, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .other, #feed .card .tags, #feed .card .stats, #feed .card .feed_info, #feed .card .comment {
   font-size: 0.7em;
 }
-/* line 40, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 40, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .tags, #feed .card .comment {
   overflow: hidden;
   text-overflow: ellipsis;
   max-height: 29px;
   margin-bottom: 5px;
 }
-/* line 45, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 45, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .tags .tag:hover, #feed .card .comment .tag:hover {
   background: #f73627;
   color: white;
 }
-/* line 47, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 47, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .other {
   position: absolute;
   bottom: 8px;
   font-weight: bold;
 }
-/* line 51, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 51, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .other:hover {
   background: #698293 !important;
   color: white;
 }
-/* line 53, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 53, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_thumbs {
   position: absolute;
   bottom: 113px;
   left: 20px;
   width: 64px;
 }
-/* line 58, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 58, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_thumbs img {
   width: 30px;
   border: 1px solid white;
   float: left;
 }
-/* line 59, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 59, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_thumbs img.first {
   display: block;
 }
-/* line 60, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 60, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_thumbs img.big {
   width: 39px;
 }
-/* line 62, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 62, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .actions {
   position: absolute;
   right: 20px;
   top: 20px;
 }
-/* line 66, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 66, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_info {
   position: absolute;
   bottom: 118px;
@@ -1660,56 +1660,56 @@ body.profile #left_tabs .tab_label.current {
   text-align: right;
   width: 120px;
 }
-/* line 73, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 73, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_info div {
   background-color: #fff673;
   margin: 1px;
   display: inline;
   padding: 0 5px;
 }
-/* line 74, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 74, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_info.create div {
   background-color: white;
 }
 
-/* line 78, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 78, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card {
   position: relative;
 }
-/* line 80, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 80, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card .stats {
   position: absolute;
   bottom: 5px;
   right: 13px;
   color: #696e76;
 }
-/* line 84, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 84, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card .stats img {
   vertical-align: middle;
 }
-/* line 85, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 85, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card .stats .listen_button:hover {
   background-color: #f72e4d;
 }
-/* line 87, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 87, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card.with_hide .inactive_hide {
   display: none;
 }
-/* line 88, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 88, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card.with_hide:hover .inactive_hide {
   display: block;
 }
-/* line 89, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 89, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card.with_hide:hover .active_hide {
   display: none;
 }
 
-/* line 92, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 92, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers, #dia_listeners {
   width: 316px;
   overflow: auto;
 }
-/* line 96, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 96, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .dialog_title, #dia_listeners .dialog_title {
   width: 290px;
   background-color: #d0e0f0;
@@ -1717,7 +1717,7 @@ body.profile #left_tabs .tab_label.current {
   padding: 4px 6px;
   font-weight: bold;
 }
-/* line 103, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 103, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card, #dia_listeners .card {
   overflow: hidden;
   *zoom: 1;
@@ -1726,18 +1726,18 @@ body.profile #left_tabs .tab_label.current {
   clear: both;
   width: 290px;
 }
-/* line 108, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 108, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card:hover, #dia_listeners .card:hover {
   background-color: #96e2ce;
 }
-/* line 109, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 109, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card img, #dia_listeners .card img {
   width: 70px;
   height: 70px;
   float: left;
   margin-right: 10px;
 }
-/* line 115, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 115, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card .title, #dia_listeners .card .title {
   font-weight: bold;
   max-height: 2.5em;
@@ -1745,22 +1745,22 @@ body.profile #left_tabs .tab_label.current {
   text-overflow: ellipsis;
   margin-bottom: 5px;
 }
-/* line 116, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 116, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card .other, #dia_starrers .card .tags, #dia_listeners .card .other, #dia_listeners .card .tags {
   font-size: .8em;
 }
-/* line 117, /home/abram/newhive/libsrc/scss/cards.scss */
+/* line 117, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card .other, #dia_listeners .card .other {
   margin-top: 10px;
   font-weight: bold;
 }
 
-/* line 1, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 1, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu {
   width: 350px;
 }
 
-/* line 4, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 4, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu .feed_item {
   width: auto;
   height: auto;
@@ -1774,37 +1774,37 @@ body.profile #left_tabs .tab_label.current {
   position: relative;
   border-top: 1px solid #d1d1d1;
 }
-/* line 16, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 16, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu .feed_item:first-child {
   border-top: none;
 }
 
-/* line 19, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 19, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item .name {
   color: #F72E4D;
 }
 
-/* line 22, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 22, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item .name.you {
   color: #000;
 }
 
-/* line 25, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 25, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item a {
   font-weight: bold;
 }
 
-/* line 28, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 28, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item p {
   margin: 0;
 }
 
-/* line 31, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 31, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item .feed_item.active {
   background-color: #96E2CE;
 }
 
-/* line 34, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 34, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu .feed_item img {
   margin: 2px;
   width: 60px;
@@ -1812,17 +1812,17 @@ body.profile #left_tabs .tab_label.current {
   float: left;
 }
 
-/* line 40, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 40, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu .feed_item:hover {
   background-color: #96e2ce;
 }
 
-/* line 43, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 43, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu .feed_item .Expr .entity, #feed_menu .feed_item.User .initiator {
   width: 220px;
 }
 
-/* line 46, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 46, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item .Expr .entity {
   font-size: 17px;
   white-space: nowrap;
@@ -1830,31 +1830,31 @@ body.profile #left_tabs .tab_label.current {
   color: #000;
 }
 
-/* line 52, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 52, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item.User .line2 {
   color: #696E76;
 }
 
-/* line 56, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 56, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu .feed_item .feed_text, #feed_menu .feed_item .byline {
   width: 220px;
 }
 
-/* line 59, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 59, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item .feed_text, .feed_item .byline {
   float: left;
   margin-left: 5px;
   font-size: 13px;
 }
 
-/* line 64, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 64, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu .feed_item .feed_text {
   margin: 5px;
   height: 45px;
   white-space: nowrap;
 }
 
-/* line 69, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 69, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item .comment_text {
   font-weight: normal;
   white-space: nowrap;
@@ -1862,7 +1862,7 @@ body.profile #left_tabs .tab_label.current {
   margin-top: 5px;
 }
 
-/* line 75, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 75, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item .byline {
   font-weight: normal;
   position: absolute;
@@ -1870,19 +1870,19 @@ body.profile #left_tabs .tab_label.current {
   bottom: 5px;
 }
 
-/* line 80, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 80, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item .byline .name, .comment .byline .name {
   font-weight: bold;
   color: #696E76;
 }
 
-/* line 85, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 85, /home/duffy/2newhive/libsrc/scss/feed.scss */
 .feed_item .byline .timestamp, .comment .byline .timestamp {
   float: right;
   color: #696E76;
 }
 
-/* line 89, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 89, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu #more_button {
   padding: 3px;
   margin-top: 3px;
@@ -1892,13 +1892,13 @@ body.profile #left_tabs .tab_label.current {
   font-weight: bold;
 }
 
-/* line 97, /home/abram/newhive/libsrc/scss/feed.scss */
+/* line 97, /home/duffy/2newhive/libsrc/scss/feed.scss */
 #feed_menu #more_button:hover, #feed_menu #more_button.active {
   background-color: #fff673;
   color: #f73627;
 }
 
-/* line 45, /home/abram/newhive/libsrc/scss/_pagethrough.scss */
+/* line 45, /home/duffy/2newhive/libsrc/scss/_pagethrough.scss */
 .pagethrough-sprite, .pagethrough-next, .pagethrough-prev {
   background: url('/images/pagethrough-sc84cb4d0fa.png') no-repeat;
 }
@@ -1921,28 +1921,28 @@ body.profile #left_tabs .tab_label.current {
   background-position: 0 -180px;
 }
 
-/* line 4, /home/abram/newhive/libsrc/scss/expression.scss */
+/* line 4, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #left_hover_area, #right_hover_area {
   width: 0px;
   top: 100px;
   height: 70%;
 }
 
-/* line 9, /home/abram/newhive/libsrc/scss/expression.scss */
+/* line 9, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #left_hover_area {
   left: 0;
 }
 
-/* line 10, /home/abram/newhive/libsrc/scss/expression.scss */
+/* line 10, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #right_hover_area {
   right: 0;
 }
 
-/* line 11, /home/abram/newhive/libsrc/scss/expression.scss */
+/* line 11, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #pagethrough_prev, #pagethrough_next {
   display: none;
 }
-/* line 13, /home/abram/newhive/libsrc/scss/expression.scss */
+/* line 13, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #pagethrough_prev a, #pagethrough_next a {
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
   opacity: 0.8;
@@ -1951,50 +1951,50 @@ body.profile #left_tabs .tab_label.current {
   height: 60px;
 }
 
-/* line 20, /home/abram/newhive/libsrc/scss/expression.scss */
+/* line 20, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #pagethrough_prev {
   left: 0;
 }
 
-/* line 23, /home/abram/newhive/libsrc/scss/expression.scss */
+/* line 23, /home/duffy/2newhive/libsrc/scss/expression.scss */
 #pagethrough_next {
   right: 0;
 }
 
-/* line 2, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 2, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings .column {
   float: left;
   width: 300px;
 }
-/* line 5, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 5, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings .column h3 {
   margin-top: 0;
 }
-/* line 7, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 7, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings input[type="text"], .user_settings input[type="password"] {
   width: 217px;
 }
-/* line 10, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 10, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings #gender_wrapper {
   width: 120px;
   float: left;
 }
-/* line 14, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 14, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings #age {
   width: 93px;
 }
-/* line 17, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 17, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings .friend {
   padding: 3px;
   border-top: 1px solid #d1d1d1;
 }
-/* line 20, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 20, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings .friend img {
   vertical-align: middle;
   width: 32px;
   margin-right: 6px;
 }
-/* line 25, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 25, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings .friend .listen {
   width: 37px;
   height: 31px;
@@ -2002,35 +2002,35 @@ body.profile #left_tabs .tab_label.current {
   float: right;
   background: url("/lib/skin/1/people_small.png");
 }
-/* line 31, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 31, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings .friend .listen:hover {
   background: #423c3e url("/lib/skin/1/people_small-hover.png");
 }
-/* line 34, /home/abram/newhive/libsrc/scss/settings.scss */
+/* line 34, /home/duffy/2newhive/libsrc/scss/settings.scss */
 .user_settings .friend .listen.active {
   background: url("/lib/skin/1/people_small_active.png");
 }
 
-/* line 1, /home/abram/newhive/libsrc/scss/signup_flow.scss */
+/* line 1, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
 .disclaimer {
   color: #696e76;
   font-size: 13px;
   margin: 5px 0;
 }
 
-/* line 7, /home/abram/newhive/libsrc/scss/signup_flow.scss */
+/* line 7, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
 .signup_without_facebook {
   color: #696e76;
   font-size: 18px;
 }
 
-/* line 12, /home/abram/newhive/libsrc/scss/signup_flow.scss */
+/* line 12, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
 body.invited {
   background: url("/lib/skin/1/congratulations_tnh.jpg") repeat-x bottom;
   min-height: 644px;
 }
 
-/* line 17, /home/abram/newhive/libsrc/scss/signup_flow.scss */
+/* line 17, /home/duffy/2newhive/libsrc/scss/signup_flow.scss */
 #example_expressions {
   height: 257px;
   margin-top: 50px;

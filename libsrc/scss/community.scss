@@ -143,8 +143,8 @@ body.profile #left_tabs .tab_label {
     font-weight: bold;
     text-align: center;
     padding : 2px 5px;
-    background-color: $color_bright_red;
+    background-color: $color_active;
     color: white;
-    padding: 3px 5px 8px;
+    padding: 5px 0px 6px;
     &:hover { background-color: $color_blue; }
 }
