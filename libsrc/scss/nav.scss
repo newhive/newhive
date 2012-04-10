@@ -82,7 +82,8 @@ body.home.logged_out .nav{
 }
 
 .nav_icon .username {
-  &:hover { background: #FFF673; }
+  &:hover { background: $color_highlight; }
+  padding: 0 3px;
 }
 
 #btn_star {
