@@ -65,6 +65,7 @@ class ExpressionController(ApplicationController):
             ,body = html
             ,exp = resource
             ,exp_js = json.dumps(resource)
+            ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
             )
 
         resource.increment_counter('views')

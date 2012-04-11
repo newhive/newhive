@@ -22,6 +22,7 @@ def dfilter(d, keys):
     for k in keys:
         if k in d: r[k] = d[k]
     return r
+def dupdate(d1, d2): return dict(d1.items() + d2.items())
 
 
 def now(): return time.time()
