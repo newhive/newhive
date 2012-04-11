@@ -9,7 +9,7 @@
       var nanFilter = function(el) { if (!isNaN(el)) return el };
       var maxValue = d3.max($.map(data, function(el) { return el.length > 1 ? $.map(el, nanFilter) : el }));
 
-      chart = d3.select("#chart").append("svg").attr("class", "chart cohort").attr("width", 1000).attr("height", 490).style("display", "block");
+      chart = d3.select("#chart").append("svg").attr("class", "chart cohort").attr("width", 1000).attr("height", 490).attr("display", "block");
       chart.opts = {width: 960, height: 450, paddingTop: 10, paddingLeft: 40};
       chart.xRange = [chart.opts.paddingLeft + chart.opts.width * 0.05, chart.opts.paddingLeft + chart.opts.width * .95]
       var y = chart.y = d3.scale.linear().domain([0, Math.min(maxValue * 1.1, 1)]).range([0, chart.opts.height]);
@@ -52,7 +52,7 @@
           .attr("class", "yLabel")
           .attr("x", chart.opts.paddingLeft - 5)
           .attr("y", y.T)
-          .style("text-anchor", "end")
+          .attr("text-anchor", "end")
           .attr("dy", ".35em")
           .text(function(d) { return Math.round(d * 100) + "%" });
 
@@ -64,8 +64,8 @@
           .attr("class", function(d,i){ return "xLabel i" + (i + meta.cohorts.length - meta.dates.length)})
           .attr("x", x)
           .attr("y", chart.opts.height + 30)
-          .style("text-anchor", "middle")
-          .style("font-weight", "bold")
+          .attr("text-anchor", "middle")
+          .attr("font-weight", "bold")
           .text(String);
 
       for (i=0; i < data.length; i++) {
@@ -95,28 +95,28 @@
               .attr("class", "valueLabel i" + i)
               .attr("x", chart.x.shift(l0 - thisdata.length)).attr("y", chart.y.T)
               .attr("dx", 5).attr("dy", -10)
-              .style("visibility", "hidden")
+              .attr("visibility", "hidden")
               .text(function(d){ return Math.round(d*100) + "%" });
 
-          chart.append("text.legend.i" + i)
+          chart.append("text")
               .attr("class", "legend i" + i)
               .attr("x", chart.opts.width + chart.opts.paddingLeft - 20)
               .attr("y", y.T(yTicks[yTicks.length - 1]) + 10)
               .attr("dy", "1em")
-              .style("text-anchor", "end")
-              .style("visibility", "hidden")
+              .attr("text-anchor", "end")
+              .attr("visibility", "hidden")
               .text(fullMonthFormatter(new Date(meta.cohorts[i] * 1000)) + " Cohort: " + meta.cohort_sizes[i] + " Users");
 
           var hoverin = function(i){
               return function(){ 
-                  $('text.valueLabel.i' + i + ', text.legend.i' + i).css("visibility", "visible"); 
+                  $('text.valueLabel.i' + i + ', text.legend.i' + i).attr("visibility", "visible"); 
                   chart.selectAll("circle, path").filter(":not(.i" + i + ")").attr("stroke-opacity", 0.15).attr("fill-opacity", 0.15);
                   chart.selectAll(".xLabel").filter(":not(.i" + i + ")").attr("stroke-opacity", 0.55).attr("fill-opacity", 0.55);
               }
           };
           var hoverout = function(i){
               return function(){ 
-                  $('text.valueLabel.i' + i + ', text.legend.i' + i).css("visibility", "hidden"); 
+                  $('text.valueLabel.i' + i + ', text.legend.i' + i).attr("visibility", "hidden"); 
                   chart.selectAll("circle, path, .xLabel").filter(":not(.i" + i + ")").attr("stroke-opacity", 1).attr("fill-opacity", 1);
               }
           };
@@ -141,8 +141,8 @@
               .attr("class", function(d,i){ return "xLabel i" + i})
               .attr("x", x)
               .attr("y", chart.opts.height + 30)
-              .style("text-anchor", "middle")
-              .style("font-weight", "bold")
+              .attr("text-anchor", "middle")
+              .attr("font-weight", "bold")
           xLabels.exit().remove();
           xLabels.transition().duration(500)
               .attr("x", ali ? x.full : x).text(String);
