@@ -272,7 +272,6 @@ function updateShareUrls(element, currentUrl) {
     var encodedUrl = encodeURIComponent(currentUrl), total=0;
     var encodedTitle = encodeURIComponent(document.title)
     element.find('.copy_url').val(currentUrl);
-    element.find('.embed_code').val('<iframe src="' + currentUrl + '" style="width: 100%; height: 100%" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0"></iframe>');
     element.find('a.twitter')
       .attr('href', 'http://twitter.com/share?url=' + encodedUrl);
     element.find('a.facebook')
