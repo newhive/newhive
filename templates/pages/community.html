@@ -58,6 +58,8 @@
     {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
 
+{% set show_prompts = network and (user.starred_user_ids|length <= 1) %}
+
 {% block header %}
   {% if home %}
     {% if not user.logged_in %}
@@ -104,7 +106,7 @@
   {% endif %}
   <div id='card_header'>
     <div class='title'>
-      {% if network and cards|length < 10 %}
+      {% if show_prompts %}
         <img src='/lib/skin/1/people_small.png' style='float: left; vertical-align: middle; margin-right: 10px;'>
         <span class='info'>To <span class='active'>listen to someone</span>, click the person icon next to their name.<br>
         Activity of the people you're listening to will appear on this page.</span>
@@ -180,7 +182,7 @@
     <script>$(function() { require_login(); });</script>
   {% else %}
     <div id='feed'>
-      {% if network and cards|length < 10 %}
+      {% if show_prompts %}
         <div>
           <a href='{{server}}home/expressions'><div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div></a>
           <div class='prompt link hoverable' id='prompt_allies' onclick='fb_listen_or_connect()'><div>Click here to connect to Facebook and follow / invite friends.</div></div>

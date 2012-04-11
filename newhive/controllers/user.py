@@ -80,6 +80,7 @@ class UserController(ApplicationController):
         user = self.db.User.create(args)
         if user.get('referrer') != self.db.User.site_user.id:
             self.db.FriendJoined.create(user, referrer)
+        self.db.Star.create(user, self.db.User.site_user)
         self._friends_to_listen(request, user)
         self._friends_not_to_listen(request, user)
         referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
