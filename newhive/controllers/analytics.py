@@ -221,18 +221,18 @@ class AnalyticsController(ApplicationController):
         response.context['metrics'] = [
                 {'name': 'Visited 2+ days'
                     , 'data': analytics.visits_per_month(self.db, cohort_users, year, month)
-                    , 'url': '/analytics/active_users_cohort'}
+                    , 'url': '/analytics/cohort/active_users'}
                 , {'name': 'Created an expression'
                     , 'data': analytics.expressions_per_month(self.db, cohort_users, year, month)
-                    , 'url': '/analytics/expression_creates_cohort'}
+                    , 'url': '/analytics/cohort/expression_creates'}
                 , {'name': 'Invited a friend'
                     , 'data': analytics.referrals_per_month(self.db, cohort_users, year, month)
-                    , 'url': '/analytics/referrals_cohort'}
+                    , 'url': '/analytics/cohort/referrals'}
                 , {'name': 'Had an invite convert'
                     , 'data': analytics.used_referrals_per_month(self.db, cohort_users, year, month)
-                    , 'url': '/analytics/used_referrals_cohort'}
+                    , 'url': '/analytics/cohort/used_referrals'}
                 , {'name': "Signup on user's expression (funnel 2)"
                     , 'data': analytics.funnel2_per_month(self.db, cohort_users, year, month)
-                    , 'url': '/analytics/funnel2_cohort'}
+                    , 'url': '/analytics/cohort/funnel2'}
                 ]
         return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')
