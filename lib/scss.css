@@ -224,33 +224,34 @@ body.home.logged_out .nav {
   font-size: 12px;
   display: inline-block;
   background: #696e76;
+  cursor: pointer;
 }
 
-/* line 125, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 126, /home/abram/newhive/libsrc/scss/nav.scss */
 .has_count .count.zero {
   display: none;
 }
 
-/* line 128, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 129, /home/abram/newhive/libsrc/scss/nav.scss */
 .has_count .icon {
   display: inline-block;
   vertical-align: top;
 }
 
-/* line 133, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 134, /home/abram/newhive/libsrc/scss/nav.scss */
 #search {
   position: relative;
   display: inline-block;
 }
 
-/* line 137, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 138, /home/abram/newhive/libsrc/scss/nav.scss */
 #search_box {
   width: 150px;
   border-width: 5px;
   padding: 5px;
 }
 
-/* line 142, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 143, /home/abram/newhive/libsrc/scss/nav.scss */
 #search_submit {
   display: inline-block;
   width: 22px;
@@ -258,43 +259,43 @@ body.home.logged_out .nav {
   background-image: url("lib/skin/1/search_arrow.png");
   vertical-align: middle;
 }
-/* line 148, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 149, /home/abram/newhive/libsrc/scss/nav.scss */
 #search_submit:hover {
   background-image: url("lib/skin/1/search_arrow-hover.png");
 }
 
-/* line 152, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 153, /home/abram/newhive/libsrc/scss/nav.scss */
 #notifications {
   background-image: url("/lib/skin/1/feed.png");
 }
-/* line 154, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 155, /home/abram/newhive/libsrc/scss/nav.scss */
 #notifications.active {
   background-image: url("/lib/skin/1/feed-hover.png");
 }
-/* line 155, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 156, /home/abram/newhive/libsrc/scss/nav.scss */
 #notifications .count {
   margin: 27px 0 0 27px;
   background-color: #f72e4d;
 }
 
-/* line 162, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 163, /home/abram/newhive/libsrc/scss/nav.scss */
 #login_menu {
   width: 190px;
   padding: 10px;
 }
 
-/* line 163, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 164, /home/abram/newhive/libsrc/scss/nav.scss */
 #login_menu input[type=text], #login_menu input[type=password] {
   width: 170px;
 }
 
-/* line 165, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 166, /home/abram/newhive/libsrc/scss/nav.scss */
 #signup_btn:hover {
   background-color: #f72e4d;
   color: white;
 }
 
-/* line 167, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 168, /home/abram/newhive/libsrc/scss/nav.scss */
 #password_recovery_link {
   font-weight: normal;
   font-size: 12px;
@@ -303,7 +304,7 @@ body.home.logged_out .nav {
   white-space: nowrap;
 }
 
-/* line 174, /home/abram/newhive/libsrc/scss/nav.scss */
+/* line 175, /home/abram/newhive/libsrc/scss/nav.scss */
 #login_submit {
   float: right;
 }

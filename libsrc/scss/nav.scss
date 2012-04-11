@@ -121,6 +121,7 @@ body.home.logged_out .nav{
   font-size: 12px;
   display: inline-block;
   background: $color_grey_medium;
+  cursor: default;
 }
 .has_count .count.zero {
   display: none;
