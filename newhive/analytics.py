@@ -205,9 +205,14 @@ def visits_per_month(db, cohort_users = None, year=None, month=None, force={}):
 
     mr1_name = 'mr.actions_per_user_per_day'
     mr1 = db.mdb[mr1_name]
-    if mr1.count() == 0 or force.has_key(1):
+    if force.get(1):
         logger.info("Performing map reduce stage 1")
-        mr_collection = db.ActionLog._col.map_reduce(map1, reduce, mr1_name)
+        t0 = now()
+        latest = mr1.find_one(sort=[('_id.date', -1)])['_id']['date']
+        # The following line performs incremental map reduce, but depends on mongodb version >= 1.8
+        #db.ActionLog._col.map_reduce(map1, reduce, mr1_name, merge_output=True, query={'created': {'$gt': latest - 24*3600}})
+        db.ActionLog._col.map_reduce(map1, reduce, mr1_name )
+        logger.info("Elapsed time: %s", now() - t0)
     else:
         logger.info("Using cached map reduce stage 1")
 
@@ -219,9 +224,13 @@ def visits_per_month(db, cohort_users = None, year=None, month=None, force={}):
         }"""
     ca.name = 'visits_per_month'
     ca.collection = mr1
-    return ca.analysis(year, month)
+    ca.user_identifier = 'names'
+    ca.active_condition = {'value': {'$gte': 2}}
+    ca.date_key = '_id.date'
+    ca.start_date = datetime.datetime(2011,12,1,12)
+    return ca.analysis(year, month, force=True)
 
-def expressions_per_month(db, cohort_users = None, year=None, month=None):
+def expressions_per_month(db, cohort_users = None, year=None, month=None, force={}):
     ca = CohortAnalysis(db, cohort_users)
     ca.map = """
         function() {
@@ -233,7 +242,7 @@ def expressions_per_month(db, cohort_users = None, year=None, month=None):
     ca.collection = db.mdb.expr
     return ca.analysis(year, month)
 
-def referrals_per_month(db, cohort_users = None, year=None, month=None):
+def referrals_per_month(db, cohort_users = None, year=None, month=None, force={}):
     ca = CohortAnalysis(db, cohort_users)
     ca.map = """
         function() {
@@ -242,9 +251,10 @@ def referrals_per_month(db, cohort_users = None, year=None, month=None):
         """
     ca.name = 'referrals_per_month'
     ca.collection = db.mdb.referral
+    ca.start_date = datetime.datetime(2011,11,1,12)
     return ca.analysis(year, month)
 
-def used_referrals_per_month(db, cohort_users = None, year=None, month=None):
+def used_referrals_per_month(db, cohort_users = None, year=None, month=None, force={}):
     ca = CohortAnalysis(db, cohort_users)
     ca.map = """
         function() {
@@ -255,9 +265,10 @@ def used_referrals_per_month(db, cohort_users = None, year=None, month=None):
         """
     ca.name = 'used_referrals_per_month'
     ca.collection = db.mdb.referral
+    ca.start_date = datetime.datetime(2011,11,1,12)
     return ca.analysis(year, month)
 
-def funnel2_per_month(db, cohort_users = None, year=None, month=None):
+def funnel2_per_month(db, cohort_users = None, year=None, month=None, force={}):
     ca = CohortAnalysis(db, cohort_users)
     ca.map = """
         function() {
@@ -268,6 +279,7 @@ def funnel2_per_month(db, cohort_users = None, year=None, month=None):
     ca.name = 'funnel2_per_month'
     ca.collection = db.mdb.referral
     ca.user_identifier = 'names'
+    ca.start_date = datetime.datetime(2011,11,1,12)
     return ca.analysis(year, month)
 
 class CohortAnalysis:
@@ -278,6 +290,7 @@ class CohortAnalysis:
         self.active_condition = {'value': {'$gte': 1}}
         self.date_key = 'created'
         self.user_identifier = 'ids'
+        self.start_date = datetime.datetime(2011,4,1,12)
 
         if cohort_users:
             self.cohort_users = cohort_users
@@ -285,18 +298,18 @@ class CohortAnalysis:
             self.cohort_users = _cohort_users(self.db)
 
 
-    def analysis(self, year, month):
+    def analysis(self, year, month, force=False):
         if year and month:
             self.range = pandas.DateRange(datetime.datetime(year,month,1,12)
                                              , periods = 1
                                              , offset = pandas.DateOffset(months=1)
                                              )
         else:
-            self.range = pandas.DateRange(datetime.datetime(2011,4,1,12)
+            self.range = pandas.DateRange(self.start_date
                                              , end = datetime.datetime.now()
                                              , offset = pandas.DateOffset(months=1)
                                              )
-        mr_dict = self.map_reduce()
+        mr_dict = self.map_reduce(force=force)
         return self.cohort_analysis(mr_dict)
 
 
@@ -345,24 +358,24 @@ class CohortAnalysis:
         return rv
 
 def _cohort_users(db, stop_date=datetime.datetime.now()):
-    cohort_range = pandas.DateRange(start = datetime.datetime(2011,4,1,12)
+    cohort_range = pandas.DateRange(start = datetime.datetime(2011,7,1,12)
                                , end = stop_date
                                , offset = pandas.DateOffset(months=1)
                                )
-
-    cohort_users = {'names': OrderedDict(), 'ids': OrderedDict()}
+    data = []
     for date in cohort_range:
-        cohort_users['names'][date] = []
-        cohort_users['ids'][date] = []
+        item = {'names': [], 'ids': [], 'counts': 0.0}
         for u in db.User.search({
                         'created': {
                             '$gt': datetime_to_int(date)
                             , '$lt': datetime_to_int(date + pandas.DateOffset(months=1))
                             }
                         }):
-            cohort_users['names'][date].append(u['name'])
-            cohort_users['ids'][date].append(u.id)
-    return cohort_users
+            item['names'].append(u['name'])
+            item['ids'].append(u.id)
+            item['counts'] += 1
+        data.append(item)
+    return pandas.DataFrame(data, index=cohort_range)
 
 
 

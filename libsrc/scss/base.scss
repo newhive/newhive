@@ -17,6 +17,7 @@ $right_column_x: $left_padding + $left_column_width + $right_padding;
 @import "expression";
 @import "settings";
 @import "signup_flow";
+@import "chart";
 
 .centered { 
     text-align: center; 
