@@ -395,8 +395,9 @@ class User(HasSocial):
         return expr and ( (expr.get('auth', 'public') == 'public') or
             (self.id == expr['owner']) or (expr.id in self.starred_expr_ids) )
 
-    def feed_profile(self, limit=40, **args):
-        res = self.feed_search( { '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] } , **args)
+    def feed_profile(self, limit=40, spec={}, **args):
+        spec.update({ '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] })
+        res = self.feed_search(spec, **args)
         page = Page(islice(res, limit))
         page.next = page[-1]['created'] if len(page) == limit else None
         return page
@@ -460,6 +461,9 @@ class User(HasSocial):
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v, salt)
+    def update_password(self, v):
+        self.set_password(v)
+        self.update(password=self['password'])
 
     def get_url(self, path='profile'):
         return abs_url(domain = self.get('sites', [config.server_name])[0]) + path

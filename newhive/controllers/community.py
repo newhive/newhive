@@ -21,6 +21,9 @@ class CommunityController(ApplicationController):
             ,'profile/expressions/public' : partial(self.user_exprs, auth='public')
             ,'profile/expressions/private': partial(self.user_exprs, auth='password')
             ,'profile/activity'           : self.feed_profile
+            ,'profile/activity/like'      : partial(self.feed_profile, by_owner=True, spec={'class_name':'Star', 'entity_class':'Expr'})
+            ,'profile/activity/discussion': partial(self.feed_profile, spec={'class_name':'Comment'})
+            ,'profile/activity/broadcast' : partial(self.feed_profile, by_owner=True, spec={'class_name':'Broadcast'})
             ,'profile/activity/network'   : self.feed_network
             ,'profile/listening'          : self.listening
             ,'profile/listening/listeners': self.listeners
@@ -53,6 +56,8 @@ class CommunityController(ApplicationController):
             ,profile = path[0] == 'profile'
             ,network = path[-1] == 'network'
             ,activity = lget(path, 1) == 'activity'
+            ,hide_feed = (path[-1] != 'activity') and (path[-1] != 'discussion')
+            ,require_login = path == ['home','expressions','all']
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
             ,args = querystring(args)
@@ -75,7 +80,10 @@ class CommunityController(ApplicationController):
     def user_exprs(self, request, auth=None):
         return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
     def feed_network(self, request): return request.owner.feed_network(**query_args(request))
-    def feed_profile(self, request): return request.owner.feed_profile_entities(**query_args(request))
+    def feed_profile(self, request, by_owner=False, spec={}, **args):
+        args.update(query_args(request))
+        if by_owner: spec.update({'initiator': request.owner.id})
+        return request.owner.feed_profile_entities(spec=spec, **args)
     def listening(self, request): return request.owner.starred_user_page(**query_args(request))
     def listeners(self, request): return request.owner.starrer_page(**query_args(request))
 

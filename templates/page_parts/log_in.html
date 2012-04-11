@@ -1,21 +1,16 @@
 <form action='{{ secure_server }}' method='POST'>
   <div class="field username">
-      <b>Username</b><br>
-      <input id='username' type='text' name='username' value='{{ user['name'] }}'>
+      <input id='username' type='text' name='username' value='{{ user['name'] }}' placeholder='Username or email'>
       <div class='spacer'></div>
   </div>
   <div class="field password">
-      <b>Password</b><br>
-      <input type='password' name='secret'><br>
+      <input type='password' name='secret' placeholder='Password'><br>
   </div>
-  <div class="field" id="expires_and_recovery">
-      <input id='expires' type='checkbox' name='no_expires'>
-      <label for='expires'> Remember me </label>
-      <a href="#" id='password_recovery_link' onclick="showDialog('#dia_password_recovery'); return false;">Forgot Password?</a>
-  </div>
-  <div class="field">
+  <div class='spacer'></div>
+  <div class='field login submit'>
+    <a href="#" id='password_recovery_link' onclick="showDialog('#dia_password_recovery'); return false;">Forgot Password?</a>
     <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
   </div>
-  <input type='hidden' name='action' value='login'>
+  <input id='login_submit' type='hidden' name='action' value='login'>
   <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile -->
 </form>

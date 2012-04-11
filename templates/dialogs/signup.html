@@ -1,13 +1,19 @@
-<div id='dia_signup' class='dialog border selected' style='padding : 0px 30px 25px 30px; width : 350px'>
- <h2 style='font-family : Museo; font-size : 30px; white-space : nowrap;'>Want to join<br>The New Hive?<br>Request a beta account.</h2>
- {% set form_id='signup_form' %}
- {% include 'page_parts/signup_form.html' %}
+<div id='dia_signup' class='dialog border selected dia_default'>
+  <h3><span class='line1'>The New Hive is the easiest way<br>to express yourself online.</span></h3>
+  <div class='column left'>
+    <h3><span class='line2'>Request a beta invite:</span></h3>
+    {% set form_id='signup_form' %}
+    {% include 'page_parts/signup_form.html' %}
+  </div>
+  <div class='column right'>
+    <img src='/lib/skin/1/request_invite_overlay.png'>
+  </div>
 </div>
 
 <script>
 $(function() {
  var dia;
- $('#signup_button, .signup_button').click(function() {
+ $('#signup_btn, .signup_button').click(function() {
      dia = showDialog('#dia_signup');
      $(this).addClass('open');
      $('input[name=forward]').val(window.location);

@@ -47,29 +47,31 @@
       </div>
     </div>
     {% if user.logged_in %}
-    <form id='mail_form' action='{{ secure_server }}' method='POST'>
-        <input type='hidden' name='forward' value='{{ url|e }}'/>
-        <input type='hidden' name='id' value='{{ exp.id if exp }}'/>
-        <input type='hidden' name='action' value='mail_them'/>
-        <input type='hidden' name='subject' value='{{ user.fullname|e }} has sent you an expression'/>
-        <div class="line">
-            <div class='medbold label align'>Email(s) </div>
-            <input id='email_to' type='text' size='35' name='to'/>
-            <input id='send_copy' type='checkbox' name='send_copy' checked><label for='send_copy'> Send me a copy</label>
-        </div>
-        <div class="line">
-            <div class='medbold label align'>Message</div>
-            <textarea cols='40' rows='2' name='message' class='element' id="email_message">Check out this expression.</textarea>
-            <input id='email_send' type='submit' class='btn black rounded' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
-        </div>
-    </form>
+      <form id='mail_form' action='{{ secure_server }}' method='POST'>
+          <input type='hidden' name='forward' value='{{ url|e }}'/>
+          <input type='hidden' name='id' value='{{ exp.id if exp }}'/>
+          <input type='hidden' name='action' value='mail_them'/>
+          <input type='hidden' name='subject' value='{{ user.fullname|e }} has sent you an expression'/>
+          <div class="line">
+              <div class='medbold label align'>Email(s) </div>
+              <input id='email_to' type='text' size='35' name='to'/>
+              <input id='send_copy' type='checkbox' name='send_copy' checked><label for='send_copy'> Send me a copy</label>
+          </div>
+          <div class="line">
+              <div class='medbold label align'>Message</div>
+              <textarea cols='40' rows='2' name='message' class='element' id="email_message">Check out this expression.</textarea>
+              <input id='email_send' type='submit' class='btn black rounded' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
+          </div>
+      </form>
     {% endif %}
     
-    <div class="line"></div>
-    <div class="line embed">
-        <div class="label medbold align">Embed</div>
-        <textarea class="copy embed_code" onfocus="this.select()" onclick="this.select()" readonly="readonly" id="expression_embed_code"></textarea>
-    </div>
+    {% if embed_url %} 
+      <div class="line"></div>
+      <div class="line embed">
+          <div class="label medbold align">Embed</div>
+          <textarea class='copy embed_code' onfocus='this.select()' onclick='this.select()' readonly='readonly' id='expression_embed_code'><iframe src='{{ embed_url }}' style='width: 100%; height: 100%' marginwidth='0' marginheight='0' frameborder='0' vspace='0' hspace='0'></iframe></textarea>
+      </div>
+    {% endif %}
 
     <br/>
 </div>

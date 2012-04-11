@@ -187,7 +187,7 @@ function showDialog(name, opts) {
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
-function btn_listen_click(entity) {
+var btn_listen_click = require_login(function(entity) {
     btn = $('.listen_button.' + entity); // grab all listen buttons for this user
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
@@ -207,8 +207,8 @@ function btn_listen_click(entity) {
         }, 'json');
     }
     return false;
-}
-function btn_star_click(entity, btn) {
+});
+var btn_star_click = require_login(function(entity, btn) {
     var btn = $(btn);
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
@@ -233,7 +233,7 @@ function btn_star_click(entity, btn) {
             };
         }, 'json');
     }
-}
+});
 function reloadFeed(){
     $.get('?dialog=feed', function(data){
         $('#feed_menu').html(data);
@@ -247,7 +247,7 @@ function reloadFeed(){
     });
 }
 
-function btn_broadcast_click(btn) {
+var btn_broadcast_click = require_login(function(btn) {
     var btn = $('#btn_broadcast');
     if (! btn.hasClass('inactive')) {
         btn.addClass('inactive');
@@ -265,14 +265,13 @@ function btn_broadcast_click(btn) {
             //}
         }, 'json');
     }
-}
+});
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);
     var encodedUrl = encodeURIComponent(currentUrl), total=0;
     var encodedTitle = encodeURIComponent(document.title)
     element.find('.copy_url').val(currentUrl);
-    element.find('.embed_code').val('<iframe src="' + currentUrl + '" style="width: 100%; height: 100%" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0"></iframe>');
     element.find('a.twitter')
       .attr('href', 'http://twitter.com/share?url=' + encodedUrl);
     element.find('a.facebook')
@@ -501,11 +500,11 @@ function hover_add(o) {
     if(o.src) {
         o.src_d = o.src;
         o.src_h = hover_url(o.src_d);
-        $(o).hover(function() { o.src = o.src_h },
-            function() { if(!o.busy) o.src = o.src_d })
+        $(o).mouseenter(function() { o.src = o.src_h }).
+            mouseleave(function() { if(!o.busy) o.src = o.src_d });
     }
-    $(o).hover(function() { $(this).addClass('active'); },
-        function() { if(!this.busy) $(this).removeClass('active'); });
+    $(o).mouseenter(function() { $(this).addClass('active'); })
+        .mouseleave(function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
 hover_menu = function(handle, drawer, options) {
@@ -649,6 +648,24 @@ function eraseCookie(name) {
 
 function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
 
+var scale_nav = function(s) {
+    $('#nav .scale').each(function(i, app_div) {
+       var e = $(this);
+       if(!e.data('css')) {
+           var c = {
+               'width': e.width(),
+               'height': e.height(),
+               'font-size': e.css('font-size')
+           }
+           e.data('css', c);
+       }
+       var c = $.extend({}, e.data('css'));
+       for(var p in c) c[p] = Math.round(c[p] * s);
+       e.css(c);
+   });
+   $('#nav, #search_box ').css('font-size', s + 'em');
+}
+
 var place_apps = function() {
    $('.happ').each(function(i, app_div) {
        var e = $(this);
@@ -656,7 +673,6 @@ var place_apps = function() {
        if(!e.data('css')) {
            var c = {};
            map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height',
-               'border-left-width', 'border-top-width', 'border-right-width', 'border-bottom-width',
                'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
@@ -735,11 +751,6 @@ var asset = function(path) {
     return debug_mode ? '/lib/libsrc/' + path : '/lib/' + path;
 }
 
-var buildSearch = function(){
-  var search = $('#search_box').val();
-  return server_url + "search?q=" + escape(search);
-}
-
 function sendRequestViaMultiFriendSelector() {
   function requestCallback(response) {
     $('#dia_referral .btn_dialog_close').click();
@@ -754,4 +765,15 @@ function sendRequestViaMultiFriendSelector() {
     , title: 'Invite Friends to Join The New Hive'
     , filters: ['app_non_users']
   }, requestCallback);
+}
+
+// works as handler or function modifier
+function require_login(fn) {
+    var check = function() {
+        if(logged_in) return fn.apply(null, arguments);
+        showDialog('#dia_must_login');
+        return false;
+    }
+    if(fn) return check;
+    else return check();
 }
