@@ -4,8 +4,8 @@ fun and easy to create and update all of your media and ideas in one ad-free
 space. Decide what you want to share to the community, the world and all your
 social media sites. What's your vision to change the world?"""
 
-embed_code_description = """Have media you'd like to share from another site? Paste in the URL's from vimeo or youtube here to include them in your expression. Or enter "embed" code found on the "share button" of many sites including- Grooveshark, googlemaps, soundcloud, bandcamp, tokbox, Flickr, paypal buttons, Ted Talks, and More! We also support iframes!"""
-embed_code_textarea = """Paste your url or embed code here."""
+embed_code_description = """Paste in the <b>URL</b> for Vimeo <span class='active'>+</span> YouTube videos or enter the <b>embed code</b> found on the share button of many sites including: Grooveshark, Soundcloud, Google Maps, Mailchimp, Tokbox, Flickr, PayPal, Ted <span class='active'>+</span> more. We also support <b>iframes</b>."""
+embed_code_textarea = """Paste your url or embed code here"""
 image_embed_textarea = """Paste the web address for the image"""
 image_embed_as_background = """Set as background image"""
 

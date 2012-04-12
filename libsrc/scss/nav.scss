@@ -1,7 +1,6 @@
 $nav_height: 50px;
 #nav { height: $nav_height; }
 
-#nav { font-weight: bold; }
 #nav .nav_icon {
     display : inline-block;
     height: $nav_height;
@@ -60,7 +59,8 @@ body.home.logged_out .nav{
   .menu_item {
       clear: both;
       overflow: hidden;
-      }
+  }
+  font-weight: bold;
 }
 
 #exp_owner { background-color : $color_selected; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; vertical-align: top; }
