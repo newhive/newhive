@@ -181,7 +181,7 @@ def datetime_to_str(dt):
     return str(datetime_to_int(dt))
 
 
-def visits_per_month(db, cohort_users = None, year=None, month=None, force={}):
+def visits_per_month(db, cohort_users = None, year=None, month=None, force=False):
     map1 = """
         function() {
             date = new Date((this.created - 12*3600) * 1000);
@@ -205,7 +205,7 @@ def visits_per_month(db, cohort_users = None, year=None, month=None, force={}):
 
     mr1_name = 'mr.actions_per_user_per_day'
     mr1 = db.mdb[mr1_name]
-    if force.get(1):
+    if force:
         logger.info("Performing map reduce stage 1")
         t0 = now()
         latest = mr1.find_one(sort=[('_id.date', -1)])['_id']['date']
@@ -228,9 +228,9 @@ def visits_per_month(db, cohort_users = None, year=None, month=None, force={}):
     ca.active_condition = {'value': {'$gte': 2}}
     ca.date_key = '_id.date'
     ca.start_date = datetime.datetime(2011,12,1,12)
-    return ca.analysis(year, month, force=True)
+    return ca.analysis(year, month, force=force)
 
-def expressions_per_month(db, cohort_users = None, year=None, month=None, force={}):
+def expressions_per_month(db, cohort_users = None, year=None, month=None, force=False):
     ca = CohortAnalysis(db, cohort_users)
     ca.map = """
         function() {
@@ -240,9 +240,9 @@ def expressions_per_month(db, cohort_users = None, year=None, month=None, force=
         }"""
     ca.name = 'expressions_per_month'
     ca.collection = db.mdb.expr
-    return ca.analysis(year, month)
+    return ca.analysis(year, month, force=force)
 
-def referrals_per_month(db, cohort_users = None, year=None, month=None, force={}):
+def referrals_per_month(db, cohort_users = None, year=None, month=None, force=False):
     ca = CohortAnalysis(db, cohort_users)
     ca.map = """
         function() {
@@ -252,9 +252,9 @@ def referrals_per_month(db, cohort_users = None, year=None, month=None, force={}
     ca.name = 'referrals_per_month'
     ca.collection = db.mdb.referral
     ca.start_date = datetime.datetime(2011,11,1,12)
-    return ca.analysis(year, month)
+    return ca.analysis(year, month, force=force)
 
-def used_referrals_per_month(db, cohort_users = None, year=None, month=None, force={}):
+def used_referrals_per_month(db, cohort_users = None, year=None, month=None, force=False):
     ca = CohortAnalysis(db, cohort_users)
     ca.map = """
         function() {
@@ -266,21 +266,21 @@ def used_referrals_per_month(db, cohort_users = None, year=None, month=None, for
     ca.name = 'used_referrals_per_month'
     ca.collection = db.mdb.referral
     ca.start_date = datetime.datetime(2011,11,1,12)
-    return ca.analysis(year, month)
+    return ca.analysis(year, month, force=force)
 
-def funnel2_per_month(db, cohort_users = None, year=None, month=None, force={}):
+def funnel2_per_month(db, cohort_users = None, year=None, month=None, force=False):
     ca = CohortAnalysis(db, cohort_users)
     ca.map = """
         function() {
-            if (this.url ) {
+            if ( this.url ) {
                 emit(this.url.match(/([a-zA-Z0-9]+)?.?(thenewhive.com)/)[1], 1);
             }
         }"""
     ca.name = 'funnel2_per_month'
-    ca.collection = db.mdb.referral
+    ca.collection = db.mdb.contact_log
     ca.user_identifier = 'names'
     ca.start_date = datetime.datetime(2011,11,1,12)
-    return ca.analysis(year, month)
+    return ca.analysis(year, month, force=force)
 
 class CohortAnalysis:
     def __init__(self, db, cohort_users=None):
