@@ -266,21 +266,21 @@ def used_referrals_per_month(db, cohort_users = None, year=None, month=None, for
     ca.name = 'used_referrals_per_month'
     ca.collection = db.mdb.referral
     ca.start_date = datetime.datetime(2011,11,1,12)
-    return ca.analysis(year, month)
+    return ca.analysis(year, month, force=force)
 
-def funnel2_per_month(db, cohort_users = None, year=None, month=None, force={}):
+def funnel2_per_month(db, cohort_users = None, year=None, month=None, force=False):
     ca = CohortAnalysis(db, cohort_users)
     ca.map = """
         function() {
-            if (this.url ) {
+            if ( this.url ) {
                 emit(this.url.match(/([a-zA-Z0-9]+)?.?(thenewhive.com)/)[1], 1);
             }
         }"""
     ca.name = 'funnel2_per_month'
-    ca.collection = db.mdb.referral
+    ca.collection = db.mdb.contact_log
     ca.user_identifier = 'names'
     ca.start_date = datetime.datetime(2011,11,1,12)
-    return ca.analysis(year, month)
+    return ca.analysis(year, month, force=force)
 
 class CohortAnalysis:
     def __init__(self, db, cohort_users=None):
