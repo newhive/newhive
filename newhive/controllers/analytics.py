@@ -185,10 +185,13 @@ class AnalyticsController(ApplicationController):
                     }
                 }
 
-        metric = cohort_map[lget(request.path.split("/"), 2)]
+        try:
+            metric = cohort_map[lget(request.path.split("/"), 2)]
+        except KeyError:
+            return self.serve_404(request, response)
         p4 = lget(request.path.split("/"), 3)
         if request.args.get("force") == "true":
-            force = {1: True}
+            force = True
         else:
             force = {}
         response.context['data'] = metric['data'](self.db, cohort_users, force=force)
