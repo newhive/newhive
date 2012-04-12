@@ -1,112 +1,315 @@
 {% extends "main.html" %}
+{% block body_classes %}{{super()}} user_settings{% endblock %}
+{% set update = True if action == 'update' %}
+
+{% block head %}
+<script>
+function user_check(user_name){
+  var n = $('#name').val().trim().toLowerCase();
+  $('#name').val(n);
+  if( $('#name').val().length < 3 ) {
+      $('#name_availability').html("Sorry, that username isn't available")
+                             .show().removeClass('valid').addClass('invalid');
+      return false;
+  }
+  if( ! n.match(/^[a-z][a-z0-9]{2,23}$/i) ) {
+      $('#name_availability').html("Username must be only 24 or less letters and numbers, and start with a letter (no spaces or punctuation, thank you).")
+                             .show().removeClass('valid').addClass('invalid');
+      return false;
+  }
+
+  $.ajax('/user_check', {
+    type: "GET",
+    dataType: 'json',
+    data: {action: "user_check", name: user_name},
+    success: function(data){
+      if (data) {
+          $('#name_availability').html("Your website will be:<br><code>" + user_name + ".{{ server_name }}</code>")
+                                 .show().addClass('valid').removeClass('invalid');
+      } else {
+          $('#name_availability').html("Sorry, that username isn't available")
+                                 .show().removeClass('valid').addClass('invalid');
+      }
+    },
+    error: function(){$('#name_unavailable').html("Sorry, that username isn't available")
+                                            .show().removeClass('valid').addClass('invalid');}
+  });
+}
+
+function validate(opts) {
+    opts = $.extend({}, opts);
+    if (! opts.update) {
+        var n = $('#name').val().trim().toLowerCase();
+        $('#name').val(n);
+        if( $('#name').val().length < 3 ) {
+            alert('Please enter username of at least 3 letters, thank you.');
+            return false;
+        }
+        if( ! n.match(/^[a-z][a-z0-9]{2,}$/i) ) {
+            alert('Username must be only letters and numbers, and start with a letter (no spaces or punctuation, thank you).');
+            return false;
+        }
+        if( ! $('#name_availability').hasClass('valid') ) {
+            alert("Your username isn't avaialable, please try again.");
+            return false;
+        }
+        if( ! $('[name=tos]').is(':checked') ) {
+            alert('Please agree to Terms of Service.');
+            return false;
+        }
+    } else {
+        if( ! $('#p0').val().length > 0) {
+            alert('Current Password is required to change any profile settings')
+            return false;
+        }
+    }
+
+    if (!opts.update || $('#p1').val().length > 0) {
+        if( $('#p1').val().length < 5 ) {
+            alert((opts.update ? 'New ' : '') + 'Password is too short. Password must be at least 5 characters.');
+            return false;
+        }
+        if( $('#p1').val() != $('#p2').val() ) {
+            alert('Passwords do not match');
+            return false;
+        }
+        if( ! $('[name=email]').val().match(/^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+[a-zA-Z0-9]{2,4}$/) ) {
+            alert('Please enter valid email address.');
+            return false;
+        }
+    }
+
+    var age = $('#age').val();
+    if (age){
+        if (!age.match(/^\d+$/) || parseInt(age) < 13 || parseInt(age) > 122){
+            alert('Age must be a number between 13 and 122');
+            return false;
+        }
+    }
+
+    return true;
+};
+
+function post_update() {
+    callback = function(data){
+      console.log(data);
+      alert(data.message);
+    };
+    asyncSubmit($('#form'), callback);
+};
+
+var update_friends_to_listen = function(){
+  var id_map = function(i, el) {
+    return $(el).attr('data-id');
+  };
+  var friends = $('.friend .listen');
+  $('input[name=friends_to_listen]').val(
+    friends.filter('.active').map(id_map).toArray().join(",")
+  );
+  $('input[name=friends_not_to_listen]').val(
+    friends.not('.active').map(id_map).toArray().join(",")
+  );
+};
+
+var disconnectFacebook = function(){
+  $.post('/', {action: 'facebook_disconnect'}, function(){
+    $('#column_3').hide();
+    $('#dia_facebook_disconnect .btn_dialog_close').click();
+    $('#error').html('Your Facebook account has been disconnected');
+  });
+}
+
+$(document).ready(function(){
+  {% if update %}
+      var update = true;
+  {% else %} 
+      var update = false;
+  {% endif %}
+  $('#name').blur(function(){
+    user_check($(this).val());
+  });
+  $('#form').submit(function(){
+    if (! validate({'update': update})) { return false }
+  });
+  $('.friend .listen').click(function(){
+    $(this).toggleClass('active');
+    update_friends_to_listen();
+  });
+
+  $('#listen_to_friends').click(function(e){
+    if ($('#listen_to_friends').is(':checked')) {
+      $('.friend .listen').addClass('active');
+    } else { 
+      $('.friend .listen').removeClass('active');
+    };
+    update_friends_to_listen();
+  });
+  // Default to listening to all friends on initial signup
+  if (!update) {
+    $('#listen_to_friends').attr('checked', 'checked');
+    $('.friend .listen').addClass('active');
+    update_friends_to_listen();
+  }
+  // Set up hover events on profile picture change
+  var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
+  var hoverout = function(){ $('#profile_thumb .message').remove(); };
+  $('#profile_thumb img').hover(hoverin, hoverout);
+  $('#profile_thumb_file_input').click(function() {
+    //$('#profile_thumb_upload_form input[name="forward"]').val(window.location);
+
+  });
+});
+var profile_thumb_choose = function(){
+  asyncUpload({success: function(data){
+    $('input[name=thumb_file_id]').val(data.file_id);
+    $('#profile_thumb a').html('<img src="' + data.thumb + '"/>');
+  }});
+  return false;
+};
+</script>
+{{ super() }}
+{% endblock head %}
 
 {% block content %}
- <div class='fathead'>
-  <img src='/lib/skin/1/plus_lg.png'> Create your account
+ <div  class='fathead'>
+   {% if not update %}
+   <div id='profile_thumb'>
+     <a href="#" onclick="profile_thumb_choose(); return false;" alt="Choose Picture">
+       {% if f.thumb %}
+         <img src="{{f.thumb}}"/>
+       {% else %}
+         <div class='placeholder rounded'>Click Here to<br/>Upload A Profile Image</div>
+       {% endif %}
+     </a>
+   </div>
+   {% endif %}
+   <div class="title"><h1>{{ ui.create_account_title if action == 'create' else "+ " ~ ui.update_account_title }}</h1></div>
+   <p class="active" id="error">{{message |e}}</p>
  </div>
 
- <div style='margin : 0 auto; width : 80%;'>
-  <div style='float : left; text-align:left; margin : 0 25px 50px 50px; vertical-align : top'>
- 
-  <form id='form' method='POST'>
-   <input type='hidden' name='action' value='user_create'>
- 
-   <b>Username</b><br>
-   <input id='name' type='text' name='name' value='{{f.name}}'><br>
-   <div class="form_validation_info" id="name_availability" style="display:none">Sorry, that name isn't available</div>
-   <br>
- 
-   <b>Password</b><br>
-   <input id='p1' type='password' name='password' value='{{f.secret}}'><br>
-   <b>Repeat</b><br>
-   <input id='p2' type='password' value='{{f.secret}}'><br>
-   <br>
-   
-   <b>Email</b><br>
-   <input type='text' name='email' value='{{f.email}}'><br>
-   <br>
-   
-   <b>Full Name</b><br>
-   <input type='text' name='fullname' value='{{f.fullname}}'><br>
-   <br>
- 
-   <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
-   <br>
- 
-   <input class='black btn rounded' type='submit' value='Create Account'>
-  
-  </form>
-  <script>
-    $(document).ready(function(){
-      $('#name').blur(function(){
-        user_check($(this).val());
-      });
-    });
-    function user_check(user_name){
-      var n = $('#name').val().trim().toLowerCase();
-      $('#name').val(n);
-      if( $('#name').val().length < 3 ) {
-          $('#name_availability').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');
-          return false;
-      }
-      if( ! n.match(/^[a-z][a-z0-9]{2,}$/i) ) {
-          $('#name_availability').html("Username must be only letters and numbers, and start with a letter (no spaces or punctuation, thank you).").show().removeClass('valid').addClass('invalid');
-          return false;
-      }
- 
-      $.ajax({
-        type: "POST",
-        dataType: 'json',
-        data: {action: "user_check", name: user_name},
-        success: function(data){
-          if (data) {
-            $('#name_availability').html("Your website will be:<br><code>" + user_name + ".{{ server_name }}</code>").show().addClass('valid').removeClass('invalid');
-          } else {
-            $('#name_availability').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');
-          }
-        },
-        error: function(){$('#name_unavailable').html("Sorry, that username isn't available").show().removeClass('valid').addClass('invalid');}
-      });
-    }
- function validate() {
-     var n = $('#name').val().trim().toLowerCase();
-     $('#name').val(n);
-     if( $('#name').val().length < 3 ) {
-         alert('Please enter username of at least 3 letters, thank you.');
-         return false;
-     }
-     if( ! n.match(/^[a-z][a-z0-9]{2,}$/i) ) {
-         alert('Username must be only letters and numbers, and start with a letter (no spaces or punctuation, thank you).');
-         return false;
-     }
-     if( ! $('#name_availability').hasClass('valid') ) {
-         alert("Your username isn't avaialable, please try again.");
-         return false;
-     }
- 
-     if( $('#p1').val().length < 4 ) {
-         alert('Password too short');
-         return false;
-     }
-     if( $('#p1').val() != $('#p2').val() ) {
-         alert('Passwords do not match');
-         return false;
-     }
-     if( ! $('[name=email]').val().match(/^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+[a-zA-Z0-9]{2,4}$/) ) {
-         alert('Please enter valid email address.');
-         return false;
-     }
-     if( ! $('[name=tos]').is(':checked') ) {
-         alert('Please agree to Terms of Service.');
-         return false;
-     }
- }
- $('#form').submit(validate);
-</script>
-  </div><div style='float : right; margin : 0 0 50px 25px; vertical-align : top'>
-   <b>Terms of Service</b><br>
-   <iframe src='/lib/doc/tos.html' style='height:400px;width:400px;' class='border'></iframe>
-  </div>
- </div>
+ <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
 
+     <div class="column" id="column_1" style='clear : both; text-align:left; margin : 0 0px 50px 0; vertical-align : top;'>
+       <input type='hidden' name='action' value='{{"user_update" if update else "user_create"}}'>
+       <input type='hidden' name='thumb_file_id' value='{{f.thumb_file_id}}'>
+   
+       <b>Username</b><br>
+       <input id='name' type='text' name='name' value='{{f.name}}' {{'disabled="disabled"' if update}}><br>
+       {# if update %}
+       <div class="user_name_change_text">If you want to change your username and associated domain, please email <a href="mailto:info@thenewhive.com">info@thenewhive.com</a></div>
+       {% endif #}
+       <div class="form_validation_info" id="name_availability" style="display:none">Sorry, that name isn't available</div>
+       <br>
+   
+       <b>Display Name</b><br>
+       <input type='text' name='fullname' value='{{f.fullname}}'><br>
+       <br>
+       <br>
+       <b class='error'>Terms of Service</b><br>
+       <br>
+       <b>
+         <span class='inactive'>1.</span> You own your information<br>
+         <span class='inactive'>2.</span> We'll never put ads on your<br>&nbsp;&nbsp;&nbsp;&nbsp;expressions<br>
+         <span class='inactive'>3.</span> Have fun<br>
+         <span class='inactive'>4.</span> Don't be mean or obscene<br>
+         <span class='inactive'>5.</span> Encourage expression<br>
+       </b><br>
+
+       <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false;" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
+       <br>
+       
+       {% if not update %}
+       <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
+       {% endif %}
+ 
+     </div>
+     <div class="column" id="column_2">
+       {% if update %}
+       <b>Current Password</b> <span class='required'>*required</span><br>
+       <input id='p0' type='password' name='old_password' value='{{f.secret}}'><br>
+       <br>
+       {% endif %}
+
+       <b>{{'New ' if update}}Password</b><br>
+       <input id='p1' type='password' name='password' value='{{f.secret}}'><br>
+       <br>
+
+       <b>Repeat {{'New ' if update}}Password</b><br>
+       <input id='p2' type='password' value='{{f.secret}}'><br>
+       <br>
+       
+       <b>Email</b><br>
+       <input type='text' name='email' value='{{q.email if q.email else f.email}}'><br>
+       <br>
+
+       {% if not update %}
+       Optional:<br/>
+       <div id="gender_wrapper">
+         <b>Gender</b><br>
+         <select name="gender">
+           <option value=""></option>
+           <option value="M">Male</option>
+           <option value="F">Female</option>
+           <option value="O">Other/NA</option>
+         </select>
+         <br>
+       </div>
+
+       <b>Age</b><br>
+       <input id='age' type='text' name='age' value='{{q.age if q.age else f.age}}'><br>
+       <br>
+       {% endif %}
+       <input type="hidden" name="friends_to_listen"/>
+       <input type="hidden" name="friends_not_to_listen"/>
+       {% if f.facebook %}
+         <input type="hidden" val='{{f.facebook | json }}' name="facebook">
+       {% endif %}
+   
+   {% if update %}
+     {% if user.has_facebook %}
+       <div style="margin-bottom:20px; font-size:13px;">
+         <input name="fb_disconnect" type="checkbox" id='fb_disconnect'><label for="fb_disconnect">Disconnect your Facebook Account</label>
+         <input name="fb_disconnect_allow_finding" type="hidden">
+       </div>
+     {% endif %}
+     <input class='black btn rounded' type='submit' value='Save Changes' >
+   {% else %}
+     <input class='black btn rounded' type='submit' value='Create Account'>
+   {% endif %}
+   </div>
+   <div class="column" id="column_3">
+     {% if friends and not update%}
+       <h3>Listen to your Friends:</h3>
+       {% if listening_count and listening_count > 0 %}
+       <p>You are already listening to {{listening_count}} facebook friend{{"s" if listening_count>1}}</p>
+       {% endif %}
+       {% if friends %}
+         <input type="checkbox" id='listen_to_friends'/><label for="listen_to_friends">{{ui.listen_to_all_friends | e}}</b></label>
+         {% for friend in friends -%}
+           <div class="friend">
+             <img src="{{friend.fb_thumb}}"/>
+             {{- friend.facebook.name -}}
+             <div data-id="{{friend.facebook.id}}" class="listen"></div>
+           </div>
+         {% endfor %}
+       {% endif %}
+     {% endif %}
+     {% if update %}
+       {% if not user.has_facebook %}
+         <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'settings']);"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
+       {% else %}
+       {% endif %}
+     {% endif %}
+   </div>
+ </form>
+{% endblock %}
+
+{% block dialogs %}
+{{super()}}
+<div id='dia_facebook_disconnect' class='dialog border selected center' style='width : 25em; padding : 20px'>
+ <h2>Disconnect Facebook</h2>
+ Are you sure you want to disconnect your Facebook account?<br><br>
+ <input id='disconnect_facebook_yes' type='button' class='btn black rounded' value='Yes' onclick="disconnectFacebook();">&nbsp; &nbsp; &nbsp; 
+ <input id='disconnect_facebook_no' type='button' class='btn black rounded' value='No' onclick="$('#dia_facebook_disconnect .btn_dialog_close').click();">
+</div>
 {% endblock %}

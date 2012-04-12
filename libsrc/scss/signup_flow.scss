@@ -1,0 +1,20 @@
+.disclaimer {
+  color: $color_grey_medium;
+  font-size: 13px;
+  margin: 5px 0;
+}
+
+.signup_without_facebook {
+  color: $color_grey_medium;
+  font-size: 18px;
+}
+
+body.invited{
+  background: url('/lib/skin/1/congratulations_tnh.jpg') repeat-x bottom;
+  min-height: 644px;
+}
+
+#example_expressions{
+  height: 257px;
+  margin-top: 50px;
+}

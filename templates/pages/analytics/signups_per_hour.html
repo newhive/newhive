@@ -1,0 +1,52 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+{{ super() }}
+<script>
+  var data = {{data}};
+  var chart;
+  $(function(){
+    chart = d3.select("#content").append("svg").attr("class", "chart").attr("width", 1300).attr("height", 620);
+    chart.opts = {width: 1200, height: 500, paddingTop: 10, paddingLeft: 20};
+    var y = chart.y = d3.scale.linear().domain([0, d3.max(data.values)]).range([0, chart.opts.height]);
+    var x = chart.x = function(d,i) { return Math.floor(chart.opts.width/data.values.length) * i + chart.opts.paddingLeft + 10 };
+    x.rangeBand = function() { return chart.opts.width/data.values.length };
+    x.label = function(d,i){ return x(d,i) + x.rangeBand()/4};
+    y.label = function(d,i){ return chart.opts.height + chart.opts.paddingTop + 5 };
+
+    chart.selectAll("line")
+      .data(y.ticks(10)).enter().append("line")
+      .attr("x2", chart.opts.paddingLeft).attr("x1", 1300)
+      .attr("y2", function(d){ return chart.opts.height + chart.opts.paddingTop - y(d)})
+      .attr("y1", function(d){ return chart.opts.height + chart.opts.paddingTop - y(d)})
+      .style("stroke", "#ccc");
+
+    chart.selectAll(".y-label")
+      .data(y.ticks(10)).enter().append("text").attr("class", "y-label")
+      .attr("x", chart.opts.paddingLeft).attr("y", function(d){ return chart.opts.height + chart.opts.paddingTop - y(d) })
+      .attr("dx", -3).attr("dy", ".35em").attr("text-anchor", "end").style("font-size", "12px")
+      .text(String);
+
+    chart.selectAll(".x-label")
+      .data(data.values).enter().append("text").attr("class", "x-label")
+      .attr("x", x.label).attr("y", y.label)
+      .attr("dx", 0).attr("text-anchor", "left").style("font-size", "10px").style("color", "#888")
+      .attr("transform", function(d,i){ return "rotate(45," + x.label(d,i) + "," + y.label(d,i) + ")"})
+      .text(function(d,i){return epochToDate(data.times[i])});
+
+    chart.selectAll("rect")
+      .data(data.values).enter().append("rect")
+      .attr("x", x).attr("width", x.rangeBand() - 1).attr("height", y)
+      .attr("y", function(d) { return chart.opts.height + chart.opts.paddingTop - y(d) })
+      .style("fill", "steelblue");
+
+  });
+</script>
+{% endblock %}
+
+{% block header %}<h1>Signups Per Day</h1>{% endblock %}
+{% block table_classes %}{% endblock %}
+{% block table_head %}
+{% endblock %}
+{% block table_body %}
+{% endblock %}

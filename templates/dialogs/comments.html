@@ -1,0 +1,65 @@
+<div id='dia_comments'>
+  <div class='header'>
+    <img class="icon" src='/lib/skin/1/discussion.png' title='Discussion Icon' />
+    <h3 class='title'>
+     {% if expr.comment_count > 0 %}
+      Discussion<span class='comments_count'> ({{ expr.comment_count }})</span>
+     {% elif user.logged_in %}
+      Start the discussion <span class='comments_count'>:)</span>
+     {% else %}
+      Discussion
+     {% endif %}
+    </h3>
+    {% if user.logged_in %}
+     <form>
+       <input type="hidden" name="action" value="add_comment" />
+       <input type="hidden" name="expression" value="{{exp.id}}" />
+       <textarea name="comment"></textarea>
+       <input type="submit" class="btn black rounded" value="Enter" onclick="submitComment(); return false;"/>
+     </form>
+    {% else %}
+     <h4 class='sub title'>&nbsp; Please log in to participate.</h4>
+    {% endif %}
+  </div>
+  <div id="comments">
+    {% for comment in expr.comments %}
+      {% include "partials/comment.html" %}
+    {% endfor %}
+  </div>
+</div>
+<script>
+  function submitComment() {
+      var submit = $('#dia_comments input[type=submit]');
+      if (!submit.hasClass('inactive')) {
+          submit.addClass('inactive');
+          _gaq.push(['_trackEvent', 'comment', 'submit']);
+          $.post('', $('#dia_comments form').serialize(), function(data) {
+              $('#dia_comments input[type=submit]').removeClass('inactive');
+              var comments_div = $('#comments');
+              comment_count += 1;
+              comments_div.append(data);
+              $('#dia_comments .comments_count').html(' (' + comment_count + ')');
+              $('#btn_comment').attr('data-count', comment_count);
+              $('#dia_comments textarea').val('');
+              commentSize();
+              comments_div[0].scrollTop = 100000;
+              reloadFeed();
+              iconCounts();
+          }, 'text');
+      }
+  };
+  function commentSize(){
+    var header_height = $('#dia_comments .header').height();
+    var dialog_height = $('#dia_comments').height();
+    var window_height = $(window).height();
+    var new_height = window_height * 0.75 - header_height - 50;
+    if ($('#comments').height() > new_height) {
+      $('#comments').height(new_height);
+    }
+    center($('#dia_comments'));
+  };
+  commentSize();
+  $('.comment_content .text').each(function(i, e) { $(e).html(autoLink($(e).html())) });
+  $('.comment_content a').each(link_target);
+  setTimeout('commentSize(); $("#comments")[0].scrollTop = 100000;', 0);
+</script>

@@ -1,0 +1,44 @@
+{% extends "emails/colorful.html" %}
+{% block body%}
+
+<h2 style="margin: 20px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
+  Hi {{name | e}},
+</h2>
+<h2 style="margin: 5px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
+  <span style="color: #f72e4d;">Thank you</span> for signing
+</h2>
+<h2 style="margin:  5px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
+  up for a beta account.
+</h2>
+
+<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;">
+  We are getting The New Hive ready for you.</br>
+  Expect to get a beta invitation in your inbox ASAP.
+</p>
+<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;"><strong>Talk to you soon,</strong><br/>
+  The New Hive team
+</p>
+<table width="484px;" style="margin: 20px 0 0 45px; background-color: #ffffff;">
+  <tr>
+    <td width="158px;" rowspan="2">
+      <a style="color: #000000; text-decoration: none;" href="{{ url }}">
+        <img style="margin: 16px;" src="{{ thumbnail_url }}" />
+      </a>
+    </td>
+    <td width="314px;">
+      <a style="color: #000000; text-decoration: none;" href="{{ url }}">
+        <h3 style="margin: 16px 0 0 0; font-size: 22px;">Explore Expressions</h3>
+      </a>
+      <h4 style="margin: 10px 0 0 0; font-size: 17px; font-weight: normal;">{{ "#creative #expression #story" | e }}</h4>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a style="color: #000000; text-decoration: none;" href="http://thenewhive.thenewhive.com" style="color: #7ba008;">
+        <h3 style="margin: 0; font-size: 22px;">The New Hive</h3>
+      </a>
+    </td>
+  </tr>
+</table>
+<h3 style="text-align: center; margin: 30px; font-size: 24px;"><a style="color: #f45518; text-decoration: none;" href="http://thenewhive.com">thenewhive.com</a></h3>
+{% endblock %}

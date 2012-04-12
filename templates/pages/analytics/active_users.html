@@ -1,0 +1,66 @@
+{% extends "pages/analytics/base.html" %}
+
+{% set auths = ["public", "private", "total"] %}
+{% block header %}
+{{ super() }}
+{% if start %}
+<h3>Expressions created by user in custom date range {{start}} to {{end}}</h3>
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Users</th>
+      {% for i in range(1,31) %}
+      <th>{{i}}+</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for auth in auths %}
+    <tr>
+      <td>{{auth}}</td>
+      {% for i in range(31) %}
+      <td>{{custom_histogram[auth][i]}}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock header %}
+{% block table_head %}
+  <tr>
+    <th colspan=3></th>
+    {% for auth in ["public", "private", "total"] %}
+    <th width="26%" colspan=6>{{ auth }}</th>
+    {% endfor %}
+  </tr>
+  <tr>
+    <th width="7%">Name</th>
+    <th width="5%">Age in weeks</th>
+    <th width="10%">Last Login</th>
+    {% for auth in ["public", "private", "total"] %}
+    {% for timerange in ["1st mo", "week", "month", "custom", "total"] %}
+    <th width="4%">{{ timerange }}</th>
+    {% endfor %}
+    <th width="5%">Per Wk</th>
+    {% endfor %}
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  {% for user in active_users %}
+  <tr>
+    <td><a href="http://{{ user['name'] }}.thenewhive.com">{{ user['name'] }}</a></td>
+    <td>{{ (user.age/7 ) | round(2,'ceil') if user.age}}</td>
+    <td data-type="epoch_date">{{ user.updated }}</td>
+    {% for auth in ["public", "private", "total"] %}
+    <td>{{ user.first_month.expressions[auth] if user and user.first_month and user.first_month.expressions }}</td>
+    {% for timerange in ["week", "month", "custom", "total"] %}
+    <td>{{ user[auth][timerange] | int if (timerange != 'custom' or user.include_custom)}}</td>
+    {% endfor %}
+    <td>{{ (user[auth]['total'] / (user['age']/7)|round(0, 'ceil')) | round(2) if user.age }} </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+{% endblock %}

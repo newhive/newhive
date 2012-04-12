@@ -1,0 +1,91 @@
+{% extends "emails/base.html" %}
+
+{% block body %}
+
+{% call h1() %}
+Dear New Hive community,
+{% endcall %}
+
+<div style="margin: 0 0 30px 0; padding: 0; width: 100%; text-align: center;">
+  <img src="http://thenewhive.com/lib/skin/1/collage.png" />
+</div>
+
+{% call p(class=p_outside_box) %}
+We're excited to announce some new features, fixes and a bunch of new
+expressions (thanks to everyone in the New Hive community)!
+{% endcall %}
+
+{% call p(class=p_outside_box) %}
+Things are changing fast around here.  We haven't "launched" publicly, but the
+time has come to open up our little community to the rest of the net.
+{% endcall %}
+
+<table style="margin: 0 0 43px 0;">
+  <tr>
+    <td width="45px"></td>
+    <td width="{{ 586 - (2*45) }}px" style="background-color: #ffffff; padding: 20px 12px;">
+{% call h2() %}
+Check out the new features we're rolling out this week:
+{% endcall %}
+
+{% call p("Invite Your Friends") %}
+If you dig The New Hive, pass it on! The next time you log
+in you'll see a pink box in the upper left hand corner.  Click it and you can
+send New Hive invites to your friends.
+{% endcall %}
+
+{% call p("Star") %}
+See a cool expression or collection that you want to keep track of?  Click the
+"star" icon in the upper right corner.  "Starring" means you'll be notified of
+updates and comments on those expressions you really dig, and can find them
+later by clicking the star tab on your profile.
+{% endcall %}
+
+{% call p('"Listen to"') %}
+Would you like to follow someone's activity on the site?  On every users
+profile there's now an icon of a person with a "+" (get to their profile by
+clicking the name in the upper right corner of any expression).  Clicking this
+means you're adding them to the network of people you're listening to.  You'll
+be notified of their new expressions, comments, and starring.
+{% endcall %}
+
+{% call p("Discussions" ) %}
+Ever wished you could leave comments on expressions? Now you can!  Just click
+the "speech bubble"  in the upper-right corner to join the discussion.
+{% endcall %}
+
+{% call p("Shapes") %}
+You can now add simple shapes to your expressions!   On the top of the screen
+there's an icon with some geometry.  Click it and you'll know what to do :)
+{% endcall %}
+
+{% call p("Background Images") %}
+Click "Background" under the image drop down to customize
+your expressions with full screen background images and colors.
+{% endcall %}
+
+{% call p("Share") %}
+And remember that if you ever want to share an expression with your friends via
+email, Facebook, Twitter, Reddit, or Google+ just use the little paper airplane
+in the upper right hand corner.  You can also check out the number of views
+your expression has or embed your expressions using this nifty tool.
+{% endcall %}
+
+{% call p() %}
+Want a feature? Email info@thenewhive.com or click the "feedback" button in
+the lower right hand corner.
+{% endcall %}
+
+{% call p() %}
+You make us a community, thank you!
+{% endcall %}
+
+<p style="font-weight: bold; font-size: 18px;">
+  Keep rocking,<br/> 
+  The New Hive team
+</p>
+</td>
+<td width="45px"></td>
+</tr>
+</table>
+{% endblock %}

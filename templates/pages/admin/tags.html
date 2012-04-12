@@ -1,0 +1,34 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+{{ super()}}
+<style>
+  table { width: auto}
+</style>
+{% endblock head %}
+{% block content %}
+<div style="width: 200px; float: left; margin-right: 50px;">
+<table class="tablesorter">
+    <thead>
+        <tr>
+          <th>Tag Name</th>
+          <th>Count</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+        {% for tag in popular_tags %}
+        <tr>
+          <td><a href="/tag/{{tag._id}}">{{tag._id}}</a></td>
+          <td>{{tag.value}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<div>
+    {% for tag in featured_tags %}
+    <div>{{tag}}</div>
+    {% endfor %}
+</div>
+{% endblock content %}

@@ -1,0 +1,119 @@
+user
+    feed :: [feed]
+    analytics :: { String : { "count" : Int } }?
+         InviteNote
+         expressions
+    session :: session
+    signup_group
+    referrer :: [user]
+    name
+    password
+    referrals :: Int
+    notification_count :: Int
+    sites :: [String]
+    flags :: { String : Int|Bool }
+        default-instructional # show help dialog in editor
+        expr_new # show share dialog on next expression view
+    fullname
+    email
+    created
+    updated
+
+expr
+    feed
+    domain :: String
+    owner_name
+    views :: Int
+    owner_views :: Int
+    random :: Float # 0-1
+    auth :: "public"|"password"
+    password :: String
+    analytics :: { String : { "count" : Int, updated : Timestamp }
+        NewExpr
+        facebook
+        gplus
+        stumble
+        twitter
+    background
+        color :: String # HTML, e.g. "#F8CBD2"
+        opacity :: Float # 0-1
+        url :: String
+    owner :: user
+    tags :: [String]
+    name :: String # URL path
+    dimensions :: [Int,Int] # 1000, Height-in-pixels
+    title :: String
+    apps :: [app]
+    created
+    updated
+
+app
+    type :: String
+    content # depends on type
+    dimensions :: [Int,Int]
+    position :: [Int,Int]
+    file_id :: file
+    z :: Int # z-index layer
+
+feed
+    class_name :: "Comment"|"Star"|"InviteNote"|"NewExpr"|"UpdatedExpr"
+    entity_class :: "Expr"|"User"
+    entity :: expr|user
+    initiator :: user
+    initiator_name :: String
+    count :: Int # ??
+    created
+    updated
+
+file
+    name :: String # file name as uploaded
+    url :: String # Full URL
+    s3_bucket :: String
+    mime :: String
+    thumbs :: { String : True } # e.g. { "124x96" : True }
+    owner :: user
+    created
+    updated
+
+session
+    user
+    plain_secret
+    secure_secret
+    remember
+    expires
+    active
+    created
+    updated
+
+action_log
+    expr_id :: expr
+    user :: user
+    user_name :: String
+    action :: 'new_expression_edit'
+        | 'new_expression_save'
+        | 'notifications_open'
+        | 'pagethrough_clicked'
+        | 'share'
+        | 'share_button_click'
+        | 'update_expression'
+        | 'view_expression'
+        | 'view_random_expression'
+    created
+    updated
+
+referral
+    user :: user # creator
+    to :: String # email
+    name :: String # Name of invitee
+    key :: String
+    created
+    updated
+
+contact
+    name :: String # "What's your name?"
+    url :: String # Page sign-up link was clicked
+    msg :: String # "How do you express yourself?"
+    referral :: String # "How did you hear about us?"
+    email :: String # their email
+    created
+    updated

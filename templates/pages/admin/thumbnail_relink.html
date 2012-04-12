@@ -1,0 +1,51 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+  <style>
+    img.thumbnail { width: 124px; }
+    .img_wrapper { padding: 5px; }
+    .incomplete { background: #FFCCCC; }
+    .complete { background: #CCFFCC; }
+    img.choice { cursor: pointer; }
+  </style>
+  <script>
+    $(function(){
+      $('img.choice').click(function(){
+        console.log($(this).data('expression'));
+        console.log($(this).data('file'));
+        $.ajax({
+          url: '',
+          type: 'POST',
+          dataType: 'json',
+          data: {action: 'thumbnail_relink', expr: $(this).data('expression'), file: $(this).data('file')},
+          success: function(data){
+            $('.' + data.expr).parent().removeClass('complete').addClass('incomplete');
+            $('.' + data.file + '.' + data.expr).parent().removeClass('incomplete').addClass('complete');
+          }
+        });
+      });
+
+    });
+  </script>
+{% endblock %}
+
+{% block table_head %}
+  <tr width='2000px'>
+    <td>Expression Thumbnails</td>
+    <td width='20px'>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+  {% for expr in exprs %}
+  <tr>
+    <td><a href='{{expr.url}}'><img class='thumbnail' src='{{expr.thumb}}'/></a></td>
+    <td></td>{# spacer #}
+    {% for image in expr.images %}
+    <td><div class='incomplete img_wrapper'>
+        <img class='thumbnail choice {{expr.id}} {{image.id}}' data-expression="{{expr.id}}" data-file="{{image.id}}" src='{{image.default_thumb}}'/>
+    </div></td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+{% endblock %}

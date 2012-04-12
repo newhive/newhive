@@ -1,0 +1,13 @@
+<div class='newdialog' id='dia_fb_account_duplicate'>
+    <h2>That account is already connected <br/>to another TNH account.</h2>
+    <h3>
+        The Facebook account for <span class="active">{{facebook_name}}</span> is already connected to the
+        user <a href="{{existing_user.url}}" class="active">{{existing_user.name}}</a>. If this is not your Facebook account, 
+        <a class="active" href='' title="Log in to a new Facebook Account" onclick="FB.logout(function(response){window.location='{{facebook_authentication_url}}'; }); return false;">
+            click here</a>.
+        <br/>
+        <span class="color_grey_medium">
+            Email us at <a href="mailto:info@thenewhive.com">info@thenewhive.com</a> if you're having trouble.
+        </span>
+    </h3>
+</div>

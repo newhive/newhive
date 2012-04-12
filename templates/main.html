@@ -1,108 +1,221 @@
 {% extends "base.html" %}
+{% from "macros/main.html" import listen_button, star_button, share_button, create_button, discussion_button, starrers_menu, context_to_string, person_thumb %} 
+
+{% block head %}
+<script>
+  var fb_logged_in = false;
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : {{facebook_app_id|json}}, // App ID
+      //channelUrl : '//WWW.YOUR_DOMAIN.COM/channel.html', // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+    FB.getLoginStatus(function(data){
+        if (data.authResponse && data.authResponse.userID == fb_id) {
+            fb_logged_in = true;
+        }
+    });
+    // Additional initialization code here
+  };
+
+  // Load the SDK Asynchronously
+  (function(d){
+     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement('script'); js.id = id; js.async = true;
+     js.src = "//connect.facebook.net/en_US/all.js";
+     ref.parentNode.insertBefore(js, ref);
+   }(document));
+</script>
+{% endblock head %}
+{% block body_classes %}{{ super() }} main {% endblock body_classes%}
 
 {% block main %}
-<div id='bg' {% if exp and exp.background and exp.background.color %}style='background-color : {{ exp.background.color }}'{% endif %}
->{#% if exp and exp.background.url and exp.background.fill == 'stretch' %}<img src='{{ exp.background.url }}' onload='background_fit(this)' style='width:100%'>{% endif %#}</div>
-
-<div class='nav' id='nav_bg'></div>
-<div class='nav' style='font-weight : bold'>
- <a href='{{ server }}'><img id='logo' class='hoverable' style='left : 5px; top : 0px; height : 50px; vertical-align : middle' src={{ icon }}></a>
- {% if user.logged_in %}
-  <div class='nav_icon medbold' style='left : 50px; top : 0;'><a href='{{ home_url }}'>{{ user['name'] }}</a></div>
-  <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
-  <div id='user_menu' class='menu'>
-   <form name='logout_form' action='{{ secure_server }}' method='POST'>
-    <input name='action' value='logout' type='hidden'>
-   </form>
-   <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
-   {% if user.referrals > 0 %}
-     <div class='menu_item' onclick='showDialog("#dia_referral")'>Referrals</div>
-  {% endif %}
-   <!--<div class='menu_item'>Change&nbsp;icon</div>
-   <div class='menu_item'>Settings</div>-->
-  </div>
-  <script>hover_menu($('#user_menu_handle'), $('#user_menu'));</script>
- {% else %}
-  <a href='{{ server }}'><div style='left : 44px; top : -1px;' class='nav nav_icon'><img src='/lib/skin/1/logotype.png'><img src='/lib/skin/1/logotype_beta.png'></div></a>
- {% endif %}
-</div>
-
-{% if not user.logged_in %}
- <div class='nav' style='right : 10px; top : 0px;'>
-  <div id='login_btn' class='btn hoverable nav_icon text' value='Log In'>Log In</div>
-  <div id='login_menu' class='menu top'>
-   <form id='login_form' action='{{ secure_server }}' method='POST'>
-    {% if error %}<div id='login_error' class='error'>{{ error }}</div><br>{% endif %}
-    <b>Username</b><br>
-    <input id='username' type='text' name='username' value='{{ user['name'] }}'>
-    <div class='spacer'></div>
-    <b>Password</b><br>
-    <input type='password' name='secret'><br>
-    <div>
-      <input id='expires' type='checkbox' name='no_expires'><label for='expires' style='font-size:small'> Remember me</label>
-    </div>
-    <div style='display : float; float : right; clear: both; margin : 6px 0px'>
-     <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
-    </div>
-    <input type='hidden' name='action' value='login'>
-    <input type='hidden' name='url' value='{{ url }}'>
-   </form>
-   <div class='spacer'></div>
-   <div style='white-space : nowrap'><span id='signup_button' onclick="showDialog('#dia_signup'); $(this).addClass('open');"
-    >Sign up for an account</span>
-    <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow.png'>
-   </div>
-  </div>
- </div>
-
- <script>
-$(function() {
- var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
-     { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
-       close_delay : 1000, auto_close : false });
- {% if error %} login_menu.open() {% endif %}
- 
- $('#send_msg').bind('click dblclick', function() {
-    if ($(this).hasClass('inactive')) { return true; }
-    $(this).addClass('inactive');
-
-    $.post('/', { name : $('[name=name]').val(), message : $('[name=message]').val(), referral : $('[name=referral]').val(), email : $('[name=email]').val(), action : 'mail_us' }, function(data) {
-            $('#send_msg').removeClass('inactive');
-            if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
-            else {
-                $('#message').val('');
-                hideDialog('#dia_signup');
-                loadDialog(data);
+  <div id="nav">
+    <div class='nav' id='nav_bg'></div>
+    <div class='nav' id='nav_left'>
+      <a href='{{ server }}home' title="{{ 'Your network' if user.logged_in else 'Explore expressions'}}"><img id='logo' class='hoverable nav_icon scale' src={{ icon }}></a>
+    
+      {% if user.logged_in %}
+        <div class='nav_icon medbold center'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
+        <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png' class='nav_icon hoverable scale padsm'>
+        <a href='{{ feed_url }}'><div id='notifications' class='nav_icon full icon has_count hoverable scale padsm' data-count='{{user.notification_count or 0}}'></div></a>
+        <div id='feed_menu' class='menu feed_menu border selected'>
+          {% include 'dialogs/feed.html' %}
+        </div>
+        <div id='user_menu' class='menu'>
+          <form name='logout_form' action='{{ secure_server }}' method='POST'>
+            <input name='action' value='logout' type='hidden'>
+          </form>
+          {% if user.has_facebook %}
+              <div class='menu_item facebook menu_hover' id='fb_invite_menu_item'>
+                <div class="fb_icon"></div><span class="fb_icon_title">Invite friends</span>
+              </div>
+              <div class='menu_item facebook' id='fb_listen_menu_item'>
+                <div class="fb_icon"></div><span class="fb_icon_title">Find friends</span>
+              </div>
+              {% else %}
+              <div class='menu_item facebook menu_hover' id='fb_connect_menu_item'>
+                <div class="fb_icon"></div><span class="fb_icon_title">Connect with Facebook</span>
+              </div>
+          {% endif %}
+          {% if user.referrals > 0 %}
+            <div class='menu_item' onclick='showDialog("#dia_referral")'>
+              <div class='invites'>Email invites</div>
+            </div>
+          {% endif %}
+          <div class='menu_item'><a href="{{secure_server}}settings">Settings</a></div>
+          <div class='menu_item' onclick='document.logout_form.submit()'>Logout</div>
+        </div>
+        <script>
+          hover_menu( $('#user_menu_handle'), $('#user_menu') );
+          $('#fb_invite_menu_item').click(function(e){
+            _gaq.push(['_trackEvent', 'fb_connect', 'open_invite_dialog', 'user_menu']);
+            sendRequestViaMultiFriendSelector();
+          });
+          $('#fb_connect_menu_item').click(function(e){
+            _gaq.push(['_trackEvent', 'fb_connect', 'open_connect_dialog', 'user_menu']);
+            showDialog('#dia_facebook_connect');
+          });
+          $('#fb_listen_menu_item').click(function(e){
+            _gaq.push(['_trackEvent', 'fb_connect', 'open_listen_dialog', 'user_menu']);
+            e.stopPropagation();
+            $(this).addClass('menu_hover');
+            loadDialogPost('facebook_listen');
+          });
+          hover_menu( $('#notifications'), $('#feed_menu'), {
+            open: function(){
+              var div = $('#notifications');
+              if ( div.attr('data-count') != "0" ) {
+                div.attr('data-count', 0);
+                iconCounts();
+                logAction('notifications_open');
+              }
             }
-        }, 'json') });
-});
- </script>
-{% endif %}
+          });
+        </script>
+      {% elif not exp %}
+        <a href='{{ server }}' title="Explore Expressions"><img src='/lib/skin/1/logotype_beta.png' class='nav_icon'></a>
+      {% endif %}
+      {% if not editing %} {# don't show random button and search in editor #}
+        <a href='{{ server }}random'><img class='nav_icon hoverable scale padsm' src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
+        <div class="nav_icon center" id="search" >
+          <form method='GET' action='{{ server }}search' name='search_form'>
+            <input type="text" id="search_box" placeholder="Search" name='q' value="{{q.q}}" class='scale'/>
+            <div id='search_submit' class='hoverable icon scale' title='Submit search' onclick='document.forms.search_form.submit()'></div>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+    
+    <div class='nav' id='nav_right'>
+      {% block nav_right_left %}{% endblock %}
+      {% if owner and not user_is_owner %}
+        {{ listen_button(owner, user, class='nav_icon nav_listen_button icon scale') }}
+        <script>$(function(){
+          var opts = {
+            open_condition: function(){ return $('#dia_listeners .user_cards .item').length > 0 } 
+            , open: function(){ 
+                var dia = $('#dia_listeners');
+                var max_height = ( $(window).height() - 50 ) * 0.8;
+                if ( dia.height() > max_height )  dia.height(max_height); 
+              }
+          }
+          hover_menu(".nav_listen_button", "#dia_listeners", opts);
+        });</script>
+        {% for collection in [{'data': listeners, 'type': 'listeners', 'id': 'listeners'}] %}
+          {% include "dialogs/starrers.html" %}
+        {% endfor %}
+        <a title="{{owner.name}}'s profile" href='{{ owner_url }}'>
+         <div id='info' class='medbold nav_icon' style='text-align : right'>
+           <div id='exp_owner'>{{ owner['name'] }}</div>
+          <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
+         </div>
+         {% if owner.get_thumb() %}<img id='owner_thumb' src='{{owner.get_thumb(70)}}' class='scale'>{% endif %}
+        </a>
+        <div class='nav_icon space'></div>
+      {% endif %}
+      {% if not editing %}
+        <a href='{{ create }}' onclick='return require_login()'><img src='/lib/skin/1/create.png'
+          class='hoverable nav_icon scale' title='Create new expression' style='padding: 0 2px'></a>
+        <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon scale' title='share' style='padding: 0 2px'>
+      {% endif %}
+      {% block nav_right %}{% endblock %}
+      {% if not user.logged_in %}
+        <div class='nav_icon center pad'><div id='signup_btn' class='btn rounded black hoverable medbold'>Sign Up</div></div>
+        <div id='login_btn' class='hoverable nav_icon medbold center pad btn'>Log In</div>
+        <div id='login_menu' class='menu top'>
+          <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
+            <img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;">
+          </a>
+          {% include 'page_parts/log_in.html' %}
+        </div>
+        <script>
+         $(function() {
+          var login_menu = hover_menu($('#login_btn'), $('#login_menu'),
+              { open : function() { $('#username').get(0).focus(); $('#username').get(0).select(); },
+                close_delay : 1000, auto_close : false, click_persist : '#login_menu' });
+          {% if error %} login_menu.options.hover_close = false; login_menu.open(); {% endif %}
+         });
+        </script>
+      {% endif %}
+    </div>
+  </div>
 
-{% block body %}
-{% endblock %}
+  {% block body %}
+  {% endblock body %}
+  <div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>
+  <div id='content'>
+    {% block content %}
+      <div id="header">
+        {% block header %}{% endblock %}
+      </div>
+      <div id="primary_content">
+        <div id="left_column">
+          {% block left_column %}{% endblock %}
+        </div>
+        <div id="right_column">
+          {% block right_column %}{% endblock %}
+        </div>
+      </div>
+    {% endblock content %}
+  </div>
 
-<div id='content'>{% block content %}{% endblock %}</div>
-
-{% if user.logged_in %}
- <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable' title='Send feedback'>
- <script>
-$('#feedback_btn').click(function() {
-    new_window('{{ server }}feedback?url=' + window.location, 470, 400);
-});
- </script>
-{% endif%}
-
-</div>
-
-<div id='dialogs'>
-  <div id='dialog_shield'></div>
   {% if user.logged_in %}
-    {% include 'dialogs/referral.html' %}
-  {% endif %}
-  {% include 'dialogs/password.html' %}
-  {% include 'dialogs/signup.html' %}
-  {% include 'dialogs/ie_warning.html' %}
-  {% include 'dialogs/share.html' %}
-</div>
-{% endblock %}
+    <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable tip_none' title='Send feedback'>
+    <script>
+      $('#feedback_btn').click(function() {
+        new_window('{{ secure_server }}feedback?url=' + window.location, 470, 400);
+      });
+    </script>
+  {% endif%}
+  
+  <div id='dialogs'>
+    {% block dialogs %}
+      {% include 'dialogs/ie_warning.html' %}
+      {% include 'dialogs/share.html' %}
+      {% include 'dialogs/password.html' %}
+
+      {% if user.logged_in %}
+          {% include 'dialogs/referral.html' %}
+          {% include 'dialogs/facebook_connect.html' %}
+          {% include 'dialogs/sent_invites_thanks.html' %}
+      {% else %}
+          {% include 'dialogs/sign_in_or_join.html' %}
+          {% include 'dialogs/signup.html' %}
+          {% include 'dialogs/password_recovery.html' %}
+          {% include 'dialogs/must_login.html' %}
+      {% endif %}
+
+      {% if dialog_to_show == '#dia_fb_account_duplicate' %}
+          {% include 'dialogs/fb_account_duplicate.html' %}
+      {% endif %}
+
+      {% if new_fb_connect %}
+          {% include 'dialogs/fb_connect_landing.html' %}
+      {% endif %}
+    {% endblock dialogs %}
+  </div>
+{% endblock main %}

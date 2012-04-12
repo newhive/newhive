@@ -17,6 +17,7 @@
 <form method='POST'>
  <input type='hidden' name='action' value='admin_update'>
  <textarea rows='1'  cols='80' name='tags'>{{ tags_js }}</textarea><br>
+ <textarea rows='2'  cols='80' name='featured_tags'>{{ featured_tags_js }}</textarea><br>
  <textarea rows='20' cols='80' name='tagged'>{{ tagged_js }}</textarea><br>
  <input type='submit' class='medbold' value='save'>
 </form>
@@ -25,7 +26,7 @@
  {% for t in tags %}<a href='/admin_home/{{ t|e }}' class='tag_label {{ 'current' if t == tag }}'>{{ t }}</a> {% endfor %}
 </div>
 
-<div id='feed'>{% include 'cards.html' %}</div>
+<div id='feed'>{% include 'page_parts/cards.html' %}</div>
 <script>
 $('.feed.item').each(function() {
     var that = this;

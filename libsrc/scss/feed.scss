@@ -1,0 +1,100 @@
+#feed_menu {
+  width: 350px;
+}
+#feed_menu .feed_item {
+  width: auto;
+  height: auto;
+  clear: both;
+  overflow: hidden;
+  color: #000;
+  cursor: pointer;
+  font-weight: bold;
+  margin: 0px;
+  padding: 2px;
+  position: relative;
+  border-top: 1px solid $color_light_grey;
+  &:first-child { border-top: none; }
+}
+
+.feed_item .name {
+  color: #F72E4D;
+}
+.feed_item .name.you {
+  color: #000;
+}
+.feed_item a {
+  font-weight: bold;
+}
+.feed_item p {
+  margin: 0;
+}
+.feed_item .feed_item.active {
+  background-color: #96E2CE;
+}
+#feed_menu .feed_item img {
+  margin: 2px;
+  width: 60px;
+  height: 60px;
+  float: left;
+}
+#feed_menu .feed_item:hover {
+  background-color: $color_selected;
+}
+#feed_menu .feed_item .Expr .entity, #feed_menu .feed_item.User .initiator{
+  width: 220px;
+}
+.feed_item .Expr .entity {
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  color: #000;
+}
+.feed_item.User .line2{
+  color: #696E76;
+}
+
+#feed_menu .feed_item .feed_text, #feed_menu .feed_item .byline {
+  width: 220px;
+}
+.feed_item .feed_text, .feed_item .byline {
+  float: left;
+  margin-left: 5px;
+  font-size: 13px;
+}
+#feed_menu .feed_item .feed_text {
+  margin: 5px;
+  height: 45px;
+  white-space: nowrap;
+}
+.feed_item .comment_text {
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-top: 5px;
+}
+.feed_item .byline {
+  font-weight: normal;
+  position: absolute;
+  right: 5px; bottom: 5px;
+}
+.feed_item .byline .name, .comment .byline .name {
+  font-weight: bold;
+  color: #696E76;
+}
+
+.feed_item .byline .timestamp, .comment .byline .timestamp {
+  float: right;
+  color: #696E76;
+}
+#feed_menu #more_button {
+  padding: 3px;
+  margin-top: 3px;
+  background-color: black;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+}
+#feed_menu #more_button:hover, #feed_menu #more_button.active {
+  background-color: $color_highlight;
+  color: $color_bright_red;
+}

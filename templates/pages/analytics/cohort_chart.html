@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block head %}
+    {{super()}}
+    {% for item in assets_env["admin.js"].urls() %}
+      <script src='{{ item }}'></script>
+    {% endfor %}
+    {% include "partials/charts/cohort.html" %}
+{% endblock head %}
+{% block main %}
+    <div id="chart"></div>
+{% endblock %}
+

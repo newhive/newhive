@@ -1,0 +1,62 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block header %}
+<h1>Funnel 1</h1>
+{% endblock header %}
+
+{% block table_head %}
+  <tr>
+    <th>Week of</th>
+    {% for item in 'users', 'invites', 'invites_used' %}
+    <th>{{item}}</th>
+    {% endfor %}
+    <th>Invites/User</th>
+    <th>Invite Convertion Rate</th>
+    <th>Conversions/User</th>
+  </tr>
+{% endblock %}
+
+{% block table_body %}
+{% for item in data | dictsort %}
+  <tr>
+    <td data-type="epoch_date_utc">{{item[0]}}</td>
+    {% for attr in 'users', 'invites', 'invites_used' %}
+    <td>{{item[1][attr]}}</td>
+    {% endfor %}
+    <td>{{item[1]['invites'] / item[1]['users']}}</td>
+    <td>{{item[1]['invites_used'] / item[1]['invites']}}</td>
+    <td>{{item[1]['invites_used'] / item[1]['users']}}</td>
+  </tr>
+{% endfor %}
+{% endblock %}
+
+{% block content %}
+{{super()}}
+{% set data = monthly %}
+<table class="tablesorter" style="width: 100%">
+  <thead>
+  <tr>
+    <th>Month of</th>
+    {% for item in 'users', 'invites', 'invites_used' %}
+    <th>{{item}}</th>
+    {% endfor %}
+    <th>Invites/User</th>
+    <th>Invite Convertion Rate</th>
+    <th>Conversions/User</th>
+  </tr>
+</tbody>
+  <tbody>
+  {% for item in data | dictsort %}
+  <tr>
+    <td data-type="epoch_date_utc">{{item[0]}}</td>
+    {% for attr in 'users', 'invites', 'invites_used' %}
+    <td>{{item[1][attr]}}</td>
+    {% endfor %}
+    <td>{{item[1]['invites'] / item[1]['users']}}</td>
+    <td>{{item[1]['invites_used'] / item[1]['invites']}}</td>
+    <td>{{item[1]['invites_used'] / item[1]['users']}}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}

@@ -1,0 +1,18 @@
+#!/usr/bin/python
+import state
+
+mailing_file = open(sys.argv[1], 'r')
+
+mailing_reader = csv.reader(mailing_file)
+
+for line in mailing_reader:
+  email = line[0]
+  if len(line) > 1:
+    name = line[1]
+  else:
+    name = False
+
+  print "sending invite to " + line[0]
+  print wsgi.mail_invite(email, name)
+
+mailing_file.close()

@@ -1,0 +1,117 @@
+{% extends "main.html" %}
+
+{% block head %}
+ {% for item in assets_env["admin.css"].urls() %}
+   <link rel='stylesheet' type='text/css' href='{{ item }}'>
+ {% endfor %}
+ {% for item in assets_env["admin.js"].urls() %}
+  <script src='{{ item }}'></script>
+ {% endfor %}
+  <script type='text/javascript'>
+    var paper;
+
+    var epochToDate = function(epoch, opts){
+      opts = $.extend({'time': true, 'utc': false}, opts);
+      if (typeof(epoch) !== 'undefined' && epoch != "") {
+        var rv = ""
+        var d = new Date(epoch*1000);
+        var minutes = d.getMinutes() + "";
+        if (minutes.length == 1) { minutes = "0" + minutes }
+
+        if (opts.utc) {
+          rv = d.toUTCString();
+        } else {
+          rv += d.toDateString();
+          if (opts.time){rv += " " + d.getHours() + ":" + minutes;}
+        }
+        return rv;
+      }
+    };
+
+    $(function(){
+        $('table.tablesorter').tablesorter({% block tablesorter_options %}{% endblock %});
+        //paper = Raphael($('#canvas_container')[0], '1000px', '500px');
+        $('[data-type="epoch_date"]').each(
+          function(){
+            $(this).html(
+              epochToDate($(this).html())
+            );
+          }
+        );
+        $('[data-type="epoch_date_utc"]').each(
+          function(){
+            $(this).html(
+              epochToDate($(this).html(), {'utc': true})
+            );
+          }
+        );
+    });
+  </script>
+<style type='text/css'>
+#content{ padding: 0 10px 50px 10px; }
+#header h1{ float: none; }
+/* tables */
+table {
+  font-family:arial;
+  background-color: #CDCDCD;
+  margin:10px 0pt 15px;
+  font-size: 8pt;
+  text-align: left;
+}
+table tr th {
+  background-color: #e6EEEE;
+  border: 1px solid #FFF;
+  font-size: 8pt;
+  padding: 4px;
+}
+table thead tr .header {
+  background-image: url(/lib/skin/1/tablesorter_bg.gif);
+  background-repeat: no-repeat;
+  background-position: center right;
+  cursor: pointer;
+}
+table tbody td {
+  color: #3D3D3D;
+  padding: 4px;
+  background-color: #FFF;
+  vertical-align: top;
+}
+table tbody tr:nth-child(odd) td, table tbody tr.odd td {
+  background-color:#F0F0F6;
+}
+table thead tr .headerSortUp {
+  background-image: url(/lib/skin/1/tablesorter_asc.gif);
+}
+table thead tr .headerSortDown {
+  background-image: url(/lib/skin/1/tablesorter_desc.gif);
+}
+table thead tr .headerSortDown, table thead tr .headerSortUp {
+background-color: #8dbdd8;
+}
+#content {
+  padding-top: 10px;
+}
+input[type=submit]:hover {
+  color: white;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div id="canvas_container"></div>
+<div id="header">
+  {% block header %}
+  {% endblock %}
+</div>
+<table width='100%' class='{% block table_classes %}tablesorter{% endblock %}'>
+  <thead>
+    {% block table_head %}
+    {% endblock %}
+  </thead>
+  <tbody>
+    {% block table_body %}
+    {% endblock %}
+  </tbody>
+</table>
+{% endblock %}

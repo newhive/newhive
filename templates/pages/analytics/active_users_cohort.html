@@ -1,0 +1,27 @@
+{% extends "pages/analytics/base.html" %}
+{% block header %}
+<h1>Active Users (2x visits per month) by month and cohort</h1>
+{% endblock %}
+{% block table_head %}
+  <tr>
+    <th>Cohort</th>
+    <th colspan={{data.items()[0][1] | count }}>Month</th>
+  </tr>
+  <tr>
+    <th></th>
+  {% for key in data.items()[0][1].keys() | reverse%}
+    <th>{{key.strftime("%b %y")}}</th>
+  {% endfor %}
+  </tr>
+{% endblock table_head %}
+
+{% block table_body %}
+  {% for key, cohort in data.iteritems() %}
+  <tr>
+    <th>{{key.strftime("%b %y")}}</th>
+    {% for val in cohort.values() | reverse %}
+    <td title="Total: {{val.size | int}}, Active: {{val.active | int}}">{{val.active_fraction | round(2)}}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+{% endblock table_body %}

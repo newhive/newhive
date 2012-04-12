@@ -1,5 +1,7 @@
 /lib/*.js
-/lib/*.css
 /lib/libsrc
-/config.py
+/libsrc/.webassets-cache
+/newhive/config.py
+/newhive/config/private_config.py
 *.pyc
+/log/*

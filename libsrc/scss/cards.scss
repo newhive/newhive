@@ -1,0 +1,122 @@
+#feed .card {
+    &.item { 
+        position: relative; 
+        padding: 13px 13px 5px 13px; 
+        width: 180px; 
+        height: 285px;
+        float: left; 
+        background-image: url('/lib/skin/1/feed_item.png'); 
+        &.border_right {
+            border-right: 1px solid $color_light_grey;
+        }
+        &.border_bottom {
+            border-bottom: 1px solid $color_light_grey;
+        }
+    }
+    &.item:hover { 
+        //background-color: $color_selected; 
+        opacity : 1; 
+        &.hide_feed .thumb { @include opacity(1) }
+        .thumb { @include opacity(0.75); }
+        .title { background: $color_selected; } 
+        .other { background: $color_highlight; }
+    }
+    .thumb {
+        @include border-radius(7px);
+        width: 180px;
+        height: 180px;
+    }
+   .title { 
+        font-size: 1.1em;
+        font-weight : bold; 
+        max-height : 2.5em; 
+        overflow : hidden; 
+        text-overflow : ellipsis; 
+    }
+    .other, .tags, .stats, .feed_info, .comment { 
+        font-size : 0.7em; 
+        //color: $color_grey_medium; 
+    }
+    .tags, .comment { 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        max-height: 29px;
+        margin-bottom: 5px;
+        .tag:hover { background: $color_bright_red; color: white; }
+    }
+    .other {
+        position: absolute;
+        bottom: 8px;
+        font-weight: bold;
+        &:hover { background: $color_blue !important; color: white; }
+    }
+    .feed_thumbs {
+        position: absolute;
+        bottom: 113px;
+        left: 20px;
+        width: 64px;
+        img { width: 30px; border: 1px solid white; float: left; }
+        img.first { display: block; }
+        img.big { width: 39px; }
+    }
+    .actions {
+        position: absolute;
+        right: 20px; top: 20px;
+    }
+    .feed_info {
+        position: absolute;
+        bottom: 118px;
+        right: 20px;
+        font-weight: bold;
+        text-align: right;
+        width: 120px;
+        div { background-color: $color_highlight; margin: 1px; display: inline; padding: 0 5px; }
+        &.create div { background-color: white; }
+    }
+}
+
+.card {
+    position: relative;
+    .stats {
+        position: absolute;
+        bottom: 5px; right: 13px;
+        color: $color_grey_medium;
+        img { vertical-align: middle; }
+        .listen_button:hover { background-color: $color_active }
+    }
+    &.with_hide .inactive_hide { display: none; }
+    &.with_hide:hover .inactive_hide { display: block; }
+    &.with_hide:hover .active_hide { display: none; }
+}
+
+#dia_starrers, #dia_listeners {
+  width: 316px;
+  $card_width: 290px;
+  overflow: auto;
+  .dialog_title { 
+    width: $card_width;
+    background-color: $color_light_blue;
+    margin: 4px 0;
+    padding: 4px 6px;;
+    font-weight: bold;
+  }
+  .card {
+    @include clearfix;
+    padding : 5px; margin : 0 5px 5px 0; 
+    clear: both;
+    width: $card_width;
+    &:hover { background-color: $color_selected; }
+    img { 
+      width: 70px; 
+      height: 70px;
+      float: left;
+      margin-right: 10px;
+    }
+    .title { font-weight : bold; max-height : 2.5em; overflow : hidden; text-overflow : ellipsis; margin-bottom : 5px; }
+    .other, .tags { font-size : .8em }
+    .other { 
+      margin-top: 10px;
+      font-weight : bold;
+    }
+  }
+}

@@ -1,0 +1,89 @@
+<div id='dia_facebook_listen' class='dialog border selected'>
+    <div class='line' style='margin-bottom:15px;'>
+        <h1>Listen to your Facebook friends:</h1>
+    </div>
+    <div class='line line2'>
+        {% if not error %}
+        <div class='invite_fb_link'>
+            <img src='/lib/skin/1/facebook_flat_sm.png' alt="Facebook Logo">
+            Invite friends from Facebook
+        </div>
+        {% endif %}
+        {% if friends %}
+        <div class='btn black rounded' id='listen_to_all'>Listen to all my friends</div>
+        {% endif %}
+    </div>
+    <div class="friends">
+      {% if not friends and not error%}
+        <p class="message" style="margin: 0;">None of your Facebook friends are currently signed
+            up on The New Hive (or they haven't connected their Facebook
+            accounts yet). Click the button above to invite your friends.</p>
+      {% endif %}
+      {% if error %}
+        <p class="error">
+          {{error | e}}
+          <strong><a href='' onclick='dia_facebook_listen_log_in(); return false;'>
+              Click here to try logging in to Facebook.
+          </a></strong>
+        </p>
+        <script>
+            function dia_facebook_listen_log_in() {
+                FB.login(function(){
+                    loadDialogPost("facebook_listen", {force: true});
+                });
+            }
+        </script>
+      {% endif %}
+      {%- for friend in friends -%}
+        <div class="friend">
+          <img class="thumb facebook" src="{{friend.fb_thumb}}"/>
+          <img class="thumb tnh" src="{{friend.thumb}}"/>
+          <div class="names">
+              <div class='facebook_name'>{{- friend.facebook.name -}}</div>
+              <div class='username'>{{- friend.name -}}</div>
+          </div>
+          {% set listening = True if friend.id in user.starred_user_ids else False %}
+          <div data-id="{{friend.id}}" class="listen {{'active' if listening}}" title="{{'Stop' if listening else 'Start'}} Listening"></div>
+        </div>
+      {%- endfor -%}
+    </div>
+    <script>
+        $('#dia_facebook_listen .friend').hover(
+        function(){
+            $(this).find('.thumb.facebook').hide();
+            $(this).find('.thumb.tnh').show();
+        },
+        function(){
+            $(this).find('.thumb.facebook').show();
+            $(this).find('.thumb.tnh').hide();
+        });
+        $('#dia_facebook_listen .listen').click(function(){
+            var action = ($(this).hasClass('active') ? 'unstar' : 'star' );
+            var entity = $(this).data('id');
+            var callback = function(that){
+                return function(data){
+                    if (data.state == 'starred') {
+                        _gaq.push(['_trackEvent', 'fb_connect', 'listen_to_freind', $(that).data('id')]);
+                        $(that).addClass('active').attr('title', 'Stop Listening');
+                    }
+                    else if (data.state == 'unstarred') {
+                        $(that).removeClass('active').attr('title', 'Start Listening');
+                    };
+                }
+            };
+            $.post('', {action: action, entity: entity, entity_class: 'User', dataType: 'json'}, callback(this), 'json');
+        });
+        $('#listen_to_all').click(function(){
+            if (! $(this).hasClass('disabled') ) {
+                _gaq.push(['_trackEvent', 'fb_connect', 'listen_to_all_freinds']);
+                $('#listen_to_all').html('Thank you').addClass('disabled');
+                $('#dia_facebook_listen .listen').not('.active').click();
+            }
+        });
+        $('.invite_fb_link').click(function(){
+            $('#dia_facebook_listen .btn_dialog_close').click();
+            _gaq.push(['_trackEvent', 'fb_connect', 'click_invite', 'listen_dialog']);
+            sendRequestViaMultiFriendSelector();
+        });
+    </script>
+</div>

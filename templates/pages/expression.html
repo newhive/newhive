@@ -1,38 +1,41 @@
 {% extends "main.html" %}
 
-{% block head %}
- <style>
-  #exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
-  #datetime { font-size : .7em; color : {{ colors[12] }}; line-height : .5em; }
-  #info { display : inline-block; text-align : right; margin-right : 10px; vertical-align : top; }
- </style>
- <meta property="og:title" content='{{ title }}' />
- <meta property="og:image" content='{{ exp.thumb|default('/lib/skin/1/default_thumb.png') }}' />
- <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
- <meta property="og:type" content="article" />
+{% block meta %}
+ <meta property="og:title" content='{{ title |e }}' />
+ <meta property="og:type" content="newhive:expression" />
+ <meta property="og:image" content='{{ exp.thumb|default('http://thenewhive.com/lib/skin/1/thumb_0.png') | e }}' />
  <meta property="fb:admins" content="1007003" />
+{% endblock %}
+{% block head %}
+ {{super()}}
  <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
+ <script type='text/javascript'>
+     var expr_id = '{{exp.id}}';
+     var comment_count = {{exp.comment_count}};
+ </script>
 {% endblock %}
 
-{% block body %}
- <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
- <div class='nav' style='right : {{ '10' if user.logged_in else '97' }}px; top : 0px;'>
-  {% if not user_is_owner %}
-   <div id='info' class='medbold' style='text-align : right'>
-    <div id='exp_owner'><a href='{{ owner_url }}'>{{ owner['name'] }}</a></div>
-    <div id='datetime'><nobr>{{ mtime }}</nobr></div>
-   </div>
+{% block nav_right %}
+  {{ star_button(exp.id, exp.star_count, exp.id in user.starred_expr_ids) }} 
+  {% for collection in [{'data': starrers, 'type': 'starrers', 'id': 'starrers'}] %}
+    {% include "dialogs/starrers.html" %}
+  {% endfor %}
+
+  {% if exp.auth == 'public' %}
+    <div id = "btn_broadcast" class="hoverable nav_icon has_count{{ ' enabled' if exp.id in user.broadcast_ids }}"
+      onclick='btn_broadcast_click(this);' title="Broadcast this to your listeners" data-count='{{ exp.broadcaster_count }}'>
+      <div class='full icon scale'></div>
+    </div>
   {% endif %}
 
-  <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon' title='share'>
- 
-  {% if user.logged_in %}
-   <a href='{{ create }}'><img src='/lib/skin/1/create.png' class='hoverable nav_icon' title='create'></a>
-  {% endif %}
- 
- {% if user_is_owner %}
-   <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon' title='edit'></a>
-   <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable nav_icon' title='delete'>
+  <div id = "btn_comment" class="hoverable nav_icon has_count" data-count='{{ exp.comment_count }}' onclick='btn_comment_click();'>
+    <img src='/lib/skin/1/discussion.png' class='hoverable icon full scale' title="Discussions">
+  </div>
+
+  {% if user_is_owner %}
+   <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon scale' title='edit'></a>
+
+   <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable nav_icon scale' title='delete'>
    <div id='dia_delete' class='menu medbold' style='padding : 10px; width : 13em;'>
     Are you sure you want
     to delete this page?
@@ -43,9 +46,23 @@
      <div style='text-align : right'><input type='submit' value='Yes' class='btn black rounded medbold'></div>
     </form>
    </div>
-   <script>click_dialogue($('#btn_delete'), $('#dia_delete'));</script>
+   <script>hover_menu($('#btn_delete'), $('#dia_delete'), { hover : false });</script>
+   {% if owner.flags.expr_new and owner.expr_count < 2 %}<script>$(function() {
+    updateShareUrls('#dia_share', window.location);  
+    showDialog('#dia_share', { minimize_to : '#btn_share' } );
+   })</script>{% endif %}
   {% endif %}
- </div>
+{% endblock %}
+
+{% block body %}
+ <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
+ {% if pagethrough and pagethrough.prev %}
+   <div id="pagethrough_prev" class='nav pagethrough'><a href='{{pagethrough.prev}}' class='pagethrough-prev' ></a></div>
+ {% endif %}
+ {% if pagethrough and pagethrough.next %}
+   <div id="pagethrough_next" class='nav pagethrough'><a href='{{pagethrough.next}}' class='pagethrough-next' ></a></div>
+ {% endif %}
+ {% include 'expr_background.html' %}
 {% endblock %}
 
 {% block content %}
@@ -60,3 +77,31 @@
   {{ body }}
  {% endif %}
 {% endblock %}
+
+{% block footer_scripts %}
+<script>
+  $(function(){
+    pagethrough_btns = $('.pagethrough');
+    pagethrough_btns.css('top', ($(window).height() - pagethrough_btns.height())/2)
+    pagethrough_btns.find('a.pagethrough-prev').attr('title', "previous " + context_to_string({plural: false})).click(function(){
+      logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'prev'});
+      setTimeout("window.location = '" + $(this).attr('href') + "'", 100);
+      return false;
+    });
+    pagethrough_btns.find('a.pagethrough-next').attr('title', "next " + context_to_string({plural: false})).click(function(){
+      logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'next'});
+      setTimeout("window.location = '" + $(this).attr('href') + "'", 100);
+      return false;
+    });
+    var hover_width = 150;
+    $(window).mousemove(function(event){
+      if ($(window).width() - event.pageX < hover_width) {
+        $('#pagethrough_next').show();
+      } else { $('#pagethrough_next').hide(); }
+      if (event.pageX < hover_width) {
+        $('#pagethrough_prev').show();
+      } else { $('#pagethrough_prev').hide(); }
+    });
+  });
+</script>
+{% endblock footer_scripts %}

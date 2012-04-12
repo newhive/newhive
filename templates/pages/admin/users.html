@@ -1,0 +1,38 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+{{super()}}
+<style>
+  table { width: auto; }
+</style>
+{% endblock head %}
+
+{% block header %}
+<h1>Users: ({{users | count }})</h1>
+{% endblock header %}
+
+
+{% block table_head %}
+<tr>
+  <th>ID</th>
+  <th>Username</th>
+  <th>Full Name</th>
+  <th>E-mail</th>
+  <th>User Since</th>
+  <th>Last login</th>
+</tr>
+{% endblock table_head %}
+
+{% block table_body %}
+{% for user in users %}
+<tr id="{{user.id}}">
+  <td>{{user.id}}</td>
+  <td><a href="users/{{user.name}}">{{user.name}}</a></td>
+  <td>{{user.fullname}}</td>
+  <td>{{user.email}}</td>
+  <td data-type="epoch_date">{{ user.created }}</td>
+  <td data-type="epoch_date">{{ user.updated }}</td>
+</tr>
+
+{% endfor %}
+{% endblock table_body %}

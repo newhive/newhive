@@ -1,0 +1,162 @@
+@import "compass/utilities";
+@import "compass/css3";
+@import "colors";
+
+$nav_height: 50px;
+$left_padding: 30px;
+$right_padding: 12px;
+$left_column_width: 178px;
+$right_column_x: $left_padding + $left_column_width + $right_padding;
+
+// Imports
+@import "nav";
+@import "dialogs";
+@import "community";
+@import "cards";
+@import "feed";
+@import "expression";
+@import "settings";
+@import "signup_flow";
+@import "chart";
+
+.centered { 
+    text-align: center; 
+}
+img.centered, div.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+.bright_headline { 
+    font-family: Museo, sans-serif; 
+    color: $color_active;
+    }
+
+// Page Layout
+#primary_content{ clear: both; }
+#left_column, #right_column, #header, #feed{ 
+  @include pie-clearfix;
+}
+#left_column {
+  float: left; 
+  width: $left_column_width;
+  padding-left: $left_padding;
+  padding-right: $right_padding;
+}
+#right_column { margin-left: $right_column_x; }
+#header { position: relative; }
+
+// Resets
+iframe { border: none; }
+
+// Misc (move to own files when this gets too long)
+.user_settings, .email_confirmation{
+  .title { padding-top: 10px; }
+  #profile_thumb {
+    float: left;
+    width: 90px;
+    .message {
+      color: $color_grey_medium;
+      font-size: 12px;
+    }
+    img {
+      width: 70px;
+      height: 70px;
+    }
+    .placeholder {
+      $padding: 17px;
+      width: 70px;
+      height: 70px - 2*$padding;
+      border: 1px dashed #CCC; 
+      text-align:center; 
+      font-size: 10px;
+      padding: $padding 0;
+    }
+  }
+  .fathead {
+    margin: 50px; 
+    div { 
+      //background: url('/lib/skin/1/plus_lg.png') no-repeat; 
+      //height: 44px;
+    }
+    h1 { 
+      display:inline;
+      font-family: Museo, Helvetica, sans-serif;
+    }
+  }
+}
+.user_settings {
+  .required { 
+    color: $color_active; 
+    font-size: 0.7em;
+  }
+  .form_validation_info { width: 215px; }
+  .user_name_change_text {
+    width: 215px;
+    font-size: 0.75em;
+  }
+}
+.email_confirmation {
+  .fathead { 
+    margin-bottom: 100px; 
+    p {margin-left: 50px; }
+  } 
+
+  #content a {
+    color: $color_blue;
+    &:hover { color: $color_active; }
+  }
+}
+.css_compilation_test{
+  color: black;
+}
+
+html, body { background-color : white; height : 100%; }
+input[type=text], input[type=password], textarea { border : 5px solid $color_unselected; padding : 5px; }
+input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : $color_selected; }
+input[type=button], input[type=submit] { border : none; }
+.hide { display: none !important; }
+.menu { display : none; border : 0px solid $color_unselected;
+    background-color : white; z-index : 1100; font-size : 11pt; position : absolute;
+    -moz-box-shadow: 05px 05px 05px #888;
+    -webkit-box-shadow: 05px 05px 05px #888;
+    box-shadow: 05px 05px 05px #888;
+    }
+.menu_item { color : $color_18; padding : 5px 8px; cursor : default; font-size : 15pt; white-space: nowrap; }
+.menu_item:hover, .menu_hover { background-color : $color_selected; color: black; }
+.border { border : 5px solid $color_unselected; padding : 5px; }
+.selected { border-color: $color_selected; }
+.medbold { font-weight : bold; font-size : 1.2em; }
+.btn { 
+  padding:5px 10px; 
+  font-weight : bold; 
+  font-size : 20px; 
+  display : inline-block; 
+  cursor : default;
+  white-space: nowrap;
+  &.inactive { background-color : $color_24; color: white;}
+  &.black:hover { 
+    color : $color_1; 
+    background-color : $color_32;
+    &.inactive { background-color : $color_24; color: white;}
+  }
+}
+
+.rounded {
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+}
+.black { background-color : black; color: white; }
+.error, .active { color: $color_active; }
+.inactive { color: $color_24; }
+#user { position : fixed; display : inline-block; }
+.nav { position : fixed; margin : 0; }
+.menu, .top, .nav { z-index : 1; }
+.spacer { height : 10px; clear : both; }
+
+$placeholder_color: black;
+::-webkit-input-placeholder { color: $placeholder_color; }
+:-moz-placeholder { color: $placeholder_color; }
+

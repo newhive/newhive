@@ -1,0 +1,38 @@
+{% extends "pages/analytics/base.html" %}
+{% block head %}
+  {% include "partials/charts/cohort.html" %}
+  {{ super() }}
+{% endblock head %}
+
+{% block header %}
+<h2>{{title}}</h2>
+{% endblock %}
+{% block table_head %}
+  <tr>
+    <th>Cohort</th>
+    <th colspan={{data.items()[0][1] | count }}>Month</th>
+  </tr>
+  <tr>
+    <th></th>
+  {% for key in data.items()[0][1].keys() | reverse%}
+    <th>{{key.strftime("%b %y")}}</th>
+  {% endfor %}
+  </tr>
+{% endblock table_head %}
+
+{% block table_body %}
+  {% for key, cohort in data.iteritems() %}
+  <tr>
+    <th>{{key.strftime("%b %y")}}</th>
+    {% for val in cohort.values() | reverse %}
+    <td title="Total: {{val.size | int}}, Active: {{val.active | int}}">{{val.active_fraction | percentage | round(1)}}%{{"*" if val.incomplete else ''}}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+{% endblock table_body %}
+{% block content %}
+<div id="chart"></div>
+{{super()}}
+<p>*Incomplete data</p>
+{% endblock %}
+

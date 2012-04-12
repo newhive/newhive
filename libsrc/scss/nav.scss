@@ -1,0 +1,175 @@
+$nav_height: 50px;
+#nav { height: $nav_height; }
+
+#nav { font-weight: bold; }
+#nav .nav_icon {
+    display : inline-block;
+    height: $nav_height;
+    float: left;
+    &.active { color : white; background-color : $color_grey_medium; }
+    &.pad { padding : 0 8px; }
+    &.padsm { padding-right: 3px; }
+    &.space { padding : 0 4px; }
+}
+#nav .icon {
+    background-repeat: no-repeat;
+    background-size: 100%;
+    &.full { width: $nav_height * .88; height: $nav_height; }
+}
+#nav .center {
+    line-height: $nav_height;
+    vertical-align: middle;
+}
+#nav .center img { vertical-align: middle; }
+
+#nav_bg {
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: $nav_height; 
+  background-image: url("/lib/skin/1/nav_gradient.png"); 
+  z-index: 1; 
+}
+
+#nav_right { right: 0px; top: 0px; margin-right: 5px; }
+
+body.home.logged_out .nav{
+  position: absolute;
+}
+
+#logo { vertical-align: middle; }
+
+#user_menu_handle.active { background: none !important; }
+#user_menu .referral_count {
+  color: $color_active;
+  padding-left: 30px;
+  float: right;
+}
+#user_menu {
+  .fb_icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 25px;
+    height: 25px;
+    margin-right: 5px;
+    background: url('/lib/skin/1/facebook_flat_sm.png') no-repeat -1px -2px;
+  }
+  .fb_icon_title {
+      font-size: 19px;
+  }
+  .menu_item {
+      clear: both;
+      overflow: hidden;
+      }
+}
+
+#exp_owner { background-color : $color_selected; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; vertical-align: top; }
+#datetime { font-size : .7em; color : $color_grey_medium; line-height : .5em; }
+#info { display : inline-block; text-align : right; margin-right : 10px; }
+#owner_thumb { width: $nav_height - 10; float: left; margin: 5px 0; }
+
+#user_menu .menu_item.facebook{
+  &:hover {
+      background-color: $color_facebook;
+      color: white;
+  }
+}
+
+.nav .notification_count {
+  display: inline-block;
+  padding: 3px 5px 2px 5px;
+  vertical-align: middle;
+}
+
+.nav_icon .username {
+  &:hover { background: $color_highlight; }
+  padding: 0 3px;
+}
+
+#btn_star {
+  .icon { background-image: url("/lib/skin/1/like.png"); }
+  &.starred .icon { background-image: url("/lib/skin/1/like-active.png"); }
+  &:hover .icon { background-image: url("/lib/skin/1/like-hover.png"); }
+}
+
+#btn_broadcast {
+  .icon { background-image: url("/lib/skin/1/broadcast.png"); }
+  &.enabled .icon { background-image: url("/lib/skin/1/broadcast_active.png"); }
+}
+
+.listen_button {
+    position: relative;
+    top: 2px;
+    width: 37px;
+    height: 31px !important;
+    background-image: url('/lib/skin/1/people_small.png'); 
+    &:hover { background-image: url('/lib/skin/1/people_small-hover.png'); }
+    &.starred { 
+        background-image: url('/lib/skin/1/people_small_active.png');
+        &:hover { background-image: url('/lib/skin/1/people_small_active-hover.png'); }
+    }
+}
+
+.has_count .count {
+  color: #FFF;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  margin: 16px 2px 0 -9px;
+  padding: 2px 4px;
+  line-height: 13px;
+  font-size: 12px;
+  display: inline-block;
+  background: $color_grey_medium;
+  cursor: default;
+}
+.has_count .count.zero {
+  display: none;
+}
+.has_count .icon {
+  display: inline-block;
+  vertical-align: top;
+}
+
+#search {
+   position: relative;
+   display: inline-block;
+}
+#search_box {
+    width: $nav_height * 3;
+   border-width: $nav_height * .1;
+   padding: $nav_height * .1;
+}
+#search_submit {
+  display: inline-block;
+  width: .44 * $nav_height;
+  height: .44 * $nav_height;
+  background-image: url('lib/skin/1/search_arrow.png');
+  vertical-align: middle;
+  &:hover { background-image: url('lib/skin/1/search_arrow-hover.png');}
+}
+
+
+#notifications {
+    background-image: url('/lib/skin/1/feed.png');
+    &.active { background-image: url('/lib/skin/1/feed-hover.png'); }
+    .count {
+        margin: 27px 0 0 27px;
+        background-color: $color_active;
+    }
+}
+
+
+#login_menu { width: 190px; padding : 10px; }
+#login_menu input[type=text], #login_menu input[type=password] { width: 170px; }
+#signup_btn {
+  &:hover { background-color: $color_active; color: white; }
+}
+#password_recovery_link {
+    font-weight: normal;
+    font-size: 12px;
+    color: black;
+    margin-right: 3px;
+    white-space: nowrap;
+}
+#login_submit { float: right; }

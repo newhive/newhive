@@ -1,0 +1,49 @@
+.chart {
+    $chart_colors : 
+        $color_tag_10
+        $color_tag_9
+        $color_tag_8
+        $color_tag_7
+        $color_tag_6
+        $color_tag_5
+        $color_tag_4
+        $color_tag_3
+        $color_tag_2
+        $color_tag_1
+        $color_tag_0
+        $color_tag_15
+        $color_tag_14
+        $color_tag_13
+        $color_tag_12
+        $color_tag_11;
+
+ 
+    @for $i from 0 through 15 {
+        path {
+            &.i#{ $i } { stroke: nth($chart_colors, $i + 1); }
+        }
+        text, circle {
+            &.i#{ $i } { fill: nth($chart_colors, $i + 1); }
+        }
+    }
+    .yLabel {
+        fill: $color_grey_medium;
+    }
+    .yGrid {
+        stroke: $color_grey_medium;
+    }
+    .background {
+        fill: $color_tan;
+    }
+}
+#chart {
+   svg { display: block; }
+   .btn { 
+       margin: 0 0 0 8px;
+       background: $color_tan;
+       &:hover, &.active {
+           color: $color_active;
+           background: $color_highlight;
+       }
+   }
+}

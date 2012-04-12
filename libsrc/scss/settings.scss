@@ -1,0 +1,40 @@
+.user_settings {
+    .column{
+      float: left;
+      width: 300px;
+      h3 { margin-top: 0; }
+    }
+    input[type="text"], input[type="password"] {
+        width: 217px;
+    }
+    #gender_wrapper {
+        width: 120px;
+        float: left;
+    }
+    #age {
+        width: 93px;
+    }
+    .friend {
+      padding: 3px;
+      border-top: 1px solid $color_light_grey;
+      img {
+        vertical-align: middle;
+        width: 32px;
+        margin-right: 6px;
+      }
+      .listen {
+        width: 37px;
+        height: 31px;
+        margin: 0;
+        float: right;
+        background: url("/lib/skin/1/people_small.png");
+        &:hover {
+          background: $color_charcoal url("/lib/skin/1/people_small-hover.png");
+        }
+        &.active {
+          background: url("/lib/skin/1/people_small_active.png");
+        }
+      }
+    }
+}
+

@@ -1,0 +1,15 @@
+{% extends "pages/home.html" %}
+
+{% block body_classes %}{{super()}} tag_search {% endblock %}
+
+{% block header %}
+{# do nothing, but override homepage header #}
+{% endblock header %}
+
+{% block right_column %}
+  <div id='tag_header'>
+    <h1>{{ title }}</h1>
+  </div>
+{{ super() }}
+
+{% endblock right_column %}
