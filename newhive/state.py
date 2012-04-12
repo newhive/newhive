@@ -76,7 +76,7 @@ class Collection(object):
 
     def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None):
         if type(spec) == dict:
-            if page: spec[sort] = { '$lt' if order == -1 else '$gt': float(page) }
+            if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': float(page) }
             res = self.search(spec, sort=[(sort, order)], limit=limit)
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -296,7 +296,7 @@ class KeyWords(Entity):
 @Database.register
 class User(HasSocial):
     cname = 'user'
-    indexes = [ ('name', {'unique':True}), ('sites', {'unique':True}), 'facebook.id' ]
+    indexes = [ ('updated', -1), ('name', {'unique':True}), ('sites', {'unique':True}), 'facebook.id' ]
     
     # fields = dict(
     #     name = str
@@ -395,10 +395,13 @@ class User(HasSocial):
         return expr and ( (expr.get('auth', 'public') == 'public') or
             (self.id == expr['owner']) or (expr.id in self.starred_expr_ids) )
 
-    def feed_profile(self, limit=40, spec={}, **args):
-        spec.update({ '$or': [ {'entity_owner':self.id}, {'initiator':self.id} ] })
-        res = self.feed_search(spec, **args)
-        page = Page(islice(res, limit))
+    def feed_profile(self, spec={}, limit=40, **args):
+        def query_feed(q):
+            q.update(spec)
+            return list(self.feed_search(q, limit=limit, **args))
+        activity = query_feed({'initiator': self.id}) + query_feed({'entity_owner': self.id})
+        activity.sort(cmp=lambda x, y: cmp(x['created'], y['created']), reverse=True)
+        page = Page(activity)
         page.next = page[-1]['created'] if len(page) == limit else None
         return page
     def feed_profile_entities(self, **args):
@@ -421,11 +424,13 @@ class User(HasSocial):
         page.next = page[-1].feed[-1]['created'] if len(page) == limit else None
         return page
 
-    def feed_search(self, spec, viewer=None, auth=None, **args):
+    def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-        res = self.db.Feed.page(spec, limit=0, **args)
+        res = self.db.Feed.page(spec, limit=0, sort='created', **args)
         if auth: res = ifilter(lambda i: i.entity and i.entity.get('auth', auth) == auth, res)
-        return ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
+        res = ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
+        if limit: res = islice(res, limit)
+        return res
 
     def feed_group(self, res, limit, feed_limit=6):
         """" group feed items by expression """
@@ -789,9 +794,8 @@ class Expr(HasSocial):
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
         thumb = self.get('thumb')
-        if not thumb: thumb = abs_url() + '/lib/skin/1/thumb_0.png'
-        thumb = re.sub('https?://thenewhive.com(:\d+)?', abs_url(), thumb) + '?v=2'
-        return thumb
+        if not thumb: thumb = abs_url() + 'lib/skin/1/thumb_0.png'
+        return thumb + '?v=2'
     thumb = property(get_thumb)
 
     def set_tld(self, domain):
@@ -990,7 +994,7 @@ class ActionLog(Entity):
 @Database.register
 class Feed(Entity):
     cname = 'feed'
-    indexes = [ ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
+    indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
     _initiator = _entity = None
 
     class Collection(Collection):

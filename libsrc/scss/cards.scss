@@ -34,8 +34,7 @@
         text-overflow : ellipsis; 
     }
     .other, .tags, .stats, .feed_info, .comment { 
-        font-size : 0.7em; 
-        //color: $color_grey_medium; 
+        font-size: 0.7em; 
     }
     .tags, .comment { 
         overflow: hidden; 
@@ -49,6 +48,8 @@
         bottom: 8px;
         font-weight: bold;
         &:hover { background: $color_blue !important; color: white; }
+        overflow: hidden;
+        max-width: 103px;
     }
     .feed_thumbs {
         position: absolute;

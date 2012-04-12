@@ -8,7 +8,7 @@ def time_range(start, end):
     return { '$gt': time_s(start), '$lt': time_s(end) }
 
 def month_range(year, month):
-    return time_range(datetime(year, month, 01), datetime(year + month / 12, (month + 1) % 12, 1))
+    return time_range(datetime(year, month, 1), datetime(year + month / 12, month % 12 + 1, 1))
 
 def users_from(year, month):
     return [u.id for u in db.User.search({'created':month_range(year, month)})]
