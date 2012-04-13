@@ -1,8 +1,8 @@
 $.jPlayer.skin = {
     basic : function(url, index){
         return '<div class="content drag">' +
-        '<div data-index=' + index + ' id="jquery_jplayer_' + index + '" class="jp-jplayer" data-url="' + url + '"></div>' +
-        '<div id="jp_container_' + index + '" class="jp-audio">' +
+        '<div data-index="' + index + '" id="jquery_jplayer_' + index + '" class="jp-jplayer" data-url="' + url + '"></div>' +
+        '<div id="jp_container_' + index + '" class="jp-audio basic">' +
         '  <div class="jp-type-single">' +
         '    <div class="jp-gui jp-interface">' +
         '      <ul class="jp-controls">' +
@@ -36,6 +36,28 @@ $.jPlayer.skin = {
         '    </div>' +
         '  </div>' +
         '</div>' +
+        '</div>'
+    }
+    , minimal : function(url, index){
+        return '<div data-index="' + index + '" id="jquery_jplayer_' + index + '" class="jp-jplayer" data-url="' + url + '"></div>' +
+        '<div id="jp_container_' + index + '" class="jp-audio minimal">' +
+        '  <div class="jp-type-single">' +
+        '    <div class="jp-gui jp-interface">' +
+        '      <div class="jp-progress">' +
+        '        <div class="jp-seek-bar">' +
+        '          <div class="jp-play-bar"></div>' +
+        '        </div>' +
+        '      </div>' +
+        '      <ul class="jp-controls">' +
+        '        <li><a href="javascript:;" class="jp-play" tabindex="1"><img src="/lib/skin/1/jplayer/play.png"></a></li>' +
+        '        <li><a href="javascript:;" class="jp-pause" tabindex="1"><img src="/lib/skin/1/jplayer/pause.png"></a></li>' +
+        '      </ul>' +
+        '    </div>' +
+        '    <div class="jp-no-solution">' +
+        '      <span>Update Required</span>' +
+        '      To play this media you will need to either update your browser to a recent version or update your <a href="http://get.adobe.com/flashplayer/" target="_blank">Flash plugin</a>.' +
+        '    </div>' +
+        '  </div>' +
         '</div>'
     }
 }
