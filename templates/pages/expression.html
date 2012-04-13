@@ -28,7 +28,7 @@
     </div>
   {% endif %}
 
-  <div id = "btn_comment" class="hoverable nav_icon has_count" data-count='{{ exp.comment_count }}' onclick='loadDialog("?dialog=comments");'>
+  <div id = "btn_comment" class="hoverable nav_icon has_count" data-count='{{ exp.comment_count }}' onclick='btn_comment_click();'>
     <img src='/lib/skin/1/discussion.png' class='hoverable icon full scale' title="Discussions">
   </div>
 

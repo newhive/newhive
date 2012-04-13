@@ -213,6 +213,7 @@ var btn_star_click = require_login(function(entity, btn) {
     if (! btn.hasClass('inactive')) {
         var action = btn.hasClass('starred') ? 'unstar' : 'star';
         btn.addClass('inactive');
+        _gaq.push(['_trackEvent', 'like']);
         $.post('', {action: action, entity: entity}, function(data) {
             var count = parseInt(btn.attr('data-count'));
             var btn_wrapper = btn.parent();
@@ -251,6 +252,7 @@ var btn_broadcast_click = require_login(function(btn) {
     var btn = $('#btn_broadcast');
     if (! btn.hasClass('inactive')) {
         btn.addClass('inactive');
+        _gaq.push(['_trackEvent', 'broadcast']);
         $.post('', {'action': 'broadcast', 'domain': window.location.hostname, 'path': window.location.pathname }, function(data) {
             var btn_wrapper = btn.parent();
             btn.removeClass('inactive');
@@ -266,6 +268,12 @@ var btn_broadcast_click = require_login(function(btn) {
         }, 'json');
     }
 });
+
+var btn_comment_click = function(){
+    loadDialog("?dialog=comments");
+    _gaq.push(['_trackEvent', 'comment', 'open_dialog']);
+}
+
 
 function updateShareUrls(element, currentUrl) {
     element = $(element);
@@ -388,6 +396,7 @@ $(function () {
     iconCounts();
     $('#btn_share').click(function(){
         logAction('share_button_click');
+        _gaq.push(['_trackEvent', 'share', 'open_dialog']);
         var dialog = $('#dia_share');
         if (dialog.length === 0 ) {
             $.get("?dialog=share", function(data){

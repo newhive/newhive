@@ -1,0 +1,195 @@
+  <script type="text/javascript">
+    var data = {{ json }};
+    var meta = {{ meta }};
+    var chart;
+    var align;
+    var xLabels;
+    $(function(){
+      data = d3.transpose(data);
+      var nanFilter = function(el) { if (!isNaN(el)) return el };
+      var maxValue = d3.max($.map(data, function(el) { return el.length > 1 ? $.map(el, nanFilter) : el }));
+
+      chart = d3.select("#chart").append("svg").attr("class", "chart cohort").attr("width", 1000).attr("height", 490).attr("display", "block");
+      chart.opts = {width: 960, height: 450, paddingTop: 10, paddingLeft: 40};
+      chart.xRange = [chart.opts.paddingLeft + chart.opts.width * 0.05, chart.opts.paddingLeft + chart.opts.width * .95]
+      var y = chart.y = d3.scale.linear().domain([0, Math.min(maxValue * 1.1, 1)]).range([0, chart.opts.height]);
+      y.T = chart.y.T = function(d) { return chart.opts.height + chart.opts.paddingTop - chart.y(d) };
+      var x = chart.x = function(d,i) { 
+          return d3.scale.linear()
+                   .domain([0, data[0].length - 1])
+                   .range(chart.xRange)(i) 
+          }
+      x.full = function(d,i) {
+          return d3.scale.linear()
+                   .domain([0, data.length - 1])
+                   .range(chart.xRange)(i) 
+          }
+
+      x.shift = function(shift) { return function(d,i) { return x(d, i+shift) } };
+      var color = function(d,i) { return d3.hsl(207 - 30*i, 0.49, 0.4) };
+
+      var monthFormatter = d3.time.format("%b %y");
+      var fullMonthFormatter = d3.time.format("%b %Y");
+
+      chart.append("rect")
+          .attr("width", chart.opts.width)
+          .attr("height", chart.opts.height)
+          .attr("y", chart.opts.paddingTop)
+          .attr("x", chart.opts.paddingLeft)
+          .attr("class", "background");
+
+      var yTicks = y.ticks(5);
+
+      chart.selectAll("line.yGrid")
+          .data(yTicks).enter().append("line")
+          .attr("class", "yGrid")
+          .attr("x2", chart.opts.paddingLeft).attr("x1", chart.opts.width + chart.opts.paddingLeft)
+          .attr("y2", function(d){ return chart.opts.height + chart.opts.paddingTop - y(d)})
+          .attr("y1", function(d){ return chart.opts.height + chart.opts.paddingTop - y(d)});
+
+      chart.selectAll("text.yLabel")
+          .data(y.ticks(5)).enter().append("text")
+          .attr("class", "yLabel")
+          .attr("x", chart.opts.paddingLeft - 5)
+          .attr("y", y.T)
+          .attr("text-anchor", "end")
+          .attr("dy", ".35em")
+          .text(function(d) { return Math.round(d * 100) + "%" });
+
+      var xLabelDates = $.map(meta.dates, function(el) { return monthFormatter(new Date(el * 1000)) });
+
+      xLabels = chart.selectAll("text.xLabel")
+          .data(xLabelDates)
+          .enter().append("text")
+          .attr("class", function(d,i){ return "xLabel i" + (i + meta.cohorts.length - meta.dates.length)})
+          .attr("x", x)
+          .attr("y", chart.opts.height + 30)
+          .attr("text-anchor", "middle")
+          .attr("font-weight", "bold")
+          .text(String);
+
+      for (i=0; i < data.length; i++) {
+          var l0 = data[i].length;
+          var thisdata = $.map(data[i], nanFilter);
+          var line = d3.svg.line()
+              .x(x.shift(l0 - thisdata.length))
+              .y(function(d) { return chart.opts.height + chart.opts.paddingTop - y(d) });
+
+          chart.append("svg:path")
+              .attr("d", line(thisdata))
+              .attr("class", "i" + i);
+
+          chart.selectAll("circle.i" + i)
+              .data(thisdata)
+              .enter()
+              .append("circle")
+              .attr("class", "i" + i)
+              .attr("cx", x.shift(l0 - thisdata.length))
+              .attr("cy", y.T)
+              .attr("r", 7);
+
+          chart.selectAll("text.valueLabel.i" + i)
+              .data(thisdata)
+              .enter()
+              .append("text")
+              .attr("class", "valueLabel i" + i)
+              .attr("x", chart.x.shift(l0 - thisdata.length)).attr("y", chart.y.T)
+              .attr("dx", 5).attr("dy", -10)
+              .attr("visibility", "hidden")
+              .text(function(d){ return Math.round(d*100) + "%" });
+
+          chart.append("text")
+              .attr("class", "legend i" + i)
+              .attr("x", chart.opts.width + chart.opts.paddingLeft - 20)
+              .attr("y", y.T(yTicks[yTicks.length - 1]) + 10)
+              .attr("dy", "1em")
+              .attr("text-anchor", "end")
+              .attr("visibility", "hidden")
+              .text(fullMonthFormatter(new Date(meta.cohorts[i] * 1000)) + " Cohort: " + meta.cohort_sizes[i] + " Users");
+
+          var hoverin = function(i){
+              return function(){ 
+                  $('text.valueLabel.i' + i + ', text.legend.i' + i).attr("visibility", "visible"); 
+                  chart.selectAll("circle, path").filter(":not(.i" + i + ")").attr("stroke-opacity", 0.15).attr("fill-opacity", 0.15);
+                  chart.selectAll(".xLabel").filter(":not(.i" + i + ")").attr("stroke-opacity", 0.55).attr("fill-opacity", 0.55);
+              }
+          };
+          var hoverout = function(i){
+              return function(){ 
+                  $('text.valueLabel.i' + i + ', text.legend.i' + i).attr("visibility", "hidden"); 
+                  chart.selectAll("circle, path, .xLabel").filter(":not(.i" + i + ")").attr("stroke-opacity", 1).attr("fill-opacity", 1);
+              }
+          };
+          $('.i' + i).hover(hoverin(i), hoverout(i));
+
+      }
+      var btns = [
+          $('<div class="btn rounded ">Age</div>').click(function(){
+                  $("#chart .btn").removeClass("active"); 
+                  $(this).addClass("active"); 
+                  align(true);})
+          , $('<div class="btn rounded active">Date</div>').click(function(){
+                  $("#chart .btn").removeClass("active"); 
+                  $(this).addClass("active"); 
+                  align(false);})
+          ];
+      $.each(btns, function(i, e){$('#chart').append(e)});
+      align = function(ali) {
+          xLabels = chart.selectAll(".xLabel")
+              .data( ali ? range(data.length) : xLabelDates );
+          xLabels.enter().append("text")
+              .attr("class", function(d,i){ return "xLabel i" + i})
+              .attr("x", x)
+              .attr("y", chart.opts.height + 30)
+              .attr("text-anchor", "middle")
+              .attr("font-weight", "bold")
+          xLabels.exit().remove();
+          xLabels.transition().duration(500)
+              .attr("x", ali ? x.full : x).text(String);
+          for (i=0; i < data.length; i++) {
+              var l0 = data[i].length;
+              var thisdata = $.map(data[i], nanFilter);
+              var thisx;
+              if (ali) {
+                  thisx = function(i, len) {
+                      return function(d,i1) { 
+                          if (i >= len) return  x.full(d, i1);
+                          return x.full(d, i1 + data.length - i - len);
+                      };
+                  }
+              } else { 
+                  thisx = function(i, len) { return  x.shift(l0 - len); };
+              };
+              var line = d3.svg.line().x(thisx(i, thisdata.length)).y(y.T);
+              chart.selectAll("path.i" + i)
+                  .transition().duration(500)
+                  .attr("d", line(thisdata));
+              chart.selectAll("circle.i" + i).data(thisdata)
+                  .transition().duration(500)
+                  .attr("cx", thisx(i, thisdata.length));
+              chart.selectAll("text.valueLabel.i" + i)
+                  .transition().duration(500)
+                  .attr("x", thisx(i, thisdata.length));
+          }
+      }
+
+    });
+
+  </script>
+  <style type="text/css">
+      path {
+        stroke-width: 3;
+        fill: none;
+      }
+      circle {
+      }
+       
+      line {
+        stroke: black;
+      }
+       
+      text {
+          font-family: Arial;
+          font-size: 9pt;
+      }
+  </style>

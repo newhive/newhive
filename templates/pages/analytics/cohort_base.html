@@ -1,4 +1,9 @@
 {% extends "pages/analytics/base.html" %}
+{% block head %}
+  {% include "partials/charts/cohort.html" %}
+  {{ super() }}
+{% endblock head %}
+
 {% block header %}
 <h2>{{title}}</h2>
 {% endblock %}
@@ -26,6 +31,7 @@
   {% endfor %}
 {% endblock table_body %}
 {% block content %}
+<div id="chart"></div>
 {{super()}}
 <p>*Incomplete data</p>
 {% endblock %}

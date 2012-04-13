@@ -32,6 +32,7 @@
       var submit = $('#dia_comments input[type=submit]');
       if (!submit.hasClass('inactive')) {
           submit.addClass('inactive');
+          _gaq.push(['_trackEvent', 'comment', 'submit']);
           $.post('', $('#dia_comments form').serialize(), function(data) {
               $('#dia_comments input[type=submit]').removeClass('inactive');
               var comments_div = $('#comments');
