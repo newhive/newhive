@@ -396,6 +396,43 @@ Hive.App.has_resize = function(o) {
     o.make_controls.push(controls);
 }
 
+Hive.App.has_resize_h = function(o) {
+
+    o.resize_h = function(dims) {
+        o.dims(dims);
+        return o.resize([dims[0], o.calcHeight()]);
+    }
+
+    o.refresh_size = function() { o.resize_h(o.dims()); }
+
+    function controls(common) {
+        var o = $.extend({}, common);
+
+        o.layout = function() {
+            common.layout()
+            var p = o.padding;
+            var dims = o.get_dims();
+            o.c.resize_h.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+        }
+
+        o.c.resize_h = o.div.find('.resize_h');
+        o.div.find('.resize_h').drag('start', function(e, dd) {
+            o.refDims = o.app.dims();
+            o.dragging = e.target;
+            o.dragging.busy = true;
+            o.app.div.drag('start');
+        }).drag('end', function(e, dd) {
+            o.dragging.busy = false;
+            o.app.div.drag('end');
+        });
+        o.refDims = null;
+        o.c.resize_h.drag(function(e, dd) { o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1]]); });
+
+        return o;
+    }
+    o.make_controls.push(controls);
+}
+
 
 // This App shows an arbitrary single HTML tag.
 Hive.App.Html = function(common) {
@@ -870,6 +907,7 @@ Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 Hive.App.Audio = function(common) {
     var o = Hive.App.Html(common);
     Hive.App.has_shield(o);
+    Hive.App.has_resize_h(o);
 
     //o.div.append($.jPlayer.skin[o.state.content.player](o.state.content.url, o.index));
     $('.jp-jplayer').each(function(){
