@@ -1,7 +1,7 @@
 $.jPlayer.skin = {
     basic : function(url, index){
         return '<div class="content drag">' +
-        '<div id="jquery_jplayer_' + index + '" class="jp-jplayer" data-url="' + url + '"></div>' +
+        '<div data-index=' + index + ' id="jquery_jplayer_' + index + '" class="jp-jplayer" data-url="' + url + '"></div>' +
         '<div id="jp_container_' + index + '" class="jp-audio">' +
         '  <div class="jp-type-single">' +
         '    <div class="jp-gui jp-interface">' +

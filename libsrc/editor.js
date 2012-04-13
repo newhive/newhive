@@ -868,6 +868,7 @@ Hive.App.Sketch = function(common) {
 Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 
 Hive.App.Audio = function(common) {
+    return Hive.App.Html(common);
     var o = {};
     $.extend(o, common);
 
@@ -946,11 +947,8 @@ Hive.new_file = function(file, opts) {
         ,content: file.url
     });
     else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
-         content: ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
-             +"<param name='FlashVars' value='soundFile=" + file.url + "'>"
-             +"<param name='wmode' value='transparent'></object>"
-             )
-        ,type: 'hive.html'
+        content: ($.jPlayer.skin.basic(file.url, 1))
+        ,type: 'hive.audio'
         ,dimensions: [200, 24]
     });
     else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
