@@ -408,6 +408,9 @@ Hive.App.has_resize_h = function(o) {
     function controls(common) {
         var o = $.extend({}, common);
 
+        o.c.resize_h = o.div.find('.resize_h');
+        o.refDims = null;
+
         o.layout = function() {
             common.layout()
             var p = o.padding;
@@ -415,8 +418,8 @@ Hive.App.has_resize_h = function(o) {
             o.c.resize_h.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
         }
 
-        o.c.resize_h = o.div.find('.resize_h');
-        o.div.find('.resize_h').drag('start', function(e, dd) {
+        // Dragging behavior
+        o.c.resize_h.drag('start', function(e, dd) {
             o.refDims = o.app.dims();
             o.dragging = e.target;
             o.dragging.busy = true;
@@ -424,9 +427,9 @@ Hive.App.has_resize_h = function(o) {
         }).drag('end', function(e, dd) {
             o.dragging.busy = false;
             o.app.div.drag('end');
+        }).drag(function(e, dd) { 
+            o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1]]); 
         });
-        o.refDims = null;
-        o.c.resize_h.drag(function(e, dd) { o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1]]); });
 
         return o;
     }
@@ -518,11 +521,6 @@ Hive.App.Text = function(common) {
         }
         return $(o.rte.doc.body).height(); 
     }
-    o.resize_h = function(dims) {
-        o.dims(dims);
-        return o.resize([dims[0], o.calcHeight()]);
-    }
-    o.refresh_size = function() { o.resize_h(o.dims()); }
     var scale = o.state.scale ? o.state.scale * 1/o.sf() : 1;
     o.scale = function(s) {
         if(typeof(s) == 'undefined') return scale;
@@ -547,17 +545,10 @@ Hive.App.Text = function(common) {
         var o = $.extend({}, common);
 
         o.padding = 5;
-        o.layout = function() {
-            common.layout();
-            var p = o.padding;
-            var dims = o.get_dims();
-            o.c.resize_h.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
-        }
 
         o.addControls($('#controls_text'));
 
         var d = o.div;
-        o.c.resize_h = d.find('.resize_h');
 
         o.link_menu = o.append_link_picker(d.find('.buttons'));
         o.close = function() { o.link_menu.close(); }
@@ -594,7 +585,7 @@ Hive.App.Text = function(common) {
             o.app.rte.edit($(e).attr('cmd'), $(e).attr('val'))
         }); })
 
-        d.find('.resize, .resize_h').drag('start', function(e, dd) {
+        d.find('.resize').drag('start', function(e, dd) {
             o.refDims = o.app.dims();
             o.dragging = e.target;
             o.dragging.busy = true;
@@ -605,8 +596,7 @@ Hive.App.Text = function(common) {
             //cos(atan2(x, y) - atan2(w, h))
             o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0], (o.refDims[1] + dd.deltaY) / o.refDims[1]));
         });
-        o.c.resize_h.drag(function(e, dd) { o.app.resize_h([o.refDims[0] + dd.deltaX, o.refDims[1]]); });
-        d.find('.resize, .resize_h').drag('end', function(e, dd) {
+        d.find('.resize').drag('end', function(e, dd) {
             o.dragging.busy = false;
             o.app.div.drag('end');
         });
@@ -615,6 +605,7 @@ Hive.App.Text = function(common) {
     }
     o.make_controls.push(controls);
     Hive.App.has_shield(o);
+    Hive.App.has_resize_h(o);
 
     o.div.addClass('text');
     o.set_shield();
