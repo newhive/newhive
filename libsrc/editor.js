@@ -253,7 +253,6 @@ Hive.App.Controls = function(app) {
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
         o.c.copy   .css({ left  : dims[0] - 45 + p, top   : -38 - p });
         o.c.remove .css({ left  : dims[0] - 14 + p, top   : -38 - p });
-        o.c.resize .css({ left  : dims[0] - 20 + p, top   : dims[1] - 20 + p });
         o.c.stack  .css({ left  : dims[0] - 78 + p, top   : dims[1] + 8 + p });
         o.c.buttons.css({ left  :  -5 - p, top : dims[1] + p + 10, width : dims[0] - 60 });
     };
@@ -286,8 +285,16 @@ Hive.App.Controls = function(app) {
         return m;
     };
 
-    o.appendControl = function(c) { o.div.append(c); };
+    o.appendControl = function(c) { 
+        o.div.append(c); 
+    };
+    o.appendButton = function(c) {
+        var buttons = o.div.find('.buttons');
+        if (buttons.length == 0) buttons = $('<div class="control buttons"></div>').appendTo(o.div);
+        buttons.append(c);
+    }
     o.addControl = function(ctrls) { map(o.appendControl, ctrls.clone(false)); };
+    o.addButton = function(ctrls) { map(o.appendButton, ctrls.clone(false)); };
     o.addControls = function(ctrls) { map(o.appendControl, ctrls.clone(false).children()); };
     o.hover_menu = function(h, d, o) { return hover_menu(h, d, $.extend({offsetY : 5}, o)) };
 
@@ -371,8 +378,18 @@ Hive.App.has_resize = function(o) {
     function controls(common) {
         var o = $.extend({}, common);
 
+        o.addControl($('#controls_misc .resize'));
+        o.c.resize = o.div.find('.resize');
+
         var refDims, ctrls = resize = o.div.find('.resize'); // , resize_h = o.div.find('.resize_h'), ctrls = resize.add(resize_h);
         //resize_h.show();
+
+        o.layout = function() {
+            common.layout()
+            var p = o.padding;
+            var dims = o.get_dims();
+            o.c.resize .css({ left  : dims[0] - 20 + p, top   : dims[1] - 20 + p });
+        }
 
         ctrls.drag('start', function(e, dd) {
             o.refDims = o.app.dims();
@@ -487,6 +504,7 @@ Hive.App.Text = function(common) {
     var o = $.extend({}, common);
     
     Hive.App.has_shield(o);
+    Hive.App.has_resize(o);
     Hive.App.has_resize_h(o);
 
     var content = o.state.content;
@@ -680,6 +698,16 @@ Hive.App.has_slider_menu = function(o, handle, callback, init) {
     o.make_controls.push(controls);
 }
 Hive.App.has_opacity = function(o) {
+    function controls(common) {
+        var o = $.extend({}, common);
+
+        o.addButton($('#controls_misc .opacity'));
+        o.c.opacity = o.div.find('.opacity');
+
+        return o;
+
+    }
+    o.make_controls.push(controls);
     Hive.App.has_slider_menu(o, '.opacity', function(v) { o.opacity(v/100) },
         function() { return Math.round(o.opacity() * 100) });
 }
@@ -901,7 +929,9 @@ Hive.App.Audio = function(common) {
     var o = $.extend({}, common);
     //var o = Hive.App.Html(common);
     Hive.App.has_shield(o);
+    //Hive.App.has_resize(o);
     Hive.App.has_resize_h(o);
+    Hive.App.has_opacity(o);
 
     o.content_element = $(o.state.content).addClass('content');
     o.div.append(o.content_element);

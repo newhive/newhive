@@ -3,11 +3,11 @@ $(function() {
     place_apps();
 
     // hive.audio jplayer setup
-    if ($('.app_hive_audio').length > 0) {
+    if ($('.jp-jplayer').length > 0) {
         $('head').append("<link rel='stylesheet' type='text/css' href='/lib/libsrc/jplayer/jplayer.blue.monday.css'>");
     };
 
-    $('.app_hive_audio .jp-jplayer').each(function(){
+    $('.jp-jplayer').each(function(){
         $(this).jPlayer({
             cssSelectorAncestor: "#jp_container_" + $(this).data("index"),
             ready: function () {

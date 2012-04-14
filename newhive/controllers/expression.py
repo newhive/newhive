@@ -298,8 +298,8 @@ def expr_to_html(exp):
         elif app.get('type') == 'hive.rectangle':
             c = app.get('content', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-        elif app.get('type') == 'hive.audio':
-            html = "<div class='app_hive_audio'>" + content + "</div>"
+        #elif app.get('type') == 'hive.audio':
+        #    html = "<div class='app_hive_audio'>" + content + "</div>"
         else: html = content
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
