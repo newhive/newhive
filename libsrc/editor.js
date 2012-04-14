@@ -286,8 +286,9 @@ Hive.App.Controls = function(app) {
         return m;
     };
 
-    o.addControl = function(c) { o.div.append(c); };
-    o.addControls = function(ctrls) { map(o.addControl, ctrls.clone(false).children()); };
+    o.appendControl = function(c) { o.div.append(c); };
+    o.addControl = function(ctrls) { map(o.appendControl, ctrls.clone(false)); };
+    o.addControls = function(ctrls) { map(o.appendControl, ctrls.clone(false).children()); };
     o.hover_menu = function(h, d, o) { return hover_menu(h, d, $.extend({offsetY : 5}, o)) };
 
     o.div = $("<div style='position : absolute; z-index : 3; width : 0; height : 0' class='controls'>");
@@ -408,6 +409,7 @@ Hive.App.has_resize_h = function(o) {
     function controls(common) {
         var o = $.extend({}, common);
 
+        o.addControl($('#controls_misc .resize_h'));
         o.c.resize_h = o.div.find('.resize_h');
         o.refDims = null;
 
@@ -484,6 +486,9 @@ var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 Hive.App.Text = function(common) {
     var o = $.extend({}, common);
     
+    Hive.App.has_shield(o);
+    Hive.App.has_resize_h(o);
+
     var content = o.state.content;
     o.content = function(content) {
         if(typeof(content) != 'undefined') {
@@ -604,8 +609,6 @@ Hive.App.Text = function(common) {
         return o;
     }
     o.make_controls.push(controls);
-    Hive.App.has_shield(o);
-    Hive.App.has_resize_h(o);
 
     o.div.addClass('text');
     o.set_shield();
@@ -638,7 +641,7 @@ Hive.App.has_rotate = function(o) {
         }
 
         o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', '/lib/skin/1/rotate.png');
-        o.addControl(o.rotateHandle);
+        o.appendControl(o.rotateHandle);
 
         o.rotateHandle.drag('start', function(e, dd) {
             refAngle = angle;
@@ -789,7 +792,6 @@ Hive.App.Rectangle = function(common) {
             var p = o.padding;
             var dims = o.get_dims();
             if(!o.rotateHandle) o.rotateHandle = o.div.find('.rotate');
-            if(!o.resizeHandle) o.resizeHandle = o.div.find('.resize_h');
             //o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 40, dims[1] - 100) });
             //o.resizeHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2     , dims[1] -  60) });
             o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
@@ -896,9 +898,13 @@ Hive.App.Sketch = function(common) {
 Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 
 Hive.App.Audio = function(common) {
-    var o = Hive.App.Html(common);
+    var o = $.extend({}, common);
+    //var o = Hive.App.Html(common);
     Hive.App.has_shield(o);
     Hive.App.has_resize_h(o);
+
+    o.content_element = $(o.state.content).addClass('content');
+    o.div.append(o.content_element);
 
     //o.div.append($.jPlayer.skin[o.state.content.player](o.state.content.url, o.index));
     $('.jp-jplayer').each(function(){
@@ -915,6 +921,7 @@ Hive.App.Audio = function(common) {
     });
  
     //o.load();
+    o.set_shield();
     return o;
 }
 Hive.registerApp(Hive.App.Audio, 'hive.audio');
