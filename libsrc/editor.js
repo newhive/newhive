@@ -711,6 +711,23 @@ Hive.App.has_opacity = function(o) {
     Hive.App.has_slider_menu(o, '.opacity', function(v) { o.opacity(v/100) },
         function() { return Math.round(o.opacity() * 100) });
 }
+    
+Hive.App.has_color = function(o, opts) {
+    function controls(common) {
+        var o = $.extend({}, common);
+
+        o.addButton($('#controls_misc .button.color'));
+        o.addButton($('#controls_misc .drawer.color'));
+        o.c.color = o.div.find('.button.color');
+        o.c.color_drawer = o.div.find('.drawer.color');
+
+        append_color_picker(o.c.color_drawer, opts.callback, opts.init(o));
+        o.hover_menu(o.c.color, o.c.color_drawer, { auto_close : false });
+        return o;
+
+    }
+    o.make_controls.push(controls);
+}
 
 
 Hive.App.Image = function(common) {
@@ -895,6 +912,7 @@ Hive.App.Sketch = function(common) {
 
         o.addControls($('#controls_sketch'));
         append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, '#000000');
+
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
         o.hover_menu(o.div.find('.button.brush'), o.div.find('.drawer.brush'));
         o.div.find('.drawer.brush .option').each(function(i, e) { $(e).click(function() {
@@ -932,9 +950,16 @@ Hive.App.Audio = function(common) {
     //Hive.App.has_resize(o);
     Hive.App.has_resize_h(o);
     Hive.App.has_opacity(o);
+    Hive.App.has_color(o, {
+        callback: function(val){ o.div.find('.jp-play-bar').css('background-color', val); }
+        , init  : function(c) { return c.app.div.find('.jp-play-bar').css('background-color')} });
 
-    o.content_element = $(o.state.content).addClass('content');
+    o.content_element = $(o.state.content || $.jPlayer.skin.minimal(o.state.src, o.state.file_id)).addClass('content');
     o.div.append(o.content_element);
+
+    o.content = function() {
+        return o.div.html();
+    };
 
     //o.div.append($.jPlayer.skin[o.state.content.player](o.state.content.url, o.index));
     $('.jp-jplayer').each(function(){
@@ -950,7 +975,7 @@ Hive.App.Audio = function(common) {
         });
     });
  
-    //o.load();
+    setTimeout(function(){ o.load(); }, 100);
     o.set_shield();
     return o;
 }
@@ -1009,7 +1034,7 @@ Hive.new_file = function(file, opts) {
         ,content: file.url
     });
     else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
-        content: ($.jPlayer.skin.minimal(file.url, 1))
+        src: file.url
         ,type: 'hive.audio'
         ,dimensions: [300, 50]
     });
@@ -1645,6 +1670,14 @@ var append_color_picker = function(container, callback, init_color) {
     var e = $('<div>').addClass('color_picker');
     container.append(e);
 
+    var to_rgb = function(c) {
+        return map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
+    }
+    var to_hex = function(color) {
+        if (typeof(color) == "string") color = to_rgb(color);
+        return '#' + map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
+    }
+    init_color = to_hex(init_color);
     var make_picker = function(c) {
         var d = $('<div>').addClass('color_select');
         d.css('background-color', c).attr('val', c).click(function() { set_color(c); manual_input.val(c); callback(c, to_rgb(c)) });
@@ -1681,9 +1714,6 @@ var append_color_picker = function(container, callback, init_color) {
     }
     bar.click(get_hue).drag(get_hue);
 
-    var to_rgb = function(c) {
-        return map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
-    }
     var set_color = function(c) {
         var rgb = to_rgb(c);
         hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
@@ -1701,7 +1731,7 @@ var append_color_picker = function(container, callback, init_color) {
 
     var calc_color = function() {
         var color = hsvToRgb(hsv[0], hsv[1], hsv[2]);
-        var hex = '#' + map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
+        var hex = to_hex(color);
         manual_input.val(hex);
         callback(hex, color);
     }
