@@ -12,7 +12,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     config.plain_port =  options.port or config.plain_port
-    config.secure_port = options.secure_port or options.port + 1 or config.ssl_port
+    config.secure_port = options.secure_port or (options.port and options.port + 1) or config.ssl_port
 
 
     """ This Werkzeug server is used only for development and debugging """
