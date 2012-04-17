@@ -9,57 +9,52 @@
 }
 
 /* line 4, /home/duffy/2newhive/libsrc/scss/nav.scss */
-#nav {
-  font-weight: bold;
-}
-
-/* line 5, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon {
   display: inline-block;
   height: 50px;
   float: left;
 }
-/* line 9, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 8, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon.active {
   color: white;
   background-color: #696e76;
 }
-/* line 10, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 9, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon.pad {
   padding: 0 8px;
 }
-/* line 11, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 10, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon.padsm {
   padding-right: 3px;
 }
-/* line 12, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 11, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .nav_icon.space {
   padding: 0 4px;
 }
 
-/* line 14, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 13, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .icon {
   background-repeat: no-repeat;
   background-size: 100%;
 }
-/* line 17, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 16, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .icon.full {
   width: 44px;
   height: 50px;
 }
 
-/* line 19, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 18, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .center {
   line-height: 50px;
   vertical-align: middle;
 }
 
-/* line 23, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 22, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav .center img {
   vertical-align: middle;
 }
 
-/* line 25, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 24, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav_bg {
   top: 0;
   left: 0;
@@ -69,36 +64,40 @@
   z-index: 1;
 }
 
-/* line 34, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 33, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #nav_right {
   right: 0px;
   top: 0px;
   margin-right: 5px;
 }
 
-/* line 36, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 35, /home/duffy/2newhive/libsrc/scss/nav.scss */
 body.home.logged_out .nav {
   position: absolute;
 }
 
-/* line 40, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 39, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #logo {
   vertical-align: middle;
 }
 
-/* line 42, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 41, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu_handle.active {
   background: none !important;
 }
 
-/* line 43, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 42, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .referral_count {
   color: #f72e4d;
   padding-left: 30px;
   float: right;
 }
 
-/* line 49, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 47, /home/duffy/2newhive/libsrc/scss/nav.scss */
+#user_menu {
+  font-weight: bold;
+}
+/* line 48, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .fb_icon {
   display: inline-block;
   vertical-align: middle;
@@ -107,11 +106,11 @@ body.home.logged_out .nav {
   margin-right: 5px;
   background: url("/lib/skin/1/facebook_flat_sm.png") no-repeat -1px -2px;
 }
-/* line 57, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 56, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .fb_icon_title {
   font-size: 19px;
 }
-/* line 60, /home/duffy/2newhive/libsrc/scss/nav.scss */
+/* line 59, /home/duffy/2newhive/libsrc/scss/nav.scss */
 #user_menu .menu_item {
   clear: both;
   overflow: hidden;
@@ -1606,57 +1605,59 @@ body.profile #left_tabs .tab_label.current {
 #feed .card .other, #feed .card .tags, #feed .card .stats, #feed .card .feed_info, #feed .card .comment {
   font-size: 0.7em;
 }
-/* line 40, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 39, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .tags, #feed .card .comment {
   overflow: hidden;
   text-overflow: ellipsis;
   max-height: 29px;
   margin-bottom: 5px;
 }
-/* line 45, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 44, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .tags .tag:hover, #feed .card .comment .tag:hover {
   background: #f73627;
   color: white;
 }
-/* line 47, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 46, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .other {
   position: absolute;
   bottom: 8px;
   font-weight: bold;
+  overflow: hidden;
+  max-width: 103px;
 }
-/* line 51, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 50, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .other:hover {
   background: #698293 !important;
   color: white;
 }
-/* line 53, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 54, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_thumbs {
   position: absolute;
   bottom: 113px;
   left: 20px;
   width: 64px;
 }
-/* line 58, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 59, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_thumbs img {
   width: 30px;
   border: 1px solid white;
   float: left;
 }
-/* line 59, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 60, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_thumbs img.first {
   display: block;
 }
-/* line 60, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 61, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_thumbs img.big {
   width: 39px;
 }
-/* line 62, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 63, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .actions {
   position: absolute;
   right: 20px;
   top: 20px;
 }
-/* line 66, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 67, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_info {
   position: absolute;
   bottom: 118px;
@@ -1665,56 +1666,56 @@ body.profile #left_tabs .tab_label.current {
   text-align: right;
   width: 120px;
 }
-/* line 73, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 74, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_info div {
   background-color: #fff673;
   margin: 1px;
   display: inline;
   padding: 0 5px;
 }
-/* line 74, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 75, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #feed .card .feed_info.create div {
   background-color: white;
 }
 
-/* line 78, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 79, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card {
   position: relative;
 }
-/* line 80, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 81, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card .stats {
   position: absolute;
   bottom: 5px;
   right: 13px;
   color: #696e76;
 }
-/* line 84, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 85, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card .stats img {
   vertical-align: middle;
 }
-/* line 85, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 86, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card .stats .listen_button:hover {
   background-color: #f72e4d;
 }
-/* line 87, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 88, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card.with_hide .inactive_hide {
   display: none;
 }
-/* line 88, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 89, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card.with_hide:hover .inactive_hide {
   display: block;
 }
-/* line 89, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 90, /home/duffy/2newhive/libsrc/scss/cards.scss */
 .card.with_hide:hover .active_hide {
   display: none;
 }
 
-/* line 92, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 93, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers, #dia_listeners {
   width: 316px;
   overflow: auto;
 }
-/* line 96, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 97, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .dialog_title, #dia_listeners .dialog_title {
   width: 290px;
   background-color: #d0e0f0;
@@ -1722,7 +1723,7 @@ body.profile #left_tabs .tab_label.current {
   padding: 4px 6px;
   font-weight: bold;
 }
-/* line 103, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 104, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card, #dia_listeners .card {
   overflow: hidden;
   *zoom: 1;
@@ -1731,18 +1732,18 @@ body.profile #left_tabs .tab_label.current {
   clear: both;
   width: 290px;
 }
-/* line 108, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 109, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card:hover, #dia_listeners .card:hover {
   background-color: #96e2ce;
 }
-/* line 109, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 110, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card img, #dia_listeners .card img {
   width: 70px;
   height: 70px;
   float: left;
   margin-right: 10px;
 }
-/* line 115, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 116, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card .title, #dia_listeners .card .title {
   font-weight: bold;
   max-height: 2.5em;
@@ -1750,11 +1751,11 @@ body.profile #left_tabs .tab_label.current {
   text-overflow: ellipsis;
   margin-bottom: 5px;
 }
-/* line 116, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 117, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card .other, #dia_starrers .card .tags, #dia_listeners .card .other, #dia_listeners .card .tags {
   font-size: .8em;
 }
-/* line 117, /home/duffy/2newhive/libsrc/scss/cards.scss */
+/* line 118, /home/duffy/2newhive/libsrc/scss/cards.scss */
 #dia_starrers .card .other, #dia_listeners .card .other {
   margin-top: 10px;
   font-weight: bold;

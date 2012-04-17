@@ -1,11 +1,20 @@
 #! /usr/bin/python
-import os
+import os, optparse
 from os.path  import dirname, exists, join as joinpath
 import newhive.config as config
 from newhive.wsgi import handle_debug
 
 # run_simple is not so simple
 if __name__ == '__main__':
+    parser = optparse.OptionParser()
+    parser.add_option("-p", "--port", action="store", type="int", dest="port")
+    parser.add_option("--secure-port", action="store", type="int", dest="secure_port")
+    (options, args) = parser.parse_args()
+
+    config.plain_port =  options.port or config.plain_port
+    config.secure_port = options.secure_port or (options.port and options.port + 1) or config.ssl_port
+
+
     """ This Werkzeug server is used only for development and debugging """
     from werkzeug import run_simple
     import OpenSSL.SSL as ssl

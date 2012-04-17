@@ -68,8 +68,9 @@
 #dia_thumbnail .thumb { float : left; margin : 5px; width : 190px; height : 190px; overflow : hidden; position : relative; }
 #dia_thumbnail .thumb img { width: 190px; height: 190px; }
 
+#menu_embed { width: 275px; padding: 10px; }
 #image_embed_submenu { display: none; }
-.embed_box { font-size: 15px; margin: 5px 8px; }
+.embed_box { font-size: 12px; margin: 10px 0; width: 250px; height: 4em; }
 .embed_button { font-size: 18px; }
 
 .menu label { font-weight: normal; font-size: 15px; color: }
