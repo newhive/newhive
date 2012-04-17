@@ -671,6 +671,7 @@ var scale_nav = function(s) {
    $('#nav, #search_box ').css('font-size', s + 'em');
 }
 
+var positionHacks = Funcs(noop);
 var place_apps = function() {
    $('.happ').each(function(i, app_div) {
        var e = $(this);
@@ -692,6 +693,7 @@ var place_apps = function() {
        }
        e.css(c);
    });
+   positionHacks();
    $('.happfill').each(function(i, div) {
        var e = $(div);
        //e.width(e.parent().width()).height(e.parent().height());

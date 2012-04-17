@@ -200,6 +200,7 @@ Hive.App = function(initState) {
         if(o.state.load) o.state.load(o);
         delete o.state.load;
         delete o.state.create;
+        delete o.state.copy;
     });
 
     // initialize
@@ -312,7 +313,9 @@ Hive.App.Controls = function(app) {
     o.c.remove.click(function() { o.app.remove() });
     o.c.copy    = d.find('.copy'   );
     o.c.copy.click(function() {
-        var cp = Hive.App(o.app.getState());
+        var state = o.app.getState();
+        state.copy = true;
+        var cp = Hive.App(state);
         cp.pos([cp.pos()[0], cp.pos()[1] + o.app.dims()[1] + 20]);
     });
     d.find('.stack_up').click(o.app.stackTop);
@@ -338,7 +341,8 @@ Hive.registerApp = function(app, name) {
 /* Hack to prevent iframe or object in an App from capturing mouse events
  * @param {Hive.App} o The app to add shielding to
  * */
-Hive.App.has_shield = function(o) {
+Hive.App.has_shield = function(o, opts) {
+    if (typeof(opts) == "undefined") opts = {};
     o.dragging = false;
 
     o.shield = function() {
@@ -349,6 +353,7 @@ Hive.App.has_shield = function(o) {
         o.eventCapturer.css('opacity', 0.0);
     }
     o.unshield = function() {
+        if (opts.always) return;
         if(!o.eventCapturer) return;
         o.eventCapturer.remove();
         o.eventCapturer = false;
@@ -721,7 +726,11 @@ Hive.App.has_color = function(o, opts) {
         o.c.color = o.div.find('.button.color');
         o.c.color_drawer = o.div.find('.drawer.color');
 
-        append_color_picker(o.c.color_drawer, opts.callback, opts.init(o));
+        var callback = function(color){
+            o.app.state.color = color;
+            opts.callback(color);
+        }
+        append_color_picker(o.c.color_drawer, callback, o.app.state.color);
         o.hover_menu(o.c.color, o.c.color_drawer, { auto_close : false });
         return o;
 
@@ -945,38 +954,99 @@ Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 
 Hive.App.Audio = function(common) {
     var o = $.extend({}, common);
-    //var o = Hive.App.Html(common);
-    Hive.App.has_shield(o);
-    //Hive.App.has_resize(o);
-    Hive.App.has_resize_h(o);
-    Hive.App.has_opacity(o);
-    Hive.App.has_color(o, {
-        callback: function(val){ o.div.find('.jp-play-bar').css('background-color', val); }
-        , init  : function(c) { return c.app.div.find('.jp-play-bar').css('background-color')} });
 
-    o.content_element = $(o.state.content || $.jPlayer.skin.minimal(o.state.src, o.state.file_id)).addClass('content');
-    o.div.append(o.content_element);
+    var randomStr = function(){ return Math.random().toString(16).slice(2);};
 
     o.content = function() {
-        return o.div.html();
+        return o.content_element.outerHTML();
     };
 
-    //o.div.append($.jPlayer.skin[o.state.content.player](o.state.content.url, o.index));
-    $('.jp-jplayer').each(function(){
-        $(this).jPlayer({
-            cssSelectorAncestor: "#jp_container_" + $(this).data("index"),
-            ready: function () {
-              $(this).jPlayer("setMedia", {
-                mp3: $(this).data("url")
-              }).jPlayer("playHead", 25);
-            },
-            swfPath: server_url + "lib/",
-            supplied: "mp3"
-        });
+    o.resize = function(dims) {
+        if(!dims[0] || !dims[1]) return;
+
+        //Hack that forces play/pause image element to resize, at least on chrome
+        o.div.find('.jp-controls img').click();
+        o.player.jPlayer("playHead", 0);
+
+        // enforce 25px < height < 400px and minimum aspect ratio of 2.5:1
+        var sf = o.sf();
+        if (dims[1] * sf < 25) dims[1] = 25 / sf;
+        if (dims[1] * sf > 400) dims[1] = 400 / sf;
+        if (dims[0] < 2.5 * dims[1]) dims[0] = 2.5 * dims[1];
+
+        o.scale(dims[1]/35);
+
+        common.resize(dims);
+        return dims;
+    }
+    //
+    // Audio players always go on top
+    //o.layer = function(n) {
+    //    common.layer(n + 1000);
+    //}
+
+    o.set_color = function(color){ o.div.find('.jp-play-bar, .jp-interface').css('background-color', color); };
+
+    o.scale = function(s) {
+        if(typeof(s) == 'undefined') return scale;
+        scale = s;
+        o.div.css('font-size', s + 'em');
+        var height = o.div.find('.jp-interface').height();
+        o.div.find('.jp-button').width(height).height(height);
+
+        common.scale(s);
+    }
+
+    o.load = function(){
+        o.resize(o.dims());
+        //o.scale_n(1);
+        common.load()
+    }
+
+    // Mixins
+    Hive.App.has_shield(o, {always: true});
+    Hive.App.has_resize(o);
+    Hive.App.has_opacity(o);
+    Hive.App.has_color(o, {
+        callback: function(val){ o.div.find('.jp-play-bar, .jp-interface').css('background-color', val); }
+    });
+
+    // Initialization
+    if(o.state.create) o.dims([200, 35]);
+
+    o.content_element = $(o.state.create || o.state.copy ? $.jPlayer.skin.minimal(o.state.src, randomStr()) : o.state.content )
+        .addClass('content')
+        .css('position', 'relative')
+        .css('height', '100%');
+    o.div.append(o.content_element);
+
+    o.set_color(o.state.color);
+
+    // jPlayer element reference
+    o.player = o.div.find('.jp-jplayer');
+    var loadeddataCallback = function (event) {
+        var status = event.jPlayer.status;
+        //o.player.jPlayer("playHead", 25);
+        o.player.siblings().find('.jp-remaining-time')
+            .text($.jPlayer.convertTime(status.duration - status.currentTime));
+    };
+    o.player.jPlayer({
+        cssSelectorAncestor: "#jp_container_" + o.player.data("index"),
+        ready: function () {
+          o.player.jPlayer("setMedia", {
+            mp3: o.player.data("url")
+          });
+         // var that = this;
+         // setTimeout(function(){$(that).jPlayer("playHead", 75)}, 10);
+        },
+        loadeddata: loadeddataCallback,
+        swfPath: server_url + "lib/",
+        supplied: "mp3"
     });
  
+    o.set_shield = function() { o.shield(); }
+    o.shield();
     setTimeout(function(){ o.load(); }, 100);
-    o.set_shield();
     return o;
 }
 Hive.registerApp(Hive.App.Audio, 'hive.audio');
@@ -1035,8 +1105,8 @@ Hive.new_file = function(file, opts) {
     });
     else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
         src: file.url
+        //,content: ($.jPlayer.skin.minimal(file.url, 1))
         ,type: 'hive.audio'
-        ,dimensions: [300, 50]
     });
     else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
 

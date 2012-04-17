@@ -56,7 +56,7 @@ assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output
 
 assets_env.register('app.css', scss, 'app.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
-assets_env.register('editor.css', 'editor.css', 'jplayer/jplayer.blue.monday.css', filters='yui_css', output='../lib/editor.css')
+assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
 ##############################################################################

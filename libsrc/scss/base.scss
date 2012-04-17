@@ -18,6 +18,7 @@ $right_column_x: $left_padding + $left_column_width + $right_padding;
 @import "settings";
 @import "signup_flow";
 @import "chart";
+@import "jplayer";
 
 .centered { 
     text-align: center; 
