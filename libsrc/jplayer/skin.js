@@ -55,9 +55,6 @@ $.jPlayer.skin = {
         '      </div>' +
         '      <div class="jp-remaining-time"></div>' +
         '      <div class="jp-volume">' +
-        '        <div class="jp-volume-bar">' +
-        '          <div class="jp-volume-bar-value"></div>' +
-        '        </div>' +
         '        <div class="jp-volume-buttons">' +
         '          <div class="jp-volume-plus button">' +
         '            <span>+</span>' +
@@ -65,6 +62,9 @@ $.jPlayer.skin = {
         '          <div class="jp-volume-minus button">' +
         '            <span>-<span>' +
         '          </div>' +
+        '        </div>' +
+        '        <div class="jp-volume-bar">' +
+        '          <div class="jp-volume-bar-value"></div>' +
         '        </div>' +
         '      </div>' +
         '    </div>' +

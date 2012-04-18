@@ -1007,6 +1007,7 @@ Hive.App.Audio = function(common) {
     // Mixins
     Hive.App.has_shield(o, {always: true});
     Hive.App.has_resize(o);
+    Hive.App.has_resize_h(o);
     Hive.App.has_opacity(o);
     Hive.App.has_color(o, {
         callback: function(val){ o.div.find('.jp-play-bar, .jp-interface').css('background-color', val); }
