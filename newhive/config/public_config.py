@@ -58,6 +58,7 @@ signup_group    = 2
 debug_mode      = False
 debug_unsecure  = False
 webassets_debug = False
+always_ssl      = False
 
 from os.path import dirname, join, normpath
 src_home        = normpath(join(dirname(__file__), "../.."))
