@@ -401,7 +401,7 @@ class User(HasSocial):
             return list(self.feed_search(q, limit=limit, **args))
         activity = query_feed({'initiator': self.id}) + query_feed({'entity_owner': self.id})
         activity.sort(cmp=lambda x, y: cmp(x['created'], y['created']), reverse=True)
-        page = Page(activity)
+        page = Page(activity[0:limit])
         page.next = page[-1]['created'] if len(page) == limit else None
         return page
     def feed_profile_entities(self, **args):
