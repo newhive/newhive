@@ -686,12 +686,14 @@ Hive.App.has_rotate = function(o) {
         o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', '/lib/skin/1/rotate.png');
         o.appendControl(o.rotateHandle);
 
+        var angleRound = function(a) { return Math.round(a / 45)*45; }
         o.rotateHandle.drag('start', function(e, dd) {
             refAngle = angle;
             offsetAngle = o.getAngle(e);
             o.app.dragstart();
         }).drag(function(e, dd) {
             angle = o.getAngle(e) - offsetAngle + refAngle;
+            if (e.shiftKey && Math.abs(angle - angleRound(angle)) < 5) angle = angleRound(angle);
             o.app.angle(angle);
             o.select_box.rotate(angle);
         }).drag('end', function(e, dd) { o.app.dragend(); });
