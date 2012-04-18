@@ -805,6 +805,7 @@ Hive.App.Image = function(common) {
         return o;
     };
     o.make_controls.push(controls);
+    Hive.App.has_resize(o);
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
 
