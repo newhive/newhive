@@ -130,7 +130,26 @@ Hive.App = function(initState) {
     o.focused = function() { return o.apps.focused == o }
     o.dragstart = Funcs(function() { o.dragging = true; });
     o.dragend = Funcs(function() { o.dragging = false; });
-    
+
+    o.keyPress = function(e){
+        var nudge = function(dx,dy){
+            return function(){
+                var refPos = o.pos();
+                if (e.shiftKey) {dx = 10*dx; dy = 10*dy;}
+                o.pos([refPos[0] + dx, refPos[1] + dy]);
+                e.preventDefault();
+            }
+        }
+
+        var handlers = {
+            37: nudge(-1,0)
+            , 38: nudge(0,-1)
+            , 39: nudge(1,0)
+            , 40: nudge(0,1)
+        }
+        handlers[e.keyCode] && handlers[e.keyCode]();
+    };
+
     // stacking order of aps
     o.layer = function(n) {
         if(typeof(n) == 'number') {
@@ -529,6 +548,7 @@ Hive.App.Text = function(common) {
         o.rte.editMode(false);
         o.rte.set_content(autoLink(o.rte.get_content()));
         o.rte.addBreaks();
+        $(window).focus(); // Needed so keypress events don't get stuck on RTE iframe
     });
     
     o.link = function(v) {
@@ -1151,6 +1171,7 @@ var main = function() {
         ,drop : Hive.upload_start
     });
 
+    $(document).keydown(function(e){ Hive.OpenApps.focused && Hive.OpenApps.focused.keyPress(e) });
     $(window).resize(function(e) {
         map(function(a) {
                 a.pos_n(a.state.position);
