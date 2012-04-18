@@ -290,7 +290,8 @@ class CohortAnalysis:
         self.active_condition = {'value': {'$gte': 1}}
         self.date_key = 'created'
         self.user_identifier = 'ids'
-        self.start_date = datetime.datetime(2011,4,1,12)
+        self.start_date = datetime.datetime(2011,11,1,12)
+        self.end_date = datetime.datetime.now().replace(day=1, hour=12, minute=0, second=0, microsecond=0) - pandas.DateOffset(months=1)
 
         if cohort_users:
             self.cohort_users = cohort_users
@@ -306,7 +307,7 @@ class CohortAnalysis:
                                              )
         else:
             self.range = pandas.DateRange(self.start_date
-                                             , end = datetime.datetime.now()
+                                             , end = self.end_date
                                              , offset = pandas.DateOffset(months=1)
                                              )
         mr_dict = self.map_reduce(force=force)
