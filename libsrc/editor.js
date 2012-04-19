@@ -1120,21 +1120,24 @@ Hive.new_app = function(s) {
     return false;
 };
 
-Hive.new_file = function(file, opts) {
-    var app = $.extend({ file_id: file.file_id }, opts);
+Hive.new_file = function(files, opts) {
+    for (i=0; i < files.length; i++) {
+        var file = files[i];
+        var app = $.extend({ file_id: file.file_id }, opts);
 
-    if(file.mime.match(/image\/(png|gif|jpeg)/)) $.extend(app, {
-         type: 'hive.image'
-        ,content: file.url
-    });
-    else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
-        src: file.url
-        //,content: ($.jPlayer.skin.minimal(file.url, 1))
-        ,type: 'hive.audio'
-    });
-    else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
+        if(file.mime.match(/image\/(png|gif|jpeg)/)) $.extend(app, {
+             type: 'hive.image'
+            ,content: file.url
+        });
+        else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
+            src: file.url
+            //,content: ($.jPlayer.skin.minimal(file.url, 1))
+            ,type: 'hive.audio'
+        });
+        else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
 
-    Hive.new_app(app);
+        Hive.new_app(app);
+    };
     return false;
 }
 
@@ -1213,7 +1216,7 @@ var main = function() {
     Hive.set_bg_img(Hive.Exp.background);
     bg_set_color(Hive.Exp.background.color);
 
-    var new_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_file }); };
+    var new_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_file, multiple : true}); };
     var new_link = function() { asyncUpload({ start : Hive.upload_start, success : function(data) {
         if(data.error) { Hive.upload_finish(); alert('Sorry, your file failed to upload'); return }
         var app = { type: 'hive.text', content: $('<a>').attr('href', data.url).text(data.name).outerHTML() };

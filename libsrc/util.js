@@ -473,14 +473,17 @@ function asyncSubmit(form, callback) {
 }
 
 function asyncUpload(opts) {
-    var target, form, opts = $.extend({ json : true, file_name : 'file', action: '/',
+    var target, form, opts = $.extend({ json : true, file_name : 'file', multiple : false, action: '/',
         start : noop, success : noop, data : { action : opts.post_action || 'file_create' } }, opts);
 
     var onload = function() {
         var frame = target.get(0);
         if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
         var resp = $(frame.contentDocument.body).text();
-        if(opts.json) resp = JSON.parse(resp);
+        if(opts.json) {
+            resp = JSON.parse(resp);
+            if(!opts.multiple){ resp = resp[0]; }
+        }
         opts.success(resp);
         form.remove();
     }
@@ -490,6 +493,7 @@ function asyncUpload(opts) {
         attr('target', tname).attr('action', opts.action);
     target = $("<iframe style='position : absolute; left : -1000px'></iframe>").attr('name', tname).appendTo(form).load(onload);
     var input = $("<input type='file'>").attr('name', opts.file_name).change(function() { opts.start(); form.submit() }).appendTo(form);
+    if(opts.multiple) { input.attr('multiple', 'multiple'); }
     for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
     form.appendTo(document.body);
     setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
