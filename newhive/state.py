@@ -862,6 +862,12 @@ class File(Entity):
         if hasattr(self, "_file") and type(self._file) == file and (not self._file.closed):
             self._file.close()
 
+    @property
+    def file(self):
+        if not self._file:
+            self.download()
+        return self._file
+
     def download(self):
         try: response = urllib.urlopen(self['url'])
         except:

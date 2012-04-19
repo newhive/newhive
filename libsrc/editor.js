@@ -1040,11 +1040,13 @@ Hive.App.Audio = function(common) {
     // Initialization
     if(o.state.create) o.dims([200, 35]);
 
+    var audio_data = o.state.type_specific;
     o.content_element = $(o.state.create || o.state.copy ? $.jPlayer.skin.minimal(o.state.src, randomStr()) : o.state.content )
         .addClass('content')
         .css('position', 'relative')
         .css('height', '100%');
-    o.div.append(o.content_element);
+    o.div.append(o.content_element)
+        .attr('title', audio_data ? [audio_data.artist, audio_data.album, audio_data.title].join(' - ') : '');
 
     o.set_color(o.state.color);
 
@@ -1125,7 +1127,7 @@ Hive.new_app = function(s, offset) {
 Hive.new_file = function(files, opts) {
     for (i=0; i < files.length; i++) {
         var file = files[i];
-        var app = $.extend({ file_id: file.file_id }, opts);
+        var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
         if(file.mime.match(/image\/(png|gif|jpeg)/)) $.extend(app, {
              type: 'hive.image'

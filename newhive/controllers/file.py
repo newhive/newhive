@@ -28,12 +28,36 @@ class FileController(ApplicationController):
             tmp_file = os.tmpfile()
             tmp_file.write(file.read())
             res = self.db.File.create(dict(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime))
-            tmp_file.close()
 
-            rv.append({ 'name': file.filename, 'mime' : mime, 'file_id' : res.id, 'url' : res.get('url'), 'thumb': res.get_thumb(190,190) })
+            mime_category = mime.split('/')[0]
+
+            # I'm not sure if this approach is very 'pythonic' but I'm 
+            # having fun with a more functional approach in javascript
+            # and I thought i'd bring it here too. Too bad python doesn't
+            # have true anonymous functions --JDT
+            data = {
+                'audio': self._handle_audio
+                , 'image': self._handle_image
+            }.get(mime_category, lambda x: {})(res)
+
+            data.update({ 'name': file.filename, 'mime' : mime, 'file_id' : res.id, 'url' : res.get('url')})
+            rv.append(data)
+            tmp_file.close()
         return rv
 
     def delete(self, request, response):
         res = self.db.File.fetch(request.form.get('id'))
         if res: res.delete()
         return True
+
+    # "private" functions
+    def _handle_audio(self, file):
+        import hsaudiotag.auto
+        track = hsaudiotag.auto.File(file.file)
+        data = dict()
+        for attr in ["artist", "album", "title", "year", "genre", "track", "comment", "duration", "bitrate", "size"]:
+            data[attr] = getattr(track, attr)
+        return {'type_specific': data}
+
+    def _handle_image(self, file):
+        return {'thumb': file.get_thumb(190,190)}
