@@ -693,7 +693,7 @@ Hive.App.has_rotate = function(o) {
             o.app.dragstart();
         }).drag(function(e, dd) {
             angle = o.getAngle(e) - offsetAngle + refAngle;
-            if (e.shiftKey && Math.abs(angle - angleRound(angle)) < 5) angle = angleRound(angle);
+            if (e.shiftKey && Math.abs(angle - angleRound(angle)) < 10) angle = angleRound(angle);
             o.app.angle(angle);
             o.select_box.rotate(angle);
         }).drag('end', function(e, dd) { o.app.dragend(); });
