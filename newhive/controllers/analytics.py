@@ -183,6 +183,10 @@ class AnalyticsController(ApplicationController):
                     "title": 'Funnel 2: Fraction of users who had a user signup on one of their expressions (not neccessarily created account), by cohort'
                     , "data": analytics.funnel2_per_month
                     }
+                , "impressions": {
+                    "title": "Views on users' expressions"
+                    , "data": analytics.impressions_per_user
+                    }
                 }
 
         try:
@@ -239,3 +243,9 @@ class AnalyticsController(ApplicationController):
                     , 'url': '/analytics/cohort/funnel2'}
                 ]
         return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')
+
+    def impressions_per_user(self, request, response):
+        hist, bin_edges = newhive.analytics.overall_impressions(self.db)
+        response.context['data'] = list(hist[1:15])
+        response.context['edges'] = list(bin_edges[1:16])
+        return self.serve_page(response, 'pages/analytics/impressions.html')
