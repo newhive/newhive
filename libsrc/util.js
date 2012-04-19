@@ -792,3 +792,12 @@ function require_login(fn) {
     if(fn) return check;
     else return check();
 }
+
+function arrayAddition(a,b){
+    if (a.length != b.length) { throw "Arrays must be equal length" };
+    rv = []
+    for (i=0; i< a.length; i++){
+        rv[i] = a[i] + b[i]
+    }
+    return rv
+}

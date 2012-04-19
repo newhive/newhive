@@ -202,8 +202,10 @@ Hive.App = function(initState) {
         o.dims(dims);
         if(o.controls) o.controls.layout();
     }
-    o.center = function() {
-        o.pos([win.width() / 2 - o.dims()[0] / 2 + win.scrollLeft(), win.height() / 2 - o.dims()[1] / 2 + win.scrollTop()]);
+    o.center = function(offset) {
+        var pos = [win.width() / 2 - o.dims()[0] / 2 + win.scrollLeft(), win.height() / 2 - o.dims()[1] / 2 + win.scrollTop()]
+        if (typeof(offset) != "undefined") { pos = arrayAddition(pos, offset) };
+        o.pos(pos);
     }
 
     o.opacity = function(s) {
@@ -1106,12 +1108,12 @@ Hive.select_none = function() {
     Hive.selection = false;
 };
 
-Hive.new_app = function(s) {
+Hive.new_app = function(s, offset) {
     s.create = true;
     var load = s.load;
     s.load = function(a) {
         Hive.upload_finish();
-        a.center();
+        a.center(offset);
         a.resize(a.dims());
         a.focus();
         if(load) load(a);
@@ -1136,7 +1138,7 @@ Hive.new_file = function(files, opts) {
         });
         else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
 
-        Hive.new_app(app);
+        Hive.new_app(app, [20*i, 20*i]);
     };
     return false;
 }
