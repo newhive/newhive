@@ -1884,4 +1884,4 @@ var append_color_picker = function(container, callback, init_color) {
 
         return [h, s, v];
     }
-}
+};

@@ -76,4 +76,4 @@ $.jPlayer.skin = {
         '</div>' +
         '</div>'
     }
-}
+};
