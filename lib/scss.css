@@ -2291,24 +2291,27 @@ div.jp-jplayer {
 /* line 86, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-no-solution {
   position: absolute;
-  width: 390px;
-  margin-left: -202px;
-  left: 50%;
-  top: 10px;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
   padding: 5px;
-  font-size: .8em;
+  font-size: 15px;
   background-color: #eee;
   border: 2px solid #009be3;
   color: #000;
   display: none;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
-/* line 101, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 105, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-no-solution a {
   color: #000;
 }
 
-/* line 105, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 109, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-no-solution span {
   font-size: 1em;
   display: block;
@@ -2317,13 +2320,13 @@ div.jp-jplayer {
 }
 
 /* Minimal Theme */
-/* line 114, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 118, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal {
   width: 100%;
   height: 100%;
   border: none;
 }
-/* line 120, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 124, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal div.jp-interface {
   height: 100%;
   overflow: hidden;
@@ -2332,29 +2335,29 @@ div.jp-jplayer {
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
 }
-/* line 129, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 133, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-controls {
   width: auto;
   float: left;
   padding: 0;
 }
-/* line 134, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 138, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal div.jp-progress {
   height: 100%;
   position: static;
   overflow: hidden;
 }
-/* line 140, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 144, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal div.jp-seek-bar {
   background: #D1D1D1;
 }
-/* line 147, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 151, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal a.jp-play img, .jp-audio.minimal a.jp-pause img {
   height: 100%;
   width: auto;
   display: block;
 }
-/* line 153, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 157, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-remaining-time {
   position: absolute;
   color: #696e76;
@@ -2363,17 +2366,17 @@ div.jp-jplayer {
   top: 0.6em;
   right: 0.6em;
 }
-/* line 162, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 166, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-play-bar, .jp-audio.minimal .jp-interface {
   background: #419DD6;
 }
-/* line 165, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 169, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-seek-wrapper {
   height: 100%;
   width: 100%;
   position: relative;
 }
-/* line 170, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 174, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume {
   display: none;
   float: right;
@@ -2386,20 +2389,20 @@ div.jp-jplayer {
   text-align: center;
   color: #696e76;
 }
-/* line 181, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 185, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume > div {
   float: left;
   height: 100%;
   border-left: solid 0.1em white;
 }
-/* line 186, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 190, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume .button {
   line-height: 1em;
   width: 1em;
   height: 50%;
   cursor: pointer;
 }
-/* line 191, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 195, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume .button span {
   display: inline-block;
   -moz-user-select: none;
@@ -2407,29 +2410,29 @@ div.jp-jplayer {
   -khtml-user-select: none;
   user-select: none;
 }
-/* line 195, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 199, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume .button:hover {
   background: #696e76;
   color: white;
 }
-/* line 200, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 204, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume .jp-volume-plus {
   border-bottom: solid 0.1em white;
 }
-/* line 201, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 205, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume .jp-volume-plus span {
   margin-top: 0.03em;
 }
-/* line 204, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 208, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume .jp-volume-minus span {
   margin-top: -0.1em;
 }
-/* line 206, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 210, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume-bar {
   position: relative;
   width: 1em;
 }
-/* line 210, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+/* line 214, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
 .jp-audio.minimal .jp-volume-bar-value {
   position: absolute;
   background-color: #696e76;

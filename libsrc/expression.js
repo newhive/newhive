@@ -1,7 +1,4 @@
 $(function() {
-    $(window).resize(place_apps);
-    place_apps();
-
     // hive.audio jplayer setup
     //if ($('.jp-jplayer').length > 0) {
     //    $('head').append("<link rel='stylesheet' type='text/css' href='/lib/libsrc/jplayer/jplayer.blue.monday.css'>");
@@ -87,4 +84,3 @@ $(function() {
         }
     }
 });
-$(window).load(function(){setTimeout(place_apps, 10)}); // position background
