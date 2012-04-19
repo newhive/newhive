@@ -516,6 +516,7 @@ Hive.App.Html = function(common) {
         return o;
     }
     o.make_controls.push(controls);
+    Hive.App.has_resize(o);
 
     setTimeout(function(){ o.load(); }, 100);
 
