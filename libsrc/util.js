@@ -415,9 +415,6 @@ $(function () {
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
   $('a').each(link_target);
 
-  $(window).resize(place_apps);
-  place_apps();
-
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
   if (dialog_to_show.name) { showDialog(dialog_to_show.name, dialog_to_show.opts); };
   if (new_fb_connect) {
@@ -435,7 +432,6 @@ $(function () {
   //    createCookie('pageview_count', count, 14);
   //};
 });
-$(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
 function link_target(i, a) {
     var re = new RegExp(server_name), a = $(a), href = $(a).attr('href');
@@ -675,6 +671,7 @@ var scale_nav = function(s) {
    $('#nav, #search_box ').css('font-size', s + 'em');
 }
 
+var positionHacks = Funcs(noop);
 var place_apps = function() {
    $('.happ').each(function(i, app_div) {
        var e = $(this);
@@ -696,6 +693,7 @@ var place_apps = function() {
        }
        e.css(c);
    });
+   positionHacks();
    $('.happfill').each(function(i, div) {
        var e = $(div);
        //e.width(e.parent().width()).height(e.parent().height());

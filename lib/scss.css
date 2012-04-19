@@ -2198,30 +2198,269 @@ body.invited {
   background: #fff673;
 }
 
-/* line 22 */
+/*
+ * Skin for jPlayer Plugin (jQuery JavaScript Library)
+ * http://www.happyworm.com/jquery/jplayer
+ *
+ * Skin Name: Blue Monday
+ *
+ * Copyright (c) 2010-2011 Happyworm Ltd
+ * Dual licensed under the MIT and GPL licenses.
+ *  - http://www.opensource.org/licenses/mit-license.php
+ *  - http://www.gnu.org/copyleft/gpl.html
+ *
+ * Author: Silvia Benvenuti
+ * Skin Version: 4.0 (jPlayer 2.1.0)
+ * Date: 1st September 2011
+ */
+/* line 19, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-audio {
+  font-family: Helvetica, Arial, sans-serif;
+  position: relative;
+}
+
+/* line 24, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-interface {
+  position: relative;
+  width: 100%;
+}
+
+/* @group CONTROLS */
+/* line 31, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-interface .jp-controls {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* line 39, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-video .jp-controls,
+div.jp-interface .jp-controls li {
+  display: inline;
+  float: left;
+}
+
+/* line 44, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-interface .jp-controls a {
+  height: 100%;
+  width: auto;
+  display: block;
+  overflow: hidden;
+  text-indent: -9999px;
+}
+
+/* line 52, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-progress {
+  overflow: hidden;
+  background-color: #ddd;
+}
+
+/* line 56, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-audio div.jp-progress {
+  position: absolute;
+}
+
+/* line 60, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-seek-bar {
+  width: 0px;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* line 65, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-play-bar {
+  width: 0px;
+  height: 100%;
+}
+
+/* The seeking class is added/removed inside jPlayer */
+/* line 75, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-jplayer audio,
+div.jp-jplayer {
+  width: 0px;
+  height: 0px;
+}
+
+/* line 80, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+div.jp-jplayer {
+  background-color: #000000;
+}
+
+/* @group NO SOLUTION error feedback */
+/* line 86, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-no-solution {
+  position: absolute;
+  width: 390px;
+  margin-left: -202px;
+  left: 50%;
+  top: 10px;
+  padding: 5px;
+  font-size: .8em;
+  background-color: #eee;
+  border: 2px solid #009be3;
+  color: #000;
+  display: none;
+}
+
+/* line 101, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-no-solution a {
+  color: #000;
+}
+
+/* line 105, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-no-solution span {
+  font-size: 1em;
+  display: block;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Minimal Theme */
+/* line 114, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+/* line 120, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal div.jp-interface {
+  height: 100%;
+  overflow: hidden;
+  border: solid 0.1em white;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+/* line 129, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-controls {
+  width: auto;
+  float: left;
+  padding: 0;
+}
+/* line 134, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal div.jp-progress {
+  height: 100%;
+  position: static;
+  overflow: hidden;
+}
+/* line 140, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal div.jp-seek-bar {
+  background: #D1D1D1;
+}
+/* line 147, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal a.jp-play img, .jp-audio.minimal a.jp-pause img {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+/* line 153, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-remaining-time {
+  position: absolute;
+  color: #696e76;
+  font-weight: normal;
+  font-size: 0.8em;
+  top: 0.6em;
+  right: 0.6em;
+}
+/* line 162, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-play-bar, .jp-audio.minimal .jp-interface {
+  background: #419DD6;
+}
+/* line 165, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-seek-wrapper {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+/* line 170, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume {
+  display: none;
+  float: right;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 0.9em;
+  font-family: courier;
+  text-align: center;
+  color: #696e76;
+}
+/* line 181, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume > div {
+  float: left;
+  height: 100%;
+  border-left: solid 0.1em white;
+}
+/* line 186, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume .button {
+  line-height: 1em;
+  width: 1em;
+  height: 50%;
+  cursor: pointer;
+}
+/* line 191, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume .button span {
+  display: inline-block;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  user-select: none;
+}
+/* line 195, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume .button:hover {
+  background: #696e76;
+  color: white;
+}
+/* line 200, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume .jp-volume-plus {
+  border-bottom: solid 0.1em white;
+}
+/* line 201, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume .jp-volume-plus span {
+  margin-top: 0.03em;
+}
+/* line 204, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume .jp-volume-minus span {
+  margin-top: -0.1em;
+}
+/* line 206, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume-bar {
+  position: relative;
+  width: 1em;
+}
+/* line 210, /home/duffy/2newhive/libsrc/scss/jplayer.scss */
+.jp-audio.minimal .jp-volume-bar-value {
+  position: absolute;
+  background-color: #696e76;
+  bottom: 0;
+  width: 100% !important;
+}
+
+/* line 23 */
 .centered {
   text-align: center;
 }
 
-/* line 25 */
+/* line 26 */
 img.centered, div.centered {
   display: block;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* line 30 */
+/* line 31 */
 .bright_headline {
   font-family: Museo, sans-serif;
   color: #f72e4d;
 }
 
-/* line 36 */
+/* line 37 */
 #primary_content {
   clear: both;
 }
 
-/* line 37 */
+/* line 38 */
 #left_column, #right_column, #header, #feed {
   *zoom: 1;
 }
@@ -2232,7 +2471,7 @@ img.centered, div.centered {
   clear: both;
 }
 
-/* line 40 */
+/* line 41 */
 #left_column {
   float: left;
   width: 178px;
@@ -2240,41 +2479,41 @@ img.centered, div.centered {
   padding-right: 12px;
 }
 
-/* line 46 */
+/* line 47 */
 #right_column {
   margin-left: 220px;
 }
 
-/* line 47 */
+/* line 48 */
 #header {
   position: relative;
 }
 
-/* line 50 */
+/* line 51 */
 iframe {
   border: none;
 }
 
-/* line 54 */
+/* line 55 */
 .user_settings .title, .email_confirmation .title {
   padding-top: 10px;
 }
-/* line 55 */
+/* line 56 */
 .user_settings #profile_thumb, .email_confirmation #profile_thumb {
   float: left;
   width: 90px;
 }
-/* line 58 */
+/* line 59 */
 .user_settings #profile_thumb .message, .email_confirmation #profile_thumb .message {
   color: #696e76;
   font-size: 12px;
 }
-/* line 62 */
+/* line 63 */
 .user_settings #profile_thumb img, .email_confirmation #profile_thumb img {
   width: 70px;
   height: 70px;
 }
-/* line 66 */
+/* line 67 */
 .user_settings #profile_thumb .placeholder, .email_confirmation #profile_thumb .placeholder {
   width: 70px;
   height: 36px;
@@ -2283,81 +2522,81 @@ iframe {
   font-size: 10px;
   padding: 17px 0;
 }
-/* line 76 */
+/* line 77 */
 .user_settings .fathead, .email_confirmation .fathead {
   margin: 50px;
 }
-/* line 82 */
+/* line 83 */
 .user_settings .fathead h1, .email_confirmation .fathead h1 {
   display: inline;
   font-family: Museo, Helvetica, sans-serif;
 }
 
-/* line 89 */
+/* line 90 */
 .user_settings .required {
   color: #f72e4d;
   font-size: 0.7em;
 }
-/* line 93 */
+/* line 94 */
 .user_settings .form_validation_info {
   width: 215px;
 }
-/* line 94 */
+/* line 95 */
 .user_settings .user_name_change_text {
   width: 215px;
   font-size: 0.75em;
 }
 
-/* line 100 */
+/* line 101 */
 .email_confirmation .fathead {
   margin-bottom: 100px;
 }
-/* line 102 */
+/* line 103 */
 .email_confirmation .fathead p {
   margin-left: 50px;
 }
-/* line 105 */
+/* line 106 */
 .email_confirmation #content a {
   color: #698293;
 }
-/* line 107 */
+/* line 108 */
 .email_confirmation #content a:hover {
   color: #f72e4d;
 }
 
-/* line 110 */
+/* line 111 */
 .css_compilation_test {
   color: black;
 }
 
-/* line 114 */
+/* line 115 */
 html, body {
   background-color: white;
   height: 100%;
 }
 
-/* line 115 */
+/* line 116 */
 input[type=text], input[type=password], textarea {
   border: 5px solid #edebe1;
   padding: 5px;
 }
 
-/* line 116 */
+/* line 117 */
 input[type=text]:focus, input[type=password]:focus, textarea:focus {
   border-color: #96e2ce;
 }
 
-/* line 117 */
+/* line 118 */
 input[type=button], input[type=submit] {
   border: none;
 }
 
-/* line 118 */
+/* line 119 */
 .hide {
   display: none !important;
 }
 
-/* line 119 */
+/* line 120 */
 .menu {
   display: none;
   border: 0px solid #edebe1;
@@ -2370,7 +2609,7 @@ input[type=button], input[type=submit] {
   box-shadow: 05px 05px 05px #888;
 }
 
-/* line 125 */
+/* line 126 */
 .menu_item {
   color: #a09b97;
   padding: 5px 8px;
@@ -2379,30 +2618,30 @@ input[type=button], input[type=submit] {
   white-space: nowrap;
 }
 
-/* line 126 */
+/* line 127 */
 .menu_item:hover, .menu_hover {
   background-color: #96e2ce;
   color: black;
 }
 
-/* line 127 */
+/* line 128 */
 .border {
   border: 5px solid #edebe1;
   padding: 5px;
 }
 
-/* line 128 */
+/* line 129 */
 .selected {
   border-color: #96e2ce;
 }
 
-/* line 129 */
+/* line 130 */
 .medbold {
   font-weight: bold;
   font-size: 1.2em;
 }
 
-/* line 130 */
+/* line 131 */
 .btn {
   padding: 5px 10px;
   font-weight: bold;
@@ -2411,23 +2650,23 @@ input[type=button], input[type=submit] {
   cursor: default;
   white-space: nowrap;
 }
-/* line 137 */
+/* line 138 */
 .btn.inactive {
   background-color: #d1d1d1;
   color: white;
 }
-/* line 138 */
+/* line 139 */
 .btn.black:hover {
   color: #f73627;
   background-color: #fff673;
 }
-/* line 141 */
+/* line 142 */
 .btn.black:hover.inactive {
   background-color: #d1d1d1;
   color: white;
 }
 
-/* line 145 */
+/* line 146 */
 .rounded {
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
@@ -2435,51 +2674,51 @@ input[type=button], input[type=submit] {
   border-radius: 5px;
 }
 
-/* line 151 */
+/* line 152 */
 .black {
   background-color: black;
   color: white;
 }
 
-/* line 152 */
+/* line 153 */
 .error, .active {
   color: #f72e4d;
 }
 
-/* line 153 */
+/* line 154 */
 .inactive {
   color: #d1d1d1;
 }
 
-/* line 154 */
+/* line 155 */
 #user {
   position: fixed;
   display: inline-block;
 }
 
-/* line 155 */
+/* line 156 */
 .nav {
   position: fixed;
   margin: 0;
 }
 
-/* line 156 */
+/* line 157 */
 .menu, .top, .nav {
   z-index: 1;
 }
 
-/* line 157 */
+/* line 158 */
 .spacer {
   height: 10px;
   clear: both;
 }
 
-/* line 160 */
+/* line 161 */
 ::-webkit-input-placeholder {
   color: black;
 }
 
-/* line 161 */
+/* line 162 */
 :-moz-placeholder {
   color: black;
 }

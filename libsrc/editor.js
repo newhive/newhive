@@ -200,6 +200,7 @@ Hive.App = function(initState) {
         if(o.state.load) o.state.load(o);
         delete o.state.load;
         delete o.state.create;
+        delete o.state.copy;
     });
 
     // initialize
@@ -253,7 +254,6 @@ Hive.App.Controls = function(app) {
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
         o.c.copy   .css({ left  : dims[0] - 45 + p, top   : -38 - p });
         o.c.remove .css({ left  : dims[0] - 14 + p, top   : -38 - p });
-        o.c.resize .css({ left  : dims[0] - 20 + p, top   : dims[1] - 20 + p });
         o.c.stack  .css({ left  : dims[0] - 78 + p, top   : dims[1] + 8 + p });
         o.c.buttons.css({ left  :  -5 - p, top : dims[1] + p + 10, width : dims[0] - 60 });
     };
@@ -286,8 +286,17 @@ Hive.App.Controls = function(app) {
         return m;
     };
 
-    o.addControl = function(c) { o.div.append(c); };
-    o.addControls = function(ctrls) { map(o.addControl, ctrls.clone(false).children()); };
+    o.appendControl = function(c) { 
+        o.div.append(c); 
+    };
+    o.appendButton = function(c) {
+        var buttons = o.div.find('.buttons');
+        if (buttons.length == 0) buttons = $('<div class="control buttons"></div>').appendTo(o.div);
+        buttons.append(c);
+    }
+    o.addControl = function(ctrls) { map(o.appendControl, ctrls.clone(false)); };
+    o.addButton = function(ctrls) { map(o.appendButton, ctrls.clone(false)); };
+    o.addControls = function(ctrls) { map(o.appendControl, ctrls.clone(false).children()); };
     o.hover_menu = function(h, d, o) { return hover_menu(h, d, $.extend({offsetY : 5}, o)) };
 
     o.div = $("<div style='position : absolute; z-index : 3; width : 0; height : 0' class='controls'>");
@@ -304,7 +313,9 @@ Hive.App.Controls = function(app) {
     o.c.remove.click(function() { o.app.remove() });
     o.c.copy    = d.find('.copy'   );
     o.c.copy.click(function() {
-        var cp = Hive.App(o.app.getState());
+        var state = o.app.getState();
+        state.copy = true;
+        var cp = Hive.App(state);
         cp.pos([cp.pos()[0], cp.pos()[1] + o.app.dims()[1] + 20]);
     });
     d.find('.stack_up').click(o.app.stackTop);
@@ -330,7 +341,8 @@ Hive.registerApp = function(app, name) {
 /* Hack to prevent iframe or object in an App from capturing mouse events
  * @param {Hive.App} o The app to add shielding to
  * */
-Hive.App.has_shield = function(o) {
+Hive.App.has_shield = function(o, opts) {
+    if (typeof(opts) == "undefined") opts = {};
     o.dragging = false;
 
     o.shield = function() {
@@ -341,6 +353,7 @@ Hive.App.has_shield = function(o) {
         o.eventCapturer.css('opacity', 0.0);
     }
     o.unshield = function() {
+        if (opts.always) return;
         if(!o.eventCapturer) return;
         o.eventCapturer.remove();
         o.eventCapturer = false;
@@ -370,8 +383,18 @@ Hive.App.has_resize = function(o) {
     function controls(common) {
         var o = $.extend({}, common);
 
+        o.addControl($('#controls_misc .resize'));
+        o.c.resize = o.div.find('.resize');
+
         var refDims, ctrls = resize = o.div.find('.resize'); // , resize_h = o.div.find('.resize_h'), ctrls = resize.add(resize_h);
         //resize_h.show();
+
+        o.layout = function() {
+            common.layout()
+            var p = o.padding;
+            var dims = o.get_dims();
+            o.c.resize .css({ left  : dims[0] - 20 + p, top   : dims[1] - 20 + p });
+        }
 
         ctrls.drag('start', function(e, dd) {
             o.refDims = o.app.dims();
@@ -389,6 +412,47 @@ Hive.App.has_resize = function(o) {
         ctrls.drag('end', function(e, dd) {
             o.dragging.busy = false;
             o.app.div.drag('end');
+        });
+
+        return o;
+    }
+    o.make_controls.push(controls);
+}
+
+Hive.App.has_resize_h = function(o) {
+
+    o.resize_h = function(dims) {
+        o.dims(dims);
+        return o.resize([dims[0], o.calcHeight()]);
+    }
+
+    o.refresh_size = function() { o.resize_h(o.dims()); }
+
+    function controls(common) {
+        var o = $.extend({}, common);
+
+        o.addControl($('#controls_misc .resize_h'));
+        o.c.resize_h = o.div.find('.resize_h');
+        o.refDims = null;
+
+        o.layout = function() {
+            common.layout()
+            var p = o.padding;
+            var dims = o.get_dims();
+            o.c.resize_h.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+        }
+
+        // Dragging behavior
+        o.c.resize_h.drag('start', function(e, dd) {
+            o.refDims = o.app.dims();
+            o.dragging = e.target;
+            o.dragging.busy = true;
+            o.app.div.drag('start');
+        }).drag('end', function(e, dd) {
+            o.dragging.busy = false;
+            o.app.div.drag('end');
+        }).drag(function(e, dd) { 
+            o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1]]); 
         });
 
         return o;
@@ -444,6 +508,10 @@ var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 Hive.App.Text = function(common) {
     var o = $.extend({}, common);
     
+    Hive.App.has_shield(o);
+    Hive.App.has_resize(o);
+    Hive.App.has_resize_h(o);
+
     var content = o.state.content;
     o.content = function(content) {
         if(typeof(content) != 'undefined') {
@@ -481,11 +549,6 @@ Hive.App.Text = function(common) {
         }
         return $(o.rte.doc.body).height(); 
     }
-    o.resize_h = function(dims) {
-        o.dims(dims);
-        return o.resize([dims[0], o.calcHeight()]);
-    }
-    o.refresh_size = function() { o.resize_h(o.dims()); }
     var scale = o.state.scale ? o.state.scale * 1/o.sf() : 1;
     o.scale = function(s) {
         if(typeof(s) == 'undefined') return scale;
@@ -510,17 +573,10 @@ Hive.App.Text = function(common) {
         var o = $.extend({}, common);
 
         o.padding = 5;
-        o.layout = function() {
-            common.layout();
-            var p = o.padding;
-            var dims = o.get_dims();
-            o.c.resize_h.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
-        }
 
         o.addControls($('#controls_text'));
 
         var d = o.div;
-        o.c.resize_h = d.find('.resize_h');
 
         o.link_menu = o.append_link_picker(d.find('.buttons'));
         o.close = function() { o.link_menu.close(); }
@@ -557,7 +613,7 @@ Hive.App.Text = function(common) {
             o.app.rte.edit($(e).attr('cmd'), $(e).attr('val'))
         }); })
 
-        d.find('.resize, .resize_h').drag('start', function(e, dd) {
+        d.find('.resize').drag('start', function(e, dd) {
             o.refDims = o.app.dims();
             o.dragging = e.target;
             o.dragging.busy = true;
@@ -568,8 +624,7 @@ Hive.App.Text = function(common) {
             //cos(atan2(x, y) - atan2(w, h))
             o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0], (o.refDims[1] + dd.deltaY) / o.refDims[1]));
         });
-        o.c.resize_h.drag(function(e, dd) { o.app.resize_h([o.refDims[0] + dd.deltaX, o.refDims[1]]); });
-        d.find('.resize, .resize_h').drag('end', function(e, dd) {
+        d.find('.resize').drag('end', function(e, dd) {
             o.dragging.busy = false;
             o.app.div.drag('end');
         });
@@ -577,7 +632,6 @@ Hive.App.Text = function(common) {
         return o;
     }
     o.make_controls.push(controls);
-    Hive.App.has_shield(o);
 
     o.div.addClass('text');
     o.set_shield();
@@ -610,7 +664,7 @@ Hive.App.has_rotate = function(o) {
         }
 
         o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', '/lib/skin/1/rotate.png');
-        o.addControl(o.rotateHandle);
+        o.appendControl(o.rotateHandle);
 
         o.rotateHandle.drag('start', function(e, dd) {
             refAngle = angle;
@@ -649,8 +703,39 @@ Hive.App.has_slider_menu = function(o, handle, callback, init) {
     o.make_controls.push(controls);
 }
 Hive.App.has_opacity = function(o) {
+    function controls(common) {
+        var o = $.extend({}, common);
+
+        o.addButton($('#controls_misc .opacity'));
+        o.c.opacity = o.div.find('.opacity');
+
+        return o;
+
+    }
+    o.make_controls.push(controls);
     Hive.App.has_slider_menu(o, '.opacity', function(v) { o.opacity(v/100) },
         function() { return Math.round(o.opacity() * 100) });
+}
+    
+Hive.App.has_color = function(o, opts) {
+    function controls(common) {
+        var o = $.extend({}, common);
+
+        o.addButton($('#controls_misc .button.color'));
+        o.addButton($('#controls_misc .drawer.color'));
+        o.c.color = o.div.find('.button.color');
+        o.c.color_drawer = o.div.find('.drawer.color');
+
+        var callback = function(color){
+            o.app.state.color = color;
+            opts.callback(color);
+        }
+        append_color_picker(o.c.color_drawer, callback, o.app.state.color);
+        o.hover_menu(o.c.color, o.c.color_drawer, { auto_close : false });
+        return o;
+
+    }
+    o.make_controls.push(controls);
 }
 
 
@@ -720,6 +805,7 @@ Hive.App.Image = function(common) {
         return o;
     };
     o.make_controls.push(controls);
+    Hive.App.has_resize(o);
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
 
@@ -761,7 +847,6 @@ Hive.App.Rectangle = function(common) {
             var p = o.padding;
             var dims = o.get_dims();
             if(!o.rotateHandle) o.rotateHandle = o.div.find('.rotate');
-            if(!o.resizeHandle) o.resizeHandle = o.div.find('.resize_h');
             //o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 40, dims[1] - 100) });
             //o.resizeHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2     , dims[1] -  60) });
             o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
@@ -837,6 +922,7 @@ Hive.App.Sketch = function(common) {
 
         o.addControls($('#controls_sketch'));
         append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, '#000000');
+
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
         o.hover_menu(o.div.find('.button.brush'), o.div.find('.drawer.brush'));
         o.div.find('.drawer.brush .option').each(function(i, e) { $(e).click(function() {
@@ -866,6 +952,112 @@ Hive.App.Sketch = function(common) {
     return o;
 };
 Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
+
+Hive.App.Audio = function(common) {
+    var o = $.extend({}, common);
+
+    var randomStr = function(){ return Math.random().toString(16).slice(2);};
+
+    o.content = function() {
+        return o.content_element.outerHTML();
+    };
+
+    o.resize = function(dims) {
+        if(!dims[0] || !dims[1]) return;
+
+        //Hack that forces play/pause image element to resize, at least on chrome
+        o.div.find('.jp-controls img').click();
+        o.player.jPlayer("playHead", 0);
+
+        // enforce 25px < height < 400px and minimum aspect ratio of 2.5:1
+        var sf = o.sf();
+        if (dims[1] * sf < 25) dims[1] = 25 / sf;
+        if (dims[1] * sf > 400) dims[1] = 400 / sf;
+        if (dims[0] < 2.5 * dims[1]) dims[0] = 2.5 * dims[1];
+
+        o.scale(dims[1]/35);
+
+        common.resize(dims);
+        return dims;
+    }
+    //
+    // Audio players always go on top
+    //o.layer = function(n) {
+    //    common.layer(n + 1000);
+    //}
+
+    o.set_color = function(color){ o.div.find('.jp-play-bar, .jp-interface').css('background-color', color); };
+
+    o.scale = function(s) {
+        if(typeof(s) == 'undefined') return scale;
+        scale = s;
+        o.div.css('font-size', s + 'em');
+        var height = o.div.find('.jp-interface').height();
+        o.div.find('.jp-button').width(height).height(height);
+
+        common.scale(s);
+    }
+
+    o.load = function(){
+        o.resize(o.dims());
+        //o.scale_n(1);
+        common.load()
+    }
+
+    // Mixins
+    Hive.App.has_shield(o, {always: true});
+    Hive.App.has_resize(o);
+    Hive.App.has_resize_h(o);
+    Hive.App.has_opacity(o);
+    Hive.App.has_color(o, {
+        callback: function(val){ o.div.find('.jp-play-bar, .jp-interface').css('background-color', val); }
+    });
+
+    // Initialization
+    if(o.state.create) o.dims([200, 35]);
+
+    o.content_element = $(o.state.create || o.state.copy ? $.jPlayer.skin.minimal(o.state.src, randomStr()) : o.state.content )
+        .addClass('content')
+        .css('position', 'relative')
+        .css('height', '100%');
+    o.div.append(o.content_element);
+
+    o.set_color(o.state.color);
+
+    // jPlayer element reference
+    o.player = o.div.find('.jp-jplayer');
+    var loadeddataCallback = function (event) {
+        var status = event.jPlayer.status;
+        //o.player.jPlayer("playHead", 25);
+        o.player.siblings().find('.jp-remaining-time')
+            .text($.jPlayer.convertTime(status.duration - status.currentTime));
+    };
+    o.player.jPlayer({
+        cssSelectorAncestor: "#jp_container_" + o.player.data("index"),
+        ready: function () {
+          o.player.jPlayer("setMedia", {
+            mp3: o.player.data("url")
+          });
+         // var that = this;
+         // setTimeout(function(){$(that).jPlayer("playHead", 75)}, 10);
+        },
+        loadeddata: loadeddataCallback,
+        swfPath: server_url + "lib/",
+        supplied: "mp3"
+    });
+ 
+    o.set_shield = function() { o.shield(); }
+    o.shield();
+    setTimeout(function(){ o.load(); }, 100);
+    return o;
+}
+Hive.registerApp(Hive.App.Audio, 'hive.audio');
+
+Hive.App.Audio.Controls = function(common) {
+    var o = {};
+    $.extend(o, common);
+    return o;
+}
 
 
 // For selecting multilpe Apps. Not implemented
@@ -914,12 +1106,9 @@ Hive.new_file = function(file, opts) {
         ,content: file.url
     });
     else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
-         content: ("<object type='application/x-shockwave-flash' data='/lib/player.swf' width='100%' height='24'>"
-             +"<param name='FlashVars' value='soundFile=" + file.url + "'>"
-             +"<param name='wmode' value='transparent'></object>"
-             )
-        ,type: 'hive.html'
-        ,dimensions: [200, 24]
+        src: file.url
+        //,content: ($.jPlayer.skin.minimal(file.url, 1))
+        ,type: 'hive.audio'
     });
     else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
 
@@ -1147,6 +1336,13 @@ Hive.embed_code = function(element) {
     else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i))
         app = { type : 'hive.html', content :
             '<iframe src="http://player.vimeo.com/video/' + m[2] + '?title=0&amp;byline=0&amp;portrait=0" style="width:100%;height:100%;border:0"></iframe>' };
+    else if(m = c.match(/^https?:\/\/(.*)mp3$/i))
+        app = { type : 'hive.audio', content : {url : c, player : minimal} }
+//<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
+//http://player.vimeo.com/video/                                                   13110687
+//<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>
+    else if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i))
+        app = { type : 'hive.image', content : c }
     else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
@@ -1546,6 +1742,14 @@ var append_color_picker = function(container, callback, init_color) {
     var e = $('<div>').addClass('color_picker');
     container.append(e);
 
+    var to_rgb = function(c) {
+        return map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
+    }
+    var to_hex = function(color) {
+        if (typeof(color) == "string") color = to_rgb(color);
+        return '#' + map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
+    }
+    init_color = to_hex(init_color);
     var make_picker = function(c) {
         var d = $('<div>').addClass('color_select');
         d.css('background-color', c).attr('val', c).click(function() { set_color(c); manual_input.val(c); callback(c, to_rgb(c)) });
@@ -1582,9 +1786,6 @@ var append_color_picker = function(container, callback, init_color) {
     }
     bar.click(get_hue).drag(get_hue);
 
-    var to_rgb = function(c) {
-        return map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
-    }
     var set_color = function(c) {
         var rgb = to_rgb(c);
         hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
@@ -1602,7 +1803,7 @@ var append_color_picker = function(container, callback, init_color) {
 
     var calc_color = function() {
         var color = hsvToRgb(hsv[0], hsv[1], hsv[2]);
-        var hex = '#' + map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
+        var hex = to_hex(color);
         manual_input.val(hex);
         callback(hex, color);
     }
