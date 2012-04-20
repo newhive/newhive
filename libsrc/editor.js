@@ -130,7 +130,26 @@ Hive.App = function(initState) {
     o.focused = function() { return o.apps.focused == o }
     o.dragstart = Funcs(function() { o.dragging = true; });
     o.dragend = Funcs(function() { o.dragging = false; });
-    
+
+    o.keyPress = function(e){
+        var nudge = function(dx,dy){
+            return function(){
+                var refPos = o.pos();
+                if (e.shiftKey) {dx = 10*dx; dy = 10*dy;}
+                o.pos([refPos[0] + dx, refPos[1] + dy]);
+                e.preventDefault();
+            }
+        }
+
+        var handlers = {
+            37: nudge(-1,0)
+            , 38: nudge(0,-1)
+            , 39: nudge(1,0)
+            , 40: nudge(0,1)
+        }
+        handlers[e.keyCode] && handlers[e.keyCode]();
+    };
+
     // stacking order of aps
     o.layer = function(n) {
         if(typeof(n) == 'number') {
@@ -183,8 +202,10 @@ Hive.App = function(initState) {
         o.dims(dims);
         if(o.controls) o.controls.layout();
     }
-    o.center = function() {
-        o.pos([win.width() / 2 - o.dims()[0] / 2 + win.scrollLeft(), win.height() / 2 - o.dims()[1] / 2 + win.scrollTop()]);
+    o.center = function(offset) {
+        var pos = [win.width() / 2 - o.dims()[0] / 2 + win.scrollLeft(), win.height() / 2 - o.dims()[1] / 2 + win.scrollTop()]
+        if (typeof(offset) != "undefined") { pos = arrayAddition(pos, offset) };
+        o.pos(pos);
     }
 
     o.opacity = function(s) {
@@ -495,6 +516,7 @@ Hive.App.Html = function(common) {
         return o;
     }
     o.make_controls.push(controls);
+    Hive.App.has_resize(o);
 
     setTimeout(function(){ o.load(); }, 100);
 
@@ -529,6 +551,7 @@ Hive.App.Text = function(common) {
         o.rte.editMode(false);
         o.rte.set_content(autoLink(o.rte.get_content()));
         o.rte.addBreaks();
+        $(window).focus(); // Needed so keypress events don't get stuck on RTE iframe
     });
     
     o.link = function(v) {
@@ -666,12 +689,14 @@ Hive.App.has_rotate = function(o) {
         o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', '/lib/skin/1/rotate.png');
         o.appendControl(o.rotateHandle);
 
+        var angleRound = function(a) { return Math.round(a / 45)*45; }
         o.rotateHandle.drag('start', function(e, dd) {
             refAngle = angle;
             offsetAngle = o.getAngle(e);
             o.app.dragstart();
         }).drag(function(e, dd) {
             angle = o.getAngle(e) - offsetAngle + refAngle;
+            if (e.shiftKey && Math.abs(angle - angleRound(angle)) < 10) angle = angleRound(angle);
             o.app.angle(angle);
             o.select_box.rotate(angle);
         }).drag('end', function(e, dd) { o.app.dragend(); });
@@ -1016,11 +1041,13 @@ Hive.App.Audio = function(common) {
     // Initialization
     if(o.state.create) o.dims([200, 35]);
 
+    var audio_data = o.state.type_specific;
     o.content_element = $(o.state.create || o.state.copy ? $.jPlayer.skin.minimal(o.state.src, randomStr()) : o.state.content )
         .addClass('content')
         .css('position', 'relative')
         .css('height', '100%');
-    o.div.append(o.content_element);
+    o.div.append(o.content_element)
+        .attr('title', audio_data ? [audio_data.artist, audio_data.album, audio_data.title].join(' - ') : '');
 
     o.set_color(o.state.color);
 
@@ -1084,12 +1111,12 @@ Hive.select_none = function() {
     Hive.selection = false;
 };
 
-Hive.new_app = function(s) {
+Hive.new_app = function(s, offset) {
     s.create = true;
     var load = s.load;
     s.load = function(a) {
         Hive.upload_finish();
-        a.center();
+        a.center(offset);
         a.resize(a.dims());
         a.focus();
         if(load) load(a);
@@ -1098,21 +1125,24 @@ Hive.new_app = function(s) {
     return false;
 };
 
-Hive.new_file = function(file, opts) {
-    var app = $.extend({ file_id: file.file_id }, opts);
+Hive.new_file = function(files, opts) {
+    for (i=0; i < files.length; i++) {
+        var file = files[i];
+        var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
-    if(file.mime.match(/image\/(png|gif|jpeg)/)) $.extend(app, {
-         type: 'hive.image'
-        ,content: file.url
-    });
-    else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
-        src: file.url
-        //,content: ($.jPlayer.skin.minimal(file.url, 1))
-        ,type: 'hive.audio'
-    });
-    else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
+        if(file.mime.match(/image\/(png|gif|jpeg)/)) $.extend(app, {
+             type: 'hive.image'
+            ,content: file.url
+        });
+        else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
+            src: file.url
+            //,content: ($.jPlayer.skin.minimal(file.url, 1))
+            ,type: 'hive.audio'
+        });
+        else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
 
-    Hive.new_app(app);
+        Hive.new_app(app, [20*i, 20*i]);
+    };
     return false;
 }
 
@@ -1151,6 +1181,7 @@ var main = function() {
         ,drop : Hive.upload_start
     });
 
+    $(document).keydown(function(e){ Hive.OpenApps.focused && Hive.OpenApps.focused.keyPress(e) });
     $(window).resize(function(e) {
         map(function(a) {
                 a.pos_n(a.state.position);
@@ -1190,7 +1221,7 @@ var main = function() {
     Hive.set_bg_img(Hive.Exp.background);
     bg_set_color(Hive.Exp.background.color);
 
-    var new_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_file }); };
+    var new_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_file, multiple : true}); };
     var new_link = function() { asyncUpload({ start : Hive.upload_start, success : function(data) {
         if(data.error) { Hive.upload_finish(); alert('Sorry, your file failed to upload'); return }
         var app = { type: 'hive.text', content: $('<a>').attr('href', data.url).text(data.name).outerHTML() };
@@ -1854,4 +1885,4 @@ var append_color_picker = function(container, callback, init_color) {
 
         return [h, s, v];
     }
-}
+};

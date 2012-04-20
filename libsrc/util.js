@@ -415,6 +415,9 @@ $(function () {
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
   $('a').each(link_target);
 
+  $(window).resize(place_apps);
+  place_apps();
+
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
   if (dialog_to_show.name) { showDialog(dialog_to_show.name, dialog_to_show.opts); };
   if (new_fb_connect) {
@@ -432,6 +435,7 @@ $(function () {
   //    createCookie('pageview_count', count, 14);
   //};
 });
+$(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
 function link_target(i, a) {
     var re = new RegExp(server_name), a = $(a), href = $(a).attr('href');
@@ -473,14 +477,17 @@ function asyncSubmit(form, callback) {
 }
 
 function asyncUpload(opts) {
-    var target, form, opts = $.extend({ json : true, file_name : 'file', action: '/',
+    var target, form, opts = $.extend({ json : true, file_name : 'file', multiple : false, action: '/',
         start : noop, success : noop, data : { action : opts.post_action || 'file_create' } }, opts);
 
     var onload = function() {
         var frame = target.get(0);
         if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
         var resp = $(frame.contentDocument.body).text();
-        if(opts.json) resp = JSON.parse(resp);
+        if(opts.json) {
+            resp = JSON.parse(resp);
+            if(!opts.multiple){ resp = resp[0]; }
+        }
         opts.success(resp);
         form.remove();
     }
@@ -490,6 +497,7 @@ function asyncUpload(opts) {
         attr('target', tname).attr('action', opts.action);
     target = $("<iframe style='position : absolute; left : -1000px'></iframe>").attr('name', tname).appendTo(form).load(onload);
     var input = $("<input type='file'>").attr('name', opts.file_name).change(function() { opts.start(); form.submit() }).appendTo(form);
+    if(opts.multiple) { input.attr('multiple', 'multiple'); }
     for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
     form.appendTo(document.body);
     setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
@@ -783,4 +791,13 @@ function require_login(fn) {
     }
     if(fn) return check;
     else return check();
+}
+
+function arrayAddition(a,b){
+    if (a.length != b.length) { throw "Arrays must be equal length" };
+    rv = []
+    for (i=0; i< a.length; i++){
+        rv[i] = a[i] + b[i]
+    }
+    return rv
 }

@@ -1,4 +1,4 @@
-import time, datetime, re, pandas, newhive, pandas
+import time, datetime, re, pandas, newhive, pandas, numpy
 from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
@@ -282,6 +282,20 @@ def funnel2_per_month(db, cohort_users = None, year=None, month=None, force=Fals
     ca.start_date = datetime.datetime(2011,11,1,12)
     return ca.analysis(year, month, force=force)
 
+def impressions_per_user(db, cohort_users = None, year=None, month=None, force=False):
+    ca = CohortAnalysis(db, cohort_users)
+    ca.map = """
+       function() {
+            if (typeof(this.apps) != "undefined" && this.apps.length > 0){
+                emit(this.owner, this.views - this.owner_views)
+            }
+       }
+       """
+    ca.name = 'impressions_per_user'
+    ca.collection = db.mdb.expr
+    return ca.analysis(year, month, force=force)
+
+
 class CohortAnalysis:
     def __init__(self, db, cohort_users=None):
         self.db = db
@@ -290,7 +304,8 @@ class CohortAnalysis:
         self.active_condition = {'value': {'$gte': 1}}
         self.date_key = 'created'
         self.user_identifier = 'ids'
-        self.start_date = datetime.datetime(2011,4,1,12)
+        self.start_date = datetime.datetime(2011,11,1,12)
+        self.end_date = datetime.datetime.now().replace(day=1, hour=12, minute=0, second=0, microsecond=0) - pandas.DateOffset(months=1)
 
         if cohort_users:
             self.cohort_users = cohort_users
@@ -306,7 +321,7 @@ class CohortAnalysis:
                                              )
         else:
             self.range = pandas.DateRange(self.start_date
-                                             , end = datetime.datetime.now()
+                                             , end = self.end_date
                                              , offset = pandas.DateOffset(months=1)
                                              )
         mr_dict = self.map_reduce(force=force)
@@ -377,6 +392,33 @@ def _cohort_users(db, stop_date=datetime.datetime.now()):
         data.append(item)
     return pandas.DataFrame(data, index=cohort_range)
 
+
+def overall_impressions(db):
+    map = """
+        function() {
+             if (typeof(this.apps) != "undefined" && this.apps.length > 0 && this.views && this.owner_views){
+                 emit(this.owner, {count: 1, views: this.views - this.owner_views})
+             }
+        }
+        """
+
+    reduce = """
+        function(key, values) {
+            result = {count: 0, views: 0};
+            for (var i=0; i < values.length; i++) {
+                result.count += values[i].count;
+                result.views += values[i].views;
+            };
+            return result;
+        }"""
+
+    name = 'overall_impressions_per_user'
+
+    results_collection = db.mdb.expr.map_reduce(map, reduce, 'mr.' + name)
+    data = [x['value']['views'] for x in results_collection.find()]
+    bin_edges = [0,1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000, 2000000, 5000000]
+    hist, bin_edges = numpy.histogram(data, bin_edges)
+    return (hist, bin_edges)
 
 
 if __name__ == '__main__':

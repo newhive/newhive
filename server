@@ -9,10 +9,12 @@ if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option("-p", "--port", action="store", type="int", dest="port")
     parser.add_option("--secure-port", action="store", type="int", dest="secure_port")
+    parser.add_option("--ssl-only", action="store_true", dest="ssl_only", default=False)
     (options, args) = parser.parse_args()
 
     config.plain_port =  options.port or config.plain_port
-    config.secure_port = options.secure_port or (options.port and options.port + 1) or config.ssl_port
+    config.ssl_port = options.secure_port or (options.port and options.port + 1) or config.ssl_port
+    config.always_ssl = options.ssl_only or config.always_ssl
 
 
     """ This Werkzeug server is used only for development and debugging """
@@ -25,11 +27,10 @@ if __name__ == '__main__':
     application = handle_debug
     if config.ssl_ca: ctx.use_certificate_chain_file(config.ssl_ca)
 
-    child = os.fork()
-    if(child):
+    def run_hive(port, ctx=None):
         run_simple(
             '0.0.0.0'
-          , config.plain_port
+          , port
           , application
           , use_reloader = True
           , use_debugger = config.debug_mode
@@ -39,20 +40,16 @@ if __name__ == '__main__':
               ,'/images' : joinpath(config.src_home, 'libsrc/scss/images')
               ,'/file' : config.media_path
             }
-          , processes = 0
-          )
-    else:
-        run_simple(
-            '0.0.0.0'
-          , config.ssl_port
-          , application
-          , use_reloader = True
-          , use_debugger = config.debug_mode
-          , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-          , static_files = {
-               '/lib' : joinpath(config.src_home, 'lib')
-              ,'/file' : config.media_path
-            }
           , ssl_context  = ctx
           , processes = 0
           )
+
+
+    if config.always_ssl:
+        run_hive(config.ssl_port, ctx=ctx)
+    else:
+        child = os.fork()
+        if(child):
+            run_hive(config.plain_port)
+        else:
+            run_hive(config.ssl_port, ctx=ctx)
