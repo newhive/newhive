@@ -16,7 +16,8 @@ class ApplicationController(object):
 
     def pre_process(self, request):
         response = Response()
-        response.context = { 'f' : request.form, 'q' : request.args, 'url' : request.url }
+        # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
+        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url }
         request.requester = auth.authenticate_request(self.db, request, response)
         self.process_facebook(request)
         if request.args.has_key('code') and not request.form.get('fb_disconnect'):

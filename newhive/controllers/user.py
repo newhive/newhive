@@ -19,6 +19,7 @@ class UserController(ApplicationController):
             referral = self._check_referral(request)[0]
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
+
         if request.args.has_key('code'):
             fb_profile = request.requester.fb_client.me()
             profile_picture_url = 'https://graph.facebook.com/' + fb_profile.get('id') + '/picture?type=large&return_ssl_resources=1'
@@ -43,6 +44,9 @@ class UserController(ApplicationController):
                 response.context['f']['thumb'] = profile_picture.get_thumb(190,190)
                 response.context['f']['thumb_file_id'] = profile_picture.id
             response.context['friends'] = request.requester.facebook_friends
+        else:
+            response.context['f']['email'] = referral.get('to', '')
+
         return self.serve_page(response, 'pages/user_settings.html')
 
     def create(self, request, response):
@@ -83,7 +87,14 @@ class UserController(ApplicationController):
         self.db.Star.create(user, self.db.User.site_user)
         self._friends_to_listen(request, user)
         self._friends_not_to_listen(request, user)
-        referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
+
+        if referral.get('reuse'):
+            referral.increment({'reuse': -1})
+            referral.update_cmd({'$push': {'users_created': user.id}})
+            if referral['reuse'] <= 0: referral.update(used=True)
+        else:
+            referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
+
         user.give_invites(5)
         if args.has_key('thumb_file_id'):
             file = self.db.File.fetch(args.get('thumb_file_id'))
