@@ -17,14 +17,14 @@ $(function() {
             cssSelectorAncestor: "#jp_container_" + $(this).data("index"),
             ready: function (event) {
               $(this).jPlayer("setMedia", {
-                mp3: $(this).data("url")
+                  mp3: $(this).data("url").replace(/^https?:/, window.location.protocol)
               });//.bind($.jPlayer.event.timeupdate, update_timer(this));
               //update_timer(this)(event);
             },
             loadeddata: update_timer(this),
             timeupdate: update_timer(this),
             ended: update_timer(this),
-            swfPath: server_url + "lib/",
+            swfPath: (window.location.protocol == "https:" ? server_url : insecure_server_url) + "lib/",
             supplied: "mp3",
             verticalVolume: true
         });
