@@ -117,9 +117,10 @@ Hive.App = function(initState) {
     }
     
     o.make_controls = [];
-    o.focus = Funcs(function() {
+    o.focus = Funcs(function(args) {
+        var event = args.event;
         if(o.focused()) return;
-        if(o.apps.focused) o.apps.focused.unfocus();
+        if(o.apps.focused && (!event || !event.shiftKey)) o.apps.focused.unfocus();
         o.apps.focused = o;
         if(!o.controls) o.controls = Hive.App.Controls(o);
     });
@@ -217,7 +218,7 @@ Hive.App = function(initState) {
 
     o.load = Funcs(function() {
         o.opacity(o.state.opacity);
-        o.content_element.addClass('content').click(function(e) { o.focus(); });
+        o.content_element.addClass('content').click(function(e) { o.focus({event: e}); });
         if(o.state.load) o.state.load(o);
         delete o.state.load;
         delete o.state.create;
