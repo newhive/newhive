@@ -2,6 +2,7 @@ from newhive.controllers.shared import *
 from newhive import auth, config, oauth
 from werkzeug import Response
 from newhive.oauth import FacebookClient
+import newhive.utils
 from newhive.utils import b64decode
 import logging
 logger = logging.getLogger(__name__)
@@ -15,6 +16,7 @@ class ApplicationController(object):
         self.fb_client = FacebookClient()
 
     def pre_process(self, request):
+        request = newhive.utils.Request(request)
         response = Response()
         # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
         response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url }
