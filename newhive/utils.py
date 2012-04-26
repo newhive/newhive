@@ -64,8 +64,12 @@ def abs_url(secure = False, domain = None, subdomain = None):
     proto = 'https' if ssl else 'http'
     port = config.ssl_port if ssl else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
-    return (proto + '://' + (subdomain + '.' if subdomain else '') +
+    rv = (proto + '://' + 
+        (subdomain + '.' if subdomain else '') +
         (domain or config.server_name) + port + '/')
+    if config.dev_prefix:
+        rv = rv.replace(config.server_name, config.dev_prefix + '.' + config.server_name)
+    return rv
 
 def uniq(seq, idfun=None):
     # order preserving 

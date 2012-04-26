@@ -6,6 +6,7 @@ database        = 'hive'
 database_host   = 'localhost'
 database_port   = 27017
 media_path      = '/home/domains/thenewhive.com'
+dev_prefix      = None
 
 ssl_ca          = False
 

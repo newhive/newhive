@@ -17,6 +17,8 @@ class ApplicationController(object):
 
     def pre_process(self, request):
         request = newhive.utils.Request(request)
+        if config.dev_prefix:
+            request.environ['HTTP_HOST'] = request.environ.get('HTTP_HOST', '').replace(config.dev_prefix + '.', '')
         response = Response()
         # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
         response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url }
