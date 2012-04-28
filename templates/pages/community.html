@@ -58,7 +58,7 @@
     {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
 
-{% set show_prompts = network and (user.starred_user_ids|length <= 1) %}
+{% set show_prompts = user_is_owner and network and (user.starred_user_ids|length <= 1) %}
 
 {% block header %}
   {% if home %}
