@@ -46,7 +46,23 @@ Hive.Apps = function(initial_state) {
         return map(function(app) { return app.getState(); }, o);
     }
     
-    o.focused = null;
+    o.focused = [];
+    o.focused.unfocus = function(){
+        var len = this.length;
+        while (this.length) {
+            var app = this.pop();
+            app.unfocus();
+        }
+    }
+    o.focused.divs = function(){
+        return $.map(this, function(a){ return a.div[0] });
+    }
+    o.focused.layout = function(){
+        for (i=0; i<this.length; i++){
+            this.controls.layout();
+        }
+    }
+
     
     o.stack = [];
     Hive.makeShuffleable(o.stack);
@@ -118,17 +134,17 @@ Hive.App = function(initState) {
     
     o.make_controls = [];
     o.focus = Funcs(function(args) {
-        var event = args.event;
+        var multi = args && args.event && args.event.shiftKey;
         if(o.focused()) return;
-        if(o.apps.focused && (!event || !event.shiftKey)) o.apps.focused.unfocus();
-        o.apps.focused = o;
+        if(o.apps.focused && !multi) o.apps.focused.unfocus();
+        o.apps.focused.push(o);
         if(!o.controls) o.controls = Hive.App.Controls(o);
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
-        o.apps.focused = null;
+        //o.apps.focused = null;
     });
-    o.focused = function() { return o.apps.focused == o }
+    o.focused = function() { return inArray(o.apps.focused, o) }
     o.dragstart = Funcs(function() { o.dragging = true; });
     o.dragend = Funcs(function() { o.dragging = false; });
 
@@ -231,9 +247,18 @@ Hive.App = function(initState) {
     o.pos_n(o.state.position);
     o.dims_n(o.state.dimensions);
     var refPos;
-    o.div.drag('start', function() { refPos = o.pos(); });
-    o.div.drag(function(e, dd) {
+    o.div.drag('start', function(e, shallow) { 
+        if (o.focused() && shallow!="yes" ) { 
+            $(o.apps.focused.divs()).not(o.div).trigger('dragstart', "yes");
+        }
+        refPos = o.pos(); 
+    });
+    o.div.drag(function(e, dd, shallow) {
         o.pos([refPos[0] + dd.deltaX, refPos[1] + dd.deltaY]);
+        if (o.focused() && shallow!="yes") { 
+            var selection = $(o.apps.focused.divs()).not(o.div);
+            selection.trigger('drag', [dd, "yes"]) 
+        }
         e.stopPropagation();
     }, { handle : '.drag' } );
     o.layer(o.layer());
@@ -1166,8 +1191,14 @@ var main = function() {
 
     $(window).click(function(e) {
         if(!focused()) return;
-        if(!$.contains(focused().div.get(0), e.target) && e.target.parentNode
-            && !$.contains($('.controls').get(0), e.target)) focused().unfocus();
+        for (i=0; i<focused().length; i++) {
+            if(
+                $.contains(focused()[i].div.get(0), e.target) 
+                || ! e.target.parentNode
+                || $.contains($('.controls').get(0), e.target)
+            ) {return;}
+        }
+        focused().unfocus();
     });
 
     $(document.body).drag('start', function() { return false; });
@@ -1182,13 +1213,18 @@ var main = function() {
         ,drop : Hive.upload_start
     });
 
-    $(document).keydown(function(e){ Hive.OpenApps.focused && Hive.OpenApps.focused.keyPress(e) });
+    $(document).keydown(function(e){ 
+        console.log("keydown handler");
+        for (i=0; i< Hive.OpenApps.focused.length; i++){
+            Hive.OpenApps.focused[i].keyPress(e);
+        }
+    });
     $(window).resize(function(e) {
         map(function(a) {
                 a.pos_n(a.state.position);
                 a.dims_n(a.state.dimensions);
                 a.scale_n(a.state.scale);
-                if(focused()) focused().controls.layout();
+                if(focused()) focused().layout();
             }, Hive.OpenApps);
         center($('#app_btns'), $('#nav_bg'));
     });

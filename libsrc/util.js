@@ -801,3 +801,10 @@ function arrayAddition(a,b){
     }
     return rv
 }
+
+function inArray(array, el){
+    for (i=0; i<array.length; i++){
+        if (el === array[i]) return true;
+    }
+    return false;
+}
