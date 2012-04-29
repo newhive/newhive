@@ -1,0 +1,56 @@
+When you buy a Durotype font, you actually buy a license, i.e. a right to use the font. So, when you purchase a Durotype font license, the font is still owned by Durotype. You buy this license strictly for yourself or your company. You have no right to give a copy of a Durotype font to your friends or business partners. (A Durotype font is computer software designed to generate the characters of a font face.) 
+
+By downloading and/or installing a Durotype font, you (or you on behalf of your employer) agree to be bound by the terms of this agreement. This agreement, in conjunction with the receipt that accompanies each purchase from Durotype or its distributor, constitutes the complete agreement between you and Durotype or its distributor. 
+
+1. Number of Users
+The maximum number of simultaneous users is specified in the applicable receipt. All users must belong to the same company or household purchasing the font. 
+
+2. Allowed Uses
+You may use a Durotype font to create an unlimited number of images on any surface such as paper, computer screens, photographs, web pages, movie credits, printed material, T-shirts, and other surfaces, where the image has a fixed size. You may use a Durotype font to create EPS files or other scalable drawings, provided that such files are only used by the company or individual licensing the font. 
+
+3. Fair Use
+You need a special license for using a Durotype font, if it is a primary design element of a product sold for profit, or if it is used for a large scale campaign (advertising, corporate identity design, product packaging, entertainment promotion, store signage). This applies to both in-house and client-based work. Contact Durotype for a special license.
+
+4. Backup
+You may make a backup copy of a Durotype font (only for the purpose of data backup). 
+
+5. Third Parties
+You may send a copy of a Durotype font along with your documents to a commercial printer or other service bureau to enable the printing of your document, provided that such party will use the font exclusively for your work and retain no copies of the font on completion of the work. If the printer or service bureau wants to edit your document, it should own a valid license to use that particular font. 
+
+6. Embedding
+You may only embed a Durotype font into electronic documents, if it is done in a secured read-only mode. You must ensure that recipients of electronic documents cannot extract a Durotype font from such documents, or use the embedded font for editing purposes or for the creation of new documents. You may not embed a Durotype font into a web site. However, for using a Durotype font as webfont, your vendor may offer an additional webfont license. You need a special license for embedding a Durotype font into software or hardware products in which the font will be used by the purchasers of such products. Contact Durotype for a special license.
+
+7. Modifications
+You may import characters from the font as graphical objects into a drawing program and modify such graphical objects, provided that such objects are only used by the company or individual licensing the font. Other modifications are not allowed. You agree that any allowed modifications are considered derivative works, and that use of such derivative work is subject to the terms and conditions of this license agreement. 
+
+8. Exclusion of Other Uses
+Except for the provisions of this agreement named “Third Parties” and “Embedding”, you may not sell, lend or otherwise transfer a Durotype font to a third party or parties. You may not transfer a Durotype font to a third party or parties as a component or sub-component of other products, e.g. electronic documents or sublicenses. You may not modify, adapt, translate, rent, lease, distribute, produce, reverse engineer, decompile, disassemble, or redigitize a Durotype font. 
+
+9. Rights Reservation
+Durotype reserves all rights not expressly granted to you under this license agreement. A Durotype font is solely for use in your own business or for your own personal use, and it remains Durotype’s ownership at all times. 
+
+10. Copyright
+Durotype retains ownership of a Durotype font and all subsequent copies of a Durotype font, regardless of the form or media in or on which the original and other copies may exist. A Durotype font and the accompanying materials are copyrighted and contain proprietary information and trade secrets of Durotype. Unauthorized copying of the font, even if modified, merged, or included with other software, or of the written materials, is expressly forbidden. You may be held legally responsible for any infringement of Durotype’s intellectual property rights that is caused or encouraged by your failure to abide by the terms of this agreement. You agree to identify a Durotype font by name, and credit Durotype’s ownership of the copyrights in any design or production credits. 
+
+11. Termination
+This agreement is effective until terminated. This agreement will terminate automatically without notice from Durotype, if you fail to comply with any term of this agreement. Upon termination, you must destroy the original and any copies of a Durotype font and the related documentation. 
+
+12. Governing Law
+This agreement is governed by the laws of the Netherlands. 
+
+
+13. Disclaimer and Limited Warranty
+
+Durotype or its distributor warrants the Durotype product to be free from defects in materials and workmanship under normal use for a period of 21 days from the date of delivery, as shown on your receipt. Durotype’s or its distributor’s entire liability and your exclusive remedy as to a defective product shall be, at Durotype’s or its distributor’s option, either return of purchase price, or replacement of any such product that is returned to Durotype or its distributor with a copy of the invoice. Durotype and its distributor shall have no responsibility to replace the product or refund the purchase price if failure results from accident, abuse or misapplication, or if any product is lost or damaged due to theft, fire, or negligence. Any replacement product will be warranted for 21 days. This warranty gives you specific legal rights. You may have other rights, which vary from jurisdiction to jurisdiction. 
+
+Except as expressly provided above, the product is provided “as is”. Durotype and its distributor do not make any warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. 
+
+The entire risk as to the quality and performance of the product rests upon you. Durotype and its distributor do not warrant that the functions contained in the product will meet your requirements, or that the operation of the product will be uninterrupted or error free. 
+
+Durotype and its distributor shall not be liable for any direct, indirect, consequential, or incidental damages (including damages from loss of business profits, business interruption, loss of business information, and the like) arising out of the use of, or inability to use, the product, even if Durotype or its distributor has been advised of the possibility of such damages. 
+
+Because some jurisdictions do not allow the exclusion or limitation of liability for consequential or incidental damages, the above limitation may not apply to you.
+
+	
+Copyright © 2011 Durotype. All rights reserved.
+6/11 v1.2.

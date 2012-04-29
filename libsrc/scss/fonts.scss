@@ -1,0 +1,85 @@
+@mixin ff($file, $family, $svg_id, $weight: 400, $style: normal) {
+@font-face { 
+    font-family: $family; 
+    src: url('/lib/fonts/#{$file}-webfont.eot'); 
+    src: url('/lib/fonts/#{$file}-webfont.eot?#iefix') format('embedded-opentype'), 
+         url('/lib/fonts/#{$file}-webfont.woff') format('woff'), 
+         url('/lib/fonts/#{$file}-webfont.ttf') format('truetype'), 
+         url('/lib/fonts/#{$file}-webfont.svg#' + $svg_id) format('svg'); 
+    font-weight: $weight; 
+    font-style: $style; 
+  }
+}
+
+@include ff('arvo/Arvo-BoldItalic', 'Arvo', 'ArvoRegular');
+@include ff('arvo/Arvo-Bold', 'Arvo', 'ArvoItalic', 400, italic);
+@include ff('arvo/Arvo-Italic', 'Arvo', 'ArvoBold', 700);
+@include ff('arvo/Arvo-Regular', 'Arvo', 'ArvoBoldItalic', 700, italic);
+@include ff('banda_regular/Banda_regular', 'Banda', 'BandaRegular');
+@include ff('Bebas/BEBAS', 'Bebas', 'BebasRegular');
+@include ff('Bitstream-Vera-Sans/Vera-Bold-Italic', 'Bitstream', 'BitstreamVeraSansRoman', 700, italic);
+@include ff('Bitstream-Vera-Sans/Vera-Bold', 'Bitstream', 'BitstreamVeraSansOblique', 700);
+@include ff('Bitstream-Vera-Sans/Vera-Italic', 'Bitstream', 'BitstreamVeraSansBold', 400, italic);
+@include ff('Bitstream-Vera-Sans/Vera', 'Bitstream', 'BitstreamVeraSansBoldOblique');
+@include ff('BPscript/BPscript', 'BPscript', 'BPscriptRegular');
+@include ff('ChunkFive/Chunkfive', 'Chunk Five', 'ChunkFiveRegular');
+@include ff('classicround_medium/ClassicRound-Medium', 'Classic Round', 'ClassicRoundMedium');
+@include ff('codepro_lightdemo/Code_Pro_Light_Demo', 'Code', 'CodeProLightDemoRegular');
+@include ff('codepro_regulardemo/Code_Pro_Demo', 'Code', 'CodeProDemoRegular');
+@include ff('Comic-Zine-OT/comic_zine_ot', 'Comic Zine', 'ComicZineOTRegular');
+@include ff('Crimson/Crimson-BoldItalic', 'Crimson', 'CrimsonRoman', 700, italic);
+@include ff('Crimson/Crimson-Bold', 'Crimson', 'CrimsonBold', 700);
+@include ff('Crimson/Crimson-Italic', 'Crimson', 'CrimsonBoldItalic', 400, italic);
+@include ff('Crimson/Crimson-Roman', 'Crimson', 'CrimsonItalic');
+@include ff('Crimson/Crimson-SemiboldItalic', 'Crimson', 'CrimsonSemibold', 600, italic);
+@include ff('Crimson/Crimson-Semibold', 'Crimson', 'CrimsonSemiboldItalic', 600);
+@include ff('Droid-Serif/DroidSerif-BoldItalic', 'Droid Serif', 'DroidSerifRegular', 700, italic);
+@include ff('Droid-Serif/DroidSerif-Bold', 'Droid Serif', 'DroidSerifItalic', 700);
+@include ff('Droid-Serif/DroidSerif-Italic', 'Droid Serif', 'DroidSerifBold', 400, italic);
+@include ff('Droid-Serif/DroidSerif-Regular', 'Droid Serif', 'DroidSerifBoldItalic');
+@include ff('fjord/FjordOne-Regular', 'Fjord', 'FjordOne');
+@include ff('Folks-Light/Folks-Bold', 'Folks', 'FolksLightRegular', 700);
+@include ff('Folks-Light/Folks-Heavy', 'Folks', 'FolksRegular', 900);
+@include ff('Folks-Light/Folks-Light', 'Folks', 'FolksBold', 100);
+@include ff('Folks-Light/Folks-Normal', 'Folks', 'FolksHeavyRegular', 400);
+@include ff('josefin-slab/JosefinSlab-BoldItalic', 'Josefin Slab', 'JosefinSlabThin', 700, italic);
+@include ff('josefin-slab/JosefinSlab-Bold', 'Josefin Slab', 'JosefinSlabThinItalic', 700);
+@include ff('josefin-slab/JosefinSlab-Italic', 'Josefin Slab', 'JosefinSlabLight', 400, italic);
+@include ff('josefin-slab/JosefinSlab-LightItalic', 'Josefin Slab', 'JosefinSlabLightItalic', 300, italic);
+@include ff('josefin-slab/JosefinSlab-Light', 'Josefin Slab', 'JosefinSlabRegular', 300);
+@include ff('josefin-slab/JosefinSlab-Regular', 'Josefin Slab', 'JosefinSlabItalic');
+@include ff('josefin-slab/JosefinSlab-SemiBoldItalic','Josefin Slab', 'JosefinSlabSemiBold', 600, italic);
+@include ff('josefin-slab/JosefinSlab-SemiBold', 'Josefin Slab', 'JosefinSlabSemiBoldItalic', 600);
+@include ff('josefin-slab/JosefinSlab-ThinItalic', 'Josefin Slab', '#JosefinSlabBold', 100, italic);
+@include ff('josefin-slab/JosefinSlab-Thin', 'Josefin Slab', '#JosefinSlabBoldItalic', 100);
+/*@include ff('Komika-Title/KomikaTitle-Axis', 'Komika Title', 'KomikaTitleRegular');*/
+/*@include ff('Komika-Title/KomikaTitle-Kaps', 'Komika Title', 'KomikaTitle-PaintRegular');*/
+/*@include ff('Komika-Title/KomikaTitle-Paint', 'Komika Title', 'KomikaTitleWideRegular');*/
+/*@include ff('Komika-Title/KomikaTitle-Wide', 'Komika Title', 'KomikaTitleKapsRegular');*/
+@include ff('Komika-Title/KomikaTitle', 'Komika Title', 'KomikaTitleAxisRegular');
+@include ff('Lane/LANENAR', 'Lane', 'LaneNarrowRegular');
+@include ff('Lane/LANEPOSH', 'Lane Up', 'LaneUpperRegular');
+@include ff('Lane/LANEUP', 'Lane Posh', 'LanePoshRegular');
+@include ff('LemonChicken/LEMONCHI', 'Lemon Chi', 'LemonChickenRegular');
+@include ff('Lilly/Lilly', 'Lilly', 'LillyRegular');
+@include ff('Lobster/Lobster_1.3', 'Lobster', 'Lobster13Regular');
+@include ff('lobster-two/LobsterTwo-BoldItalic', 'Lobster Two', 'LobsterTwoBoldItalic', 700, italic);
+@include ff('lobster-two/LobsterTwo-Bold', 'Lobster Two', 'LobsterTwoBold', 700);
+@include ff('lobster-two/LobsterTwo-Italic', 'Lobster Two', 'LobsterTwoItalic', 400, italic);
+@include ff('lobster-two/LobsterTwo-Regular', 'Lobster Two', 'LobsterTwoRegular');
+@include ff('Matiz/Matiz', 'Matiz', 'MatizRegular');
+@include ff('merge_light/merge_light', 'Merge', 'MergeLight');
+@include ff('museo_300/Museo300-Regular', 'Museo', 'Museo300', 300);
+@include ff('museo_500/Museo500-Regular', 'Museo', 'Museo300', 500);
+@include ff('museo_700/Museo700-Regular', 'Museo', 'Museo500', 700);
+@include ff('nevis/nevis.ttf', 'Nevis', '');
+@include ff('novecentowide_bold/Novecentowide-Bold', 'Novecento', 'NovecentowideBold', 700);
+@include ff('novecentowide_medium/Novecentowide-Medium', 'Novecento', 'NovecentowideMedium');
+@include ff('pacifico/Pacifico', 'Pacifico', 'PacificoRegular');
+@include ff('Quicksand/Quicksand_Bold_Oblique', 'Quicksand', 'QuicksandBoldOblique', 700, italic);
+@include ff('Quicksand/Quicksand_Bold', 'Quicksand', 'QuicksandBold', 700);
+@include ff('Quicksand/Quicksand_Book_Oblique', 'Quicksand', 'QuicksandBookOblique', 400, italic);
+@include ff('Quicksand/Quicksand_Book', 'Quicksand', 'QuicksandBook');
+/*@include ff('Quicksand/Quicksand_Dash', 'Quicksand', 'QuicksandDash'*/
+/*@include ff('Quicksand/Quicksand_Light_Oblique', 'Quicksand', 'QuicksandLightOblique';*/
+/*@include ff('Quicksand/Quicksand_Light', 'Quicksand', 'QuicksandLight';*/
