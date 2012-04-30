@@ -17,6 +17,7 @@ class ApplicationController(object):
 
     def pre_process(self, request):
         request = newhive.utils.Request(request)
+        request.environ['wsgi.url_scheme'] = request.headers.get('X-Forwarded-Proto', request.environ['wsgi.url_scheme'])
         if config.dev_prefix:
             request.environ['HTTP_HOST'] = request.environ.get('HTTP_HOST', '').replace(config.dev_prefix + '.', '')
         response = Response()
