@@ -421,12 +421,38 @@ def overall_impressions(db):
     return (hist, bin_edges)
 
 
+def active7(db):
+    period = 7 #days
+    input_name = "mr.actions_per_user_per_day"
+    output_name = "mr.active" + str(period)
+
+    map = """
+        function(){
+            var period = %(period)s;
+            for (i=0; i<period; i++){
+                var date = this._id.date + i * 3600 * 24;
+                emit({date: date, name: this._id.name}, 1)
+            }
+        }
+        """ % {'period': period}
+
+    reduce = """
+        function(key, values) {
+            var total=0;
+            for (var i=0; i < values.length; i++) {
+                total += values[i];
+            }
+            return total;
+        }"""
+    results_collection = db.mdb[input_name].map_reduce(map, reduce, output_name)
+    return results_collection
+
 if __name__ == '__main__':
     from newhive.state import Database
     import newhive.config
     db = Database(newhive.config)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.debug)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    #ch = logging.StreamHandler()
+    #ch.setLevel(logging.debug)
+    #formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    #ch.setFormatter(formatter)
+    #logger.addHandler(ch)
