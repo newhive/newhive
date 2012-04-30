@@ -1,6 +1,8 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.mail import mail_invite
+import logging
+logger = logging.getLogger(__name__)
 
 class AdminController(ApplicationController):
 
@@ -106,3 +108,7 @@ class AdminController(ApplicationController):
         response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in self.db.Contact.search({})])
         response.content_type = 'text/csv; charset=utf-8'
         return response
+
+    def _index(self, request, response):
+        logger.debug('_index')
+        return self.redirect(response, abs_url(secure=True, subdomain="thenewhive") + 'admin')

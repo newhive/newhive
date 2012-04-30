@@ -61,7 +61,8 @@ class ApplicationController(object):
         return (request, response)
 
     def default(self, request, response):
-        method = lget(request.path_parts, 1, '')
+        method = lget(request.path_parts, 1, '_index')
+        logger.debug(method)
         if not hasattr(self, method): return self.serve_404(request, response)
         return getattr(self, method)(request, response)
 
