@@ -10,7 +10,7 @@
 <pre>{{ error.created | epoch_to_string }}</pre>
 
 <h3>IP</h3>
-<pre>{{ environ.REMOTE_ADDR }}</pre>
+<pre>{{ environ.HTTP_X_FORWARDED_FOR or environ.REMOTE_ADDR }}</pre>
 
 <h3>User</h3>
 <pre>{{ user.name }}</pre>
