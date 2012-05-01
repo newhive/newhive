@@ -65,6 +65,7 @@ assets_env.register('expression.js', 'expression.js', filters='yui_js', output='
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
 jinja_env.filters['time'] = friendly_date
+jinja_env.filters['epoch_to_string'] = epoch_to_string
 jinja_env.filters['length_bucket'] = length_bucket
 jinja_env.filters['large_number'] = large_number
 jinja_env.filters['json'] = json.dumps
@@ -248,7 +249,8 @@ def handle_safe(request):
         traceback = get_current_traceback(skip=1, show_hidden_frames=False, ignore_system_exceptions=True)
         requester = request.environ['hive.request'].requester
         log_entry = {
-                'environ': {key.replace('.', '-'): val for key, val in request.environ.iteritems() if type(val) in [bool, str, int, float, tuple]}
+                'exception': traceback.exception
+                , 'environ': {key.replace('.', '-'): val for key, val in request.environ.iteritems() if type(val) in [bool, str, int, float, tuple]}
                 , 'stack_frames': [
                         {
                         'filename': x.filename,
@@ -258,10 +260,9 @@ def handle_safe(request):
                         } for x in traceback.frames
                     ]
                 , 'requester': {'id': requester.id, 'name': requester.get('name')}
-                , 'created': now()
                 }
 
-        db.mdb.error_log.insert(log_entry)
+        db.ErrorLog.create(log_entry)
         raise
 
 application = handle_safe

@@ -1162,7 +1162,10 @@ class Referral(Entity):
 class Contact(Entity):
     cname = 'contact_log'
 
-
+@Database.register
+class ErrorLog(Entity):
+    cname = 'error_log'
+    indexes = ['created']
 
 ## utils
 
