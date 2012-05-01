@@ -254,9 +254,13 @@ def handle_safe(request):
         hostname = socket.gethostname()
         traceback = get_current_traceback(skip=1, show_hidden_frames=False, ignore_system_exceptions=True)
         requester = request.environ['hive.request'].requester
+        def serializable_filter(dictionary):
+            return {key.replace('.', '-'): val for key, val in dictionary.iteritems() if type(val) in [bool, str, int, float, tuple, unicode]}
         log_entry = {
                 'exception': traceback.exception
-                , 'environ': {key.replace('.', '-'): val for key, val in request.environ.iteritems() if type(val) in [bool, str, int, float, tuple]}
+                , 'environ': serializable_filter(request.environ)
+                , 'form': serializable_filter(request.form)
+                , 'url': request.url
                 , 'stack_frames': [
                         {
                         'filename': x.filename,

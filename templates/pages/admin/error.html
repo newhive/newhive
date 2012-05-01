@@ -6,6 +6,9 @@
 <h1>{{ error.get('exception') }}</h1>
 <pre>{{traceback|e}}</pre>
 
+<h3>Url</h3>
+<pre>{{ error.get('url') }}</pre>
+
 <h3>Date</h3>
 <pre>{{ error.created | epoch_to_string }}</pre>
 
@@ -14,6 +17,18 @@
 
 <h3>User</h3>
 <pre>{{ user.name }}</pre>
+
+{% if error.get('form') %}
+<h3>Form</h3>
+<table>
+  {% for key, val in error.get('form').iteritems() %}
+  <tr>
+    <td>{{ key }}</td>
+    <td>{{ val | e}}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
 
 <h3>WSGI Environment</h3>
 <table>
