@@ -11,11 +11,14 @@ if __name__ == '__main__':
     parser.add_option("-p", "--port", action="store", type="int", dest="port")
     parser.add_option("--secure-port", action="store", type="int", dest="secure_port")
     parser.add_option("--ssl-only", action="store_true", dest="ssl_only", default=False)
+    parser.add_option("--debug", action="store_true", dest="debug")
     (options, args) = parser.parse_args()
 
     config.plain_port =  options.port or config.plain_port
     config.ssl_port = options.secure_port or (options.port and options.port + 1) or config.ssl_port
     config.always_ssl = options.ssl_only or config.always_ssl
+    config.debug_mode = options.debug or config.debug_mode
+    config.webassets_debug = options.debug or config.webassets_debug
 
 
     """ This Werkzeug server is used only for development and debugging """
