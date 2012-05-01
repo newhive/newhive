@@ -239,10 +239,33 @@ def handle_debug(request):
 def handle_safe(request):
     """Log exceptions thrown, display friendly error message.
        Not implemneted."""
-    try: return handle(request)
-    except Exception as e: return app.serve_error(request, str(e))
+    try:
+        return handle(request)
+    except Exception as e:
+        import socket
+        from werkzeug.debug.tbtools import get_current_traceback
+        hostname = socket.gethostname()
+        traceback = get_current_traceback(skip=1, show_hidden_frames=False, ignore_system_exceptions=True)
+        requester = request.environ['hive.request'].requester
+        log_entry = {
+                'environ': {key.replace('.', '-'): val for key, val in request.environ.iteritems() if type(val) in [bool, str, int, float, tuple]}
+                , 'stack_frames': [
+                        {
+                        'filename': x.filename,
+                        'lineno': x.lineno,
+                        'function_name': x.function_name,
+                        'current_line': x.current_line.strip()
+                        } for x in traceback.frames
+                    ]
+                , 'requester': {'id': requester.id, 'name': requester.get('name')}
+                , 'created': now()
+                }
 
-application = handle_debug
+        db.mdb.error_log.insert(log_entry)
+        raise
+
+application = handle_safe
+#application = handle_debug
 
 if __name__ == '__main__':
     from werkzeug.test import EnvironBuilder
