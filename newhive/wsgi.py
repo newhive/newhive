@@ -91,7 +91,12 @@ app = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db =
 
 def admins(server):
     def access_controled(request, response, *arg):
-        return (server if request.requester.get('name') in config.admins else app.serve_404)(request, response, *arg)
+        if request.requester.get('name') not in config.admins:
+            return app.serve_404(request, response, *arg)
+        elif not request.is_secure:
+            return app.redirect(response, abs_url(secure=True) + request.path + '?' + request.query_string)
+        else:
+            return server(request, response, *arg)
     return access_controled
 
 def dialog_map(request, response, args=None):
