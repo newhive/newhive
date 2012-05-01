@@ -158,6 +158,7 @@ site_pages = {
     ,'admin'               : admins(controllers['admin'].default)
     ,'analytics'           : admins(controllers['analytics'].default)
     ,'robots.txt'          : app.robots
+    ,'500'                 : newhive.utils.exception_test
 }
 
 dialogs = dict(

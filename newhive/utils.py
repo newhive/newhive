@@ -156,3 +156,6 @@ class Wrapper(object):
 
 class Request(Wrapper):
     is_secure = property(lambda self: self._wrapped_obj.is_secure or self.headers.get('X-Forwarded-Proto') == 'https')
+
+def exception_test(*args, **kwargs):
+    raise Exception('dummy exception')
