@@ -43,8 +43,8 @@ assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
-    assets_env.set_url('/lib/libsrc')
-    scss = webassets.Bundle('scss/base.scss', filters=get_filter('scss', compass=True), output='../lib/scss.css', debug=False)
+    #assets_env.set_url('/lib/libsrc')
+    scss = webassets.Bundle('scss/base.scss', filters=get_filter('scss', use_compass=True), output='../lib/scss.css', debug=False)
 else: scss = 'scss.css'
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
