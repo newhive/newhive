@@ -300,5 +300,5 @@ class UserController(ApplicationController):
             response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
         if friends and len(friends):
             response.context['friends'] = friends
-        logger.debug('Facebook listen response time %d ms', time.time() - t0)
+        logger.debug('Facebook listen response time %d ms', (time.time() - t0)*1000)
         return self.serve_page(response, 'dialogs/facebook_listen.html')
