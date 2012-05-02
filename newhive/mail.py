@@ -1,4 +1,4 @@
-import crypt, urllib
+import crypt, urllib, time
 import newhive.state
 from newhive.state import abs_url
 from newhive import config
@@ -11,9 +11,14 @@ from email.generator import Generator
 from email import Charset
 from werkzeug import url_unquote
 
+import logging
+logger = logging.getLogger(__name__)
+
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
 def send_mail(headers, body):
-    smtp = SMTP(config.email_server)
+    t0 = time.time()
+    smtp = SMTP(config.email_server, 2525)
+    logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
     msg = MIMEMultipart('alternative')
     msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
     msg['To'] = headers['To']
@@ -37,9 +42,12 @@ def send_mail(headers, body):
     encoded_msg = io.getvalue()
 
     if config.debug_mode and not msg['To'] in config.admin_emails:
-        print "Not sending mail to %s in debug mode" % (msg['To'])
+        logger.warn("Not sending mail to %s in debug mode" % (msg['To']))
     else:
-        return smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
+        t0 = time.time()
+        sent = smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
+        logger.debug('SMTP sendmail time %d ms', (time.time() - t0) * 1000)
+        return sent
 
 
 def mail_invite(jinja_env, db, email, name=False, force_resend=False):

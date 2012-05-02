@@ -65,6 +65,7 @@ assets_env.register('expression.js', 'expression.js', filters='yui_js', output='
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
 jinja_env.filters['time'] = friendly_date
+jinja_env.filters['epoch_to_string'] = epoch_to_string
 jinja_env.filters['length_bucket'] = length_bucket
 jinja_env.filters['large_number'] = large_number
 jinja_env.filters['json'] = json.dumps
@@ -90,7 +91,12 @@ app = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db =
 
 def admins(server):
     def access_controled(request, response, *arg):
-        return (server if request.requester.get('name') in config.admins else app.serve_404)(request, response, *arg)
+        if request.requester.get('name') not in config.admins:
+            return app.serve_404(request, response, *arg)
+        elif not request.is_secure:
+            return app.redirect(response, abs_url(secure=True) + request.path + '?' + request.query_string)
+        else:
+            return server(request, response, *arg)
     return access_controled
 
 def dialog_map(request, response, args=None):
@@ -152,6 +158,7 @@ site_pages = {
     ,'admin'               : admins(controllers['admin'].default)
     ,'analytics'           : admins(controllers['analytics'].default)
     ,'robots.txt'          : app.robots
+    ,'500'                 : newhive.utils.exception_test
 }
 
 dialogs = dict(
@@ -239,10 +246,37 @@ def handle_debug(request):
 def handle_safe(request):
     """Log exceptions thrown, display friendly error message.
        Not implemneted."""
-    try: return handle(request)
-    except Exception as e: return app.serve_error(request, str(e))
+    try:
+        return handle(request)
+    except Exception as e:
+        import socket
+        from werkzeug.debug.tbtools import get_current_traceback
+        hostname = socket.gethostname()
+        traceback = get_current_traceback(skip=1, show_hidden_frames=False, ignore_system_exceptions=True)
+        requester = request.environ['hive.request'].requester
+        def serializable_filter(dictionary):
+            return {key.replace('.', '-'): val for key, val in dictionary.iteritems() if type(val) in [bool, str, int, float, tuple, unicode]}
+        log_entry = {
+                'exception': traceback.exception
+                , 'environ': serializable_filter(request.environ)
+                , 'form': serializable_filter(request.form)
+                , 'url': request.url
+                , 'stack_frames': [
+                        {
+                        'filename': x.filename,
+                        'lineno': x.lineno,
+                        'function_name': x.function_name,
+                        'current_line': x.current_line.strip()
+                        } for x in traceback.frames
+                    ]
+                , 'requester': {'id': requester.id, 'name': requester.get('name')}
+                }
 
-application = handle_debug
+        db.ErrorLog.create(log_entry)
+        raise
+
+application = handle_safe
+#application = handle_debug
 
 if __name__ == '__main__':
     from werkzeug.test import EnvironBuilder

@@ -17,11 +17,14 @@ class ApplicationController(object):
 
     def pre_process(self, request):
         request = newhive.utils.Request(request)
+        request.environ['hive.request'] = request
+        request.environ['wsgi.url_scheme'] = request.headers.get('X-Forwarded-Proto', request.environ['wsgi.url_scheme'])
+        original_url = request.url
         if config.dev_prefix:
             request.environ['HTTP_HOST'] = request.environ.get('HTTP_HOST', '').replace(config.dev_prefix + '.', '')
         response = Response()
         # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
-        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url }
+        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : original_url }
         request.requester = auth.authenticate_request(self.db, request, response)
         self.process_facebook(request)
         if request.args.has_key('code') and not request.form.get('fb_disconnect'):
@@ -60,7 +63,7 @@ class ApplicationController(object):
         return (request, response)
 
     def default(self, request, response):
-        method = lget(request.path_parts, 1, '')
+        method = lget(request.path_parts, 1, '_index')
         if not hasattr(self, method): return self.serve_404(request, response)
         return getattr(self, method)(request, response)
 

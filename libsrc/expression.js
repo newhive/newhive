@@ -17,7 +17,7 @@ $(function() {
             cssSelectorAncestor: "#jp_container_" + $(this).data("index"),
             ready: function (event) {
               $(this).jPlayer("setMedia", {
-                  mp3: $(this).data("url").replace(/^https?:/, window.location.protocol)
+                  mp3: $(this).data("url").replace(/^https?:/, window.location.protocol).replace(/:\d+/, '')
               });//.bind($.jPlayer.event.timeupdate, update_timer(this));
               //update_timer(this)(event);
             },
