@@ -43,18 +43,18 @@ assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
-    assets_env.set_url('/lib/libsrc')
-    scss = webassets.Bundle('scss/base.scss', filters=get_filter('scss', compass=True), output='../lib/scss.css', debug=False)
+    #assets_env.set_url('/lib/libsrc')
+    scss = webassets.Bundle('scss/base.scss', filters=get_filter('scss', use_compass=True, debug_info=False), output='../lib/scss.css', debug=False)
 else: scss = 'scss.css'
-assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
+assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
-    'drag.js', 'dragndrop.js', 'colors.js', 'util.js', filters='yui_js', output='../lib/app.js')
+    'drag.js', 'dragndrop.js', 'colors.js', 'util.js', 'jplayer/jquery.jplayer.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
-assets_env.register('app.css', scss, 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', scss, 'app_src.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
@@ -65,6 +65,7 @@ assets_env.register('expression.js', 'expression.js', filters='yui_js', output='
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
 jinja_env.filters['time'] = friendly_date
+jinja_env.filters['epoch_to_string'] = epoch_to_string
 jinja_env.filters['length_bucket'] = length_bucket
 jinja_env.filters['large_number'] = large_number
 jinja_env.filters['json'] = json.dumps
@@ -90,7 +91,12 @@ app = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db =
 
 def admins(server):
     def access_controled(request, response, *arg):
-        return (server if request.requester.get('name') in config.admins else app.serve_404)(request, response, *arg)
+        if request.requester.get('name') not in config.admins:
+            return app.serve_404(request, response, *arg)
+        elif not request.is_secure:
+            return app.redirect(response, abs_url(secure=True) + request.path + '?' + request.query_string)
+        else:
+            return server(request, response, *arg)
     return access_controled
 
 def dialog_map(request, response, args=None):
@@ -152,6 +158,7 @@ site_pages = {
     ,'admin'               : admins(controllers['admin'].default)
     ,'analytics'           : admins(controllers['analytics'].default)
     ,'robots.txt'          : app.robots
+    ,'500'                 : newhive.utils.exception_test
 }
 
 dialogs = dict(
@@ -239,10 +246,37 @@ def handle_debug(request):
 def handle_safe(request):
     """Log exceptions thrown, display friendly error message.
        Not implemneted."""
-    try: return handle(request)
-    except Exception as e: return app.serve_error(request, str(e))
+    try:
+        return handle(request)
+    except Exception as e:
+        import socket
+        from werkzeug.debug.tbtools import get_current_traceback
+        hostname = socket.gethostname()
+        traceback = get_current_traceback(skip=1, show_hidden_frames=False, ignore_system_exceptions=True)
+        requester = request.environ['hive.request'].requester
+        def serializable_filter(dictionary):
+            return {key.replace('.', '-'): val for key, val in dictionary.iteritems() if type(val) in [bool, str, int, float, tuple, unicode]}
+        log_entry = {
+                'exception': traceback.exception
+                , 'environ': serializable_filter(request.environ)
+                , 'form': serializable_filter(request.form)
+                , 'url': request.url
+                , 'stack_frames': [
+                        {
+                        'filename': x.filename,
+                        'lineno': x.lineno,
+                        'function_name': x.function_name,
+                        'current_line': x.current_line.strip()
+                        } for x in traceback.frames
+                    ]
+                , 'requester': {'id': requester.id, 'name': requester.get('name')}
+                }
 
-application = handle_debug
+        db.ErrorLog.create(log_entry)
+        raise
+
+application = handle_safe
+#application = handle_debug
 
 if __name__ == '__main__':
     from werkzeug.test import EnvironBuilder

@@ -1,0 +1,26 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block table_head %}
+<tr>
+  <th>ID</th>
+  <th>Date</th>
+  <th>IP</th>
+  <th>User</th>
+  <th>Error</th>
+  <th>Line</th>
+</tr>
+{% endblock %}
+
+{% block table_body %}
+{% for error in errors %}
+
+<tr>
+  <td><a href="/admin/error_log/{{error.id}}">{{error.id}}</a>
+  <td>{{ error.created | epoch_to_string }}</td>
+  <td>{{ error.get('environ').HTTP_X_FORWARDED_FOR or error.get('environ').REMOTE_ADDR }}</td>
+  <td>{{ error.get('requester').name | e}}</td>
+  <td>{{ error.get('exception') | e}}</td>
+  <td>{{ error.get('stack_frames')[-1].current_line | e}}</td>
+</tr>
+{% endfor %}
+{% endblock %}

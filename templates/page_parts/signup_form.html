@@ -26,13 +26,13 @@
         $('.signup_form').submit(function() {
             if($(this).hasClass('inactive')) { return false; }
             $(this).addClass('inactive');
+            $(this).find('.signup_submit').addClass('inactive');
             var callback = function(that){
                 return function(data){
                     $(that).find('.signup_submit').removeClass('inactive');
                     if(!data) alert('Sorry, there was a problem sending your message. Did you include your e-mail address?');
                     else {
                         $(that).find('input[name=message]').val('');
-                        createCookie('signup_completed', true);
                         var dialog = $(that).parents('.dialog');
                         _gaq.push(['_trackEvent', 'signup', 'submit', dialog.attr('id')]);
                         dialog.find('.btn_dialog_close').click();
@@ -44,5 +44,3 @@
          });
     });
 </script>
-
-

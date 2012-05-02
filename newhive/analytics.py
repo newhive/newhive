@@ -163,8 +163,8 @@ def funnel2(db, start_datetime, end_datetime):
 
 def contacts_per_hour(db, end=now()):
     end = datetime.datetime.fromtimestamp(end)
-    end = end.replace(hour=8, minute=0, second=0, microsecond=0)
-    hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=24), periods=30)
+    end = end.replace(hour=12, minute=0, second=0, microsecond=0)
+    hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=24), periods=120)
     contacts = db.contact_log.find({'created':{'$gt': time.mktime(hourly[0].timetuple())}}, {'created': True})
     contact_times = sorted([datetime.datetime.utcfromtimestamp(c['created']) for c in contacts])
     data = pandas.Series(1, contact_times)
@@ -394,7 +394,7 @@ def _cohort_users(db, stop_date=datetime.datetime.now()):
 
 
 def overall_impressions(db):
-    map = """
+    map_function = """
         function() {
              if (typeof(this.apps) != "undefined" && this.apps.length > 0 && this.views && this.owner_views){
                  emit(this.owner, {count: 1, views: this.views - this.owner_views})
@@ -414,11 +414,11 @@ def overall_impressions(db):
 
     name = 'overall_impressions_per_user'
 
-    results_collection = db.mdb.expr.map_reduce(map, reduce, 'mr.' + name)
+    results_collection = db.mdb.expr.map_reduce(map_function, reduce, 'mr.' + name)
     data = [x['value']['views'] for x in results_collection.find()]
     bin_edges = [0,1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000, 2000000, 5000000]
     hist, bin_edges = numpy.histogram(data, bin_edges)
-    return (hist, bin_edges)
+    return (map(int,hist), map(int,bin_edges))
 
 
 def active7(db):

@@ -1,6 +1,8 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.mail import mail_invite
+import logging
+logger = logging.getLogger(__name__)
 
 class AdminController(ApplicationController):
 
@@ -106,3 +108,18 @@ class AdminController(ApplicationController):
         response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in self.db.Contact.search({})])
         response.content_type = 'text/csv; charset=utf-8'
         return response
+
+    def error_log(self, request, response):
+        id = lget(request.path.split('/'), 2)
+        if id:
+            response.context['error'] = self.db.ErrorLog.find({'_id': id})
+            response.context['traceback'] = '\n'.join(['  File "%(filename)s", line %(lineno)s, in %(function_name)s\n    ' % frame + frame['current_line'].strip() for frame in response.context['error'].get('stack_frames')])
+
+            return self.serve_page(response, 'pages/admin/error.html')
+        else:
+            response.context['errors'] = self.db.ErrorLog.search({}, sort=[('created', -1)], limit=100)
+            return self.serve_page(response, 'pages/admin/error_log.html')
+
+    def _index(self, request, response):
+        logger.debug('_index')
+        return self.redirect(response, abs_url(secure=True, subdomain="thenewhive") + 'admin')

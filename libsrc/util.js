@@ -477,14 +477,17 @@ function asyncSubmit(form, callback) {
 }
 
 function asyncUpload(opts) {
-    var target, form, opts = $.extend({ json : true, file_name : 'file', action: '/',
+    var target, form, opts = $.extend({ json : true, file_name : 'file', multiple : false, action: '/',
         start : noop, success : noop, data : { action : opts.post_action || 'file_create' } }, opts);
 
     var onload = function() {
         var frame = target.get(0);
         if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
         var resp = $(frame.contentDocument.body).text();
-        if(opts.json) resp = JSON.parse(resp);
+        if(opts.json) {
+            resp = JSON.parse(resp);
+            if(!opts.multiple){ resp = resp[0]; }
+        }
         opts.success(resp);
         form.remove();
     }
@@ -494,13 +497,14 @@ function asyncUpload(opts) {
         attr('target', tname).attr('action', opts.action);
     target = $("<iframe style='position : absolute; left : -1000px'></iframe>").attr('name', tname).appendTo(form).load(onload);
     var input = $("<input type='file'>").attr('name', opts.file_name).change(function() { opts.start(); form.submit() }).appendTo(form);
+    if(opts.multiple) { input.attr('multiple', 'multiple'); }
     for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
     form.appendTo(document.body);
     setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
 }
 
 function hover_url(url) {
-    var h = url.replace(/(.png)|(-.*)$/, '-hover.png');
+    var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
     var i = $("<img style='display:none'>").attr('src', h);
     $(document.body).append(i);
     return h;
@@ -675,6 +679,7 @@ var scale_nav = function(s) {
    $('#nav, #search_box ').css('font-size', s + 'em');
 }
 
+var positionHacks = Funcs(noop);
 var place_apps = function() {
    $('.happ').each(function(i, app_div) {
        var e = $(this);
@@ -696,6 +701,7 @@ var place_apps = function() {
        }
        e.css(c);
    });
+   positionHacks();
    $('.happfill').each(function(i, div) {
        var e = $(div);
        //e.width(e.parent().width()).height(e.parent().height());
@@ -785,4 +791,13 @@ function require_login(fn) {
     }
     if(fn) return check;
     else return check();
+}
+
+function arrayAddition(a,b){
+    if (a.length != b.length) { throw "Arrays must be equal length" };
+    rv = []
+    for (i=0; i< a.length; i++){
+        rv[i] = a[i] + b[i]
+    }
+    return rv
 }

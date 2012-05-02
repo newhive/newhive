@@ -1,0 +1,218 @@
+/*
+ * Skin for jPlayer Plugin (jQuery JavaScript Library)
+ * http://www.happyworm.com/jquery/jplayer
+ *
+ * Skin Name: Blue Monday
+ *
+ * Copyright (c) 2010-2011 Happyworm Ltd
+ * Dual licensed under the MIT and GPL licenses.
+ *  - http://www.opensource.org/licenses/mit-license.php
+ *  - http://www.gnu.org/copyleft/gpl.html
+ *
+ * Author: Silvia Benvenuti
+ * Skin Version: 4.0 (jPlayer 2.1.0)
+ * Date: 1st September 2011
+ */
+
+@import "compass/css3/user-interface";
+
+div.jp-audio {
+	font-family:Helvetica, Arial, sans-serif;
+	position:relative;
+}
+
+div.jp-interface {
+	position: relative;
+	width:100%;
+}
+
+/* @group CONTROLS */
+
+div.jp-interface .jp-controls {
+	list-style-type:none;
+	margin:0;
+	padding: 0;
+	overflow:hidden;
+}
+
+div.jp-video .jp-controls,
+div.jp-interface .jp-controls li {
+	display:inline;
+	float: left;
+}
+
+div.jp-interface .jp-controls a {
+  height: 100%;
+  width: auto;
+	display:block;
+	overflow:hidden;
+	text-indent:-9999px;
+}
+
+div.jp-progress {
+	overflow:hidden;
+	background-color: #ddd;
+}
+div.jp-audio div.jp-progress {
+	position: absolute;
+}
+
+div.jp-seek-bar {
+	width:0px;
+	height:100%;
+	cursor: pointer;
+}
+div.jp-play-bar {
+	width:0px;
+	height:100%;
+}
+
+/* The seeking class is added/removed inside jPlayer */
+div.jp-seeking-bg {
+}
+
+div.jp-jplayer audio,
+div.jp-jplayer {
+	width:0px;
+	height:0px;
+}
+
+div.jp-jplayer {
+	background-color: #000000;
+}
+
+/* @group NO SOLUTION error feedback */
+
+.jp-no-solution {
+   width: 100%;
+   height: 100%;
+   left: 0;
+   top: 0;
+   padding: 5px;
+   font-size: 15px;
+   background-color: #eee;
+   border: 2px solid #009be3;
+   color: #000;
+   display: none;
+   -moz-box-sizing: border-box;
+   -webkit-box-sizing: border-box;
+   box-sizing: border-box;
+
+}
+
+.jp-no-solution a {
+	color:#000;
+}
+
+.jp-no-solution span {
+	font-size:1em;
+	display:block;
+	text-align:center;
+	font-weight:bold;
+}
+
+/* Minimal Theme */
+
+.jp-audio.minimal {
+    width: 100%;
+    height: 100%;
+    border: none;
+    $border: solid 0.1em white;
+
+    div.jp-interface {
+        height: 100%;
+        overflow: hidden;
+        border: $border;
+        -moz-box-sizing:    border-box;
+        -webkit-box-sizing: border-box;
+        box-sizing:        border-box;
+    }
+
+    .jp-controls {
+        width: auto;
+        float: left;
+        padding: 0;
+    }
+    div.jp-progress {
+        height: 100%;
+        position: static;
+        overflow: hidden;
+    }
+
+    div.jp-seek-bar {
+        background: #D1D1D1;
+    }
+
+    a.jp-play, a.jp-pause {
+    }
+
+    a.jp-play img, a.jp-pause img{
+        height: 100%;
+        width: auto;
+        display: block;
+    }
+
+    .jp-remaining-time {
+        position: absolute;
+        color: $color_grey_medium;
+        font-weight: normal;
+        font-size: 0.8em;
+        top: 0.6em;
+        right: 0.6em;
+    }
+
+    .jp-play-bar, .jp-interface {
+        background: #419DD6;
+    }
+    .jp-seek-wrapper {
+        height: 100%;
+        width: 100%;
+        position: relative;
+    }
+    .jp-volume {
+        display: none;
+        float: right;
+        height: 100%;
+        position: absolute;
+        right: 0;
+        top: 0;
+        font-size: 0.9em;
+        font-family: courier;
+        text-align: center;
+        color: $color_grey_medium;
+        &>div {
+            float: left;
+            height: 100%;
+            border-left: $border;
+        }
+        .button {
+            line-height: 1em;
+            width: 1em;
+            height: 50%;
+            cursor: pointer;
+            span {
+                display: inline-block;
+                @include user-select(none);
+            }
+            &:hover { 
+                background: $color_grey_medium;
+                color: white;
+            }
+        }
+        .jp-volume-plus {
+            span { margin-top: 0.03em; }
+            border-bottom: $border;
+        }
+        .jp-volume-minus span { margin-top: -0.1em; }
+    }
+    .jp-volume-bar {
+        position:relative;
+        width: 1em;
+    }
+    .jp-volume-bar-value {
+        position:absolute;
+        background-color: $color_grey_medium;
+        bottom: 0;
+        width: 100% !important;
+    }
+}

@@ -1,4 +1,9 @@
-from wsgi import *
+import sys, os
+parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_path)
+
+import newhive
+from newhive.wsgi import *
 
 context = {'name': "Duffy", 'url': "http://thenewhive.com", 'referrer_name':
 'Abram', 'referrer_url': 'http://abram.thenewhive.com', 'admin_name': 'Cara',
@@ -6,27 +11,16 @@ context = {'name': "Duffy", 'url': "http://thenewhive.com", 'referrer_name':
 , 'title': 'Lumana', 'tags': "#microfinance #africa #lumana", 'user_name':
 'duffy', 'sender_fullname': "Cara Bucciferro", 'sender_url':
 'http://cara.thenewhive.com/profile', 'thumbnail_url':
-'https://s2-thenewhive.s3.amazonaws.com/4e834e5eba283953b6000015?Signature=PYRlN9WNHznJoXAUDIIu%2FvYHEqg%3D&Expires=1628268128&AWSAccessKeyId=AKIAINGD337TBAXRIRJA'
+'https://s2-thenewhive.s3.amazonaws.com/4f9f162939219f1798000388_190x190?v=1'
 }
 
+index = open('lib/email/index.html', 'w')
+index.write("<html><body>")
 for type in ['html', 'txt']:
-  template = jinja_env.get_template('emails/invitation.' + type)
-  with open('lib/email_invitation.' + type, 'w') as f:
-    f.write(template.render(context))
-
-  template = jinja_env.get_template('emails/user_invitation.' + type)
-  with open('lib/email_user_invitation.' + type, 'w') as f:
-    f.write(template.render(context))
-
-  template = jinja_env.get_template('emails/reminder_invitation.' + type)
-  with open('lib/email_reminder_invitation.' + type, 'w') as f:
-    f.write(template.render(context))
-
-  template = jinja_env.get_template('emails/share.' + type)
-  with open('lib/email_share.' + type, 'w') as f:
-    f.write(template.render(context))
-
-  template = jinja_env.get_template('emails/thank_you_signup.' + type)
-  with open('lib/email_thank_you_signup.' + type, 'w') as f:
-    f.write(template.render(context))
-
+    for template in ['invitation', 'user_invitation', 'reminder_invitation', 'share', 'thank_you_signup']:
+        filename = template + '.' + type
+        temp = jinja_env.get_template('emails/' + filename)
+        with open('lib/email/' + filename, 'w') as f:
+            f.write(temp.render(context))
+        index.write("<a href='/lib/email/%s'>%s</a><br/>" % (filename, filename))
+index.close()

@@ -60,11 +60,16 @@ def normalize(ws):
 def abs_url(secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
-    proto = 'https' if secure else 'http'
-    port = config.ssl_port if secure else config.plain_port
+    ssl = secure or config.always_ssl
+    proto = 'https' if ssl else 'http'
+    port = config.ssl_port if ssl else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
-    return (proto + '://' + (subdomain + '.' if subdomain else '') +
+    rv = (proto + '://' + 
+        (subdomain + '.' if subdomain else '') +
         (domain or config.server_name) + port + '/')
+    if config.dev_prefix:
+        rv = rv.replace(config.server_name, config.dev_prefix + '.' + config.server_name)
+    return rv
 
 def uniq(seq, idfun=None):
     # order preserving 
@@ -122,3 +127,35 @@ def bound(num, lower_bound, upper_bound):
     if num < lower_bound: return lower_bound
     if num > upper_bound: return upper_bound
     return num
+
+# Wrapper class from http://code.activestate.com/recipes/577555-object-wrapper-class/
+class Wrapper(object):
+    '''
+    Object wrapper class.
+    This a wrapper for objects. It is initialiesed with the object to wrap
+    and then proxies the unhandled getattribute methods to it.
+    Other classes are to inherit from it.
+    '''
+    def __init__(self, obj):
+        '''
+        Wrapper constructor.
+        @param obj: object to wrap
+        '''
+        # wrap the object
+        self._wrapped_obj = obj
+
+    def __getattr__(self, attr):
+        # see if this object has attr
+        # NOTE do not use hasattr, it goes into
+        # infinite recurrsion
+        if attr in self.__dict__:
+            # this object has it
+            return getattr(self, attr)
+        # proxy to the wrapped object
+        return getattr(self._wrapped_obj, attr)
+
+class Request(Wrapper):
+    is_secure = property(lambda self: self._wrapped_obj.is_secure or self.headers.get('X-Forwarded-Proto') == 'https')
+
+def exception_test(*args, **kwargs):
+    raise Exception('dummy exception')

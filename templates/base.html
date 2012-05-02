@@ -13,7 +13,7 @@
  {% endfor %}
  <link id='css_base' rel='stylesheet' type='text/css' href='{{ assets_env['base.css'].urls()[0] }}'>
  <script>
-     var logged_in = {{ 'true' if user.logged_in else 'false'}}, server_name = '{{ server_name }}', server_url = '{{ secure_server }}', debug_mode = {{ 'true' if debug else 'false' }};
+   var logged_in = {{ 'true' if user.logged_in else 'false'}}, server_name = '{{ server_name }}', server_url = '{{ secure_server }}', insecure_server_url = '{{server}}', debug_mode = {{ 'true' if debug else 'false' }};
      var dialog_to_show = {
        name: '{{dialog_to_show}}'
        , opts: {{dialog_to_show_opts | default('{}')}}

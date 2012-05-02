@@ -3,7 +3,10 @@ plain_port      = 80
 ssl_port        = 443
 server_name     = 'thenewhive.com'
 database        = 'hive'
+database_host   = 'localhost'
+database_port   = 27017
 media_path      = '/home/domains/thenewhive.com'
+dev_prefix      = None
 
 ssl_ca          = False
 
@@ -58,6 +61,7 @@ signup_group    = 2
 debug_mode      = False
 debug_unsecure  = False
 webassets_debug = False
+always_ssl      = False
 
 from os.path import dirname, join, normpath
 src_home        = normpath(join(dirname(__file__), "../.."))
