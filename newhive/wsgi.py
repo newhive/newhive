@@ -44,7 +44,7 @@ if config.webassets_debug:
     assets_env.debug = True
     assets_env.updater = "always"
     #assets_env.set_url('/lib/libsrc')
-    scss = webassets.Bundle('scss/base.scss', filters=get_filter('scss', use_compass=True), output='../lib/scss.css', debug=False)
+    scss = webassets.Bundle('scss/base.scss', filters=get_filter('scss', use_compass=True, debug_info=False), output='../lib/scss.css', debug=False)
 else: scss = 'scss.css'
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
@@ -54,7 +54,7 @@ assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
-assets_env.register('app.css', scss, 'app.css', filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', scss, 'app_src.css', filters='yui_css', output='../lib/app.css')
 assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
 assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')

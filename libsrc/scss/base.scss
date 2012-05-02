@@ -9,6 +9,7 @@ $left_column_width: 178px;
 $right_column_x: $left_padding + $left_column_width + $right_padding;
 
 // Imports
+@import "fonts";
 @import "nav";
 @import "dialogs";
 @import "community";
