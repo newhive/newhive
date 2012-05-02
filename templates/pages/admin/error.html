@@ -7,7 +7,7 @@
 <pre>{{traceback|e}}</pre>
 
 <h3>Url</h3>
-<pre>{{ error.get('url') }}</pre>
+<pre><a href="{{error.get('url')}}">{{ error.get('url') | e }}</a></pre>
 
 <h3>Date</h3>
 <pre>{{ error.created | epoch_to_string }}</pre>
@@ -16,7 +16,7 @@
 <pre>{{ environ.HTTP_X_FORWARDED_FOR or environ.REMOTE_ADDR }}</pre>
 
 <h3>User</h3>
-<pre>{{ user.name }}</pre>
+<pre>{{ error.get('requester').name }}</pre>
 
 {% if error.get('form') %}
 <h3>Form</h3>
