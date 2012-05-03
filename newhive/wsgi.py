@@ -256,10 +256,14 @@ def handle_safe(request):
         requester = request.environ['hive.request'].requester
         def serializable_filter(dictionary):
             return {key.replace('.', '-'): val for key, val in dictionary.iteritems() if type(val) in [bool, str, int, float, tuple, unicode]}
+        def privacy_filter(dictionary):
+            for key in ['password', 'secret']:
+                if dictionary.has_key(key): dictionary.update({key: "******"})
+            return dictionary
         log_entry = {
                 'exception': traceback.exception
                 , 'environ': serializable_filter(request.environ)
-                , 'form': serializable_filter(request.form)
+                , 'form': privacy_filter(serializable_filter(request.form))
                 , 'url': request.url
                 , 'stack_frames': [
                         {

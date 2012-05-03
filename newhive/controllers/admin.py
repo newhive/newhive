@@ -117,7 +117,17 @@ class AdminController(ApplicationController):
 
             return self.serve_page(response, 'pages/admin/error.html')
         else:
-            response.context['errors'] = self.db.ErrorLog.search({}, sort=[('created', -1)], limit=100)
+            query = {'created': {'$exists': True}}
+            page = int(request.args.get('page', 1))
+            if request.args.has_key('before'): query['created'] = {'$lt': float(request.args.get('before'))}
+            if request.args.has_key('after'): query['created'] = {'$gt': float(request.args.get('after'))}
+            count = self.db.ErrorLog.count({})
+            page_size = 200
+            errors = list(self.db.ErrorLog.search(query, sort=[('created', -1)], limit=page_size))
+            response.context['page'] = page
+            response.context['newer'] = {'exists': page > 1, 'date': errors[0]['created'], 'page': page - 1}
+            response.context['older'] = {'exists': page*page_size < count, 'date': errors[-1]['created'], 'page': page + 1}
+            response.context['errors'] = errors
             return self.serve_page(response, 'pages/admin/error_log.html')
 
     def _index(self, request, response):

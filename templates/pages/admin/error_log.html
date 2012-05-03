@@ -1,5 +1,16 @@
 {% extends "pages/analytics/base.html" %}
 
+{% block header %}
+Page {{page}}
+{% if newer.exists %}
+| <a style="color: blue;" href="/admin/error_log?page={{newer.page}}&after={{newer.date}}">newer</a>
+{% endif %}
+{% if older.exists %}
+| <a style="color: blue;" href="/admin/error_log?page={{older.page}}&before={{older.date}}">older</a>
+{% endif %}
+
+{% endblock %}
+
 {% block table_head %}
 <tr>
   <th>ID</th>
