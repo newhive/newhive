@@ -447,7 +447,7 @@ def active(db, period=7):
     dr = pandas.DateRange(start=start + offset, end=datetime.datetime.now(), offset=pandas.DateOffset(days=1))
     data = []
     for date in dr:
-        cursor = mr_col.find({'_id.date': {'$lt': datetime_to_int(date), '$gt': datetime_to_int(date - offset)}})
+        cursor = mr_col.find({'_id.date': {'$lte': datetime_to_int(date), '$gt': datetime_to_int(date - offset)}})
         data.append(len(cursor.distinct('_id.name')))
 
     #data = [mr_col.find({'_id.date': datetime_to_int(date)}).count() for date in dr]
