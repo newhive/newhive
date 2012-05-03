@@ -444,7 +444,7 @@ def active(db, period=7):
     mr_col.ensure_index('_id.date')
     offset = pandas.DateOffset(days=period)
     start = newhive.utils.time_u(mr_col.find_one(sort=[('_id.date', 1)])['_id']['date'])
-    dr = pandas.DateRange(start=start + offset, end=datetime.datetime.now() - offset, offset=pandas.DateOffset(days=1))
+    dr = pandas.DateRange(start=start + offset, end=datetime.datetime.now(), offset=pandas.DateOffset(days=1))
     data = []
     for date in dr:
         cursor = mr_col.find({'_id.date': {'$lt': datetime_to_int(date), '$gt': datetime_to_int(date - offset)}})
