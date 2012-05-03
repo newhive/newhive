@@ -2,6 +2,7 @@ import time, datetime, re, pandas, newhive, pandas, numpy
 from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
+from newhive.utils import datetime_to_int, datetime_to_str
 
 import logging
 logger = logging.getLogger(__name__)
@@ -174,12 +175,28 @@ def contacts_per_hour(db, end=now()):
             , 'values': data.values.tolist()
             }
 
-def datetime_to_int(dt):
-    return int(time.mktime(dt.timetuple()))
+def actions_per_user_per_day(db):
+    map1 = """
+        function() {
+            date = new Date((this.created - 12*3600) * 1000);
+            day = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+            emit({name: this.user_name, date: day/1000}, 1);
+        }"""
 
-def datetime_to_str(dt):
-    return str(datetime_to_int(dt))
+    reduce = """
+        function(key, values) {
+            var total=0;
+            for (var i=0; i < values.length; i++) {
+                total += values[i];
+            }
+            return total;
+        }"""
 
+    mr1_name = 'mr.actions_per_user_per_day'
+    mr1 = db.mdb[mr1_name]
+    latest = mr1.find_one(sort=[('_id.date', -1)])['_id']['date']
+    # The following line performs incremental map reduce, but depends on mongodb version >= 1.8
+    return db.ActionLog._col.map_reduce(map1, reduce, mr1_name, merge_output=True, query={'created': {'$gt': latest - 24*3600}})
 
 def visits_per_month(db, cohort_users = None, year=None, month=None, force=False):
     map1 = """
@@ -397,7 +414,7 @@ def overall_impressions(db):
     map_function = """
         function() {
              if (typeof(this.apps) != "undefined" && this.apps.length > 0 && this.views && this.owner_views){
-                 emit(this.owner, {count: 1, views: this.views - this.owner_views})
+                 emit(this.owner, {count: 1, views: this.views - this.owner_views
              }
         }
         """
@@ -421,12 +438,27 @@ def overall_impressions(db):
     return (map(int,hist), map(int,bin_edges))
 
 
+def active(db, period=7):
+    input_name = "mr.actions_per_user_per_day"
+    mr_col = actions_per_user_per_day(db)
+    mr_col.ensure_index('_id.date')
+    offset = pandas.DateOffset(days=period)
+    start = newhive.utils.time_u(mr_col.find_one(sort=[('_id.date', 1)])['_id']['date'])
+    dr = pandas.DateRange(start=start + offset, end=datetime.datetime.now() - offset, offset=pandas.DateOffset(days=1))
+    data = []
+    for date in dr:
+        cursor = mr_col.find({'_id.date': {'$lt': datetime_to_int(date), '$gt': datetime_to_int(date - offset)}})
+        data.append(len(cursor.distinct('_id.name')))
+
+    #data = [mr_col.find({'_id.date': datetime_to_int(date)}).count() for date in dr]
+    return (data, dr)
+
 if __name__ == '__main__':
     from newhive.state import Database
     import newhive.config
     db = Database(newhive.config)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.debug)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    #ch = logging.StreamHandler()
+    #ch.setLevel(logging.debug)
+    #formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    #ch.setFormatter(formatter)
+    #logger.addHandler(ch)
