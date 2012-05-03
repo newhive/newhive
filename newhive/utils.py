@@ -32,6 +32,13 @@ def time_s(t):
 
 def time_u(t): return datetime.utcfromtimestamp(t)
 
+def datetime_to_int(dt):
+    return int(time.mktime(dt.timetuple()))
+
+def datetime_to_str(dt):
+    return str(datetime_to_int(dt))
+
+
 def junkstr(length):
     """Creates a random base 64 string"""
 

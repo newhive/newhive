@@ -3,7 +3,7 @@ import newhive
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive import analytics
-from newhive.utils import now
+from newhive.utils import now, datetime_to_int
 import operator as op
 
 class AnalyticsController(ApplicationController):
@@ -77,6 +77,15 @@ class AnalyticsController(ApplicationController):
         response.context['data'] = analytics.app_count(self.db).items()
         response.context['title'] = 'App Type Count'
         return self.serve_page(response, 'pages/analytics/generic.html')
+
+    def active_user_growth(self, request, response):
+        period = int(lget(request.path.split('/'), 2, 7))
+        data, daterange = newhive.analytics.active(self.db, period)
+        dates = [datetime_to_int(date) for date in daterange]
+        response.context['json_data'] = json.dumps({'counts': data, 'dates': dates})
+        response.context['title'] = 'Active User Growth'
+        return self.serve_page(response, 'pages/analytics/user_growth.html')
+
 
     def user_growth(self, request, response):
         users = self.db.User.search({}, sort=[('created', 1)])
