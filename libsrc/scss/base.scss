@@ -1,16 +1,9 @@
 // Imports
-@import "fonts";
-@import "nav";
-@import "dialogs";
-@import "community";
-@import "cards";
-@import "feed";
-@import "expression";
-@import "settings";
-@import "signup_flow";
-@import "chart";
-@import "jplayer";
+@import "common";
 
+body.home {
+  background-color: orange;
+}
 .centered { 
     text-align: center; 
 }
