@@ -9,6 +9,9 @@
 
 ## INSTALL
 # symlink this script from .git/hooks
+# copy bin/hive-server-deploy to /usr/local/sbin
+# edit /etc/sudoers to allow members of admin group to 
+#      run hive-server-deploy with sudo without a password
 
 cd ..
 GIT_DIR='.git'
