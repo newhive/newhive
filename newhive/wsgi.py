@@ -37,6 +37,10 @@ import webassets
 from webassets.script import CommandLineEnvironment
 from webassets.filter import get_filter
 
+import logging
+logger = logging.getLogger(__name__)
+logger.info("Initializing WSGI")
+
 ##############################################################################
 #                             webassets setup                                #
 ##############################################################################
@@ -69,11 +73,11 @@ if config.debug_mode:
     assets_env.debug = True
     assets_env.url = '/lib/libsrc'
 else:
-    import logging
-    logger = logging.getLogger(__name__)
     assets_env.auto_build = False
     cmd = CommandLineEnvironment(assets_env, logger)
+    logger.info("Forcing rebuild of webassets"); t0 = time.time()
     cmd.build()
+    logger.info("Assets build complete in %s seconds", time.time() - t0)
 
 ##############################################################################
 #                                jinja setup                                 #
@@ -297,6 +301,7 @@ def handle_safe(request):
 
 application = handle_safe
 #application = handle_debug
+logger.info("WSGI initialization complete")
 
 if __name__ == '__main__':
     from werkzeug.test import EnvironBuilder
