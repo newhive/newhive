@@ -2,4 +2,5 @@
 /lib/*.css
 /libsrc/.webassets-cache
 /newhive/config/private_config.py
+/newhive/config/GA_credentials.dat
 *.pyc
