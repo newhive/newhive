@@ -1,3 +1,5 @@
+@import "common";
+
 .ehapp, .ehapp > * { position : absolute; }
 .ehapp .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
 .select_box { width : 100%; height : 100%; z-index : 1; top : -5px; left : -5px; padding : 0; }
@@ -39,6 +41,7 @@
 #app_buttons { display : inline-block; margin : 20px; }
 .insert_btn { margin-right : 15px; cursor : default; }
 .btn { display : inline-block; padding : 5px; cursor : default; }
+.menu label { font-weight: normal; font-size: 15px; }
 #menu_save { top : 43px; right : 0px; padding : 10px; }
 #menu_save textarea { height : 2.5em; }
 #menu_save input, #menu_save textarea { width : 200px; }
@@ -73,4 +76,6 @@
 .embed_box { font-size: 12px; margin: 10px 0; width: 250px; height: 4em; }
 .embed_button { font-size: 18px; }
 
-.menu label { font-weight: normal; font-size: 15px; color: }
+.btn_text.selected { color: white; background-color: #696E76; }
+.btn_text { background: none; color: #696E76; padding: 2px 4px; padding: 3px 8px; display: inline-block; }
+.clickable { cursor: default; }

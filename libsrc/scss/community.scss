@@ -1,3 +1,10 @@
+@import "common";
+
+#homepage_header {
+  z-index: 0;
+}
+.home .fathead { float: left; font-family : Museo, Helvetica, sans-serif; font-size : 3em; font-weight : bold; margin : 0 0 20px 0; padding: 60px 0 80px 50px; width: 95%;}
+
 body.profile {
   #profile_header { 
     margin: 35px 0px 5px 35px;

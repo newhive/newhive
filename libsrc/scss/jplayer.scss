@@ -1,3 +1,6 @@
+@import "common";
+@import "compass/css3/user-interface";
+
 /*
  * Skin for jPlayer Plugin (jQuery JavaScript Library)
  * http://www.happyworm.com/jquery/jplayer
@@ -14,7 +17,6 @@
  * Date: 1st September 2011
  */
 
-@import "compass/css3/user-interface";
 
 div.jp-audio {
 	font-family:Helvetica, Arial, sans-serif;

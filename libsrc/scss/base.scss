@@ -1,13 +1,3 @@
-@import "compass/utilities";
-@import "compass/css3";
-@import "colors";
-
-$nav_height: 50px;
-$left_padding: 30px;
-$right_padding: 12px;
-$left_column_width: 178px;
-$right_column_x: $left_padding + $left_column_width + $right_padding;
-
 // Imports
 @import "fonts";
 @import "nav";
@@ -35,6 +25,7 @@ img.centered, div.centered {
     }
 
 // Page Layout
+body.main #content { top: 50px }
 #primary_content{ clear: both; }
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;
@@ -123,6 +114,7 @@ input[type=button], input[type=submit] { border : none; }
     -moz-box-shadow: 05px 05px 05px #888;
     -webkit-box-shadow: 05px 05px 05px #888;
     box-shadow: 05px 05px 05px #888;
+    overflow: auto;
     }
 .menu_item { color : $color_18; padding : 5px 8px; cursor : default; font-size : 15pt; white-space: nowrap; }
 .menu_item:hover, .menu_hover { background-color : $color_selected; color: black; }
@@ -162,3 +154,13 @@ $placeholder_color: black;
 ::-webkit-input-placeholder { color: $placeholder_color; }
 :-moz-placeholder { color: $placeholder_color; }
 
+
+.form_validation_info.valid {
+  color: green;
+}
+
+.form_validation_info.invalid {
+  color: red;
+}
+#btn_help { color : #696E76; }
+#btn_help.active { color : white; }

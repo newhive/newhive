@@ -34,18 +34,15 @@ import newhive.state
 import newhive.ui_strings.en as ui
 
 import webassets
+from webassets.script import CommandLineEnvironment
 from webassets.filter import get_filter
 
 ##############################################################################
 #                             webassets setup                                #
 ##############################################################################
 assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
-if config.webassets_debug:
-    assets_env.debug = True
-    assets_env.updater = "always"
-    #assets_env.set_url('/lib/libsrc')
-    scss = webassets.Bundle('scss/base.scss', filters=get_filter('scss', use_compass=True, debug_info=False), output='../lib/scss.css', debug=False)
-else: scss = 'scss.css'
+assets_env.updater = 'always'
+
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
     'drag.js', 'dragndrop.js', 'colors.js', 'util.js', 'jplayer/jquery.jplayer.js', filters='yui_js', output='../lib/app.js')
@@ -54,10 +51,29 @@ assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js', output='../lib/admin.js')
 assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
-assets_env.register('app.css', scss, 'app_src.css', filters='yui_css', output='../lib/app.css')
+scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
+    "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
+    "scss/feed.scss", "scss/expression.scss", "scss/settings.scss",
+    "scss/signup_flow.scss", "scss/chart.scss", "scss/jplayer.scss",
+    filters=get_filter('scss', use_compass=True, debug_info=False),
+    output='../libsrc/scss.css',
+    debug=False)
+edit_scss = webassets.Bundle('scss/edit.scss', filters=get_filter('scss', use_compass=True, debug_info=False), output='../libsrc/edit.css', debug=False)
+
+assets_env.register('app.css', scss, filters='yui_css', output='../lib/app.css')
+assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
 assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
-assets_env.register('editor.css', 'editor.css', filters='yui_css', output='../lib/editor.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
+
+if config.debug_mode:
+    assets_env.debug = True
+    assets_env.url = '/lib/libsrc'
+else:
+    import logging
+    logger = logging.getLogger(__name__)
+    assets_env.auto_build = False
+    cmd = CommandLineEnvironment(assets_env, logger)
+    cmd.build()
 
 ##############################################################################
 #                                jinja setup                                 #
@@ -293,4 +309,3 @@ if __name__ == '__main__':
     andrew = db.User.named('andrew')
     abram = db.User.named('abram')
     zach = db.User.named('zach')
-
