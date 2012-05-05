@@ -103,7 +103,7 @@ class ExpressionController(ApplicationController):
         if not exp: raise ValueError('missing or malformed exp')
 
         res = self.db.Expr.fetch(exp.id)
-        upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb'])
+        upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb', 'images'])
         upd['name'] = upd['name'].lower().strip()
 
         # if user has not picked a thumbnail, pick the latest image added

@@ -909,6 +909,7 @@ class File(Entity):
 
 
     def store_aws(self, file, id, name):
+        file.seek(0)
         b = self.db.s3_con.get_bucket(self.get('s3_bucket', random.choice(self.db.s3_buckets).name))
         k = S3Key(b)
         k.name = id
