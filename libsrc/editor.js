@@ -1153,21 +1153,25 @@ Hive.new_file = function(files, opts) {
 
 var main = function() {
     if (typeof(Hive.Exp.images) == "undefined") {
-        Hive.Exp.images = $.map(Hive.Exp.apps, function(app){
-            if ( app.type == 'hive.image' && app.file_id ) {
-                return { 
-                    file_id: app.file_id, 
-                    thumb: app.content + "_190x190?v=1", 
-                    url: app.content
+        if (typeof(Hive.Exp.apps_ == "undefined") {
+            Hive.Exp.images = [];
+        } else {
+            Hive.Exp.images = $.map(Hive.Exp.apps, function(app){
+                if ( app.type == 'hive.image' && app.file_id ) {
+                    return { 
+                        file_id: app.file_id, 
+                        thumb: app.content + "_190x190?v=1", 
+                        url: app.content
+                    }
                 }
-            }
-        });
-        if (typeof(Hive.Exp.background.url) != "undefined"){
-            Hive.Exp.images.push({
-                file_id: Hive.Exp.background.url.match(/[a-f0-9]+$/)[0]
-                , thumb: Hive.Exp.background.url + "_190x190?v=1"
-                , url: Hive.Exp.background.url
             });
+            if (typeof(Hive.Exp.background.url) != "undefined"){
+                Hive.Exp.images.push({
+                    file_id: Hive.Exp.background.url.match(/[a-f0-9]+$/)[0]
+                    , thumb: Hive.Exp.background.url + "_190x190?v=1"
+                    , url: Hive.Exp.background.url
+                });
+            }
         }
     };
     //setInterval(Hive.set_draft, 5000);
