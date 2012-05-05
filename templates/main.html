@@ -103,7 +103,7 @@
         <a href='{{ server }}random'><img class='nav_icon hoverable scale padsm' src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
         <div class="nav_icon center" id="search" >
           <form method='GET' action='{{ server }}search' name='search_form'>
-            <input type="text" id="search_box" placeholder="Search" name='q' value="{{q.q}}" class='scale'/>
+            <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
             <div id='search_submit' class='hoverable icon scale' title='Submit search' onclick='document.forms.search_form.submit()'></div>
           </form>
         </div>
