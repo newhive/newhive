@@ -1,0 +1,9 @@
+#!/usr/bin/python
+from os.path import dirname, join, abspath, realpath
+import os, sys
+bin_path = dirname(realpath(__file__))
+parent_path = abspath(join(bin_path, '..'))
+sys.path.append(parent_path)
+
+os.chdir(parent_path)
+os.execlp('ipython', 'ipython', join(bin_path, 'prompt.py'))
