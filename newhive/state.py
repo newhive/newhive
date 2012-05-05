@@ -1030,6 +1030,9 @@ class Feed(Entity):
         for key in ['initiator', 'entity', 'entity_class']:
             assert self.has_key(key)
 
+        #TODO: consult with user.prefs.email object to determine this value
+        self['send_email'] = True
+
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create()

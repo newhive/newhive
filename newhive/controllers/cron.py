@@ -5,6 +5,7 @@ from newhive.utils import now
 import newhive.mail
 
 class CronController(ApplicationController):
+    key = 'VaUcZjzozgiV'
 
     def cron(self, request, response):
         """ Reads intenal crontab, list of tuples of the format:
@@ -15,52 +16,32 @@ class CronController(ApplicationController):
                 min hour
 
             """
-        if request.remote_addr != '127.0.0.1':
+
+        method_name = lget(request.path_parts, 1)
+        method = getattr(self, method_name)
+        if not request.is_secure or not method or (request.args.get('key') != self.key):
             return self.serve_404(request, response)
 
-        t = datetime.now()
-        crontab = [
-                ("* *", "email_star_broadcast", {'delay': 1, 'frequency': 1})
-                ]
+        opts_serial = dfilter(request.args, ['delay', 'span'])
+        opts = dict((k, int(v)) for k, v in opts_serial.iteritems())
 
-        log = "Cron ran the following commands: "
-        for entry in crontab:
-            if self._cronmatch(t, entry[0]):
-                log = log + entry[1] + ", "
-                getattr(self, entry[1])(entry[2])
-
-        return self.serve_json(response, log + "\n")
+        status = method(**opts)
+        return self.serve_json(response, status)
 
 
-    def email_star_broadcast(self, opts):
-        logfile = open(config.src_home + '/log/email_star.log', 'a')
-        start = opts.get('delay') + opts.get('frequency')
-        end = opts.get('delay')
-        items = self.db.Star.search(
-                {'created': {"$gt": now() - 60 * start, "$lt": now() - 60 * end}})
-        items2 = self.db.Broadcast.search(
-                {'created': {"$gt": now() - 60 * start, "$lt": now() - 60 * end}})
-        for item in chain(items, items2):
+    def email_star_broadcast(self, delay=60, span=60):
+        spec = {'send_email': True, 'created': {"$gt": now() - delay - span, "$lt": now() - delay } }
+
+        stats = { 'send_count': 0, 'matched': 0 }
+        def send(item):
+            stats['matched'] += 1
             recipient = item.entity.owner
-            if item.initiator.id == recipient.id: continue
+            if item.initiator.id == recipient.id: return
             headers = newhive.mail.mail_feed(self.jinja_env, item, recipient, dry_run = False)
-            logfile.write('\n' + time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(time.time())) + " " * 4 + headers['To'] + ' ' * ( 50 - len(headers['To']) )  + headers['Subject'] )
-        logfile.close()
+            stats['send_count'] += 1
+            item.update(send_email=False, email_sent=now())
 
-    def _cronmatch(self, time, string):
+        for item in self.db.Star.search(spec): send(item)
+        for item in self.db.Broadcast.search(spec): send(item)
 
-        def fieldmatch(time, field):
-            if field == "*": return True
-            if re.match('^\d+$', field) and time == int(field): return True
-            match = re.match(r'^((\d+)-(\d+)|\*)\/(\d+)$', field)
-            if match:
-                splat, start, end, interval = match.groups()
-                if splat == "*":
-                    return True if time % int(interval) == 0 else False
-                if time > int(start) and time < int(end) and (time - int(start)) % int(interval) == 0: return True
-            return False
-
-        fields = re.split("\s", string)
-        if len(fields) != 2:
-            raise Exception("Simple Cron Format string must be of the form 'min hour'")
-        return fieldmatch(time.minute, fields[0]) and fieldmatch(time.hour, fields[1])
+        return stats
