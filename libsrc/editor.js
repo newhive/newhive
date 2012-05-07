@@ -1153,7 +1153,7 @@ Hive.new_file = function(files, opts) {
 
 var main = function() {
     if (typeof(Hive.Exp.images) == "undefined") {
-        if (typeof(Hive.Exp.apps_ == "undefined") {
+        if (typeof(Hive.Exp.apps) == "undefined") {
             Hive.Exp.images = [];
         } else {
             Hive.Exp.images = $.map(Hive.Exp.apps, function(app){
