@@ -1,0 +1,9 @@
+@import "compass/utilities";
+@import "compass/css3";
+@import "colors";
+
+$nav_height: 50px;
+$left_padding: 30px;
+$right_padding: 12px;
+$left_column_width: 178px;
+$right_column_x: $left_padding + $left_column_width + $right_padding;

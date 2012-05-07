@@ -58,7 +58,7 @@
     {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
 
-{% set show_prompts = network and (user.starred_user_ids|length <= 1) %}
+{% set show_prompts = user_is_owner and network and (user.starred_user_ids|length <= 1) %}
 
 {% block header %}
   {% if home %}
@@ -93,7 +93,7 @@
           <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
         {% endif %}
         {% if owner.get_thumb() %}
-          <img src='{{ owner.get_thumb() }}' alt="{{ owner.fullname }}"/>
+          <img src='{{ owner.get_thumb() }}' alt="{{ owner.fullname|e }}"/>
         {% elif user_is_owner %}
           <div class='placeholder rounded'>Click Here to<br/>Upload A Profile Image</div>
         {% endif %}
@@ -101,7 +101,7 @@
           </a>
         {% endif %}
       </div>
-      <span class='fathead'>{% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + user_tag if user_tag }}</span>
+      <span class='fathead'>{% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname|e }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + user_tag if user_tag }}</span>
     </div>
   {% endif %}
   <div id='card_header'>

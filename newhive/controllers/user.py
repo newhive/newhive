@@ -1,4 +1,4 @@
-import crypt, pickle, urllib
+import crypt, pickle, urllib, time
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.utils import normalize, junkstr
@@ -19,6 +19,7 @@ class UserController(ApplicationController):
             referral = self._check_referral(request)[0]
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
+
         if request.args.has_key('code'):
             fb_profile = request.requester.fb_client.me()
             profile_picture_url = 'https://graph.facebook.com/' + fb_profile.get('id') + '/picture?type=large&return_ssl_resources=1'
@@ -43,6 +44,9 @@ class UserController(ApplicationController):
                 response.context['f']['thumb'] = profile_picture.get_thumb(190,190)
                 response.context['f']['thumb_file_id'] = profile_picture.id
             response.context['friends'] = request.requester.facebook_friends
+        else:
+            response.context['f']['email'] = referral.get('to', '')
+
         return self.serve_page(response, 'pages/user_settings.html')
 
     def create(self, request, response):
@@ -83,7 +87,14 @@ class UserController(ApplicationController):
         self.db.Star.create(user, self.db.User.site_user)
         self._friends_to_listen(request, user)
         self._friends_not_to_listen(request, user)
-        referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
+
+        if referral.get('reuse'):
+            referral.increment({'reuse': -1})
+            referral.update_cmd({'$push': {'users_created': user.id}})
+            if referral['reuse'] <= 0: referral.update(used=True)
+        else:
+            referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
+
         user.give_invites(5)
         if args.has_key('thumb_file_id'):
             file = self.db.File.fetch(args.get('thumb_file_id'))
@@ -142,12 +153,12 @@ class UserController(ApplicationController):
             valid_request = False
             for request_id in request_ids:
                 if not request_id: continue
-                fb_request = fbc.find("https://graph.facebook.com/" + str(request_id), app_access=True)
-                if fb_request:
-                    referral = self.db.Referral.find({'request_id': request_id})
-                    if referral:
+                referral = self.db.Referral.find({'request_id': request_id})
+                if referral:
+                    fb_request = fbc.find("https://graph.facebook.com/" + str(request_id) + "_" + referral.get('to'), app_access=True)
+                    if fb_request:
                         fbc.delete("https://graph.facebook.com/" + request_id + "_" + referral.get('to'), app_access=True)
-                valid_request = valid_request or (fb_request and referral and not referral.get('used'))
+                valid_request = valid_request or ( referral and fb_request and not referral.get('used'))
             #request id is handled as a path rather than querystring so it is preserved through fb redirect
             signup_url = abs_url(secure=True) + 'create_account/' + request_id
             response.context['facebook_connect_url'] = fbc.authorize_url(signup_url)
@@ -272,6 +283,7 @@ class UserController(ApplicationController):
         return self.serve_page(response, 'pages/error.html')
 
     def facebook_listen(self, request, response, args=None):
+        t0 = time.time()
         friends = None
         try:
             friends = list(request.requester.facebook_friends)
@@ -288,4 +300,5 @@ class UserController(ApplicationController):
             response.context['error'] = 'Something went wrong finding your friends.  You may need to log in to facebook to continue'
         if friends and len(friends):
             response.context['friends'] = friends
+        logger.debug('Facebook listen response time %d ms', (time.time() - t0)*1000)
         return self.serve_page(response, 'dialogs/facebook_listen.html')

@@ -1156,16 +1156,21 @@ Hive.new_file = function(files, opts) {
         var file = files[i];
         var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
-        if(file.mime.match(/image\/(png|gif|jpeg)/)) $.extend(app, {
-             type: 'hive.image'
-            ,content: file.url
-        });
-        else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
-            src: file.url
-            //,content: ($.jPlayer.skin.minimal(file.url, 1))
-            ,type: 'hive.audio'
-        });
-        else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
+        if(file.mime.match(/image\/(png|gif|jpeg)/)) {
+            Hive.Exp.images = Hive.Exp.images.push(file);
+            $.extend(app, {
+                 type: 'hive.image'
+                ,content: file.url
+            });
+        } else if(file.mime.match(/audio\/mpeg/)) {
+            $.extend(app, {
+                src: file.url
+                //,content: ($.jPlayer.skin.minimal(file.url, 1))
+                ,type: 'hive.audio'
+            });
+        } else {
+            $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
+        }
 
         Hive.new_app(app, [20*i, 20*i]);
     };
@@ -1173,6 +1178,28 @@ Hive.new_file = function(files, opts) {
 }
 
 var main = function() {
+    if (typeof(Hive.Exp.images) == "undefined") {
+        if (typeof(Hive.Exp.apps) == "undefined") {
+            Hive.Exp.images = [];
+        } else {
+            Hive.Exp.images = $.map(Hive.Exp.apps, function(app){
+                if ( app.type == 'hive.image' && app.file_id ) {
+                    return { 
+                        file_id: app.file_id, 
+                        thumb: app.content + "_190x190?v=1", 
+                        url: app.content
+                    }
+                }
+            });
+            if (typeof(Hive.Exp.background.url) != "undefined"){
+                Hive.Exp.images.push({
+                    file_id: Hive.Exp.background.url.match(/[a-f0-9]+$/)[0]
+                    , thumb: Hive.Exp.background.url + "_190x190?v=1"
+                    , url: Hive.Exp.background.url
+                });
+            }
+        }
+    };
     //setInterval(Hive.set_draft, 5000);
     window.onbeforeunload = function(){
         //try { Hive.set_draft(); }
@@ -1254,7 +1281,12 @@ var main = function() {
         Hive.set_bg_img(Hive.Exp.background);
     });
     $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start,
-        success : function(data) { data['load'] = Hive.upload_finish; Hive.set_bg_img(data); } }); });
+        success : function(data) { 
+            Hive.Exp.images.push(data);
+            data['load'] = Hive.upload_finish; 
+            Hive.set_bg_img(data); 
+        } 
+    }); });
     Hive.set_bg_img(Hive.Exp.background);
     bg_set_color(Hive.Exp.background.color);
 
@@ -1341,12 +1373,10 @@ var main = function() {
     var dia_thumbnail;
     $('#btn_thumbnail').click(function() {
         dia_thumbnail = showDialog('#dia_thumbnail');
-        var user_thumbs = $.map(Hive.get_state().apps, function(app){
-            if ( app.type == 'hive.image' && app.file_id ) {
-                var img = $('<img>').attr('src', app.content + "_190x190").attr('data-file-id', app.file_id);
-                var e = $("<div class='thumb'>").append(img).get(0);
-                return e;
-            }
+        var user_thumbs = $.map(Hive.Exp.images, function(app){
+           var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
+           var e = $("<div class='thumb'>").append(img).get(0);
+           return e;
         })
         $('#expr_images').empty().append(user_thumbs);
         $('#dia_thumbnail .thumb img').click(function() {

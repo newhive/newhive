@@ -1,0 +1,6 @@
+#! /bin/sh
+
+# Copy this file to /usr/local/sbin
+
+chown -R www-data:adm /var/www/newhive
+apache2ctl graceful

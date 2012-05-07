@@ -39,7 +39,7 @@ class Database:
             self.s3_con = S3Connection(config.aws_id, config.aws_secret)
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
 
-        self.con = pymongo.Connection()
+        self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
@@ -401,7 +401,7 @@ class User(HasSocial):
             return list(self.feed_search(q, limit=limit, **args))
         activity = query_feed({'initiator': self.id}) + query_feed({'entity_owner': self.id})
         activity.sort(cmp=lambda x, y: cmp(x['created'], y['created']), reverse=True)
-        page = Page(activity)
+        page = Page(activity[0:limit])
         page.next = page[-1]['created'] if len(page) == limit else None
         return page
     def feed_profile_entities(self, **args):
@@ -452,8 +452,7 @@ class User(HasSocial):
 
     def new_referral(self, d, decrement=True):
         if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
-            if decrement:
-                self.update(referrals=self['referrals'] - 1)
+            if decrement: self.increment({ 'referrals': -1 })
             d.update(user = self.id)
             return self.db.Referral.create(d)
     def give_invites(self, count):
@@ -910,6 +909,7 @@ class File(Entity):
 
 
     def store_aws(self, file, id, name):
+        file.seek(0)
         b = self.db.s3_con.get_bucket(self.get('s3_bucket', random.choice(self.db.s3_buckets).name))
         k = S3Key(b)
         k.name = id
@@ -1030,6 +1030,9 @@ class Feed(Entity):
     def create(self):
         for key in ['initiator', 'entity', 'entity_class']:
             assert self.has_key(key)
+
+        #TODO: consult with user.prefs.email object to determine this value
+        self['send_email'] = True
 
         class_name = type(self).__name__
         self.update(class_name=class_name)
@@ -1163,7 +1166,10 @@ class Referral(Entity):
 class Contact(Entity):
     cname = 'contact_log'
 
-
+@Database.register
+class ErrorLog(Entity):
+    cname = 'error_log'
+    indexes = ['created']
 
 ## utils
 

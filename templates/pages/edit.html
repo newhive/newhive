@@ -1,10 +1,10 @@
 {% extends "main.html" %}
 
 {% block head %}
- {% for item in assets_env["edit.js"].urls() %}
+ {% for item in assets_env["edit.js"].urls_with_expiry() %}
   <script src='{{ item }}'></script>
  {% endfor %}
- {% for item in assets_env["editor.css"].urls() %}
+ {% for item in assets_env["edit.css"].urls_with_expiry() %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
 
@@ -213,7 +213,7 @@ input, textarea { font-size : inherit }
    ><div class='option' style='font-family:Lobster Two'     cmd='fontname' val='Lobster Two'    >Lobster Two  </div
    ><div class='option' style='font-family:Crimson'         cmd='fontname' val='Crimson'        >Crimson      </div
    ><div class='option' style='font-family:Classic Round'   cmd='fontname' val='Classic Round'  >Classic Round</div
-   ><div class='option' style='font-family:Novocentro'      cmd='fontname' val='Novocentro'     >Novocentro   </div
+   ><div class='option' style='font-family:Novecento'       cmd='fontname' val='Novecento'      >Novecento   </div
   ></div
   ><div class='control drawer border color'></div
   ><div class='control drawer border align'

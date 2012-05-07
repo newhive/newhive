@@ -504,7 +504,7 @@ function asyncUpload(opts) {
 }
 
 function hover_url(url) {
-    var h = url.replace(/(.png)|(-.*)$/, '-hover.png');
+    var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
     var i = $("<img style='display:none'>").attr('src', h);
     $(document.body).append(i);
     return h;

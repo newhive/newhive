@@ -1,6 +1,8 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.mail import mail_invite
+import logging
+logger = logging.getLogger(__name__)
 
 class AdminController(ApplicationController):
 
@@ -106,3 +108,28 @@ class AdminController(ApplicationController):
         response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in self.db.Contact.search({})])
         response.content_type = 'text/csv; charset=utf-8'
         return response
+
+    def error_log(self, request, response):
+        id = lget(request.path.split('/'), 2)
+        if id:
+            response.context['error'] = self.db.ErrorLog.find({'_id': id})
+            response.context['traceback'] = '\n'.join(['  File "%(filename)s", line %(lineno)s, in %(function_name)s\n    ' % frame + frame['current_line'].strip() for frame in response.context['error'].get('stack_frames')])
+
+            return self.serve_page(response, 'pages/admin/error.html')
+        else:
+            query = {'created': {'$exists': True}}
+            page = int(request.args.get('page', 1))
+            if request.args.has_key('before'): query['created'] = {'$lt': float(request.args.get('before'))}
+            if request.args.has_key('after'): query['created'] = {'$gt': float(request.args.get('after'))}
+            count = self.db.ErrorLog.count({})
+            page_size = 200
+            errors = list(self.db.ErrorLog.search(query, sort=[('created', -1)], limit=page_size))
+            response.context['page'] = page
+            response.context['newer'] = {'exists': page > 1, 'date': errors[0]['created'], 'page': page - 1}
+            response.context['older'] = {'exists': page*page_size < count, 'date': errors[-1]['created'], 'page': page + 1}
+            response.context['errors'] = errors
+            return self.serve_page(response, 'pages/admin/error_log.html')
+
+    def _index(self, request, response):
+        logger.debug('_index')
+        return self.redirect(response, abs_url(secure=True, subdomain="thenewhive") + 'admin')
