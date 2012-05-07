@@ -8,7 +8,7 @@
 {% endblock %}
 {% block head %}
  {{super()}}
- <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
+ <script src='{{ assets_env['expression.js'].urls_with_expiry()[0] }}'></script>
  <script type='text/javascript'>
      var expr_id = '{{exp.id}}';
      var comment_count = {{exp.comment_count}};

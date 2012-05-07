@@ -46,6 +46,14 @@ logger.info("Initializing WSGI")
 ##############################################################################
 assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 assets_env.updater = 'always'
+assets_env.url_expire = True
+def urls_with_expiry(self):
+    urls = self.urls()
+    if self.env.debug:
+        return [re.sub(r'(\?\w+)?$', '?' + str(int(time.time())), u) for u in urls]
+    else:
+        return urls
+webassets.bundle.Bundle.urls_with_expiry = urls_with_expiry
 
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',

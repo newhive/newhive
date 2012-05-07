@@ -8,10 +8,10 @@
  <meta property="fb:app_id" content="153421698080835" />
  <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
 
- {% for item in assets_env["app.css"].urls() %}
+ {% for item in assets_env["app.css"].urls_with_expiry() %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
- <link id='css_base' rel='stylesheet' type='text/css' href='{{ assets_env['base.css'].urls()[0] }}'>
+ <link id='css_base' rel='stylesheet' type='text/css' href='{{ assets_env['base.css'].urls_with_expiry()[0] }}'>
  <script>
    var logged_in = {{ 'true' if user.logged_in else 'false'}}, server_name = '{{ server_name }}', server_url = '{{ secure_server }}', insecure_server_url = '{{server}}', debug_mode = {{ 'true' if debug else 'false' }};
      var dialog_to_show = {
@@ -21,7 +21,7 @@
      var new_fb_connect = {{ "true" if new_fb_connect else "false"}};
      var fb_id = '{{ user.facebook_id }}';
  </script>
- {% for item in assets_env["app.js"].urls() %}
+ {% for item in assets_env["app.js"].urls_with_expiry() %}
    <script src='{{ item }}'></script>
  {% endfor %}
  {#
