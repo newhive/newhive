@@ -1,17 +1,7 @@
 import boto
+from newhive.manage import aws_credentials
 
-try:
-    from newhive.config import aws as config
-except ImportError:
-    "Could not import aws.py"
-    from newhive import config
-
-if hasattr(config, 'aws_id') and hasattr(config, 'aws_secret'):
-    credentials = (config.aws_id, config.aws_secret)
-else:
-    credentials = ()
-
-ec2_con = boto.connect_ec2(*credentials)
+ec2_con = boto.connect_ec2(*aws_credentials)
 
 def get_running_webservers():
     reservations = []

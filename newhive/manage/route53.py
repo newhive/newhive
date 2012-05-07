@@ -1,11 +1,11 @@
-from newhive.manage import ec2, slick53
+from newhive.manage import ec2, slick53, aws_credentials
 import boto
 
 slick53.patch(boto)
 
 def update_zonefile():
     zone_name = 'tnh.me'
-    con = boto.connect_route53()
+    con = boto.connect_route53(*aws_credentials)
     zone = con.get_zone(zone_name)
 
     print "Fetching running servers"
