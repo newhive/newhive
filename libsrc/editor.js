@@ -392,12 +392,14 @@ Hive.App.has_shield = function(o, opts) {
     if (typeof(opts) == "undefined") opts = {};
     o.dragging = false;
 
-    o.shield = function() {
+    o.shield = function(opts) {
+        if (typeof(opts) == 'undefined') opts = {};
         if(o.eventCapturer) return;
         o.eventCapturer = $("<div class='drag shield'>");
-        o.eventCapturer.click(function(e) { o.focus(); });
+        o.eventCapturer.click(function(e) { o.focus({event: e}); });
         o.div.append(o.eventCapturer);
         o.eventCapturer.css('opacity', 0.0);
+        if(opts.cursor) o.eventCapturer.css('cursor', opts.cursor);
     }
     o.unshield = function() {
         if (opts.always) return;
@@ -569,16 +571,29 @@ Hive.App.Text = function(common) {
         return o.rte.get_content();
     }
 
-    o.focus.add(function() {
-        o.rte.removeBreaks();
-        o.rte.editMode(true);
+    o.focus.add(function(args) {
+        multi = args && args.event && args.event.shiftKey;
+        if (multi) {
+            o.mode('drag');
+        } else {
+            o.mode('edit');
+        }
     });
     o.unfocus.add(function() {
         o.rte.editMode(false);
         o.rte.set_content(autoLink(o.rte.get_content()));
         o.rte.addBreaks();
-        $(window).focus(); // Needed so keypress events don't get stuck on RTE iframe
     });
+
+    o.mode = function(mode) {
+        if (mode == 'drag') {
+            o.rte.editMode(false);
+            o.shield({cursor: 'text'});
+        } else if (mode == 'edit'){
+            o.rte.removeBreaks();
+            o.rte.editMode(true);
+        }
+    };
     
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
@@ -676,6 +691,10 @@ Hive.App.Text = function(common) {
         d.find('.resize').drag('end', function(e, dd) {
             o.dragging.busy = false;
             o.app.div.drag('end');
+        });
+        o.select_box.click(function(){
+            o.app.mode('drag');
+            o.app.shield({cursor: 'text'});
         });
 
         return o;
@@ -1764,6 +1783,7 @@ Hive.rte = function(options) {
             //o.range = o.get_range(); // attempt to save cursor positoion breaks deleting textboxes
             o.doc.designMode = 'off';
             o.iframe.blur();
+            $(window).focus(); // Needed so keypress events don't get stuck on RTE iframe
         }
     }
 
