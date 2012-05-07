@@ -17,4 +17,4 @@ cd ..
 GIT_DIR='.git'
 GIT_WORK_TREE='.'
 umask 002 && git reset --hard
-sudo /usr/local/sbin/hive-server-deploy
+sudo hive-server-deploy
