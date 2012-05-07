@@ -50,7 +50,15 @@ assets_env.url_expire = True
 def urls_with_expiry(self):
     urls = self.urls()
     if self.env.debug:
-        return [re.sub(r'(\?\w+)?$', '?' + str(int(time.time())), u) for u in urls]
+        rv = []
+        for u in urls:
+            parts = u.split('?')
+            name = parts[0]
+            query = lget(parts, 1)
+            if not query:
+                query = str(int(os.stat(config.src_home + name).st_mtime))
+            rv.append(name + '?' + query)
+        return rv
     else:
         return urls
 webassets.bundle.Bundle.urls_with_expiry = urls_with_expiry
