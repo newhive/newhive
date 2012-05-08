@@ -32,6 +32,60 @@ Hive.makeShuffleable = function(arr) {
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
 // editing functions.
+Hive.Group = function(){
+    var o = {elements: []};
+
+    o.unfocus = function(app){
+        var new_focused = []
+        $.each(o.elements, function(i, current_app){
+            if (!app || app === current_app){
+                current_app.unfocus()
+            } else {
+                new_focused.push(current_app);
+            }
+        });
+        o.elements = new_focused;
+        //while (this.length) {
+        //    if (!app || app === current_app){
+        //        var current_app = this.pop();
+        //        current_app.unfocus();
+        //    } else {
+        //        new_focused.push
+        //    });
+        //}
+    }
+    o.focus = function(app){
+        // Unfocus all apps except the requested app
+        if (o.length()){
+        $.each(o.elements, function(i, current_app){
+           current_app.unfocus();
+        });
+        if (app){
+            app.focus();
+            o.elements = [new_focused];
+        } else {
+            o.elements = [];
+        }
+    }
+    }
+
+    o.divs = function(){
+        return $.map(o.elements, function(a){ return a.div[0] });
+    }
+
+    o.layout = function(){
+        for (i=0; i<o.elements.length; i++){
+            o.elements.controls.layout();
+        }
+    }
+    o.length = function(){ 
+        return o.elements.length 
+    };
+    o.push = function(element) { return o.elements.push(element) };
+    o.each = function(fn){ $.each(o.elements, fn) };
+    return o;
+
+};
 Hive.Apps = function(initial_state) {
     var o = [];
     
@@ -46,22 +100,28 @@ Hive.Apps = function(initial_state) {
         return map(function(app) { return app.getState(); }, o);
     }
     
-    o.focused = [];
-    o.focused.unfocus = function(){
-        var len = this.length;
-        while (this.length) {
-            var app = this.pop();
-            app.unfocus();
-        }
-    }
-    o.focused.divs = function(){
-        return $.map(this, function(a){ return a.div[0] });
-    }
-    o.focused.layout = function(){
-        for (i=0; i<this.length; i++){
-            this.controls.layout();
-        }
-    }
+    o.focused = Hive.Group();
+    //o.focused = [];
+    //o.focused.unfocus = function(app){
+    //    var new_focused = []
+    //    var len = this.length;
+    //    $.each(o.focused, function(i, current_app){
+    //    //while (this.length) {
+    //        if (!app || app === current_app){
+    //            var current_app = this.pop();
+    //            current_app.unfocus();
+    //        } else {
+    //            new_focused.push
+    //    });
+    //}
+    //o.focused.divs = function(){
+    //    return $.map(this, function(a){ return a.div[0] });
+    //}
+    //o.focused.layout = function(){
+    //    for (i=0; i<this.length; i++){
+    //        this.controls.layout();
+    //    }
+    //}
 
     
     o.stack = [];
@@ -144,7 +204,7 @@ Hive.App = function(initState) {
         if(o.controls) o.controls.remove();
         //o.apps.focused = null;
     });
-    o.focused = function() { return inArray(o.apps.focused, o) }
+    o.focused = function() { return inArray(o.apps.focused.elements, o) }
     o.dragstart = Funcs(function() { o.dragging = true; });
     o.dragend = Funcs(function() { o.dragging = false; });
 
@@ -1236,15 +1296,24 @@ var main = function() {
         showDialog('#editor_browsers');
 
     $(window).click(function(e) {
-        if(!focused()) return;
-        for (i=0; i<focused().length; i++) {
-            if(
-                $.contains(focused()[i].div.get(0), e.target) 
-                || ! e.target.parentNode
-                || $.contains($('.controls').get(0), e.target)
-            ) {return;}
-        }
-        focused().unfocus();
+        if(!Hive.OpenApps.focused.length()) return;
+        var hit = false;//!e.target.parentNode;
+        Hive.OpenApps.focused.each(function(i,el){
+            if(!$.contains(el.div.get(0), e.target)){
+                hit = el;
+                //Hive.OpenApps.focused.focus(el);
+            }
+        });
+        Hive.OpenApps.focused.focus(hit);
+        //if (!hit) Hive.OpenApps.focused.unfocus();
+        //for (i=0; i<focused().length(); i++) {
+        //    if(
+        //        $.contains(focused()[i].div.get(0), e.target) 
+        //        || ! e.target.parentNode
+        //        || $.contains($('.controls').get(0), e.target)
+        //    ) {return;}
+        //}
+        //focused().unfocus();
     });
 
     $(document.body).drag('start', function() { return false; });
@@ -1261,9 +1330,10 @@ var main = function() {
 
     $(document).keydown(function(e){ 
         console.log("keydown handler");
-        for (i=0; i< Hive.OpenApps.focused.length; i++){
-            Hive.OpenApps.focused[i].keyPress(e);
-        }
+        Hive.OpenApps.focused.each(function(i, el){ el.keyPress(e) });
+        //for (i=0; i< Hive.OpenApps.focused.length(); i++){
+        //    Hive.OpenApps.focused[i].keyPress(e);
+        //}
     });
     $(window).resize(function(e) {
         map(function(a) {
