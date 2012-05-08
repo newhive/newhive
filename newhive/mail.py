@@ -29,7 +29,7 @@ def send_mail(headers, body):
         html = MIMEText(body['html'].encode('utf-8'), 'html')
         msg.attach(plain); msg.attach(html)
     else:
-        part1 = MIMEText(body, 'plain')
+        part1 = MIMEText(body.encode('utf-8'), 'plain')
         msg.attach(part1)
 
     if config.email_user and config.email_password:
