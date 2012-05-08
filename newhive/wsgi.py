@@ -108,6 +108,7 @@ jinja_env.filters['json'] = json.dumps
 jinja_env.filters['mod'] = lambda x, y: x % y
 jinja_env.filters['querystring'] = querystring
 jinja_env.filters['percentage'] = lambda x: x*100
+jinja_env.filters['strip_filenames'] = lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
 jinja_env.globals['colors'] = newhive.colors.colors
 
 db = newhive.state.Database(config)
