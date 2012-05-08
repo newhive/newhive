@@ -460,11 +460,11 @@ class User(HasSocial):
         self.db.InviteNote.create(self.db.User.named(config.site_user), self, data={'count':count})
 
     def cmp_password(self, v):
-        return crypt(v, self['password']) == self['password']
+        return crypt(v.encode('UTF8'), self['password']) == self['password']
 
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
-        self['password'] = crypt(v, salt)
+        self['password'] = crypt(v.encode('UTF8'), salt)
     def update_password(self, v):
         self.set_password(v)
         self.update(password=self['password'])
