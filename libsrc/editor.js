@@ -1152,7 +1152,7 @@ Hive.new_file = function(files, opts) {
 }
 
 var main = function() {
-    if (typeof(Hive.Exp.images) == "undefined") {
+    if (typeof(Hive.Exp.images) == "undefined" || typeof(Hive.Exp.images) == "number") {
         if (typeof(Hive.Exp.apps) == "undefined") {
             Hive.Exp.images = [];
         } else {
