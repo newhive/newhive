@@ -1131,7 +1131,7 @@ Hive.new_file = function(files, opts) {
         var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
         if(file.mime.match(/image\/(png|gif|jpeg)/)) {
-            Hive.Exp.images = Hive.Exp.images.push(file);
+            Hive.Exp.images.push(file);
             $.extend(app, {
                  type: 'hive.image'
                 ,content: file.url
