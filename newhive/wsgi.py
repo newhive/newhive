@@ -294,7 +294,7 @@ def handle_safe(request):
         def serializable_filter(dictionary):
             return {key.replace('.', '-'): val for key, val in dictionary.iteritems() if type(val) in [bool, str, int, float, tuple, unicode]}
         def privacy_filter(dictionary):
-            for key in ['password', 'secret']:
+            for key in ['password', 'secret', 'old_password']:
                 if dictionary.has_key(key): dictionary.update({key: "******"})
             return dictionary
         log_entry = {
