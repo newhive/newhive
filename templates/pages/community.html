@@ -2,7 +2,7 @@
 
 {% if 'home' %}
   {% block meta %}
-    <meta name="description" content="{{ui.intro_paragraph}}" />
+  <meta name="description" content="{{description + " - " if description}}{{ui.intro_paragraph}}" />
     <meta property="og:image" content='http://thenewhive.com/lib/skin/1/logo_medium.png' />
   {% endblock meta %}
 {% endif %}
