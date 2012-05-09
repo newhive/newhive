@@ -32,6 +32,7 @@ from newhive.utils import abs_url
 import newhive.colors
 import newhive.state
 import newhive.ui_strings.en as ui
+import newhive.manage.git
 
 import webassets
 from webassets.script import CommandLineEnvironment
@@ -311,6 +312,7 @@ def handle_safe(request):
                         } for x in traceback.frames
                     ]
                 , 'requester': {'id': requester.id, 'name': requester.get('name')}
+                , 'code_revision': newhive.manage.git.current_revision
                 }
 
         db.ErrorLog.create(log_entry)

@@ -18,6 +18,9 @@
 <h3>User</h3>
 <pre>{{ error.get('requester').name }}</pre>
 
+<h3>Code Revision</h3>
+<a href="https://github.com/hivedev/newhive/tree/{{error.code_revision}}"><pre>{{ error.code_revision }}</pre></a>
+
 {% if error.get('form') %}
 <h3>Form</h3>
 <table>
