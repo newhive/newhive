@@ -1247,7 +1247,7 @@ var main = function() {
         Hive.upload_finish();
         alert('Sorry, your file failed to upload');
     }
-    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback
+    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback,
         success : function(data) { 
             Hive.Exp.images.push(data);
             data['load'] = Hive.upload_finish; 
@@ -1487,6 +1487,8 @@ Hive.save = function() {
 
     var on_error = function(ret) {
         Hive.upload_finish();
+        if (ret.status == 403){
+        }
         alert("Your expression failed to save.  It is possible you've been logged off.  Without closing this tab, open thenewhive in another tab and try logging in again, then hit 'Save' again."); 
         $('#save_submit').removeClass('disabled');
     }
