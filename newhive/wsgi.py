@@ -291,7 +291,6 @@ def handle_safe(request):
         from werkzeug.debug.tbtools import get_current_traceback
         hostname = socket.gethostname()
         traceback = get_current_traceback(skip=1, show_hidden_frames=False, ignore_system_exceptions=True)
-        requester = request.environ['hive.request'].requester
         def serializable_filter(dictionary):
             return {key.replace('.', '-'): val for key, val in dictionary.iteritems() if type(val) in [bool, str, int, float, tuple, unicode]}
         def privacy_filter(dictionary):
@@ -311,9 +310,11 @@ def handle_safe(request):
                         'current_line': x.current_line.strip()
                         } for x in traceback.frames
                     ]
-                , 'requester': {'id': requester.id, 'name': requester.get('name')}
                 , 'code_revision': newhive.manage.git.current_revision
                 }
+        request = request.environ.get('hive.request')
+        if request and hasattr(request, 'requester'):
+            log_entry.update({'requester': {'id': request.requester.id, 'name': request.requester.get('name')}})
 
         db.ErrorLog.create(log_entry)
         raise
