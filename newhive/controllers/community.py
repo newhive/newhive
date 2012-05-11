@@ -54,7 +54,8 @@ class CommunityController(ApplicationController):
              home = path[0] != 'profile'
             ,search = path[0] == 'search'
             ,profile = path[0] == 'profile'
-            ,network = path[-1] == 'network'
+            ,show_prompts = ((path == ['profile','activity','network'] and request.is_owner)
+                or (path == ['home','network'])) and (len(request.requester.starred_user_ids) <= 1)
             ,activity = lget(path, 1) == 'activity'
             ,hide_feed = (path[-1] != 'activity') and (path[-1] != 'discussion')
             ,require_login = path == ['home','expressions','all']
