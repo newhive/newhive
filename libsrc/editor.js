@@ -1488,8 +1488,8 @@ Hive.save = function() {
     var on_error = function(ret) {
         Hive.upload_finish();
         if (ret.status == 403){
+            relogin(function(){ $('#btn_save').click(); });
         }
-        alert("Your expression failed to save.  It is possible you've been logged off.  Without closing this tab, open thenewhive in another tab and try logging in again, then hit 'Save' again."); 
         $('#save_submit').removeClass('disabled');
     }
 
