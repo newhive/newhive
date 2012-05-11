@@ -1,10 +1,10 @@
 {% extends "main.html" %}
 
 {% block head %}
- {% for item in assets_env["edit.js"].urls() %}
+ {% for item in assets_env["edit.js"].urls_with_expiry() %}
   <script src='{{ item }}'></script>
  {% endfor %}
- {% for item in assets_env["edit.css"].urls() %}
+ {% for item in assets_env["edit.css"].urls_with_expiry() %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
 

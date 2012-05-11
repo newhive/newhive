@@ -6,7 +6,7 @@
  <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
  <meta property="og:type" content="article" />
  <meta property="fb:admins" content="1007003" />
- <script src='{{ assets_env['expression.js'].urls()[0] }}'></script>
+ <script src='{{ assets_env['expression.js'].urls_with_expiry()[0] }}'></script>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression minimal{% endblock %}
