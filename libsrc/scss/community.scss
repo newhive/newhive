@@ -36,7 +36,7 @@ body.profile #card_header { margin-top: -10px; }
 #header .title { margin-left: $right_column_x + 9px; }
 #header .head { font-size: 2em; font-family: Museo,Helvetica,sans-serif; }
 
-#top_tabs { position: absolute; right: 0px; white-space: nowrap; }
+#top_tabs { position: absolute; right: 0; bottom: 0; white-space: nowrap; }
 #top_tabs .tab_label {
   display: inline-block;
   vertical-align: middle;
