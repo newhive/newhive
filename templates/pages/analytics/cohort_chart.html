@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block head %}
     {{super()}}
-    {% for item in assets_env["admin.js"].urls() %}
+    {% for item in assets_env["admin.js"].urls_with_expiry() %}
       <script src='{{ item }}'></script>
     {% endfor %}
     {% include "partials/charts/cohort.html" %}

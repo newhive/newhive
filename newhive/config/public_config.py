@@ -5,6 +5,7 @@ server_name     = 'thenewhive.com'
 database        = 'hive'
 database_host   = 'localhost'
 database_port   = 27017
+email_port      = 2525
 media_path      = '/home/domains/thenewhive.com'
 dev_prefix      = None
 

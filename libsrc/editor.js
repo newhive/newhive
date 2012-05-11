@@ -1131,7 +1131,7 @@ Hive.new_file = function(files, opts) {
         var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
         if(file.mime.match(/image\/(png|gif|jpeg)/)) {
-            Hive.Exp.images = Hive.Exp.images.push(file);
+            Hive.Exp.images.push(file);
             $.extend(app, {
                  type: 'hive.image'
                 ,content: file.url
@@ -1152,7 +1152,7 @@ Hive.new_file = function(files, opts) {
 }
 
 var main = function() {
-    if (typeof(Hive.Exp.images) == "undefined") {
+    if (typeof(Hive.Exp.images) == "undefined" || typeof(Hive.Exp.images) == "number") {
         if (typeof(Hive.Exp.apps) == "undefined") {
             Hive.Exp.images = [];
         } else {
@@ -1243,7 +1243,11 @@ var main = function() {
         Hive.Exp.background.opacity = parseFloat($(e.target).val()) / 100;
         Hive.set_bg_img(Hive.Exp.background);
     });
-    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start,
+    var uploadErrorCallback = function(){
+        Hive.upload_finish();
+        alert('Sorry, your file failed to upload');
+    }
+    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback,
         success : function(data) { 
             Hive.Exp.images.push(data);
             data['load'] = Hive.upload_finish; 
@@ -1253,9 +1257,11 @@ var main = function() {
     Hive.set_bg_img(Hive.Exp.background);
     bg_set_color(Hive.Exp.background.color);
 
-    var new_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_file, multiple : true}); };
-    var new_link = function() { asyncUpload({ start : Hive.upload_start, success : function(data) {
-        if(data.error) { Hive.upload_finish(); alert('Sorry, your file failed to upload'); return }
+    var new_file = function() {
+        asyncUpload({ multiple: true, start : Hive.upload_start, success : Hive.new_file, error : uploadErrorCallback});
+    };
+    var new_link = function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback, success : function(data) {
+        if(data.error) { return error(); }
         var app = { type: 'hive.text', content: $('<a>').attr('href', data.url).text(data.name).outerHTML() };
         Hive.new_app(app);
     } }); }
@@ -1389,7 +1395,7 @@ $(main);
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app;
 
-    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i)))
+    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i)) || (m = c.match(/http:\/\/youtu.be\/(.*)$/i)))
         app = { type : 'hive.html', content : 
               '<object type="application/x-shockwave-flash" style="width:100%; height:100%" data="http://www.youtube.com/v/' + m[1]
             + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1"><param name="movie" value="http://www.youtube.com/v/' + m[1]
@@ -1416,17 +1422,24 @@ Hive.embed_code = function(element) {
         app = { type : 'hive.html', content : embed.outerHTML() };
     }
     else if(c.match(/^https?:\/\//i)) {
+        var error = function(data){
+            alert('Sorry, failed to load url ' + c);
+            Hive.upload_finish();
+        };
         var callback = function(data) {
             if (data.error) {
-                alert('Sorry, failed to load url ' + c);
-                Hive.upload_finish();
-                return;
+                return error();
             }
             Hive.new_file(data, { load: Hive.upload_finish });
             $(element).val('');
         }
         Hive.upload_start();
-        $.post(server_url, { action: 'file_create', remote: true, url: c }, callback, 'json');
+        $.ajax(server_url, {
+            data: { action: 'file_create', remote: true, url: c }
+            , success: callback
+            , dataType: 'json'
+            , error: error
+        });
         return;
     }
     else {
@@ -1474,6 +1487,8 @@ Hive.save = function() {
 
     var on_error = function(ret) {
         Hive.upload_finish();
+        if (ret.status == 403){
+        }
         alert("Your expression failed to save.  It is possible you've been logged off.  Without closing this tab, open thenewhive in another tab and try logging in again, then hit 'Save' again."); 
         $('#save_submit').removeClass('disabled');
     }

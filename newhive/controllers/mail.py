@@ -96,7 +96,7 @@ class MailController(ApplicationController):
         for i in range(0,4):
             name = request.form.get('name_' + str(i))
             to_email = request.form.get('to_' + str(i))
-            if user['referrals'] <= 0 or not name or not to_email or len(name) == 0 or len(to_email) == 0: break
+            if user['referrals'] <= 0 or not to_email or len(to_email) == 0: break
             referral = user.new_referral({'name': name, 'to': to_email})
 
             heads = {

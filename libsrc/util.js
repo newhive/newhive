@@ -478,14 +478,20 @@ function asyncSubmit(form, callback) {
 
 function asyncUpload(opts) {
     var target, form, opts = $.extend({ json : true, file_name : 'file', multiple : false, action: '/',
-        start : noop, success : noop, data : { action : opts.post_action || 'file_create' } }, opts);
+        start : noop, success : noop, error: noop, data : { action : opts.post_action || 'file_create' } }, opts);
 
     var onload = function() {
         var frame = target.get(0);
         if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
         var resp = $(frame.contentDocument.body).text();
         if(opts.json) {
-            resp = JSON.parse(resp);
+            try{
+                resp = JSON.parse(resp);
+            } catch (e) {
+                // JSON parsing will fail if server returns a 500
+                // Suppress this and call the error callback
+                opts.error(resp);
+            }
             if(!opts.multiple){ resp = resp[0]; }
         }
         opts.success(resp);

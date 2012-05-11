@@ -32,6 +32,7 @@ from newhive.utils import abs_url
 import newhive.colors
 import newhive.state
 import newhive.ui_strings.en as ui
+import newhive.manage.git
 
 import webassets
 from webassets.script import CommandLineEnvironment
@@ -46,6 +47,22 @@ logger.info("Initializing WSGI")
 ##############################################################################
 assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
 assets_env.updater = 'always'
+assets_env.url_expire = True
+def urls_with_expiry(self):
+    urls = self.urls()
+    if self.env.debug:
+        rv = []
+        for u in urls:
+            parts = u.split('?')
+            name = parts[0]
+            query = lget(parts, 1)
+            if not query:
+                query = str(int(os.stat(config.src_home + name).st_mtime))
+            rv.append(name + '?' + query)
+        return rv
+    else:
+        return urls
+webassets.bundle.Bundle.urls_with_expiry = urls_with_expiry
 
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
@@ -92,6 +109,7 @@ jinja_env.filters['json'] = json.dumps
 jinja_env.filters['mod'] = lambda x, y: x % y
 jinja_env.filters['querystring'] = querystring
 jinja_env.filters['percentage'] = lambda x: x*100
+jinja_env.filters['strip_filenames'] = lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
 jinja_env.globals['colors'] = newhive.colors.colors
 
 db = newhive.state.Database(config)
@@ -277,7 +295,7 @@ def handle_safe(request):
         def serializable_filter(dictionary):
             return {key.replace('.', '-'): val for key, val in dictionary.iteritems() if type(val) in [bool, str, int, float, tuple, unicode]}
         def privacy_filter(dictionary):
-            for key in ['password', 'secret']:
+            for key in ['password', 'secret', 'old_password']:
                 if dictionary.has_key(key): dictionary.update({key: "******"})
             return dictionary
         log_entry = {
@@ -294,6 +312,7 @@ def handle_safe(request):
                         } for x in traceback.frames
                     ]
                 , 'requester': {'id': requester.id, 'name': requester.get('name')}
+                , 'code_revision': newhive.manage.git.current_revision
                 }
 
         db.ErrorLog.create(log_entry)
