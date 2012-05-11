@@ -15,8 +15,6 @@ class UserController(ApplicationController):
         referral = self._check_referral(request)[0]
         if response.context.has_key('dialog_to_show'):
             response.context.pop('dialog_to_show')
-        if not referral:
-            referral = self._check_referral(request)[0]
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
 
