@@ -1,6 +1,7 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 import urllib, urlparse, itertools
+from werkzeug.http import parse_options_header
 
 class FileController(ApplicationController):
 
@@ -18,7 +19,6 @@ class FileController(ApplicationController):
             if file.getcode() != 200:
                 return {'error': 'remote url download failed with status %s' % (file.getcode())}
             mime = file.headers.getheader('Content-Type')
-            print mimetypes.guess_extension(mime)
             filename = lget([i[1] for i in [i.split('=') for i in file.headers.get('content-disposition', '').split(';')] if i[0].strip() == 'filename'], 0)
             file.filename = filename + mimetypes.guess_extension(mime) if filename else os.path.basename(urlparse.urlsplit(url).path)
             files = [file]
@@ -29,11 +29,9 @@ class FileController(ApplicationController):
         rv = []
         for file in files:
             if hasattr(file, 'headers') and hasattr(file.headers, 'getheader'):
-                mime = file.headers.getheader('Content-Type')
+                mime = parse_options_header(file.headers.getheader('Content-Type'))[0]
             else:
                 mime = mimetypes.guess_type(file.filename)[0]
-
-            print "MIME: {}".format(mime)
 
             type, subtype = mime.split('/')
 
@@ -64,19 +62,6 @@ class FileController(ApplicationController):
                 data.update({'mime': mime, 'name': file.filename, 'file_id': file_record.id, 'url': file_record.get('url')})
                 rv.append(data)
 
-            # I'm not sure if this approach is very 'pythonic' but I'm 
-            # having fun with a more functional approach in javascript
-            # and I thought i'd bring it here too. Too bad python doesn't
-            # have true anonymous functions --JDT
-            #file, data = {
-            #    'audio': self._handle_audio
-            #    , 'image': self._handle_image
-            #    , 'text': self._handle_text
-            #}.get(mime_category, lambda x: {})(file, mime_subcategory)
-            #tmp_file.close()
-
-            #data.update({'mime' : mime})
-            #rv.append(data)
         return rv
 
     def delete(self, request, response):
@@ -104,14 +89,10 @@ class FileController(ApplicationController):
         return {'thumb': file_record.get_thumb(190,190)}
 
     def _handle_frame(self, file, local_file, file_record, mime):
-        return {'iframe': True, 'original_url': file.url if hasattr(file, 'url') else ''}
-
-    def _handle_text(self, file, local_file, file_record, mime):
-        if mime == "html":
-            pass
+        return {'original_url': file.url if hasattr(file, 'url') else ''}
 
     def _handle_link(self, file, local_file, file_record, mime):
-        pass
+        return  {}
 
     def _handle_unsupported(self, file, local_file, file_record, mime):
         data = {'error': 'file type not supported'}

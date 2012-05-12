@@ -1130,7 +1130,7 @@ Hive.new_file = function(files, opts) {
         var file = files[i];
         var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
-        if(file.iframe){
+        if(file.mime.match(/text\/html/)){
             app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
         } else if(file.mime.match(/image\/(png|gif|jpeg)/)) {
             Hive.Exp.images.push(file);
@@ -1141,7 +1141,6 @@ Hive.new_file = function(files, opts) {
         } else if(file.mime.match(/audio\/mpeg/)) {
             $.extend(app, {
                 src: file.url
-                //,content: ($.jPlayer.skin.minimal(file.url, 1))
                 ,type: 'hive.audio'
             });
         } else {
@@ -1441,6 +1440,7 @@ Hive.embed_code = function(element) {
             , success: callback
             , dataType: 'json'
             , error: error
+            , type: 'POST'
         });
         return;
     }
