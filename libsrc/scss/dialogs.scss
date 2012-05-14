@@ -467,6 +467,13 @@ input[type="text"].copy, textarea.copy {
         margin: 30px 0 0 0;
         letter-spacing: -1px;
     }
+    .btn_dialog_close + h3{
+        margin-top: 0;
+    }
+    h3 + form {
+        display: block;
+        margin-top: 20px;
+    }
     p { margin: 10px 0 20px 0; }
     &.centered {
         text-align: center;

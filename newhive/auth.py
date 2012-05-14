@@ -137,7 +137,7 @@ def cmp_secret(session, request, response):
     if client_secret == session[secrets[secure]]:
         #set_secret(session, secure, response)
         return True
-    raise BadCookie()
+    return False # Cookies are funky, but just return false and let the user login again.
 
 import datetime
 def set_cookie(response, name, data, secure = False, expires = True):
@@ -149,7 +149,3 @@ def set_cookie(response, name, data, secure = False, expires = True):
 def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name, secure = False): response.delete_cookie(name,
     domain = None if secure else '.' + config.server_name)
-
-class BadCookie(exceptions.BadRequest):
-    def get_body(self, environ):
-        return "there's some funky cookie business going on"

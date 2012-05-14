@@ -470,9 +470,10 @@ function img_fill(img) {
     return e;
 }
 
-function asyncSubmit(form, callback) {
+function asyncSubmit(form, callback, opts) {
+    var opts = $.extend({ dataType : 'text' }, opts);
     var url = $(form).attr('action')? $(form).attr('action') : server_url
-    $.post(url, $(form).serialize(), callback, 'text');
+    $.post(url, $(form).serialize(), callback, opts.dataType);
     return false;
 }
 
@@ -807,3 +808,19 @@ function arrayAddition(a,b){
     }
     return rv
 }
+
+function relogin(success){
+    var dia = $('#dia_relogin');
+    showDialog(dia);
+    var form = dia.find('form');
+    var callback = function(data){
+        console.log(data);
+        if (data.login) { 
+            dia.find('.btn_dialog_close').click();
+            success();
+        } else { failure(); };
+    }
+    form.find("[type=submit]").click(function(){
+        return asyncSubmit(form, callback, {dataType: 'json'});
+    });
+};

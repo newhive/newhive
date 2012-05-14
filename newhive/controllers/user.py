@@ -256,7 +256,10 @@ class UserController(ApplicationController):
 
     def login(self, request, response):
         if auth.handle_login(self.db, request, response):
-            return self.redirect(response, request.form.get('url', request.requester.url))
+            if request.is_xhr:
+                return self.serve_json(response, {'login': True})
+            else:
+                return self.redirect(response, request.form.get('url', request.requester.url))
 
     def logout(self, request, response):
         auth.handle_logout(self.db, request, response)

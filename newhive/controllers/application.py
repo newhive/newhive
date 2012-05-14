@@ -116,15 +116,23 @@ class ApplicationController(object):
         """ as_text is used when content is received in an <iframe> by the client """
         return self.serve_data(response, 'text/plain' if as_text else 'application/json', json.dumps(val))
 
+    def serve_text(self, response, text):
+        return self.serve_json(response, text, as_text=True)
+
     def serve_404(self, request, response):
         response.status_code = 404
         return self.serve_page(response, 'pages/notfound.html')
 
     def serve_error(self, request, msg, code=500):
-        response = Response()
+        request, response = self.pre_process(request)
         response.status_code = 500
         response.context['msg'] = msg
         return self.serve_page(response, 'pages/error.html')
+
+    def serve_forbidden(self, request):
+        response = Response()
+        response.status_code = 403
+        return self.serve_text(response, 'That action is only available to logged in users.')
 
     def redirect(self, response, location, permanent=False):
         response.location = location
