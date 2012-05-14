@@ -10,5 +10,5 @@ def get_running_webservers():
     return [i for r in reservations for i in r.instances]
 
 def get_active_webserver_ids(load_balancer="LoadBalancer2"):
-    elb = boto.connect_elb(*credentials)
+    elb = boto.connect_elb(*aws_credentials)
     return [inst.instance_id for inst in elb.describe_instance_health(load_balancer)]
