@@ -460,11 +460,11 @@ class User(HasSocial):
         self.db.InviteNote.create(self.db.User.named(config.site_user), self, data={'count':count})
 
     def cmp_password(self, v):
-        return crypt(v, self['password']) == self['password']
+        return crypt(v.encode('UTF8'), self['password']) == self['password']
 
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
-        self['password'] = crypt(v, salt)
+        self['password'] = crypt(v.encode('UTF8'), salt)
     def update_password(self, v):
         self.set_password(v)
         self.update(password=self['password'])
@@ -909,6 +909,7 @@ class File(Entity):
 
 
     def store_aws(self, file, id, name):
+        file.seek(0)
         b = self.db.s3_con.get_bucket(self.get('s3_bucket', random.choice(self.db.s3_buckets).name))
         k = S3Key(b)
         k.name = id
@@ -1029,6 +1030,9 @@ class Feed(Entity):
     def create(self):
         for key in ['initiator', 'entity', 'entity_class']:
             assert self.has_key(key)
+
+        #TODO: consult with user.prefs.email object to determine this value
+        self['send_email'] = True
 
         class_name = type(self).__name__
         self.update(class_name=class_name)

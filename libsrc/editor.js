@@ -1130,16 +1130,21 @@ Hive.new_file = function(files, opts) {
         var file = files[i];
         var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
-        if(file.mime.match(/image\/(png|gif|jpeg)/)) $.extend(app, {
-             type: 'hive.image'
-            ,content: file.url
-        });
-        else if(file.mime.match(/audio\/mpeg/)) $.extend(app, {
-            src: file.url
-            //,content: ($.jPlayer.skin.minimal(file.url, 1))
-            ,type: 'hive.audio'
-        });
-        else $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
+        if(file.mime.match(/image\/(png|gif|jpeg)/)) {
+            Hive.Exp.images.push(file);
+            $.extend(app, {
+                 type: 'hive.image'
+                ,content: file.url
+            });
+        } else if(file.mime.match(/audio\/mpeg/)) {
+            $.extend(app, {
+                src: file.url
+                //,content: ($.jPlayer.skin.minimal(file.url, 1))
+                ,type: 'hive.audio'
+            });
+        } else {
+            $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
+        }
 
         Hive.new_app(app, [20*i, 20*i]);
     };
@@ -1147,6 +1152,28 @@ Hive.new_file = function(files, opts) {
 }
 
 var main = function() {
+    if (typeof(Hive.Exp.images) == "undefined" || typeof(Hive.Exp.images) == "number") {
+        if (typeof(Hive.Exp.apps) == "undefined") {
+            Hive.Exp.images = [];
+        } else {
+            Hive.Exp.images = $.map(Hive.Exp.apps, function(app){
+                if ( app.type == 'hive.image' && app.file_id ) {
+                    return { 
+                        file_id: app.file_id, 
+                        thumb: app.content + "_190x190?v=1", 
+                        url: app.content
+                    }
+                }
+            });
+            if (typeof(Hive.Exp.background.url) != "undefined"){
+                Hive.Exp.images.push({
+                    file_id: Hive.Exp.background.url.match(/[a-f0-9]+$/)[0]
+                    , thumb: Hive.Exp.background.url + "_190x190?v=1"
+                    , url: Hive.Exp.background.url
+                });
+            }
+        }
+    };
     //setInterval(Hive.set_draft, 5000);
     window.onbeforeunload = function(){
         //try { Hive.set_draft(); }
@@ -1216,14 +1243,25 @@ var main = function() {
         Hive.Exp.background.opacity = parseFloat($(e.target).val()) / 100;
         Hive.set_bg_img(Hive.Exp.background);
     });
-    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start,
-        success : function(data) { data['load'] = Hive.upload_finish; Hive.set_bg_img(data); } }); });
+    var uploadErrorCallback = function(){
+        Hive.upload_finish();
+        alert('Sorry, your file failed to upload');
+    }
+    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback,
+        success : function(data) { 
+            Hive.Exp.images.push(data);
+            data['load'] = Hive.upload_finish; 
+            Hive.set_bg_img(data); 
+        } 
+    }); });
     Hive.set_bg_img(Hive.Exp.background);
     bg_set_color(Hive.Exp.background.color);
 
-    var new_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_file, multiple : true}); };
-    var new_link = function() { asyncUpload({ start : Hive.upload_start, success : function(data) {
-        if(data.error) { Hive.upload_finish(); alert('Sorry, your file failed to upload'); return }
+    var new_file = function() {
+        asyncUpload({ multiple: true, start : Hive.upload_start, success : Hive.new_file, error : uploadErrorCallback});
+    };
+    var new_link = function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback, success : function(data) {
+        if(data.error) { return error(); }
         var app = { type: 'hive.text', content: $('<a>').attr('href', data.url).text(data.name).outerHTML() };
         Hive.new_app(app);
     } }); }
@@ -1304,12 +1342,10 @@ var main = function() {
     var dia_thumbnail;
     $('#btn_thumbnail').click(function() {
         dia_thumbnail = showDialog('#dia_thumbnail');
-        var user_thumbs = $.map(Hive.get_state().apps, function(app){
-            if ( app.type == 'hive.image' && app.file_id ) {
-                var img = $('<img>').attr('src', app.content + "_190x190").attr('data-file-id', app.file_id);
-                var e = $("<div class='thumb'>").append(img).get(0);
-                return e;
-            }
+        var user_thumbs = $.map(Hive.Exp.images, function(app){
+           var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
+           var e = $("<div class='thumb'>").append(img).get(0);
+           return e;
         })
         $('#expr_images').empty().append(user_thumbs);
         $('#dia_thumbnail .thumb img').click(function() {
@@ -1359,7 +1395,7 @@ $(main);
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app;
 
-    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i)))
+    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i)) || (m = c.match(/http:\/\/youtu.be\/(.*)$/i)))
         app = { type : 'hive.html', content : 
               '<object type="application/x-shockwave-flash" style="width:100%; height:100%" data="http://www.youtube.com/v/' + m[1]
             + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1"><param name="movie" value="http://www.youtube.com/v/' + m[1]
@@ -1386,17 +1422,24 @@ Hive.embed_code = function(element) {
         app = { type : 'hive.html', content : embed.outerHTML() };
     }
     else if(c.match(/^https?:\/\//i)) {
+        var error = function(data){
+            alert('Sorry, failed to load url ' + c);
+            Hive.upload_finish();
+        };
         var callback = function(data) {
             if (data.error) {
-                alert('Sorry, failed to load url ' + c);
-                Hive.upload_finish();
-                return;
+                return error();
             }
             Hive.new_file(data, { load: Hive.upload_finish });
             $(element).val('');
         }
         Hive.upload_start();
-        $.post(server_url, { action: 'file_create', remote: true, url: c }, callback, 'json');
+        $.ajax(server_url, {
+            data: { action: 'file_create', remote: true, url: c }
+            , success: callback
+            , dataType: 'json'
+            , error: error
+        });
         return;
     }
     else {
@@ -1444,7 +1487,9 @@ Hive.save = function() {
 
     var on_error = function(ret) {
         Hive.upload_finish();
-        alert("Your expression failed to save.  It is possible you've been logged off.  Without closing this tab, open thenewhive in another tab and try logging in again, then hit 'Save' again."); 
+        if (ret.status == 403){
+            relogin(function(){ $('#btn_save').click(); });
+        }
         $('#save_submit').removeClass('disabled');
     }
 

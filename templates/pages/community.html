@@ -2,14 +2,14 @@
 
 {% if 'home' %}
   {% block meta %}
-    <meta name="description" content="{{ui.intro_paragraph}}" />
+  <meta name="description" content="{{description + " - " if description}}{{ui.intro_paragraph}}" />
     <meta property="og:image" content='http://thenewhive.com/lib/skin/1/logo_medium.png' />
   {% endblock meta %}
 {% endif %}
 
 {% block head %}
   {{ super() }}
-  {% if user_is_owner %}
+  {% if profile and user_is_owner %}
     <script>
       $(function(){
           var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
@@ -58,8 +58,6 @@
     {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
 
-{% set show_prompts = user_is_owner and network and (user.starred_user_ids|length <= 1) %}
-
 {% block header %}
   {% if home %}
     {% if not user.logged_in %}
@@ -93,7 +91,7 @@
           <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
         {% endif %}
         {% if owner.get_thumb() %}
-          <img src='{{ owner.get_thumb() }}' alt="{{ owner.fullname }}"/>
+          <img src='{{ owner.get_thumb() }}' alt="{{ owner.fullname|e }}"/>
         {% elif user_is_owner %}
           <div class='placeholder rounded'>Click Here to<br/>Upload A Profile Image</div>
         {% endif %}
@@ -101,7 +99,7 @@
           </a>
         {% endif %}
       </div>
-      <span class='fathead'>{% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + user_tag if user_tag }}</span>
+      <span class='fathead'>{% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname|e }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + user_tag if user_tag }}</span>
     </div>
   {% endif %}
   <div id='card_header'>

@@ -470,22 +470,29 @@ function img_fill(img) {
     return e;
 }
 
-function asyncSubmit(form, callback) {
+function asyncSubmit(form, callback, opts) {
+    var opts = $.extend({ dataType : 'text' }, opts);
     var url = $(form).attr('action')? $(form).attr('action') : server_url
-    $.post(url, $(form).serialize(), callback, 'text');
+    $.post(url, $(form).serialize(), callback, opts.dataType);
     return false;
 }
 
 function asyncUpload(opts) {
     var target, form, opts = $.extend({ json : true, file_name : 'file', multiple : false, action: '/',
-        start : noop, success : noop, data : { action : opts.post_action || 'file_create' } }, opts);
+        start : noop, success : noop, error: noop, data : { action : opts.post_action || 'file_create' } }, opts);
 
     var onload = function() {
         var frame = target.get(0);
         if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
         var resp = $(frame.contentDocument.body).text();
         if(opts.json) {
-            resp = JSON.parse(resp);
+            try{
+                resp = JSON.parse(resp);
+            } catch (e) {
+                // JSON parsing will fail if server returns a 500
+                // Suppress this and call the error callback
+                opts.error(resp);
+            }
             if(!opts.multiple){ resp = resp[0]; }
         }
         opts.success(resp);
@@ -801,3 +808,19 @@ function arrayAddition(a,b){
     }
     return rv
 }
+
+function relogin(success){
+    var dia = $('#dia_relogin');
+    showDialog(dia);
+    var form = dia.find('form');
+    var callback = function(data){
+        console.log(data);
+        if (data.login) { 
+            dia.find('.btn_dialog_close').click();
+            success();
+        } else { failure(); };
+    }
+    form.find("[type=submit]").click(function(){
+        return asyncSubmit(form, callback, {dataType: 'json'});
+    });
+};
