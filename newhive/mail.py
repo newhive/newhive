@@ -107,13 +107,13 @@ def mail_email_confirmation(jinja_env, user, email):
         }
     send_mail(heads, body)
 
-def mail_temporary_password(jinja_env, user, password):
+def mail_temporary_password(jinja_env, user, recovery_link):
     heads = {
         'To' : user.get('email')
         , 'Subject' : 'Password recovery for thenewhive.com'
         }
     context = {
-        'password': password
+        'recovery_link': recovery_link
         ,'user_fullname' : user['fullname']
         ,'user_name': user['name']
         }

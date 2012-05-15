@@ -16,6 +16,9 @@ password_change_success_message = "Your password has been changed successfully."
 password_change_failure_message = "Sorry, the old password you entered is incorrect."
 fullname_change_success_message = "Your name has been changed successfully."
 email_change_success_message = "To finish changing your e-mail address, please click the confirmation link sent to your new address.  If you can't find the e-mail, make sure to check your spam folder."
-password_recovery_failure_message = "Sorry, we can't find that username/password combination.  Please try again"
-password_recovery_success_message = "Your password has been successfully reset.  A temporary password has been sent to your e-mail address.  If you can't find the e-mail, make sure to check your spam folder."
+password_recovery_failure_message = "Sorry, we can't find a username with that e-mail address.  Please try again"
+password_recovery_success_message = """We've sent a password reset link to your e-mail address.  If you don't see the e-mail, make sure to check your spam folder."""
 listen_to_all_friends = "Listen to all of my friends from Facebook that are on The New Hive."
+invalid_password_recovery_link = """Sorry, the password recovery link you are
+    trying to use is invalid or has expired. Please try requesting a new password
+    again from the Log In menu."""
