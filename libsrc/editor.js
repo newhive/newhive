@@ -1171,11 +1171,13 @@ var main = function() {
                 }
             });
             if (typeof(Hive.Exp.background.url) != "undefined"){
-                Hive.Exp.images.push({
-                    file_id: Hive.Exp.background.url.match(/[a-f0-9]+$/)[0]
-                    , thumb: Hive.Exp.background.url + "_190x190?v=1"
+                var image = {
+                    thumb: Hive.Exp.background.url + "_190x190?v=1"
                     , url: Hive.Exp.background.url
-                });
+                };
+                var match = Hive.Exp.background.url.match(/[a-f0-9]+$/);
+                if (match !== null) image.file_id = match[0]; // If match doesn't exists it's not on S3
+                Hive.Exp.images.push(image);
             }
         }
     };
@@ -1348,10 +1350,12 @@ var main = function() {
     $('#btn_thumbnail').click(function() {
         dia_thumbnail = showDialog('#dia_thumbnail');
         var user_thumbs = $.map(Hive.Exp.images, function(app){
-           var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
-           var e = $("<div class='thumb'>").append(img).get(0);
-           return e;
-        })
+           if (typeof(app.file_id) != "undefined") { // Non S3 images can't be used for thumbs
+               var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
+               var e = $("<div class='thumb'>").append(img).get(0);
+               return e;
+           };
+        });
         $('#expr_images').empty().append(user_thumbs);
         $('#dia_thumbnail .thumb img').click(function() {
             setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
