@@ -22,3 +22,5 @@ listen_to_all_friends = "Listen to all of my friends from Facebook that are on T
 invalid_password_recovery_link = """Sorry, the password recovery link you are
     trying to use is invalid or has expired. Please try requesting a new password
     again from the Log In menu."""
+
+facebook_flow_exhange_error = 'Either something went wrong with facebook login or your facebook account is not connected to The New Hive.'
