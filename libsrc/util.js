@@ -434,6 +434,14 @@ $(function () {
   //    if ((count == 5 || count == 15) && (!signup)) setTimeout("$('.signup_button').first().click();", 1000);
   //    createCookie('pageview_count', count, 14);
   //};
+  var dia_referral = $('#dia_referral');
+  dia_referral.find('input[type=submit]').click(function(){
+      asyncSubmit(dia_referral.find('form'), function(){
+          dia_referral.find('.btn_dialog_close').click();
+          showDialog('#dia_sent_invites_thanks');
+      });
+      return false;
+  });
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
