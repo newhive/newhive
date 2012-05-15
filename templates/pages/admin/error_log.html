@@ -13,11 +13,14 @@ Page {{page}}
 
 {% block table_head %}
 <tr>
-  <th>ID</th>
   <th>Date</th>
   <th>IP</th>
   <th>User</th>
+  <th>URL</th>
+  <th>Action</th>
   <th>Error</th>
+  <th>File</th>
+  <th>Line</th>
   <th>Line</th>
 </tr>
 {% endblock %}
@@ -26,11 +29,14 @@ Page {{page}}
 {% for error in errors %}
 
 <tr>
-  <td><a href="/admin/error_log/{{error.id}}">{{error.id}}</a>
-  <td>{{ error.created | epoch_to_string }}</td>
+  <td><a href="/admin/error_log/{{error.id}}">{{ error.created | epoch_to_string }}</td>
   <td>{{ error.get('environ').HTTP_X_FORWARDED_FOR or error.get('environ').REMOTE_ADDR }}</td>
   <td>{{ error.get('requester').name | e}}</td>
-  <td>{{ error.get('exception') | e}}</td>
+  <td>{{ error.get('environ').HTTP_HOST | e}}{{ error.get('environ').PATH_INFO | e}}</td>
+  <td>{{ error.form.action | e if error.has_key('form')}}</td>
+  <td>{{ error.get('exception') | e | truncate(60)}}</td>
+  <td>{{ error.get('stack_frames')[-1].filename | strip_filenames}}</td>
+  <td>{{ error.get('stack_frames')[-1].lineno | e}}</td>
   <td>{{ error.get('stack_frames')[-1].current_line | e}}</td>
 </tr>
 {% endfor %}

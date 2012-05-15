@@ -1,6 +1,10 @@
 from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 import urllib, urlparse, itertools
+from werkzeug.http import parse_options_header
+
+import logging
+logger = logging.getLogger(__name__)
 
 class FileController(ApplicationController):
 
@@ -11,9 +15,12 @@ class FileController(ApplicationController):
 
         url = request.form.get('url')
         if request.form.get('remote') and url:
-            try: file = urllib.urlopen(url)
-            except: return {'error': 'remote url download failed'}
-            if file.getcode() != 200: return {'error': 'remote url download failed with status %s' % (file.getcode())}
+            try:
+                file = urllib.urlopen(url)
+            except:
+                return {'error': 'remote url download failed'}
+            if file.getcode() != 200:
+                return {'error': 'remote url download failed with status %s' % (file.getcode())}
             mime = file.headers.getheader('Content-Type')
             filename = lget([i[1] for i in [i.split('=') for i in file.headers.get('content-disposition', '').split(';')] if i[0].strip() == 'filename'], 0)
             file.filename = filename + mimetypes.guess_extension(mime) if filename else os.path.basename(urlparse.urlsplit(url).path)
@@ -24,25 +31,40 @@ class FileController(ApplicationController):
 
         rv = []
         for file in files:
-            mime = mimetypes.guess_type(file.filename)[0]
-            tmp_file = os.tmpfile()
-            tmp_file.write(file.read())
-            res = self.db.File.create(dict(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime))
+            if hasattr(file, 'headers') and hasattr(file.headers, 'getheader'):
+                mime = parse_options_header(file.headers.getheader('Content-Type'))[0]
+            else:
+                mime = mimetypes.guess_type(file.filename)[0]
 
-            mime_category = mime.split('/')[0]
+            type, subtype = mime.split('/')
 
-            # I'm not sure if this approach is very 'pythonic' but I'm 
-            # having fun with a more functional approach in javascript
-            # and I thought i'd bring it here too. Too bad python doesn't
-            # have true anonymous functions --JDT
-            data = {
-                'audio': self._handle_audio
-                , 'image': self._handle_image
-            }.get(mime_category, lambda x: {})(res)
+            # Supported mime types.  First try to find exact match to full mime
+            # type (e.g. text/html), then default to generic type (e.g. text).
+            # If that doesn't exist either alert the client that the type is
+            # unsupported
+            supported_mimes = {
+                    'audio/mpeg': self._handle_audio
+                    , 'audio/mp4': self._handle_audio
+                    , 'image/gif': self._handle_image
+                    , 'image/jpeg': self._handle_image
+                    , 'image/png': self._handle_image
+                    , 'application': self._handle_link
+                    , 'text/html': self._handle_frame
+                    , 'text': self._handle_link
+                    }
 
-            data.update({ 'name': file.filename, 'mime' : mime, 'file_id' : res.id, 'url' : res.get('url')})
-            rv.append(data)
-            tmp_file.close()
+            handler = supported_mimes.get(mime)
+            if not handler: handler = supported_mimes.get(type, self._handle_unsupported)
+
+            with os.tmpfile() as local_file:
+                local_file.write(file.read())
+
+                file_record = self.db.File.create({'owner': request.requester.id, 'tmp_file': local_file, 'name': file.filename, 'mime': mime})
+                data = handler(file, local_file, file_record, mime)
+
+                data.update({'mime': mime, 'name': file.filename, 'file_id': file_record.id, 'url': file_record.get('url')})
+                rv.append(data)
+
         return rv
 
     def delete(self, request, response):
@@ -51,13 +73,35 @@ class FileController(ApplicationController):
         return True
 
     # "private" functions
-    def _handle_audio(self, file):
+    def _upload(self, file, local_file, owner):
+        return (file_record, {'name': file.filename, 'file_id': res.id, 'url': res.get('url')})
+
+    def _handle_audio(self, file, local_file, file_record, mime):
         import hsaudiotag.auto
-        track = hsaudiotag.auto.File(file.file)
+        #file_record, data = self._upload(file, local_file, owner)
+        track = hsaudiotag.auto.File(local_file)
         data = dict()
         for attr in ["artist", "album", "title", "year", "genre", "track", "comment", "duration", "bitrate", "size"]:
             data[attr] = getattr(track, attr)
         return {'type_specific': data}
 
-    def _handle_image(self, file):
-        return {'thumb': file.get_thumb(190,190)}
+    def _handle_image(self, file, local_file, file_record, mime):
+        #file_record, data = self._upload(file, local_file, owner)
+        #data.update({'thumb': file_record.get_thumb(190,190)})
+        #return data
+        return {'thumb': file_record.get_thumb(190,190)}
+
+    def _handle_frame(self, file, local_file, file_record, mime):
+        url = file.url if hasattr(file, 'url') else ''
+        logger.info("Embed URL attempted: %s", url)
+        return {'original_url': url}
+
+    def _handle_link(self, file, local_file, file_record, mime):
+        return  {}
+
+    def _handle_unsupported(self, file, local_file, file_record, mime):
+        data = {'error': 'file type not supported'}
+        if hasattr(file, 'url'): data['url'] = file.url
+        data['filename'] = file.filename
+        return data
+

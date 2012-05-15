@@ -2,6 +2,7 @@ from werkzeug import exceptions
 from newhive import config, oauth
 from newhive.utils import junkstr
 from newhive.oauth import FacebookClient, FlowExchangeError
+import newhive.ui_strings.en as ui
 
 import logging
 logger = logging.getLogger(__name__)
@@ -57,7 +58,7 @@ def facebook_login(db, request, response):
     except FlowExchangeError as e:
         logger.error("Flow exchange error during facebook login: %s", e)
         user = None
-        response.context['error'] = 'Either something went wrong with facebook login or your facebook account is not connect to The New Hive'
+        response.context['error'] = ui.facebook_flow_exhange_error
 
     if user:
         session = new_session(db, user, request, response)
@@ -107,18 +108,18 @@ def handle_logout(db, request, response):
 
     request.requester.logged_in = False
 
-def password_change(request, response):
+def password_change(request, response, force=False):
     args = request.form
-    if not request.is_secure: raise exceptions.BadRequest()
-    secret = args.get('old_password', False)
     new_password = args.get('password', False)
     user = request.requester
-    if not (user and secret and new_password): raise exceptions.BadRequest()
-    if user and user.cmp_password(secret):
-        user.set_password(new_password)
-        user.save()
-        return True
-    else: return False
+    if not request.is_secure or not (user and new_password):
+        raise exceptions.BadRequest()
+    if not force:
+        secret = args.get('old_password', False)
+        if not user.cmp_password(secret): return False
+    user.set_password(new_password)
+    user.save()
+    return True
 
 secrets = ['plain_secret', 'secure_secret']
 cookies = secrets + ['identity']
@@ -137,7 +138,7 @@ def cmp_secret(session, request, response):
     if client_secret == session[secrets[secure]]:
         #set_secret(session, secure, response)
         return True
-    raise BadCookie()
+    return False # Cookies are funky, but just return false and let the user login again.
 
 import datetime
 def set_cookie(response, name, data, secure = False, expires = True):
@@ -149,7 +150,3 @@ def set_cookie(response, name, data, secure = False, expires = True):
 def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name, secure = False): response.delete_cookie(name,
     domain = None if secure else '.' + config.server_name)
-
-class BadCookie(exceptions.BadRequest):
-    def get_body(self, environ):
-        return "there's some funky cookie business going on"

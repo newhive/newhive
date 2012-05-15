@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
 def send_mail(headers, body):
     t0 = time.time()
-    smtp = SMTP(config.email_server, 2525)
+    smtp = SMTP(config.email_server, config.email_port)
     logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
     msg = MIMEMultipart('alternative')
     msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
@@ -29,7 +29,7 @@ def send_mail(headers, body):
         html = MIMEText(body['html'].encode('utf-8'), 'html')
         msg.attach(plain); msg.attach(html)
     else:
-        part1 = MIMEText(body, 'plain')
+        part1 = MIMEText(body.encode('utf-8'), 'plain')
         msg.attach(part1)
 
     if config.email_user and config.email_password:
@@ -107,13 +107,13 @@ def mail_email_confirmation(jinja_env, user, email):
         }
     send_mail(heads, body)
 
-def mail_temporary_password(jinja_env, user, password):
+def mail_temporary_password(jinja_env, user, recovery_link):
     heads = {
         'To' : user.get('email')
         , 'Subject' : 'Password recovery for thenewhive.com'
         }
     context = {
-        'password': password
+        'recovery_link': recovery_link
         ,'user_fullname' : user['fullname']
         ,'user_name': user['name']
         }

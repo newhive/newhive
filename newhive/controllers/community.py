@@ -47,14 +47,15 @@ class CommunityController(ApplicationController):
             match_extent -= 1
         if not query: return self.serve_404(request, response)
 
-        items_and_args = query(request)
+        items_and_args = query(request, response)
         content, args = items_and_args if type(items_and_args) == tuple else (items_and_args, None)
         if content == None: return self.serve_404(request, response)
         response.context.update(dict(
              home = path[0] != 'profile'
             ,search = path[0] == 'search'
             ,profile = path[0] == 'profile'
-            ,network = path[-1] == 'network'
+            ,show_prompts = ((path == ['profile','activity','network'] and request.is_owner)
+                or (path == ['home','network'])) and (len(request.requester.starred_user_ids) <= 1)
             ,activity = lget(path, 1) == 'activity'
             ,hide_feed = (path[-1] != 'activity') and (path[-1] != 'discussion')
             ,require_login = path == ['home','expressions','all']
@@ -70,24 +71,36 @@ class CommunityController(ApplicationController):
         return self.page(request, response)
 
 
-    def expr_featured(self, request):
+    def expr_featured(self, request, response):
+        if (request.path_parts, 1): response.context['title'] = 'Featured Expressions'
         return self.db.Expr.page(self.db.User.root_user['tagged']['Featured'], **query_args(request)), {'tag': 'Featured'}
-    def expr_all(self, request): return self.db.Expr.page({'auth': 'public'}, **query_args(request)), {'tag': 'Recent'}
-    def home_feed(self, request): return request.requester.feed_network(**query_args(request))
-    def people(self, request): return self.db.User.page({}, **query_args(request))
-    def expr_page(self, request): return expr_to_html(self.db.Expr.named('thenewhive.thenewhive.com', lget(request.path_parts, 2, 'about')))
-
-    def user_exprs(self, request, auth=None):
+    def expr_all(self, request, response):
+        response.context['title'] = 'All Expressions'
+        return self.db.Expr.page({'auth': 'public'}, **query_args(request)), {'tag': 'Recent'}
+    def home_feed(self, request, response):
+        if (request.path_parts, 1): response.context['title'] = 'Network'
+        return request.requester.feed_network(**query_args(request))
+    def people(self, request, response):
+        response.context['title'] = 'People'
+        return self.db.User.page({}, **query_args(request))
+    def expr_page(self, request, response):
+        page = lget(request.path_parts, 2, 'about')
+        response.context['title'] = page
+        return expr_to_html(self.db.Expr.named('thenewhive.thenewhive.com', lget(request.path_parts, 2, 'about')))
+    def user_exprs(self, request, response, auth=None):
         return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
-    def feed_network(self, request): return request.owner.feed_network(**query_args(request))
-    def feed_profile(self, request, by_owner=False, spec={}, **args):
+    def feed_network(self, request, response):
+        return request.owner.feed_network(**query_args(request))
+    def feed_profile(self, request, response, by_owner=False, spec={}, **args):
         args.update(query_args(request))
         if by_owner: spec.update({'initiator': request.owner.id})
         return request.owner.feed_profile_entities(spec=spec, **args)
-    def listening(self, request): return request.owner.starred_user_page(**query_args(request))
-    def listeners(self, request): return request.owner.starrer_page(**query_args(request))
+    def listening(self, request, response):
+        return request.owner.starred_user_page(**query_args(request))
+    def listeners(self, request, response):
+        return request.owner.starrer_page(**query_args(request))
 
-    def search(self, request):
+    def search(self, request, response):
         query = request.args.get('q', '')
         res = self.db.KeyWords.search_page(query, **query_args(request))
         entities = { 'User': self.db.User, 'Expr': self.db.Expr }
@@ -95,6 +108,7 @@ class CommunityController(ApplicationController):
         res[:] = filter(lambda e: e and request.requester.can_view(e), res)
 
         self.db.ActionLog.create(request.requester, "search", data={ 'query': query })
+        response.context['title'] = "Results for '{}'".format(query)
 
         # TODO: if search matches one or more tags, return tags argument
         return res
@@ -108,7 +122,9 @@ class CommunityController(ApplicationController):
             tag_page = True,
             tag = tag,
             home = True,
-            args=querystring({'tag': tag})
+            args=querystring({'tag': tag}),
+            title="#{}".format(tag),
+            description="Expressions tagged '{}'".format(tag)
         ))
         return self.page(request, response)
 

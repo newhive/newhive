@@ -2,14 +2,14 @@
 
 {% if 'home' %}
   {% block meta %}
-    <meta name="description" content="{{ui.intro_paragraph}}" />
+  <meta name="description" content="{{description + " - " if description}}{{ui.intro_paragraph}}" />
     <meta property="og:image" content='http://thenewhive.com/lib/skin/1/logo_medium.png' />
   {% endblock meta %}
 {% endif %}
 
 {% block head %}
   {{ super() }}
-  {% if user_is_owner %}
+  {% if profile and user_is_owner %}
     <script>
       $(function(){
           var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
@@ -57,8 +57,6 @@
   {% if not current %}<a href='/{{ p }}' {{ attr }}>{% endif %}<div class='tab_label {{ 'current' if current }} {{ class }} {{ 'text' if text else 'icon' }}'
     {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
-
-{% set show_prompts = user_is_owner and network and (user.starred_user_ids|length <= 1) %}
 
 {% block header %}
   {% if home %}

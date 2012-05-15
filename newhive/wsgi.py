@@ -32,6 +32,7 @@ from newhive.utils import abs_url
 import newhive.colors
 import newhive.state
 import newhive.ui_strings.en as ui
+import newhive.manage.git
 
 import webassets
 from webassets.script import CommandLineEnvironment
@@ -108,6 +109,7 @@ jinja_env.filters['json'] = json.dumps
 jinja_env.filters['mod'] = lambda x, y: x % y
 jinja_env.filters['querystring'] = querystring
 jinja_env.filters['percentage'] = lambda x: x*100
+jinja_env.filters['strip_filenames'] = lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
 jinja_env.globals['colors'] = newhive.colors.colors
 
 db = newhive.state.Database(config)
@@ -149,7 +151,8 @@ actions = dict(
     ,file_delete       = controllers['file'].delete
     ,user_create       = controllers['user'].create
     ,user_update       = controllers['user'].update
-    ,password_recovery = controllers['user'].password_recovery
+    ,password_recovery_1 = controllers['user'].password_recovery_1
+    ,password_recovery_2 = controllers['user'].password_recovery_2
     ,mail_us           = controllers['mail'].mail_us
     ,mail_them         = controllers['mail'].mail_them
     ,mail_referral     = controllers['mail'].mail_referral
@@ -195,6 +198,7 @@ site_pages = {
     ,'analytics'           : admins(controllers['analytics'].default)
     ,'robots.txt'          : app.robots
     ,'500'                 : newhive.utils.exception_test
+    ,'password_recovery'   : controllers['user'].edit
 }
 
 dialogs = dict(
@@ -220,15 +224,16 @@ def handle(request): # HANDLER
     if request.domain != config.content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite', 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
-            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback', 'file_create']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite', 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
+            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery_1', 'password_recovery_2', 'mail_feedback', 'file_create']
             if not reqaction in insecure_actions:
-                if not request.is_secure: raise exceptions.BadRequest('post request action "' + reqaction + '" is not secure')
+                if not request.is_secure:
+                    return app.serve_forbidden(request)
                 # erroneously catches logout, possibly other posts
                 #if urlparse(request.headers.get('Referer')).hostname != config.server_name:
                 #    raise exceptions.BadRequest('Invalid cross site post request from: ' + request.headers.get('Referer'))
             if not request.requester.logged_in and not reqaction in non_logged_in_actions:
-                raise exceptions.BadRequest('post request action "' + reqaction + '" is not logged_in')
+                return app.serve_forbidden(request)
 
             if not actions.get(reqaction): raise exceptions.BadRequest('invalid action: '+reqaction)
             r = actions.get(reqaction)(request, response)
@@ -289,11 +294,10 @@ def handle_safe(request):
         from werkzeug.debug.tbtools import get_current_traceback
         hostname = socket.gethostname()
         traceback = get_current_traceback(skip=1, show_hidden_frames=False, ignore_system_exceptions=True)
-        requester = request.environ['hive.request'].requester
         def serializable_filter(dictionary):
             return {key.replace('.', '-'): val for key, val in dictionary.iteritems() if type(val) in [bool, str, int, float, tuple, unicode]}
         def privacy_filter(dictionary):
-            for key in ['password', 'secret']:
+            for key in ['password', 'secret', 'old_password']:
                 if dictionary.has_key(key): dictionary.update({key: "******"})
             return dictionary
         log_entry = {
@@ -309,8 +313,11 @@ def handle_safe(request):
                         'current_line': x.current_line.strip()
                         } for x in traceback.frames
                     ]
-                , 'requester': {'id': requester.id, 'name': requester.get('name')}
+                , 'code_revision': newhive.manage.git.current_revision
                 }
+        request = request.environ.get('hive.request')
+        if request and hasattr(request, 'requester'):
+            log_entry.update({'requester': {'id': request.requester.id, 'name': request.requester.get('name')}})
 
         db.ErrorLog.create(log_entry)
         raise
