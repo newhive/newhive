@@ -107,18 +107,18 @@ def handle_logout(db, request, response):
 
     request.requester.logged_in = False
 
-def password_change(request, response):
+def password_change(request, response, force=False):
     args = request.form
-    if not request.is_secure: raise exceptions.BadRequest()
-    secret = args.get('old_password', False)
     new_password = args.get('password', False)
     user = request.requester
-    if not (user and secret and new_password): raise exceptions.BadRequest()
-    if user and user.cmp_password(secret):
-        user.set_password(new_password)
-        user.save()
-        return True
-    else: return False
+    if not request.is_secure or not (user and new_password):
+        raise exceptions.BadRequest()
+    if not force:
+        secret = args.get('old_password', False)
+        if not user.cmp_password(secret): return False
+    user.set_password(new_password)
+    user.save()
+    return True
 
 secrets = ['plain_secret', 'secure_secret']
 cookies = secrets + ['identity']

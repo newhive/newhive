@@ -151,7 +151,8 @@ actions = dict(
     ,file_delete       = controllers['file'].delete
     ,user_create       = controllers['user'].create
     ,user_update       = controllers['user'].update
-    ,password_recovery = controllers['user'].password_recovery
+    ,password_recovery_1 = controllers['user'].password_recovery_1
+    ,password_recovery_2 = controllers['user'].password_recovery_2
     ,mail_us           = controllers['mail'].mail_us
     ,mail_them         = controllers['mail'].mail_them
     ,mail_referral     = controllers['mail'].mail_referral
@@ -197,6 +198,7 @@ site_pages = {
     ,'analytics'           : admins(controllers['analytics'].default)
     ,'robots.txt'          : app.robots
     ,'500'                 : newhive.utils.exception_test
+    ,'password_recovery'   : controllers['user'].edit
 }
 
 dialogs = dict(
@@ -222,8 +224,8 @@ def handle(request): # HANDLER
     if request.domain != config.content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery', 'mail_feedback', 'facebook_invite', 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
-            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery', 'mail_feedback', 'file_create']
+            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite', 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
+            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery_1', 'password_recovery_2', 'mail_feedback', 'file_create']
             if not reqaction in insecure_actions:
                 if not request.is_secure:
                     return app.serve_forbidden(request)
