@@ -1131,7 +1131,11 @@ Hive.new_file = function(files, opts) {
         var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
         if(file.mime.match(/text\/html/)){
-            app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
+            // Not using code for auto-embeding urls that resolve to html
+            // pages because of too many problems with sites that
+            // don't want to be framed. Just link to site instead.
+            // app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
+            $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
         } else if(file.mime.match(/image\/(png|gif|jpeg)/)) {
             Hive.Exp.images.push(file);
             $.extend(app, {
