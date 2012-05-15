@@ -3,6 +3,9 @@ from newhive.controllers.application import ApplicationController
 import urllib, urlparse, itertools
 from werkzeug.http import parse_options_header
 
+import logging
+logger = logging.getLogger(__name__)
+
 class FileController(ApplicationController):
 
     def create(self, request, response):
@@ -89,7 +92,9 @@ class FileController(ApplicationController):
         return {'thumb': file_record.get_thumb(190,190)}
 
     def _handle_frame(self, file, local_file, file_record, mime):
-        return {'original_url': file.url if hasattr(file, 'url') else ''}
+        url = file.url if hasattr(file, 'url') else ''
+        logger.info("Embed URL attempted: %s", url)
+        return {'original_url': url}
 
     def _handle_link(self, file, local_file, file_record, mime):
         return  {}
