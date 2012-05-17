@@ -82,6 +82,8 @@ Hive.Group = function(){
         return o.elements.length 
     };
     o.push = function(element) { return o.elements.push(element) };
+    o.remove = function(element) { o.elements = $.grep(o.elements, function(el){ return el !== element }); };
+
     o.each = function(fn){ $.each(o.elements, fn) };
     return o;
 
@@ -202,7 +204,7 @@ Hive.App = function(initState) {
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
-        //o.apps.focused = null;
+        o.apps.focused.remove(o);
     });
     o.focused = function() { return inArray(o.apps.focused.elements, o) }
     o.dragstart = Funcs(function() { o.dragging = true; });
@@ -294,7 +296,9 @@ Hive.App = function(initState) {
 
     o.load = Funcs(function() {
         o.opacity(o.state.opacity);
-        o.content_element.addClass('content').click(function(e) { o.focus({event: e}); });
+        o.content_element.addClass('content').click(function(e) {
+            o.focus({event: e});
+        });
         if(o.state.load) o.state.load(o);
         delete o.state.load;
         delete o.state.create;
@@ -456,7 +460,9 @@ Hive.App.has_shield = function(o, opts) {
         if (typeof(opts) == 'undefined') opts = {};
         if(o.eventCapturer) return;
         o.eventCapturer = $("<div class='drag shield'>");
-        o.eventCapturer.click(function(e) { o.focus({event: e}); });
+        o.eventCapturer.click(function(e) {
+            o.focus({event: e});
+        });
         o.div.append(o.eventCapturer);
         o.eventCapturer.css('opacity', 0.0);
         if(opts.cursor) o.eventCapturer.css('cursor', opts.cursor);
@@ -1302,26 +1308,17 @@ var main = function() {
     if(!(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) || /Chrome/.test(navigator.userAgent)))
         showDialog('#editor_browsers');
 
+    // Fallthrough click handler that unfocuses all apps if user clicks on background.
     $(window).click(function(e) {
         if(!Hive.OpenApps.focused.length()) return;
-        var hit = false;//!e.target.parentNode;
+        var hit = false;
         Hive.OpenApps.focused.each(function(i,el){
-            if($.contains(el.div.get(0), e.target)){
-                hit = el;
-                //Hive.OpenApps.focused.focus(el);
-            }
+            if( $.contains(el.div.get(0), e.target)
+                || $.contains(el.controls.div.get(0), e.target)
+                || !e.target.parentNode //Target has already been removed from DOM, as in drag shield
+            ) hit = true;
         });
         if (!hit) focused().unfocus();
-        //Hive.OpenApps.focused.focus(hit);
-        //if (!hit) Hive.OpenApps.focused.unfocus();
-        //for (i=0; i<focused().length(); i++) {
-        //    if(
-        //        $.contains(focused()[i].div.get(0), e.target) 
-        //        || ! e.target.parentNode
-        //        || $.contains($('.controls').get(0), e.target)
-        //    ) {return;}
-        //}
-        //focused().unfocus();
     });
 
     $(document.body).drag('start', function() { return false; });
