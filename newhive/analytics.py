@@ -414,7 +414,7 @@ def overall_impressions(db):
     map_function = """
         function() {
              if (typeof(this.apps) != "undefined" && this.apps.length > 0 && this.views && this.owner_views){
-                 emit(this.owner, {count: 1, views: this.views - this.owner_views
+                 emit(this.owner, {count: 1, views: this.views - this.owner_views});
              }
         }
         """
