@@ -57,17 +57,17 @@ Hive.Group = function(){
     o.focus = function(app){
         // Unfocus all apps except the requested app
         if (o.length()){
-        $.each(o.elements, function(i, current_app){
-           current_app.unfocus();
-        });
-        if (app){
-            app.focus();
-            o.elements = [new_focused];
-        } else {
-            o.elements = [];
+            $.each(o.elements, function(i, current_app){
+               current_app.unfocus();
+            });
+            if (app){
+                app.focus();
+                o.elements = [app];
+            } else {
+                o.elements = [];
+            }
         }
-    }
-    }
+    };
 
     o.divs = function(){
         return $.map(o.elements, function(a){ return a.div[0] });
@@ -195,7 +195,7 @@ Hive.App = function(initState) {
     o.make_controls = [];
     o.focus = Funcs(function(args) {
         var multi = args && args.event && args.event.shiftKey;
-        if(o.focused()) return;
+        //if(o.focused()) return;
         if(o.apps.focused && !multi) o.apps.focused.unfocus();
         o.apps.focused.push(o);
         if(!o.controls) o.controls = Hive.App.Controls(o);
@@ -1306,12 +1306,13 @@ var main = function() {
         if(!Hive.OpenApps.focused.length()) return;
         var hit = false;//!e.target.parentNode;
         Hive.OpenApps.focused.each(function(i,el){
-            if(!$.contains(el.div.get(0), e.target)){
+            if($.contains(el.div.get(0), e.target)){
                 hit = el;
                 //Hive.OpenApps.focused.focus(el);
             }
         });
-        Hive.OpenApps.focused.focus(hit);
+        if (!hit) focused().unfocus();
+        //Hive.OpenApps.focused.focus(hit);
         //if (!hit) Hive.OpenApps.focused.unfocus();
         //for (i=0; i<focused().length(); i++) {
         //    if(
