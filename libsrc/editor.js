@@ -194,7 +194,7 @@ Hive.App = function(initState) {
     
     o.make_controls = [];
     o.focus = Funcs(function(args) {
-        var multi = args && args.event && args.event.shiftKey;
+        var multi = args && Hive.multi_test(args);
         //if(o.focused()) return;
         if(o.apps.focused && !multi) o.apps.focused.unfocus();
         o.apps.focused.push(o);
@@ -632,7 +632,7 @@ Hive.App.Text = function(common) {
     }
 
     o.focus.add(function(args) {
-        multi = args && args.event && args.event.shiftKey;
+        var multi = args && Hive.multi_test(args);
         if (multi) {
             o.mode('drag');
         } else {
@@ -2072,3 +2072,7 @@ var append_color_picker = function(container, callback, init_color) {
         return [h, s, v];
     }
 };
+
+Hive.multi_test = function(args) {
+    return args.event && (args.event.shiftKey || args.event.ctrlKey);
+}
