@@ -83,8 +83,11 @@ Hive.Group = function(){
     };
     o.push = function(element) { 
         if (element.focused()) return;
-        o.each(function(i, el){ el.sharedFocus(); });
-        return o.elements.push(element) 
+        o.elements.push(element);
+        if (o.length() > 1){
+            o.each(function(i, el){ el.sharedFocus(); });
+        }
+        return element;
     };
     o.remove = function(element) { o.elements = $.grep(o.elements, function(el){ return el !== element }); };
 
@@ -213,14 +216,14 @@ Hive.App = function(initState) {
         } else {
             o.apps.focused.unfocus();
         }
-        o.apps.focused.push(o);
         if(!o.controls) o.controls = Hive.App.Controls(o);
+        o.apps.focused.push(o);
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
         o.apps.focused.remove(o);
     });
-    o.sharedFocus = Funcs(noop);
+    o.sharedFocus = Funcs(function(){ o.controls.div.find('.control').hide(); });
     o.focused = function() { return inArray(o.apps.focused.elements, o) }
 
     o.keyPress = function(e){
