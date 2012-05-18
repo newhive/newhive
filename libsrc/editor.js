@@ -201,8 +201,18 @@ Hive.App = function(initState) {
     o.make_controls = [];
     o.focus = Funcs(function(args) {
         var multi = args && Hive.multi_test(args);
-        //if(o.focused()) return;
-        if(o.apps.focused && !multi) o.apps.focused.unfocus();
+        if (multi) {
+            if (o.focused()) {
+                o.unfocus();
+                // Now that the target element is unfocused, we stop
+                // propagation so the click doesn't count as outside all
+                // focused elements, resulting in unfocusing everything
+                args.event.stopPropagation();
+                return;
+            }
+        } else {
+            o.apps.focused.unfocus();
+        }
         o.apps.focused.push(o);
         if(!o.controls) o.controls = Hive.App.Controls(o);
     });
