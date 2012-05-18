@@ -75,13 +75,17 @@ Hive.Group = function(){
 
     o.layout = function(){
         for (i=0; i<o.elements.length; i++){
-            o.elements.controls.layout();
+            o.elements[i].controls.layout();
         }
     }
     o.length = function(){ 
         return o.elements.length 
     };
-    o.push = function(element) { return o.elements.push(element) };
+    o.push = function(element) { 
+        if (element.focused()) return;
+        o.each(function(i, el){ el.sharedFocus(); });
+        return o.elements.push(element) 
+    };
     o.remove = function(element) { o.elements = $.grep(o.elements, function(el){ return el !== element }); };
 
     o.each = function(fn){ $.each(o.elements, fn) };
@@ -206,6 +210,7 @@ Hive.App = function(initState) {
         if(o.controls) o.controls.remove();
         o.apps.focused.remove(o);
     });
+    o.sharedFocus = Funcs(noop);
     o.focused = function() { return inArray(o.apps.focused.elements, o) }
     o.dragstart = Funcs(function() { o.dragging = true; });
     o.dragend = Funcs(function() { o.dragging = false; });
@@ -456,8 +461,8 @@ Hive.App.has_shield = function(o, opts) {
     if (typeof(opts) == "undefined") opts = {};
     o.dragging = false;
 
-    o.shield = function(opts) {
-        if (typeof(opts) == 'undefined') opts = {};
+    o.shield = function(sheild_opts) {
+        if (typeof(sheild_opts) == 'undefined') sheild_opts = {};
         if(o.eventCapturer) return;
         o.eventCapturer = $("<div class='drag shield'>");
         o.eventCapturer.click(function(e) {
@@ -465,7 +470,7 @@ Hive.App.has_shield = function(o, opts) {
         });
         o.div.append(o.eventCapturer);
         o.eventCapturer.css('opacity', 0.0);
-        if(opts.cursor) o.eventCapturer.css('cursor', opts.cursor);
+        if(sheild_opts.cursor) o.eventCapturer.css('cursor', sheild_opts.cursor);
     }
     o.unshield = function() {
         if (opts.always) return;
@@ -478,20 +483,20 @@ Hive.App.has_shield = function(o, opts) {
         else o.unshield();
     }
 
-    o.focus.add(o.set_shield)
-    o.unfocus.add(o.set_shield)
+    o.focus.add(o.set_shield);
+    o.unfocus.add(o.set_shield);
 
     o.div.drag('start', function() {
         o.dragging = true;
-        o.set_shield();
+        //o.set_shield();
     });
     o.div.drag('end', function() {
         o.dragging = false;
-        o.set_shield();
+        //o.set_shield();
         return false;
     });
-    o.dragstart.add(o.set_shield);
-    o.dragend.add(o.set_shield);
+    //o.dragstart.add(o.set_shield);
+    //o.dragend.add(o.set_shield);
 }
 
 Hive.App.has_resize = function(o) {
@@ -588,7 +593,7 @@ Hive.App.Html = function(common) {
     o.content_element = $(o.state.content).addClass('content');
     o.div.append(o.content_element);
     if(o.content_element.is('object') || o.content_element.is('embed') || o.content_element.is('iframe')) {
-        Hive.App.has_shield(o);
+        Hive.App.has_shield(o, {always: true});
         o.set_shield = function() { o.shield(); }
         o.shield();
     }
@@ -650,6 +655,9 @@ Hive.App.Text = function(common) {
         o.rte.set_content(autoLink(o.rte.get_content()));
         o.rte.addBreaks();
     });
+    o.sharedFocus.add(function(){
+        o.mode('drag');
+    });
 
     o.mode = function(mode) {
         if (mode == 'drag') {
@@ -658,7 +666,10 @@ Hive.App.Text = function(common) {
         } else if (mode == 'edit'){
             o.rte.removeBreaks();
             o.rte.editMode(true);
+            o.unshield();
         }
+        console.log(mode);
+        o._current_mode = mode;
     };
     
     o.link = function(v) {
@@ -760,7 +771,7 @@ Hive.App.Text = function(common) {
         });
         o.select_box.click(function(){
             o.app.mode('drag');
-            o.app.shield({cursor: 'text'});
+            //o.app.shield({cursor: 'text'});
         });
 
         return o;
