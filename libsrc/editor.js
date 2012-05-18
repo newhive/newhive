@@ -234,10 +234,10 @@ Hive.App = function(initState) {
         }
 
         var handlers = {
-            37: nudge(-1,0)
-            , 38: nudge(0,-1)
-            , 39: nudge(1,0)
-            , 40: nudge(0,1)
+            37: nudge(-1,0)   // Left
+            , 38: nudge(0,-1) // Up
+            , 39: nudge(1,0)  // Right
+            , 40: nudge(0,1)  // Down
         }
         handlers[e.keyCode] && handlers[e.keyCode]();
     };
