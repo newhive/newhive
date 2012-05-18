@@ -212,8 +212,6 @@ Hive.App = function(initState) {
     });
     o.sharedFocus = Funcs(noop);
     o.focused = function() { return inArray(o.apps.focused.elements, o) }
-    o.dragstart = Funcs(function() { o.dragging = true; });
-    o.dragend = Funcs(function() { o.dragging = false; });
 
     o.keyPress = function(e){
         var nudge = function(dx,dy){
@@ -488,15 +486,12 @@ Hive.App.has_shield = function(o, opts) {
 
     o.div.drag('start', function() {
         o.dragging = true;
-        //o.set_shield();
+        o.set_shield();
     });
     o.div.drag('end', function() {
         o.dragging = false;
-        //o.set_shield();
-        return false;
+        o.set_shield();
     });
-    //o.dragstart.add(o.set_shield);
-    //o.dragend.add(o.set_shield);
 }
 
 Hive.App.has_resize = function(o) {
@@ -668,7 +663,6 @@ Hive.App.Text = function(common) {
             o.rte.editMode(true);
             o.unshield();
         }
-        console.log(mode);
         o._current_mode = mode;
     };
     
@@ -778,6 +772,14 @@ Hive.App.Text = function(common) {
     }
     o.make_controls.push(controls);
 
+    var refMode;
+    o.div.drag('start', function(){
+        refMode = o._current_mode;
+        o.mode('drag');
+    });
+    o.div.drag('end', function(){
+        o.mode(refMode);
+    });
     o.div.addClass('text');
     o.set_shield();
     o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
@@ -815,13 +817,12 @@ Hive.App.has_rotate = function(o) {
         o.rotateHandle.drag('start', function(e, dd) {
             refAngle = angle;
             offsetAngle = o.getAngle(e);
-            o.app.dragstart();
         }).drag(function(e, dd) {
             angle = o.getAngle(e) - offsetAngle + refAngle;
             if (e.shiftKey && Math.abs(angle - angleRound(angle)) < 10) angle = angleRound(angle);
             o.app.angle(angle);
             o.select_box.rotate(angle);
-        }).drag('end', function(e, dd) { o.app.dragend(); });
+        });
         o.select_box.rotate(o.app.angle());
 
         return o;
@@ -1345,7 +1346,6 @@ var main = function() {
     });
 
     $(document).keydown(function(e){ 
-        console.log("keydown handler");
         Hive.OpenApps.focused.each(function(i, el){ el.keyPress(e) });
         //for (i=0; i< Hive.OpenApps.focused.length(); i++){
         //    Hive.OpenApps.focused[i].keyPress(e);
