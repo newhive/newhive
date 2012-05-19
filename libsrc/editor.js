@@ -447,7 +447,7 @@ Hive.App.Controls = function(app) {
     });
     d.find('.stack_up').click(o.app.stackTop);
     d.find('.stack_down').click(o.app.stackBottom);
-    o.padding = 0;
+    o.padding = 4;
 
     o = reduce(function(o, f) { return f(o) }, o.app.make_controls, o);
 
@@ -719,8 +719,6 @@ Hive.App.Text = function(common) {
 
     function controls(common) {
         var o = $.extend({}, common);
-
-        o.padding = 5;
 
         o.addControls($('#controls_text'));
 
@@ -1013,7 +1011,6 @@ Hive.App.Rectangle = function(common) {
             o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
         };
 
-        o.select_box.hide();
         o.addControls($('#controls_rectangle'));
         append_color_picker(o.div.find('.drawer.fill'), o.app.css_setter('color'), state.color);
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
