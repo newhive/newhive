@@ -27,6 +27,8 @@ $nav_height: 50px;
   top: 0; 
   left: 0; 
   width: 100%; 
+  min-width: 620px;
+  pointer-events: none;
   height: $nav_height; 
   background-image: url("/lib/skin/1/nav_gradient.png"); 
   z-index: 1; 
