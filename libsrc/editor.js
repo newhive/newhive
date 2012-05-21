@@ -658,7 +658,7 @@ Hive.App.Text = function(common) {
 
     o.div.addClass('text');
     o.set_shield();
-    o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
+    o.rte = Hive.rte({ css : $('#css_minimal').clone(), parent : o.div,
         change : throttle(function() { setTimeout(o.refresh_size, 10) }, 200), load : o.load, click : function() { o.controls.close() } });
     o.content_element = $(o.rte.iframe);
     

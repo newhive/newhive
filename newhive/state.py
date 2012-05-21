@@ -38,6 +38,7 @@ class Database:
         if config.aws_id:
             self.s3_con = S3Connection(config.aws_id, config.aws_secret)
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
+            self.asset_bucket = self.s3_con.create_bucket(config.asset_bucket)
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]

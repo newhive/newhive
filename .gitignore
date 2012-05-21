@@ -1,5 +1,6 @@
 /lib/*.js
 /lib/*.css
+compiled.*
 /libsrc/.webassets-cache
 /.sass-cache
 /newhive/config/private_config.py
