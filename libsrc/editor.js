@@ -45,28 +45,16 @@ Hive.Group = function(){
             }
         });
         o.elements = new_focused;
-        //while (this.length) {
-        //    if (!app || app === current_app){
-        //        var current_app = this.pop();
-        //        current_app.unfocus();
-        //    } else {
-        //        new_focused.push
-        //    });
-        //}
     }
-    o.focus = function(app){
-        // Unfocus all apps except the requested app
-        if (o.length()){
-            $.each(o.elements, function(i, current_app){
-               current_app.unfocus();
-            });
-            if (app){
-                app.focus();
-                o.elements = [app];
-            } else {
-                o.elements = [];
-            }
-        }
+
+    o.focus = function(apps){
+        // Focus only the requested app(s)
+        if (! $.isArray(apps) ) apps = [apps];
+        o.unfocus();
+        $.each(apps, function(i, el) {
+            el.focus({multi: true});
+        });
+        o.elements = apps;
     };
 
     o.divs = function(){
@@ -427,7 +415,7 @@ Hive.App.Controls = function(app) {
     o.hover_menu = function(h, d, o) { return hover_menu(h, d, $.extend({offsetY : 5}, o)) };
 
     o.div = $("<div style='position : absolute; z-index : 3; width : 0; height : 0' class='controls'>");
-    o.select_box = $("<div class='select_box drag border selected'>");
+    o.select_box = $("<div class='select_box drag border selected'>").css({top: '-9px', left: '-9px', padding: '4px'});
     o.app.div.append(o.select_box);
     $('body').append(o.div);
     o.addControls($('#controls_common'));
@@ -1225,7 +1213,7 @@ Hive.select_start = function(e, dd) {
     var o = Hive.selection = {};
     o.selected = [];
     o.div = $("<div class='app_select'>");
-    o.select_box = $("<div class='select_box border selected'>");
+    o.select_box = $("<div class='select_box border selected dragbox'>").css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
     $(document.body).append(o.div);
     o.div.append(o.select_box);
     o.start = [e.pageX, e.pageY];
@@ -1235,12 +1223,30 @@ Hive.select_move = function(e, dd) {
     o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
     o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
     o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
+    Hive.update_focus();
+};
+Hive.update_focus = function(){
+    var o = Hive.selection;
+    // TODO: remove this offset when we base app positions on 0 = top of window
+    var nav_bar_offset = 50; 
+    var select = { top: o.pos[1] - nav_bar_offset, right: o.pos[0] + o.dims[0], bottom: o.pos[1] + o.dims[1] - nav_bar_offset, left: o.pos[0]};
+    o.old_selection = o.selected;
+    o.selected = $.grep(Hive.OpenApps, function(el){
+        var dims = el.dims();
+        var pos = el.pos();
+        var app = { top: pos[1], right: pos[0] + dims[0], bottom: pos[1] + dims[1], left: pos[0]};
+        return (select.top <= app.top && select.left <= app.left && select.right >= app.right && select.bottom >= app.bottom)
+    });
+    if (o.old_selection.length != o.selected.length){
+        Hive.OpenApps.focused.focus(o.selected);
+    }
 };
 Hive.select_finish = function() {
-    if(!Hive.selection.selected.length) Hive.select_none();
+    Hive.update_focus();
+    Hive.selection.div.remove();
+    //if(!Hive.selection.selected.length) Hive.select_none();
 };
 Hive.select_none = function() {
-    Hive.selection.div.remove();
     Hive.selection = false;
 };
 
@@ -1343,9 +1349,9 @@ var main = function() {
         if (!hit) focused().unfocus();
     });
 
-    $(document.body).drag('start', function() { return false; });
-    $(document.body).drag(function() { return false; });
-    $(document.body).drag('end', function() { return false; });
+    $(document.body).drag(Hive.select_move);
+    $(document.body).drag('start', Hive.select_start);
+    $(document.body).drag('end', Hive.select_finish);
 
     $(document.body).filedrop({
          data : { action : 'file_create' }
@@ -2092,5 +2098,5 @@ var append_color_picker = function(container, callback, init_color) {
 };
 
 Hive.multi_test = function(args) {
-    return args.event && (args.event.shiftKey || args.event.ctrlKey);
+    return args.multi || (args.event && (args.event.shiftKey || args.event.ctrlKey));
 }
