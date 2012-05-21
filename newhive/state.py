@@ -480,7 +480,7 @@ class User(HasSocial):
             if file:
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
-        return self.get('profile_thumb')
+        return self.get('profile_thumb') or abs_url(secure=True) + "/lib/skin/1/thumb_person_mask.png?v=2"
     thumb = property(get_thumb)
 
     def get_files(self):

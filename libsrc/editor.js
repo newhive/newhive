@@ -1130,7 +1130,13 @@ Hive.new_file = function(files, opts) {
         var file = files[i];
         var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
-        if(file.mime.match(/image\/(png|gif|jpeg)/)) {
+        if(file.mime.match(/text\/html/)){
+            // Not using code for auto-embeding urls that resolve to html
+            // pages because of too many problems with sites that
+            // don't want to be framed. Just link to site instead.
+            // app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
+            $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
+        } else if(file.mime.match(/image\/(png|gif|jpeg)/)) {
             Hive.Exp.images.push(file);
             $.extend(app, {
                  type: 'hive.image'
@@ -1139,7 +1145,6 @@ Hive.new_file = function(files, opts) {
         } else if(file.mime.match(/audio\/mpeg/)) {
             $.extend(app, {
                 src: file.url
-                //,content: ($.jPlayer.skin.minimal(file.url, 1))
                 ,type: 'hive.audio'
             });
         } else {
@@ -1166,11 +1171,13 @@ var main = function() {
                 }
             });
             if (typeof(Hive.Exp.background.url) != "undefined"){
-                Hive.Exp.images.push({
-                    file_id: Hive.Exp.background.url.match(/[a-f0-9]+$/)[0]
-                    , thumb: Hive.Exp.background.url + "_190x190?v=1"
+                var image = {
+                    thumb: Hive.Exp.background.url + "_190x190?v=1"
                     , url: Hive.Exp.background.url
-                });
+                };
+                var match = Hive.Exp.background.url.match(/[a-f0-9]+$/);
+                if (match !== null) image.file_id = match[0]; // If match doesn't exists it's not on S3
+                Hive.Exp.images.push(image);
             }
         }
     };
@@ -1343,10 +1350,12 @@ var main = function() {
     $('#btn_thumbnail').click(function() {
         dia_thumbnail = showDialog('#dia_thumbnail');
         var user_thumbs = $.map(Hive.Exp.images, function(app){
-           var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
-           var e = $("<div class='thumb'>").append(img).get(0);
-           return e;
-        })
+           if (typeof(app.file_id) != "undefined") { // Non S3 images can't be used for thumbs
+               var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
+               var e = $("<div class='thumb'>").append(img).get(0);
+               return e;
+           };
+        });
         $('#expr_images').empty().append(user_thumbs);
         $('#dia_thumbnail .thumb img').click(function() {
             setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
@@ -1408,8 +1417,6 @@ Hive.embed_code = function(element) {
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
 //http://player.vimeo.com/video/                                                   13110687
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>
-    else if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i))
-        app = { type : 'hive.image', content : c }
     else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
@@ -1428,7 +1435,12 @@ Hive.embed_code = function(element) {
         };
         var callback = function(data) {
             if (data.error) {
-                return error();
+                if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i)){
+                    app = { type : 'hive.image', content : c }
+                    Hive.new_app(app);
+                } else {
+                    return error();
+                }
             }
             Hive.new_file(data, { load: Hive.upload_finish });
             $(element).val('');
@@ -1439,6 +1451,7 @@ Hive.embed_code = function(element) {
             , success: callback
             , dataType: 'json'
             , error: error
+            , type: 'POST'
         });
         return;
     }
@@ -1488,8 +1501,8 @@ Hive.save = function() {
     var on_error = function(ret) {
         Hive.upload_finish();
         if (ret.status == 403){
+            relogin(function(){ $('#btn_save').click(); });
         }
-        alert("Your expression failed to save.  It is possible you've been logged off.  Without closing this tab, open thenewhive in another tab and try logging in again, then hit 'Save' again."); 
         $('#save_submit').removeClass('disabled');
     }
 

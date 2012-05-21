@@ -3,7 +3,7 @@
     Hi <span id='user_first_name'>{{ user.name }}</span>, good news!<br/>
     You have <span id='referral_count'>{{ user.referrals }}</span> hive invites.
   </h3>
-  <form id='referral_form' action='{{ secure_server}}' method='POST'>
+  <form id='referral_form' action='/' method='POST'>
     <input type='hidden' name='forward' value='{{ url }}' />
     <input type='hidden' name='action' value='mail_referral'/>
     <div class="label">Enter contact info below to send invitation(s)</div>
