@@ -40,7 +40,7 @@
     
       {% if user.logged_in %}
         <div class='nav_icon medbold center'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
-        <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png' class='nav_icon hoverable scale padsm'>
+        <img id='user_menu_handle' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}' class='nav_icon hoverable scale padsm'>
         <a href='{{ feed_url }}'><div id='notifications' class='nav_icon full icon has_count hoverable scale padsm' data-count='{{user.notification_count or 0}}'></div></a>
         <div id='feed_menu' class='menu feed_menu border selected'>
           {% include 'dialogs/feed.html' %}

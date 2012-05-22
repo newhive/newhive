@@ -30,7 +30,7 @@ $nav_height: 50px;
   min-width: 620px;
   pointer-events: none;
   height: $nav_height; 
-  background-image: asset_url("skin/1/nav_gradient.png"); 
+  background-image: asset_url('skin/1/nav_gradient.png'); 
   z-index: 1; 
 }
 
@@ -148,9 +148,9 @@ body.home.logged_out .nav{
   display: inline-block;
   width: .44 * $nav_height;
   height: .44 * $nav_height;
-  background-image: url('lib/skin/1/search_arrow.png');
+  background-image: asset_url('skin/1/search_arrow.png');
   vertical-align: middle;
-  &:hover { background-image: url('lib/skin/1/search_arrow-hover.png');}
+  &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
 }
 
 

@@ -44,8 +44,8 @@ $.jPlayer.skin = {
         '<div id="jp_container_' + index + '" class="jp-audio minimal">' +
         '  <div class="jp-gui jp-interface">' +
         '    <div class="jp-controls jp-button">' +
-        '      <a href="javascript:;" class="jp-play jp-button" tabindex="1"><img src="/lib/skin/1/jplayer/play.svg" class="jp-button"></a>' +
-        '      <a href="javascript:;" class="jp-pause jp-button" tabindex="1"><img src="/lib/skin/1/jplayer/pause.svg" class="jp-button"></a>' +
+        '      <a href="javascript:;" class="jp-play jp-button" tabindex="1"><img src="' + asset('skin/1/jplayer/play.svg') + " class="jp-button"></a>' +
+        '      <a href="javascript:;" class="jp-pause jp-button" tabindex="1"><img src="' + asset('skin/1/jplayer/pause.svg') + " class="jp-button"></a>' +
         '    </div>' +
         '    <div class="jp-progress">' +
         '      <div class="jp-seek-wrapper">' +

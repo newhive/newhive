@@ -3,6 +3,7 @@ import operator as op
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
+from wsgiref.handlers import format_date_time
 from newhive import social_stats, config
 from itertools import ifilter, islice
 import PIL.Image as Img
@@ -914,8 +915,8 @@ class File(Entity):
         b = self.db.s3_con.get_bucket(self.get('s3_bucket', random.choice(self.db.s3_buckets).name))
         k = S3Key(b)
         k.name = id
-        k.set_contents_from_file(file,
-            headers={ 'Content-Disposition' : 'inline; filename=' + name, 'Content-Type' : self['mime'] })
+        k.set_contents_from_file(file, headers={ 'Content-Disposition' : 'inline; filename=' + name,
+            'Content-Type' : self['mime'], 'Expires': format_date_time(now() + 86400 * 3650) })
         k.make_public()
         return k.generate_url(86400 * 3600, query_auth=False)
 
