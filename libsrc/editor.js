@@ -1234,15 +1234,20 @@ Hive.select_start = function(e, dd) {
     $(document.body).append(o.div);
     o.div.append(o.select_box);
     o.start = [e.pageX, e.pageY];
+    if (e.shiftKey || e.ctrlKey){
+        o.initial_elements = $.extend({}, Hive.OpenApps.focused.elements);
+    } else {
+        o.initial_elements = [];
+    }
 };
 Hive.select_move = function(e, dd) {
     var o = Hive.selection;
     o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
     o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
     o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
-    Hive.update_focus();
+    Hive.update_focus(e);
 };
-Hive.update_focus = function(){
+Hive.update_focus = function(event, force){
     var o = Hive.selection;
     // TODO: remove this offset when we base app positions on 0 = top of window
     var nav_bar_offset = 50; 
@@ -1254,8 +1259,8 @@ Hive.update_focus = function(){
         var app = { top: pos[1], right: pos[0] + dims[0], bottom: pos[1] + dims[1], left: pos[0]};
         return (select.top <= app.top && select.left <= app.left && select.right >= app.right && select.bottom >= app.bottom)
     });
-    if (o.old_selection.length != o.selected.length){
-        Hive.OpenApps.focused.focus(o.selected);
+    if (force || o.old_selection.length != o.selected.length){
+        Hive.OpenApps.focused.focus($.unique($.merge(o.selected, o.initial_elements)));
     }
 };
 Hive.select_finish = function() {
