@@ -50,9 +50,16 @@ Hive.Group = function(){
     o.focus = function(apps){
         // Focus only the requested app(s)
         if (! $.isArray(apps) ) apps = [apps];
-        o.unfocus();
+
+        // Previously unfocused elements that should be focused
         $.each(apps, function(i, el) {
+            if (el.focused()) return;
             el.focus({multi: true});
+        });
+
+        // Previously focused elements that should be unfocused
+        $.each(o.elements, function(i, el){
+            if (!inArray(apps, el)) el.unfocus();
         });
         o.elements = apps;
     };
@@ -190,7 +197,16 @@ Hive.App = function(initState) {
     }
     
     o.make_controls = [];
+    o.add_select_box = function(){
+        if (!o.select_box){
+            o.select_box = $("<div class='select_box drag border selected'>").css({top: '-9px', left: '-9px', padding: '4px'});
+            o.div.append(o.select_box);
+        }
+        return o.select_box;
+    };
+
     o.focus = Funcs(function(args) {
+        o.add_select_box();
         var multi = args && Hive.multi_test(args);
         if (multi) {
             if (o.focused()) {
@@ -203,15 +219,19 @@ Hive.App = function(initState) {
             }
         } else {
             o.apps.focused.unfocus();
+            if(!o.controls) o.controls = Hive.App.Controls(o);
         }
-        if(!o.controls) o.controls = Hive.App.Controls(o);
         o.apps.focused.push(o);
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
+        if(o.select_box) {
+            o.select_box.remove();
+            o.select_box = false;
+        }
         o.apps.focused.remove(o);
     });
-    o.sharedFocus = Funcs(function(){ o.controls.div.find('.control').hide(); });
+    o.sharedFocus = Funcs(function(){ if (o.controls) o.controls.div.find('.control').hide(); });
     o.focused = function() { return inArray(o.apps.focused.elements, o) }
 
     o.keyPress = function(e){
@@ -415,8 +435,7 @@ Hive.App.Controls = function(app) {
     o.hover_menu = function(h, d, o) { return hover_menu(h, d, $.extend({offsetY : 5}, o)) };
 
     o.div = $("<div style='position : absolute; z-index : 3; width : 0; height : 0' class='controls'>");
-    o.select_box = $("<div class='select_box drag border selected'>").css({top: '-9px', left: '-9px', padding: '4px'});
-    o.app.div.append(o.select_box);
+    o.select_box = o.app.add_select_box();
     $('body').append(o.div);
     o.addControls($('#controls_common'));
     var d = o.div;
@@ -1342,7 +1361,7 @@ var main = function() {
         var hit = false;
         Hive.OpenApps.focused.each(function(i,el){
             if( $.contains(el.div.get(0), e.target)
-                || $.contains(el.controls.div.get(0), e.target)
+                || (el.controls && $.contains(el.controls.div.get(0), e.target))
                 || !e.target.parentNode //Target has already been removed from DOM, as in drag shield
             ) hit = true;
         });
