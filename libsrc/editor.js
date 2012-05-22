@@ -1230,6 +1230,7 @@ Hive.App.Audio.Controls = function(common) {
 Hive.select_start = function(e, dd) {
     var o = Hive.selection = {};
     o.selected = [];
+    $('.app_select').remove();
     o.div = $("<div class='app_select'>");
     o.select_box = $("<div class='select_box border selected dragbox'>").css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
     $(document.body).append(o.div);
