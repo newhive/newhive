@@ -21,6 +21,7 @@
      var new_fb_connect = {{ "true" if new_fb_connect else "false"}};
      var fb_id = '{{ user.facebook_id }}';
  </script>
+ <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
  {% for item in assets_env["app.js"].urls_with_expiry() %}
    <script src='{{ item }}'></script>
  {% endfor %}
