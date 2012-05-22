@@ -30,7 +30,7 @@ $nav_height: 50px;
   min-width: 620px;
   pointer-events: none;
   height: $nav_height; 
-  background-image: url("/lib/skin/1/nav_gradient.png"); 
+  background-image: asset_url("skin/1/nav_gradient.png"); 
   z-index: 1; 
 }
 
@@ -55,7 +55,7 @@ body.home.logged_out .nav{
     width: 25px;
     height: 25px;
     margin-right: 5px;
-    background: url('/lib/skin/1/facebook_flat_sm.png') no-repeat -1px -2px;
+    background: asset_url('skin/1/facebook_flat_sm.png') no-repeat -1px -2px;
   }
   .fb_icon_title {
       font-size: 19px;
@@ -91,14 +91,14 @@ body.home.logged_out .nav{
 }
 
 #btn_star {
-  .icon { background-image: url("/lib/skin/1/like.png"); }
-  &.starred .icon { background-image: url("/lib/skin/1/like-active.png"); }
-  &:hover .icon { background-image: url("/lib/skin/1/like-hover.png"); }
+  .icon { background-image: asset_url("skin/1/like.png"); }
+  &.starred .icon { background-image: asset_url("skin/1/like-active.png"); }
+  &:hover .icon { background-image: asset_url("skin/1/like-hover.png"); }
 }
 
 #btn_broadcast {
-  .icon { background-image: url("/lib/skin/1/broadcast.png"); }
-  &.enabled .icon { background-image: url("/lib/skin/1/broadcast_active.png"); }
+  .icon { background-image: asset_url("skin/1/broadcast.png"); }
+  &.enabled .icon { background-image: asset_url("skin/1/broadcast_active.png"); }
 }
 
 .listen_button {
@@ -106,11 +106,11 @@ body.home.logged_out .nav{
     top: 2px;
     width: 37px;
     height: 31px !important;
-    background-image: url('/lib/skin/1/people_small.png'); 
-    &:hover { background-image: url('/lib/skin/1/people_small-hover.png'); }
+    background-image: asset_url('skin/1/people_small.png'); 
+    &:hover { background-image: asset_url('skin/1/people_small-hover.png'); }
     &.starred { 
-        background-image: url('/lib/skin/1/people_small_active.png');
-        &:hover { background-image: url('/lib/skin/1/people_small_active-hover.png'); }
+        background-image: asset_url('skin/1/people_small_active.png');
+        &:hover { background-image: asset_url('skin/1/people_small_active-hover.png'); }
     }
 }
 
@@ -155,8 +155,8 @@ body.home.logged_out .nav{
 
 
 #notifications {
-    background-image: url('/lib/skin/1/feed.png');
-    &.active { background-image: url('/lib/skin/1/feed-hover.png'); }
+    background-image: asset_url('skin/1/feed.png');
+    &.active { background-image: asset_url('skin/1/feed-hover.png'); }
     .count {
         margin: 27px 0 0 27px;
         background-color: $color_active;

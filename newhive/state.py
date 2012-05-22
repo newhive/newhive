@@ -31,14 +31,14 @@ class Database:
     def add_collection(self, col):
         pass
 
-    def __init__(self, config):
+    def __init__(self, config, assets=None):
         self.config = config
+        self.assets = assets
 
         # initialize s3 connection
         if config.aws_id:
             self.s3_con = S3Connection(config.aws_id, config.aws_secret)
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
-            self.asset_bucket = self.s3_con.create_bucket(config.asset_bucket)
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
@@ -480,7 +480,7 @@ class User(HasSocial):
             if file:
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
-        return self.get('profile_thumb') or abs_url(secure=True) + "/lib/skin/1/thumb_person_mask.png?v=2"
+        return self.get('profile_thumb') or self.db.assets.url('skin/1/thumb_person_mask.png')
     thumb = property(get_thumb)
 
     def get_files(self):
@@ -794,7 +794,7 @@ class Expr(HasSocial):
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
         thumb = self.get('thumb')
-        if not thumb: thumb = abs_url() + 'lib/skin/1/thumb_0.png'
+        if not thumb: thumb = self.db.assets.url('skin/1/thumb_0.png')
         return thumb + '?v=2'
     thumb = property(get_thumb)
 

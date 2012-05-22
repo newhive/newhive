@@ -3,7 +3,7 @@
   left: 0;
   width: 100%;
   height: 50px;
-  background-image: url("/lib/skin/1/nav_gradient.png");
+  background-image: asset_url("skin/1/nav_gradient.png");
   z-index: 1; }
 
 body.home.logged_out .nav {
@@ -24,36 +24,36 @@ body.home.logged_out .nav {
   height: 50px;
   float: left;
   width: 67px;
-  background-image: url("/lib/skin/1/star.png"); }
+  background-image: asset_url("skin/1/star.png"); }
 
 #btn_star.starred .icon {
-  background-image: url("/lib/skin/1/star_active.png"); }
+  background-image: asset_url("skin/1/star_active.png"); }
 
 #btn_star.active.starred .icon, #btn_star.active .icon {
-  background-image: url("/lib/skin/1/star-hover.png"); }
+  background-image: asset_url("skin/1/star-hover.png"); }
 
 .expr_cards #btn_star .icon {
-  background-image: url("/lib/skin/1/people.png"); }
+  background-image: asset_url("skin/1/people.png"); }
 .expr_cards #btn_star.active .icon {
-  background-image: url("/lib/skin/1/people-hover.png"); }
+  background-image: asset_url("skin/1/people-hover.png"); }
 .expr_cards #btn_star.starred .icon {
-  background-image: url("/lib/skin/1/people_active.png"); }
+  background-image: asset_url("skin/1/people_active.png"); }
 .expr_cards #btn_star.starred.active .icon {
-  background-image: url("/lib/skin/1/people_active-hover.png"); }
+  background-image: asset_url("skin/1/people_active-hover.png"); }
 
 .listen_small.icon {
   position: relative;
   top: 2px;
   width: 37px;
   height: 31px;
-  background-image: url("/lib/skin/1/people_small.png"); }
+  background-image: asset_url("skin/1/people_small.png"); }
   .listen_small.icon:hover {
-    background-image: url("/lib/skin/1/people_small-hover.png"); }
+    background-image: asset_url("skin/1/people_small-hover.png"); }
 
 .listen_small.starred.icon {
-  background-image: url("/lib/skin/1/people_small_active.png"); }
+  background-image: asset_url("skin/1/people_small_active.png"); }
   .listen_small.starred.icon:hover {
-    background-image: url("/lib/skin/1/people_small_active-hover.png"); }
+    background-image: asset_url("skin/1/people_small_active-hover.png"); }
 
 .has_count .count {
   color: #FFF;
@@ -120,13 +120,13 @@ body.home.logged_out .nav {
   position: absolute;
   width: 20px;
   height: 20px;
-  background-image: url("/lib/skin/1/close.png");
+  background-image: asset_url("skin/1/close.png");
   right: 10px;
   top: 5px;
   z-index: 100; }
 
 .btn_dialog_close:hover, #btn_dialog_close:hover {
-  background-image: url("/lib/skin/1/close-hover.png"); }
+  background-image: asset_url("skin/1/close-hover.png"); }
 
 input[type="text"].copy, textarea.copy {
   border: none;
@@ -176,14 +176,14 @@ input[type="text"].copy, textarea.copy {
   background-color: #D0E0F0; }
 
 #btn_url_copy {
-  background-image: url("/lib/skin/1/copy_clipboard.png");
+  background-image: asset_url("skin/1/copy_clipboard.png");
   float: right;
   width: 20px;
   height: 24px;
   margin: 5px 5px 0 0; }
 
 #btn_url_copy.hover {
-  background-image: url("/lib/skin/1/copy_clipboard-hover.png"); }
+  background-image: asset_url("skin/1/copy_clipboard-hover.png"); }
 
 #dia_share {
   width: 555px;
@@ -450,15 +450,15 @@ input[type="text"].copy, textarea.copy {
     .tag_label.system.Starred a, .tag_label.system.Listening a {
       padding-right: 18px; }
     .tag_label.system.Starred {
-      background-image: url("/lib/skin/1/star_tab.png"); }
+      background-image: asset_url("skin/1/star_tab.png"); }
       .tag_label.system.Starred.current:hover {
-        background-image: url("/lib/skin/1/star_tab.png"); }
+        background-image: asset_url("skin/1/star_tab.png"); }
       .tag_label.system.Starred:hover {
-        background-image: url("/lib/skin/1/star_tab-hover.png"); }
+        background-image: asset_url("skin/1/star_tab-hover.png"); }
     .tag_label.system.Listening {
-      background-image: url("/lib/skin/1/people_tab.png"); }
+      background-image: asset_url("skin/1/people_tab.png"); }
       .tag_label.system.Listening:hover {
-        background-image: url("/lib/skin/1/people_tab-hover.png"); }
+        background-image: asset_url("skin/1/people_tab-hover.png"); }
 
 .expr_cards .tag_label.system.current {
   background-color: white;
@@ -474,7 +474,7 @@ input[type="text"].copy, textarea.copy {
   width: 190px;
   height: 285px;
   float: left;
-  background-image: url("/lib/skin/1/feed_item.png"); }
+  background-image: asset_url("skin/1/feed_item.png"); }
   #feed .card.item.border_right {
     border-right: 1px solid #D1D1D1; }
   #feed .card.item.border_bottom {

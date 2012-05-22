@@ -45,9 +45,6 @@ logger.info("Initializing WSGI")
 ##############################################################################
 #                   Ass sets, oh my! (static content tool chain)             #
 ##############################################################################
-assets_env = webassets.Environment(join(config.src_home, 'libsrc'), '/lib')
-assets_env.updater = 'always'
-assets_env.url_expire = True
 def urls_with_expiry(self):
     urls = self.urls()
     if self.env.debug:
@@ -64,15 +61,26 @@ def urls_with_expiry(self):
         return urls
 webassets.bundle.Bundle.urls_with_expiry = urls_with_expiry
 
+assets_env = webassets.Environment(join(config.src_home, 'libsrc'), '/lib')
+assets_env.updater = 'always'
+assets_env.url_expire = True
+
 # get assets that webasset bundles depend on (just images and fonts), generate scss include
 print('Fetching assets for scss...')
 hive_assets = Assets('lib').find('skin').find('fonts')
+
+if config.debug_mode:
+    assets_env.debug = True
+    assets_env.url = '/lib/libsrc'
+    hive_assets.base_url = '/lib/'
+
 hive_assets.write_ruby('libsrc/scss/compiled.asset_paths.rb')
+hive_assets.write_js('libsrc/compiled.asset_paths.js')
 
 print('Compiling css and js...')
 assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
 assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
-    'drag.js', 'dragndrop.js', 'colors.js', 'util.js', 'jplayer/jquery.jplayer.js', filters='yui_js', output='../lib/app.js')
+    'drag.js', 'dragndrop.js', 'colors.js', 'util.js', 'compiled.asset_paths.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js', output='../lib/admin.js')
@@ -80,7 +88,7 @@ assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output
 
 scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
     libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
-scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
+app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
     "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
     "scss/feed.scss", "scss/expression.scss", "scss/settings.scss",
     "scss/signup_flow.scss", "scss/chart.scss", "scss/jplayer.scss",
@@ -90,15 +98,12 @@ scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
 edit_scss = webassets.Bundle('scss/edit.scss', filters=scss_filter, output='edit.css', debug=False)
 minimal_scss = webassets.Bundle('scss/minimal.scss', filters=scss_filter, output='minimal.css', debug=False)
 
-assets_env.register('app.css', scss, filters='yui_css', output='../lib/app.css')
+assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
 assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
 assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
 assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
-if config.debug_mode:
-    assets_env.debug = True
-    assets_env.url = '/lib/libsrc'
-else:
+if not config.debug_mode:
     assets_env.auto_build = False
     cmd = webassets.script.CommandLineEnvironment(assets_env, logger)
     logger.info("Forcing rebuild of webassets"); t0 = time.time()
@@ -109,6 +114,10 @@ else:
 print('Syncing all assets to s3...')
 hive_assets.find(recurse=False).find('doc')
 hive_assets.push_s3()
+
+def asset_bundle(name):
+    if config.debug_mode: return assets_env[name].urls_with_expiry()
+    else: return [hive_assets.url(name)]
 
 
 ##############################################################################
@@ -126,24 +135,37 @@ jinja_env.filters.update({
     ,'querystring': querystring
     ,'percentage': lambda x: x*100
     ,'strip_filenames': lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
-    #,'asset_url': assets.url
+    ,'asset_url': hive_assets.url
 })
-jinja_env.globals['colors'] = newhive.colors.colors
+jinja_env.globals.update({
+     'colors': newhive.colors.colors
+    ,'asset_bundle': asset_bundle
+})
+    
 
-db = newhive.state.Database(config)
+##############################################################################
+#                          newhive server setup                              #
+##############################################################################
+db = newhive.state.Database(config, assets=hive_assets)
+server_env = {
+     'db': db
+    ,'jinja_env': jinja_env
+    ,'assets': hive_assets
+}
+
 controllers = {
-      'community':   CommunityController(jinja_env, assets_env, db)
-    , 'analytics':   AnalyticsController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'admin':       AdminController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'user':        UserController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'file':        FileController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'expression':  ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'mail':        MailController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'star':        StarController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'broadcast':   BroadcastController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'cron':        CronController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+      'community':   CommunityController(**server_env)
+    , 'analytics':   AnalyticsController(**server_env)
+    , 'admin':       AdminController(**server_env)
+    , 'user':        UserController(**server_env)
+    , 'file':        FileController(**server_env)
+    , 'expression':  ExpressionController(**server_env)
+    , 'mail':        MailController(**server_env)
+    , 'star':        StarController(**server_env)
+    , 'broadcast':   BroadcastController(**server_env)
+    , 'cron':        CronController(**server_env)
     }
-app = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+app = ApplicationController(**server_env)
 
 def admins(server):
     def access_controled(request, response, *arg):
@@ -303,8 +325,8 @@ def handle_debug(request):
 
 @Request.application
 def handle_safe(request):
-    """Log exceptions thrown, display friendly error message.
-       Not implemneted."""
+    """Log thrown exceptions"""
+    # TODO: display friendly error message.
     try:
         return handle(request)
     except Exception as e:

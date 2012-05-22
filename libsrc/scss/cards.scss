@@ -7,7 +7,7 @@
         width: 180px; 
         height: 285px;
         float: left; 
-        background-image: url('/lib/skin/1/feed_item.png'); 
+        background-image: asset_url('skin/1/feed_item.png'); 
         &.border_right {
             border-right: 1px solid $color_light_grey;
         }
