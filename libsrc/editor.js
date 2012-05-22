@@ -47,8 +47,9 @@ Hive.Group = function(){
         o.elements = new_focused;
     }
 
-    o.focus = function(apps){
+    o.focus = function(apps, opts){
         // Focus only the requested app(s)
+        opts = $.extend({}, opts);
         if (! $.isArray(apps) ) apps = [apps];
 
         // Previously unfocused elements that should be focused
@@ -58,10 +59,13 @@ Hive.Group = function(){
         });
 
         // Previously focused elements that should be unfocused
+        var prev = [];
         $.each(o.elements, function(i, el){
-            if (!inArray(apps, el)) el.unfocus();
+            if (!inArray(apps, el)) {
+                opts.union ? prev.push(el) : el.unfocus();
+            }
         });
-        o.elements = apps;
+        o.elements = $.merge(prev, apps);
     };
 
     o.divs = function(){
