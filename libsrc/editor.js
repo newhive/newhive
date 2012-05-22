@@ -29,9 +29,6 @@ Hive.makeShuffleable = function(arr) {
     }
 }
 
-// collection object for all App objects in page. An App is a widget
-// that you can move, resize, and copy. Each App type has more specific
-// editing functions.
 Hive.Group = function(){
     var o = {elements: []};
 
@@ -94,6 +91,10 @@ Hive.Group = function(){
     return o;
 
 };
+
+// collection object for all App objects in page. An App is a widget
+// that you can move, resize, and copy. Each App type has more specific
+// editing functions.
 Hive.Apps = function(initial_state) {
     var o = [];
     
