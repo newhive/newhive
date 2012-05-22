@@ -335,20 +335,14 @@ Hive.App = function(initState) {
     o.pos_n(o.state.position);
     o.dims_n(o.state.dimensions);
     var refPos;
-    o.div.drag('start', function(e, shallow) { 
-        if (o.focused() && shallow!="yes" ) { 
-            $(o.apps.focused.divs()).not(o.div).trigger('dragstart', "yes");
-        }
+    o.div.drag('init', function(){
+        if ( inArray(Hive.OpenApps.focused.divs(), this) )
+            return $(Hive.OpenApps.focused.divs());
+    }).drag('start', function(e, shallow) { 
         refPos = o.pos(); 
-    });
-    o.div.drag(function(e, dd, shallow) {
+    }).drag(function(e, dd, shallow) {
         o.pos([refPos[0] + dd.deltaX, refPos[1] + dd.deltaY]);
-        if (o.focused() && shallow!="yes") { 
-            var selection = $(o.apps.focused.divs()).not(o.div);
-            selection.trigger('drag', [dd, "yes"]) 
-        }
-        e.stopPropagation();
-    }, { handle : '.drag' } );
+    });
     o.layer(o.layer());
       
     o = o.type(o); // add type-specific properties
