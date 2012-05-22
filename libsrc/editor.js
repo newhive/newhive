@@ -1226,52 +1226,50 @@ Hive.App.Audio.Controls = function(common) {
 }
 
 
-// For selecting multilpe Apps. Not implemented
-Hive.select_start = function(e, dd) {
-    var o = Hive.selection = {};
-    o.selected = [];
-    $('.app_select').remove();
-    o.div = $("<div class='app_select'>");
-    o.select_box = $("<div class='select_box border selected dragbox'>").css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
-    $(document.body).append(o.div);
-    o.div.append(o.select_box);
-    o.start = [e.pageX, e.pageY];
-    if (e.shiftKey || e.ctrlKey){
-        o.initial_elements = $.extend({}, Hive.OpenApps.focused.elements);
-    } else {
-        o.initial_elements = [];
+// For selecting multilpe Apps with a click and drag motion
+Hive.selection = {
+    update_focus: function(event, force){
+        var o = Hive.selection;
+        // TODO: remove this offset when we base app positions on 0 = top of window
+        var nav_bar_offset = 50;
+        var select = { top: o.pos[1] - nav_bar_offset, right: o.pos[0] + o.dims[0], bottom: o.pos[1] + o.dims[1] - nav_bar_offset, left: o.pos[0]};
+        o.old_selection = o.selected;
+        o.selected = $.grep(Hive.OpenApps, function(el){
+            var dims = el.dims();
+            var pos = el.pos();
+            var app = { top: pos[1], right: pos[0] + dims[0], bottom: pos[1] + dims[1], left: pos[0]};
+            return (select.top <= app.top && select.left <= app.left && select.right >= app.right && select.bottom >= app.bottom)
+        });
+        if (force || o.old_selection.length != o.selected.length){
+            Hive.OpenApps.focused.focus($.unique($.merge(o.selected, o.initial_elements)));
+        }
+    },
+    dragstart: function(e, dd) {
+        var o = Hive.selection;
+        o.selected = [];
+        $('.app_select').remove();
+        o.div = $("<div class='app_select'>");
+        o.select_box = $("<div class='select_box border selected dragbox'>").css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
+        $(document.body).append(o.div);
+        o.div.append(o.select_box);
+        o.start = [e.pageX, e.pageY];
+        if (e.shiftKey || e.ctrlKey){
+            o.initial_elements = $.extend({}, Hive.OpenApps.focused.elements);
+        } else {
+            o.initial_elements = [];
+        }
+    },
+    drag: function(e, dd) {
+        var o = Hive.selection;
+        o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
+        o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
+        o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
+        Hive.selection.update_focus(e);
+    },
+    dragend: function() {
+        Hive.selection.update_focus();
+        Hive.selection.div.remove();
     }
-};
-Hive.select_move = function(e, dd) {
-    var o = Hive.selection;
-    o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
-    o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
-    o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
-    Hive.update_focus(e);
-};
-Hive.update_focus = function(event, force){
-    var o = Hive.selection;
-    // TODO: remove this offset when we base app positions on 0 = top of window
-    var nav_bar_offset = 50; 
-    var select = { top: o.pos[1] - nav_bar_offset, right: o.pos[0] + o.dims[0], bottom: o.pos[1] + o.dims[1] - nav_bar_offset, left: o.pos[0]};
-    o.old_selection = o.selected;
-    o.selected = $.grep(Hive.OpenApps, function(el){
-        var dims = el.dims();
-        var pos = el.pos();
-        var app = { top: pos[1], right: pos[0] + dims[0], bottom: pos[1] + dims[1], left: pos[0]};
-        return (select.top <= app.top && select.left <= app.left && select.right >= app.right && select.bottom >= app.bottom)
-    });
-    if (force || o.old_selection.length != o.selected.length){
-        Hive.OpenApps.focused.focus($.unique($.merge(o.selected, o.initial_elements)));
-    }
-};
-Hive.select_finish = function() {
-    Hive.update_focus();
-    Hive.selection.div.remove();
-    //if(!Hive.selection.selected.length) Hive.select_none();
-};
-Hive.select_none = function() {
-    Hive.selection = false;
 };
 
 Hive.new_app = function(s, offset) {
@@ -1373,9 +1371,9 @@ var main = function() {
         if (!hit) focused().unfocus();
     });
 
-    $(document.body).drag(Hive.select_move);
-    $(document.body).drag('start', Hive.select_start);
-    $(document.body).drag('end', Hive.select_finish);
+    $(document.body).drag(Hive.selection.drag);
+    $(document.body).drag('start', Hive.selection.dragstart);
+    $(document.body).drag('end', Hive.selection.dragend);
 
     $(document.body).filedrop({
          data : { action : 'file_create' }
@@ -1387,9 +1385,6 @@ var main = function() {
 
     $(document).keydown(function(e){ 
         Hive.OpenApps.focused.each(function(i, el){ el.keyPress(e) });
-        //for (i=0; i< Hive.OpenApps.focused.length(); i++){
-        //    Hive.OpenApps.focused[i].keyPress(e);
-        //}
     });
     $(window).resize(function(e) {
         map(function(a) {
