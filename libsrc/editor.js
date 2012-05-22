@@ -675,7 +675,7 @@ Hive.App.Text = function(common) {
     o.mode = function(mode) {
         if (mode == 'drag') {
             o.rte.editMode(false);
-            o.shield({cursor: 'text'});
+            o.shield();
         } else if (mode == 'edit'){
             o.rte.removeBreaks();
             o.rte.editMode(true);
