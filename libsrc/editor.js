@@ -1257,6 +1257,13 @@ Hive.selection = {
         }
     },
     dragstart: function(e, dd) {
+
+        // Don't do anything if user is dragging one of the controls. This
+        // should probably be handled with jQuery.event.stopPropagation, but we
+        // are triggering drag events on app div from the drag handler for the
+        // controls, so the situation is more complicated.
+        if ($(e.target).hasClass('ehapp')) return;
+
         var o = Hive.selection;
         o.selected = [];
         $('.app_select').remove();
@@ -1273,6 +1280,7 @@ Hive.selection = {
         }
     },
     drag: function(e, dd) {
+        if ($(e.target).hasClass('ehapp')) return;
         var o = Hive.selection;
         o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
         o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
@@ -1280,6 +1288,7 @@ Hive.selection = {
         Hive.selection.update_focus(e);
     },
     dragend: function(e, dd) {
+        if ($(e.target).hasClass('ehapp')) return;
         var o = Hive.selection;
         if (o.pos) {
             o.update_focus();
