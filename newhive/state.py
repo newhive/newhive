@@ -916,7 +916,7 @@ class File(Entity):
         k = S3Key(b)
         k.name = id
         k.set_contents_from_file(file, headers={ 'Content-Disposition' : 'inline; filename=' + name,
-            'Content-Type' : self['mime'], 'Expires': format_date_time(now() + 86400 * 3650) })
+            'Content-Type' : self['mime'], 'Cache-Control': 'max-age=' + str(86400 * 3650) })
         k.make_public()
         return k.generate_url(86400 * 3600, query_auth=False)
 

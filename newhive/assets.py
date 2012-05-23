@@ -3,7 +3,6 @@ import os
 import json
 from boto.s3.key import Key as S3Key
 from boto.s3.connection import S3Connection
-from wsgiref.handlers import format_date_time
 from newhive import config
 from newhive.manage import git
 from newhive.utils import lget, now
@@ -38,10 +37,6 @@ class Assets:
 
     # upload each asset
     def push_s3(self):
-        # assets expire 10 years from now (we rely on cache busting query string)
-        now_stamp = int(now())
-        expires = format_date_time(now() + 86400 * 3650)
-
         versions_key_name = '.versions.json'
         versions_key = self.asset_bucket.get_key(versions_key_name)
         old_versions = json.loads(versions_key.get_contents_as_string()) if versions_key else {}
@@ -55,7 +50,8 @@ class Assets:
                 print 'uploading: '+ name
                 k = S3Key(self.asset_bucket)
                 k.name = name
-                k.set_contents_from_filename(path, headers={'Expires': expires})
+                # assets expire 10 years from now (we rely on cache busting query string)
+                k.set_contents_from_filename(path, headers={'Cache-Control': 'max-age=' + str(86400 * 3650) })
                 k.make_public()
 
         new_versions = dict([(r[0], r[1][1]) for r in self.assets.iteritems()]) # make name: version dict
