@@ -693,8 +693,12 @@ Hive.App.Text = function(common) {
     }
 
     var refScale = o.state.scale ? o.state.scale : 1;
-    o.div.drag('start', function() { refScale = scale; });
-    o.div.drag('end', function() { o.resize(o.dims()); });
+    o.div.drag('start', function() {
+        refScale = scale;
+    });
+    o.div.drag('end', function() {
+        o.resize(o.dims());
+    });
     
     o.calcHeight = function() {
         if(is_chrome) {
@@ -1266,9 +1270,10 @@ Hive.selection = {
         o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
         Hive.selection.update_focus(e);
     },
-    dragend: function() {
-        Hive.selection.update_focus();
-        Hive.selection.div.remove();
+    dragend: function(e, dd) {
+        var o = Hive.selection;
+        if (o.pos) o.update_focus();
+        if (o.div) o.div.remove();
     }
 };
 
