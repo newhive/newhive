@@ -88,6 +88,14 @@ Hive.Group = function(){
     o.remove = function(element) { o.elements = $.grep(o.elements, function(el){ return el !== element }); };
 
     o.each = function(fn){ $.each(o.elements, fn) };
+    o.bounds = function() { 
+        return {
+            left:   Array.min($.map(o.elements, function(el){ return el.pos()[0]})),
+            right:  Array.max($.map(o.elements, function(el){ return el.pos()[0] + el.dims()[0]})),
+            top:    Array.min($.map(o.elements, function(el){ return el.pos()[1]})),
+            bottom: Array.max($.map(o.elements, function(el){ return el.pos()[1] + el.dims()[1]}))
+        };
+    };
     return o;
 
 };
@@ -1273,9 +1281,21 @@ Hive.selection = {
     },
     dragend: function(e, dd) {
         var o = Hive.selection;
-        if (o.pos) o.update_focus();
+        if (o.pos) {
+            o.update_focus();
+            var focused = Hive.OpenApps.focused.elements;
+            var bounds = Hive.OpenApps.focused.bounds();
+            console.log(bounds);
+        }
         if (o.div) o.div.remove();
     }
+};
+
+Array.max = function( array ){
+    return Math.max.apply( Math, array );
+};
+Array.min = function( array ){
+    return Math.min.apply( Math, array );
 };
 
 Hive.new_app = function(s, offset) {
