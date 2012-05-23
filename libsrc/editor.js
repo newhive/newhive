@@ -1232,7 +1232,7 @@ Hive.App.Audio.Controls = function(common) {
 
 // For selecting multilpe Apps with a click and drag motion
 Hive.selection = {
-    update_focus: function(event, force){
+    update_focus: function(event){
         var o = Hive.selection;
         // TODO: remove this offset when we base app positions on 0 = top of window
         var nav_bar_offset = 50;
@@ -1244,7 +1244,7 @@ Hive.selection = {
             var app = { top: pos[1], right: pos[0] + dims[0], bottom: pos[1] + dims[1], left: pos[0]};
             return (select.top <= app.top && select.left <= app.left && select.right >= app.right && select.bottom >= app.bottom)
         });
-        if (force || o.old_selection.length != o.selected.length){
+        if (o.old_selection.length != o.selected.length){
             Hive.OpenApps.focused.focus($.unique($.merge(o.selected, o.initial_elements)));
         }
     },
@@ -1261,6 +1261,7 @@ Hive.selection = {
             o.initial_elements = $.extend({}, Hive.OpenApps.focused.elements);
         } else {
             o.initial_elements = [];
+            Hive.OpenApps.focused.unfocus();
         }
     },
     drag: function(e, dd) {
