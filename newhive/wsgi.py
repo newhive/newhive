@@ -78,9 +78,9 @@ hive_assets.write_ruby('libsrc/scss/compiled.asset_paths.rb')
 hive_assets.write_js('libsrc/compiled.asset_paths.js')
 
 print('Compiling css and js...')
-assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
-assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
-    'drag.js', 'dragndrop.js', 'colors.js', 'util.js', 'compiled.asset_paths.js', filters='yui_js', output='../lib/app.js')
+assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', filters='yui_js', output='../lib/edit.js')
+assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'util.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
+    'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', 'colors.js', filters='yui_js', output='../lib/app.js')
 assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
 
 assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js', output='../lib/admin.js')

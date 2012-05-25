@@ -7,7 +7,7 @@
     src: asset_url('fonts/#{$file}-webfont.eot') format('embedded-opentype'),
          asset_url('fonts/#{$file}-webfont.woff') format('woff'),
          asset_url('fonts/#{$file}-webfont.ttf') format('truetype'),
-         asset_url('fonts/#{$file}-webfont.svg') + '#' + $svg_id format('svg');
+         asset_url('fonts/#{$file}-webfont.svg', '#' + $svg_id) format('svg');
     font-weight: $weight; 
     font-style: $style; 
   }

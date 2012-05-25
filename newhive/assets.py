@@ -63,7 +63,9 @@ class Assets:
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
         if not props: return '/not_found:' + name
-        return self.base_url + name + ('?' + props[1] if props[1] else '')
+        path = self.base_url + name
+        return path
+        return path + '?' + props[1] if props[1] else ''
 
     def write_ruby(self, write_path):
         with open(join(config.src_home, write_path), 'w') as f:
