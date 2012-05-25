@@ -29,9 +29,6 @@ Hive.makeShuffleable = function(arr) {
     }
 }
 
-// collection object for all App objects in page. An App is a widget
-// that you can move, resize, and copy. Each App type has more specific
-// editing functions.
 Hive.Group = function(){
     var o = {elements: []};
 
@@ -45,29 +42,28 @@ Hive.Group = function(){
             }
         });
         o.elements = new_focused;
-        //while (this.length) {
-        //    if (!app || app === current_app){
-        //        var current_app = this.pop();
-        //        current_app.unfocus();
-        //    } else {
-        //        new_focused.push
-        //    });
-        //}
     }
-    o.focus = function(app){
-        // Unfocus all apps except the requested app
-        if (o.length()){
-        $.each(o.elements, function(i, current_app){
-           current_app.unfocus();
+
+    o.focus = function(apps, opts){
+        // Focus only the requested app(s)
+        opts = $.extend({}, opts);
+        if (! $.isArray(apps) ) apps = [apps];
+
+        // Previously unfocused elements that should be focused
+        $.each(apps, function(i, el) {
+            if (el.focused()) return;
+            el.focus({multi: true});
         });
-        if (app){
-            app.focus();
-            o.elements = [new_focused];
-        } else {
-            o.elements = [];
-        }
-    }
-    }
+
+        // Previously focused elements that should be unfocused
+        var prev = [];
+        $.each(o.elements, function(i, el){
+            if (!inArray(apps, el)) {
+                opts.union ? prev.push(el) : el.unfocus();
+            }
+        });
+        o.elements = $.merge(prev, apps);
+    };
 
     o.divs = function(){
         return $.map(o.elements, function(a){ return a.div[0] });
@@ -75,17 +71,38 @@ Hive.Group = function(){
 
     o.layout = function(){
         for (i=0; i<o.elements.length; i++){
-            o.elements.controls.layout();
+            o.elements[i].controls.layout();
         }
     }
     o.length = function(){ 
         return o.elements.length 
     };
-    o.push = function(element) { return o.elements.push(element) };
+    o.push = function(element) { 
+        if (element.focused()) return;
+        o.elements.push(element);
+        if (o.length() > 1){
+            o.each(function(i, el){ el.sharedFocus(); });
+        }
+        return element;
+    };
+    o.remove = function(element) { o.elements = $.grep(o.elements, function(el){ return el !== element }); };
+
     o.each = function(fn){ $.each(o.elements, fn) };
+    o.bounds = function() { 
+        return {
+            left:   Array.min($.map(o.elements, function(el){ return el.pos()[0]})),
+            right:  Array.max($.map(o.elements, function(el){ return el.pos()[0] + el.dims()[0]})),
+            top:    Array.min($.map(o.elements, function(el){ return el.pos()[1]})),
+            bottom: Array.max($.map(o.elements, function(el){ return el.pos()[1] + el.dims()[1]}))
+        };
+    };
     return o;
 
 };
+
+// collection object for all App objects in page. An App is a widget
+// that you can move, resize, and copy. Each App type has more specific
+// editing functions.
 Hive.Apps = function(initial_state) {
     var o = [];
     
@@ -193,20 +210,42 @@ Hive.App = function(initState) {
     }
     
     o.make_controls = [];
+    o.add_select_box = function(){
+        if (!o.select_box){
+            o.select_box = $("<div class='select_box drag border selected'>").css({top: '-9px', left: '-9px', padding: '4px'});
+            o.div.append(o.select_box);
+        }
+        return o.select_box;
+    };
+
     o.focus = Funcs(function(args) {
-        var multi = args && args.event && args.event.shiftKey;
-        if(o.focused()) return;
-        if(o.apps.focused && !multi) o.apps.focused.unfocus();
+        o.add_select_box();
+        var multi = args && Hive.multi_test(args);
+        if (multi) {
+            if (o.focused()) {
+                o.unfocus();
+                // Now that the target element is unfocused, we stop
+                // propagation so the click doesn't count as outside all
+                // focused elements, resulting in unfocusing everything
+                args.event.stopPropagation();
+                return;
+            }
+        } else {
+            o.apps.focused.unfocus();
+            if(!o.controls) o.controls = Hive.App.Controls(o);
+        }
         o.apps.focused.push(o);
-        if(!o.controls) o.controls = Hive.App.Controls(o);
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
-        //o.apps.focused = null;
+        if(o.select_box) {
+            o.select_box.remove();
+            o.select_box = false;
+        }
+        o.apps.focused.remove(o);
     });
+    o.sharedFocus = Funcs(function(){ if (o.controls) o.controls.div.find('.control').hide(); });
     o.focused = function() { return inArray(o.apps.focused.elements, o) }
-    o.dragstart = Funcs(function() { o.dragging = true; });
-    o.dragend = Funcs(function() { o.dragging = false; });
 
     o.keyPress = function(e){
         var nudge = function(dx,dy){
@@ -219,10 +258,10 @@ Hive.App = function(initState) {
         }
 
         var handlers = {
-            37: nudge(-1,0)
-            , 38: nudge(0,-1)
-            , 39: nudge(1,0)
-            , 40: nudge(0,1)
+            37: nudge(-1,0)   // Left
+            , 38: nudge(0,-1) // Up
+            , 39: nudge(1,0)  // Right
+            , 40: nudge(0,1)  // Down
         }
         handlers[e.keyCode] && handlers[e.keyCode]();
     };
@@ -294,7 +333,9 @@ Hive.App = function(initState) {
 
     o.load = Funcs(function() {
         o.opacity(o.state.opacity);
-        o.content_element.addClass('content').click(function(e) { o.focus({event: e}); });
+        o.content_element.addClass('content').click(function(e) {
+            o.focus({event: e});
+        });
         if(o.state.load) o.state.load(o);
         delete o.state.load;
         delete o.state.create;
@@ -307,20 +348,14 @@ Hive.App = function(initState) {
     o.pos_n(o.state.position);
     o.dims_n(o.state.dimensions);
     var refPos;
-    o.div.drag('start', function(e, shallow) { 
-        if (o.focused() && shallow!="yes" ) { 
-            $(o.apps.focused.divs()).not(o.div).trigger('dragstart', "yes");
-        }
+    o.div.drag('init', function(){
+        if ( inArray(Hive.OpenApps.focused.divs(), this) )
+            return $(Hive.OpenApps.focused.divs());
+    }).drag('start', function(e, shallow) { 
         refPos = o.pos(); 
-    });
-    o.div.drag(function(e, dd, shallow) {
+    }).drag(function(e, dd, shallow) {
         o.pos([refPos[0] + dd.deltaX, refPos[1] + dd.deltaY]);
-        if (o.focused() && shallow!="yes") { 
-            var selection = $(o.apps.focused.divs()).not(o.div);
-            selection.trigger('drag', [dd, "yes"]) 
-        }
-        e.stopPropagation();
-    }, { handle : '.drag' } );
+    });
     o.layer(o.layer());
       
     o = o.type(o); // add type-specific properties
@@ -408,8 +443,7 @@ Hive.App.Controls = function(app) {
     o.hover_menu = function(h, d, o) { return hover_menu(h, d, $.extend({offsetY : 5}, o)) };
 
     o.div = $("<div style='position : absolute; z-index : 3; width : 0; height : 0' class='controls'>");
-    o.select_box = $("<div class='select_box drag border selected'>");
-    o.app.div.append(o.select_box);
+    o.select_box = o.app.add_select_box();
     $('body').append(o.div);
     o.addControls($('#controls_common'));
     var d = o.div;
@@ -428,7 +462,7 @@ Hive.App.Controls = function(app) {
     });
     d.find('.stack_up').click(o.app.stackTop);
     d.find('.stack_down').click(o.app.stackBottom);
-    o.padding = 0;
+    o.padding = 4;
 
     o = reduce(function(o, f) { return f(o) }, o.app.make_controls, o);
 
@@ -453,14 +487,16 @@ Hive.App.has_shield = function(o, opts) {
     if (typeof(opts) == "undefined") opts = {};
     o.dragging = false;
 
-    o.shield = function(opts) {
-        if (typeof(opts) == 'undefined') opts = {};
+    o.shield = function(sheild_opts) {
+        if (typeof(sheild_opts) == 'undefined') sheild_opts = {};
         if(o.eventCapturer) return;
         o.eventCapturer = $("<div class='drag shield'>");
-        o.eventCapturer.click(function(e) { o.focus({event: e}); });
+        o.eventCapturer.click(function(e) {
+            o.focus({event: e});
+        });
         o.div.append(o.eventCapturer);
         o.eventCapturer.css('opacity', 0.0);
-        if(opts.cursor) o.eventCapturer.css('cursor', opts.cursor);
+        if(sheild_opts.cursor) o.eventCapturer.css('cursor', sheild_opts.cursor);
     }
     o.unshield = function() {
         if (opts.always) return;
@@ -473,8 +509,8 @@ Hive.App.has_shield = function(o, opts) {
         else o.unshield();
     }
 
-    o.focus.add(o.set_shield)
-    o.unfocus.add(o.set_shield)
+    o.focus.add(o.set_shield);
+    o.unfocus.add(o.set_shield);
 
     o.div.drag('start', function() {
         o.dragging = true;
@@ -483,10 +519,7 @@ Hive.App.has_shield = function(o, opts) {
     o.div.drag('end', function() {
         o.dragging = false;
         o.set_shield();
-        return false;
     });
-    o.dragstart.add(o.set_shield);
-    o.dragend.add(o.set_shield);
 }
 
 Hive.App.has_resize = function(o) {
@@ -583,7 +616,7 @@ Hive.App.Html = function(common) {
     o.content_element = $(o.state.content).addClass('content');
     o.div.append(o.content_element);
     if(o.content_element.is('object') || o.content_element.is('embed') || o.content_element.is('iframe')) {
-        Hive.App.has_shield(o);
+        Hive.App.has_shield(o, {always: true});
         o.set_shield = function() { o.shield(); }
         o.shield();
     }
@@ -633,7 +666,7 @@ Hive.App.Text = function(common) {
     }
 
     o.focus.add(function(args) {
-        multi = args && args.event && args.event.shiftKey;
+        var multi = args && Hive.multi_test(args);
         if (multi) {
             o.mode('drag');
         } else {
@@ -645,15 +678,20 @@ Hive.App.Text = function(common) {
         o.rte.set_content(autoLink(o.rte.get_content()));
         o.rte.addBreaks();
     });
+    o.sharedFocus.add(function(){
+        o.mode('drag');
+    });
 
     o.mode = function(mode) {
         if (mode == 'drag') {
             o.rte.editMode(false);
-            o.shield({cursor: 'text'});
+            o.shield();
         } else if (mode == 'edit'){
             o.rte.removeBreaks();
             o.rte.editMode(true);
+            o.unshield();
         }
+        o._current_mode = mode;
     };
     
     o.link = function(v) {
@@ -664,8 +702,12 @@ Hive.App.Text = function(common) {
     }
 
     var refScale = o.state.scale ? o.state.scale : 1;
-    o.div.drag('start', function() { refScale = scale; });
-    o.div.drag('end', function() { o.resize(o.dims()); });
+    o.div.drag('start', function() {
+        refScale = scale;
+    });
+    o.div.drag('end', function() {
+        o.resize(o.dims());
+    });
     
     o.calcHeight = function() {
         if(is_chrome) {
@@ -696,8 +738,6 @@ Hive.App.Text = function(common) {
 
     function controls(common) {
         var o = $.extend({}, common);
-
-        o.padding = 5;
 
         o.addControls($('#controls_text'));
 
@@ -755,13 +795,21 @@ Hive.App.Text = function(common) {
         });
         o.select_box.click(function(){
             o.app.mode('drag');
-            o.app.shield({cursor: 'text'});
+            //o.app.shield({cursor: 'text'});
         });
 
         return o;
     }
     o.make_controls.push(controls);
 
+    var refMode;
+    o.div.drag('start', function(){
+        refMode = o._current_mode;
+        o.mode('drag');
+    });
+    o.div.drag('end', function(){
+        o.mode(refMode);
+    });
     o.div.addClass('text');
     o.set_shield();
     o.rte = Hive.rte({ css : $('#css_minimal').clone(), parent : o.div,
@@ -799,13 +847,12 @@ Hive.App.has_rotate = function(o) {
         o.rotateHandle.drag('start', function(e, dd) {
             refAngle = angle;
             offsetAngle = o.getAngle(e);
-            o.app.dragstart();
         }).drag(function(e, dd) {
             angle = o.getAngle(e) - offsetAngle + refAngle;
             if (e.shiftKey && Math.abs(angle - angleRound(angle)) < 10) angle = angleRound(angle);
             o.app.angle(angle);
             o.select_box.rotate(angle);
-        }).drag('end', function(e, dd) { o.app.dragend(); });
+        });
         o.select_box.rotate(o.app.angle());
 
         return o;
@@ -983,7 +1030,6 @@ Hive.App.Rectangle = function(common) {
             o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
         };
 
-        o.select_box.hide();
         o.addControls($('#controls_rectangle'));
         append_color_picker(o.div.find('.drawer.fill'), o.app.css_setter('color'), state.color);
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
@@ -1193,28 +1239,64 @@ Hive.App.Audio.Controls = function(common) {
 }
 
 
-// For selecting multilpe Apps. Not implemented
-Hive.select_start = function(e, dd) {
-    var o = Hive.selection = {};
-    o.selected = [];
-    o.div = $("<div class='app_select'>");
-    o.select_box = $("<div class='select_box border selected'>");
-    $(document.body).append(o.div);
-    o.div.append(o.select_box);
-    o.start = [e.pageX, e.pageY];
+// For selecting multilpe Apps with a click and drag motion
+Hive.selection = {
+    update_focus: function(event){
+        var o = Hive.selection;
+        // TODO: remove this offset when we base app positions on 0 = top of window
+        var nav_bar_offset = 50;
+        var select = { top: o.pos[1] - nav_bar_offset, right: o.pos[0] + o.dims[0], bottom: o.pos[1] + o.dims[1] - nav_bar_offset, left: o.pos[0]};
+        o.old_selection = o.selected;
+        o.selected = $.grep(Hive.OpenApps, function(el){
+            var dims = el.dims();
+            var pos = el.pos();
+            var app = { top: pos[1], right: pos[0] + dims[0], bottom: pos[1] + dims[1], left: pos[0]};
+            return (select.top <= app.top && select.left <= app.left && select.right >= app.right && select.bottom >= app.bottom)
+        });
+        if (o.old_selection.length != o.selected.length){
+            Hive.OpenApps.focused.focus($.unique($.merge(o.selected, o.initial_elements)));
+        }
+    },
+    dragstart: function(e, dd) {
+        var o = Hive.selection;
+        o.selected = [];
+        $('.app_select').remove();
+        o.div = $("<div class='app_select'>");
+        o.select_box = $("<div class='select_box border selected dragbox'>").css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
+        $(document.body).append(o.div);
+        o.div.append(o.select_box);
+        o.start = [e.pageX, e.pageY];
+        if (e.shiftKey || e.ctrlKey){
+            o.initial_elements = $.extend({}, Hive.OpenApps.focused.elements);
+        } else {
+            o.initial_elements = [];
+            Hive.OpenApps.focused.unfocus();
+        }
+    },
+    drag: function(e, dd) {
+        var o = Hive.selection;
+        o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
+        o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
+        o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
+        Hive.selection.update_focus(e);
+    },
+    dragend: function(e, dd) {
+        var o = Hive.selection;
+        if (o.pos) {
+            o.update_focus();
+            var focused = Hive.OpenApps.focused.elements;
+            var bounds = Hive.OpenApps.focused.bounds();
+            console.log(bounds);
+        }
+        if (o.div) o.div.remove();
+    }
 };
-Hive.select_move = function(e, dd) {
-    var o = Hive.selection;
-    o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
-    o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
-    o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
+
+Array.max = function( array ){
+    return Math.max.apply( Math, array );
 };
-Hive.select_finish = function() {
-    if(!Hive.selection.selected.length) Hive.select_none();
-};
-Hive.select_none = function() {
-    Hive.selection.div.remove();
-    Hive.selection = false;
+Array.min = function( array ){
+    return Math.min.apply( Math, array );
 };
 
 Hive.new_app = function(s, offset) {
@@ -1303,30 +1385,22 @@ var main = function() {
     if(!(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) || /Chrome/.test(navigator.userAgent)))
         showDialog('#editor_browsers');
 
+    // Fallthrough click handler that unfocuses all apps if user clicks on background.
     $(window).click(function(e) {
         if(!Hive.OpenApps.focused.length()) return;
-        var hit = false;//!e.target.parentNode;
+        var hit = false;
         Hive.OpenApps.focused.each(function(i,el){
-            if(!$.contains(el.div.get(0), e.target)){
-                hit = el;
-                //Hive.OpenApps.focused.focus(el);
-            }
+            if( $.contains(el.div.get(0), e.target)
+                || (el.controls && $.contains(el.controls.div.get(0), e.target))
+                || !e.target.parentNode //Target has already been removed from DOM, as in drag shield
+            ) hit = true;
         });
-        Hive.OpenApps.focused.focus(hit);
-        //if (!hit) Hive.OpenApps.focused.unfocus();
-        //for (i=0; i<focused().length(); i++) {
-        //    if(
-        //        $.contains(focused()[i].div.get(0), e.target) 
-        //        || ! e.target.parentNode
-        //        || $.contains($('.controls').get(0), e.target)
-        //    ) {return;}
-        //}
-        //focused().unfocus();
+        if (!hit) focused().unfocus();
     });
 
-    $(document.body).drag('start', function() { return false; });
-    $(document.body).drag(function() { return false; });
-    $(document.body).drag('end', function() { return false; });
+    $(document.body).drag(Hive.selection.drag);
+    $(document.body).drag('start', Hive.selection.dragstart);
+    $(document.body).drag('end', Hive.selection.dragend);
 
     $(document.body).filedrop({
          data : { action : 'file_create' }
@@ -1337,11 +1411,7 @@ var main = function() {
     });
 
     $(document).keydown(function(e){ 
-        console.log("keydown handler");
         Hive.OpenApps.focused.each(function(i, el){ el.keyPress(e) });
-        //for (i=0; i< Hive.OpenApps.focused.length(); i++){
-        //    Hive.OpenApps.focused[i].keyPress(e);
-        //}
     });
     $(window).resize(function(e) {
         map(function(a) {
@@ -2072,3 +2142,7 @@ var append_color_picker = function(container, callback, init_color) {
         return [h, s, v];
     }
 };
+
+Hive.multi_test = function(args) {
+    return args.multi || (args.event && (args.event.shiftKey || args.event.ctrlKey));
+}
