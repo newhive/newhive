@@ -40,7 +40,7 @@
     
       {% if user.logged_in %}
         <div class='nav_icon medbold center'><a class="username" href='{{ home_url }}' title="Your Profile">{{ user['name'] }}</a></div>
-        <img id='user_menu_handle' src='{{ server }}lib/skin/1/drop_arrow_circle.png' class='nav_icon hoverable scale padsm'>
+        <img id='user_menu_handle' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}' class='nav_icon hoverable scale padsm'>
         <a href='{{ feed_url }}'><div id='notifications' class='nav_icon full icon has_count hoverable scale padsm' data-count='{{user.notification_count or 0}}'></div></a>
         <div id='feed_menu' class='menu feed_menu border selected'>
           {% include 'dialogs/feed.html' %}
@@ -97,10 +97,10 @@
           });
         </script>
       {% elif not exp %}
-        <a href='{{ server }}' title="Explore Expressions"><img src='/lib/skin/1/logotype_beta.png' class='nav_icon'></a>
+        <a href='{{ server }}' title="Explore Expressions"><img src='{{ 'skin/1/logotype_beta.png'|asset_url }}' class='nav_icon'></a>
       {% endif %}
       {% if not editing %} {# don't show random button and search in editor #}
-        <a href='{{ server }}random'><img class='nav_icon hoverable scale padsm' src='/lib/skin/1/shuffle.png' title="View Random Expression"></a>
+        <a href='{{ server }}random'><img class='nav_icon hoverable scale padsm' src='{{ 'skin/1/shuffle.png'|asset_url }}' title="View Random Expression"></a>
         <div class="nav_icon center" id="search" >
           <form method='GET' action='{{ server }}search' name='search_form'>
             <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
@@ -138,9 +138,9 @@
         <div class='nav_icon space'></div>
       {% endif %}
       {% if not editing %}
-        <a href='{{ create }}' onclick='return require_login()'><img src='/lib/skin/1/create.png'
+        <a href='{{ create }}' onclick='return require_login()'><img src='{{ 'skin/1/create.png'|asset_url }}'
           class='hoverable nav_icon scale' title='Create new expression' style='padding: 0 2px'></a>
-        <img id='btn_share' src='/lib/skin/1/share.png' class='hoverable nav_icon scale' title='share' style='padding: 0 2px'>
+        <img id='btn_share' src='{{ 'skin/1/share.png'|asset_url }}' class='hoverable nav_icon scale' title='share' style='padding: 0 2px'>
       {% endif %}
       {% block nav_right %}{% endblock %}
       {% if not user.logged_in %}
@@ -148,7 +148,7 @@
         <div id='login_btn' class='hoverable nav_icon medbold center pad btn'>Log In</div>
         <div id='login_menu' class='menu top'>
           <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
-            <img src="/lib/skin/1/fb_sign_in.png" style="margin: 2px 0 2px -4px;">
+            <img src='{{ 'skin/1/fb_sign_in.png'|asset_url }}' style='margin: 2px 0 2px -4px;'>
           </a>
           {% include 'page_parts/log_in.html' %}
         </div>
@@ -184,7 +184,7 @@
   </div>
 
   {% if user.logged_in %}
-    <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='/lib/skin/1/feedback_btn.png' class='top hoverable tip_none' title='Send feedback'>
+    <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='{{ 'skin/1/feedback_btn.png'|asset_url }}' class='top hoverable tip_none' title='Send feedback'>
     <script>
       $('#feedback_btn').click(function() {
         new_window('{{ secure_server }}feedback?url=' + window.location, 470, 400);
@@ -202,6 +202,7 @@
           {% include 'dialogs/referral.html' %}
           {% include 'dialogs/facebook_connect.html' %}
           {% include 'dialogs/sent_invites_thanks.html' %}
+          {% include 'dialogs/relogin.html' %}
       {% else %}
           {% include 'dialogs/sign_in_or_join.html' %}
           {% include 'dialogs/signup.html' %}

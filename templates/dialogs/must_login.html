@@ -7,7 +7,7 @@
 
     <div class='center'>
       <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
-        <img src="/lib/skin/1/fb_sign_in.png">
+        <img src='{{ 'skin/1/fb_sign_in.png'|asset_url }}'>
       </a>
       {% include "page_parts/log_in.html" %}
     </div>
@@ -25,5 +25,5 @@
     &nbsp;drag <span class='active'>+</span> drop, blank canvas <span class='active'>+</span> self publishing tool.&nbsp;</span></div>
   <div class='spacer'></div>
   <div class='spacer'></div>
-  <img src='/lib/skin/1/log_in_overlay.png'>
+  <img src='{{ 'skin/1/log_in_overlay.png'|asset_url }}'>
 </div>

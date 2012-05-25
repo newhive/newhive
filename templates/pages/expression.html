@@ -3,15 +3,16 @@
 {% block meta %}
  <meta property="og:title" content='{{ title |e }}' />
  <meta property="og:type" content="newhive:expression" />
- <meta property="og:image" content='{{ exp.thumb|default('http://thenewhive.com/lib/skin/1/thumb_0.png') | e }}' />
+ <meta property="og:image" content='{{ exp.thumb |e }}' />
  <meta property="fb:admins" content="1007003" />
+ <meta property="description" contents="{{ title |e }}, an expression by {{owner.fullname}}" />
 {% endblock %}
 {% block head %}
  {{super()}}
- <script src='{{ assets_env['expression.js'].urls_with_expiry()[0] }}'></script>
+ <script src='{{ asset_bundle('expression.js')[0] }}'></script>
  <script type='text/javascript'>
-     var expr_id = '{{exp.id}}';
-     var comment_count = {{exp.comment_count}};
+     var expr_id = '{{ exp.id }}';
+     var comment_count = {{ exp.comment_count }};
  </script>
 {% endblock %}
 
@@ -29,13 +30,13 @@
   {% endif %}
 
   <div id = "btn_comment" class="hoverable nav_icon has_count" data-count='{{ exp.comment_count }}' onclick='btn_comment_click();'>
-    <img src='/lib/skin/1/discussion.png' class='hoverable icon full scale' title="Discussions">
+    <img src='{{ 'skin/1/discussion.png'|asset_url }}' class='hoverable icon full scale' title="Discussions">
   </div>
 
   {% if user_is_owner %}
-   <a href='{{ edit }}'><img id='btn_edit' src='/lib/skin/1/edit.png' class='hoverable nav_icon scale' title='edit'></a>
+   <a href='{{ edit }}'><img id='btn_edit' src='{{ 'skin/1/edit.png'|asset_url }}' class='hoverable nav_icon scale' title='edit'></a>
 
-   <img id='btn_delete' src='/lib/skin/1/delete_page.png' class='hoverable nav_icon scale' title='delete'>
+   <img id='btn_delete' src='{{ 'skin/1/delete_page.png'|asset_url }}' class='hoverable nav_icon scale' title='delete'>
    <div id='dia_delete' class='menu medbold' style='padding : 10px; width : 13em;'>
     Are you sure you want
     to delete this page?

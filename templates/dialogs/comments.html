@@ -1,6 +1,6 @@
 <div id='dia_comments'>
   <div class='header'>
-    <img class="icon" src='/lib/skin/1/discussion.png' title='Discussion Icon' />
+    <img class="icon" src='{{ 'skin/1/discussion.png'|asset_url }}' title='Discussion Icon' />
     <h3 class='title'>
      {% if expr.comment_count > 0 %}
       Discussion<span class='comments_count'> ({{ expr.comment_count }})</span>

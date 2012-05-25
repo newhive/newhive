@@ -5,6 +5,7 @@ server_name     = 'thenewhive.com'
 database        = 'hive'
 database_host   = 'localhost'
 database_port   = 27017
+email_port      = 2525
 media_path      = '/home/domains/thenewhive.com'
 dev_prefix      = None
 
@@ -13,6 +14,7 @@ ssl_ca          = False
 aws_id          = False
 aws_secret      = False
 s3_buckets      = []
+asset_bucket    = None
 
 admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack']
 admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',

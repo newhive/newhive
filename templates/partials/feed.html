@@ -2,7 +2,7 @@
 
 {% if feed.class_name == 'InviteNote' %}
   <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}} border_right border_bottom" onclick="showDialog('#dia_referral')">
-    <img src='/lib/skin/1/logo_190x190.png'>
+    <img src='{{ 'skin/1/logo_190x190.png'|asset_url }}'>
     <div class='feed_text'>You have been given <br/>{{ feed.count }} invites!</div>
     <div class="byline">
       <a class="name" href="{{ feed.initiator.url }}">{{ feed.initiator_name }}</a><span class="timestamp">{{ feed.created | time }}</span>
@@ -30,7 +30,7 @@
     {% if feed.entity == user %}
       {{ person_thumb(feed.initiator.get_thumb(70), feed.initiator.fullname) }}
     {% else %}
-      <img src='{{ feed.entity.get_thumb(70) | default("/lib/skin/1/thumb_0.png", True) }}'>
+      <img src='{{ feed.entity.get_thumb(70) }}'>
     {% endif %}
     <div class="feed_text">
       <p>

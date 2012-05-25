@@ -57,7 +57,7 @@ function validate(opts) {
             alert('Please agree to Terms of Service.');
             return false;
         }
-    } else {
+    } else if (!opts.password_recovery) {
         if( ! $('#p0').val().length > 0) {
             alert('Current Password is required to change any profile settings')
             return false;
@@ -120,16 +120,14 @@ var disconnectFacebook = function(){
 }
 
 $(document).ready(function(){
-  {% if update %}
-      var update = true;
-  {% else %} 
-      var update = false;
-  {% endif %}
+  var update = {{ 'true' if update else 'false' }};
+  var password_recovery = {{ 'true' if password_recovery else 'false' }};
+
   $('#name').blur(function(){
     user_check($(this).val());
   });
   $('#form').submit(function(){
-    if (! validate({'update': update})) { return false }
+    if (! validate({'update': update, 'password_recovery': password_recovery})) { return false }
   });
   $('.friend .listen').click(function(){
     $(this).toggleClass('active');
@@ -190,9 +188,11 @@ var profile_thumb_choose = function(){
  <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
 
      <div class="column" id="column_1" style='clear : both; text-align:left; margin : 0 0px 50px 0; vertical-align : top;'>
-       <input type='hidden' name='action' value='{{"user_update" if update else "user_create"}}'>
+       <input type='hidden' name='action' value='{{"password_recovery_2" if password_recovery else "user_update" if update else "user_create"}}'>
        <input type='hidden' name='thumb_file_id' value='{{f.thumb_file_id}}'>
-   
+       {% if password_recovery %}
+           <input type='hidden' name='password_recovery' value='{{password_recovery}}'>
+       {% endif %}
        <b>Username</b><br>
        <input id='name' type='text' name='name' value='{{f.name}}' {{'disabled="disabled"' if update}}><br>
        {# if update %}
@@ -202,7 +202,7 @@ var profile_thumb_choose = function(){
        <br>
    
        <b>Display Name</b><br>
-       <input type='text' name='fullname' value='{{f.fullname}}'><br>
+       <input type='text' name='fullname' value='{{f.fullname}}' {{'disabled="disabled"' if password_recovery}}><br>
        <br>
        <br>
        <b class='error'>Terms of Service</b><br>
@@ -215,7 +215,8 @@ var profile_thumb_choose = function(){
          <span class='inactive'>5.</span> Encourage expression<br>
        </b><br>
 
-       <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false;" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
+       {% set tos_page = 'doc/tos.html'|asset_url %}
+       <a href='{{ tos_page }}' target='_new' onclick="loadDialog('{{ tos_page }}'); return false;" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
        <br>
        
        {% if not update %}
@@ -224,7 +225,7 @@ var profile_thumb_choose = function(){
  
      </div>
      <div class="column" id="column_2">
-       {% if update %}
+       {% if update and not password_recovery %}
        <b>Current Password</b> <span class='required'>*required</span><br>
        <input id='p0' type='password' name='old_password' value='{{f.secret}}'><br>
        <br>
@@ -239,7 +240,7 @@ var profile_thumb_choose = function(){
        <br>
        
        <b>Email</b><br>
-       <input type='text' name='email' value='{{q.email if q.email else f.email}}'><br>
+       <input type='text' name='email' value='{{q.email if q.email else f.email}}' {{'disabled="disabled"' if password_recovery}}><br>
        <br>
 
        {% if not update %}
@@ -294,9 +295,9 @@ var profile_thumb_choose = function(){
          {% endfor %}
        {% endif %}
      {% endif %}
-     {% if update %}
+     {% if update and not password_recovery%}
        {% if not user.has_facebook %}
-         <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'settings']);"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
+         <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'settings']);"><img class='centered' src='{{ 'skin/1/connect_with_fb_lg.png'|asset_url }}'/></a>
        {% else %}
        {% endif %}
      {% endif %}

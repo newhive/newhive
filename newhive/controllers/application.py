@@ -8,9 +8,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ApplicationController(object):
-    def __init__(self, jinja_env, assets_env, db):
+    def __init__(self, jinja_env=None, db=None, assets=None):
         self.jinja_env = jinja_env
-        self.assets_env = assets_env
+        self.assets = assets
+        self.asset = self.assets.url
         self.db = db
         self.content_domain = config.content_domain
         self.fb_client = FacebookClient()
@@ -94,7 +95,6 @@ class ApplicationController(object):
             ,server_name = config.server_name
             ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
             ,debug = config.debug_mode
-            ,assets_env = self.assets_env
             ,use_ga = config.use_ga
             ,ui = ui
             ,template = template
@@ -109,22 +109,30 @@ class ApplicationController(object):
                 , minimize_to: '#user_menu_handle'}"""
             context.update(dialog_to_show = '#dia_facebook_connect', dialog_to_show_opts=dia_opts)
             response.user.unflag('fb_connect_dialog')
-        context.setdefault('icon', '/lib/skin/1/logo.png')
+        context.setdefault('icon', self.asset('skin/1/logo.png'))
         return self.jinja_env.get_template(template).render(context)
 
     def serve_json(self, response, val, as_text = False):
         """ as_text is used when content is received in an <iframe> by the client """
         return self.serve_data(response, 'text/plain' if as_text else 'application/json', json.dumps(val))
 
+    def serve_text(self, response, text):
+        return self.serve_json(response, text, as_text=True)
+
     def serve_404(self, request, response):
         response.status_code = 404
         return self.serve_page(response, 'pages/notfound.html')
 
     def serve_error(self, request, msg, code=500):
-        response = Response()
+        request, response = self.pre_process(request)
         response.status_code = 500
         response.context['msg'] = msg
         return self.serve_page(response, 'pages/error.html')
+
+    def serve_forbidden(self, request):
+        response = Response()
+        response.status_code = 403
+        return self.serve_text(response, 'That action is only available to logged in users.')
 
     def redirect(self, response, location, permanent=False):
         response.location = location

@@ -1,0 +1,16 @@
+* { line-height : 1.2em; }
+html, body, input { font-family : Helvetica, Arial, sans-serif; }
+html, body { margin : 0; padding : 0; color : black; white-space-collapse : discard; font-size : 17px; }
+img { padding : 0; margin : 0; border : 0; }
+a { color : inherit; text-decoration : none; }
+.happ, .ehapp { position : absolute; }
+.happ img { width : 100%; }
+.happfill { position : fixed; top : 0; left : 0; width : 100%; height : 100%; }
+.happfill img { position : absolute; left : 0; top : 0; }
+h1 { font-size : 40px; }
+form { display : inline; }
+
+#body { position : absolute; top : 0; left : 0; min-width : 100%; min-height : 100%; z-index : 1; }
+#content { position : absolute; top : 0; left : 0; z-index : 0; min-width : 100%; }
+
+@import "fonts"

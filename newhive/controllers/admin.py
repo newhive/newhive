@@ -122,7 +122,7 @@ class AdminController(ApplicationController):
             if request.args.has_key('before'): query['created'] = {'$lt': float(request.args.get('before'))}
             if request.args.has_key('after'): query['created'] = {'$gt': float(request.args.get('after'))}
             count = self.db.ErrorLog.count({})
-            page_size = 200
+            page_size = 500
             errors = list(self.db.ErrorLog.search(query, sort=[('created', -1)], limit=page_size))
             response.context['page'] = page
             response.context['newer'] = {'exists': page > 1, 'date': errors[0]['created'], 'page': page - 1}

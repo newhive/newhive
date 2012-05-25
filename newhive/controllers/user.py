@@ -3,7 +3,7 @@ from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from newhive.utils import normalize, junkstr
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
-from newhive import mail
+from newhive import mail, auth
 
 import logging
 logger = logging.getLogger(__name__)
@@ -15,8 +15,6 @@ class UserController(ApplicationController):
         referral = self._check_referral(request)[0]
         if response.context.has_key('dialog_to_show'):
             response.context.pop('dialog_to_show')
-        if not referral:
-            referral = self._check_referral(request)[0]
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
 
@@ -128,6 +126,22 @@ class UserController(ApplicationController):
                 self.db.FriendJoined.create(new_user, friend)
 
     def edit(self, request, response):
+        if request.path.split('/')[0] == "password_recovery":
+            key = request.args.get('key')
+            user_id = request.args.get('user')
+            user = self.db.User.fetch(user_id)
+            if not (key and user and user.get('password_recovery') == key): return self._password_recovery_failure(request, response)
+            response.context['password_recovery'] = key
+            if request.requester.logged_in:
+                auth.handle_logout(self.db, request, response)
+            if user:
+                user.logged_in = True
+                request.requester = user
+            else:
+                return self._password_recovery_failure(request, response)
+        else:
+            response.context['password_recovery'] = False
+
         if request.requester.logged_in and request.is_secure:
             response.context['action'] = 'update'
             response.context['f'] = request.requester
@@ -172,10 +186,35 @@ class UserController(ApplicationController):
             request.requester.new_referral({'to': invite, 'request_id': request_id}, decrement=False)
         return self.serve_json(response, {'success': True})
 
+    def password_recovery_1(self, request, response):
+        email = request.form.get('email')
+        user = self.db.User.find({'email': email})
+        if user:
+            key = junkstr(16)
+            recovery_link = abs_url(secure=True) + 'password_recovery?key=' + key + '&user=' + user.id
+            mail.mail_temporary_password(self.jinja_env, user, recovery_link)
+            user.update(password_recovery = key)
+            return self.serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
+        else:
+            return self.serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
+
+    def password_recovery_2(self, request, response):
+        message = ''
+        key = request.args.get('key')
+        user_id = request.args.get('user')
+        user = self.db.User.fetch(user_id)
+        if user.get('password_recovery') != key: return self._password_recovery_failure(request, response)
+        request.requester = user
+        auth.password_change(request, response, force=True)
+        auth.new_session(self.db, user, request, response)
+        user.update_cmd({'$unset': {'password_recovery': 1}})
+        return self.redirect(response, abs_url())
+
     def update(self, request, response):
         message = ''
         user = request.requester
-        if not user.cmp_password(request.form.get('old_password')): return self.serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
+        if not user.cmp_password(request.form.get('old_password')):
+            return self.serve_json(response, {'success': False, 'message': ui.password_change_failure_message})
         if request.form.get('password'):
             if auth.password_change(request, response):
                 message = message + ui.password_change_success_message + " "
@@ -224,19 +263,6 @@ class UserController(ApplicationController):
         request.requester.update(thumb_file_id = res.id, profile_thumb=res.get_thumb(190,190))
         return { 'name': file.filename, 'mime' : mime, 'file_id' : res.id, 'url' : res.get('url'), 'thumb': res.get_thumb(190,190) }
 
-    def password_recovery(self, request, response):
-        email = request.form.get('email')
-        name = request.form.get('name')
-        user = self.db.User.find(dict(email=email, name=name))
-        if user:
-            password = junkstr(8)
-            mail.mail_temporary_password(self.jinja_env, user, password)
-            user.set_password(password)
-            user.save()
-            return self.serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
-        else:
-            return self.serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
-
     def user_check(self, request, response):
         user_available = False if self.db.User.named(request.args.get('name')) else True
         return self.serve_json(response, user_available)
@@ -256,7 +282,10 @@ class UserController(ApplicationController):
 
     def login(self, request, response):
         if auth.handle_login(self.db, request, response):
-            return self.redirect(response, request.form.get('url', request.requester.url))
+            if request.is_xhr:
+                return self.serve_json(response, {'login': True})
+            else:
+                return self.redirect(response, request.form.get('url', request.requester.url))
 
     def logout(self, request, response):
         auth.handle_logout(self.db, request, response)
@@ -281,6 +310,11 @@ class UserController(ApplicationController):
         response.context['msg'] = msg
         response.context['error'] = 'Log in if you already have an account'
         return self.serve_page(response, 'pages/error.html')
+
+    def _password_recovery_failure(self, request, response):
+        response.context['msg'] = ui.invalid_password_recovery_link
+        return self.serve_page(response, 'pages/error.html')
+
 
     def facebook_listen(self, request, response, args=None):
         t0 = time.time()

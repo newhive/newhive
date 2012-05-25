@@ -366,7 +366,8 @@ Hive.App.Controls = function(app) {
     };
 
     o.append_link_picker = function(d) {
-        var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='/lib/skin/1/delete_sm.png' title='Clear link'></nobr>");
+        var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='" +
+            asset('skin/1/delete_sm.png') +"' title='Clear link'></nobr>");
         d.append(e);
         var input = e.find('input');
         var m = o.hover_menu(d.find('.button.link'), e, {
@@ -763,7 +764,7 @@ Hive.App.Text = function(common) {
 
     o.div.addClass('text');
     o.set_shield();
-    o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
+    o.rte = Hive.rte({ css : $('#css_minimal').clone(), parent : o.div,
         change : throttle(function() { setTimeout(o.refresh_size, 10) }, 200), load : o.load, click : function() { o.controls.close() } });
     o.content_element = $(o.rte.iframe);
     
@@ -791,7 +792,7 @@ Hive.App.has_rotate = function(o) {
             return Math.atan2(y, x) * 180 / Math.PI;
         }
 
-        o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', '/lib/skin/1/rotate.png');
+        o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', asset('skin/1/rotate.png'));
         o.appendControl(o.rotateHandle);
 
         var angleRound = function(a) { return Math.round(a / 45)*45; }
@@ -1174,7 +1175,7 @@ Hive.App.Audio = function(common) {
          // setTimeout(function(){$(that).jPlayer("playHead", 75)}, 10);
         },
         loadeddata: loadeddataCallback,
-        swfPath: server_url + "lib/",
+        swfPath: asset(''),
         supplied: "mp3"
     });
  
@@ -1235,8 +1236,14 @@ Hive.new_file = function(files, opts) {
         var file = files[i];
         var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
 
-        if(file.mime.match(/image\/(png|gif|jpeg)/)) {
-            Hive.Exp.images = Hive.Exp.images.push(file);
+        if(file.mime.match(/text\/html/)){
+            // Not using code for auto-embeding urls that resolve to html
+            // pages because of too many problems with sites that
+            // don't want to be framed. Just link to site instead.
+            // app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
+            $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
+        } else if(file.mime.match(/image\/(png|gif|jpeg)/)) {
+            Hive.Exp.images.push(file);
             $.extend(app, {
                  type: 'hive.image'
                 ,content: file.url
@@ -1244,7 +1251,6 @@ Hive.new_file = function(files, opts) {
         } else if(file.mime.match(/audio\/mpeg/)) {
             $.extend(app, {
                 src: file.url
-                //,content: ($.jPlayer.skin.minimal(file.url, 1))
                 ,type: 'hive.audio'
             });
         } else {
@@ -1257,7 +1263,7 @@ Hive.new_file = function(files, opts) {
 }
 
 var main = function() {
-    if (typeof(Hive.Exp.images) == "undefined") {
+    if (typeof(Hive.Exp.images) == "undefined" || typeof(Hive.Exp.images) == "number") {
         if (typeof(Hive.Exp.apps) == "undefined") {
             Hive.Exp.images = [];
         } else {
@@ -1271,11 +1277,13 @@ var main = function() {
                 }
             });
             if (typeof(Hive.Exp.background.url) != "undefined"){
-                Hive.Exp.images.push({
-                    file_id: Hive.Exp.background.url.match(/[a-f0-9]+$/)[0]
-                    , thumb: Hive.Exp.background.url + "_190x190?v=1"
+                var image = {
+                    thumb: Hive.Exp.background.url + "_190x190?v=1"
                     , url: Hive.Exp.background.url
-                });
+                };
+                var match = Hive.Exp.background.url.match(/[a-f0-9]+$/);
+                if (match !== null) image.file_id = match[0]; // If match doesn't exists it's not on S3
+                Hive.Exp.images.push(image);
             }
         }
     };
@@ -1369,7 +1377,11 @@ var main = function() {
         Hive.Exp.background.opacity = parseFloat($(e.target).val()) / 100;
         Hive.set_bg_img(Hive.Exp.background);
     });
-    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start,
+    var uploadErrorCallback = function(){
+        Hive.upload_finish();
+        alert('Sorry, your file failed to upload');
+    }
+    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback,
         success : function(data) { 
             Hive.Exp.images.push(data);
             data['load'] = Hive.upload_finish; 
@@ -1379,9 +1391,11 @@ var main = function() {
     Hive.set_bg_img(Hive.Exp.background);
     bg_set_color(Hive.Exp.background.color);
 
-    var new_file = function() { asyncUpload({ start : Hive.upload_start, success : Hive.new_file, multiple : true}); };
-    var new_link = function() { asyncUpload({ start : Hive.upload_start, success : function(data) {
-        if(data.error) { Hive.upload_finish(); alert('Sorry, your file failed to upload'); return }
+    var new_file = function() {
+        asyncUpload({ multiple: true, start : Hive.upload_start, success : Hive.new_file, error : uploadErrorCallback});
+    };
+    var new_link = function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback, success : function(data) {
+        if(data.error) { return error(); }
         var app = { type: 'hive.text', content: $('<a>').attr('href', data.url).text(data.name).outerHTML() };
         Hive.new_app(app);
     } }); }
@@ -1463,10 +1477,12 @@ var main = function() {
     $('#btn_thumbnail').click(function() {
         dia_thumbnail = showDialog('#dia_thumbnail');
         var user_thumbs = $.map(Hive.Exp.images, function(app){
-           var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
-           var e = $("<div class='thumb'>").append(img).get(0);
-           return e;
-        })
+           if (typeof(app.file_id) != "undefined") { // Non S3 images can't be used for thumbs
+               var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
+               var e = $("<div class='thumb'>").append(img).get(0);
+               return e;
+           };
+        });
         $('#expr_images').empty().append(user_thumbs);
         $('#dia_thumbnail .thumb img').click(function() {
             setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
@@ -1515,7 +1531,7 @@ $(main);
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app;
 
-    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i)))
+    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i)) || (m = c.match(/http:\/\/youtu.be\/(.*)$/i)))
         app = { type : 'hive.html', content : 
               '<object type="application/x-shockwave-flash" style="width:100%; height:100%" data="http://www.youtube.com/v/' + m[1]
             + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1"><param name="movie" value="http://www.youtube.com/v/' + m[1]
@@ -1528,8 +1544,6 @@ Hive.embed_code = function(element) {
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
 //http://player.vimeo.com/video/                                                   13110687
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>
-    else if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i))
-        app = { type : 'hive.image', content : c }
     else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
@@ -1542,17 +1556,30 @@ Hive.embed_code = function(element) {
         app = { type : 'hive.html', content : embed.outerHTML() };
     }
     else if(c.match(/^https?:\/\//i)) {
+        var error = function(data){
+            alert('Sorry, failed to load url ' + c);
+            Hive.upload_finish();
+        };
         var callback = function(data) {
             if (data.error) {
-                alert('Sorry, failed to load url ' + c);
-                Hive.upload_finish();
-                return;
+                if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i)){
+                    app = { type : 'hive.image', content : c }
+                    Hive.new_app(app);
+                } else {
+                    return error();
+                }
             }
             Hive.new_file(data, { load: Hive.upload_finish });
             $(element).val('');
         }
         Hive.upload_start();
-        $.post(server_url, { action: 'file_create', remote: true, url: c }, callback, 'json');
+        $.ajax(server_url, {
+            data: { action: 'file_create', remote: true, url: c }
+            , success: callback
+            , dataType: 'json'
+            , error: error
+            , type: 'POST'
+        });
         return;
     }
     else {
@@ -1600,7 +1627,9 @@ Hive.save = function() {
 
     var on_error = function(ret) {
         Hive.upload_finish();
-        alert("Your expression failed to save.  It is possible you've been logged off.  Without closing this tab, open thenewhive in another tab and try logging in again, then hit 'Save' again."); 
+        if (ret.status == 403){
+            relogin(function(){ $('#btn_save').click(); });
+        }
         $('#save_submit').removeClass('disabled');
     }
 
@@ -1642,9 +1671,9 @@ Hive.grid = false;
 Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
     var e = $('#btn_grid').get(0);
-    e.src = e.src_d = '/lib/skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png';
+    e.src = e.src_d = asset('skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png');
     $('#grid_guide').css(Hive.grid ?
-          { 'background-image' : "url('/lib/skin/1/grid_square.png')", 'background-repeat' : 'repeat' }
+          { 'background-image' : "url('" + asset('skin/1/grid_square.png') + "')", 'background-repeat' : 'repeat' }
         : { 'background-image' : '' }
     );
 }
@@ -1954,8 +1983,8 @@ var append_color_picker = function(container, callback, init_color) {
     e.append(pickers);
 
     var bar = $("<img class='hue_bar'>");
-    bar.attr('src', '/lib/skin/1/saturated.png');
-    var shades = $("<div class='shades'><img src='/lib/skin/1/greys.png'></div>");
+    bar.attr('src', asset('skin/1/saturated.png'));
+    var shades = $("<div class='shades'><img src='" + asset('skin/1/greys.png') +"'></div>");
     var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
 
     var update_hex = function() {

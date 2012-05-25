@@ -3,11 +3,11 @@
 @mixin ff($file, $family, $svg_id: '', $weight: 400, $style: normal) {
 @font-face { 
     font-family: $family; 
-    src: url('/lib/fonts/#{$file}-webfont.eot'); 
-    src: url('/lib/fonts/#{$file}-webfont.eot?#iefix') format('embedded-opentype'), 
-         url('/lib/fonts/#{$file}-webfont.woff') format('woff'), 
-         url('/lib/fonts/#{$file}-webfont.ttf') format('truetype'), 
-         url('/lib/fonts/#{$file}-webfont.svg#' + $svg_id) format('svg'); 
+    src: asset_url('fonts/#{$file}-webfont.eot');
+    src: asset_url('fonts/#{$file}-webfont.eot') format('embedded-opentype'),
+         asset_url('fonts/#{$file}-webfont.woff') format('woff'),
+         asset_url('fonts/#{$file}-webfont.ttf') format('truetype'),
+         asset_url('fonts/#{$file}-webfont.svg', '#' + $svg_id) format('svg');
     font-weight: $weight; 
     font-style: $style; 
   }
