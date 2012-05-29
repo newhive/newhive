@@ -211,6 +211,8 @@ Hive.App = function(initState) {
     
     o.make_controls = [];
 
+    Hive.has_select_box(o);
+
     o.focus = Funcs(function(args) {
         o.add_select_box();
         var multi = args && Hive.multi_test(args);
@@ -474,7 +476,7 @@ Hive.registerApp = function(app, name) {
 }
 
 /* Show blue select box */
-Hive.App.has_select_box = function(o) {
+Hive.has_select_box = function(o) {
     o.add_select_box = function(){
         if (!o.select_box){
             o.select_box = $("<div class='select_box drag border selected'>").css({top: '-9px', left: '-9px', padding: '4px'});
