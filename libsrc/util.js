@@ -777,9 +777,7 @@ var context_to_string = function(opt_arg){
     }
 };
 
-var asset = function(path) {
-    return debug_mode ? '/lib/libsrc/' + path : '/lib/' + path;
-}
+var asset = function(path) { return hive_asset_paths[path]; }
 
 function sendRequestViaMultiFriendSelector() {
   function requestCallback(response) {

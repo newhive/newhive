@@ -29,12 +29,12 @@
         height: 31px;
         margin: 0;
         float: right;
-        background: url("/lib/skin/1/people_small.png");
+        background: asset_url("skin/1/people_small.png");
         &:hover {
-          background: $color_charcoal url("/lib/skin/1/people_small-hover.png");
+          background: $color_charcoal asset_url("skin/1/people_small-hover.png");
         }
         &.active {
-          background: url("/lib/skin/1/people_small_active.png");
+          background: asset_url("skin/1/people_small_active.png");
         }
       }
     }

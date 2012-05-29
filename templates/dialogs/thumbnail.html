@@ -4,7 +4,7 @@
  <span id='default_thumbs'>
    {% for i in range(6) %}
    <div class="thumb">
-     <img data-file-id="{{i}}" src='/lib/skin/1/thumb_{{i}}.png'>
+     <img data-file-id="{{i}}" src='{{ ('skin/1/thumb_' + i|string +'.png')|asset_url }}'>
    </div>
    {% endfor %}
  </span>

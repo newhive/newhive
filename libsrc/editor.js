@@ -401,7 +401,8 @@ Hive.App.Controls = function(app) {
     };
 
     o.append_link_picker = function(d) {
-        var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='/lib/skin/1/delete_sm.png' title='Clear link'></nobr>");
+        var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='" +
+            asset('skin/1/delete_sm.png') +"' title='Clear link'></nobr>");
         d.append(e);
         var input = e.find('input');
         var m = o.hover_menu(d.find('.button.link'), e, {
@@ -811,7 +812,7 @@ Hive.App.Text = function(common) {
     });
     o.div.addClass('text');
     o.set_shield();
-    o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
+    o.rte = Hive.rte({ css : $('#css_minimal').clone(), parent : o.div,
         change : throttle(function() { setTimeout(o.refresh_size, 10) }, 200), load : o.load, click : function() { o.controls.close() } });
     o.content_element = $(o.rte.iframe);
     
@@ -839,7 +840,7 @@ Hive.App.has_rotate = function(o) {
             return Math.atan2(y, x) * 180 / Math.PI;
         }
 
-        o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', '/lib/skin/1/rotate.png');
+        o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', asset('skin/1/rotate.png'));
         o.appendControl(o.rotateHandle);
 
         var angleRound = function(a) { return Math.round(a / 45)*45; }
@@ -1220,7 +1221,7 @@ Hive.App.Audio = function(common) {
          // setTimeout(function(){$(that).jPlayer("playHead", 75)}, 10);
         },
         loadeddata: loadeddataCallback,
-        swfPath: server_url + "lib/",
+        swfPath: asset(''),
         supplied: "mp3"
     });
  
@@ -1749,9 +1750,9 @@ Hive.grid = false;
 Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
     var e = $('#btn_grid').get(0);
-    e.src = e.src_d = '/lib/skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png';
+    e.src = e.src_d = asset('skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png');
     $('#grid_guide').css(Hive.grid ?
-          { 'background-image' : "url('/lib/skin/1/grid_square.png')", 'background-repeat' : 'repeat' }
+          { 'background-image' : "url('" + asset('skin/1/grid_square.png') + "')", 'background-repeat' : 'repeat' }
         : { 'background-image' : '' }
     );
 }
@@ -2061,8 +2062,8 @@ var append_color_picker = function(container, callback, init_color) {
     e.append(pickers);
 
     var bar = $("<img class='hue_bar'>");
-    bar.attr('src', '/lib/skin/1/saturated.png');
-    var shades = $("<div class='shades'><img src='/lib/skin/1/greys.png'></div>");
+    bar.attr('src', asset('skin/1/saturated.png'));
+    var shades = $("<div class='shades'><img src='" + asset('skin/1/greys.png') +"'></div>");
     var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
 
     var update_hex = function() {

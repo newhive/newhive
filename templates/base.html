@@ -8,10 +8,10 @@
  <meta property="fb:app_id" content="153421698080835" />
  <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
 
- {% for item in assets_env["app.css"].urls_with_expiry() %}
+ {% for item in asset_bundle('app.css') %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
- <link id='css_base' rel='stylesheet' type='text/css' href='{{ assets_env['base.css'].urls_with_expiry()[0] }}'>
+ <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
  <script>
    var logged_in = {{ 'true' if user.logged_in else 'false'}}, server_name = '{{ server_name }}', server_url = '{{ secure_server }}', insecure_server_url = '{{server}}', debug_mode = {{ 'true' if debug else 'false' }};
      var dialog_to_show = {
@@ -26,41 +26,30 @@
  {% else %}
    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
  {% endif %}
- {% for item in assets_env["app.js"].urls_with_expiry() %}
+ {% for item in asset_bundle('app.js') %}
    <script src='{{ item }}'></script>
  {% endfor %}
- {#
-  {% if not debug and not admin %}
-    <!-- Begin Inspectlet Embed Code -->
-    <script type="text/javascript" id="inspectletjs">
-      var __insp = __insp || [];
-      var __inspHost = (("https:" == document.location.protocol) ? "https://www.inspectlet.com" : "http://www.inspectlet.com");
-      document.write(unescape("%3Cscript id='inspsync' src='" + __inspHost + "/inspect_nojquery/1614263783.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <!-- End Inspectlet Embed Code -->
-  {% endif %}
-  #}
-
 
  {% block head %}{% endblock %}
-<script type="text/javascript">
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-22827299-2']);
-  _gaq.push(['_setDomainName', '.thenewhive.com']);
-  _gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
-  //_gaq.push(['_setCustomVar', 2, 'wave{{ user['signup_group']|default('0') }}', '{{ user['name'] }}', 1]);
-  _gaq.push(['_setCustomVar', 2, 'join_date', '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
-  _gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
-  _gaq.push(['_trackPageview']);
- 
-  {% if use_ga %}
-   (function() {
-     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-   })();
-  {% endif %}
-</script>
+
+ <script type="text/javascript">
+   var _gaq = _gaq || [];
+   _gaq.push(['_setAccount', 'UA-22827299-2']);
+   _gaq.push(['_setDomainName', '.thenewhive.com']);
+   _gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
+   //_gaq.push(['_setCustomVar', 2, 'wave{{ user['signup_group']|default('0') }}', '{{ user['name'] }}', 1]);
+   _gaq.push(['_setCustomVar', 2, 'join_date', '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
+   _gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
+   _gaq.push(['_trackPageview']);
+  
+   {% if use_ga %}
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+   {% endif %}
+ </script>
 </head>
 <body class="{% block body_classes %}{{'logged_in' if user.logged_in else "logged_out"}}{{' admin' if admin}} {% endblock %}" >
  {% block main %}{% endblock %}

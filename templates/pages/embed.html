@@ -2,18 +2,18 @@
 
 {% block head %}
  <meta property="og:title" content='{{ title }}' />
- <meta property="og:image" content='{{ exp.thumb|default('/lib/skin/1/thumb_0.png') }}' />
+ <meta property="og:image" content='{{ exp.thumb }}' />
  <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
  <meta property="og:type" content="article" />
  <meta property="fb:admins" content="1007003" />
- <script src='{{ assets_env['expression.js'].urls_with_expiry()[0] }}'></script>
+ <script src='{{ asset_bundle('expression.js')[0] }}'></script>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression minimal{% endblock %}
 
 
 {% block main %}
- <a href='{{ exp.url }}' target='_top'><img src='/lib/skin/1/logo_embed.png' style='position: fixed; left: 5px; bottom: 5px; z-index: 2'></a>
+ <a href='{{ exp.url }}' target='_top'><img src='{{ 'skin/1/logo_embed.png'|asset_url }}' style='position: fixed; left: 5px; bottom: 5px; z-index: 2'></a>
  {% if auth_required %}
   <script>
    $(function() {

@@ -7,8 +7,8 @@ from newhive.state import Page
 
 class CommunityController(ApplicationController):
 
-    def __init__(self, *args):
-        super(CommunityController, self).__init__(*args)
+    def __init__(self, **args):
+        super(CommunityController, self).__init__(**args)
 
         self.pages = {
              'search'                     : self.search
