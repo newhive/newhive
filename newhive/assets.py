@@ -20,10 +20,9 @@ class Assets:
         self.base_url = bucket_url[0:bucket_url.index('?')]
 
     # return (path, name) tuples
-    def find(self, recurse=True, *opt_start_path):
-        start_path = lget(opt_start_path, 0, '')
+    def find(self, start_path='', recurse=True):
         strip = len(self.base_path) + 1
-        
+
         for dirname, subdirs, filenames in os.walk(join(self.base_path, start_path)):
             if not recurse: subdirs[:] = [] # slice prevents subdirs being clobbered with new list
             for n in filenames:
