@@ -28,14 +28,11 @@ import jinja2
 
 from newhive import config
 from newhive.utils import abs_url, now
-from newhive.assets import Assets
+from newhive.assets import HiveAssets
 import newhive.colors
 import newhive.state
 import newhive.manage.git
 import newhive.assets
-
-import webassets
-import webassets.script
 
 import logging
 logger = logging.getLogger(__name__)
@@ -45,80 +42,10 @@ logger.info("Initializing WSGI")
 ##############################################################################
 #                   Ass sets, oh my! (static content tool chain)             #
 ##############################################################################
-def urls_with_expiry(self):
-    urls = self.urls()
-    if self.env.debug:
-        rv = []
-        for u in urls:
-            parts = u.split('?')
-            name = parts[0]
-            query = lget(parts, 1)
-            if not query:
-                query = str(int(os.stat(config.src_home + name).st_mtime))
-            rv.append(name + '?' + query)
-        return rv
-    else:
-        return urls
-webassets.bundle.Bundle.urls_with_expiry = urls_with_expiry
 
-assets_env = webassets.Environment(join(config.src_home, 'libsrc'), '/lib')
-assets_env.updater = 'always'
-assets_env.url_expire = True
-
-# get assets that webasset bundles depend on (just images and fonts), generate scss include
-print('Fetching assets for scss...')
-hive_assets = Assets('lib').find('skin').find('fonts')
-
-if config.debug_mode:
-    assets_env.debug = True
-    assets_env.url = '/lib/libsrc'
-    hive_assets.base_url = '/lib/'
-
-hive_assets.write_ruby('libsrc/scss/compiled.asset_paths.rb')
-hive_assets.write_js('libsrc/compiled.asset_paths.js')
-
-print('Compiling css and js...')
-assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
-assets_env.register('app.js', 'jquery_misc.js', 'util.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
-    'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'colors.js', filters='yui_js', output='../lib/app.js')
-assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
-
-assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js', output='../lib/admin.js')
-assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
-
-scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
-    libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
-app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
-    "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
-    "scss/feed.scss", "scss/expression.scss", "scss/settings.scss",
-    "scss/signup_flow.scss", "scss/chart.scss", "scss/jplayer.scss",
-    filters=scss_filter,
-    output='scss.css',
-    debug=False)
-edit_scss = webassets.Bundle('scss/edit.scss', filters=scss_filter, output='edit.css', debug=False)
-minimal_scss = webassets.Bundle('scss/minimal.scss', filters=scss_filter, output='minimal.css', debug=False)
-
-assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
-assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
-assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
-assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
-
-if not config.debug_mode:
-    assets_env.auto_build = False
-    cmd = webassets.script.CommandLineEnvironment(assets_env, logger)
-    logger.info("Forcing rebuild of webassets"); t0 = time.time()
-    cmd.build()
-    logger.info("Assets build complete in %s seconds", time.time() - t0)
-
-# add the assets we just compiled, and some other misc. assets, push to s3
-print('Syncing all assets to s3...')
-hive_assets.find(recurse=False).find('doc')
+hive_assets = HiveAssets()
+hive_assets.bundle_and_compile()
 hive_assets.push_s3()
-
-def asset_bundle(name):
-    if config.debug_mode: return assets_env[name].urls_with_expiry()
-    else: return [hive_assets.url(name)]
-
 
 ##############################################################################
 #                                jinja setup                                 #
@@ -139,9 +66,8 @@ jinja_env.filters.update({
 })
 jinja_env.globals.update({
      'colors': newhive.colors.colors
-    ,'asset_bundle': asset_bundle
+    ,'asset_bundle': hive_assets.asset_bundle
 })
-    
 
 ##############################################################################
 #                          newhive server setup                              #
