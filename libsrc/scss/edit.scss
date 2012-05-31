@@ -2,12 +2,12 @@
 
 .ehapp, .ehapp > * { position : absolute; }
 .ehapp .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
-.select_box { width : 100%; height : 100%; z-index : 1;}
+.select_border { background-color: $color_selected; position: absolute; }
+.select_box { width: 100%; height:100%; border: 2px dashed $color_selected; }
 .app_select { position : absolute; }
 #grid_guide { position : fixed; width : 100%; height : 100%; }
 
 .content { z-index : 2 }
-.text .select_box { padding : 5px; top : -10px; left : -10px; }
 /* it would be nice to make all .content 100%x100%, but that distorts new images */
 .content.rectangle { width : 100%; height : 100%; }
 .content.sketch { width : 100%; height : 100%; } 

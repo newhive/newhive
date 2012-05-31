@@ -193,10 +193,7 @@ Hive.App = function(initState) {
     
     o.make_controls = [];
 
-    Hive.has_select_box(o);
-
     o.focus = Funcs(function(args) {
-        o.add_select_box();
         var multi = args && Hive.multi_test(args);
         if (multi) {
             if (o.focused()) {
@@ -209,16 +206,12 @@ Hive.App = function(initState) {
             }
         } else {
             o.apps.focused.unfocus();
-            if(!o.controls) o.controls = Hive.App.Controls(o);
         }
+        Hive.App.Controls(o, multi);
         o.apps.focused.push(o);
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
-        if(o.select_box) {
-            o.select_box.remove();
-            o.select_box = false;
-        }
         o.apps.focused.remove(o);
     });
     o.sharedFocus = Funcs(function(){ if (o.controls) o.controls.div.find('.control').hide(); });
@@ -330,15 +323,18 @@ Hive.App = function(initState) {
     $('#content').append(o.div);
     o.pos_n(o.state.position);
     o.dims_n(o.state.dimensions);
-    var refPos;
-    o.div.drag('init', function(){
+
+    o.move_init = function(){
         if ( inArray(Hive.OpenApps.focused.divs(), this) )
             return $(Hive.OpenApps.focused.divs());
-    }).drag('start', function(e, shallow) { 
-        refPos = o.pos(); 
-    }).drag(function(e, dd, shallow) {
-        o.pos([refPos[0] + dd.deltaX, refPos[1] + dd.deltaY]);
-    });
+    };
+    o.move_start = function(){ o.ref_pos = o.pos(); };
+    o.move = function (e, dd, shallow) {
+        var delta = [dd.deltaX, dd.deltaY]
+        if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
+        o.pos([o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1]]);
+    };
+    o.div.drag('init', o.move_init).drag('start', o.move_start).drag(o.move);
     o.layer(o.layer());
       
     o.type(o); // add type-specific properties
@@ -347,28 +343,18 @@ Hive.App = function(initState) {
     return o;
 }
 
-Hive.has_select_box = function(o) {
-    o.add_select_box = function(){
-        if (!o.select_box){
-            o.select_box = $("<div class='select_box drag border selected'>")
-                .css({top: '-9px', left: '-9px', padding: '4px'});
-            o.div.append(o.select_box);
-        }
-        return o.select_box;
-    };
-}
-
 // Generic widgets for all App types. This objects is responsible for the
 // selection border, and all the buttons surounding the App when selected, and for
 // these button's behavior.  App specific behavior is added by
 // Hive.App.Foo.Controls function, and a list of modifiers in app.make_controls
-Hive.App.Controls = function(app) {
-    var o = {};
+Hive.App.Controls = function(app, border_only) {
+    if(app.controls) return;
+    var o = app.controls = {};
     o.app = app;
+    o.border_only = border_only;
 
     o.remove = function() {
         o.div.remove();
-        o.select_box.remove();
         o.app.controls = false;
     };
 
@@ -382,23 +368,21 @@ Hive.App.Controls = function(app) {
 
     o.layout = function() {
         o.pos();
-        var dims = o.get_dims();
+        var dims = o.get_dims(), p = o.padding, ad = o.app.dims(), cx = ad[0] / 2, cy = ad[1] / 2;
 
-        var p = o.padding;
+        o.select_box.css({ left: cx, top: cy });
+        o.select_borders.eq(0).css({ left: -cx -5 - p, top: -cy -5 -p, width: ad[0] + 10 + p * 2 });
+        o.select_borders.eq(1).css({ left: cx + p, top: -cy -p, height: ad[1] + p * 2 });
+        o.select_borders.eq(2).css({ left: -cx -5 - p, top: cy + p, width: ad[0] + 10 + p * 2 });
+        o.select_borders.eq(3).css({ left: -cx -5 - p, top: -cy -p, height: ad[1] + p * 2 });
+        if(o.border_only) return;
+
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
         o.c.copy   .css({ left  : dims[0] - 45 + p, top   : -38 - p });
         o.c.remove .css({ left  : dims[0] - 14 + p, top   : -38 - p });
         o.c.stack  .css({ left  : dims[0] - 78 + p, top   : dims[1] + 8 + p });
         o.c.buttons.css({ left  :  -5 - p, top : dims[1] + p + 10, width : dims[0] - 60 });
     };
-
-    //o.add_select_box = function(){
-    //    if (!o.select_box){
-    //        o.select_box = $("<div class='select_box drag border selected'>").css({top: '-9px', left: '-9px', padding: '4px'});
-    //        o.div.append(o.select_box);
-    //    }
-    //    return o.select_box;
-    //};
 
     o.append_link_picker = function(d) {
         var e = $("<div class='control drawer link'><nobr><input type='text'> "
@@ -439,39 +423,50 @@ Hive.App.Controls = function(app) {
             buttons = $('<div class="control buttons"></div>').appendTo(o.div);
         buttons.append(c);
     }
+
     o.addControl = function(ctrls) { map(o.appendControl, ctrls.clone(false)); };
     o.addButton = function(ctrls) { map(o.appendButton, ctrls.clone(false)); };
     o.addControls = function(ctrls) { map(o.appendControl, ctrls.clone(false).children()); };
     o.hover_menu = function(h, d, o) { return hover_menu(h, d, $.extend({offsetY : 5}, o)) };
 
     o.div = $("<div style='position: absolute; z-index: 3; width: 0; height: 0' class='controls'>");
-    o.select_box = o.app.add_select_box();
+
+    o.select_box = $("<div style='position: absolute'>");
+    var border = $("<div class='select_border drag ehapp'>").css({ width: 5, height: 5 }).get(0);
+    o.select_borders = $([border, border.cloneNode(), border.cloneNode(), border.cloneNode()]);
+    o.select_borders.drag('init', function(){ return Hive.OpenApps.focused.divs() })
+        .drag('start', o.app.move_start).drag(o.app.move);
+    o.div.append(o.select_box.append(o.select_borders));
+
     $('body').append(o.div);
-    o.addControls($('#controls_common'));
-    var d = o.div;
-    o.c = {};
-    //o.c.undo    = d.find('.undo'   );
-    o.c.remove  = d.find('.remove' );
-    o.c.resize  = d.find('.resize' );
-    o.c.stack   = d.find('.stack'  );
-    o.c.remove.click(function() { o.app.remove() });
-    o.c.copy    = d.find('.copy'   );
-    o.c.copy.click(function() {
-        var state = o.app.getState();
-        state.copy = true;
-        var cp = Hive.App(state);
-        cp.pos([cp.pos()[0], cp.pos()[1] + o.app.dims()[1] + 20]);
-    });
-    d.find('.stack_up').click(o.app.stackTop);
-    d.find('.stack_down').click(o.app.stackBottom);
     o.padding = 4;
 
-    o = reduce(function(o, f) { return f(o) }, o.app.make_controls, o);
+    if(!border_only) {
+        o.addControls($('#controls_common'));
+        var d = o.div;
+        o.c = {};
+        //o.c.undo    = d.find('.undo'   );
+        o.c.remove  = d.find('.remove' );
+        o.c.resize  = d.find('.resize' );
+        o.c.stack   = d.find('.stack'  );
+        o.c.remove.click(function() { o.app.remove() });
+        o.c.copy    = d.find('.copy'   );
+        o.c.copy.click(function() {
+            var state = o.app.getState();
+            state.copy = true;
+            var cp = Hive.App(state);
+            cp.pos([cp.pos()[0], cp.pos()[1] + o.app.dims()[1] + 20]);
+        });
+        d.find('.stack_up').click(o.app.stackTop);
+        d.find('.stack_down').click(o.app.stackBottom);
 
-    o.c.buttons = d.find('.buttons');
+        map(function(f){ f(o) }, o.app.make_controls);
+
+        o.c.buttons = d.find('.buttons');
+        d.find('.hoverable').each(function() { hover_add(this) });
+    }
+
     o.layout();
-    d.find('.hoverable').each(function() { hover_add(this) });
-
     return o;
 }
 
@@ -489,44 +484,41 @@ Hive.App.has_shield = function(o, opts) {
     if (typeof(opts) == "undefined") opts = {};
     o.dragging = false;
 
-    o.shield = function(sheild_opts) {
-        if (typeof(sheild_opts) == 'undefined') sheild_opts = {};
-        if(o.eventCapturer) return;
-        o.eventCapturer = $("<div class='drag shield'>");
-        o.eventCapturer.click(function(e) {
-            o.focus({event: e});
-        });
-        o.div.append(o.eventCapturer);
-        o.eventCapturer.css('opacity', 0.0);
-        if(sheild_opts.cursor) o.eventCapturer.css('cursor', sheild_opts.cursor);
+    o.shield = function() {
+        if(o.shield_div) return;
+        o.shield_div = $("<div class='drag shield'>");
+        o.shield_div.click(function(e) { o.focus({event: e}); });
+        o.div.append(o.shield_div);
+        o.shield_div.css('opacity', 0.0);
     }
     o.unshield = function() {
         if (opts.always) return;
-        if(!o.eventCapturer) return;
-        o.eventCapturer.remove();
-        o.eventCapturer = false;
+        if(!o.shield_div) return;
+        o.shield_div.remove();
+        o.shield_div = false;
     }
-    o.set_shield = function() {
-        if(o.dragging || !o.focused()) o.shield();
+    o.set_shield = function(){ return o.dragging || !o.focused() }
+    o.update_shield = function(){
+        if(o.set_shield()) o.shield();
         else o.unshield();
     }
 
-    o.focus.add(o.set_shield);
-    o.unfocus.add(o.set_shield);
+    o.focus.add(o.update_shield);
+    o.unfocus.add(o.update_shield);
 
     o.div.drag('start', function() {
         o.dragging = true;
-        o.set_shield();
+        o.update_shield();
     });
     o.div.drag('end', function() {
         o.dragging = false;
-        o.set_shield();
+        o.update_shield();
     });
 }
 
 Hive.App.has_resize = function(o) {
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addControl($('#controls_misc .resize'));
         o.c.resize = o.div.find('.resize');
@@ -572,8 +564,8 @@ Hive.App.has_resize_h = function(o) {
 
     o.refresh_size = function() { o.resize_h(o.dims()); }
 
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addControl($('#controls_misc .resize_h'));
         o.c.resize_h = o.div.find('.resize_h');
@@ -622,12 +614,12 @@ Hive.App.Html = function(o) {
         || o.content_element.is('iframe'))
     {
         Hive.App.has_shield(o, {always: true});
-        o.set_shield = function() { o.shield(); }
+        o.set_shield = function(){ return true; }
         o.shield();
     }
 
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         var d = o.div;
         d.find('.resize').drag('start', function(e, dd) { o.refDims = o.app.dims(); });
@@ -657,7 +649,6 @@ var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 Hive.App.Text = function(o) {
     var common = $.extend({}, o);
     
-    Hive.App.has_shield(o);
     Hive.App.has_resize(o);
     Hive.App.has_resize_h(o);
 
@@ -670,35 +661,30 @@ Hive.App.Text = function(o) {
         return o.rte.get_content();
     }
 
-    o.focus.add(function(args) {
-        var multi = args && Hive.multi_test(args);
-        if (multi) {
-            o.mode('drag');
-        } else {
-            o.mode('edit');
-        }
-    });
-    o.unfocus.add(function() {
-        o.rte.editMode(false);
-        o.rte.set_content(autoLink(o.rte.get_content()));
-        o.rte.addBreaks();
-    });
-    o.sharedFocus.add(function(){
-        o.mode('drag');
-    });
-
-    o.mode = function(mode) {
-        if (mode == 'drag') {
-            o.rte.editMode(false);
-            o.shield();
-        } else if (mode == 'edit'){
+    o._edit_mode = false;
+    o.edit_mode = function(mode) {
+        if(mode && !o._edit_mode) {
             o.rte.removeBreaks();
             o.rte.editMode(true);
-            o.unshield();
+            o._edit_mode = true;
         }
-        o._current_mode = mode;
-    };
-    
+        else if(o._edit_mode) {
+            o.rte.editMode(false);
+            o.rte.set_content(autoLink(o.rte.get_content()));
+            o.rte.addBreaks();
+            o._edit_mode = false;
+        }
+    }
+    o.focus.add(function(args) {
+        var multi = args && Hive.multi_test(args);
+        if (!multi) o.edit_mode(true);
+    });
+    o.unfocus.add(function(){ o.edit_mode(false) });
+
+    // focus and unfocus handlers for set_shield must be added after handlers that set edit_mode
+    Hive.App.has_shield(o);
+    o.set_shield = function(){ return o.dragging || !o.focused() || !o._edit_mode };
+
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
         v = v.trim();
@@ -741,15 +727,14 @@ Hive.App.Text = function(o) {
         o.refresh_size();
     }
 
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addControls($('#controls_text'));
 
         var d = o.div;
 
         o.link_menu = o.append_link_picker(d.find('.buttons'));
-        o.close = function() { o.link_menu.close(); }
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
@@ -768,17 +753,23 @@ Hive.App.Text = function(o) {
         o.hover_menu(d.find('.button.fontname'), d.find('.drawer.fontname'));
         //cmd_buttons('.fontname .option', function(v) { o.app.rte.css('font-family', v) });
 
-        append_color_picker(d.find('.drawer.color'),
+        Hive.append_color_picker(d.find('.drawer.color'),
             function(v) { o.app.rte.edit('forecolor', v) });
-        o.hover_menu(d.find('.button.color'), d.find('.drawer.color'), { auto_close : false });
+        o.color_menu = o.hover_menu(d.find('.button.color'), d.find('.drawer.color'),
+            { auto_close : false });
 
         //cmd_buttons('.button.bold',   function(v) { o.app.rte.css('font-weight', '700'   , { toggle : '400'   }) });
         //cmd_buttons('.button.italic', function(v) { o.app.rte.css('font-style' , 'italic', { toggle : 'normal'}) });
 
-        o.hover_menu(d.find('.button.align'), d.find('.drawer.align'));
+        o.align_menu = o.hover_menu(d.find('.button.align'), d.find('.drawer.align'));
         //cmd_buttons('.align .option', function(v) { o.app.rte.css('text-align', v, { body : true }) });
 
         //cmd_buttons('.button.unformat', function(v) { o.app.rte.edit('removeformat') });
+
+        o.close_menus = function() {
+            o.link_menu.close();
+            o.color_menu.close();
+        }
 
         $('.option[cmd],.button[cmd]').each(function(i, e) { $(e).click(function() {
             o.app.rte.edit($(e).attr('cmd'), $(e).attr('val'))
@@ -801,27 +792,24 @@ Hive.App.Text = function(o) {
             o.app.div.drag('end');
         });
         o.select_box.click(function(){
-            o.app.mode('drag');
-            //o.app.shield({cursor: 'text'});
+            o.app.edit_mode(false)
+            o.app.update_shield();
         });
 
         return o;
     }
     o.make_controls.push(controls);
 
-    var refMode;
-    o.div.drag('start', function(){
-        refMode = o._current_mode;
-        o.mode('drag');
-    });
-    o.div.drag('end', function(){
-        o.mode(refMode);
-    });
     o.div.addClass('text');
-    o.set_shield();
-    o.rte = Hive.rte({ css: $('#css_minimal').clone(), parent: o.div,
-        change: throttle(function() { setTimeout(o.refresh_size, 10) }, 200), load: o.load,
-        click : function() { o.controls.close() } });
+    o.update_shield();
+    o.rte = Hive.rte({
+        css: $('#css_minimal').clone(), parent: o.div,
+        change: throttle(function() { setTimeout(o.refresh_size, 10) }, 200),
+        load: o.load,
+        // the link and color menus can become sticky, when an input field in the menu is focused
+        // the menus have their own handler to close, but clicks in the rte frame get captured
+        click : function() { if(o.controls && o.controls.close_menus) o.controls.close_menus() }
+    });
     o.content_element = $(o.rte.iframe);
     
     return o;
@@ -838,14 +826,22 @@ Hive.App.has_rotate = function(o) {
     }
     o.load.add(function() { if(o.angle()) o.angle(o.angle()) });
 
-    function controls(common) {
-        var o = $.extend({}, common), refAngle = null, offsetAngle = null;
+    function controls(o) {
+        var common = $.extend({}, o), refAngle = null, offsetAngle = null;
 
         o.getAngle = function(e) {
             var cpos = o.app.centerPos();
             var x = e.pageX - cpos[0];
             var y = e.pageY - cpos[1];
             return Math.atan2(y, x) * 180 / Math.PI;
+        }
+
+        o.layout = function() {
+            common.layout();
+            var p = o.padding;
+            var dims = o.get_dims();
+            o.rotateHandle.css({ left: dims[0] - 20 + o.padding,
+                top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
         }
 
         o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>")
@@ -872,8 +868,8 @@ Hive.App.has_rotate = function(o) {
 //Hive.App.has_percent_
 
 Hive.App.has_slider_menu = function(o, handle, callback, init) {
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         var input = $("<input class='control drawer' type='text' size='2'>");
         o.div.find('.buttons').append(input);
@@ -890,8 +886,8 @@ Hive.App.has_slider_menu = function(o, handle, callback, init) {
     o.make_controls.push(controls);
 }
 Hive.App.has_opacity = function(o) {
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addButton($('#controls_misc .opacity'));
         o.c.opacity = o.div.find('.opacity');
@@ -905,8 +901,8 @@ Hive.App.has_opacity = function(o) {
 }
     
 Hive.App.has_color = function(o, opts) {
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addButton($('#controls_misc .button.color'));
         o.addButton($('#controls_misc .drawer.color'));
@@ -917,7 +913,7 @@ Hive.App.has_color = function(o, opts) {
             o.app.state.color = color;
             opts.callback(color);
         }
-        append_color_picker(o.c.color_drawer, callback, o.app.state.color);
+        Hive.append_color_picker(o.c.color_drawer, callback, o.app.state.color);
         o.hover_menu(o.c.color, o.c.color_drawer, { auto_close : false });
         return o;
 
@@ -969,17 +965,8 @@ Hive.App.Image = function(o) {
         return dims;
     }
 
-    function controls(common) {
-        var o = $.extend({}, common);
-
-        o.layout = function() {
-            common.layout();
-            var p = o.padding;
-            var dims = o.get_dims();
-            if(!o.rotateHandle) o.rotateHandle = o.div.find('.rotate');
-            o.rotateHandle.css({ left: dims[0] - 20 + o.padding,
-                top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
-        }
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addControls($('#controls_image'));
         o.append_link_picker(o.div.find('.buttons'));
@@ -1021,35 +1008,14 @@ Hive.App.Rectangle = function(o) {
         var ps = {}; ps[css_prop] = v; o.set_css(ps);
     } }
 
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
         
-        // Correct for border offset of o.app.content
-        o.get_dims = function() {
-            var dims = o.app.dims();
-            dims = [ dims[0] + parseFloat(state['border-width']) * 2,
-                dims[1] + parseFloat(state['border-width']) * 2];
-            if(dims[0] < 135) dims[0] = 135;
-            if(dims[1] < 40) dims[1] = 40;
-            return dims;
-        };
-
-        o.layout = function() {
-            common.layout();
-            var p = o.padding;
-            var dims = o.get_dims();
-            if(!o.rotateHandle) o.rotateHandle = o.div.find('.rotate');
-            //o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 40, dims[1] - 100) });
-            //o.resizeHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2     , dims[1] -  60) });
-            o.rotateHandle.css({ left: dims[0] - 20 + o.padding,
-                top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
-        };
-
         o.addControls($('#controls_rectangle'));
-        append_color_picker(o.div.find('.drawer.fill'), o.app.css_setter('color'), state.color);
+        Hive.append_color_picker(o.div.find('.drawer.fill'), o.app.css_setter('color'), state.color);
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'),
             { auto_close : false });
-        //append_color_picker(o.div.find('.drawer.stroke'), function(v) {
+        //Hive.append_color_picker(o.div.find('.drawer.stroke'), function(v) {
         //    if(!state['border-width']) o.app.set_css({'border-width':'5px'});
         //    o.layout();
         //    o.app.set_css({'border-color':v});
@@ -1100,23 +1066,11 @@ Hive.App.Sketch = function(o) {
 
     o.focus.add(function() { o.win.focus() });
 
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
         
-        o.layout = function() {
-            common.layout();
-            var p = o.padding;
-            var dims = o.get_dims();
-            if(!o.rotateHandle) o.rotateHandle = o.div.find('.rotate');
-            if(!o.resizeHandle) o.resizeHandle = o.div.find('.resize_h');
-            //o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 40, dims[1] - 100) });
-            //o.resizeHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2     , dims[1] -  60) });
-            o.rotateHandle.css({ left: dims[0] - 20 + o.padding,
-                top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
-        };
-
         o.addControls($('#controls_sketch'));
-        append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, '#000000');
+        Hive.append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, '#000000');
 
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'),
             { auto_close : false });
@@ -1144,7 +1098,7 @@ Hive.App.Sketch = function(o) {
         o.load();
         if(o.state.content) o.set_content(o.state.content);
     });
-    o.set_shield();
+    o.update_shield();
 
     return o;
 };
@@ -1246,22 +1200,17 @@ Hive.App.Audio = function(o) {
         supplied: "mp3"
     });
  
-    o.set_shield = function() { o.shield(); }
-    o.shield();
+    o.set_shield = function() { return true; }
+    o.update_shield();
     setTimeout(function(){ o.load(); }, 100);
     return o;
 }
 Hive.registerApp(Hive.App.Audio, 'hive.audio');
 
-Hive.App.Audio.Controls = function(common) {
-    var o = {};
-    $.extend(o, common);
-    return o;
-}
-
 
 // For selecting multilpe Apps with a click and drag motion
 Hive.selection = {
+    dragging: false,
     update_focus: function(event){
         var o = Hive.selection;
         // TODO: remove this offset when we base app positions on 0 = top of window
@@ -1282,7 +1231,6 @@ Hive.selection = {
         }
     },
     dragstart: function(e, dd) {
-
         // Don't do anything if user is dragging one of the controls. This
         // should probably be handled with jQuery.event.stopPropagation, but we
         // are triggering drag events on app div from the drag handler for the
@@ -1291,6 +1239,7 @@ Hive.selection = {
 
         var o = Hive.selection;
         o.selected = [];
+        o.dragging = true;
         $('.app_select').remove();
         o.div = $("<div class='app_select'>");
         o.select_box = $("<div class='select_box border selected dragbox'>")
@@ -1306,16 +1255,17 @@ Hive.selection = {
         }
     },
     drag: function(e, dd) {
-        if ($(e.target).hasClass('ehapp')) return;
         var o = Hive.selection;
+        if (!o.dragging || $(e.target).hasClass('ehapp')) return;
+
         o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
         o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
         o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
         o.update_focus(e);
     },
     dragend: function(e, dd) {
-        if ($(e.target).hasClass('ehapp')) return;
         var o = Hive.selection;
+        o.dragging = false;
         if (o.pos) { o.update_focus(); }
         if (o.div) o.div.remove();
     }
@@ -1427,7 +1377,7 @@ var main = function() {
                 || !e.target.parentNode //Target has already been removed from DOM, as in drag shield
             ) hit = true;
         });
-        if (!hit) focused().unfocus();
+        if (!hit) Hive.OpenApps.focused.unfocus();
     });
 
     $(document.body).drag(Hive.selection.drag);
@@ -1473,7 +1423,7 @@ var main = function() {
         Hive.bg_div.add('#bg_preview').css('background-color', c);
         Hive.Exp.background.color = c;
     };
-    append_color_picker($('#color_pick'), bg_set_color, Hive.Exp.background.color);
+    Hive.append_color_picker($('#color_pick'), bg_set_color, Hive.Exp.background.color);
     $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
     $('#bg_remove').click(function() { delete Hive.Exp.background.url; Hive.set_bg_img({}); });
     $('#bg_opacity').focus(function() { $('#bg_opacity').focus().select() }).keyup(function(e) {
@@ -2094,7 +2044,7 @@ Hive.rte = function(options) {
     return o;
 }
 
-var append_color_picker = function(container, callback, init_color) {
+Hive.append_color_picker = function(container, callback, init_color) {
     init_color = init_color || '#FFFFFF';
     var e = $('<div>').addClass('color_picker');
     container.append(e);
