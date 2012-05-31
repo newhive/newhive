@@ -30,7 +30,6 @@ class Assets:
                 name = path[strip:]
                 with open(path) as f: version = md5(f.read()).hexdigest()[:8]
                 self.assets[name] = (path, version)
-        self.assets[''] = (None, '') # hack to include empty asset name pointing to base_url
 
         return self
 
@@ -63,7 +62,7 @@ class Assets:
         # TODO: return path of special logging 404 page if asset not found
         if not props: return '/not_found:' + name
         path = self.base_url + name
-        return path + '?' + props[1] if props[1] else ''
+        return path + '?' + props[1]
 
     def write_ruby(self, write_path):
         with open(join(config.src_home, write_path), 'w') as f:
