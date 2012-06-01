@@ -47,6 +47,7 @@ class Assets(object):
             versions_key = S3Key(self.asset_bucket)
             versions_key.name = versions_key_name
 
+        print('Syncing all assets to s3...')
         for name, (path, version) in self.assets.iteritems():
             if not path: continue
             if version != old_versions.get(name):
@@ -56,6 +57,7 @@ class Assets(object):
                 # assets expire 10 years from now (we rely on cache busting query string)
                 k.set_contents_from_filename(path, headers={'Cache-Control': 'max-age=' + str(86400 * 3650) })
                 k.make_public()
+        print("Done Syncing to s3")
 
         new_versions = dict([(r[0], r[1][1]) for r in self.assets.iteritems()]) # make name: version dict
         versions_key.set_contents_from_string(json.dumps(new_versions))
@@ -91,18 +93,24 @@ class Assets(object):
                 + 'var hive_asset_paths = ' + json.dumps(urls) +';'
             )
 
-    def audit(self):
-        for name, (path, version) in self.assets.iteritems():
+    def audit(self, limit=None):
+        assets = sorted(self.assets.items())
+        if limit: assets = assets[:limit]
+        total = 0; valid = 0;
+        for name, (path, version) in assets:
+            total = total + 1
             key = self.asset_bucket.get_key(name)
             etag = key.etag.replace('"', '')[0:8]
             if key.exists:
                 if etag == version:
+                    valid = valid + 1
                     message = "OK:   MD5 match for: %s"
                 else:
                     message = "FAIL: MD5 match for: %s"
             else:
                 message     = "FAIL: %s does not exist"
             print message % (name)
+        print "\nPassed %s/%s" % (valid, total)
 
 class HiveAssets(Assets):
 
@@ -163,7 +171,6 @@ class HiveAssets(Assets):
             logger.info("Assets build complete in %s seconds", time.time() - t0)
 
         # add the assets we just compiled, and some other misc. assets, push to s3
-        print('Syncing all assets to s3...')
         hive_assets.find(recurse=False).find('doc')
 
     def urls_with_expiry(self):
