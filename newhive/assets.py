@@ -86,6 +86,7 @@ class Assets(object):
     
     def write_js(self, write_path):
         urls = dict([(name, self.url(name)) for name in self.assets])
+        urls[''] = self.base_url
         with open(join(config.src_home, write_path), 'w') as f:
             f.write(
                   '// Hey!\n'
