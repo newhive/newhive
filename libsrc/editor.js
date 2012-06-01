@@ -432,8 +432,8 @@ Hive.App.Controls = function(app, border_only) {
     o.div = $("<div style='position: absolute; z-index: 3; width: 0; height: 0' class='controls'>");
 
     o.select_box = $("<div style='position: absolute'>");
-    var border = $("<div class='select_border drag ehapp'>").css({ width: 5, height: 5 }).get(0);
-    o.select_borders = $([border, border.cloneNode(), border.cloneNode(), border.cloneNode()]);
+    var border = $("<div class='select_border drag ehapp'>").css({ width: 5, height: 5 });
+    o.select_borders = border.add(border.clone()).add(border.clone()).add(border.clone());
     o.select_borders.drag('init', function(){ return Hive.OpenApps.focused.divs() })
         .drag('start', o.app.move_start).drag(o.app.move);
     o.div.append(o.select_box.append(o.select_borders));
