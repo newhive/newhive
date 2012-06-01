@@ -114,6 +114,7 @@ class HiveAssets(Assets):
         self.write_js('libsrc/compiled.asset_paths.js')
 
         assets_env = webassets.Environment(join(config.src_home, 'libsrc'), '/lib')
+        self.assets_env = assets_env
         assets_env.updater = 'always'
         assets_env.url_expire = True
 
@@ -184,5 +185,5 @@ class HiveAssets(Assets):
     webassets.bundle.Bundle.urls_with_expiry = urls_with_expiry
 
     def asset_bundle(self, name):
-        if config.debug_mode: return assets_env[name].urls_with_expiry()
+        if config.debug_mode: return self.assets_env[name].urls_with_expiry()
         else: return [self.url(name)]
