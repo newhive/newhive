@@ -129,7 +129,7 @@ class HiveAssets(Assets):
 
         # get assets that webasset bundles depend on (just images and fonts), generate scss include
         print('Fetching assets for scss...')
-        hive_assets = self.find('skin').find('fonts')
+        hive_assets = self.find('skin').find('fonts').find('images')
 
         if config.debug_mode:
             assets_env.debug = True
