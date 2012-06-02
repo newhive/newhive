@@ -8,10 +8,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ApplicationController(object):
-    def __init__(self, jinja_env=None, db=None, assets=None):
+    def __init__(self, jinja_env, assets_env, db):
         self.jinja_env = jinja_env
-        self.assets = assets
-        self.asset = self.assets.url
+        self.assets_env = assets_env
         self.db = db
         self.content_domain = config.content_domain
         self.fb_client = FacebookClient()
@@ -95,6 +94,7 @@ class ApplicationController(object):
             ,server_name = config.server_name
             ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
             ,debug = config.debug_mode
+            ,assets_env = self.assets_env
             ,use_ga = config.use_ga
             ,ui = ui
             ,template = template
@@ -109,7 +109,7 @@ class ApplicationController(object):
                 , minimize_to: '#user_menu_handle'}"""
             context.update(dialog_to_show = '#dia_facebook_connect', dialog_to_show_opts=dia_opts)
             response.user.unflag('fb_connect_dialog')
-        context.setdefault('icon', self.asset('skin/1/logo.png'))
+        context.setdefault('icon', '/lib/skin/1/logo.png')
         return self.jinja_env.get_template(template).render(context)
 
     def serve_json(self, response, val, as_text = False):

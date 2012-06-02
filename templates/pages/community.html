@@ -3,7 +3,7 @@
 {% if 'home' %}
   {% block meta %}
   <meta name="description" content="{{description + " - " if description}}{{ui.intro_paragraph}}" />
-    <meta property="og:image" content='{{ 'skin/1/logo_medium.png'|asset_url }}' />
+    <meta property="og:image" content='http://thenewhive.com/lib/skin/1/logo_medium.png' />
   {% endblock meta %}
 {% endif %}
 
@@ -105,7 +105,7 @@
   <div id='card_header'>
     <div class='title'>
       {% if show_prompts %}
-        <img src='{{ 'skin/1/people_small.png'|asset_url }}' style='float: left; vertical-align: middle; margin-right: 10px;'>
+        <img src='/lib/skin/1/people_small.png' style='float: left; vertical-align: middle; margin-right: 10px;'>
         <span class='info'>To <span class='active'>listen to someone</span>, click the person icon next to their name.<br>
         Activity of the people you're listening to will appear on this page.</span>
       {% elif search %}
@@ -153,8 +153,8 @@
     {% endif %}
     {% if profile %}
       {{ left_tab('profile/expressions', 'Expressions') }}
-      {{ left_tab('profile/activity', "<img src='" + 'skin/1/activity_tab.png'|asset_url +"'>Activity") }}
-      {{ left_tab('profile/listening', "<img src='" + 'skin/1/listening_tab.png'|asset_url +"'>Listening") }}
+      {{ left_tab('profile/activity', '<img src="/lib/skin/1/activity_tab.png">Activity') }}
+      {{ left_tab('profile/listening', '<img src="/lib/skin/1/listening_tab.png">Listening') }}
     {% endif %}
   </div>
   <div id="tag_links">
@@ -163,8 +163,8 @@
     </div>{% endfor %}
   </div>
   {% if user_is_owner %}
-    <img src='{{ 'skin/1/add_tab.png'|asset_url }}' class='hoverable tag_label' onclick='folder_add()' title='Add Folder'><br>
-    {% if user_tag %}<img src='{{ 'skin/1/remove_tab.png'|asset_url }}' class='hoverable tag_label' onclick='folder_remove()'
+    <img src='/lib/skin/1/add_tab.png' class='hoverable tag_label' onclick='folder_add()' title='Add Folder'><br>
+    {% if user_tag %}<img src='/lib/skin/1/remove_tab.png' class='hoverable tag_label' onclick='folder_remove()'
       title='Remove folder "{{ user_tag }}"'>{% endif %}
     <form id='upload_form' method='POST' action='{{ secure_server }}' style='position : absolute; left : -1000px' target='upload_target'>
      <input type='hidden' name='action' id='action_input'>

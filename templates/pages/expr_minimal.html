@@ -2,11 +2,11 @@
 
 {% block head %}
  <meta property="og:title" content='{{ title }}' />
- <meta property="og:image" content='{{ exp.thumb }}' />
+ <meta property="og:image" content='{{ exp.thumb|default('/lib/skin/1/thumb_0.png') }}' />
  <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
  <meta property="og:type" content="article" />
  <meta property="fb:admins" content="1007003" />
- <script src='{{ asset_bundle('expression.js')[0] }}'></script>
+ <script src='{{ assets_env['expression.js'].urls_with_expiry()[0] }}'></script>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression minimal{% endblock %}

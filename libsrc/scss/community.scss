@@ -46,15 +46,15 @@ body.profile #card_header { margin-top: -10px; }
   &.current.text { color: white; background-color: black; cursor: default; font-weight: bold; }
   
   &.icon { width: 25px; height: 25px; }
-  &.tab_like { background-image: asset_url('skin/1/tab_like.png'); }
-  &.tab_like:hover { background-image: asset_url('skin/1/tab_like-hover.png'); }
-  &.current.tab_like { background-image: asset_url('skin/1/tab_like-selected.png'); }
-  &.tab_discussion { background-image: asset_url('skin/1/tab_discussion.png'); }
-  &.tab_discussion:hover { background-image: asset_url('skin/1/tab_discussion-hover.png'); }
-  &.current.tab_discussion { background-image: asset_url('skin/1/tab_discussion-selected.png'); }
-  &.tab_broadcast { background-image: asset_url('skin/1/tab_broadcast.png'); }
-  &.tab_broadcast:hover { background-image: asset_url('skin/1/tab_broadcast-hover.png'); }
-  &.current.tab_broadcast { background-image: asset_url('skin/1/tab_broadcast-selected.png'); }
+  &.tab_like { background-image: url('/lib/skin/1/tab_like.png'); }
+  &.tab_like:hover { background-image: url('/lib/skin/1/tab_like-hover.png'); }
+  &.current.tab_like { background-image: url('/lib/skin/1/tab_like-selected.png'); }
+  &.tab_discussion { background-image: url('/lib/skin/1/tab_discussion.png'); }
+  &.tab_discussion:hover { background-image: url('/lib/skin/1/tab_discussion-hover.png'); }
+  &.current.tab_discussion { background-image: url('/lib/skin/1/tab_discussion-selected.png'); }
+  &.tab_broadcast { background-image: url('/lib/skin/1/tab_broadcast.png'); }
+  &.tab_broadcast:hover { background-image: url('/lib/skin/1/tab_broadcast-hover.png'); }
+  &.current.tab_broadcast { background-image: url('/lib/skin/1/tab_broadcast-selected.png'); }
 }
 
 #left_tabs {
@@ -134,16 +134,16 @@ body.profile #left_tabs .tab_label {
   &.link { cursor: pointer; }
 }
 #prompt_interests {
-  background-image: asset_url('skin/1/prompt_interests.png');
-  &.active { background-image: asset_url('skin/1/prompt_interests-hover.png'); }
+  background-image: url('/lib/skin/1/prompt_interests.png');
+  &.active { background-image: url('/lib/skin/1/prompt_interests-hover.png'); }
 }
 #prompt_allies {
-  background-image: asset_url('skin/1/prompt_allies.png');
-  &.active { background-image: asset_url('skin/1/prompt_allies-hover.png'); }
+  background-image: url('/lib/skin/1/prompt_allies.png');
+  &.active { background-image: url('/lib/skin/1/prompt_allies-hover.png'); }
 }
 #prompt_expressions {
-  background-image: asset_url('skin/1/prompt_expressions.png');
-  &.active { background-image: asset_url('skin/1/prompt_expressions-hover.png'); }
+  background-image: url('/lib/skin/1/prompt_expressions.png');
+  &.active { background-image: url('/lib/skin/1/prompt_expressions-hover.png'); }
 }
 
 .signup_link {

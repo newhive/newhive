@@ -73,6 +73,22 @@ def mail_invite(jinja_env, db, email, name=False, force_resend=False):
     send_mail(heads, body)
     return referral.id
 
+def mail_signup_thank_you(jinja_env, form):
+    context = {
+        'url': 'http://thenewhive.com'
+        ,'thumbnail_url': 'http://thenewhive.com/lib/skin/1/thumb_0.png'
+        ,'name': form.get('name')
+        }
+    heads = {
+        'To': form.get('email')
+        ,'Subject': 'Thank you for signing up for a beta account on The New Hive'
+        }
+    body = {
+         'plain': jinja_env.get_template("emails/thank_you_signup.txt").render(context)
+        ,'html': jinja_env.get_template("emails/thank_you_signup.html").render(context)
+        }
+    send_mail(heads,body)
+
 def mail_email_confirmation(jinja_env, user, email):
     secret = crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date'))))
     link = abs_url(secure=True) + "email_confirmation?user=" + user.id + "&email=" + urllib.quote(email) + "&secret=" + urllib.quote(secret)

@@ -215,8 +215,7 @@ var profile_thumb_choose = function(){
          <span class='inactive'>5.</span> Encourage expression<br>
        </b><br>
 
-       {% set tos_page = 'doc/tos.html'|asset_url %}
-       <a href='{{ tos_page }}' target='_new' onclick="loadDialog('{{ tos_page }}'); return false;" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
+       <a href='/lib/doc/tos.html' target='_new' onclick="loadDialog('/lib/doc/tos.html'); return false;" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
        <br>
        
        {% if not update %}
@@ -297,7 +296,7 @@ var profile_thumb_choose = function(){
      {% endif %}
      {% if update and not password_recovery%}
        {% if not user.has_facebook %}
-         <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'settings']);"><img class='centered' src='{{ 'skin/1/connect_with_fb_lg.png'|asset_url }}'/></a>
+         <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'settings']);"><img class='centered' src='/lib/skin/1/connect_with_fb_lg.png'/></a>
        {% else %}
        {% endif %}
      {% endif %}

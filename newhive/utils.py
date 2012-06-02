@@ -166,10 +166,3 @@ class Request(Wrapper):
 
 def exception_test(*args, **kwargs):
     raise Exception('dummy exception')
-
-def timer(func):
-    t0 = now()
-    r = func()
-    t1 = now()
-    print t1 - t0
-    return r

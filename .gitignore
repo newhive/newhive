@@ -1,8 +1,5 @@
 /lib/*.js
 /lib/*.css
-/libsrc/edit.css
-/libsrc/minimal.css
-compiled.*
 /libsrc/.webassets-cache
 /.sass-cache
 /newhive/config/private_config.py

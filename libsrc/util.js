@@ -15,7 +15,7 @@ function throttle(callback, min_delay, that) {
 /*** Returns a function that calls a list of functions ***/
 function Funcs(fn) {
     var o = [fn];
-    var callback = function() { for(i in o) o[i].apply(this, arguments); }
+    var callback = function() { for(i in o) o[i](); }
     callback.handlers = o;
     callback.add = function(fn) { o.push(fn); }
     callback.clear = function() { o = []; }
@@ -777,7 +777,9 @@ var context_to_string = function(opt_arg){
     }
 };
 
-var asset = function(path) { return hive_asset_paths[path]; }
+var asset = function(path) {
+    return debug_mode ? '/lib/libsrc/' + path : '/lib/' + path;
+}
 
 function sendRequestViaMultiFriendSelector() {
   function requestCallback(response) {
@@ -813,13 +815,6 @@ function arrayAddition(a,b){
         rv[i] = a[i] + b[i]
     }
     return rv
-}
-
-function inArray(array, el){
-    for (i=0; i<array.length; i++){
-        if (el === array[i]) return true;
-    }
-    return false;
 }
 
 function relogin(success){

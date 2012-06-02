@@ -1,6 +1,6 @@
 {% macro share_button(count=0) %}
   <div id="btn_share" class="hoverable nav_icon has_count" data-count="{{count}}" >
-    <img src='{{ 'skin/1/share.png'|asset_url }}' class='hoverable ' title="Share This Expression">
+    <img src='/lib/skin/1/share.png' class='hoverable ' title="Share This Expression">
   </div>
 {%- endmacro %}
 
@@ -36,5 +36,6 @@
 {%- endmacro %}
 
 {% macro person_thumb(url, name) %}
-  <img src='{{ url }}' style='background: {{ colors[range(32)|random] }};' class='thumb' alt='{{ name | e }}'>
+  <img src='{{ url | default("/lib/skin/1/thumb_person_mask.png", True) }}'
+    style='background: {{ colors[range(32)|random] }};' class='thumb' alt='{{ name | e }}'>
 {%- endmacro %}

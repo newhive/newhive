@@ -15,7 +15,7 @@ img.centered, div.centered {
     }
 
 // Page Layout
-body.main #content { top: 50px; }
+body.main #content { top: 50px }
 #primary_content{ clear: both; }
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;
@@ -59,7 +59,7 @@ iframe { border: none; }
   .fathead {
     margin: 50px; 
     div { 
-      //background: asset_url('skin/1/plus_lg.png') no-repeat; 
+      //background: url('/lib/skin/1/plus_lg.png') no-repeat; 
       //height: 44px;
     }
     h1 { 

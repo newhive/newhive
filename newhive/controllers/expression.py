@@ -114,7 +114,7 @@ class ExpressionController(ApplicationController):
                 upd['thumb'] = file.get_default_thumb()
                 upd['thumb_file_id'] = thumb_file_id
             elif len(thumb_file_id) == 1:
-                upd['thumb'] = self.asset("skin/1/thumb_%s.png" % thumb_file_id)
+                upd['thumb'] = "/lib/skin/1/thumb_%s.png" % (thumb_file_id)
                 upd['thumb_file_id'] = None
 
         # deal with inline base64 encoded images from Sketch app
