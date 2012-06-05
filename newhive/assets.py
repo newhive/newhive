@@ -158,7 +158,7 @@ class HiveAssets(Assets):
             output='scss.css',
             debug=False)
         edit_scss = webassets.Bundle('scss/edit.scss', filters=scss_filter, output='edit.css', debug=False)
-        minimal_scss = webassets.Bundle('scss/minimal.scss', filters=scss_filter, output='minimal.css', debug=False)
+        minimal_scss = webassets.Bundle('scss/minimal.scss', 'scss/fonts.scss', filters=scss_filter, output='minimal.css', debug=False)
 
         assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
         assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
