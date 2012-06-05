@@ -100,6 +100,14 @@ Hive.Group = function(){
             bottom: Array.max($.map(o.elements, function(el){ return el.pos()[1] + el.dims()[1]}))
         };
     };
+    o.pos = function(){
+        var bounds = o.bounds();
+        return [bounds.left, bounds.top];
+    }
+    o.dims = function(){
+        var bounds = o.bounds();
+        return [bounds.right - bounds.left, bounds.bottom - bounds.top];
+    }
 
     return o;
 };
@@ -358,7 +366,10 @@ Hive.App.Controls = function(app, border_only) {
         o.app.controls = false;
     };
 
-    o.pos = function() { o.div.css(o.app.div.offset()); };
+    o.pos = function() {
+        var p = o.app.pos();
+        o.div.css({ 'left': p[0], 'top': p[1] + 50 });
+    };
     o.get_dims = function() {
         var dims = o.app.dims();
         if(dims[0] < 135) dims[0] = 135;
