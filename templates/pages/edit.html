@@ -1,10 +1,10 @@
 {% extends "main.html" %}
 
 {% block head %}
- {% for item in assets_env["edit.js"].urls_with_expiry() %}
+ {% for item in asset_bundle('edit.js') %}
   <script src='{{ item }}'></script>
  {% endfor %}
- {% for item in assets_env["edit.css"].urls_with_expiry() %}
+ {% for item in asset_bundle('edit.css') %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
 
@@ -38,10 +38,10 @@ input, textarea { font-size : inherit }
     b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to : b } ) });
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
- <div class='nav_icon center pad'><img id='btn_grid' title="Show Grid" class='hoverable' src='/lib/skin/1/grid-off.png'></div>
+ <div class='nav_icon center pad'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div>
  <div class='nav_icon pad'></div>
  <div id='btn_save' class='btn medbold nav_icon hoverable center pad'>
-  Save <img class='scale' src='/lib/skin/1/drop_arrow_circle.png'>
+  Save <img class='scale' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
  </div>
  
  <div id='menu_save' class='menu top'>
@@ -61,7 +61,7 @@ input, textarea { font-size : inherit }
 
   <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle btn rounded'>
    <span>Private</span>
-   <img src='/lib/skin/1/drop_arrow.png'>
+   <img src='{{ 'skin/1/drop_arrow.png'|asset_url }}'>
   </div>
   <div id='menu_privacy' class='menu medbold' style='width : 125px;'>
    <div val='password' class='menu_item'>Private</div>
@@ -78,7 +78,7 @@ input, textarea { font-size : inherit }
   <div class='spacer'></div>
 
   <div id='btn_thumbnail'>
-      <div id='btn_thumbnail_text' class='hoverable'>Choose thumbnail <img class='scale' src='/lib/skin/1/drop_arrow.png'></div>
+      <div id='btn_thumbnail_text' class='hoverable'>Choose thumbnail <img class='scale' src='{{ 'skin/1/drop_arrow.png'|asset_url }}'></div>
       <img id="current_thumb" width="70px" height="70px" src="{{exp.thumb}}">
   </div>
   
@@ -90,12 +90,12 @@ input, textarea { font-size : inherit }
 {% include 'dialogs/editor_browsers.html' %}
 
 <div id='app_btns' class='nav'>
- <img id='insert_text'  class='hoverable nav_icon' src='/lib/skin/1/text.png'
- ><img id='insert_image' class='hoverable nav_icon' src='/lib/skin/1/images.png'
- ><img id='insert_audio' class='hoverable nav_icon' src='/lib/skin/1/audio.png'
- ><img id='insert_file'  class='hoverable nav_icon' src='/lib/skin/1/upload.png'
- ><img id='insert_embed' class='hoverable nav_icon' src='/lib/skin/1/embed.png'
- ><img id='insert_shape' class='hoverable nav_icon' src='/lib/skin/1/shapes.png'>
+ <img id='insert_text'  class='hoverable nav_icon' src='{{ 'skin/1/text.png'|asset_url }}'
+ ><img id='insert_image' class='hoverable nav_icon' src='{{ 'skin/1/images.png'|asset_url }}'
+ ><img id='insert_audio' class='hoverable nav_icon' src='{{ 'skin/1/audio.png'|asset_url }}'
+ ><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'
+ ><img id='insert_embed' class='hoverable nav_icon' src='{{ 'skin/1/embed.png'|asset_url }}'
+ ><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'>
  
  <div id='menu_text' class='menu medbold'>
   <div id='text_default' class='menu_item'>Normal</div>
@@ -141,25 +141,25 @@ input, textarea { font-size : inherit }
  </div>
 </div>
 
-<img id='loading' src='/lib/skin/1/loading.gif'>
+<img id='loading' src='{{ 'skin/1/loading.gif'|asset_url }}'>
 
 <div id='controls_common' class='controls_src'>
- <!--<img class='control undo   hoverable' src='/lib/skin/1/undo.png'>-->
- <img class='control copy   hoverable tip_N' src='/lib/skin/1/copy.png' title='Duplicate Element'>
- <img class='control remove hoverable tip_NE' src='/lib/skin/1/delete_sm.png' title='Delete, no undo!'>
- <div class='control stack'><img class='stack_up hoverable' src='/lib/skin/1/stack_up.png' title='move to front'><img class='stack_down hoverable' src='/lib/skin/1/stack_down.png' title='move to back'></div>
+ <!--<img class='control undo   hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'>-->
+ <img class='control copy   hoverable tip_N' src='{{ 'skin/1/copy.png'|asset_url }}' title='Duplicate Element'>
+ <img class='control remove hoverable tip_NE' src='{{ 'skin/1/delete_sm.png'|asset_url }}' title='Delete, no undo!'>
+ <div class='control stack'><img class='stack_up hoverable' src='{{ 'skin/1/stack_up.png'|asset_url }}' title='move to front'><img class='stack_down hoverable' src='{{ 'skin/1/stack_down.png'|asset_url }}' title='move to back'></div>
 </div>
 
 <div id='controls_text' class='controls_src'>
  <div class='control buttons'
-  ><img class='button link hoverable tip_W'     src='/lib/skin/1/link.png' title='Link'
-  ><!--<img class='button fontsize hoverable' src='/lib/skin/1/text_size.png'
-  >--><img class='button fontname'           src='/lib/skin/1/font.png'
-  ><img class='button color'              src='/lib/skin/1/color.png'
-  ><img class='button bold hoverable'     src='/lib/skin/1/bold.png'     cmd='bold'
-  ><img class='button italic hoverable'   src='/lib/skin/1/italic.png'   cmd='italic'
-  ><img class='button align'              src='/lib/skin/1/justify.png'  
-  ><img class='button unformat hoverable' src='/lib/skin/1/unformat.png' cmd='removeformat' title='unformat'
+  ><img class='button link hoverable tip_W'     src='{{ 'skin/1/link.png'|asset_url }}' title='Link'
+  ><!--<img class='button fontsize hoverable' src='{{ 'skin/1/text_size.png'|asset_url }}'
+  >--><img class='button fontname'           src='{{ 'skin/1/font.png'|asset_url }}'
+  ><img class='button color'              src='{{ 'skin/1/color.png'|asset_url }}'
+  ><img class='button bold hoverable'     src='{{ 'skin/1/bold.png'|asset_url }}'     cmd='bold'
+  ><img class='button italic hoverable'   src='{{ 'skin/1/italic.png'|asset_url }}'   cmd='italic'
+  ><img class='button align'              src='{{ 'skin/1/justify.png'|asset_url }}'  
+  ><img class='button unformat hoverable' src='{{ 'skin/1/unformat.png'|asset_url }}' cmd='removeformat' title='unformat'
   ><!--<div class='control drawer border fontsize'
     ><span class='option fs1' style='font-size : .75em' val = '.75'>a</span
     > <span class='option fs2' style='font-size :   1em' val =   '1'>a</span
@@ -215,12 +215,12 @@ input, textarea { font-size : inherit }
   ><div class='control drawer border color'></div
   ><div class='control drawer border align'
    ><div><nobr
-    ><img class='option small hoverable' cmd='justifyleft'    src='/lib/skin/1/justify_left.png' 
-    ><img class='option small hoverable' cmd='justifyright'   src='/lib/skin/1/justify_right.png'
+    ><img class='option small hoverable' cmd='justifyleft'    src='{{ 'skin/1/justify_left.png'|asset_url }}' 
+    ><img class='option small hoverable' cmd='justifyright'   src='{{ 'skin/1/justify_right.png'|asset_url }}'
    ></nobr></div
    ><div
-    ><img class='option small hoverable' cmd='justifycenter'  src='/lib/skin/1/justify_center.png'
-    ><img class='option small hoverable' cmd='justifyfull'    src='/lib/skin/1/justify_full.png'  
+    ><img class='option small hoverable' cmd='justifycenter'  src='{{ 'skin/1/justify_center.png'|asset_url }}'
+    ><img class='option small hoverable' cmd='justifyfull'    src='{{ 'skin/1/justify_full.png'|asset_url }}'  
    ></div
   ></div
  ></div>
@@ -228,25 +228,25 @@ input, textarea { font-size : inherit }
 
 <div id='controls_image' class='controls_src'>
  <div class='control buttons'
-  ><img class='button link hoverable tip_W' src='/lib/skin/1/link.png' title='Link'
-  ><img class='button set_bg hoverable' src='/lib/skin/1/fullscreen.png' title='make background'
+  ><img class='button link hoverable tip_W' src='{{ 'skin/1/link.png'|asset_url }}' title='Link'
+  ><img class='button set_bg hoverable' src='{{ 'skin/1/fullscreen.png'|asset_url }}' title='make background'
  ></div
 ></div>
 
 <div id='controls_html' class='controls_src'>
  <div class='control buttons'
-  ><img class='button opacity tip_N' title='Opacity' src='/lib/skin/1/opacity.png' title='Opacity'
+  ><img class='button opacity tip_N' title='Opacity' src='{{ 'skin/1/opacity.png'|asset_url }}' title='Opacity'
  ></div
 ></div>
 
 <div id='controls_rectangle' class='controls_src'>
  <div class='control buttons'
-  {#><img class='button link hoverable tip_W'     src='/lib/skin/1/link.png' title='Link'#}
-  ><img class='button fill hoverable tip_N' src='/lib/skin/1/color.png' title='fill color'
-  {#><img class='button stroke hoverable tip_N' src='/lib/skin/1/border_color.png' title='Border color'#}
-  {#><img class='button blank bwidth hoverable tip_N' src='/lib/skin/1/border_width.png' title='Border width'#}
+  {#><img class='button link hoverable tip_W'     src='{{ 'skin/1/link.png'|asset_url }}' title='Link'#}
+  ><img class='button fill hoverable tip_N' src='{{ 'skin/1/color.png'|asset_url }}' title='fill color'
+  {#><img class='button stroke hoverable tip_N' src='{{ 'skin/1/border_color.png'|asset_url }}' title='Border color'#}
+  {#><img class='button blank bwidth hoverable tip_N' src='{{ 'skin/1/border_width.png'|asset_url }}' title='Border width'#}
   {#><div class='button blank bstyle hoverable' title='Border style'></div#}
-  ><img class='button blank rounding hoverable tip_N' src='/lib/skin/1/rounded_corners.png' title='corner rounding'
+  ><img class='button blank rounding hoverable tip_N' src='{{ 'skin/1/rounded_corners.png'|asset_url }}' title='corner rounding'
 
   ><div class='control drawer fill border'></div
   ><div class='control drawer stroke border'></div
@@ -259,19 +259,19 @@ input, textarea { font-size : inherit }
 </div>
 
 <div id='controls_misc' class='controls_src'>
- <img class='control resize hoverable tip_SE' src='/lib/skin/1/resize.png' title="Resize">
- <img class='control resize_h hoverable tip_E' src='/lib/skin/1/resize_h.png' title="Resize">
- <img class='button color hoverable' src='/lib/skin/1/color.png' title="Color">
- <img class='button opacity tip_N' src='/lib/skin/1/opacity.png' title='Opacity'>
+ <img class='control resize hoverable tip_SE' src='{{ 'skin/1/resize.png'|asset_url }}' title="Resize">
+ <img class='control resize_h hoverable tip_E' src='{{ 'skin/1/resize_h.png'|asset_url }}' title="Resize">
+ <img class='button color hoverable' src='{{ 'skin/1/color.png'|asset_url }}' title="Color">
+ <img class='button opacity tip_N' src='{{ 'skin/1/opacity.png'|asset_url }}' title='Opacity'>
  <div class='control drawer color border'></div>
 </div>
 
 <div id='controls_sketch' class='controls_src'>
  <div class='control buttons'
-  {#><img class='button link hoverable tip_W'     src='/lib/skin/1/link.png' title='Link'#}
-  ><img class='button fill hoverable tip_N' src='/lib/skin/1/color.png' title='fill color'
-  ><img class='button brush rounding hoverable tip_N' src='/lib/skin/1/brush_icon.png' title='brush'
-  ><img class='button size rounding hoverable tip_N' src='/lib/skin/1/brush_size.png' title='brush size'
+  {#><img class='button link hoverable tip_W'     src='{{ 'skin/1/link.png'|asset_url }}' title='Link'#}
+  ><img class='button fill hoverable tip_N' src='{{ 'skin/1/color.png'|asset_url }}' title='fill color'
+  ><img class='button brush rounding hoverable tip_N' src='{{ 'skin/1/brush_icon.png'|asset_url }}' title='brush'
+  ><img class='button size rounding hoverable tip_N' src='{{ 'skin/1/brush_size.png'|asset_url }}' title='brush size'
   {#><div class='button about blank rounding hoverable tip_N' title='about'>?</div#}
 
   ><div class='control drawer fill border'></div
@@ -291,8 +291,8 @@ input, textarea { font-size : inherit }
   ><div class='control drawer border about'>
 blah blah
   </div
-  {#><img class='button stroke hoverable tip_N' src='/lib/skin/1/border_color.png' title='Border color'#}
-  {#><img class='button blank bwidth hoverable tip_N' src='/lib/skin/1/border_width.png' title='Border width'#}
+  {#><img class='button stroke hoverable tip_N' src='{{ 'skin/1/border_color.png'|asset_url }}' title='Border color'#}
+  {#><img class='button blank bwidth hoverable tip_N' src='{{ 'skin/1/border_width.png'|asset_url }}' title='Border width'#}
   {#><div class='button blank bstyle hoverable' title='Border style'></div#}
   {#><div class='control drawer bstyle'
    ><div class='border hoverable' style='border-style : solid;' title='Solid border'></div

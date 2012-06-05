@@ -19,113 +19,79 @@ from newhive.controllers import (
 
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
 from datetime import datetime
-from os.path  import dirname, exists, join as joinpath
+from os.path  import join
 from werkzeug import Request, Response, exceptions, url_unquote
 from werkzeug.routing import Map, Rule
 from werkzeug.exceptions import HTTPException, NotFound
 from urlparse import urlparse
 import jinja2
 
-from newhive import config, utils
-from newhive.state import User
-from newhive.utils import abs_url
+from newhive import config
+from newhive.utils import abs_url, now
+from newhive.assets import HiveAssets
 import newhive.colors
 import newhive.state
-import newhive.ui_strings.en as ui
 import newhive.manage.git
-
-import webassets
-from webassets.script import CommandLineEnvironment
-from webassets.filter import get_filter
+import newhive.assets
 
 import logging
 logger = logging.getLogger(__name__)
 logger.info("Initializing WSGI")
 
+
 ##############################################################################
-#                             webassets setup                                #
+#                   Ass sets, oh my! (static content tool chain)             #
 ##############################################################################
-assets_env = webassets.Environment(joinpath(config.src_home, 'libsrc'), '/lib')
-assets_env.updater = 'always'
-assets_env.url_expire = True
-def urls_with_expiry(self):
-    urls = self.urls()
-    if self.env.debug:
-        rv = []
-        for u in urls:
-            parts = u.split('?')
-            name = parts[0]
-            query = lget(parts, 1)
-            if not query:
-                query = str(int(os.stat(config.src_home + name).st_mtime))
-            rv.append(name + '?' + query)
-        return rv
-    else:
-        return urls
-webassets.bundle.Bundle.urls_with_expiry = urls_with_expiry
 
-assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/jquery.jplayer.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
-assets_env.register('app.js', 'jquery.js', 'jquery_misc.js', 'rotate.js', 'hover.js',
-    'drag.js', 'dragndrop.js', 'colors.js', 'util.js', 'jplayer/jquery.jplayer.js', filters='yui_js', output='../lib/app.js')
-assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
-
-assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js', output='../lib/admin.js')
-assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
-
-scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
-    "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
-    "scss/feed.scss", "scss/expression.scss", "scss/settings.scss",
-    "scss/signup_flow.scss", "scss/chart.scss", "scss/jplayer.scss",
-    filters=get_filter('scss', use_compass=True, debug_info=False),
-    output='../libsrc/scss.css',
-    debug=False)
-edit_scss = webassets.Bundle('scss/edit.scss', filters=get_filter('scss', use_compass=True, debug_info=False), output='../libsrc/edit.css', debug=False)
-
-assets_env.register('app.css', scss, filters='yui_css', output='../lib/app.css')
-assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
-assets_env.register('base.css', 'base.css', filters='yui_css', output='../lib/base.css')
-assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
-
-if config.debug_mode:
-    assets_env.debug = True
-    assets_env.url = '/lib/libsrc'
-else:
-    assets_env.auto_build = False
-    cmd = CommandLineEnvironment(assets_env, logger)
-    logger.info("Forcing rebuild of webassets"); t0 = time.time()
-    cmd.build()
-    logger.info("Assets build complete in %s seconds", time.time() - t0)
+hive_assets = HiveAssets()
+hive_assets.bundle_and_compile()
+hive_assets.push_s3()
 
 ##############################################################################
 #                                jinja setup                                 #
 ##############################################################################
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(joinpath(config.src_home, 'templates')))
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(join(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
-jinja_env.filters['time'] = friendly_date
-jinja_env.filters['epoch_to_string'] = epoch_to_string
-jinja_env.filters['length_bucket'] = length_bucket
-jinja_env.filters['large_number'] = large_number
-jinja_env.filters['json'] = json.dumps
-jinja_env.filters['mod'] = lambda x, y: x % y
-jinja_env.filters['querystring'] = querystring
-jinja_env.filters['percentage'] = lambda x: x*100
-jinja_env.filters['strip_filenames'] = lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
-jinja_env.globals['colors'] = newhive.colors.colors
+jinja_env.filters.update({
+     'time': friendly_date
+    ,'epoch_to_string': epoch_to_string
+    ,'length_bucket': length_bucket
+    ,'large_number': large_number
+    ,'json': json.dumps
+    ,'mod': lambda x, y: x % y
+    ,'querystring': querystring
+    ,'percentage': lambda x: x*100
+    ,'strip_filenames': lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
+    ,'asset_url': hive_assets.url
+})
+jinja_env.globals.update({
+     'colors': newhive.colors.colors
+    ,'asset_bundle': hive_assets.asset_bundle
+})
 
-db = newhive.state.Database(config)
+##############################################################################
+#                          newhive server setup                              #
+##############################################################################
+db = newhive.state.Database(config, assets=hive_assets)
+server_env = {
+     'db': db
+    ,'jinja_env': jinja_env
+    ,'assets': hive_assets
+}
+
 controllers = {
-      'community':   CommunityController(jinja_env, assets_env, db)
-    , 'analytics':   AnalyticsController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'admin':       AdminController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'user':        UserController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'file':        FileController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'expression':  ExpressionController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'mail':        MailController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'star':        StarController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'broadcast':   BroadcastController(jinja_env = jinja_env, assets_env = assets_env, db = db)
-    , 'cron':        CronController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+      'community':   CommunityController(**server_env)
+    , 'analytics':   AnalyticsController(**server_env)
+    , 'admin':       AdminController(**server_env)
+    , 'user':        UserController(**server_env)
+    , 'file':        FileController(**server_env)
+    , 'expression':  ExpressionController(**server_env)
+    , 'mail':        MailController(**server_env)
+    , 'star':        StarController(**server_env)
+    , 'broadcast':   BroadcastController(**server_env)
+    , 'cron':        CronController(**server_env)
     }
-app = ApplicationController(jinja_env = jinja_env, assets_env = assets_env, db = db)
+app = ApplicationController(**server_env)
 
 def admins(server):
     def access_controled(request, response, *arg):
@@ -285,8 +251,8 @@ def handle_debug(request):
 
 @Request.application
 def handle_safe(request):
-    """Log exceptions thrown, display friendly error message.
-       Not implemneted."""
+    """Log thrown exceptions"""
+    # TODO: display friendly error message.
     try:
         return handle(request)
     except Exception as e:

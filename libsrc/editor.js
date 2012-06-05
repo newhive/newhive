@@ -29,6 +29,81 @@ Hive.makeShuffleable = function(arr) {
     }
 }
 
+Hive.Group = function(){
+    var o = { elements: [] };
+
+    o.unfocus = function(app){
+        var new_focused = []
+        $.each(o.elements, function(i, current_app){
+            if (!app || app === current_app){
+                current_app.unfocus()
+            } else {
+                new_focused.push(current_app);
+            }
+        });
+        o.elements = new_focused;
+    }
+
+    o.focus = function(apps, opts){
+        // Focus only the requested app(s)
+        opts = $.extend({}, opts);
+        if (! $.isArray(apps) ) apps = [apps];
+
+        // Previously unfocused elements that should be focused
+        $.each(apps, function(i, el) {
+            if (el.focused()) return;
+            el.focus({multi: true});
+        });
+
+        // Previously focused elements that should be unfocused
+        var prev = [];
+        $.each(o.elements, function(i, el){
+            if (!inArray(apps, el)) {
+                opts.union ? prev.push(el) : el.unfocus();
+            }
+        });
+        o.elements = $.merge(prev, apps);
+    };
+
+    o.divs = function(){
+        return $.map(o.elements, function(a){ return a.div[0] });
+    }
+
+    o.layout = function(){
+        for (i=0; i<o.elements.length; i++){
+            o.elements[i].controls.layout();
+        }
+    }
+
+    o.length = function(){ 
+        return o.elements.length 
+    };
+    o.push = function(element) { 
+        if (element.focused()) return;
+        o.elements.push(element);
+        if (o.length() > 1){
+            o.each(function(i, el){ el.sharedFocus(); });
+        }
+        return element;
+    };
+    o.remove = function(element) {
+        o.elements = $.grep(o.elements, function(el){ return el !== element });
+    };
+
+    o.each = function(fn){ $.each(o.elements, fn) };
+
+    o.bounds = function() { 
+        return {
+            left:   Array.min($.map(o.elements, function(el){ return el.pos()[0]})),
+            right:  Array.max($.map(o.elements, function(el){ return el.pos()[0] + el.dims()[0]})),
+            top:    Array.min($.map(o.elements, function(el){ return el.pos()[1]})),
+            bottom: Array.max($.map(o.elements, function(el){ return el.pos()[1] + el.dims()[1]}))
+        };
+    };
+
+    return o;
+};
+
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
 // editing functions.
@@ -46,7 +121,7 @@ Hive.Apps = function(initial_state) {
         return map(function(app) { return app.getState(); }, o);
     }
     
-    o.focused = null;
+    o.focused = Hive.Group();
     
     o.stack = [];
     Hive.makeShuffleable(o.stack);
@@ -117,19 +192,30 @@ Hive.App = function(initState) {
     }
     
     o.make_controls = [];
-    o.focus = Funcs(function() {
-        if(o.focused()) return;
-        if(o.apps.focused) o.apps.focused.unfocus();
-        o.apps.focused = o;
-        if(!o.controls) o.controls = Hive.App.Controls(o);
+
+    o.focus = Funcs(function(args) {
+        var multi = args && Hive.multi_test(args);
+        if (multi) {
+            if (o.focused()) {
+                o.unfocus();
+                // Now that the target element is unfocused, we stop
+                // propagation so the click doesn't count as outside all
+                // focused elements, resulting in unfocusing everything
+                args.event.stopPropagation();
+                return;
+            }
+        } else {
+            o.apps.focused.unfocus();
+        }
+        Hive.App.Controls(o, multi);
+        o.apps.focused.push(o);
     });
     o.unfocus = Funcs(function() {
         if(o.controls) o.controls.remove();
-        o.apps.focused = null;
+        o.apps.focused.remove(o);
     });
-    o.focused = function() { return o.apps.focused == o }
-    o.dragstart = Funcs(function() { o.dragging = true; });
-    o.dragend = Funcs(function() { o.dragging = false; });
+    o.sharedFocus = Funcs(function(){ if (o.controls) o.controls.div.find('.control').hide(); });
+    o.focused = function() { return inArray(o.apps.focused.elements, o) }
 
     o.keyPress = function(e){
         var nudge = function(dx,dy){
@@ -142,10 +228,10 @@ Hive.App = function(initState) {
         }
 
         var handlers = {
-            37: nudge(-1,0)
-            , 38: nudge(0,-1)
-            , 39: nudge(1,0)
-            , 40: nudge(0,1)
+            37: nudge(-1,0)   // Left
+            , 38: nudge(0,-1) // Up
+            , 39: nudge(1,0)  // Right
+            , 40: nudge(0,1)  // Down
         }
         handlers[e.keyCode] && handlers[e.keyCode]();
     };
@@ -178,7 +264,9 @@ Hive.App = function(initState) {
             if(o.controls) o.controls.pos();
         }
     }
-    o.pos_n = function(dims) { o.div.css({left : Math.round(dims[0] * 1/o.sf()), top : Math.round(dims[1] * 1/o.sf()) }) }
+    o.pos_n = function(dims) {
+        o.div.css({left: Math.round(dims[0] * 1/o.sf()), top: Math.round(dims[1] * 1/o.sf()) })
+    }
     o.centerPos = function() {
         var dims = o.dims();
         var pos = o.pos();
@@ -191,7 +279,10 @@ Hive.App = function(initState) {
             o.state.dimensions = [dims[0] * o.sf(), dims[1] * o.sf()];
         }
     }
-    o.dims_n = function(dims) { o.div.width(Math.round(dims[0] * 1/o.sf())); o.div.height(Math.round(dims[1] * 1/o.sf())); }
+    o.dims_n = function(dims) {
+        o.div.width(Math.round(dims[0] * 1/o.sf()));
+        o.div.height(Math.round(dims[1] * 1/o.sf()));
+    }
     o.scale = function(scale) {
         s = 1000 / win.width();
         o.state.scale = scale * s;
@@ -203,7 +294,8 @@ Hive.App = function(initState) {
         if(o.controls) o.controls.layout();
     }
     o.center = function(offset) {
-        var pos = [win.width() / 2 - o.dims()[0] / 2 + win.scrollLeft(), win.height() / 2 - o.dims()[1] / 2 + win.scrollTop()]
+        var pos = [win.width() / 2 - o.dims()[0] / 2 + win.scrollLeft(),
+            win.height() / 2 - o.dims()[1] / 2 + win.scrollTop()]
         if (typeof(offset) != "undefined") { pos = arrayAddition(pos, offset) };
         o.pos(pos);
     }
@@ -217,7 +309,9 @@ Hive.App = function(initState) {
 
     o.load = Funcs(function() {
         o.opacity(o.state.opacity);
-        o.content_element.addClass('content').click(function(e) { o.focus(); });
+        o.content_element.addClass('content').click(function(e) {
+            o.focus({event: e});
+        });
         if(o.state.load) o.state.load(o);
         delete o.state.load;
         delete o.state.create;
@@ -229,15 +323,21 @@ Hive.App = function(initState) {
     $('#content').append(o.div);
     o.pos_n(o.state.position);
     o.dims_n(o.state.dimensions);
-    var refPos;
-    o.div.drag('start', function() { refPos = o.pos(); });
-    o.div.drag(function(e, dd) {
-        o.pos([refPos[0] + dd.deltaX, refPos[1] + dd.deltaY]);
-        e.stopPropagation();
-    }, { handle : '.drag' } );
+
+    o.move_init = function(){
+        if ( inArray(Hive.OpenApps.focused.divs(), this) )
+            return $(Hive.OpenApps.focused.divs());
+    };
+    o.move_start = function(){ o.ref_pos = o.pos(); };
+    o.move = function (e, dd, shallow) {
+        var delta = [dd.deltaX, dd.deltaY]
+        if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
+        o.pos([o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1]]);
+    };
+    o.div.drag('init', o.move_init).drag('start', o.move_start).drag(o.move);
     o.layer(o.layer());
       
-    o = o.type(o); // add type-specific properties
+    o.type(o); // add type-specific properties
     o.index = o.apps.add(o); // add to apps collection
 
     return o;
@@ -247,19 +347,18 @@ Hive.App = function(initState) {
 // selection border, and all the buttons surounding the App when selected, and for
 // these button's behavior.  App specific behavior is added by
 // Hive.App.Foo.Controls function, and a list of modifiers in app.make_controls
-Hive.App.Controls = function(app) {
-    var o = {};
+Hive.App.Controls = function(app, border_only) {
+    if(app.controls) return;
+    var o = app.controls = {};
     o.app = app;
+    o.border_only = border_only;
 
     o.remove = function() {
-        o.c.remove;
         o.div.remove();
-        o.select_box.remove();
         o.app.controls = false;
     };
 
     o.pos = function() { o.div.css(o.app.div.offset()); };
-    o.get_pos = o.app.pos;
     o.get_dims = function() {
         var dims = o.app.dims();
         if(dims[0] < 135) dims[0] = 135;
@@ -269,9 +368,15 @@ Hive.App.Controls = function(app) {
 
     o.layout = function() {
         o.pos();
-        var dims = o.get_dims();
+        var dims = o.get_dims(), p = o.padding, ad = o.app.dims(), cx = ad[0] / 2, cy = ad[1] / 2;
 
-        var p = o.padding;
+        o.select_box.css({ left: cx, top: cy });
+        o.select_borders.eq(0).css({ left: -cx -5 - p, top: -cy -5 -p, width: ad[0] + 10 + p * 2 });
+        o.select_borders.eq(1).css({ left: cx + p, top: -cy -p, height: ad[1] + p * 2 });
+        o.select_borders.eq(2).css({ left: -cx -5 - p, top: cy + p, width: ad[0] + 10 + p * 2 });
+        o.select_borders.eq(3).css({ left: -cx -5 - p, top: -cy -p, height: ad[1] + p * 2 });
+        if(o.border_only) return;
+
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
         o.c.copy   .css({ left  : dims[0] - 45 + p, top   : -38 - p });
         o.c.remove .css({ left  : dims[0] - 14 + p, top   : -38 - p });
@@ -280,7 +385,9 @@ Hive.App.Controls = function(app) {
     };
 
     o.append_link_picker = function(d) {
-        var e = $("<div class='control drawer link'><nobr><input type='text'> <img class='hoverable' src='/lib/skin/1/delete_sm.png' title='Clear link'></nobr>");
+        var e = $("<div class='control drawer link'><nobr><input type='text'> "
+            + "<img class='hoverable' src='" + asset('skin/1/delete_sm.png')
+            + "' title='Clear link'></nobr>");
         d.append(e);
         var input = e.find('input');
         var m = o.hover_menu(d.find('.button.link'), e, {
@@ -312,43 +419,54 @@ Hive.App.Controls = function(app) {
     };
     o.appendButton = function(c) {
         var buttons = o.div.find('.buttons');
-        if (buttons.length == 0) buttons = $('<div class="control buttons"></div>').appendTo(o.div);
+        if (buttons.length == 0)
+            buttons = $('<div class="control buttons"></div>').appendTo(o.div);
         buttons.append(c);
     }
+
     o.addControl = function(ctrls) { map(o.appendControl, ctrls.clone(false)); };
     o.addButton = function(ctrls) { map(o.appendButton, ctrls.clone(false)); };
     o.addControls = function(ctrls) { map(o.appendControl, ctrls.clone(false).children()); };
     o.hover_menu = function(h, d, o) { return hover_menu(h, d, $.extend({offsetY : 5}, o)) };
 
-    o.div = $("<div style='position : absolute; z-index : 3; width : 0; height : 0' class='controls'>");
-    o.select_box = $("<div class='select_box drag border selected'>");
-    o.app.div.append(o.select_box);
+    o.div = $("<div style='position: absolute; z-index: 3; width: 0; height: 0' class='controls'>");
+
+    o.select_box = $("<div style='position: absolute'>");
+    var border = $("<div class='select_border drag ehapp'>").css({ width: 5, height: 5 });
+    o.select_borders = border.add(border.clone()).add(border.clone()).add(border.clone());
+    o.select_borders.drag('init', function(){ return Hive.OpenApps.focused.divs() })
+        .drag('start', o.app.move_start).drag(o.app.move);
+    o.div.append(o.select_box.append(o.select_borders));
+
     $('body').append(o.div);
-    o.addControls($('#controls_common'));
-    var d = o.div;
-    o.c = {};
-    //o.c.undo    = d.find('.undo'   );
-    o.c.remove  = d.find('.remove' );
-    o.c.resize  = d.find('.resize' );
-    o.c.stack   = d.find('.stack'  );
-    o.c.remove.click(function() { o.app.remove() });
-    o.c.copy    = d.find('.copy'   );
-    o.c.copy.click(function() {
-        var state = o.app.getState();
-        state.copy = true;
-        var cp = Hive.App(state);
-        cp.pos([cp.pos()[0], cp.pos()[1] + o.app.dims()[1] + 20]);
-    });
-    d.find('.stack_up').click(o.app.stackTop);
-    d.find('.stack_down').click(o.app.stackBottom);
-    o.padding = 0;
+    o.padding = 4;
 
-    o = reduce(function(o, f) { return f(o) }, o.app.make_controls, o);
+    if(!border_only) {
+        o.addControls($('#controls_common'));
+        var d = o.div;
+        o.c = {};
+        //o.c.undo    = d.find('.undo'   );
+        o.c.remove  = d.find('.remove' );
+        o.c.resize  = d.find('.resize' );
+        o.c.stack   = d.find('.stack'  );
+        o.c.remove.click(function() { o.app.remove() });
+        o.c.copy    = d.find('.copy'   );
+        o.c.copy.click(function() {
+            var state = o.app.getState();
+            state.copy = true;
+            var cp = Hive.App(state);
+            cp.pos([cp.pos()[0], cp.pos()[1] + o.app.dims()[1] + 20]);
+        });
+        d.find('.stack_up').click(o.app.stackTop);
+        d.find('.stack_down').click(o.app.stackBottom);
 
-    o.c.buttons = d.find('.buttons');
+        map(function(f){ f(o) }, o.app.make_controls);
+
+        o.c.buttons = d.find('.buttons');
+        d.find('.hoverable').each(function() { hover_add(this) });
+    }
+
     o.layout();
-    d.find('.hoverable').each(function() { hover_add(this) });
-
     return o;
 }
 
@@ -367,48 +485,45 @@ Hive.App.has_shield = function(o, opts) {
     o.dragging = false;
 
     o.shield = function() {
-        if(o.eventCapturer) return;
-        o.eventCapturer = $("<div class='drag shield'>");
-        o.eventCapturer.click(function(e) { o.focus(); });
-        o.div.append(o.eventCapturer);
-        o.eventCapturer.css('opacity', 0.0);
+        if(o.shield_div) return;
+        o.shield_div = $("<div class='drag shield'>");
+        o.shield_div.click(function(e) { o.focus({event: e}); });
+        o.div.append(o.shield_div);
+        o.shield_div.css('opacity', 0.0);
     }
     o.unshield = function() {
         if (opts.always) return;
-        if(!o.eventCapturer) return;
-        o.eventCapturer.remove();
-        o.eventCapturer = false;
+        if(!o.shield_div) return;
+        o.shield_div.remove();
+        o.shield_div = false;
     }
-    o.set_shield = function() {
-        if(o.dragging || !o.focused()) o.shield();
+    o.set_shield = function(){ return o.dragging || !o.focused() }
+    o.update_shield = function(){
+        if(o.set_shield()) o.shield();
         else o.unshield();
     }
 
-    o.focus.add(o.set_shield)
-    o.unfocus.add(o.set_shield)
+    o.focus.add(o.update_shield);
+    o.unfocus.add(o.update_shield);
 
     o.div.drag('start', function() {
         o.dragging = true;
-        o.set_shield();
+        o.update_shield();
     });
     o.div.drag('end', function() {
         o.dragging = false;
-        o.set_shield();
-        return false;
+        o.update_shield();
     });
-    o.dragstart.add(o.set_shield);
-    o.dragend.add(o.set_shield);
 }
 
 Hive.App.has_resize = function(o) {
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addControl($('#controls_misc .resize'));
         o.c.resize = o.div.find('.resize');
 
         var refDims, ctrls = resize = o.div.find('.resize'); // , resize_h = o.div.find('.resize_h'), ctrls = resize.add(resize_h);
-        //resize_h.show();
 
         o.layout = function() {
             common.layout()
@@ -449,8 +564,8 @@ Hive.App.has_resize_h = function(o) {
 
     o.refresh_size = function() { o.resize_h(o.dims()); }
 
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addControl($('#controls_misc .resize_h'));
         o.c.resize_h = o.div.find('.resize_h');
@@ -460,7 +575,8 @@ Hive.App.has_resize_h = function(o) {
             common.layout()
             var p = o.padding;
             var dims = o.get_dims();
-            o.c.resize_h.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+            o.c.resize_h.css({ left: dims[0] - 20 + o.padding, top: Math.min(dims[1] / 2 - 20,
+                dims[1] - 54) });
         }
 
         // Dragging behavior
@@ -483,8 +599,8 @@ Hive.App.has_resize_h = function(o) {
 
 
 // This App shows an arbitrary single HTML tag.
-Hive.App.Html = function(common) {
-    var o = $.extend({}, common);
+Hive.App.Html = function(o) {
+    var common = $.extend({}, o);
 
     o.content = function(c) {
         if(typeof(c) != 'undefined') 
@@ -493,14 +609,17 @@ Hive.App.Html = function(common) {
 
     o.content_element = $(o.state.content).addClass('content');
     o.div.append(o.content_element);
-    if(o.content_element.is('object') || o.content_element.is('embed') || o.content_element.is('iframe')) {
-        Hive.App.has_shield(o);
-        o.set_shield = function() { o.shield(); }
+    if(    o.content_element.is('object')
+        || o.content_element.is('embed')
+        || o.content_element.is('iframe'))
+    {
+        Hive.App.has_shield(o, {always: true});
+        o.set_shield = function(){ return true; }
         o.shield();
     }
 
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         var d = o.div;
         d.find('.resize').drag('start', function(e, dd) { o.refDims = o.app.dims(); });
@@ -527,10 +646,9 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
 // Contains an iframe that has designMode set when selected
-Hive.App.Text = function(common) {
-    var o = $.extend({}, common);
+Hive.App.Text = function(o) {
+    var common = $.extend({}, o);
     
-    Hive.App.has_shield(o);
     Hive.App.has_resize(o);
     Hive.App.has_resize_h(o);
 
@@ -543,17 +661,30 @@ Hive.App.Text = function(common) {
         return o.rte.get_content();
     }
 
-    o.focus.add(function() {
-        o.rte.removeBreaks();
-        o.rte.editMode(true);
+    o._edit_mode = false;
+    o.edit_mode = function(mode) {
+        if(mode && !o._edit_mode) {
+            o.rte.removeBreaks();
+            o.rte.editMode(true);
+            o._edit_mode = true;
+        }
+        else if(o._edit_mode) {
+            o.rte.editMode(false);
+            o.rte.set_content(autoLink(o.rte.get_content()));
+            o.rte.addBreaks();
+            o._edit_mode = false;
+        }
+    }
+    o.focus.add(function(args) {
+        var multi = args && Hive.multi_test(args);
+        if (!multi) o.edit_mode(true);
     });
-    o.unfocus.add(function() {
-        o.rte.editMode(false);
-        o.rte.set_content(autoLink(o.rte.get_content()));
-        o.rte.addBreaks();
-        $(window).focus(); // Needed so keypress events don't get stuck on RTE iframe
-    });
-    
+    o.unfocus.add(function(){ o.edit_mode(false) });
+
+    // focus and unfocus handlers for set_shield must be added after handlers that set edit_mode
+    Hive.App.has_shield(o);
+    o.set_shield = function(){ return o.dragging || !o.focused() || !o._edit_mode };
+
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
         v = v.trim();
@@ -562,8 +693,12 @@ Hive.App.Text = function(common) {
     }
 
     var refScale = o.state.scale ? o.state.scale : 1;
-    o.div.drag('start', function() { refScale = scale; });
-    o.div.drag('end', function() { o.resize(o.dims()); });
+    o.div.drag('start', function() {
+        refScale = scale;
+    });
+    o.div.drag('end', function() {
+        o.resize(o.dims());
+    });
     
     o.calcHeight = function() {
         if(is_chrome) {
@@ -592,17 +727,14 @@ Hive.App.Text = function(common) {
         o.refresh_size();
     }
 
-    function controls(common) {
-        var o = $.extend({}, common);
-
-        o.padding = 5;
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addControls($('#controls_text'));
 
         var d = o.div;
 
         o.link_menu = o.append_link_picker(d.find('.buttons'));
-        o.close = function() { o.link_menu.close(); }
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
@@ -621,16 +753,23 @@ Hive.App.Text = function(common) {
         o.hover_menu(d.find('.button.fontname'), d.find('.drawer.fontname'));
         //cmd_buttons('.fontname .option', function(v) { o.app.rte.css('font-family', v) });
 
-        append_color_picker(d.find('.drawer.color'), function(v) { o.app.rte.edit('forecolor', v) });
-        o.hover_menu(d.find('.button.color'), d.find('.drawer.color'), { auto_close : false });
+        Hive.append_color_picker(d.find('.drawer.color'),
+            function(v) { o.app.rte.edit('forecolor', v) });
+        o.color_menu = o.hover_menu(d.find('.button.color'), d.find('.drawer.color'),
+            { auto_close : false });
 
         //cmd_buttons('.button.bold',   function(v) { o.app.rte.css('font-weight', '700'   , { toggle : '400'   }) });
         //cmd_buttons('.button.italic', function(v) { o.app.rte.css('font-style' , 'italic', { toggle : 'normal'}) });
 
-        o.hover_menu(d.find('.button.align'), d.find('.drawer.align'));
+        o.align_menu = o.hover_menu(d.find('.button.align'), d.find('.drawer.align'));
         //cmd_buttons('.align .option', function(v) { o.app.rte.css('text-align', v, { body : true }) });
 
         //cmd_buttons('.button.unformat', function(v) { o.app.rte.edit('removeformat') });
+
+        o.close_menus = function() {
+            o.link_menu.close();
+            o.color_menu.close();
+        }
 
         $('.option[cmd],.button[cmd]').each(function(i, e) { $(e).click(function() {
             o.app.rte.edit($(e).attr('cmd'), $(e).attr('val'))
@@ -645,11 +784,16 @@ Hive.App.Text = function(common) {
         o.refDims = null;
         o.c.resize.drag(function(e, dd) {
             //cos(atan2(x, y) - atan2(w, h))
-            o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0], (o.refDims[1] + dd.deltaY) / o.refDims[1]));
+            o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0],
+                (o.refDims[1] + dd.deltaY) / o.refDims[1]));
         });
         d.find('.resize').drag('end', function(e, dd) {
             o.dragging.busy = false;
             o.app.div.drag('end');
+        });
+        o.select_box.click(function(){
+            o.app.edit_mode(false)
+            o.app.update_shield();
         });
 
         return o;
@@ -657,9 +801,15 @@ Hive.App.Text = function(common) {
     o.make_controls.push(controls);
 
     o.div.addClass('text');
-    o.set_shield();
-    o.rte = Hive.rte({ css : $('#css_base').clone(), parent : o.div,
-        change : throttle(function() { setTimeout(o.refresh_size, 10) }, 200), load : o.load, click : function() { o.controls.close() } });
+    o.update_shield();
+    o.rte = Hive.rte({
+        css: $('#css_minimal').clone(), parent: o.div,
+        change: throttle(function() { setTimeout(o.refresh_size, 10) }, 200),
+        load: o.load,
+        // the link and color menus can become sticky, when an input field in the menu is focused
+        // the menus have their own handler to close, but clicks in the rte frame get captured
+        click : function() { if(o.controls && o.controls.close_menus) o.controls.close_menus() }
+    });
     o.content_element = $(o.rte.iframe);
     
     return o;
@@ -676,8 +826,8 @@ Hive.App.has_rotate = function(o) {
     }
     o.load.add(function() { if(o.angle()) o.angle(o.angle()) });
 
-    function controls(common) {
-        var o = $.extend({}, common), refAngle = null, offsetAngle = null;
+    function controls(o) {
+        var common = $.extend({}, o), refAngle = null, offsetAngle = null;
 
         o.getAngle = function(e) {
             var cpos = o.app.centerPos();
@@ -686,20 +836,28 @@ Hive.App.has_rotate = function(o) {
             return Math.atan2(y, x) * 180 / Math.PI;
         }
 
-        o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>").attr('src', '/lib/skin/1/rotate.png');
+        o.layout = function() {
+            common.layout();
+            var p = o.padding;
+            var dims = o.get_dims();
+            o.rotateHandle.css({ left: dims[0] - 20 + o.padding,
+                top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+        }
+
+        o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>")
+            .attr('src', asset('skin/1/rotate.png'));
         o.appendControl(o.rotateHandle);
 
         var angleRound = function(a) { return Math.round(a / 45)*45; }
         o.rotateHandle.drag('start', function(e, dd) {
             refAngle = angle;
             offsetAngle = o.getAngle(e);
-            o.app.dragstart();
         }).drag(function(e, dd) {
             angle = o.getAngle(e) - offsetAngle + refAngle;
             if (e.shiftKey && Math.abs(angle - angleRound(angle)) < 10) angle = angleRound(angle);
             o.app.angle(angle);
             o.select_box.rotate(angle);
-        }).drag('end', function(e, dd) { o.app.dragend(); });
+        });
         o.select_box.rotate(o.app.angle());
 
         return o;
@@ -710,8 +868,8 @@ Hive.App.has_rotate = function(o) {
 //Hive.App.has_percent_
 
 Hive.App.has_slider_menu = function(o, handle, callback, init) {
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         var input = $("<input class='control drawer' type='text' size='2'>");
         o.div.find('.buttons').append(input);
@@ -728,8 +886,8 @@ Hive.App.has_slider_menu = function(o, handle, callback, init) {
     o.make_controls.push(controls);
 }
 Hive.App.has_opacity = function(o) {
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addButton($('#controls_misc .opacity'));
         o.c.opacity = o.div.find('.opacity');
@@ -743,8 +901,8 @@ Hive.App.has_opacity = function(o) {
 }
     
 Hive.App.has_color = function(o, opts) {
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addButton($('#controls_misc .button.color'));
         o.addButton($('#controls_misc .drawer.color'));
@@ -755,7 +913,7 @@ Hive.App.has_color = function(o, opts) {
             o.app.state.color = color;
             opts.callback(color);
         }
-        append_color_picker(o.c.color_drawer, callback, o.app.state.color);
+        Hive.append_color_picker(o.c.color_drawer, callback, o.app.state.color);
         o.hover_menu(o.c.color, o.c.color_drawer, { auto_close : false });
         return o;
 
@@ -764,8 +922,8 @@ Hive.App.has_color = function(o, opts) {
 }
 
 
-Hive.App.Image = function(common) {
-    var o = $.extend({}, common);
+Hive.App.Image = function(o) {
+    var common = $.extend({}, o);
 
     o.content = function(content) {
         if(typeof(content) != 'undefined') o.image_src(content);
@@ -790,7 +948,8 @@ Hive.App.Image = function(common) {
         o.imageHeight = o.img.height();
         o.aspectRatio = o.imageWidth / o.imageHeight;
         if(o.state.create) {
-            var w = o.imageWidth > $(window).width() * 0.8 ? $(window).width() * 0.8 : o.imageWidth;
+            var w = o.imageWidth > $(window).width() * 0.8 ?
+                $(window).width() * 0.8 : o.imageWidth;
             o.resize([w,w]);
         }
         o.img.css('width', '100%');
@@ -806,16 +965,8 @@ Hive.App.Image = function(common) {
         return dims;
     }
 
-    function controls(common) {
-        var o = $.extend({}, common);
-
-        o.layout = function() {
-            common.layout();
-            var p = o.padding;
-            var dims = o.get_dims();
-            if(!o.rotateHandle) o.rotateHandle = o.div.find('.rotate');
-            o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
-        }
+    function controls(o) {
+        var common = $.extend({}, o);
 
         o.addControls($('#controls_image'));
         o.append_link_picker(o.div.find('.buttons'));
@@ -841,8 +992,8 @@ Hive.App.Image = function(common) {
 Hive.registerApp(Hive.App.Image, 'hive.image');
 
 
-Hive.App.Rectangle = function(common) {
-    var o = $.extend({}, common);
+Hive.App.Rectangle = function(o) {
+    var common = $.extend({}, o);
     Hive.App.has_resize(o);
 
     var state = {};
@@ -853,35 +1004,18 @@ Hive.App.Rectangle = function(common) {
         $.extend(state, props);
         if(o.controls) o.controls.layout();
     }
-    o.css_setter = function(css_prop) { return function(v) { var ps = {}; ps[css_prop] = v; o.set_css(ps); } }
+    o.css_setter = function(css_prop) { return function(v) {
+        var ps = {}; ps[css_prop] = v; o.set_css(ps);
+    } }
 
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
         
-        // Correct for border offset of o.app.content
-        o.get_dims = function() {
-            var dims = o.app.dims();
-            dims = [ dims[0] + parseFloat(state['border-width']) * 2, dims[1] + parseFloat(state['border-width']) * 2];
-            if(dims[0] < 135) dims[0] = 135;
-            if(dims[1] < 40) dims[1] = 40;
-            return dims;
-        };
-
-        o.layout = function() {
-            common.layout();
-            var p = o.padding;
-            var dims = o.get_dims();
-            if(!o.rotateHandle) o.rotateHandle = o.div.find('.rotate');
-            //o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 40, dims[1] - 100) });
-            //o.resizeHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2     , dims[1] -  60) });
-            o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
-        };
-
-        o.select_box.hide();
         o.addControls($('#controls_rectangle'));
-        append_color_picker(o.div.find('.drawer.fill'), o.app.css_setter('color'), state.color);
-        o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
-        //append_color_picker(o.div.find('.drawer.stroke'), function(v) {
+        Hive.append_color_picker(o.div.find('.drawer.fill'), o.app.css_setter('color'), state.color);
+        o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'),
+            { auto_close : false });
+        //Hive.append_color_picker(o.div.find('.drawer.stroke'), function(v) {
         //    if(!state['border-width']) o.app.set_css({'border-width':'5px'});
         //    o.layout();
         //    o.app.set_css({'border-color':v});
@@ -894,7 +1028,8 @@ Hive.App.Rectangle = function(common) {
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
     //Hive.App.has_slider_menu(o, '.bwidth', function(v) { o.set_css({'border-width':v+'px'}); }, function() { return parseInt(state['border-width']) });
-    Hive.App.has_slider_menu(o, '.rounding', function(v) { o.set_css({'border-radius':v+'px'}); }, function() { return parseInt(state['border-radius']) });
+    Hive.App.has_slider_menu(o, '.rounding', function(v) { o.set_css({'border-radius':v+'px'}); },
+        function() { return parseInt(state['border-radius']) });
 
     o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
     o.set_css(o.state.content);
@@ -905,8 +1040,8 @@ Hive.App.Rectangle = function(common) {
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
 
 
-Hive.App.Sketch = function(common) {
-    var o = $.extend({}, common);
+Hive.App.Sketch = function(o) {
+    var common = $.extend({}, o);
     Hive.App.has_resize(o);
 
     var state = {};
@@ -931,24 +1066,14 @@ Hive.App.Sketch = function(common) {
 
     o.focus.add(function() { o.win.focus() });
 
-    function controls(common) {
-        var o = $.extend({}, common);
+    function controls(o) {
+        var common = $.extend({}, o);
         
-        o.layout = function() {
-            common.layout();
-            var p = o.padding;
-            var dims = o.get_dims();
-            if(!o.rotateHandle) o.rotateHandle = o.div.find('.rotate');
-            if(!o.resizeHandle) o.resizeHandle = o.div.find('.resize_h');
-            //o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 40, dims[1] - 100) });
-            //o.resizeHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2     , dims[1] -  60) });
-            o.rotateHandle.css({ left : dims[0] - 20 + o.padding, top : Math.min(dims[1] / 2 - 20, dims[1] - 54) });
-        };
-
         o.addControls($('#controls_sketch'));
-        append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, '#000000');
+        Hive.append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, '#000000');
 
-        o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'), { auto_close : false });
+        o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'),
+            { auto_close : false });
         o.hover_menu(o.div.find('.button.brush'), o.div.find('.drawer.brush'));
         o.div.find('.drawer.brush .option').each(function(i, e) { $(e).click(function() {
             o.app.win.set_brush($(e).attr('val'));
@@ -963,7 +1088,8 @@ Hive.App.Sketch = function(common) {
     Hive.App.has_slider_menu(o, '.size', function(v) { o.win.BRUSH_SIZE = v; },
         function() { return o.win.BRUSH_SIZE; });
 
-    o.content_element = $('<iframe>').attr('src', asset('harmony_sketch.html')).css({'width':'100%','height':'100%','position':'absolute'});
+    o.content_element = $('<iframe>').attr('src', asset('harmony_sketch.html'))
+        .css({'width':'100%','height':'100%','position':'absolute'});
     o.iframe = o.content_element.get(0);
     o.fill_color = function(hex, rgb) { o.win.COLOR = rgb; }
     o.div.append(o.content_element);
@@ -972,14 +1098,14 @@ Hive.App.Sketch = function(common) {
         o.load();
         if(o.state.content) o.set_content(o.state.content);
     });
-    o.set_shield();
+    o.update_shield();
 
     return o;
 };
 Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 
-Hive.App.Audio = function(common) {
-    var o = $.extend({}, common);
+Hive.App.Audio = function(o) {
+    var common = $.extend({}, o);
 
     var randomStr = function(){ return Math.random().toString(16).slice(2);};
 
@@ -1011,7 +1137,8 @@ Hive.App.Audio = function(common) {
     //    common.layer(n + 1000);
     //}
 
-    o.set_color = function(color){ o.div.find('.jp-play-bar, .jp-interface').css('background-color', color); };
+    o.set_color = function(color){ o.div.find('.jp-play-bar, .jp-interface')
+        .css('background-color', color); };
 
     o.scale = function(s) {
         if(typeof(s) == 'undefined') return scale;
@@ -1034,20 +1161,20 @@ Hive.App.Audio = function(common) {
     Hive.App.has_resize(o);
     Hive.App.has_resize_h(o);
     Hive.App.has_opacity(o);
-    Hive.App.has_color(o, {
-        callback: function(val){ o.div.find('.jp-play-bar, .jp-interface').css('background-color', val); }
-    });
+    Hive.App.has_color(o, { callback: function(val){
+        o.div.find('.jp-play-bar, .jp-interface').css('background-color', val); } });
 
     // Initialization
     if(o.state.create) o.dims([200, 35]);
 
     var audio_data = o.state.type_specific;
-    o.content_element = $(o.state.create || o.state.copy ? $.jPlayer.skin.minimal(o.state.src, randomStr()) : o.state.content )
+    o.content_element = $(o.state.create || o.state.copy ?
+            $.jPlayer.skin.minimal(o.state.src, randomStr()) : o.state.content )
         .addClass('content')
         .css('position', 'relative')
         .css('height', '100%');
-    o.div.append(o.content_element)
-        .attr('title', audio_data ? [audio_data.artist, audio_data.album, audio_data.title].join(' - ') : '');
+    o.div.append(o.content_element).attr('title', audio_data ?
+            [audio_data.artist, audio_data.album, audio_data.title].join(' - ') : '');
 
     o.set_color(o.state.color);
 
@@ -1069,46 +1196,86 @@ Hive.App.Audio = function(common) {
          // setTimeout(function(){$(that).jPlayer("playHead", 75)}, 10);
         },
         loadeddata: loadeddataCallback,
-        swfPath: server_url + "lib/",
+        swfPath: asset(''),
         supplied: "mp3"
     });
  
-    o.set_shield = function() { o.shield(); }
-    o.shield();
+    o.set_shield = function() { return true; }
+    o.update_shield();
     setTimeout(function(){ o.load(); }, 100);
     return o;
 }
 Hive.registerApp(Hive.App.Audio, 'hive.audio');
 
-Hive.App.Audio.Controls = function(common) {
-    var o = {};
-    $.extend(o, common);
-    return o;
-}
 
+// For selecting multilpe Apps with a click and drag motion
+Hive.selection = {
+    dragging: false,
+    update_focus: function(event){
+        var o = Hive.selection;
+        // TODO: remove this offset when we base app positions on 0 = top of window
+        var nav_bar_offset = 50;
+        var select = { top: o.pos[1] - nav_bar_offset, right: o.pos[0] + o.dims[0],
+            bottom: o.pos[1] + o.dims[1] - nav_bar_offset, left: o.pos[0] };
+        o.old_selection = o.selected;
+        o.selected = $.grep(Hive.OpenApps, function(el){
+            var dims = el.dims();
+            var pos = el.pos();
+            var app = { top: pos[1], right: pos[0] + dims[0],
+                bottom: pos[1] + dims[1], left: pos[0]};
+            return (select.top <= app.top && select.left <= app.left
+                && select.right >= app.right && select.bottom >= app.bottom);
+        });
+        if (o.old_selection.length != o.selected.length){
+            Hive.OpenApps.focused.focus($.unique($.merge(o.selected, o.initial_elements)));
+        }
+    },
+    dragstart: function(e, dd) {
+        // Don't do anything if user is dragging one of the controls. This
+        // should probably be handled with jQuery.event.stopPropagation, but we
+        // are triggering drag events on app div from the drag handler for the
+        // controls, so the situation is more complicated.
+        if ($(e.target).hasClass('ehapp')) return;
 
-// For selecting multilpe Apps. Not implemented
-Hive.select_start = function(e, dd) {
-    var o = Hive.selection = {};
-    o.selected = [];
-    o.div = $("<div class='app_select'>");
-    o.select_box = $("<div class='select_box border selected'>");
-    $(document.body).append(o.div);
-    o.div.append(o.select_box);
-    o.start = [e.pageX, e.pageY];
+        var o = Hive.selection;
+        o.selected = [];
+        o.dragging = true;
+        $('.app_select').remove();
+        o.div = $("<div class='app_select'>");
+        o.select_box = $("<div class='select_box border selected dragbox'>")
+            .css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
+        $(document.body).append(o.div);
+        o.div.append(o.select_box);
+        o.start = [e.pageX, e.pageY];
+        if (e.shiftKey || e.ctrlKey){
+            o.initial_elements = $.extend({}, Hive.OpenApps.focused.elements);
+        } else {
+            o.initial_elements = [];
+            Hive.OpenApps.focused.unfocus();
+        }
+    },
+    drag: function(e, dd) {
+        var o = Hive.selection;
+        if (!o.dragging || $(e.target).hasClass('ehapp')) return;
+
+        o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
+        o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
+        o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
+        o.update_focus(e);
+    },
+    dragend: function(e, dd) {
+        var o = Hive.selection;
+        o.dragging = false;
+        if (o.pos) { o.update_focus(); }
+        if (o.div) o.div.remove();
+    }
 };
-Hive.select_move = function(e, dd) {
-    var o = Hive.selection;
-    o.dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
-    o.pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
-    o.div.css({ left : o.pos[0], top : o.pos[1], width : o.dims[0], height : o.dims[1] });
+
+Array.max = function( array ){
+    return Math.max.apply( Math, array );
 };
-Hive.select_finish = function() {
-    if(!Hive.selection.selected.length) Hive.select_none();
-};
-Hive.select_none = function() {
-    Hive.selection.div.remove();
-    Hive.selection = false;
+Array.min = function( array ){
+    return Math.min.apply( Math, array );
 };
 
 Hive.new_app = function(s, offset) {
@@ -1128,14 +1295,16 @@ Hive.new_app = function(s, offset) {
 Hive.new_file = function(files, opts) {
     for (i=0; i < files.length; i++) {
         var file = files[i];
-        var app = $.extend({ file_id: file.file_id, file_name: file.name, type_specific: file.type_specific }, opts);
+        var app = $.extend({ file_id: file.file_id, file_name: file.name,
+            type_specific: file.type_specific }, opts);
 
         if(file.mime.match(/text\/html/)){
             // Not using code for auto-embeding urls that resolve to html
             // pages because of too many problems with sites that
             // don't want to be framed. Just link to site instead.
             // app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
-            $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
+            $.extend(app, { type: 'hive.text', content:
+                $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
         } else if(file.mime.match(/image\/(png|gif|jpeg)/)) {
             Hive.Exp.images.push(file);
             $.extend(app, {
@@ -1148,7 +1317,8 @@ Hive.new_file = function(files, opts) {
                 ,type: 'hive.audio'
             });
         } else {
-            $.extend(app, { type: 'hive.text', content: $('<a>').attr('href', file.url).text(file.name).outerHTML() });
+            $.extend(app, { type: 'hive.text', content:
+                $('<a>').attr('href', file.url).text(file.name).outerHTML() });
         }
 
         Hive.new_app(app, [20*i, 20*i]);
@@ -1197,15 +1367,22 @@ var main = function() {
     if(!(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) || /Chrome/.test(navigator.userAgent)))
         showDialog('#editor_browsers');
 
+    // Fallthrough click handler that unfocuses all apps if user clicks on background.
     $(window).click(function(e) {
-        if(!focused()) return;
-        if(!$.contains(focused().div.get(0), e.target) && e.target.parentNode
-            && !$.contains($('.controls').get(0), e.target)) focused().unfocus();
+        if(!Hive.OpenApps.focused.length()) return;
+        var hit = false;
+        Hive.OpenApps.focused.each(function(i,el){
+            if( $.contains(el.div.get(0), e.target)
+                || (el.controls && $.contains(el.controls.div.get(0), e.target))
+                || !e.target.parentNode //Target has already been removed from DOM, as in drag shield
+            ) hit = true;
+        });
+        if (!hit) Hive.OpenApps.focused.unfocus();
     });
 
-    $(document.body).drag('start', function() { return false; });
-    $(document.body).drag(function() { return false; });
-    $(document.body).drag('end', function() { return false; });
+    $(document.body).drag(Hive.selection.drag);
+    $(document.body).drag('start', Hive.selection.dragstart);
+    $(document.body).drag('end', Hive.selection.dragend);
 
     $(document.body).filedrop({
          data : { action : 'file_create' }
@@ -1215,13 +1392,15 @@ var main = function() {
         ,drop : Hive.upload_start
     });
 
-    $(document).keydown(function(e){ Hive.OpenApps.focused && Hive.OpenApps.focused.keyPress(e) });
+    $(document).keydown(function(e){ 
+        Hive.OpenApps.focused.each(function(i, el){ el.keyPress(e) });
+    });
     $(window).resize(function(e) {
         map(function(a) {
                 a.pos_n(a.state.position);
                 a.dims_n(a.state.dimensions);
                 a.scale_n(a.state.scale);
-                if(focused()) focused().controls.layout();
+                //if(focused()) focused().layout();
             }, Hive.OpenApps);
         center($('#app_btns'), $('#nav_bg'));
     });
@@ -1232,7 +1411,8 @@ var main = function() {
         Hive.new_app({ type : 'hive.text', content : ' ' });
     });
     $('#text_header').click(function(e) {
-        Hive.new_app({ type : 'hive.text', content : '<span style="font-weight:bold">&nbsp;</span>', scale : 3 });
+        Hive.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
+            scale : 3 });
     });
 
 
@@ -1243,7 +1423,7 @@ var main = function() {
         Hive.bg_div.add('#bg_preview').css('background-color', c);
         Hive.Exp.background.color = c;
     };
-    append_color_picker($('#color_pick'), bg_set_color, Hive.Exp.background.color);
+    Hive.append_color_picker($('#color_pick'), bg_set_color, Hive.Exp.background.color);
     $('#image_background').click(function() { showDialog('#dia_edit_bg', { fade : false }); });
     $('#bg_remove').click(function() { delete Hive.Exp.background.url; Hive.set_bg_img({}); });
     $('#bg_opacity').focus(function() { $('#bg_opacity').focus().select() }).keyup(function(e) {
@@ -1254,8 +1434,9 @@ var main = function() {
         Hive.upload_finish();
         alert('Sorry, your file failed to upload');
     }
-    $('#bg_upload').click(function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback,
-        success : function(data) { 
+    $('#bg_upload').click(function() { asyncUpload({
+        start: Hive.upload_start, error: uploadErrorCallback,
+        success: function(data) { 
             Hive.Exp.images.push(data);
             data['load'] = Hive.upload_finish; 
             Hive.set_bg_img(data); 
@@ -1264,14 +1445,19 @@ var main = function() {
     Hive.set_bg_img(Hive.Exp.background);
     bg_set_color(Hive.Exp.background.color);
 
-    var new_file = function() {
-        asyncUpload({ multiple: true, start : Hive.upload_start, success : Hive.new_file, error : uploadErrorCallback});
-    };
-    var new_link = function() { asyncUpload({ start : Hive.upload_start, error: uploadErrorCallback, success : function(data) {
-        if(data.error) { return error(); }
-        var app = { type: 'hive.text', content: $('<a>').attr('href', data.url).text(data.name).outerHTML() };
-        Hive.new_app(app);
-    } }); }
+    var new_file = function() { asyncUpload({
+        multiple: true, start: Hive.upload_start, success: Hive.new_file,
+        error: uploadErrorCallback
+    }); };
+    var new_link = function() { asyncUpload({
+        start: Hive.upload_start, error: uploadErrorCallback,
+        success : function(data) {
+            if(data.error) { return error(); }
+            var app = { type: 'hive.text', content:
+                $('<a>').attr('href', data.url).text(data.name).outerHTML() };
+            Hive.new_app(app);
+        }
+    }); };
     $('#insert_image').click(new_file);
     $('#image_upload').click(new_file);
     $('#insert_audio').click(new_file);
@@ -1279,22 +1465,30 @@ var main = function() {
     $('#insert_file' ).click(new_link);
     $('#menu_file'   ).click(new_link);
 
-    var image_menu = hover_menu($('#insert_image'), $('#menu_image'), { click_persist : $('#image_embed_code'), auto_close: false});
-    var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'), { click_persist : $('#image_embed_code'), auto_close: false});
+    var image_menu = hover_menu($('#insert_image'), $('#menu_image'),
+        { click_persist : $('#image_embed_code'), auto_close: false});
+    var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'),
+        { click_persist : $('#image_embed_code'), auto_close: false});
     //$('#image_embed_submenu').children().not('#embed_done').add('#image_from_url').click(function(e){e.stopPropagation();});
-    $('#image_embed_done').click(function() { Hive.embed_code('#image_embed_code'); image_embed_menu.close(); image_menu.close(); });
+    $('#image_embed_done').click(function() {
+        Hive.embed_code('#image_embed_code');
+        image_embed_menu.close();
+        image_menu.close();
+    });
 
     hover_menu($('#insert_text'), $('#menu_text'));
     hover_menu($('#insert_audio'), $('#menu_audio'));
     hover_menu($('#insert_file'), $('#menu_file'));
 
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), { click_persist : $('#embed_code'), auto_close : false } );
+    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'),
+        { click_persist : $('#embed_code'), auto_close : false } );
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     hover_menu($('#insert_shape'), $('#menu_shape'));
     $('#insert_shape,#shape_rectangle').click(function(e) {
-        Hive.new_app({ type : 'hive.rectangle', content : { color : colors[24],
-            'border-color' : 'black', 'border-width' : 0, 'border-style' : 'solid', 'border-radius' : 0 } });
+        Hive.new_app({ type : 'hive.rectangle', content :
+            { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
+                'border-style' : 'solid', 'border-radius' : 0 } });
     });
     $('#shape_sketch').click(function(e) {
         Hive.new_app({ type : 'hive.sketch', dimensions : [700, 700 / 1.6] });
@@ -1329,10 +1523,13 @@ var main = function() {
         // if a default thumb a pseudo file_id, id<10 is chosen. 
         // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
         Hive.Exp.thumb_file_id = app.file_id;
-        $('#current_thumb').attr('src', app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
+        $('#current_thumb').attr('src',
+            app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
     };
 
-    hover_menu($('#btn_save'), $('#menu_save'), { auto_height : false, auto_close : false, open: pickDefaultThumb, click_persist : '#menu_save' });
+    hover_menu($('#btn_save'), $('#menu_save'),
+        { auto_height : false, auto_close : false,
+            open: pickDefaultThumb, click_persist : '#menu_save' });
     $('#save_submit').click(function(){
         if (! $(this).hasClass('disabled')){ 
             $(this).addClass('disabled');
@@ -1364,12 +1561,12 @@ var main = function() {
         });
     });
     
-    // Automatically update url unless it's an already saved expression or the user has modified the url manually
+    // Automatically update url unless it's an already saved
+    // expression or the user has modified the url manually
     $('#menu_save #title').bind('keydown keyup', function(){
-        if (!(Hive.Exp.home || Hive.Exp._id || $('#url').hasClass('modified') )){
-            $('#url').val(
-                $('#title').val().replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").replace(/-$/, "").toLowerCase()
-            );
+        if (!(Hive.Exp.home || Hive.Exp._id || $('#url').hasClass('modified') )) {
+            $('#url').val( $('#title').val().replace(/[^0-9a-zA-Z]/g, "-")
+                .replace(/--+/g, "-").replace(/-$/, "").toLowerCase());
         }
     }).keydown();
 
@@ -1404,19 +1601,31 @@ $(main);
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app;
 
-    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i) || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i)) || (m = c.match(/http:\/\/youtu.be\/(.*)$/i)))
+    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i)
+        || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i))
+        || (m = c.match(/http:\/\/youtu.be\/(.*)$/i))
+    ) {
+        var url = 'http://www.youtube.com/v/' + m[1]
+            + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1';
         app = { type : 'hive.html', content : 
-              '<object type="application/x-shockwave-flash" style="width:100%; height:100%" data="http://www.youtube.com/v/' + m[1]
-            + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1"><param name="movie" value="http://www.youtube.com/v/' + m[1]
-            + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1"><param name="allowFullScreen" value="true"><param name="wmode" value="opaque"/></object>' };
+              '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
+            + 'data="' + url + '"><param name="movie" value="' + url + '">'
+            + '<param name="allowFullScreen" value="true">'
+            + '<param name="wmode" value="opaque"/></object>' };
+    }
+
     else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i))
         app = { type : 'hive.html', content :
-            '<iframe src="http://player.vimeo.com/video/' + m[2] + '?title=0&amp;byline=0&amp;portrait=0" style="width:100%;height:100%;border:0"></iframe>' };
+            '<iframe src="http://player.vimeo.com/video/'
+            + m[2] + '?title=0&amp;byline=0&amp;portrait=0"'
+            + 'style="width:100%;height:100%;border:0"></iframe>' };
+
     else if(m = c.match(/^https?:\/\/(.*)mp3$/i))
         app = { type : 'hive.audio', content : {url : c, player : minimal} }
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
 //http://player.vimeo.com/video/                                                   13110687
 //<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>
+
     else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
@@ -1428,6 +1637,7 @@ Hive.embed_code = function(element) {
         embed.find('embed').attr('wmode', 'opaque');
         app = { type : 'hive.html', content : embed.outerHTML() };
     }
+
     else if(c.match(/^https?:\/\//i)) {
         var error = function(data){
             alert('Sorry, failed to load url ' + c);
@@ -1455,6 +1665,7 @@ Hive.embed_code = function(element) {
         });
         return;
     }
+
     else {
         var stuffs = $('<div>');
         stuffs.html(c);
@@ -1486,7 +1697,8 @@ Hive.save = function() {
 
     var on_response = function(ret) {
         Hive.upload_finish();
-        if(typeof(ret) != 'object') alert("Sorry, something is broken :(. Please send us feedback");
+        if(typeof(ret) != 'object')
+            alert("Sorry, something is broken :(. Please send us feedback");
         if(ret.error == 'overwrite') {
             $('#expr_name').html(expr.name);
             showDialog('#dia_overwrite');
@@ -1515,7 +1727,8 @@ Hive.save = function() {
         error: on_error
     } );
 };
-Hive.get_draft = function() { return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
+Hive.get_draft = function() {
+    return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
 Hive.set_draft = function() { localStorage.expr_draft = JSON.stringify(Hive.get_state()); }
 Hive.del_draft = function() { delete localStorage.expr_draft; }
 
@@ -1544,9 +1757,10 @@ Hive.grid = false;
 Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
     var e = $('#btn_grid').get(0);
-    e.src = e.src_d = '/lib/skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png';
+    e.src = e.src_d = asset('skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png');
     $('#grid_guide').css(Hive.grid ?
-          { 'background-image' : "url('/lib/skin/1/grid_square.png')", 'background-repeat' : 'repeat' }
+          { 'background-image' : "url('" + asset('skin/1/grid_square.png') + "')",
+              'background-repeat' : 'repeat' }
         : { 'background-image' : '' }
     );
 }
@@ -1694,7 +1908,8 @@ Hive.rte = function(options) {
         // Look for the first link that intersects r
         var find_intersecting = function(r) {
             var link = false;
-            $(o.doc.body).find('a').each(function() { if(!link && rangeIntersectsNode(r, this)) link = this });
+            $(o.doc.body).find('a').each(function() {
+                if(!link && rangeIntersectsNode(r, this)) link = this });
             if(link) {
                 r.selectNode(link);
                 o.select(r);
@@ -1711,8 +1926,9 @@ Hive.rte = function(options) {
             // r.expand('word') // works in IE and Chrome
             var s = o.select(r);
             // If the cursor is not at the beginning of a word...
-            if(!r.startContainer.data || !/\W|^$/.test(r.startContainer.data.charAt(r.startOffset - 1)))
-                s.modify('move','backward','word');
+            if(!r.startContainer.data || !/\W|^$/.test(
+                r.startContainer.data.charAt(r.startOffset - 1))
+            ) s.modify('move','backward','word');
             s.modify('extend','forward','word');
         }
 
@@ -1755,6 +1971,7 @@ Hive.rte = function(options) {
             //o.range = o.get_range(); // attempt to save cursor positoion breaks deleting textboxes
             o.doc.designMode = 'off';
             o.iframe.blur();
+            window.focus(); // Needed so keypress events don't get stuck on RTE iframe
         }
     }
 
@@ -1784,7 +2001,8 @@ Hive.rte = function(options) {
     o.eachTextNodeIn = function(node, fn) {
         if(node.nodeType == 3) fn(node);
         else {
-            for(var i = 0; i < node.childNodes.length; i++) o.eachTextNodeIn(node.childNodes[i], fn);
+            for(var i = 0; i < node.childNodes.length; i++)
+                o.eachTextNodeIn(node.childNodes[i], fn);
         }
     }
     o.addBreaks = function() {
@@ -1826,22 +2044,27 @@ Hive.rte = function(options) {
     return o;
 }
 
-var append_color_picker = function(container, callback, init_color) {
+Hive.append_color_picker = function(container, callback, init_color) {
     init_color = init_color || '#FFFFFF';
     var e = $('<div>').addClass('color_picker');
     container.append(e);
 
     var to_rgb = function(c) {
-        return map(parseInt, $('<div>').css('color', c).css('color').replace(/[^\d,]/g,'').split(','));
+        return map(parseInt, $('<div>').css('color', c).css('color')
+            .replace(/[^\d,]/g,'').split(','));
     }
     var to_hex = function(color) {
         if (typeof(color) == "string") color = to_rgb(color);
-        return '#' + map(function(c) { var s = c.toString(16); return s.length == 1 ? '0' + s : s }, color).join('').toUpperCase();
+        return '#' + map(function(c) {
+                var s = c.toString(16);
+                return s.length == 1 ? '0' + s : s },
+            color).join('').toUpperCase();
     }
     init_color = to_hex(init_color);
     var make_picker = function(c) {
         var d = $('<div>').addClass('color_select');
-        d.css('background-color', c).attr('val', c).click(function() { set_color(c); manual_input.val(c); callback(c, to_rgb(c)) });
+        d.css('background-color', c).attr('val', c).click(function() {
+            set_color(c); manual_input.val(c); callback(c, to_rgb(c)) });
         return d.get(0);
     }
     var make_row = function(cs) {
@@ -1855,8 +2078,8 @@ var append_color_picker = function(container, callback, init_color) {
     e.append(pickers);
 
     var bar = $("<img class='hue_bar'>");
-    bar.attr('src', '/lib/skin/1/saturated.png');
-    var shades = $("<div class='shades'><img src='/lib/skin/1/greys.png'></div>");
+    bar.attr('src', asset('skin/1/saturated.png'));
+    var shades = $("<div class='shades'><img src='" + asset('skin/1/greys.png') +"'></div>");
     var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
 
     var update_hex = function() {
@@ -1944,3 +2167,7 @@ var append_color_picker = function(container, callback, init_color) {
         return [h, s, v];
     }
 };
+
+Hive.multi_test = function(args) {
+    return args.multi || (args.event && (args.event.shiftKey || args.event.ctrlKey));
+}

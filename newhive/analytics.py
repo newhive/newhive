@@ -290,7 +290,8 @@ def funnel2_per_month(db, cohort_users = None, year=None, month=None, force=Fals
     ca.map = """
         function() {
             if ( this.url ) {
-                emit(this.url.match(/([a-zA-Z0-9]+)?.?(thenewhive.com)/)[1], 1);
+                var m = this.url.match(/([a-zA-Z0-9]+)?.?(thenewhive.com)/)
+                if (m) emit(m[1], 1);
             }
         }"""
     ca.name = 'funnel2_per_month'

@@ -40,9 +40,9 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
   }
 }
 
-.btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: url("/lib/skin/1/close.png");
+.btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: asset_url("skin/1/close.png");
     right:10px; top:5px; z-index : 100; }
-.btn_dialog_close:hover, #btn_dialog_close:hover {background-image: url("/lib/skin/1/close-hover.png")}
+.btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
 input[type="text"].copy, textarea.copy {
     border: none;
     font-family: helvetica, verdana, sans-serif;
@@ -83,8 +83,8 @@ input[type="text"].copy, textarea.copy {
     height: 60px;
     background-color: #D0E0F0; 
 }
-#btn_url_copy { background-image:url("/lib/skin/1/copy_clipboard.png"); float:right; width:20px; height:24px; margin: 5px 5px 0 0;}
-#btn_url_copy.hover { background-image:url("/lib/skin/1/copy_clipboard-hover.png");}
+#btn_url_copy { background-image:asset_url("skin/1/copy_clipboard.png"); float:right; width:20px; height:24px; margin: 5px 5px 0 0;}
+#btn_url_copy.hover { background-image:asset_url("skin/1/copy_clipboard-hover.png");}
 #dia_share{ 
   width: 555px; 
   padding: 20px;
@@ -385,15 +385,15 @@ input[type="text"].copy, textarea.copy {
     height: 31px;
     margin: 10px 0;
     float: right;
-    background: url("/lib/skin/1/people_small.png");
+    background: asset_url("skin/1/people_small.png");
     @include border-radius(3px);
     &:hover {
-      background: $color_active url("/lib/skin/1/people_small-hover.png");
+      background: $color_active asset_url("skin/1/people_small-hover.png");
     }
     &.active {
-      background: url("/lib/skin/1/people_small_active.png");
+      background: asset_url("skin/1/people_small_active.png");
       &:hover {
-        background: $color_active url("/lib/skin/1/people_small_active-hover.png");
+        background: $color_active asset_url("skin/1/people_small_active-hover.png");
       }
     }
   }

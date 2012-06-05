@@ -33,7 +33,6 @@ if __name__ == '__main__':
 
     if config.ssl_ca: ctx.use_certificate_chain_file(config.ssl_ca)
 
-    print 'starting server...'
     def run_hive(port, ctx=None):
         run_simple(
             '0.0.0.0'
@@ -52,6 +51,7 @@ if __name__ == '__main__':
           )
 
 
+    print 'starting server...'
     if config.always_ssl:
         run_hive(config.ssl_port, ctx=ctx)
     elif options.plain_only:

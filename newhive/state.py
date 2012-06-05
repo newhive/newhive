@@ -3,6 +3,7 @@ import operator as op
 from os.path import join as joinpath
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
+from wsgiref.handlers import format_date_time
 from newhive import social_stats, config
 from itertools import ifilter, islice
 import PIL.Image as Img
@@ -31,8 +32,9 @@ class Database:
     def add_collection(self, col):
         pass
 
-    def __init__(self, config):
+    def __init__(self, config, assets=None):
         self.config = config
+        self.assets = assets
 
         # initialize s3 connection
         if config.aws_id:
@@ -479,7 +481,7 @@ class User(HasSocial):
             if file:
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
-        return self.get('profile_thumb') or abs_url(secure=True) + "/lib/skin/1/thumb_person_mask.png?v=2"
+        return self.get('profile_thumb') or self.db.assets.url('skin/1/thumb_person_mask.png')
     thumb = property(get_thumb)
 
     def get_files(self):
@@ -793,7 +795,7 @@ class Expr(HasSocial):
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
         thumb = self.get('thumb')
-        if not thumb: thumb = abs_url() + 'lib/skin/1/thumb_0.png'
+        if not thumb: thumb = self.db.assets.url('skin/1/thumb_0.png')
         return thumb + '?v=2'
     thumb = property(get_thumb)
 
@@ -913,8 +915,8 @@ class File(Entity):
         b = self.db.s3_con.get_bucket(self.get('s3_bucket', random.choice(self.db.s3_buckets).name))
         k = S3Key(b)
         k.name = id
-        k.set_contents_from_file(file,
-            headers={ 'Content-Disposition' : 'inline; filename=' + name, 'Content-Type' : self['mime'] })
+        k.set_contents_from_file(file, headers={ 'Content-Disposition' : 'inline; filename=' + name,
+            'Content-Type' : self['mime'], 'Cache-Control': 'max-age=' + str(86400 * 3650) })
         k.make_public()
         return k.generate_url(86400 * 3600, query_auth=False)
 

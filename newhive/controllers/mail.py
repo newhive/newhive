@@ -2,7 +2,7 @@ from newhive.controllers.shared import *
 from newhive.controllers.application import ApplicationController
 from werkzeug import url_unquote
 from werkzeug.urls import url_decode
-from newhive.mail import send_mail, mail_signup_thank_you
+from newhive.mail import send_mail
 
 
 class MailController(ApplicationController):
@@ -40,7 +40,21 @@ class MailController(ApplicationController):
             send_mail(heads, body)
         self.db.Contact.create(form)
 
-        mail_signup_thank_you(self.jinja_env, form)
+        # mail_signup thank you
+        context = {
+            'url': 'http://thenewhive.com'
+            ,'thumbnail_url': self.asset('skin/1/thumb_0.png')
+            ,'name': form.get('name')
+            }
+        heads = {
+            'To': form.get('email')
+            ,'Subject': 'Thank you for signing up for a beta account on The New Hive'
+            }
+        body = {
+             'plain': self.jinja_env.get_template("emails/thank_you_signup.txt").render(context)
+            ,'html': self.jinja_env.get_template("emails/thank_you_signup.html").render(context)
+            }
+        send_mail(heads,body)
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
@@ -66,7 +80,7 @@ class MailController(ApplicationController):
             response.context.update({
               'short_url': (exp.get('domain') + '/' + exp.get('name'))
               ,'tags': exp.get('tags')
-              ,'thumbnail_url': exp.get('thumb', abs_url() + '/lib/skin/1/thumb_0.png')
+              ,'thumbnail_url': exp.get('thumb', self.asset('skin/1/thumb_0.png'))
               ,'user_url': owner.url
               ,'user_name': owner.get('name')
               ,'title': exp.get('title')
