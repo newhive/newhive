@@ -6,6 +6,7 @@
   <div class="field password">
       <input type='password' name='secret' placeholder='Password'><br>
   </div>
+  {% if error %}<div id='login_error' class='error'>{{ error }}</div>{% endif %}
   <div class='spacer'></div>
   <div class='field login submit'>
     <a href="#" id='password_recovery_link' onclick="showDialog('#dia_password_recovery'); return false;">Forgot Password?</a>
