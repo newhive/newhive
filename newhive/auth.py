@@ -39,13 +39,12 @@ def handle_login(db, request, response):
     if not request.is_secure: raise exceptions.BadRequest()
     username = args.get('username', False).lower()
     secret = args.get('secret', False)
-    if not (username or secret): raise exceptions.BadRequest()
-
-    user = db.User.named(username)
-    if not user: user = db.User.find({'email': username})
-    if user and user.cmp_password(secret):
-        new_session(db, user, request, response)
-        return True
+    if username and secret:
+        user = db.User.named(username)
+        if not user: user = db.User.find({'email': username})
+        if user and user.cmp_password(secret):
+            new_session(db, user, request, response)
+            return True
 
     response.context['error'] = 'Invalid username or password'
     return False
