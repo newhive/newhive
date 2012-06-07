@@ -14,7 +14,8 @@ function throttle(callback, min_delay, that) {
 
 /*** Returns a function that calls a list of functions ***/
 function Funcs(fn) {
-    var o = [fn];
+    var o = [];
+    if(fn) o.push(fn);
     var callback = function() { for(i in o) o[i].apply(this, arguments); }
     callback.handlers = o;
     callback.add = function(fn) { o.push(fn); }
@@ -353,6 +354,7 @@ function bound(num, lower_bound, upper_bound) {
     if(num > upper_bound) return upper_bound;
     return num;
 }
+
 function array_delete(arr, e) {
     for(var n = 0; n < arr.length; n++) {
         if(arr[n] == e) {
@@ -362,6 +364,21 @@ function array_delete(arr, e) {
     }
     return false;
 }
+function arrayAddition(a,b){
+    if (a.length != b.length) { throw "Arrays must be equal length" };
+    rv = []
+    for (i=0; i< a.length; i++){
+        rv[i] = a[i] + b[i]
+    }
+    return rv
+}
+function inArray(array, el){
+    for (i=0; i<array.length; i++){
+        if (el === array[i]) return true;
+    }
+    return false;
+}
+
     
 function iconCounts() {
     $('.has_count').each(function(){
@@ -804,22 +821,6 @@ function require_login(fn) {
     }
     if(fn) return check;
     else return check();
-}
-
-function arrayAddition(a,b){
-    if (a.length != b.length) { throw "Arrays must be equal length" };
-    rv = []
-    for (i=0; i< a.length; i++){
-        rv[i] = a[i] + b[i]
-    }
-    return rv
-}
-
-function inArray(array, el){
-    for (i=0; i<array.length; i++){
-        if (el === array[i]) return true;
-    }
-    return false;
 }
 
 function relogin(success){
