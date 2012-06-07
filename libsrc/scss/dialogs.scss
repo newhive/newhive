@@ -531,3 +531,7 @@ input[type="text"].copy, textarea.copy {
     .field.username { margin-top: 30px; }
     .field.login.submit { margin-top: 20px; }
 }
+
+#login_error {
+    font-size: 12px;
+}

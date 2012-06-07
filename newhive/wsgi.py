@@ -61,7 +61,8 @@ jinja_env.filters.update({
     ,'mod': lambda x, y: x % y
     ,'querystring': querystring
     ,'percentage': lambda x: x*100
-    ,'strip_filenames': lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
+    ,'strip_filenames':
+        lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
     ,'asset_url': hive_assets.url
 })
 jinja_env.globals.update({
@@ -98,7 +99,8 @@ def admins(server):
         if request.requester.get('name') not in config.admins:
             return app.serve_404(request, response, *arg)
         elif not request.is_secure:
-            return app.redirect(response, abs_url(secure=True) + request.path + '?' + request.query_string)
+            return app.redirect(
+                    response, abs_url(secure=True) + request.path + '?' + request.query_string)
         else:
             return server(request, response, *arg)
     return access_controled
@@ -190,8 +192,12 @@ def handle(request): # HANDLER
     if request.domain != config.content_domain and request.method == "POST":
         reqaction = request.form.get('action')
         if reqaction:
-            insecure_actions = ['add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite', 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
-            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery_1', 'password_recovery_2', 'mail_feedback', 'file_create']
+            insecure_actions = [
+                    'add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add'
+                    , 'mail_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite'
+                    , 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
+            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery_1'
+                    , 'password_recovery_2', 'mail_feedback', 'file_create']
             if not reqaction in insecure_actions:
                 if not request.is_secure:
                     return app.serve_forbidden(request)
@@ -259,9 +265,12 @@ def handle_safe(request):
         import socket
         from werkzeug.debug.tbtools import get_current_traceback
         hostname = socket.gethostname()
-        traceback = get_current_traceback(skip=1, show_hidden_frames=False, ignore_system_exceptions=True)
+        traceback = get_current_traceback(skip=1, show_hidden_frames=False
+                , ignore_system_exceptions=True)
         def serializable_filter(dictionary):
-            return {key.replace('.', '-'): val for key, val in dictionary.iteritems() if type(val) in [bool, str, int, float, tuple, unicode]}
+            return {key.replace('.', '-'): val
+                    for key, val in dictionary.iteritems()
+                    if type(val) in [bool, str, int, float, tuple, unicode]}
         def privacy_filter(dictionary):
             for key in ['password', 'secret', 'old_password']:
                 if dictionary.has_key(key): dictionary.update({key: "******"})
@@ -283,7 +292,8 @@ def handle_safe(request):
                 }
         request = request.environ.get('hive.request')
         if request and hasattr(request, 'requester'):
-            log_entry.update({'requester': {'id': request.requester.id, 'name': request.requester.get('name')}})
+            log_entry.update({'requester': {'id': request.requester.id
+                                            , 'name': request.requester.get('name')}})
 
         db.ErrorLog.create(log_entry)
         raise

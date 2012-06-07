@@ -244,7 +244,6 @@ def visits_per_month(db, cohort_users = None, year=None, month=None, force=False
     ca.user_identifier = 'names'
     ca.active_condition = {'value': {'$gte': 2}}
     ca.date_key = '_id.date'
-    ca.start_date = datetime.datetime(2011,12,1,12)
     return ca.analysis(year, month, force=force)
 
 def expressions_per_month(db, cohort_users = None, year=None, month=None, force=False):
@@ -268,7 +267,6 @@ def referrals_per_month(db, cohort_users = None, year=None, month=None, force=Fa
         """
     ca.name = 'referrals_per_month'
     ca.collection = db.mdb.referral
-    ca.start_date = datetime.datetime(2011,11,1,12)
     return ca.analysis(year, month, force=force)
 
 def used_referrals_per_month(db, cohort_users = None, year=None, month=None, force=False):
@@ -282,7 +280,6 @@ def used_referrals_per_month(db, cohort_users = None, year=None, month=None, for
         """
     ca.name = 'used_referrals_per_month'
     ca.collection = db.mdb.referral
-    ca.start_date = datetime.datetime(2011,11,1,12)
     return ca.analysis(year, month, force=force)
 
 def funnel2_per_month(db, cohort_users = None, year=None, month=None, force=False):
@@ -297,7 +294,6 @@ def funnel2_per_month(db, cohort_users = None, year=None, month=None, force=Fals
     ca.name = 'funnel2_per_month'
     ca.collection = db.mdb.contact_log
     ca.user_identifier = 'names'
-    ca.start_date = datetime.datetime(2011,11,1,12)
     return ca.analysis(year, month, force=force)
 
 def impressions_per_user(db, cohort_users = None, year=None, month=None, force=False):
@@ -322,7 +318,7 @@ class CohortAnalysis:
         self.active_condition = {'value': {'$gte': 1}}
         self.date_key = 'created'
         self.user_identifier = 'ids'
-        self.start_date = datetime.datetime(2011,11,1,12)
+        self.start_date = datetime.datetime(2011,12,1,12)
         self.end_date = datetime.datetime.now().replace(day=1, hour=12, minute=0, second=0, microsecond=0) - pandas.DateOffset(months=1)
 
         if cohort_users:
@@ -391,7 +387,7 @@ class CohortAnalysis:
         return rv
 
 def _cohort_users(db, stop_date=datetime.datetime.now()):
-    cohort_range = pandas.DateRange(start = datetime.datetime(2011,7,1,12)
+    cohort_range = pandas.DateRange(start = datetime.datetime(2011,12,1,12)
                                , end = stop_date
                                , offset = pandas.DateOffset(months=1)
                                )
