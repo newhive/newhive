@@ -118,15 +118,16 @@ Hive.App = function(initState) {
     
     o.make_controls = [];
 
+    var focused = false;
     o.focus = Funcs(function() {
-        if(o._focused) return;
-        o._focused = true;
+        if(focused) return;
+        focused = true;
     });
     o.unfocus = Funcs(function() {
-        if(!o._focused) return;
-        o._focused = false;
+        if(!focused) return;
+        focused = false;
     });
-    o.focused = function() { return o._focused };
+    o.focused = function() { return focused };
 
     o.keyPress = function(e){
         var nudge = function(dx,dy){
@@ -184,6 +185,7 @@ Hive.App = function(initState) {
         else {
             o.div.width(dims[0]); o.div.height(dims[1]);
             o.state.dimensions = [dims[0] * o.sf(), dims[1] * o.sf()];
+            if(o.controls) o.controls.layout();
         }
     }
     o.dims_n = function(dims) {
@@ -196,10 +198,8 @@ Hive.App = function(initState) {
         //o.div.css('font-size', scale + 'em');
     }
     o.scale_n = function(s) { o.scale(s * 1/o.sf()) }
-    o.resize = function(dims) {
-        o.dims(dims);
-        if(o.controls) o.controls.layout();
-    }
+    o.resize_start = noop;
+    o.resize = function(dims){ o.dims(dims); }
     o.center = function(offset) {
         var pos = [win.width() / 2 - o.dims()[0] / 2 + win.scrollLeft(),
             win.height() / 2 - o.dims()[1] / 2 + win.scrollTop()]
@@ -435,8 +435,6 @@ Hive.App.has_resize = function(o) {
         o.addControl($('#controls_misc .resize'));
         o.c.resize = o.div.find('.resize');
 
-        var refDims, ctrls = resize = o.div.find('.resize'); // , resize_h = o.div.find('.resize_h'), ctrls = resize.add(resize_h);
-
         o.layout = function() {
             common.layout()
             var p = o.padding;
@@ -444,23 +442,16 @@ Hive.App.has_resize = function(o) {
             o.c.resize .css({ left  : dims[0] - 20 + p, top   : dims[1] - 20 + p });
         }
 
-        ctrls.drag('start', function(e, dd) {
+        o.c.resize.drag('start', function(e, dd) {
             o.refDims = o.app.dims();
-            o.dragging = e.target;
-            o.dragging.busy = true;
-            o.app.div.drag('start');
+            o.drag_target = e.target;
+            o.drag_target.busy = true;
+            o.app.resize_start();
         });
-        resize.drag(function(e, dd) {
-            //var s = Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0],
-            //    (o.refDims[1] + dd.deltaY) / o.refDims[1]);
-            //o.app.resize([o.refDims[0] * s, o.refDims[1] * s]);
+        o.c.resize.drag(function(e, dd) {
             o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1] + dd.deltaY]);
         });
-        //resize_h.drag(function(e, dd) { o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1]]); });
-        ctrls.drag('end', function(e, dd) {
-            o.dragging.busy = false;
-            o.app.div.drag('end');
-        });
+        o.c.resize.drag('end', function(e, dd) { o.drag_target.busy = false; });
 
         return o;
     }
@@ -468,10 +459,9 @@ Hive.App.has_resize = function(o) {
 }
 
 Hive.App.has_resize_h = function(o) {
-
     o.resize_h = function(dims) {
         o.dims(dims);
-        return o.resize([dims[0], o.calcHeight()]);
+        return o.dims([dims[0], o.calcHeight()]);
     }
 
     o.refresh_size = function() { o.resize_h(o.dims()); }
@@ -573,18 +563,18 @@ Hive.App.Text = function(o) {
         return o.rte.get_content();
     }
 
-    o._edit_mode = false;
+    var edit_mode = false;
     o.edit_mode = function(mode) {
-        if(mode && !o._edit_mode) {
+        if(mode && !edit_mode) {
             o.rte.editMode(true);
             o.rte.removeBreaks();
-            o._edit_mode = true;
+            edit_mode = true;
         }
-        else if(o._edit_mode) {
+        else if(edit_mode) {
             o.rte.editMode(false);
             o.rte.set_content(autoLink(o.rte.get_content()));
             o.rte.addBreaks();
-            o._edit_mode = false;
+            edit_mode = false;
         }
     }
     o.focus.add(function(){ o.edit_mode(true); });
@@ -592,7 +582,7 @@ Hive.App.Text = function(o) {
 
     // focus and unfocus handlers for set_shield must be added after handlers that set edit_mode
     Hive.App.has_shield(o);
-    o.set_shield = function(){ return o.dragging || !o.focused() || !o._edit_mode };
+    o.set_shield = function(){ return o.dragging || !o.focused() || !edit_mode };
 
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
@@ -601,14 +591,6 @@ Hive.App.Text = function(o) {
         else o.rte.edit('createlink', v);
     }
 
-    var refScale = o.state.scale ? o.state.scale : 1;
-    o.div.drag('start', function() {
-        refScale = scale;
-    });
-    o.div.drag('end', function() {
-        o.resize(o.dims());
-    });
-    
     o.calcHeight = function() {
         if(is_chrome) {
             o.div.css('height', 1).css('height', '');
@@ -616,6 +598,7 @@ Hive.App.Text = function(o) {
         }
         return $(o.rte.doc.body).height(); 
     }
+
     var scale = o.state.scale ? o.state.scale * 1/o.sf() : 1;
     o.scale = function(s) {
         if(typeof(s) == 'undefined') return scale;
@@ -623,14 +606,24 @@ Hive.App.Text = function(o) {
         $(o.rte.doc.body).css('font-size', scale + 'em');
         common.scale(s);
     }
+
+    var scale_ref = o.state.scale ? o.state.scale : 1;
+    o.resize_start = function(){ scale_ref = scale };
+    o.resize = function(delta) {
+        console.log('resize..');
+        if( !o.refDims ) return;
+        console.log('..ing');
+        o.app.rescale( o.refDims, Math.max( (o.refDims[0] + delta[0]) / o.refDims[0],
+            (o.refDims[1] + delta[1]) / o.refDims[1] ) );
+    };
     o.rescale = function(dims1, s) {
         var dims2 = [dims1[0] * s, dims1[1] * s];
-        o.resize(dims2);
-        o.scale(refScale * s);
+        o.scale( scale_ref * s );
+        o.dims(dims2);
     }
     
     o.load = function() {
-        o.scale_n(refScale);
+        o.scale_n(scale_ref);
         o.content(content);
         common.load();
         o.refresh_size();
@@ -684,22 +677,6 @@ Hive.App.Text = function(o) {
             o.app.rte.edit($(e).attr('cmd'), $(e).attr('val'))
         }); })
 
-        d.find('.resize').drag('start', function(e, dd) {
-            o.refDims = o.app.dims();
-            o.dragging = e.target;
-            o.dragging.busy = true;
-            o.app.div.drag('start');
-        });
-        o.refDims = null;
-        o.c.resize.drag(function(e, dd) {
-            //cos(atan2(x, y) - atan2(w, h))
-            o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0],
-                (o.refDims[1] + dd.deltaY) / o.refDims[1]));
-        });
-        d.find('.resize').drag('end', function(e, dd) {
-            o.dragging.busy = false;
-            o.app.div.drag('end');
-        });
         o.select_box.click(function( e ){
             e.stopPropagation();
             o.app.edit_mode( false );
@@ -881,12 +858,6 @@ Hive.App.Image = function(o) {
         o.addControls($('#controls_image'));
         o.append_link_picker(o.div.find('.buttons'));
         o.div.find('.button.set_bg').click(function() { Hive.set_bg_img(o.app.getState()) });
-
-        o.refDims = null;
-        o.div.find('.resize').drag(function(e, dd) {
-            o.app.resize([o.refDims[0] + dd.deltaX, o.refDims[1] + dd.deltaY]);
-        });
-        o.div.find('.resize').drag('start', function(e, dd) { o.refDims = o.app.dims(); });
 
         return o;
     };
@@ -1188,13 +1159,6 @@ Hive.Selection = function(){
         return $.map(o.elements, function(a){ return a.div[0] });
     }
 
-    o.layout = function(){
-        for (i=0; i<o.elements.length; i++){
-            o.elements[i].controls.layout();
-        }
-        if(o.controls) o.controls.layout();
-    }
-
     o.bounds = function() { 
         return {
             left:   Array.min($.map(o.elements, function(el){ return el.pos()[0]})),
@@ -1262,6 +1226,7 @@ Hive.Selection = function(){
         o.update_focus(e);
     };
     o.dragend = function (e, dd) {
+        if( !o.drag_dims ) return;
         o.dragging = false;
         if (o.pos) { o.update_focus(); }
         if (o.div) o.div.remove();
@@ -1289,6 +1254,7 @@ Hive.Selection = function(){
         o.pos = function(){ var p = o.app.pos(); return [ p[0], p[1] + 50 ]; }
         o.padding = 7;
     }];
+    //Hive.App.has_resize(o);
 
     $(function() {
         $(document.body).drag(o.drag).drag('start', o.dragstart).drag('end', o.dragend);
@@ -2192,3 +2158,9 @@ Hive.append_color_picker = function(container, callback, init_color) {
         return [h, s, v];
     }
 };
+
+// Convenience functions for the console
+function sel(n) {
+    if( !n ) n = 0;
+    return Hive.Selection.elements[n];
+}
