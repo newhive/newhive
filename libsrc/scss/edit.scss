@@ -79,3 +79,20 @@
 .btn_text.selected { color: white; background-color: #696E76; }
 .btn_text { background: none; color: #696E76; padding: 2px 4px; padding: 3px 8px; display: inline-block; }
 .clickable { cursor: default; }
+
+input, textarea { font-size : inherit; }
+
+.drawer { z-index : 1100; white-space : nowrap;  }
+
+.fontsize .option { color : $color_12; vertical-align : bottom; }
+.menu label { color: $color_18; }
+.fontsize .bigger .option.small { width : 70px; height : 135px; }
+.fontsize .option:hover { background-color : $color_selected; color : $color_0; }
+.drawer.fontname .option:hover { background-color : $color_selected; }
+
+#privacy { background-color : $color_selected; color : $color_0; }
+
+.dialogue_handle { background-color : $color_selected; }
+#loading { position : fixed; z-index : 1200; display : none; }
+#app_btns { top : 0; left : 300px; width : 402px; height : 50px; }
+
