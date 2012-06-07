@@ -50,7 +50,7 @@ Hive.Apps = function(initial_state) {
     Hive.makeShuffleable(o.stack);
     o.restack = function() {
         for(var i = 0; i < o.stack.length; i++)
-            if(o.stack[i]) o.stack[i].layer(i); // 0 is for background
+            if(o.stack[i]) o.stack[i].layer(i);
     }
     
     o.add = function(app) {
@@ -1129,8 +1129,10 @@ Hive.Selection = function(){
 
     o.app_drag_init = function (app, e) {
         var drag_items = [];
-        if( o.controls ) $.merge( drag_items, o.controls.div );
-        if( o.selected( app ) || app === o ) $.merge( drag_items, o.divs() );
+        if( o.selected( app ) || app === o ) {
+            $.merge( drag_items, o.divs() );
+            if( o.controls ) $.merge( drag_items, o.controls.div );
+        }
         return drag_items;
     };
     o.app_click = function (app, e) {
@@ -1158,9 +1160,9 @@ Hive.Selection = function(){
         var multi = o.dragging || (apps.length > 1);
 
         // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el) { o.app_select(el, multi); });
+        $.each( apps, function( i, el ){ o.app_select( el, multi ); } );
         // Previously focused elements that should be unfocused
-        $.each(o.elements, function(i, el){ if (!inArray(apps, el)) o.app_unselect(el, multi) });
+        o.each( function( i, el ){ if( !inArray( apps, el ) ) o.app_unselect( el, multi ) } );
 
         o.elements = $.merge([], apps);
 
@@ -1266,6 +1268,22 @@ Hive.Selection = function(){
         o.update(o.elements);
     }
 
+    o.copy = function(){
+        var offset = [ 0, o.dims()[1] + 20 ]
+        o.each( function( i, el ){ el.copy( offset ) } );
+    }
+    o.remove = function(){ o.each( function( i, el ){ el.remove() } ) };
+
+    o.get_stack = function(){
+        return o.elements.sort( function( a, b ){ a.layer() - b.layer() } );
+    };
+    o.stackTop = function(){
+        $.each( o.get_stack(), function( i, el ){ el.stackTop() } )
+    };
+    o.stackBottom = function(){
+        $.each( o.get_stack().reverse(), function( i, el ){ el.stackBottom() } )
+    };
+
     o.make_controls = [function( o ){
         Hive.has_drag_move( o );
         o.pos = function(){ var p = o.app.pos(); return [ p[0], p[1] + 50 ]; }
@@ -1279,12 +1297,12 @@ Hive.Selection = function(){
         $(window).click(function(e) {
             if(!Hive.Selection.count()) return;
             var hit = false;
-            //Hive.Selection.each(function(i,el){
-            //    if( $.contains(el.div.get(0), e.target)
-            //        || (el.controls && $.contains(el.controls.div.get(0), e.target))
-            //        || !e.target.parentNode //Target has already been removed from DOM, as in drag shiel
-            //    ) hit = true;
-            //});
+            Hive.Selection.each(function(i,el){
+                if( $.contains(el.div.get(0), e.target)
+                    || (el.controls && $.contains(el.controls.div.get(0), e.target))
+                ) hit = true;
+            });
+            if( o.controls && $.contains( o.controls.div.get(0), e.target ) ) hit = true;
             if (!hit) Hive.Selection.unfocus();
         });
 
