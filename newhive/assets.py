@@ -119,9 +119,6 @@ class HiveAssets(Assets):
         super(HiveAssets, self).__init__('lib')
 
     def bundle_and_compile(self):
-        self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
-        self.write_js('libsrc/compiled.asset_paths.js')
-
         assets_env = webassets.Environment(join(config.src_home, 'libsrc'), '/lib')
         self.assets_env = assets_env
         assets_env.updater = 'always'
@@ -129,7 +126,7 @@ class HiveAssets(Assets):
 
         # get assets that webasset bundles depend on (just images and fonts), generate scss include
         print('Fetching assets for scss...')
-        hive_assets = self.find('skin').find('fonts').find('images')
+        hive_assets = self.find('')
 
         if config.debug_mode:
             assets_env.debug = True
@@ -172,8 +169,8 @@ class HiveAssets(Assets):
             cmd.build()
             logger.info("Assets build complete in %s seconds", time.time() - t0)
 
-        # add the assets we just compiled, and some other misc. assets, push to s3
-        hive_assets.find(recurse=False).find('doc')
+        # add the assets we just compiled
+        hive_assets.find(recurse=False)
 
     def urls_with_expiry(self):
         urls = self.urls()
