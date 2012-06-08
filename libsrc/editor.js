@@ -235,7 +235,8 @@ Hive.App = function(initState) {
     o.div = $('<div class="ehapp">');
     Hive.has_drag_move( o );
     o.div.click(function(e) { return Hive.Selection.app_click(o, e) });
-    o.div.drag('init', function(e) { return Hive.Selection.app_drag_init(o, e) })
+    o.move_init = function(e) { return Hive.Selection.app_drag_init(o, e) };
+    o.div.drag('init', o.move_init)
     $('#content').append(o.div);
     o.pos_n(o.state.position);
     o.dims_n(o.state.dimensions);
@@ -566,24 +567,19 @@ Hive.App.Text = function(o) {
 
     var content = o.state.content;
     o.content = function(content) {
-        if(typeof(content) != 'undefined') {
-            if(content == null || content == '') o.rte.set_content(' '); // seems to avoid giant or invisible cursor bug in FF
-            else o.rte.set_content(content);
-        }
-        return o.rte.get_content();
     }
 
     o._edit_mode = false;
     o.edit_mode = function(mode) {
         if(mode && !o._edit_mode) {
-            o.rte.editMode(true);
-            o.rte.removeBreaks();
+            o.rte.makeEditable();
+            o.content_element.bind('mousedown', function(e){ e.stopPropagation(); });
             o._edit_mode = true;
         }
-        else if(o._edit_mode) {
-            o.rte.editMode(false);
-            o.rte.set_content(autoLink(o.rte.get_content()));
-            o.rte.addBreaks();
+        else if(!mode && o._edit_mode) {
+            o.rte.makeUneditable();
+            o.content_element.unbind('mousedown');
+
             o._edit_mode = false;
         }
     }
@@ -591,8 +587,6 @@ Hive.App.Text = function(o) {
     o.unfocus.add(function(){ o.edit_mode(false); });
 
     // focus and unfocus handlers for set_shield must be added after handlers that set edit_mode
-    Hive.App.has_shield(o);
-    o.set_shield = function(){ return o.dragging || !o.focused() || !o._edit_mode };
 
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
@@ -610,25 +604,15 @@ Hive.App.Text = function(o) {
     });
     
     o.calcHeight = function() {
-        if(is_chrome) {
-            o.div.css('height', 1).css('height', '');
-            o.dims(o.dims());
-        }
-        return $(o.rte.doc.body).height(); 
+        return o.content_element.height();
     }
     var scale = o.state.scale ? o.state.scale * 1/o.sf() : 1;
     o.scale = function(s) {
         if(typeof(s) == 'undefined') return scale;
         scale = s;
-        $(o.rte.doc.body).css('font-size', scale + 'em');
+        o.div.css('font-size', s + 'em');
         common.scale(s);
     }
-    o.rescale = function(dims1, s) {
-        var dims2 = [dims1[0] * s, dims1[1] * s];
-        o.resize(dims2);
-        o.scale(refScale * s);
-    }
-    
     o.load = function() {
         o.scale_n(refScale);
         o.content(content);
@@ -686,6 +670,7 @@ Hive.App.Text = function(o) {
 
         d.find('.resize').drag('start', function(e, dd) {
             o.refDims = o.app.dims();
+            o.refScale = o.app.scale();
             o.dragging = e.target;
             o.dragging.busy = true;
             o.app.div.drag('start');
@@ -693,17 +678,20 @@ Hive.App.Text = function(o) {
         o.refDims = null;
         o.c.resize.drag(function(e, dd) {
             //cos(atan2(x, y) - atan2(w, h))
-            o.app.rescale(o.refDims, Math.max((o.refDims[0] + dd.deltaX) / o.refDims[0],
-                (o.refDims[1] + dd.deltaY) / o.refDims[1]));
+            o.app.scale(o.refScale * (o.refDims[1] + dd.deltaY) / o.refDims[1]);
+            var div = o.app.content_element.contents().find('body').children('div').first()
+            var height = o.app.calcHeight();
+            o.app.resize([o.refDims[0] + dd.deltaX, height]);
+            e.stopPropagation();
         });
         d.find('.resize').drag('end', function(e, dd) {
             o.dragging.busy = false;
             o.app.div.drag('end');
+            e.stopPropagation();
         });
         o.select_box.click(function( e ){
             e.stopPropagation();
             o.app.edit_mode( false );
-            o.app.update_shield();
         });
 
         return o;
@@ -711,17 +699,14 @@ Hive.App.Text = function(o) {
     o.make_controls.push(controls);
 
     o.div.addClass('text');
-    o.update_shield();
-    o.rte = Hive.rte({
-        css: $('#css_minimal').clone(), parent: o.div,
-        change: throttle(function() { setTimeout(o.refresh_size, 10) }, 200),
-        load: o.load,
-        // the link and color menus can become sticky, when an input field in the menu is focused
-        // the menus have their own handler to close, but clicks in the rte frame get captured
-        click : function() { if(o.controls && o.controls.close_menus) o.controls.close_menus() }
-    });
-    o.content_element = $(o.rte.iframe);
+    o.content_element = $('<div></div>');
+    o.content_element.attr('id', Hive.randomStr()).css('width', '100%');
+    o.div.append(o.content_element);
+    o.rte = new goog.editor.SeamlessField(o.content_element.attr('id'));
+    o.rte.registerPlugin(new goog.editor.plugins.BasicTextFormatter());
+    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
     
+    setTimeout(function(){ o.load(); }, 100);
     return o;
 }
 Hive.registerApp(Hive.App.Text, 'hive.text');
@@ -1017,8 +1002,6 @@ Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 Hive.App.Audio = function(o) {
     var common = $.extend({}, o);
 
-    var randomStr = function(){ return Math.random().toString(16).slice(2);};
-
     o.content = function() {
         return o.content_element.outerHTML();
     };
@@ -1079,7 +1062,7 @@ Hive.App.Audio = function(o) {
 
     var audio_data = o.state.type_specific;
     o.content_element = $(o.state.create || o.state.copy ?
-            $.jPlayer.skin.minimal(o.state.src, randomStr()) : o.state.content )
+            $.jPlayer.skin.minimal(o.state.src, Hive.randomStr()) : o.state.content )
         .addClass('content')
         .css('position', 'relative')
         .css('height', '100%');
@@ -1291,7 +1274,7 @@ Hive.Selection = function(){
     }];
 
     $(function() {
-        $(document.body).drag(o.drag).drag('start', o.dragstart).drag('end', o.dragend);
+        $('#grid_guide').drag(o.drag).drag('start', o.dragstart).drag('end', o.dragend);
 
         // Fallthrough click handler that unfocuses all apps if user clicks on background.
         $(window).click(function(e) {
@@ -1433,7 +1416,7 @@ var main = function() {
 
 
     $('#insert_text,#text_default').click(function(e) {
-        Hive.new_app({ type : 'hive.text', content : ' ' });
+        Hive.new_app({ type : 'hive.text', content : '' });
     });
     $('#text_header').click(function(e) {
         Hive.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
@@ -2192,3 +2175,5 @@ Hive.append_color_picker = function(container, callback, init_color) {
         return [h, s, v];
     }
 };
+
+Hive.randomStr = function(){ return Math.random().toString(16).slice(2);};
