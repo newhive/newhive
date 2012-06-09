@@ -118,15 +118,15 @@ Hive.App = function(initState) {
     o.make_controls = [];
 
     var focused = false;
+    o.focused = function() { return focused };
     o.focus = Funcs(function() {
         if(focused) return;
         focused = true;
-    });
+    }, function(){ return !o.focused()} );
     o.unfocus = Funcs(function() {
         if(!focused) return;
         focused = false;
-    });
-    o.focused = function() { return focused };
+    }, o.focused);
 
     o.keyPress = function(e){
         var nudge = function(dx,dy){
@@ -356,6 +356,10 @@ Hive.Controls = function(app, multiselect) {
     o.select_borders.drag('init', function(e) { return Hive.Selection.app_drag_init(o.app, e) })
         .drag('start', o.app.move_start).drag(o.app.move);
     o.div.append(o.select_box.append(o.select_borders));
+    o.select_box.click(function( e ){
+        e.stopPropagation();
+        o.app.unfocus();
+    });
 
     o.padding = 4;
     o.border_width = 5;
@@ -471,7 +475,9 @@ Hive.App.has_resize_h = function(o) {
         return o.dims([dims[0], o.calcHeight()]);
     }
 
-    o.refresh_size = function() { o.resize_h(o.dims()); }
+    o.refresh_size = function() {
+        o.resize_h(o.dims());
+    };
 
     function controls(o) {
         var common = $.extend({}, o);
@@ -561,19 +567,24 @@ Hive.App.Text = function(o) {
 
     var content = o.state.content;
     o.content = function(content) {
+        if(typeof(content) != 'undefined') {
+            if(content == null || content == '') o.rte.setHtml(false, ' '); // seems to avoid giant or invisible cursor bug in FF
+            else o.rte.setHtml(false, content);
+        }
+        return o.rte.getCleanContents();
     }
 
     var edit_mode = false;
     o.edit_mode = function(mode) {
-        if(mode && !o._edit_mode) {
+        if (mode === edit_mode) return;
+        if (mode) {
             o.rte.makeEditable();
-            o.content_element.bind('mousedown', function(e){ e.stopPropagation(); });
+            o.content_element.bind('mousedown keydown', function(e){ e.stopPropagation(); });
             edit_mode = true;
         }
-        else if(!mode && o._edit_mode) {
+        else {
             o.rte.makeUneditable();
-            o.content_element.unbind('mousedown');
-
+            o.content_element.unbind('mousedown keydown');
             edit_mode = false;
         }
     }
@@ -665,7 +676,7 @@ Hive.App.Text = function(o) {
         }
 
         $('.option[cmd],.button[cmd]').each(function(i, e) { $(e).click(function() {
-            o.app.rte.edit($(e).attr('cmd'), $(e).attr('val'))
+            o.app.rte.execCommand($(e).attr('cmd'), $(e).attr('val'))
         }); })
 
         // Old scaling code
@@ -690,10 +701,6 @@ Hive.App.Text = function(o) {
         //    o.app.div.drag('end');
         //    e.stopPropagation();
         //});
-        o.select_box.click(function( e ){
-            e.stopPropagation();
-            o.app.edit_mode( false );
-        });
 
         return o;
     }

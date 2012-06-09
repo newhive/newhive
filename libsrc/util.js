@@ -13,10 +13,14 @@ function throttle(callback, min_delay, that) {
 }
 
 /*** Returns a function that calls a list of functions ***/
-function Funcs(fn) {
+function Funcs(fn, filter) {
     var o = [];
     if(fn) o.push(fn);
-    var callback = function() { for(i in o) o[i].apply(this, arguments); }
+    var callback = function() {
+        if (!filter || filter()){
+            for(i in o) o[i].apply(this, arguments);
+        }
+    };
     callback.handlers = o;
     callback.add = function(fn) { o.push(fn); }
     callback.clear = function() { o = []; }
