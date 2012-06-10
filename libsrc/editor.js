@@ -1088,7 +1088,7 @@ Hive.App.Sketch = function(o) {
     Hive.App.has_slider_menu(o, '.size', function(v) { o.win.BRUSH_SIZE = v; },
         function() { return o.win.BRUSH_SIZE; });
 
-    o.content_element = $('<iframe>').attr('src', asset('harmony_sketch.html'))
+    o.content_element = $('<iframe>').attr('src', '/lib/harmony_sketch.html')
         .css({'width':'100%','height':'100%','position':'absolute'});
     o.iframe = o.content_element.get(0);
     o.fill_color = function(hex, rgb) { o.win.COLOR = rgb; }
