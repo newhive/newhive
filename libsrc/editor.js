@@ -250,7 +250,10 @@ Hive.App = function(initState) {
              content    :  o.content()
             ,z          :  o.layer()
             });
-        if(o.angle && o.angle() != 0) o.state.angle = o.angle();
+        if(o.angle) {
+            var a = o.state.angle = o.angle();
+            if( a == 0 ) delete o.state.angle;
+        }
         return o.state;
     }
     var win = $(window);
