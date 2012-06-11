@@ -844,6 +844,11 @@ Hive.App.has_rotate = function(o) {
                 top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
         }
 
+        o.rotate = function(a){
+            o.app.angle(a);
+            o.select_box.rotate(a);
+        };
+
         o.rotateHandle = $("<img class='control rotate hoverable' title='Rotate'>")
             .attr('src', asset('skin/1/rotate.png'));
         o.appendControl(o.rotateHandle);
@@ -855,9 +860,9 @@ Hive.App.has_rotate = function(o) {
         }).drag(function(e, dd) {
             angle = o.getAngle(e) - offsetAngle + refAngle;
             if (e.shiftKey && Math.abs(angle - angleRound(angle)) < 10) angle = angleRound(angle);
-            o.app.angle(angle);
-            o.select_box.rotate(angle);
-        });
+            o.rotate( angle );
+        }).dblclick( function(){ o.rotate( 0 ); });
+
         o.select_box.rotate(o.app.angle());
 
         return o;
