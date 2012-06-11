@@ -1284,6 +1284,13 @@ Hive.Selection = function(){
 };
 Hive.Selection();
 
+Hive.History = function(){
+    var o = Hive.History;
+
+
+}
+Hive.History();
+
 Array.max = function( array ){
     return Math.max.apply( Math, array );
 };
