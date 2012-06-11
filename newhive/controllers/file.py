@@ -36,6 +36,7 @@ class FileController(ApplicationController):
             else:
                 mime = mimetypes.guess_type(file.filename)[0]
 
+            if not mime: mime = 'application/octet-stream'
             type, subtype = mime.split('/')
 
             # Supported mime types.  First try to find exact match to full mime

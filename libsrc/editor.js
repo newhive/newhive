@@ -161,7 +161,10 @@ Hive.App = function(initState) {
              content    :  o.content()
             ,z          :  o.layer()
             });
-        if(o.angle && o.angle() != 0) o.state.angle = o.angle();
+        if(o.angle) {
+            var a = o.state.angle = o.angle();
+            if( a == 0 ) delete o.state.angle;
+        }
         return o.state;
     }
     var win = $(window);
@@ -730,6 +733,11 @@ Hive.App.has_rotate = function(o) {
                 top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
         }
 
+        o.rotate = function(a){
+            o.app.angle(a);
+            o.select_box.rotate(a);
+        };
+
         o.rotateHandle = $("<img class='control rotate hoverable drag' title='Rotate'>")
             .attr('src', asset('skin/1/rotate.png'));
         o.appendControl(o.rotateHandle);
@@ -741,9 +749,9 @@ Hive.App.has_rotate = function(o) {
         }).drag(function(e, dd) {
             angle = o.getAngle(e) - offsetAngle + refAngle;
             if (e.shiftKey && Math.abs(angle - angleRound(angle)) < 10) angle = angleRound(angle);
-            o.app.angle(angle);
-            o.select_box.rotate(angle);
-        });
+            o.rotate( angle );
+        }).dblclick( function(){ o.rotate( 0 ); });
+
         o.select_box.rotate(o.app.angle());
 
         return o;
@@ -965,7 +973,7 @@ Hive.App.Sketch = function(o) {
     Hive.App.has_slider_menu(o, '.size', function(v) { o.win.BRUSH_SIZE = v; },
         function() { return o.win.BRUSH_SIZE; });
 
-    o.content_element = $('<iframe>').attr('src', asset('harmony_sketch.html'))
+    o.content_element = $('<iframe>').attr('src', '/lib/harmony_sketch.html')
         .css({'width':'100%','height':'100%','position':'absolute'});
     o.iframe = o.content_element.get(0);
     o.fill_color = function(hex, rgb) { o.win.COLOR = rgb; }
@@ -1469,13 +1477,14 @@ var main = function() {
     var image_menu = hover_menu($('#insert_image'), $('#menu_image'),
         { click_persist : $('#image_embed_code'), auto_close: false});
     var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'),
-        { click_persist : $('#image_embed_code'), auto_close: false});
-    //$('#image_embed_submenu').children().not('#embed_done').add('#image_from_url').click(function(e){e.stopPropagation();});
-    $('#image_embed_done').click(function() {
+        { click_persist: $('#image_embed_code'), auto_close: false,
+            open: function(){ $('#image_embed_code').focus(); } });
+    $('#embed_image_form').submit( function(){
         Hive.embed_code('#image_embed_code');
         image_embed_menu.close();
         image_menu.close();
-    });
+        return false;
+    } );
 
     hover_menu($('#insert_text'), $('#menu_text'));
     hover_menu($('#insert_audio'), $('#menu_audio'));
