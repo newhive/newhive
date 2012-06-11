@@ -1473,13 +1473,14 @@ var main = function() {
     var image_menu = hover_menu($('#insert_image'), $('#menu_image'),
         { click_persist : $('#image_embed_code'), auto_close: false});
     var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'),
-        { click_persist : $('#image_embed_code'), auto_close: false});
-    //$('#image_embed_submenu').children().not('#embed_done').add('#image_from_url').click(function(e){e.stopPropagation();});
-    $('#image_embed_done').click(function() {
+        { click_persist: $('#image_embed_code'), auto_close: false,
+            open: function(){ $('#image_embed_code').focus(); } });
+    $('#embed_image_form').submit( function(){
         Hive.embed_code('#image_embed_code');
         image_embed_menu.close();
         image_menu.close();
-    });
+        return false;
+    } );
 
     hover_menu($('#insert_text'), $('#menu_text'));
     hover_menu($('#insert_audio'), $('#menu_audio'));
