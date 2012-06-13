@@ -588,14 +588,29 @@ Hive.App.Text = function(o) {
             edit_mode = false;
         }
     }
-    o.focus.add(function(){ o.edit_mode(true); });
-    o.unfocus.add(function(){ o.edit_mode(false); });
+    //var previous_range = [];
+    previous_range = []; //temporary for debugging
+    o.focus.add(function(){
+        o.edit_mode(true);
+        console.log(previous_range);
+        if (previous_range.length > 1){
+            previous_range.pop();
+            var selection = window.getSelection()
+            selection.removeAllRanges();
+            selection.addRange(previous_range.pop().getBrowserRangeObject());
+        } else {
+            o.rte.focusAndPlaceCursorAtStart();
+        };
+    });
+    o.unfocus.add(function(){
+        o.edit_mode(false);
+    });
 
     // focus and unfocus handlers for set_shield must be added after handlers that set edit_mode
 
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
-        v = v.trim();
+        //v = v.trim();
         if(!v) o.rte.edit('unlink');
         else o.rte.edit('createlink', v);
     }
@@ -604,7 +619,8 @@ Hive.App.Text = function(o) {
         return o.content_element.height();
     }
 
-    var scale = o.state.scale ? o.state.scale * 1/o.sf() : 1;
+    var sf = o.state.copy ? 1 : 1/o.sf();
+    var scale = o.state.scale ? o.state.scale * sf : 1;
     o.scale = function(s) {
         if(typeof(s) == 'undefined') return scale;
         scale = s;
@@ -658,7 +674,7 @@ Hive.App.Text = function(o) {
         //cmd_buttons('.fontname .option', function(v) { o.app.rte.css('font-family', v) });
 
         Hive.append_color_picker(d.find('.drawer.color'),
-            function(v) { o.app.rte.edit('forecolor', v) });
+            function(v) { o.app.rte.execCommand('+foreColor', v) });
         o.color_menu = o.hover_menu(d.find('.button.color'), d.find('.drawer.color'),
             { auto_close : false });
 
@@ -675,9 +691,14 @@ Hive.App.Text = function(o) {
             o.color_menu.close();
         }
 
-        $('.option[cmd],.button[cmd]').each(function(i, e) { $(e).click(function() {
-            o.app.rte.execCommand($(e).attr('cmd'), $(e).attr('val'))
-        }); })
+        $('.option[cmd],.button[cmd]').each(function(i, el) {
+            $(el).bind('mousedown', function(e) {
+                e.preventDefault();
+            }).click(function(){
+                o.app.rte.execCommand($(el).attr('cmd'), $(el).attr('val'));
+                o.app.content_element.find('*').css('font-size', ''); //strip inline font sizes
+            });
+        });
 
         // Old scaling code
         //d.find('.resize').drag('start', function(e, dd) {
@@ -712,7 +733,14 @@ Hive.App.Text = function(o) {
     o.div.append(o.content_element);
     o.rte = new goog.editor.SeamlessField(o.content_element.attr('id'));
     o.rte.registerPlugin(new goog.editor.plugins.BasicTextFormatter());
+    o.rte.registerPlugin(new goog.editor.plugins.RemoveFormatting());
+    o.rte.registerPlugin(new goog.editor.plugins.UndoRedo());
     goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
+    var blurCallback = function(){
+        previous_range.push(o.rte.getRange());
+    };
+    goog.events.listen(o.rte, goog.editor.Field.EventType.SELECTIONCHANGE, blurCallback);
+    goog.events.listen(o.rte, goog.editor.Field.EventType.BLUR, blurCallback);
     
     setTimeout(function(){ o.load(); }, 100);
     return o;
@@ -1271,6 +1299,7 @@ Hive.Selection = function(){
         Hive.has_drag_move( o );
         o.pos = function(){ var p = o.app.pos(); return [ p[0], p[1] + 50 ]; }
         o.padding = 7;
+
     } );
 
     $(function() {
@@ -2073,12 +2102,20 @@ Hive.append_color_picker = function(container, callback, init_color) {
     init_color = to_hex(init_color);
     var make_picker = function(c) {
         var d = $('<div>').addClass('color_select');
-        d.css('background-color', c).attr('val', c).click(function() {
-            set_color(c); manual_input.val(c); callback(c, to_rgb(c)) });
+        d.css('background-color', c).attr('val', c).click(function(e) {
+            set_color(c);
+            manual_input.val(c);
+            callback(c, to_rgb(c));
+            //e.stopPropagation();
+            //e.preventDefault();
+            //return false;
+        }).bind('mousedown', function(e){ e.preventDefault()});
         return d.get(0);
     }
     var make_row = function(cs) {
-        var d = $("<div>");
+        var d = $("<div>").click(function(e){
+            e.preventDefault();
+        });
         d.append(map(make_picker, cs));
         return d.get(0);
     }

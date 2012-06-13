@@ -145,7 +145,7 @@
   ><img class='button bold hoverable'     src='{{ 'skin/1/bold.png'|asset_url }}'     cmd='+bold'
   ><img class='button italic hoverable'   src='{{ 'skin/1/italic.png'|asset_url }}'   cmd='+italic'
   ><img class='button align'              src='{{ 'skin/1/justify.png'|asset_url }}'  
-  ><img class='button unformat hoverable' src='{{ 'skin/1/unformat.png'|asset_url }}' cmd='removeformat' title='unformat'
+  ><img class='button unformat hoverable' src='{{ 'skin/1/unformat.png'|asset_url }}' cmd='+removeFormat' title='unformat'
   ><!--<div class='control drawer border fontsize'
     ><span class='option fs1' style='font-size : .75em' val = '.75'>a</span
     > <span class='option fs2' style='font-size :   1em' val =   '1'>a</span
@@ -156,57 +156,57 @@
     > <span class='option fs5' style='font-size :   8em' val =   '8'>a</span
   ></div
   >--><div class='control drawer border fontname'
-   ><div class='option' style='font-family:Georgia'         cmd='fontname' val='Georgia'        >Georgia       </div
-   ><div class='option' style='font-family:Helvetica'       cmd='fontname' val='Helvetica'      >Helvetica     </div
-   ><div class='option' style='font-family:Courier New'     cmd='fontname' val='Courier New'    >Courier New   </div
-   ><div class='option' style='font-family:Times'           cmd='fontname' val='Times'          >Times         </div
-   ><div class='option' style='font-family:Trebuchet'       cmd='fontname' val='Trebuchet'      >Trebuchet     </div
-   ><div class='option' style='font-family:Museo'           cmd='fontname' val='Museo'          >Museo         </div
-   ><div class='option' style='font-family:BPscript'        cmd='fontname' val='BPscript'       >BPscript      </div
-   ><div class='option' style='font-family:Code'            cmd='fontname' val='Code'           >Code          </div
-   ><div class='option' style='font-family:Comic Zine'      cmd='fontname' val='Comic Zine'     >Comic Zine    </div
-   ><div class='option' style='font-family:Folk Outline'    cmd='fontname' val='Folk Outline'   >Folk Outline  </div
-   ><div class='option' style='font-family:Folk Shadow'     cmd='fontname' val='Folk Shadow'    >Folk Shadow   </div
-   ><div class='option' style='font-family:Folk Sketches'   cmd='fontname' val='Folk Sketches'  >Folk Sketches </div
-   ><div class='option' style='font-family:Folk'            cmd='fontname' val='Folk'           >Folk          </div
-   ><div class='option' style='font-family:Lane'            cmd='fontname' val='Lane'           >Lane          </div
-   ><div class='option' style='font-family:Lane Posh'       cmd='fontname' val='Lane Posh'      >Lane Posh     </div
-   ><div class='option' style='font-family:Lane Up'         cmd='fontname' val='Lane Up'        >Lane Up       </div
-   ><div class='option' style='font-family:League Gothic'   cmd='fontname' val='League Gothic'  >League Gothic </div
-   ><div class='option' style='font-family:Lemon Chi'       cmd='fontname' val='Lemon Chi'      >Lemon Chi     </div
-   ><div class='option' style='font-family:Lilly'           cmd='fontname' val='Lilly'          >Lilly         </div
-   ><div class='option' style='font-family:Lobster'         cmd='fontname' val='Lobster'        >Lobster       </div
-   ><div class='option' style='font-family:Matiz'           cmd='fontname' val='Matiz'          >Matiz         </div
-   ><div class='option' style='font-family:Quicksand'       cmd='fontname' val='Quicksand'      >Quicksand     </div
-   ><div class='option' style='font-family:Bitstream Mono'  cmd='fontname' val='Bitstream Mono' >Bitstream     </div
+   ><div class='option' style='font-family:Georgia'         cmd='+fontName' val='Georgia'        >Georgia       </div
+   ><div class='option' style='font-family:Helvetica'       cmd='+fontName' val='Helvetica'      >Helvetica     </div
+   ><div class='option' style='font-family:Courier New'     cmd='+fontName' val='Courier New'    >Courier New   </div
+   ><div class='option' style='font-family:Times'           cmd='+fontName' val='Times'          >Times         </div
+   ><div class='option' style='font-family:Trebuchet'       cmd='+fontName' val='Trebuchet'      >Trebuchet     </div
+   ><div class='option' style='font-family:Museo'           cmd='+fontName' val='Museo'          >Museo         </div
+   ><div class='option' style='font-family:BPscript'        cmd='+fontName' val='BPscript'       >BPscript      </div
+   ><div class='option' style='font-family:Code'            cmd='+fontName' val='Code'           >Code          </div
+   ><div class='option' style='font-family:Comic Zine'      cmd='+fontName' val='Comic Zine'     >Comic Zine    </div
+   ><div class='option' style='font-family:Folk Outline'    cmd='+fontName' val='Folk Outline'   >Folk Outline  </div
+   ><div class='option' style='font-family:Folk Shadow'     cmd='+fontName' val='Folk Shadow'    >Folk Shadow   </div
+   ><div class='option' style='font-family:Folk Sketches'   cmd='+fontName' val='Folk Sketches'  >Folk Sketches </div
+   ><div class='option' style='font-family:Folk'            cmd='+fontName' val='Folk'           >Folk          </div
+   ><div class='option' style='font-family:Lane'            cmd='+fontName' val='Lane'           >Lane          </div
+   ><div class='option' style='font-family:Lane Posh'       cmd='+fontName' val='Lane Posh'      >Lane Posh     </div
+   ><div class='option' style='font-family:Lane Up'         cmd='+fontName' val='Lane Up'        >Lane Up       </div
+   ><div class='option' style='font-family:League Gothic'   cmd='+fontName' val='League Gothic'  >League Gothic </div
+   ><div class='option' style='font-family:Lemon Chi'       cmd='+fontName' val='Lemon Chi'      >Lemon Chi     </div
+   ><div class='option' style='font-family:Lilly'           cmd='+fontName' val='Lilly'          >Lilly         </div
+   ><div class='option' style='font-family:Lobster'         cmd='+fontName' val='Lobster'        >Lobster       </div
+   ><div class='option' style='font-family:Matiz'           cmd='+fontName' val='Matiz'          >Matiz         </div
+   ><div class='option' style='font-family:Quicksand'       cmd='+fontName' val='Quicksand'      >Quicksand     </div
+   ><div class='option' style='font-family:Bitstream Mono'  cmd='+fontName' val='Bitstream Mono' >Bitstream     </div
 
-   ><div class='option' style='font-family:Folks'           cmd='fontname' val='Folks'          >Folks        </div
-   ><div class='option' style='font-family:Merge'           cmd='fontname' val='Merge'          >Merge        </div
-   ><div class='option' style='font-family:Bebas'           cmd='fontname' val='Bebas'          >Bebas        </div
-   ><div class='option' style='font-family:Arvo'            cmd='fontname' val='Arvo'           >Arvo         </div
-   ><div class='option' style='font-family:St Ryde'         cmd='fontname' val='St Ryde'        >St Ryde      </div
-   ><div class='option' style='font-family:Chunk Five'      cmd='fontname' val='Chunk Five'     >Chunk Five   </div
-   ><div class='option' style='font-family:Droid Serif'     cmd='fontname' val='Droid Serif'    >Droid Serif  </div
-   ><div class='option' style='font-family:Komika Title'    cmd='fontname' val='Komika Title'   >Komika Title </div
-   ><div class='option' style='font-family:Banda'           cmd='fontname' val='Banda'          >Banda        </div
-   ><div class='option' style='font-family:Pacifico'        cmd='fontname' val='Pacifico'       >Pacifico     </div
-   ><div class='option' style='font-family:Fjord'           cmd='fontname' val='Fjord'          >Fjord        </div
-   ><div class='option' style='font-family:Josefin Slab'    cmd='fontname' val='Josefin Slab'   >Josefin Slab </div
-   ><div class='option' style='font-family:Nevis'           cmd='fontname' val='Nevis'          >Nevis        </div
-   ><div class='option' style='font-family:Lobster Two'     cmd='fontname' val='Lobster Two'    >Lobster Two  </div
-   ><div class='option' style='font-family:Crimson'         cmd='fontname' val='Crimson'        >Crimson      </div
-   ><div class='option' style='font-family:Classic Round'   cmd='fontname' val='Classic Round'  >Classic Round</div
-   ><div class='option' style='font-family:Novecento'       cmd='fontname' val='Novecento'      >Novecento   </div
+   ><div class='option' style='font-family:Folks'           cmd='+fontName' val='Folks'          >Folks        </div
+   ><div class='option' style='font-family:Merge'           cmd='+fontName' val='Merge'          >Merge        </div
+   ><div class='option' style='font-family:Bebas'           cmd='+fontName' val='Bebas'          >Bebas        </div
+   ><div class='option' style='font-family:Arvo'            cmd='+fontName' val='Arvo'           >Arvo         </div
+   ><div class='option' style='font-family:St Ryde'         cmd='+fontName' val='St Ryde'        >St Ryde      </div
+   ><div class='option' style='font-family:Chunk Five'      cmd='+fontName' val='Chunk Five'     >Chunk Five   </div
+   ><div class='option' style='font-family:Droid Serif'     cmd='+fontName' val='Droid Serif'    >Droid Serif  </div
+   ><div class='option' style='font-family:Komika Title'    cmd='+fontName' val='Komika Title'   >Komika Title </div
+   ><div class='option' style='font-family:Banda'           cmd='+fontName' val='Banda'          >Banda        </div
+   ><div class='option' style='font-family:Pacifico'        cmd='+fontName' val='Pacifico'       >Pacifico     </div
+   ><div class='option' style='font-family:Fjord'           cmd='+fontName' val='Fjord'          >Fjord        </div
+   ><div class='option' style='font-family:Josefin Slab'    cmd='+fontName' val='Josefin Slab'   >Josefin Slab </div
+   ><div class='option' style='font-family:Nevis'           cmd='+fontName' val='Nevis'          >Nevis        </div
+   ><div class='option' style='font-family:Lobster Two'     cmd='+fontName' val='Lobster Two'    >Lobster Two  </div
+   ><div class='option' style='font-family:Crimson'         cmd='+fontName' val='Crimson'        >Crimson      </div
+   ><div class='option' style='font-family:Classic Round'   cmd='+fontName' val='Classic Round'  >Classic Round</div
+   ><div class='option' style='font-family:Novecento'       cmd='+fontName' val='Novecento'      >Novecento   </div
   ></div
   ><div class='control drawer border color'></div
   ><div class='control drawer border align'
    ><div><nobr
-    ><img class='option small hoverable' cmd='justifyleft'    src='{{ 'skin/1/justify_left.png'|asset_url }}' 
-    ><img class='option small hoverable' cmd='justifyright'   src='{{ 'skin/1/justify_right.png'|asset_url }}'
+    ><img class='option small hoverable' cmd='+justifyLeft'    src='{{ 'skin/1/justify_left.png'|asset_url }}' 
+    ><img class='option small hoverable' cmd='+justifyRight'   src='{{ 'skin/1/justify_right.png'|asset_url }}'
    ></nobr></div
    ><div
-    ><img class='option small hoverable' cmd='justifycenter'  src='{{ 'skin/1/justify_center.png'|asset_url }}'
-    ><img class='option small hoverable' cmd='justifyfull'    src='{{ 'skin/1/justify_full.png'|asset_url }}'  
+    ><img class='option small hoverable' cmd='+justifyCenter'  src='{{ 'skin/1/justify_center.png'|asset_url }}'
+    ><img class='option small hoverable' cmd='+justifyFull'    src='{{ 'skin/1/justify_full.png'|asset_url }}'  
    ></div
   ></div
  ></div>
