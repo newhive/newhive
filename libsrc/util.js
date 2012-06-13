@@ -364,7 +364,7 @@ function array_delete(arr, e) {
     }
     return false;
 }
-function arrayAddition(a,b){
+function array_sum( a, b ){
     if (a.length != b.length) { throw "Arrays must be equal length" };
     rv = []
     for (i=0; i< a.length; i++){
