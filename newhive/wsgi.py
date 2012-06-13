@@ -18,7 +18,7 @@ from newhive.controllers import (
 )
 
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
-from datetime import datetime
+import datetime
 from os.path  import join
 from werkzeug import Request, Response, exceptions, url_unquote
 from werkzeug.routing import Map, Rule
@@ -52,12 +52,22 @@ hive_assets.push_s3()
 ##############################################################################
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(join(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
+
+class JSONDateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        else:
+            return json.JSONEncoder.default(self, obj)
+def datetime_json(data):
+    return json.dumps(data, cls=JSONDateTimeEncoder)
+
 jinja_env.filters.update({
      'time': friendly_date
     ,'epoch_to_string': epoch_to_string
     ,'length_bucket': length_bucket
     ,'large_number': large_number
-    ,'json': json.dumps
+    ,'json': datetime_json
     ,'mod': lambda x, y: x % y
     ,'querystring': querystring
     ,'percentage': lambda x: x*100

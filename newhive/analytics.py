@@ -162,6 +162,25 @@ def funnel2(db, start_datetime, end_datetime):
             , 'views': int(views['ga:pageviews'])
     }
 
+def pageviews(db, start_datetime, end_datetime):
+    #GA seems to use dates inclusively, so instead of ending on Feb 1, end on Jan 31
+    ga_end_datetime = end_datetime - pandas.DateOffset(days=1)
+
+    # convert datetime into epoch
+    start = time.mktime(start_datetime.timetuple())
+    end = time.mktime(end_datetime.timetuple())
+
+    ga = oauth.GAClient()
+    views = ga.find_time_series({
+        'start_date': start_datetime.strftime("%Y-%m-%d")
+        , 'end_date': ga_end_datetime.strftime("%Y-%m-%d")
+        , 'metrics': 'ga:pageviews'
+        })
+    views = numpy.array(views)
+    index = list(views[:, 0])
+    data = list(views[:, 1])
+    return (index, data)
+
 def contacts_per_hour(db, end=now()):
     end = datetime.datetime.fromtimestamp(end)
     end = end.replace(hour=12, minute=0, second=0, microsecond=0)

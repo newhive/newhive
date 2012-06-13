@@ -258,3 +258,11 @@ class AnalyticsController(ApplicationController):
         response.context['data'] = list(hist[1:15])
         response.context['edges'] = list(bin_edges[1:16])
         return self.serve_page(response, 'pages/analytics/impressions.html')
+
+    def pageviews(self, request, response):
+        end = datetime.now()
+        start = datetime(2012,1,1)
+        c = response.context
+        c['dates'], c['data'] = analytics.pageviews(self.db, start, end)
+        return self.serve_page(response, 'partials/charts/time.html')
+

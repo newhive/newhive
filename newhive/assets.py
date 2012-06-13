@@ -142,7 +142,10 @@ class HiveAssets(Assets):
             'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'colors.js', filters='yui_js', output='../lib/app.js')
         assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
 
-        assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js', output='../lib/admin.js')
+        assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js',
+                'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js',
+                'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js',
+                'admin.js', output='../lib/admin.js')
         assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
 
         scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
