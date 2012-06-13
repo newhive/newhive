@@ -1216,7 +1216,6 @@ Hive.Selection = function(){
         };
         copies = $.map( o.elements, function(e){
             return e.copy({ offset: offset, load: load_counter }) } );
-        o.select(copies);
     }
     o.remove = function(){
         var sel = $.merge([], o.elements);
