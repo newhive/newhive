@@ -39,6 +39,8 @@ input, textarea { font-size : inherit }
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
  <div class='nav_icon center pad'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div>
+ <div class='nav_icon center smpad'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div>
+ <div class='nav_icon center smpad'><img id='btn_redo' title='redo' class='hoverable' src='{{ 'skin/1/redo.png'|asset_url }}'></div>
  <div class='nav_icon pad'></div>
  <div id='btn_save' class='btn medbold nav_icon hoverable center pad'>
   Save <img class='scale' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
@@ -93,9 +95,9 @@ input, textarea { font-size : inherit }
  <img id='insert_text'  class='hoverable nav_icon' src='{{ 'skin/1/text.png'|asset_url }}'
  ><img id='insert_image' class='hoverable nav_icon' src='{{ 'skin/1/images.png'|asset_url }}'
  ><img id='insert_audio' class='hoverable nav_icon' src='{{ 'skin/1/audio.png'|asset_url }}'
- ><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'
  ><img id='insert_embed' class='hoverable nav_icon' src='{{ 'skin/1/embed.png'|asset_url }}'
- ><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'>
+ ><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'
+ ><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'>
  
  <div id='menu_text' class='menu medbold'>
   <div id='text_default' class='menu_item'>Normal</div>
@@ -121,7 +123,6 @@ input, textarea { font-size : inherit }
  
  <div id='menu_audio' class='menu medbold'>
   <div id='audio_upload' class='menu_item'>Upload MP3</div>
-  <div id='audio_record' class='menu_item'>Record Audio (coming soon)</div>
  </div>
  
  <div id='menu_file' class='menu medbold'>
