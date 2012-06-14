@@ -24,16 +24,11 @@ Hive.has_shuffle = function(arr) {
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
 // editing functions.
-Hive.Apps = function(initial_state) {
-    var o = [];
+Hive.Apps = [];
+Hive.Apps.init = function(initial_state, load) {
+    var o = Hive.Apps;
+    if(! load) load = noop;
     
-    // selected apps are being interacted with
-    //var selected = [];
-    
-    var init = function(o) {
-        if(! initial_state) initial_state = [ ];
-        map(Hive.App, initial_state)
-    }
     o.state = function() {
         return map(function(app) { return app.state(); }, o);
     }
@@ -63,10 +58,14 @@ Hive.Apps = function(initial_state) {
         for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
     
-    init(o);
-    return o;
-}
-Hive.OpenApps = Hive.Apps();
+    if(! initial_state) initial_state = [ ];
+    var load_count = initial_state.length;
+    var load_counter = function(){
+        load_count--;
+        if( ! load_count ) load();
+    };
+    $.map(initial_state, function(e){ Hive.App(e, { load: load_counter }) } );
+};
 
 Hive.has_drag_move = function(o) {
     o.move_start = function(){ o.ref_pos = o.pos(); };
@@ -86,7 +85,7 @@ Hive.env = function(){
 // Creates generic initial object for all App types.
 Hive.App = function(init_state, opts) {
     var o = {};
-    o.apps = Hive.OpenApps;
+    o.apps = Hive.Apps;
     if(!opts) opts = {};
     
     o.init_state = { z: null };
@@ -1162,7 +1161,7 @@ Hive.Selection = function(){
         var select = { top: o.drag_pos[1] - nav_bar_offset, right: o.drag_pos[0] + o.drag_dims[0],
             bottom: o.drag_pos[1] + o.drag_dims[1] - nav_bar_offset, left: o.drag_pos[0] };
         o.old_selection = o.new_selection;
-        o.new_selection = $.grep(Hive.OpenApps, function(el){
+        o.new_selection = $.grep(Hive.Apps, function(el){
             var dims = el.dims();
             var pos = el.pos();
             return (select.top <= pos[1] && select.left <= pos[0]
@@ -1287,7 +1286,7 @@ Hive.Selection = function(){
         $(document).keydown(function(e){ 
             // ctrl+[shift+]a to select all or none
             if( e.keyCode == 65 && e.ctrlKey ){
-                o.select( e.shiftKey ? [] : Hive.OpenApps );
+                o.select( e.shiftKey ? [] : Hive.Apps );
                 e.preventDefault();
                 return;
             }
@@ -1305,7 +1304,7 @@ Hive.Selection();
 
 Hive.History = function(){
     var o = Hive.History;
-    o.apps_ref = $.map(Hive.Exp.apps, function(e){ return $.extend(true, {}, e) });
+    o.apps_ref = $.map(Hive.Apps, function(e){ return e.state() });
     o.history = [];
     o.history_index = -1;
 
@@ -1314,13 +1313,16 @@ Hive.History = function(){
         var by_id = {};
         $.each(o.apps_ref, function(i,e){ by_id[e.id] = i; });
 
-        //if( o.history.length > o.history_index + 1 )
-        //    o.history.splice( o.history_index );
+        if( o.history.length > o.history_index + 1 )
+            o.history.splice( o.history_index );
         o.history.push({ apps_new: modified, apps_old: apps_old });
 
         $.each(modified, function(i, e){
             var i = by_id[e.id];
-            if(i == undefined) return;
+            if(i == undefined) {
+                o.apps_ref.push(e);
+                return;
+            }
             apps_old.push(o.apps_ref[i]);
             o.apps_ref[i] = e;
         });
@@ -1329,13 +1331,13 @@ Hive.History = function(){
     };
 
     o.undo = function(){
-        if(! o.history.length) return;
+        if(! o.history_index) return;
 
         var now = o.history[o.history_index];
         var by_id = {};
         $.each(o.apps_ref, function(i,e){ by_id[e.id] = i; });
 
-        $.each(now.apps_new, function(i, e){ Hive.OpenApps.fetch(e.id).remove(); });
+        $.each(now.apps_new, function(i, e){ Hive.Apps.fetch(e.id).remove(); });
         $.each(now.apps_old, function(i, e){
             Hive.App(e);
             o.apps_ref[ by_id[e.id] ] = e;
@@ -1345,8 +1347,19 @@ Hive.History = function(){
     };
 
     o.redo = function(){
-        //o.history_index += 1;
+        if( o.history_index == (o.history.length - 1) ) return;
 
+        var now = o.history[o.history_index];
+        var by_id = {};
+        $.each(o.apps_ref, function(i,e){ by_id[e.id] = i; });
+        $.each(now.apps_new, function(i, e){
+            if(by_id[e.id]) o.apps_ref[ by_id[e.id] ] = e;
+            else o.apps_ref.push(e);
+            var app = Hive.Apps.fetch(e.id);
+            if(app) app.remove();
+            Hive.App(e);
+        });
+        o.history_index += 1;
     };
 };
 
@@ -1405,7 +1418,7 @@ Hive.new_file = function(files, opts) {
     return false;
 }
 
-var main = function() {
+Hive.init = function() {
     if (typeof(Hive.Exp.images) == "undefined" || typeof(Hive.Exp.images) == "number") {
         if (typeof(Hive.Exp.apps) == "undefined") {
             Hive.Exp.images = [];
@@ -1459,7 +1472,7 @@ var main = function() {
         var new_env = Hive.env();
         map(function(a) {
             a.state_relative_set(new_env, a.state_relative(old_env));
-        }, Hive.OpenApps);
+        }, Hive.Apps);
         center($('#app_btns'), $('#nav_bg'));
         if(Hive.Selection.controls) Hive.Selection.controls.layout();
         old_env = new_env;
@@ -1653,13 +1666,13 @@ var main = function() {
     });
     if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 
-    Hive.Apps(Hive.Exp.apps);
-
-    Hive.History();
-    $('#btn_undo').click(Hive.History.undo);
-    $('#btn_redo').click(Hive.History.redo);
-}
-$(main);
+    Hive.Apps.init(Hive.Exp.apps, function(){
+        Hive.History();
+        $('#btn_undo').click(Hive.History.undo);
+        $('#btn_redo').click(Hive.History.redo);
+    });
+};
+$(Hive.init);
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to Hive.new_app.
@@ -1801,7 +1814,7 @@ Hive.del_draft = function() { delete localStorage.expr_draft; }
 Hive.state = function() {
     //Hive.Exp.domain = $('#domain').val();
     Hive.Exp.name = $('#url').val();
-    Hive.Exp.apps = Hive.OpenApps.state();
+    Hive.Exp.apps = Hive.Apps.state();
     Hive.Exp.title = $('#title').val();
     Hive.Exp.tags = $('#tags_input').val();
     Hive.Exp.auth = $('#menu_privacy .selected').attr('val');
@@ -1845,7 +1858,7 @@ Hive.set_bg_img = function(app_state) {
 };
 
 function remove_all_apps() {
-    var aps = map(id, Hive.OpenApps); // store a copy of OpenApps so we can destructively update it
+    var aps = map(id, Hive.Apps); // store a copy of Apps so we can destructively update it
     map(function(a) { a.remove() }, aps);
 }
 
