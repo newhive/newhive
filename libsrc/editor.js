@@ -731,7 +731,8 @@ Hive.App.Text = function(o) {
     o.content_element = $('<div></div>');
     o.content_element.attr('id', Hive.randomStr()).css('width', '100%');
     o.div.append(o.content_element);
-    o.rte = new goog.editor.SeamlessField(o.content_element.attr('id'));
+    //o.rte = new goog.editor.SeamlessField(o.content_element.attr('id'));
+    o.rte = new Hive.goog_rte(o.content_element.attr('id'));
     o.rte.registerPlugin(new goog.editor.plugins.BasicTextFormatter());
     o.rte.registerPlugin(new goog.editor.plugins.RemoveFormatting());
     o.rte.registerPlugin(new goog.editor.plugins.UndoRedo());
@@ -747,6 +748,98 @@ Hive.App.Text = function(o) {
 }
 Hive.registerApp(Hive.App.Text, 'hive.text');
 
+
+Hive.goog_rte = function(id){
+    goog.editor.SeamlessField.call(this, id);
+
+    function rangeIntersectsNode(range, node) {
+        var nodeRange = node.ownerDocument.createRange();
+        try {
+          nodeRange.selectNode(node);
+        }
+        catch (e) {
+          nodeRange.selectNodeContents(node);
+        }
+
+        return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
+               range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
+    }
+
+    this.edit = function(command, args){
+        // Fix Chrome's incompatibile behavior of inserting href as text 
+        if(command == 'createlink' && !this.get_range().toString()) return;
+
+        document.execCommand(command, false, args);
+    }
+
+    this.select = function(range) {
+        var s = window.getSelection();
+        if(!s) return;
+        s.removeAllRanges();
+        if(range)
+        s.addRange(range);
+        return s;
+    }
+
+    this.get_range = function() {
+        var s = window.getSelection();
+        if(s.rangeCount) return window.getSelection().getRangeAt(0).cloneRange();
+        else return null;
+    }
+
+    // Finds link element the cursor is on, selects it after saving
+    // any existing selection, returns its href
+    this.get_link = function() {
+        this.range = this.get_range(); // save existing selection
+        var r = this.range.cloneRange();
+
+        // Look for link in parents
+        var node = r.startContainer;
+        while(node.parentNode) {
+            node = node.parentNode;
+            if($(node).is('a')) {
+                r.selectNode(node);   
+                this.select(r);
+                return $(node).attr('href');
+            }
+        }
+
+        // Look for the first link that intersects r
+        var find_intersecting = function(r) {
+            var link = false;
+            $(document).find('a').each(function() {
+                if(!link && rangeIntersectsNode(r, this)) link = this });
+            if(link) {
+                r.selectNode(link);
+                this.select(r);
+                return $(link).attr('href');
+            };
+            return '';
+        }
+        var link = find_intersecting(r);
+        if(link) return link;
+
+        // If there's still no link, select current word
+        if(!r.toString()) {
+            // select current word
+            // r.expand('word') // works in IE and Chrome
+            var s = this.select(r);
+            // If the cursor is not at the beginning of a word...
+            if(!r.startContainer.data || !/\W|^$/.test(
+                r.startContainer.data.charAt(r.startOffset - 1))
+            ) s.modify('move','backward','word');
+            s.modify('extend','forward','word');
+        }
+
+        // It's possible to grab a previously missed link with the above code 
+        var link = find_intersecting(this.get_range());
+        return link;
+    }
+
+}
+$(function(){
+    goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
+});
 
 Hive.App.has_rotate = function(o) {
     var angle = o.state.angle ? o.state.angle : 0;
