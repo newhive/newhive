@@ -301,9 +301,9 @@ Hive.Controls = function(app, multiselect) {
     };
 
     o.append_link_picker = function(d) {
-        var e = $("<div class='control drawer link'><input type='text'> "
+        var e = $("<div class='control drawer link'><nobr><input type='text'> "
             + "<img class='hoverable' src='" + asset('skin/1/delete_sm.png')
-            + "' title='Clear link'>");
+            + "' title='Clear link'></nobr>");
         d.append(e);
         var input = e.find('input');
         var m = o.hover_menu(d.find('.button.link'), e, {
@@ -319,7 +319,6 @@ Hive.Controls = function(app, multiselect) {
             ,auto_close : false
         });
         var set_link = function(){
-            console.log('setting link');
             var v = input.val();
             // TODO: improve URL guessing
             if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
@@ -613,7 +612,6 @@ Hive.App.Text = function(o) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
         //v = v.trim();
         if(!v) o.rte.edit('unlink');
-        //else o.rte.execCommand('createlink', v);
         else o.rte.edit('createlink', v);
     }
 
@@ -702,31 +700,6 @@ Hive.App.Text = function(o) {
             });
         });
 
-        o.iframe_fields = {};
-        o.make_iframe_field = function(selector) {
-            var element = o.div.find(selector);
-            var element_copy = element.clone();
-            var iframe = $("<iframe style='border : none; height: " + element.outerHeight() + "px'>").get(0);
-            iframe.src = 'javascript:void(0)';
-            o.iframe_fields[selector] = iframe;
-            element.replaceWith(iframe);
-
-            o.wait_for_doc = function() {
-                if(iframe.contentWindow.document) {
-                    clearTimeout(o.doc_poll);
-                    var doc = $(iframe).contents();
-                    doc.find('body').append(element_copy);
-                    doc.find('head').append($('#css_minimal').outerHTML());
-                    element.change();
-                    //doc.find('head').append("<link rel='stylesheet' type='text/css' href='" +
-                    //    asset('minimal.css') + "'>");
-                }
-            }
-
-            //$(o.parent).append(o.iframe);
-            o.doc_poll = setTimeout(o.wait_for_doc, 1);
-        }
-        o.make_iframe_field('.link input');
         // Old scaling code
         //d.find('.resize').drag('start', function(e, dd) {
         //    o.refDims = o.app.dims();
