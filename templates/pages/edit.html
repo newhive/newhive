@@ -23,9 +23,10 @@
      b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to : b } ) });
      {% if show_help %}$('#btn_help').click(){% endif %} })();
   </script>
-  <div class='nav_icon center pad'><img id='btn_grid' title="Show Grid" class='hoverable'
-                                        src='{{ 'skin/1/grid-off.png'|asset_url }}'></div>
-  <div class='nav_icon pad'></div>
+ <div class='nav_icon center pad'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div>
+ <div class='nav_icon center smpad'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div>
+ <div class='nav_icon center smpad'><img id='btn_redo' title='redo' class='hoverable' src='{{ 'skin/1/redo.png'|asset_url }}'></div>
+ <div class='nav_icon pad'></div>
   <div id='btn_save' class='btn medbold nav_icon hoverable center pad'>
     Save
     <img class='scale' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
@@ -79,9 +80,9 @@
  <img id='insert_text'  class='hoverable nav_icon' src='{{ 'skin/1/text.png'|asset_url }}'
  ><img id='insert_image' class='hoverable nav_icon' src='{{ 'skin/1/images.png'|asset_url }}'
  ><img id='insert_audio' class='hoverable nav_icon' src='{{ 'skin/1/audio.png'|asset_url }}'
- ><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'
  ><img id='insert_embed' class='hoverable nav_icon' src='{{ 'skin/1/embed.png'|asset_url }}'
- ><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'>
+ ><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'
+ ><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'>
  
  <div id='menu_text' class='menu medbold'>
   <div id='text_default' class='menu_item'>Normal</div>
@@ -94,11 +95,12 @@
   <div id='image_background' class='menu_item'>Background</div>
   <div id='image_from_url' class='menu_item'>Image URL</div>
   <div id='image_embed_submenu' style='text-align: center; padding-bottom: 7px;'>
-    <textarea id='image_embed_code' class='embed_box' style='width : 325px; height: 1.2em;' placeholder='{{ui.image_embed_textarea}}'></textarea>
-    <div class='spacer'></div>
-    <!--<input type='checkbox' id='image_embed_as_background' name='image_embed_as_background' value='image_embed_as_background'/>
-    <label for='image_embed_as_background'>{{ui.image_embed_as_background}}</label>-->
-    <input id='image_embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
+    <form id='embed_image_form'>
+      <input type='text' id='image_embed_code' class='embed_box' style='width: 325px; height: 1.2em;'
+        placeholder='{{ ui.image_embed_textarea }}'>
+      <div class='spacer'></div>
+      <input id='image_embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
+    </form>
   </div>
   <!--<div id='image_webcam' class='menu_item'>Take picture</div>
   <div id='image_search' class='menu_item'>Google images</div>-->
@@ -106,7 +108,6 @@
  
  <div id='menu_audio' class='menu medbold'>
   <div id='audio_upload' class='menu_item'>Upload MP3</div>
-  <div id='audio_record' class='menu_item'>Record Audio (coming soon)</div>
  </div>
  
  <div id='menu_file' class='menu medbold'>
