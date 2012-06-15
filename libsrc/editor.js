@@ -835,7 +835,23 @@ Hive.goog_rte = function(id){
         var link = find_intersecting(this.get_range());
         return link;
     }
-
+    var current_selection;
+    this.wrap_selection = function(wrapper){
+        if (typeof(wrapper) == "string") wrapper = $(wrapper)[0];
+        var range = this.getRange();
+        try {
+            range.surroundWithContents(wrapper);
+        } catch (e) {
+            document.execCommand('createLink', false, 'temporary_link');
+            var nodes = $(range.getContainer()).find('a[href=temporary_link]');
+            current_selection = nodes.wrapInner(wrapper).children().unwrap();
+            return current_selection;
+        };
+    }
+    this.unwrap_nodes = function(){
+        if (! current_selection) return;
+        current_selection.each(function(i,el){ $(el).replaceWith($(el).html()); });
+    }
 }
 $(function(){
     goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
