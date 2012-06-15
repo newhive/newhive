@@ -43,11 +43,12 @@ Hive.Apps.init = function(initial_state, load) {
     o.add = function(app) {
         var i = o.length;
         o.push(app);
+
         if(typeof(app.layer()) != 'number' || o.stack[app.layer()]) o.stack.push(app);
         else o.stack[app.layer()] = app;
         o.restack();
         return i;
-    }
+    };
     
     o.remove = function(app) {
         array_delete(o, app);
@@ -75,7 +76,15 @@ Hive.has_drag_move = function(o) {
         if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
         o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ]);
     };
-    o.div.drag('start', o.move_start).drag(o.move);
+    o.move_end = function(){
+        var old_state = $.merge([], o.ref_pos), new_state = $.merge([], o.pos());
+        Hive.History.save(
+            function(){ o.pos_set(old_state); },
+            function(){ o.pos_set(new_state); },
+            'move'
+        );
+    };
+    o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
 };
 
 Hive.env = function(){
@@ -142,7 +151,7 @@ Hive.App = function(init_state, opts) {
     };
 
     // stacking order of aps
-    var layer;
+    var layer = init_state.z;
     o.layer = function(){ return layer; };
     o.layer_set = function(n){
         layer = n;
@@ -277,10 +286,10 @@ Hive.Controls = function(app, multiselect) {
             outer_width = ad[0] + bw*2 + p*2, outer_height = ad[1] + p * 2 + 1;
 
         o.select_box.css({ left: cx, top: cy });
-        o.select_borders.eq(0).css({ left: outer_l, top: -cy -bw -p, width: outer_width, height: bw });
-        o.select_borders.eq(1).css({ left: cx + p -rf, top: -cy -p, height: outer_height, width: bw });
-        o.select_borders.eq(2).css({ left: outer_l, top: cy + p, width: outer_width, height: bw });
-        o.select_borders.eq(3).css({ left: outer_l, top: -cy -p, height: outer_height, width: bw });
+        o.select_borders.eq(0).css({ left: outer_l, top: -cy -bw -p, width: outer_width, height: bw }); // top
+        o.select_borders.eq(1).css({ left: cx + p -rf, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
+        o.select_borders.eq(2).css({ left: outer_l, top: cy + p, width: outer_width, height: bw }); // bottom
+        o.select_borders.eq(3).css({ left: outer_l, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
         if(o.multiselect) return;
 
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
@@ -342,14 +351,17 @@ Hive.Controls = function(app, multiselect) {
     // add borders
     o.select_box = $("<div style='position: absolute'>");
     var border = $('<div>').addClass('select_border drag ehapp');
-    o.select_borders = border.add(border.clone()).add(border.clone()).add(border.clone());
+    o.select_borders = border.add(border.clone().addClass('right'))
+        .add(border.clone().addClass('bottom'))
+        .add(border.clone().addClass('left'));
+    border.eq(0).addClass('top'); // add 'left' class after the others were cloned
     o.select_borders.drag('init', function(e) { return Hive.Selection.app_drag_init(o.app, e) })
         .drag('start', o.app.move_start).drag(o.app.move);
     o.div.append(o.select_box.append(o.select_borders));
 
     o.padding = 4;
-    o.border_width = 5;
-    if(multiselect){ o.padding = 1; o.border_width = 2; }
+    o.border_width = 4;
+    if(multiselect){ o.padding = 1; o.border_width = 1; }
     else {
         o.addControls($('#controls_common'));
         var d = o.div;
@@ -1302,64 +1314,36 @@ Hive.Selection = function(){
 };
 Hive.Selection();
 
-Hive.History = function(){
+Hive.History = [];
+Hive.History.init = function(){
     var o = Hive.History;
-    o.apps_ref = $.map(Hive.Apps, function(e){ return e.state() });
-    o.history = [];
-    o.history_index = -1;
+    o.current = -1;
 
-    o.push = function(modified_apps){
-        var modified = $.map(modified_apps, function(e){ return e.state() }), apps_old = [];
-        var by_id = {};
-        $.each(o.apps_ref, function(i,e){ by_id[e.id] = i; });
-
-        if( o.history.length > o.history_index + 1 )
-            o.history.splice( o.history_index );
-        o.history.push({ apps_new: modified, apps_old: apps_old });
-
-        $.each(modified, function(i, e){
-            var i = by_id[e.id];
-            if(i == undefined) {
-                o.apps_ref.push(e);
-                return;
-            }
-            apps_old.push(o.apps_ref[i]);
-            o.apps_ref[i] = e;
-        });
-
-        o.history_index += 1;
+    o.save = function(undo, redo, action_name){
+        o.push({ undo: undo, redo: redo, name: action_name });
+        o.current += 1;
+        o.update_btn_titles();
     };
 
     o.undo = function(){
-        if(! o.history_index) return;
-
-        var now = o.history[o.history_index];
-        var by_id = {};
-        $.each(o.apps_ref, function(i,e){ by_id[e.id] = i; });
-
-        $.each(now.apps_new, function(i, e){ Hive.Apps.fetch(e.id).remove(); });
-        $.each(now.apps_old, function(i, e){
-            Hive.App(e);
-            o.apps_ref[ by_id[e.id] ] = e;
-        });
-
-        o.history_index -= 1;
+        if( ! o.length ) return;
+        o[o.current].undo();
+        o.current -= 1;
+        o.update_btn_titles();
     };
 
     o.redo = function(){
-        if( o.history_index == (o.history.length - 1) ) return;
-
-        var now = o.history[o.history_index];
-        var by_id = {};
-        $.each(o.apps_ref, function(i,e){ by_id[e.id] = i; });
-        $.each(now.apps_new, function(i, e){
-            if(by_id[e.id]) o.apps_ref[ by_id[e.id] ] = e;
-            else o.apps_ref.push(e);
-            var app = Hive.Apps.fetch(e.id);
-            if(app) app.remove();
-            Hive.App(e);
-        });
-        o.history_index += 1;
+        var next = o[ o.current + 1 ];
+        if( ! next ) return;
+        next.redo();
+        o.current += 1;
+        o.update_btn_titles();
+    };
+        
+    o.update_btn_titles = function(){
+        var current = o[o.current], next = o[ o.current + 1 ];
+        $('#btn_undo').attr('title', current ? 'undo ' + current.name : 'nothing to undo');
+        $('#btn_redo').attr('title', next ? 'redo ' + next.name : 'nothing to redo');
     };
 };
 
@@ -1666,11 +1650,11 @@ Hive.init = function() {
     });
     if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 
-    Hive.Apps.init(Hive.Exp.apps, function(){
-        Hive.History();
-        $('#btn_undo').click(Hive.History.undo);
-        $('#btn_redo').click(Hive.History.redo);
-    });
+    Hive.Apps.init(Hive.Exp.apps);
+
+    Hive.History.init();
+    $('#btn_undo').click(Hive.History.undo);
+    $('#btn_redo').click(Hive.History.redo);
 };
 $(Hive.init);
 

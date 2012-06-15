@@ -2,7 +2,16 @@
 
 .ehapp, .ehapp > * { position : absolute; }
 .ehapp .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
-.select_border { background-color: $color_selected; position: absolute; }
+.select_border {
+    background-color: $color_selected; position: absolute;
+    border-color: $color_light_blue;
+    border-style: solid;
+    box-sizing: border-box;
+    &.left { border-width: 0 0 0 1px; }
+    &.top { border-width: 1px 0 0 0; }
+    &.right { border-width: 0 1px 0 0; }
+    &.bottom { border-width: 0 0 1px 0; }
+}
 .select_box { width: 100%; height:100%; border: 2px dashed $color_selected; }
 .app_select { position : absolute; }
 #grid_guide { position : fixed; width : 100%; height : 100%; }
