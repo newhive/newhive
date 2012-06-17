@@ -300,7 +300,7 @@ Hive.Controls = function(app, multiselect) {
         o.c.buttons.css({ left  :  -bw - p, top : dims[1] + p + 10, width : dims[0] - 60 });
     };
 
-    o.append_link_picker = function(d) {
+    o.append_link_picker = function(d, opts) {
         var e = $("<div class='control drawer link'><nobr><input type='text'> "
             + "<img class='hoverable' src='" + asset('skin/1/delete_sm.png')
             + "' title='Clear link'></nobr>");
@@ -308,11 +308,13 @@ Hive.Controls = function(app, multiselect) {
         var input = e.find('input');
         var m = o.hover_menu(d.find('.button.link'), e, {
              open : function() {
+                 if (opts && opts.open) opts.open();
                  input.focus();
                  input.val(o.app.link());
              }
             ,click_persist : input
             ,close : function() {
+                if (opts && opts.close) opts.close();
                 input.blur();
                 o.app.focus();
             }
@@ -657,7 +659,15 @@ Hive.App.Text = function(o) {
 
         o.addControls($('#controls_text'));
 
-        o.link_menu = o.append_link_picker(d.find('.buttons'));
+        var link_open = function(){
+            o.app.rte.wrap_selection('<span class="hive_selection"></span>');
+        }
+        var link_close = function(){
+            o.app.rte.unwrap_selection();
+            o.app.rte.restore_selection()
+        };
+        o.link_menu = o.append_link_picker(d.find('.buttons'),
+                        {open: link_open, close: o.app.rte.unwrap_selection});
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
@@ -845,22 +855,45 @@ Hive.goog_rte = function(id){
         var link = find_intersecting(this.get_range());
         return link;
     }
+
+    var saved_range;
+    this.save_selection = function(){
+        var range = this.getRange();
+        saved_range = range.saveUsingCarets();
+    };
+
+    this.restore_selection = function(){
+        this.select(saved_range.restore().getBrowserRangeObject());
+    };
+
+    // Wrap a node around selecte text, even if selection spans multiple block elements
     var current_selection;
     this.wrap_selection = function(wrapper){
         if (typeof(wrapper) == "string") wrapper = $(wrapper)[0];
         var range = this.getRange();
-        try {
-            range.surroundWithContents(wrapper);
-        } catch (e) {
-            document.execCommand('createLink', false, 'temporary_link');
-            var nodes = $(range.getContainer()).find('a[href=temporary_link]');
-            current_selection = nodes.wrapInner(wrapper).children().unwrap();
-            return current_selection;
-        };
+
+        // Return if selection is empty
+        if (range.getStartNode() === range.getEndNode() && 
+            range.getStartOffset() === range.getEndOffset()) return;
+
+        this.save_selection();
+        // Create temporary anchor nodes using execcommand
+        document.execCommand('createLink', false, 'temporary_link');
+
+        // Replace temporary nodes with desired wrapper, saving reference in
+        // closure for use by unwrap_selection
+        var nodes = $(range.getContainer()).find('a[href=temporary_link]');
+        current_selection = nodes.wrapInner(wrapper)
+        current_selection = current_selection.children()
+        current_selection = current_selection.unwrap();
+        return current_selection;
     }
-    this.unwrap_nodes = function(){
+    var that = this;
+    this.unwrap_selection = function(){
         if (! current_selection) return;
         current_selection.each(function(i,el){ $(el).replaceWith($(el).html()); });
+        that.restore_selection();
+        current_selection = false;
     }
 }
 $(function(){
