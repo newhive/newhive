@@ -913,7 +913,7 @@ Hive.goog_rte = function(id){
     };
 
     this.restore_selection = function(){
-        if (saved_range.isDisposed()) return;
+        if (!saved_range || saved_range.isDisposed()) return;
         saved_range.restore();
     };
 
