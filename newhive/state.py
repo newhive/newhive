@@ -159,8 +159,7 @@ class Entity(dict):
         dict.update(self, self.db.User.fetch(self.id))
 
     def update(self, **d):
-        if d.has_key('updated'): del d['updated']
-        else: d['updated'] = now()
+        if not d.has_key('updated'): d['updated'] = now()
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d }, safe=True)
     def update_cmd(self, d, **opts): return self._col.update({ '_id' : self.id }, d, **opts)
