@@ -152,8 +152,11 @@ function showDialog(name, opts) {
         o.open = function() {
             if(o.opened) return;
             o.opened = true;
-            o.opts = $.extend({ open : noop, close : noop, absolute : false, fade : true,
-                mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
+            o.opts = $.extend({
+                open : noop, close : noop, absolute : false, fade : true,
+                mandatory: dialog.hasClass('mandatory'),
+                layout: function() { center(dialog, $(window), opts) }
+            }, opts);
 
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
             if (! dialog.hasClass('newdialog')) dialog.addClass('dialog border selected');
@@ -721,9 +724,12 @@ var place_apps = function() {
        var e = $(this);
        var s = e.parent().width() / 1000;
        if(!e.data('css')) {
-           var c = {};
-           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height',
-               'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']);
+           var c = {}, props = ['left', 'top', 'width', 'height'];
+           if($(app_div).css('border-radius').indexOf('px') > 0) $.merge(props,
+                    ['border-top-left-radius', 'border-top-right-radius',
+                        'border-bottom-right-radius', 'border-bottom-left-radius']
+                );
+           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, props);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
            e.data('css', c);
