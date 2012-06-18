@@ -111,3 +111,6 @@ input, textarea { font-size : inherit; }
 #loading { position : fixed; z-index : 1200; display : none; }
 #app_btns { top : 0; left : 300px; width : 402px; height : 50px; }
 
+.hive_selection {
+    background: $color_light_grey;
+}
