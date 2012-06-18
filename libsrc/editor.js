@@ -716,6 +716,8 @@ Hive.App.Text = function(o) {
             { 
                 auto_close : false,
                 open: function(){
+                    // Update current color. Range should usually exist, but
+                    // better to do nothing than throw error if not
                     var range = o.app.rte.getRange();
                     if (range){
                         var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
