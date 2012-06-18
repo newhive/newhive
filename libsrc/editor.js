@@ -716,6 +716,11 @@ Hive.App.Text = function(o) {
             { 
                 auto_close : false,
                 open: function(){
+                    var range = o.app.rte.getRange();
+                    if (range){
+                        var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
+                        color_picker.update_initial_color(current_color);
+                    }
                     o.app.rte.wrap_selection();
                     o.app.content_element.blur();
                 },
@@ -2403,12 +2408,20 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
         var c = $('<div>').css('color', v).css('color');
         callback(c, to_rgb(c));
     };
-    //manual_input.change(update_hex).keyup(update_hex);
+
+    // Prevent unwanted nudging of app when moving cursor in manual_input
+    manual_input.bind('mousedown keydown', function(e){ e.stopPropagation(); });
+
     manual_input.blur(update_hex).keypress(function(e){
         if (e.keyCode == 13) {
             update_hex();
         }
     });
+
+    o.update_initial_color = function(color){
+        manual_input.val(to_hex(color));
+        set_color(color);
+    };
 
     // saturated color picked from color bar
     var hsv = [0, 0, 1];
