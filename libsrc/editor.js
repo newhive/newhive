@@ -178,11 +178,13 @@ Hive.App = function(init_state, opts) {
         o.div.width(_dims[0]).height(_dims[1]);
         if(o.controls) o.controls.layout();
     };
+    o.width = function(){ return _dims[0] };
+    o.height = function(){ return _dims[1] };
 
     o.center = function(offset) {
-        var center_pos = o.pos_center(), win = $(window),
-            pos = [ win.width() / 2 - center_pos[0] + win.scrollLeft(),
-                win.height() / 2 - center_pos[1] + win.scrollTop() ];
+        var win = $(window),
+            pos = [ ( win.width() - o.width() ) / 2 + win.scrollLeft(),
+                ( win.height() - o.height() ) / 2 + win.scrollTop() ];
         if(typeof(offset) != "undefined"){ pos = array_sum(pos, offset) };
         o.pos_set(pos);
     }
@@ -306,27 +308,29 @@ Hive.Controls = function(app, multiselect) {
             + "' title='Clear link'></nobr>");
         d.append(e);
         var input = e.find('input');
-        var m = o.hover_menu(d.find('.button.link'), e, {
-             open : function() {
-                 if (opts && opts.open) opts.open();
-                 input.focus();
-                 input.val(o.app.link());
-             }
-            ,click_persist : input
-            ,close : function() {
-                if (opts && opts.close) opts.close();
-                input.blur();
-                o.app.focus();
-            }
-            ,auto_close : false
-        });
         var set_link = function(){
             var v = input.val();
             // TODO: improve URL guessing
             if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
             o.app.link(v);
         };
-        input.bind('change keyup mouseup paste', function(){setTimeout(set_link, 10)} );
+        var m = o.hover_menu(d.find('.button.link'), e, {
+             open : function() {
+                 var link = o.app.link();
+                 if (opts && opts.open) opts.open();
+                 input.focus();
+                 input.val(link);
+             }
+            ,click_persist : input
+            ,close : function() {
+                if (opts && opts.close) opts.close();
+                set_link();
+                input.blur();
+                o.app.focus();
+            }
+            ,auto_close : false
+        });
+        //input.bind('change keyup mouseup paste', function(){setTimeout(set_link, 10)} );
         e.find('img').click(function() { input.val(''); o.app.link(''); m.close(); });
         input.keypress(function(e) { if(e.keyCode == 13) m.close() });
         return m;
@@ -618,8 +622,16 @@ Hive.App.Text = function(o) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
         //v = v.trim();
         if(!v) o.rte.edit('unlink');
-        else o.rte.edit('createlink', v);
+        //else o.rte.execCommand('+createLink', v);
+        else o.rte.make_link(v);
     }
+    o.link_set = function(href) {
+        if (!v){
+            o.rte.edit('unlink');
+        } else {
+            o.rte.make_link(v);
+        };
+    };
 
     o.calcHeight = function() {
         return o.content_element.height();
@@ -660,7 +672,8 @@ Hive.App.Text = function(o) {
         o.addControls($('#controls_text'));
 
         var link_open = function(){
-            o.app.rte.wrap_selection('<span class="hive_selection"></span>');
+            var link = o.app.rte.get_link();
+            o.app.rte.wrap_selection();
         }
         var link_close = function(){
             o.app.rte.unwrap_selection();
@@ -686,10 +699,32 @@ Hive.App.Text = function(o) {
         o.hover_menu(d.find('.button.fontname'), d.find('.drawer.fontname'));
         //cmd_buttons('.fontname .option', function(v) { o.app.rte.css('font-family', v) });
 
-        Hive.append_color_picker(d.find('.drawer.color'),
-            function(v) { o.app.rte.execCommand('+foreColor', v) });
-        o.color_menu = o.hover_menu(d.find('.button.color'), d.find('.drawer.color'),
-            { auto_close : false });
+        var color_picker = Hive.append_color_picker(
+            d.find('.drawer.color'),
+            function(v) {
+                var focused = document.activeElement;
+                o.app.rte.unwrap_selection();
+                o.app.rte.execCommand('+foreColor', v);
+                o.app.rte.wrap_selection();
+                o.app.content_element.blur();
+                //$(focused).focus();
+            }
+        );
+        o.color_menu = o.hover_menu(
+            d.find('.button.color'),
+            d.find('.drawer.color'),
+            { 
+                auto_close : false,
+                open: function(){
+                    o.app.rte.wrap_selection();
+                    o.app.content_element.blur();
+                },
+                close: function(){
+                    color_picker.manual_input.blur();
+                    o.app.rte.unwrap_all_selections();
+                }
+            }
+        );
 
         //cmd_buttons('.button.bold',   function(v) { o.app.rte.css('font-weight', '700'   , { toggle : '400'   }) });
         //cmd_buttons('.button.italic', function(v) { o.app.rte.css('font-style' , 'italic', { toggle : 'normal'}) });
@@ -770,6 +805,7 @@ Hive.registerApp(Hive.App.Text, 'hive.text');
 
 
 Hive.goog_rte = function(id){
+    var that = this;
     goog.editor.SeamlessField.call(this, id);
 
     function rangeIntersectsNode(range, node) {
@@ -819,7 +855,7 @@ Hive.goog_rte = function(id){
             node = node.parentNode;
             if($(node).is('a')) {
                 r.selectNode(node);   
-                this.select(r);
+                that.select(r);
                 return $(node).attr('href');
             }
         }
@@ -828,10 +864,11 @@ Hive.goog_rte = function(id){
         var find_intersecting = function(r) {
             var link = false;
             $(document).find('a').each(function() {
-                if(!link && rangeIntersectsNode(r, this)) link = this });
+                if(!link && rangeIntersectsNode(r, this)) link = this;
+            });
             if(link) {
                 r.selectNode(link);
-                this.select(r);
+                that.select(r);
                 return $(link).attr('href');
             };
             return '';
@@ -843,7 +880,7 @@ Hive.goog_rte = function(id){
         if(!r.toString()) {
             // select current word
             // r.expand('word') // works in IE and Chrome
-            var s = this.select(r);
+            var s = that.select(r);
             // If the cursor is not at the beginning of a word...
             if(!r.startContainer.data || !/\W|^$/.test(
                 r.startContainer.data.charAt(r.startOffset - 1))
@@ -852,10 +889,16 @@ Hive.goog_rte = function(id){
         }
 
         // It's possible to grab a previously missed link with the above code 
-        var link = find_intersecting(this.get_range());
+        var link = find_intersecting(that.get_range());
         return link;
     }
 
+    this.make_link = function(href) {
+        that.restore_selection()
+        // TODO: don't use browser API directly
+        document.execCommand('createlink', false, href);
+        that
+    };
     var saved_range;
     this.save_selection = function(){
         var range = this.getRange();
@@ -863,38 +906,54 @@ Hive.goog_rte = function(id){
     };
 
     this.restore_selection = function(){
-        this.select(saved_range.restore().getBrowserRangeObject());
+        if (saved_range.isDisposed()) return;
+        saved_range.restore();
     };
 
     // Wrap a node around selecte text, even if selection spans multiple block elements
     var current_selection;
     this.wrap_selection = function(wrapper){
+        if (current_selection) return;
+        wrapper = wrapper || '<span class="hive_selection"></span>';
+        var range, node, nodes;
+
         if (typeof(wrapper) == "string") wrapper = $(wrapper)[0];
-        var range = this.getRange();
+        range = that.getRange();
+        if (!range) return;
 
-        // Return if selection is empty
-        if (range.getStartNode() === range.getEndNode() && 
-            range.getStartOffset() === range.getEndOffset()) return;
+        if (range.getStartNode() === range.getEndNode()) {
+            // Return if selection is empty
+            if (range.getStartOffset() === range.getEndOffset()) return;
 
-        this.save_selection();
-        // Create temporary anchor nodes using execcommand
-        document.execCommand('createLink', false, 'temporary_link');
+            var node = $(range.getStartNode());
+            if (node.parent().is('a')) nodes = node.parent();
+        }
 
-        // Replace temporary nodes with desired wrapper, saving reference in
-        // closure for use by unwrap_selection
-        var nodes = $(range.getContainer()).find('a[href=temporary_link]');
+        that.save_selection();
+        if (!nodes){
+            // Create temporary anchor nodes using execcommand
+            document.execCommand('createLink', false, 'temporary_link');
+
+            // Replace temporary nodes with desired wrapper, saving reference in
+            // closure for use by unwrap_selection
+            nodes = $(range.getContainer()).find('a[href=temporary_link]');
+        }
         current_selection = nodes.wrapInner(wrapper)
         current_selection = current_selection.children()
         current_selection = current_selection.unwrap();
         return current_selection;
-    }
-    var that = this;
+    };
     this.unwrap_selection = function(){
         if (! current_selection) return;
         current_selection.each(function(i,el){ $(el).replaceWith($(el).html()); });
         that.restore_selection();
         current_selection = false;
-    }
+    };
+    this.unwrap_all_selections = function(){
+        current_selection = $(that.getElement()).find('.hive_selection');
+        that.unwrap_selection();
+    };
+        
 }
 $(function(){
     goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
@@ -2293,14 +2352,15 @@ Hive.rte = function(options) {
     return o;
 }
 
-Hive.append_color_picker = function(container, callback, init_color) {
+Hive.append_color_picker = function(container, callback, init_color, opts) {
+    var o = {};
     init_color = init_color || '#FFFFFF';
     var e = $('<div>').addClass('color_picker');
     container.append(e);
     var bar = $("<img class='hue_bar'>");
     bar.attr('src', asset('skin/1/saturated.png'));
     var shades = $("<div class='shades'><img src='" + asset('skin/1/greys.png') +"'></div>");
-    var manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
+    var manual_input = o.manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
 
     var to_rgb = function(c) {
         return map(parseInt, $('<div>').css('color', c).css('color')
@@ -2338,12 +2398,17 @@ Hive.append_color_picker = function(container, callback, init_color) {
     pickers.append(map(make_row, by_sixes));
     e.append(pickers);
 
-    var update_hex = function() {
+    var update_hex = o.update_hex = function() {
         var v = manual_input.val();
         var c = $('<div>').css('color', v).css('color');
         callback(c, to_rgb(c));
     };
-    manual_input.change(update_hex).keyup(update_hex);
+    //manual_input.change(update_hex).keyup(update_hex);
+    manual_input.blur(update_hex).keypress(function(e){
+        if (e.keyCode == 13) {
+            update_hex();
+        }
+    });
 
     // saturated color picked from color bar
     var hsv = [0, 0, 1];
@@ -2422,6 +2487,7 @@ Hive.append_color_picker = function(container, callback, init_color) {
 
         return [h, s, v];
     }
+    return o;
 };
 
 Hive.random_str = function(){ return Math.random().toString(16).slice(2); };
