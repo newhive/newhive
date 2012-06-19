@@ -598,16 +598,13 @@ Hive.App.Text = function(o) {
             edit_mode = false;
         }
     }
-    //var previous_range = [];
-    previous_range = []; //temporary for debugging
+    var previous_range;
+    //previous_range = []; //temporary for debugging
     o.focus.add(function(){
         o.edit_mode(true);
-        console.log(previous_range);
-        if (previous_range.length > 1){
-            previous_range.pop();
-            var selection = window.getSelection()
-            selection.removeAllRanges();
-            selection.addRange(previous_range.pop().getBrowserRangeObject());
+        if (previous_range){
+            previous_rnage.select();
+            //o.rte.select(previous_range.getBrowserRangeObject());
         } else {
             o.rte.focusAndPlaceCursorAtStart();
         };
@@ -800,10 +797,35 @@ Hive.App.Text = function(o) {
     o.rte.registerPlugin(new goog.editor.plugins.UndoRedo());
     goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
     var blurCallback = function(){
-        previous_range.push(o.rte.getRange());
+        //console.log('blurcallback');
+        //previous_range.push(o.rte.getRange());
+        previous_range = o.rte.getRange();
+        //console.log($.map(previous_range, function(el, i){ return el.getEndOffset()}));
     };
+    o.content_element.bind('paste', function(){
+        setTimeout(function(){
+            console.log('previously', previous_range.getEndOffset());
+            console.log('now       ', o.rte.getRange().getEndOffset());
+            var current_range = o.rte.getRange();
+            var pasted_range = goog.dom.Range.createFromNodes(
+                previous_range.getStartNode(), 
+                previous_range.getStartOffset(), 
+                current_range.getStartNode(), 
+                current_range.getStartOffset()
+                );
+            pasted_range.select();
+            o.rte.execCommand('+removeFormat');
+            current_range.select();
+            return;
+        }, 0);
+    });
+    //goog.events.listen(o.rte, goog.editor.Field.EventType.SELECTIONCHANGE, log('selectionchange'));
+    //goog.events.listen(o.rte, goog.editor.Field.EventType.BEFORECHANGE, log('beforechange'));
+    goog.events.listen(o.rte, goog.editor.Field.EventType.BEFORECHANGE, blurCallback);
     goog.events.listen(o.rte, goog.editor.Field.EventType.SELECTIONCHANGE, blurCallback);
-    goog.events.listen(o.rte, goog.editor.Field.EventType.BLUR, blurCallback);
+    //goog.events.listen(o.rte, goog.editor.Field.EventType.CHANGE, log('change'));
+    //goog.events.listen(o.rte, goog.editor.Field.EventType.BLUR, log('blur'));
+    //goog.events.listen(o.rte, goog.editor.Field.EventType.BLUR, blurCallback);
     
     setTimeout(function(){ o.load(); }, 100);
     return o;
@@ -2511,4 +2533,11 @@ Hive.random_str = function(){ return Math.random().toString(16).slice(2); };
 function sel(n) {
     if(!n) n = 0;
     return Hive.Selection.elements[n];
+}
+
+// Convenience function for logging something in a callback
+function log(text){
+    return function(){
+        console.log(text);
+    }
 }
