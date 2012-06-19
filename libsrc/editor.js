@@ -599,7 +599,8 @@ Hive.App.Text = function(o) {
     var content = o.init_state.content;
     o.content = function(content) {
         if(typeof(content) != 'undefined') {
-            if(content == null || content == '') o.rte.setHtml(false, ' '); // seems to avoid giant or invisible cursor bug in FF
+            // avoid 0-height content element in FF
+            if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
             else o.rte.setHtml(false, content);
         }
         return o.rte.getCleanContents();
@@ -818,7 +819,7 @@ Hive.App.Text = function(o) {
     goog.events.listen(o.rte.undo_redo.undoManager_,
             goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
             o.history_saver);
-    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, function(){ o.refresh_size(); });
+    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
 
     setTimeout(function(){ o.load(); }, 100);
     return o;
