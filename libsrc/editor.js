@@ -619,16 +619,9 @@ Hive.App.Text = function(o) {
             edit_mode = false;
         }
     }
-    var previous_range;
-    //previous_range = []; //temporary for debugging
+
     o.focus.add(function(){
         o.edit_mode(true);
-        if (previous_range){
-            previous_range.select();
-            //o.rte.select(previous_range.getBrowserRangeObject());
-        } else {
-            o.rte.focusAndPlaceCursorAtStart();
-        };
     });
     o.unfocus.add(function(){
         o.edit_mode(false);
@@ -686,11 +679,11 @@ Hive.App.Text = function(o) {
         o.refresh_size();
     };
 
-    o.history_saver = function(name){
+    o.history_saver = function(){
         Hive.History.save(
             function(){ o.rte.execCommand('+undo') },
             function(){ o.rte.execCommand('+redo') },
-            name
+            'edit'
         );
     };
 
@@ -821,54 +814,23 @@ Hive.App.Text = function(o) {
     o.content_element.attr('id', Hive.random_str()).css('width', '100%');
     o.div.append(o.content_element);
     //o.rte = new goog.editor.SeamlessField(o.content_element.attr('id'));
-    o.rte = new Hive.goog_rte(o.content_element.attr('id'));
-    o.rte.registerPlugin(new goog.editor.plugins.BasicTextFormatter());
-    var undo_redo = new goog.editor.plugins.UndoRedo();
-    var undo_redo_manager = undo_redo.undoManager_;
-    o.rte.registerPlugin(undo_redo);
-    o.rte.registerPlugin(new goog.editor.plugins.RemoveFormatting());
+    o.rte = new Hive.goog_rte(o.content_element);
+    goog.events.listen(o.rte.undo_redo.undoManager_,
+            goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
+            o.history_saver);
     goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, function(){ o.refresh_size(); });
-    goog.events.listen(undo_redo_manager, goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
-        o.history_saver);
-    var blurCallback = function(){
-        //console.log('blurcallback');
-        //previous_range.push(o.rte.getRange());
-        previous_range = o.rte.getRange();
-        //console.log($.map(previous_range, function(el, i){ return el.getEndOffset()}));
-    };
-    o.content_element.bind('paste', function(){
-        setTimeout(function(){
-            console.log('previously', previous_range.getEndOffset());
-            console.log('now       ', o.rte.getRange().getEndOffset());
-            var current_range = o.rte.getRange();
-            var pasted_range = goog.dom.Range.createFromNodes(
-                previous_range.getStartNode(), 
-                previous_range.getStartOffset(), 
-                current_range.getStartNode(), 
-                current_range.getStartOffset()
-                );
-            pasted_range.select();
-            o.rte.execCommand('+removeFormat');
-            current_range.select();
-            return;
-        }, 0);
-    });
-    //goog.events.listen(o.rte, goog.editor.Field.EventType.SELECTIONCHANGE, log('selectionchange'));
-    //goog.events.listen(o.rte, goog.editor.Field.EventType.BEFORECHANGE, log('beforechange'));
-    goog.events.listen(o.rte, goog.editor.Field.EventType.BEFORECHANGE, blurCallback);
-    goog.events.listen(o.rte, goog.editor.Field.EventType.SELECTIONCHANGE, blurCallback);
-    //goog.events.listen(o.rte, goog.editor.Field.EventType.CHANGE, log('change'));
-    //goog.events.listen(o.rte, goog.editor.Field.EventType.BLUR, log('blur'));
-    //goog.events.listen(o.rte, goog.editor.Field.EventType.BLUR, blurCallback);
-    
+
     setTimeout(function(){ o.load(); }, 100);
     return o;
 }
 Hive.registerApp(Hive.App.Text, 'hive.text');
 
 
-Hive.goog_rte = function(id){
+Hive.goog_rte = function(content_element){
     var that = this;
+    var id = content_element.attr('id');
+    this.content_element = content_element;
+
     goog.editor.SeamlessField.call(this, id);
 
     function rangeIntersectsNode(range, node) {
@@ -1016,7 +978,60 @@ Hive.goog_rte = function(id){
         current_selection = $(that.getElement()).find('.hive_selection');
         that.unwrap_selection();
     };
-        
+
+    this.undo_redo = new goog.editor.plugins.UndoRedo();
+    this.registerPlugin(this.undo_redo);
+    this.registerPlugin(new goog.editor.plugins.BasicTextFormatter());
+    this.registerPlugin(new goog.editor.plugins.RemoveFormatting());
+
+    var previous_range = {};
+    this.content_element.bind('paste', function(){
+        setTimeout(function(){
+            var current_range = that.getRange();
+            var pasted_range = goog.dom.Range.createFromNodes(
+                previous_range.before.getStartNode(), 
+                previous_range.before.getStartOffset(), 
+                current_range.getStartNode(), 
+                current_range.getStartOffset()
+                );
+            pasted_range.select();
+            that.execCommand('+removeFormat');
+
+            // Place cursor at end of pasted range
+            var range = that.getRange();
+            goog.dom.Range.createFromNodes(
+                range.getEndNode(), 
+                range.getEndOffset(), 
+                range.getEndNode(), 
+                range.getEndOffset()
+            ).select();
+        }, 0);
+    });
+
+    var range_change_callback = function(type){
+        return function(){
+            var range = that.getRange();
+            $.each(type, function(i, name){
+                previous_range[name] = range;
+            });
+        }
+    };
+
+    goog.events.listen(this, goog.editor.Field.EventType.DELAYEDCHANGE, range_change_callback(['delayed']));
+    goog.events.listen(this, goog.editor.Field.EventType.BEFORECHANGE, range_change_callback(['before']));
+    goog.events.listen(this, goog.editor.Field.EventType.SELECTIONCHANGE, range_change_callback(['delayed', 'before']));
+
+    this.restore_cursor = function(){
+        if (previous_range && previous_range.delayed){
+            that.focus();
+            previous_range.delayed.select();
+            return true;
+        } else {
+            that.focusAndPlaceCursorAtStart();
+            return false;
+        };
+    };
+    goog.events.listen(this, goog.editor.Field.EventType.LOAD, this.restore_cursor);
 }
 $(function(){
     goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
