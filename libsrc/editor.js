@@ -827,10 +827,10 @@ Hive.App.Text = function(o) {
     o.rte.registerPlugin(new goog.editor.plugins.BasicTextFormatter());
     o.rte.registerPlugin(new goog.editor.plugins.RemoveFormatting());
     o.rte.registerPlugin(new goog.editor.plugins.UndoRedo());
-    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, function(){
-        o.refresh_size(); 
-        o.history_saver('edit');  
-    });
+    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, function(){ o.refresh_size(); });
+    var undo_redo_manager = o.rte.getPluginByClassId('UndoRedo').undoManager_;
+    goog.events.listen(undo_redo_manager, goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
+        o.history_saver);
     var blurCallback = function(){
         previous_range.push(o.rte.getRange());
     };
