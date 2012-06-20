@@ -638,9 +638,7 @@ Hive.App.Text = function(o) {
 
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
-        //v = v.trim();
         if(!v) o.rte.edit('unlink');
-        //else o.rte.execCommand('+createLink', v);
         else o.rte.make_link(v);
     }
     o.link_set = function(href) {
@@ -732,14 +730,10 @@ Hive.App.Text = function(o) {
         var color_picker = Hive.append_color_picker(
             d.find('.drawer.color'),
             function(v) {
-                var focused = document.activeElement;
-                //o.app.rte.restore_selection()
                 o.app.rte.unwrap_selection();
                 o.app.rte.execCommand('+foreColor', v);
-                //o.app.rte.save_selection();
                 o.app.rte.wrap_selection();
                 o.app.content_element.blur();
-                //$(focused).focus();
             },
             undefined,
             {field_to_focus: o.app.content_element}
@@ -830,7 +824,6 @@ Hive.App.Text = function(o) {
     o.content_element = $('<div></div>');
     o.content_element.attr('id', Hive.random_str()).css('width', '100%');
     o.div.append(o.content_element);
-    //o.rte = new goog.editor.SeamlessField(o.content_element.attr('id'));
     o.rte = new Hive.goog_rte(o.content_element);
     goog.events.listen(o.rte.undo_redo.undoManager_,
             goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
@@ -978,9 +971,6 @@ Hive.goog_rte = function(content_element){
         range.select(); // For some reason on FF save_selection unselects the range
         if (!nodes){
             // Create temporary anchor nodes using execcommand
-            //var res = that.execCommand("+link", "temporary_link");
-            //console.log('res', res);
-            //that.basic_text.createLink_(range, 'temporary_link')
             document.execCommand('createLink', false, 'temporary_link');
 
             // Replace temporary nodes with desired wrapper, saving reference in
