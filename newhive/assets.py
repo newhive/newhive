@@ -138,6 +138,7 @@ class HiveAssets(Assets):
 
         print('Compiling css and js...')
         assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
+        assets_env.register('google_closure.js', 'google_closure.js')
         assets_env.register('app.js', 'jquery_misc.js', 'util.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
             'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'colors.js', filters='yui_js', output='../lib/app.js')
         assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')

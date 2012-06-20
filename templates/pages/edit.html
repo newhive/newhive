@@ -1,6 +1,9 @@
 {% extends "main.html" %}
 
 {% block head %}
+  {% for item in asset_bundle('google_closure.js') %}
+    <script src='{{ item }}'></script>
+  {% endfor %}
   {% for item in asset_bundle('edit.js') %}
     <script src='{{ item }}'></script>
   {% endfor %}
@@ -8,12 +11,6 @@
   {% for item in asset_bundle('edit.css') %}
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
   {% endfor %}
- 
-  {% if debug_mode %}
-    <script src='/lib/closure.concatenated.js'></script>
-  {% else %}
-    <script src='/lib/closure.compiled.js'></script>
-  {% endif %}
  
   <script>
     Hive.Exp = {{ exp_js }}; // current expression from server
