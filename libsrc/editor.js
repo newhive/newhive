@@ -695,6 +695,9 @@ Hive.App.Text = function(o) {
 
         var link_open = function(){
             var link = o.app.rte.get_link();
+            // wrap-unwrap-wrap hack fixes firefox being unable to wrap selection initially
+            o.app.rte.wrap_selection();
+            o.app.rte.unwrap_selection();
             o.app.rte.wrap_selection();
         }
         var link_close = function(){
@@ -725,8 +728,10 @@ Hive.App.Text = function(o) {
             d.find('.drawer.color'),
             function(v) {
                 var focused = document.activeElement;
+                //o.app.rte.restore_selection()
                 o.app.rte.unwrap_selection();
                 o.app.rte.execCommand('+foreColor', v);
+                //o.app.rte.save_selection();
                 o.app.rte.wrap_selection();
                 o.app.content_element.blur();
                 //$(focused).focus();
@@ -745,6 +750,9 @@ Hive.App.Text = function(o) {
                         var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
                         color_picker.update_initial_color(current_color);
                     }
+                    // wrap-unwrap-wrap hack fixes firefox being unable to wrap selection initially
+                    o.app.rte.wrap_selection();
+                    o.app.rte.unwrap_selection();
                     o.app.rte.wrap_selection();
                     o.app.content_element.blur();
                 },
@@ -872,8 +880,8 @@ Hive.goog_rte = function(content_element){
     // Finds link element the cursor is on, selects it after saving
     // any existing selection, returns its href
     this.get_link = function() {
-        this.range = this.get_range(); // save existing selection
-        var r = this.range.cloneRange();
+        that.range = that.get_range(); // save existing selection
+        var r = that.range.cloneRange();
 
         // Look for link in parents
         var node = r.startContainer;
@@ -923,7 +931,6 @@ Hive.goog_rte = function(content_element){
         that.restore_selection()
         // TODO: don't use browser API directly
         document.execCommand('createlink', false, href);
-        that
     };
     var saved_range;
     this.save_selection = function(){
@@ -943,7 +950,10 @@ Hive.goog_rte = function(content_element){
         wrapper = wrapper || '<span class="hive_selection"></span>';
         var range, node, nodes;
 
+        // Turn wrapper into DOM object
         if (typeof(wrapper) == "string") wrapper = $(wrapper)[0];
+
+        // Get selection
         range = that.getRange();
         if (!range) return;
 
@@ -951,13 +961,22 @@ Hive.goog_rte = function(content_element){
             // Return if selection is empty
             if (range.getStartOffset() === range.getEndOffset()) return;
 
+            // Check if selection is already a link
             var node = $(range.getStartNode());
             if (node.parent().is('a')) nodes = node.parent();
         }
 
         that.save_selection();
+        range.select(); // For some reason on FF save_selection unselects the range
+        console.log(range.getStartNode());
+        console.log(range.getStartOffset());
+        console.log(range.getEndNode());
+        console.log(range.getEndOffset());
         if (!nodes){
             // Create temporary anchor nodes using execcommand
+            //var res = that.execCommand("+link", "temporary_link");
+            //console.log('res', res);
+            //that.basic_text.createLink_(range, 'temporary_link')
             document.execCommand('createLink', false, 'temporary_link');
 
             // Replace temporary nodes with desired wrapper, saving reference in
@@ -967,6 +986,9 @@ Hive.goog_rte = function(content_element){
         current_selection = nodes.wrapInner(wrapper)
         current_selection = current_selection.children()
         current_selection = current_selection.unwrap();
+
+        // Remove browser selection
+        window.getSelection().removeAllRanges();
         return current_selection;
     };
     this.unwrap_selection = function(){
@@ -981,8 +1003,9 @@ Hive.goog_rte = function(content_element){
     };
 
     this.undo_redo = new goog.editor.plugins.UndoRedo();
+    this.basic_text = new goog.editor.plugins.BasicTextFormatter();
     this.registerPlugin(this.undo_redo);
-    this.registerPlugin(new goog.editor.plugins.BasicTextFormatter());
+    this.registerPlugin(this.basic_text);
     this.registerPlugin(new goog.editor.plugins.RemoveFormatting());
 
     var previous_range = {};
@@ -2612,14 +2635,20 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
     pickers.append(map(make_row, by_sixes));
     e.append(pickers);
 
+    var hex_changed = false;
     var update_hex = o.update_hex = function() {
+        if (!hex_changed) return;
+        hex_changed = false;
         var v = manual_input.val();
         var c = $('<div>').css('color', v).css('color');
         callback(c, to_rgb(c));
     };
 
     // Prevent unwanted nudging of app when moving cursor in manual_input
-    manual_input.bind('mousedown keydown', function(e){ e.stopPropagation(); });
+    manual_input.bind('mousedown keydown', function(e){
+        hex_changed = true;
+        e.stopPropagation();
+    });
 
     manual_input.blur(update_hex).keypress(function(e){
         if (e.keyCode == 13) {
@@ -2725,4 +2754,21 @@ function log(text){
     return function(){
         console.log(text);
     }
+}
+
+// Convenience for pausing javascript without changing focus, used during text
+// editor debugging
+$(function(){
+    $(window).keydown(function(e){
+        if(e.shiftKey && e.keyCode == 120){
+            // Insert a breakpoint here
+            // console.log('F9 pause');
+            console.log(sel().content_element.find('.hive_selection'));
+        }
+    });
+});
+
+function print_stack(){
+    //try { thiswillthrowanerror^2 }
+    //catch(e) { console.log(e.stack) }
 }
