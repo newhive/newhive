@@ -687,11 +687,13 @@ Hive.App.Text = function(o) {
     };
 
     o.history_saver = function(){
-        Hive.History.save(
-            function(){ o.rte.execCommand('+undo') },
-            function(){ o.rte.execCommand('+redo') },
-            'edit'
-        );
+        var exec_cmd = function(cmd){ return function(){
+            var uneditable = o.rte.isUneditable();
+            if(uneditable) o.rte.makeEditable();
+            o.rte.execCommand(cmd);
+            if(uneditable) o.rte.makeUneditable();
+        } };
+        Hive.History.save(exec_cmd('+undo'), exec_cmd('+redo'), 'edit');
     };
 
     function controls(o) {
@@ -1748,7 +1750,7 @@ Hive.History.init = function(){
     };
 
     o.undo = function(){
-        if(! o[o.current]) return;
+        if(! o[o.current]) return false;
         o[o.current].undo();
         o.current -= 1;
         o.update_btn_titles();
@@ -1757,7 +1759,7 @@ Hive.History.init = function(){
 
     o.redo = function(){
         var next = o[ o.current + 1 ];
-        if( ! next ) return;
+        if( ! next ) return false;
         next.redo();
         o.current += 1;
         o.update_btn_titles();
