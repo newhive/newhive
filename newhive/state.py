@@ -475,6 +475,11 @@ class User(HasSocial):
         return abs_url(domain = self.get('sites', [config.server_name])[0]) + path
     url = property(get_url)
 
+    def has_thumb(self):
+        id = self.get('thumb_file_id')
+        url = self.get('profile_thumb')
+        return (id and id != '') or (url and url != '')
+
     def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
             file = self.db.File.fetch(self['thumb_file_id'])
