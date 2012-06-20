@@ -705,7 +705,7 @@ Hive.App.Text = function(o) {
             o.app.rte.restore_selection()
         };
         o.link_menu = o.append_link_picker(d.find('.buttons'),
-                        {open: link_open, close: o.app.rte.unwrap_selection});
+                        {open: link_open, close: link_close});
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
