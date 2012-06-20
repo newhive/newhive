@@ -50,7 +50,9 @@
 .drawer.fontsize { white-space : nowrap; overflow : hidden; }
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
-#app_buttons { display : inline-block; margin : 20px; }
+#app_btns {
+    .nav_icon:hover { background-color: $color_grey_medium; }
+}
 .insert_btn { margin-right : 15px; cursor : default; }
 .btn { display : inline-block; padding : 5px; cursor : default; }
 .menu label { font-weight: normal; font-size: 15px; }
