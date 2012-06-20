@@ -44,7 +44,7 @@ input[type=text]:focus, input[type=password]:focus, textarea:focus { border-colo
 input[type=button], input[type=submit] { border : none; }
 .hide { display: none !important; }
 .menu { display : none; border : 0px solid $color_unselected;
-    background-color : white; z-index : 1100; font-size : 11pt; position : absolute;
+    background-color : white; z-index : 2; font-size : 11pt; position : absolute;
     -moz-box-shadow: 05px 05px 05px #888;
     -webkit-box-shadow: 05px 05px 05px #888;
     box-shadow: 05px 05px 05px #888;
@@ -81,7 +81,7 @@ input[type=button], input[type=submit] { border : none; }
 .inactive { color: $color_24; }
 #user { position : fixed; display : inline-block; }
 .nav { position : fixed; margin : 0; }
-.menu, .top, .nav { z-index : 1; }
+.top, .nav { z-index : 1; }
 .spacer { height : 10px; clear : both; }
 
 $placeholder_color: black;

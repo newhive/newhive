@@ -1,7 +1,7 @@
 @import "common";
 
 .ehapp, .ehapp > * { position : absolute; }
-.ehapp .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
+.ehapp .shield { left : 0px; top : 0px; z-index: 1; width : 100%; height : 100%; }
 .select_border {
     background-color: $color_selected; position: absolute;
     border-color: $color_light_blue;
@@ -26,7 +26,8 @@
 .controls_src { display : none; }
 .drag { cursor : move; }
 
-.control { position : absolute; cursor : default; z-index : 2 }
+.controls { position:absolute; width:0; height:0; z-index: 1; }
+.control { position : absolute; cursor : default; z-index : 1 }
 .control.resize_h { cursor : ew-resize; }
 .control.resize { cursor : se-resize; }
 .control.stack img { display : inline-block; margin-left : 5px; }
@@ -97,7 +98,7 @@
 
 input, textarea { font-size : inherit; }
 
-.drawer { z-index : 1100; white-space : nowrap;  }
+.drawer { z-index: 2; white-space : nowrap;  }
 
 .fontsize .option { color : $color_12; vertical-align : bottom; }
 .menu label { color: $color_18; }
@@ -108,7 +109,7 @@ input, textarea { font-size : inherit; }
 #privacy { background-color : $color_selected; color : $color_0; }
 
 .dialogue_handle { background-color : $color_selected; }
-#loading { position : fixed; z-index : 1200; display : none; }
+#loading { position : fixed; z-index: 3; display : none; }
 #app_btns { top : 0; left : 300px; width : 402px; height : 50px; }
 
 .hive_selection {
