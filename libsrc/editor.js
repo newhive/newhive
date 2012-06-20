@@ -757,7 +757,8 @@ Hive.App.Text = function(o) {
                     o.app.content_element.blur();
                 },
                 close: function(){
-                    color_picker.manual_input.blur();
+                    o.app.content_element.focus();
+                    o.app.rte.unwrap_selection();
                     o.app.rte.unwrap_all_selections();
                 }
             }
