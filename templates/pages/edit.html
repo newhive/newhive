@@ -9,7 +9,11 @@
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
   {% endfor %}
  
-  <script src='/lib/combined.js'></script>
+  {% if debug_mode %}
+    <script src='/lib/closure.concatenated.js'></script>
+  {% else %}
+    <script src='/lib/closure.compiled.js'></script>
+  {% endif %}
  
   <script>
     Hive.Exp = {{ exp_js }}; // current expression from server
