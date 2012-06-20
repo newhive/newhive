@@ -335,6 +335,7 @@ Hive.Controls = function(app, multiselect) {
              }
             ,click_persist : input
             ,close : function() {
+                if (opts.field_to_focus) opts.field_to_focus.focus();
                 if (opts && opts.close) opts.close();
                 set_link();
                 input.blur();
@@ -344,7 +345,12 @@ Hive.Controls = function(app, multiselect) {
         });
 
         e.find('img').click(function() { input.val(''); o.app.link(''); m.close(); });
-        input.keypress(function(e) { if(e.keyCode == 13) m.close() });
+        input.keypress(function(e) {
+            if(e.keyCode == 13) {
+                // timeout needed to get around firefox bug
+                setTimeout(m.close, 0);
+            }
+        });
         return m;
     };
 
@@ -702,10 +708,9 @@ Hive.App.Text = function(o) {
         }
         var link_close = function(){
             o.app.rte.unwrap_selection();
-            o.app.rte.restore_selection()
         };
         o.link_menu = o.append_link_picker(d.find('.buttons'),
-                        {open: link_open, close: link_close});
+                        {open: link_open, close: link_close, field_to_focus: o.app.content_element});
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
