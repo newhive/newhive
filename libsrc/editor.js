@@ -735,7 +735,9 @@ Hive.App.Text = function(o) {
                 o.app.rte.wrap_selection();
                 o.app.content_element.blur();
                 //$(focused).focus();
-            }
+            },
+            undefined,
+            {field_to_focus: o.app.content_element}
         );
         o.color_menu = o.hover_menu(
             d.find('.button.color'),
@@ -969,10 +971,6 @@ Hive.goog_rte = function(content_element){
 
         that.save_selection();
         range.select(); // For some reason on FF save_selection unselects the range
-        console.log(range.getStartNode());
-        console.log(range.getStartOffset());
-        console.log(range.getEndNode());
-        console.log(range.getEndOffset());
         if (!nodes){
             // Create temporary anchor nodes using execcommand
             //var res = that.execCommand("+link", "temporary_link");
@@ -2653,7 +2651,11 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
 
     manual_input.blur(update_hex).keypress(function(e){
         if (e.keyCode == 13) {
-            update_hex();
+            if (opts.field_to_focus){
+                opts.field_to_focus.focus();
+            } else {
+                manual_input.blur();
+            }
         }
     });
 
