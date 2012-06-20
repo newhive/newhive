@@ -16,18 +16,30 @@ body.profile {
     display: inline-block;
     margin-right: 10px;
     position: relative;
+    img, .img {
+      height: 180px;
+      vertical-align: middle;
+      display: inline-block;
+    }
+    img, .placeholder{ 
+      width: 180px; 
+      @include border-radius(7px);
+    }
+    .placeholder{
+      border: 1px dashed #CCC;
+      .text {
+          text-align:center; 
+          vertical-align: middle;
+          display: inline-block;
+      }
+    }
+    .message {position: absolute; bottom: -18px; left: 5px; font-size: 12px;}
   }
-  #profile_thumb img { vertical-align: middle; }
-  #profile_thumb img, #profile_thumb .placeholder{ 
-    height: 180px; width: 180px; 
-    @include border-radius(7px);
-  }
-  #profile_thumb .placeholder{ height: 30px; padding: 85px 0;}
-  .placeholder { border: 1px dashed #CCC; text-align:center; }
-  #profile_thumb .message {position: absolute; bottom: -18px; left: 5px; font-size: 12px;}
   
-  .fathead { font-weight: normal; }
-  .fathead.hasthumb { margin: 75px 50px 0 50px; }
+  .fathead {
+      vertical-align: middle;
+      font-weight: normal;
+  }
   .fathead img { margin : 8px 0; vertical-align : top; }
 }
 
