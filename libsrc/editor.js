@@ -1002,8 +1002,11 @@ Hive.goog_rte = function(content_element){
         current_selection = false;
     };
     this.unwrap_all_selections = function(){
-        current_selection = $(that.getElement()).find('.hive_selection');
-        that.unwrap_selection();
+        var selection =  $(that.getElement()).find('.hive_selection');
+        if (selection.length) {
+            current_selection = selection;
+            that.unwrap_selection();
+        }
     };
 
     this.undo_redo = new goog.editor.plugins.UndoRedo();
