@@ -621,8 +621,10 @@ Hive.App.Text = function(o) {
             edit_mode = true;
         }
         else {
+            o.rte.unwrap_all_selections();
             o.rte.makeUneditable();
             o.content_element.unbind('mousedown keydown');
+            o.content_element.blur();
             edit_mode = false;
         }
     }
