@@ -513,10 +513,6 @@ Hive.App.has_resize_h = function(o) {
         return o.dims_set([ dims[0], o.calcHeight() ]);
     }
 
-    o.refresh_size = function() {
-        o.resize_h(o.dims());
-    };
-
     function controls(o) {
         var common = $.extend({}, o);
 
@@ -634,6 +630,7 @@ Hive.App.Text = function(o) {
     }
 
     o.focus.add(function(){
+        o.refresh_size();
         o.edit_mode(true);
     });
     o.unfocus.add(function(){
@@ -655,9 +652,16 @@ Hive.App.Text = function(o) {
         };
     };
 
+    o.calcWidth = function() {
+        return o.content_element.width();
+    }
     o.calcHeight = function() {
         return o.content_element.height();
     }
+
+    o.refresh_size = function() {
+        o.resize_h([o.calcWidth(), o.dims()[1]]);
+    };
 
     Hive.has_scale(o);
     var _scale_set = o.scale_set;
@@ -831,7 +835,7 @@ Hive.App.Text = function(o) {
     o.div.addClass('text');
     if(!o.init_state.dimensions) o.dims_set([ 300, 20 ]);
     o.content_element = $('<div></div>');
-    o.content_element.attr('id', Hive.random_str()).css('width', '100%');
+    o.content_element.attr('id', Hive.random_str()).css('min-width', '100%');
     o.div.append(o.content_element);
     o.rte = new Hive.goog_rte(o.content_element);
     goog.events.listen(o.rte.undo_redo.undoManager_,
