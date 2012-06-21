@@ -617,14 +617,18 @@ Hive.App.Text = function(o) {
         if (mode === edit_mode) return;
         if (mode) {
             o.rte.makeEditable();
-            o.content_element.bind('mousedown keydown', function(e){ e.stopPropagation(); });
+            o.content_element
+                .bind('mousedown keydown', function(e){ e.stopPropagation(); })
+                .removeClass('drag').css('word-wrap', 'normal');
             edit_mode = true;
         }
         else {
             o.rte.unwrap_all_selections();
             o.rte.makeUneditable();
-            o.content_element.unbind('mousedown keydown');
-            o.content_element.blur();
+            o.content_element
+                .unbind('mousedown keydown')
+                .blur()
+                .addClass('drag');
             edit_mode = false;
         }
     }
