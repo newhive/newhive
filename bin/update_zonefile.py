@@ -5,4 +5,4 @@ sys.path.append(parent_path)
 
 from newhive.manage.route53 import update_zonefile
 
-if __name__ == '__main__': update_zonefile()
+if __name__ == '__main__': update_zonefile('thenewhive.com')
