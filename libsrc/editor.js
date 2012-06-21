@@ -692,6 +692,7 @@ Hive.App.Text = function(o) {
             if(uneditable) o.rte.makeEditable();
             o.rte.execCommand(cmd);
             if(uneditable) o.rte.makeUneditable();
+            o.rte.unwrap_all_selections();
         } };
         Hive.History.save(exec_cmd('+undo'), exec_cmd('+redo'), 'edit');
     };
@@ -996,7 +997,7 @@ Hive.goog_rte = function(content_element){
         current_selection = false;
     };
     this.unwrap_all_selections = function(){
-        var selection =  $(that.getElement()).find('.hive_selection');
+        var selection =  that.content_element.find('.hive_selection');
         if (selection.length) {
             current_selection = selection;
             that.unwrap_selection();
