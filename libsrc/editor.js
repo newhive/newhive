@@ -156,6 +156,7 @@ Hive.App = function(init_state, opts) {
 
     var history_point;
     o.move_start = function(){
+        Hive.drag_start();
         o.ref_pos = o.pos();
         history_point = o.history_helper_relative('move');
     };
@@ -165,7 +166,10 @@ Hive.App = function(init_state, opts) {
         if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
         o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ]);
     };
-    o.move_end = function(){ history_point.save() };
+    o.move_end = function(){
+        Hive.drag_end();
+        history_point.save()
+    };
 
     var _dims;
     o.dims = function() { return [ _dims[0], _dims[1] ]; };
@@ -412,6 +416,9 @@ Hive.Controls = function(app, multiselect) {
         o.c.buttons = d.find('.buttons');
         d.find('.hoverable').each(function() { hover_add(this) });
     }
+
+    // disable hover handlers while dragging
+    o.div.find('.drag').drag('start', Hive.drag_start).drag('end', Hive.drag_end);
 
     o.layout();
     return o;
@@ -680,7 +687,7 @@ Hive.App.Text = function(o) {
     o.resize = function(delta) {
         var scale_by = Math.min( (dims_ref[0] + delta[0]) / dims_ref[0],
             (dims_ref[1] + delta[1]) / dims_ref[1] );
-        var dims = [ dims_ref[0] * scale_by, dims_ref[1] * scale_by ];
+        var dims = [ Math.max(1, dims_ref[0] * scale_by), Math.max(1, dims_ref[1] * scale_by) ];
         o.scale_set(scale_ref * scale_by);
         o.dims_set(dims);
     };
@@ -1572,12 +1579,8 @@ Hive.Selection = function(){
         }
     };
 
-    o.dragstart = function(e, dd) {
-        // Don't do anything if user is dragging one of the controls. This
-        // should probably be handled with jQuery.event.stopPropagation, but we
-        // are triggering drag events on app div from the drag handler for the
-        // controls, so the situation is more complicated.
-        if ($(e.target).hasClass('ehapp')) return;
+    o.drag_start = function(e, dd) {
+        Hive.drag_start();
 
         o.new_selection = [];
         o.dragging = true;
@@ -1604,7 +1607,9 @@ Hive.Selection = function(){
             width : o.drag_dims[0], height : o.drag_dims[1] });
         o.update_focus(e);
     };
-    o.dragend = function (e, dd) {
+    o.drag_end = function (e, dd) {
+        Hive.drag_end();
+
         if(!o.drag_dims) return;
         o.dragging = false;
         if (o.pos) { o.update_focus(); }
@@ -1679,6 +1684,7 @@ Hive.Selection = function(){
 
     o.make_controls.push(function(o){
         o.move_start = function(){
+            Hive.drag_start();
             o.ref_pos = o.pos();
             Hive.History.begin();
         };
@@ -1687,7 +1693,10 @@ Hive.Selection = function(){
             if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
             o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ]);
         };
-        o.move_end = function(){ Hive.History.group('move group') };
+        o.move_end = function(){
+            Hive.drag_end();
+            Hive.History.group('move group');
+        };
         o.pos = function(){ var p = o.app.pos(); return [ p[0], p[1] + 50 ]; }
 
         o.padding = 7;
@@ -1696,7 +1705,7 @@ Hive.Selection = function(){
     });
 
     $(function() {
-        $('#grid_guide').drag(o.drag).drag('start', o.dragstart).drag('end', o.dragend);
+        $('#grid_guide').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
 
         // Fallthrough click handler that unfocuses all apps if user clicks on background.
         $(window).click(function(e) {
@@ -2229,6 +2238,9 @@ Hive.embed_code = function(element) {
 // to support multiple busy processes
 Hive.upload_start = function() { center($('#loading').show()); }
 Hive.upload_finish = function() { $('#loading').hide(); }
+
+Hive.drag_start = function(){ hovers_active(false) };
+Hive.drag_end = function(){ hovers_active(true) };
 
 Hive.save = function() {
     var expr = Hive.state();

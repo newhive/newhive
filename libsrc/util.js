@@ -542,6 +542,11 @@ function asyncUpload(opts) {
     setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
 }
 
+function hovers_active(state){
+    hover_add.disabled = !state;
+    hover_menu.disabled = !state;
+}
+
 function hover_url(url) {
     var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
     var i = $("<img style='display:none'>").attr('src', h);
@@ -555,7 +560,10 @@ function hover_add(o) {
         $(o).mouseenter(function() { o.src = o.src_h }).
             mouseleave(function() { if(!o.busy) o.src = o.src_d });
     }
-    $(o).mouseenter(function() { $(this).addClass('active'); })
+    $(o).mouseenter(function() {
+            if(hover_add.disabled) return;
+            $(this).addClass('active');
+        })
         .mouseleave(function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
@@ -607,6 +615,7 @@ hover_menu = function(handle, drawer, options) {
         handle.get(0).busy = false;
     }
     o.open = function() {
+        if(hover_menu.disabled) return;
         o.cancel_close();
         if (!o.options.open_condition()) return;
         if(o.opened) return;
@@ -699,24 +708,6 @@ function eraseCookie(name) {
 }
 
 function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
-
-var scale_nav = function(s) {
-    $('#nav .scale').each(function(i, app_div) {
-       var e = $(this);
-       if(!e.data('css')) {
-           var c = {
-               'width': e.width(),
-               'height': e.height(),
-               'font-size': e.css('font-size')
-           }
-           e.data('css', c);
-       }
-       var c = $.extend({}, e.data('css'));
-       for(var p in c) c[p] = Math.round(c[p] * s);
-       e.css(c);
-   });
-   $('#nav, #search_box ').css('font-size', s + 'em');
-}
 
 var positionHacks = Funcs(noop);
 var place_apps = function() {
