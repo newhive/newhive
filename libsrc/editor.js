@@ -679,7 +679,7 @@ Hive.App.Text = function(o) {
     o.resize = function(delta) {
         var scale_by = Math.min( (dims_ref[0] + delta[0]) / dims_ref[0],
             (dims_ref[1] + delta[1]) / dims_ref[1] );
-        var dims = [ dims_ref[0] * scale_by, dims_ref[1] * scale_by ];
+        var dims = [ Math.max(1, dims_ref[0] * scale_by), Math.max(1, dims_ref[1] * scale_by) ];
         o.scale_set(scale_ref * scale_by);
         o.dims_set(dims);
     };
