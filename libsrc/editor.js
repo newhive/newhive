@@ -1011,7 +1011,7 @@ Hive.goog_rte = function(content_element){
     this.registerPlugin(new goog.editor.plugins.RemoveFormatting());
 
     var previous_range = {};
-    this.content_element.bind('paste', function(){
+    this.content_element.on('paste', function(){
         setTimeout(function(){
             var current_range = that.getRange();
             var pasted_range = goog.dom.Range.createFromNodes(
