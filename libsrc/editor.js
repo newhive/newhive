@@ -1067,9 +1067,7 @@ Hive.goog_rte = function(content_element){
     };
     goog.events.listen(this, goog.editor.Field.EventType.LOAD, this.restore_cursor);
 }
-$(function(){
-    goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
-});
+goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
 
 Hive.App.has_rotate = function(o) {
     var angle = o.init_state.angle ? o.init_state.angle : 0;
