@@ -977,6 +977,19 @@ goog.cloneObject = function(obj) {
 
 
 /**
+ * Forward declaration for the clone method. This is necessary until the
+ * compiler can better support duck-typing constructs as used in
+ * goog.cloneObject.
+ *
+ * TODO(brenneman): Remove once the JSCompiler can infer that the check for
+ * proto.clone is safe in goog.cloneObject.
+ *
+ * @type {Function}
+ */
+Object.prototype.clone;
+
+
+/**
  * A native implementation of goog.bind.
  * @param {Function} fn A function to partially apply.
  * @param {Object|undefined} selfObj Specifies the object which |this| should
@@ -1407,7 +1420,6 @@ goog.inherits = function(childCtor, parentCtor) {
   tempCtor.prototype = parentCtor.prototype;
   childCtor.superClass_ = parentCtor.prototype;
   childCtor.prototype = new tempCtor();
-  /** @override */
   childCtor.prototype.constructor = childCtor;
 };
 
@@ -3095,23 +3107,18 @@ goog.asserts.assertBoolean = function(value, opt_message, var_args) {
 /**
  * Checks if the value is an instance of the user-defined type if
  * goog.asserts.ENABLE_ASSERTS is true.
- *
- * The compiler may tighten the type returned by this function.
- *
  * @param {*} value The value to check.
  * @param {!Function} type A user-defined constructor.
  * @param {string=} opt_message Error message in case of failure.
  * @param {...*} var_args The items to substitute into the failure message.
  * @throws {goog.asserts.AssertionError} When the value is not an instance of
  *     type.
- * @return {!Object}
  */
 goog.asserts.assertInstanceof = function(value, type, opt_message, var_args) {
   if (goog.asserts.ENABLE_ASSERTS && !(value instanceof type)) {
     goog.asserts.doAssertFailure_('instanceof check failed.', null,
         opt_message, Array.prototype.slice.call(arguments, 3));
   }
-  return /** @type {!Object} */(value);
 };
 
 // Copyright 2006 The Closure Library Authors. All Rights Reserved.
@@ -4116,7 +4123,7 @@ goog.array.sort = function(arr, opt_compareFn) {
  * O(n) overhead of copying the array twice.
  *
  * @param {Array} arr The array to be sorted.
- * @param {function(?, ?): number=} opt_compareFn Optional comparison function
+ * @param {function(*, *): number=} opt_compareFn Optional comparison function
  *     by which the array is to be ordered. Should take 2 arguments to compare,
  *     and return a negative number, zero, or a positive number depending on
  *     whether the first argument is less than, equal to, or greater than the
@@ -4223,7 +4230,7 @@ goog.array.compare = function(arr1, arr2, opt_equalsFn) {
  * 3-way array compare function.
  * @param {!goog.array.ArrayLike} arr1 The first array to compare.
  * @param {!goog.array.ArrayLike} arr2 The second array to compare.
- * @param {(function(?, ?): number)=} opt_compareFn Optional comparison function
+ * @param {(function(*, *): number)=} opt_compareFn Optional comparison function
  *     by which the array is to be ordered. Should take 2 arguments to compare,
  *     and return a negative number, zero, or a positive number depending on
  *     whether the first argument is less than, equal to, or greater than the
@@ -5957,7 +5964,6 @@ if (goog.DEBUG) {
   /**
    * Returns a nice string representing size.
    * @return {string} In the form (50 x 73).
-   * @override
    */
   goog.math.Size.prototype.toString = function() {
     return '(' + this.width + ' x ' + this.height + ')';
@@ -6165,368 +6171,11 @@ goog.dom.BrowserFeature = {
 // limitations under the License.
 
 /**
- * @fileoverview Additional mathematical functions.
- */
-
-goog.provide('goog.math');
-
-goog.require('goog.array');
-
-
-/**
- * Returns a random integer greater than or equal to 0 and less than {@code a}.
- * @param {number} a  The upper bound for the random integer (exclusive).
- * @return {number} A random integer N such that 0 <= N < a.
- */
-goog.math.randomInt = function(a) {
-  return Math.floor(Math.random() * a);
-};
-
-
-/**
- * Returns a random number greater than or equal to {@code a} and less than
- * {@code b}.
- * @param {number} a  The lower bound for the random number (inclusive).
- * @param {number} b  The upper bound for the random number (exclusive).
- * @return {number} A random number N such that a <= N < b.
- */
-goog.math.uniformRandom = function(a, b) {
-  return a + Math.random() * (b - a);
-};
-
-
-/**
- * Takes a number and clamps it to within the provided bounds.
- * @param {number} value The input number.
- * @param {number} min The minimum value to return.
- * @param {number} max The maximum value to return.
- * @return {number} The input number if it is within bounds, or the nearest
- *     number within the bounds.
- */
-goog.math.clamp = function(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-};
-
-
-/**
- * The % operator in JavaScript returns the remainder of a / b, but differs from
- * some other languages in that the result will have the same sign as the
- * dividend. For example, -1 % 8 == -1, whereas in some other languages
- * (such as Python) the result would be 7. This function emulates the more
- * correct modulo behavior, which is useful for certain applications such as
- * calculating an offset index in a circular list.
- *
- * @param {number} a The dividend.
- * @param {number} b The divisor.
- * @return {number} a % b where the result is between 0 and b (either 0 <= x < b
- *     or b < x <= 0, depending on the sign of b).
- */
-goog.math.modulo = function(a, b) {
-  var r = a % b;
-  // If r and b differ in sign, add b to wrap the result to the correct sign.
-  return (r * b < 0) ? r + b : r;
-};
-
-
-/**
- * Performs linear interpolation between values a and b. Returns the value
- * between a and b proportional to x (when x is between 0 and 1. When x is
- * outside this range, the return value is a linear extrapolation).
- * @param {number} a A number.
- * @param {number} b A number.
- * @param {number} x The proportion between a and b.
- * @return {number} The interpolated value between a and b.
- */
-goog.math.lerp = function(a, b, x) {
-  return a + x * (b - a);
-};
-
-
-/**
- * Tests whether the two values are equal to each other, within a certain
- * tolerance to adjust for floating pount errors.
- * @param {number} a A number.
- * @param {number} b A number.
- * @param {number=} opt_tolerance Optional tolerance range. Defaults
- *     to 0.000001. If specified, should be greater than 0.
- * @return {boolean} Whether {@code a} and {@code b} are nearly equal.
- */
-goog.math.nearlyEquals = function(a, b, opt_tolerance) {
-  return Math.abs(a - b) <= (opt_tolerance || 0.000001);
-};
-
-
-/**
- * Standardizes an angle to be in range [0-360). Negative angles become
- * positive, and values greater than 360 are returned modulo 360.
- * @param {number} angle Angle in degrees.
- * @return {number} Standardized angle.
- */
-goog.math.standardAngle = function(angle) {
-  return goog.math.modulo(angle, 360);
-};
-
-
-/**
- * Converts degrees to radians.
- * @param {number} angleDegrees Angle in degrees.
- * @return {number} Angle in radians.
- */
-goog.math.toRadians = function(angleDegrees) {
-  return angleDegrees * Math.PI / 180;
-};
-
-
-/**
- * Converts radians to degrees.
- * @param {number} angleRadians Angle in radians.
- * @return {number} Angle in degrees.
- */
-goog.math.toDegrees = function(angleRadians) {
-  return angleRadians * 180 / Math.PI;
-};
-
-
-/**
- * For a given angle and radius, finds the X portion of the offset.
- * @param {number} degrees Angle in degrees (zero points in +X direction).
- * @param {number} radius Radius.
- * @return {number} The x-distance for the angle and radius.
- */
-goog.math.angleDx = function(degrees, radius) {
-  return radius * Math.cos(goog.math.toRadians(degrees));
-};
-
-
-/**
- * For a given angle and radius, finds the Y portion of the offset.
- * @param {number} degrees Angle in degrees (zero points in +X direction).
- * @param {number} radius Radius.
- * @return {number} The y-distance for the angle and radius.
- */
-goog.math.angleDy = function(degrees, radius) {
-  return radius * Math.sin(goog.math.toRadians(degrees));
-};
-
-
-/**
- * Computes the angle between two points (x1,y1) and (x2,y2).
- * Angle zero points in the +X direction, 90 degrees points in the +Y
- * direction (down) and from there we grow clockwise towards 360 degrees.
- * @param {number} x1 x of first point.
- * @param {number} y1 y of first point.
- * @param {number} x2 x of second point.
- * @param {number} y2 y of second point.
- * @return {number} Standardized angle in degrees of the vector from
- *     x1,y1 to x2,y2.
- */
-goog.math.angle = function(x1, y1, x2, y2) {
-  return goog.math.standardAngle(goog.math.toDegrees(Math.atan2(y2 - y1,
-                                                                x2 - x1)));
-};
-
-
-/**
- * Computes the difference between startAngle and endAngle (angles in degrees).
- * @param {number} startAngle  Start angle in degrees.
- * @param {number} endAngle  End angle in degrees.
- * @return {number} The number of degrees that when added to
- *     startAngle will result in endAngle. Positive numbers mean that the
- *     direction is clockwise. Negative numbers indicate a counter-clockwise
- *     direction.
- *     The shortest route (clockwise vs counter-clockwise) between the angles
- *     is used.
- *     When the difference is 180 degrees, the function returns 180 (not -180)
- *     angleDifference(30, 40) is 10, and angleDifference(40, 30) is -10.
- *     angleDifference(350, 10) is 20, and angleDifference(10, 350) is -20.
- */
-goog.math.angleDifference = function(startAngle, endAngle) {
-  var d = goog.math.standardAngle(endAngle) -
-          goog.math.standardAngle(startAngle);
-  if (d > 180) {
-    d = d - 360;
-  } else if (d <= -180) {
-    d = 360 + d;
-  }
-  return d;
-};
-
-
-/**
- * Returns the sign of a number as per the "sign" or "signum" function.
- * @param {number} x The number to take the sign of.
- * @return {number} -1 when negative, 1 when positive, 0 when 0.
- */
-goog.math.sign = function(x) {
-  return x == 0 ? 0 : (x < 0 ? -1 : 1);
-};
-
-
-/**
- * JavaScript implementation of Longest Common Subsequence problem.
- * http://en.wikipedia.org/wiki/Longest_common_subsequence
- *
- * Returns the longest possible array that is subarray of both of given arrays.
- *
- * @param {Array.<Object>} array1 First array of objects.
- * @param {Array.<Object>} array2 Second array of objects.
- * @param {Function=} opt_compareFn Function that acts as a custom comparator
- *     for the array ojects. Function should return true if objects are equal,
- *     otherwise false.
- * @param {Function=} opt_collectorFn Function used to decide what to return
- *     as a result subsequence. It accepts 2 arguments: index of common element
- *     in the first array and index in the second. The default function returns
- *     element from the first array.
- * @return {Array.<Object>} A list of objects that are common to both arrays
- *     such that there is no common subsequence with size greater than the
- *     length of the list.
- */
-goog.math.longestCommonSubsequence = function(
-    array1, array2, opt_compareFn, opt_collectorFn) {
-
-  var compare = opt_compareFn || function(a, b) {
-    return a == b;
-  };
-
-  var collect = opt_collectorFn || function(i1, i2) {
-    return array1[i1];
-  };
-
-  var length1 = array1.length;
-  var length2 = array2.length;
-
-  var arr = [];
-  for (var i = 0; i < length1 + 1; i++) {
-    arr[i] = [];
-    arr[i][0] = 0;
-  }
-
-  for (var j = 0; j < length2 + 1; j++) {
-    arr[0][j] = 0;
-  }
-
-  for (i = 1; i <= length1; i++) {
-    for (j = 1; j <= length1; j++) {
-      if (compare(array1[i - 1], array2[j - 1])) {
-        arr[i][j] = arr[i - 1][j - 1] + 1;
-      } else {
-        arr[i][j] = Math.max(arr[i - 1][j], arr[i][j - 1]);
-      }
-    }
-  }
-
-  // Backtracking
-  var result = [];
-  var i = length1, j = length2;
-  while (i > 0 && j > 0) {
-    if (compare(array1[i - 1], array2[j - 1])) {
-      result.unshift(collect(i - 1, j - 1));
-      i--;
-      j--;
-    } else {
-      if (arr[i - 1][j] > arr[i][j - 1]) {
-        i--;
-      } else {
-        j--;
-      }
-    }
-  }
-
-  return result;
-};
-
-
-/**
- * Returns the sum of the arguments.
- * @param {...number} var_args Numbers to add.
- * @return {number} The sum of the arguments (0 if no arguments were provided,
- *     {@code NaN} if any of the arguments is not a valid number).
- */
-goog.math.sum = function(var_args) {
-  return /** @type {number} */ (goog.array.reduce(arguments,
-      function(sum, value) {
-        return sum + value;
-      }, 0));
-};
-
-
-/**
- * Returns the arithmetic mean of the arguments.
- * @param {...number} var_args Numbers to average.
- * @return {number} The average of the arguments ({@code NaN} if no arguments
- *     were provided or any of the arguments is not a valid number).
- */
-goog.math.average = function(var_args) {
-  return goog.math.sum.apply(null, arguments) / arguments.length;
-};
-
-
-/**
- * Returns the sample standard deviation of the arguments.  For a definition of
- * sample standard deviation, see e.g.
- * http://en.wikipedia.org/wiki/Standard_deviation
- * @param {...number} var_args Number samples to analyze.
- * @return {number} The sample standard deviation of the arguments (0 if fewer
- *     than two samples were provided, or {@code NaN} if any of the samples is
- *     not a valid number).
- */
-goog.math.standardDeviation = function(var_args) {
-  var sampleSize = arguments.length;
-  if (sampleSize < 2) {
-    return 0;
-  }
-
-  var mean = goog.math.average.apply(null, arguments);
-  var variance = goog.math.sum.apply(null, goog.array.map(arguments,
-      function(val) {
-        return Math.pow(val - mean, 2);
-      })) / (sampleSize - 1);
-
-  return Math.sqrt(variance);
-};
-
-
-/**
- * Returns whether the supplied number represents an integer, i.e. that is has
- * no fractional component.  No range-checking is performed on the number.
- * @param {number} num The number to test.
- * @return {boolean} Whether {@code num} is an integer.
- */
-goog.math.isInt = function(num) {
-  return isFinite(num) && num % 1 == 0;
-};
-
-
-/**
- * Returns whether the supplied number is finite and not NaN.
- * @param {number} num The number to test.
- * @return {boolean} Whether {@code num} is a finite number.
- */
-goog.math.isFiniteNumber = function(num) {
-  return isFinite(num) && !isNaN(num);
-};
-// Copyright 2006 The Closure Library Authors. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS-IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-/**
  * @fileoverview A utility class for representing two-dimensional positions.
  */
 
 
 goog.provide('goog.math.Coordinate');
-
-goog.require('goog.math');
 
 
 
@@ -6599,27 +6248,6 @@ goog.math.Coordinate.distance = function(a, b) {
   var dx = a.x - b.x;
   var dy = a.y - b.y;
   return Math.sqrt(dx * dx + dy * dy);
-};
-
-
-/**
- * Returns the magnitude of a coordinate.
- * @param {!goog.math.Coordinate} a A Coordinate.
- * @return {number} The distance between the origin and {@code a}.
- */
-goog.math.Coordinate.magnitude = function(a) {
-  return Math.sqrt(a.x * a.x + a.y * a.y);
-};
-
-
-/**
- * Returns the angle from the origin to a coordinate.
- * @param {!goog.math.Coordinate} a A Coordinate.
- * @return {number} The angle, in degrees, clockwise from the positive X
- *     axis to {@code a}.
- */
-goog.math.Coordinate.azimuth = function(a) {
-  return goog.math.angle(0, 0, a.x, a.y);
 };
 
 
@@ -8103,7 +7731,7 @@ goog.dom.getFrameContentDocument = function(frame) {
 
 /**
  * Cross-browser function for getting the window of a frame or iframe.
- * @param {Element} frame Frame element.
+ * @param {HTMLIFrameElement|HTMLFrameElement} frame Frame element.
  * @return {Window} The window associated with the given frame.
  */
 goog.dom.getFrameContentWindow = function(frame) {
@@ -8893,16 +8521,6 @@ goog.dom.DomHelper.prototype.getDocumentScroll = function() {
 
 
 /**
- * Determines the active element in the given document.
- * @param {Document=} opt_doc The document to look in.
- * @return {Element} The active element.
- */
-goog.dom.DomHelper.prototype.getActiveElement = function(opt_doc) {
-  return goog.dom.getActiveElement(opt_doc || this.document_);
-};
-
-
-/**
  * Appends a child to a node.
  * @param {Node} parent Parent.
  * @param {Node} child Child.
@@ -8919,16 +8537,6 @@ goog.dom.DomHelper.prototype.appendChild = goog.dom.appendChild;
  *     If this is an array like object then fields 0 to length - 1 are appended.
  */
 goog.dom.DomHelper.prototype.append = goog.dom.append;
-
-
-/**
- * Determines if the given node can contain children, intended to be used for
- * HTML generation.
- *
- * @param {Node} node The node to check.
- * @return {boolean} Whether the node can contain children.
- */
-goog.dom.DomHelper.prototype.canHaveChildren = goog.dom.canHaveChildren;
 
 
 /**
@@ -8957,18 +8565,6 @@ goog.dom.DomHelper.prototype.insertSiblingAfter = goog.dom.insertSiblingAfter;
 
 
 /**
- * Insert a child at a given index. If index is larger than the number of child
- * nodes that the parent currently has, the node is inserted as the last child
- * node.
- * @param {Element} parent The element into which to insert the child.
- * @param {Node} child The element to insert.
- * @param {number} index The index at which to insert the new child node. Must
- *     not be negative.
- */
-goog.dom.DomHelper.prototype.insertChildAt = goog.dom.insertChildAt;
-
-
-/**
  * Removes a node from its parent.
  * @param {Node} node The node to remove.
  * @return {Node} The node removed if removed; else, null.
@@ -8993,15 +8589,6 @@ goog.dom.DomHelper.prototype.replaceNode = goog.dom.replaceNode;
  *     document.
  */
 goog.dom.DomHelper.prototype.flattenElement = goog.dom.flattenElement;
-
-
-/**
- * Returns an array containing just the element children of the given element.
- * @param {Element} element The element whose element children we want.
- * @return {!(Array|NodeList)} An array or array-like list of just the element
- *     children of the given element.
- */
-goog.dom.DomHelper.prototype.getChildren = goog.dom.getChildren;
 
 
 /**
@@ -9046,7 +8633,8 @@ goog.dom.DomHelper.prototype.getPreviousElementSibling =
  * @return {Node} The next node in the DOM tree, or null if this was the last
  *     node.
  */
-goog.dom.DomHelper.prototype.getNextNode = goog.dom.getNextNode;
+goog.dom.DomHelper.prototype.getNextNode =
+    goog.dom.getNextNode;
 
 
 /**
@@ -9055,7 +8643,8 @@ goog.dom.DomHelper.prototype.getNextNode = goog.dom.getNextNode;
  * @return {Node} The previous node in the DOM tree, or null if this was the
  *     first node.
  */
-goog.dom.DomHelper.prototype.getPreviousNode = goog.dom.getPreviousNode;
+goog.dom.DomHelper.prototype.getPreviousNode =
+    goog.dom.getPreviousNode;
 
 
 /**
@@ -9067,62 +8656,12 @@ goog.dom.DomHelper.prototype.isNodeLike = goog.dom.isNodeLike;
 
 
 /**
- * Whether the object looks like an Element.
- * @param {*} obj The object being tested for Element likeness.
- * @return {boolean} Whether the object looks like an Element.
- */
-goog.dom.DomHelper.prototype.isElement = goog.dom.isElement;
-
-
-/**
- * Returns true if the specified value is a Window object. This includes the
- * global window for HTML pages, and iframe windows.
- * @param {*} obj Variable to test.
- * @return {boolean} Whether the variable is a window.
- */
-goog.dom.DomHelper.prototype.isWindow = goog.dom.isWindow;
-
-
-/**
- * Returns an element's parent, if it's an Element.
- * @param {Element} element The DOM element.
- * @return {Element} The parent, or null if not an Element.
- */
-goog.dom.DomHelper.prototype.getParentElement = goog.dom.getParentElement;
-
-
-/**
  * Whether a node contains another node.
  * @param {Node} parent The node that should contain the other node.
  * @param {Node} descendant The node to test presence of.
  * @return {boolean} Whether the parent node contains the descendent node.
  */
 goog.dom.DomHelper.prototype.contains = goog.dom.contains;
-
-
-/**
- * Compares the document order of two nodes, returning 0 if they are the same
- * node, a negative number if node1 is before node2, and a positive number if
- * node2 is before node1.  Note that we compare the order the tags appear in the
- * document so in the tree <b><i>text</i></b> the B node is considered to be
- * before the I node.
- *
- * @param {Node} node1 The first node to compare.
- * @param {Node} node2 The second node to compare.
- * @return {number} 0 if the nodes are the same node, a negative number if node1
- *     is before node2, and a positive number if node2 is before node1.
- */
-goog.dom.DomHelper.prototype.compareNodeOrder = goog.dom.compareNodeOrder;
-
-
-/**
- * Find the deepest common ancestor of the given nodes.
- * @param {...Node} var_args The nodes to find a common ancestor of.
- * @return {Node} The common ancestor of the nodes, or null if there is none.
- *     null will only be returned if two or more of the nodes are from different
- *     documents.
- */
-goog.dom.DomHelper.prototype.findCommonAncestor = goog.dom.findCommonAncestor;
 
 
 /**
@@ -9144,7 +8683,7 @@ goog.dom.DomHelper.prototype.getFrameContentDocument =
 
 /**
  * Cross browser function for getting the window of a frame or iframe.
- * @param {Element} frame Frame element.
+ * @param {HTMLIFrameElement|HTMLFrameElement} frame Frame element.
  * @return {Window} The window associated with the given frame.
  */
 goog.dom.DomHelper.prototype.getFrameContentWindow =
@@ -9158,15 +8697,6 @@ goog.dom.DomHelper.prototype.getFrameContentWindow =
  *     content with.
  */
 goog.dom.DomHelper.prototype.setTextContent = goog.dom.setTextContent;
-
-
-/**
- * Gets the outerHTML of a node, which islike innerHTML, except that it
- * actually contains the HTML of the node itself.
- * @param {Element} element The element to get the HTML of.
- * @return {string} The outerHTML of the given element.
- */
-goog.dom.DomHelper.prototype.getOuterHtml = goog.dom.getOuterHtml;
 
 
 /**
@@ -9187,30 +8717,6 @@ goog.dom.DomHelper.prototype.findNode = goog.dom.findNode;
  * @return {Array.<Node>} The found nodes or an empty array if none are found.
  */
 goog.dom.DomHelper.prototype.findNodes = goog.dom.findNodes;
-
-
-/**
- * Returns true if the element has a tab index that allows it to receive
- * keyboard focus (tabIndex >= 0), false otherwise.  Note that form elements
- * natively support keyboard focus, even if they have no tab index.
- * @param {Element} element Element to check.
- * @return {boolean} Whether the element has a tab index that allows keyboard
- *     focus.
- */
-goog.dom.DomHelper.prototype.isFocusableTabIndex = goog.dom.isFocusableTabIndex;
-
-
-/**
- * Enables or disables keyboard focus support on the element via its tab index.
- * Only elements for which {@link goog.dom.isFocusableTabIndex} returns true
- * (or elements that natively support keyboard focus, like form elements) can
- * receive keyboard focus.  See http://go/tabindex for more info.
- * @param {Element} element Element whose tab index is to be changed.
- * @param {boolean} enable Whether to set or remove a tab index on the element
- *     that supports keyboard focus.
- */
-goog.dom.DomHelper.prototype.setFocusableTabIndex =
-    goog.dom.setFocusableTabIndex;
 
 
 /**
@@ -9249,30 +8755,6 @@ goog.dom.DomHelper.prototype.getNodeTextLength = goog.dom.getNodeTextLength;
  * @return {number} The text offset.
  */
 goog.dom.DomHelper.prototype.getNodeTextOffset = goog.dom.getNodeTextOffset;
-
-
-/**
- * Returns the node at a given offset in a parent node.  If an object is
- * provided for the optional third parameter, the node and the remainder of the
- * offset will stored as properties of this object.
- * @param {Node} parent The parent node.
- * @param {number} offset The offset into the parent node.
- * @param {Object=} opt_result Object to be used to store the return value. The
- *     return value will be stored in the form {node: Node, remainder: number}
- *     if this object is provided.
- * @return {Node} The node at the given offset.
- */
-goog.dom.DomHelper.prototype.getNodeAtOffset = goog.dom.getNodeAtOffset;
-
-
-/**
- * Returns true if the object is a {@code NodeList}.  To qualify as a NodeList,
- * the object must have a numeric length property and an item function (which
- * has type 'string' on IE for some reason).
- * @param {Object} val Object to test.
- * @return {boolean} Whether the object is a NodeList.
- */
-goog.dom.DomHelper.prototype.isNodeList = goog.dom.isNodeList;
 
 
 /**
@@ -9661,6 +9143,7 @@ goog.math.Rect = function(x, y, w, h) {
 /**
  * Returns a new copy of the rectangle.
  * @return {!goog.math.Rect} A clone of this Rectangle.
+ * @override
  */
 goog.math.Rect.prototype.clone = function() {
   return new goog.math.Rect(this.left, this.top, this.width, this.height);
@@ -9964,7 +9447,6 @@ goog.provide('goog.style');
 
 
 goog.require('goog.array');
-goog.require('goog.asserts');
 goog.require('goog.dom');
 goog.require('goog.math.Box');
 goog.require('goog.math.Coordinate');
@@ -10254,42 +9736,19 @@ goog.style.getViewportPageOffset = function(doc) {
 
 
 /**
- * Determines whether getBoundingClientRect is supported for this element.
- * @param {!Element} el The element to be measured.
- * @return {boolean} Whether getBoundingClientRect is supported.
- * @private
- */
-goog.style.supportsGetBoundingClientRect_ = function(el) {
-  if (goog.userAgent.MOBILE && goog.userAgent.WEBKIT) {
-    // http://crbug.com/130651 -- Android Chrome's getBoundingClientRect
-    // incorrectly applies zoom in iframes.  To avoid adding a dependency to
-    // goog.userAgent.product, this is a little broader to apply to all mobile
-    // WebKit, so this will unfortunately slow down other mobile devices.  To
-    // mitigate the effect, we can still use getClientBoundingRect when not in
-    // an iframe.
-    var win = el.ownerDocument.defaultView;
-    if (win != win.top) {
-      return false;
-    }
-  }
-  return !!el.getBoundingClientRect;
-};
-
-
-/**
  * Gets the client rectangle of the DOM element.
  *
  * getBoundingClientRect is part of a new CSS object model draft (with a
  * long-time presence in IE), replacing the error-prone parent offset
  * computation and the now-deprecated Gecko getBoxObjectFor.
  *
- * This utility patches common browser bugs in getBoundingClientRect. It
- * will fail if getBoundingClientRect is unsupported.
+ * This utility patches common browser bugs in getClientBoundingRect. It
+ * will fail if getClientBoundingRect is unsupported.
  *
  * If the element is not in the DOM, the result is undefined, and an error may
  * be thrown depending on user agent.
  *
- * @param {!Element} el The element whose bounding rectangle is being queried.
+ * @param {Element} el The element whose bounding rectangle is being queried.
  * @return {Object} A native bounding rectangle with numerical left, top,
  *     right, and bottom.  Reported by Firefox to be of object type ClientRect.
  * @private
@@ -10309,7 +9768,7 @@ goog.style.getBoundingClientRect_ = function(el) {
     // In quirks mode, the offset can be determined by querying the body's
     // clientLeft/clientTop, but in standards mode, it is found by querying
     // the document element's clientLeft/clientTop.  Since we already called
-    // getBoundingClientRect we have already forced a reflow, so it is not
+    // getClientBoundingRect we have already forced a reflow, so it is not
     // too expensive just to query them all.
 
     // See: http://msdn.microsoft.com/en-us/library/ms536433(VS.85).aspx
@@ -10518,8 +9977,6 @@ goog.style.getClientLeftTop = function(el) {
 goog.style.getPageOffset = function(el) {
   var box, doc = goog.dom.getOwnerDocument(el);
   var positionStyle = goog.style.getStyle_(el, 'position');
-  // TODO(gboyer): Update the jsdoc in a way that doesn't break the universe.
-  goog.asserts.assertObject(el, 'Parameter is required');
 
   // NOTE(eae): Gecko pre 1.9 normally use getBoxObjectFor to calculate the
   // position. When invoked for an element with position absolute and a negative
@@ -10544,8 +10001,8 @@ goog.style.getPageOffset = function(el) {
     return pos;
   }
 
-  // IE, Gecko 1.9+, and most modern WebKit.
-  if (goog.style.supportsGetBoundingClientRect_(el)) {
+  // IE and Gecko 1.9+.
+  if (el.getBoundingClientRect) {
     box = goog.style.getBoundingClientRect_(el);
     // Must add the scroll coordinates in to get the absolute page offset
     // of element since getBoundingClientRect returns relative coordinates to
@@ -10725,20 +10182,16 @@ goog.style.getRelativePosition = function(a, b) {
 goog.style.getClientPosition = function(el) {
   var pos = new goog.math.Coordinate;
   if (el.nodeType == goog.dom.NodeType.ELEMENT) {
-    el = /** @type {!Element} */ (el);
-    if (goog.style.supportsGetBoundingClientRect_(el)) {
-      // IE, Gecko 1.9+, and most modern WebKit
-      var box = goog.style.getBoundingClientRect_(el);
+    if (el.getBoundingClientRect) {  // IE and Gecko 1.9+
+      var box = goog.style.getBoundingClientRect_(/** @type {Element} */ (el));
       pos.x = box.left;
       pos.y = box.top;
     } else {
-      var scrollCoord = goog.dom.getDomHelper(el).getDocumentScroll();
-      var pageCoord = goog.style.getPageOffset(el);
+      var scrollCoord = goog.dom.getDomHelper(/** @type {Element} */ (el))
+          .getDocumentScroll();
+      var pageCoord = goog.style.getPageOffset(/** @type {Element} */ (el));
       pos.x = pageCoord.x - scrollCoord.x;
       pos.y = pageCoord.y - scrollCoord.y;
-    }
-    if (goog.userAgent.GECKO && !goog.userAgent.isVersion(12)) {
-      pos = goog.math.Coordinate.sum(pos, goog.style.getCssTranslation(el));
     }
   } else {
     var isAbstractedEvent = goog.isFunction(el.getBrowserEvent);
@@ -11818,58 +11271,6 @@ goog.style.getScrollbarWidth = function(opt_className) {
   goog.dom.removeNode(outerDiv);
   return width;
 };
-
-
-/**
- * Regular expression to extract x and y translation components from a CSS
- * transform Matrix representation.
- *
- * @type {!RegExp}
- * @const
- * @private
- */
-goog.style.MATRIX_TRANSLATION_REGEX_ =
-    new RegExp('matrix\\([0-9\\.\\-]+, [0-9\\.\\-]+, ' +
-               '[0-9\\.\\-]+, [0-9\\.\\-]+, ' +
-               '([0-9\\.\\-]+)p?x?, ([0-9\\.\\-]+)p?x?\\)');
-
-
-/**
- * Returns the x,y translation component of any CSS transforms applied to the
- * element, in pixels.
- *
- * @param {!Element} element The element to get the translation of.
- * @return {!goog.math.Coordinate} The CSS translation of the element in px.
- */
-goog.style.getCssTranslation = function(element) {
-  var property;
-  if (goog.userAgent.IE) {
-    property = '-ms-transform';
-  } else if (goog.userAgent.WEBKIT) {
-    property = '-webkit-transform';
-  } else if (goog.userAgent.OPERA) {
-    property = '-o-transform';
-  } else if (goog.userAgent.GECKO) {
-    property = '-moz-transform';
-  }
-  var transform;
-  if (property) {
-    transform = goog.style.getStyle_(element, property);
-  }
-  if (!transform) {
-    transform = goog.style.getStyle_(element, 'transform');
-  }
-  if (!transform) {
-    return new goog.math.Coordinate(0, 0);
-  }
-  var matches = transform.match(goog.style.MATRIX_TRANSLATION_REGEX_);
-  if (!matches) {
-    return new goog.math.Coordinate(0, 0);
-  }
-  return new goog.math.Coordinate(parseFloat(matches[1]),
-                                  parseFloat(matches[2]));
-};
-
 // Copyright 2010 The Closure Library Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12028,7 +11429,8 @@ goog.provide('goog.editor.defines');
  * it through a QA run. If we can file the bugs with Mozilla, there's a chance
  * they'll fix them for a dot release of Firefox 3.
  */
-goog.editor.defines.USE_CONTENTEDITABLE_IN_FIREFOX_3 = false;
+//goog.editor.defines.USE_CONTENTEDITABLE_IN_FIREFOX_3 = false;
+goog.editor.defines.USE_CONTENTEDITABLE_IN_FIREFOX_3 = true;
 // Copyright 2008 The Closure Library Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13100,12 +12502,12 @@ goog.iter.forEach = function(iterable, f, opt_obj) {
  *     passed the test are present.
  */
 goog.iter.filter = function(iterable, f, opt_obj) {
-  var iterator = goog.iter.toIterator(iterable);
+  iterable = goog.iter.toIterator(iterable);
   var newIter = new goog.iter.Iterator;
   newIter.next = function() {
     while (true) {
-      var val = iterator.next();
-      if (f.call(opt_obj, val, undefined, iterator)) {
+      var val = iterable.next();
+      if (f.call(opt_obj, val, undefined, iterable)) {
         return val;
       }
     }
@@ -13182,12 +12584,12 @@ goog.iter.join = function(iterable, deliminator) {
  *     applying the function to each element in the original iterator.
  */
 goog.iter.map = function(iterable, f, opt_obj) {
-  var iterator = goog.iter.toIterator(iterable);
+  iterable = goog.iter.toIterator(iterable);
   var newIter = new goog.iter.Iterator;
   newIter.next = function() {
     while (true) {
-      var val = iterator.next();
-      return f.call(opt_obj, val, undefined, iterator);
+      var val = iterable.next();
+      return f.call(opt_obj, val, undefined, iterable);
     }
   };
   return newIter;
@@ -13333,13 +12735,13 @@ goog.iter.chain = function(var_args) {
  *     original iterator as long as {@code f} is true.
  */
 goog.iter.dropWhile = function(iterable, f, opt_obj) {
-  var iterator = goog.iter.toIterator(iterable);
+  iterable = goog.iter.toIterator(iterable);
   var newIter = new goog.iter.Iterator;
   var dropping = true;
   newIter.next = function() {
     while (true) {
-      var val = iterator.next();
-      if (dropping && f.call(opt_obj, val, undefined, iterator)) {
+      var val = iterable.next();
+      if (dropping && f.call(opt_obj, val, undefined, iterable)) {
         continue;
       } else {
         dropping = false;
@@ -13363,14 +12765,14 @@ goog.iter.dropWhile = function(iterable, f, opt_obj) {
  *     original iterator as long as the function is true.
  */
 goog.iter.takeWhile = function(iterable, f, opt_obj) {
-  var iterator = goog.iter.toIterator(iterable);
+  iterable = goog.iter.toIterator(iterable);
   var newIter = new goog.iter.Iterator;
   var taking = true;
   newIter.next = function() {
     while (true) {
       if (taking) {
-        var val = iterator.next();
-        if (f.call(opt_obj, val, undefined, iterator)) {
+        var val = iterable.next();
+        if (f.call(opt_obj, val, undefined, iterable)) {
           return val;
         } else {
           taking = false;
@@ -14726,7 +14128,7 @@ goog.structs.Map.prototype.containsValue = function(val) {
 /**
  * Whether this map is equal to the argument map.
  * @param {goog.structs.Map} otherMap The map against which to test equality.
- * @param {function(?, ?) : boolean=} opt_equalityFn Optional equality function
+ * @param {function(*, *) : boolean=} opt_equalityFn Optional equality function
  *     to test equality of values. If not specified, this will test whether
  *     the values contained in each map are identical objects.
  * @return {boolean} Whether the maps are equal.
@@ -15090,7 +14492,6 @@ goog.structs.Set.getKey_ = function(val) {
 
 /**
  * @return {number} The number of elements in the set.
- * @override
  */
 goog.structs.Set.prototype.getCount = function() {
   return this.map_.getCount();
@@ -15100,7 +14501,6 @@ goog.structs.Set.prototype.getCount = function() {
 /**
  * Add a primitive or an object to the set.
  * @param {*} element The primitive or object to add.
- * @override
  */
 goog.structs.Set.prototype.add = function(element) {
   this.map_.set(goog.structs.Set.getKey_(element), element);
@@ -15137,7 +14537,6 @@ goog.structs.Set.prototype.removeAll = function(col) {
  * Removes the given element from this set.
  * @param {*} element The primitive or object to remove.
  * @return {boolean} Whether the element was found and removed.
- * @override
  */
 goog.structs.Set.prototype.remove = function(element) {
   return this.map_.remove(goog.structs.Set.getKey_(element));
@@ -15165,7 +14564,6 @@ goog.structs.Set.prototype.isEmpty = function() {
  * Tests whether this set contains the given element.
  * @param {*} element The primitive or object to test for.
  * @return {boolean} True if this set contains the given element.
- * @override
  */
 goog.structs.Set.prototype.contains = function(element) {
   return this.map_.containsKey(goog.structs.Set.getKey_(element));
@@ -17186,7 +16584,6 @@ goog.Disposable.prototype.creationStack;
 
 /**
  * @return {boolean} Whether the object has been disposed of.
- * @override
  */
 goog.Disposable.prototype.isDisposed = function() {
   return this.disposed_;
@@ -17207,7 +16604,6 @@ goog.Disposable.prototype.getDisposed = goog.Disposable.prototype.isDisposed;
  * objects, DOM nodes, and other disposable objects. Reentrant.
  *
  * @return {void} Nothing.
- * @override
  */
 goog.Disposable.prototype.dispose = function() {
   if (!this.disposed_) {
@@ -17844,7 +17240,6 @@ goog.dom.TagIterator.prototype.restartTag = function() {
  * Move to the next position in the DOM tree.
  * @return {Node} Returns the next node, or throws a goog.iter.StopIteration
  *     exception if the end of the iterator's range has been reached.
- * @override
  */
 goog.dom.TagIterator.prototype.next = function() {
   var node;
@@ -18754,7 +18149,6 @@ goog.dom.TextRangeIterator.prototype.isLast = function() {
  * Move to the next position in the selection.
  * Throws {@code goog.iter.StopIteration} when it passes the end of the range.
  * @return {Node} The node at the next position.
- * @override
  */
 goog.dom.TextRangeIterator.prototype.next = function() {
   if (this.isLast()) {
@@ -18792,7 +18186,6 @@ goog.dom.TextRangeIterator.prototype.copyFrom = function(other) {
 
 /**
  * @return {goog.dom.TextRangeIterator} An identical iterator.
- * @override
  */
 goog.dom.TextRangeIterator.prototype.clone = function() {
   var copy = new goog.dom.TextRangeIterator(this.startNode_,
@@ -18899,7 +18292,6 @@ goog.string.StringBuffer.prototype.getLength = function() {
 
 /**
  * @return {string} The concatenated string.
- * @override
  */
 goog.string.StringBuffer.prototype.toString = function() {
   return this.buffer_;
@@ -19357,7 +18749,6 @@ goog.dom.browserrange.W3cRange.createFromNodes = function(startNode,
 
 /**
  * @return {goog.dom.browserrange.W3cRange} A clone of this range.
- * @override
  */
 goog.dom.browserrange.W3cRange.prototype.clone = function() {
   return new this.constructor(this.range_.cloneRange());
@@ -19775,7 +19166,6 @@ goog.inherits(goog.dom.NodeIterator, goog.dom.TagIterator);
  * Moves to the next position in the DOM tree.
  * @return {Node} Returns the next node, or throws a goog.iter.StopIteration
  *     exception if the end of the iterator's range has been reached.
- * @override
  */
 goog.dom.NodeIterator.prototype.next = function() {
   do {
@@ -20094,7 +19484,6 @@ goog.dom.browserrange.IeRange.prototype.endOffset_ = -1;
 
 /**
  * @return {goog.dom.browserrange.IeRange} A clone of this range.
- * @override
  */
 goog.dom.browserrange.IeRange.prototype.clone = function() {
   var range = new goog.dom.browserrange.IeRange(
@@ -21262,7 +20651,6 @@ goog.dom.TextRange.prototype.isReversed_ = false;
 
 /**
  * @return {goog.dom.TextRange} A clone of this range.
- * @override
  */
 goog.dom.TextRange.prototype.clone = function() {
   var range = new goog.dom.TextRange();
@@ -21518,7 +20906,6 @@ goog.dom.TextRange.prototype.getPastableHtml = function() {
  * the direction of the range, the iterator will move in document order.
  * @param {boolean=} opt_keys Unused for this iterator.
  * @return {goog.dom.TextRangeIterator} An iterator over tags in the range.
- * @override
  */
 goog.dom.TextRange.prototype.__iterator__ = function(opt_keys) {
   return new goog.dom.TextRangeIterator(this.getStartNode(),
@@ -21652,7 +21039,6 @@ goog.inherits(goog.dom.DomSavedTextRange_, goog.dom.SavedRange);
 
 /**
  * @return {goog.dom.AbstractRange} The restored range.
- * @override
  */
 goog.dom.DomSavedTextRange_.prototype.restoreInternal = function() {
   return goog.dom.Range.createFromNodes(this.anchorNode_, this.anchorOffset_,
@@ -21782,7 +21168,9 @@ goog.dom.ControlRange.prototype.clearCachedValues_ = function() {
 };
 
 
-/** @override */
+/**
+ * @return {goog.dom.ControlRange} A clone of this range.
+ */
 goog.dom.ControlRange.prototype.clone = function() {
   return goog.dom.ControlRange.createFromElements.apply(this,
                                                         this.getElements());
@@ -21899,7 +21287,7 @@ goog.dom.ControlRange.prototype.isRangeInDocument = function() {
     returnValue = goog.array.every(this.getElements(), function(element) {
       // On IE, this throws an exception when the range is detached.
       return goog.userAgent.IE ?
-          !!element.parentNode :
+          element.parentNode :
           goog.dom.contains(element.ownerDocument.body, element);
     });
   } catch (e) {
@@ -22032,7 +21420,9 @@ goog.dom.DomSavedControlRange_ = function(range) {
 goog.inherits(goog.dom.DomSavedControlRange_, goog.dom.SavedRange);
 
 
-/** @override */
+/**
+ * @return {goog.dom.ControlRange} The restored range.
+ */
 goog.dom.DomSavedControlRange_.prototype.restoreInternal = function() {
   var doc = this.elements_.length ?
       goog.dom.getOwnerDocument(this.elements_[0]) : document;
@@ -22134,7 +21524,6 @@ goog.dom.ControlRangeIterator.prototype.isLast = function() {
  * Move to the next position in the selection.
  * Throws {@code goog.iter.StopIteration} when it passes the end of the range.
  * @return {Node} The node at the next position.
- * @override
  */
 goog.dom.ControlRangeIterator.prototype.next = function() {
   // Iterate over each element in the range, and all of its children.
@@ -22165,7 +21554,6 @@ goog.dom.ControlRangeIterator.prototype.copyFrom = function(other) {
 
 /**
  * @return {goog.dom.ControlRangeIterator} An identical iterator.
- * @override
  */
 goog.dom.ControlRangeIterator.prototype.clone = function() {
   var copy = new goog.dom.ControlRangeIterator(null);
@@ -22316,7 +21704,6 @@ goog.dom.MultiRange.prototype.clearCachedValues_ = function() {
 
 /**
  * @return {goog.dom.MultiRange} A clone of this range.
- * @override
  */
 goog.dom.MultiRange.prototype.clone = function() {
   return goog.dom.MultiRange.createFromBrowserRanges(this.browserRanges_);
@@ -22518,7 +21905,6 @@ goog.dom.MultiRange.prototype.saveUsingDom = function() {
  * depending on the parameter.  This will result in the number of ranges in this
  * multi range becoming 1.
  * @param {boolean} toAnchor Whether to collapse to the anchor.
- * @override
  */
 goog.dom.MultiRange.prototype.collapse = function(toAnchor) {
   if (!this.isCollapsed()) {
@@ -22560,7 +21946,6 @@ goog.inherits(goog.dom.DomSavedMultiRange_, goog.dom.SavedRange);
 
 /**
  * @return {goog.dom.MultiRange} The restored range.
- * @override
  */
 goog.dom.DomSavedMultiRange_.prototype.restoreInternal = function() {
   var ranges = goog.array.map(this.savedRanges_, function(savedRange) {
@@ -22684,7 +22069,6 @@ goog.dom.MultiRangeIterator.prototype.copyFrom = function(other) {
 
 /**
  * @return {goog.dom.MultiRangeIterator} An identical iterator.
- * @override
  */
 goog.dom.MultiRangeIterator.prototype.clone = function() {
   var copy = new goog.dom.MultiRangeIterator(null);
@@ -25364,6 +24748,7 @@ goog.events.unlistenByKey = function(key) {
   }
 
   var srcUid = goog.getUid(src);
+  var listenerArray = goog.events.listenerTree_[type][capture][srcUid];
 
   // In a perfect implementation we would decrement the remaining_ field here
   // but then we would need to know if the listener has already been fired or
@@ -25380,19 +24765,8 @@ goog.events.unlistenByKey = function(key) {
   }
 
   listener.removed = true;
-
-  // There are some esoteric situations where the hash code of an object
-  // can change, and we won't be able to find the listenerArray anymore.
-  // For example, if you're listening on a window, and the user navigates to
-  // a different window, the UID will disappear.
-  //
-  // It should be impossible to ever find the original listenerArray, so it
-  // doesn't really matter if we can't clean it up in this case.
-  var listenerArray = goog.events.listenerTree_[type][capture][srcUid];
-  if (listenerArray) {
-    listenerArray.needsCleanup_ = true;
-    goog.events.cleanUp_(type, capture, srcUid, listenerArray);
-  }
+  listenerArray.needsCleanup_ = true;
+  goog.events.cleanUp_(type, capture, srcUid, listenerArray);
 
   delete goog.events.listeners_[key];
 
@@ -26106,7 +25480,6 @@ goog.debug.entryPointRegistry.register(
 goog.provide('goog.events.EventTarget');
 
 goog.require('goog.Disposable');
-goog.require('goog.debug.Logger');
 goog.require('goog.events');
 
 
@@ -26160,47 +25533,8 @@ goog.require('goog.events');
  */
 goog.events.EventTarget = function() {
   goog.Disposable.call(this);
-  if (goog.events.EventTarget.ENABLE_MONITORING) {
-    this.creationStack = new Error().stack;
-    goog.events.EventTarget.instances_[goog.getUid(this)] = this;
-  }
 };
 goog.inherits(goog.events.EventTarget, goog.Disposable);
-
-
-/**
- * @define {boolean} Whether to enable the monitoring of the
- *     goog.events.EventTarget instances. Switching on the monitoring is only
- *     recommended for debugging because it has a significant impact on
- *     performance and memory usage. If switched off, the monitoring code
- *     compiles down to 0 bytes. The monitoring expects that all event targets
- *     objects call the {@code goog.events.EventTarget} base constructor.
- */
-goog.events.EventTarget.ENABLE_MONITORING = false;
-
-
-/**
- * Maps the unique ID of every undisposed {@code goog.events.EvenTarget} object
- * to the object itself.
- * @type {!Object.<!goog.events.EventTarget>}
- * @private
- */
-goog.events.EventTarget.instances_ = {};
-
-
-/**
- * @return {!Array.<!goog.events.EventTarget>} All {@code
- *     goog.events.EventTarget} objects that haven't been disposed of.
- */
-goog.events.EventTarget.getUndisposedObjects = function() {
-  var ret = [];
-  for (var id in goog.events.EventTarget.instances_) {
-    if (goog.events.EventTarget.instances_.hasOwnProperty(id)) {
-      ret.push(goog.events.EventTarget.instances_[id]);
-    }
-  }
-  return ret;
-};
 
 
 /**
@@ -26318,18 +25652,6 @@ goog.events.EventTarget.prototype.disposeInternal = function() {
   goog.events.EventTarget.superClass_.disposeInternal.call(this);
   goog.events.removeAll(this);
   this.parentEventTarget_ = null;
-  if (goog.events.EventTarget.ENABLE_MONITORING) {
-    var uid = goog.getUid(this);
-    if (!goog.events.EventTarget.instances_.hasOwnProperty(uid)) {
-      // Either the base class constructor was not called, or the monitoring
-      // mode was turned on after the event target was created.
-      goog.debug.Logger.getLogger('goog.events.EventTarget').warning(
-          this + ' might have forgotten to call the goog.eventTarget base ' +
-          'constructor');
-    } else {
-      delete goog.events.EventTarget.instances_[uid];
-    }
-  }
 };
 // Copyright 2008 The Closure Library Authors. All Rights Reserved.
 //
@@ -32817,7 +32139,7 @@ goog.cssom.iframe.style.getElementContext = function(
   };
   // Text formatting property values, to keep text nodes directly under BODY
   // looking right.
-  for (i = 0; prop = goog.cssom.iframe.style.textProperties_[i]; i++) {
+  for (i = 0, prop; prop = goog.cssom.iframe.style.textProperties_[i]; i++) {
     bodyProperties[prop] = computedStyle[goog.string.toCamelCase(prop)];
   }
   if (opt_copyBackgroundContext &&
@@ -35302,7 +34624,6 @@ goog.editor.plugins.BasicTextFormatter.SUPPORTED_COMMANDS_ =
  * @param {string} command Command string to check.
  * @return {boolean} Whether the string corresponds to a command
  *     this plugin handles.
- * @override
  */
 goog.editor.plugins.BasicTextFormatter.prototype.isSupportedCommand = function(
     command) {
@@ -35542,7 +34863,6 @@ goog.editor.plugins.BasicTextFormatter.prototype.focusField_ = function() {
  *     selection.  NOTE: This return type list is not documented in MSDN or MDC
  *     and has been constructed from experience.  Please update it
  *     if necessary.
- * @override
  */
 goog.editor.plugins.BasicTextFormatter.prototype.queryCommandValue = function(
     command) {
@@ -36999,7 +36319,6 @@ goog.inherits(goog.dom.NodeOffset, goog.Disposable);
 
 /**
  * @return {string} A string representation of this object.
- * @override
  */
 goog.dom.NodeOffset.prototype.toString = function() {
   var strs = [];
@@ -37542,7 +36861,6 @@ goog.inherits(goog.editor.plugins.UndoRedo, goog.editor.Plugin);
  * The logger for this class.
  * @type {goog.debug.Logger}
  * @protected
- * @override
  */
 goog.editor.plugins.UndoRedo.prototype.logger =
     goog.debug.Logger.getLogger('goog.editor.plugins.UndoRedo');
@@ -37630,7 +36948,6 @@ goog.editor.plugins.UndoRedo.prototype.setUndoRedoManager = function(manager) {
  * @param {string} command Command string to check.
  * @return {boolean} Whether the string corresponds to a command
  *     this plugin handles.
- * @override
  */
 goog.editor.plugins.UndoRedo.prototype.isSupportedCommand = function(command) {
   return command in goog.editor.plugins.UndoRedo.SUPPORTED_COMMANDS_;
@@ -37652,7 +36969,6 @@ goog.editor.plugins.UndoRedo.prototype.registerFieldObject = function(
  * This is probably as simple as skipping over entries in the undo stack
  * that have a hashcode of an uneditable field.
  * @param {goog.editor.Field} fieldObject The field to register with the plugin.
- * @override
  */
 goog.editor.plugins.UndoRedo.prototype.unregisterFieldObject = function(
     fieldObject) {
@@ -38184,7 +37500,6 @@ goog.editor.plugins.UndoRedo.UndoState_.prototype.redoCursorPosition_;
 
 /**
  * Performs the undo operation represented by this state.
- * @override
  */
 goog.editor.plugins.UndoRedo.UndoState_.prototype.undo = function() {
   this.restore_(this, this.undoContent_,
@@ -38194,7 +37509,6 @@ goog.editor.plugins.UndoRedo.UndoState_.prototype.undo = function() {
 
 /**
  * Performs the redo operation represented by this state.
- * @override
  */
 goog.editor.plugins.UndoRedo.UndoState_.prototype.redo = function() {
   this.restore_(this, this.redoContent_,
@@ -38377,7 +37691,6 @@ goog.editor.plugins.UndoRedo.CursorPosition_.prototype.isValid = function() {
 
 /**
  * @return {string} A string representation of this object.
- * @override
  */
 goog.editor.plugins.UndoRedo.CursorPosition_.prototype.toString = function() {
   if (goog.editor.BrowserFeature.HAS_W3C_RANGES) {
