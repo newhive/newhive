@@ -51,7 +51,7 @@
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
 #app_btns {
-    .nav_icon:hover { background-color: $color_grey_medium; }
+    .nav_icon.active { background-color: $color_grey_medium; }
 }
 .insert_btn { margin-right : 15px; cursor : default; }
 .btn { display : inline-block; padding : 5px; cursor : default; }
