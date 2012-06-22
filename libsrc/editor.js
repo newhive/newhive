@@ -654,8 +654,9 @@ Hive.App.Text = function(o) {
 
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
-        if(!v) o.rte.edit('unlink');
-        else o.rte.make_link(v);
+        //if(!v) o.rte.edit('unlink');
+        //else o.rte.make_link(v);
+        o.rte.make_link(v);
     }
     o.link_set = function(href) {
         if (!v){
@@ -869,6 +870,7 @@ Hive.goog_rte = function(content_element){
         var node = r.startContainer;
         while(node.parentNode) {
             node = node.parentNode;
+            if (node == that.content_element) return;
             if($(node).is('a')) {
                 r.selectNode(node);   
                 that.select(r);
