@@ -616,8 +616,9 @@ Hive.App.Text = function(o) {
             // avoid 0-height content element in FF
             if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
             else o.rte.setHtml(false, content);
+        } else {
+            return o.rte.add_breaks();
         }
-        return o.rte.getCleanContents();
     }
 
     var edit_mode = false;
@@ -702,6 +703,7 @@ Hive.App.Text = function(o) {
     o.load = function() {
         o.scale_set(o.scale());
         o.content(content);
+        o.rte.remove_breaks();
         _load();
         o.refresh_size();
     };
@@ -1049,6 +1051,54 @@ Hive.goog_rte = function(content_element){
         };
     };
     goog.events.listen(this, goog.editor.Field.EventType.LOAD, this.restore_cursor);
+
+    // Text wrapping hack: insert explicit line breaks where text is
+    // soft-wrapped before saving, remove them on loading
+    function eachTextNodeIn(node, fn) {
+        if(node.nodeType == 3) fn(node);
+        else {
+            for(var i = 0; i < node.childNodes.length; i++)
+                eachTextNodeIn(node.childNodes[i], fn);
+        }
+    };
+    this.add_breaks = function() {
+        var e = that.content_element.clone();
+        e.css({
+            'left':-5000,
+            width: that.content_element.width(),
+            height: that.content_element.height(),
+            'min-width': ''
+        }).appendTo(document.body);
+
+        // wrap all words with spans
+        eachTextNodeIn(e.get(0), function(n) {
+            $(n).replaceWith(n.nodeValue.replace(/(\w+)/g, "<span class='wordmark'>$1</span>"))
+        });
+
+        // TODO: iterate over wordmarks, add <br>s where line breaks occur
+        var y = 0;
+        e.find('.wordmark').each(function(i, e) {
+            var ely = $(e).offset().top;
+            if(ely > y) {
+                var br = $('<br class="softbr">');
+                $(e).before(br);
+                if(ely != $(e).offset().top) br.remove(); // if element moves, oops, remove <br>
+            }
+            y = ely;
+        });
+
+        // unwrap all words
+        e.find('.wordmark').each(function(i, e) { $(e).replaceWith($(e).text()) });
+
+        var html = e.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
+        e.remove();
+        return html;
+    }
+    this.remove_breaks = function() {
+        that.content_element.find('.softbr').remove();
+        var wrapper = that.content_element.find('.viewstyle');
+        if(wrapper.length) that.content_element.html(wrapper.html());
+    }
 }
 goog.editor.Field.DELAYED_CHANGE_FREQUENCY = 100;
 goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
