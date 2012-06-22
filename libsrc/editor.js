@@ -705,7 +705,7 @@ Hive.App.Text = function(o) {
         var exec_cmd = function(cmd){ return function(){
             var uneditable = o.rte.isUneditable();
             if(uneditable) o.rte.makeEditable();
-            o.rte.execCommand(cmd);
+            o.rte.exec_command(cmd);
             if(uneditable) o.rte.makeUneditable();
             o.rte.unwrap_all_selections();
         } };
@@ -751,7 +751,7 @@ Hive.App.Text = function(o) {
             d.find('.drawer.color'),
             function(v) {
                 o.app.rte.unwrap_selection();
-                o.app.rte.execCommand('+foreColor', v);
+                o.app.rte.exec_command('+foreColor', v);
                 o.app.rte.wrap_selection();
                 o.app.content_element.blur();
             },
@@ -802,8 +802,7 @@ Hive.App.Text = function(o) {
             $(el).bind('mousedown', function(e) {
                 e.preventDefault();
             }).click(function(){
-                o.app.rte.execCommand($(el).attr('cmd'), $(el).attr('val'));
-                o.app.content_element.find('*').css('font-size', ''); //strip inline font sizes
+                o.app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
             });
         });
 
@@ -953,6 +952,7 @@ Hive.goog_rte = function(content_element){
         // TODO: don't use browser API directly
         document.execCommand('createlink', false, href);
     };
+
     var saved_range;
     this.save_selection = function(){
         var range = this.getRange();
@@ -1027,26 +1027,29 @@ Hive.goog_rte = function(content_element){
 
     var previous_range = {};
     this.content_element.on('paste', function(){
-        setTimeout(function(){
-            var current_range = that.getRange();
-            var pasted_range = goog.dom.Range.createFromNodes(
-                previous_range.before.getStartNode(), 
-                previous_range.before.getStartOffset(), 
-                current_range.getStartNode(), 
-                current_range.getStartOffset()
-                );
-            pasted_range.select();
-            that.execCommand('+removeFormat');
+        setTimeout(that.strip_sizes, 0);
 
-            // Place cursor at end of pasted range
-            var range = that.getRange();
-            goog.dom.Range.createFromNodes(
-                range.getEndNode(), 
-                range.getEndOffset(), 
-                range.getEndNode(), 
-                range.getEndOffset()
-            ).select();
-        }, 0);
+        // Paste unformatting code
+        //    var current_range = that.getRange();
+        //    var pasted_range = goog.dom.Range.createFromNodes(
+        //        previous_range.before.getStartNode(), 
+        //        previous_range.before.getStartOffset(), 
+        //        current_range.getStartNode(), 
+        //        current_range.getStartOffset()
+        //        );
+        //    pasted_range.select();
+        //    that.execCommand('+removeFormat');
+
+        //    // Place cursor at end of pasted range
+        //    var range = that.getRange();
+        //    previous_range.before = goog.dom.Range.createFromNodes(
+        //        range.getEndNode(), 
+        //        range.getEndOffset(), 
+        //        range.getEndNode(), 
+        //        range.getEndOffset()
+        //        );
+        //    previous_range.before.select();
+        //}, 0);
     });
 
     var range_change_callback = function(type){
@@ -1058,9 +1061,22 @@ Hive.goog_rte = function(content_element){
         }
     };
 
+    this.exec_command = function(cmd, val){
+        that.execCommand(cmd, val);
+        that.strip_sizes();
+    };
+
+    this.strip_sizes = function(){
+        that.content_element.find('*').css('font-size', '');
+        //    .css('width', '').css('height', '')
+        //    .attr('width', '').attr('height', '');
+    };
+
+
     goog.events.listen(this, goog.editor.Field.EventType.DELAYEDCHANGE, range_change_callback(['delayed']));
     goog.events.listen(this, goog.editor.Field.EventType.BEFORECHANGE, range_change_callback(['before']));
     goog.events.listen(this, goog.editor.Field.EventType.SELECTIONCHANGE, range_change_callback(['delayed', 'before']));
+    //goog.events.listen(this, goog.editor.Field.EventType.FOCUS, range_change_callback(['before']));
 
     this.restore_cursor = function(){
         if (previous_range && previous_range.delayed){
