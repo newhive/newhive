@@ -601,7 +601,6 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 
 var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
-// Contains an iframe that has designMode set when selected
 Hive.App.Text = function(o) {
     Hive.App.has_resize_h(o);
 
@@ -643,8 +642,6 @@ Hive.App.Text = function(o) {
     o.unfocus.add(function(){
         o.edit_mode(false);
     });
-
-    // focus and unfocus handlers for set_shield must be added after handlers that set edit_mode
 
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.rte.get_link();
@@ -736,16 +733,7 @@ Hive.App.Text = function(o) {
             })
         }
 
-        //hover_menu(d.find('.button.fontsize'), d.find('.drawer.fontsize'));
-        //d.find('.drawer.fontsize .option').each(function(i, e) { $(e).click(function() {
-        //    o.app.rte.edit('fontsize', (parseFloat($(e).attr('val')) / o.app.scale()) + 'em')
-        //    o.app.resize_h(o.app.dims());
-        //}) });
-
-        //d.find('.undo').click(function() { o.app.rte.undo() });
-
         o.hover_menu(d.find('.button.fontname'), d.find('.drawer.fontname'));
-        //cmd_buttons('.fontname .option', function(v) { o.app.rte.css('font-family', v) });
 
         var color_picker = Hive.append_color_picker(
             d.find('.drawer.color'),
@@ -785,13 +773,7 @@ Hive.App.Text = function(o) {
             }
         );
 
-        //cmd_buttons('.button.bold',   function(v) { o.app.rte.css('font-weight', '700'   , { toggle : '400'   }) });
-        //cmd_buttons('.button.italic', function(v) { o.app.rte.css('font-style' , 'italic', { toggle : 'normal'}) });
-
         o.align_menu = o.hover_menu(d.find('.button.align'), d.find('.drawer.align'));
-        //cmd_buttons('.align .option', function(v) { o.app.rte.css('text-align', v, { body : true }) });
-
-        //cmd_buttons('.button.unformat', function(v) { o.app.rte.edit('removeformat') });
 
         o.close_menus = function() {
             o.link_menu.close();
@@ -810,29 +792,6 @@ Hive.App.Text = function(o) {
             e.stopPropagation();
             o.app.edit_mode(false);
         });
-
-        // Old scaling code
-        //d.find('.resize').drag('start', function(e, dd) {
-        //    o.refDims = o.app.dims();
-        //    o.refScale = o.app.scale();
-        //    o.dragging = e.target;
-        //    o.dragging.busy = true;
-        //    o.app.div.drag('start');
-        //});
-        //o.refDims = null;
-        //o.c.resize.drag(function(e, dd) {
-        //    //cos(atan2(x, y) - atan2(w, h))
-        //    o.app.scale(o.refScale * (o.refDims[1] + dd.deltaY) / o.refDims[1]);
-        //    var div = o.app.content_element.contents().find('body').children('div').first()
-        //    var height = o.app.calcHeight();
-        //    o.app.resize([o.refDims[0] + dd.deltaX, height]);
-        //    e.stopPropagation();
-        //});
-        //d.find('.resize').drag('end', function(e, dd) {
-        //    o.dragging.busy = false;
-        //    o.app.div.drag('end');
-        //    e.stopPropagation();
-        //});
 
         return o;
     }
@@ -873,13 +832,6 @@ Hive.goog_rte = function(content_element){
 
         return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
                range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
-    }
-
-    this.edit = function(command, args){
-        // Fix Chrome's incompatibile behavior of inserting href as text 
-        if(command == 'createlink' && !this.get_range().toString()) return;
-
-        document.execCommand(command, false, args);
     }
 
     this.select = function(range) {
@@ -2364,266 +2316,6 @@ Hive.bg_change = function(s){
 function remove_all_apps() {
     var aps = map(id, Hive.Apps); // store a copy of Apps so we can destructively update it
     map(function(a) { a.remove() }, aps);
-}
-
-// Creates iframe for Hive.App.Text
-Hive.rte = function(options) {
-    var o = $.extend({ click : noop, change : noop }, options);
-
-    o.create_editor = function() {
-        o.iframe = $("<iframe style='border : none; width : 100%; height : 100%;'>").get(0);
-        o.iframe.src = 'javascript:void(0)';
-        $(o.parent).append(o.iframe);
-        o.doc_poll = setTimeout(o.wait_for_doc, 1);
-    }
-    o.wait_for_doc = function() {
-        if(o.iframe.contentWindow.document) {
-            o.setup_editor();
-            clearTimeout(o.doc_poll);
-        }
-    }
-    o.setup_editor = function() {
-        o.win = o.iframe.contentWindow;
-        $(o.win).click(function(){ o.range = null; o.click(); });
-        o.doc = o.win.document;
-        if(o.css) $(o.doc).find('head').append(o.css);
-        o.doc.body.style.overflow = 'hidden';
-        
-        o.cache_content = function() { o.previous_content = $(o.doc.body).text(); }
-        o.cache_content();
-        $(o.win).bind('keypress', o.cache_content);
-        $(o.win).bind('paste', function() { setTimeout(function(e){
-            // TODO: determine which part was actually pasted, if
-            // pasting with existing text
-            if(o.previous_content.trim() == "") o.unformat();
-            o.change();
-        }, 10)});
-
-        $(o.win).bind('keypress', o.change);
-
-        //o.editor_cmd('styleWithCSS', true);
-        if(o.load) o.load();
-    }
-
-    o.unformat = function() {
-        // TODO: figure out how to splice out selection,
-        // and splice in unformatted text. Preserve newlines, and
-        // possibly create another unformat command to remove those too
-        $(o.doc.body).html($(o.doc.body).text());
-    }
-
-    o.editor_cmd = function(command, args) {
-        o.doc.execCommand(command, false, args);
-    }
-    o.range = null;
-    o.edit = function(command, args) {
-        //o.range = o.get_range();
-        //var r = o.range;
-        //var edit_all = !r || !r.toString();
-        //if(edit_all) {
-        //    r = o.range_all();
-        //    if(r.toString().trim()) o.select(r);
-        //}
-
-        // Fix Chrome's incompatibile behavior of inserting href as text 
-        if(command == 'createlink' && !o.get_range().toString()) return;
-
-        o.editor_cmd(command, args);
-
-        //if(command == 'removeformat') {
-        //    var brs = $(o.doc.body).find('br');
-        //    if(brs.length) brs.replaceWith("\n");
-        //    var c = o.get_content();
-        //    //c = c.replace(/[ \f\t\u00A0]+[\n\u2028\u2029]/g, "\n"); // remove trailing whitespace
-        //    // remove single newlines
-        //    // TODO: only remove newlines from selected region.
-        //    c = c.replace(/([^\n])\n([^\n])/g, '$1 $2');
-        //    o.set_content(c);
-        //}
-
-        // Major hack here. When changing fontsize in designmode,
-        // FireFox creates deprecated <font size='N'> tags. This code
-        // replaces the size attribute with css em units, so that text
-        // boxes can scale like other Apps. A similar hack must be
-        // done for all browsers, as they all use a slightly different
-        // form of absolute text sizing.
-        // 
-        // This is currently unused due to significant layout
-        // inconsistencies with opposing font sizes in app container
-        // and inline tags
-        if(command == 'fontsize') {
-            var broken = $(o.doc.body).find('font[size]');
-            $(broken).css('font-size', args);
-            $(broken).removeAttr('size');
-        }
-
-        //if(edit_all) o.select(null);
-    }
-    o.undo = function() {
-        o.select(o.range);
-        o.editor_cmd('undo');
-    }
-
-    o.get_range = function() {
-        var s = o.win.getSelection();
-        if(s.rangeCount) return o.win.getSelection().getRangeAt(0).cloneRange();
-        else return null;
-    }
-
-    // Finds link element the cursor is on, selects it after saving
-    // any existing selection, returns its href
-    o.get_link = function() {
-        o.range = o.get_range(); // save existing selection
-        var r = o.range.cloneRange();
-
-        // Look for link in parents
-        var node = r.startContainer;
-        while(node.parentNode) {
-            node = node.parentNode;
-            if($(node).is('a')) {
-                r.selectNode(node);   
-                o.select(r);
-                return $(node).attr('href');
-            }
-        }
-
-        // Look for the first link that intersects r
-        var find_intersecting = function(r) {
-            var link = false;
-            $(o.doc.body).find('a').each(function() {
-                if(!link && rangeIntersectsNode(r, this)) link = this });
-            if(link) {
-                r.selectNode(link);
-                o.select(r);
-                return $(link).attr('href');
-            };
-            return '';
-        }
-        var link = find_intersecting(r);
-        if(link) return link;
-
-        // If there's still no link, select current word
-        if(!r.toString()) {
-            // select current word
-            // r.expand('word') // works in IE and Chrome
-            var s = o.select(r);
-            // If the cursor is not at the beginning of a word...
-            if(!r.startContainer.data || !/\W|^$/.test(
-                r.startContainer.data.charAt(r.startOffset - 1))
-            ) s.modify('move','backward','word');
-            s.modify('extend','forward','word');
-        }
-
-        // It's possible to grab a previously missed link with the above code 
-        var link = find_intersecting(o.get_range());
-        return link;
-    }
-
-    o.select = function(range) {
-        var s = o.win.getSelection();
-        if(!s) return;
-        s.removeAllRanges();
-        if(range)
-        s.addRange(range);
-        return s;
-    }
-
-    // An attempt to replace execCommand?
-    //o.css = function(prop, val, options) {
-    //    if(typeof(options) == 'undefined') options = {};
-    //    rng = o.get_selection_range();
-    //    if(!rng.toString() || options.body)
-    //        if(options.toggle) {
-    //            var c = $(o.doc.body).css(prop);
-    //            $(o.doc.body).css(prop, c == val ? options.toggle : val);
-    //        } else $(o.doc.body).css(prop, val);
-    //    else {
-    //        var s = $(o.doc.createElement('span'));
-    //        s.css(prop, val);
-    //        rng.surroundContents(s);
-    //    }
-    //}
-
-    o.editMode = function(mode) {
-        if(mode) {
-            o.doc.designMode = 'on';
-            o.iframe.contentWindow.focus();
-            if(o.range) o.select(o.range);
-        } else {
-            //o.range = o.get_range(); // attempt to save cursor position breaks deleting textboxes
-            o.doc.designMode = 'off';
-            o.iframe.blur();
-            window.focus(); // Needed so keypress events don't get stuck on RTE iframe
-        }
-    }
-
-    o.get_content = function() {
-        o.doc.normalize();
-        return $(o.doc.body).html();
-    }
-    o.set_content = function(c) {
-        return $(o.doc.body).html(c);
-    }
-
-    function rangeIntersectsNode(range, node) {
-        var nodeRange = node.ownerDocument.createRange();
-        try {
-          nodeRange.selectNode(node);
-        }
-        catch (e) {
-          nodeRange.selectNodeContents(node);
-        }
-
-        return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
-               range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
-    }
-
-    // Text wrapping hack: insert explicit line breaks where text is
-    // soft-wrapped before saving, remove them on loading
-    o.eachTextNodeIn = function(node, fn) {
-        if(node.nodeType == 3) fn(node);
-        else {
-            for(var i = 0; i < node.childNodes.length; i++)
-                o.eachTextNodeIn(node.childNodes[i], fn);
-        }
-    }
-    o.addBreaks = function() {
-        // clone body to off-page element
-        var e = $(o.doc.body); //.clone();
-        //e.css({'left':-5000, width:$(o.iframe).width(), height:$(o.iframe).height()}).appendTo(document.body);
-
-        // wrap all words with spans
-        o.eachTextNodeIn(e.get(0), function(n) {
-            $(n).replaceWith(n.nodeValue.replace(/(\w+)/g, "<span class='wordmark'>$1</span>"))
-        });
-
-        // TODO: iterate over wordmarks, add <br>s where line breaks occur
-        var y = 0;
-        e.find('.wordmark').each(function(i, e) {
-            var ely = $(e).offset().top;
-            if(ely > y) {
-                var br = $('<br class="softbr">');
-                $(e).before(br);
-                if(ely != $(e).offset().top) br.remove(); // if element moves, oops, remove <br>
-            }
-            y = ely;
-        });
-
-        // unwrap all words
-        e.find('.wordmark').each(function(i, e) { $(e).replaceWith($(e).text()) });
-
-        var html = e.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
-        //e.remove();
-        return html;
-    }
-    o.removeBreaks = function() {
-        $(o.doc.body).find('.softbr').remove();
-        var wrapper = $(o.doc.body).find('.viewstyle');
-        if(wrapper.length) $(o.doc.body).html(wrapper.html());
-    }
-
-    o.create_editor();
-    return o;
 }
 
 Hive.append_color_picker = function(container, callback, init_color, opts) {
