@@ -467,6 +467,9 @@ Hive.App.has_shield = function(o, opts) {
         o.dragging = false;
         o.update_shield();
     };
+
+    // If auto is false, app can be shielded/unshielded but update_shield is
+    // not bound to drag events, for example auto=false in text app
     if (opts.auto) {
         o.div.drag('start', start).drag('end', end);
         o.make_controls.push(function(o){
