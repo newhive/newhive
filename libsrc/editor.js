@@ -616,6 +616,11 @@ Hive.App.Text = function(o) {
             // avoid 0-height content element in FF
             if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
             else o.rte.setHtml(false, content);
+
+            // The following is a hack. If the element contains only a single
+            // <b> node, as created by old editor code for headers, then it
+            // styles the content_element, which is not what we want
+            if (o.content_element.contents().length < 2) o.content_element.append('&nbsp;');
         } else {
             return o.rte.add_breaks();
         }
