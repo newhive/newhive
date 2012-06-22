@@ -435,7 +435,7 @@ Hive.registerApp = function(app, name) {
  * @param {Hive.App} o The app to add shielding to
  * */
 Hive.App.has_shield = function(o, opts) {
-    if (typeof(opts) == "undefined") opts = {};
+    opts = $.extend({auto: true}, opts);
     o.dragging = false;
 
     o.shield = function() {
@@ -466,11 +466,13 @@ Hive.App.has_shield = function(o, opts) {
     var end = function(){
         o.dragging = false;
         o.update_shield();
+    };
+    if (opts.auto) {
+        o.div.drag('start', start).drag('end', end);
+        o.make_controls.push(function(o){
+            o.div.find('.drag').drag('start', start).drag('end', end);
+        });
     }
-    o.div.drag('start', start).drag('end', end);
-    o.make_controls.push(function(o){
-        o.div.find('.drag').drag('start', start).drag('end', end);
-    });
 };
 
 Hive.App.has_resize = function(o) {
@@ -603,6 +605,7 @@ var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
 Hive.App.Text = function(o) {
     Hive.App.has_resize_h(o);
+    Hive.App.has_shield(o, {auto: false});
 
     var content = o.init_state.content;
     o.content = function(content) {
@@ -618,6 +621,7 @@ Hive.App.Text = function(o) {
     o.edit_mode = function(mode) {
         if (mode === edit_mode) return;
         if (mode) {
+            o.unshield();
             o.rte.makeEditable();
             o.content_element
                 .bind('mousedown keydown', function(e){ e.stopPropagation(); })
@@ -632,6 +636,7 @@ Hive.App.Text = function(o) {
                 .blur()
                 .addClass('drag');
             edit_mode = false;
+            o.shield();
         }
     }
 
