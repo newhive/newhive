@@ -1087,7 +1087,7 @@ Hive.goog_rte = function(content_element){
             width: that.content_element.width(),
             height: that.content_element.height(),
             'min-width': ''
-        }).appendTo(document.body);
+        }).removeClass('text_content_element').appendTo(document.body);
 
         // wrap all words with spans
         eachTextNodeIn(e.get(0), function(n) {
