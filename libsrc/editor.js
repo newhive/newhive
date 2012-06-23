@@ -616,11 +616,6 @@ Hive.App.Text = function(o) {
             // avoid 0-height content element in FF
             if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
             else o.rte.setHtml(false, content);
-
-            // The following is a hack. If the element contains only a single
-            // <b> node, as created by old editor code for headers, then it
-            // styles the content_element, which is not what we want
-            if (o.content_element.contents().length < 2) o.content_element.append('&nbsp;');
         } else {
             return o.rte.add_breaks();
         }
@@ -633,17 +628,15 @@ Hive.App.Text = function(o) {
             o.unshield();
             o.rte.makeEditable();
             o.content_element
-                .bind('mousedown keydown', function(e){ e.stopPropagation(); })
-                .removeClass('drag').css('word-wrap', 'normal');
+                .bind('mousedown keydown', function(e){ e.stopPropagation(); });
             edit_mode = true;
         }
         else {
             o.rte.unwrap_all_selections();
-            o.rte.makeUneditable();
+            o.rte.make_uneditable();
             o.content_element
                 .unbind('mousedown keydown')
-                .blur()
-                .addClass('drag');
+                .blur();
             edit_mode = false;
             o.shield();
         }
@@ -816,7 +809,7 @@ Hive.App.Text = function(o) {
     o.div.addClass('text');
     if(!o.init_state.dimensions) o.dims_set([ 300, 20 ]);
     o.content_element = $('<div></div>');
-    o.content_element.attr('id', Hive.random_str()).css('min-width', '100%');
+    o.content_element.attr('id', Hive.random_str()).addClass('text_content_element');
     o.div.append(o.content_element);
     o.rte = new Hive.goog_rte(o.content_element);
     goog.events.listen(o.rte.undo_redo.undoManager_,
@@ -836,6 +829,20 @@ Hive.goog_rte = function(content_element){
     this.content_element = content_element;
 
     goog.editor.SeamlessField.call(this, id);
+
+    this.make_uneditable = function() {
+        // Firefox tries to style the entire content_element, which google
+        // clobbers with makeUneditable.  This solution works, but results
+        // in multiple nested empty divs in some cases. TODO: improve
+        that.content_element.css('opacity', ''); //Opacity isn't supported for text anyway yet
+        var style = that.content_element.attr('style');
+        if (style != '') {
+            var inner_wrapper = $('<div></div>');
+            inner_wrapper.attr('style', style);
+            that.content_element.wrapInner(inner_wrapper[0]);
+        }
+        that.makeUneditable();
+    };
 
     function rangeIntersectsNode(range, node) {
         var nodeRange = node.ownerDocument.createRange();
