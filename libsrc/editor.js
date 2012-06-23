@@ -1481,7 +1481,7 @@ Hive.App.Audio = function(o) {
     o.load = function(){
         _load();
         o.dims_set(o.dims());
-        o.scale_set(o.scale());
+        o.scale_set(o.dims()[1] / 35);
     }
 
     o.make_controls.push(function(o){
