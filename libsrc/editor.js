@@ -868,8 +868,12 @@ Hive.goog_rte = function(content_element){
     // Finds link element the cursor is on, selects it after saving
     // any existing selection, returns its href
     this.get_link = function() {
-        that.range = that.get_range(); // save existing selection
-        var r = that.range.cloneRange();
+        // If the color menu is still open the selection needs to be restored.
+        // TODO: make this work right :)
+        if (saved_range) that.restore_selection();
+
+        that.range = that.get_range();
+        var r = that.range.cloneRange(); // save existing selection
 
         // Look for link in parents
         var node = r.startContainer;
@@ -931,6 +935,7 @@ Hive.goog_rte = function(content_element){
     this.restore_selection = function(){
         if (!saved_range || saved_range.isDisposed()) return;
         saved_range.restore();
+        saved_range = false;
     };
 
     // Wrap a node around selecte text, even if selection spans multiple block elements
