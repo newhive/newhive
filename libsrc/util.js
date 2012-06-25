@@ -648,7 +648,7 @@ hover_menu = function(handle, drawer, options) {
                 'top': hp.top + handle.outerHeight(),
                 'left': hp.left,
                 'height': o.options.offset_y,
-                'width': handle.outerWidth(),
+                'width': drawer.outerWidth(),
             });
             $(document.body).append(o.shield);
             o.shield.mouseover(o.cancel_close).mouseout(o.delayed_close);

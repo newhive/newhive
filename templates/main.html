@@ -52,7 +52,7 @@
         ><div class='menu_item'>Settings</div
         ><form id='logout_form' action='{{ secure_server }}' method='POST'
           ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
-          ><input name='action' value='logout' type='hidden' class='text_btn'
+          ><input name='action' value='logout' type='hidden'
         ></form
       ></div>
       <div class='bar'></div>
@@ -79,7 +79,7 @@
       ><div id='share_icon' class='icon'></div
       ><div class='text'>Share</div
     ></div
-    ><div id='plus_btn' class='icon hoverable'
+    ><div id='plus_btn' class='icon hoverable'></div
   ></div>
   {% if not user.logged_in %}
     <div id='login_menu' class='menu top'>
