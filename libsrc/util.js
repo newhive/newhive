@@ -164,6 +164,7 @@ function showDialog(name, opts) {
             if(!o.opts.mandatory) {
                 o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
                 o.shield.add(o.btn_close).click(o.close);
+                if(opts.click_close) dialog.click(o.close);
             }
             $(window).resize(function() { o.opts.layout(o.dialog) });
             o.opts.layout(o.dialog);
