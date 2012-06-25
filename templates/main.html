@@ -44,27 +44,42 @@
         ><div id='create_icon' class='icon'></div
       ></a></div
   ></div>
-  <div id='user_menu' class='menu feed_menu'>
-    <div id='user_btns'
-      ><div class='menu_item'>Profile</div
-      ><div class='menu_item'>Invite friends!</div
-      ><div class='menu_item'>Settings</div
-      ><form id='logout_form' action='{{ secure_server }}' method='POST'
-        ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
-        ><input name='action' value='logout' type='hidden' class='text_btn'
-      ></form
-    ></div>
-    <div class='bar'></div>
-    {% for feed in user.feed_profile(viewer=user, limit=7) %}
-      {% include "partials/feed.html" %}
-    {% endfor %}
-  </div>
-  <script>hover_menu( '#username', '#user_menu', { offset_y: 8 } )</script>
+  {% if user.logged_in %}
+    <div id='user_menu' class='menu feed_menu'>
+      <div id='user_btns'
+        ><div class='menu_item'>Profile</div
+        ><div class='menu_item'>Invite friends!</div
+        ><div class='menu_item'>Settings</div
+        ><form id='logout_form' action='{{ secure_server }}' method='POST'
+          ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
+          ><input name='action' value='logout' type='hidden' class='text_btn'
+        ></form
+      ></div>
+      <div class='bar'></div>
+      {% for feed in user.feed_profile(viewer=user, limit=7) %}
+        {% include "partials/feed.html" %}
+      {% endfor %}
+    </div>
+    <script>hover_menu( '#username', '#user_menu', { offset_y: 5 } )</script>
+  {% endif %}
 
   <div id='nav_content' class='nav'
     {% if not user.logged_in %}
       ><div class='center'><div id='login_btn' class='text center hoverable text_btn'>Log In</div></div
     {% endif %}
+    {% if owner and not user_is_owner %}
+      ><div id='owner_btn' class='hoverable center'
+        {% if owner.has_thumb() %}
+          ><img id='owner_thumb' src='{{owner.get_thumb(70)}}'
+        {% endif %}
+        ><div id='owner_name' class='text name'>{{ owner['name'] }}</div
+      ></div
+    {% endif %}
+    ><div id='share_btn' class='hoverable center'
+      ><div id='share_icon' class='icon'></div
+      ><div class='text'>Share</div
+    ></div
+    ><div id='plus_btn' class='icon hoverable'
   ></div>
   {% if not user.logged_in %}
     <div id='login_menu' class='menu top'>
@@ -75,16 +90,26 @@
     </div>
     <script>
       $(function() {
-          var login_menu = hover_menu( $('#login_btn'), $('#login_menu'), {
+          var login_menu = hover_menu( '#login_btn', '#login_menu', {
               open: function() { var e = $('#username').get(0); e.focus(); e.select(); },
               close_delay: 1000,
               auto_close: false,
               click_persist: '#login_menu',
-              offset_y: 8
+              offset_y: 5
           } );
           {% if error %} login_menu.open(); {% endif %}
       });
     </script>
+  {% endif %}
+  {% if owner and not user_is_owner %}
+    <div id='owner_menu' class='menu'>
+      <div class='menu_item'>Expressions</div>
+      <div class='bar'></div>
+      <div class='menu_item'>Follow {{ owner['name'] }}</div>
+      <div class='menu_item'>Send message</div>
+      <div class='bar'></div>
+    </div>
+    <script>hover_menu('#owner_btn', '#owner_menu', { offset_y: 5 });</script>
   {% endif %}
 
   {% block body %}

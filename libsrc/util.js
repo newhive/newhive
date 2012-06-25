@@ -594,6 +594,7 @@ hover_menu = function(handle, drawer, options) {
     o.close_timer = false;
 
     o.delayed_close = function() {
+        o.options.default_item.removeClass('active');
         if(o.options.hover_close && ! o.close_timer) {
             o.close_timer = setTimeout(o.close, o.options.close_delay);
         }
@@ -608,6 +609,7 @@ hover_menu = function(handle, drawer, options) {
     o.close = function() {
         if(!o.opened) return;
         drawer.hide();
+        if(o.shield) o.shield.remove();
         o.opened = false;
         o.options.close();
         handle.get(0).busy = false;
@@ -616,7 +618,6 @@ hover_menu = function(handle, drawer, options) {
     o.open = function() {
         if(hover_menu.disabled || !o.options.open_condition()) return;
         handle.addClass('active');
-        menu_items.removeClass('active');
         o.options.default_item.addClass('active');
         o.cancel_close();
         if(o.opened) return;
@@ -638,6 +639,20 @@ hover_menu = function(handle, drawer, options) {
             hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
         if (o.options.auto_height) css_opts.drawer_height = bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
         drawer.css(css_opts);
+
+        // prevent hovering over gap between handle and menu from closing the menu
+        if(o.options.offset_y) {
+            o.shield = $('<div>').css({
+                'position': 'absolute',
+                'top': hp.top + handle.outerHeight(),
+                'left': hp.left,
+                'height': o.options.offset_y,
+                'width': handle.outerWidth(),
+            });
+            $(document.body).append(o.shield);
+            o.shield.mouseover(o.cancel_close).mouseout(o.delayed_close);
+        }
+
         o.options.open();
     }
 
@@ -652,12 +667,8 @@ hover_menu = function(handle, drawer, options) {
         o.options.hover_close = false;
     });
 
-    //setTimeout(function(){
-    menu_items.mouseover(function(e){
-        menu_items.removeClass('active');
-        $(e.target).addClass('active');
-    });
-    //}) }, 0); // without setTimeout, mouseover never fires
+    menu_items.mouseover(function(e){ $(e.target).addClass('active'); })
+        .mouseout(function(e){ $(e.target).removeClass('active'); });
 
     if(o.options.auto_close) drawer.click(o.close);
     $(window).click(function(e) {
