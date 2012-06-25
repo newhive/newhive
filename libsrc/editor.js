@@ -816,6 +816,7 @@ Hive.App.Text = function(o) {
             goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
             o.history_saver);
     goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
+    o.shield();
 
     setTimeout(function(){ o.load(); }, 100);
     return o;
@@ -2458,7 +2459,7 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
 
     manual_input.blur(update_hex).keypress(function(e){
         if (e.keyCode == 13) {
-            if (opts.field_to_focus){
+            if (opts && opts.field_to_focus){
                 opts.field_to_focus.focus();
             } else {
                 manual_input.blur();
