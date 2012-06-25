@@ -811,7 +811,7 @@ Hive.App.Text = function(o) {
     o.content_element = $('<div></div>');
     o.content_element.attr('id', Hive.random_str()).addClass('text_content_element');
     o.div.append(o.content_element);
-    o.rte = new Hive.goog_rte(o.content_element);
+    o.rte = new Hive.goog_rte(o.content_element, o);
     goog.events.listen(o.rte.undo_redo.undoManager_,
             goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
             o.history_saver);
@@ -824,10 +824,11 @@ Hive.App.Text = function(o) {
 Hive.registerApp(Hive.App.Text, 'hive.text');
 
 
-Hive.goog_rte = function(content_element){
+Hive.goog_rte = function(content_element, app){
     var that = this;
     var id = content_element.attr('id');
     this.content_element = content_element;
+    this.app = app;
 
     goog.editor.SeamlessField.call(this, id);
 
@@ -1084,6 +1085,7 @@ Hive.goog_rte = function(content_element){
     this.add_breaks = function() {
         var e = that.content_element.clone();
         e.css({
+            'font-size': that.app.scale() + 'em',
             'left':-5000,
             width: that.content_element.width(),
             height: that.content_element.height(),
@@ -1102,7 +1104,9 @@ Hive.goog_rte = function(content_element){
             if(ely > y) {
                 var br = $('<br class="softbr">');
                 $(e).before(br);
-                if(ely != $(e).offset().top) br.remove(); // if element moves, oops, remove <br>
+                if(ely != $(e).offset().top){
+                    br.remove(); // if element moves, oops, remove <br>
+                }
             }
             y = ely;
         });
