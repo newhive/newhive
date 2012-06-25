@@ -152,6 +152,9 @@ $nav_size: 40px;
 }
 #nav .center img { vertical-align: middle; }
 
+.nav { position : fixed; margin : 0; }
+.top, .nav { z-index : 4; }
+
 #nav_bg {
   top: 0; 
   left: 0; 

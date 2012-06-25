@@ -3,8 +3,7 @@ import boto
 
 slick53.patch(boto)
 
-def update_zonefile():
-    zone_name = 'tnh.me'
+def update_zonefile(zone_name):
     con = boto.connect_route53(*aws_credentials)
     zone = con.get_zone(zone_name)
 
