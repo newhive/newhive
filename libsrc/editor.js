@@ -1508,8 +1508,8 @@ Hive.App.Audio = function(o) {
             [audio_data.artist, audio_data.album, audio_data.title].join(' - ') : '');
 
     colored = o.div.find('.jp-play-bar, .jp-interface');
+    color = colored.css('background-color');
     if(!o.init_state.color) o.init_state.color = colors[23];
-    o.color_set(o.init_state.color);
 
     o.set_shield = function() { return true; }
     o.update_shield();
