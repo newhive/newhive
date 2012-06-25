@@ -80,8 +80,6 @@ input[type=button], input[type=submit] { border : none; }
 .error, .active { color: $color_active; }
 .inactive { color: $color_24; }
 #user { position : fixed; display : inline-block; }
-.nav { position : fixed; margin : 0; }
-.top, .nav { z-index : 1; }
 .spacer { height : 10px; clear : both; }
 
 $placeholder_color: black;
