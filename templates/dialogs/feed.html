@@ -1,4 +1,0 @@
-{% for feed in user.feed_profile(viewer=user, limit=7) %}
-  {% include "partials/feed.html" %}
-{% endfor %}
-<a href="{{feed_url}}"><div id="more_button" class="medbold black">more</div></a>

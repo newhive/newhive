@@ -569,72 +569,71 @@ function hover_add(o) {
 
 hover_menu = function(handle, drawer, options) {
     handle = $(handle); drawer = $(drawer);
-    var o = { handle : handle, drawer : drawer };
+    var o = { handle : handle, drawer : drawer },
+        menu_items = drawer.find('.menu_item');
     o.options = {
          open : noop
         ,close : noop
         ,auto_close : true
         ,hover_close : true
         ,close_delay : 500
-        ,offsetY : 0
+        ,offset_y : 0
         ,click_persist : false
         ,hover : true
         ,open_condition : function(){ return true }
         ,auto_height : true
+        ,default_item: drawer.find('.menu_item').eq(0)
     };
     $.extend(o.options, options);
     if(!handle.length) throw("hover_menu has no handle");
     if(!drawer.length) throw("hover_menu has no drawer");
     handle.get(0).hover_menu = o;
-    //drawer.remove();
-    //$(document.body).append(drawer);
+    $(document.body).append(drawer.remove());
 
     o.opened = false;
-    o.close_timer = null;
-    o.rollover = null;
-    if(handle.attr('src')) o.rollover = handle;
-    if(handle.find('img').length) o.rollover = handle.find('img');
-    if(o.rollover) {
-        o.handle_src = o.rollover.attr('src');
-        o.hover_src = hover_url(o.handle_src);
-    }
+    o.close_timer = false;
 
-    o.delayed_close = function(e) {
-        o.e = e;
-        if(o.options.hover_close) o.close_timer = setTimeout(o.close, o.options.close_delay);
-    }
-    o.cancel_close = function() { if(o.close_timer) clearTimeout(o.close_timer); }
+    o.delayed_close = function() {
+        if(o.options.hover_close && ! o.close_timer) {
+            o.close_timer = setTimeout(o.close, o.options.close_delay);
+        }
+    };
+    o.cancel_close = function(e) {
+        if(o.close_timer) {
+            clearTimeout(o.close_timer);
+            o.close_timer = false;
+        }
+    };
 
     o.close = function() {
         if(!o.opened) return;
         drawer.hide();
         o.opened = false;
-        if(o.rollover) o.rollover.attr('src', o.handle_src);
-        handle.removeClass('active');
         o.options.close();
         handle.get(0).busy = false;
+        handle.removeClass('active');
     }
     o.open = function() {
-        if(hover_menu.disabled) return;
+        if(hover_menu.disabled || !o.options.open_condition()) return;
+        handle.addClass('active');
+        menu_items.removeClass('active');
+        o.options.default_item.addClass('active');
         o.cancel_close();
-        if (!o.options.open_condition()) return;
         if(o.opened) return;
 
         o.opened = true;
         handle.get(0).busy = true;
-        if(o.rollover) o.rollover.attr('src', o.hover_src);
-        handle.addClass('active');
         if(o.options.click_persist) o.options.hover_close = true;
 
         drawer.show();
-        var hp = handle.position();
-        var oy = handle.outerHeight() + o.options.offsetY;
+        var hp = handle.offset();
+        var oy = handle.outerHeight() + o.options.offset_y;
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
         var css_opts = {};
         css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
             && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
-            hp.top - drawer.outerHeight() - o.options.offsetY : hp.top + oy;
+            hp.top - drawer.outerHeight() - o.options.offset_y : hp.top + oy;
         css_opts.left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
             hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
         if (o.options.auto_height) css_opts.drawer_height = bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
@@ -642,13 +641,23 @@ hover_menu = function(handle, drawer, options) {
         o.options.open();
     }
 
+    $(document.body).append( drawer.remove() );
+
     if(o.options.hover) {
         handle.hover(o.open, o.delayed_close);
-        drawer.hover(o.cancel_close, o.delayed_close);
-        handle.hover(o.open);
+        drawer.mouseover(o.cancel_close).mouseout(o.delayed_close);
     }
     handle.click(o.open);
-    $(o.options.click_persist).bind('click contextmenu keydown', function() { o.options.hover_close = false; });
+    $(o.options.click_persist).bind('click contextmenu keydown', function() {
+        o.options.hover_close = false;
+    });
+
+    //setTimeout(function(){
+    menu_items.mouseover(function(e){
+        menu_items.removeClass('active');
+        $(e.target).addClass('active');
+    });
+    //}) }, 0); // without setTimeout, mouseover never fires
 
     if(o.options.auto_close) drawer.click(o.close);
     $(window).click(function(e) {
@@ -829,7 +838,6 @@ function relogin(success){
     showDialog(dia);
     var form = dia.find('form');
     var callback = function(data){
-        console.log(data);
         if (data.login) { 
             dia.find('.btn_dialog_close').click();
             success();

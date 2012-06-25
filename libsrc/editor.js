@@ -372,7 +372,7 @@ Hive.Controls = function(app, multiselect) {
     o.addButton = function(ctrls) { map(o.appendButton, ctrls.clone(false)); };
     o.addControls = function(ctrls) { map(o.appendControl, ctrls.clone(false).children()); };
     o.hover_menu = function(h, d, opts) {
-        return hover_menu(h, d, $.extend({offsetY : o.padding + 1}, opts)) };
+        return hover_menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
     o.div = $("<div style='position: absolute; z-index: 3; width: 0; height: 0' class='controls'>");
     $('body').append(o.div);
