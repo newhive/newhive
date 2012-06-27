@@ -1,0 +1,31 @@
+@import "common";
+
+.navigator {
+    width: 100%;
+    overflow: hidden;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+}
+.navigator_inner{
+    position: relative;
+    .current {
+        position: absolute;
+    }
+    .container {
+        overflow: hidden;
+        width: 100%;
+        position: absolute;
+        top: 0;
+    }
+    .element {
+        @include border-radius(7px);
+    }
+    .prev .element {
+        float: right;
+    }
+    .next .element {
+        float: left;
+    }
+}
+

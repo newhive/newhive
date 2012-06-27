@@ -151,6 +151,7 @@ site_pages = {
     ,'tag'                 : controllers['community'].tag
     ,'edit'                : controllers['expression'].edit
     ,'random'              : controllers['expression'].random
+    ,'expression'          : controllers['expression'].info
     ,'settings'            : controllers['user'].edit
     ,'signup'              : controllers['user'].invited # old invites in the wild may go here
     ,'invited'             : controllers['user'].invited

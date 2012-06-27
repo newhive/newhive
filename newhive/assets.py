@@ -140,7 +140,7 @@ class HiveAssets(Assets):
         assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
         assets_env.register('google_closure.js', 'google_closure.js')
         assets_env.register('app.js', 'jquery_misc.js', 'util.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
-            'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'colors.js', filters='yui_js', output='../lib/app.js')
+            'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'colors.js', 'navigator.js', filters='yui_js', output='../lib/app.js')
         assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
 
         assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js', 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js', output='../lib/admin.js')
@@ -151,7 +151,7 @@ class HiveAssets(Assets):
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
             "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
             "scss/feed.scss", "scss/expression.scss", "scss/settings.scss",
-            "scss/signup_flow.scss", "scss/chart.scss", "scss/jplayer.scss",
+            "scss/signup_flow.scss", "scss/chart.scss", "scss/jplayer.scss", "scss/navigator.scss",
             filters=scss_filter,
             output='scss.css',
             debug=False)
