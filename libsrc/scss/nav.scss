@@ -19,6 +19,8 @@ $nav_size: 40px;
 
 .nav {
     margin: 7px;
+    z-index: 4;
+
     .icon {
         height: $nav_size;
         width: $nav_size;

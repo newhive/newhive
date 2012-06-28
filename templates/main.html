@@ -36,7 +36,7 @@
   <div id='nav_hive' class='nav'
     ><div id='logo' class='hoverable icon'></div
     {% if user.logged_in %}
-      ><div id='username' class='text center text_btn hoverable name'>Abram</div
+      ><div id='username' class='text center text_btn hoverable name'>{{ user.name|capitalize }}</div
     {% endif %}
     ><div id='create_btn' class='center hoverable'
       ><a href='{{ create }}' onclick='return require_login()'
@@ -72,7 +72,7 @@
         {% if owner.has_thumb() %}
           ><img id='owner_thumb' src='{{owner.get_thumb(70)}}'
         {% endif %}
-        ><div id='owner_name' class='text name'>{{ owner['name'] }}</div
+        ><div id='owner_name' class='text name'>{{ owner.name|capitalize }}</div
       ></div
     {% endif %}
     ><div id='share_btn' class='hoverable center'
