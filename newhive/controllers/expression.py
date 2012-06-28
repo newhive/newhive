@@ -82,6 +82,15 @@ class ExpressionController(ApplicationController):
 
         else: return self.serve_page(response, 'pages/' + template + '.html')
 
+    def info(self, request, response):
+        expr_ids = request.path.split('/')[1].split(',')
+        exprs = []
+        for id in expr_ids:
+            expr = self.db.Expr.fetch(id)
+            expr['thumb'] = expr.get_thumb()
+            exprs.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name']))
+        return self.serve_json(response, exprs)
+
     def random(self, request, response):
         expr = self.db.Expr.random()
         if request.requester.logged_in:

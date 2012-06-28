@@ -440,7 +440,12 @@ $(function () {
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
   $('a').each(link_target);
 
-  $(window).resize(place_apps);
+  $(window).resize(function(){
+      place_apps();
+      if (Hive.navigator){
+          Hive.navigator.render();
+      }
+  });
   place_apps();
 
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);

@@ -1,0 +1,52 @@
+@import "common";
+
+.navigator {
+    $margin: 5px;
+    $shadow_color: rgba(0,0,0,0.4);
+    @include box-shadow(0 -2px 15px $shadow_color);
+    width: 100%;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    padding-top: $margin * 2;
+    background: white;
+    .navigator_inner{
+        position: relative;
+        .current {
+            position: absolute;
+            padding: 0;
+            .element {
+                margin: 0;
+                @include border-radius(0);
+            }
+        }
+        .container {
+            overflow: hidden;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            margin: 0 $margin;
+            &.prev {
+                margin-right: $margin + 1;
+            }
+        }
+        .element {
+            margin: 0 $margin 100px $margin;
+            @include border-radius(7px);
+            .text {
+                overflow: hidden;
+            }
+        }
+        .prev .element {
+            float: right;
+        }
+        .next .element {
+            float: left;
+        }
+    }
+    .frame {
+        position: absolute;
+        padding: 0;
+        @include box-shadow(2px 2px 10px $shadow_color);
+    }
+}
