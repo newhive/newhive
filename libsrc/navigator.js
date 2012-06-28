@@ -5,11 +5,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     opts = $.extend(
         {
             visible_count: 10,
-            thumb_width: 190
+            thumb_width: 130,
+            text_height: 40,
+            margin: 5
         },
         opts
     );
-    var height = opts.thumb_width;
+    var height = opts.thumb_width + opts.text_height + 2 * opts.margin;
 
     // private variables
     var content_element,
@@ -20,55 +22,119 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         current_expr;
 
     // methods
-    o.next = function(){
+    function animate_slide(steps){
+        var operator = steps > 0 ? "-=" : "+=";
+        inner.find('.current .element').addClass('rounded');
+        inner.animate(
+            {left: operator + ((opts.thumb_width + opts.margin * 2) * Math.abs(steps))},
+            {complete: o.render}
+        );
+    };
+
+    o.select = function(offset){
+        if (offset > 0){
+            var towards = next_list;
+            var away = prev_list;
+            var update_function = updater.next;
+        } else {
+            var towards = prev_list;
+            var away = next_list;
+            var update_function = updater.prev;
+        }
+
+        for(i=0; i < Math.abs(offset); i++){
+            away.unshift(current_expr);
+            current_expr = towards.shift();
+        }
+        animate_slide(offset);
+
         var callback = function(data){
-            next_list.push(data[0]);
+            $.each(data, function(i, expr){
+                towards.push(expr);
+            });
         };
-        prev_list.unshift(current_expr);
-        current_expr = next_list.shift();
-        updater.next(next_list[next_list.length - 1]._id, 1, callback);
+        update_function(towards[towards.length - 1]._id, Math.abs(offset), callback);
+
     };
 
     o.prev = function(){
-        var callback = function(data){
-            prev_list.push(data[0]);
-        };
-        next_list.unshift(current_expr);
-        current_expr = prev_list.shift();
-        updater.prev(prev_list[prev_list.length - 1]._id, 1, callback);
-    };
+        return function(){ o.select(-1); }
+    }();
 
-    o.select = function(id){
-    };
+    o.next = function(){
+        return function(){ o.select(1); }
+    }();
 
     var inner;
-    o.render = function(){
+    o.render = function(render_opts){
+        render_opts = $.extend({hidden: false}, render_opts);
+
         var width = $(window).width();
+
+        // Points on the screen immediately left and right of the center thumbnail
         var center = {
-            minus: (width - opts.thumb_width) / 2,
-            plus: (width + opts.thumb_width) / 2
+            minus: Math.floor((width - opts.thumb_width) / 2),
+            plus: Math.floor((width + opts.thumb_width) / 2)
         };
+
         inner = $('<div>').addClass('navigator_inner');
-        var current = $('<div>').addClass('current').append(
-            $('<img>').attr('src', current_expr.thumb).css('width', opts.thumb_width).addClass('element')
-            ).css('left', center.minus);
+
+        function build(list, element, direction){
+            $.each(list, function(i, expr){
+                if (!expr) return;
+                var el = $('<div>')
+                    .addClass('element')
+                    .data('index', (i + 1) * direction);
+                var im = $('<img>')
+                    .attr('src', expr.thumb)
+                    .css('width', opts.thumb_width)
+                    .css('height', opts.thumb_width);
+                var text = $('<div class="text">')
+                    .append('<div class="title">' + expr.title + '</div>')
+                    .css('width', opts.thumb_width)
+                    .css('height', opts.text_height);
+                el.append(im).append(text);
+                element.append(el);
+            });
+        };
+
+        var current = $('<div>').addClass('current').css('left', center.minus);
         var next = $('<div>').addClass('container next').css('left', center.plus);
         var prev = $('<div>').addClass('container prev').css('right', center.plus);
-        $.each(next_list, function(i, el){
-            if (el){
-                var im = $('<img>').attr('src', el.thumb).css('width', opts.thumb_width).addClass('element');
-                next.append(im);
-            }
+
+        build([current_expr], current, 0);
+        build(next_list, next, 1);
+        build(prev_list, prev, -1);
+
+        inner.append(next).append(prev).append(current);
+        inner.find('.element').click(function(){
+            o.select($(this).data('index'));
         });
-        $.each(prev_list, function(i, el){
-            if (el){
-                var im = $('<img>').attr('src', el.thumb).css('width', opts.thumb_width).addClass('element');
-                prev.append(im);
-            }
-        });
-        inner.append(current).append(next).append(prev);
-        navigator_element.empty().append(inner).addClass('navigator')
-            .css('z-index', '4').css('height', height).css('bottom', -height);
+
+        // The frame is the 'loupe' like border highlighting the current element
+        var frame = $('<div>').addClass('frame border selected')
+            .css('left', center.minus - opts.margin)
+            .css('width', opts.thumb_width)
+            .css('height', height - opts.margin)
+            .css('margin-top', -opts.margin);
+
+        // Build the new navigator
+        var new_nav = $('<div>').addClass('navigator')
+            .css('z-index', '4').css('height', height)
+            .css('font-size', opts.thumb_width/190 + 'em');
+        if (render_opts.hidden) new_nav.css('bottom', -height - 2 * opts.margin);
+        new_nav.append(inner).append(frame);//.css('opacity', 0.1);
+
+        // Render the new element to the page, then swap it in for the old
+        // element.  This roundabout way prevents a flash of a blank element,
+        // could be improved though I'm sure. For instance, you see a doubly
+        // opaque drop shadow for a moment
+        navigator_element.before(new_nav);
+        var old_nav = navigator_element;
+        navigator_element.animate({opactiy: 0}, 5, function(){ old_nav.remove();});
+        navigator_element = new_nav;
+        set_hover_handler();
+
         return o;
     };
 
@@ -83,9 +149,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.hide = function(){
-        if (!visible || sticky) return o;
+        if (o.no_hide || !visible || sticky) return o;
         navigator_element.stop().clearQueue();
-        navigator_element.delay(500).animate({bottom: -height});
+        navigator_element.delay(500).animate({bottom: -height-2*opts.margin});
         visible = false;
         return o;
     };
@@ -122,10 +188,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     // initialization
+    function set_hover_handler(){
+        navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
+    };
     o.initialize = function(){
         current_expr = expr;
         var render_and_show = function(){
-            o.render();
+            o.render({hidden: true});
             //o.show();
         };
         if (updater) {
@@ -138,7 +207,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 if (next_list.length) render_and_show();
             });
         }
-        navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
+        set_hover_handler();
         return o;
     };
 

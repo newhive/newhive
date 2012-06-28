@@ -106,17 +106,17 @@
     var hover_width = 150;
     var hover_height = 50;
     $(window).mousemove(function(event){
-        if ($(window).width() - event.pageX < hover_width) {
+        if ($(window).width() - event.clientX < hover_width) {
             $('#pagethrough_next img').show();
             if (Hive.navigator){
                 Hive.navigator.show();
             }
-        } else if (event.pageX < hover_width) {
+        } else if (event.clientX < hover_width) {
             $('#pagethrough_prev img').show();
             if (Hive.navigator){
                 Hive.navigator.show();
             }
-        } else if ($(window).height() - event.pageY < hover_height) {
+        } else if ($(window).height() - event.clientY < hover_height) {
             if (Hive.navigator){
                 Hive.navigator.show();
             }
