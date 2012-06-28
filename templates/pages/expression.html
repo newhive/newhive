@@ -13,8 +13,6 @@
  <script type='text/javascript'>
      var expr_id = '{{ exp.id }}';
      var comment_count = {{ exp.comment_count }};
-     // TODO: temporary, should probably hide this better
-     var expr = {{exp | json}};
  </script>
 {% endblock %}
 
@@ -77,6 +75,10 @@
    });
   </script>
  {% else %}
+   <script>
+     // TODO: temporary, should probably hide this better
+     var expr = {{exp | json}};
+   </script>
   {{ body }}
  {% endif %}
 {% endblock %}

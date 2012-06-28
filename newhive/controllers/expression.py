@@ -88,7 +88,7 @@ class ExpressionController(ApplicationController):
         for id in expr_ids:
             expr = self.db.Expr.fetch(id)
             expr['thumb'] = expr.get_thumb()
-            exprs.append(expr)
+            exprs.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name']))
         return self.serve_json(response, exprs)
 
     def random(self, request, response):
