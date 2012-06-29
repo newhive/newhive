@@ -132,12 +132,20 @@ class CommunityController(ApplicationController):
         if request.args.get('partial'):
             return self.serve_page(response, 'page_parts/cards.html')
 
-        if request.owner: tags = map(lambda t: {'url': '/profile/expressions?tag=' + t, 'name': t}, request.owner.get('tags', []))
-        else: tags = map(lambda t: {'url': '/tag/' + t, 'name': t}, self.db.User.site_user['config']['featured_tags'])
-        response.context.update({'tags': tags, 'user_tag': request.args.get('tag') })
-        if request.owner: response.context.update({ 'title': request.owner['fullname'] })
-        return self.serve_page(response, 'pages/community.html')
+        if request.owner:
+            tags = map(
+                    lambda t: {'url': '/profile/expressions?tag=' + t, 'name': t},
+                    request.owner.get('tags', []))
+        else:
+            tags = map(
+                    lambda t: {'url': '/tag/' + t, 'name': t},
+                    self.db.User.site_user['config']['featured_tags'])
 
+        response.context.update({'tags': tags, 'user_tag': request.args.get('tag') })
+        if request.owner:
+            response.context.update({ 'title': request.owner['fullname'] })
+
+        return self.serve_page(response, 'pages/community.html')
 
 def query_args(request):
     return {'page': request.args.get('page'), 'viewer': request.requester}
