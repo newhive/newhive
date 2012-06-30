@@ -86,7 +86,7 @@ class CommunityController(ApplicationController):
     def expr_page(self, request, response):
         page = lget(request.path_parts, 2, 'about')
         response.context['title'] = page
-        return expr_to_html(self.db.Expr.named('thenewhive.thenewhive.com', lget(request.path_parts, 2, 'about')))
+        return expr_to_html( self.db.Expr.named( config.site_user, lget(request.path_parts, 2, 'about') ) )
     def user_exprs(self, request, response, auth=None):
         return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
     def feed_network(self, request, response):

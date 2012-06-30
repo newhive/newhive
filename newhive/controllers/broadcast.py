@@ -3,7 +3,7 @@ from newhive.controllers.application import ApplicationController
 
 class BroadcastController(ApplicationController):
     def update(self, request, response, delete=False):
-        entity = self.db.Expr.named(request.domain.lower(), request.path.lower())
+        entity = self.db.Expr.named(request.owner['name'], request.path.lower())
         if not delete:
             s = self.db.Broadcast.create(request.requester, entity)
             if s:

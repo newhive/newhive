@@ -37,9 +37,11 @@ class ExpressionController(ApplicationController):
         })
         return self.serve_page(response, 'pages/edit.html')
 
-    def show(self, request, response):
+    # Controller for all navigation surrounding an expression
+    # Must only output trusted HTML
+    def frame(self, request, response):
         owner = response.context['owner']
-        resource = self.db.Expr.find(dict(domain=request.domain, name=request.path.lower()))
+        resource = self.db.Expr.meta(owner['name'], request.path.lower())
         if not resource:
             if request.path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
@@ -52,7 +54,6 @@ class ExpressionController(ApplicationController):
         if request.args.has_key('tag') or request.args.has_key('user'):
             response.context.update(pagethrough = self._pagethrough(request, response, resource))
 
-        html = expr_to_html(resource)
         auth_required = (resource.get('auth') == 'password' and resource.get('password')
             and request.form.get('password') != resource.get('password')
             and request.requester.id != resource['owner'])
@@ -62,14 +63,11 @@ class ExpressionController(ApplicationController):
             ,title = resource.get('title', False)
             ,starrers = resource.starrer_page()
             ,auth_required = auth_required
-            ,body = html
             ,exp = resource
             ,exp_js = json.dumps(resource)
+            ,url = config.content_domain + '/' + resource.id
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
             )
-
-        resource.increment_counter('views')
-        if is_owner: resource.increment_counter('owner_views')
 
         template = resource.get('template', request.args.get('template', 'expression'))
 
@@ -81,6 +79,22 @@ class ExpressionController(ApplicationController):
             return self.serve_html(response, html)
 
         else: return self.serve_page(response, 'pages/' + template + '.html')
+
+    # Renders the actual content of an expression.
+    # This output is untrusted and must never be served from config.server_name.
+    def render(self, request, response):
+        expr_id = lget(request.path_parts, 0)
+        resource = db.Expr.fetch(expr_id)
+        if not resource: return self.serve_404(request, response)
+
+        if ( resource.get('auth') == 'password' and
+            request.form.get('password') != resource.get('password') ): return Forbidden()
+
+        resource.increment_counter('views')
+        if is_owner: resource.increment_counter('owner_views')
+
+        response.context.update( html = expr_to_html(resource) )
+        return self.serve_page(response, 'pages/expr_minimal.html')
 
     def random(self, request, response):
         expr = self.db.Expr.random()
@@ -142,7 +156,7 @@ class ExpressionController(ApplicationController):
                   request.requester.give_invites(5)
             except DuplicateKeyError:
                 if exp.get('overwrite'):
-                    self.db.Expr.named(upd['domain'], upd['name']).delete()
+                    self.db.Expr.named(request.requester['name'], upd['name']).delete()
                     res = request.requester.expr_create(upd)
                     self.db.ActionLog.create(request.requester, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
                 else:

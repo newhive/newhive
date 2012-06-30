@@ -636,19 +636,21 @@ def media_path(user, f_id=None):
 class Expr(HasSocial):
     cname = 'expr'
     indexes = [
-         (['domain', 'name'], {'unique':True})
+         (['owner_name', 'name'], {'unique':True})
         ,['owner', 'updated']
-        ,'updated'
+        ,'domain'
         ,'tags_index'
+        ,'updated'
         ,'random'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
 
     class Collection(Collection):
-        def named(self, domain, name): return self.find({'domain' : domain, 'name' : name})
-        def meta(self,  domain, name):
-            return self.find({'domain' : domain, 'name' : name}, fields=[])
+        def named(self, username, name):
+            return self.find({'owner_name': username, 'name': name})
+        def meta(self,  username, name):
+            return self.find({'owner_name': username, 'name': name}, fields=[])
 
         def popular_tags(self):
             map_js = Code("function () {"

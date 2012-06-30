@@ -183,7 +183,13 @@ def handle(request): # HANDLER
     parts = request.path_parts = request.path.split('/')
 
     ##############################################################################
-    #                                post handler                                #
+    #                         user content handler                               #
+    ##############################################################################
+    if request.domain == config.content_domain:
+        return controllers['expression'].render(request, response)
+
+    ##############################################################################
+    #                          post action handler                               #
     ##############################################################################
     reqaction = request.form.get('action')
     if reqaction:
@@ -209,17 +215,19 @@ def handle(request): # HANDLER
         #return Response(status=204) # 204 status = no content
 
     ##############################################################################
-    #                             site_url handler                               #
+    #                             site url handler                               #
     ##############################################################################
-    if request.domain == config.server_name:
+    if request.domain == config.server_name and site_pages.get(parts[0]):
         return site_pages.get(parts[0], app.serve_404)(request, response)
+        else: username = parts[0] # assume newhive.com/username/
     elif request.domain.startswith('www.'):
         return app.redirect(response, re.sub('www.', '', request.url, 1))
 
     ##############################################################################
-    #                             user_url handler                               #
+    #                             user url handler                               #
     ##############################################################################
-    request.owner = owner = db.User.find(dict(sites=request.domain.lower()))
+    request.owner = owner = ( db.User.named(username) if username else
+        db.User.find({ 'sites': request.domain.lower() }) )
     if not owner: return app.serve_404(request, response)
     request.is_owner = request.requester.logged_in and owner.id == request.requester.id
 
@@ -236,7 +244,7 @@ def handle(request): # HANDLER
     if parts[0] == 'expressions': return app.redirect(response, owner.url)
     if config.debug_mode and request.path == 'robots.txt': return app.robots(request, response)
     if request.args.has_key('dialog'): return controllers['expression'].dialog(request, response)
-    return controllers['expression'].show(request, response)
+    return controllers['expression'].frame(request, response)
 
 
 ##############################################################################

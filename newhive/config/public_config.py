@@ -48,8 +48,7 @@ site_pages      = {
     ,'welcome'      : 'welcome'
     }
 
-content_domain_prefix = 'expr'
-content_domain = content_domain_prefix + "." + server_name
+content_domain = 'newhiveexpression.com'
 
 email_server    = 'localhost'
 email_user      = False
