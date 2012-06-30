@@ -1,3 +1,4 @@
+{% set args = args | querystring %}
 {% set link = item.url + args %}
 <div class='expr card item border_right border_bottom with_hide' draggable='false'>
   <input type='hidden' class='item_id' value='{{ item.id }}'>

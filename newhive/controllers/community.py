@@ -61,14 +61,14 @@ class CommunityController(ApplicationController):
             ,require_login = path == ['home','expressions','all']
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
-            ,args = querystring(args)
+            ,args = args
         ))
         response.context.update({
             'cards': content
             ,'next_page': next_page(request, content.next)
         } if hasattr(content, 'next') else {'content': content})
 
-        return self.page(request, response)
+        return self.page(request, response, content)
 
 
     def expr_featured(self, request, response):
@@ -116,19 +116,28 @@ class CommunityController(ApplicationController):
     def tag(self, request, response):
         tag = lget(request.path_parts, 1)
         items = self.db.Expr.page({ 'tags_index': tag }, **query_args(request))
+        paging_args = {'tag': tag}
         response.context.update(dict(
             cards = items,
             next_page = next_page(request, items.next),
             tag_page = True,
             tag = tag,
             home = True,
-            args=querystring({'tag': tag}),
+            args=paging_args,
             title="#{}".format(tag),
             description="Expressions tagged '{}'".format(tag)
         ))
-        return self.page(request, response)
+        return self.page(request, response, items)
 
-    def page(self, request, response):
+    def page(self, request, response, content):
+
+        def expr_info(expr):
+            expr['thumb'] = expr.get_thumb()
+            return dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name'])
+
+        if request.args.get('json'):
+            json = map(expr_info, content)
+            return self.serve_json(response, json)
         if request.args.get('partial'):
             return self.serve_page(response, 'page_parts/cards.html')
 
