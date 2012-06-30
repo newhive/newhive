@@ -25,13 +25,16 @@ $nav_size: 40px;
 
     .center *, .center { vertical-align: middle; }
 
-    .text { font-weight: bold; color: $color_grey_medium; }
-    .text_btn {
-        padding: 0 6px;
-        cursor: pointer;
+    .text {
+        font-weight: bold;
+        color: $color_grey_medium;
         height: $nav_size;
         line-height: $nav_size;
         vertical-align: middle;
+    }
+    .text_btn {
+        padding: 0 6px;
+        cursor: pointer;
     }
 
     .name { color: black; }
