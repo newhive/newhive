@@ -10,7 +10,7 @@ class ExpressionController(ApplicationController):
     def edit(self, request, response):
         if not request.requester.logged_in: return self.serve_404(request, response)
 
-        exp_id = lget(request.path.split('/'), 1) #TODO: remove this hack once full routing is in place
+        exp_id = lget(request.path_parts, 1)
         if not exp_id:
             exp = { 'domain' : lget(request.requester.get('sites'), 0) }
             exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
