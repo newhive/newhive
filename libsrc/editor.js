@@ -1084,23 +1084,26 @@ Hive.goog_rte = function(content_element, app){
         }
     };
     this.add_breaks = function() {
-        var e = that.content_element.clone();
-        e.css({
+        var clone = that.content_element.clone();
+        clone.css({
             'font-size': that.app.scale() + 'em',
             'left':-5000,
             width: that.content_element.width(),
             height: that.content_element.height(),
             'min-width': ''
-        }).removeClass('text_content_element').appendTo(document.body);
+            })
+            .removeClass('text_content_element')
+            .attr('contenteditable', 'true')
+            .appendTo(document.body);
 
         // wrap all words with spans
-        eachTextNodeIn(e.get(0), function(n) {
+        eachTextNodeIn(clone.get(0), function(n) {
             $(n).replaceWith(n.nodeValue.replace(/(\w+)/g, "<span class='wordmark'>$1</span>"))
         });
 
         // TODO: iterate over wordmarks, add <br>s where line breaks occur
         var y = 0;
-        e.find('.wordmark').each(function(i, e) {
+        clone.find('.wordmark').each(function(i, e) {
             var ely = $(e).offset().top;
             if(ely > y) {
                 var br = $('<br class="softbr">');
@@ -1113,10 +1116,12 @@ Hive.goog_rte = function(content_element, app){
         });
 
         // unwrap all words
-        e.find('.wordmark').each(function(i, e) { $(e).replaceWith($(e).text()) });
+        clone.find('.wordmark').each(function(i, e) {
+            $(e).replaceWith($(e).text());
+        });
 
-        var html = e.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
-        e.remove();
+        var html = clone.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
+        clone.remove();
         return html;
     }
     this.remove_breaks = function() {
