@@ -53,6 +53,7 @@
         ><form id='logout_form' action='{{ secure_server }}' method='POST'
           ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
           ><input name='action' value='logout' type='hidden'
+          ><input type='hidden' name='url' value='{{ url }}'
         ></form
       ></div>
       <div class='bar'></div>
