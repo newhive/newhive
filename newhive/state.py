@@ -647,6 +647,8 @@ class Expr(HasSocial):
 
     class Collection(Collection):
         def named(self, domain, name): return self.find({'domain' : domain, 'name' : name})
+        def meta(self,  domain, name):
+            return self.find({'domain' : domain, 'name' : name}, fields=[])
 
         def popular_tags(self):
             map_js = Code("function () {"
