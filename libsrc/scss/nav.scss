@@ -1,25 +1,18 @@
 @import "common";
 
 $nav_size: 40px;
+
 .nav {
+    margin: 7px;
+    z-index: 4;
     position: absolute;
     background-color: white;
     margin: 7px 8px 0 7px;
     @include border-radius(5px);
     @include box-shadow(rgba(black, .3) 3px 3px 10px);
-}
 
-.nav div { display: inline-block; }
-.nav > div {
-    display: inline-block;
-    vertical-align: top;
-}
-.nav .text { font-weight: bold; color: $color_grey_medium; }
-.nav .center *, .nav .center { vertical-align: middle; }
-
-.nav {
-    margin: 7px;
-    z-index: 4;
+    > div { vertical-align: top; }
+    div { display: inline-block; }
 
     .icon {
         height: $nav_size;
@@ -29,9 +22,10 @@ $nav_size: 40px;
         background-color: black;
         color: white;
     }
-}
 
-.nav {
+    .center *, .nav .center { vertical-align: middle; }
+
+    .text { font-weight: bold; color: $color_grey_medium; }
     .text_btn {
         padding: 0 6px;
         cursor: pointer;
@@ -39,11 +33,12 @@ $nav_size: 40px;
         line-height: $nav_size;
         vertical-align: middle;
     }
-}
 
-.nav {
     .name { color: black; }
     .active.name, .active .name { color: white; }
+
+    .left_edge { @include border-radius(5px 0 0 5px); }
+    .right_edge { @include border-radius(0 5px 5px 0); }
 }
 
 
@@ -51,28 +46,19 @@ $nav_size: 40px;
 
 #logo {
     width: $nav_size; height: $nav_size;
-    @include border-radius(5px 0 0 5px);
     background-image: asset_url('skin/1/logo.png');
     &.active { background-image: asset_url('skin/1/logo-hover.png'); }
     padding-right: 2px;
 }
 
-#create_btn {
-    .text { padding-left: 6px; }
-    @include border-radius(0 5px 5px 0);
-}
-#create_icon {
-    background-image: asset_url('skin/1/create.png');
-    @include border-radius(0 5px 5px 0);
-}
+#create_btn { .text { padding-left: 6px; } }
+#create_icon { background-image: asset_url('skin/1/create.png'); }
 .active #create_icon { background-image: asset_url('skin/1/create-hover.png'); }
 
 
 #nav_content { height: $nav_size; right: 0; top: 0; }
 
-#login_btn {
-    @include border-radius(5px 0 0 5px);
-}
+#login_btn { padding: 0 10px 0 10px; }
 
 #owner_btn {
     #owner_thumb {
@@ -90,11 +76,9 @@ $nav_size: 40px;
 }
 
 #plus_btn {
-    @include border-radius(0 5px 5px 0);
     background-image: asset_url('skin/1/plus.png');
     &.active { background-image: asset_url('skin/1/plus-hover.png'); }
 }
-
 
 
 
