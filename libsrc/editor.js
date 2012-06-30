@@ -618,7 +618,9 @@ Hive.App.Text = function(o) {
             if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
             else o.rte.setHtml(false, content);
         } else {
-            return o.rte.add_breaks();
+            // remove any remaining selection-saving carets
+            o.rte.content_element.find('span[id^="goog_"]').remove();
+            return o.rte.getCleanContents();
         }
     }
 
@@ -627,13 +629,17 @@ Hive.App.Text = function(o) {
         if (mode === edit_mode) return;
         if (mode) {
             o.unshield();
+            o.rte.remove_breaks();
             o.rte.makeEditable();
+            o.rte.restore_cursor();
             o.content_element
                 .bind('mousedown keydown', function(e){ e.stopPropagation(); });
             edit_mode = true;
         }
         else {
             o.rte.unwrap_all_selections();
+            o.rte.save_cursor();
+            o.rte.add_breaks();
             o.rte.make_uneditable();
             o.content_element
                 .unbind('mousedown keydown')
@@ -703,7 +709,6 @@ Hive.App.Text = function(o) {
     o.load = function() {
         o.scale_set(o.scale());
         o.content(content);
-        o.rte.remove_breaks();
         _load();
         o.refresh_size();
     };
@@ -1062,17 +1067,21 @@ Hive.goog_rte = function(content_element, app){
     goog.events.listen(this, goog.editor.Field.EventType.SELECTIONCHANGE, range_change_callback(['delayed', 'before']));
     //goog.events.listen(this, goog.editor.Field.EventType.FOCUS, range_change_callback(['before']));
 
+    var saved_cursor;
+    this.save_cursor = function(){
+        saved_cursor = previous_range.delayed.saveUsingCarets();
+    };
     this.restore_cursor = function(){
-        if (previous_range && previous_range.delayed){
+        if (saved_cursor){
             that.focus();
-            previous_range.delayed.select();
+            saved_cursor.restore();
             return true;
         } else {
             that.focusAndPlaceCursorAtStart();
             return false;
         };
     };
-    goog.events.listen(this, goog.editor.Field.EventType.LOAD, this.restore_cursor);
+    //goog.events.listen(this, goog.editor.Field.EventType.LOAD, this.restore_cursor);
 
     // Text wrapping hack: insert explicit line breaks where text is
     // soft-wrapped before saving, remove them on loading
@@ -1084,23 +1093,15 @@ Hive.goog_rte = function(content_element, app){
         }
     };
     this.add_breaks = function() {
-        var e = that.content_element.clone();
-        e.css({
-            'font-size': that.app.scale() + 'em',
-            'left':-5000,
-            width: that.content_element.width(),
-            height: that.content_element.height(),
-            'min-width': ''
-        }).removeClass('text_content_element').appendTo(document.body);
+        var text_content = that.content_element;
 
-        // wrap all words with spans
-        eachTextNodeIn(e.get(0), function(n) {
+        eachTextNodeIn(text_content.get(0), function(n) {
             $(n).replaceWith(n.nodeValue.replace(/(\w+)/g, "<span class='wordmark'>$1</span>"))
         });
 
-        // TODO: iterate over wordmarks, add <br>s where line breaks occur
+        // iterate over wordmarks, add <br>s where line breaks occur
         var y = 0;
-        e.find('.wordmark').each(function(i, e) {
+        text_content.find('.wordmark').each(function(i, e) {
             var ely = $(e).offset().top;
             if(ely > y) {
                 var br = $('<br class="softbr">');
@@ -1113,10 +1114,11 @@ Hive.goog_rte = function(content_element, app){
         });
 
         // unwrap all words
-        e.find('.wordmark').each(function(i, e) { $(e).replaceWith($(e).text()) });
+        text_content.find('.wordmark').each(function(i, e) {
+            $(e).replaceWith($(e).text());
+        });
 
-        var html = e.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
-        e.remove();
+        var html = text_content.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
         return html;
     }
     this.remove_breaks = function() {
