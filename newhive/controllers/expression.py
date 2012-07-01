@@ -57,6 +57,11 @@ class ExpressionController(ApplicationController):
         auth_required = (resource.get('auth') == 'password' and resource.get('password')
             and request.form.get('password') != resource.get('password')
             and request.requester.id != resource['owner'])
+
+        if not auth_required:
+            resource.increment_counter('views')
+            if is_owner: resource.increment_counter('owner_views')
+
         response.context.update(
              edit = abs_url(secure = True) + 'edit/' + resource.id
             ,mtime = friendly_date(time_u(resource['updated']))
@@ -65,7 +70,7 @@ class ExpressionController(ApplicationController):
             ,auth_required = auth_required
             ,exp = resource
             ,exp_js = json.dumps(resource)
-            ,url = config.content_domain + '/' + resource.id
+            ,url = abs_url(domain = config.content_domain) + resource.id
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
             )
 
@@ -84,16 +89,13 @@ class ExpressionController(ApplicationController):
     # This output is untrusted and must never be served from config.server_name.
     def render(self, request, response):
         expr_id = lget(request.path_parts, 0)
-        resource = db.Expr.fetch(expr_id)
+        resource = self.db.Expr.fetch(expr_id)
         if not resource: return self.serve_404(request, response)
 
         if ( resource.get('auth') == 'password' and
             request.form.get('password') != resource.get('password') ): return Forbidden()
 
-        resource.increment_counter('views')
-        if is_owner: resource.increment_counter('owner_views')
-
-        response.context.update( html = expr_to_html(resource) )
+        response.context.update( html = expr_to_html(resource), exp = resource )
         return self.serve_page(response, 'pages/expr_minimal.html')
 
     def random(self, request, response):

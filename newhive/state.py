@@ -647,10 +647,9 @@ class Expr(HasSocial):
     _owner = None
 
     class Collection(Collection):
-        def named(self, username, name):
-            return self.find({'owner_name': username, 'name': name})
-        def meta(self,  username, name):
-            return self.find({'owner_name': username, 'name': name}, fields=[])
+        def named(self, username, name): return self.find({'owner_name': username, 'name': name})
+        def meta(self,  username, name): return self.find({'owner_name': username, 'name': name},
+            fields={ 'apps': 0, 'background': 0, 'images': 0 })
 
         def popular_tags(self):
             map_js = Code("function () {"

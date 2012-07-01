@@ -63,20 +63,16 @@
  {% if pagethrough and pagethrough.next %}
    <a href='{{pagethrough.next}}' id='pagethrough_next'><img src='{{ 'skin/1/pagethrough/next.png'|asset_url }}' class='pagethrough pagethrough_next hoverable'></a>
  {% endif %}
- {% include 'expr_background.html' %}
+
+ {% if auth_required %}
+  {% include 'dialogs/password.html' %}
+ {% else %}
+  <iframe src='{{ url }}' class='expr' name='expr'></iframe>
+ {% endif %}
 {% endblock %}
 
+{# clear layout for community pages #}
 {% block content %}
- {% if auth_required %}
-  <script>
-   $(function() {
-       showDialog('#dia_password');
-       $('#password_input').select();
-   });
-  </script>
- {% else %}
-  {{ body }}
- {% endif %}
 {% endblock %}
 
 {% block footer_scripts %}

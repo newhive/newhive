@@ -214,11 +214,13 @@ def handle(request): # HANDLER
         print "************************would return status 204 here*************************"
         #return Response(status=204) # 204 status = no content
 
+    username = None
     ##############################################################################
-    #                             site url handler                               #
+    #                          site and user url handler                         #
     ##############################################################################
-    if request.domain == config.server_name and site_pages.get(parts[0]):
-        return site_pages.get(parts[0], app.serve_404)(request, response)
+    if request.domain == config.server_name:
+        if site_pages.has_key(parts[0]):
+            return site_pages.get(parts[0], app.serve_404)(request, response)
         else: username = parts[0] # assume newhive.com/username/
     elif request.domain.startswith('www.'):
         return app.redirect(response, re.sub('www.', '', request.url, 1))

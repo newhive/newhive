@@ -68,15 +68,18 @@ def abs_url(secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
     ssl = secure or config.always_ssl
+    domain = domain or config.server_name
+    if domain.find('.' + config.server_name) > -1:
+        (subdomain, domain) = domain.split('.', 1)
+    if config.dev_prefix: domain = config.dev_prefix + '.' + domain
     proto = 'https' if ssl else 'http'
     port = config.ssl_port if ssl else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
-    rv = (proto + '://' + 
+    return (
+        proto + '://' + 
         (subdomain + '.' if subdomain else '') +
-        (domain or config.server_name) + port + '/')
-    if config.dev_prefix:
-        rv = rv.replace(config.server_name, config.dev_prefix + '.' + config.server_name)
-    return rv
+        domain + port + '/'
+    )
 
 def uniq(seq, idfun=None):
     # order preserving 
