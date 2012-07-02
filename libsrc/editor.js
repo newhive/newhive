@@ -1299,9 +1299,20 @@ Hive.App.Image = function(o) {
         o.imageHeight = o.img.height();
         o.aspect = o.imageWidth / o.imageHeight;
         if( ! o.init_state.dimensions ){
-            var w = o.imageWidth > $(window).width() * 0.8 ?
-                $(window).width() * 0.8 : o.imageWidth;
-            o.init_state.dimensions = [ w, w / o.aspect ];
+            var ww = $(window).width(), wh = $(window).height(), iw, ih, wa = ww / wh;
+            if( (o.imageWidth > ww * .8) || (o.imageHeight > wh * .8) ){
+                if( wa < o.imageWidth / o.imageHeight ){
+                    iw = 800;
+                    ih = iw / o.aspect;
+                } else {
+                    ih = 800 / wa;
+                    iw = ih * o.aspect;
+                }
+            } else {
+                iw = 1000 * o.imageWidth / ww;
+                ih = iw / o.aspect;
+            }
+            o.init_state.dimensions = [ iw, ih ];
         }
         o.img.css('width', '100%');
         o.img.show();
