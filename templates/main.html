@@ -34,7 +34,7 @@
 
 {% block main %}
   <div id='nav_hive' class='nav'
-    ><div id='logo' class='hoverable icon left_edge'></div
+    ><a href='{{ server_url }}'><div id='logo' class='hoverable icon left_edge'></div></a
     {% if user.logged_in %}
       ><div id='username' class='text center text_btn hoverable name'>{{ user.name|capitalize }}</div
     {% endif %}
@@ -161,7 +161,7 @@
           {% include 'dialogs/must_login.html' %}
       {% endif %}
 
-      {% if dialog_to_show == '#dia_fb_account_duplicate' %}
+      {% if dialog_to_show.name == '#dia_fb_account_duplicate' %}
           {% include 'dialogs/fb_account_duplicate.html' %}
       {% endif %}
 

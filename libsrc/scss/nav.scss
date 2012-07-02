@@ -11,7 +11,7 @@ $nav_size: 40px;
     @include border-radius(5px);
     @include box-shadow(rgba(black, .3) 3px 3px 10px);
 
-    > div { vertical-align: top; }
+    > * { display: inline-block; vertical-align: top; }
     div { display: inline-block; }
 
     .icon {

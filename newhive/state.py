@@ -544,6 +544,7 @@ class User(HasSocial):
     @property
     def facebook_id(self):
         if self.has_key('facebook'): return self['facebook'].get('id')
+        else: return False
 
     @property
     def fb_thumb(self):

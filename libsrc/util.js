@@ -444,7 +444,7 @@ $(function () {
   place_apps();
 
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
-  if (dialog_to_show.name) { showDialog(dialog_to_show.name, dialog_to_show.opts); };
+  if( dialog_to_show ){ showDialog(dialog_to_show.name, dialog_to_show.opts); };
   if (new_fb_connect) {
       _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
       showDialog('#dia_fb_connect_landing');
