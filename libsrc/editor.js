@@ -37,7 +37,9 @@ Hive.Apps.init = function(initial_state, load) {
         var i = o.length;
         o.push(app);
 
-        if(typeof(app.layer()) != 'number' || stack[app.layer()]) stack.push(app);
+        if(typeof(app.layer()) != 'number') stack.push(app);
+        // if there's already an app at this layer, splice in the new app one layer above
+        else if( stack[app.layer()] ) stack.splice(app.layer() + 1, 0, app);
         else stack[app.layer()] = app;
         restack();
         return i;
@@ -192,7 +194,8 @@ Hive.App = function(init_state, opts) {
     o.copy = function(opts){
         if(!opts) opts = {};
         if(!opts.offset) opts.offset = [ 0, o.dims()[1] + 20 ];
-        var app_state = o.state(), pos = o.pos();
+        var app_state = o.state();
+        if(opts.z_offset) app_state.z += opts.z_offset;
         var cp = Hive.App(app_state, opts);
         Hive.History.save(cp._remove, cp._unremove, 'copy');
         return cp;
@@ -1690,7 +1693,8 @@ Hive.Selection = function(){
         };
         Hive.History.begin();
         copies = $.map( o.elements, function(e){
-            return e.copy({ offset: offset, load: load_counter }) } );
+            return e.copy({ offset: offset, load: load_counter, 'z_offset': o.elements.length })
+        });
     }
     o.remove = function(){
         var sel = $.merge([], o.elements);
