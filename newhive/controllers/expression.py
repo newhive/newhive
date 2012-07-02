@@ -211,7 +211,7 @@ class ExpressionController(ApplicationController):
         return tag
 
     def _pagethrough(self, request, response, resource):
-        pagethrough = {'next': None, 'prev': None}
+        pagethrough = {'next': [], 'prev': []}
         shared_spec = {}
         url_args = {}
         root = self.db.User.get_root()
@@ -232,11 +232,15 @@ class ExpressionController(ApplicationController):
                 if tag in ['recent']: shared_spec = {}
                 else:  shared_spec.update({'tags_index': tag})
             url_args.update({'tag': tag})
-        pagethrough['next'] = resource.related_next(shared_spec, loop=loop)
-        pagethrough['prev'] = resource.related_prev(shared_spec, loop=loop)
 
-        if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring(url_args)
-        if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
+        next = resource.related_next(shared_spec, loop=loop)
+        prev = resource.related_prev(shared_spec, loop=loop)
+
+        for cursor, name in [(next, 'next'), (prev, 'prev')]:
+            for expr in cursor:
+                expr['thumb'] = expr.get_thumb()
+                summary_keys = ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name']
+                pagethrough[name].append(dfilter(expr, summary_keys))
 
         return pagethrough
 

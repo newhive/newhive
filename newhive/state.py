@@ -210,51 +210,39 @@ class HasSocial(Entity):
     def broadcaster_count(self):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
 
-    def related_next(self, spec={}, loop=True):
-        if type(spec) == dict:
-            shared_spec = spec
-            try:
-                spec = {'updated':{'$lt': self['updated']}}
-                spec.update(shared_spec)
-                cur = self._col.find(spec).sort([('updated', -1)]).limit(1)
-                return self.collection.new(cur[0])
-            except IndexError:
-                if loop:
-                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated', -1)]).limit(1)[0])
-                    except IndexError: return None
-                else: return None
-        elif type(spec) == list:
-            try: index = spec.index(self.id)
-            except ValueError: return None #in this case the expression isn't in the collection to begin with
+    def _related(direction=1):
+        def related(self, spec=None, loop=True, count=1):
+            if spec == None: spec = {}
+            print spec
+            #import rpdb2; rpdb2.start_embedded_debugger("remoteDeBuggingisFUn")
+            if type(spec) == dict:
+                shared_spec = spec.copy()
+                try:
+                    comparator = '$lt' if direction < 0 else '$gt'
+                    spec = {'updated':{comparator: self['updated']}}
+                    spec.update(shared_spec)
+                    cur = self._col.find(spec).sort([('updated', direction)]).limit(count)
+                    #return self.collection.new(cur[0])
+                    return Cursor(self.collection, cur)
+                except IndexError:
+                    return None
 
-            try: return self.db.Expr.fetch(spec[index+1])
-            except IndexError:
-                if loop: return self.db.Expr.fetch(spec[0])
-                else: return None
-        else: raise "argument must be a mongodb spec dicionary or a list of object ids"
+            elif type(spec) == list:
+                try:
+                    index = spec.index(self.id)
+                except ValueError:
+                    return None #in this case the expression isn't in the collection to begin with
 
-    def related_prev(self, spec={}, loop=True):
-        if type(spec) == dict:
-            shared_spec = spec
-            try:
-                spec = {'updated':{'$gt': self['updated']}}
-                spec.update(shared_spec)
-                cur = self._col.find(spec).sort([('updated', 1)]).limit(1)
-                return self.collection.new(cur[0])
-            except IndexError:
-                if loop:
-                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
-                    except IndexError: return None
-                else: return None
-        elif type(spec) == list:
-            try: index = spec.index(self.id)
-            except ValueError: return None #in this case the expression isn't in the collection to begin with
+                try:
+                    return self.db.Expr.fetch(spec[index - direction])
+                except IndexError:
+                    return None
+            else:
+                raise "argument must be a mongodb spec dicionary or a list of object ids"
+        return related
 
-            try: return self.db.Expr.fetch(spec[index-1])
-            except IndexError:
-                if loop: return self.db.Expr.fetch(spec[-1])
-                else: return None
-        else: raise "argument must be a mongodb spec dicionary or a list of object ids"
+    related_next = _related(direction=-1)
+    related_prev = _related(direction=1)
 
 
 @Database.register
@@ -690,7 +678,7 @@ class Expr(HasSocial):
     def related_prev(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()
-            shared_spec.update({'auth': 'public'})
+            shared_spec.update({'auth': 'public', 'apps': {'$exists': True}})
         else: shared_spec = spec
         return super(Expr, self).related_prev(shared_spec, **kwargs)
 

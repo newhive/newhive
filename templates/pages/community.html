@@ -201,6 +201,7 @@
 {% block footer_scripts %}
   {{ super () }}
   <script>
+     paging_args = {{ args | json }};
      var load_page = null;
      var next_page = true;
      $(window).scroll(function() {

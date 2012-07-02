@@ -44,8 +44,9 @@ logger.info("Initializing WSGI")
 ##############################################################################
 
 hive_assets = HiveAssets()
-hive_assets.bundle_and_compile()
-hive_assets.push_s3()
+if __name__ != "__main__":
+    hive_assets.bundle_and_compile()
+    hive_assets.push_s3()
 
 ##############################################################################
 #                                jinja setup                                 #
