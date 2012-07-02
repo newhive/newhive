@@ -319,7 +319,7 @@ Hive.Controls = function(app, multiselect) {
     };
 
     o.append_link_picker = function(d, opts) {
-        opts = $.extend({ open: noop }, opts);
+        opts = $.extend({ open: noop, close: noop }, opts);
         var e = $("<div class='control drawer link'><nobr><input type='text'> "
             + "<img class='hoverable' src='" + asset('skin/1/delete_sm.png')
             + "' title='Clear link'></nobr>");
@@ -341,7 +341,7 @@ Hive.Controls = function(app, multiselect) {
             ,click_persist : input
             ,close : function() {
                 if (opts.field_to_focus) opts.field_to_focus.focus();
-                if (opts && opts.close) opts.close();
+                opts.close();
                 set_link();
                 input.blur();
                 o.app.focus();

@@ -177,11 +177,7 @@ dialogs = dict(
 
 
 def handle(request): # HANDLER
-    """The HTTP handler, main entry point from Werkzeug.
-       All POST requests must be sent to thenewhive.com, as opposed to
-       user.thenewhive.com which can contain arbitrary scripts. Any
-       response for thenewhive.com must not contain unsanitized user content.
-       Accepts werkzeug.Request, returns werkzeug.Response"""
+    """The HTTP handler, main entry point from Werkzeug. """
 
     request, response = app.pre_process(request)
     request.owner = None
@@ -189,47 +185,53 @@ def handle(request): # HANDLER
     parts = request.path_parts = request.path.split('/')
 
     ##############################################################################
-    #                                post handler                                #
+    #                         user content handler                               #
     ##############################################################################
-    if request.domain != config.content_domain and request.method == "POST":
-        reqaction = request.form.get('action')
-        if reqaction:
-            insecure_actions = [
-                    'add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add'
-                    , 'mail_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite'
-                    , 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
-            non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery_1'
-                    , 'password_recovery_2', 'mail_feedback', 'file_create']
-            if not reqaction in insecure_actions:
-                if not request.is_secure:
-                    return app.serve_forbidden(request)
-                # erroneously catches logout, possibly other posts
-                #if urlparse(request.headers.get('Referer')).hostname != config.server_name:
-                #    raise exceptions.BadRequest('Invalid cross site post request from: ' + request.headers.get('Referer'))
-            if not request.requester.logged_in and not reqaction in non_logged_in_actions:
-                return app.serve_forbidden(request)
+    if request.domain == config.content_domain:
+        return controllers['expression'].render(request, response)
 
+    ##############################################################################
+    #                          post action handler                               #
+    ##############################################################################
+    reqaction = request.form.get('action')
+    if reqaction:
+        # these can be performed over non-ssl connections
+        insecure_actions = [
+            'add_comment', 'star', 'unstar', 'broadcast', 'log', 'mail_us', 'tag_add'
+            , 'mail_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite'
+            , 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
+        non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery_1'
+            , 'password_recovery_2', 'mail_feedback', 'file_create']
+        if ( (reqaction in insecure_actions or request.is_secure) and
+             (reqaction in non_logged_in_actions or request.requester.logged_in)
+        ):
             if not actions.get(reqaction): raise exceptions.BadRequest('invalid action: '+reqaction)
             r = actions.get(reqaction)(request, response)
             if type(r) == Response: return r
             if r != None: return app.serve_json(response, r, as_text = True)
-            elif reqaction != 'logout':
-               print reqaction
-               print "************************would return status 204 here*************************"
-               #return Response(status=204) # 204 status = no content
+        else:
+            return app.serve_forbidden(request)
+           
+        print reqaction
+        print "************************would return status 204 here*************************"
+        #return Response(status=204) # 204 status = no content
 
+    username = None
     ##############################################################################
-    #                             site_url handler                               #
+    #                          site and user url handler                         #
     ##############################################################################
     if request.domain == config.server_name:
-        return site_pages.get(parts[0], app.serve_404)(request, response)
+        if site_pages.has_key(parts[0]):
+            return site_pages.get(parts[0], app.serve_404)(request, response)
+        else: username = parts[0] # assume newhive.com/username/
     elif request.domain.startswith('www.'):
         return app.redirect(response, re.sub('www.', '', request.url, 1))
 
     ##############################################################################
-    #                             user_url handler                               #
+    #                             user url handler                               #
     ##############################################################################
-    request.owner = owner = db.User.find(dict(sites=request.domain.lower()))
+    request.owner = owner = ( db.User.named(username) if username else
+        db.User.find({ 'sites': request.domain.lower() }) )
     if not owner: return app.serve_404(request, response)
     request.is_owner = request.requester.logged_in and owner.id == request.requester.id
 
@@ -246,7 +248,7 @@ def handle(request): # HANDLER
     if parts[0] == 'expressions': return app.redirect(response, owner.url)
     if config.debug_mode and request.path == 'robots.txt': return app.robots(request, response)
     if request.args.has_key('dialog'): return controllers['expression'].dialog(request, response)
-    return controllers['expression'].show(request, response)
+    return controllers['expression'].frame(request, response)
 
 
 ##############################################################################

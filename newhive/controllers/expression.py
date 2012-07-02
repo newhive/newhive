@@ -10,7 +10,7 @@ class ExpressionController(ApplicationController):
     def edit(self, request, response):
         if not request.requester.logged_in: return self.serve_404(request, response)
 
-        exp_id = lget(request.path.split('/'), 1) #TODO: remove this hack once full routing is in place
+        exp_id = lget(request.path_parts, 1)
         if not exp_id:
             exp = { 'domain' : lget(request.requester.get('sites'), 0) }
             exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
@@ -37,9 +37,11 @@ class ExpressionController(ApplicationController):
         })
         return self.serve_page(response, 'pages/edit.html')
 
-    def show(self, request, response):
+    # Controller for all navigation surrounding an expression
+    # Must only output trusted HTML
+    def frame(self, request, response):
         owner = response.context['owner']
-        resource = self.db.Expr.find(dict(domain=request.domain, name=request.path.lower()))
+        resource = self.db.Expr.meta(owner['name'], request.path.lower())
         if not resource:
             if request.path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
@@ -52,24 +54,25 @@ class ExpressionController(ApplicationController):
         if request.args.has_key('tag') or request.args.has_key('user'):
             response.context.update(pagethrough = self._pagethrough(request, response, resource))
 
-        html = expr_to_html(resource)
         auth_required = (resource.get('auth') == 'password' and resource.get('password')
             and request.form.get('password') != resource.get('password')
             and request.requester.id != resource['owner'])
+
+        if not auth_required:
+            resource.increment_counter('views')
+            if is_owner: resource.increment_counter('owner_views')
+
         response.context.update(
              edit = abs_url(secure = True) + 'edit/' + resource.id
             ,mtime = friendly_date(time_u(resource['updated']))
             ,title = resource.get('title', False)
             ,starrers = resource.starrer_page()
             ,auth_required = auth_required
-            ,body = html
             ,exp = resource
             ,exp_js = json.dumps(resource)
+            ,url = abs_url(domain = config.content_domain) + resource.id
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
             )
-
-        resource.increment_counter('views')
-        if is_owner: resource.increment_counter('owner_views')
 
         template = resource.get('template', request.args.get('template', 'expression'))
 
@@ -90,6 +93,19 @@ class ExpressionController(ApplicationController):
             expr['thumb'] = expr.get_thumb()
             exprs.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name']))
         return self.serve_json(response, exprs)
+
+    # Renders the actual content of an expression.
+    # This output is untrusted and must never be served from config.server_name.
+    def render(self, request, response):
+        expr_id = lget(request.path_parts, 0)
+        resource = self.db.Expr.fetch(expr_id)
+        if not resource: return self.serve_404(request, response)
+
+        if ( resource.get('auth') == 'password' and
+            request.form.get('password') != resource.get('password') ): return Forbidden()
+
+        response.context.update( html = expr_to_html(resource), exp = resource )
+        return self.serve_page(response, 'pages/expr_minimal.html')
 
     def random(self, request, response):
         expr = self.db.Expr.random()
@@ -151,7 +167,7 @@ class ExpressionController(ApplicationController):
                   request.requester.give_invites(5)
             except DuplicateKeyError:
                 if exp.get('overwrite'):
-                    self.db.Expr.named(upd['domain'], upd['name']).delete()
+                    self.db.Expr.named(request.requester['name'], upd['name']).delete()
                     res = request.requester.expr_create(upd)
                     self.db.ActionLog.create(request.requester, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
                 else:

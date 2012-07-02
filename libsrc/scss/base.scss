@@ -16,6 +16,7 @@ img.centered, div.centered {
 
 // Page Layout
 body.main #content { top: 50px; }
+iframe.expr { position: absolute; z-index: 0; left: 0; top: 0; width: 100%; height: 100%; }
 #primary_content{ clear: both; }
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;

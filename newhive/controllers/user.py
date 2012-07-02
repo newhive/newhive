@@ -289,6 +289,7 @@ class UserController(ApplicationController):
 
     def logout(self, request, response):
         auth.handle_logout(self.db, request, response)
+        return self.redirect(response, request.form.get('url', request.url))
 
     def log(self, request, response):
         action = request.form.get('log_action')

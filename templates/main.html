@@ -34,14 +34,14 @@
 
 {% block main %}
   <div id='nav_hive' class='nav'
-    ><div id='logo' class='hoverable icon'></div
+    ><div id='logo' class='hoverable icon left_edge'></div
     {% if user.logged_in %}
       ><div id='username' class='text center text_btn hoverable name'>{{ user.name|capitalize }}</div
     {% endif %}
-    ><div id='create_btn' class='center hoverable'
+    ><div id='create_btn' class='center hoverable right_edge'
       ><a href='{{ create }}' onclick='return require_login()'
         ><div class='text'>Create</div
-        ><div id='create_icon' class='icon'></div
+        ><div id='create_icon' class='icon right_edge'></div
       ></a></div
   ></div>
   {% if user.logged_in %}
@@ -53,6 +53,7 @@
         ><form id='logout_form' action='{{ secure_server }}' method='POST'
           ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
           ><input name='action' value='logout' type='hidden'
+          ><input type='hidden' name='url' value='{{ url }}'
         ></form
       ></div>
       <div class='bar'></div>
@@ -64,22 +65,25 @@
   {% endif %}
 
   <div id='nav_content' class='nav'
+    {% set nav_begin = True %}
     {% if not user.logged_in %}
-      ><div class='center'><div id='login_btn' class='text center hoverable text_btn'>Log In</div></div
+      ><div class='center'><div id='login_btn' class='text center hoverable text_btn left_edge'>Log In</div></div
+      {% set nav_begin = False %}
     {% endif %}
     {% if owner and not user_is_owner %}
-      ><div id='owner_btn' class='hoverable center'
+      ><div id='owner_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %}'
         {% if owner.has_thumb() %}
           ><img id='owner_thumb' src='{{owner.get_thumb(70)}}'
         {% endif %}
         ><div id='owner_name' class='text name'>{{ owner.name|capitalize }}</div
       ></div
+      {% set nav_begin = False %}
     {% endif %}
-    ><div id='share_btn' class='hoverable center'
-      ><div id='share_icon' class='icon'></div
+    ><div id='share_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %}'
+      ><div id='share_icon' class='icon{% if nav_begin %} left_edge{% endif %}'></div
       ><div class='text'>Share</div
     ></div
-    ><div id='plus_btn' class='icon hoverable'></div
+    ><div id='plus_btn' class='icon hoverable right_edge'></div
   ></div>
   {% if not user.logged_in %}
     <div id='login_menu' class='menu top'>
@@ -146,7 +150,6 @@
     {% block dialogs %}
       {% include 'dialogs/ie_warning.html' %}
       {% include 'dialogs/share.html' %}
-      {% include 'dialogs/password.html' %}
 
       {% if user.logged_in %}
           {% include 'dialogs/referral.html' %}

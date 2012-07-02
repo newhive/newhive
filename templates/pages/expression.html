@@ -63,24 +63,21 @@
  {% if pagethrough and pagethrough.next %}
    <a href='{{pagethrough.next}}' id='pagethrough_next'><img src='{{ 'skin/1/pagethrough/next.png'|asset_url }}' class='pagethrough pagethrough_next hoverable'></a>
  {% endif %}
- {% include 'expr_background.html' %}
-{% endblock %}
 
-{% block content %}
  {% if auth_required %}
-  <script>
-   $(function() {
-       showDialog('#dia_password');
-       $('#password_input').select();
-   });
-  </script>
+  {% include 'dialogs/password.html' %}
  {% else %}
+  <iframe src='{{ url }}' class='expr' name='expr'></iframe>
    <script>
      // TODO: temporary, should probably hide this better
      var expr = {{exp | json}};
    </script>
   {{ body }}
  {% endif %}
+{% endblock %}
+
+{# clear layout for community pages #}
+{% block content %}
 {% endblock %}
 
 {% block footer_scripts %}
