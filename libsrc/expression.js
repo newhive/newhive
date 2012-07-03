@@ -83,5 +83,7 @@ $(function() {
             createCookie('ie_warning_count', count, 30);
         }
     }
-    Hive.navigator = Hive.Navigator($('#navigator'), undefined).set_updater(Hive.Navigator.DummyUpdater()).initialize();
+    Hive.navigator = Hive.Navigator($('#navigator'), undefined)
+        .set_updater(Hive.Navigator.DummyUpdater())
+        .initialize();
 });

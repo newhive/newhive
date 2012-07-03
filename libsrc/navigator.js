@@ -217,11 +217,15 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 Hive.Navigator.Updater = function(){
     var o = {};
 
-    o.next = function(current_id, count){
+    seek = function(direction){
+        return function(current_id, count, callback){
+            var uri = URI(window.location.href);
+            uri.addQuery({current: current_id, count: count, direction: direction});
+            return uri.toString();
+         };
     };
-
-    o.prev = function(current_id, count){
-    };
+    o.next = seek(1);
+    o.prev = seek(-1);
 
     return o
 };

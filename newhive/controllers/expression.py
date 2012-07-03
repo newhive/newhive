@@ -40,6 +40,9 @@ class ExpressionController(ApplicationController):
     # Controller for all navigation surrounding an expression
     # Must only output trusted HTML
     def frame(self, request, response):
+        if request.is_xhr:
+            return self.info(request, response)
+
         owner = response.context['owner']
         resource = self.db.Expr.meta(owner['name'], request.path.lower())
         if not resource:
@@ -86,6 +89,11 @@ class ExpressionController(ApplicationController):
         else: return self.serve_page(response, 'pages/' + template + '.html')
 
     def info(self, request, response):
+        #args = request.args.copy()
+        #current = args.pop('current')
+        #count = args.pop('count')
+        #direction = args.pop('direction')
+        #return self.serve_json(response, args)
         expr_ids = request.path.split('/')[1].split(',')
         exprs = []
         for id in expr_ids:
