@@ -449,7 +449,7 @@ $(function () {
   place_apps();
 
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
-  if (dialog_to_show.name) { showDialog(dialog_to_show.name, dialog_to_show.opts); };
+  if( dialog_to_show ){ showDialog(dialog_to_show.name, dialog_to_show.opts); };
   if (new_fb_connect) {
       _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
       showDialog('#dia_fb_connect_landing');
@@ -574,9 +574,10 @@ function hover_add(o) {
 }
 
 hover_menu = function(handle, drawer, options) {
-    handle = $(handle); drawer = $(drawer);
-    var o = { handle : handle, drawer : drawer },
-        menu_items = drawer.find('.menu_item');
+    var handle = $(handle), drawer = $(drawer),
+        o = { handle : handle, drawer : drawer },
+        menu_items = drawer.find('.menu_item')
+    ;
     o.options = {
          open : noop
         ,close : noop
@@ -588,7 +589,7 @@ hover_menu = function(handle, drawer, options) {
         ,hover : true
         ,open_condition : function(){ return true }
         ,auto_height : true
-        ,default_item: drawer.find('.menu_item').eq(0)
+        ,default_item: drawer.find('.menu_item.default')
     };
     $.extend(o.options, options);
     if(!handle.length) throw("hover_menu has no handle");
@@ -678,6 +679,10 @@ hover_menu = function(handle, drawer, options) {
 
     if(o.options.auto_close) drawer.click(o.close);
     $(window).click(function(e) {
+        console.log('menu window click');
+        window.e = e;
+        window.drawer = drawer.get(0);
+        window.handle = handle.get(0);
         if(handle.get(0) == e.target
             || $.contains(handle.get(0), e.target)
             || drawer.get(0) == e.target

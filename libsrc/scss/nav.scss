@@ -2,6 +2,13 @@
 
 $nav_size: 40px;
 
+.icon {
+    height: $nav_size;
+    width: $nav_size;
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .nav {
     margin: 7px;
     z-index: 4;
@@ -10,14 +17,11 @@ $nav_size: 40px;
     margin: 7px 8px 0 7px;
     @include border-radius(5px);
     @include box-shadow(rgba(black, .3) 3px 3px 10px);
+    cursor: default;
 
-    > div { vertical-align: top; }
+    > * { display: inline-block; vertical-align: top; }
     div { display: inline-block; }
 
-    .icon {
-        height: $nav_size;
-        width: $nav_size;
-    }
     .active, .active * {
         background-color: black;
         color: white;
@@ -95,32 +99,47 @@ $nav_size: 40px;
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include border-radius(5px);
     padding: 5px;
+    cursor: pointer;
 
     .bar {
         background-color: $color_light_grey;
         height: 1px;
         margin: 5px 0;
     }
-}
-.menu_item {
-    padding: 5px 8px;
-    cursor: default;
-    font-weight: bold;
-    white-space: nowrap;
-    &.active { background-color: $color_selected; }
-}
+    .active { color: black; }
 
-
-#user_btns {
-    font-size: 14px;
-    div {
-        cursor: pointer;
-        display: inline-block;
-        padding: 8px;
-        color: black;
+    .menu_item {
+        padding: 5px 8px;
+        cursor: default;
+        font-weight: bold;
+        white-space: nowrap;
+        &.active { background-color: $color_selected; }
     }
-    .active { background-color: $color_selected; }
+
+    .btns {
+        font-size: 14px;
+        div {
+            display: inline-block;
+            margin: 4px;
+            padding: 4px;
+            color: black;
+            cursor: pointer;
+        }
+        .active { background-color: $color_selected; }
+    }
+    #hive_btns {
+        margin-bottom: 10px;
+    }
+    #user_btns {
+    }
+
+    &#hive_menu {
+        padding: 5px 10px 10px 5px;
+        #random_btn { background-image: asset_url('skin/1/shuffle.png') }
+        #random_btn.active { background-image: asset_url('skin/1/shuffle-hover.png'); background-color: black; }
+    }
 }
+
 
 
 

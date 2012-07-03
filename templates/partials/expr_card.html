@@ -5,7 +5,7 @@
   <a href='{{ link }}'><img src='{{ item.thumb }}' class='thumb'>
   <div class='title'>{{ item.title|e }}</div></a>
   <div class='tags {{ "active_hide" if item.feed and item.feed[0].text }}'>
-    {% for t in item.tags_index %}<a href='{{ server }}tag/{{ t|e }}' class='tag' value='{{ t|e }}'>#{{ t }}</a> {% endfor %}
+    {% for t in item.tags_index %}<a href='{{ server_url }}tag/{{ t|e }}' class='tag' value='{{ t|e }}'>#{{ t }}</a> {% endfor %}
   </div>
   {% if item.feed and item.feed[0].text %}
     <div class='comment inactive_hide'>"{{ item.feed[0].text }}"</div>

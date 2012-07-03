@@ -13,13 +13,12 @@
  {% endfor %}
  <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
  <script>
-   var logged_in = {{ 'true' if user.logged_in else 'false'}}, server_name = '{{ server_name }}', server_url = '{{ secure_server }}', insecure_server_url = '{{server}}', debug_mode = {{ 'true' if debug else 'false' }};
-     var dialog_to_show = {
-       name: '{{dialog_to_show}}'
-       , opts: {{dialog_to_show_opts | default('{}')}}
-       };
-     var new_fb_connect = {{ "true" if new_fb_connect else "false"}};
-     var fb_id = '{{ user.facebook_id }}';
+    var logged_in = {{ user.logged_in|json }}, server_name = '{{ server_name }}',
+        secure_server = '{{ secure_server }}', insecure_server = '{{ insecure_server }}',
+        debug_mode = {{ debug|json }},
+        dialog_to_show = {{ dialog_to_show|json }},
+        new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
+    ;
  </script>
  {% if debug %}{# unminified version for development #}
    <script src='http://code.jquery.com/jquery-1.7.2.js'></script>
@@ -54,5 +53,5 @@
 <body class="{% block body_classes %}{{'logged_in' if user.logged_in else "logged_out"}}{{' admin' if admin}} {% endblock %}" >
  {% block main %}{% endblock %}
  {% block footer_scripts %}{% endblock %}
- </body>
+</body>
 </html>
