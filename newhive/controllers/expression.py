@@ -72,6 +72,7 @@ class ExpressionController(ApplicationController):
             ,exp_js = json.dumps(resource)
             ,url = abs_url(domain = config.content_domain) + resource.id
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
+            ,content_domain = abs_url(domain = config.content_domain)
             )
 
         template = resource.get('template', request.args.get('template', 'expression'))

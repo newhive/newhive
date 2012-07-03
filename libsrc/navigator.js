@@ -48,6 +48,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             current_expr = towards.shift();
         }
         animate_slide(offset);
+        content_element.attr('src', content_domain + current_expr._id);
 
         var callback = function(data){
             $.each(data, function(i, expr){
@@ -237,7 +238,7 @@ Hive.Navigator.Updater = function(){
 };
 
 $(function(){
-    Hive.navigator = Hive.Navigator($('#navigator'), undefined)
+    Hive.navigator = Hive.Navigator($('#navigator'), $('iframe[name=expr]'))
         .set_updater(Hive.Navigator.Updater())
         .initialize();
 });
