@@ -70,7 +70,9 @@
  {% if auth_required %}
   {% include 'dialogs/password.html' %}
  {% else %}
-  <iframe src='{{ url }}' class='expr' name='expr'></iframe>
+  <div id="expression_frames">
+      <iframe src='{{ url }}' class='expr' name='expr'></iframe>
+  </div>
   {{ body }}
  {% endif %}
 {% endblock %}

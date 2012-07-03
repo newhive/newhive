@@ -442,9 +442,6 @@ $(function () {
 
   $(window).resize(function(){
       place_apps();
-      if (Hive.navigator){
-          Hive.navigator.render();
-      }
   });
   place_apps();
 
