@@ -44,27 +44,6 @@ input[type=text]:focus, input[type=password]:focus, textarea:focus { border-colo
 input[type=button], input[type=submit] { border : none; }
 .hide { display: none !important; }
 
-.menu {
-    display: none;
-    border: 0px solid $color_unselected;
-    background-color: white;
-    z-index: 2;
-    position: absolute;
-    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
-    @include border-radius(5px);
-    overflow: auto;
-}
-.menu_item {
-    padding: 5px 8px;
-    cursor: default;
-    font-weight: bold;
-    white-space: nowrap;
-}
-.menu_item.active {
-    background-color: $color_selected;
-    color: black;
-}
-
 .border { border : 5px solid $color_unselected; padding : 5px; }
 .selected { border-color: $color_selected; }
 .medbold { font-weight : bold; font-size : 1.2em; }

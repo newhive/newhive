@@ -44,10 +44,30 @@
         ><div id='create_icon' class='icon right_edge'></div
       ></a></div
   ></div>
+
+  <div id='hive_menu' class='menu'>
+    {% if user.logged_in %}
+      <div id='hive_btns' class='btns'
+        ><a href='{{ server_url }}'><div class='menu_item default'>My Network</div></a
+        ><a href='{{ server_url }}/home/expressions'><div class='menu_item'>Featured</div></a
+        ><a href='{{ server_url }}/home/people'><div class='menu_item'>People</div></a
+      ></div>
+    {% endif %}
+    <a href='{{ server_url }}random'><div id='random_btn' class='icon hoverable rounded' title="View Random Expression"></div></a>
+    <form method='GET' action='{{ server_url }}search' name='search_form'>
+      <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
+      <div id='search_submit' class='hoverable icon scale' title='Submit search' onclick='document.forms.search_form.submit()'></div>
+    </form>
+  </div>
+  <script>
+    hover_menu( '#logo', '#hive_menu', { offset_y: 5, open: function(){
+        $('#search_box').get(0).focus(); }, click_persist: '#search_box' } );
+  </script>
+
   {% if user.logged_in %}
     <div id='user_menu' class='menu feed_menu'>
-      <div id='user_btns'
-        ><div class='menu_item'>Profile</div
+      <div class='menu_item default'>Expressions</div>
+      <div id='user_btns' class='btns'
         ><div class='menu_item'>Invite friends!</div
         ><div class='menu_item'>Settings</div
         ><form id='logout_form' action='{{ secure_server }}' method='POST'
@@ -56,9 +76,12 @@
         ></form
       ></div>
       <div class='bar'></div>
-      {% for feed in user.feed_profile(viewer=user, limit=7) %}
-        {% include "partials/feed.html" %}
-      {% endfor %}
+      <div class='menu_item'>Activity</div>
+      <div id='user_activity_feed'>
+        {% for feed in user.feed_profile(viewer=user, limit=7) %}
+          {% include "partials/feed.html" %}
+        {% endfor %}
+      </div>
     </div>
     <script>hover_menu( '#username', '#user_menu', { offset_y: 5 } )</script>
   {% endif %}
@@ -84,6 +107,7 @@
     ></div
     ><div id='plus_btn' class='icon hoverable right_edge'></div
   ></div>
+
   {% if not user.logged_in %}
     <div id='login_menu' class='menu top'>
       <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
@@ -104,13 +128,18 @@
       });
     </script>
   {% endif %}
+
   {% if owner and not user_is_owner %}
     <div id='owner_menu' class='menu'>
-      <div class='menu_item'>Expressions</div>
+      <div class='menu_item default'>Expressions</div>
       <div class='bar'></div>
+      {#<div class='menu_item'>Profile</div>#}
       <div class='menu_item'>Follow {{ owner['name'] }}</div>
-      <div class='menu_item'>Send message</div>
+      {#<div class='menu_item'>Send message</div>#}
       <div class='bar'></div>
+      <div class='menu_item'>Activity</div>
+      <div id='owner_activity_feed'>
+      </div>
     </div>
     <script>hover_menu('#owner_btn', '#owner_menu', { offset_y: 5 });</script>
   {% endif %}
