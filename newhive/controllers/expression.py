@@ -54,9 +54,6 @@ class ExpressionController(ApplicationController):
 
         if is_owner: owner.unflag('expr_new')
 
-        if request.args.has_key('tag') or request.args.has_key('user'):
-            response.context.update(pagethrough = self._pagethrough(request, response, resource))
-
         auth_required = (resource.get('auth') == 'password' and resource.get('password')
             and request.form.get('password') != resource.get('password')
             and request.requester.id != resource['owner'])
@@ -89,18 +86,22 @@ class ExpressionController(ApplicationController):
         else: return self.serve_page(response, 'pages/' + template + '.html')
 
     def info(self, request, response):
-        #args = request.args.copy()
-        #current = args.pop('current')
-        #count = args.pop('count')
-        #direction = args.pop('direction')
-        #return self.serve_json(response, args)
-        expr_ids = request.path.split('/')[1].split(',')
-        exprs = []
-        for id in expr_ids:
-            expr = self.db.Expr.fetch(id)
+        args = request.args.copy().to_dict(flat=True)
+        current = args.pop('current')
+        count = int(args.pop('count'))
+        direction = int(args.pop('direction'))
+        if args.has_key('tag'):
+            args['tags_index'] = args.pop('tag')
+        if args.has_key('user'):
+            args['owner_name'] = args.pop('user')
+            if args['owner_name'] != request.requester['name']:
+                args['auth'] = 'public'
+        exprs = self.db.Expr.page(args, limit=count, page=current, order=-direction)
+        expr_infos = []
+        for expr in exprs:
             expr['thumb'] = expr.get_thumb()
-            exprs.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name']))
-        return self.serve_json(response, exprs)
+            expr_infos.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name', 'updated']))
+        return self.serve_json(response, expr_infos)
 
     # Renders the actual content of an expression.
     # This output is untrusted and must never be served from config.server_name.
@@ -233,40 +234,6 @@ class ExpressionController(ApplicationController):
                 new_tags = re.sub(tag, '', expr['tags'])
         expr.update(tags=new_tags, updated=False)
         return tag
-
-    def _pagethrough(self, request, response, resource):
-        pagethrough = {'next': [], 'prev': []}
-        shared_spec = {}
-        url_args = {}
-        root = self.db.User.get_root()
-        loop = False
-        user = request.args.get('user')
-        if user:
-            loop = True
-            shared_spec.update({'owner_name': request.args.get('user')})
-            url_args.update({'user': user})
-        if request.args.has_key('tag'):
-            tag = request.args.get('tag', '')
-            root_tags = root.get('tagged', {})
-            if root_tags.has_key(tag):
-                ids = root_tags.get(tag, [])
-                shared_spec = ids
-            else:
-                tag = normalize(tag)[0]
-                if tag in ['recent']: shared_spec = {}
-                else:  shared_spec.update({'tags_index': tag})
-            url_args.update({'tag': tag})
-
-        next = resource.related_next(shared_spec, loop=loop)
-        prev = resource.related_prev(shared_spec, loop=loop)
-
-        for cursor, name in [(next, 'next'), (prev, 'prev')]:
-            for expr in cursor:
-                expr['thumb'] = expr.get_thumb()
-                summary_keys = ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name']
-                pagethrough[name].append(dfilter(expr, summary_keys))
-
-        return pagethrough
 
     featured = {
             'project': [

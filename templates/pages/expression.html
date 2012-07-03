@@ -10,9 +10,14 @@
 {% block head %}
  {{super()}}
  <script src='{{ asset_bundle('expression.js')[0] }}'></script>
+ {% for asset in asset_bundle('navigator.js') %}
+     <script src='{{ asset }}'></script>
+ {% endfor %}
  <script type='text/javascript'>
      var expr_id = '{{ exp.id }}';
      var comment_count = {{ exp.comment_count }};
+     // TODO: temporary, should probably hide this better
+     var expr = {{exp | json}};
  </script>
 {% endblock %}
 
@@ -57,21 +62,13 @@
 
 {% block body %}
  <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
- {% if pagethrough and pagethrough.prev %}
-   <a href='{{pagethrough.prev}}' id='pagethrough_prev'><img src='{{ 'skin/1/pagethrough/prev.png'|asset_url }}' class='pagethrough hoverable'></a>
- {% endif %}
- {% if pagethrough and pagethrough.next %}
-   <a href='{{pagethrough.next}}' id='pagethrough_next'><img src='{{ 'skin/1/pagethrough/next.png'|asset_url }}' class='pagethrough pagethrough_next hoverable'></a>
- {% endif %}
+   <a href='#' onclick="Hive.navigator.prev(); return false;" id='pagethrough_prev'><img src='{{ 'skin/1/pagethrough/prev.png'|asset_url }}' class='pagethrough hoverable'></a>
+   <a href='#' onclick="Hive.navigator.next(); return false;" id='pagethrough_next'><img src='{{ 'skin/1/pagethrough/next.png'|asset_url }}' class='pagethrough pagethrough_next hoverable'></a>
 
  {% if auth_required %}
   {% include 'dialogs/password.html' %}
  {% else %}
   <iframe src='{{ url }}' class='expr' name='expr'></iframe>
-   <script>
-     // TODO: temporary, should probably hide this better
-     var expr = {{exp | json}};
-   </script>
   {{ body }}
  {% endif %}
 {% endblock %}

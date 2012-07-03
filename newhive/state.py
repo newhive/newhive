@@ -82,7 +82,7 @@ class Collection(object):
             res = self.search(spec, sort=[(sort, order)], limit=limit)
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
-                res = Page(res)
+                res = Page(list(res))
                 res.next = res[-1][sort] if len(res) == limit else None
             return res
         elif type(spec) == list:
@@ -209,41 +209,6 @@ class HasSocial(Entity):
     @memoized
     def broadcaster_count(self):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
-
-    def _related(direction=1):
-        def related(self, spec=None, loop=True, count=1):
-            if spec == None: spec = {}
-            print spec
-            #import rpdb2; rpdb2.start_embedded_debugger("remoteDeBuggingisFUn")
-            if type(spec) == dict:
-                shared_spec = spec.copy()
-                try:
-                    comparator = '$lt' if direction < 0 else '$gt'
-                    spec = {'updated':{comparator: self['updated']}}
-                    spec.update(shared_spec)
-                    cur = self._col.find(spec).sort([('updated', direction)]).limit(count)
-                    #return self.collection.new(cur[0])
-                    return Cursor(self.collection, cur)
-                except IndexError:
-                    return None
-
-            elif type(spec) == list:
-                try:
-                    index = spec.index(self.id)
-                except ValueError:
-                    return None #in this case the expression isn't in the collection to begin with
-
-                try:
-                    return self.db.Expr.fetch(spec[index - direction])
-                except IndexError:
-                    return None
-            else:
-                raise "argument must be a mongodb spec dicionary or a list of object ids"
-        return related
-
-    related_next = _related(direction=-1)
-    related_prev = _related(direction=1)
-
 
 @Database.register
 class KeyWords(Entity):

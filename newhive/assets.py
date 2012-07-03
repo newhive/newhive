@@ -145,10 +145,14 @@ class HiveAssets(Assets):
 
         assets_env.register('google_closure.js', 'google_closure.js')
 
+        assets_env.register('navigator.js',
+                'navigator.js', 'URI.js',
+                filters='yui_js',
+                output='../lib/navigator.js')
+
         assets_env.register('app.js',
                 'jquery_misc.js', 'util.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
                 'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'colors.js',
-                'navigator.js', 'URI.js',
                 filters='yui_js',
                 output='../lib/app.js')
 
