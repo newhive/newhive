@@ -147,7 +147,7 @@ class HiveAssets(Assets):
 
         assets_env.register('navigator.js',
                 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
-                'history/history.adapter.jquery.js',
+                'history/history.adapter.jquery.js', 'jquery.transition.js',
                 filters='yui_js',
                 output='../lib/navigator.js')
 

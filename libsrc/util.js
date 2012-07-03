@@ -679,7 +679,6 @@ hover_menu = function(handle, drawer, options) {
 
     if(o.options.auto_close) drawer.click(o.close);
     $(window).click(function(e) {
-        console.log('menu window click');
         window.e = e;
         window.drawer = drawer.get(0);
         window.handle = handle.get(0);
@@ -869,3 +868,9 @@ function relogin(success){
         return asyncSubmit(form, callback, {dataType: 'json'});
     });
 };
+
+function callback_log(message){
+    return function(){
+        console.log(message);
+    };
+}

@@ -11,3 +11,6 @@
 
 #bg { z-index: 0; }
 #content { z-index: 1; }
+body.frame {
+    overflow: hidden;
+}

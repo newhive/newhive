@@ -21,6 +21,7 @@
      var content_domain = {{ content_domain | json }};
  </script>
 {% endblock %}
+{% block body_classes %}{{super()}} frame{% endblock %}
 
 {% block nav_right %}
   {{ star_button(exp.id, exp.star_count, exp.id in user.starred_expr_ids) }} 
