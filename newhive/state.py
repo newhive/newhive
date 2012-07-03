@@ -744,7 +744,7 @@ class Expr(HasSocial):
         return 0
 
     @property
-    def url(self): return abs_url(domain=self['domain']) + self['name']
+    def url(self): return abs_url() + self['owner_name'] + '/' + self['name']
 
     @property
     def owner_url(self): return abs_url(domain = self.get('domain')) + 'profile'

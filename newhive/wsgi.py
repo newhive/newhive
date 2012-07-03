@@ -223,7 +223,9 @@ def handle(request): # HANDLER
     if request.domain == config.server_name:
         if site_pages.has_key(parts[0]):
             return site_pages.get(parts[0], app.serve_404)(request, response)
-        else: username = parts[0] # assume newhive.com/username/
+        else:
+            username = parts[0] # assume newhive.com/username/
+            parts = parts[1:]
     elif request.domain.startswith('www.'):
         return app.redirect(response, re.sub('www.', '', request.url, 1))
 
@@ -248,7 +250,7 @@ def handle(request): # HANDLER
     if parts[0] == 'expressions': return app.redirect(response, owner.url)
     if config.debug_mode and request.path == 'robots.txt': return app.robots(request, response)
     if request.args.has_key('dialog'): return controllers['expression'].dialog(request, response)
-    return controllers['expression'].frame(request, response)
+    return controllers['expression'].frame(request, response, parts)
 
 
 ##############################################################################

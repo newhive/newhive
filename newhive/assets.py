@@ -146,7 +146,8 @@ class HiveAssets(Assets):
         assets_env.register('google_closure.js', 'google_closure.js')
 
         assets_env.register('navigator.js',
-                'navigator.js', 'URI.js',
+                'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
+                'history/history.adapter.jquery.js',
                 filters='yui_js',
                 output='../lib/navigator.js')
 

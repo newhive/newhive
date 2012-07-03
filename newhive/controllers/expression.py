@@ -39,12 +39,13 @@ class ExpressionController(ApplicationController):
 
     # Controller for all navigation surrounding an expression
     # Must only output trusted HTML
-    def frame(self, request, response):
+    def frame(self, request, response, parts):
         if request.is_xhr:
             return self.info(request, response)
 
+        path = '/'.join(parts)
         owner = response.context['owner']
-        resource = self.db.Expr.meta(owner['name'], request.path.lower())
+        resource = self.db.Expr.meta(owner['name'], path)
         if not resource:
             if request.path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
@@ -101,7 +102,7 @@ class ExpressionController(ApplicationController):
         expr_infos = []
         for expr in exprs:
             expr['thumb'] = expr.get_thumb()
-            expr_infos.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name', 'updated']))
+            expr_infos.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name', 'updated', 'name']))
         return self.serve_json(response, expr_infos)
 
     # Renders the actual content of an expression.
