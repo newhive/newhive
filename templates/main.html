@@ -66,7 +66,7 @@
 
   {% if user.logged_in %}
     <div id='user_menu' class='menu feed_menu'>
-      <div class='menu_item default'>Expressions</div>
+      <a href='{{ home_url }}'><div class='menu_item default'>Expressions</div></a>
       <div id='user_btns' class='btns'
         ><div class='menu_item'>Invite friends!</div
         ><div class='menu_item'>Settings</div
@@ -76,7 +76,7 @@
         ></form
       ></div>
       <div class='bar'></div>
-      <div class='menu_item'>Activity</div>
+      <a href='{{ feed_url }}'><div class='menu_item'>Activity</div></a>
       <div id='user_activity_feed'>
         {% for feed in user.feed_profile(viewer=user, limit=7) %}
           {% include "partials/feed.html" %}
@@ -181,7 +181,7 @@
           <div class="count">{{ exp.analytic_count("stumble") | large_number if exp and exp.id else zero_count_string }}</div>
         </div>
         <div class="like_button gplus">
-          <a href="https://plusone.google.com/_/+1/confirm?hl=en-US&url=ADD_YOUR_URL" >
+          <a href="https://plusone.google.com/_/+1/confirm?hl=en-US&url={{ here }}" >
             <img src="{{ 'skin/1/social/plus_one.png'|asset_url }}" title="Google+"/>
           </a>
           <div class="count">{{ exp.analytic_count('gplus') | large_number if exp and exp.id else zero_count_string }}</div>

@@ -36,6 +36,7 @@ $nav_size: 40px;
         line-height: $nav_size;
         vertical-align: middle;
     }
+    .active .text { color: white; }
     .text_btn {
         padding: 0 6px;
         cursor: pointer;
@@ -99,7 +100,7 @@ $nav_size: 40px;
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include border-radius(5px);
     padding: 5px;
-    cursor: pointer;
+    cursor: default;
 
     .bar {
         background-color: $color_light_grey;
@@ -110,7 +111,6 @@ $nav_size: 40px;
 
     .menu_item {
         padding: 5px 8px;
-        cursor: default;
         font-weight: bold;
         white-space: nowrap;
         &.active { background-color: $color_selected; }
