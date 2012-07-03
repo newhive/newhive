@@ -9,8 +9,8 @@
   {% if error %}<div id='login_error' class='error'>{{ error }}</div>{% endif %}
   <div class='spacer'></div>
   <div class='field login submit'>
-    <a href="#" id='password_recovery_link' onclick="showDialog('#dia_password_recovery'); return false;">Forgot Password?</a>
-    <input id='login_submit' type='submit' class='btn black rounded' value='Enter'>
+    <a href="#" class='password_recovery' onclick="showDialog('#dia_password_recovery'); return false;">Forgot Password?</a>
+    <input type='submit' class='btn black rounded submit' value='Enter'>
   </div>
   <input id='login_submit' type='hidden' name='action' value='login'>
   <input type='hidden' name='url' value='{{ url }}'> <!-- Redirect to current URL on login instead of profile -->

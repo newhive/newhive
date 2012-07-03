@@ -127,20 +127,90 @@ $nav_size: 40px;
         }
         .active { background-color: $color_selected; }
     }
-    #hive_btns {
-        margin-bottom: 10px;
-    }
-    #user_btns {
+
+    &#login_menu {
+        width: 190px; padding : 10px;
+        input[type=text], #login_menu input[type=password] { width: 170px; }
+        .password_recovery {
+            font-weight: normal;
+            font-size: 12px;
+            color: black;
+            margin-right: 3px;
+            white-space: nowrap;
+        }
+        .submit { float: right; }
     }
 
     &#hive_menu {
         padding: 5px 10px 10px 5px;
         #random_btn { background-image: asset_url('skin/1/shuffle.png') }
         #random_btn.active { background-image: asset_url('skin/1/shuffle-hover.png'); background-color: black; }
+
+        .btns {
+            margin-bottom: 10px;
+        }
+    }
+
+    &#share_menu {
+        padding-top:10px;
+
+        .like_button {
+            text-align: center;
+            display: inline-block;
+            margin: 10px 10px 0 10px;
+        }
     }
 }
 
 
+
+/* Share dialog */
+/*
+#email_send {margin-top: 26px; margin-left:20px; font-family:Arial; font-size:17px;}
+#congrats_message h1 {font-weight:lighter; font-family:$header_font; display:inline; font-size: 33px;}
+#congrats_message strong {font-weight:normal; color: red; }
+#dia_share .share_context_explanation { 
+    font-size: 13px;
+    padding: 0 40px;
+    input { float: left; }
+}
+#expression_url { 
+    display:block; 
+    float: left; 
+    font-size:14px; 
+    padding:7px; 
+    margin:3px auto auto 10px; 
+    width: 470px; 
+    background-color: #FFF673; 
+}
+#expression_embed_code { 
+    overflow:auto; 
+    display:block; 
+    float: left; 
+    font-size:12px; 
+    padding:7px; 
+    margin: 0; 
+    width: 439px; 
+    height: 60px;
+    background-color: #D0E0F0; 
+}
+#btn_url_copy { background-image:asset_url("skin/1/copy_clipboard.png"); float:right; width:20px; height:24px; margin: 5px 5px 0 0;}
+#btn_url_copy.hover { background-image:asset_url("skin/1/copy_clipboard-hover.png");}
+#dia_share{ 
+  width: 555px; 
+  padding: 20px;
+}
+#dia_share #email_message { width:350px; }
+#dia_share #email_to { width: 301px; }
+#dia_share .line.embed { padding-top: 20px; }
+#dia_share label { font-size: 14px; }
+#dia_share .count {
+  font-family: League Gothic, sans-serif;
+  font-size: 55px;
+}
+#dia_share .label.align {
+    width: 89px;
+}
 
 
 
@@ -267,16 +337,4 @@ $nav_size: 40px;
 }
 
 
-#login_menu { width: 190px; padding : 10px; }
-#login_menu input[type=text], #login_menu input[type=password] { width: 170px; }
-#signup_btn {
-  &:hover { background-color: $color_active; color: white; }
-}
-#password_recovery_link {
-    font-weight: normal;
-    font-size: 12px;
-    color: black;
-    margin-right: 3px;
-    white-space: nowrap;
-}
-#login_submit { float: right; }
+*/
