@@ -56,7 +56,7 @@
     <a href='{{ server_url }}random'><div id='random_btn' class='icon hoverable rounded' title="View Random Expression"></div></a>
     <form method='GET' action='{{ server_url }}search' name='search_form'>
       <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
-      <div id='search_submit' class='hoverable icon scale' title='Submit search' onclick='document.forms.search_form.submit()'></div>
+      <div class='hoverable icon scale submit' title='Submit search' onclick='document.forms.search_form.submit()'></div>
     </form>
   </div>
   <script>
@@ -93,7 +93,7 @@
       {% set nav_begin = False %}
     {% endif %}
     {% if owner and not user_is_owner %}
-      ><div id='owner_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %}'
+      ><div id='owner_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %} text_btn'
         {% if owner.has_thumb() %}
           ><img id='owner_thumb' src='{{owner.get_thumb(70)}}'
         {% endif %}
@@ -101,11 +101,11 @@
       ></div
       {% set nav_begin = False %}
     {% endif %}
-    ><div id='share_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %}'
+    ><div id='share_btn' class='hoverable center{% if nav_begin and exp %} left_edge{% endif %}{% if not exp %} rounded{% endif %}'
       ><div id='share_icon' class='icon{% if nav_begin %} left_edge{% endif %}'></div
       ><div class='text'>Share</div
     ></div
-    ><div id='plus_btn' class='icon hoverable right_edge'></div
+    {% if exp %}><div id='plus_btn' class='icon hoverable right_edge'></div{% endif %}
   ></div>
 
   {% if not user.logged_in %}
@@ -164,7 +164,7 @@
           <a class='tumblr' onClick="logShare('tumblr');" target="_blank">
             <img src='{{ 'skin/1/social/tumblr.png'|asset_url }}' title='Share on Tumblr'>
           </a>
-          <div class="count">{{ exp.analytic_count("twitter") | large_number if exp and exp.id else zero_count_string }}</div>
+          <div class="count">{{ exp.analytic_count("tumblr") | large_number if exp and exp.id else zero_count_string }}</div>
         </div>
         <div class="like_button pinterest">
           <a class='pinterest' onClick="logShare('pinterest');" target="_blank">
@@ -206,6 +206,15 @@
     <div class='menu_item'>Embed</div>
   </div>
   <script>hover_menu('#share_btn', '#share_menu', { offset_y: 5 });</script>
+
+  <div id='plus_menu'>
+    <div class='nav_btn broadcast hoverable'>
+    </div>
+    <div class='nav_btn like hoverable'>
+    </div>
+  </div>
+  <script>
+  </script>
 
   {% block body %}
   {% endblock body %}

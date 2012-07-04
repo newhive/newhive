@@ -541,6 +541,7 @@ hover_menu = function(handle, drawer, options) {
         ,open_condition : function(){ return true }
         ,auto_height : true
         ,default_item: drawer.find('.menu_item.default')
+        ,layout: true
     };
     $.extend(o.options, options);
     if(!handle.length) throw("hover_menu has no handle");
@@ -578,7 +579,10 @@ hover_menu = function(handle, drawer, options) {
         handle.addClass('active');
         o.options.default_item.addClass('active');
         o.cancel_close();
-        if(o.opened) return;
+        if(o.opened) {
+            if(o.options.default_item) o.options.default_item.click();
+            return;
+        }
 
         o.opened = true;
         handle.get(0).busy = true;
@@ -595,8 +599,8 @@ hover_menu = function(handle, drawer, options) {
             hp.top - drawer.outerHeight() - o.options.offset_y : hp.top + oy;
         css_opts.left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
             hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
-        if (o.options.auto_height) css_opts.drawer_height = bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
-        drawer.css(css_opts);
+        if(o.options.auto_height) css_opts.drawer_height = bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
+        if(o.options.layout) drawer.css(css_opts);
 
         // prevent hovering over gap between handle and menu from closing the menu
         if(o.options.offset_y) {

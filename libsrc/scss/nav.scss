@@ -2,6 +2,8 @@
 
 $nav_size: 40px;
 
+@media print { .nav { display: none; } }
+
 .icon {
     height: $nav_size;
     width: $nav_size;
@@ -12,7 +14,7 @@ $nav_size: 40px;
 .nav {
     margin: 7px;
     z-index: 4;
-    position: absolute;
+    position: fixed;
     background-color: white;
     margin: 7px 8px 0 7px;
     @include border-radius(5px);
@@ -73,8 +75,7 @@ $nav_size: 40px;
         width: $nav_size - 8;
         margin: 4px;
     }
-    .text { padding-left: 3px; }
-    padding: 0 6px 0 3px;
+    .text { padding-left: 2px; }
 }
 
 #share_btn {
@@ -87,6 +88,8 @@ $nav_size: 40px;
     background-image: asset_url('skin/1/plus.png');
     &.active { background-image: asset_url('skin/1/plus-hover.png'); }
 }
+
+
 
 
 
@@ -149,6 +152,15 @@ $nav_size: 40px;
         .btns {
             margin-bottom: 10px;
         }
+
+        .submit {
+          display: inline-block;
+          width: .44 * $nav_height;
+          height: .44 * $nav_height;
+          background-image: asset_url('skin/1/search_arrow.png');
+          vertical-align: middle;
+          &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
+        }
     }
 
     &#share_menu {
@@ -162,6 +174,32 @@ $nav_size: 40px;
     }
 }
 
+
+#plus_menu {
+    right: 0;
+    top: 70px;
+    margin: 7px;
+    position: fixed;
+    z-index: 4;
+
+    .nav_btn {
+        width: 38px;
+        height: 59px;
+        vertical-align: middle;
+        background-color: white;
+        @include border-radius(5px);
+        @include box-shadow(rgba(black, .3) 3px 3px 10px);
+        margin: 5px 0;
+
+        background-repeat: no-repeat;
+        background-position: 0px 15px;
+        &.broadcast { background-image: asset_url('skin/1/broadcast.png'); }
+        &.broadcast.active { background-image: asset_url('skin/1/broadcast-hover.png'); }
+        &.like { background-image: asset_url('skin/1/like.png'); }
+        &.like.active { background-image: asset_url('skin/1/like-hover.png'); }
+        &.active { background-color: $color_selected; }
+    }
+}
 
 
 /* Share dialog */
@@ -316,14 +354,6 @@ $nav_size: 40px;
     width: $nav_height * 3;
    border-width: $nav_height * .1;
    padding: $nav_height * .1;
-}
-#search_submit {
-  display: inline-block;
-  width: .44 * $nav_height;
-  height: .44 * $nav_height;
-  background-image: asset_url('skin/1/search_arrow.png');
-  vertical-align: middle;
-  &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
 }
 
 
