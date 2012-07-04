@@ -2,6 +2,9 @@
 
 {% block head %}
  <script src='{{ asset_bundle('expression.js')[0] }}'></script>
+ <script>
+     parent_url = {{ exp.url | json }};
+ </script>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression minimal{% endblock %}
