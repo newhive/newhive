@@ -54,58 +54,6 @@ input[type="text"].copy, textarea.copy {
   font-size: 28px;
 }
 
-/* Share dialog */
-#email_send {margin-top: 26px; margin-left:20px; font-family:Arial; font-size:17px;}
-#congrats_message h1 {font-weight:lighter; font-family:$header_font; display:inline; font-size: 33px;}
-#congrats_message strong {font-weight:normal; color: red; }
-#dia_share .share_context_explanation { 
-    font-size: 13px;
-    padding: 0 40px;
-    input { float: left; }
-}
-#expression_url { 
-    display:block; 
-    float: left; 
-    font-size:14px; 
-    padding:7px; 
-    margin:3px auto auto 10px; 
-    width: 470px; 
-    background-color: #FFF673; 
-}
-#expression_embed_code { 
-    overflow:auto; 
-    display:block; 
-    float: left; 
-    font-size:12px; 
-    padding:7px; 
-    margin: 0; 
-    width: 439px; 
-    height: 60px;
-    background-color: #D0E0F0; 
-}
-#btn_url_copy { background-image:asset_url("skin/1/copy_clipboard.png"); float:right; width:20px; height:24px; margin: 5px 5px 0 0;}
-#btn_url_copy.hover { background-image:asset_url("skin/1/copy_clipboard-hover.png");}
-#dia_share{ 
-  width: 555px; 
-  padding: 20px;
-}
-#like_buttons { margin: 20px 0;}
-#like_buttons .like_button {
-  display: inline-block;
-  margin: 10px;
-}
-#dia_share #email_message { width:350px; }
-#dia_share #email_to { width: 301px; }
-#dia_share .line.embed { padding-top: 20px; }
-#dia_share label { font-size: 14px; }
-#dia_share .count {
-  font-family: League Gothic, sans-serif;
-  font-size: 55px;
-}
-#dia_share .label.align {
-    width: 89px;
-}
-
 
 /* Referral Dialog */
 #dia_referral {

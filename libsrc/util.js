@@ -283,36 +283,6 @@ var btn_comment_click = function(){
     _gaq.push(['_trackEvent', 'comment', 'open_dialog']);
 }
 
-
-function updateShareUrls(element, currentUrl) {
-    element = $(element);
-    var encodedUrl = encodeURIComponent(currentUrl), total=0;
-    var encodedTitle = encodeURIComponent(document.title)
-    element.find('.copy_url').val(currentUrl);
-    element.find('a.twitter')
-      .attr('href', 'http://twitter.com/share?url=' + encodedUrl);
-    element.find('a.facebook')
-      .attr('href', 'http://www.facebook.com/sharer.php?u=' + encodedUrl);
-    element.find('a.reddit')
-      .attr('href', 'http://www.reddit.com/submit?url=' + encodedUrl);
-    element.find('.gplus_button')
-      .attr('href', currentUrl);
-    element.find('a.stumble')
-      .attr('href', 'http://www.stumbleupon.com/submit?url=' + encodedUrl + '&title=' + encodedTitle);
-
-    element.find('.count').each(function(){
-      $(this).html($(this).html().replace(/^0$/, "-"))
-    });
-    //element.find('textarea[name=message]').html("Check out this expression:\n\n" + currentUrl);
-
-    // Activate Google Plus
-    (function() {
-      var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-      po.src = 'https://apis.google.com/js/plusone.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
-    })();
-}
-
 function id(x) { return x; };
 function noop() { };
 // takes f, a1, a2, ... and returns function() { f(a1, a2, ...) }
@@ -418,21 +388,7 @@ var urlParams = {};
  * Adds hover events for elements with class='hoverable'
  * ***/
 $(function () {
-    iconCounts();
-    $('#btn_share').click(function(){
-        logAction('share_button_click');
-        _gaq.push(['_trackEvent', 'share', 'open_dialog']);
-        var dialog = $('#dia_share');
-        if (dialog.length === 0 ) {
-            $.get("?dialog=share", function(data){
-                showDialog(data, { 'select' : '#expression_url' } );
-                updateShareUrls('#dia_share', window.location);
-            });
-        } else {
-            showDialog('#dia_share', { 'select' : '#expression_url' });
-            updateShareUrls('#dia_share', window.location);
-        }
-    });
+  iconCounts();
 
   $(".hoverable").each(function() { hover_add(this) });
 
