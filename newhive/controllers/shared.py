@@ -51,3 +51,40 @@ def length_bucket(t):
     if l < 10: return 1
     if l < 20: return 2
     return 3
+
+def query_args(request):
+    return {'page': request.args.get('page'), 'viewer': request.requester}
+
+class PagingMixin(object):
+
+    def expr_featured(self, request, response, args=None):
+        kwargs = query_args(request)
+        if args: kwargs.update(args)
+        if (request.path_parts, 1): response.context['title'] = 'Featured Expressions'
+        return self.db.Expr.page(self.db.User.root_user['tagged']['Featured'], **kwargs), {'tag': 'Featured'}
+
+    def expr_all(self, request, response):
+        response.context['title'] = 'All Expressions'
+        return self.db.Expr.page({'auth': 'public'}, **query_args(request)), {'tag': 'Recent'}
+    def home_feed(self, request, response):
+        if (request.path_parts, 1): response.context['title'] = 'Network'
+        return request.requester.feed_network(**query_args(request))
+    def people(self, request, response):
+        response.context['title'] = 'People'
+        return self.db.User.page({}, **query_args(request))
+    def expr_page(self, request, response):
+        page = lget(request.path_parts, 2, 'about')
+        response.context['title'] = page
+        return expr_to_html( self.db.Expr.named( config.site_user, lget(request.path_parts, 2, 'about') ) )
+    def user_exprs(self, request, response, auth=None):
+        return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **query_args(request)), {'user': request.owner['name']}
+    def feed_network(self, request, response):
+        return request.owner.feed_network(**query_args(request))
+    def feed_profile(self, request, response, by_owner=False, spec={}, **args):
+        args.update(query_args(request))
+        if by_owner: spec.update({'initiator': request.owner.id})
+        return request.owner.feed_profile_entities(spec=spec, **args)
+    def listening(self, request, response):
+        return request.owner.starred_user_page(**query_args(request))
+    def listeners(self, request, response):
+        return request.owner.starrer_page(**query_args(request))

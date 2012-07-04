@@ -8,7 +8,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             thumb_width: 130,
             text_height: 40,
             margin: 5,
-            paging_attr: 'updated'
+            paging_attr: 'id'
         },
         opts
     );

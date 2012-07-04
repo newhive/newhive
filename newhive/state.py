@@ -16,7 +16,7 @@ from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredenti
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of
+from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of, is_mongo_key
 
 import logging
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class Collection(object):
         self.entity = entity
 
     def fetch_empty(self, key, keyname='_id'): return self.find_empty({ keyname : key })
-    def fetch(self, key, keyname='_id'): return self.find({ keyname : key })
+    def fetch(self, key, keyname='_id', **opts): return self.find({ keyname : key }, **opts)
 
     def find_empty(self, spec, **opts):
         res = self.find(spec, **opts)
@@ -85,16 +85,34 @@ class Collection(object):
                 res = Page(list(res))
                 res.next = res[-1][sort] if len(res) == limit else None
             return res
+
         elif type(spec) == list:
-            if not page: page = 0
-            page = int(page)
-            end = (page + 1) * limit
             spec = uniq(spec)
+            if not page: page = '0'
+
+            if is_mongo_key(page):
+                start = spec.index(page)
+                end = start + limit * -order
+                if end > start:
+                    if start == len(spec): return []
+                    sub_spec = spec[start+1:end+1]
+                else:
+                    if start == 0: return []
+                    if end - 1 < 0:
+                        sub_spec = spec[start-1::-1]
+                    else:
+                        sub_spec = spec[start-1:end-1:-1]
+            else:
+                page = int(page)
+                end = (page + 1) * limit
+                sub_spec = spec[ page * limit : end ]
+
             items = {}
-            for e in self.search({'_id': {'$in': spec[ page * limit : end ] }}): items[e.id] = e
+            for e in self.search({'_id': {'$in': sub_spec }}): items[e.id] = e
             res = Page()
-            res.next = page + 1 if end <= len(spec) else None
-            for i in spec:
+            if type(page) == int:
+                res.next = page + 1 if end <= len(spec) else None
+            for i in sub_spec:
                 if items.has_key(i): res.append(items[i])
             return res
 
@@ -604,6 +622,10 @@ class Expr(HasSocial):
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
         def meta(self,  username, name): return self.find({'owner_name': username, 'name': name},
             fields={ 'apps': 0, 'background': 0, 'images': 0 })
+
+        def fetch(self, key, keyname='_id', meta=False):
+            opts = dict(fields={ 'apps': 0, 'background': 0, 'images': 0 }) if meta else {}
+            return super(Expr.Collection, self).fetch(key, keyname, **opts)
 
         def popular_tags(self):
             map_js = Code("function () {"

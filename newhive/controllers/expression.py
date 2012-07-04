@@ -5,7 +5,7 @@ from newhive import utils, mail
 # TODO: handle this in model layer somehow
 from pymongo.connection import DuplicateKeyError
 
-class ExpressionController(ApplicationController):
+class ExpressionController(ApplicationController, PagingMixin):
 
     def edit(self, request, response):
         if not request.requester.logged_in: return self.serve_404(request, response)
@@ -92,13 +92,30 @@ class ExpressionController(ApplicationController):
         current = args.pop('current')
         count = int(args.pop('count'))
         direction = int(args.pop('direction'))
-        if args.has_key('tag'):
-            args['tags_index'] = args.pop('tag')
-        if args.has_key('user'):
-            args['owner_name'] = args.pop('user')
-            if args['owner_name'] != request.requester['name']:
+
+        kwargs = {'page': current, 'order': -direction, 'limit': count}
+
+        special_tags = {
+                'Featured': self.expr_featured
+                }
+        pager = special_tags.get(args.get('tag'))
+
+        if pager:
+            items_and_args = pager(request, response, kwargs)
+            exprs, args = items_and_args if type(items_and_args) == tuple else (items_and_args, None)
+        else:
+            # Use key_map to map between keys used in querystring and those of database
+            args = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'})
+
+            expr = self.db.Expr.fetch(current, meta=True)
+            kwargs['page'] = expr['updated']
+
+            owner_name = args.get('owner_name')
+            if owner_name and owner_name != request.requester['name']:
                 args['auth'] = 'public'
-        exprs = self.db.Expr.page(args, limit=count, page=current, order=-direction)
+
+            exprs = self.db.Expr.page(args, **kwargs)
+
         expr_infos = []
         for expr in exprs:
             expr['thumb'] = expr.get_thumb()

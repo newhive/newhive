@@ -1,4 +1,4 @@
-import time, random, re, base64
+import time, random, re, base64, copy
 from datetime import datetime
 from newhive import config
 
@@ -176,3 +176,13 @@ def timer(func):
     t1 = now()
     print t1 - t0
     return r
+
+def key_map(original, transformation):
+    output = copy.copy(original)
+    for old, new in transformation.items():
+        if output.has_key(old):
+            output[new] = output.pop(old)
+    return output
+
+def is_mongo_key(string):
+    return bool(re.match('[0-9a-f]{24}', string))
