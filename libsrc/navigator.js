@@ -76,8 +76,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         o.cache_next();
 
         var final_expr = towards[towards.length - 1];
-        if (final_expr) {
-            update_function(final_expr[opts.paging_attr], Math.abs(offset), callback);
+        if (final_expr && towards.length < opts.visible_count) {
+            update_function(final_expr[opts.paging_attr], opts.visible_count, callback);
         }
 
     };
