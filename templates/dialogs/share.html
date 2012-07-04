@@ -46,6 +46,7 @@
         <div class="count">{{ exp.views() | large_number if exp and exp.id else zero_count_string }}</div>
       </div>
     </div>
+
     {% if user.logged_in %}
       <form id='mail_form' action='{{ secure_server }}' method='POST'>
           <input type='hidden' name='forward' value='{{ url|e }}'/>
