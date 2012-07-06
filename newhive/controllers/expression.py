@@ -63,6 +63,7 @@ class ExpressionController(ApplicationController, PagingMixin):
             resource.increment_counter('views')
             if is_owner: resource.increment_counter('owner_views')
 
+        resource['thumb'] = resource.get_thumb()
         response.context.update(
              edit = abs_url(secure = True) + 'edit/' + resource.id
             ,mtime = friendly_date(time_u(resource['updated']))
