@@ -70,6 +70,11 @@ class CommunityController(ApplicationController, PagingMixin):
 
         return self.page(request, response, content)
 
+    def expr_page(self, request, response):
+        page = lget(request.path_parts, 2, 'about')
+        response.context['title'] = page
+        return expr_to_html( self.db.Expr.named( config.site_user, lget(request.path_parts, 2, 'about') ) )
+
     def search(self, request, response):
         query = request.args.get('q', '')
         res = self.db.KeyWords.search_page(query, **query_args(request))

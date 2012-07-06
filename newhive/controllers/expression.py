@@ -89,16 +89,25 @@ class ExpressionController(ApplicationController, PagingMixin):
 
     def info(self, request, response):
         args = request.args.copy().to_dict(flat=True)
-        current = args.pop('current')
+        current_id = args.pop('current')
         count = int(args.pop('count'))
         direction = int(args.pop('direction'))
 
-        kwargs = {'page': current, 'order': -direction, 'limit': count}
-
         special_tags = {
-                'Featured': self.expr_featured
+                'Featured': (self.expr_featured, 'id')
+                , 'Recent': (self.expr_all, 'updated')
+                , 'Network': (self.home_feed, 'updated')
                 }
-        pager = special_tags.get(args.get('tag'))
+        default = (None, 'updated')
+        pager, paging_attr = special_tags.get(args.get('tag'), default)
+
+        if paging_attr == 'id':
+            page = current_id
+        else:
+            expr = self.db.Expr.fetch(current_id, meta=True)
+            page = expr[paging_attr]
+
+        kwargs = {'page': page, 'order': -direction, 'limit': count}
 
         if pager:
             items_and_args = pager(request, response, kwargs)
@@ -106,9 +115,6 @@ class ExpressionController(ApplicationController, PagingMixin):
         else:
             # Use key_map to map between keys used in querystring and those of database
             args = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'})
-
-            expr = self.db.Expr.fetch(current, meta=True)
-            kwargs['page'] = expr['updated']
 
             owner_name = args.get('owner_name')
             if owner_name and owner_name != request.requester['name']:
