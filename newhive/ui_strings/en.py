@@ -1,8 +1,5 @@
-intro_paragraph = """The New Hive makes it easy for you to express yourself
-online. Whether it's a journal, collection of recipes, portfolio or flyer, it's
-fun and easy to create and update all of your media and ideas in one ad-free
-space. Decide what you want to share to the community, the world and all your
-social media sites. What's your vision to change the world?"""
+intro_paragraph = """<b>We believe that your life is a blank canvas <span class='active'>+</span> you decide what goes on it.<br>
+The New Hive is your radically simple, drag <span class='active'>+</span> drop self publishing tool.</b>"""
 
 embed_code_description = """Paste in the <b>URL</b> for Vimeo <span class='active'>+</span> YouTube videos or enter the <b>embed code</b> found on the share button of many sites including: Grooveshark, Soundcloud, Google Maps, Mailchimp, Tokbox, Flickr, PayPal, Ted <span class='active'>+</span> more. We also support <b>iframes</b>."""
 embed_code_textarea = """Paste your url or embed code here"""

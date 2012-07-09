@@ -159,8 +159,7 @@ class Entity(dict):
         dict.update(self, self.db.User.fetch(self.id))
 
     def update(self, **d):
-        if d.has_key('updated'): del d['updated']
-        else: d['updated'] = now()
+        if not d.has_key('updated'): d['updated'] = now()
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d }, safe=True)
     def update_cmd(self, d, **opts): return self._col.update({ '_id' : self.id }, d, **opts)
@@ -474,6 +473,11 @@ class User(HasSocial):
     def get_url(self, path='profile'):
         return abs_url(domain = self.get('sites', [config.server_name])[0]) + path
     url = property(get_url)
+
+    def has_thumb(self):
+        id = self.get('thumb_file_id')
+        url = self.get('profile_thumb')
+        return (id and id != '') or (url and url != '')
 
     def get_thumb(self, size=190):
         if self.get('thumb_file_id'):

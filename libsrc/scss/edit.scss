@@ -1,8 +1,19 @@
 @import "common";
 
 .ehapp, .ehapp > * { position : absolute; }
-.ehapp .shield { left : 0px; top : 0px; z-index : 1000; width : 100%; height : 100%; }
-.select_border { background-color: $color_selected; position: absolute; }
+.ehapp .shield { left : 0px; top : 0px; z-index: 2; width : 100%; height : 100%; }
+.select_border {
+    background-color: $color_selected; position: absolute;
+    border-color: $color_light_blue;
+    border-style: solid;
+    box-sizing: border-box;
+    &.left { border-width: 0 0 0 1px; }
+    &.top { border-width: 1px 0 0 0; }
+    &.right { border-width: 0 1px 0 0; }
+    &.bottom { border-width: 0 0 1px 0; }
+    position: absolute;
+    z-index: 1;
+}
 .select_box { width: 100%; height:100%; border: 2px dashed $color_selected; }
 .app_select { position : absolute; }
 #grid_guide { position : fixed; width : 100%; height : 100%; }
@@ -15,7 +26,8 @@
 .controls_src { display : none; }
 .drag { cursor : move; }
 
-.control { position : absolute; cursor : default; z-index : 2 }
+.controls { position:absolute; width:0; height:0; z-index: 1; }
+.control { position : absolute; cursor : default; z-index : 1 }
 .control.resize_h { cursor : ew-resize; }
 .control.resize { cursor : se-resize; }
 .control.stack img { display : inline-block; margin-left : 5px; }
@@ -38,7 +50,9 @@
 .drawer.fontsize { white-space : nowrap; overflow : hidden; }
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
-#app_buttons { display : inline-block; margin : 20px; }
+#app_btns {
+    .nav_icon.active { background-color: $color_grey_medium; }
+}
 .insert_btn { margin-right : 15px; cursor : default; }
 .btn { display : inline-block; padding : 5px; cursor : default; }
 .menu label { font-weight: normal; font-size: 15px; }
@@ -49,12 +63,16 @@
 #right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }
 
-.color_picker { width : 310px; }
+.color_picker { width : 298px; }
 .color_picker img { width : 100%; }
 .color_picker .palette { float : left; }
 .color_picker .color_select { display : inline-block; width : 20px; height : 20px; margin : 2px; }
 .color_picker .hue_bar { width : 10px; height : 170px; float : left; margin : 2px 10px; }
-.color_picker .color_input { margin : 10px; }
+.color_picker .color_input {
+    float: left;
+    margin-top : 10px;
+    width: 100px;
+}
 .color_picker .shades { width : 120px; height : 120px; float : left; }
 
 #dia_edit_bg h2 { margin : 0 0 20px; text-align : center; }
@@ -79,3 +97,27 @@
 .btn_text.selected { color: white; background-color: #696E76; }
 .btn_text { background: none; color: #696E76; padding: 2px 4px; padding: 3px 8px; display: inline-block; }
 .clickable { cursor: default; }
+
+input, textarea { font-size : inherit; }
+
+.drawer { z-index: 2; white-space : nowrap;  }
+
+.fontsize .option { color : $color_12; vertical-align : bottom; }
+.menu label { color: $color_18; }
+.fontsize .bigger .option.small { width : 70px; height : 135px; }
+.fontsize .option:hover { background-color : $color_selected; color : $color_0; }
+.drawer.fontname .option:hover { background-color : $color_selected; }
+
+#privacy { background-color : $color_selected; color : $color_0; }
+
+.dialogue_handle { background-color : $color_selected; }
+#loading { position : fixed; z-index: 3; display : none; }
+#app_btns { top : 0; left : 300px; width : 402px; height : 50px; }
+
+.hive_selection {
+    background: $color_light_grey;
+}
+.text_content_element {
+    min-width: 100%;
+    word-wrap: normal;
+}

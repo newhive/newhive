@@ -58,10 +58,10 @@
 {% block body %}
  <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
  {% if pagethrough and pagethrough.prev %}
-   <div id="pagethrough_prev" class='nav pagethrough'><a href='{{pagethrough.prev}}' class='pagethrough-prev' ></a></div>
+   <a href='{{pagethrough.prev}}' id='pagethrough_prev'><img src='{{ 'skin/1/pagethrough/prev.png'|asset_url }}' class='pagethrough hoverable'></a>
  {% endif %}
  {% if pagethrough and pagethrough.next %}
-   <div id="pagethrough_next" class='nav pagethrough'><a href='{{pagethrough.next}}' class='pagethrough-next' ></a></div>
+   <a href='{{pagethrough.next}}' id='pagethrough_next'><img src='{{ 'skin/1/pagethrough/next.png'|asset_url }}' class='pagethrough pagethrough_next hoverable'></a>
  {% endif %}
  {% include 'expr_background.html' %}
 {% endblock %}
@@ -84,24 +84,29 @@
   $(function(){
     pagethrough_btns = $('.pagethrough');
     pagethrough_btns.css('top', ($(window).height() - pagethrough_btns.height())/2)
-    pagethrough_btns.find('a.pagethrough-prev').attr('title', "previous " + context_to_string({plural: false})).click(function(){
-      logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'prev'});
-      setTimeout("window.location = '" + $(this).attr('href') + "'", 100);
-      return false;
-    });
-    pagethrough_btns.find('a.pagethrough-next').attr('title', "next " + context_to_string({plural: false})).click(function(){
-      logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'next'});
-      setTimeout("window.location = '" + $(this).attr('href') + "'", 100);
-      return false;
-    });
+    $('#pagethrough_prev').attr('title', "previous "
+      + context_to_string({plural: false}))
+      .click(function(){
+        logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'prev'});
+        var url = $(this).attr('href');
+        setTimeout(function() { window.location = url; }, 100);
+        return false;
+      });
+    $('#pagethrough_next').attr('title', "next "
+      + context_to_string({plural: false})).click(function(){
+        logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'next'});
+        var url = $(this).attr('href');
+        setTimeout(function() { window.location = url; }, 100);
+        return false;
+      });
     var hover_width = 150;
     $(window).mousemove(function(event){
       if ($(window).width() - event.pageX < hover_width) {
-        $('#pagethrough_next').show();
-      } else { $('#pagethrough_next').hide(); }
+        $('#pagethrough_next img').show();
+      } else { $('#pagethrough_next img').hide(); }
       if (event.pageX < hover_width) {
-        $('#pagethrough_prev').show();
-      } else { $('#pagethrough_prev').hide(); }
+        $('#pagethrough_prev img').show();
+      } else { $('#pagethrough_prev img').hide(); }
     });
   });
 </script>

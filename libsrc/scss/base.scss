@@ -33,63 +33,7 @@ body.main #content { top: 50px; }
 iframe { border: none; }
 
 // Misc (move to own files when this gets too long)
-.user_settings, .email_confirmation{
-  .title { padding-top: 10px; }
-  #profile_thumb {
-    float: left;
-    width: 90px;
-    .message {
-      color: $color_grey_medium;
-      font-size: 12px;
-    }
-    img {
-      width: 70px;
-      height: 70px;
-    }
-    .placeholder {
-      $padding: 17px;
-      width: 70px;
-      height: 70px - 2*$padding;
-      border: 1px dashed #CCC; 
-      text-align:center; 
-      font-size: 10px;
-      padding: $padding 0;
-    }
-  }
-  .fathead {
-    margin: 50px; 
-    div { 
-      //background: asset_url('skin/1/plus_lg.png') no-repeat; 
-      //height: 44px;
-    }
-    h1 { 
-      display:inline;
-      font-family: Museo, Helvetica, sans-serif;
-    }
-  }
-}
-.user_settings {
-  .required { 
-    color: $color_active; 
-    font-size: 0.7em;
-  }
-  .form_validation_info { width: 215px; }
-  .user_name_change_text {
-    width: 215px;
-    font-size: 0.75em;
-  }
-}
-.email_confirmation {
-  .fathead { 
-    margin-bottom: 100px; 
-    p {margin-left: 50px; }
-  } 
 
-  #content a {
-    color: $color_blue;
-    &:hover { color: $color_active; }
-  }
-}
 .css_compilation_test{
   color: black;
 }
@@ -100,7 +44,7 @@ input[type=text]:focus, input[type=password]:focus, textarea:focus { border-colo
 input[type=button], input[type=submit] { border : none; }
 .hide { display: none !important; }
 .menu { display : none; border : 0px solid $color_unselected;
-    background-color : white; z-index : 1100; font-size : 11pt; position : absolute;
+    background-color : white; z-index : 2; font-size : 11pt; position : absolute;
     -moz-box-shadow: 05px 05px 05px #888;
     -webkit-box-shadow: 05px 05px 05px #888;
     box-shadow: 05px 05px 05px #888;
@@ -136,8 +80,6 @@ input[type=button], input[type=submit] { border : none; }
 .error, .active { color: $color_active; }
 .inactive { color: $color_24; }
 #user { position : fixed; display : inline-block; }
-.nav { position : fixed; margin : 0; }
-.menu, .top, .nav { z-index : 1; }
 .spacer { height : 10px; clear : both; }
 
 $placeholder_color: black;

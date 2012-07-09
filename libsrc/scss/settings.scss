@@ -40,3 +40,61 @@
     }
 }
 
+.user_settings, .email_confirmation{
+  .title { padding-top: 10px; }
+  #profile_thumb {
+    float: left;
+    width: 90px;
+    .message {
+      color: $color_grey_medium;
+      font-size: 12px;
+    }
+    img {
+      width: 70px;
+      height: 70px;
+    }
+    .placeholder {
+      $padding: 17px;
+      width: 70px;
+      height: 70px - 2*$padding;
+      border: 1px dashed #CCC; 
+      text-align:center; 
+      font-size: 10px;
+      padding: $padding 0;
+    }
+  }
+  .fathead {
+    margin: 50px; 
+    div { 
+      //background: asset_url('skin/1/plus_lg.png') no-repeat; 
+      //height: 44px;
+    }
+    h1 { 
+      display:inline;
+      font-family: Museo, Helvetica, sans-serif;
+    }
+  }
+}
+.user_settings {
+  .required { 
+    color: $color_active; 
+    font-size: 0.7em;
+  }
+  .form_validation_info { width: 215px; }
+  .user_name_change_text {
+    width: 215px;
+    font-size: 0.75em;
+  }
+}
+
+.email_confirmation {
+  .fathead { 
+    margin-bottom: 100px; 
+    p {margin-left: 50px; }
+  } 
+
+  #content a {
+    color: $color_blue;
+    &:hover { color: $color_active; }
+  }
+}

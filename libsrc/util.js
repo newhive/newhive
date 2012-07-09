@@ -13,9 +13,14 @@ function throttle(callback, min_delay, that) {
 }
 
 /*** Returns a function that calls a list of functions ***/
-function Funcs(fn) {
-    var o = [fn];
-    var callback = function() { for(i in o) o[i].apply(this, arguments); }
+function Funcs(fn, filter) {
+    var o = [];
+    if(fn) o.push(fn);
+    var callback = function() {
+        if (!filter || filter()){
+            for(i in o) o[i].apply(this, arguments);
+        }
+    };
     callback.handlers = o;
     callback.add = function(fn) { o.push(fn); }
     callback.clear = function() { o = []; }
@@ -147,8 +152,11 @@ function showDialog(name, opts) {
         o.open = function() {
             if(o.opened) return;
             o.opened = true;
-            o.opts = $.extend({ open : noop, close : noop, absolute : false, fade : true,
-                mandatory : dialog.hasClass('mandatory'), layout : function() { center(dialog, $(window), opts) } }, opts);
+            o.opts = $.extend({
+                open : noop, close : noop, absolute : false, fade : true,
+                mandatory: dialog.hasClass('mandatory'),
+                layout: function() { center(dialog, $(window), opts) }
+            }, opts);
 
             o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
             if (! dialog.hasClass('newdialog')) dialog.addClass('dialog border selected');
@@ -156,6 +164,7 @@ function showDialog(name, opts) {
             if(!o.opts.mandatory) {
                 o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
                 o.shield.add(o.btn_close).click(o.close);
+                if(o.opts.click_close) dialog.click(o.close);
             }
             $(window).resize(function() { o.opts.layout(o.dialog) });
             o.opts.layout(o.dialog);
@@ -353,6 +362,7 @@ function bound(num, lower_bound, upper_bound) {
     if(num > upper_bound) return upper_bound;
     return num;
 }
+
 function array_delete(arr, e) {
     for(var n = 0; n < arr.length; n++) {
         if(arr[n] == e) {
@@ -362,6 +372,21 @@ function array_delete(arr, e) {
     }
     return false;
 }
+function array_sum( a, b ){
+    if (a.length != b.length) { throw "Arrays must be equal length" };
+    rv = []
+    for (i=0; i< a.length; i++){
+        rv[i] = a[i] + b[i]
+    }
+    return rv
+}
+function inArray(array, el){
+    for (i=0; i<array.length; i++){
+        if (el === array[i]) return true;
+    }
+    return false;
+}
+
     
 function iconCounts() {
     $('.has_count').each(function(){
@@ -518,6 +543,11 @@ function asyncUpload(opts) {
     setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
 }
 
+function hovers_active(state){
+    hover_add.disabled = !state;
+    hover_menu.disabled = !state;
+}
+
 function hover_url(url) {
     var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
     var i = $("<img style='display:none'>").attr('src', h);
@@ -531,7 +561,10 @@ function hover_add(o) {
         $(o).mouseenter(function() { o.src = o.src_h }).
             mouseleave(function() { if(!o.busy) o.src = o.src_d });
     }
-    $(o).mouseenter(function() { $(this).addClass('active'); })
+    $(o).mouseenter(function() {
+            if(hover_add.disabled) return;
+            $(this).addClass('active');
+        })
         .mouseleave(function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
@@ -583,6 +616,7 @@ hover_menu = function(handle, drawer, options) {
         handle.get(0).busy = false;
     }
     o.open = function() {
+        if(hover_menu.disabled) return;
         o.cancel_close();
         if (!o.options.open_condition()) return;
         if(o.opened) return;
@@ -676,33 +710,18 @@ function eraseCookie(name) {
 
 function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
 
-var scale_nav = function(s) {
-    $('#nav .scale').each(function(i, app_div) {
-       var e = $(this);
-       if(!e.data('css')) {
-           var c = {
-               'width': e.width(),
-               'height': e.height(),
-               'font-size': e.css('font-size')
-           }
-           e.data('css', c);
-       }
-       var c = $.extend({}, e.data('css'));
-       for(var p in c) c[p] = Math.round(c[p] * s);
-       e.css(c);
-   });
-   $('#nav, #search_box ').css('font-size', s + 'em');
-}
-
 var positionHacks = Funcs(noop);
 var place_apps = function() {
    $('.happ').each(function(i, app_div) {
        var e = $(this);
        var s = e.parent().width() / 1000;
        if(!e.data('css')) {
-           var c = {};
-           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, ['left', 'top', 'width', 'height',
-               'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']);
+           var c = {}, props = ['left', 'top', 'width', 'height'];
+           if($(app_div).css('border-radius').indexOf('px') > 0) $.merge(props,
+                    ['border-top-left-radius', 'border-top-right-radius',
+                        'border-bottom-right-radius', 'border-bottom-left-radius']
+                );
+           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, props);
            var scale = parseFloat(e.attr('data-scale'));
            if(scale) c['font-size'] = scale;
            e.data('css', c);
@@ -804,22 +823,6 @@ function require_login(fn) {
     }
     if(fn) return check;
     else return check();
-}
-
-function arrayAddition(a,b){
-    if (a.length != b.length) { throw "Arrays must be equal length" };
-    rv = []
-    for (i=0; i< a.length; i++){
-        rv[i] = a[i] + b[i]
-    }
-    return rv
-}
-
-function inArray(array, el){
-    for (i=0; i<array.length; i++){
-        if (el === array[i]) return true;
-    }
-    return false;
 }
 
 function relogin(success){

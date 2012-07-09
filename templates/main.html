@@ -133,7 +133,7 @@
            <div id='exp_owner'>{{ owner['name'] }}</div>
           <div id='datetime' style="whitespace: nowrap;">{{ mtime }}</div>
          </div>
-         {% if owner.get_thumb() %}<img id='owner_thumb' src='{{owner.get_thumb(70)}}' class='scale'>{% endif %}
+         {% if owner.has_thumb() %}<img id='owner_thumb' src='{{owner.get_thumb(70)}}' class='scale'>{% endif %}
         </a>
         <div class='nav_icon space'></div>
       {% endif %}

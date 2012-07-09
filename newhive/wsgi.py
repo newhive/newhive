@@ -173,7 +173,7 @@ site_pages = {
     ,'cron'                : controllers['cron'].cron
     ,'admin_home'          : admins(controllers['admin'].home)
     ,'admin'               : admins(controllers['admin'].default)
-    ,'analytics'           : admins(controllers['analytics'].default)
+    ,'analytics'           : controllers['analytics'].default
     ,'robots.txt'          : app.robots
     ,'500'                 : newhive.utils.exception_test
     ,'password_recovery'   : controllers['user'].edit

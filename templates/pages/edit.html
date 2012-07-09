@@ -1,88 +1,80 @@
 {% extends "main.html" %}
 
 {% block head %}
- {% for item in asset_bundle('edit.js') %}
-  <script src='{{ item }}'></script>
- {% endfor %}
- {% for item in asset_bundle('edit.css') %}
-   <link rel='stylesheet' type='text/css' href='{{ item }}'>
- {% endfor %}
-
- <script>
-  Hive.Exp = {{ exp_js }}; // current expression from server
- </script>
-
- <style>
-input, textarea { font-size : inherit }
-
-.drawer { z-index : 1100, white-space : nowrap;  }
-
-.fontsize .option { color : {{ colors[12] }}; vertical-align : bottom; }
-.menu label { color: {{colors[18]}}; }
-.fontsize .bigger .option.small { width : 70px; height : 135px; }
-.fontsize .option:hover { background-color : {{ colors['selected'] }}; color : {{ colors[0] }} }
-.drawer.fontname .option:hover { background-color : {{ colors['selected'] }}; }
-
-#privacy { background-color : {{ colors['selected'] }}; color : {{ colors[0] }}; }
-
-.dialogue_handle { background-color : {{ colors.selected }}; }
-#loading { position : fixed; z-index : 1200; display : none; }
-#app_btns { top : 0; left : 300px; width : 402px; height : 50px; }
- </style>
-{% endblock %}
+  {% for item in asset_bundle('google_closure.js') %}
+    <script src='{{ item }}'></script>
+  {% endfor %}
+  {% for item in asset_bundle('edit.js') %}
+    <script src='{{ item }}'></script>
+  {% endfor %}
+ 
+  {% for item in asset_bundle('edit.css') %}
+    <link rel='stylesheet' type='text/css' href='{{ item }}'>
+  {% endfor %}
+ 
+  <script>
+    Hive.Exp = {{ exp_js }}; // current expression from server
+  </script>
+{% endblock head %}
 
 {% block nav_right %}
- <div class='nav_icon center pad hoverable medbold' title="Editor Help" id='btn_help'>?</div>
+ <div class='nav_icon smpad center'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div>
+ <div class='nav_icon center smpad'><img id='btn_redo' title='redo' class='hoverable' src='{{ 'skin/1/redo.png'|asset_url }}'></div>
+ <div class='nav_icon smpad'></div>
+ <div class='nav_icon smpad'></div>
+ <div class='nav_icon center'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div>
+ <div class='nav_icon smpad'></div>
+ <div class='nav_icon center smpad hoverable medbold btn' title="Editor Help" id='btn_help'>?</div>
  <script>
   (function() { var b = $('#btn_help');
-    b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to : b } ) });
+    b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to: b, click_close: true } ) });
     {% if show_help %}$('#btn_help').click(){% endif %} })();
  </script>
- <div class='nav_icon center pad'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div>
- <div class='nav_icon pad'></div>
- <div id='btn_save' class='btn medbold nav_icon hoverable center pad'>
-  Save <img class='scale' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
- </div>
- 
- <div id='menu_save' class='menu top'>
-  <div class='medbold'>Title</div>
-  <textarea id='title'>{{ exp.title }}</textarea>
-  <div class='spacer'></div>
-
-  <div class='medbold'>URL</div>
-  <div class=''>{{ exp.domain }}/</div>
-  <input id='url' type='text' value='{{ exp.name|e }}'>
-  <div class='spacer'></div>
-
-  <div class='medbold'>Tags</div>
-  <input id='tags_input' type='text' value='{{ exp.tags|e }}'>
-  <div class='spacer'></div>
-  <div class='spacer'></div>
-
-  <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle btn rounded'>
-   <span>Private</span>
-   <img src='{{ 'skin/1/drop_arrow.png'|asset_url }}'>
-  </div>
-  <div id='menu_privacy' class='menu medbold' style='width : 125px;'>
-   <div val='password' class='menu_item'>Private</div>
-   <div val='public' class='menu_item'>Public</div>
-  </div>
-
-  <div id='save_submit' style='float : right; padding : 5px' class='btn black rounded'>Save</div>
- 
-  <div id='password_ui' style='display : none'>
-   <br><br><br>
-   <b>Optional password</b><br>
-   <input type='text' id='password' value='{{ exp.password }}'>
-  </div>
-  <div class='spacer'></div>
-
-  <div id='btn_thumbnail'>
-      <div id='btn_thumbnail_text' class='hoverable'>Choose thumbnail <img class='scale' src='{{ 'skin/1/drop_arrow.png'|asset_url }}'></div>
-      <img id="current_thumb" width="70px" height="70px" src="{{exp.thumb}}">
+ <div class='nav_icon smpad'></div>
+ <div class='nav_icon'></div>
+  <div id='btn_save' class='btn medbold nav_icon hoverable center pad'>
+    Save
+    <img class='scale' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
   </div>
   
- </div
+  <div id='menu_save' class='menu top'>
+    <div class='medbold'>Title</div>
+    <textarea id='title'>{{ exp.title }}</textarea>
+    <div class='spacer'></div>
+  
+    <div class='medbold'>URL</div>
+    <div class=''>{{ exp.domain }}/</div>
+    <input id='url' type='text' value='{{ exp.name|e }}'>
+    <div class='spacer'></div>
+  
+    <div class='medbold'>Tags</div>
+    <input id='tags_input' type='text' value='{{ exp.tags|e }}'>
+    <div class='spacer'></div>
+    <div class='spacer'></div>
+
+    <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle btn rounded'>
+      <span>Private</span>
+      <img src='{{ 'skin/1/drop_arrow.png'|asset_url }}'>
+    </div>
+    <div id='menu_privacy' class='menu medbold' style='width : 125px;'>
+      <div val='password' class='menu_item'>Private</div>
+      <div val='public' class='menu_item'>Public</div>
+    </div>
+
+    <div id='save_submit' style='float : right; padding : 5px' class='btn black rounded'>Save</div>
+ 
+    <div id='password_ui' style='display : none'>
+      <br><br><br>
+      <b>Optional password</b><br>
+      <input type='text' id='password' value='{{ exp.password }}'>
+    </div>
+    <div class='spacer'></div>
+
+    <div id='btn_thumbnail'>
+      <div id='btn_thumbnail_text' class='hoverable'>Choose thumbnail <img class='scale' src='{{ 'skin/1/drop_arrow.png'|asset_url }}'></div>
+      <img id="current_thumb" width="70px" height="70px" src="{{exp.thumb}}">
+    </div>
+  </div>
 {% endblock %}
 
 {% block body %}
@@ -93,9 +85,9 @@ input, textarea { font-size : inherit }
  <img id='insert_text'  class='hoverable nav_icon' src='{{ 'skin/1/text.png'|asset_url }}'
  ><img id='insert_image' class='hoverable nav_icon' src='{{ 'skin/1/images.png'|asset_url }}'
  ><img id='insert_audio' class='hoverable nav_icon' src='{{ 'skin/1/audio.png'|asset_url }}'
- ><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'
  ><img id='insert_embed' class='hoverable nav_icon' src='{{ 'skin/1/embed.png'|asset_url }}'
- ><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'>
+ ><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'
+ ><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'>
  
  <div id='menu_text' class='menu medbold'>
   <div id='text_default' class='menu_item'>Normal</div>
@@ -108,11 +100,12 @@ input, textarea { font-size : inherit }
   <div id='image_background' class='menu_item'>Background</div>
   <div id='image_from_url' class='menu_item'>Image URL</div>
   <div id='image_embed_submenu' style='text-align: center; padding-bottom: 7px;'>
-    <textarea id='image_embed_code' class='embed_box' style='width : 325px; height: 1.2em;' placeholder='{{ui.image_embed_textarea}}'></textarea>
-    <div class='spacer'></div>
-    <!--<input type='checkbox' id='image_embed_as_background' name='image_embed_as_background' value='image_embed_as_background'/>
-    <label for='image_embed_as_background'>{{ui.image_embed_as_background}}</label>-->
-    <input id='image_embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
+    <form id='embed_image_form'>
+      <input type='text' id='image_embed_code' class='embed_box' style='width: 325px; height: 1.2em;'
+        placeholder='{{ ui.image_embed_textarea }}'>
+      <div class='spacer'></div>
+      <input id='image_embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
+    </form>
   </div>
   <!--<div id='image_webcam' class='menu_item'>Take picture</div>
   <div id='image_search' class='menu_item'>Google images</div>-->
@@ -120,7 +113,6 @@ input, textarea { font-size : inherit }
  
  <div id='menu_audio' class='menu medbold'>
   <div id='audio_upload' class='menu_item'>Upload MP3</div>
-  <div id='audio_record' class='menu_item'>Record Audio (coming soon)</div>
  </div>
  
  <div id='menu_file' class='menu medbold'>
@@ -146,7 +138,7 @@ input, textarea { font-size : inherit }
 <div id='controls_common' class='controls_src'>
  <!--<img class='control undo   hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'>-->
  <img class='control copy   hoverable tip_N' src='{{ 'skin/1/copy.png'|asset_url }}' title='Duplicate Element'>
- <img class='control remove hoverable tip_NE' src='{{ 'skin/1/delete_sm.png'|asset_url }}' title='Delete, no undo!'>
+ <img class='control remove hoverable tip_NE' src='{{ 'skin/1/delete_sm.png'|asset_url }}' title='delete'>
  <div class='control stack'><img class='stack_up hoverable' src='{{ 'skin/1/stack_up.png'|asset_url }}' title='move to front'><img class='stack_down hoverable' src='{{ 'skin/1/stack_down.png'|asset_url }}' title='move to back'></div>
 </div>
 
@@ -156,10 +148,10 @@ input, textarea { font-size : inherit }
   ><!--<img class='button fontsize hoverable' src='{{ 'skin/1/text_size.png'|asset_url }}'
   >--><img class='button fontname'           src='{{ 'skin/1/font.png'|asset_url }}'
   ><img class='button color'              src='{{ 'skin/1/color.png'|asset_url }}'
-  ><img class='button bold hoverable'     src='{{ 'skin/1/bold.png'|asset_url }}'     cmd='bold'
-  ><img class='button italic hoverable'   src='{{ 'skin/1/italic.png'|asset_url }}'   cmd='italic'
+  ><img class='button bold hoverable'     src='{{ 'skin/1/bold.png'|asset_url }}'     cmd='+bold'
+  ><img class='button italic hoverable'   src='{{ 'skin/1/italic.png'|asset_url }}'   cmd='+italic'
   ><img class='button align'              src='{{ 'skin/1/justify.png'|asset_url }}'  
-  ><img class='button unformat hoverable' src='{{ 'skin/1/unformat.png'|asset_url }}' cmd='removeformat' title='unformat'
+  ><img class='button unformat hoverable' src='{{ 'skin/1/unformat.png'|asset_url }}' cmd='+removeFormat' title='unformat'
   ><!--<div class='control drawer border fontsize'
     ><span class='option fs1' style='font-size : .75em' val = '.75'>a</span
     > <span class='option fs2' style='font-size :   1em' val =   '1'>a</span
@@ -170,57 +162,57 @@ input, textarea { font-size : inherit }
     > <span class='option fs5' style='font-size :   8em' val =   '8'>a</span
   ></div
   >--><div class='control drawer border fontname'
-   ><div class='option' style='font-family:Georgia'         cmd='fontname' val='Georgia'        >Georgia       </div
-   ><div class='option' style='font-family:Helvetica'       cmd='fontname' val='Helvetica'      >Helvetica     </div
-   ><div class='option' style='font-family:Courier New'     cmd='fontname' val='Courier New'    >Courier New   </div
-   ><div class='option' style='font-family:Times'           cmd='fontname' val='Times'          >Times         </div
-   ><div class='option' style='font-family:Trebuchet'       cmd='fontname' val='Trebuchet'      >Trebuchet     </div
-   ><div class='option' style='font-family:Museo'           cmd='fontname' val='Museo'          >Museo         </div
-   ><div class='option' style='font-family:BPscript'        cmd='fontname' val='BPscript'       >BPscript      </div
-   ><div class='option' style='font-family:Code'            cmd='fontname' val='Code'           >Code          </div
-   ><div class='option' style='font-family:Comic Zine'      cmd='fontname' val='Comic Zine'     >Comic Zine    </div
-   ><div class='option' style='font-family:Folk Outline'    cmd='fontname' val='Folk Outline'   >Folk Outline  </div
-   ><div class='option' style='font-family:Folk Shadow'     cmd='fontname' val='Folk Shadow'    >Folk Shadow   </div
-   ><div class='option' style='font-family:Folk Sketches'   cmd='fontname' val='Folk Sketches'  >Folk Sketches </div
-   ><div class='option' style='font-family:Folk'            cmd='fontname' val='Folk'           >Folk          </div
-   ><div class='option' style='font-family:Lane'            cmd='fontname' val='Lane'           >Lane          </div
-   ><div class='option' style='font-family:Lane Posh'       cmd='fontname' val='Lane Posh'      >Lane Posh     </div
-   ><div class='option' style='font-family:Lane Up'         cmd='fontname' val='Lane Up'        >Lane Up       </div
-   ><div class='option' style='font-family:League Gothic'   cmd='fontname' val='League Gothic'  >League Gothic </div
-   ><div class='option' style='font-family:Lemon Chi'       cmd='fontname' val='Lemon Chi'      >Lemon Chi     </div
-   ><div class='option' style='font-family:Lilly'           cmd='fontname' val='Lilly'          >Lilly         </div
-   ><div class='option' style='font-family:Lobster'         cmd='fontname' val='Lobster'        >Lobster       </div
-   ><div class='option' style='font-family:Matiz'           cmd='fontname' val='Matiz'          >Matiz         </div
-   ><div class='option' style='font-family:Quicksand'       cmd='fontname' val='Quicksand'      >Quicksand     </div
-   ><div class='option' style='font-family:Bitstream Mono'  cmd='fontname' val='Bitstream Mono' >Bitstream     </div
+   ><div class='option' style='font-family:Georgia'         cmd='+fontName' val='Georgia'        >Georgia       </div
+   ><div class='option' style='font-family:Helvetica'       cmd='+fontName' val='Helvetica'      >Helvetica     </div
+   ><div class='option' style='font-family:Courier New'     cmd='+fontName' val='Courier New'    >Courier New   </div
+   ><div class='option' style='font-family:Times'           cmd='+fontName' val='Times'          >Times         </div
+   ><div class='option' style='font-family:Trebuchet'       cmd='+fontName' val='Trebuchet'      >Trebuchet     </div
+   ><div class='option' style='font-family:Museo'           cmd='+fontName' val='Museo'          >Museo         </div
+   ><div class='option' style='font-family:BPscript'        cmd='+fontName' val='BPscript'       >BPscript      </div
+   ><div class='option' style='font-family:Code'            cmd='+fontName' val='Code'           >Code          </div
+   ><div class='option' style='font-family:Comic Zine'      cmd='+fontName' val='Comic Zine'     >Comic Zine    </div
+   ><div class='option' style='font-family:Folk Outline'    cmd='+fontName' val='Folk Outline'   >Folk Outline  </div
+   ><div class='option' style='font-family:Folk Shadow'     cmd='+fontName' val='Folk Shadow'    >Folk Shadow   </div
+   ><div class='option' style='font-family:Folk Sketches'   cmd='+fontName' val='Folk Sketches'  >Folk Sketches </div
+   ><div class='option' style='font-family:Folk'            cmd='+fontName' val='Folk'           >Folk          </div
+   ><div class='option' style='font-family:Lane'            cmd='+fontName' val='Lane'           >Lane          </div
+   ><div class='option' style='font-family:Lane Posh'       cmd='+fontName' val='Lane Posh'      >Lane Posh     </div
+   ><div class='option' style='font-family:Lane Up'         cmd='+fontName' val='Lane Up'        >Lane Up       </div
+   ><div class='option' style='font-family:League Gothic'   cmd='+fontName' val='League Gothic'  >League Gothic </div
+   ><div class='option' style='font-family:Lemon Chi'       cmd='+fontName' val='Lemon Chi'      >Lemon Chi     </div
+   ><div class='option' style='font-family:Lilly'           cmd='+fontName' val='Lilly'          >Lilly         </div
+   ><div class='option' style='font-family:Lobster'         cmd='+fontName' val='Lobster'        >Lobster       </div
+   ><div class='option' style='font-family:Matiz'           cmd='+fontName' val='Matiz'          >Matiz         </div
+   ><div class='option' style='font-family:Quicksand'       cmd='+fontName' val='Quicksand'      >Quicksand     </div
+   ><div class='option' style='font-family:Bitstream Mono'  cmd='+fontName' val='Bitstream Mono' >Bitstream     </div
 
-   ><div class='option' style='font-family:Folks'           cmd='fontname' val='Folks'          >Folks        </div
-   ><div class='option' style='font-family:Merge'           cmd='fontname' val='Merge'          >Merge        </div
-   ><div class='option' style='font-family:Bebas'           cmd='fontname' val='Bebas'          >Bebas        </div
-   ><div class='option' style='font-family:Arvo'            cmd='fontname' val='Arvo'           >Arvo         </div
-   ><div class='option' style='font-family:St Ryde'         cmd='fontname' val='St Ryde'        >St Ryde      </div
-   ><div class='option' style='font-family:Chunk Five'      cmd='fontname' val='Chunk Five'     >Chunk Five   </div
-   ><div class='option' style='font-family:Droid Serif'     cmd='fontname' val='Droid Serif'    >Droid Serif  </div
-   ><div class='option' style='font-family:Komika Title'    cmd='fontname' val='Komika Title'   >Komika Title </div
-   ><div class='option' style='font-family:Banda'           cmd='fontname' val='Banda'          >Banda        </div
-   ><div class='option' style='font-family:Pacifico'        cmd='fontname' val='Pacifico'       >Pacifico     </div
-   ><div class='option' style='font-family:Fjord'           cmd='fontname' val='Fjord'          >Fjord        </div
-   ><div class='option' style='font-family:Josefin Slab'    cmd='fontname' val='Josefin Slab'   >Josefin Slab </div
-   ><div class='option' style='font-family:Nevis'           cmd='fontname' val='Nevis'          >Nevis        </div
-   ><div class='option' style='font-family:Lobster Two'     cmd='fontname' val='Lobster Two'    >Lobster Two  </div
-   ><div class='option' style='font-family:Crimson'         cmd='fontname' val='Crimson'        >Crimson      </div
-   ><div class='option' style='font-family:Classic Round'   cmd='fontname' val='Classic Round'  >Classic Round</div
-   ><div class='option' style='font-family:Novecento'       cmd='fontname' val='Novecento'      >Novecento   </div
+   ><div class='option' style='font-family:Folks'           cmd='+fontName' val='Folks'          >Folks        </div
+   ><div class='option' style='font-family:Merge'           cmd='+fontName' val='Merge'          >Merge        </div
+   ><div class='option' style='font-family:Bebas'           cmd='+fontName' val='Bebas'          >Bebas        </div
+   ><div class='option' style='font-family:Arvo'            cmd='+fontName' val='Arvo'           >Arvo         </div
+   ><div class='option' style='font-family:St Ryde'         cmd='+fontName' val='St Ryde'        >St Ryde      </div
+   ><div class='option' style='font-family:Chunk Five'      cmd='+fontName' val='Chunk Five'     >Chunk Five   </div
+   ><div class='option' style='font-family:Droid Serif'     cmd='+fontName' val='Droid Serif'    >Droid Serif  </div
+   ><div class='option' style='font-family:Komika Title'    cmd='+fontName' val='Komika Title'   >Komika Title </div
+   ><div class='option' style='font-family:Banda'           cmd='+fontName' val='Banda'          >Banda        </div
+   ><div class='option' style='font-family:Pacifico'        cmd='+fontName' val='Pacifico'       >Pacifico     </div
+   ><div class='option' style='font-family:Fjord'           cmd='+fontName' val='Fjord'          >Fjord        </div
+   ><div class='option' style='font-family:Josefin Slab'    cmd='+fontName' val='Josefin Slab'   >Josefin Slab </div
+   ><div class='option' style='font-family:Nevis'           cmd='+fontName' val='Nevis'          >Nevis        </div
+   ><div class='option' style='font-family:Lobster Two'     cmd='+fontName' val='Lobster Two'    >Lobster Two  </div
+   ><div class='option' style='font-family:Crimson'         cmd='+fontName' val='Crimson'        >Crimson      </div
+   ><div class='option' style='font-family:Classic Round'   cmd='+fontName' val='Classic Round'  >Classic Round</div
+   ><div class='option' style='font-family:Novecento'       cmd='+fontName' val='Novecento'      >Novecento   </div
   ></div
   ><div class='control drawer border color'></div
   ><div class='control drawer border align'
    ><div><nobr
-    ><img class='option small hoverable' cmd='justifyleft'    src='{{ 'skin/1/justify_left.png'|asset_url }}' 
-    ><img class='option small hoverable' cmd='justifyright'   src='{{ 'skin/1/justify_right.png'|asset_url }}'
+    ><img class='option small hoverable' cmd='+justifyLeft'    src='{{ 'skin/1/justify_left.png'|asset_url }}' 
+    ><img class='option small hoverable' cmd='+justifyRight'   src='{{ 'skin/1/justify_right.png'|asset_url }}'
    ></nobr></div
    ><div
-    ><img class='option small hoverable' cmd='justifycenter'  src='{{ 'skin/1/justify_center.png'|asset_url }}'
-    ><img class='option small hoverable' cmd='justifyfull'    src='{{ 'skin/1/justify_full.png'|asset_url }}'  
+    ><img class='option small hoverable' cmd='+justifyCenter'  src='{{ 'skin/1/justify_center.png'|asset_url }}'
+    ><img class='option small hoverable' cmd='+justifyFull'    src='{{ 'skin/1/justify_full.png'|asset_url }}'  
    ></div
   ></div
  ></div>
@@ -241,26 +233,22 @@ input, textarea { font-size : inherit }
 
 <div id='controls_rectangle' class='controls_src'>
  <div class='control buttons'
-  {#><img class='button link hoverable tip_W'     src='{{ 'skin/1/link.png'|asset_url }}' title='Link'#}
-  ><img class='button fill hoverable tip_N' src='{{ 'skin/1/color.png'|asset_url }}' title='fill color'
-  {#><img class='button stroke hoverable tip_N' src='{{ 'skin/1/border_color.png'|asset_url }}' title='Border color'#}
-  {#><img class='button blank bwidth hoverable tip_N' src='{{ 'skin/1/border_width.png'|asset_url }}' title='Border width'#}
-  {#><div class='button blank bstyle hoverable' title='Border style'></div#}
+  ><img class='button color hoverable' src='{{ 'skin/1/color.png'|asset_url }}' title="Color"
+  {#><img class='button stroke hoverable tip_N' src='{{ 'skin/1/border_color.png'|asset_url }}' title='Border color'
+  ><img class='button blank bwidth hoverable tip_N' src='{{ 'skin/1/border_width.png'|asset_url }}' title='Border width'
+  ><div class='button blank bstyle hoverable' title='Border style'></div#}
   ><img class='button blank rounding hoverable tip_N' src='{{ 'skin/1/rounded_corners.png'|asset_url }}' title='corner rounding'
-
-  ><div class='control drawer fill border'></div
-  ><div class='control drawer stroke border'></div
   {#><div class='control drawer bstyle'
-   ><div class='border hoverable' style='border-style : solid;' title='Solid border'></div
-   ><div class='border hoverable' style='border-style : dashed;' title='Dashed border'></div
-   ><div class='border none hoverable' style='border-style : none;' title='No border'></div
+   ><div class='border hoverable' style='border-style: solid;' title='Solid border'></div
+   ><div class='border hoverable' style='border-style: dashed;' title='Dashed border'></div
+   ><div class='border none hoverable' style='border-style: none;' title='No border'></div
   ></div#}
  ></div>
 </div>
 
 <div id='controls_misc' class='controls_src'>
- <img class='control resize hoverable tip_SE' src='{{ 'skin/1/resize.png'|asset_url }}' title="Resize">
- <img class='control resize_h hoverable tip_E' src='{{ 'skin/1/resize_h.png'|asset_url }}' title="Resize">
+ <img class='control drag resize hoverable tip_SE' src='{{ 'skin/1/resize.png'|asset_url }}' title="Resize">
+ <img class='control drag resize_h hoverable tip_E' src='{{ 'skin/1/resize_h.png'|asset_url }}' title="Resize">
  <img class='button color hoverable' src='{{ 'skin/1/color.png'|asset_url }}' title="Color">
  <img class='button opacity tip_N' src='{{ 'skin/1/opacity.png'|asset_url }}' title='Opacity'>
  <div class='control drawer color border'></div>
