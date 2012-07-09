@@ -14,12 +14,6 @@
     <div class='feed_text'>Your friend {{feed.initiator.name}}<br/>joined The New Hive</div>
     <div class="byline"><span class="timestamp">{{ feed.created | time }}</span></div>
   </div></a>
-{% elif feed.class_name == 'SystemMessage' %}
-  <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}} border_right border_bottom" onclick="{{feed.onclick}}">
-    <img alt="feed.image_alt" src='{{feed.image}}'/>
-    <div class='feed_text'>{{feed.message}}</div>
-    <div class="byline"><span class="timestamp">{{ feed.created | time }}</span></div>
-  </div>
 {% else %}
   {% if feed.entity == user %}
     {% set entity_url = feed.initiator.url %}

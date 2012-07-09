@@ -207,7 +207,7 @@ class HasSocial(Entity):
 
     @property
     @memoized
-    def broadcaster_count(self):
+    def broadcast_count(self):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
 
     def related_next(self, spec={}, loop=True):
@@ -580,8 +580,8 @@ class User(HasSocial):
         return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}, 'facebook.disconnected': {'$exists': False}})
 
     @property
-    def expressions(self):
-        return self.db.Expr.search({'owner': self.id})
+    def expressions(self): return self.get_exprs()
+    def get_exprs(self, **opts): return self.db.Expr.search({'owner': self.id}, **opts)
 
     def delete(self):
         # Facebook Disconnect
@@ -748,6 +748,7 @@ class Expr(HasSocial):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
         return self.increment({counter: 1})
 
+    @property
     def views(self):
         if self.has_key('views'):
             if self.has_key('owner_views'):
@@ -818,6 +819,10 @@ class Expr(HasSocial):
             self.update_cmd({'$set': {'analytics.Comment.count': len(comments)}})
         return comments
     comments = property(get_comments)
+
+    def get_feed(self, **opts):
+        return self.db.Feed.search({ 'entity': self.id,
+            'class_name': {'$in': ['Star', 'Comment', 'Broadcast']} }, **opts)
 
     @property
     def comment_count(self):

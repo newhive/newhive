@@ -57,6 +57,7 @@ jinja_env.filters.update({
     ,'epoch_to_string': epoch_to_string
     ,'length_bucket': length_bucket
     ,'large_number': large_number
+    ,'no_zero': no_zero
     ,'json': json.dumps
     ,'mod': lambda x, y: x % y
     ,'querystring': querystring

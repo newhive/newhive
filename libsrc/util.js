@@ -532,7 +532,7 @@ hover_menu = function(handle, drawer, options) {
     o.options = {
          open : noop
         ,close : noop
-        ,auto_close : true
+        ,auto_close: false
         ,hover_close : true
         ,close_delay : 500
         ,offset_y : 0
@@ -542,12 +542,11 @@ hover_menu = function(handle, drawer, options) {
         ,auto_height : true
         ,default_item: drawer.find('.menu_item.default')
         ,layout: true
+        ,layout_x: 'auto'
     };
     $.extend(o.options, options);
     if(!handle.length) throw("hover_menu has no handle");
     if(!drawer.length) throw("hover_menu has no drawer");
-    handle.get(0).hover_menu = o;
-    $(document.body).append(drawer.remove());
 
     o.opened = false;
     o.close_timer = false;
@@ -574,6 +573,7 @@ hover_menu = function(handle, drawer, options) {
         handle.get(0).busy = false;
         handle.removeClass('active');
     }
+
     o.open = function() {
         if(hover_menu.disabled || !o.options.open_condition()) return;
         handle.addClass('active');
@@ -594,12 +594,19 @@ hover_menu = function(handle, drawer, options) {
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
         var css_opts = {};
+
         css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
             && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
             hp.top - drawer.outerHeight() - o.options.offset_y : hp.top + oy;
-        css_opts.left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
-            hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
-        if(o.options.auto_height) css_opts.drawer_height = bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
+
+        if( o.options.layout_x == 'auto' ) o.options.layout_x =
+            (handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
+                'right' : 'left');
+        css_opts.left = ( o.options.layout_x == 'right' ?
+            hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
+
+        if(o.options.auto_height) css_opts.drawer_height =
+            bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
         if(o.options.layout) drawer.css(css_opts);
 
         // prevent hovering over gap between handle and menu from closing the menu
@@ -618,6 +625,14 @@ hover_menu = function(handle, drawer, options) {
         o.options.open();
     }
 
+    o.destroy = function(){
+        //handle.unbind('click', o.open).unbind('hover', o.open).unbind('hoverend', o.delayed_close);
+        //drawer.unbind('mouseover mouseout click');
+        //$(o.options.click_persist).unbind('click contextmenu keydown');
+        //menu_items.unbind('mouseover mouseout');
+        //$(window).unbind('click', o.click_close);
+    };
+
     $(document.body).append( drawer.remove() );
 
     if(o.options.hover) {
@@ -633,18 +648,15 @@ hover_menu = function(handle, drawer, options) {
         .mouseout(function(e){ $(e.target).removeClass('active'); });
 
     if(o.options.auto_close) drawer.click(o.close);
-    $(window).click(function(e) {
-        console.log('menu window click');
-        window.e = e;
-        window.drawer = drawer.get(0);
-        window.handle = handle.get(0);
+    o.click_close = function(e) {
         if(handle.get(0) == e.target
             || $.contains(handle.get(0), e.target)
             || drawer.get(0) == e.target
             || $.contains(drawer.get(0), e.target)
             ) return;
         o.close();
-    });
+    };
+    $(window).click(o.click_close);
 
     return o;
 }

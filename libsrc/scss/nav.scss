@@ -12,14 +12,13 @@ $nav_size: 40px;
 }
 
 .nav {
-    margin: 7px;
+    margin: 7px 8px;
     z-index: 4;
     position: fixed;
     background-color: white;
-    margin: 7px 8px 0 7px;
     @include border-radius(5px);
     @include box-shadow(rgba(black, .3) 3px 3px 10px);
-    cursor: default;
+    cursor: pointer;
 
     > * { display: inline-block; vertical-align: top; }
     div { display: inline-block; }
@@ -73,7 +72,7 @@ $nav_size: 40px;
 #owner_btn {
     #owner_thumb {
         width: $nav_size - 8;
-        margin: 4px;
+        margin-right: 4px;
     }
     .text { padding-left: 2px; }
 }
@@ -88,9 +87,6 @@ $nav_size: 40px;
     background-image: asset_url('skin/1/plus.png');
     &.active { background-image: asset_url('skin/1/plus-hover.png'); }
 }
-
-
-
 
 
 .menu {
@@ -111,6 +107,8 @@ $nav_size: 40px;
         margin: 5px 0;
     }
     .active { color: black; }
+    .thumbs { padding: 5px; }
+    .thumb { width: 42px; }
 
     .menu_item {
         padding: 5px 8px;
@@ -145,7 +143,7 @@ $nav_size: 40px;
     }
 
     &#hive_menu {
-        padding: 5px 10px 10px 5px;
+        padding: 10px;
         #random_btn { background-image: asset_url('skin/1/shuffle.png') }
         #random_btn.active { background-image: asset_url('skin/1/shuffle-hover.png'); background-color: black; }
 
@@ -169,38 +167,173 @@ $nav_size: 40px;
         .like_button {
             text-align: center;
             display: inline-block;
-            margin: 10px 10px 0 10px;
+            margin: 3px 7px;
         }
     }
 }
 
 
+.count {
+    font-size: 11px;
+    &.zero { display: none; }
+    font-weight: bold;
+}
+
+.nav_btn {
+    height: 59px;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    background-color: white;
+    @include border-radius(5px);
+    @include box-shadow(rgba(black, .3) 3px 3px 10px);
+    position: relative;
+    &.active { background-color: $color_selected; }
+    font-weight: bold;
+    color: black;
+    cursor: pointer;
+}
+
 #plus_menu {
     right: 0;
-    top: 70px;
-    margin: 7px;
+    top: 60px;
     position: fixed;
     z-index: 4;
 
+    .edit_spacer { height: 46px; }
+    .btn_box {
+        display: table;
+        margin: 8px;
+    }
     .nav_btn {
-        width: 38px;
-        height: 59px;
-        vertical-align: middle;
-        background-color: white;
-        @include border-radius(5px);
-        @include box-shadow(rgba(black, .3) 3px 3px 10px);
-        margin: 5px 0;
+        .edge {
+            position: absolute;
+            top: 0;
+            left: -11px;
+            height: 59px;
+            width: 11px;
+        }
+        &.active .edge {
+            background-image: asset_url('skin/1/action-hover.png');
+        }
 
-        background-repeat: no-repeat;
-        background-position: 0px 15px;
-        &.broadcast { background-image: asset_url('skin/1/broadcast.png'); }
-        &.broadcast.active { background-image: asset_url('skin/1/broadcast-hover.png'); }
-        &.like { background-image: asset_url('skin/1/like.png'); }
-        &.like.active { background-image: asset_url('skin/1/like-hover.png'); }
-        &.active { background-color: $color_selected; }
+        .count { margin-top: 5px; }
+
+        .icon { background-repeat: no-repeat; width: 38px; height: 28px; }
+
+        &.edit {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            height: 38px;
+            text-align: right;
+            .icon {
+                height: 32px;
+                margin: 5px 0;
+                display: inline-block;
+                background-image: asset_url('skin/1/edit.png');
+            }
+            .text { display: none; }
+            &.active {
+                width: 85px;
+                .text { display: inline; }
+            }
+        }
+
+        &.views {
+            .icon { background-image: asset_url('skin/1/views.png'); }
+            &.active .icon { background-image: asset_url('skin/1/views-hover.png'); }
+        }
+
+        &.broadcast {
+            .icon { background-image: asset_url('skin/1/broadcast.png'); }
+            &.active .icon { background-image: asset_url('skin/1/broadcast-hover.png'); }
+        }
+
+        &.like {
+            .icon { background-image: asset_url('skin/1/like.png'); }
+            &.active .icon { background-image: asset_url('skin/1/like-hover.png'); }
+        }
+
+        &.delete_btn {
+            position: absolute;
+            z-index: 4;
+            top: 255px;
+            right: 8px;
+            height: 38px;
+            text-align: right;
+            .icon {
+                height: 32px;
+                margin: 5px 0;
+                display: inline-block;
+                background-image: asset_url('skin/1/delete.png');
+            }
+            &.active .icon { background-image: asset_url('skin/1/delete-hover.png'); }
+            .text { display: none; }
+            &.active {
+                width: 103px;
+                .text { display: inline; }
+            }
+        }
     }
 }
 
+#expr_menu {
+    top: 68px;
+    right: 58px;
+    width: 250px;
+}
+
+
+
+.feed_item {
+    width: auto;
+    height: auto;
+    clear: both;
+    overflow: hidden;
+    font-weight: normal;
+    cursor: pointer;
+    margin: 0px;
+    padding: 2px;
+    position: relative;
+    border-top: 1px solid $color_light_grey;
+    &:first-child { border-top: none; }
+    &:hover, &.active {
+        background-color: $color_selected;
+    }
+    img {
+        margin: 2px 7px 2px 0px;
+        width: 50px;
+        height: 50px;
+        float: left;
+    }
+    .feed_text {
+        margin-left: 5px;
+        font-size: 13px;
+        a, .title {
+            font-weight: bold;
+        }
+    }
+    .byline {
+        position: absolute;
+        right: 0;
+        bottom: 4px;
+        overflow: hidden;
+        font-size: 12px;
+    }
+    .comment_text {
+        white-space: nowrap;
+        margin-top: 5px;
+        height: 33px;
+    }
+    p {
+        margin: 0;
+    }
+    .timestamp {
+        float: right;
+        color: $color_grey_medium;
+    }
+}
 
 /* Share dialog */
 /*

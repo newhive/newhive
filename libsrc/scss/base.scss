@@ -15,7 +15,7 @@ img.centered, div.centered {
     }
 
 // Page Layout
-body.main #content { top: 50px; }
+body #content { top: 50px; }
 #primary_content{ clear: both; }
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;

@@ -86,135 +86,208 @@
     <script>hover_menu( '#username', '#user_menu', { offset_y: 5 } )</script>
   {% endif %}
 
-  <div id='nav_content' class='nav'
-    {% set nav_begin = True %}
-    {% if not user.logged_in %}
-      ><div class='center'><div id='login_btn' class='text center hoverable text_btn left_edge'>Log In</div></div
-      {% set nav_begin = False %}
-    {% endif %}
-    {% if owner and not user_is_owner %}
-      ><div id='owner_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %} text_btn'
-        {% if owner.has_thumb() %}
-          ><img id='owner_thumb' src='{{owner.get_thumb(70)}}'
-        {% endif %}
-        ><div id='owner_name' class='text name'>{{ owner.name|capitalize }}</div
+  {% if not editing %}
+    <div id='nav_content' class='nav'
+      {% set nav_begin = True %}
+      {% if not user.logged_in %}
+        ><div class='center'><div id='login_btn' class='text center hoverable text_btn left_edge'>Log In</div></div
+        {% set nav_begin = False %}
+      {% endif %}
+      {% if owner and not user_is_owner %}
+        ><div id='owner_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %} text_btn'
+          {% if owner.has_thumb() %}
+            ><img id='owner_thumb' src='{{owner.get_thumb(70)}}'
+          {% endif %}
+          ><div id='owner_name' class='text name'>by {{ owner.name|capitalize }}</div
+        ></div
+        {% set nav_begin = False %}
+      {% endif %}
+      ><div id='share_btn' class='hoverable center{% if nav_begin and exp %} left_edge{% endif %}{% if not exp %} rounded{% endif %}'
+        ><div id='share_icon' class='icon{% if nav_begin %} left_edge{% endif %}'></div
+        ><div class='text'>Share</div
       ></div
-      {% set nav_begin = False %}
+      {% if exp %}><div id='plus_btn' class='icon hoverable right_edge'></div{% endif %}
+    ></div>
+
+    {% if not user.logged_in %}
+      <div id='login_menu' class='menu top'>
+        <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
+          <img src='{{ 'skin/1/fb_sign_in.png'|asset_url }}' style='margin: 2px 0 2px -4px;'>
+        </a>
+        {% include 'page_parts/log_in.html' %}
+      </div>
+      <script>
+        $(function() {
+            var login_menu = hover_menu( '#login_btn', '#login_menu', {
+                open: function() { $('#username').get(0).focus(); },
+                close_delay: 1000,
+                click_persist: '#login_menu',
+                offset_y: 5
+            } );
+            {% if error %} login_menu.open(); {% endif %}
+        });
+      </script>
     {% endif %}
-    ><div id='share_btn' class='hoverable center{% if nav_begin and exp %} left_edge{% endif %}{% if not exp %} rounded{% endif %}'
-      ><div id='share_icon' class='icon{% if nav_begin %} left_edge{% endif %}'></div
-      ><div class='text'>Share</div
-    ></div
-    {% if exp %}><div id='plus_btn' class='icon hoverable right_edge'></div{% endif %}
-  ></div>
 
-  {% if not user.logged_in %}
-    <div id='login_menu' class='menu top'>
-      <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
-        <img src='{{ 'skin/1/fb_sign_in.png'|asset_url }}' style='margin: 2px 0 2px -4px;'>
-      </a>
-      {% include 'page_parts/log_in.html' %}
-    </div>
-    <script>
-      $(function() {
-          var login_menu = hover_menu( '#login_btn', '#login_menu', {
-              open: function() { var e = $('#username').get(0); e.focus(); e.select(); },
-              close_delay: 1000,
-              auto_close: false,
-              click_persist: '#login_menu',
-              offset_y: 5
-          } );
-          {% if error %} login_menu.open(); {% endif %}
-      });
-    </script>
-  {% endif %}
-
-  {% if owner and not user_is_owner %}
-    <div id='owner_menu' class='menu'>
-      <a href='{{ owner.url }}'><div class='menu_item default'>Expressions</div></a>
-      <div class='bar'></div>
-      {#<div class='menu_item'>Profile</div>#}
-      <div class='menu_item'>Follow {{ owner['name'] }}</div>
-      {#<div class='menu_item'>Send message</div>#}
-      <div class='bar'></div>
-      <div class='menu_item'>Activity</div>
-      <div id='owner_activity_feed'>
+    {% if owner and not user_is_owner %}
+      <div id='owner_menu' class='menu'>
+        <a href='{{ owner.url }}'><div class='menu_item default'>Expressions</div></a>
+        <div class='thumbs'>
+          {% for expr in owner.get_exprs(limit=5) %}
+            <a href='{{ expr.url }}'><img src='{{ expr.thumb }}' class='thumb'></a>
+          {% endfor %}
+        </div>
+        {#<div class='menu_item'>Profile</div>#}
+        <div class='menu_item'>Follow {{ owner['name'] }}</div>
+        {#<div class='menu_item'>Send message</div>#}
+        <div class='bar'></div>
+        <div class='menu_item'>Activity</div>
+        <div id='owner_activity_feed'>
+          {% for feed in owner.feed_profile(viewer=user, limit=6) %}
+            {% include "partials/feed.html" %}
+          {% endfor %}
+        </div>
       </div>
-    </div>
-    <script>hover_menu('#owner_btn', '#owner_menu', { offset_y: 5 });</script>
-  {% endif %}
+      <script>hover_menu('#owner_btn', '#owner_menu', { offset_y: 5, layout_x: 'right' });</script>
+    {% endif %}
 
-  <div id='share_menu' class='menu'>
-    {% set here = url | urlencode %}
-    <div id="like_buttons">
-      <div>
-        <div class="like_button facebook">
+    <div id='share_menu' class='menu'>
+      {% set here = url | urlencode %}
+      <div id="like_buttons">
+        <div>
           <a class='facebook' onClick="logShare('facebook');" target="_blank" href='http://www.facebook.com/sharer.php?u={{ here }}'>
-            <img src='{{ 'skin/1/social/facebook.png'|asset_url }}' title='Share on Facebook'>
+            <div class="like_button facebook">
+              <img src='{{ 'skin/1/social/facebook.png'|asset_url }}' title='Share on Facebook'>
+              <div class="count">&nbsp;{{ exp.analytic_count('facebook') | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
+            </div>
           </a>
-          <div class="count">{{ exp.analytic_count('facebook') | large_number if exp and exp.id else zero_count_string }}</div>
-        </div>
-        <div class="like_button twitter">
           <a class='twitter' onClick="logShare('twitter');" target="_blank" href='http://twitter.com/share?url={{ here }}'>
-            <img src='{{ 'skin/1/social/twitter.png'|asset_url }}' title='Share on Twitter'>
+            <div class="like_button twitter">
+              <img src='{{ 'skin/1/social/twitter.png'|asset_url }}' title='Share on Twitter'>
+              <div class="count">&nbsp;{{ exp.analytic_count("twitter") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
+            </div>
           </a>
-          <div class="count">{{ exp.analytic_count("twitter") | large_number if exp and exp.id else zero_count_string }}</div>
-        </div>
-        <div class="like_button tumblr">
           <a class='tumblr' onClick="logShare('tumblr');" target="_blank">
-            <img src='{{ 'skin/1/social/tumblr.png'|asset_url }}' title='Share on Tumblr'>
+            <div class="like_button tumblr">
+              <img src='{{ 'skin/1/social/tumblr.png'|asset_url }}' title='Share on Tumblr'>
+              <div class="count">&nbsp;{{ exp.analytic_count("tumblr") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
+            </div>
           </a>
-          <div class="count">{{ exp.analytic_count("tumblr") | large_number if exp and exp.id else zero_count_string }}</div>
-        </div>
-        <div class="like_button pinterest">
           <a class='pinterest' onClick="logShare('pinterest');" target="_blank">
-            <img src='{{ 'skin/1/social/pinterest.png'|asset_url }}' title='Share on Pinterest'>
+            <div class="like_button pinterest">
+              <img src='{{ 'skin/1/social/pinterest.png'|asset_url }}' title='Share on Pinterest'>
+              <div class="count">&nbsp;{{ exp.analytic_count("pinterest") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
+            </div>
           </a>
-          <div class="count">{{ exp.analytic_count("pinterest") | large_number if exp and exp.id else zero_count_string }}</div>
         </div>
-      </div>
-      <div>
-        <div class="like_button stumble">
-          <a class='stumble' onClick="logShare('stumble');" target="_blank" href='http://www.stumbleupon.com/submit?url={{ here }}&title={{ title | urlencode }}'>
-            <img src='{{ 'skin/1/social/stumbleupon.png'|asset_url }}' alt="submit to stumbleupon" border="0" />
+        <div>
+          <a class='stumble' onClick="logShare('stumble');" target="_blank" href='http://www.stumbleupon.com/submit?url={{ here }}&title={{ title | urlencode }}' title="Submit to Stumbleupon">
+            <div class="like_button stumble">
+              <img src='{{ 'skin/1/social/stumbleupon.png'|asset_url }}'/>
+              <div class="count">&nbsp;{{ exp.analytic_count("stumble") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
+            </div>
           </a>
-          <div class="count">{{ exp.analytic_count("stumble") | large_number if exp and exp.id else zero_count_string }}</div>
-        </div>
-        <div class="like_button gplus">
-          <a href="https://plusone.google.com/_/+1/confirm?hl=en-US&url={{ here }}" >
-            <img src="{{ 'skin/1/social/plus_one.png'|asset_url }}" title="Google+"/>
+          <a href="https://plusone.google.com/_/+1/confirm?hl=en-US&url={{ here }}" title="Google+">
+            <div class="like_button gplus">
+              <img src="{{ 'skin/1/social/plus_one.png'|asset_url }}"/>
+              <div class="count">&nbsp;{{ exp.analytic_count('gplus') | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
+            </div>
           </a>
-          <div class="count">{{ exp.analytic_count('gplus') | large_number if exp and exp.id else zero_count_string }}</div>
-        </div>
-        <div class="like_button linkedin">
           <a href="https://plusone.google.com/_/+1/confirm?hl=en-US&url=ADD_YOUR_URL" >
-            <img src="{{ 'skin/1/social/linkedin.png'|asset_url }}" title="Share to Linked In"/>
+            <div class="like_button linkedin">
+              <img src="{{ 'skin/1/social/linkedin.png'|asset_url }}" title="Share to Linked In"/>
+              <div class="count">&nbsp;{{ exp.analytic_count('linkedin') | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
+            </div>
           </a>
-          <div class="count">{{ exp.analytic_count('linkedin') | large_number if exp and exp.id else zero_count_string }}</div>
-        </div>
-        <div class="like_button reddit">
-          <a class='reddit' onClick="logShare('reddit');" target="_blank" href='http://www.reddit.com/submit?url={{ here }}'>
-            <img src='{{ 'skin/1/social/reddit.png'|asset_url }}' title="Submit to Reddit" border="0" />
+          <a class='reddit' onClick="logShare('reddit');" target="_blank" href='http://www.reddit.com/submit?url={{ here }}' title="Submit to Reddit">
+            <div class="like_button reddit">
+              <img src='{{ 'skin/1/social/reddit.png'|asset_url }}'>
+              <div class="count">&nbsp;{{ exp.analytic_count("reddit") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
+            </div>
           </a>
-          <div class="count">{{ exp.analytic_count("reddit") | large_number if exp and exp.id else zero_count_string }}</div>
         </div>
       </div>
-    </div>
 
-    <div class='bar'></div>
-    <div class='menu_item'>Email</div>
-    <div class='menu_item'>Embed</div>
-  </div>
-  <script>hover_menu('#share_btn', '#share_menu', { offset_y: 5 });</script>
+      <div class='bar'></div>
+      <div class='menu_item'>Email</div>
+      <div class='menu_item'>Embed</div>
+    </div>
+    <script>hover_menu('#share_btn', '#share_menu', { offset_y: 5 });</script>
 
-  <div id='plus_menu'>
-    <div class='nav_btn broadcast hoverable'>
-    </div>
-    <div class='nav_btn like hoverable'>
-    </div>
-  </div>
-  <script>
-  </script>
+    {% if exp %}
+      <div id='plus_menu' class='plus_menu'>
+        {% if user_is_owner %}
+          <a href='{{ edit }}'><div class='nav_btn edit hoverable'>
+            <span class='text'>Edit</span>
+            <div class='icon'></div>
+          </div></a>
+          <div class='edit_spacer'></div>
+        {% endif %}
+        <div class='btn_box'>
+          <div id='expr_btn' class='nav_btn views hoverable'>
+            <div class='edge'></div>
+            <div class='icon'></div>
+            <div class='count'>{{ exp.views | large_number }}</div>
+          </div>
+        </div>
+        <div class='btn_box'>
+          <div class='nav_btn broadcast hoverable'>
+            <div class='edge'></div>
+            <div class='icon'></div>
+            <div class='count{{ ' zero' if not exp.broadcast_count }}'>{{ exp.broadcast_count | large_number }}</div>
+          </div>
+        </div>
+        <div class='btn_box'>
+          <div class='nav_btn like hoverable'>
+            <div class='edge'></div>
+            <div class='icon'></div>
+            <div class='count{{ ' zero' if not exp.star_count }}'>{{ exp.star_count | large_number }}</div>
+          </div>
+        </div>
+        {% if user_is_owner %}
+          <div class='nav_btn delete_btn hoverable plus_menu'>
+            <span class='text'>Delete</span>
+            <div class='icon'></div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div id='expr_menu' class='menu'>
+        {% for feed in exp.get_feed() %}
+          {% include "partials/feed.html" %}
+        {% endfor %}
+      </div>
+
+      <div id='broadcast_menu' class='menu'>
+      </div>
+
+      <div id='like_menu' class='menu'>
+      </div>
+
+      <script>
+        //(function(){ 
+            var menu, opened = false, drawer = $('#plus_menu'), make_menu = function(){
+                menu = hover_menu('#plus_btn', '#plus_menu', { layout: false }) };
+            //make_menu();
+            $('#plus_btn').click(function(){
+                console.log('hey');
+                if(opened) {
+                console.log('opened');
+                    menu.close();
+                    //make_menu();
+                } else {
+                console.log('!opened');
+                    drawer.show();
+                    menu.destroy();
+                }
+                opened = !opened;
+            });
+
+            hover_menu('#expr_btn', '#expr_menu', { layout: false });
+        //})();
+      </script>
+    {% endif %}
+  {% endif %}
 
   {% block body %}
   {% endblock body %}
@@ -235,14 +308,14 @@
     {% endblock content %}
   </div>
 
-  {% if user.logged_in %}
+  {#{% if user.logged_in %}
     <img id='feedback_btn' style='position : fixed; bottom:0; right:0' src='{{ 'skin/1/feedback_btn.png'|asset_url }}' class='top hoverable tip_none' title='Send feedback'>
     <script>
       $('#feedback_btn').click(function() {
         new_window('{{ secure_server }}feedback?url=' + window.location, 470, 400);
       });
     </script>
-  {% endif%}
+  {% endif%}#}
   
   <div id='dialogs'>
     {% block dialogs %}

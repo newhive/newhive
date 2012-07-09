@@ -37,7 +37,11 @@ def friendly_date(then):
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
 
+def no_zero(num):
+    return '' if num == 0 else num
+
 def large_number(number):
+    if type(number) != int: return number
     if number < 10000: return str(number)
     elif 10000 <= number < 1000000:
         return str(int(number/1000)) + "K"

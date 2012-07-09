@@ -150,7 +150,7 @@ class HiveAssets(Assets):
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
             "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
-            "scss/feed.scss", "scss/expression.scss", "scss/settings.scss",
+            "scss/expression.scss", "scss/settings.scss",
             "scss/signup_flow.scss", "scss/chart.scss", "scss/jplayer.scss",
             filters=scss_filter,
             output='scss.css',
