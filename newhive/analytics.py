@@ -426,11 +426,11 @@ def _cohort_users(db, stop_date=datetime.datetime.now()):
     return pandas.DataFrame(data, index=cohort_range)
 
 
-def overall_impressions(db):
+def overall_impressions(db, histogram=True, key='owner'):
     map_function = """
         function() {
              if (typeof(this.apps) != "undefined" && this.apps.length > 0 && this.views && this.owner_views){
-                 emit(this.owner, {count: 1, views: this.views - this.owner_views});
+                 emit(this.""" + key + """, {count: 1, views: this.views - this.owner_views});
              }
         }
         """
@@ -448,11 +448,13 @@ def overall_impressions(db):
     name = 'overall_impressions_per_user'
 
     results_collection = db.mdb.expr.map_reduce(map_function, reduce, 'mr.' + name)
-    data = [x['value']['views'] for x in results_collection.find()]
-    bin_edges = [0,1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000, 2000000, 5000000]
-    hist, bin_edges = numpy.histogram(data, bin_edges)
-    return (map(int,hist), map(int,bin_edges))
-
+    if histogram:
+        data = [x['value']['views'] for x in results_collection.find()]
+        bin_edges = [0,1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000, 2000000, 5000000]
+        hist, bin_edges = numpy.histogram(data, bin_edges)
+        return (map(int,hist), map(int,bin_edges))
+    else:
+        return results_collection
 
 def active(db, period=7):
     input_name = "mr.actions_per_user_per_day"
