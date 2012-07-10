@@ -104,17 +104,6 @@ controllers = {
     }
 app = ApplicationController(**server_env)
 
-def admins(server):
-    def access_controled(request, response, *arg):
-        if request.requester.get('name') not in config.admins:
-            return app.serve_404(request, response, *arg)
-        elif not request.is_secure:
-            return app.redirect(
-                    response, abs_url(secure=True) + request.path + '?' + request.query_string)
-        else:
-            return server(request, response, *arg)
-    return access_controled
-
 def dialog_map(request, response, args=None):
     return dialogs.get(request.form['dialog'])(request, response, args)
 
@@ -171,8 +160,8 @@ site_pages = {
     ,'feedback'            : app.page('pages/feedback.html')
     ,'file'                : app.serve_404
     ,'cron'                : controllers['cron'].cron
-    ,'admin_home'          : admins(controllers['admin'].home)
-    ,'admin'               : admins(controllers['admin'].default)
+    ,'admin_home'          : controllers['admin'].home
+    ,'admin'               : controllers['admin'].default
     ,'analytics'           : controllers['analytics'].default
     ,'robots.txt'          : app.robots
     ,'500'                 : newhive.utils.exception_test

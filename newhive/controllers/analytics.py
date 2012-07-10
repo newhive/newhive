@@ -253,6 +253,7 @@ class AnalyticsController(ApplicationController):
                 ]
         return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')
 
+    @admins
     def impressions_per_user(self, request, response):
         url_parts = request.path.split('/')
         view = lget(url_parts, 2, 'chart')
