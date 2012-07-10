@@ -253,8 +253,32 @@ class AnalyticsController(ApplicationController):
                 ]
         return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')
 
+    @admins
     def impressions_per_user(self, request, response):
-        hist, bin_edges = newhive.analytics.overall_impressions(self.db)
-        response.context['data'] = list(hist[1:15])
-        response.context['edges'] = list(bin_edges[1:16])
-        return self.serve_page(response, 'pages/analytics/impressions.html')
+        url_parts = request.path.split('/')
+        view = lget(url_parts, 2, 'chart')
+        if view == 'top':
+            # collection is a mongodb collection
+            collection = newhive.analytics.overall_impressions(self.db, histogram=False)
+            user_list = collection.find({}, sort=[('value.views', -1)], limit=100)
+            users = []
+            for item in user_list:
+                user = self.db.User.fetch(item['_id'])
+                user.impressions = item['value']['views']
+                users.append(user)
+            response.context['users'] = users
+            return self.serve_page(response, 'pages/analytics/impressions_top.html')
+
+        elif view == 'chart':
+            hist, bin_edges = newhive.analytics.overall_impressions(self.db)
+            response.context['data'] = list(hist[1:15])
+            response.context['edges'] = list(bin_edges[1:16])
+            return self.serve_page(response, 'pages/analytics/impressions.html')
+
+    def pageviews(self, request, response):
+        end = datetime.now()
+        start = datetime(2012,1,1)
+        c = response.context
+        c['dates'], c['data'] = analytics.pageviews(self.db, start, end)
+        return self.serve_page(response, 'partials/charts/time.html')
+

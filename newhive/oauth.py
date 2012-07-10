@@ -42,9 +42,20 @@ class GAClient(object):
     @property
     def data(self): return self.client.data()
 
-    def find_one(self, query):
+    def query(self, query):
         query.update({'ids': self.id})
-        return self.data.ga().get(**query).execute().get('totalsForAllResults')
+        return self.data.ga().get(**query).execute()
+
+    def find(self, query):
+        return self.query(query).get('rows')
+
+    def find_one(self, query):
+        return self.query(query).get('totalsForAllResults')
+
+    def find_time_series(self, query):
+        if not query.has_key('dimensions'): query['dimensions'] = 'ga:date'
+        results = self.find(query)
+        return [[datetime.datetime.strptime(date, '%Y%m%d'), float(value)] for date, value in results]
 
 class FacebookClient(object):
 

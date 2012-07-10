@@ -37,7 +37,9 @@ Hive.Apps.init = function(initial_state, load) {
         var i = o.length;
         o.push(app);
 
-        if(typeof(app.layer()) != 'number' || stack[app.layer()]) stack.push(app);
+        if(typeof(app.layer()) != 'number') stack.push(app);
+        // if there's already an app at this layer, splice in the new app one layer above
+        else if( stack[app.layer()] ) stack.splice(app.layer() + 1, 0, app);
         else stack[app.layer()] = app;
         restack();
         return i;
@@ -192,7 +194,8 @@ Hive.App = function(init_state, opts) {
     o.copy = function(opts){
         if(!opts) opts = {};
         if(!opts.offset) opts.offset = [ 0, o.dims()[1] + 20 ];
-        var app_state = o.state(), pos = o.pos();
+        var app_state = o.state();
+        if(opts.z_offset) app_state.z += opts.z_offset;
         var cp = Hive.App(app_state, opts);
         Hive.History.save(cp._remove, cp._unremove, 'copy');
         return cp;
@@ -1085,25 +1088,39 @@ Hive.goog_rte = function(content_element, app){
 
     // Text wrapping hack: insert explicit line breaks where text is
     // soft-wrapped before saving, remove them on loading
-    function eachTextNodeIn(node, fn) {
-        if(node.nodeType == 3) fn(node);
-        else {
-            for(var i = 0; i < node.childNodes.length; i++)
-                eachTextNodeIn(node.childNodes[i], fn);
-        }
-    };
-    this.add_breaks = function() {
+    this.add_breaks = function(){
         var text_content = that.content_element;
 
-        eachTextNodeIn(text_content.get(0), function(n) {
-            $(n).replaceWith(n.nodeValue.replace(/(\w+)/g, "<span class='wordmark'>$1</span>"))
+        // Get text nodes: .find gets all non-textNode elements, contents gets
+        // all child nodes (inc textNodes) and the not() part removes all
+        // non-textNodes. Technique by Nathan MacInnes, nathan@macinn.es from
+        // http://stackoverflow.com/questions/4671713/#7431801
+         var textNodes = text_content.find('*').add(text_content).contents()
+            .not(text_content.find('*'));
+
+        // Split each textNode into individual textNodes, one for each word
+        textNodes.each(function (index, lastNode) {
+            var startOfWord = /\W\b/,
+                result;
+            while (startOfWord.exec(lastNode.nodeValue) !== null) {
+                result = startOfWord.exec(lastNode.nodeValue);
+                // startOfWord matches the character before the start of a
+                // word, so need to add 1.
+                lastNode = lastNode.splitText(result.index + 1);
+            }
         });
+        // end contributed code
+
+        var textNodes = text_content.find('*').add(text_content).contents()
+            .not(text_content.find('*'));
+
+        textNodes.wrap('<span class="wordmark">');
 
         // iterate over wordmarks, add <br>s where line breaks occur
         var y = 0;
         text_content.find('.wordmark').each(function(i, e) {
             var ely = $(e).offset().top;
-            if(ely > y) {
+            if($(e).text().length && ely > y) {
                 var br = $('<br class="softbr">');
                 $(e).before(br);
                 if(ely != $(e).offset().top){
@@ -1301,9 +1318,20 @@ Hive.App.Image = function(o) {
         o.imageHeight = o.img.height();
         o.aspect = o.imageWidth / o.imageHeight;
         if( ! o.init_state.dimensions ){
-            var w = o.imageWidth > $(window).width() * 0.8 ?
-                $(window).width() * 0.8 : o.imageWidth;
-            o.init_state.dimensions = [ w, w / o.aspect ];
+            var ww = $(window).width(), wh = $(window).height(), iw, ih, wa = ww / wh;
+            if( (o.imageWidth > ww * .8) || (o.imageHeight > wh * .8) ){
+                if( wa < o.imageWidth / o.imageHeight ){
+                    iw = 800;
+                    ih = iw / o.aspect;
+                } else {
+                    ih = 800 / wa;
+                    iw = ih * o.aspect;
+                }
+            } else {
+                iw = 1000 * o.imageWidth / ww;
+                ih = iw / o.aspect;
+            }
+            o.init_state.dimensions = [ iw, ih ];
         }
         o.img.css('width', '100%');
         o.img.show();
@@ -1681,7 +1709,8 @@ Hive.Selection = function(){
         };
         Hive.History.begin();
         copies = $.map( o.elements, function(e){
-            return e.copy({ offset: offset, load: load_counter }) } );
+            return e.copy({ offset: offset, load: load_counter, 'z_offset': o.elements.length })
+        });
     }
     o.remove = function(){
         var sel = $.merge([], o.elements);

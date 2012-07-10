@@ -1,0 +1,20 @@
+{% extends "pages/analytics/base.html" %}
+{% block table_head %}
+<tr>
+  <th>Rank</th>
+  <th>Name</th>
+  <th>Impressions</th>
+  <th>e-mail</th>
+</tr>
+{% endblock table_head %}
+
+{% block table_body %}
+{% for user in users %}
+<tr>
+  <td>{{ loop.index }}</td>
+  <td>{{ user.name }}</td>
+  <td>{{ user.impressions }}</td>
+  <td><a href="mailto:{{user.email}}">{{user.email}}</a></td>
+</tr>
+{% endfor %}
+{% endblock table_body %}

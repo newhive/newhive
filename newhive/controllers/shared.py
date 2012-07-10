@@ -5,6 +5,16 @@ import newhive.ui_strings.en as ui
 from newhive.utils import *
 import urllib
 
+def admins(server):
+    def access_controlled(self, request, response, *arg, **kwarg):
+        if request.requester.get('name') not in config.admins:
+            return self.serve_404(request, response, *arg, **kwarg)
+        elif not request.is_secure:
+            return self.redirect(
+                    response, abs_url(secure=True) + request.path + '?' + request.query_string)
+        else:
+            return server(self, request, response, *arg, **kwarg)
+    return access_controlled
 
 def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
 

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block head %}
+    {{super()}}
+    {% for item in asset_bundle('admin.js') %}
+      <script src='{{ item }}'></script>
+    {% endfor %}
+    <script>
+        var chart;
+        $(function(){
+            chart = Hive.chart.Time({{dates | json}}, {{data | json}}, {padding_left: 80});
+            chart.draw_chart();
+        });
+    </script>
+    <style type="text/css">
+        path {
+          stroke-width: 3;
+          fill: none;
+        }
+        circle {
+        }
+         
+        line {
+          stroke: black;
+        }
+         
+        text {
+            font-family: Arial;
+            font-size: 9pt;
+        }
+    </style>
+{% endblock head %}
+{% block main %}
+    <div id="chart"></div>
+{% endblock %}

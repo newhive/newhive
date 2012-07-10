@@ -6,14 +6,17 @@ logger = logging.getLogger(__name__)
 
 class AdminController(ApplicationController):
 
+    @admins
     def contact_log(self, request, response):
         response.context['contacts'] = self.db.Contact.page({}, limit=500, sort='created')
         return self.serve_page(response, 'pages/admin/contact_log.html')
 
+    @admins
     def referrals(self, request, response):
         response.context['users'] = self.db.User.search({})
         return self.serve_page(response, 'pages/admin/referrals.html')
 
+    @admins
     def thumbnail_relink(self, request, response):
         return self.serve_html(response, 'thumbnail relink is deprecated')
         response.context['exprs'] = []
@@ -26,12 +29,14 @@ class AdminController(ApplicationController):
             response.context['exprs'].append({'id': e.id, 'url': e.url, 'thumb': e.get('thumb'), 'images': image_apps})
         return self.serve_page(response, 'pages/admin/thumbnail_relink.html')
 
+    @admins
     def tags(self, request, response):
         popular_tags = self.db.Expr.popular_tags()
         response.context['featured_tags'] = self.db.User.site_user['config']['featured_tags']
         response.context['popular_tags'] = popular_tags[0:100]
         return self.serve_page(response, 'pages/admin/tags.html')
 
+    @admins
     def users(self, request, response):
         p3 = lget(request.path.split('/'), 2)
         if not p3:
@@ -49,6 +54,7 @@ class AdminController(ApplicationController):
             response.context['expression_counts'] = {'public': len(public_expressions), 'private': len(private_expressions), 'total': len(expressions)}
             return self.serve_page(response, 'pages/admin/user.html')
 
+    @admins
     def add_referral(self, request, response):
         if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         form = request.form.copy()
@@ -66,6 +72,7 @@ class AdminController(ApplicationController):
 
         return self.redirect(response, forward)
 
+    @admins
     def bulk_invite(self, request, resposne):
         if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         form = request.form.copy()
@@ -82,6 +89,7 @@ class AdminController(ApplicationController):
                     else:
                         print "email not sent to " + contact['email'] + " referral already exists"
 
+    @admins
     def admin_update(self, request, response):
         if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         for k in ['tags', 'tagged']:
@@ -92,6 +100,7 @@ class AdminController(ApplicationController):
         site_user['config']['featured_tags'] = featured_tags
         site_user.save()
 
+    @admins
     def home(self, request, response):
         root = self.db.User.get_root()
         if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
@@ -103,12 +112,14 @@ class AdminController(ApplicationController):
         #expr_home_list(p2, request, response, limit=900) 
         return self.serve_page(response, 'pages/admin_home.html')
 
+    @admins
     def contacts(self, request, response):
         response.headers.add('Content-Disposition', 'inline', filename='contacts.csv')
         response.data = "\n".join([','.join(map(json.dumps, [o.get('name'), o.get('email'), o.get('referral'), o.get('message'), o.get('url'), str(time_u(int(o['created'])))])) for o in self.db.Contact.search({})])
         response.content_type = 'text/csv; charset=utf-8'
         return response
 
+    @admins
     def error_log(self, request, response):
         id = lget(request.path.split('/'), 2)
         if id:
@@ -130,6 +141,7 @@ class AdminController(ApplicationController):
             response.context['errors'] = errors
             return self.serve_page(response, 'pages/admin/error_log.html')
 
+    @admins
     def _index(self, request, response):
         logger.debug('_index')
         return self.redirect(response, abs_url(secure=True, subdomain="thenewhive") + 'admin')

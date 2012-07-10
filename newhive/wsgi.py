@@ -18,7 +18,7 @@ from newhive.controllers import (
 )
 
 import os, re, json, mimetypes, math, time, crypt, urllib, base64
-from datetime import datetime
+import datetime
 from os.path  import join
 from werkzeug import Request, Response, exceptions, url_unquote
 from werkzeug.routing import Map, Rule
@@ -53,13 +53,23 @@ if __name__ != "__main__":
 ##############################################################################
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(join(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
+
+class JSONDateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        else:
+            return json.JSONEncoder.default(self, obj)
+def datetime_json(data):
+    return json.dumps(data, cls=JSONDateTimeEncoder)
+
 jinja_env.filters.update({
      'time': friendly_date
     ,'epoch_to_string': epoch_to_string
     ,'length_bucket': length_bucket
     ,'large_number': large_number
     ,'no_zero': no_zero
-    ,'json': json.dumps
+    ,'json': datetime_json
     ,'mod': lambda x, y: x % y
     ,'querystring': querystring
     ,'percentage': lambda x: x*100
@@ -96,17 +106,6 @@ controllers = {
     , 'cron':        CronController(**server_env)
     }
 app = ApplicationController(**server_env)
-
-def admins(server):
-    def access_controled(request, response, *arg):
-        if request.requester.get('name') not in config.admins:
-            return app.serve_404(request, response, *arg)
-        elif not request.is_secure:
-            return app.redirect(
-                    response, abs_url(secure=True) + request.path + '?' + request.query_string)
-        else:
-            return server(request, response, *arg)
-    return access_controled
 
 def dialog_map(request, response, args=None):
     return dialogs.get(request.form['dialog'])(request, response, args)
@@ -165,8 +164,8 @@ site_pages = {
     ,'feedback'            : app.page('pages/feedback.html')
     ,'file'                : app.serve_404
     ,'cron'                : controllers['cron'].cron
-    ,'admin_home'          : admins(controllers['admin'].home)
-    ,'admin'               : admins(controllers['admin'].default)
+    ,'admin_home'          : controllers['admin'].home
+    ,'admin'               : controllers['admin'].default
     ,'analytics'           : controllers['analytics'].default
     ,'robots.txt'          : app.robots
     ,'500'                 : newhive.utils.exception_test
