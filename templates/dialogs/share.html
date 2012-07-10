@@ -43,7 +43,7 @@
       </div>
       <div class="like_button views">
         <div style="width:32px; height:32px; font-family: Lobster; font-size: 28px; display: inline;">Views</div>
-        <div class="count">{{ exp.views() | large_number if exp and exp.id else zero_count_string }}</div>
+        <div class="count">{{ exp.views | large_number if exp and exp.id else zero_count_string }}</div>
       </div>
     </div>
 

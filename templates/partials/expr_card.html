@@ -15,7 +15,7 @@
   {% endif %}
   <div class='stats'>
     <span class='active_hide'>
-      <img src='{{ 'skin/1/views_sm.png'|asset_url }}'> {{ item.views() }}
+      <img src='{{ 'skin/1/views_sm.png'|asset_url }}'> {{ item.views }}
       {% if item.analytics and item.analytics.Star %}<img src='{{ 'skin/1/like_sm.png'|asset_url }}'> {{ item.analytics.Star.count }}{% endif %}
       {% if item.auth != 'public' %}<img src='{{ 'skin/1/private_sm.png'|asset_url }}'>{% endif %}
     </span>

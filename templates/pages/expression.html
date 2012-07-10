@@ -30,7 +30,7 @@
 
   {% if exp.auth == 'public' %}
     <div id = "btn_broadcast" class="hoverable nav_icon has_count{{ ' enabled' if exp.id in user.broadcast_ids }}"
-      onclick='btn_broadcast_click(this);' title="Broadcast this to your listeners" data-count='{{ exp.broadcaster_count }}'>
+      onclick='btn_broadcast_click(this);' title="Broadcast this to your listeners" data-count='{{ exp.broadcast_count }}'>
       <div class='full icon scale'></div>
     </div>
   {% endif %}
