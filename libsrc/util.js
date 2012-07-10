@@ -155,21 +155,28 @@ function showDialog(name, opts) {
             o.opts = $.extend({
                 open : noop, close : noop, absolute : false, fade : true,
                 mandatory: dialog.hasClass('mandatory'),
-                layout: function() { center(dialog, $(window), opts) }
+                layout: function() { center(dialog, $(window), opts) },
+                close_btn: true
             }, opts);
 
-            o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
-            if (! dialog.hasClass('newdialog')) dialog.addClass('dialog border selected');
-            dialog.detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            o.shield = $("<div id='dialog_shield'>");
+            if(o.opts.fade) o.shield.addClass('fade');
+            o.shield.appendTo(document.body);
+
+            dialog.detach().appendTo(document.body)
+                .css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+
             if(!o.opts.mandatory) {
-                o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
-                o.shield.add(o.btn_close).click(o.close);
+                if( o.opts.close_btn && ! dialog.find('.btn_dialog_close') )
+                    $('<div class="btn_dialog_close">').prependTo(dialog).click(o.close);
+                o.shield.click(o.close);
                 if(o.opts.click_close) dialog.click(o.close);
             }
-            $(window).resize(function() { o.opts.layout(o.dialog) });
+
+            $(window).resize(function(){ o.opts.layout(o.dialog) });
             o.opts.layout(o.dialog);
 
-            if (o.opts.select) dialog.find(o.opts.select).focus().click();
+            if(o.opts.select) dialog.find(o.opts.select).click();
             o.index = showDialog.opened.length;
             showDialog.opened.push(o);
             o.opts.open();
@@ -178,7 +185,6 @@ function showDialog(name, opts) {
         o.close = function() {
             showDialog.opened.splice(showDialog.opened.indexOf(o), 1);
             o.shield.remove();
-            if(o.btn_close) o.btn_close.remove();
             $(window).unbind('resize', o.opts.layout);
             var clean_up = function() {
                 dialog.hide();
@@ -579,12 +585,10 @@ hover_menu = function(handle, drawer, options) {
         handle.addClass('active');
         o.options.default_item.addClass('active');
         o.cancel_close();
-        if(o.opened) {
-            if(o.options.default_item) o.options.default_item.click();
-            return;
-        }
 
         o.opened = true;
+        if( hover_menu.opened && (hover_menu.opened != o) ) hover_menu.opened.close();
+        hover_menu.opened = o;
         handle.get(0).busy = true;
         if(o.options.click_persist) o.options.hover_close = true;
 
@@ -639,7 +643,10 @@ hover_menu = function(handle, drawer, options) {
         handle.hover(o.open, o.delayed_close);
         drawer.mouseover(o.cancel_close).mouseout(o.delayed_close);
     }
-    handle.click(o.open);
+    handle.click(function(){
+        if(o.opened && o.options.default_item) o.options.default_item.click();
+        o.open();
+    });
     $(o.options.click_persist).bind('click contextmenu keydown', function() {
         o.options.hover_close = false;
     });

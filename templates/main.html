@@ -60,7 +60,7 @@
     </form>
   </div>
   <script>
-    hover_menu( '#logo', '#hive_menu', { offset_y: 5, open: function(){
+    hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
         $('#search_box').get(0).focus(); }, click_persist: '#search_box' } );
   </script>
 
@@ -73,6 +73,7 @@
         ><form id='logout_form' action='{{ secure_server }}' method='POST'
           ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
           ><input name='action' value='logout' type='hidden'
+          ><input name='url' value='{{ url }}' type='hidden'
         ></form
       ></div>
       <div class='bar'></div>
@@ -83,7 +84,7 @@
         {% endfor %}
       </div>
     </div>
-    <script>hover_menu( '#username', '#user_menu', { offset_y: 5 } )</script>
+    <script>hover_menu( '#username', '#user_menu', { offset_y: 8 } )</script>
   {% endif %}
 
   {% if not editing %}
@@ -122,7 +123,8 @@
                 open: function() { $('#username').get(0).focus(); },
                 close_delay: 1000,
                 click_persist: '#login_menu',
-                offset_y: 5
+                offset_y: 8,
+                layout_x: 'right'
             } );
             {% if error %} login_menu.open(); {% endif %}
         });
@@ -133,7 +135,7 @@
       <div id='owner_menu' class='menu'>
         <a href='{{ owner.url }}'><div class='menu_item default'>Expressions</div></a>
         <div class='thumbs'>
-          {% for expr in owner.get_exprs(limit=5) %}
+          {% for expr in owner.expr_page(limit=5) %}
             <a href='{{ expr.url }}'><img src='{{ expr.thumb }}' class='thumb'></a>
           {% endfor %}
         </div>
@@ -148,7 +150,7 @@
           {% endfor %}
         </div>
       </div>
-      <script>hover_menu('#owner_btn', '#owner_menu', { offset_y: 5, layout_x: 'right' });</script>
+      <script>hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right' });</script>
     {% endif %}
 
     <div id='share_menu' class='menu'>
@@ -212,7 +214,7 @@
       <div class='menu_item'>Email</div>
       <div class='menu_item'>Embed</div>
     </div>
-    <script>hover_menu('#share_btn', '#share_menu', { offset_y: 5 });</script>
+    <script>hover_menu('#share_btn', '#share_menu', { offset_y: 8 });</script>
 
     {% if exp %}
       <div id='plus_menu' class='plus_menu'>
@@ -231,6 +233,13 @@
           </div>
         </div>
         <div class='btn_box'>
+          <div class='nav_btn like hoverable'>
+            <div class='edge'></div>
+            <div class='icon'></div>
+            <div class='count{{ ' zero' if not exp.star_count }}'>{{ exp.star_count | large_number }}</div>
+          </div>
+        </div>
+        <div class='btn_box'>
           <div class='nav_btn broadcast hoverable'>
             <div class='edge'></div>
             <div class='icon'></div>
@@ -238,10 +247,10 @@
           </div>
         </div>
         <div class='btn_box'>
-          <div class='nav_btn like hoverable'>
+          <div class='nav_btn comment hoverable'>
             <div class='edge'></div>
             <div class='icon'></div>
-            <div class='count{{ ' zero' if not exp.star_count }}'>{{ exp.star_count | large_number }}</div>
+            <div class='count{{ ' zero' if not exp.comment_count }}'>{{ exp.comment_count | large_number }}</div>
           </div>
         </div>
         {% if user_is_owner %}
@@ -253,6 +262,7 @@
       </div>
 
       <div id='expr_menu' class='menu'>
+        
         {% for feed in exp.get_feed() %}
           {% include "partials/feed.html" %}
         {% endfor %}
@@ -266,23 +276,7 @@
 
       <script>
         //(function(){ 
-            var menu, opened = false, drawer = $('#plus_menu'), make_menu = function(){
-                menu = hover_menu('#plus_btn', '#plus_menu', { layout: false }) };
-            //make_menu();
-            $('#plus_btn').click(function(){
-                console.log('hey');
-                if(opened) {
-                console.log('opened');
-                    menu.close();
-                    //make_menu();
-                } else {
-                console.log('!opened');
-                    drawer.show();
-                    menu.destroy();
-                }
-                opened = !opened;
-            });
-
+            //var plus_menu = hover_menu('#plus_btn', '#plus_menu', { layout: false });
             hover_menu('#expr_btn', '#expr_menu', { layout: false });
         //})();
       </script>
@@ -319,8 +313,6 @@
   
   <div id='dialogs'>
     {% block dialogs %}
-      {% include 'dialogs/ie_warning.html' %}
-      {% include 'dialogs/share.html' %}
       {% include 'dialogs/password.html' %}
 
       {% if user.logged_in %}
@@ -341,6 +333,27 @@
 
       {% if new_fb_connect %}
           {% include 'dialogs/fb_connect_landing.html' %}
+      {% endif %}
+
+      {% if exp and user_is_owner %}
+        <div id='dia_delete' class='newdialog center'>
+          <h3>Are you sure you want to delete this expression?</h3>
+          <div class='btns'>
+            <form method='POST' action='{{ secure_server }}'>
+              <input type='hidden' name='action' value='expr_delete'>
+              <input type='hidden' name='id' value='{{ exp.id }}'>
+              <input type='submit' value='Yes' class='btn'> &nbsp;
+              <input type='button' value='No' class='no_btn btn'>
+            </form>
+          </div>
+        </div>
+        <script>
+          (function(){
+            var dialog;
+            $('.delete_btn').click(function(){ dialog = showDialog('#dia_delete'); });
+            $('#dia_delete .no_btn').click(function(){ dialog.close() });
+          })();
+        </script>
       {% endif %}
     {% endblock dialogs %}
   </div>

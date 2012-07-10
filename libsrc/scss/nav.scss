@@ -255,10 +255,14 @@ $nav_size: 40px;
             &.active .icon { background-image: asset_url('skin/1/like-hover.png'); }
         }
 
+        &.comment {
+            .icon { background-image: asset_url('skin/1/comment.png'); }
+            &.active .icon { background-image: asset_url('skin/1/comment-hover.png'); }
+        }
+
         &.delete_btn {
             position: absolute;
-            z-index: 4;
-            top: 255px;
+            top: 321px;
             right: 8px;
             height: 38px;
             text-align: right;

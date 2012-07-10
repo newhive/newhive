@@ -13,7 +13,7 @@
   position:fixed;
   width:100%;
   height:100%;
-  z-index:4;
+  z-index: 5;
   top: 0;
 }
 #dialog_shield.fade { background-color:black; opacity:0.6; }
@@ -52,6 +52,17 @@ input[type="text"].copy, textarea.copy {
   font-family: $header_font;
   font-weight: normal;
   font-size: 28px;
+  margin: 0;
+}
+
+
+#dia_delete {
+    width: 240px;
+    .btns {
+        text-align: right;
+        margin-top: 20px;
+    }
+    input { background-color: $color_highlight; }
 }
 
 
@@ -397,25 +408,22 @@ input[type="text"].copy, textarea.copy {
 .newdialog {
     display: none; 
     position: absolute;
-    z-index: 2; 
+    z-index: 5;
     max-width: 700px;
-    padding: 30px 20px;
+    padding: 20px;
     background-color : white;
     border: 5px solid $color_selected;
     @include box-shadow(05px 05px 05px #666);
 
-    h1, h2 {
+    h1, h2, h3 {
         font-family: $header_font;
         letter-spacing: -1px;
         margin: 0;
     }
     h1 { font-size: 42px; }
     h2 { font-size: 34px; }
-    h3 { 
-        margin: 30px 0 0 0;
-        letter-spacing: -1px;
-    }
-    .btn_dialog_close + h3{
+    h3 { letter-spacing: -1px; }
+    .btn_dialog_close + h3 {
         margin-top: 0;
     }
     h3 + form {

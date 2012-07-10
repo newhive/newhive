@@ -581,7 +581,6 @@ class User(HasSocial):
 
     @property
     def expressions(self): return self.get_exprs()
-    def get_exprs(self, **opts): return self.db.Expr.search({'owner': self.id}, **opts)
 
     def delete(self):
         # Facebook Disconnect
