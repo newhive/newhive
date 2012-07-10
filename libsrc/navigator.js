@@ -13,7 +13,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         opts
     );
     var height = opts.thumb_width + opts.text_height + 2 * opts.margin;
-    var history_manager = window.history;
+    var history_manager = window.History;
 
     // private variables
     var content_element,
@@ -66,7 +66,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             frame.css('z-index', 1);
         };
         frame.animate({left: 0}, {complete: animate_complete});
-        history_manager.pushState(current_expr._id, current_expr.title, o.current_url());
+        history_manager.pushState(current_expr, current_expr.title, o.current_url());
 
         var callback = function(data){
             $.each(data, function(i, expr){
@@ -89,6 +89,31 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.next = function(){
         return function(){ o.select(1); }
     }();
+
+    o.select_by_id = function(id){
+        var ids, return_ids, pos;
+        if (id === o.current_id()) return;
+        return_ids = function(el) { return el.id };
+
+        // Look for id in prev_list
+        ids = $.map(o.prev_list(), return_ids);
+        pos = $.inArray(id, ids);
+        if (pos >= 0){
+            // Transform from 0-based index in previous list to position relative to current
+            pos = -(pos + 1);
+        } else {
+            // Now look in next_list
+            ids = $.map(o.next_list(), return_ids);
+            pos = $.inArray(id, ids);
+            if (pos >= 0){
+                pos = pos + 1;
+            } else {
+                // Not found in either case, this shouldn't happen normally
+                return false;
+            }
+        }
+        o.select(pos);
+    };
 
     var inner;
     o.render = function(render_opts){
@@ -250,7 +275,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 if (next_list.length) render_and_show();
             });
         }
-        history_manager.replaceState(current_expr._id, current_expr.title, o.current_url());
+        history_manager.replaceState(current_expr, current_expr.title, o.current_url());
         set_hover_handler();
         return o;
     };
@@ -273,7 +298,6 @@ Hive.Navigator.Expr = function(data){
     o.load = function(content_element, callback){
         if (frame) return;
         o.loading_started = true;
-        console.log('loading ', o.id);
         frame = $('<iframe>')
             .attr('src', content_domain + o.id)
             .css('left', 5000)
@@ -314,9 +338,11 @@ $(function(){
     Hive.navigator = Hive.Navigator($('#navigator'), $('#expression_frames'))
         .set_updater(Hive.Navigator.Updater())
         .initialize();
-    $(window).on('popstate', function(e, data){
-    });
     $(window).resize(function(){
         Hive.navigator.render();
+    });
+    $(window).on('statechange', function(){ // Note: We are using statechange instead of popstate
+        var state = History.getState(); // Note: We are using History.getState() instead of event.state
+        Hive.navigator.select_by_id(state.data.id);
     });
 });
