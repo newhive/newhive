@@ -7,13 +7,21 @@
     width: 100%;
     position: fixed;
     left: 0;
-    bottom: 0;
+    bottom: -800px;
     background: rgba(255,255,255,0.8);
     z-index: 4;
     .info {
         margin: $margin 0;
         .tags {
             float: right;
+        }
+        .tag {
+            font-weight: bold;
+            font-size: 15px;
+            padding: 6px;
+            margin: 4px;
+            background: $color_selected;
+            display: inline-block;
         }
     }
     .navigator_inner{

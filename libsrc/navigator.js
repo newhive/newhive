@@ -12,7 +12,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         },
         opts
     );
-    var height = opts.thumb_width + opts.text_height + 2 * opts.margin;
+    var height = opts.thumb_width + opts.text_height + 2 * opts.margin + navigator_element.find('.info').height();
     var history_manager = window.History;
 
     // private variables
@@ -175,6 +175,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             .css('font-size', opts.thumb_width/190 + 'em');
         if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
         navigator_element.append(inner).append(frame);
+
+        var info = navigator_element.find('.info');
+        var tags = o.current_expr().tags_index;
+        if (typeof(tags) == "undefined") tags = [];
+        info.find('.tags').html(
+            $.map(tags, function(el){ return "<span class='tag'>#" + el + "</span>" }).join('')
+        );
 
         // Unless this is the initial render we now have two inner elements,
         // remove the old one, but do it in this roundabout way to prevent a
