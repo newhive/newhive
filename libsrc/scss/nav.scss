@@ -11,6 +11,14 @@ $nav_size: 40px;
     vertical-align: middle;
 }
 
+.random_btn {
+    background-image: asset_url('skin/1/shuffle.png');
+    &.active, &:hover {
+        background-image: asset_url('skin/1/shuffle-hover.png');
+        background-color: black;
+    }
+}
+
 .nav {
     margin: 7px 8px;
     z-index: 4;
@@ -144,8 +152,6 @@ $nav_size: 40px;
 
     &#hive_menu {
         padding: 10px;
-        #random_btn { background-image: asset_url('skin/1/shuffle.png') }
-        #random_btn.active { background-image: asset_url('skin/1/shuffle-hover.png'); background-color: black; }
 
         .btns {
             margin-bottom: 10px;

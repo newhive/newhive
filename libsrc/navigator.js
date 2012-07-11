@@ -127,6 +127,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             plus: Math.floor((width + opts.thumb_width) / 2)
         };
 
+        var old_inner = inner;
         inner = $('<div>').addClass('navigator_inner');
 
         function build(list, element, direction){
@@ -162,28 +163,25 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         });
 
         // The frame is the 'loupe' like border highlighting the current element
-        var frame = $('<div>').addClass('frame border selected')
-            .css('left', center.minus - opts.margin)
+        var frame = navigator_element.find('.frame');
+        if (!frame.length) frame = $('<div>').addClass('frame border selected')
+        frame.css('left', center.minus - opts.margin)
             .css('width', opts.thumb_width)
             .css('height', height - opts.margin)
             .css('margin-top', -opts.margin);
 
         // Build the new navigator
-        var new_nav = $('<div>').addClass('navigator')
-            .css('z-index', '4').css('height', height)
+        navigator_element.css('height', height)
             .css('font-size', opts.thumb_width/190 + 'em');
-        if (render_opts.hidden) new_nav.css('bottom', -height - 2 * opts.margin);
-        new_nav.append(inner).append(frame);//.css('opacity', 0.1);
+        if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
+        navigator_element.append(inner).append(frame);
 
-        // Render the new element to the page, then swap it in for the old
-        // element.  This roundabout way prevents a flash of a blank element,
-        // could be improved though I'm sure. For instance, you see a doubly
-        // opaque drop shadow for a moment
-        navigator_element.before(new_nav);
-        var old_nav = navigator_element;
-        navigator_element.animate({opactiy: 0}, 5, function(){ old_nav.remove();});
-        navigator_element = new_nav;
-        set_hover_handler();
+        // Unless this is the initial render we now have two inner elements,
+        // remove the old one, but do it in this roundabout way to prevent a
+        // flash of a blank element,
+        if (old_inner) {
+            old_inner.animate({opactiy: 0}, 5, function(){ old_inner.remove();});
+        }
 
         return o;
     };
@@ -254,10 +252,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     // initialization
-    function set_hover_handler(){
-        navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
-    };
-
     o.initialize = function(){
         current_expr = Hive.Navigator.Expr(expr);
         content_element.find('iframe').on('load', o.cache_next);
@@ -276,7 +270,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             });
         }
         history_manager.replaceState(current_expr, current_expr.title, o.current_url());
-        set_hover_handler();
+        navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
         return o;
     };
 
