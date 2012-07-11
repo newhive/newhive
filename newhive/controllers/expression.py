@@ -72,12 +72,12 @@ class ExpressionController(ApplicationController, PagingMixin):
             ,auth_required = auth_required
             ,exp = resource
             ,exp_js = json.dumps(resource)
-            ,url = abs_url(domain = config.content_domain) + resource.id
+            ,expr_url = abs_url(domain = config.content_domain) + resource.id
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
             ,content_domain = abs_url(domain = config.content_domain)
             )
 
-        template = resource.get('template', request.args.get('template', 'expression'))
+        template = resource.get('template', request.args.get('template', 'frame'))
 
         if request.requester.logged_in:
             self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
@@ -140,7 +140,7 @@ class ExpressionController(ApplicationController, PagingMixin):
             request.form.get('password') != resource.get('password') ): return Forbidden()
 
         response.context.update( html = expr_to_html(resource), exp = resource )
-        return self.serve_page(response, 'pages/expr_minimal.html')
+        return self.serve_page(response, 'pages/expression.html')
 
     def random(self, request, response):
         expr = self.db.Expr.random()

@@ -103,11 +103,10 @@
         ></div
         {% set nav_begin = False %}
       {% endif %}
-      ><div id='share_btn' class='hoverable center{% if nav_begin and exp %} left_edge{% endif %}{% if not exp %} rounded{% endif %}'
+      ><div id='share_btn' class='hoverable center{% if nav_begin %} rounded{% else %} right_edge{% endif %}'
         ><div id='share_icon' class='icon{% if nav_begin %} left_edge{% endif %}'></div
         ><div class='text'>Share</div
       ></div
-      {% if exp %}><div id='plus_btn' class='icon hoverable right_edge'></div{% endif %}
     ></div>
 
     {% if not user.logged_in %}
@@ -140,7 +139,13 @@
           {% endfor %}
         </div>
         {#<div class='menu_item'>Profile</div>#}
-        <div class='menu_item'>Follow {{ owner['name'] }}</div>
+        <div class='menu_item listen off'>
+          <span class='off'>Listen to</span>
+          <span class='on'>Stop listening to</span>
+          <span class='owner'>{{ owner['name'] }}</span>
+          <div class='icon'></div>
+        </div>
+        <div class='menu_item message'>Send message <div class='icon'></div></div>
         {#<div class='menu_item'>Send message</div>#}
         <div class='bar'></div>
         <div class='menu_item'>Activity</div>
@@ -262,6 +267,25 @@
       </div>
 
       <div id='expr_menu' class='menu'>
+        <div class="feed_item border_bottom" onclick="window.location=&quot;http://dev-2.thenewhive.com/wildflower/the-face&quot;">
+        <img src="https://s1-thenewhive.s3.amazonaws.com/4f572636ba28391dd00000c2_70x70?v=1">
+        <div class="feed_text">
+        <p>
+        <a href="http://elljay.dev-2.thenewhive.com/profile" class="initiator name ">
+        elljay
+        </a>
+
+        likes
+
+
+
+        </p>
+
+        <p class="title title1">the face</p>
+
+        </div>
+        <div class="byline"><span class="timestamp">Jul 1</span></div>
+        </div>
         
         {% for feed in exp.get_feed() %}
           {% include "partials/feed.html" %}

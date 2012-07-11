@@ -413,16 +413,7 @@ $(function () {
       _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
       showDialog('#dia_fb_connect_landing');
   };
-  // This completely breaks the site on Ios, and is annoying
-  // Also likely to be seen by logged out users
-  //else if (!logged_in) {
-  //    var count = parseInt(readCookie('pageview_count'));
-  //    var signup = readCookie('signup_completed') == 'true';
-  //    if (! count ) count = 0;
-  //    count++;
-  //    if ((count == 5 || count == 15) && (!signup)) setTimeout("$('.signup_button').first().click();", 1000);
-  //    createCookie('pageview_count', count, 14);
-  //};
+
   var dia_referral = $('#dia_referral');
   dia_referral.find('input[type=submit]').click(function(){
       asyncSubmit(dia_referral.find('form'), function(){
@@ -653,8 +644,11 @@ hover_menu = function(handle, drawer, options) {
         o.options.hover_close = false;
     });
 
-    menu_items.mouseover(function(e){ $(e.target).addClass('active'); })
-        .mouseout(function(e){ $(e.target).removeClass('active'); });
+    menu_items.each(function(i, d){
+        var e = $(d);
+        e.mouseover(function(){ e.addClass('active'); });
+        e.mouseout(function(){ e.removeClass('active'); });
+    });
 
     if(o.options.auto_close) drawer.click(o.close);
     o.click_close = function(e) {
