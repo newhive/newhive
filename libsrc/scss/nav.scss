@@ -9,6 +9,7 @@ $nav_size: 40px;
     width: $nav_size;
     display: inline-block;
     vertical-align: middle;
+    background-size: 100% 100%;
 }
 
 .random_btn {
@@ -89,11 +90,7 @@ $nav_size: 40px;
     #share_icon { background-image: asset_url('skin/1/share.png'); }
     &.active #share_icon { background-image: asset_url('skin/1/share-hover.png'); }
     padding-right: 6px;
-}
-
-#plus_btn {
-    background-image: asset_url('skin/1/plus.png');
-    &.active { background-image: asset_url('skin/1/plus-hover.png'); }
+    cursor: default;
 }
 
 
@@ -123,6 +120,12 @@ $nav_size: 40px;
         font-weight: bold;
         white-space: nowrap;
         &.active { background-color: $color_selected; }
+        .icon {
+            float: right;
+            width: 30px;
+            height: 30px;
+            margin-top: -5px;
+        }
     }
 
     .btns {
@@ -165,6 +168,21 @@ $nav_size: 40px;
           vertical-align: middle;
           &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
         }
+    }
+
+    &#user_menu { width: 260px; }
+    &#owner_menu {
+        width: 260px;
+
+        .listen.off .on { display: none }
+        .listen.on .off { display: none }
+        .listen.off .icon { background-image: asset_url('skin/1/listen.png') }
+        .listen.off.active .icon { background-image: asset_url('skin/1/listen-hover.png') }
+        .listen.on .icon { background-image: asset_url('skin/1/listening.png') }
+        .listen.on.active .icon { background-image: asset_url('skin/1/listening-hover.png') }
+
+        .message .icon { background-image: asset_url('skin/1/send_message.png') }
+        .message.active .icon { background-image: asset_url('skin/1/send_message-hover.png') }
     }
 
     &#share_menu {

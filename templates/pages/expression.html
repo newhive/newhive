@@ -1,148 +1,15 @@
-{% extends "main.html" %}
+{% extends "base.html" %}
 
-{% block meta %}
- <meta property="og:title" content='{{ title |e }}' />
- <meta property="og:type" content="newhive:expression" />
- <meta property="og:image" content='{{ exp.thumb |e }}' />
- <meta property="fb:admins" content="1007003" />
- <meta property="description" contents="{{ title |e }}, an expression by {{owner.fullname}}" />
-{% endblock %}
 {% block head %}
- {{super()}}
- {% for asset in asset_bundle('navigator.js') %}
-     <script src='{{ asset }}'></script>
- {% endfor %}
- <script type='text/javascript'>
-     var expr_id = '{{ exp.id }}';
-     var comment_count = {{ exp.comment_count }};
-     // TODO: temporary, should probably hide this better
-     var expr = {{exp | json}};
-     var content_domain = {{ content_domain | json }};
+ <script src='{{ asset_bundle('expression.js')[0] }}'></script>
+ <script>
+     parent_url = {{ exp.url | json }};
  </script>
 {% endblock %}
-{% block body_classes %}{{super()}} frame{% endblock %}
 
-{% block nav_right %}
-  {{ star_button(exp.id, exp.star_count, exp.id in user.starred_expr_ids) }} 
-  {% for collection in [{'data': starrers, 'type': 'starrers', 'id': 'starrers'}] %}
-    {% include "dialogs/starrers.html" %}
-  {% endfor %}
+{% block body_classes %}{{ super() }} expression minimal{% endblock %}
 
-  {% if exp.auth == 'public' %}
-    <div id = "btn_broadcast" class="hoverable nav_icon has_count{{ ' enabled' if exp.id in user.broadcast_ids }}"
-      onclick='btn_broadcast_click(this);' title="Broadcast this to your listeners" data-count='{{ exp.broadcast_count }}'>
-      <div class='full icon scale'></div>
-    </div>
-  {% endif %}
-
-  <div id = "btn_comment" class="hoverable nav_icon has_count" data-count='{{ exp.comment_count }}' onclick='btn_comment_click();'>
-    <img src='{{ 'skin/1/discussion.png'|asset_url }}' class='hoverable icon full scale' title="Discussions">
-  </div>
-
-  {% if user_is_owner %}
-   <a href='{{ edit }}'><img id='btn_edit' src='{{ 'skin/1/edit.png'|asset_url }}' class='hoverable nav_icon scale' title='edit'></a>
-
-   <img id='btn_delete' src='{{ 'skin/1/delete_page.png'|asset_url }}' class='hoverable nav_icon scale' title='delete'>
-   <div id='dia_delete' class='menu medbold' style='padding : 10px; width : 13em;'>
-    Are you sure you want
-    to delete this page?
-    <br>
-    <form method='POST' action='{{ secure_server }}'>
-     <input type='hidden' name='action' value='expr_delete'>
-     <input type='hidden' name='id' value='{{ exp.id }}'>
-     <div style='text-align : right'><input type='submit' value='Yes' class='btn black rounded medbold'></div>
-    </form>
-   </div>
-   <script>hover_menu($('#btn_delete'), $('#dia_delete'), { hover : false });</script>
-   {% if owner.flags.expr_new and owner.expr_count < 2 %}<script>$(function() {
-    updateShareUrls('#dia_share', window.location);  
-    showDialog('#dia_share', { minimize_to : '#btn_share' } );
-   })</script>{% endif %}
-  {% endif %}
+{% block main %}
+ {% include 'expr_background.html' %}
+ <div id='content'>{{ html }}</div>
 {% endblock %}
-
-{% block body %}
- <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
-   <a href='#' onclick="Hive.navigator.prev(); return false;" id='pagethrough_prev'><img src='{{ 'skin/1/pagethrough/prev.png'|asset_url }}' class='pagethrough hoverable'></a>
-   <a href='#' onclick="Hive.navigator.next(); return false;" id='pagethrough_next'><img src='{{ 'skin/1/pagethrough/next.png'|asset_url }}' class='pagethrough pagethrough_next hoverable'></a>
-
- {% if auth_required %}
-  {% include 'dialogs/password.html' %}
- {% else %}
-  <div id="expression_frames">
-      <iframe src='{{ url }}' class='expr' name='expr'></iframe>
-  </div>
-  <div id="navigator" class="navigator">
-    <div class="info">
-      <div class="icon random_btn hoverable rounded"></div>
-      <input type="text" class="search">
-      <div class="tags"></div>
-    </div>
-  </div>
-  {{ body }}
- {% endif %}
-{% endblock %}
-
-{# clear layout for community pages #}
-{% block content %}
-{% endblock %}
-
-{% block footer_scripts %}
-<script>
-  $(function(){
-    pagethrough_btns = $('.pagethrough');
-    var navigator_height = (Hive && Hive.navigator) ? Hive.navigator.height() : 0;
-    pagethrough_btns.css('top', ($(window).height() - pagethrough_btns.height() - navigator_height) / 2);
-    $('#pagethrough_prev').attr('title', "previous "
-      + context_to_string({plural: false}))
-      .click(function(){
-        logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'prev'});
-        var url = $(this).attr('href');
-        setTimeout(function() { window.location = url; }, 100);
-        return false;
-      });
-    $('#pagethrough_next').attr('title', "next "
-      + context_to_string({plural: false})).click(function(){
-        logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'next'});
-        var url = $(this).attr('href');
-        setTimeout(function() { window.location = url; }, 100);
-        return false;
-      });
-
-    var hover_width = 150;
-    var hover_height = 50;
-
-    function mouse_move(x,y){
-         if ($(window).width() - x < hover_width) {
-            $('#pagethrough_next img').show();
-            if (Hive.navigator){
-                Hive.navigator.show();
-            }
-        } else if (x < hover_width) {
-            $('#pagethrough_prev img').show();
-            if (Hive.navigator){
-                Hive.navigator.show();
-            }
-        } else if ($(window).height() - y < hover_height) {
-            if (Hive.navigator){
-                Hive.navigator.show();
-            }
-        } else {
-            $('#pagethrough_prev img').hide();
-            $('#pagethrough_next img').hide();
-            if (Hive.navigator){
-                Hive.navigator.hide();
-            }
-        }
-   };
-    window.addEventListener("message", function(e){
-        var a = e.data.split(',');
-        mouse_move(parseInt(a[0]), parseInt(a[1]));
-    }, false);
-
-    $(window).mousemove(function(e){
-        mouse_move(e.clientX, e.clientY);
-    });
-  });
-</script>
-{% endblock footer_scripts %}

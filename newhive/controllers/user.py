@@ -281,15 +281,14 @@ class UserController(ApplicationController):
         return self.serve_page(response, "pages/email_confirmation.html")
 
     def login(self, request, response):
-        if auth.handle_login(self.db, request, response):
-            if request.is_xhr:
-                return self.serve_json(response, {'login': True})
-            else:
-                return self.redirect(response, request.form.get('url', request.requester.url))
+        success = auth.handle_login(self.db, request, response)
+        if success and request.is_xhr:
+            return self.serve_json(response, {'login': True})
+        return self.redirect( response, request.form.get('url', abs_url()) )
 
     def logout(self, request, response):
         auth.handle_logout(self.db, request, response)
-        return self.redirect(response, request.form.get('url', request.url))
+        return self.redirect( response, request.form.get('url', abs_url()) )
 
     def log(self, request, response):
         action = request.form.get('log_action')
