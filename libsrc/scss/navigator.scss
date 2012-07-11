@@ -12,6 +12,9 @@
     z-index: 4;
     .info {
         margin: $margin 0;
+        .search {
+            width: 300px;
+        }
         .tags {
             float: right;
         }

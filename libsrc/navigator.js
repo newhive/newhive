@@ -23,7 +23,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         prev_list = [],
         current_expr;
 
-    // methods
+    // private methods
     function animate_slide(steps){
         var operator = steps > 0 ? "-=" : "+=";
         inner.find('.current .element').addClass('rounded');
@@ -33,6 +33,19 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         );
     };
 
+    function build_search(query) {
+        function build(list, input, prefix){
+            if (typeof(input) == "undefined") return;
+            var q = typeof(input) == "string" ? [input] : input;
+            $.merge(list, $.map(q, function(el) { return prefix + el }));
+        };
+        var query_list = []
+        build(query_list, query.user, "@");
+        build(query_list, query.tag, "#");
+        return query_list.join(" ");
+    };
+
+    // public methods
     o.select = function(offset){
         var previous_expr = current_expr;
         var left_offset = $(window).width();
@@ -176,12 +189,16 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
         navigator_element.append(inner).append(frame);
 
+        // Update tags, etc in info line
         var info = navigator_element.find('.info');
         var tags = o.current_expr().tags_index;
         if (typeof(tags) == "undefined") tags = [];
         info.find('.tags').html(
             $.map(tags, function(el){ return "<span class='tag'>#" + el + "</span>" }).join('')
         );
+
+        var query = URI(window.location.href).query(true);
+        info.find('input').val(build_search(query));
 
         // Unless this is the initial render we now have two inner elements,
         // remove the old one, but do it in this roundabout way to prevent a
