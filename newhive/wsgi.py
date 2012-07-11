@@ -227,6 +227,7 @@ def handle(request): # HANDLER
         else:
             username = parts[0] # assume newhive.com/username/
             parts = parts[1:]
+            if not len(parts): parts = ['']
     elif request.domain.startswith('www.'):
         return app.redirect(response, re.sub('www.', '', request.url, 1))
 
