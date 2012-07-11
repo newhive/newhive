@@ -53,7 +53,7 @@
         ><a href='{{ server_url }}/home/people'><div class='menu_item'>People</div></a
       ></div>
     {% endif %}
-    <a href='{{ server_url }}random'><div id='random_btn' class='icon hoverable rounded' title="View Random Expression"></div></a>
+    <a href='{{ server_url }}random'><div class='random_btn icon hoverable rounded' title="View Random Expression"></div></a>
     <form method='GET' action='{{ server_url }}search' name='search_form'>
       <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
       <div class='hoverable icon scale submit' title='Submit search' onclick='document.forms.search_form.submit()'></div>
@@ -325,8 +325,6 @@
     {% endblock content %}
   </div>
 
-  <div id="navigator"></div>
-  
   <div id='dialogs'>
     {% block dialogs %}
 

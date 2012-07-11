@@ -7,9 +7,23 @@
     width: 100%;
     position: fixed;
     left: 0;
-    bottom: 0;
-    padding-top: $margin * 2;
-    background: white;
+    bottom: -800px;
+    background: rgba(255,255,255,0.8);
+    z-index: 4;
+    .info {
+        margin: $margin 0;
+        .tags {
+            float: right;
+        }
+        .tag {
+            font-weight: bold;
+            font-size: 15px;
+            padding: 6px;
+            margin: 4px;
+            background: $color_selected;
+            display: inline-block;
+        }
+    }
     .navigator_inner{
         position: relative;
         .current {
@@ -17,7 +31,6 @@
             padding: 0;
             .element {
                 margin: 0;
-                @include border-radius(0);
             }
         }
         .container {
@@ -32,7 +45,9 @@
         }
         .element {
             margin: 0 $margin 100px $margin;
-            @include border-radius(7px);
+            img {
+                @include border-radius(4px);
+            }
             .text {
                 overflow: hidden;
             }

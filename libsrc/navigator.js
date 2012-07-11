@@ -12,8 +12,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         },
         opts
     );
-    var height = opts.thumb_width + opts.text_height + 2 * opts.margin;
-    var history_manager = window.history;
+    var height = opts.thumb_width + opts.text_height + 2 * opts.margin + navigator_element.find('.info').height();
+    var history_manager = window.History;
 
     // private variables
     var content_element,
@@ -66,7 +66,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             frame.css('z-index', 1);
         };
         frame.animate({left: 0}, {complete: animate_complete});
-        history_manager.pushState(current_expr._id, current_expr.title, o.current_url());
+        history_manager.pushState(current_expr, current_expr.title, o.current_url());
 
         var callback = function(data){
             $.each(data, function(i, expr){
@@ -90,6 +90,31 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         return function(){ o.select(1); }
     }();
 
+    o.select_by_id = function(id){
+        var ids, return_ids, pos;
+        if (id === o.current_id()) return;
+        return_ids = function(el) { return el.id };
+
+        // Look for id in prev_list
+        ids = $.map(o.prev_list(), return_ids);
+        pos = $.inArray(id, ids);
+        if (pos >= 0){
+            // Transform from 0-based index in previous list to position relative to current
+            pos = -(pos + 1);
+        } else {
+            // Now look in next_list
+            ids = $.map(o.next_list(), return_ids);
+            pos = $.inArray(id, ids);
+            if (pos >= 0){
+                pos = pos + 1;
+            } else {
+                // Not found in either case, this shouldn't happen normally
+                return false;
+            }
+        }
+        o.select(pos);
+    };
+
     var inner;
     o.render = function(render_opts){
         render_opts = $.extend({hidden: false}, render_opts);
@@ -102,6 +127,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             plus: Math.floor((width + opts.thumb_width) / 2)
         };
 
+        var old_inner = inner;
         inner = $('<div>').addClass('navigator_inner');
 
         function build(list, element, direction){
@@ -137,28 +163,32 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         });
 
         // The frame is the 'loupe' like border highlighting the current element
-        var frame = $('<div>').addClass('frame border selected')
-            .css('left', center.minus - opts.margin)
+        var frame = navigator_element.find('.frame');
+        if (!frame.length) frame = $('<div>').addClass('frame border selected')
+        frame.css('left', center.minus - opts.margin)
             .css('width', opts.thumb_width)
             .css('height', height - opts.margin)
             .css('margin-top', -opts.margin);
 
         // Build the new navigator
-        var new_nav = $('<div>').addClass('navigator')
-            .css('z-index', '4').css('height', height)
+        navigator_element.css('height', height)
             .css('font-size', opts.thumb_width/190 + 'em');
-        if (render_opts.hidden) new_nav.css('bottom', -height - 2 * opts.margin);
-        new_nav.append(inner).append(frame);//.css('opacity', 0.1);
+        if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
+        navigator_element.append(inner).append(frame);
 
-        // Render the new element to the page, then swap it in for the old
-        // element.  This roundabout way prevents a flash of a blank element,
-        // could be improved though I'm sure. For instance, you see a doubly
-        // opaque drop shadow for a moment
-        navigator_element.before(new_nav);
-        var old_nav = navigator_element;
-        navigator_element.animate({opactiy: 0}, 5, function(){ old_nav.remove();});
-        navigator_element = new_nav;
-        set_hover_handler();
+        var info = navigator_element.find('.info');
+        var tags = o.current_expr().tags_index;
+        if (typeof(tags) == "undefined") tags = [];
+        info.find('.tags').html(
+            $.map(tags, function(el){ return "<span class='tag'>#" + el + "</span>" }).join('')
+        );
+
+        // Unless this is the initial render we now have two inner elements,
+        // remove the old one, but do it in this roundabout way to prevent a
+        // flash of a blank element,
+        if (old_inner) {
+            old_inner.animate({opactiy: 0}, 5, function(){ old_inner.remove();});
+        }
 
         return o;
     };
@@ -229,10 +259,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     // initialization
-    function set_hover_handler(){
-        navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
-    };
-
     o.initialize = function(){
         current_expr = Hive.Navigator.Expr(expr);
         content_element.find('iframe').on('load', o.cache_next);
@@ -250,8 +276,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 if (next_list.length) render_and_show();
             });
         }
-        history_manager.replaceState(current_expr._id, current_expr.title, o.current_url());
-        set_hover_handler();
+        history_manager.replaceState(current_expr, current_expr.title, o.current_url());
+        navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
         return o;
     };
 
@@ -273,7 +299,6 @@ Hive.Navigator.Expr = function(data){
     o.load = function(content_element, callback){
         if (frame) return;
         o.loading_started = true;
-        console.log('loading ', o.id);
         frame = $('<iframe>')
             .attr('src', content_domain + o.id)
             .css('left', 5000)
@@ -314,9 +339,11 @@ $(function(){
     Hive.navigator = Hive.Navigator($('#navigator'), $('#expression_frames'))
         .set_updater(Hive.Navigator.Updater())
         .initialize();
-    $(window).on('popstate', function(e, data){
-    });
     $(window).resize(function(){
         Hive.navigator.render();
+    });
+    $(window).on('statechange', function(){ // Note: We are using statechange instead of popstate
+        var state = History.getState(); // Note: We are using History.getState() instead of event.state
+        Hive.navigator.select_by_id(state.data.id);
     });
 });
