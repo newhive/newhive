@@ -60,7 +60,19 @@ $nav_size: 40px;
 }
 
 
-#nav_hive { height: $nav_size; left: 0; top: 0; }
+#nav_hive {
+    height: $nav_size;
+    left: 0;
+    top: 0;
+
+    .count {
+        background-color: $color_bright_red;
+        padding: 1px 4px;
+        margin: 0 0 6px 6px;
+        color: white;
+    }
+    .count.zero { display: none; }
+}
 
 #logo {
     width: $nav_size; height: $nav_size;
@@ -79,11 +91,10 @@ $nav_size: 40px;
 #login_btn { padding: 0 10px 0 10px; }
 
 #owner_btn {
-    #owner_thumb {
-        width: $nav_size - 8;
-        margin-right: 4px;
+    .owner_thumb {
+        width: $nav_size - 6;
+        margin-right: 6px;
     }
-    .text { padding-left: 2px; }
 }
 
 #share_btn {
@@ -113,7 +124,7 @@ $nav_size: 40px;
     }
     .active { color: black; }
     .thumbs { padding: 5px; }
-    .thumb { width: 42px; }
+    .thumbs .thumb { width: 44px; }
 
     .menu_item {
         padding: 5px 8px;
@@ -122,9 +133,9 @@ $nav_size: 40px;
         &.active { background-color: $color_selected; }
         .icon {
             float: right;
-            width: 30px;
-            height: 30px;
-            margin-top: -5px;
+            width: 35px;
+            height: 35px;
+            margin: -8px -9px;
         }
     }
 
@@ -139,60 +150,60 @@ $nav_size: 40px;
         }
         .active { background-color: $color_selected; }
     }
+}
 
-    &#login_menu {
-        width: 190px; padding : 10px;
-        input[type=text], #login_menu input[type=password] { width: 170px; }
-        .password_recovery {
-            font-weight: normal;
-            font-size: 12px;
-            color: black;
-            margin-right: 3px;
-            white-space: nowrap;
-        }
-        .submit { float: right; }
+#login_menu {
+    width: 190px; padding : 10px;
+    input[type=text], #login_menu input[type=password] { width: 170px; }
+    .password_recovery {
+        font-weight: normal;
+        font-size: 12px;
+        color: black;
+        margin-right: 3px;
+        white-space: nowrap;
+    }
+    .submit { float: right; }
+}
+
+#hive_menu {
+    padding: 10px;
+
+    .btns {
+        margin-bottom: 10px;
     }
 
-    &#hive_menu {
-        padding: 10px;
-
-        .btns {
-            margin-bottom: 10px;
-        }
-
-        .submit {
-          display: inline-block;
-          width: .44 * $nav_height;
-          height: .44 * $nav_height;
-          background-image: asset_url('skin/1/search_arrow.png');
-          vertical-align: middle;
-          &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
-        }
+    .submit {
+      display: inline-block;
+      width: .44 * $nav_height;
+      height: .44 * $nav_height;
+      background-image: asset_url('skin/1/search_arrow.png');
+      vertical-align: middle;
+      &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
     }
+}
 
-    &#user_menu { width: 260px; }
-    &#owner_menu {
-        width: 260px;
+#user_menu { width: 260px; }
+#owner_menu {
+    width: 260px;
 
-        .listen.off .on { display: none }
-        .listen.on .off { display: none }
-        .listen.off .icon { background-image: asset_url('skin/1/listen.png') }
-        .listen.off.active .icon { background-image: asset_url('skin/1/listen-hover.png') }
-        .listen.on .icon { background-image: asset_url('skin/1/listening.png') }
-        .listen.on.active .icon { background-image: asset_url('skin/1/listening-hover.png') }
+    .listen.off .on { display: none }
+    .listen.on .off { display: none }
+    .listen.off .icon { background-image: asset_url('skin/1/listen.png') }
+    .listen.off.active .icon { background-image: asset_url('skin/1/listen-hover.png') }
+    .listen.on .icon { background-image: asset_url('skin/1/listening.png') }
+    .listen.on.active .icon { background-image: asset_url('skin/1/listening-hover.png') }
 
-        .message .icon { background-image: asset_url('skin/1/send_message.png') }
-        .message.active .icon { background-image: asset_url('skin/1/send_message-hover.png') }
-    }
+    .message .icon { background-image: asset_url('skin/1/send_message.png') }
+    .message.active .icon { background-image: asset_url('skin/1/send_message-hover.png') }
+}
 
-    &#share_menu {
-        padding-top:10px;
+#share_menu {
+    padding-top:10px;
 
-        .like_button {
-            text-align: center;
-            display: inline-block;
-            margin: 3px 7px;
-        }
+    .like_button {
+        text-align: center;
+        display: inline-block;
+        margin: 3px 7px;
     }
 }
 
@@ -252,7 +263,6 @@ $nav_size: 40px;
             height: 38px;
             text-align: right;
             .icon {
-                height: 32px;
                 margin: 5px 0;
                 display: inline-block;
                 background-image: asset_url('skin/1/edit.png');
@@ -291,7 +301,6 @@ $nav_size: 40px;
             height: 38px;
             text-align: right;
             .icon {
-                height: 32px;
                 margin: 5px 0;
                 display: inline-block;
                 background-image: asset_url('skin/1/delete.png');
