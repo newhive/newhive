@@ -344,10 +344,16 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.cache_next = function(){
         for (i=0; i<3; i++) {
             if ( next_list[i] && !next_list[i].loading_started){
-                next_list[i].load(content_element, o.cache_next);
+                setTimeout( function(){
+                    console.log('caching');
+                    next_list[i].load(content_element, o.cache_next);
+                }, 500);
                 break;
             } else if (prev_list[i] && !prev_list[i].loading_started){
-                prev_list[i].load(content_element, o.cache_next);
+                setTimeout( function(){
+                    console.log('caching');
+                    prev_list[i].load(content_element, o.cache_next);
+                }, 500);
                 break;
             }
         }
