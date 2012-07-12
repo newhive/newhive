@@ -141,14 +141,14 @@
         setTimeout(function(){
             var speed = 100;
             var close_nav = function(){
-                $('#user_nav').animate({ left: -50, top: -50 }, speed);
-                $('#owner_nav').animate({ right: -50, top: -50 }, speed);
-                $('#action_nav').animate({ right: -50 }, speed);
+                $('#user_nav').stop().clearQueue().animate({ left: -50, top: -50 }, speed);
+                $('#owner_nav').stop().clearQueue().animate({ right: -50, top: -50 }, speed);
+                $('#action_nav').stop().clearQueue().animate({ right: -50 }, speed);
             };
             var open_nav = function(){
-                $('#user_nav').animate({ left: 0, top: 0 }, speed);
-                $('#owner_nav').animate({ right: 0, top: 0 }, speed);
-                $('#action_nav').animate({ right: 0 }, speed);
+                $('#user_nav').stop().clearQueue().animate({ left: 0, top: 0 }, speed);
+                $('#owner_nav').stop().clearQueue().animate({ right: 0, top: 0 }, speed);
+                $('#action_nav').stop().clearQueue().animate({ right: 0 }, speed);
             };
 
             var drawers = $('#user_nav,#owner_nav,#action_nav'),
