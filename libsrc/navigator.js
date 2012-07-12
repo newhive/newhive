@@ -220,17 +220,17 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 .css('height', height - opts.margin)
                 .css('margin-top', -opts.margin);
 
-            inner.add(frame).drag('init', function(){
-                return inner.add(frame);
-            }).drag(function(e, dd){
-                $(this).css('left', dd.offsetX);
-            }).drag('end', function(e, dd){
-                if (this === inner[0]) update_pos(dd.deltaX);
-            }).on('mousewheel', function(e){
-                var delta = e.originalEvent.wheelDelta;
-                inner.add(frame).css('left', '+=' + delta);
-                update_pos(delta);
-            });
+            //inner.add(frame).drag('init', function(){
+            //    return inner.add(frame);
+            //}).drag(function(e, dd){
+            //    $(this).css('left', dd.offsetX);
+            //}).drag('end', function(e, dd){
+            //    if (this === inner[0]) update_pos(dd.deltaX);
+            //}).on('mousewheel', function(e){
+            //    var delta = e.originalEvent.wheelDelta;
+            //    inner.add(frame).css('left', '+=' + delta);
+            //    update_pos(delta);
+            //});
 
             // Build the new navigator
             navigator_element.css('height', height)
