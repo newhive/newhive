@@ -295,7 +295,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     var visible = false;
-    var sticky = false;
     o.show = function(){
         if (visible) return o;
         navigator_element.stop().clearQueue();
@@ -305,7 +304,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.hide = function(){
-        if (o.no_hide || !visible || sticky) return o;
+        if (!visible) return o;
         navigator_element.stop().clearQueue();
         navigator_element.delay(500).animate({bottom: -height-2*opts.margin});
         visible = false;
@@ -369,18 +368,14 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.initialize = function(){
         current_expr = Hive.Navigator.Expr(expr);
         content_element.find('iframe').on('load', o.cache_next);
-        var render_and_show = function(){
-            o.render({hidden: true});
-            //o.show();
-        };
         if (updater) {
             updater.next(current_expr[opts.paging_attr], o.visible_count(), function(data){
                 next_list = $.map(data, Hive.Navigator.Expr);
-                if (prev_list.length) render_and_show();
+                if (prev_list.length) o.render().show();
             });
             updater.prev(current_expr[opts.paging_attr], o.visible_count(), function(data){
                 prev_list = $.map(data, Hive.Navigator.Expr);
-                if (next_list.length) render_and_show();
+                if (next_list.length) o.render().show();
             });
         }
         history_manager.replaceState(current_expr, current_expr.title, o.current_url());

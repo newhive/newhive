@@ -149,7 +149,7 @@ class HiveAssets(Assets):
                 'frame.js', 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
                 'history/history.adapter.jquery.js', 'jquery.transition.js',
                 filters='yui_js',
-                output='../lib/navigator.js')
+                output='../lib/frame.js')
 
         assets_env.register('app.js',
                 'jquery_misc.js', 'util.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
