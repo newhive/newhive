@@ -29,6 +29,7 @@
     }
     .navigator_inner{
         position: relative;
+        left: 0;
         .current {
             position: absolute;
             padding: 0;
@@ -38,7 +39,7 @@
         }
         .container {
             overflow: hidden;
-            width: 100%;
+            width: 10000px;
             position: absolute;
             top: 0;
             margin: 0 $margin;
