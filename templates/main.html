@@ -95,7 +95,7 @@
         ><div class='center'><div id='login_btn' class='text center hoverable text_btn left_edge'>Log In</div></div
         {% set nav_begin = False %}
       {% endif %}
-      {% if owner and not user_is_owner %}
+      {% if owner %}
         ><div id='owner_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %} text_btn'
           {% if owner.has_thumb() %}
             ><img class='owner_thumb' src='{{ owner.get_thumb(70) }}'
@@ -119,7 +119,7 @@
       </div>
     {% endif %}
 
-    {% if owner and not user_is_owner %}
+    {% if owner %}
       <div id='owner_menu' class='menu'>
         <a href='{{ owner.url }}'><div class='menu_item default'>Expressions</div></a>
         <div class='thumbs'>

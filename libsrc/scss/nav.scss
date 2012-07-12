@@ -161,7 +161,8 @@ $nav_size: 40px;
 
     .edit {
         height: 38px;
-        text-align: right;
+
+        .nav_btn { text-align: right; }
         .icon {
             margin: 5px 0;
             display: inline-block;
@@ -198,7 +199,8 @@ $nav_size: 40px;
 
     .delete {
         height: 38px;
-        text-align: right;
+
+        .nav_btn { text-align: right; }
         .icon {
             margin: 5px 0;
             display: inline-block;
