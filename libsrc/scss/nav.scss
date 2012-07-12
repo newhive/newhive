@@ -19,6 +19,15 @@ $nav_size: 40px;
         background-color: black;
     }
 }
+.icon.submit {
+    display: inline-block;
+    width: .44 * $nav_height;
+    height: .44 * $nav_height;
+    background-image: asset_url('skin/1/search_arrow.png');
+    vertical-align: middle;
+    &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
+}
+
 
 .nav {
     margin: 7px 8px;
@@ -160,14 +169,6 @@ $nav_size: 40px;
             margin-bottom: 10px;
         }
 
-        .submit {
-          display: inline-block;
-          width: .44 * $nav_height;
-          height: .44 * $nav_height;
-          background-image: asset_url('skin/1/search_arrow.png');
-          vertical-align: middle;
-          &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
-        }
     }
 
     &#user_menu { width: 260px; }

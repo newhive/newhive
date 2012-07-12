@@ -249,14 +249,34 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         // Update tags, etc in info line
         var info = navigator_element.find('.info');
-        var tags = o.current_expr().tags_index;
-        if (typeof(tags) == "undefined") tags = [];
-        info.find('.tags').html(
-            $.map(tags, function(el){ return "<span class='tag'>#" + el + "</span>" }).join('')
-        );
 
         var query = URI(window.location.href).query(true);
-        info.find('input').val(build_search(query));
+        var search_bar = info.find('input').val(build_search(query));
+
+        function tagify(tags, cls, prefix){
+            if (typeof tags == "undefined") return "";
+            var tag_array = typeof(tags) == "string" ? [tags] : tags;
+            return $.map(tag_array, function(tag) {
+                return "<span class='tag " + cls + "'>" + prefix + tag + "</span>"
+            }).join('');
+        };
+
+        var expr_tags = o.current_expr().tags_index;
+        var owner_tags = o.current_expr().owner.tags;
+        if (owner_tags) {
+            owner_tags = $.grep(owner_tags, function(tag){ return $.inArray(tag, expr_tags) == -1 });
+        };
+
+        info.find('.tags').html(
+            tagify(o.current_expr().owner.name, 'name', '@')
+        ).append(
+            tagify(expr_tags, 'expr', '#')
+        ).append(
+            tagify(owner_tags, 'user', '#')
+        ).find('.tag').click(function(){
+            search_bar.val($(this).html());
+        });
+
 
         // Unless this is the initial render we now have two inner elements,
         // remove the old one, but do it in this roundabout way to prevent a

@@ -12,19 +12,29 @@
     z-index: 4;
     .info {
         margin: $margin 0;
+        height: 45px;
         .search {
-            width: 300px;
+            width: 20%;
+        }
+        .tags_wrapper {
+            max-width: 70%;
+            margin-right: 10px;
+            float: right;
+            overflow: hidden;
         }
         .tags {
-            float: right;
+            white-space: nowrap;
         }
         .tag {
             font-weight: bold;
             font-size: 15px;
             padding: 6px;
             margin: 4px;
-            background: $color_selected;
             display: inline-block;
+            cursor: pointer;
+            &.name { background: $color_pink; }
+            &.expr { background: $color_selected; }
+            &.user { background: $color_bright_yellow; }
         }
     }
     .navigator_inner{

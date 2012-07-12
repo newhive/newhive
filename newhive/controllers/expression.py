@@ -64,6 +64,7 @@ class ExpressionController(ApplicationController, PagingMixin):
             if is_owner: resource.increment_counter('owner_views')
 
         resource['thumb'] = resource.get_thumb()
+        resource['owner'] = dfilter(owner, ['name', 'fullname', 'thumb', 'tags'])
         response.context.update(
              edit = abs_url(secure = True) + 'edit/' + resource.id
             ,mtime = friendly_date(time_u(resource['updated']))
@@ -128,7 +129,7 @@ class ExpressionController(ApplicationController, PagingMixin):
             owner = expr.owner
             owner['thumb'] = owner.get_thumb()
             expr['thumb'] = expr.get_thumb()
-            expr['owner'] = dfilter(owner, ['name', 'fullname', 'thumb'])
+            expr['owner'] = dfilter(owner, ['name', 'fullname', 'thumb', 'tags'])
             expr_infos.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'tags_index', 'owner', 'owner_name', 'updated', 'name']))
         return self.serve_json(response, expr_infos)
 
