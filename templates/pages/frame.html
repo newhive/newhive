@@ -152,22 +152,17 @@
         };
 
         var drawers = $('#user_nav,#owner_nav,#action_nav'),
-            handles = $($.map(drawers, function(e){ return make_handle(e).get(0) }));
+            handles = $($.map(drawers, function(e){ return make_handle(e).get(0) }))
+                .add('#navigator_handle').add('#navigator');
         nav_menu = hover_menu(handles, drawers, { layout: false, open_menu: open_nav,
             close_menu: close_nav, opened: true } );
 
         var navigator_menu = hover_menu('#navigator_handle', '#navigator', {
             layout: false,
             opened: true,
-            open_menu: function(){
-                Hive.navigator.show();
-                nav_menu.open();
-            },
-            close_menu: function(){
-                Hive.navigator.hide();
-                nav_menu.close();
-            }
-        } );
+            open_menu: function(){ Hive.navigator.show() },
+            close_menu: function(){ console.log('footest'); Hive.navigator.hide() }
+        });
   </script>
 
   <div id="expression_frames">

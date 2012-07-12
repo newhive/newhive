@@ -67,7 +67,7 @@ input[type=button], input[type=submit] { border : none; }
     @include border-radius(5px);
 }
 .black { background-color : black; color: white; }
-.error, .active { color: $color_active; }
+.error { color: $color_active; }
 .inactive { color: $color_24; }
 #user { position : fixed; display : inline-block; }
 .spacer { height : 10px; clear : both; }
