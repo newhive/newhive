@@ -138,31 +138,43 @@
         //hover_menu('.btn_box.view', $('#expr_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
         //hover_menu('.btn_box.comment', $('#comment_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
 
+        setTimeout(function(){
+            var speed = 100;
+            var close_nav = function(){
+                $('#user_nav').animate({ left: -50, top: -50 }, speed);
+                $('#owner_nav').animate({ right: -50, top: -50 }, speed);
+                $('#action_nav').animate({ right: -50 }, speed);
+            };
+            var open_nav = function(){
+                $('#user_nav').animate({ left: 0, top: 0 }, speed);
+                $('#owner_nav').animate({ right: 0, top: 0 }, speed);
+                $('#action_nav').animate({ right: 0 }, speed);
+            };
 
-        var speed = 100;
-        var close_nav = function(){
-            $('#user_nav').animate({ left: -50, top: -50 }, speed);
-            $('#owner_nav').animate({ right: -50, top: -50 }, speed);
-            $('#action_nav').animate({ right: -50 }, speed);
-        };
-        var open_nav = function(){
-            $('#user_nav').animate({ left: 0, top: 0 }, speed);
-            $('#owner_nav').animate({ right: 0, top: 0 }, speed);
-            $('#action_nav').animate({ right: 0 }, speed);
-        };
+            var drawers = $('#user_nav,#owner_nav,#action_nav'),
+                handles = $($.map(drawers, function(e){ return make_handle(e).get(0) }))
+                    .add('#navigator_handle').add('#navigator');
+            nav_menu = hover_menu(handles, drawers, { layout: false, open_menu: open_nav,
+                close_menu: close_nav, opened: true } );
 
-        var drawers = $('#user_nav,#owner_nav,#action_nav'),
-            handles = $($.map(drawers, function(e){ return make_handle(e).get(0) }))
-                .add('#navigator_handle').add('#navigator');
-        nav_menu = hover_menu(handles, drawers, { layout: false, open_menu: open_nav,
-            close_menu: close_nav, opened: true } );
+            var navigator_menu = hover_menu('#navigator_handle', '#navigator', {
+                layout: false,
+                opened: true,
+                open_menu: function(){ Hive.navigator.show() },
+                close_menu: function(){ Hive.navigator.hide() },
+                group: false
+            });
 
-        var navigator_menu = hover_menu('#navigator_handle', '#navigator', {
-            layout: false,
-            opened: true,
-            open_menu: function(){ Hive.navigator.show() },
-            close_menu: function(){ console.log('footest'); Hive.navigator.hide() }
-        });
+            hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
+                $('#search_box').get(0).focus(); }, click_persist: '#search_box', group: nav_menu } );
+            if(logged_in) hover_menu( '#username', '#user_menu', { offset_y: 8, group: nav_menu } );
+
+            hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right', group: nav_menu });
+            hover_menu('#share_btn', '#share_menu', { offset_y: 8, group: nav_menu  });
+
+            navigator_menu.close();
+            nav_menu.close();
+        }, 3000);
   </script>
 
   <div id="expression_frames">

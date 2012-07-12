@@ -208,34 +208,6 @@
     </div>
   {% endif %}
 
-  <script>
-    (function(){
-        var user_nav = hover_menu(make_handle('#user_nav'), '#user_nav', {
-            animate_close: { top: -50, left: -50 }, opened: true, layout: false });
-        hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
-            $('#search_box').get(0).focus(); }, click_persist: '#search_box', group: user_nav } );
-        if(logged_in) hover_menu( '#username', '#user_menu', { offset_y: 8, group: user_nav } );
-
-        {% if not editing %}
-            var owner_nav = hover_menu(make_handle('#owner_nav'), '#owner_nav', {
-                animate_close: { right: -50, top: -50 }, opened: true, layout: false });
-            if(!logged_in) {
-                var login_menu = hover_menu( '#login_btn', '#login_menu', {
-                        open: function() { $('#username').get(0).focus(); },
-                        close_delay: 1000,
-                        click_persist: '#login_menu',
-                        offset_y: 8,
-                        layout_x: 'right',
-                        group: owner_nav
-                    } );
-                {% if error %} login_menu.open(); {% endif %}
-            }
-            hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right', group: owner_nav });
-            hover_menu('#share_btn', '#share_menu', { offset_y: 8, group: owner_nav  });
-        {% endif %}
-    })();
-  </script>
-
   {% block body %}
   {% endblock body %}
   <div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>

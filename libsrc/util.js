@@ -571,6 +571,7 @@ hover_menu = function(handle, drawer, options) {
     ;
     if(!handle.length) throw("hover_menu has no handle");
     if(!drawer.length) throw("hover_menu has no drawer");
+    if(!opts.group) opts.group = { menus: [] };
 
     o.menus = [];
     o.opened = opts.opened;
