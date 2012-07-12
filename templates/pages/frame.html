@@ -155,14 +155,15 @@
                 handles = $($.map(drawers, function(e){ return make_handle(e).get(0) }))
                     .add('#navigator_handle').add('#navigator');
             nav_menu = hover_menu(handles, drawers, { layout: false, open_menu: open_nav,
-                close_menu: close_nav, opened: true } );
+                close_menu: close_nav, opened: true, close_delay: 2000 } );
 
             var navigator_menu = hover_menu('#navigator_handle', '#navigator', {
                 layout: false,
                 opened: true,
                 open_menu: function(){ Hive.navigator.show() },
                 close_menu: function(){ Hive.navigator.hide() },
-                group: false
+                group: false,
+                close_delay: 2000
             });
 
             hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
@@ -174,7 +175,7 @@
 
             navigator_menu.close();
             nav_menu.close();
-        }, 3000);
+        }, 5000);
   </script>
 
   <div id="expression_frames">
