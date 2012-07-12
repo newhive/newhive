@@ -1,4 +1,4 @@
-from os.path import dirname, join, abspath, normpath
+from os.path import dirname, join, abspath, normpath, isfile, isdir
 import os
 import json
 import time
@@ -8,33 +8,49 @@ from boto.s3.key import Key as S3Key
 from boto.s3.connection import S3Connection
 from newhive import config
 from newhive.manage import git
-from newhive.utils import lget, now
+from newhive.utils import lget, now, abs_url
 from md5 import md5
 
 import logging
 logger = logging.getLogger(__name__)
 
+
+#class Asset(object):
+#    def __init__(self, path, version, host):
+
+
 class Assets(object):
     def __init__(self, asset_path):
-        self.base_path = normpath(join(config.src_home, asset_path))
         self.assets = {}
+        self.base_path = normpath(join(config.src_home, asset_path))
+        self.strip = len(self.base_path) + 1
 
         self.s3_con = S3Connection(config.aws_id, config.aws_secret)
         self.asset_bucket = self.s3_con.create_bucket(config.asset_bucket)
         bucket_url = self.asset_bucket.generate_url(0)
         self.base_url = bucket_url[0:bucket_url.index('?')]
+        self.local_base_url = abs_url() + 'lib/'
+        self.secure_local_base_url = abs_url(secure=True) + 'lib/'
 
     # return (path, name) tuples
-    def find(self, start_path='', recurse=True):
-        strip = len(self.base_path) + 1
+    def find(self, start_path='', recurse=True, local=False):
+        actual_path = join(self.base_path, start_path)
 
-        for dirname, subdirs, filenames in os.walk(join(self.base_path, start_path)):
-            if not recurse: subdirs[:] = [] # slice prevents subdirs being clobbered with new list
-            for n in filenames:
-                path = join(dirname, n)
-                name = path[strip:]
-                with open(path) as f: version = md5(f.read()).hexdigest()[:8]
-                self.assets[name] = (path, version)
+        if isfile(actual_path): self.add_file(actual_path, local=local)
+        elif isdir(actual_path):
+            for dirname, subdirs, filenames in os.walk(join(self.base_path, start_path)):
+                if not recurse: subdirs[:] = [] # slice prevents subdirs being clobbered with new list
+                for n in filenames: self.add_file(join(dirname, n), local=local)
+        else: raise Exception('Yo, this is not a file or directory: ' + actual_path)
+
+        return self
+
+    def add_file(self, path, local=False):
+        name = path[self.strip:]
+        if self.assets.get(name): return
+
+        with open(path) as f: version = md5(f.read()).hexdigest()[:8]
+        self.assets[name] = (path, version, local)
 
         return self
 
@@ -48,8 +64,8 @@ class Assets(object):
             versions_key.name = versions_key_name
 
         print('Syncing all assets to s3...')
-        for name, (path, version) in self.assets.iteritems():
-            if not path: continue
+        for name, (path, version, local) in self.assets.iteritems():
+            if not path or local: continue
             if version != old_versions.get(name):
                 print 'uploading: '+ name
                 k = S3Key(self.asset_bucket)
@@ -64,12 +80,16 @@ class Assets(object):
 
         return self
 
-    def url(self, name):
+    def url(self, name, secure=False):
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
         if not props: return '/not_found:' + name
-        path = self.base_url + name
-        return path + '?' + props[1]
+
+        if props[2]: # local asset
+            path = self.secure_local_base_url if secure else self.local_base_url
+        else:
+            path = self.base_url
+        return path + name + '?' + props[1]
 
     def write_ruby(self, write_path):
         with open(join(config.src_home, write_path), 'w') as f:
@@ -113,6 +133,7 @@ class Assets(object):
             print message % (name)
         print "\nPassed %s/%s" % (valid, total)
 
+
 class HiveAssets(Assets):
 
     def __init__(self):
@@ -125,7 +146,10 @@ class HiveAssets(Assets):
         assets_env.url_expire = True
 
         # get assets that webasset bundles depend on (just images and fonts), generate scss include
+        #
         print('Fetching assets for scss...')
+        # first add assets that need to be local for weird browser requirements (fonts and flash)
+        #self.find('Jplayer.swf')
         hive_assets = self.find('')
 
         if config.debug_mode:

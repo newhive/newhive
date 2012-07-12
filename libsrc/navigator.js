@@ -441,15 +441,14 @@ Hive.Navigator.Updater = function(){
     return o
 };
 
-$(function(){
-    Hive.navigator = Hive.Navigator($('#navigator'), $('#expression_frames'))
+Hive.Navigator.create = function(navigator, viewer){
+    var o = Hive.Navigator($(navigator), $(viewer))
         .set_updater(Hive.Navigator.Updater())
         .initialize();
-    $(window).resize(function(){
-        Hive.navigator.render();
-    });
+    $(window).resize(o.render);
     $(window).on('statechange', function(){ // Note: We are using statechange instead of popstate
         var state = History.getState(); // Note: We are using History.getState() instead of event.state
-        Hive.navigator.select_by_id(state.data.id);
+        o.select_by_id(state.data.id);
     });
-});
+    return o;
+};

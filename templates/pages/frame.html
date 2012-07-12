@@ -32,6 +32,9 @@
     </div>
   </div>
   <div id='navigator_handle' class='menu_handle'></div>
+  <div id="expression_frames">
+    <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
+  </div>
 
   <div id='action_nav'>
     {% if user_is_owner %}
@@ -138,7 +141,6 @@
         //hover_menu('.btn_box.view', $('#expr_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
         //hover_menu('.btn_box.comment', $('#comment_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
 
-        setTimeout(function(){
             var speed = 100;
             var close_nav = function(){
                 $('#user_nav').stop().clearQueue().animate({ left: -50, top: -50 }, speed);
@@ -157,11 +159,12 @@
             nav_menu = hover_menu(handles, drawers, { layout: false, open_menu: open_nav,
                 close_menu: close_nav, opened: true, close_delay: 2000 } );
 
+            Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames');
             var navigator_menu = hover_menu('#navigator_handle', '#navigator', {
                 layout: false,
                 opened: true,
-                open_menu: function(){ Hive.navigator.show() },
-                close_menu: function(){ Hive.navigator.hide() },
+                open_menu: Hive.navigator.show,
+                close_menu: Hive.navigator.hide,
                 group: false,
                 close_delay: 2000
             });
@@ -175,12 +178,7 @@
 
             navigator_menu.close();
             nav_menu.close();
-        }, 5000);
   </script>
-
-  <div id="expression_frames">
-    <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
-  </div>
   {{ body }}
 {% endblock %}
 
