@@ -9,7 +9,7 @@
 {% endblock %}
 {% block head %}
  {{super()}}
- {% for asset in asset_bundle('navigator.js') %}
+ {% for asset in asset_bundle('frame.js') %}
      <script src='{{ asset }}'></script>
  {% endfor %}
  <script type='text/javascript'>
@@ -23,14 +23,6 @@
 {% block body_classes %}{{super()}} frame{% endblock %}
 
 {% block body %}
- <input type='hidden' name='expr_id' id='expr_id' value='{{ exp.id }}'>
-
- {% if auth_required %}
-  {% include 'dialogs/password.html' %}
- {% else %}
-  <div id="expression_frames">
-      <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
-  </div>
   <div id="navigator" class="navigator">
     <div class="info">
       <div class="icon random_btn hoverable rounded"></div>
@@ -41,8 +33,106 @@
       </div>
     </div>
   </div>
+
+  <div id='action_nav'>
+    {% if user_is_owner %}
+      <a href='{{ edit }}'><div class='btn_box edit hoverable'>
+        <div class='nav_btn'>
+          <span class='text'>Edit</span>
+          <div class='icon'></div>
+        </div>
+      </div></a>
+    {% endif %}
+    <div class='btn_box view hoverable'>
+      <div class='nav_btn'>
+        <div class='edge'></div>
+        <div class='icon'></div>
+        <div class='count'>{{ exp.view | large_number }}</div>
+      </div>
+    </div>
+    <div class='btn_box like hoverable'>
+      <div class='nav_btn'>
+        <div class='edge'></div>
+        <div class='icon'></div>
+        <div class='count{{ ' zero' if not exp.star_count }}'>{{ exp.star_count | large_number }}</div>
+      </div>
+    </div>
+    <div class='btn_box broadcast hoverable'>
+      <div class='nav_btn'>
+        <div class='edge'></div>
+        <div class='icon'></div>
+        <div class='count{{ ' zero' if not exp.broadcast_count }}'>{{ exp.broadcast_count | large_number }}</div>
+      </div>
+    </div>
+    <div class='btn_box comment hoverable'>
+      <div class='nav_btn'>
+        <div class='edge'></div>
+        <div class='icon'></div>
+        <div class='count{{ ' zero' if not exp.comment_count }}'>{{ exp.comment_count | large_number }}</div>
+      </div>
+    </div>
+    {% if user_is_owner %}
+      <div class='btn_box delete hoverable'>
+        <div class='nav_btn'>
+          <span class='text'>Delete</span>
+          <div class='icon'></div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  <script>$(window).resize(function(){ center($('#action_nav'), $(window), { h: false }) }).resize()</script>
+
+  <div id='expr_menu' class='menu'>
+    <div class="feed_item border_bottom" onclick="window.location=&quot;http://dev-2.thenewhive.com/wildflower/the-face&quot;">
+    <img src="https://s1-thenewhive.s3.amazonaws.com/4f572636ba28391dd00000c2_70x70?v=1">
+    <div class="feed_text">
+    <p>
+    <a href="http://elljay.dev-2.thenewhive.com/profile" class="initiator name ">
+    elljay
+    </a>
+
+    likes
+
+
+
+    </p>
+
+    <p class="title title1">the face</p>
+
+    </div>
+    <div class="byline"><span class="timestamp">Jul 1</span></div>
+    </div>
+    
+    {% for feed in exp.get_feed() %}
+      {% include "partials/feed.html" %}
+    {% endfor %}
+  </div>
+
+  <div id='broadcast_menu' class='menu'>
+  </div>
+
+  <div id='like_menu' class='menu'>
+  </div>
+
+  <div id='comment_menu' class='menu'>
+    {% for feed in exp.get_feed() %}
+      {% include "partials/feed.html" %}
+    {% endfor %}
+  </div>
+
+  <script>
+    (function(){ 
+        var action_nav = hover_menu(make_handle('#action_nav'), '#action_nav', {
+            animate_close: { right: -50 }, opened: true, layout: false });
+        hover_menu('.btn_box.view', $('#expr_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
+        hover_menu('.btn_box.comment', $('#expr_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
+    })();
+  </script>
+
+  <div id="expression_frames">
+    <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
+  </div>
   {{ body }}
- {% endif %}
 {% endblock %}
 
 {# clear layout for community pages #}
@@ -71,27 +161,14 @@
     //    return false;
     //  });
 
-    var hover_width = 150;
     var hover_height = 50;
 
     function mouse_move(x,y){
-         if ($(window).width() - x < hover_width) {
-            $('#pagethrough_next img').show();
-            if (Hive.navigator){
-                Hive.navigator.show();
-            }
-        } else if (x < hover_width) {
-            $('#pagethrough_prev img').show();
-            if (Hive.navigator){
-                Hive.navigator.show();
-            }
-        } else if ($(window).height() - y < hover_height) {
+        if ($(window).height() - y < hover_height) {
             if (Hive.navigator){
                 Hive.navigator.show();
             }
         } else {
-            $('#pagethrough_prev img').hide();
-            $('#pagethrough_next img').hide();
             if (Hive.navigator){
                 Hive.navigator.hide();
             }
@@ -108,3 +185,27 @@
   });
 </script>
 {% endblock footer_scripts %}
+
+{% block dialogs %}
+  {{ super() }}
+  {% if user_is_owner %}
+    <div id='dia_delete' class='newdialog center'>
+      <h3>Are you sure you want to delete this expression?</h3>
+      <div class='btns'>
+        <form method='POST' action='{{ secure_server }}'>
+          <input type='hidden' name='action' value='expr_delete'>
+          <input type='hidden' name='id' value='{{ exp.id }}'>
+          <input type='submit' value='Yes' class='btn'> &nbsp;
+          <input type='button' value='No' class='no_btn btn'>
+        </form>
+      </div>
+    </div>
+    <script>
+      (function(){
+        var dialog;
+        $('.delete_btn').click(function(){ dialog = showDialog('#dia_delete'); });
+        $('#dia_delete .no_btn').click(function(){ dialog.close() });
+      })();
+    </script>
+  {% endif %}
+{% endblock %}
