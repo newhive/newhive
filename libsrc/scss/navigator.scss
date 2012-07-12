@@ -12,20 +12,34 @@
     z-index: 4;
     .info {
         margin: $margin 0;
-        .tags {
+        height: 45px;
+        .search {
+            width: 20%;
+        }
+        .tags_wrapper {
+            max-width: 70%;
+            margin-right: 10px;
             float: right;
+            overflow: hidden;
+        }
+        .tags {
+            white-space: nowrap;
         }
         .tag {
             font-weight: bold;
             font-size: 15px;
             padding: 6px;
             margin: 4px;
-            background: $color_selected;
             display: inline-block;
+            cursor: pointer;
+            &.name { background: $color_pink; }
+            &.expr { background: $color_selected; }
+            &.user { background: $color_bright_yellow; }
         }
     }
     .navigator_inner{
         position: relative;
+        left: 0;
         .current {
             position: absolute;
             padding: 0;
@@ -35,7 +49,7 @@
         }
         .container {
             overflow: hidden;
-            width: 100%;
+            width: 10000px;
             position: absolute;
             top: 0;
             margin: 0 $margin;

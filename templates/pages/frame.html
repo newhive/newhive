@@ -27,7 +27,10 @@
     <div class="info">
       <div class="icon random_btn hoverable rounded"></div>
       <input type="text" class="search">
-      <div class="tags"></div>
+      <div class="hoverable icon scale submit" title="Submit search"></div>
+      <div class="tags_wrapper">
+          <div class="tags"></div>
+      </div>
     </div>
   </div>
 
@@ -129,6 +132,7 @@
   <div id="expression_frames">
     <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
   </div>
+  {{ body }}
 {% endblock %}
 
 {# clear layout for community pages #}
