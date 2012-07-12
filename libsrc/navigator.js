@@ -121,6 +121,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         frame.animate({left: 0}, {complete: animate_complete});
         history_manager.pushState(current_expr, current_expr.title, o.current_url());
 
+        Hive.Nav.update_expr(current_expr.data());
+
         //var callback = function(data){
         //    $.each(data, function(i, expr){
         //        towards.push(Hive.Navigator.Expr(expr));
@@ -410,6 +412,10 @@ Hive.Navigator.Expr = function(data){
 
     o.frame = function(){
         return frame;
+    };
+
+    o.data = function(){
+        return data;
     };
 
     return o;
