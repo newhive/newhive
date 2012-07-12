@@ -182,8 +182,12 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 .attr('src', expr.thumb)
                 .css('width', opts.thumb_width)
                 .css('height', opts.thumb_width);
+            var byline = $('<div class="byline">')
+                .append('<span class="by">by</span> ' + expr.owner.name )
+                .append('<span>');
             var text = $('<div class="text">')
                 .append('<div class="title">' + expr.title + '</div>')
+                .append(byline)
                 .css('width', opts.thumb_width)
                 .css('height', opts.text_height);
             el.append(im).append(text);
