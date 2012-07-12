@@ -23,7 +23,7 @@ $nav_size: 40px;
 .nav {
     margin: 7px 8px;
     z-index: 4;
-    position: fixed;
+    position: absolute;
     background-color: white;
     @include border-radius(5px);
     @include box-shadow(rgba(black, .3) 3px 3px 10px);
@@ -60,7 +60,7 @@ $nav_size: 40px;
 }
 
 
-#nav_hive {
+#user_nav {
     height: $nav_size;
     left: 0;
     top: 0;
@@ -86,7 +86,7 @@ $nav_size: 40px;
 .active #create_icon { background-image: asset_url('skin/1/create-hover.png'); }
 
 
-#nav_content { height: $nav_size; right: 0; top: 0; }
+#owner_nav { height: $nav_size; right: 0; top: 0; }
 
 #login_btn { padding: 0 10px 0 10px; }
 
@@ -104,6 +104,117 @@ $nav_size: 40px;
     cursor: default;
 }
 
+
+#action_nav {
+    right: 0;
+    top: 60px;
+    position: absolute;
+    z-index: 4;
+
+    .edit_spacer { height: 46px; }
+    .btn_box {
+        display: table;
+        margin: 4px 8px;
+        height: 59px;
+        background-color: white;
+        @include border-radius(5px);
+        @include box-shadow(rgba(black, .3) 3px 3px 10px);
+        font-weight: bold;
+        color: black;
+        cursor: pointer;
+        float: right;
+        clear: both;
+
+        &.active {
+            background-color: $color_selected;
+            .edge { background-image: asset_url('skin/1/action-hover.png'); }
+        }
+
+        .nav_btn {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+            position: relative;
+        }
+
+        .edge {
+            position: absolute;
+            top: 0;
+            left: -11px;
+            height: 59px;
+            width: 11px;
+        }
+
+        .count { margin-top: 5px; }
+
+        .icon { background-repeat: no-repeat; width: 38px; height: 28px; }
+    }
+
+    .edit {
+        height: 38px;
+        text-align: right;
+        .icon {
+            margin: 5px 0;
+            display: inline-block;
+            background-image: asset_url('skin/1/edit.png');
+        }
+        .text { display: none; }
+        &.active {
+            width: 85px;
+            .text { display: inline; }
+        }
+    }
+
+    .view {
+        .icon { background-image: asset_url('skin/1/views.png'); }
+        &.active .icon { background-image: asset_url('skin/1/views-hover.png'); }
+        cursor: default;
+    }
+
+    .broadcast {
+        .icon { background-image: asset_url('skin/1/broadcast.png'); }
+        &.active .icon { background-image: asset_url('skin/1/broadcast-hover.png'); }
+    }
+
+    .like {
+        .icon { background-image: asset_url('skin/1/like.png'); }
+        &.active .icon { background-image: asset_url('skin/1/like-hover.png'); }
+    }
+
+    .comment {
+        .icon { background-image: asset_url('skin/1/comment.png'); }
+        &.active .icon { background-image: asset_url('skin/1/comment-hover.png'); }
+        cursor: default;
+    }
+
+    .delete {
+        height: 38px;
+        text-align: right;
+        .icon {
+            margin: 5px 0;
+            display: inline-block;
+            background-image: asset_url('skin/1/delete.png');
+        }
+        &.active .icon { background-image: asset_url('skin/1/delete-hover.png'); }
+        .text { display: none; }
+        &.active {
+            width: 103px;
+            .text { display: inline; }
+        }
+    }
+}
+
+#expr_menu {
+    top: 68px;
+    right: 58px;
+    width: 250px;
+}
+
+
+.menu_handle {
+    position: absolute;
+    z-index: 3;
+}
 
 .menu {
     display: none;
@@ -214,113 +325,6 @@ $nav_size: 40px;
     font-weight: bold;
 }
 
-.nav_btn {
-    height: 59px;
-    display: table-cell;
-    vertical-align: middle;
-    text-align: center;
-    background-color: white;
-    @include border-radius(5px);
-    @include box-shadow(rgba(black, .3) 3px 3px 10px);
-    position: relative;
-    &.active { background-color: $color_selected; }
-    font-weight: bold;
-    color: black;
-    cursor: pointer;
-}
-
-#plus_menu {
-    right: 0;
-    top: 60px;
-    position: fixed;
-    z-index: 4;
-
-    .edit_spacer { height: 46px; }
-    .btn_box {
-        display: table;
-        margin: 8px;
-    }
-    .nav_btn {
-        .edge {
-            position: absolute;
-            top: 0;
-            left: -11px;
-            height: 59px;
-            width: 11px;
-        }
-        &.active .edge {
-            background-image: asset_url('skin/1/action-hover.png');
-        }
-
-        .count { margin-top: 5px; }
-
-        .icon { background-repeat: no-repeat; width: 38px; height: 28px; }
-
-        &.edit {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            height: 38px;
-            text-align: right;
-            .icon {
-                margin: 5px 0;
-                display: inline-block;
-                background-image: asset_url('skin/1/edit.png');
-            }
-            .text { display: none; }
-            &.active {
-                width: 85px;
-                .text { display: inline; }
-            }
-        }
-
-        &.views {
-            .icon { background-image: asset_url('skin/1/views.png'); }
-            &.active .icon { background-image: asset_url('skin/1/views-hover.png'); }
-        }
-
-        &.broadcast {
-            .icon { background-image: asset_url('skin/1/broadcast.png'); }
-            &.active .icon { background-image: asset_url('skin/1/broadcast-hover.png'); }
-        }
-
-        &.like {
-            .icon { background-image: asset_url('skin/1/like.png'); }
-            &.active .icon { background-image: asset_url('skin/1/like-hover.png'); }
-        }
-
-        &.comment {
-            .icon { background-image: asset_url('skin/1/comment.png'); }
-            &.active .icon { background-image: asset_url('skin/1/comment-hover.png'); }
-        }
-
-        &.delete_btn {
-            position: absolute;
-            top: 321px;
-            right: 8px;
-            height: 38px;
-            text-align: right;
-            .icon {
-                margin: 5px 0;
-                display: inline-block;
-                background-image: asset_url('skin/1/delete.png');
-            }
-            &.active .icon { background-image: asset_url('skin/1/delete-hover.png'); }
-            .text { display: none; }
-            &.active {
-                width: 103px;
-                .text { display: inline; }
-            }
-        }
-    }
-}
-
-#expr_menu {
-    top: 68px;
-    right: 58px;
-    width: 250px;
-}
-
 
 
 .feed_item {
@@ -339,7 +343,7 @@ $nav_size: 40px;
         background-color: $color_selected;
     }
     img {
-        margin: 2px 7px 2px 0px;
+        margin: 4px 7px 4px 4px;
         width: 50px;
         height: 50px;
         float: left;
@@ -353,7 +357,7 @@ $nav_size: 40px;
     }
     .byline {
         position: absolute;
-        right: 0;
+        right: 6px;
         bottom: 4px;
         overflow: hidden;
         font-size: 12px;
