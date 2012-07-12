@@ -125,7 +125,10 @@ class ExpressionController(ApplicationController, PagingMixin):
 
         expr_infos = []
         for expr in exprs:
+            owner = expr.owner
+            owner['thumb'] = owner.get_thumb()
             expr['thumb'] = expr.get_thumb()
+            expr['owner'] = dfilter(owner, ['name', 'fullname', 'thumb'])
             expr_infos.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'tags_index', 'owner', 'owner_name', 'updated', 'name']))
         return self.serve_json(response, expr_infos)
 
