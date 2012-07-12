@@ -586,16 +586,19 @@ hover_menu = function(handle, drawer, options) {
         }
     };
 
-    o.close = function() {
+    o.close = function(force) {
+        o.close_timer = false;
         if(!o.opened) return;
-        if($.inArray(true, $.map(o.menus, function(m){ return m.opened })) > -1) return;
+
+        if(force) $.map(o.menus, function(m){ m.close(force) });
+        else if($.inArray(true, $.map(o.menus, function(m){ return m.opened })) > -1) return;
 
         if(o.opts.animate_close){
             if(!o.opts.animate_open){
                 o.opts.animate_open = {};
                 for(p in o.opts.animate_close) o.opts.animate_open[p] = drawer.css(p);
             }
-            drawer.animate(o.opts.animate_close, 200);
+            drawer.animate(o.opts.animate_close, 100);
         } else {
             drawer.hide();
         }
@@ -616,12 +619,12 @@ hover_menu = function(handle, drawer, options) {
         o.cancel_close();
 
         o.opened = true;
-        if( o.opts.group.current && (o.opts.group.current != o) ) o.opts.group.current.close();
+        if( o.opts.group.current && (o.opts.group.current != o) ) o.opts.group.current.close(true);
         o.opts.group.current = o;
         handle.get(0).busy = true;
         if(o.opts.click_persist) o.opts.hover_close = true;
 
-        if(o.opts.animate_open) drawer.animate(o.opts.animate_open, 200);
+        if(o.opts.animate_open) drawer.animate(o.opts.animate_open, 100);
         else drawer.show();
 
         var css_opts = {};

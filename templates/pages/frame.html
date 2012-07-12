@@ -44,7 +44,7 @@
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
-        <div class='count'>{{ exp.view | large_number }}</div>
+        <div class='count'>{{ exp.views | large_number }}</div>
       </div>
     </div>
     <div class='btn_box like hoverable'>
@@ -122,7 +122,7 @@
         var action_nav = hover_menu(make_handle('#action_nav'), '#action_nav', {
             animate_close: { right: -50 }, opened: true, layout: false });
         hover_menu('.btn_box.view', $('#expr_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
-        hover_menu('.btn_box.comment', $('#expr_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
+        hover_menu('.btn_box.comment', $('#comment_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
     })();
   </script>
 
