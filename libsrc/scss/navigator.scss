@@ -64,6 +64,14 @@
             }
             .text {
                 overflow: hidden;
+                font-weight: bold;
+                .title{ display: block; }
+                .byline{ display: none; }
+                .by { color: $color_grey_medium; }
+            }
+            &:hover .text {
+                .title { display: none; }
+                .byline { display: block; }
             }
         }
         .prev .element {
@@ -77,5 +85,6 @@
         position: absolute;
         padding: 0;
         @include box-shadow(2px 2px 10px $shadow_color);
+        pointer-events: none;
     }
 }
