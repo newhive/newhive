@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class Assets(object):
-    def __init__(self, asset_path):
+    def __init__(self, asset_path, default_local=False):
         self.assets = {}
         self.base_path = normpath(join(config.src_home, asset_path))
         self.strip = len(self.base_path) + 1
@@ -31,9 +31,10 @@ class Assets(object):
         self.base_url = bucket_url[0:bucket_url.index('?')]
         self.local_base_url = abs_url() + 'lib/'
         self.secure_local_base_url = abs_url(secure=True) + 'lib/'
+        self.default_local = False
 
     # return (path, name) tuples
-    def find(self, start_path='', recurse=True, local=False):
+    def find(self, start_path='', recurse=True, local=None):
         actual_path = join(self.base_path, start_path)
 
         if isfile(actual_path): self.add_file(actual_path, local=local)
@@ -45,10 +46,11 @@ class Assets(object):
 
         return self
 
-    def add_file(self, path, local=False):
+    def add_file(self, path, local=None):
         name = path[self.strip:]
         if self.assets.get(name): return
 
+        if local == None: local = self.default_local
         with open(path) as f: version = md5(f.read()).hexdigest()[:8]
         self.assets[name] = (path, version, local)
 
@@ -145,20 +147,22 @@ class HiveAssets(Assets):
         assets_env.updater = 'always'
         assets_env.url_expire = True
 
+        if config.debug_mode:
+            assets_env.debug = True
+            assets_env.url = '/lib/libsrc'
+            self.default_local = True
+
         # get assets that webasset bundles depend on (just images and fonts), generate scss include
         #
         print('Fetching assets for scss...')
         # first add assets that need to be local for weird browser requirements (fonts and flash)
-        #self.find('Jplayer.swf')
-        hive_assets = self.find('')
+        self.find('Jplayer.swf', local=True)
+        self.find('fonts', local=True)
+        # now grab the rest of 'em
+        self.find('')
 
-        if config.debug_mode:
-            assets_env.debug = True
-            assets_env.url = '/lib/libsrc'
-            hive_assets.base_url = '/lib/'
-
-        hive_assets.write_ruby('libsrc/scss/compiled.asset_paths.rb')
-        hive_assets.write_js('libsrc/compiled.asset_paths.js')
+        self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
+        self.write_js('libsrc/compiled.asset_paths.js')
 
 
         print('Compiling css and js...')
@@ -230,7 +234,7 @@ class HiveAssets(Assets):
             logger.info("Assets build complete in %s seconds", time.time() - t0)
 
         # add the assets we just compiled
-        hive_assets.find(recurse=False)
+        self.find(recurse=False)
 
     def urls_with_expiry(self):
         urls = self.urls()

@@ -856,7 +856,10 @@ var context_to_string = function(opt_arg){
     }
 };
 
-var asset = function(path) { return hive_asset_paths[path]; }
+var asset = function(path, secure) {
+    var p = hive_asset_paths[path];
+    return secure ? p.replace('http:', 'https:') : p;
+}
 
 function sendRequestViaMultiFriendSelector() {
   function requestCallback(response) {

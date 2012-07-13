@@ -24,7 +24,7 @@ $(function() {
             loadeddata: update_timer(this),
             timeupdate: update_timer(this),
             ended: update_timer(this),
-            swfPath: (window.location.protocol == "https:" ? server_url : insecure_server) + "lib/",
+            swfPath: (window.location.protocol == "https:") ? asset('Jplayer.swf', true) : asset('Jplayer.swf'),
             supplied: "mp3",
             verticalVolume: true
         });
