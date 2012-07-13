@@ -122,16 +122,6 @@
 
         //var owner_nav = hover_menu(make_handle('#owner_nav'), '#owner_nav', {
         //    animate_close: { right: -50, top: -50 }, opened: true, layout: false });
-        //if(!logged_in) {
-        //    var login_menu = hover_menu( '#login_btn', '#login_menu', {
-        //            open: function() { $('#username').get(0).focus(); },
-        //            close_delay: 1000,
-        //            offset_y: 8,
-        //            layout_x: 'right',
-        //            group: owner_nav
-        //        } );
-        //    {% if error %} login_menu.open(); {% endif %}
-        //}
         //hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right', group: owner_nav });
         //hover_menu('#share_btn', '#share_menu', { offset_y: 8, group: owner_nav  });
 
@@ -140,7 +130,7 @@
         //hover_menu('.btn_box.view', $('#expr_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
         //hover_menu('.btn_box.comment', $('#comment_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
 
-    setTimeout(function(){
+    (function(){
         var speed = 100;
         var close_nav = function(){
             $('#user_nav').stop().clearQueue().animate({ left: -50, top: -50 }, speed);
@@ -160,6 +150,28 @@
         Hive.menus.nav_menu = hover_menu(handles, drawers, { layout: false, open_menu: open_nav,
             close_menu: close_nav, opened: true, close_delay: 2000 } );
 
+        hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
+            $('#search_box').get(0).focus(); }, group: Hive.menus.nav_menu } );
+        if(logged_in) hover_menu( '#username', '#user_menu', { offset_y: 8, group: Hive.menus.nav_menu } );
+
+        if(!logged_in) {
+            var login_menu = hover_menu( '#login_btn', '#login_menu', {
+                    open: function() { $('#username').get(0).focus(); },
+                    close_delay: 1000,
+                    offset_y: 8,
+                    layout_x: 'right',
+                    group: Hive.menus.nav_menu
+                } );
+            {% if error %} login_menu.open(); {% endif %}
+        }
+
+        var swap_action_nav = { open: function(){ $('#action_nav').hide() },
+            close: function(){ $('#action_nav').show() } };
+        hover_menu('#owner_btn', '#owner_menu', $.extend({ offset_y: 8, layout_x: 'right',
+            group: Hive.menus.nav_menu }, swap_action_nav));
+        hover_menu('#share_btn', '#share_menu', $.extend({ offset_y: 8,
+            group: Hive.menus.nav_menu }, swap_action_nav));
+
         Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames');
         Hive.menus.navigator_menu = hover_menu('#navigator_handle', '#navigator', {
             layout: false,
@@ -169,14 +181,9 @@
             group: false,
             close_delay: 2000
         });
+    })();
 
-        hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
-            $('#search_box').get(0).focus(); }, group: Hive.menus.nav_menu } );
-        if(logged_in) hover_menu( '#username', '#user_menu', { offset_y: 8, group: Hive.menus.nav_menu } );
-
-        hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right', group: Hive.menus.nav_menu });
-        hover_menu('#share_btn', '#share_menu', { offset_y: 8, group: Hive.menus.nav_menu  });
-
+    setTimeout(function(){
         Hive.menus.navigator_menu.close();
         Hive.menus.nav_menu.close();
     }, 5000);
