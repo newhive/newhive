@@ -1,4 +1,7 @@
 $(function() {
+    ///////////////////////////////////////////////////////////////////////////
+    //                      jPlayer shenanigans                              //
+    ///////////////////////////////////////////////////////////////////////////
     // hive.audio jplayer setup
     //if ($('.jp-jplayer').length > 0) {
     //    $('head').append("<link rel='stylesheet' type='text/css' href='/lib/libsrc/jplayer/jplayer.blue.monday.css'>");
@@ -72,18 +75,36 @@ $(function() {
         player.jPlayer('volume', newVolume);
     });
     
+
+    ///////////////////////////////////////////////////////////////////////////
+    //         more or less normal scrolling without default scrollbars      //
+    ///////////////////////////////////////////////////////////////////////////
+    $(window).on('mousewheel', function(e){
+        var delta = [e.originalEvent.wheelDeltaX, e.originalEvent.wheelDeltaY];
+        if(!delta[0] && !delta[1]) return;
+        document.body.scrollLeft -= delta[0];
+        document.body.scrollTop -= delta[1];
+    });
+
+    var scroll_ref, mouse_ref;
+    $(document.body).drag('start', function(e, dd){
+        scroll_ref = [document.body.scrollLeft, document.body.scrollTop];
+        mouse_ref = [e.clientX, e.clientY];
+    }).drag(function(e, dd){
+        document.body.scrollLeft = scroll_ref[0] - e.clientX + mouse_ref[0];
+        document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
+    });
+
+
     // Warning for IE
     //if(/MSIE/.test(navigator.userAgent)){
-    if(/MSIE/.test(navigator.userAgent)){
-        var count = parseInt(readCookie('ie_warning_count'));
-        if (! count) { count=0; }
-        if ( count < 1) {
-            showDialog('#ie_warning');
-            count++;
-            createCookie('ie_warning_count', count, 30);
-        }
-    }
-    $(window).mousemove(function(e){
-        top.postMessage(e.clientX + ',' + e.clientY, parent_url);
-    });
+    //if(/MSIE/.test(navigator.userAgent)){
+    //    var count = parseInt(readCookie('ie_warning_count'));
+    //    if (! count) { count=0; }
+    //    if ( count < 1) {
+    //        showDialog('#ie_warning');
+    //        count++;
+    //        createCookie('ie_warning_count', count, 30);
+    //    }
+    //}
 });

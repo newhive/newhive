@@ -442,7 +442,7 @@ class User(HasSocial):
         self.update(password=self['password'])
 
     def get_url(self, path='profile'):
-        return abs_url(domain = self.get('sites', [config.server_name])[0]) + path
+        return abs_url() + self.get('name', '') + '/' + path
     url = property(get_url)
 
     def has_thumb(self):

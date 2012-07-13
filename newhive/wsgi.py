@@ -229,7 +229,7 @@ def handle(request): # HANDLER
             return site_pages.get(parts[0], app.serve_404)(request, response)
         else:
             username = parts[0] # assume newhive.com/username/
-            parts = parts[1:]
+            parts = request.path_parts = parts[1:]
             if not len(parts): parts = ['']
     # handle redirection
     else:

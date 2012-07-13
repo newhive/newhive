@@ -1,4 +1,3 @@
-
 plain_port      = 80
 ssl_port        = 443
 server_name     = 'newhive.com'
