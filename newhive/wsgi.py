@@ -151,7 +151,6 @@ site_pages = {
     ,'home'                : controllers['community'].index
     ,'search'              : controllers['community'].index
     ,'tag'                 : controllers['community'].tag
-    ,'edit'                : controllers['expression'].edit
     ,'random'              : controllers['expression'].random
     ,'expression'          : controllers['expression'].info
     ,'settings'            : controllers['user'].edit
@@ -185,11 +184,14 @@ def handle(request): # HANDLER
     request.is_owner = False
     parts = request.path_parts = request.path.split('/')
 
+
     ##############################################################################
-    #                         user content handler                               #
+    #      user content handler end editor, serves UNSAFE sandboxed content      #
     ##############################################################################
     if request.domain == config.content_domain:
+        if parts[0] == 'edit': return controllers['expression'].edit
         return controllers['expression'].render(request, response)
+
 
     ##############################################################################
     #                          post action handler                               #
@@ -217,6 +219,7 @@ def handle(request): # HANDLER
         print "************************would return status 204 here*************************"
         #return Response(status=204) # 204 status = no content
 
+
     username = None
     ##############################################################################
     #                          site and user url handler                         #
@@ -228,8 +231,17 @@ def handle(request): # HANDLER
             username = parts[0] # assume newhive.com/username/
             parts = parts[1:]
             if not len(parts): parts = ['']
-    elif request.domain.startswith('www.'):
-        return app.redirect(response, re.sub('www.', '', request.url, 1))
+    # handle redirection
+    else:
+        if request.domain.startswith('www.'):
+            return app.redirect(response, re.sub('www.', '', request.url, 1))
+
+        for redirect_from in config.redirect_domains:
+            if request.domain == redirect_from or request.domain.endswith('.' + redirect_from):
+                name = request.domain[0:-len(redirect_from)].strip('.')
+                new_url = abs_url() + name + ('/' if name else '') + request.path
+                return app.redirect(response, new_url)
+
 
     ##############################################################################
     #                             user url handler                               #
