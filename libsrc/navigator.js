@@ -306,7 +306,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.hide = function(){
         if (!visible) return o;
         navigator_element.stop().clearQueue();
-        navigator_element.delay(500).animate({bottom: -height-2*opts.margin});
+        navigator_element.animate({bottom: -height-2*opts.margin});
         visible = false;
         return o;
     };
