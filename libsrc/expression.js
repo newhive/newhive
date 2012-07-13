@@ -83,7 +83,4 @@ $(function() {
             createCookie('ie_warning_count', count, 30);
         }
     }
-    $(window).mousemove(function(e){
-        top.postMessage(e.clientX + ',' + e.clientY, parent_url);
-    });
 });
