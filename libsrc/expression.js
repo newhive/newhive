@@ -1,6 +1,9 @@
 if (typeof Hive == "undefined") Hive = {};
 
 $(function() {
+    ///////////////////////////////////////////////////////////////////////////
+    //                      jPlayer shenanigans                              //
+    ///////////////////////////////////////////////////////////////////////////
     // hive.audio jplayer setup
     //if ($('.jp-jplayer').length > 0) {
     //    $('head').append("<link rel='stylesheet' type='text/css' href='/lib/libsrc/jplayer/jplayer.blue.monday.css'>");
@@ -26,7 +29,7 @@ $(function() {
             loadeddata: update_timer(this),
             timeupdate: update_timer(this),
             ended: update_timer(this),
-            swfPath: (window.location.protocol == "https:" ? server_url : insecure_server) + "lib/",
+            swfPath: (window.location.protocol == "https:") ? asset('Jplayer.swf', true) : asset('Jplayer.swf'),
             supplied: "mp3",
             verticalVolume: true
         });
@@ -74,17 +77,54 @@ $(function() {
         player.jPlayer('volume', newVolume);
     });
     
+
+    ///////////////////////////////////////////////////////////////////////////
+    //         more or less normal scrolling without default scrollbars      //
+    ///////////////////////////////////////////////////////////////////////////
+    $(window).on('mousewheel', function(e){
+        var delta = [e.originalEvent.wheelDeltaX, e.originalEvent.wheelDeltaY];
+        if(!delta[0] && !delta[1]) return;
+        document.body.scrollLeft -= delta[0];
+        document.body.scrollTop -= delta[1];
+    });
+
+    // TODO: Enable selection of text, dragging of images? Prevent click event after scrolling
+    // TODO: prevent scroll sticking after mouse-up outside of expr frame
+    var scroll_ref, mouse_ref;
+    $(document.body).drag('start', function(e, dd){
+        scroll_ref = [document.body.scrollLeft, document.body.scrollTop];
+        mouse_ref = [e.clientX, e.clientY];
+    }).drag(function(e, dd){
+        document.body.scrollLeft = scroll_ref[0] - e.clientX + mouse_ref[0];
+        document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
+    });
+
+    // TODO: scroll handlers for arrow keys, ctrl + home / end, spacebar
+
+
+    // TODO: listen for hide / show messages to unload / load <iframe>s, <object>s, and <embed>s
+    //window.addEventListener("message", function(e){
+    //    var a = e.data.split(',');
+    //    mouse_move(parseInt(a[0]), parseInt(a[1]));
+    //}, false);
+
+    // TODO: when click on right or left third, move to next or prev expr
+    //$(window).click(function(e){
+    //    top.postMessage(e.clientX + ',' + e.clientY, parent_url);
+    //});
+
+
     // Warning for IE
     //if(/MSIE/.test(navigator.userAgent)){
-    if(/MSIE/.test(navigator.userAgent)){
-        var count = parseInt(readCookie('ie_warning_count'));
-        if (! count) { count=0; }
-        if ( count < 1) {
-            showDialog('#ie_warning');
-            count++;
-            createCookie('ie_warning_count', count, 30);
-        }
-    }
+    //if(/MSIE/.test(navigator.userAgent)){
+    //    var count = parseInt(readCookie('ie_warning_count'));
+    //    if (! count) { count=0; }
+    //    if ( count < 1) {
+    //        showDialog('#ie_warning');
+    //        count++;
+    //        createCookie('ie_warning_count', count, 30);
+    //    }
+    //}
 
     Hive.show_expr = function(){
         $.each(expr.apps, function(i, app){

@@ -34,6 +34,9 @@
     </div>
   </div>
   <div id='navigator_handle' class='menu_handle'></div>
+  <div id="expression_frames">
+    <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
+  </div>
 
   <div id='action_nav'>
     {% if user_is_owner %}
@@ -112,77 +115,9 @@
   </div>
 
   <script>
-        // Exclusive menus, that only appear one at a time. Kinda weird
-        //var user_nav = hover_menu(make_handle('#user_nav'), '#user_nav', {
-        //    animate_close: { top: -50, left: -50 }, opened: true, layout: false });
-        //hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
-        //    $('#search_box').get(0).focus(); }, click_persist: '#search_box', group: user_nav } );
-        //if(logged_in) hover_menu( '#username', '#user_menu', { offset_y: 8, group: user_nav } );
-
-        //var owner_nav = hover_menu(make_handle('#owner_nav'), '#owner_nav', {
-        //    animate_close: { right: -50, top: -50 }, opened: true, layout: false });
-        //if(!logged_in) {
-        //    var login_menu = hover_menu( '#login_btn', '#login_menu', {
-        //            open: function() { $('#username').get(0).focus(); },
-        //            close_delay: 1000,
-        //            click_persist: '#login_menu',
-        //            offset_y: 8,
-        //            layout_x: 'right',
-        //            group: owner_nav
-        //        } );
-        //    {% if error %} login_menu.open(); {% endif %}
-        //}
-        //hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right', group: owner_nav });
-        //hover_menu('#share_btn', '#share_menu', { offset_y: 8, group: owner_nav  });
-
-        //var action_nav = hover_menu(make_handle('#action_nav'), '#action_nav', {
-        //    animate_close: { right: -50 }, opened: true, layout: false });
-        //hover_menu('.btn_box.view', $('#expr_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
-        //hover_menu('.btn_box.comment', $('#comment_menu'), { layout: 'center_y', offset_x: 11, group: action_nav });
-
-        setTimeout(function(){
-            var speed = 100;
-            var close_nav = function(){
-                $('#user_nav').stop().clearQueue().animate({ left: -50, top: -50 }, speed);
-                $('#owner_nav').stop().clearQueue().animate({ right: -50, top: -50 }, speed);
-                $('#action_nav').stop().clearQueue().animate({ right: -50 }, speed);
-            };
-            var open_nav = function(){
-                $('#user_nav').stop().clearQueue().animate({ left: 0, top: 0 }, speed);
-                $('#owner_nav').stop().clearQueue().animate({ right: 0, top: 0 }, speed);
-                $('#action_nav').stop().clearQueue().animate({ right: 0 }, speed);
-            };
-
-            var drawers = $('#user_nav,#owner_nav,#action_nav'),
-                handles = $($.map(drawers, function(e){ return make_handle(e).get(0) }))
-                    .add('#navigator_handle').add('#navigator');
-            nav_menu = hover_menu(handles, drawers, { layout: false, open_menu: open_nav,
-                close_menu: close_nav, opened: true, close_delay: 2000 } );
-
-            var navigator_menu = hover_menu('#navigator_handle', '#navigator', {
-                layout: false,
-                opened: true,
-                open_menu: function(){ Hive.navigator.show() },
-                close_menu: function(){ Hive.navigator.hide() },
-                group: false,
-                close_delay: 2000
-            });
-
-            hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
-                $('#search_box').get(0).focus(); }, click_persist: '#search_box', group: nav_menu } );
-            if(logged_in) hover_menu( '#username', '#user_menu', { offset_y: 8, group: nav_menu } );
-
-            hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right', group: nav_menu });
-            hover_menu('#share_btn', '#share_menu', { offset_y: 8, group: nav_menu  });
-
-            navigator_menu.close();
-            nav_menu.close();
-        }, 5000);
+    Hive.Menus.create();
+    {% if error %} Hive.menus.login_menu.open(); {% endif %}
   </script>
-
-  <div id="expression_frames">
-    <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
-  </div>
   {{ body }}
 {% endblock %}
 
@@ -211,28 +146,6 @@
       //    setTimeout(function() { window.location = url; }, 100);
       //    return false;
       //  });
-
-      //var hover_height = 50;
-
-      //function mouse_move(x,y){
-      //    if ($(window).height() - y < hover_height) {
-      //        if (Hive.navigator){
-      //            Hive.navigator.show();
-      //        }
-      //    } else {
-      //        if (Hive.navigator){
-      //            Hive.navigator.hide();
-      //        }
-      //    }
-      //};
-      //window.addEventListener("message", function(e){
-      //    var a = e.data.split(',');
-      //    mouse_move(parseInt(a[0]), parseInt(a[1]));
-      //}, false);
-
-      //$(window).mousemove(function(e){
-      //    mouse_move(e.clientX, e.clientY);
-      //});
   });
 </script>
 {% endblock footer_scripts %}

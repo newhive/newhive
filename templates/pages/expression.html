@@ -6,6 +6,7 @@
       parent_url = {{ exp.url | json }};
       expr = {{ exp | json }};
   </script>
+  <style>html { overflow: hidden }</style>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression{% endblock %}
@@ -15,6 +16,6 @@
     {% include 'dialogs/password.html' %}
   {% else %}
     {% include 'expr_background.html' %}
-    <div id='content'>{{ html }}</div>
+    {{ html }}
   {% endif %}
 {% endblock %}

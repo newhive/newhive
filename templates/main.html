@@ -37,7 +37,7 @@
     ><a href='{{ server_url }}'><div id='logo' class='hoverable icon left_edge'></div></a
     {% if user.logged_in %}
       ><div id='username' class='text center text_btn hoverable name'
-        >{{ user.name|capitalize }}<div class='count rounded{{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
+        >{{ user.name }}<div class='count rounded{{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
     {% endif %}
     ><div id='create_btn' class='center hoverable right_edge'
       ><a href='{{ create }}' onclick='return require_login()'
@@ -100,7 +100,7 @@
           {% if owner.has_thumb() %}
             ><img class='owner_thumb' src='{{ owner.get_thumb(70) }}'
           {% endif %}
-          ><div class='text name'>by <span class='owner_name'>{{ owner.name|capitalize }}</span></div
+          ><div class='text name'>by <span class='owner_name'>{{ owner.name }}</span></div
         ></div
         {% set nav_begin = False %}
       {% endif %}
@@ -121,7 +121,7 @@
 
     {% if owner %}
       <div id='owner_menu' class='menu'>
-        <a href='{{ owner.url }}'><div class='menu_item default'>Expressions</div></a>
+        <a href='{{ owner.url }}' class='owner_url'><div class='menu_item default'>Expressions</div></a>
         <div class='thumbs'>
           {% for expr in owner.expr_page(limit=5) %}
             <a href='{{ expr.url }}'><img src='{{ expr.thumb }}' class='thumb'></a>
@@ -175,7 +175,7 @@
           </a>
         </div>
         <div>
-          <a class='stumble' onClick="logShare('stumble');" target="_blank" href='http://www.stumbleupon.com/submit?url={{ here }}&title={{ title | urlencode }}' title="Submit to Stumbleupon">
+          <a class='stumble' onClick="logShare('stumble');" target="_blank" href='http://www.stumbleupon.com/submit?url={{ here }}&title={{ title | e | urlencode }}' title="Submit to Stumbleupon">
             <div class="like_button stumble">
               <img src='{{ 'skin/1/social/stumbleupon.png'|asset_url }}'/>
               <div class="count">&nbsp;{{ exp.analytic_count("stumble") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
@@ -203,7 +203,7 @@
       </div>
 
       <div class='bar'></div>
-      <div class='menu_item'>Email</div>
+      <div class='menu_item message'>Email <div class='icon'></div></div>
       <div class='menu_item'>Embed</div>
     </div>
   {% endif %}

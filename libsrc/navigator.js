@@ -107,7 +107,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
         animate_slide(offset);
 
-        //content_element.attr('src', content_domain + current_expr._id);
+        //content_element.attr('src', content_domain + current_expr.id);
         if (!current_expr.loading_started) current_expr.load(content_element);
         var frame = current_expr.frame
             .css({left: left_offset, 'z-index': 2});
@@ -124,7 +124,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         previous_expr.hide();
         current_expr.show();
 
-        Hive.Nav.update_expr(current_expr.data());
+        Hive.Menus.update_expr(current_expr.data());
 
         //var callback = function(data){
         //    $.each(data, function(i, expr){
@@ -326,7 +326,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.current_id = function(){
-        return current_expr._id;
+        return current_expr.id;
     };
 
     o.current_url = function(){
@@ -394,7 +394,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 Hive.Navigator.Expr = function(data){
     var o = $.extend({}, data);
 
-    o.id = o._id;
     o.url =  '/' + o.owner_name + '/' + o.name;
 
     function on_load(callback){
@@ -449,15 +448,14 @@ Hive.Navigator.Updater = function(){
     return o
 };
 
-$(function(){
-    Hive.navigator = Hive.Navigator($('#navigator'), $('#expression_frames'))
+Hive.Navigator.create = function(navigator, viewer){
+    var o = Hive.Navigator($(navigator), $(viewer))
         .set_updater(Hive.Navigator.Updater())
         .initialize();
-    $(window).resize(function(){
-        Hive.navigator.render();
-    });
+    $(window).resize(o.render);
     $(window).on('statechange', function(){ // Note: We are using statechange instead of popstate
         var state = History.getState(); // Note: We are using History.getState() instead of event.state
-        Hive.navigator.select_by_id(state.data._id);
+        o.select_by_id(state.data._id);
     });
-});
+    return o;
+};
