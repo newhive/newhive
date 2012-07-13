@@ -554,7 +554,7 @@ hover_menu = function(handle, drawer, options) {
             ,hover_close: true
             ,close_delay: 500
             ,offset_y: 0
-            ,click_persist: false
+            ,focus_persist: true
             ,hover: true
             ,open_condition: function(){ return true }
             ,auto_height: true
@@ -575,6 +575,7 @@ hover_menu = function(handle, drawer, options) {
 
     o.menus = [];
     o.opened = opts.opened;
+    o.sticky = false;
 
     o.delayed_close = function() {
         opts.default_item.removeClass('active');
@@ -589,14 +590,16 @@ hover_menu = function(handle, drawer, options) {
         }
     };
 
+    // for debugging
     o.opts = function(){ return opts };
+    o.drawer = function(){ return drawer };
 
     o.close = function(force) {
         close_timer = false;
         if(!o.opened) return;
 
         if(force) $.map(o.menus, function(m){ m.close(force) });
-        else if($.inArray(true, $.map(o.menus, function(m){ return m.opened })) > -1) return;
+        else if(o.sticky || $.inArray(true, $.map(o.menus, function(m){ return m.opened })) > -1) return;
 
         if(opts.animate_close){
             if(!opts.animate_open){
@@ -625,7 +628,6 @@ hover_menu = function(handle, drawer, options) {
         if( opts.group.current && (opts.group.current != o) ) opts.group.current.close(true);
         opts.group.current = o;
         handle.get(0).busy = true;
-        if(opts.click_persist) opts.hover_close = true;
 
         if(opts.animate_open) drawer.animate(opts.animate_open, 100);
         else opts.open_menu();
@@ -699,9 +701,14 @@ hover_menu = function(handle, drawer, options) {
         if(o.opened && opts.default_item) opts.default_item.click();
         o.open();
     });
-    $(opts.click_persist).bind('click contextmenu keydown', function() {
-        opts.hover_close = false;
-    });
+    if(opts.focus_persist){
+        drawer.find('input,textarea').on('click keydown', function(){
+            o.sticky = true;
+        }).on('blur', function(){
+            o.sticky = false;
+            o.delayed_close();
+        });
+    }
 
     menu_items.each(function(i, d){
         var e = $(d);
@@ -710,15 +717,6 @@ hover_menu = function(handle, drawer, options) {
     });
 
     if(opts.auto_close) drawer.click(o.close);
-    o.click_close = function(e) {
-        if(handle.get(0) == e.target
-            || $.contains(handle.get(0), e.target)
-            || drawer.get(0) == e.target
-            || $.contains(drawer.get(0), e.target)
-            ) return;
-        o.close();
-    };
-    $(window).click(o.click_close);
 
     return o;
 }
