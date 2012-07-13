@@ -175,7 +175,7 @@
           </a>
         </div>
         <div>
-          <a class='stumble' onClick="logShare('stumble');" target="_blank" href='http://www.stumbleupon.com/submit?url={{ here }}&title={{ title | urlencode }}' title="Submit to Stumbleupon">
+          <a class='stumble' onClick="logShare('stumble');" target="_blank" href='http://www.stumbleupon.com/submit?url={{ here }}&title={{ title | e | urlencode }}' title="Submit to Stumbleupon">
             <div class="like_button stumble">
               <img src='{{ 'skin/1/social/stumbleupon.png'|asset_url }}'/>
               <div class="count">&nbsp;{{ exp.analytic_count("stumble") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>

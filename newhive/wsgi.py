@@ -76,7 +76,7 @@ jinja_env.filters.update({
     ,'strip_filenames':
         lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
     ,'asset_url': hive_assets.url
-    ,'urlencode': urllib.quote
+    ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
 })
 jinja_env.globals.update({
      'colors': newhive.colors.colors

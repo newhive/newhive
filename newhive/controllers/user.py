@@ -282,9 +282,9 @@ class UserController(ApplicationController):
 
     def login(self, request, response):
         success = auth.handle_login(self.db, request, response)
-        if success and request.is_xhr:
-            return self.serve_json(response, {'login': True})
-        return self.redirect( response, request.form.get('url', abs_url()) )
+        if success:
+            if request.is_xhr: return self.serve_json(response, {'login': True})
+            return self.redirect( response, request.form.get('url', abs_url()) )
 
     def logout(self, request, response):
         auth.handle_logout(self.db, request, response)

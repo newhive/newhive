@@ -550,6 +550,7 @@ hover_menu = function(handle, drawer, options) {
             ,close: noop
             ,open_menu: function(){ drawer.show() }
             ,close_menu: function(){ drawer.hide() }
+            ,sticky: false
             ,auto_close: false
             ,hover_close: true
             ,close_delay: 500
@@ -575,7 +576,7 @@ hover_menu = function(handle, drawer, options) {
 
     o.menus = [];
     o.opened = opts.opened;
-    o.sticky = false;
+    o.sticky = opts.sticky;
 
     o.delayed_close = function() {
         opts.default_item.removeClass('active');
@@ -616,6 +617,8 @@ hover_menu = function(handle, drawer, options) {
         handle.removeClass('active');
 
         if(opts.group.delayed_close) opts.group.delayed_close();
+
+        return o;
     }
 
     o.open = function() {
@@ -689,6 +692,7 @@ hover_menu = function(handle, drawer, options) {
         drawer.css(css_opts);
 
         opts.open();
+        return o;
     }
 
     opts.group.menus.push(o);
