@@ -110,7 +110,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         //content_element.attr('src', content_domain + current_expr.id);
         if (!current_expr.loading_started) current_expr.load(content_element);
         var frame = current_expr.frame
-            .css({left: left_offset, 'z-index': 2});
+            .css({left: left_offset, 'z-index': 2})
+            .load(current_expr.show);
         //$('iframe.expr').not(frame).not(previous_expr.frame()).css('z-index', 0);
 
 
@@ -370,7 +371,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     // initialization
     o.initialize = function(){
         current_expr = Hive.Navigator.Expr(expr);
-        var frame = content_element.find('iframe').on('load', o.cache_next);
+        function on_frame_load(){
+            o.cache_next();
+            current_expr.show();
+        };
+        var frame = content_element.find('iframe').on('load', on_frame_load);
         if (updater) {
             updater.next(current_expr[opts.paging_attr], o.visible_count(), function(data){
                 next_list = $.map(data, Hive.Navigator.Expr);
@@ -417,11 +422,11 @@ Hive.Navigator.Expr = function(data){
     };
 
     o.show = function(){
-        o.frame[0].contentWindow.postMessage('show', o.frame.attr('src'));
+        o.frame[0].contentWindow.postMessage('show', '*');
     };
 
     o.hide = function(){
-        o.frame[0].contentWindow.postMessage('hide', o.frame.attr('src'));
+        o.frame[0].contentWindow.postMessage('hide', '*');
     };
 
     return o;

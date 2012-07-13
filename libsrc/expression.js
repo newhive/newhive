@@ -129,7 +129,7 @@ $(function() {
     Hive.show_expr = function(){
         $.each(expr.apps, function(i, app){
             if (app.type == "hive.html") {
-                $('#app' + app.id).html(app.content);
+                $('#app' + (app.id || app.z)).html(app.content);
             }
         });
     };
