@@ -4,21 +4,23 @@ Hive.Menus = {};
 
 // initialize menus for frame page, then close them after delay
 Hive.Menus.create = function(){
-    var speed = 100;
-    var close_nav = function(){
-        $('#user_nav').stop().clearQueue().animate({ left: -50, top: -50 }, speed);
-        $('#owner_nav').stop().clearQueue().animate({ right: -50, top: -50 }, speed);
-        $('#action_nav').stop().clearQueue().animate({ right: -50 }, speed);
-    };
-    var open_nav = function(){
-        $('#user_nav').stop().clearQueue().animate({ left: 0, top: 0 }, speed);
-        $('#owner_nav').stop().clearQueue().animate({ right: 0, top: 0 }, speed);
-        $('#action_nav').stop().clearQueue().animate({ right: 0 }, speed);
-    };
-
-    var drawers = $('#user_nav,#owner_nav,#action_nav'),
+    var speed = 100,
+        drawers = $('#user_nav,#owner_nav,#action_nav'),
         handles = $($.map(drawers, function(e){ return make_handle(e).get(0) }))
-            .add('#navigator_handle').add('#navigator');
+            .add('#navigator_handle').add('#navigator'),
+        close_nav = function(){
+            drawers.stop().clearQueue();
+            $('#user_nav').animate({ left: -50, top: -50 }, speed);
+            $('#owner_nav').animate({ right: -50, top: -50 }, speed);
+            $('#action_nav').animate({ right: -50 }, speed);
+            drawers.hide();
+        },
+        open_nav = function(){
+            drawers.stop().clearQueue().show();
+            $('#user_nav').animate({ left: 0, top: 0 }, speed);
+            $('#owner_nav').animate({ right: 0, top: 0 }, speed);
+            $('#action_nav').animate({ right: 0 }, speed);
+        };
     Hive.Menus.nav_menu = hover_menu(handles, drawers, { layout: false, open_menu: open_nav,
         close_menu: close_nav, opened: true, close_delay: 1500 } );
 

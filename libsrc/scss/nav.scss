@@ -32,7 +32,7 @@ $nav_size: 40px;
 .nav {
     margin: 7px 8px;
     z-index: 4;
-    position: absolute;
+    position: fixed;
     background-color: white;
     @include border-radius(5px);
     @include box-shadow(rgba(black, .3) 3px 3px 10px);
@@ -117,7 +117,7 @@ $nav_size: 40px;
 #action_nav {
     right: 0;
     top: 60px;
-    position: absolute;
+    position: fixed;
     z-index: 4;
 
     .edit_spacer { height: 46px; }
@@ -223,7 +223,7 @@ $nav_size: 40px;
 
 
 .menu_handle {
-    position: absolute;
+    position: fixed;
     z-index: 3;
 }
 
@@ -232,7 +232,7 @@ $nav_size: 40px;
     border: 0px solid $color_unselected;
     background-color: white;
     z-index: 5;
-    position: absolute;
+    position: fixed;
     overflow: auto;
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include border-radius(5px);
