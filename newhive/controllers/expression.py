@@ -37,6 +37,23 @@ class ExpressionController(ApplicationController, PagingMixin):
         })
         return self.serve_page(response, 'pages/edit.html')
 
+    # destructively prepare state.Expr for client consumption
+    def expr_prepare(self, expr):
+        owner = expr.owner
+        owner_info = dfilter(owner, ['name', 'fullname', 'tags'])
+        owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70) })
+
+        #expr_info = dfilter(expr, ['thumb', 'title', 'tags', 'tags_index', 'owner',
+        #    'owner_name', 'updated', 'name'])
+        counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
+            k, v in expr.get('analytics', {}).iteritems() ])
+        counts['Views'] = large_number(expr.views)
+        counts['Comment'] = large_number(expr.comment_count)
+        dict.update(expr, { 'id': expr.id, 'thumb': expr.get_thumb(), 'owner': owner_info,
+            'counts': counts, 'url': expr.url })
+
+        return expr
+
     # Controller for all navigation surrounding an expression
     # Must only output trusted HTML
     def frame(self, request, response, parts):
@@ -63,8 +80,7 @@ class ExpressionController(ApplicationController, PagingMixin):
             resource.increment_counter('views')
             if is_owner: resource.increment_counter('owner_views')
 
-        resource['thumb'] = resource.get_thumb()
-        resource['owner'] = dfilter(owner, ['_id', 'name', 'fullname', 'thumb', 'tags'])
+        self.expr_prepare(resource)
         response.context.update(
              edit = abs_url(secure = True) + 'edit/' + resource.id
             ,mtime = friendly_date(time_u(resource['updated']))
@@ -124,14 +140,7 @@ class ExpressionController(ApplicationController, PagingMixin):
 
             exprs = self.db.Expr.page(args, **kwargs)
 
-        expr_infos = []
-        for expr in exprs:
-            owner = expr.owner
-            owner['thumb'] = owner.get_thumb()
-            expr['thumb'] = expr.get_thumb()
-            expr['owner'] = dfilter(owner, ['name', 'fullname', 'thumb', 'tags'])
-            expr_infos.append(dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'tags_index', 'owner', 'owner_name', 'updated', 'name']))
-        return self.serve_json(response, expr_infos)
+        return self.serve_json(response, map(self.expr_prepare, exprs))
 
     # Renders the actual content of an expression.
     # This output is untrusted and must never be served from config.server_name.

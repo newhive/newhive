@@ -107,7 +107,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
         animate_slide(offset);
 
-        //content_element.attr('src', content_domain + current_expr._id);
+        //content_element.attr('src', content_domain + current_expr.id);
         if (!current_expr.loading_started) current_expr.load(content_element);
         var frame = current_expr.frame()
             .css({left: left_offset, 'z-index': 2});
@@ -121,7 +121,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         frame.animate({left: 0}, {complete: animate_complete});
         history_manager.pushState(current_expr, current_expr.title, o.current_url());
 
-        Hive.Nav.update_expr(current_expr.data());
+        Hive.Menus.update_expr(current_expr.data());
 
         //var callback = function(data){
         //    $.each(data, function(i, expr){
@@ -323,7 +323,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.current_id = function(){
-        return current_expr._id;
+        return current_expr.id;
     };
 
     o.current_url = function(){
@@ -390,7 +390,6 @@ Hive.Navigator.Expr = function(data){
     var o = $.extend({}, data);
     var frame;
 
-    o.id = o._id;
     o.url =  '/' + o.owner_name + '/' + o.name;
 
     function on_load(callback){
