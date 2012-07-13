@@ -27,7 +27,7 @@ Hive.Menus.create = function(){
     if(logged_in) hover_menu( '#username', '#user_menu', { offset_y: 8, group: Hive.Menus.nav_menu } );
 
     if(!logged_in) {
-        Hive.menus.login_menu = hover_menu( '#login_btn', '#login_menu', {
+        Hive.Menus.login_menu = hover_menu( '#login_btn', '#login_menu', {
             open: function() { $('#username').get(0).focus(); },
             close_delay: 1500,
             offset_y: 8,
