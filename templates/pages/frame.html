@@ -24,10 +24,12 @@
   <div id="navigator" class="navigator">
     <div class="info">
       <div class="icon random_btn hoverable rounded"></div>
-      <input type="text" class="search">
-      <div class="hoverable icon scale submit" title="Submit search"></div>
+      <form method='get'>
+        <input type="text" class="search">
+        <div class="hoverable icon scale submit" title="Submit search" onclick="Hive.navigator.search()"></div>
+      </form>
       <div class="tags_wrapper">
-          <div class="tags"></div>
+        <div class="tags"></div>
       </div>
     </div>
   </div>
