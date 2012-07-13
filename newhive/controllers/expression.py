@@ -322,22 +322,26 @@ def expr_to_html(exp):
     def html_for_app(app):
         content = app.get('content', '')
         more_css = ''
-        html = ''
-        if app.get('type') == 'hive.image':
+        type = app.get('type')
+        id = app.get('id', app['z'])
+        if type == 'hive.image':
             html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
-        elif app.get('type') == 'hive.sketch':
+        elif type == 'hive.sketch':
             html = "<img src='%s'>" % content.get('src')
-        elif app.get('type') == 'hive.rectangle':
+        elif type == 'hive.rectangle':
             c = app.get('content', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-        #elif app.get('type') == 'hive.audio':
-        #    html = "<div class='app_hive_audio'>" + content + "</div>"
-        else: html = content
+            html = ''
+        elif type == 'hive.html':
+            html = ""
+        else:
+            html = content
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app) + more_css, data, html)
+        return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
+            (type.replace('.', '_'), id, css_for_app(app) + more_css, data, html)
 
     return ''.join(map(html_for_app, apps))
 

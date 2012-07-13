@@ -4,6 +4,7 @@
   <script src='{{ asset_bundle('expression.js')[0] }}'></script>
   <script>
       parent_url = {{ exp.url | json }};
+      expr = {{ exp | json }};
   </script>
 {% endblock %}
 
