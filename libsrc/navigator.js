@@ -261,6 +261,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var info = navigator_element.find('.info');
 
         var query = URI(window.location.href).query(true);
+        info.find('form').submit(o.search);
         var search_bar = info.find('input').val(build_search(query));
 
         function tagify(tags, cls, prefix){
@@ -285,6 +286,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             tagify(owner_tags, 'user', '#')
         ).find('.tag').click(function(){
             search_bar.val($(this).html());
+            o.search();
         });
 
 
@@ -368,14 +370,23 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
     };
 
-    // initialization
-    o.initialize = function(){
-        current_expr = Hive.Navigator.Expr(expr);
-        function on_frame_load(){
-            o.cache_next();
-            current_expr.show();
-        };
-        var frame = content_element.find('iframe').on('load', on_frame_load);
+    o.search_string = function(){
+        var string = navigator_element.find('input').val();
+        var tags = (" " + string).match(/(.?)[a-z0-9]+/gi);
+        tags = $.map(tags, function(el){
+            return el.replace('@', 'user=').replace('#', 'tag=').replace(/^[^a-z]/, 'text=')
+        });
+        return window.location.origin + window.location.pathname + "?" + tags.join('&');
+    };
+
+    o.search = function(){
+        history_manager.pushState(current_expr.data(), current_expr.title, o.search_string());
+        populate_navigator();
+    };
+
+    var populate_navigator = function(){
+        next_list = [];
+        prev_list = [];
         if (updater) {
             updater.next(current_expr[opts.paging_attr], o.visible_count(), function(data){
                 next_list = $.map(data, Hive.Navigator.Expr);
@@ -386,7 +397,17 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 if (next_list.length) o.render().show();
             });
         }
+    }
+    // initialization
+    o.initialize = function(){
+        current_expr = Hive.Navigator.Expr(expr);
+        function on_frame_load(){
+            o.cache_next();
+            current_expr.show();
+        };
+        var frame = content_element.find('iframe').on('load', on_frame_load);
         history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
+        populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
         navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
