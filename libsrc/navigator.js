@@ -57,22 +57,22 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     // public methods
-    var fetching = {};
+    var fetching_lock = {};
     fetch = function(count, direction){
         if (!count) count = opts.visible_count;
         if (direction > 0){
-            var lock = fetching.next;
+            var lock = 'next';
             var update_function = updater.next;
             var towards = next_list;
             var element = navigator_element.find('.container.next');
         } else {
-            var lock = fetching.prev;
+            var lock = 'prev';
             var update_function = updater.prev;
             var towards = prev_list;
             var element = navigator_element.find('.container.prev');
         }
-        if (lock) return;
-        lock = true;
+        if (fetching_lock[lock]) return;
+        fetching_lock[lock] = true;
         var start = element.children().last().data('index');
         console.log('start', start);
         var callback = function(data){
@@ -86,7 +86,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 });
                 element.append(card);
             });
-            lock = false;
+            fetching_lock[lock] = false;
         };
         var final_expr = towards[towards.length - 1];
         update_function(final_expr[opts.paging_attr], count, callback);
