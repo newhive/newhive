@@ -96,26 +96,30 @@
       </div>
       <div class='byline'><span class="timestamp">Jul 1</span></div>
     </div>
-      
-    {% for feed in exp.feed_page(viewer=user) %}
-      {% include "partials/feed.html" %}
-    {% endfor %}
-  </div>
-
-  <div id='broadcast_menu' class='menu'>
-    Loading...
+    <div id='expr_feed' class='items'>  
+      {% for feed in exp.feed_page(viewer=user) %}
+        {% include "partials/feed.html" %}
+      {% endfor %}
+    </div>
   </div>
 
   <div id='like_menu' class='menu'>
-    <div class='header'>Likes</div>
-    <div class='items'>Loading...</div>
+    <div class='header'>Love</div>
+    <div>Show this expression some love, and be notified of updates and comments.</div>
+    <div class='items'><b>Loading...</b></div>
+  </div>
+
+  <div id='broadcast_menu' class='menu'>
+    <div class='header'>Broadcast</div>
+    <div>Broadcast this expression out to your listeners.</div>
+    <div class='items'><b>Loading...</b></div>
   </div>
 
   <div id='comment_menu' class='menu{{ ' off' if not exp.comment_count }}'>
     <div class='header'>Comment</div>
     <div class='on'>Leave a comment to begin</div>
     <div class='off'>Join the conversation around this expression</div>
-    <div class='items'>Loading...</div>
+    <div class='items'><b>Loading...</b></div>
   </div>
 
   <script>

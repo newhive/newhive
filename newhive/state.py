@@ -1033,6 +1033,7 @@ class Feed(Entity):
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create()
+
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
         if self.entity['owner'] != self['initiator']: self.entity.owner.notify(self)
 
@@ -1125,6 +1126,13 @@ class NewExpr(Feed):
 class UpdatedExpr(Feed):
     action_name = 'updated'
 
+    def create(self):
+        super(UpdatedExpr, self).create()
+        # if most recent in feed is an update to same expression, delete it
+        prev = self.db.UpdatedExpr.last({ 'initiator': self['initiator'], 'entity': self['entity'] })
+        if prev: prev.delete()
+        return self
+
 @Database.register
 class FriendJoined(Feed):
     def viewable(self, viewer):
@@ -1133,14 +1141,6 @@ class FriendJoined(Feed):
     def create(self):
         if self.db.FriendJoined.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         return super(FriendJoined, self).create()
-
-@Database.register
-class SystemMessage(Feed):
-    class Collection(Feed.Collection):
-        def create(self, entity, data={}):
-            initiator = self.db.User.get_root()
-            return super(SystemMessage.Collection, self).create(initiator, entity, data)
-
 
 @Database.register
 class Referral(Entity):

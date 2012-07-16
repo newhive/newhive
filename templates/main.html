@@ -65,9 +65,9 @@
     <div id='user_menu' class='menu feed_menu'>
       <a href='{{ home_url }}'><div class='menu_item default'>Expressions</div></a>
       <div class='thumbs'>
-        {% for expr in user.expr_page(limit=5) %}
+        {% for expr in user.expr_page(limit=5) -%}
           <a href='{{ expr.url }}'><img src='{{ expr.thumb }}' class='thumb'></a>
-        {% endfor %}
+        {%- endfor %}
       </div>
       <div id='user_btns' class='btns'
         ><div class='menu_item'>Invite friends!</div
@@ -121,21 +121,21 @@
       <div id='owner_menu' class='menu'>
         <a href='{{ owner.url }}' class='owner_url'><div class='menu_item default'>Expressions</div></a>
         <div class='thumbs'>
-          {% for expr in owner.expr_page(limit=5) %}
+          {% for expr in owner.expr_page(limit=5) -%}
             <a href='{{ expr.url }}'><img src='{{ expr.thumb }}' class='thumb'></a>
-          {% endfor %}
+          {%- endfor %}
         </div>
         {#<div class='menu_item'>Profile</div>#}
         <div class='menu_item listen off'>
-          <span class='off'>Listen to</span>
-          <span class='on'>Stop listening to</span>
+          <span class='off'>Listen</span>
+          <span class='on'>Unlisten</span>
           <span class='owner_name'>{{ owner.name }}</span>
           <div class='icon'></div>
         </div>
         {#<div class='menu_item message'>Send message <div class='icon'></div></div>#}
         <div class='bar'></div>
         <div class='menu_item'>Activity</div>
-        <div id='owner_activity_feed'>
+        <div class='items'>
           {% for feed in owner.feed_profile(viewer=user, limit=6) %}
             {% include "partials/feed.html" %}
           {% endfor %}

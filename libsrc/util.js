@@ -562,6 +562,7 @@ hover_menu = function(handle, drawer, options) {
             ,default_item: drawer.find('.menu_item.default')
             ,layout: 'bottom'
             ,layout_x: 'auto'
+            ,min_y: 0
             ,group: hover_menu
             ,animate_close: false
             ,animate_open: false
@@ -578,10 +579,11 @@ hover_menu = function(handle, drawer, options) {
     o.opened = opts.opened;
     o.sticky = opts.sticky;
 
-    o.delayed_close = function() {
+    o.delayed_close = function(close_delay) {
+        if(typeof(close_delay) != 'number') close_delay = false;
         opts.default_item.removeClass('active');
         if(opts.hover_close && ! close_timer) {
-            close_timer = setTimeout(o.close, opts.close_delay);
+            close_timer = setTimeout(o.close, close_delay || opts.close_delay);
         }
     };
     o.cancel_close = function(e) {
@@ -655,12 +657,9 @@ hover_menu = function(handle, drawer, options) {
                 css_opts.left = ( opts.layout_x == 'right' ?
                     hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
             }
-            else if( opts.layout == 'min_y' ){
-                css_opts.top = Math.max(0, ($(window).height() - drawer.outerHeight()) / 2);
-                if(css_opts.top > hp.top) css_opts.top = hp.top;
-                if(css_opts.top + drawer.outerHeight() < hp.top + handle.outerHeight())
-                    css_opts.top = hp.top + handle.outerHeight() - drawer.outerHeight();
-
+            else if( opts.layout == 'center_y' ){
+                css_opts.top = Math.max(opts.min_y, hp.top + handle.outerHeight() / 2 -
+                     drawer.outerHeight() / 2);
                 css_opts.left = hp.left - opts.offset_x - drawer.outerWidth();
             }
 
