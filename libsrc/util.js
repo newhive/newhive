@@ -655,7 +655,7 @@ hover_menu = function(handle, drawer, options) {
                 css_opts.left = ( opts.layout_x == 'right' ?
                     hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
             }
-            else if( opts.layout == 'center_y' ){
+            else if( opts.layout == 'min_y' ){
                 css_opts.top = Math.max(0, ($(window).height() - drawer.outerHeight()) / 2);
                 if(css_opts.top > hp.top) css_opts.top = hp.top;
                 if(css_opts.top + drawer.outerHeight() < hp.top + handle.outerHeight())

@@ -41,7 +41,7 @@ class ExpressionController(ApplicationController, PagingMixin):
     def expr_prepare(self, expr):
         owner = expr.owner
         owner_info = dfilter(owner, ['name', 'fullname', 'tags'])
-        owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70) })
+        owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70), 'has_thumb': owner.has_thumb })
 
         #expr_info = dfilter(expr, ['thumb', 'title', 'tags', 'tags_index', 'owner',
         #    'owner_name', 'updated', 'name'])
@@ -154,6 +154,12 @@ class ExpressionController(ApplicationController, PagingMixin):
 
         response.context.update( html = expr_to_html(resource), exp = resource )
         return self.serve_page(response, 'pages/expression.html')
+
+    def feed(self, request, response):
+        expr = self.db.Expr.fetch(lget(request.path_parts, 1))
+        if not expr: return self.serve_404(request, response)
+        items = expr.feed_page(viewer=request.requester, limit=0)
+        return self.serve_json(response, list(items))       
 
     def random(self, request, response):
         expr = self.db.Expr.random()

@@ -47,28 +47,28 @@
         </div>
       </div></a>
     {% endif %}
-    <div class='btn_box view hoverable'>
+    <div id='view_btn' class='btn_box view hoverable'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
         <div class='count'>{{ exp.views | large_number }}</div>
       </div>
     </div>
-    <div class='btn_box like hoverable'>
+    <div id='like_btn' class='btn_box like hoverable'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
         <div class='count{{ ' zero' if not exp.star_count }}'>{{ exp.star_count | large_number }}</div>
       </div>
     </div>
-    <div class='btn_box broadcast hoverable'>
+    <div id='broadcast_btn' class='btn_box broadcast hoverable'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
         <div class='count{{ ' zero' if not exp.broadcast_count }}'>{{ exp.broadcast_count | large_number }}</div>
       </div>
     </div>
-    <div class='btn_box comment hoverable'>
+    <div id='comment_btn' class='btn_box comment hoverable'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
@@ -97,21 +97,25 @@
       <div class='byline'><span class="timestamp">Jul 1</span></div>
     </div>
       
-    {% for feed in exp.get_feed() %}
+    {% for feed in exp.feed_page(viewer=user) %}
       {% include "partials/feed.html" %}
     {% endfor %}
   </div>
 
   <div id='broadcast_menu' class='menu'>
+    Loading...
   </div>
 
   <div id='like_menu' class='menu'>
+    <div class='header'>Likes</div>
+    <div class='items'>Loading...</div>
   </div>
 
-  <div id='comment_menu' class='menu'>
-    {% for feed in exp.get_feed() %}
-      {% include "partials/feed.html" %}
-    {% endfor %}
+  <div id='comment_menu' class='menu{{ ' off' if not exp.comment_count }}'>
+    <div class='header'>Comment</div>
+    <div class='on'>Leave a comment to begin</div>
+    <div class='off'>Join the conversation around this expression</div>
+    <div class='items'>Loading...</div>
   </div>
 
   <script>
@@ -152,6 +156,7 @@
 
 {% block dialogs %}
   {{ super() }}
+  {% include 'dialogs/password.html' %}
   {% if user_is_owner %}
     <div id='dia_delete' class='newdialog center'>
       <h3>Are you sure you want to delete this expression?</h3>

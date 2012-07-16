@@ -379,7 +379,7 @@ class User(HasSocial):
     def feed_profile_entities(self, **args):
         res = self.feed_profile(**args)
         for i, item in enumerate(res):
-            if item.type == 'SystemMessage' or item.type == 'FriendJoined': continue
+            if item.type == 'FriendJoined': continue
             entity = item.initiator if item.entity.id == self.id else item.entity
             entity.feed = [item]
             res[i] = entity
@@ -444,11 +444,12 @@ class User(HasSocial):
     def get_url(self, path='profile'):
         return abs_url() + self.get('name', '') + '/' + path
     url = property(get_url)
-
+ 
+    @property
     def has_thumb(self):
         id = self.get('thumb_file_id')
         url = self.get('profile_thumb')
-        return (id and id != '') or (url and url != '')
+        return True if ( (id and id != '') or (url and url != '') ) else False
 
     def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
@@ -797,9 +798,15 @@ class Expr(HasSocial):
         return comments
     comments = property(get_comments)
 
-    def get_feed(self, **opts):
-        return self.db.Feed.search({ 'entity': self.id,
+    def feed_page(self, viewer=None, **opts):
+        if self.get('auth') == 'password' and self.get('password'):
+            # TODO: add support for password matching
+            if self.owner.id != get_id(viewer): return []
+        
+        items = self.db.Feed.page({ 'entity': self.id,
             'class_name': {'$in': ['Star', 'Comment', 'Broadcast']} }, **opts)
+
+        return items
 
     @property
     def comment_count(self):

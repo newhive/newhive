@@ -90,7 +90,7 @@
           <script>function profile_thumb_choose() { asyncUpload({post_action:'profile_thumb_set', success: function(data) { window.location = '' } }) };</script>
           <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
         {% endif %}
-        {% if owner.has_thumb() %}
+        {% if owner.has_thumb %}
           <img src='{{ owner.get_thumb() }}' alt="{{ owner.fullname|e }}"/>
         {% elif user_is_owner %}
           <div class="img placeholder">

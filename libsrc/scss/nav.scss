@@ -12,6 +12,8 @@ $nav_size: 40px;
     background-size: 100% 100%;
 }
 
+.none, .off .on, .on .off { display: none }
+
 .random_btn {
     background-image: asset_url('skin/1/shuffle.png');
     &.active, &:hover {
@@ -303,8 +305,6 @@ $nav_size: 40px;
 #owner_menu {
     width: 260px;
 
-    .listen.off .on { display: none }
-    .listen.on .off { display: none }
     .listen.off .icon { background-image: asset_url('skin/1/listen.png') }
     .listen.off.active .icon { background-image: asset_url('skin/1/listen-hover.png') }
     .listen.on .icon { background-image: asset_url('skin/1/listening.png') }
