@@ -5,7 +5,7 @@ ec2_con = boto.connect_ec2(*aws_credentials)
 
 def get_running_webservers():
     reservations = []
-    for group_name in ['application', 'dev']:
+    for group_name in ['application', 'dev', 'database']:
         reservations.extend(ec2_con.get_all_instances(filters={'instance-state-name': 'running', 'group-name': group_name}))
     return [i for r in reservations for i in r.instances]
 
