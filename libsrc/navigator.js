@@ -65,7 +65,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var towards = next_list;
         var callback = function(data){
             $.each(data, function(i, expr){
-                towards.push(Hive.Navigator.Expr(expr));
+                towards.push(o.make_expr(expr));
             });
         };
         var final_expr = towards[towards.length - 1];
@@ -78,7 +78,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var towards = prev_list;
         var callback = function(data){
             $.each(data, function(i, expr){
-                towards.push(Hive.Navigator.Expr(expr));
+                towards.push(o.make_expr(expr));
             });
         };
         var final_expr = towards[towards.length - 1];
@@ -110,7 +110,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         //content_element.attr('src', content_domain + current_expr.id);
         if (!current_expr.loading_started) current_expr.load(content_element);
         var frame = current_expr.frame
-            .css({left: left_offset, 'z-index': 2});
+            .css({left: left_offset, 'z-index': 2})
+            .load(current_expr.show);
         //$('iframe.expr').not(frame).not(previous_expr.frame()).css('z-index', 0);
 
 
@@ -178,22 +179,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         element.empty();
         $.each(list, function(i, expr){
             if (!expr) return;
-            var el = $('<div>')
-                .addClass('element')
-                .data('index', (i + start_index) * direction);
-            var im = $('<img>')
-                .attr('src', expr.thumb)
-                .css('width', opts.thumb_width)
-                .css('height', opts.thumb_width);
-            var byline = $('<div class="byline">')
-                .append('<span class="by">by</span> ' + expr.owner.name )
-                .append('<span>');
-            var text = $('<div class="text">')
-                .append('<div class="title">' + expr.title + '</div>')
-                .append(byline)
-                .css('width', opts.thumb_width)
-                .css('height', opts.text_height);
-            el.append(im).append(text);
+            var el = expr.render_card();
+            el.data('index', (i + start_index) * direction);
             element.append(el);
         });
     };
@@ -260,6 +247,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var info = navigator_element.find('.info');
 
         var query = URI(window.location.href).query(true);
+        info.find('form').submit(o.search);
         var search_bar = info.find('input').val(build_search(query));
 
         function tagify(tags, cls, prefix){
@@ -284,6 +272,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             tagify(owner_tags, 'user', '#')
         ).find('.tag').click(function(){
             search_bar.val($(this).html());
+            o.search();
         });
 
 
@@ -367,21 +356,49 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
     };
 
-    // initialization
-    o.initialize = function(){
-        current_expr = Hive.Navigator.Expr(expr);
-        var frame = content_element.find('iframe').on('load', o.cache_next);
+    o.search_string = function(){
+        var string = navigator_element.find('input').val();
+        var tags = (" " + string).match(/(.?)[a-z0-9]+/gi);
+        tags = $.map(tags, function(el){
+            return el.replace('@', 'user=').replace('#', 'tag=').replace(/^[^a-z]/, 'text=')
+        });
+        return window.location.origin + window.location.pathname + "?" + tags.join('&');
+    };
+
+    o.search = function(){
+        history_manager.pushState(current_expr.data(), current_expr.title, o.search_string());
+        populate_navigator();
+    };
+
+    // Factory method for Expr objects
+    o.make_expr = function(data){
+        return Hive.Navigator.Expr(data, opts);
+    };
+
+    var populate_navigator = function(){
+        next_list = [];
+        prev_list = [];
         if (updater) {
             updater.next(current_expr[opts.paging_attr], o.visible_count(), function(data){
-                next_list = $.map(data, Hive.Navigator.Expr);
+                next_list = $.map(data, o.make_expr);
                 if (prev_list.length) o.render().show();
             });
             updater.prev(current_expr[opts.paging_attr], o.visible_count(), function(data){
-                prev_list = $.map(data, Hive.Navigator.Expr);
+                prev_list = $.map(data, o.make_expr);
                 if (next_list.length) o.render().show();
             });
         }
+    }
+    // initialization
+    o.initialize = function(){
+        current_expr = o.make_expr(expr);
+        function on_frame_load(){
+            o.cache_next();
+            current_expr.show();
+        };
+        var frame = content_element.find('iframe').on('load', on_frame_load);
         history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
+        populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
         navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
@@ -391,7 +408,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     return o;
 };
 
-Hive.Navigator.Expr = function(data){
+Hive.Navigator.Expr = function(data, opts){
     var o = $.extend({}, data);
 
     o.url =  '/' + o.owner_name + '/' + o.name;
@@ -417,12 +434,31 @@ Hive.Navigator.Expr = function(data){
     };
 
     o.show = function(){
-        o.frame[0].contentWindow.postMessage('show', o.frame.attr('src'));
+        o.frame[0].contentWindow.postMessage('show', '*');
     };
 
     o.hide = function(){
-        o.frame[0].contentWindow.postMessage('hide', o.frame.attr('src'));
+        o.frame[0].contentWindow.postMessage('hide', '*');
     };
+
+    o.render_card = function(){
+        var el = $('<div>')
+            .addClass('element');
+        var im = $('<img>')
+            .attr('src', o.thumb)
+            .css('width', opts.thumb_width)
+            .css('height', opts.thumb_width);
+        var byline = $('<div class="byline">')
+            .append('<span class="by">by</span> ' + o.owner.name )
+            .append('<span>');
+        var text = $('<div class="text">')
+            .append('<div class="title">' + o.title + '</div>')
+            .append(byline)
+            .css('width', opts.thumb_width)
+            .css('height', opts.text_height);
+        el.append(im).append(text);
+        return el;
+   };
 
     return o;
 };
