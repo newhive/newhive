@@ -47,10 +47,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     var pos = 0;
-    var fetching;
     function update_pos(offset){
         pos = pos + offset;
-        if (fetching) return;
         if (pos > (prev_list.length - opts.visible_count) * expr_width) {
             o.fetch_prev();
         } else if (-pos > (next_list.length - opts.visible_count) * expr_width) {
@@ -59,18 +57,22 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     // public methods
+    var fetching = {};
     fetch = function(count, direction){
-        fetching = true;
         if (!count) count = opts.visible_count;
         if (direction > 0){
+            var lock = fetching.next;
             var update_function = updater.next;
             var towards = next_list;
             var element = navigator_element.find('.container.next');
         } else {
+            var lock = fetching.prev;
             var update_function = updater.prev;
             var towards = prev_list;
             var element = navigator_element.find('.container.prev');
         }
+        if (lock) return;
+        lock = true;
         var start = element.children().last().data('index');
         console.log('start', start);
         var callback = function(data){
@@ -84,7 +86,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 });
                 element.append(card);
             });
-            fetching = false;
+            lock = false;
         };
         var final_expr = towards[towards.length - 1];
         update_function(final_expr[opts.paging_attr], count, callback);
