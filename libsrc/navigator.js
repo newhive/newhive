@@ -4,7 +4,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     var o = {};
     opts = $.extend(
         {
-            visible_count: 20,
             thumb_width: 130,
             text_height: 40,
             margin: 5,
@@ -14,6 +13,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     );
     var height = opts.thumb_width + opts.text_height + 2 * opts.margin + navigator_element.find('.info').height();
     var expr_width = opts.thumb_width + 2 * opts.margin;
+    if (!opts.visible_count) opts.visible_count = Math.round($(window).width() / expr_width * 2);
     var history_manager = window.History;
 
     // private variables
