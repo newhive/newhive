@@ -375,11 +375,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (updater) {
             updater.next(current_expr[opts.paging_attr], o.visible_count(), function(data){
                 next_list = $.map(data, o.make_expr);
-                if (prev_list.length) o.render().show();
+                next_list.loaded = true;
+                if (prev_list.loaded) o.render().show();
             });
             updater.prev(current_expr[opts.paging_attr], o.visible_count(), function(data){
                 prev_list = $.map(data, o.make_expr);
-                if (next_list.length) o.render().show();
+                prev_list.loaded = true;
+                if (next_list.loaded) o.render().show();
             });
         }
     }
