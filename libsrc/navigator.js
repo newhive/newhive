@@ -255,14 +255,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         info.find('form').submit(o.search);
         var search_bar = info.find('input').val(build_search(query));
 
-        function tagify(tags, cls, prefix){
-            if (typeof tags == "undefined") return "";
-            var tag_array = typeof(tags) == "string" ? [tags] : tags;
-            return $.map(tag_array, function(tag) {
-                return "<span class='tag " + cls + "'>" + prefix + tag + "</span>"
-            }).join('');
-        };
-
         var expr_tags = o.current_expr().tags_index;
         var owner_tags = o.current_expr().owner.tags;
         if (owner_tags) {
@@ -270,11 +262,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
 
         info.find('.tags').html(
-            tagify(o.current_expr().owner.name, 'name', '@')
+            tag_list_html(o.current_expr().owner.name, {cls: 'name', prefix: '@'})
         ).append(
-            tagify(expr_tags, 'expr', '#')
+            tag_list_html(expr_tags, {cls: 'expr'})
         ).append(
-            tagify(owner_tags, 'user', '#')
+            tag_list_html(owner_tags, {cls: 'user'})
         ).find('.tag').click(function(){
             search_bar.val($(this).html());
             o.search();

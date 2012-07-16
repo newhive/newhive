@@ -908,4 +908,13 @@ function callback_log(message){
     return function(){
         console.log(message);
     };
-}
+};
+
+function tag_list_html(tags, opts){
+    if (typeof tags == "undefined") return "";
+    opts = $.extend({prefix: '#', cls: ''}, opts);
+    var tag_array = typeof(tags) == "string" ? [tags] : tags;
+    return $.map(tag_array, function(tag) {
+        return "<span class='tag " + opts.cls + "'>" + opts.prefix + tag + "</span>"
+    }).join('');
+};
