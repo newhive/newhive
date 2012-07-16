@@ -4,7 +4,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     var o = {};
     opts = $.extend(
         {
-            visible_count: 10,
+            visible_count: 20,
             thumb_width: 130,
             text_height: 40,
             margin: 5,
@@ -47,43 +47,50 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     var pos = 0;
+    var fetching;
     function update_pos(offset){
         pos = pos + offset;
-        if (pos > prev_list.length * expr_width - $(window).width()){
+        if (fetching) return;
+        if (pos > (prev_list.length - opts.visible_count) * expr_width) {
             o.fetch_prev();
-            o.render({'preserve_pos': true});
-        } else if (-pos > next_list.length * expr_width - $(window).width()) {
+        } else if (-pos > (next_list.length - opts.visible_count) * expr_width) {
             o.fetch_next();
-            o.render({'preserve_pos': true});
         };
     };
 
     // public methods
-    o.fetch_next = function(count){
+    fetch = function(count, direction){
+        fetching = true;
         if (!count) count = opts.visible_count;
-        var update_function = updater.next;
-        var towards = next_list;
+        if (direction > 0){
+            var update_function = updater.next;
+            var towards = next_list;
+            var element = navigator_element.find('.container.next');
+        } else {
+            var update_function = updater.prev;
+            var towards = prev_list;
+            var element = navigator_element.find('.container.prev');
+        }
+        var start = element.children().last().data('index');
+        console.log('start', start);
         var callback = function(data){
             $.each(data, function(i, expr){
-                towards.push(o.make_expr(expr));
+                // Add to data model
+                var exp = o.make_expr(expr);
+                towards.push(exp);
+                // Add to document
+                var card = exp.render_card().data('index', start + direction * (i+1)).click(function(){
+                    o.select($(this).data('index'));
+                });
+                element.append(card);
             });
+            fetching = false;
         };
         var final_expr = towards[towards.length - 1];
-        update_function(final_expr[opts.paging_attr], opts.visible_count, callback);
+        update_function(final_expr[opts.paging_attr], count, callback);
     };
-
-    o.fetch_prev = function(count){
-        if (!count) count = opts.visible_count;
-        var update_function = updater.prev;
-        var towards = prev_list;
-        var callback = function(data){
-            $.each(data, function(i, expr){
-                towards.push(o.make_expr(expr));
-            });
-        };
-        var final_expr = towards[towards.length - 1];
-        update_function(final_expr[opts.paging_attr], opts.visible_count, callback);
-    };
+    o.fetch_next = function(count){ return fetch(count, 1); };
+    o.fetch_prev = function(count){ return fetch(count, -1); };
 
     o.select = function(offset){
         var previous_expr = current_expr;
@@ -180,7 +187,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         $.each(list, function(i, expr){
             if (!expr) return;
             var el = expr.render_card();
-            el.data('index', (i + start_index) * direction);
+            el.data('index', (i + start_index) * direction).click(function(){
+                o.select($(this).data('index'));
+            });
             element.append(el);
         });
     };
@@ -216,17 +225,17 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 .css('height', height - opts.margin)
                 .css('margin-top', -opts.margin);
 
-            //inner.add(frame).drag('init', function(){
-            //    return inner.add(frame);
-            //}).drag(function(e, dd){
-            //    $(this).css('left', dd.offsetX);
-            //}).drag('end', function(e, dd){
-            //    if (this === inner[0]) update_pos(dd.deltaX);
-            //}).on('mousewheel', function(e){
-            //    var delta = e.originalEvent.wheelDelta;
-            //    inner.add(frame).css('left', '+=' + delta);
-            //    update_pos(delta);
-            //});
+            inner.add(frame).drag('init', function(){
+                return inner.add(frame);
+            }).drag(function(e, dd){
+                $(this).css('left', dd.offsetX);
+            }).drag('end', function(e, dd){
+                if (this === inner[0]) update_pos(dd.deltaX);
+            }).on('mousewheel', function(e){
+                var delta = e.originalEvent.wheelDelta;
+                inner.add(frame).css('left', '+=' + delta);
+                update_pos(delta);
+            });
 
             // Build the new navigator
             navigator_element.css('height', height)
@@ -238,10 +247,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         build([current_expr], current, 0, 1);
         build(next_list, next, 1, 1);
         build(prev_list, prev, -1, 1);
-
-        inner.find('.element').click(function(){
-            o.select($(this).data('index'));
-        });
 
         // Update tags, etc in info line
         var info = navigator_element.find('.info');
@@ -342,13 +347,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         for (i=0; i<3; i++) {
             if ( next_list[i] && !next_list[i].loading_started){
                 setTimeout( function(){
-                    console.log('caching');
+                    //console.log('caching');
                     next_list[i].load(content_element, o.cache_next);
                 }, 500);
                 break;
             } else if (prev_list[i] && !prev_list[i].loading_started){
                 setTimeout( function(){
-                    console.log('caching');
+                    //console.log('caching');
                     prev_list[i].load(content_element, o.cache_next);
                 }, 500);
                 break;
