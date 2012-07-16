@@ -1,3 +1,5 @@
+if (typeof Hive == "undefined") Hive = {};
+
 $(function() {
     ///////////////////////////////////////////////////////////////////////////
     //                      jPlayer shenanigans                              //
@@ -123,4 +125,20 @@ $(function() {
     //        createCookie('ie_warning_count', count, 30);
     //    }
     //}
+
+    Hive.show_expr = function(){
+        $.each(expr.apps, function(i, app){
+            if (app.type == "hive.html") {
+                $('#app' + app.id).html(app.content);
+            }
+        });
+    };
+    Hive.hide_expr = function(){
+        $('.happ.hive_html').html('');
+    };
+    window.addEventListener('message', function(m){
+        console.log("received message " + m);
+        if ( m.data == "show" ) Hive.show_expr();
+        if ( m.data == "hide" ) Hive.hide_expr();
+    }, false);
 });

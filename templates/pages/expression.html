@@ -4,6 +4,7 @@
   <script src='{{ asset_bundle('expression.js')[0] }}'></script>
   <script>
       parent_url = {{ exp.url | json }};
+      expr = {{ exp | json }};
   </script>
   <style>html { overflow: hidden }</style>
 {% endblock %}
@@ -11,10 +12,6 @@
 {% block body_classes %}{{ super() }} expression{% endblock %}
 
 {% block main %}
-  {% if auth_required %}
-    {% include 'dialogs/password.html' %}
-  {% else %}
-    {% include 'expr_background.html' %}
-    {{ html }}
-  {% endif %}
+  {% include 'expr_background.html' %}
+  {{ html }}
 {% endblock %}

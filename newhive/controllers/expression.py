@@ -41,7 +41,7 @@ class ExpressionController(ApplicationController, PagingMixin):
     def expr_prepare(self, expr):
         owner = expr.owner
         owner_info = dfilter(owner, ['name', 'fullname', 'tags'])
-        owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70) })
+        owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70), 'has_thumb': owner.has_thumb })
 
         #expr_info = dfilter(expr, ['thumb', 'title', 'tags', 'tags_index', 'owner',
         #    'owner_name', 'updated', 'name'])
@@ -154,6 +154,12 @@ class ExpressionController(ApplicationController, PagingMixin):
 
         response.context.update( html = expr_to_html(resource), exp = resource )
         return self.serve_page(response, 'pages/expression.html')
+
+    def feed(self, request, response):
+        expr = self.db.Expr.fetch(lget(request.path_parts, 1))
+        if not expr: return self.serve_404(request, response)
+        items = expr.feed_page(viewer=request.requester, limit=0)
+        return self.serve_json(response, list(items))       
 
     def random(self, request, response):
         expr = self.db.Expr.random()
@@ -331,22 +337,26 @@ def expr_to_html(exp):
     def html_for_app(app):
         content = app.get('content', '')
         more_css = ''
-        html = ''
-        if app.get('type') == 'hive.image':
+        type = app.get('type')
+        id = app.get('id', app['z'])
+        if type == 'hive.image':
             html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
-        elif app.get('type') == 'hive.sketch':
+        elif type == 'hive.sketch':
             html = "<img src='%s'>" % content.get('src')
-        elif app.get('type') == 'hive.rectangle':
+        elif type == 'hive.rectangle':
             c = app.get('content', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-        #elif app.get('type') == 'hive.audio':
-        #    html = "<div class='app_hive_audio'>" + content + "</div>"
-        else: html = content
+            html = ''
+        elif type == 'hive.html':
+            html = ""
+        else:
+            html = content
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app) + more_css, data, html)
+        return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
+            (type.replace('.', '_'), id, css_for_app(app) + more_css, data, html)
 
     return ''.join(map(html_for_app, apps))
 
