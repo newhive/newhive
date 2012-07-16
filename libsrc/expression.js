@@ -137,7 +137,6 @@ $(function() {
         $('.happ.hive_html').html('');
     };
     window.addEventListener('message', function(m){
-        console.log("received message " + m);
         if ( m.data == "show" ) Hive.show_expr();
         if ( m.data == "hide" ) Hive.hide_expr();
     }, false);
