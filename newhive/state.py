@@ -379,7 +379,7 @@ class User(HasSocial):
     def feed_profile_entities(self, **args):
         res = self.feed_profile(**args)
         for i, item in enumerate(res):
-            if item.type == 'SystemMessage' or item.type == 'FriendJoined': continue
+            if item.type == 'FriendJoined': continue
             entity = item.initiator if item.entity.id == self.id else item.entity
             entity.feed = [item]
             res[i] = entity
@@ -444,11 +444,12 @@ class User(HasSocial):
     def get_url(self, path='profile'):
         return abs_url() + self.get('name', '') + '/' + path
     url = property(get_url)
-
+ 
+    @property
     def has_thumb(self):
         id = self.get('thumb_file_id')
         url = self.get('profile_thumb')
-        return (id and id != '') or (url and url != '')
+        return True if ( (id and id != '') or (url and url != '') ) else False
 
     def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
@@ -797,9 +798,15 @@ class Expr(HasSocial):
         return comments
     comments = property(get_comments)
 
-    def get_feed(self, **opts):
-        return self.db.Feed.search({ 'entity': self.id,
+    def feed_page(self, viewer=None, **opts):
+        if self.get('auth') == 'password' and self.get('password'):
+            # TODO: add support for password matching
+            if self.owner.id != get_id(viewer): return []
+        
+        items = self.db.Feed.page({ 'entity': self.id,
             'class_name': {'$in': ['Star', 'Comment', 'Broadcast']} }, **opts)
+
+        return items
 
     @property
     def comment_count(self):
@@ -1026,6 +1033,7 @@ class Feed(Entity):
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create()
+
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
         if self.entity['owner'] != self['initiator']: self.entity.owner.notify(self)
 
@@ -1118,6 +1126,13 @@ class NewExpr(Feed):
 class UpdatedExpr(Feed):
     action_name = 'updated'
 
+    def create(self):
+        super(UpdatedExpr, self).create()
+        # if most recent in feed is an update to same expression, delete it
+        prev = self.db.UpdatedExpr.last({ 'initiator': self['initiator'], 'entity': self['entity'] })
+        if prev: prev.delete()
+        return self
+
 @Database.register
 class FriendJoined(Feed):
     def viewable(self, viewer):
@@ -1126,14 +1141,6 @@ class FriendJoined(Feed):
     def create(self):
         if self.db.FriendJoined.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         return super(FriendJoined, self).create()
-
-@Database.register
-class SystemMessage(Feed):
-    class Collection(Feed.Collection):
-        def create(self, entity, data={}):
-            initiator = self.db.User.get_root()
-            return super(SystemMessage.Collection, self).create(initiator, entity, data)
-
 
 @Database.register
 class Referral(Entity):

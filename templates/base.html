@@ -14,7 +14,7 @@
  <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
  <script>
     var logged_in = {{ user.logged_in|json }}, server_name = '{{ server_name }}',
-        secure_server = '{{ secure_server }}', insecure_server = '{{ insecure_server }}',
+        secure_server = '{{ secure_server }}', server_url = '{{ server_url }}',
         debug_mode = {{ debug|json }},
         dialog_to_show = {{ dialog_to_show|json }},
         new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}

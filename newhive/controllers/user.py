@@ -149,6 +149,22 @@ class UserController(ApplicationController):
                                                            abs_url(secure=True)+ 'settings')
             return self.serve_page(response, 'pages/user_settings.html')
 
+    def info(self, request, response):
+        user = self.db.User.fetch(lget(request.path_parts, 1))
+        if not user: return self.serve_404(request, response)
+
+        items = user.feed_profile(viewer=request.requester, limit=20)
+        tmpl = self.jinja_env.get_template('partials/feed.html')
+        feed_html = ''.join([ tmpl.render(dict(response.context, feed=item, user=request.requester)) for item in items ])
+
+        exprs = [ { 'thumb': e.get_thumb(70), 'url': e.url } for e in user.expr_page(limit=5) ]
+
+        return self.serve_json(response, dict(
+             feed_html = feed_html
+            ,exprs = exprs
+            ,listening = user.id in request.requester.starred_user_ids
+        ))
+
     def facebook_canvas(self, request, response, args={}):
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited' + querystring({'request_ids': request.args.get('request_ids','')}) + '";</script></html>')
 
