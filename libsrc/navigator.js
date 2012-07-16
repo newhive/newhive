@@ -65,7 +65,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var towards = next_list;
         var callback = function(data){
             $.each(data, function(i, expr){
-                towards.push(Hive.Navigator.Expr(expr));
+                towards.push(o.make_expr(expr));
             });
         };
         var final_expr = towards[towards.length - 1];
@@ -78,7 +78,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var towards = prev_list;
         var callback = function(data){
             $.each(data, function(i, expr){
-                towards.push(Hive.Navigator.Expr(expr));
+                towards.push(o.make_expr(expr));
             });
         };
         var final_expr = towards[towards.length - 1];
@@ -179,22 +179,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         element.empty();
         $.each(list, function(i, expr){
             if (!expr) return;
-            var el = $('<div>')
-                .addClass('element')
-                .data('index', (i + start_index) * direction);
-            var im = $('<img>')
-                .attr('src', expr.thumb)
-                .css('width', opts.thumb_width)
-                .css('height', opts.thumb_width);
-            var byline = $('<div class="byline">')
-                .append('<span class="by">by</span> ' + expr.owner.name )
-                .append('<span>');
-            var text = $('<div class="text">')
-                .append('<div class="title">' + expr.title + '</div>')
-                .append(byline)
-                .css('width', opts.thumb_width)
-                .css('height', opts.text_height);
-            el.append(im).append(text);
+            var el = expr.render_card();
+            el.data('index', (i + start_index) * direction);
             element.append(el);
         });
     };
@@ -384,23 +370,28 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         populate_navigator();
     };
 
+    // Factory method for Expr objects
+    o.make_expr = function(data){
+        return Hive.Navigator.Expr(data, opts);
+    };
+
     var populate_navigator = function(){
         next_list = [];
         prev_list = [];
         if (updater) {
             updater.next(current_expr[opts.paging_attr], o.visible_count(), function(data){
-                next_list = $.map(data, Hive.Navigator.Expr);
+                next_list = $.map(data, o.make_expr);
                 if (prev_list.length) o.render().show();
             });
             updater.prev(current_expr[opts.paging_attr], o.visible_count(), function(data){
-                prev_list = $.map(data, Hive.Navigator.Expr);
+                prev_list = $.map(data, o.make_expr);
                 if (next_list.length) o.render().show();
             });
         }
     }
     // initialization
     o.initialize = function(){
-        current_expr = Hive.Navigator.Expr(expr);
+        current_expr = o.make_expr(expr);
         function on_frame_load(){
             o.cache_next();
             current_expr.show();
@@ -417,7 +408,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     return o;
 };
 
-Hive.Navigator.Expr = function(data){
+Hive.Navigator.Expr = function(data, opts){
     var o = $.extend({}, data);
 
     o.url =  '/' + o.owner_name + '/' + o.name;
@@ -449,6 +440,25 @@ Hive.Navigator.Expr = function(data){
     o.hide = function(){
         o.frame[0].contentWindow.postMessage('hide', '*');
     };
+
+    o.render_card = function(){
+        var el = $('<div>')
+            .addClass('element');
+        var im = $('<img>')
+            .attr('src', o.thumb)
+            .css('width', opts.thumb_width)
+            .css('height', opts.thumb_width);
+        var byline = $('<div class="byline">')
+            .append('<span class="by">by</span> ' + o.owner.name )
+            .append('<span>');
+        var text = $('<div class="text">')
+            .append('<div class="title">' + o.title + '</div>')
+            .append(byline)
+            .css('width', opts.thumb_width)
+            .css('height', opts.text_height);
+        el.append(im).append(text);
+        return el;
+   };
 
     return o;
 };
