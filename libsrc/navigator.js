@@ -283,20 +283,15 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         return o;
     };
 
-    var visible = false;
     o.show = function(){
-        if (visible) return o;
         navigator_element.stop().clearQueue();
         navigator_element.animate({bottom: 0});
-        visible = true;
         return o;
     };
 
     o.hide = function(){
-        if (!visible) return o;
         navigator_element.stop().clearQueue();
         navigator_element.animate({bottom: -height-2*opts.margin});
-        visible = false;
         return o;
     };
 
