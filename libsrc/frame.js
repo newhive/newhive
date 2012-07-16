@@ -79,6 +79,7 @@ Hive.Menus.create = function(){
 
 // AJAXy diddling for all content in above menus
 Hive.Menus.update_expr = function(expr){
+    console.log(expr);
     $('.owner_name').html(expr.owner_name);
     $('.owner_thumb').attr('src', expr.owner.thumb);
     $('.owner_thumb')[expr.owner.has_thumb ? 'removeClass' : 'addClass']('none');
@@ -90,6 +91,9 @@ Hive.Menus.update_expr = function(expr){
     $('.comment .count').html(expr.counts.Comment);
 
     // TODO: update share URLs
+
+    $('#expr_menu .title').html(expr.title);
+    $('#expr_menu img').attr('src', expr.thumb);
 
     // load owner's info: feed items in owner_menu, expr links and thumbs, listening status
     $.getJSON(server_url + 'user/' + expr.owner.id, function(data, status, jqXHR){
