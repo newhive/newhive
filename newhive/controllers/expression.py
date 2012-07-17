@@ -98,11 +98,7 @@ class ExpressionController(ApplicationController, PagingMixin):
         if request.requester.logged_in:
             self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
 
-        if template == 'none':
-            if auth_required: return Forbidden()
-            return self.serve_html(response, html)
-
-        else: return self.serve_page(response, 'pages/' + template + '.html')
+        return self.serve_page(response, 'pages/' + template + '.html')
 
     def info(self, request, response):
         args = request.args.copy().to_dict(flat=True)
@@ -145,13 +141,13 @@ class ExpressionController(ApplicationController, PagingMixin):
     # This output is untrusted and must never be served from config.server_name.
     def render(self, request, response):
         expr_id = lget(request.path_parts, 0)
-        resource = self.db.Expr.fetch(expr_id)
-        if not resource: return self.serve_404(request, response)
+        expr = self.db.Expr.fetch(expr_id)
+        if not expr: return self.serve_404(request, response)
 
-        if ( resource.get('auth') == 'password' and
-            request.form.get('password') != resource.get('password') ): return Forbidden()
+        if expr.get('auth') == 'password' and not expr.cmp_password(request.form.get('password')):
+            return self.serve_forbidden(request)
 
-        response.context.update( html = expr_to_html(resource), exp = resource )
+        response.context.update( html = expr_to_html(expr), exp = expr )
         return self.serve_page(response, 'pages/expression.html')
 
     def feed(self, request, response):

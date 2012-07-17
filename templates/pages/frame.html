@@ -95,8 +95,8 @@
       </div>
     </div>
     <div id='expr_feed' class='items'>
-      Loading...
-      {# TODO: create links for javascript-less clients #}
+      <b>Loading...</b>
+      {# TODO: create content for javascript-less clients #}
       {#% for feed in exp.feed_page(viewer=user) %}
         {% include "partials/feed.html" %}
       {% endfor %#}
@@ -106,19 +106,22 @@
   <div id='like_menu' class='menu action_menu face_menu'>
     <span class='header'>Love</span>
     <div class='info'>Show this expression some love, and be notified of updates and comments.</div>
+    {# TODO: create content for javascript-less clients #}
     <div class='items'><b>Loading...</b></div>
   </div>
 
   <div id='broadcast_menu' class='menu action_menu face_menu'>
     <span class='header'>Broadcast</span>
     <div class='info'>Broadcast this expression out to your listeners.</div>
+    {# TODO: create content for javascript-less clients #}
     <div class='items'><b>Loading...</b></div>
   </div>
 
-  <div id='comment_menu' class='menu action_menu {{ 'off' if not exp.comment_count }}'>
+  <div id='comment_menu' class='menu action_menu {{ 'on' if exp.comment_count else 'off' }}'>
     <span class='header'>Comment</span>
-    <div class='info on'>Leave a comment to begin</div>
-    <div class='info off'>Join the conversation around this expression</div>
+    <div class='info off'>Leave a comment to begin</div>
+    <div class='info on'>Join the conversation around this expression</div>
+    {# TODO: create content for javascript-less clients #}
     <div class='items'><b>Loading...</b></div>
   </div>
 

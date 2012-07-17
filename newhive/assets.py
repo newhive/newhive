@@ -1,9 +1,5 @@
 from os.path import dirname, join, abspath, normpath, isfile, isdir
-import os
-import json
-import time
-import webassets
-import webassets.script
+import os, json, time, webassets, webassets.script, re
 from boto.s3.key import Key as S3Key
 from boto.s3.connection import S3Connection
 from newhive import config
@@ -29,7 +25,7 @@ class Assets(object):
         self.asset_bucket = self.s3_con.create_bucket(config.asset_bucket)
         bucket_url = self.asset_bucket.generate_url(0)
         self.base_url = bucket_url[0:bucket_url.index('?')]
-        self.local_base_url = abs_url() + 'lib/'
+        self.local_base_url = re.sub('https?:', '', abs_url()) + 'lib/'
         self.secure_local_base_url = abs_url(secure=True) + 'lib/'
         self.default_local = False
 
@@ -82,16 +78,11 @@ class Assets(object):
 
         return self
 
-    def url(self, name, secure=False):
+    def url(self, name):
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
         if not props: return '/not_found:' + name
-
-        if props[2]: # local asset
-            path = self.secure_local_base_url if secure else self.local_base_url
-        else:
-            path = self.base_url
-        return path + name + '?' + props[1]
+        return (self.local_base_url if props[2] else self.base_url) + name + '?' + props[1]
 
     def write_ruby(self, write_path):
         with open(join(config.src_home, write_path), 'w') as f:

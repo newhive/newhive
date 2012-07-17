@@ -29,7 +29,7 @@ $(function() {
             loadeddata: update_timer(this),
             timeupdate: update_timer(this),
             ended: update_timer(this),
-            swfPath: (window.location.protocol == "https:") ? asset('Jplayer.swf', true) : asset('Jplayer.swf'),
+            swfPath: asset('Jplayer.swf'),
             supplied: "mp3",
             verticalVolume: true
         });
@@ -88,10 +88,9 @@ $(function() {
         document.body.scrollTop -= delta[1];
     });
 
-    // TODO: Enable selection of text, dragging of images? Prevent click event after scrolling
     // TODO: prevent scroll sticking after mouse-up outside of expr frame
     var scroll_ref, mouse_ref;
-    $(document.body).drag('start', function(e, dd){
+    $('#bg').drag('start', function(e, dd){
         scroll_ref = [document.body.scrollLeft, document.body.scrollTop];
         mouse_ref = [e.clientX, e.clientY];
     }).drag(function(e, dd){

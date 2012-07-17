@@ -766,6 +766,11 @@ class Expr(HasSocial):
       else:
         return 0
 
+    def cmp_password(self, v):
+        password = self.get('password', '')
+        if password == '' or password == v: return True
+        return crypt(v.encode('UTF8'), self['password']) == self['password']
+
     @property
     def url(self): return abs_url() + self['owner_name'] + '/' + self['name']
 

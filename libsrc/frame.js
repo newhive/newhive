@@ -96,7 +96,7 @@ Hive.Menus.update_expr = function(expr){
     $('.owner_name').html(expr.owner_name);
     $('.owner_thumb').attr('src', expr.owner.thumb);
     $('.owner_thumb').toggleClass('none', !expr.owner.has_thumb);
-    $('.owner_url').attr('src', expr.owner.url);
+    $('.owner_url').attr('href', expr.owner.url);
 
     $('.view .count').html(expr.counts.Views);
     $('.like .count').html(expr.counts.Star).toggleClass('zero', expr.counts.Star == '0');
@@ -153,6 +153,11 @@ Hive.Menus.update_expr = function(expr){
             $('<a>').attr('href', profile_link(item.initiator_name))
                 .append($('<img>').attr({ src: item.initiator_thumb, title: item.initiator_name }))
                 .appendTo(box);
+        });
+
+        var box = $('#comment_menu .items').html('');
+        $.map(feeds.Comment, function(item){
+            
         });
 
         console.log(feeds);
