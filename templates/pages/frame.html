@@ -15,12 +15,14 @@
   <script type='text/javascript'>
       // TODO: temporary, should probably hide this better
       var expr = {{exp | json}};
+      var user = {{ user.id | json }};
       var content_domain = {{ content_domain | json }};
   </script>
 {% endblock %}
 {% block body_classes %}{{super()}} frame{% endblock %}
 
 {% block body %}
+  <div id='navigator_handle' class='menu_handle'></div>
   <div id="navigator" class="navigator">
     <div class="info">
       <div class="icon random_btn hoverable rounded"></div>
@@ -33,20 +35,18 @@
       </div>
     </div>
   </div>
-  <div id='navigator_handle' class='menu_handle'></div>
   <div id="expression_frames">
     <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
   </div>
 
+  <div id='action_nav_handle' class='menu_handle'></div>
   <div id='action_nav'>
-    {% if user_is_owner %}
-      <a href='{{ edit }}'><div class='btn_box edit hoverable'>
-        <div class='nav_btn'>
-          <span class='text'>Edit</span>
-          <div class='icon'></div>
-        </div>
-      </div></a>
-    {% endif %}
+    <a href='{{ edit }}'><div class='btn_box edit hoverable {{ 'none' if not user_is_owner }}'>
+      <div class='nav_btn'>
+        <span class='text'>Edit</span>
+        <div class='icon'></div>
+      </div>
+    </div></a>
     <div id='view_btn' class='btn_box view hoverable'>
       <div class='nav_btn'>
         <div class='edge'></div>
@@ -75,19 +75,17 @@
         <div class='count{{ ' zero' if not exp.comment_count }}'>{{ exp.comment_count | large_number }}</div>
       </div>
     </div>
-    {% if user_is_owner %}
-      <div class='btn_box delete hoverable'>
-        <div class='nav_btn'>
-          <span class='text'>Delete</span>
-          <div class='icon'></div>
-        </div>
+    <div class='btn_box delete hoverable {{ 'none' if not user_is_owner }}'>
+      <div class='nav_btn'>
+        <span class='text'>Delete</span>
+        <div class='icon'></div>
       </div>
-    {% endif %}
+    </div>
   </div>
 
-  <div id='expr_menu' class='menu'>
+  <div id='expr_menu' class='menu action_menu'>
     <div class='expr_card big_card'>
-      <img src='{{ exp.get_thumb(190) }}'>
+      <img src='{{ exp.get_thumb(190) }}' class='thumb'>
       <div class='card_text'>
         <div class='title'>{{ exp.title | e }}</div>
         <div class='tags'>{% for tag in exp.tags_index %}
@@ -96,29 +94,31 @@
         <div class='byline timestamp'>Jul 1</div>
       </div>
     </div>
-    <div id='expr_feed' class='items'>  
-      {% for feed in exp.feed_page(viewer=user) %}
+    <div id='expr_feed' class='items'>
+      Loading...
+      {# TODO: create links for javascript-less clients #}
+      {#% for feed in exp.feed_page(viewer=user) %}
         {% include "partials/feed.html" %}
-      {% endfor %}
+      {% endfor %#}
     </div>
   </div>
 
-  <div id='like_menu' class='menu'>
-    <div class='header'>Love</div>
-    <div>Show this expression some love, and be notified of updates and comments.</div>
+  <div id='like_menu' class='menu action_menu face_menu'>
+    <span class='header'>Love</span>
+    <div class='info'>Show this expression some love, and be notified of updates and comments.</div>
     <div class='items'><b>Loading...</b></div>
   </div>
 
-  <div id='broadcast_menu' class='menu'>
-    <div class='header'>Broadcast</div>
-    <div>Broadcast this expression out to your listeners.</div>
+  <div id='broadcast_menu' class='menu action_menu face_menu'>
+    <span class='header'>Broadcast</span>
+    <div class='info'>Broadcast this expression out to your listeners.</div>
     <div class='items'><b>Loading...</b></div>
   </div>
 
-  <div id='comment_menu' class='menu{{ ' off' if not exp.comment_count }}'>
-    <div class='header'>Comment</div>
-    <div class='on'>Leave a comment to begin</div>
-    <div class='off'>Join the conversation around this expression</div>
+  <div id='comment_menu' class='menu action_menu {{ 'off' if not exp.comment_count }}'>
+    <span class='header'>Comment</span>
+    <div class='info on'>Leave a comment to begin</div>
+    <div class='info off'>Join the conversation around this expression</div>
     <div class='items'><b>Loading...</b></div>
   </div>
 
@@ -167,18 +167,11 @@
       <div class='btns'>
         <form method='POST' action='{{ secure_server }}'>
           <input type='hidden' name='action' value='expr_delete'>
-          <input type='hidden' name='id' value='{{ exp.id }}'>
+          <input type='hidden' name='id' value='{{ exp.id }}' class='expr_id'>
           <input type='submit' value='Yes' class='btn'> &nbsp;
           <input type='button' value='No' class='no_btn btn'>
         </form>
       </div>
     </div>
-    <script>
-      (function(){
-        var dialog;
-        $('.delete_btn').click(function(){ dialog = showDialog('#dia_delete'); });
-        $('#dia_delete .no_btn').click(function(){ dialog.close() });
-      })();
-    </script>
   {% endif %}
 {% endblock %}

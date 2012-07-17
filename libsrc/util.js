@@ -535,13 +535,6 @@ function hover_add(o) {
         .mouseleave(function() { if(!this.busy) $(this).removeClass('active'); });
 }
 
-make_handle = function(menu){
-    var d = $(menu);
-    return $('<div>').addClass('menu_handle').css({
-        left: d.offset().left, top: d.offset().top, width: d.width(), height: d.height()
-    }).appendTo(document.body);
-};
-
 hover_menu = function(handle, drawer, options) {
     var handle = $(handle), drawer = $(drawer), o = { handle : handle, drawer : drawer },
         menu_items = drawer.find('.menu_item'), close_timer = false,
@@ -915,6 +908,6 @@ function tag_list_html(tags, opts){
     opts = $.extend({prefix: '#', cls: ''}, opts);
     var tag_array = typeof(tags) == "string" ? [tags] : tags;
     return $.map(tag_array, function(tag) {
-        return "<span class='tag " + opts.cls + "'>" + opts.prefix + tag + "</span>"
-    }).join('');
+        return "<a href='#" + tag + "' class='tag " + opts.cls + "'>" + opts.prefix + tag + "</a>"
+    }).join(' ');
 };

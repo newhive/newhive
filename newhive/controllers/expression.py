@@ -88,7 +88,6 @@ class ExpressionController(ApplicationController, PagingMixin):
             ,starrers = resource.starrer_page()
             ,auth_required = auth_required
             ,exp = resource
-            ,exp_js = json.dumps(resource)
             ,expr_url = abs_url(domain = config.content_domain) + resource.id
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
             ,content_domain = abs_url(domain = config.content_domain)
@@ -158,7 +157,10 @@ class ExpressionController(ApplicationController, PagingMixin):
     def feed(self, request, response):
         expr = self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
-        items = expr.feed_page(viewer=request.requester, limit=0)
+        items = map(lambda item: dict(item,
+                initiator_thumb=item.initiator.get_thumb(70),
+                created_friendly=friendly_date(item['created'])
+            ), expr.feed_page(viewer=request.requester, limit=0))
         return self.serve_json(response, list(items))       
 
     def random(self, request, response):

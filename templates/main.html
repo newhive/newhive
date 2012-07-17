@@ -33,6 +33,7 @@
 {% block body_classes %}{{ super() }} main {% endblock body_classes%}
 
 {% block main %}
+  <div id='user_nav_handle' class='menu_handle'></div>
   <div id='user_nav' class='nav'
     ><a href='{{ server_url }}'><div id='logo' class='hoverable icon left_edge'></div></a
     {% if user.logged_in %}
@@ -89,6 +90,7 @@
   {% endif %}
 
   {% if not editing %}
+    <div id='owner_nav_handle' class='menu_handle'></div>
     <div id='owner_nav' class='nav'
       {% set nav_begin = True %}
       {% if not user.logged_in %}
@@ -127,8 +129,8 @@
         </div>
         {#<div class='menu_item'>Profile</div>#}
         <div class='menu_item listen off'>
-          <span class='off'>Listen</span>
-          <span class='on'>Unlisten</span>
+          <span class='off'>Listen to</span>
+          <span class='on'>Unlisten to</span>
           <span class='owner_name'>{{ owner.name }}</span>
           <div class='icon'></div>
         </div>
