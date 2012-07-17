@@ -95,7 +95,7 @@ class ApplicationController(object):
             ,server_name = config.server_name
             ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
             ,debug = config.debug_mode
-            ,use_ga = config.use_ga
+            ,use_ga = config.live_server
             ,ui = ui
             ,template = template
             ,facebook_app_id = config.facebook_app_id
@@ -140,7 +140,7 @@ class ApplicationController(object):
         return response
 
     def robots(self, request, response):
-        if config.debug_mode:
+        if not config.live_server:
             return self.serve_data(response, 'text/plain', "User-agent: *\nDisallow: /")
         else: return self.serve_404(None, response)
 
