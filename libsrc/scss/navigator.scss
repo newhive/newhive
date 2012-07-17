@@ -5,6 +5,7 @@
     $shadow_color: rgba(0,0,0,0.4);
     @include box-shadow(0 -2px 15px $shadow_color);
     width: 100%;
+    overflow: hidden;
     position: fixed;
     left: 0;
     bottom: 0;
