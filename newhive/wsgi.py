@@ -311,6 +311,7 @@ def handle_safe(request):
                         } for x in traceback.frames
                     ]
                 , 'code_revision': newhive.manage.git.current_revision
+                , 'dev_prefix': config.dev_prefix
                 }
         request = request.environ.get('hive.request')
         if request and hasattr(request, 'requester'):
