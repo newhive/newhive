@@ -13,6 +13,7 @@ Page {{page}}
 
 {% block table_head %}
 <tr>
+  <th>Prefix</th>
   <th>Date</th>
   <th>IP</th>
   <th>User</th>
@@ -29,6 +30,7 @@ Page {{page}}
 {% for error in errors %}
 
 <tr>
+  <td>{{ error.dev_prefix }}</td>
   <td><a href="/admin/error_log/{{error.id}}">{{ error.created | epoch_to_string }}</td>
   <td>{{ error.get('environ').HTTP_X_FORWARDED_FOR or error.get('environ').REMOTE_ADDR }}</td>
   <td>{{ error.get('requester').name | e}}</td>

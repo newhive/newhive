@@ -128,7 +128,10 @@ class AdminController(ApplicationController):
 
             return self.serve_page(response, 'pages/admin/error.html')
         else:
-            query = {'created': {'$exists': True}}
+            query = {
+                    'created': {'$exists': True}
+                    , '$or': [{'dev_prefix': {'$exists': False}}, {'dev_prefix': config.dev_prefix}]
+                    }
             page = int(request.args.get('page', 1))
             if request.args.has_key('before'): query['created'] = {'$lt': float(request.args.get('before'))}
             if request.args.has_key('after'): query['created'] = {'$gt': float(request.args.get('after'))}
