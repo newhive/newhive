@@ -60,7 +60,7 @@
         .element {
             margin: 0 $margin 100px $margin;
             img {
-                @include border-radius(4px);
+                //@include border-radius(4px);
             }
             .text {
                 overflow: hidden;

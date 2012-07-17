@@ -4,14 +4,14 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     var o = {};
     opts = $.extend(
         {
-            thumb_width: 130,
+            thumb_width: 166,
             text_height: 40,
             margin: 5,
             paging_attr: 'id'
         },
         opts
     );
-    var height = opts.thumb_width + opts.text_height + 2 * opts.margin + navigator_element.find('.info').height();
+    var height = opts.thumb_width + 2 * opts.margin + navigator_element.find('.info').height();
     var expr_width = opts.thumb_width + 2 * opts.margin;
     if (!opts.visible_count) opts.visible_count = Math.round($(window).width() / expr_width * 2);
     var history_manager = window.History;
@@ -439,7 +439,8 @@ Hive.Navigator.Expr = function(data, opts){
 
     o.render_card = function(){
         var el = $('<div>')
-            .addClass('element');
+            .addClass('element expr_card')
+            .css('height', opts.thumb_width);
         var im = $('<img>')
             .attr('src', o.thumb)
             .css('width', opts.thumb_width)
@@ -447,7 +448,7 @@ Hive.Navigator.Expr = function(data, opts){
         var byline = $('<div class="byline">')
             .append('<span class="by">by</span> ' + o.owner.name )
             .append('<span>');
-        var text = $('<div class="text">')
+        var text = $('<div class="card_text">')
             .append('<div class="title">' + o.title + '</div>')
             .append(byline)
             .css('width', opts.thumb_width)

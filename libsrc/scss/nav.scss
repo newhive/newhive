@@ -217,12 +217,9 @@ $nav_size: 40px;
     }
 }
 
-#expr_menu {
-    top: 68px;
-    right: 58px;
-    width: 250px;
-
-    .big_card {
+body.frame{
+    // Styles shared between navigator and big_card
+    .expr_card {
         position: relative;
         margin: 5px;
 
@@ -232,16 +229,14 @@ $nav_size: 40px;
 
         .card_text {
             position: absolute;
-            bottom: 5px;
             background-color: rgba(0,0,0,0.7);
             color: white;
             width: 100%;
-            padding: 7px;
             box-sizing: border-box;
+            bottom: 0;
         }
 
         .title {
-            font-size: 22px;
             font-weight: bold;
         }
 
@@ -250,9 +245,26 @@ $nav_size: 40px;
             right: 6px;
             bottom: 4px;
             overflow: hidden;
-            font-size: 12px;
         }
     }
+    // big_card specific overrides
+    .expr_card.big_card {
+        .card_text {
+            bottom: 5px;
+            padding: 7px;
+        }
+        .title { font-size: 22px; }
+        .byline { font-size: 12px; }
+    }
+    // navigator specific overrides
+    .navigator .expr_card {
+    }
+}
+
+#expr_menu {
+    top: 68px;
+    right: 58px;
+    width: 250px;
 }
 
 
