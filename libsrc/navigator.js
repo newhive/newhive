@@ -451,8 +451,7 @@ Hive.Navigator.Expr = function(data, opts){
         var text = $('<div class="card_text">')
             .append('<div class="title">' + o.title + '</div>')
             .append(byline)
-            .css('width', opts.thumb_width)
-            .css('height', opts.text_height);
+            .css('width', opts.thumb_width);
         el.append(im).append(text);
         return el;
    };
