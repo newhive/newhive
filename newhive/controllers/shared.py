@@ -103,7 +103,7 @@ class PagingMixin(object):
         return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **paging_args), {'user': request.owner['name']}
 
     @paging_decorator
-    def feed_network(self, request, response):
+    def feed_network(self, request, response, paging_args, **kwargs):
         return request.owner.feed_network(**paging_args)
 
     def feed_profile(self, request, response, by_owner=False, spec={}, **args):
