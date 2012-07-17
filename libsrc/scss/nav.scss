@@ -249,9 +249,6 @@ body.frame{
         }
 
         .byline {
-            position: absolute;
-            right: 6px;
-            bottom: 4px;
             overflow: hidden;
         }
     }
@@ -262,10 +259,19 @@ body.frame{
             padding: 7px;
         }
         .title { font-size: 22px; }
-        .byline { font-size: 12px; }
+        .byline {
+            font-size: 12px;
+            position: absolute;
+            right: 6px;
+            bottom: 4px;
+        }
     }
     // navigator specific overrides
     .navigator .expr_card {
+        .card_text {
+            font-weight: bold;
+            padding: 4px;
+        }
     }
 }
 
