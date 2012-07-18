@@ -342,6 +342,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
     };
 
+    // returns url with querystring based on tag-styled string
+    // e.g.: "@thenewhive #art" => "http://currenturl.com/path?user=thenewhive&tag=art"
     o.search_string = function(){
         var string = navigator_element.find('input').val();
         var tags = (" " + string).match(/(.?)[a-z0-9]+/gi);
@@ -351,11 +353,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         return window.location.origin + window.location.pathname + "?" + tags.join('&');
     };
 
+    // Update url, push history state and repopulate navigator based on new context
     o.search = function(){
         history_manager.pushState(current_expr.data(), current_expr.title, o.search_string());
         populate_navigator();
     };
 
+    // Pick appropriate updater strategy based on context
     function change_context(str){
         switch(str) {
             case "#Network":
@@ -382,6 +386,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         return Hive.Navigator.Expr(data, opts);
     };
 
+    // Populate navigator from scratch
     var populate_navigator = function(){
         next_list = [];
         prev_list = [];
@@ -397,7 +402,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 if (next_list.loaded) o.render().show();
             });
         }
-    }
+    };
+
     // initialization
     o.initialize = function(){
         current_expr = o.make_expr(expr);
