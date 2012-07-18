@@ -360,6 +360,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         populate_navigator();
     };
 
+    o.context = function(str) {
+        navigator_element.find('input').val(str);
+        o.search();
+    };
+
     // Factory method for Expr objects
     o.make_expr = function(data){
         return Hive.Navigator.Expr(data, opts);
