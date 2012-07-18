@@ -192,10 +192,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         });
     };
 
-
     var inner, current, next, prev;
     o.render = function(render_opts){
-        render_opts = $.extend({hidden: false, preserve_pos: false}, render_opts);
+        render_opts = $.extend({hidden: false}, render_opts);
 
         var width = $(window).width();
 
@@ -206,41 +205,39 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
 
         var old_inner = inner;
-        if (!render_opts.preserve_pos) {
-            inner = $('<div>').addClass('navigator_inner');
+        inner = $('<div>').addClass('navigator_inner');
 
-            current = $('<div>').addClass('current').css('left', center.minus);
-            next = $('<div>').addClass('container next').css('left', center.plus);
-            prev = $('<div>').addClass('container prev').css('right', center.plus);
+        current = $('<div>').addClass('current').css('left', center.minus);
+        next = $('<div>').addClass('container next').css('left', center.plus);
+        prev = $('<div>').addClass('container prev').css('right', center.plus);
 
-            inner.append(next).append(prev).append(current);
+        inner.append(next).append(prev).append(current);
 
-            // The frame is the 'loupe' like border highlighting the current element
-            var frame = navigator_element.find('.frame');
-            if (!frame.length) frame = $('<div>').addClass('frame border selected')
-            frame.css('left', center.minus - opts.margin)
-                .css('width', opts.thumb_width)
-                .css('height', height - opts.margin)
-                .css('margin-top', -opts.margin);
+        // The frame is the 'loupe' like border highlighting the current element
+        var frame = navigator_element.find('.frame');
+        if (!frame.length) frame = $('<div>').addClass('frame border selected')
+        frame.css('left', center.minus - opts.margin)
+            .css('width', opts.thumb_width)
+            .css('height', height - opts.margin)
+            .css('margin-top', -opts.margin);
 
-            inner.add(frame).drag('init', function(){
-                return inner.add(frame);
-            }).drag(function(e, dd){
-                $(this).css('left', dd.offsetX);
-            }).drag('end', function(e, dd){
-                if (this === inner[0]) update_pos(dd.deltaX);
-            }).on('mousewheel', function(e){
-                var delta = e.originalEvent.wheelDelta;
-                inner.add(frame).css('left', '+=' + delta);
-                update_pos(delta);
-            });
+        inner.add(frame).drag('init', function(){
+            return inner.add(frame);
+        }).drag(function(e, dd){
+            $(this).css('left', dd.offsetX);
+        }).drag('end', function(e, dd){
+            if (this === inner[0]) update_pos(dd.deltaX);
+        }).on('mousewheel', function(e){
+            var delta = e.originalEvent.wheelDelta;
+            inner.add(frame).css('left', '+=' + delta);
+            update_pos(delta);
+        });
 
-            // Build the new navigator
-            navigator_element.css('height', height)
-                .css('font-size', opts.thumb_width/190 + 'em');
-            if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
-            navigator_element.append(inner).append(frame);
-        }
+        // Build the new navigator
+        navigator_element.css('height', height)
+            .css('font-size', opts.thumb_width/190 + 'em');
+        if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
+        navigator_element.append(inner).append(frame);
 
         build([current_expr], current, 0, 1);
         build(next_list, next, 1, 1);
