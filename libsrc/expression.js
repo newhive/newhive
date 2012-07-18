@@ -79,7 +79,7 @@ $(function() {
     
 
     ///////////////////////////////////////////////////////////////////////////
-    //         more or less normal scrolling without default scrollbars      //
+    //             cool bonus paging and scrolling features                  //
     ///////////////////////////////////////////////////////////////////////////
     // TODO: prevent scroll sticking after mouse-up outside of expr frame
     var scroll_ref, mouse_ref;
@@ -89,6 +89,23 @@ $(function() {
     }).drag(function(e, dd){
         document.body.scrollLeft = scroll_ref[0] - e.clientX + mouse_ref[0];
         document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
+    });
+
+    var go_next = function(){ top.postMessage('next', parent_url); };
+    var go_prev = function(){ top.postMessage('prev', parent_url); };
+
+    $(document.body).on('keydown', function(e){
+        if(e.keyCode == 32) // space
+            if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) go_next();
+        if(e.keyCode == 39) // right arrow
+            if(document.body.scrollLeft + $(window).width() == document.body.scrollWidth) go_next();
+        if(e.keyCode == 37)
+            if(document.body.scrollLeft == 0) go_prev();
+    });
+
+    $('#bg').on('click', function(e){
+        if(e.clientX > $(window).width() * .666) go_next();
+        if(e.clientX < $(window).width() * .333) go_prev();
     });
 
 

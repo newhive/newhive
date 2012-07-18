@@ -83,7 +83,7 @@
     </div>
   </div>
 
-  <div id='expr_menu' class='menu action_menu'>
+  <div id='expr_menu' class='menu'>
     <div class='expr_card big_card'>
       <img src='{{ exp.get_thumb(190) }}' class='thumb'>
       <div class='card_text'>
@@ -123,6 +123,10 @@
     <div class='info on'>Join the conversation around this expression</div>
     {# TODO: create content for javascript-less clients #}
     <div class='items'><b>Loading...</b></div>
+    <form id='comment_form'>
+      <textarea name='comment' placeholder='Type comment here...' rows='4'></textarea>
+      <input type='submit' value='Enter' class='btn black rounded'>
+    </form>
   </div>
 
   <script>

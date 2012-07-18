@@ -61,7 +61,8 @@ Hive.Menus.create = function(){
     hover_menu('#view_btn', '#expr_menu', { layout: 'center_y', min_y: menu_top, offset_x: 11, group: nav_menu });
     hover_menu('#like_btn', '#like_menu', { layout: 'center_y', min_y: menu_top, offset_x: 11, group: nav_menu });
     hover_menu('#broadcast_btn', '#broadcast_menu', { layout: 'center_y', min_y: menu_top, offset_x: 11, group: nav_menu });
-    hover_menu('#comment_btn', '#comment_menu', { layout: 'center_y', min_y: menu_top, offset_x: 11, group: nav_menu });
+    hover_menu('#comment_btn', '#comment_menu', { layout: 'center_y', min_y: menu_top, offset_x: 11,
+        open: function(){ $('#comment_menu textarea').get(0).focus() }, group: nav_menu });
 
     Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames');
     o.navigator_menu = hover_menu('#navigator_handle', '#navigator', {
@@ -131,8 +132,8 @@ Hive.Menus.update_expr = function(expr){
                 + "<a href='" + profile_link(item.initiator_name) + "'>"
                     + "<img src='" + item.initiator_thumb + "'></a>"
                 + "<div class='feed_text'>"
-                    + "<div class='byline'>" + item.created_friendly + "</div>"
-                    + "<a href='" + profile_link(item.initiator_name) + "'>"
+                    + "<div class='time'>" + item.created_friendly + "</div>"
+                    + "<a href='" + profile_link(item.initiator_name) + "' class='author'>"
                     + item.initiator_name + "</a> " + o.action_name(item)
                     + ( item.text ? '<br>"' + item.text + '"' : '' )
                     + "</div></div>").appendTo(box);
@@ -160,13 +161,12 @@ Hive.Menus.update_expr = function(expr){
         $.map(feeds.Comment, function(item){
             $("<div class='item'>"
                 + "<a href='" + profile_link(item.initiator_name) + "'>"
-                    + "<img src='" + item.initiator_thumb + "'></a>"
-                + "<div class='feed_text'>"
-                    + item.text
-                    + "<div class='author'><a href='" + profile_link(item.initiator_name) + "'>"
-                    + item.initiator_name + "</a></div>"
-                    + "<div class='byline'>" + item.created_friendly + "</div>"
-                    + "</div></div>").appendTo(box);
+                + "<img src='" + item.initiator_thumb + "'></a>"
+                + item.text
+                + "<div class='author'><a href='" + profile_link(item.initiator_name) + "'>"
+                + item.initiator_name + "</a></div>"
+                + "<div class='time'>" + item.created_friendly + "</div>"
+                + "</div>").prependTo(box);
         });
     };
     $.getJSON(server_url + 'expr_feed/' + expr.id, load_feed);

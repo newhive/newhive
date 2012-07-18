@@ -30,7 +30,6 @@ class ExpressionController(ApplicationController, PagingMixin):
         response.context.update({
              'title'     : 'Editing: ' + exp['title']
             ,'sites'     : request.requester.get('sites')
-            ,'exp_js'    : re.sub('</script>', '<\\/script>', json.dumps(exp))
             ,'exp'       : exp
             ,'show_help' : show_help
             ,'editing'   : True

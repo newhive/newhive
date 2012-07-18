@@ -17,7 +17,7 @@ from newhive.controllers import (
     ,CronController
 )
 
-import os, re, json, mimetypes, math, time, crypt, urllib, base64
+import os, re, mimetypes, math, time, crypt, urllib, base64
 import datetime
 from os.path  import join
 from werkzeug import Request, Response, exceptions, url_unquote
@@ -29,6 +29,7 @@ import jinja2
 from newhive import config
 from newhive.utils import abs_url, now
 from newhive.assets import HiveAssets
+from newhive.extra_json import extra_json
 import newhive.colors
 import newhive.state
 import newhive.manage.git
@@ -54,22 +55,13 @@ if __name__ != "__main__":
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(join(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
 
-class JSONDateTimeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (datetime.date, datetime.datetime)):
-            return obj.isoformat()
-        else:
-            return json.JSONEncoder.default(self, obj)
-def datetime_json(data):
-    return json.dumps(data, cls=JSONDateTimeEncoder)
-
 jinja_env.filters.update({
      'time': friendly_date
     ,'epoch_to_string': epoch_to_string
     ,'length_bucket': length_bucket
     ,'large_number': large_number
     ,'no_zero': no_zero
-    ,'json': datetime_json
+    ,'json': extra_json
     ,'mod': lambda x, y: x % y
     ,'querystring': querystring
     ,'percentage': lambda x: x*100

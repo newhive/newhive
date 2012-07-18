@@ -489,5 +489,9 @@ Hive.Navigator.create = function(navigator, viewer){
         var state = History.getState(); // Note: We are using History.getState() instead of event.state
         o.select_by_id(state.data._id);
     });
+    window.addEventListener('message', function(m){
+        if(m.data == 'next') o.next();
+        if(m.data == 'prev') o.prev();
+    }, false);
     return o;
 };
