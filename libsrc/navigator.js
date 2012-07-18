@@ -394,7 +394,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
         var frame = content_element.find('iframe').on('load', on_frame_load);
         history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
-        Hive.Menus.update_expr(current_expr.data());
         populate_navigator();
         current_expr.frame = frame;
         current_expr.show();

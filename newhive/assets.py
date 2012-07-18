@@ -25,7 +25,7 @@ class Assets(object):
         self.asset_bucket = self.s3_con.create_bucket(config.asset_bucket)
         bucket_url = self.asset_bucket.generate_url(0)
         self.base_url = bucket_url[0:bucket_url.index('?')]
-        self.local_base_url = re.sub('https?:', '', abs_url()) + 'lib/'
+        self.local_base_url = '/lib/' #re.sub('https?:', '', abs_url()) + 'lib/'
         self.secure_local_base_url = abs_url(secure=True) + 'lib/'
         self.default_local = False
 

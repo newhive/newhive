@@ -74,7 +74,7 @@ Hive.Menus.create = function(){
     });
 
     $(window).resize(o.layout);
-    o.layout();
+    o.update_expr(expr);
 
     var del_dialog;
     $('.delete_btn').click(function(){ del_dialog = showDialog('#dia_delete'); });
@@ -98,10 +98,11 @@ Hive.Menus.update_expr = function(expr){
     $('.owner_thumb').toggleClass('none', !expr.owner.has_thumb);
     $('.owner_url').attr('href', expr.owner.url);
 
+    var is_empty = function(v){ return !v || (v == '0') };
     $('.view .count').html(expr.counts.Views);
-    $('.like .count').html(expr.counts.Star).toggleClass('zero', expr.counts.Star == '0');
-    $('.broadcast .count').html(expr.counts.Broadcast).toggleClass('zero', expr.counts.Broadcast == '0');
-    $('.comment .count').html(expr.counts.Comment).toggleClass('zero', expr.counts.Comment == '0');
+    $('.like .count').html(expr.counts.Star).toggleClass('zero', is_empty(expr.counts.Star));
+    $('.broadcast .count').html(expr.counts.Broadcast).toggleClass('zero', is_empty(expr.counts.Broadcast));
+    $('.comment .count').html(expr.counts.Comment).toggleClass('zero', is_empty(expr.counts.Comment));
 
     // TODO: update share URLs
 
@@ -124,7 +125,7 @@ Hive.Menus.update_expr = function(expr){
     // load expr's feed items: likes, broadcasts, comments
     var load_feed = function(data, status, jqXHR){
         // put all items in expr_menu
-        var expr_feed = $('#expr_feed').html('');
+        var box = $('#expr_menu .items').html('');
         $.map(data, function(item){
             $("<div class='item'>"
                 + "<a href='" + profile_link(item.initiator_name) + "'>"
@@ -134,7 +135,7 @@ Hive.Menus.update_expr = function(expr){
                     + "<a href='" + profile_link(item.initiator_name) + "'>"
                     + item.initiator_name + "</a> " + o.action_name(item)
                     + ( item.text ? '<br>"' + item.text + '"' : '' )
-                    + "</div></div>").appendTo(expr_feed);
+                    + "</div></div>").appendTo(box);
         });
                 
         // filter in to 3 lists of likes, broadcasts, and comments
@@ -142,25 +143,31 @@ Hive.Menus.update_expr = function(expr){
         var feeds = { Star: [], Broadcast: [], Comment: [] };
         $.map(data, function(item){ feeds[item.class_name].push(item) });
 
-        var box = $('#like_menu .items').html('');
+        box = $('#like_menu .items').html('');
         $.map(feeds.Star, function(item){
             $('<a>').attr('href', '/' + item.initiator_name)
                 .append($('<img>').attr({ src: item.initiator_thumb, title: item.initiator_name }))
                 .appendTo(box);
         });
-        var box = $('#broadcast_menu .items').html('');
+        box = $('#broadcast_menu .items').html('');
         $.map(feeds.Broadcast, function(item){
             $('<a>').attr('href', profile_link(item.initiator_name))
                 .append($('<img>').attr({ src: item.initiator_thumb, title: item.initiator_name }))
                 .appendTo(box);
         });
 
-        var box = $('#comment_menu .items').html('');
+        box = $('#comment_menu .items').html('');
         $.map(feeds.Comment, function(item){
-            
+            $("<div class='item'>"
+                + "<a href='" + profile_link(item.initiator_name) + "'>"
+                    + "<img src='" + item.initiator_thumb + "'></a>"
+                + "<div class='feed_text'>"
+                    + item.text
+                    + "<div class='author'><a href='" + profile_link(item.initiator_name) + "'>"
+                    + item.initiator_name + "</a></div>"
+                    + "<div class='byline'>" + item.created_friendly + "</div>"
+                    + "</div></div>").appendTo(box);
         });
-
-        console.log(feeds);
     };
     $.getJSON(server_url + 'expr_feed/' + expr.id, load_feed);
 

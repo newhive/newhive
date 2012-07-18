@@ -130,7 +130,7 @@ class ExpressionController(ApplicationController, PagingMixin):
             args = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'})
 
             owner_name = args.get('owner_name')
-            if owner_name and owner_name != request.requester['name']:
+            if owner_name and owner_name != request.requester.get('name'):
                 args['auth'] = 'public'
 
             exprs = self.db.Expr.page(args, **kwargs)

@@ -81,13 +81,6 @@ $(function() {
     ///////////////////////////////////////////////////////////////////////////
     //         more or less normal scrolling without default scrollbars      //
     ///////////////////////////////////////////////////////////////////////////
-    $(window).on('mousewheel', function(e){
-        var delta = [e.originalEvent.wheelDeltaX, e.originalEvent.wheelDeltaY];
-        if(!delta[0] && !delta[1]) return;
-        document.body.scrollLeft -= delta[0];
-        document.body.scrollTop -= delta[1];
-    });
-
     // TODO: prevent scroll sticking after mouse-up outside of expr frame
     var scroll_ref, mouse_ref;
     $('#bg').drag('start', function(e, dd){
@@ -97,8 +90,6 @@ $(function() {
         document.body.scrollLeft = scroll_ref[0] - e.clientX + mouse_ref[0];
         document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
     });
-
-    // TODO: scroll handlers for arrow keys, ctrl + home / end, spacebar
 
 
     // TODO: listen for hide / show messages to unload / load <iframe>s, <object>s, and <embed>s

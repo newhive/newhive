@@ -143,6 +143,8 @@ $nav_size: 40px;
         cursor: pointer;
         float: right;
         clear: both;
+        // firefox bug requires all ancestors of absolute element to be relative
+        position: relative;
 
         &.active {
             background-color: $color_selected;
@@ -240,7 +242,7 @@ body.frame{
             background-color: rgba(0,0,0,0.7);
             color: white;
             width: 100%;
-            box-sizing: border-box;
+            @include box-sizing(border-box);
             bottom: 0;
         }
 
@@ -281,7 +283,7 @@ body.frame{
     width: 250px;
     overflow: hidden;
 
-    #expr_feed .item {
+    .items .item {
         padding: 5px;
         clear: both;
         border-top: 1px solid $color_light_grey;
@@ -325,8 +327,8 @@ body.frame{
         &.active { background-color: $color_selected; }
         .icon {
             float: right;
-            width: 35px;
-            height: 35px;
+            width: 34px;
+            height: 34px;
             margin: -8px -9px;
         }
     }
@@ -415,7 +417,21 @@ body.frame{
 
         img {
             width: 44px;
-            background-color: $color_grey_medium;
+            margin: 2px;
+        }
+    }
+}
+
+#comment_menu {
+    width: 500px;
+
+    .items {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid $color_light_grey;
+
+        img {
+            width: 44px;
             margin: 2px;
         }
     }
@@ -451,7 +467,6 @@ body.frame{
         width: 50px;
         height: 50px;
         float: left;
-        background-color: $color_grey_medium;
     }
     .feed_text {
         margin-left: 5px;
