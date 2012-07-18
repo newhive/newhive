@@ -12,6 +12,8 @@ $nav_size: 40px;
     background-size: 100% 100%;
 }
 
+img.thumb { background-color: $color_grey_medium; }
+
 .none, .off .on, .on .off { display: none !important }
 
 .random_btn {
@@ -218,7 +220,6 @@ $nav_size: 40px;
             display: inline-block;
             background-image: asset_url('skin/1/delete.png');
         }
-        &.active .icon { background-image: asset_url('skin/1/delete-hover.png'); }
         .text { display: none; }
         &.active {
             width: 103px;
@@ -306,9 +307,9 @@ body.frame{
         &.active { background-color: $color_selected; }
         .icon {
             float: right;
-            width: 34px;
-            height: 34px;
-            margin: -8px -9px;
+            width: 33px;
+            height: 33px;
+            margin: -7px -9px;
         }
     }
 
@@ -356,9 +357,7 @@ body.frame{
     width: 260px;
 
     .listen.off .icon { background-image: asset_url('skin/1/listen.png') }
-    .listen.off.active .icon { background-image: asset_url('skin/1/listen-hover.png') }
     .listen.on .icon { background-image: asset_url('skin/1/listening.png') }
-    .listen.on.active .icon { background-image: asset_url('skin/1/listening-hover.png') }
 }
 
 #share_menu {
@@ -404,7 +403,7 @@ body.frame{
             margin-right: 8px;
         }
         .author { font-weight: bold; }
-        .feed_text { font-size: 13px; height: 32px; overflow: hidden; }
+        .text { font-size: 13px; height: 32px; overflow: hidden; }
         .time { font-size: 12px; float: right; padding-right: 2px; }
     }
 }
@@ -443,7 +442,7 @@ body.frame{
             float: left;
         }
         .comment { float: left; }
-        .feed_text { position: relative; }
+        .text { position: relative; }
         .author { font-weight: bold; margin-top: 5px; }
         .time { font-size: 12px; position: absolute; right: 0; bottom: 0; padding-right: 2px; }
     }

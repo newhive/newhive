@@ -507,7 +507,8 @@ function asyncUpload(opts) {
     if(opts.multiple) { input.attr('multiple', 'multiple'); }
     for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
     form.appendTo(document.body);
-    setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
+    // It's a mystery why this timout is needed to make the upload dialog appear on some machines
+    setTimeout(function() { input.click() }, 0);
 }
 
 function hovers_active(state){
@@ -678,8 +679,11 @@ hover_menu = function(handle, drawer, options) {
             ;
         }
 
-        //if(opts.auto_height) css_opts.height =
-        //    bound(drawer.height(), 0, $(window).height() * 0.8);
+        if(opts.auto_height && css_opts.top + drawer.outerHeight() > $(window).height()) {
+            var scroller = drawer.find('.items');
+            scroller.css({ 'max-height': $(window).height() - 50 - css_opts.top -
+                (drawer.height() - scroller.height()), overflow: 'hidden' });
+        }
 
         drawer.css(css_opts);
 

@@ -130,8 +130,8 @@ Hive.Menus.update_expr = function(expr){
         $.map(data, function(item){
             $("<div class='item'>"
                 + "<a href='" + profile_link(item.initiator_name) + "'>"
-                    + "<img src='" + item.initiator_thumb + "'></a>"
-                + "<div class='feed_text'>"
+                    + "<img src='" + item.initiator_thumb + "' class='thumb'></a>"
+                + "<div class='text'>"
                     + "<div class='time'>" + item.created_friendly + "</div>"
                     + "<a href='" + profile_link(item.initiator_name) + "' class='author'>"
                     + item.initiator_name + "</a> " + o.action_name(item)
@@ -147,13 +147,13 @@ Hive.Menus.update_expr = function(expr){
         box = $('#like_menu .items').html('');
         $.map(feeds.Star, function(item){
             $('<a>').attr('href', '/' + item.initiator_name)
-                .append($('<img>').attr({ src: item.initiator_thumb, title: item.initiator_name }))
+                .append($("<img class='thumb'>").attr({ src: item.initiator_thumb, title: item.initiator_name }))
                 .appendTo(box);
         });
         box = $('#broadcast_menu .items').html('');
         $.map(feeds.Broadcast, function(item){
             $('<a>').attr('href', profile_link(item.initiator_name))
-                .append($('<img>').attr({ src: item.initiator_thumb, title: item.initiator_name }))
+                .append($("<img class='thumb'>").attr({ src: item.initiator_thumb, title: item.initiator_name }))
                 .appendTo(box);
         });
 
@@ -161,12 +161,13 @@ Hive.Menus.update_expr = function(expr){
         $.map(feeds.Comment, function(item){
             $("<div class='item'>"
                 + "<a href='" + profile_link(item.initiator_name) + "'>"
-                + "<img src='" + item.initiator_thumb + "'></a>"
-                + item.text
-                + "<div class='author'><a href='" + profile_link(item.initiator_name) + "'>"
-                + item.initiator_name + "</a></div>"
-                + "<div class='time'>" + item.created_friendly + "</div>"
-                + "</div>").prependTo(box);
+                + "<img src='" + item.initiator_thumb + "' class='thumb'></a>"
+                + "<div class='text'>"
+                    + item.text
+                    + "<div class='author'><a href='" + profile_link(item.initiator_name) + "'>"
+                    + item.initiator_name + "</a></div>"
+                    + "<div class='time'>" + item.created_friendly + "</div>"
+                    + "</div></div>").prependTo(box);
         });
     };
     $.getJSON(server_url + 'expr_feed/' + expr.id, load_feed);
