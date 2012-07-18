@@ -6,8 +6,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         {
             thumb_width: 166,
             text_height: 40,
-            margin: 5,
-            paging_attr: 'id'
+            margin: 5
         },
         opts
     );
@@ -89,7 +88,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             fetching_lock[lock] = false;
         };
         var final_expr = towards[towards.length - 1];
-        update_function(final_expr[opts.paging_attr], count, callback);
+        update_function(final_expr, count, callback);
     };
     o.fetch_next = function(count){ return fetch(count, 1); };
     o.fetch_prev = function(count){ return fetch(count, -1); };
@@ -100,12 +99,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (offset > 0){
             var towards = next_list;
             var away = prev_list;
-            var update_function = updater.next;
             var fetch_function = o.fetch_next;
         } else {
             var towards = prev_list;
             var away = next_list;
-            var update_function = updater.prev;
             var fetch_function = o.fetch_prev;
             left_offset = -left_offset;
         }
@@ -146,7 +143,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var final_expr = towards[towards.length - 1];
         if (final_expr && towards.length < opts.visible_count) {
             fetch_function(opts.visible_count);
-            //update_function(final_expr[opts.paging_attr], opts.visible_count, callback);
         }
 
     };
@@ -373,12 +369,12 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         next_list = [];
         prev_list = [];
         if (updater) {
-            updater.next(current_expr[opts.paging_attr], o.visible_count(), function(data){
+            updater.next(current_expr, o.visible_count(), function(data){
                 next_list = $.map(data, o.make_expr);
                 next_list.loaded = true;
                 if (prev_list.loaded) o.render().show();
             });
-            updater.prev(current_expr[opts.paging_attr], o.visible_count(), function(data){
+            updater.prev(current_expr, o.visible_count(), function(data){
                 prev_list = $.map(data, o.make_expr);
                 prev_list.loaded = true;
                 if (next_list.loaded) o.render().show();
@@ -462,15 +458,16 @@ Hive.Navigator.Expr = function(data, opts){
 
 Hive.Navigator.Updater = function(){
     var o = {};
+    o.paging_attr = 'id';
 
     seek = function(direction){
         var last;
-        return function(current_id, count, callback){
-            if (current_id === last) return;
+        return function(current_expr, count, callback){
+            if (current_expr === last) return;
             var uri = URI(window.location.href);
-            uri.addQuery({current: current_id, count: count, direction: direction});
+            uri.addQuery({page: current_expr[o.paging_attr], limit: count, order: -direction});
             $.getJSON(uri.toString(), function(data, status, jqXHR){
-                if (!data.length) last = current_id;
+                if (!data.length) last = current_expr;
                 callback(data, status, jqXHR);
             });
          };
@@ -481,9 +478,36 @@ Hive.Navigator.Updater = function(){
     return o
 };
 
+Hive.Navigator.NetworkUpdater = function(){
+    var o = Hive.Navigator.Updater();
+
+    seek = function(direction){
+        var last;
+        return function(current_expr, count, callback){
+            if (current_expr === last) return;
+            var query = {limit: count, order: -direction};
+            if (current_expr.feed) {
+                query.page = current_expr.feed[0].id;
+            } else {
+                query.expr = current_expr[o.paging_attr]
+            }
+            var uri = URI(window.location.href);
+            uri.addQuery(query);
+            $.getJSON(uri.toString(), function(data, status, jqXHR){
+                if (!data.length) last = current_expr;
+                callback(data, status, jqXHR);
+            });
+         };
+    };
+    o.next = seek(1);
+    o.prev = seek(-1);
+
+    return o;
+};
+
 Hive.Navigator.create = function(navigator, viewer){
     var o = Hive.Navigator($(navigator), $(viewer))
-        .set_updater(Hive.Navigator.Updater())
+        .set_updater(Hive.Navigator.NetworkUpdater())
         .initialize();
     $(window).resize(o.render);
     $(window).on('statechange', function(){ // Note: We are using statechange instead of popstate

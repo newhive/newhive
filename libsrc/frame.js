@@ -5,7 +5,6 @@ Hive.Menus = {};
 Hive.Menus.layout = function(){
     var o = Hive.Menus, action_nav = $('#action_nav'),
         top = ($(window).height() - 225 - 47) / 2 - action_nav.outerHeight() / 2 + 47;
-    console.log('top', top);
     action_nav.css('top', Math.max(o.action_nav_top, top));
 };
 

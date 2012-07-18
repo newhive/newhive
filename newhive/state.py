@@ -385,15 +385,30 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_network(self, limit=40, **args):
-        res = self.feed_search({ '$or': [
-            { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
-            ,{ 'initiator': self.id, 'class_name': 'Broadcast' }
-            ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
-                'initiator': { '$ne': self.id } }
-        ] } , auth='public', **args)
+    def feed_network(self, limit=40, expr=None, **args):
+        user_action = {
+                'initiator': {'$in': self.starred_user_ids},
+                'class_name': {'$in': ['NewExpr', 'Broadcast']}
+                }
+        own_broadcast = { 'initiator': self.id, 'class_name': 'Broadcast' }
+        expression_action = {
+                'entity': {'$in': self.starred_expr_ids}
+                , 'class_name': {'$in':['Comment', 'UpdatedExpr']}
+                , 'initiator': { '$ne': self.id }
+                }
+        or_clause = [user_action, own_broadcast, expression_action]
+
+        # In some cases we have an expression but no feed item to page relative
+        # to.  In this case, look up the most recent appropriate feed item with
+        # that expression as entity
+        if expr:
+            feed_start = self.feed_search({'entity': expr, '$or': or_clause },
+                    viewer=args['viewer'], limit=1
+                    ).next()
+            args['page'] = feed_start['created']
+        res = self.feed_search({ '$or': or_clause }, auth='public', **args)
         page = Page(self.feed_group(res, limit))
-        page.next = page[-1].feed[-1]['created'] if len(page) == limit else None
+        page.next = page[-1]['feed'][-1]['created'] if len(page) == limit else None
         return page
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
@@ -410,11 +425,11 @@ class User(HasSocial):
         for item in res:
             i = index_of(exprs, lambda e: e.id == item['entity'])
             if i == -1:
-                item.entity.feed = [item]
+                item.entity['feed'] = [item]
                 exprs.append(item.entity)
-            elif len(exprs[i].feed) < feed_limit:
-                if index_of(exprs[i].feed, lambda e: e['initiator'] == item['initiator']) != -1: continue
-                exprs[i].feed.append(item)
+            elif len(exprs[i]['feed']) < feed_limit:
+                if index_of(exprs[i]['feed'], lambda e: e['initiator'] == item['initiator']) != -1: continue
+                exprs[i]['feed'].append(item)
             if len(exprs) == limit: break
         return exprs
 
