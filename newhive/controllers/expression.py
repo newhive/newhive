@@ -112,48 +112,33 @@ class ExpressionController(ApplicationController, PagingMixin):
         special_tags = {
                 'Featured': (self.expr_featured, 'id')
                 , 'Recent': (self.expr_all, 'updated')
-                , 'Network': (self.home_feed, 'created')
+                , 'Network': (self.home_feed, None)
                 }
 
         default = (None, 'updated')
         pager, paging_attr = special_tags.get(args.get('tag'), default)
 
-        kwargs = args
-
-        if kwargs.has_key('order'): kwargs['order'] = float(kwargs['order'])
-        if kwargs.has_key('limit'): kwargs['limit'] = int(kwargs['limit'])
-
-        if current_id:
-            if not utils.is_mongo_key(current_id):
-                kwargs['page'] = float(kwargs['page'])
+        if utils.is_mongo_key(current_id):
+            if paging_attr and paging_attr != 'id':
+                utils.set_trace()()
+                expr = self.db.Expr.fetch(current_id)
+                args['page'] = expr[paging_attr]
             else:
-                kwargs['sort'] = '_id'
-        #if paging_attr == 'id':
-        #    pass
-        #    #kwargs['page'] = current_id
-        #    # In this case the network is organized by feed items, but what we have is an expression
-        #    # See User.feed_network for more info
-        #    #kwargs['expr'] = current_id
-        #else:
-        #    if kwargs.has_key('page'): kwargs['page'] = float(kwargs['page'])
-        #    #expr = self.db.Expr.fetch(current_id, meta=True)
-        #    #kwargs['page'] = expr[paging_attr]
+                args['sort'] = '_id'
+
+        if args.has_key('order'): args['order'] = float(args['order'])
+        if args.has_key('limit'): args['limit'] = int(args['limit'])
 
         if pager:
-            kwargs = dfilter(args, ['page', 'expr', 'order', 'limit'])
-            print kwargs
-            items_and_args = pager(request, response, kwargs)
-            exprs, args = items_and_args if type(items_and_args) == tuple else (items_and_args, None)
+            args = dfilter(args, ['page', 'expr', 'order', 'limit'])
+            items_and_args = pager(request, response, args)
+            exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
         else:
             # Use key_map to map between keys used in querystring and those of database
             spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
-            kwargs = dfilter(args, ['sort', 'page', 'order', 'limit'])
+            args = dfilter(args, ['sort', 'page', 'order', 'limit'])
 
-            owner_name = spec.get('owner_name')
-            if owner_name and owner_name != request.requester['name']:
-                args['auth'] = 'public'
-
-            exprs = self.db.Expr.page(spec, **kwargs)
+            exprs = self.db.Expr.page(spec, **args)
 
         return self.serve_json(response, map(self.expr_prepare, exprs))
 

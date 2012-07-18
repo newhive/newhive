@@ -16,7 +16,7 @@ from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredenti
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of, is_mongo_key
+from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of, is_mongo_key, set_trace
 
 import logging
 logger = logging.getLogger(__name__)
@@ -77,6 +77,8 @@ class Collection(object):
         return self.find(spec, **opts)
 
     def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None):
+        if page and not is_mongo_key(page):
+            page = float(page)
         if type(spec) == dict:
             if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': page }
             res = self.search(spec, sort=[(sort, order)], limit=limit)
