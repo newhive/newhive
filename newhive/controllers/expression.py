@@ -114,24 +114,32 @@ class ExpressionController(ApplicationController, PagingMixin):
                 , 'Recent': (self.expr_all, 'updated')
                 , 'Network': (self.home_feed, 'created')
                 }
+
         default = (None, 'updated')
         pager, paging_attr = special_tags.get(args.get('tag'), default)
 
         kwargs = args
 
-        if paging_attr == 'id':
-            pass
-            #kwargs['page'] = current_id
-            # In this case the network is organized by feed items, but what we have is an expression
-            # See User.feed_network for more info
-            #kwargs['expr'] = current_id
-        else:
-            pass
-            #expr = self.db.Expr.fetch(current_id, meta=True)
-            #kwargs['page'] = expr[paging_attr]
+        if kwargs.has_key('order'): kwargs['order'] = float(kwargs['order'])
+        if kwargs.has_key('limit'): kwargs['limit'] = int(kwargs['limit'])
+
+        if current_id:
+            if not utils.is_mongo_key(current_id):
+                kwargs['page'] = float(kwargs['page'])
+            else:
+                kwargs['sort'] = '_id'
+        #if paging_attr == 'id':
+        #    pass
+        #    #kwargs['page'] = current_id
+        #    # In this case the network is organized by feed items, but what we have is an expression
+        #    # See User.feed_network for more info
+        #    #kwargs['expr'] = current_id
+        #else:
+        #    if kwargs.has_key('page'): kwargs['page'] = float(kwargs['page'])
+        #    #expr = self.db.Expr.fetch(current_id, meta=True)
+        #    #kwargs['page'] = expr[paging_attr]
 
         if pager:
-            kwargs['order'] = int(kwargs['order'])
             kwargs = dfilter(args, ['page', 'expr', 'order', 'limit'])
             print kwargs
             items_and_args = pager(request, response, kwargs)
@@ -139,7 +147,7 @@ class ExpressionController(ApplicationController, PagingMixin):
         else:
             # Use key_map to map between keys used in querystring and those of database
             spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
-            kwargs = dfilter(args, ['page', 'order', 'limit'])
+            kwargs = dfilter(args, ['sort', 'page', 'order', 'limit'])
 
             owner_name = spec.get('owner_name')
             if owner_name and owner_name != request.requester['name']:

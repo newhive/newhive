@@ -251,7 +251,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         var query = URI(window.location.href).query(true);
         info.find('form').submit(o.search);
-        var search_bar = info.find('input').val(build_search(query));
+        set_context_box(build_search(query));
 
         var expr_tags = o.current_expr().tags_index;
         var owner_tags = o.current_expr().owner.tags;
@@ -266,8 +266,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         ).append(
             tag_list_html(owner_tags, {cls: 'user'})
         ).find('.tag').click(function(){
-            search_bar.val($(this).html());
-            o.search();
+            o.context($(this).html());
         });
 
 
@@ -360,8 +359,24 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         populate_navigator();
     };
 
-    o.context = function(str) {
+    function change_context(str){
+        switch(str) {
+            case "#Network":
+                o.set_updater(Hive.Navigator.NetworkUpdater());
+                break;
+            default:
+                o.set_updater(Hive.Navigator.Updater());
+                break;
+        }
+    };
+
+    function set_context_box(str){
         navigator_element.find('input').val(str);
+        change_context(str);
+    };
+
+    o.context = function(str) {
+        set_context_box(str)
         o.search();
     };
 
@@ -396,6 +411,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var frame = content_element.find('iframe').on('load', on_frame_load);
         history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
         Hive.Menus.update_expr(current_expr.data());
+        var query = URI(window.location.href).query(true);
+        change_context(build_search(query));
         populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
@@ -492,7 +509,7 @@ Hive.Navigator.NetworkUpdater = function(){
             if (current_expr === last) return;
             var query = {limit: count, order: -direction};
             if (current_expr.feed) {
-                query.page = current_expr.feed[0].id;
+                query.page = current_expr.feed[0].created;
             } else {
                 query.expr = current_expr[o.paging_attr]
             }
@@ -512,7 +529,7 @@ Hive.Navigator.NetworkUpdater = function(){
 
 Hive.Navigator.create = function(navigator, viewer){
     var o = Hive.Navigator($(navigator), $(viewer))
-        .set_updater(Hive.Navigator.NetworkUpdater())
+        //.set_updater(Hive.Navigator.NetworkUpdater())
         .initialize();
     $(window).resize(o.render);
     $(window).on('statechange', function(){ // Note: We are using statechange instead of popstate

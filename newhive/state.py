@@ -78,7 +78,7 @@ class Collection(object):
 
     def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None):
         if type(spec) == dict:
-            if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': float(page) }
+            if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': page }
             res = self.search(spec, sort=[(sort, order)], limit=limit)
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -406,7 +406,7 @@ class User(HasSocial):
                     viewer=args['viewer'], limit=1
                     ).next()
             args['page'] = feed_start['created']
-        res = self.feed_search({ '$or': or_clause }, auth='public', **args)
+        res = self.feed_search({ '$or': or_clause }, auth='public', limit=limit, **args)
         page = Page(self.feed_group(res, limit))
         page.next = page[-1]['feed'][-1]['created'] if len(page) == limit else None
         return page
