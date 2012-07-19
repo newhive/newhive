@@ -109,7 +109,7 @@ class Expression(Application, PagingMixin):
             else:
                 args['sort'] = '_id'
 
-        if args.has_key('order'): args['order'] = float(args['order'])
+        if args.has_key('order'): args['order'] = int(args['order'])
         if args.has_key('limit'): args['limit'] = int(args['limit'])
 
         if pager:
