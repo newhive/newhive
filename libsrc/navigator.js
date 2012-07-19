@@ -363,6 +363,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     function change_context(str){
         switch(str) {
             case "#Network":
+                if (!logged_in) {
+                    o.context('#Featured');
+                    break;
+                }
                 o.set_updater(Hive.Navigator.NetworkUpdater());
                 break;
             default:
