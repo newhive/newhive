@@ -604,7 +604,7 @@ hover_menu = function(handle, drawer, options) {
             o.sticky = false;
             o.delayed_close();
         });
-        drawer.click(o.cancel_close);
+        drawer.mousedown(function(){ setTimeout(o.cancel_close, 1) });
     }
 
     menu_items.each(function(i, d){
