@@ -21,7 +21,7 @@ Hive.Menus = (function(){
             handles = $('.menu_handle').add('#navigator_handle').add('#navigator'),
             close_nav = function(){
                 drawers.stop().clearQueue();
-                $('#user_nav').animate({ left: -50, top: -50, complete:
+                $('#user_nav').animate({ left: -50, top: -50 }, { complete:
                     function(){ drawers.hide() } }, speed);
                 $('#owner_nav').animate({ right: -50, top: -50 }, speed);
                 $('#action_nav').animate({ right: -50 }, speed);
