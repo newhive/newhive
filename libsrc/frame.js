@@ -176,27 +176,27 @@ Hive.Menus = (function(){
             });
                     
             // filter in to 3 lists of stars, broadcasts, and comments
-            var feeds = { Star: [], Broadcast: [], Comment: [] },
-                feed_member = function(l){
-                    return $.grep(l, function(i){ return i.initiator == user.id }).length == 1;
+            o.feeds = { Star: [], Broadcast: [], Comment: [] };
+            var feed_member = function(l){
+                    return $.grep(l, function(i){ return i.initiator == user.id }).length >= 1;
                 };
-            $.map(data, function(item){ feeds[item.class_name].push(item) });
+            $.map(data, function(item){ o.feeds[item.class_name].push(item) });
 
             box = $('#star_menu .items').html('');
-            $.map(feeds.Star, function(item){
+            $.map(o.feeds.Star, function(item){
                 o.face_link(item.initiator_name, item.initiator, item.initiator_thumb).appendTo(box);
             });
-            o.btn_state('#star_btn', feed_member(feeds.Star));
+            o.btn_state('#star_btn', feed_member(o.feeds.Star));
 
             box = $('#broadcast_menu .items').html('');
-            $.map(feeds.Broadcast, function(item){
+            $.map(o.feeds.Broadcast, function(item){
                 o.face_link(item.initiator_name, item.initiator, item.initiator_thumb).appendTo(box);
             });
-            o.btn_state('#broadcast_btn', feed_member(feeds.Broadcast));
+            o.btn_state('#broadcast_btn', feed_member(o.feeds.Broadcast));
 
             box = $('#comment_menu .items').html('');
-            $.map(feeds.Comment, function(item){ o.comment_card(item).prependTo(box); });
-            o.btn_state('#comment_btn', feed_member(feeds.Comment));
+            $.map(o.feeds.Comment, function(item){ o.comment_card(item).prependTo(box); });
+            o.btn_state('#comment_btn', feed_member(o.feeds.Comment));
         };
         $.getJSON(server_url + 'expr_feed/' + expr.id, load_feed);
 
@@ -280,6 +280,7 @@ Hive.Menus = (function(){
             if(!data) { o.server_error(); return; }
             o.comment_card(data).appendTo(items);
             items.scrollTop(items.get(0).scrollHeight);
+            o.btn_state('#comment_btn', true);
         }, 'json');
 
         return false;

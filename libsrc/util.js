@@ -598,7 +598,7 @@ hover_menu = function(handle, drawer, options) {
         o.open();
     });
     if(opts.focus_persist){
-        drawer.find('input,textarea').on('click keydown', function(){
+        drawer.find('input[type=text],textarea').on('click keydown', function(){
             o.sticky = true;
         }).on('blur', function(){
             o.sticky = false;

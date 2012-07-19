@@ -199,14 +199,16 @@ img.thumb { background-color: $color_grey_medium; }
 
     .star {
         .icon { background-image: asset_url('skin/1/star.png'); }
-        &.active .icon, &.on .icon { background-image: asset_url('skin/1/star-hover.png'); }
+        &.active .icon { background-image: asset_url('skin/1/star-hover.png'); }
+        &.on .icon { background-image: asset_url('skin/1/star_on.png'); }
         &.on { background-color: $color_bright_red; }
         &.on.active .edge { background-image: asset_url('skin/1/star_bg_on-hover.png'); }
     }
 
     .broadcast {
         .icon { background-image: asset_url('skin/1/broadcast.png'); }
-        &.active .icon, &.on .icon { background-image: asset_url('skin/1/broadcast-hover.png'); }
+        &.active .icon { background-image: asset_url('skin/1/broadcast-hover.png'); }
+        &.on .icon { background-image: asset_url('skin/1/broadcast_on.png'); }
         &.on {
             background-image: asset_url('skin/1/broadcast_bg_on.png');
             background-size: 100% 100%;
@@ -216,7 +218,8 @@ img.thumb { background-color: $color_grey_medium; }
 
     .comment {
         .icon { background-image: asset_url('skin/1/comment.png'); }
-        &.active .icon, &.on .icon { background-image: asset_url('skin/1/comment-hover.png'); }
+        &.active .icon { background-image: asset_url('skin/1/comment-hover.png'); }
+        &.on .icon { background-image: asset_url('skin/1/comment_on.png'); }
         &.on { background-color: $color_blue; }
         &.on.active .edge { background-image: asset_url('skin/1/comment_bg_on-hover.png'); }
         cursor: default;
