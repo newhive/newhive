@@ -72,7 +72,7 @@ class Expression(Application, PagingMixin):
         self.expr_prepare(resource)
         user = request.requester
         response.context.update(
-             user_client = { 'name': user['name'], 'id': user.id, 'thumb': user.get_thumb(70) }
+             user_client = { 'name': user.get('name'), 'id': user.id, 'thumb': user.get_thumb(70) }
             ,edit = abs_url(secure = True) + 'edit/' + resource.id
             ,title = resource.get('title', False)
             ,exp = resource
