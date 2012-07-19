@@ -307,6 +307,7 @@ if __name__ == '__main__':
     from newhive.oauth import FacebookClient
     get_builder = EnvironBuilder(method='GET', environ_overrides={'wsgi.url_scheme': 'https'})
     get_request = lambda: Request(get_builder.get_environ())
+    config.interactive = True
 
     cara = db.User.named('cara')
     duffy = db.User.named('duffy')

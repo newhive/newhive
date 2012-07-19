@@ -16,7 +16,7 @@ from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredenti
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of, is_mongo_key
+from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of, is_mongo_key, set_trace
 
 import logging
 logger = logging.getLogger(__name__)
@@ -77,8 +77,10 @@ class Collection(object):
         return self.find(spec, **opts)
 
     def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None):
+        if page and not is_mongo_key(page):
+            page = float(page)
         if type(spec) == dict:
-            if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': float(page) }
+            if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': page }
             res = self.search(spec, sort=[(sort, order)], limit=limit)
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -385,15 +387,30 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_network(self, limit=40, **args):
-        res = self.feed_search({ '$or': [
-            { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
-            ,{ 'initiator': self.id, 'class_name': 'Broadcast' }
-            ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
-                'initiator': { '$ne': self.id } }
-        ] } , auth='public', **args)
+    def feed_network(self, limit=40, expr=None, **args):
+        user_action = {
+                'initiator': {'$in': self.starred_user_ids},
+                'class_name': {'$in': ['NewExpr', 'Broadcast']}
+                }
+        own_broadcast = { 'initiator': self.id, 'class_name': 'Broadcast' }
+        expression_action = {
+                'entity': {'$in': self.starred_expr_ids}
+                , 'class_name': {'$in':['Comment', 'UpdatedExpr']}
+                , 'initiator': { '$ne': self.id }
+                }
+        or_clause = [user_action, own_broadcast, expression_action]
+
+        # In some cases we have an expression but no feed item to page relative
+        # to.  In this case, look up the most recent appropriate feed item with
+        # that expression as entity
+        if expr:
+            feed_start = self.feed_search({'entity': expr, '$or': or_clause },
+                    viewer=args['viewer'], limit=1
+                    ).next()
+            args['page'] = feed_start['created']
+        res = self.feed_search({ '$or': or_clause }, auth='public', limit=limit, **args)
         page = Page(self.feed_group(res, limit))
-        page.next = page[-1].feed[-1]['created'] if len(page) == limit else None
+        page.next = page[-1]['feed'][-1]['created'] if len(page) == limit else None
         return page
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
@@ -410,11 +427,11 @@ class User(HasSocial):
         for item in res:
             i = index_of(exprs, lambda e: e.id == item['entity'])
             if i == -1:
-                item.entity.feed = [item]
+                item.entity['feed'] = [item]
                 exprs.append(item.entity)
-            elif len(exprs[i].feed) < feed_limit:
-                if index_of(exprs[i].feed, lambda e: e['initiator'] == item['initiator']) != -1: continue
-                exprs[i].feed.append(item)
+            elif len(exprs[i]['feed']) < feed_limit:
+                if index_of(exprs[i]['feed'], lambda e: e['initiator'] == item['initiator']) != -1: continue
+                exprs[i]['feed'].append(item)
             if len(exprs) == limit: break
         return exprs
 
