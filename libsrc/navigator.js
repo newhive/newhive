@@ -10,7 +10,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         },
         opts
     );
-    var height = opts.thumb_width + 2 * opts.margin + navigator_element.find('.info').height();
+    var height = opts.thumb_width + 2 * opts.margin + navigator_element.height();
     var expr_width = opts.thumb_width + 2 * opts.margin;
     if (!opts.visible_count) opts.visible_count = Math.round($(window).width() / expr_width * 2);
     var history_manager = window.History;
@@ -218,7 +218,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (!frame.length) frame = $('<div>').addClass('frame border selected')
         frame.css('left', center.minus - opts.margin)
             .css('width', opts.thumb_width)
-            .css('height', height - opts.margin)
+            .css('height', opts.thumb_width)
             .css('margin-top', -opts.margin);
 
         inner.add(frame).drag('init', function(){
@@ -256,15 +256,15 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             owner_tags = $.grep(owner_tags, function(tag){ return $.inArray(tag, expr_tags) == -1 });
         };
 
-        info.find('.tags').html(
+        var tag_html = [
             tag_list_html(o.current_expr().owner.name, {cls: 'name', prefix: '@'})
-        ).append(
-            tag_list_html(expr_tags, {cls: 'expr'})
-        ).append(
-            tag_list_html(owner_tags, {cls: 'user'})
-        ).find('.tag').click(function(){
-            o.context($(this).html());
-        });
+            , tag_list_html(expr_tags, {cls: 'expr'})
+            , tag_list_html(owner_tags, {cls: 'user'})
+            ].join(' ')
+        info.find('.tags').html(tag_html)
+            .find('.tag').click(function(){
+                o.context($(this).html());
+            });
 
 
         // Unless this is the initial render we now have two inner elements,
@@ -363,6 +363,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     function change_context(str){
         switch(str) {
             case "#Network":
+                if (!logged_in) {
+                    o.context('#Featured');
+                    break;
+                }
                 o.set_updater(Hive.Navigator.NetworkUpdater());
                 break;
             default:

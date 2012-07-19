@@ -9,7 +9,7 @@
     position: fixed;
     left: 0;
     bottom: 0;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.92);
     z-index: 4;
     .info {
         margin: $margin 0;
@@ -29,8 +29,8 @@
         .tag {
             font-weight: bold;
             font-size: 15px;
-            padding: 6px;
-            margin: 4px;
+            padding: 3px 6px;
+            margin: 9px 3px;
             display: inline-block;
             cursor: pointer;
             &.name { background: $color_pink; }
