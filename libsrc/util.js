@@ -577,8 +577,8 @@ hover_menu = function(handle, drawer, options) {
 
         if(opts.auto_height && css_opts.top + drawer.outerHeight() > $(window).height()) {
             var scroller = drawer.find('.items');
-            scroller.css({ 'max-height': $(window).height() - 50 - css_opts.top -
-                (drawer.height() - scroller.height()), overflow: 'hidden' });
+            scroller.css('max-height', $(window).height() - 50 - css_opts.top -
+                (drawer.outerHeight() - scroller.outerHeight()));
         }
 
         drawer.css(css_opts);
@@ -804,4 +804,4 @@ function callback_log(message){
 var log_stub = function(m){
     window.m = m;
     console.log(m);
-}
+};

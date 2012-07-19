@@ -16,6 +16,8 @@ img.thumb { background-color: $color_grey_medium; }
 
 .none, .off .on, .on .off { display: none !important }
 
+.items { overflow: hidden; }
+
 .random_btn {
     background-image: asset_url('skin/1/shuffle.png');
     &.active, &:hover {
@@ -433,9 +435,11 @@ body.frame{
 }
 
 #comment_menu {
-    width: 550px;
+    width: 575px;
     padding: 15px;
     border: 5px solid $color_selected;
+
+    .items { overflow: auto; }
 
     .item {
         margin-top: 10px;
@@ -451,7 +455,7 @@ body.frame{
             float: left;
         }
         .comment { float: left; }
-        .text { position: relative; float: right; width: 490px; }
+        .text { position: relative; float: right; width: 490px; margin-right: 10px; }
         .user { display: block; font-weight: bold; margin-top: 5px; }
         .time { font-size: 12px; position: absolute; right: 0; bottom: 0; padding-right: 2px; }
     }

@@ -72,7 +72,7 @@ class Collection(object):
     def search(self, spec, **opts):
         return Cursor(self, self._col.find(spec=spec, **opts))
 
-    def last(self, spec, **opts):
+    def last(self, spec={}, **opts):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
