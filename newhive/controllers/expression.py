@@ -1,11 +1,11 @@
 import base64
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from newhive import utils, mail
 # TODO: handle this in model layer somehow
 from pymongo.connection import DuplicateKeyError
 
-class ExpressionController(ApplicationController, PagingMixin):
+class Expression(Application, PagingMixin):
 
     def edit(self, request, response):
         if not request.requester.logged_in: return self.serve_404(request, response)
@@ -30,7 +30,6 @@ class ExpressionController(ApplicationController, PagingMixin):
         response.context.update({
              'title'     : 'Editing: ' + exp['title']
             ,'sites'     : request.requester.get('sites')
-            ,'exp_js'    : re.sub('</script>', '<\\/script>', json.dumps(exp))
             ,'exp'       : exp
             ,'show_help' : show_help
             ,'editing'   : True
@@ -66,29 +65,17 @@ class ExpressionController(ApplicationController, PagingMixin):
         if not resource:
             if request.path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
-
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
-
         if is_owner: owner.unflag('expr_new')
 
-        auth_required = (resource.get('auth') == 'password' and resource.get('password')
-            and request.form.get('password') != resource.get('password')
-            and request.requester.id != resource['owner'])
-
-        if not auth_required:
-            resource.increment_counter('views')
-            if is_owner: resource.increment_counter('owner_views')
-
         self.expr_prepare(resource)
+        user = request.requester
         response.context.update(
-             edit = abs_url(secure = True) + 'edit/' + resource.id
-            ,mtime = friendly_date(time_u(resource['updated']))
+             user_client = { 'name': user['name'], 'id': user.id, 'thumb': user.get_thumb(70) }
+            ,edit = abs_url(secure = True) + 'edit/' + resource.id
             ,title = resource.get('title', False)
-            ,starrers = resource.starrer_page()
-            ,auth_required = auth_required
             ,exp = resource
-            ,exp_js = json.dumps(resource)
             ,expr_url = abs_url(domain = config.content_domain) + resource.id
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
             ,content_domain = abs_url(domain = config.content_domain)
@@ -99,46 +86,42 @@ class ExpressionController(ApplicationController, PagingMixin):
         if request.requester.logged_in:
             self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
 
-        if template == 'none':
-            if auth_required: return Forbidden()
-            return self.serve_html(response, html)
-
-        else: return self.serve_page(response, 'pages/' + template + '.html')
+        return self.serve_page(response, 'pages/' + template + '.html')
 
     def info(self, request, response):
         args = request.args.copy().to_dict(flat=True)
-        current_id = args.pop('current')
-        count = int(args.pop('count'))
-        direction = int(args.pop('direction'))
+        current_id = args.get('page')
 
         special_tags = {
                 'Featured': (self.expr_featured, 'id')
                 , 'Recent': (self.expr_all, 'updated')
-                , 'Network': (self.home_feed, 'updated')
+                , 'Network': (self.home_feed, None)
                 }
+
         default = (None, 'updated')
         pager, paging_attr = special_tags.get(args.get('tag'), default)
 
-        if paging_attr == 'id':
-            page = current_id
-        else:
-            expr = self.db.Expr.fetch(current_id, meta=True)
-            page = expr[paging_attr]
+        if utils.is_mongo_key(current_id):
+            if paging_attr and paging_attr != 'id':
+                utils.set_trace()()
+                expr = self.db.Expr.fetch(current_id)
+                args['page'] = expr[paging_attr]
+            else:
+                args['sort'] = '_id'
 
-        kwargs = {'page': page, 'order': -direction, 'limit': count}
+        if args.has_key('order'): args['order'] = float(args['order'])
+        if args.has_key('limit'): args['limit'] = int(args['limit'])
 
         if pager:
-            items_and_args = pager(request, response, kwargs)
-            exprs, args = items_and_args if type(items_and_args) == tuple else (items_and_args, None)
+            args = dfilter(args, ['page', 'expr', 'order', 'limit'])
+            items_and_args = pager(request, response, args)
+            exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
         else:
             # Use key_map to map between keys used in querystring and those of database
-            args = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'})
+            spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
+            args = dfilter(args, ['sort', 'page', 'order', 'limit'])
 
-            owner_name = args.get('owner_name')
-            if owner_name and owner_name != request.requester['name']:
-                args['auth'] = 'public'
-
-            exprs = self.db.Expr.page(args, **kwargs)
+            exprs = self.db.Expr.page(spec, **args)
 
         return self.serve_json(response, map(self.expr_prepare, exprs))
 
@@ -146,19 +129,32 @@ class ExpressionController(ApplicationController, PagingMixin):
     # This output is untrusted and must never be served from config.server_name.
     def render(self, request, response):
         expr_id = lget(request.path_parts, 0)
-        resource = self.db.Expr.fetch(expr_id)
-        if not resource: return self.serve_404(request, response)
+        expr = self.db.Expr.fetch(expr_id)
+        if not expr: return self.serve_404(request, response)
 
-        if ( resource.get('auth') == 'password' and
-            request.form.get('password') != resource.get('password') ): return Forbidden()
+        # TODO: determine if owner is requesting, by matching
+        # against auto-generated secret, set is_owner
 
-        response.context.update( html = expr_to_html(resource), exp = resource )
+        #auth_required = (resource.get('auth') == 'password' and resource.get('password')
+        #    and request.form.get('password') != resource.get('password')
+        #    and request.requester.id != resource['owner'])
+
+        if expr.get('auth') == 'password' and not expr.cmp_password(request.form.get('password')):
+            return self.serve_forbidden(request)
+
+        #resource.increment_counter('views')
+        #if is_owner: resource.increment_counter('owner_views')
+
+        response.context.update( html = expr_to_html(expr), exp = expr )
         return self.serve_page(response, 'pages/expression.html')
 
     def feed(self, request, response):
         expr = self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
-        items = expr.feed_page(viewer=request.requester, limit=0)
+        items = map(lambda item: dict(item,
+                initiator_thumb=item.initiator.get_thumb(70),
+                created_friendly=friendly_date(item['created'])
+            ), expr.feed_page(viewer=request.requester, limit=0))
         return self.serve_json(response, list(items))       
 
     def random(self, request, response):
@@ -243,19 +239,6 @@ class ExpressionController(ApplicationController, PagingMixin):
         e.delete()
         # TODO: garbage collect media files that are no longer referenced by expression
         return self.redirect(response, request.requester.url)
-
-
-    def add_comment(self, request, response):
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
-        commenter = request.requester
-        expression = self.db.Expr.fetch(request.form.get('expression'))
-        comment_text = request.form.get('comment')
-        comment = self.db.Comment.create(commenter, expression, {'text': comment_text})
-        if comment.initiator.id != expression.owner.id:
-            mail.mail_feed(self.jinja_env, comment, expression.owner)
-        response.context['comment'] = comment
-        return self.serve_page(response, 'partials/comment.html')
 
     def tag_update(self, request, response):
         tag = lget(normalize(request.form.get('value', '')), 0)

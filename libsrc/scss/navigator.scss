@@ -5,6 +5,7 @@
     $shadow_color: rgba(0,0,0,0.4);
     @include box-shadow(0 -2px 15px $shadow_color);
     width: 100%;
+    overflow: hidden;
     position: fixed;
     left: 0;
     bottom: 0;
@@ -60,16 +61,15 @@
         .element {
             margin: 0 $margin 100px $margin;
             img {
-                @include border-radius(4px);
+                //@include border-radius(4px);
             }
-            .text {
+            .card_text {
                 overflow: hidden;
-                font-weight: bold;
                 .title{ display: block; }
                 .byline{ display: none; }
                 .by { color: $color_grey_medium; }
             }
-            &:hover .text {
+            &:hover .card_text {
                 .title { display: none; }
                 .byline { display: block; }
             }

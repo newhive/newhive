@@ -1,6 +1,6 @@
 import crypt, pickle, urllib, time
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from newhive.utils import normalize, junkstr
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 from newhive import mail, auth
@@ -8,7 +8,7 @@ from newhive import mail, auth
 import logging
 logger = logging.getLogger(__name__)
 
-class UserController(ApplicationController):
+class User(Application):
 
     def new(self, request, response):
         if request.requester.logged_in: return self.redirect(response, request.requester.url)

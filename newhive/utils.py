@@ -177,12 +177,22 @@ def timer(func):
     print t1 - t0
     return r
 
-def key_map(original, transformation):
+def key_map(original, transformation, filter=False):
     output = copy.copy(original)
     for old, new in transformation.items():
         if output.has_key(old):
             output[new] = output.pop(old)
-    return output
+    if filter:
+        return dfilter(output, transformation.values())
+    else:
+        return output
 
 def is_mongo_key(string):
-    return bool(re.match('[0-9a-f]{24}', string))
+    return isinstance(string, basestring) and re.match('[0-9a-f]{24}', string)
+
+def set_trace():
+    if config.interactive:
+        import ipdb;
+        return ipdb.set_trace
+    else:
+        return lambda: None

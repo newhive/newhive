@@ -1,11 +1,11 @@
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from werkzeug import url_unquote
 from werkzeug.urls import url_decode
 from newhive.mail import send_mail
 
 
-class MailController(ApplicationController):
+class Mail(Application):
 
     def mail_us(self, request, response):
         if not request.form.get('email'): return False

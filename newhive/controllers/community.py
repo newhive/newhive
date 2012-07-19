@@ -1,14 +1,14 @@
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from newhive.controllers.expression import expr_to_html
 from functools import partial
 from itertools import chain
 from newhive.state import Page
 
-class CommunityController(ApplicationController, PagingMixin):
+class Community(Application, PagingMixin):
 
     def __init__(self, **args):
-        super(CommunityController, self).__init__(**args)
+        super(Community, self).__init__(**args)
 
         self.pages = {
              'search'                     : self.search

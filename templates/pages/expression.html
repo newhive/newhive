@@ -6,7 +6,6 @@
       parent_url = {{ exp.url | json }};
       expr = {{ exp | json }};
   </script>
-  <style>html { overflow: hidden }</style>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression{% endblock %}

@@ -3,21 +3,8 @@
 # thenewhive.com WSGI server version 0.2
 
 from newhive.controllers.shared import *
-from newhive.controllers import (
-     ApplicationController
-    ,AnalyticsController
-    ,AdminController
-    ,ExpressionController
-    ,MailController
-    ,CommunityController
-    ,UserController
-    ,FileController
-    ,StarController
-    ,BroadcastController
-    ,CronController
-)
-
-import os, re, json, mimetypes, math, time, crypt, urllib, base64
+from newhive import controllers as hivectrl
+import os, re, mimetypes, math, time, crypt, urllib, base64
 import datetime
 from os.path  import join
 from werkzeug import Request, Response, exceptions, url_unquote
@@ -29,6 +16,7 @@ import jinja2
 from newhive import config
 from newhive.utils import abs_url, now
 from newhive.assets import HiveAssets
+from newhive.extra_json import extra_json
 import newhive.colors
 import newhive.state
 import newhive.manage.git
@@ -54,22 +42,13 @@ if __name__ != "__main__":
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(join(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
 
-class JSONDateTimeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (datetime.date, datetime.datetime)):
-            return obj.isoformat()
-        else:
-            return json.JSONEncoder.default(self, obj)
-def datetime_json(data):
-    return json.dumps(data, cls=JSONDateTimeEncoder)
-
 jinja_env.filters.update({
      'time': friendly_date
     ,'epoch_to_string': epoch_to_string
     ,'length_bucket': length_bucket
     ,'large_number': large_number
     ,'no_zero': no_zero
-    ,'json': datetime_json
+    ,'json': extra_json
     ,'mod': lambda x, y: x % y
     ,'querystring': querystring
     ,'percentage': lambda x: x*100
@@ -94,18 +73,17 @@ server_env = {
 }
 
 controllers = {
-      'community':   CommunityController(**server_env)
-    , 'analytics':   AnalyticsController(**server_env)
-    , 'admin':       AdminController(**server_env)
-    , 'user':        UserController(**server_env)
-    , 'file':        FileController(**server_env)
-    , 'expression':  ExpressionController(**server_env)
-    , 'mail':        MailController(**server_env)
-    , 'star':        StarController(**server_env)
-    , 'broadcast':   BroadcastController(**server_env)
-    , 'cron':        CronController(**server_env)
+      'expression':  hivectrl.Expression(**server_env)
+    , 'feed':        hivectrl.Feed(**server_env)
+    , 'file':        hivectrl.File(**server_env)
+    , 'user':        hivectrl.User(**server_env)
+    , 'community':   hivectrl.Community(**server_env)
+    , 'mail':        hivectrl.Mail(**server_env)
+    , 'cron':        hivectrl.Cron(**server_env)
+    , 'analytics':   hivectrl.Analytics(**server_env)
+    , 'admin':       hivectrl.Admin(**server_env)
     }
-app = ApplicationController(**server_env)
+app = hivectrl.Application(**server_env)
 
 def dialog_map(request, response, args=None):
     return dialogs.get(request.form['dialog'])(request, response, args)
@@ -113,36 +91,35 @@ def dialog_map(request, response, args=None):
 
 # Possible values for the POST variable 'action'
 actions = dict(
-     login             = controllers['user'].login
-    ,logout            = controllers['user'].logout
-    ,expr_save         = controllers['expression'].save
+     expr_save         = controllers['expression'].save
     ,expr_delete       = controllers['expression'].delete
+    ,tag_remove        = controllers['expression'].tag_update
+    ,tag_add           = controllers['expression'].tag_update
+    ,star              = controllers['feed'].star
+    ,broadcast         = controllers['feed'].broadcast
+    ,comment           = controllers['feed'].comment
     ,file_create       = controllers['file'].create
     ,file_delete       = controllers['file'].delete
+    ,login             = controllers['user'].login
+    ,logout            = controllers['user'].logout
     ,user_create       = controllers['user'].create
     ,user_update       = controllers['user'].update
     ,password_recovery_1 = controllers['user'].password_recovery_1
     ,password_recovery_2 = controllers['user'].password_recovery_2
+    ,user_tag_add      = controllers['user'].tag_update
+    ,user_tag_remove   = controllers['user'].tag_update
+    ,profile_thumb_set = controllers['user'].profile_thumb_set
+    ,log               = controllers['user'].log
+    ,facebook_invite   = controllers['user'].facebook_invite
+    ,facebook_listen   = controllers['user'].facebook_listen
     ,mail_us           = controllers['mail'].mail_us
     ,mail_them         = controllers['mail'].mail_them
     ,mail_referral     = controllers['mail'].mail_referral
     ,mail_feedback     = controllers['mail'].mail_feedback
-    ,user_tag_add      = controllers['user'].tag_update
-    ,user_tag_remove   = controllers['user'].tag_update
-    ,tag_remove        = controllers['expression'].tag_update
-    ,tag_add           = controllers['expression'].tag_update
     ,admin_update      = controllers['admin'].admin_update
     ,add_referral      = controllers['admin'].add_referral
-    ,add_comment       = controllers['expression'].add_comment
     ,bulk_invite       = controllers['admin'].bulk_invite
-    ,profile_thumb_set = controllers['user'].profile_thumb_set
-    ,star              = controllers['star'].star
-    ,unstar            = controllers['star'].star
-    ,broadcast         = controllers['broadcast'].update
-    ,log               = controllers['user'].log
     ,thumbnail_relink  = controllers['admin'].thumbnail_relink
-    ,facebook_invite   = controllers['user'].facebook_invite
-    ,facebook_listen   = controllers['user'].facebook_listen
     ,dialog            = dialog_map
 )
 
@@ -330,6 +307,7 @@ if __name__ == '__main__':
     from newhive.oauth import FacebookClient
     get_builder = EnvironBuilder(method='GET', environ_overrides={'wsgi.url_scheme': 'https'})
     get_request = lambda: Request(get_builder.get_environ())
+    config.interactive = True
 
     cara = db.User.named('cara')
     duffy = db.User.named('duffy')

@@ -21,15 +21,12 @@ if __name__ == '__main__':
     config.always_ssl = options.ssl_only or config.always_ssl
     config.debug_mode = options.debug or config.debug_mode
     config.webassets_debug = options.debug or config.webassets_debug
+    config.interactive = True
 
 
     """ This Werkzeug server is used only for development and debugging """
     from werkzeug import run_simple
     import OpenSSL.SSL as ssl
-
-    ctx = ssl.Context(ssl.SSLv3_METHOD)
-    ctx.use_privatekey_file(config.ssl_key)
-    ctx.use_certificate_file(config.ssl_cert)
 
     if config.ssl_ca: ctx.use_certificate_chain_file(config.ssl_ca)
 
@@ -53,7 +50,7 @@ if __name__ == '__main__':
 
     print 'starting server...'
     if config.always_ssl:
-        run_hive(config.ssl_port, ctx=ctx)
+        run_hive(config.ssl_port, ctx='adhoc')
     elif options.plain_only:
         run_hive(config.plain_port)
     else:
@@ -61,4 +58,4 @@ if __name__ == '__main__':
         if(child):
             run_hive(config.plain_port)
         else:
-            run_hive(config.ssl_port, ctx=ctx)
+            run_hive(config.ssl_port, ctx='adhoc')

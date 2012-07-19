@@ -13,7 +13,7 @@
   {% endfor %}
  
   <script>
-    Hive.Exp = {{ exp_js }}; // current expression from server
+    Hive.Exp = {{ exp | json }}; // current expression from server
   </script>
 {% endblock head %}
 
