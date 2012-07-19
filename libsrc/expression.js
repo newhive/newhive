@@ -29,7 +29,7 @@ $(function() {
             loadeddata: update_timer(this),
             timeupdate: update_timer(this),
             ended: update_timer(this),
-            swfPath: (window.location.protocol == "https:") ? asset('Jplayer.swf', true) : asset('Jplayer.swf'),
+            swfPath: asset('Jplayer.swf'),
             supplied: "mp3",
             verticalVolume: true
         });
@@ -79,19 +79,11 @@ $(function() {
     
 
     ///////////////////////////////////////////////////////////////////////////
-    //         more or less normal scrolling without default scrollbars      //
+    //             cool bonus paging and scrolling features                  //
     ///////////////////////////////////////////////////////////////////////////
-    $(window).on('mousewheel', function(e){
-        var delta = [e.originalEvent.wheelDeltaX, e.originalEvent.wheelDeltaY];
-        if(!delta[0] && !delta[1]) return;
-        document.body.scrollLeft -= delta[0];
-        document.body.scrollTop -= delta[1];
-    });
-
-    // TODO: Enable selection of text, dragging of images? Prevent click event after scrolling
     // TODO: prevent scroll sticking after mouse-up outside of expr frame
     var scroll_ref, mouse_ref;
-    $(document.body).drag('start', function(e, dd){
+    $('#bg').drag('start', function(e, dd){
         scroll_ref = [document.body.scrollLeft, document.body.scrollTop];
         mouse_ref = [e.clientX, e.clientY];
     }).drag(function(e, dd){
@@ -99,7 +91,22 @@ $(function() {
         document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
     });
 
-    // TODO: scroll handlers for arrow keys, ctrl + home / end, spacebar
+    var go_next = function(){ top.postMessage('next', parent_url); };
+    var go_prev = function(){ top.postMessage('prev', parent_url); };
+
+    $(document.body).on('keydown', function(e){
+        if(e.keyCode == 32) // space
+            if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) go_next();
+        if(e.keyCode == 39) // right arrow
+            if(document.body.scrollLeft + $(window).width() == document.body.scrollWidth) go_next();
+        if(e.keyCode == 37)
+            if(document.body.scrollLeft == 0) go_prev();
+    });
+
+    $('#bg').on('click', function(e){
+        if(e.clientX > $(window).width() * .666) go_next();
+        if(e.clientX < $(window).width() * .333) go_prev();
+    });
 
 
     // TODO: listen for hide / show messages to unload / load <iframe>s, <object>s, and <embed>s

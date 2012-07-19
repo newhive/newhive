@@ -202,93 +202,6 @@ function showDialog(name, opts) {
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
 
-var btn_listen_click = require_login(function(entity) {
-    btn = $('.listen_button.' + entity); // grab all listen buttons for this user
-    if (! btn.hasClass('inactive')) {
-        var action = btn.hasClass('starred') ? 'unstar' : 'star';
-        btn.addClass('inactive');
-        $.post('', {action: action, entity: entity }, function(data) {
-            btn.removeClass('inactive');
-            if (!data) alert("Something went wrong, please try again");
-            else if(data.unstarred) {
-                btn.removeClass('starred');
-                btn.attr('title', btn.attr('data-title-inactive'));
-                $('#dia_listeners .user_cards .' + data.unstarred).remove();
-            } else {
-                btn.addClass('starred');
-                btn.attr('title', btn.attr('data-title-active'));
-                $('#dia_listeners .user_cards').prepend(data);
-            };
-        }, 'json');
-    }
-    return false;
-});
-var btn_star_click = require_login(function(entity, btn) {
-    var btn = $(btn);
-    if (! btn.hasClass('inactive')) {
-        var action = btn.hasClass('starred') ? 'unstar' : 'star';
-        btn.addClass('inactive');
-        _gaq.push(['_trackEvent', 'like']);
-        $.post('', {action: action, entity: entity}, function(data) {
-            var count = parseInt(btn.attr('data-count'));
-            var btn_wrapper = btn.parent();
-            btn.removeClass('inactive');
-            if (!data) alert("Something went wrong, please try again");
-            else if(data.unstarred) {
-                btn.removeClass('starred');
-                btn_wrapper.attr('title', btn_wrapper.attr('data-title-inactive'));
-                btn.attr('data-count', count-1);
-                iconCounts();
-                $('#dia_starrers .user_cards .' + data.unstarred).remove();
-            } else {
-                btn.addClass('starred');
-                btn_wrapper.attr('title', btn_wrapper.attr('data-title-active'));
-                btn.attr('data-count', count+1);
-                iconCounts();
-                $('#dia_starrers .user_cards').prepend(data);
-            };
-        }, 'json');
-    }
-});
-function reloadFeed(){
-    $.get('?dialog=feed', function(data){
-        $('#feed_menu').html(data);
-        var count = $('#notification_count').html();
-        var count_div = $('#notifications .count').html(count);
-        if (count == "0"){
-            count_div.parent('.has_count').andSelf().addClass('zero');
-        } else {
-            count_div.parent('.has_count').andSelf().removeClass('zero');
-        }
-    });
-}
-
-var btn_broadcast_click = require_login(function(btn) {
-    var btn = $('#btn_broadcast');
-    if (! btn.hasClass('inactive')) {
-        btn.addClass('inactive');
-        _gaq.push(['_trackEvent', 'broadcast']);
-        $.post('', {'action': 'broadcast', 'domain': window.location.hostname, 'path': window.location.pathname }, function(data) {
-            var btn_wrapper = btn.parent();
-            btn.removeClass('inactive');
-            if (!data) { alert("Something went wrong, please try again"); return; }
-            btn.addClass('enabled');
-            //if(data.unstarred) {
-            //    btn.removeClass('starred');
-            //    btn_wrapper.attr('title', btn_wrapper.attr('data-title-inactive'));
-            //    btn.attr('data-count', count-1);
-            //    iconCounts();
-            //    $('#dia_starrers .user_cards .' + data.unstarred).remove();
-            //}
-        }, 'json');
-    }
-});
-
-var btn_comment_click = function(){
-    loadDialog("?dialog=comments");
-    _gaq.push(['_trackEvent', 'comment', 'open_dialog']);
-}
-
 function id(x) { return x; };
 function noop() { };
 // takes f, a1, a2, ... and returns function() { f(a1, a2, ...) }
@@ -364,22 +277,6 @@ function inArray(array, el){
 }
 
     
-function iconCounts() {
-    $('.has_count').each(function(){
-        var count = $(this).attr('data-count');
-        var count_div = $(this).find('.count');
-        if (count_div.length == 0){
-            count_div = $(this).append('<div class="count"></div>').children().last();
-        }
-        if (count == "0") {
-            count_div.parent('.has_count').andSelf().addClass('zero');
-        } else {
-            count_div.parent('.has_count').andSelf().removeClass('zero');
-        }
-        count_div.html(count);
-    });
-};
-
 var urlParams = {};
 (function () {
     var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
@@ -394,8 +291,6 @@ var urlParams = {};
  * Adds hover events for elements with class='hoverable'
  * ***/
 $(function () {
-  iconCounts();
-
   $(".hoverable").each(function() { hover_add(this) });
 
   // Cause external links to open in a new window
@@ -507,7 +402,8 @@ function asyncUpload(opts) {
     if(opts.multiple) { input.attr('multiple', 'multiple'); }
     for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
     form.appendTo(document.body);
-    setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
+    // It's a mystery why this timout is needed to make the upload dialog appear on some machines
+    setTimeout(function() { input.click() }, 0);
 }
 
 function hovers_active(state){
@@ -534,13 +430,6 @@ function hover_add(o) {
         })
         .mouseleave(function() { if(!this.busy) $(this).removeClass('active'); });
 }
-
-make_handle = function(menu){
-    var d = $(menu);
-    return $('<div>').addClass('menu_handle').css({
-        left: d.offset().left, top: d.offset().top, width: d.width(), height: d.height()
-    }).appendTo(document.body);
-};
 
 hover_menu = function(handle, drawer, options) {
     var handle = $(handle), drawer = $(drawer), o = { handle : handle, drawer : drawer },
@@ -628,6 +517,7 @@ hover_menu = function(handle, drawer, options) {
         handle.addClass('active');
         opts.default_item.addClass('active');
         o.cancel_close();
+        if(o.opened) return;
 
         o.opened = true;
         if( opts.group.current && (opts.group.current != o) ) opts.group.current.close(true);
@@ -685,8 +575,11 @@ hover_menu = function(handle, drawer, options) {
             ;
         }
 
-        //if(opts.auto_height) css_opts.height =
-        //    bound(drawer.height(), 0, $(window).height() * 0.8);
+        if(opts.auto_height && css_opts.top + drawer.outerHeight() > $(window).height()) {
+            var scroller = drawer.find('.items');
+            scroller.css({ 'max-height': $(window).height() - 50 - css_opts.top -
+                (drawer.height() - scroller.height()), overflow: 'hidden' });
+        }
 
         drawer.css(css_opts);
 
@@ -711,6 +604,7 @@ hover_menu = function(handle, drawer, options) {
             o.sticky = false;
             o.delayed_close();
         });
+        drawer.click(o.cancel_close);
     }
 
     menu_items.each(function(i, d){
@@ -768,8 +662,6 @@ function readCookie(name) {
 function eraseCookie(name) {
     createCookie(name,"",-1);
 }
-
-function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
 
 var positionHacks = Funcs(noop);
 var place_apps = function() {
@@ -857,10 +749,9 @@ var context_to_string = function(opt_arg){
     }
 };
 
-var asset = function(path, secure) {
-    var p = hive_asset_paths[path];
-    return secure ? p.replace('http:', 'https:') : p;
-}
+var asset = function(path) {
+    return hive_asset_paths[path];
+};
 
 function sendRequestViaMultiFriendSelector() {
   function requestCallback(response) {
@@ -910,11 +801,7 @@ function callback_log(message){
     };
 };
 
-function tag_list_html(tags, opts){
-    if (typeof tags == "undefined") return "";
-    opts = $.extend({prefix: '#', cls: ''}, opts);
-    var tag_array = typeof(tags) == "string" ? [tags] : tags;
-    return $.map(tag_array, function(tag) {
-        return "<span class='tag " + opts.cls + "'>" + opts.prefix + tag + "</span>"
-    }).join('');
-};
+var log_stub = function(m){
+    window.m = m;
+    console.log(m);
+}

@@ -7,7 +7,7 @@ from newhive.utils import b64decode
 import logging
 logger = logging.getLogger(__name__)
 
-class ApplicationController(object):
+class Application(object):
     def __init__(self, jinja_env=None, db=None, assets=None):
         self.jinja_env = jinja_env
         self.assets = assets

@@ -1,10 +1,10 @@
 from itertools import chain
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from newhive.utils import now
 import newhive.mail
 
-class CronController(ApplicationController):
+class Cron(Application):
     key = 'VaUcZjzozgiV'
 
     def cron(self, request, response):

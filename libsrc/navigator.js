@@ -413,7 +413,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
         var frame = content_element.find('iframe').on('load', on_frame_load);
         history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
-        Hive.Menus.update_expr(current_expr.data());
         var query = URI(window.location.href).query(true);
         change_context(build_search(query));
         populate_navigator();
@@ -539,5 +538,9 @@ Hive.Navigator.create = function(navigator, viewer){
         var state = History.getState(); // Note: We are using History.getState() instead of event.state
         o.select_by_id(state.data._id);
     });
+    window.addEventListener('message', function(m){
+        if(m.data == 'next') o.next();
+        if(m.data == 'prev') o.prev();
+    }, false);
     return o;
 };
