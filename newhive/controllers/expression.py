@@ -91,6 +91,7 @@ class Expression(Application, PagingMixin):
     def info(self, request, response):
         args = request.args.copy().to_dict(flat=True)
         current_id = args.get('page')
+        tag = args.get('tag')
 
         special_tags = {
                 'Featured': (self.expr_featured, 'id')
@@ -98,12 +99,14 @@ class Expression(Application, PagingMixin):
                 , 'Network': (self.home_feed, None)
                 }
 
+        spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
+        args = dfilter(args, ['sort', 'page', 'order', 'limit'])
+
         default = (None, 'updated')
-        pager, paging_attr = special_tags.get(args.get('tag'), default)
+        pager, paging_attr = special_tags.get(tag, default) if spec else (self.expr_all, 'updated')
 
         if utils.is_mongo_key(current_id):
             if paging_attr and paging_attr != 'id':
-                utils.set_trace()()
                 expr = self.db.Expr.fetch(current_id)
                 args['page'] = expr[paging_attr]
             else:
@@ -113,13 +116,10 @@ class Expression(Application, PagingMixin):
         if args.has_key('limit'): args['limit'] = int(args['limit'])
 
         if pager:
-            args = dfilter(args, ['page', 'expr', 'order', 'limit'])
             items_and_args = pager(request, response, args)
             exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
         else:
             # Use key_map to map between keys used in querystring and those of database
-            spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
-            args = dfilter(args, ['sort', 'page', 'order', 'limit'])
 
             exprs = self.db.Expr.page(spec, **args)
 
