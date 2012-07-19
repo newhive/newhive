@@ -171,8 +171,8 @@ class HiveAssets(Assets):
                 output='../lib/frame.js')
 
         assets_env.register('app.js',
-                'jquery_misc.js', 'util.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
-                'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'colors.js',
+                'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
+                'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'util.js',
                 filters='yui_js',
                 output='../lib/app.js')
 

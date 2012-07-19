@@ -804,4 +804,4 @@ function callback_log(message){
 var log_stub = function(m){
     window.m = m;
     console.log(m);
-}
+};

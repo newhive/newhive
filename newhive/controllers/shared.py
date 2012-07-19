@@ -86,7 +86,8 @@ class PagingMixin(object):
     @paging_decorator
     def expr_all(self, request, response, paging_args, **kwargs):
         response.context['title'] = 'All Expressions'
-        return self.db.Expr.page({'auth': 'public'}, **paging_args), {'tag': 'Recent'}
+        quality_filter = [{'views': {'$gt': 25}}, {'analytics.Star': {'$gt': 0}}]
+        return self.db.Expr.page({'auth': 'public', '$or': quality_filter}, **paging_args), {'tag': 'Recent'}
 
     @paging_decorator
     def home_feed(self, request, response, paging_args, **kwargs):
