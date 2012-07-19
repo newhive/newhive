@@ -81,7 +81,7 @@
       ></div>
       <div class='bar'></div>
       <a href='{{ feed_url }}'><div class='menu_item'>Activity</div></a>
-      <div id='user_activity_feed'>
+      <div id='user_activity_feed' class='items'>
         {% for feed in user.feed_profile(viewer=user, limit=6) %}
           {% include "partials/feed.html" %}
         {% endfor %}

@@ -54,14 +54,14 @@
         <div class='count'>{{ exp.views | large_number }}</div>
       </div>
     </div>
-    <div id='star_btn' class='btn_box star hoverable'>
+    <div id='star_btn' class='btn_box star hoverable' data-title-off='show some love' data-title-on='stop loving'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
         <div class='count{{ ' zero' if not exp.star_count }}'>{{ exp.star_count | large_number }}</div>
       </div>
     </div>
-    <div id='broadcast_btn' class='btn_box broadcast hoverable'>
+    <div id='broadcast_btn' class='btn_box broadcast hoverable' data-title-off='broadcast to listeners' data-title-on='stop broadcasting'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
@@ -123,9 +123,10 @@
     <div class='info on'>Join the conversation around this expression</div>
     {# TODO: create content for javascript-less clients #}
     <div class='items'><b>Loading...</b></div>
-    <form id='comment_form'>
-      <textarea name='comment' placeholder='Type comment here...' rows='4'></textarea>
-      <input type='submit' value='Enter' class='btn black rounded'>
+    <form id='comment_form' method='POST'>
+      <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
+      <input type='submit' value='Enter' class='submit btn black rounded'>
+      <input type='hidden' name='action' value='comment'>
     </form>
   </div>
 
