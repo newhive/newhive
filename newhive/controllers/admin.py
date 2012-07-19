@@ -1,10 +1,10 @@
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from newhive.mail import mail_invite
 import logging
 logger = logging.getLogger(__name__)
 
-class AdminController(ApplicationController):
+class Admin(Application):
 
     @admins
     def contact_log(self, request, response):

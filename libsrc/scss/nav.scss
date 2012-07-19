@@ -150,7 +150,7 @@ img.thumb { background-color: $color_grey_medium; }
 
         &.active {
             background-color: $color_selected;
-            .edge { background-image: asset_url('skin/1/action-hover.png'); }
+            .edge { background-image: asset_url('skin/1/action_bg-hover.png'); }
         }
 
         .nav_btn {
@@ -195,19 +195,28 @@ img.thumb { background-color: $color_grey_medium; }
         cursor: default;
     }
 
-    .broadcast {
-        .icon { background-image: asset_url('skin/1/broadcast.png'); }
-        &.active .icon { background-image: asset_url('skin/1/broadcast-hover.png'); }
+    .star {
+        .icon { background-image: asset_url('skin/1/star.png'); }
+        &.active .icon, &.on .icon { background-image: asset_url('skin/1/star-hover.png'); }
+        &.on { background-color: $color_bright_red; }
+        &.on.active .edge { background-image: asset_url('skin/1/star_bg_on-hover.png'); }
     }
 
-    .like {
-        .icon { background-image: asset_url('skin/1/like.png'); }
-        &.active .icon { background-image: asset_url('skin/1/like-hover.png'); }
+    .broadcast {
+        .icon { background-image: asset_url('skin/1/broadcast.png'); }
+        &.active .icon, &.on .icon { background-image: asset_url('skin/1/broadcast-hover.png'); }
+        &.on {
+            background-image: asset_url('skin/1/broadcast_bg_on.png');
+            background-size: 100% 100%;
+        }
+        &.on.active .edge { background-image: asset_url('skin/1/broadcast_bg_on-hover.png'); }
     }
 
     .comment {
         .icon { background-image: asset_url('skin/1/comment.png'); }
-        &.active .icon { background-image: asset_url('skin/1/comment-hover.png'); }
+        &.active .icon, &.on .icon { background-image: asset_url('skin/1/comment-hover.png'); }
+        &.on { background-color: $color_blue; }
+        &.on.active .edge { background-image: asset_url('skin/1/comment_bg_on-hover.png'); }
         cursor: default;
     }
 
@@ -402,7 +411,7 @@ body.frame{
             width: 32px;
             margin-right: 8px;
         }
-        .author { font-weight: bold; }
+        .user { font-weight: bold; }
         .text { font-size: 13px; height: 32px; overflow: hidden; }
         .time { font-size: 12px; float: right; padding-right: 2px; }
     }
@@ -424,7 +433,7 @@ body.frame{
 }
 
 #comment_menu {
-    width: 500px;
+    width: 550px;
     padding: 15px;
     border: 5px solid $color_selected;
 
@@ -442,8 +451,8 @@ body.frame{
             float: left;
         }
         .comment { float: left; }
-        .text { position: relative; }
-        .author { font-weight: bold; margin-top: 5px; }
+        .text { position: relative; float: right; width: 490px; }
+        .user { display: block; font-weight: bold; margin-top: 5px; }
         .time { font-size: 12px; position: absolute; right: 0; bottom: 0; padding-right: 2px; }
     }
 

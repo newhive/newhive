@@ -3,20 +3,7 @@
 # thenewhive.com WSGI server version 0.2
 
 from newhive.controllers.shared import *
-from newhive.controllers import (
-     ApplicationController
-    ,AnalyticsController
-    ,AdminController
-    ,ExpressionController
-    ,MailController
-    ,CommunityController
-    ,UserController
-    ,FileController
-    ,StarController
-    ,BroadcastController
-    ,CronController
-)
-
+from newhive import controllers as hivectrl
 import os, re, mimetypes, math, time, crypt, urllib, base64
 import datetime
 from os.path  import join
@@ -86,18 +73,17 @@ server_env = {
 }
 
 controllers = {
-      'community':   CommunityController(**server_env)
-    , 'analytics':   AnalyticsController(**server_env)
-    , 'admin':       AdminController(**server_env)
-    , 'user':        UserController(**server_env)
-    , 'file':        FileController(**server_env)
-    , 'expression':  ExpressionController(**server_env)
-    , 'mail':        MailController(**server_env)
-    , 'star':        StarController(**server_env)
-    , 'broadcast':   BroadcastController(**server_env)
-    , 'cron':        CronController(**server_env)
+      'expression':  hivectrl.Expression(**server_env)
+    , 'feed':        hivectrl.Feed(**server_env)
+    , 'file':        hivectrl.File(**server_env)
+    , 'user':        hivectrl.User(**server_env)
+    , 'community':   hivectrl.Community(**server_env)
+    , 'mail':        hivectrl.Mail(**server_env)
+    , 'cron':        hivectrl.Cron(**server_env)
+    , 'analytics':   hivectrl.Analytics(**server_env)
+    , 'admin':       hivectrl.Admin(**server_env)
     }
-app = ApplicationController(**server_env)
+app = hivectrl.Application(**server_env)
 
 def dialog_map(request, response, args=None):
     return dialogs.get(request.form['dialog'])(request, response, args)
@@ -105,36 +91,35 @@ def dialog_map(request, response, args=None):
 
 # Possible values for the POST variable 'action'
 actions = dict(
-     login             = controllers['user'].login
-    ,logout            = controllers['user'].logout
-    ,expr_save         = controllers['expression'].save
+     expr_save         = controllers['expression'].save
     ,expr_delete       = controllers['expression'].delete
+    ,tag_remove        = controllers['expression'].tag_update
+    ,tag_add           = controllers['expression'].tag_update
+    ,star              = controllers['feed'].star
+    ,broadcast         = controllers['feed'].broadcast
+    ,comment           = controllers['feed'].comment
     ,file_create       = controllers['file'].create
     ,file_delete       = controllers['file'].delete
+    ,login             = controllers['user'].login
+    ,logout            = controllers['user'].logout
     ,user_create       = controllers['user'].create
     ,user_update       = controllers['user'].update
     ,password_recovery_1 = controllers['user'].password_recovery_1
     ,password_recovery_2 = controllers['user'].password_recovery_2
+    ,user_tag_add      = controllers['user'].tag_update
+    ,user_tag_remove   = controllers['user'].tag_update
+    ,profile_thumb_set = controllers['user'].profile_thumb_set
+    ,log               = controllers['user'].log
+    ,facebook_invite   = controllers['user'].facebook_invite
+    ,facebook_listen   = controllers['user'].facebook_listen
     ,mail_us           = controllers['mail'].mail_us
     ,mail_them         = controllers['mail'].mail_them
     ,mail_referral     = controllers['mail'].mail_referral
     ,mail_feedback     = controllers['mail'].mail_feedback
-    ,user_tag_add      = controllers['user'].tag_update
-    ,user_tag_remove   = controllers['user'].tag_update
-    ,tag_remove        = controllers['expression'].tag_update
-    ,tag_add           = controllers['expression'].tag_update
     ,admin_update      = controllers['admin'].admin_update
     ,add_referral      = controllers['admin'].add_referral
-    ,add_comment       = controllers['expression'].add_comment
     ,bulk_invite       = controllers['admin'].bulk_invite
-    ,profile_thumb_set = controllers['user'].profile_thumb_set
-    ,star              = controllers['star'].star
-    ,unstar            = controllers['star'].star
-    ,broadcast         = controllers['broadcast'].update
-    ,log               = controllers['user'].log
     ,thumbnail_relink  = controllers['admin'].thumbnail_relink
-    ,facebook_invite   = controllers['user'].facebook_invite
-    ,facebook_listen   = controllers['user'].facebook_listen
     ,dialog            = dialog_map
 )
 

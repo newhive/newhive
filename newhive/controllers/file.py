@@ -1,12 +1,12 @@
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 import urllib, urlparse, itertools
 from werkzeug.http import parse_options_header
 
 import logging
 logger = logging.getLogger(__name__)
 
-class FileController(ApplicationController):
+class File(Application):
 
     def create(self, request, response):
         """ Saves a file uploaded from the expression editor, responds

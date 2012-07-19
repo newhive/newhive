@@ -1,14 +1,14 @@
 import datetime, pandas
 import newhive
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from newhive import analytics
 from newhive.utils import now, datetime_to_int
 import operator as op
 
-class AnalyticsController(ApplicationController):
+class Analytics(Application):
     def __init__(self, *a, **b):
-        super(AnalyticsController, self).__init__(*a, **b)
+        super(Analytics, self).__init__(*a, **b)
         self.mdb = b['db'].mdb # direct reference to pymongo db
 
     def active_users(self, request, response):

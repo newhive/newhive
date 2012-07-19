@@ -15,7 +15,7 @@
   <script type='text/javascript'>
       // TODO: temporary, should probably hide this better
       var expr = {{exp | json}};
-      var user = {{ user.id | json }};
+      var user = {{ user_client | json }};
       var content_domain = {{ content_domain | json }};
   </script>
 {% endblock %}
@@ -41,7 +41,7 @@
 
   <div id='action_nav_handle' class='menu_handle'></div>
   <div id='action_nav'>
-    <a href='{{ edit }}'><div class='btn_box edit hoverable {{ 'none' if not user_is_owner }}'>
+    <a href='{{ edit }}'><div class='btn_box edit hoverable'>
       <div class='nav_btn'>
         <span class='text'>Edit</span>
         <div class='icon'></div>
@@ -54,7 +54,7 @@
         <div class='count'>{{ exp.views | large_number }}</div>
       </div>
     </div>
-    <div id='like_btn' class='btn_box like hoverable'>
+    <div id='star_btn' class='btn_box star hoverable'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
@@ -75,7 +75,7 @@
         <div class='count{{ ' zero' if not exp.comment_count }}'>{{ exp.comment_count | large_number }}</div>
       </div>
     </div>
-    <div class='btn_box delete hoverable {{ 'none' if not user_is_owner }}'>
+    <div class='btn_box delete hoverable'>
       <div class='nav_btn'>
         <span class='text'>Delete</span>
         <div class='icon'></div>
@@ -103,7 +103,7 @@
     </div>
   </div>
 
-  <div id='like_menu' class='menu action_menu face_menu'>
+  <div id='star_menu' class='menu action_menu face_menu'>
     <span class='header'>Love</span>
     <div class='info'>Show this expression some love, and be notified of updates and comments.</div>
     {# TODO: create content for javascript-less clients #}
@@ -168,17 +168,15 @@
 {% block dialogs %}
   {{ super() }}
   {% include 'dialogs/password.html' %}
-  {% if user_is_owner %}
-    <div id='dia_delete' class='newdialog center'>
-      <h3>Are you sure you want to delete this expression?</h3>
-      <div class='btns'>
-        <form method='POST' action='{{ secure_server }}'>
-          <input type='hidden' name='action' value='expr_delete'>
-          <input type='hidden' name='id' value='{{ exp.id }}' class='expr_id'>
-          <input type='submit' value='Yes' class='btn'> &nbsp;
-          <input type='button' value='No' class='no_btn btn'>
-        </form>
-      </div>
+  <div id='dia_delete' class='newdialog center'>
+    <h3>Are you sure you want to delete this expression?</h3>
+    <div class='btns'>
+      <form method='POST' action='{{ secure_server }}'>
+        <input type='hidden' name='action' value='expr_delete'>
+        <input type='hidden' name='id' value='{{ exp.id }}' class='expr_id'>
+        <input type='submit' value='Yes' class='btn'> &nbsp;
+        <input type='button' value='No' class='no_btn btn'>
+      </form>
     </div>
-  {% endif %}
+  </div>
 {% endblock %}

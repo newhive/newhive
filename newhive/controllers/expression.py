@@ -1,11 +1,11 @@
 import base64
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from newhive import utils, mail
 # TODO: handle this in model layer somehow
 from pymongo.connection import DuplicateKeyError
 
-class ExpressionController(ApplicationController, PagingMixin):
+class Expression(Application, PagingMixin):
 
     def edit(self, request, response):
         if not request.requester.logged_in: return self.serve_404(request, response)
@@ -65,27 +65,16 @@ class ExpressionController(ApplicationController, PagingMixin):
         if not resource:
             if request.path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
-
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
-
         if is_owner: owner.unflag('expr_new')
 
-        auth_required = (resource.get('auth') == 'password' and resource.get('password')
-            and request.form.get('password') != resource.get('password')
-            and request.requester.id != resource['owner'])
-
-        if not auth_required:
-            resource.increment_counter('views')
-            if is_owner: resource.increment_counter('owner_views')
-
         self.expr_prepare(resource)
+        user = request.requester
         response.context.update(
-             edit = abs_url(secure = True) + 'edit/' + resource.id
-            ,mtime = friendly_date(time_u(resource['updated']))
+             user_client = { 'name': user['name'], 'id': user.id, 'thumb': user.get_thumb(70) }
+            ,edit = abs_url(secure = True) + 'edit/' + resource.id
             ,title = resource.get('title', False)
-            ,starrers = resource.starrer_page()
-            ,auth_required = auth_required
             ,exp = resource
             ,expr_url = abs_url(domain = config.content_domain) + resource.id
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
@@ -143,8 +132,18 @@ class ExpressionController(ApplicationController, PagingMixin):
         expr = self.db.Expr.fetch(expr_id)
         if not expr: return self.serve_404(request, response)
 
+        # TODO: determine if owner is requesting, by matching
+        # against auto-generated secret, set is_owner
+
+        #auth_required = (resource.get('auth') == 'password' and resource.get('password')
+        #    and request.form.get('password') != resource.get('password')
+        #    and request.requester.id != resource['owner'])
+
         if expr.get('auth') == 'password' and not expr.cmp_password(request.form.get('password')):
             return self.serve_forbidden(request)
+
+        #resource.increment_counter('views')
+        #if is_owner: resource.increment_counter('owner_views')
 
         response.context.update( html = expr_to_html(expr), exp = expr )
         return self.serve_page(response, 'pages/expression.html')
@@ -240,19 +239,6 @@ class ExpressionController(ApplicationController, PagingMixin):
         e.delete()
         # TODO: garbage collect media files that are no longer referenced by expression
         return self.redirect(response, request.requester.url)
-
-
-    def add_comment(self, request, response):
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
-        commenter = request.requester
-        expression = self.db.Expr.fetch(request.form.get('expression'))
-        comment_text = request.form.get('comment')
-        comment = self.db.Comment.create(commenter, expression, {'text': comment_text})
-        if comment.initiator.id != expression.owner.id:
-            mail.mail_feed(self.jinja_env, comment, expression.owner)
-        response.context['comment'] = comment
-        return self.serve_page(response, 'partials/comment.html')
 
     def tag_update(self, request, response):
         tag = lget(normalize(request.form.get('value', '')), 0)
