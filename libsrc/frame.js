@@ -21,10 +21,10 @@ Hive.Menus = (function(){
             handles = $('.menu_handle').add('#navigator_handle').add('#navigator'),
             close_nav = function(){
                 drawers.stop().clearQueue();
-                $('#user_nav').animate({ left: -50, top: -50 }, speed);
+                $('#user_nav').animate({ left: -50, top: -50, complete:
+                    function(){ drawers.hide() } }, speed);
                 $('#owner_nav').animate({ right: -50, top: -50 }, speed);
                 $('#action_nav').animate({ right: -50 }, speed);
-                drawers.hide();
             },
             open_nav = function(){
                 drawers.stop().clearQueue().show();
@@ -61,8 +61,23 @@ Hive.Menus = (function(){
         hover_menu('#view_btn', '#expr_menu', { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
         hover_menu('#star_btn', '#star_menu', { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
         hover_menu('#broadcast_btn', '#broadcast_menu', { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
-        hover_menu('#comment_btn', '#comment_menu', { layout: 'center_y', min_y: menu_top, offset_x: 13,
-            open: function(){ $('#comment_menu textarea').get(0).focus() }, group: nav_menu });
+        hover_menu('#comment_btn', '#comment_menu', { layout: 'center_y', min_y: menu_top,
+            offset_x: 13, open: function(){
+                $('#comment_menu textarea').get(0).focus();
+                var box = $('#comment_menu .items');
+                box.scrollTop(box.get(0).scrollHeight);
+            }, group: nav_menu });
+
+        $('#star_btn').click(function(){ o.feed_toggle('star', Hive.expr.id, '#star_btn',
+            '#star_menu .items') });
+        $('#broadcast_btn').click(function(){ o.feed_toggle('broadcast', Hive.expr.id,
+            '#broadcast_btn', '#broadcast_menu .items') });
+
+        $('#comment_form').submit(o.post_comment);
+
+        var del_dialog;
+        $('.delete_btn').click(function(){ del_dialog = showDialog('#dia_delete'); });
+        $('#dia_delete .no_btn').click(function(){ del_dialog.close() });
 
         Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames');
         o.navigator_menu = hover_menu('#navigator_handle', '#navigator', {
@@ -77,35 +92,40 @@ Hive.Menus = (function(){
         $(window).resize(o.layout);
         o.update_expr(expr);
 
-        var del_dialog;
-        $('.delete_btn').click(function(){ del_dialog = showDialog('#dia_delete'); });
-        $('#dia_delete .no_btn').click(function(){ del_dialog.close() });
-
         o.navigator_menu.delayed_close(5000);
         nav_menu.delayed_close(5000);
     };
 
-    o.user_link = function(name){
-        return $('<a>').attr('href', '/' + name)
+    o.user_link = function(name, id){
+        return $('<a>').attr('href', '/' + name).addClass(id)
             .click(function(){ Hive.navigator.context('@' + name); return false; });
     };
-    o.face_link = function(name, thumb){
-        return o.user_link(name).append( $('<img>').attr('src', thumb).addClass('thumb') );
+    o.face_link = function(name, id, thumb){
+        return o.user_link(name, id).append( $('<img>').attr('src', thumb).addClass('thumb') );
     };
-    o.name_link = function(name){ return o.user_link(name).addClass('user').html(name); };
+    o.name_link = function(name, id){ return o.user_link(name, id).addClass('user').html(name); };
 
     o.comment_card = function(item){
         return $("<div class='item'>")
-            .append(o.face_link(item.initiator_name, item.initiator_thumb))
+            .append(o.face_link(item.initiator_name, item.initiator, item.initiator_thumb))
             .append( $('<div>').addClass('text').html(
                 item.text
-                + o.name_link(item.initiator_name).outerHTML()
+                + o.name_link(item.initiator_name, item.initiator).outerHTML()
                 + "<div class='time'>" + item.created_friendly + "</div>"
             ) );
     };
 
+    o.btn_state = function(btn, state){
+        btn = $(btn);
+        btn.toggleClass('on', state);
+        btn.toggleClass('off', !state);
+        if(btn.attr('data-title-on'))
+            btn.attr('title', btn.attr('data-title-' + (state ? 'on' : 'off') ));
+    }
+
     // AJAXy diddling for all content in above menus
     o.update_expr = function(expr){
+        Hive.expr = expr;
         var set_class = function(o, b, c){ return o[b ? 'addClass' : 'removeClass'](c) };
 
         $('.expr_id').val(expr.id); // for delete dialog
@@ -146,10 +166,11 @@ Hive.Menus = (function(){
             var box = $('#expr_menu .items').html('');
             $.map(data, function(item){
                 $("<div class='item'>")
-                    .append(o.face_link(item.initiator_name, item.initiator_thumb))
+                    .append(o.face_link(item.initiator_name, item.initiator, item.initiator_thumb))
                     .append( $('<div>').addClass('text').html(
                         "<div class='time'>" + item.created_friendly + "</div>"
-                        + o.name_link(item.initiator_name).outerHTML() + ' ' + o.action_name(item)
+                        + o.name_link(item.initiator_name, item.initiator).outerHTML()
+                        + ' ' + o.action_name(item)
                         + ( item.text ? '<br>"' + item.text + '"' : '' )
                     ) ).appendTo(box);
             });
@@ -163,19 +184,19 @@ Hive.Menus = (function(){
 
             box = $('#star_menu .items').html('');
             $.map(feeds.Star, function(item){
-                o.face_link(item.initiator_name, item.initiator_thumb).appendTo(box);
+                o.face_link(item.initiator_name, item.initiator, item.initiator_thumb).appendTo(box);
             });
-            $('#star_btn').toggleClass('on', feed_member(feeds.Star));
+            o.btn_state('#star_btn', feed_member(feeds.Star));
 
             box = $('#broadcast_menu .items').html('');
             $.map(feeds.Broadcast, function(item){
-                o.face_link(item.initiator_name, item.initiator_thumb).appendTo(box);
+                o.face_link(item.initiator_name, item.initiator, item.initiator_thumb).appendTo(box);
             });
-            $('#broadcast_btn').toggleClass('on', feed_member(feeds.Broadcast));
+            o.btn_state('#broadcast_btn', feed_member(feeds.Broadcast));
 
             box = $('#comment_menu .items').html('');
             $.map(feeds.Comment, function(item){ o.comment_card(item).prependTo(box); });
-            $('#comment_btn').toggleClass('on', feed_member(feeds.Comment));
+            o.btn_state('#comment_btn', feed_member(feeds.Comment));
         };
         $.getJSON(server_url + 'expr_feed/' + expr.id, load_feed);
 
@@ -201,58 +222,72 @@ Hive.Menus = (function(){
         if(i.class_name == 'Broadcast') return 'broadcast';
     };
 
-    o.click_star = require_login(function(entity, btn) {
-        var btn = $(btn);
+    o.server_error = function(){
+        alert("Sorry, something went wrong. Try refreshing the page and trying again.");
+    };
+
+    o.click_listen = require_login(function(entity) {
+        btn = $('.listen.' + entity); // grab all listen buttons for this user
+        if(btn.hasClass('inactive')) return;
+
+        var state = btn.hasClass('off');
+        _gaq.push(['_trackEvent', state ? 'listen' : 'unlisten']);
+        btn.addClass('inactive');
+        $.post('', { action: 'star', entity: entity }, function(data) {
+            btn.removeClass('inactive');
+            if(!data) { o.server_error(); return }
+            o.btn_state(btn, state);
+        }, 'json');
+
+        return false;
+    });
+
+    o.feed_toggle = require_login(function(action, entity, btn, items) {
+        btn = $(btn); items = $(items);
         if(btn.hasClass('inactive')) return;
         btn.addClass('inactive');
 
-        var action = btn.hasClass('on') ? 'unstar' : 'star';
-        _gaq.push(['_trackEvent', action]);
-        $.post('', {action: action, entity: entity}, function(data) {
-            var count = parseInt(btn.attr('data-count'));
-            var btn_wrapper = btn.parent();
+        var state = btn.hasClass('off');
+        _gaq.push(['_trackEvent', (state ? '' : 'un') + action]);
+        $.post('', { action: action, entity: entity, state: state }, function(data) {
+            var count_e = btn.find('.count');
+            var count = parseInt(count_e.html());
             btn.removeClass('inactive');
-            if (!data) alert("Something went wrong, please try again");
-            else if(data.unstarred) {
-                btn.removeClass('starred');
-                btn_wrapper.attr('title', btn_wrapper.attr('data-title-inactive'));
-                btn.attr('data-count', count-1);
-                iconCounts();
-                $('#dia_starrers .user_cards .' + data.unstarred).remove();
+
+            console.log(data);
+            if(!data) { o.server_error(); return; }
+            if(data.state) {
+                count_e.html(count + 1);
+                o.face_link(user.name, user.id, user.thumb).prependTo(items);
             } else {
-                btn.addClass('starred');
-                btn_wrapper.attr('title', btn_wrapper.attr('data-title-active'));
-                btn.attr('data-count', count+1);
-                iconCounts();
-                $('#dia_starrers .user_cards').prepend(data);
+                count_e.html(count - 1);
+                items.find('.' + user.id).remove();
             };
+            o.btn_state(btn, data.state);
         }, 'json');
+    });
+
+    o.post_comment = require_login(function(){
+        btn = $('#comment_form .submit'); items = $('#comment_menu .items');
+        if(btn.hasClass('inactive')) return;
+        btn.addClass('inactive');
+
+        var text = $('#comment_form textarea').val();
+        if(text.trim() == '') return false;
+        _gaq.push(['_trackEvent', 'post_comment']);
+        $.post('', { action: 'comment', entity: Hive.expr.id, text: text }, function(data) {
+            btn.removeClass('inactive');
+            if(!data) { o.server_error(); return; }
+            o.comment_card(data).appendTo(items);
+            items.scrollTop(items.get(0).scrollHeight);
+        }, 'json');
+
+        return false;
     });
 
     return o;
 })();
 
-var btn_listen_click = require_login(function(entity) {
-    btn = $('.listen_button.' + entity); // grab all listen buttons for this user
-    if (! btn.hasClass('inactive')) {
-        var action = btn.hasClass('starred') ? 'unstar' : 'star';
-        btn.addClass('inactive');
-        $.post('', {action: action, entity: entity }, function(data) {
-            btn.removeClass('inactive');
-            if (!data) alert("Something went wrong, please try again");
-            else if(data.unstarred) {
-                btn.removeClass('starred');
-                btn.attr('title', btn.attr('data-title-inactive'));
-                $('#dia_listeners .user_cards .' + data.unstarred).remove();
-            } else {
-                btn.addClass('starred');
-                btn.attr('title', btn.attr('data-title-active'));
-                $('#dia_listeners .user_cards').prepend(data);
-            };
-        }, 'json');
-    }
-    return false;
-});
 function reloadFeed(){
     $.get('?dialog=feed', function(data){
         $('#feed_menu').html(data);
@@ -266,32 +301,6 @@ function reloadFeed(){
     });
 }
 
-var btn_broadcast_click = require_login(function(btn) {
-    var btn = $('#btn_broadcast');
-    if (! btn.hasClass('inactive')) {
-        btn.addClass('inactive');
-        _gaq.push(['_trackEvent', 'broadcast']);
-        $.post('', {'action': 'broadcast', 'domain': window.location.hostname, 'path': window.location.pathname }, function(data) {
-            var btn_wrapper = btn.parent();
-            btn.removeClass('inactive');
-            if (!data) { alert("Something went wrong, please try again"); return; }
-            btn.addClass('enabled');
-            //if(data.unstarred) {
-            //    btn.removeClass('starred');
-            //    btn_wrapper.attr('title', btn_wrapper.attr('data-title-inactive'));
-            //    btn.attr('data-count', count-1);
-            //    iconCounts();
-            //    $('#dia_starrers .user_cards .' + data.unstarred).remove();
-            //}
-        }, 'json');
-    }
-});
-
-var btn_comment_click = function(){
-    loadDialog("?dialog=comments");
-    _gaq.push(['_trackEvent', 'comment', 'open_dialog']);
-}
-
 var tag_list_html = function(tags, opts){
     if (typeof tags == "undefined") return "";
     opts = $.extend({prefix: '#', cls: ''}, opts);
@@ -299,20 +308,4 @@ var tag_list_html = function(tags, opts){
     return $.map(tag_array, function(tag) {
         return "<a href='#" + tag + "' class='tag " + opts.cls + "'>" + opts.prefix + tag + "</a>"
     }).join(' ');
-};
-
-function iconCounts() {
-    $('.has_count').each(function(){
-        var count = $(this).attr('data-count');
-        var count_div = $(this).find('.count');
-        if (count_div.length == 0){
-            count_div = $(this).append('<div class="count"></div>').children().last();
-        }
-        if (count == "0") {
-            count_div.parent('.has_count').andSelf().addClass('zero');
-        } else {
-            count_div.parent('.has_count').andSelf().removeClass('zero');
-        }
-        count_div.html(count);
-    });
 };
