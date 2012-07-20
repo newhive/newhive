@@ -7,26 +7,23 @@ from pymongo.connection import DuplicateKeyError
 
 class Expression(Application, PagingMixin):
 
-    def edit(self, request, response):
+    def edit_frame(self, request, response):
         if not request.requester.logged_in: return self.serve_404(request, response)
 
-        exp_id = lget(request.path_parts, 1)
-        if not exp_id:
-            exp = { 'domain' : lget(request.requester.get('sites'), 0) }
-            exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
-            exp['title'] = 'Untitled'
-            exp['auth'] = 'public'
+        expr_id = lget(request.path_parts, 1)
+        if not expr_id:
+            expr = dfilter(request.args, ['domain', 'name', 'tags'])
+            expr['title'] = 'Untitled'
+            expr['auth'] = 'public'
             self.db.ActionLog.create(request.requester, "new_expression_edit")
         else:
-            exp = self.db.Expr.fetch(exp_id)
-            if not exp: return self.serve_404(request, response)
-            self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': exp.id})
+            expr = self.db.Expr.fetch(expr_id)
+            if not expr: return self.serve_404(request, response)
+            self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
 
-        if request.requester.get('flags'):
-            show_help = request.requester['flags'].get('default-instructional') < 1
-        else: show_help = True
-        if show_help:
-            request.requester.increment({'flags.default-instructional': 1})
+        show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
+        if show_help: request.requester.increment({'flags.default-instructional': 1})
+
         response.context.update({
              'title'     : 'Editing: ' + exp['title']
             ,'sites'     : request.requester.get('sites')
@@ -34,6 +31,12 @@ class Expression(Application, PagingMixin):
             ,'show_help' : show_help
             ,'editing'   : True
         })
+        return self.serve_page(response, 'pages/edit_frame.html')
+
+    def edit(self, request, response):
+        expr = self.db.Expr.fetch(lget(request.path_parts, 1))
+        if not expr: return self.serve_404(request, response)
+        response.context.update({ 'expr': expr })
         return self.serve_page(response, 'pages/edit.html')
 
     # destructively prepare state.Expr for client consumption
