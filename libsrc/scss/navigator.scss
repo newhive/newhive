@@ -74,14 +74,18 @@
                 .byline { display: block; }
             }
         }
-        .prev .element {
-            float: right;
+        .prev {
+            .element, .cap {
+                float: right;
+            }
         }
-        .next .element {
-            float: left;
+        .next {
+            .element, .cap {
+                float: left;
+            }
         }
     }
-    .frame {
+    .loupe {
         position: absolute;
         padding: 0;
         @include box-shadow(2px 2px 10px $shadow_color);

@@ -46,14 +46,38 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     var pos = 0;
-    function update_pos(offset){
-        pos = pos + offset;
+    o.pos_set = function(x){
+        if ((prev_list.length + next_list.length + 1) * expr_width < $(window).width()){
+            x = prev_list.length * expr_width - center.minus;
+        } else if (prev_list.cap.offset().left + x - pos > 0){
+            x = pos - prev_list.cap.offset().left;
+        } else if (next_list.cap.offset().left + x - pos < $(window).width() ){
+            x = pos + $(window).width() - next_list.cap.offset().left;
+        }
+        inner.css('left', x);
+        loupe.css('left', x + loupe.data('offset'));
+        pos = x;
+    };
+    o.move = function(event){
+        if (event instanceof WheelEvent){
+            o.pos_set(event.wheelDelta + pos);
+        } else {
+            o.pos_set(event.offsetX);
+        }
+    };
+    o.move_end = function(event){
+        if (event instanceof WheelEvent){
+            delta = event.wheelDelta;
+        } else {
+            delta = event.deltaX;
+        }
         if (pos > (prev_list.length - opts.visible_count) * expr_width) {
             o.fetch_prev();
         } else if (-pos > (next_list.length - opts.visible_count) * expr_width) {
             o.fetch_next();
         };
     };
+
 
     // public methods
     var fetching_lock = {};
@@ -75,6 +99,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var start = element.children().last().data('index');
         console.log('start', start);
         var callback = function(data){
+            var cap = element.find('.cap');
             $.each(data, function(i, expr){
                 // Add to data model
                 var exp = o.make_expr(expr);
@@ -83,7 +108,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 var card = exp.render_card().data('index', start + direction * (i+1)).click(function(){
                     o.select($(this).data('index'));
                 });
-                element.append(card);
+                cap.before(card);
             });
             fetching_lock[lock] = false;
         };
@@ -190,16 +215,18 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             });
             element.append(el);
         });
+        list.cap = $('<div class="cap">');
+        list.element = element.append(list.cap);
     };
 
-    var inner, current, next, prev;
+    var inner, current, next, prev, scrolling_elements, loupe, center;
     o.render = function(render_opts){
         render_opts = $.extend({hidden: false}, render_opts);
 
         var width = $(window).width();
 
         // Points on the screen immediately left and right of the center thumbnail
-        var center = {
+        center = {
             minus: Math.floor((width - opts.thumb_width) / 2),
             plus: Math.floor((width + opts.thumb_width) / 2)
         };
@@ -213,35 +240,36 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         inner.append(next).append(prev).append(current);
 
-        // The frame is the 'loupe' like border highlighting the current element
-        var frame = navigator_element.find('.frame');
-        if (!frame.length) frame = $('<div>').addClass('frame border selected')
-        frame.css('left', center.minus - opts.margin)
-            .css('width', opts.thumb_width)
+        // The loupe is the 'loupe' like border highlighting the current element
+        loupe = navigator_element.find('.loupe');
+        if (!loupe.length) loupe = $('<div>').addClass('loupe border selected')
+        loupe.css('width', opts.thumb_width)
             .css('height', opts.thumb_width)
-            .css('margin-top', -opts.margin);
+            .css('margin-top', -opts.margin)
+            .data('offset', center.minus - opts.margin);
 
-        inner.add(frame).drag('init', function(){
-            return inner.add(frame);
-        }).drag(function(e, dd){
-            $(this).css('left', dd.offsetX);
+        inner.drag(function(e, dd){
+            o.move(dd);
         }).drag('end', function(e, dd){
-            if (this === inner[0]) update_pos(dd.deltaX);
+            o.move_end(dd, true);
         }).on('mousewheel', function(e){
-            var delta = e.originalEvent.wheelDelta;
-            inner.add(frame).css('left', '+=' + delta);
-            update_pos(delta);
+            o.move(e.originalEvent);
+            o.move_end(e.originalEvent);
         });
+
+        scrolling_elements = inner.add(loupe);
 
         // Build the new navigator
         navigator_element.css('height', height)
             .css('font-size', opts.thumb_width/190 + 'em');
         if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
-        navigator_element.append(inner).append(frame);
+        navigator_element.append(inner).append(loupe);
 
         build([current_expr], current, 0, 1);
         build(next_list, next, 1, 1);
         build(prev_list, prev, -1, 1);
+
+        o.pos_set(0);
 
         // Update tags, etc in info line
         var info = navigator_element.find('.info');
