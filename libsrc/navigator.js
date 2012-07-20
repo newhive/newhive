@@ -25,12 +25,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     // private methods
     function animate_slide(steps){
-        var operator = steps > 0 ? "-=" : "+=";
-        inner.find('.current .element').addClass('rounded');
-        inner.animate(
-            {left: operator + ((opts.thumb_width + opts.margin * 2) * Math.abs(steps))},
-            {complete: o.render}
-        );
+        var offset = (opts.thumb_width + opts.margin * 2) * -steps;
+        o.pos_set(0, offset, true, o.render);
     };
 
     function build_search(query) {
@@ -46,14 +42,57 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     var pos = 0;
-    function update_pos(offset){
-        pos = pos + offset;
+    function clamp_pos(x){
+        var x_max = prev_list.length * expr_width - center.minus;
+        var x_min = center.minus - next_list.length * expr_width;
+
+        if (x_max < x_min) {
+            return x_max;
+        } else if (x > x_max){
+            return x_max;
+        } else if (x < x_min ){
+            return x_min;
+        } else {
+            return x;
+        }
+    };
+    o.pos_set = function(x, offset, animate, callback){
+        if (animate){
+            var new_inner_pos = clamp_pos(x + offset);
+            var deficit = x + offset - new_inner_pos;
+            inner.animate({'left': new_inner_pos}, {complete: callback});
+            loupe.animate({'left': x - deficit + loupe.data('offset')});
+        } else {
+            var clamped_x = clamp_pos(x);
+            inner.css({'left': clamped_x});
+            loupe.css({'left': clamped_x + loupe.data('offset')});
+        }
+        pos = clamped_x;
+    };
+    o.pos = function(){
+        return pos;
+    };
+
+    o.move = function(event){
+        if (event instanceof WheelEvent){
+            o.pos_set(event.wheelDelta + pos);
+        } else {
+            o.pos_set(event.offsetX);
+        }
+    };
+    o.move_end = function(event){
+        if (event instanceof WheelEvent){
+            delta = event.wheelDelta;
+        } else {
+            delta = event.deltaX;
+        }
         if (pos > (prev_list.length - opts.visible_count) * expr_width) {
             o.fetch_prev();
         } else if (-pos > (next_list.length - opts.visible_count) * expr_width) {
             o.fetch_next();
         };
     };
+
 
     // public methods
     var fetching_lock = {};
@@ -73,7 +112,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (fetching_lock[lock]) return;
         fetching_lock[lock] = true;
         var start = element.children().last().data('index');
-        console.log('start', start);
         var callback = function(data){
             $.each(data, function(i, expr){
                 // Add to data model
@@ -96,6 +134,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.select = function(offset){
         var previous_expr = current_expr;
         var left_offset = $(window).width();
+        animate_slide(offset);
         if (offset > 0){
             var towards = next_list;
             var away = prev_list;
@@ -111,18 +150,15 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             away.unshift(current_expr);
             current_expr = towards.shift();
         }
-        animate_slide(offset);
 
-        //content_element.attr('src', content_domain + current_expr.id);
         if (!current_expr.loading_started) current_expr.load(content_element);
         var frame = current_expr.frame
             .css({left: left_offset, 'z-index': 2})
             .load(current_expr.show);
-        //$('iframe.expr').not(frame).not(previous_expr.frame()).css('z-index', 0);
 
 
         function animate_complete(){
-            $('iframe.expr').not(frame).css({left: 9999});
+            $('iframe.expr').not(frame).css({left: -9999});
             frame.css('z-index', 1);
         };
         frame.animate({left: 0}, {complete: animate_complete});
@@ -133,11 +169,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         Hive.Menus.update_expr(current_expr.data());
 
-        //var callback = function(data){
-        //    $.each(data, function(i, expr){
-        //        towards.push(Hive.Navigator.Expr(expr));
-        //    });
-        //};
         o.cache_next();
 
         var final_expr = towards[towards.length - 1];
@@ -190,20 +221,22 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             });
             element.append(el);
         });
+        list.element = element;
     };
 
-    var inner, current, next, prev;
+    var inner, current, next, prev, scrolling_elements, loupe, center;
     o.render = function(render_opts){
         render_opts = $.extend({hidden: false}, render_opts);
 
         var width = $(window).width();
 
         // Points on the screen immediately left and right of the center thumbnail
-        var center = {
+        center = {
             minus: Math.floor((width - opts.thumb_width) / 2),
             plus: Math.floor((width + opts.thumb_width) / 2)
         };
 
+        //if (inner) o.pos_set(0);
         var old_inner = inner;
         inner = $('<div>').addClass('navigator_inner');
 
@@ -213,35 +246,36 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         inner.append(next).append(prev).append(current);
 
-        // The frame is the 'loupe' like border highlighting the current element
-        var frame = navigator_element.find('.frame');
-        if (!frame.length) frame = $('<div>').addClass('frame border selected')
-        frame.css('left', center.minus - opts.margin)
-            .css('width', opts.thumb_width)
+        // The loupe is the 'loupe' like border highlighting the current element
+        loupe = navigator_element.find('.loupe');
+        if (!loupe.length) loupe = $('<div>').addClass('loupe border selected')
+        loupe.css('width', opts.thumb_width)
             .css('height', opts.thumb_width)
-            .css('margin-top', -opts.margin);
+            .css('margin-top', -opts.margin)
+            .data('offset', center.minus - opts.margin);
 
-        inner.add(frame).drag('init', function(){
-            return inner.add(frame);
-        }).drag(function(e, dd){
-            $(this).css('left', dd.offsetX);
+        inner.drag(function(e, dd){
+            o.move(dd);
         }).drag('end', function(e, dd){
-            if (this === inner[0]) update_pos(dd.deltaX);
+            o.move_end(dd, true);
         }).on('mousewheel', function(e){
-            var delta = e.originalEvent.wheelDelta;
-            inner.add(frame).css('left', '+=' + delta);
-            update_pos(delta);
+            o.move(e.originalEvent);
+            o.move_end(e.originalEvent);
         });
+
+        scrolling_elements = inner.add(loupe);
 
         // Build the new navigator
         navigator_element.css('height', height)
             .css('font-size', opts.thumb_width/190 + 'em');
         if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
-        navigator_element.append(inner).append(frame);
+        navigator_element.append(inner).append(loupe);
 
         build([current_expr], current, 0, 1);
         build(next_list, next, 1, 1);
         build(prev_list, prev, -1, 1);
+
+        o.pos_set(0);
 
         // Update tags, etc in info line
         var info = navigator_element.find('.info');
@@ -259,7 +293,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var tag_html = [
             tag_list_html(o.current_expr().owner.name, {cls: 'name', prefix: '@'})
             , tag_list_html(expr_tags, {cls: 'expr'})
-            , tag_list_html(owner_tags, {cls: 'user'})
+            //, tag_list_html(owner_tags, {cls: 'user'})
             ].join(' ')
         info.find('.tags').html(tag_html)
             .find('.tag').click(function(){
@@ -325,7 +359,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.cache_next = function(){
-        for (i=0; i<3; i++) {
+        for (i=0; i<1; i++) {
             if ( next_list[i] && !next_list[i].loading_started){
                 setTimeout( function(){
                     //console.log('caching');
