@@ -259,7 +259,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var tag_html = [
             tag_list_html(o.current_expr().owner.name, {cls: 'name', prefix: '@'})
             , tag_list_html(expr_tags, {cls: 'expr'})
-            , tag_list_html(owner_tags, {cls: 'user'})
+            //, tag_list_html(owner_tags, {cls: 'user'})
             ].join(' ')
         info.find('.tags').html(tag_html)
             .find('.tag').click(function(){
