@@ -430,19 +430,26 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     // Populate navigator from scratch
-    o.populate_navigator = function(){
+    o.populate_navigator = function(callback){
+        if (typeof(callback) == "undefined") callback = noop;
         next_list = [];
         prev_list = [];
         if (updater) {
             updater.next(current_expr, o.visible_count(), function(data){
                 next_list = $.map(data, o.make_expr);
                 next_list.loaded = true;
-                if (prev_list.loaded) o.render().show();
+                if (prev_list.loaded) {
+                    o.render().show();
+                    callback();
+                }
             });
             updater.prev(current_expr, o.visible_count(), function(data){
                 prev_list = $.map(data, o.make_expr);
                 prev_list.loaded = true;
-                if (next_list.loaded) o.render().show();
+                if (next_list.loaded) {
+                    o.render().show();
+                    callback();
+                }
             });
         }
     };
@@ -580,11 +587,15 @@ Hive.Navigator.create = function(navigator, viewer){
     $(window).on('statechange', function(){ // Note: We are using statechange instead of popstate
         var state = History.getState(); // Note: We are using History.getState() instead of event.state
         console.log(state);
-        if (state.data.id != o.current_id()) {
-            o.select_by_id(state.data.id);
-        }
+        var select_expr = function(){
+            if (state.data.id != o.current_id()) {
+                o.select_by_id(state.data.id);
+            }
+        };
         if (state.data.context != o.context()){
-            o.populate_navigator();
+            o.populate_navigator(select_expr);
+        } else {
+            select_expr();
         }
     });
     window.addEventListener('message', function(m){
