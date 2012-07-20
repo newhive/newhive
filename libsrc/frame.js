@@ -25,6 +25,7 @@ Hive.Menus = (function(){
                     function(){ drawers.hide() } }, speed);
                 $('#owner_nav').animate({ right: -50, top: -50 }, speed);
                 $('#action_nav').animate({ right: -50 }, speed);
+                Hive.navigator.current_expr().frame.get(0).focus();
             },
             open_nav = function(){
                 drawers.stop().clearQueue().show();
@@ -126,6 +127,7 @@ Hive.Menus = (function(){
     // AJAXy diddling for all content in above menus
     o.update_expr = function(expr){
         Hive.expr = expr;
+        if(!o.navigator_menu.opened) Hive.navigator.current_expr().frame.get(0).focus();
         var set_class = function(o, b, c){ return o[b ? 'addClass' : 'removeClass'](c) };
 
         $('.expr_id').val(expr.id); // for delete dialog
