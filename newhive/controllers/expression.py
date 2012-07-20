@@ -104,6 +104,7 @@ class Expression(Application, PagingMixin):
 
         spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
         args = dfilter(args, ['sort', 'page', 'order', 'limit'])
+        args['viewer'] = request.requester
 
         default = (None, 'updated')
         pager, paging_attr = special_tags.get(tag, default) if spec else (self.expr_all, 'updated')
