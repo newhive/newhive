@@ -25,12 +25,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     // private methods
     function animate_slide(steps){
-        var operator = steps > 0 ? "-=" : "+=";
-        inner.find('.current .element').addClass('rounded');
-        inner.animate(
-            {left: operator + ((opts.thumb_width + opts.margin * 2) * Math.abs(steps))},
-            {complete: o.render}
-        );
+        var offset = (opts.thumb_width + opts.margin * 2) * -steps;
+        o.pos_set(0, offset, true, o.render);
     };
 
     function build_search(query) {
@@ -46,18 +42,37 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     var pos = 0;
-    o.pos_set = function(x){
-        if ((prev_list.length + next_list.length + 1) * expr_width < $(window).width()){
-            x = prev_list.length * expr_width - center.minus;
-        } else if (prev_list.cap.offset().left + x - pos > 0){
-            x = pos - prev_list.cap.offset().left;
-        } else if (next_list.cap.offset().left + x - pos < $(window).width() ){
-            x = pos + $(window).width() - next_list.cap.offset().left;
+    function clamp_pos(x){
+        var x_max = prev_list.length * expr_width - center.minus;
+        var x_min = center.minus - next_list.length * expr_width;
+
+        if (x_max < x_min) {
+            return x_max;
+        } else if (x > x_max){
+            return x_max;
+        } else if (x < x_min ){
+            return x_min;
+        } else {
+            return x;
         }
-        inner.css('left', x);
-        loupe.css('left', x + loupe.data('offset'));
-        pos = x;
     };
+    o.pos_set = function(x, offset, animate, callback){
+        if (animate){
+            var new_inner_pos = clamp_pos(x + offset);
+            var deficit = x + offset - new_inner_pos;
+            inner.animate({'left': new_inner_pos}, {complete: callback});
+            loupe.animate({'left': x - deficit + loupe.data('offset')});
+        } else {
+            var clamped_x = clamp_pos(x);
+            inner.css({'left': clamped_x});
+            loupe.css({'left': clamped_x + loupe.data('offset')});
+        }
+        pos = clamped_x;
+    };
+    o.pos = function(){
+        return pos;
+    };
+
     o.move = function(event){
         if (event instanceof WheelEvent){
             o.pos_set(event.wheelDelta + pos);
@@ -97,9 +112,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (fetching_lock[lock]) return;
         fetching_lock[lock] = true;
         var start = element.children().last().data('index');
-        console.log('start', start);
         var callback = function(data){
-            var cap = element.find('.cap');
             $.each(data, function(i, expr){
                 // Add to data model
                 var exp = o.make_expr(expr);
@@ -108,7 +121,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 var card = exp.render_card().data('index', start + direction * (i+1)).click(function(){
                     o.select($(this).data('index'));
                 });
-                cap.before(card);
+                element.append(card);
             });
             fetching_lock[lock] = false;
         };
@@ -121,6 +134,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.select = function(offset){
         var previous_expr = current_expr;
         var left_offset = $(window).width();
+        animate_slide(offset);
         if (offset > 0){
             var towards = next_list;
             var away = prev_list;
@@ -136,18 +150,15 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             away.unshift(current_expr);
             current_expr = towards.shift();
         }
-        animate_slide(offset);
 
-        //content_element.attr('src', content_domain + current_expr.id);
         if (!current_expr.loading_started) current_expr.load(content_element);
         var frame = current_expr.frame
             .css({left: left_offset, 'z-index': 2})
             .load(current_expr.show);
-        //$('iframe.expr').not(frame).not(previous_expr.frame()).css('z-index', 0);
 
 
         function animate_complete(){
-            $('iframe.expr').not(frame).css({left: 9999});
+            $('iframe.expr').not(frame).css({left: -9999});
             frame.css('z-index', 1);
         };
         frame.animate({left: 0}, {complete: animate_complete});
@@ -158,11 +169,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         Hive.Menus.update_expr(current_expr.data());
 
-        //var callback = function(data){
-        //    $.each(data, function(i, expr){
-        //        towards.push(Hive.Navigator.Expr(expr));
-        //    });
-        //};
         o.cache_next();
 
         var final_expr = towards[towards.length - 1];
@@ -215,8 +221,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             });
             element.append(el);
         });
-        list.cap = $('<div class="cap">');
-        list.element = element.append(list.cap);
+        list.element = element;
     };
 
     var inner, current, next, prev, scrolling_elements, loupe, center;
@@ -231,6 +236,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             plus: Math.floor((width + opts.thumb_width) / 2)
         };
 
+        //if (inner) o.pos_set(0);
         var old_inner = inner;
         inner = $('<div>').addClass('navigator_inner');
 
@@ -353,6 +359,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.cache_next = function(){
+        return;
         for (i=0; i<3; i++) {
             if ( next_list[i] && !next_list[i].loading_started){
                 setTimeout( function(){
