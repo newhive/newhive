@@ -162,7 +162,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             frame.css('z-index', 1);
         };
         frame.animate({left: 0}, {complete: animate_complete});
-        history_manager.pushState(current_expr.data(), current_expr.title, o.current_url());
+        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
 
         previous_expr.hide();
         current_expr.show();
@@ -391,12 +391,14 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     // Update url, push history state and repopulate navigator based on new context
     o.search = function(){
-        history_manager.pushState(current_expr.data(), current_expr.title, o.search_string());
-        populate_navigator();
+        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.search_string());
+        o.populate_navigator();
     };
 
     // Pick appropriate updater strategy based on context
+    var current_context;
     function change_context(str){
+        current_context = str;
         switch(str) {
             case "#Network":
                 if (!logged_in) {
@@ -417,6 +419,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.context = function(str) {
+        if (typeof(str) == "undefined") return current_context;
         set_context_box(str)
         o.search();
     };
@@ -427,7 +430,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     // Populate navigator from scratch
-    var populate_navigator = function(){
+    o.populate_navigator = function(){
         next_list = [];
         prev_list = [];
         if (updater) {
@@ -455,7 +458,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
         var query = URI(window.location.href).query(true);
         change_context(build_search(query));
-        populate_navigator();
+        o.populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
         navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
@@ -576,7 +579,13 @@ Hive.Navigator.create = function(navigator, viewer){
     $(window).resize(o.render);
     $(window).on('statechange', function(){ // Note: We are using statechange instead of popstate
         var state = History.getState(); // Note: We are using History.getState() instead of event.state
-        o.select_by_id(state.data._id);
+        console.log(state);
+        if (state.data.id != o.current_id()) {
+            o.select_by_id(state.data.id);
+        }
+        if (state.data.context != o.context()){
+            o.populate_navigator();
+        }
     });
     window.addEventListener('message', function(m){
         if(m.data == 'next') o.next();
