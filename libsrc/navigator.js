@@ -290,9 +290,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             owner_tags = $.grep(owner_tags, function(tag){ return $.inArray(tag, expr_tags) == -1 });
         };
 
+        var href = function(tag,opts){ return o.search_string(opts.prefix + tag); };
         var tag_html = [
-            tag_list_html(o.current_expr().owner.name, {cls: 'name', prefix: '@'})
-            , tag_list_html(expr_tags, {cls: 'expr'})
+            tag_list_html(o.current_expr().owner.name, {cls: 'name', prefix: '@', href: href})
+            , tag_list_html(expr_tags, {cls: 'expr', href: href})
             //, tag_list_html(owner_tags, {cls: 'user'})
             ].join(' ')
         info.find('.tags').html(tag_html)
@@ -379,8 +380,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     // returns url with querystring based on tag-styled string
     // e.g.: "@thenewhive #art" => "http://currenturl.com/path?user=thenewhive&tag=art"
-    o.search_string = function(){
-        var string = navigator_element.find('input').val();
+    o.search_string = function(string){
+        var string = string || navigator_element.find('input').val();
         var tags = (" " + string).match(/(.?)[a-z0-9]+/gi);
         tags = $.map(tags, function(el){
             return el.replace('@', 'user=').replace('#', 'tag=').replace(/^[^a-z]/, 'text=')
