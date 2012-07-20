@@ -298,6 +298,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         info.find('.tags').html(tag_html)
             .find('.tag').click(function(){
                 o.context($(this).html());
+                return false;
             });
 
 

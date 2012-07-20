@@ -307,6 +307,6 @@ var tag_list_html = function(tags, opts){
     opts = $.extend({prefix: '#', cls: '', join: ' ', href: function(tag){ return '#' + tag }}, opts);
     var tag_array = typeof(tags) == "string" ? [tags] : tags;
     return $.map(tag_array, function(tag) {
-        return "<a href=" + opts.href(tag) + "' class='tag " + opts.cls + "'>" + opts.prefix + tag + "</a>"
+        return "<a href='" + opts.href(tag) + "' class='tag " + opts.cls + "'>" + opts.prefix + tag + "</a>"
     }).join(opts.join);
 };
