@@ -27,7 +27,7 @@ class Expression(Application, PagingMixin):
         response.context.update({
              'title'     : 'Editing: ' + exp['title']
             ,'sites'     : request.requester.get('sites')
-            ,'exp'       : exp
+            ,'expr'      : exp
             ,'show_help' : show_help
             ,'editing'   : True
         })
@@ -40,7 +40,7 @@ class Expression(Application, PagingMixin):
         return self.serve_page(response, 'pages/edit.html')
 
     # destructively prepare state.Expr for client consumption
-    def expr_prepare(self, expr):
+    def expr_prepare(self, expr, viewer=None):
         owner = expr.owner
         owner_info = dfilter(owner, ['name', 'fullname', 'tags'])
         owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70), 'has_thumb': owner.has_thumb })
@@ -51,8 +51,23 @@ class Expression(Application, PagingMixin):
             k, v in expr.get('analytics', {}).iteritems() ])
         counts['Views'] = large_number(expr.views)
         counts['Comment'] = large_number(expr.comment_count)
-        dict.update(expr, { 'id': expr.id, 'thumb': expr.get_thumb(), 'owner': owner_info,
-            'counts': counts, 'url': expr.url })
+
+        if expr.auth_required(viewer):
+            for key in ['password', 'thumb', 'thumb_file_id']: del expr[key]
+            expr.update(
+                 tags = ''
+                ,title = '[Private]'
+                ,tags_index = []
+            )
+
+        dict.update(expr, {
+            'id': expr.id,
+            'thumb': expr.get_thumb(),
+            'owner': owner_info,
+            'counts': counts,
+            'url': expr.url,
+            'auth_required': expr.auth_required()
+        })
 
         return expr
 
@@ -72,14 +87,14 @@ class Expression(Application, PagingMixin):
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
         if is_owner: owner.unflag('expr_new')
 
-        self.expr_prepare(resource)
-        user = request.requester
+        self.expr_prepare(resource, response.user)
+        expr_url = ( abs_url(domain = config.content_domain)
+            + ('empty' if resource.get('auth_required') else resource.id) )
         response.context.update(
-             user_client = { 'name': user.get('name'), 'id': user.id, 'thumb': user.get_thumb(70) }
-            ,edit = abs_url(secure = True) + 'edit/' + resource.id
+             edit = abs_url(secure = True) + 'edit/' + resource.id
             ,title = resource.get('title', False)
-            ,exp = resource
-            ,expr_url = abs_url(domain = config.content_domain) + resource.id
+            ,expr = resource
+            ,expr_url = expr_url
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
             ,content_domain = abs_url(domain = config.content_domain)
             )
@@ -126,7 +141,7 @@ class Expression(Application, PagingMixin):
 
             exprs = self.db.Expr.page(spec, **args)
 
-        return self.serve_json(response, map(self.expr_prepare, exprs))
+        return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))
 
     # Renders the actual content of an expression.
     # This output is untrusted and must never be served from config.server_name.
@@ -135,25 +150,20 @@ class Expression(Application, PagingMixin):
         expr = self.db.Expr.fetch(expr_id)
         if not expr: return self.serve_404(request, response)
 
-        # TODO: determine if owner is requesting, by matching
-        # against auto-generated secret, set is_owner
-
-        #auth_required = (resource.get('auth') == 'password' and resource.get('password')
-        #    and request.form.get('password') != resource.get('password')
-        #    and request.requester.id != resource['owner'])
-
-        if expr.get('auth') == 'password' and not expr.cmp_password(request.form.get('password')):
+        if (expr.get('auth') == 'password') and not expr.cmp_password(request.form.get('password')):
             return self.serve_forbidden(request)
 
-        #resource.increment_counter('views')
-        #if is_owner: resource.increment_counter('owner_views')
+        response.context.update(html = expr_to_html(expr), expr = expr)
+        return self.serve_page(response, 'pages/expr.html')
 
-        response.context.update( html = expr_to_html(expr), exp = expr )
-        return self.serve_page(response, 'pages/expression.html')
+    def empty(self, request, response): return self.serve_page(response, 'pages/expr_empty.html')
 
     def feed(self, request, response):
         expr = self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
+        if (expr.auth_required(request.requester) and not
+            expr.cmp_password(request.form.get('password', ''))): return []
+
         items = map(lambda item: dict(item,
                 initiator_thumb=item.initiator.get_thumb(70),
                 created_friendly=friendly_date(item['created'])

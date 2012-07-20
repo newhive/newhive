@@ -26,7 +26,7 @@ class Application(object):
         response = Response()
         # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
         response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : original_url }
-        request.requester = auth.authenticate_request(self.db, request, response)
+        response.user = request.requester = auth.authenticate_request(self.db, request, response)
 
         self.process_facebook(request)
         response.context.update({ 'new_fb_connect': False })
@@ -55,9 +55,8 @@ class Application(object):
                 fb_client.user = request.requester
                 request.requester.fb_client = fb_client
                 if not request.requester.id: self.show_dialog(response, '#dia_sign_in_or_join')
-
         response.context.update(facebook_authentication_url=self.fb_client.authorize_url(request.base_url))
-        response.user = request.requester
+
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
 
@@ -89,13 +88,16 @@ class Application(object):
              home_url = response.user.get_url()
             ,feed_url = response.user.get_url(path='profile/activity')
             ,user = response.user
+            ,user_client = { 'name': response.user.get('name'), 'id': response.user.id,
+                'thumb': response.user.get_thumb(70) }
             ,admin = response.user.get('name') in config.admins
             ,beta_tester = config.debug_mode or response.user.get('name') in config.beta_testers
             ,create = abs_url(secure = True) + 'edit'
             ,server_url = abs_url()
             ,secure_server = abs_url(secure = True)
             ,server_name = config.server_name
-            ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
+            ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k])
+                for k in config.site_pages])
             ,debug = config.debug_mode
             ,use_ga = config.live_server
             ,ui = ui

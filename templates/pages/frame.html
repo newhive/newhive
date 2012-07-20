@@ -3,7 +3,7 @@
 {% block meta %}
  <meta property="og:title" content='{{ title |e }}' />
  <meta property="og:type" content="newhive:expression" />
- <meta property="og:image" content='{{ exp.thumb |e }}' />
+ <meta property="og:image" content='{{ expr.thumb |e }}' />
  <meta property="fb:admins" content="1007003" />
  <meta property="description" contents="{{ title |e }}, an expression by {{owner.fullname}}" />
 {% endblock %}
@@ -14,7 +14,7 @@
   {% endfor %}
   <script type='text/javascript'>
       // TODO: temporary, should probably hide this better
-      var expr = {{exp | json}};
+      var expr = {{ expr | json}};
       var user = {{ user_client | json }};
       var content_domain = {{ content_domain | json }};
   </script>
@@ -51,28 +51,28 @@
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
-        <div class='count'>{{ exp.views | large_number }}</div>
+        <div class='count'></div>
       </div>
     </div>
     <div id='star_btn' class='btn_box star hoverable' data-title-off='show some love' data-title-on='stop loving'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
-        <div class='count{{ ' zero' if not exp.star_count }}'>{{ exp.star_count | large_number }}</div>
+        <div class='count'></div>
       </div>
     </div>
     <div id='broadcast_btn' class='btn_box broadcast hoverable' data-title-off='broadcast to listeners' data-title-on='stop broadcasting'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
-        <div class='count{{ ' zero' if not exp.broadcast_count }}'>{{ exp.broadcast_count | large_number }}</div>
+        <div class='count'></div>
       </div>
     </div>
     <div id='comment_btn' class='btn_box comment hoverable'>
       <div class='nav_btn'>
         <div class='edge'></div>
         <div class='icon'></div>
-        <div class='count{{ ' zero' if not exp.comment_count }}'>{{ exp.comment_count | large_number }}</div>
+        <div class='count'></div>
       </div>
     </div>
     <div class='btn_box delete hoverable'>
@@ -85,11 +85,11 @@
 
   <div id='expr_menu' class='menu'>
     <div class='expr_card big_card'>
-      <img src='{{ exp.get_thumb(190) }}' class='thumb'>
+      <img src='{{ expr.get_thumb(190) }}' class='thumb'>
       <div class='card_text'>
-        <div class='title'>{{ exp.title | e }}</div>
-        <div class='tags'>{% for tag in exp.tags_index %}
-          <a href='{{ exp.url }}?tag={{ tag }}'>#{{ tag }}</a>
+        <div class='title'>{{ expr.title | e }}</div>
+        <div class='tags'>{% for tag in expr.tags_index %}
+          <a href='{{ expr.url }}?tag={{ tag }}'>#{{ tag }}</a>
         {% endfor %}</div>
         <div class='byline timestamp'>Jul 1</div>
       </div>
@@ -97,7 +97,7 @@
     <div class='items'>
       <b>Loading...</b>
       {# TODO: create content for javascript-less clients #}
-      {#% for feed in exp.feed_page(viewer=user) %}
+      {#% for feed in expr.feed_page(viewer=user) %}
         {% include "partials/feed.html" %}
       {% endfor %#}
     </div>
@@ -117,7 +117,7 @@
     <div class='items'><b>Loading...</b></div>
   </div>
 
-  <div id='comment_menu' class='menu action_menu {{ 'on' if exp.comment_count else 'off' }}'>
+  <div id='comment_menu' class='menu action_menu'>
     <span class='header'>Comment</span>
     <div class='info off'>Leave a comment to begin</div>
     <div class='info on'>Join the conversation around this expression</div>
@@ -174,7 +174,7 @@
     <div class='btns'>
       <form method='POST' action='{{ secure_server }}'>
         <input type='hidden' name='action' value='expr_delete'>
-        <input type='hidden' name='id' value='{{ exp.id }}' class='expr_id'>
+        <input type='hidden' name='id' value='{{ expr.id }}' class='expr_id'>
         <input type='submit' value='Yes' class='btn'> &nbsp;
         <input type='button' value='No' class='no_btn btn'>
       </form>
