@@ -25,7 +25,6 @@ Hive.password_dialog = function(){
         dia.close();
         $.post(server_url + 'expr_info/' + Hive.expr.id, { password: pass_field.val() }, function(expr){
             $.extend(Hive.expr, expr);
-            console.log(expr);
             Hive.Menus.update_expr(Hive.expr);
         }, 'json');
     });
