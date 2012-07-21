@@ -501,11 +501,15 @@ Hive.Navigator.Expr = function(data, opts){
     };
 
     o.show = function(){
-        o.frame[0].contentWindow.postMessage('show', '*');
+        var f = o.frame;
+        f.attr('name', 'expr');
+        f[0].contentWindow.postMessage('show', '*');
     };
 
     o.hide = function(){
-        o.frame[0].contentWindow.postMessage('hide', '*');
+        var f = o.frame;
+        f.attr('name', '');
+        f[0].contentWindow.postMessage('hide', '*');
     };
 
     o.render_card = function(){
