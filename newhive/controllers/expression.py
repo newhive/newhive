@@ -40,7 +40,7 @@ class Expression(Application, PagingMixin):
         return self.serve_page(response, 'pages/edit.html')
 
     # destructively prepare state.Expr for client consumption
-    def expr_prepare(self, expr, viewer=None):
+    def expr_prepare(self, expr, viewer=None, password=None):
         owner = expr.owner
         owner_info = dfilter(owner, ['name', 'fullname', 'tags'])
         owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70), 'has_thumb': owner.has_thumb })
@@ -52,13 +52,17 @@ class Expression(Application, PagingMixin):
         counts['Views'] = large_number(expr.views)
         counts['Comment'] = large_number(expr.comment_count)
 
-        if expr.auth_required(viewer):
+        # check if auth is required so we can then strip password
+        auth_required = expr.auth_required()
+        if expr.auth_required(viewer, password):
             for key in ['password', 'thumb', 'thumb_file_id']: del expr[key]
-            expr.update(
-                 tags = ''
-                ,title = '[Private]'
-                ,tags_index = []
-            )
+            dict.update(expr, {
+                 'tags': ''
+                ,'background': {}
+                ,'apps': []
+                ,'title': '[Private]'
+                ,'tags_index': []
+            })
 
         dict.update(expr, {
             'id': expr.id,
@@ -66,7 +70,7 @@ class Expression(Application, PagingMixin):
             'owner': owner_info,
             'counts': counts,
             'url': expr.url,
-            'auth_required': expr.auth_required()
+            'auth_required': auth_required
         })
 
         return expr
@@ -75,7 +79,7 @@ class Expression(Application, PagingMixin):
     # Must only output trusted HTML
     def frame(self, request, response, parts):
         if request.is_xhr:
-            return self.info(request, response)
+            return self.infos(request, response)
 
         path = '/'.join(parts)
         owner = response.context['owner']
@@ -87,9 +91,9 @@ class Expression(Application, PagingMixin):
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
         if is_owner: owner.unflag('expr_new')
 
-        self.expr_prepare(resource, response.user)
         expr_url = ( abs_url(domain = config.content_domain)
-            + ('empty' if resource.get('auth_required') else resource.id) )
+            + ('empty' if resource.auth_required() else resource.id) )
+        self.expr_prepare(resource, response.user)
         response.context.update(
              edit = abs_url(secure = True) + 'edit/' + resource.id
             ,title = resource.get('title', False)
@@ -106,7 +110,7 @@ class Expression(Application, PagingMixin):
 
         return self.serve_page(response, 'pages/' + template + '.html')
 
-    def info(self, request, response):
+    def infos(self, request, response):
         args = request.args.copy().to_dict(flat=True)
         current_id = args.get('page')
         tag = args.get('tag')
@@ -144,6 +148,12 @@ class Expression(Application, PagingMixin):
 
         return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))
 
+    def info(self, request, response):
+        expr = self.db.Expr.fetch(lget(request.path_parts, 1))
+        if not expr: return self.serve_404(request, response)
+        return self.serve_json( response, self.expr_prepare(
+            expr, viewer=response.user, password=request.form.get('password')) )
+
     # Renders the actual content of an expression.
     # This output is untrusted and must never be served from config.server_name.
     def render(self, request, response):
@@ -151,7 +161,7 @@ class Expression(Application, PagingMixin):
         expr = self.db.Expr.fetch(expr_id)
         if not expr: return self.serve_404(request, response)
 
-        if (expr.get('auth') == 'password') and not expr.cmp_password(request.form.get('password')):
+        if expr.auth_required() and not expr.cmp_password(request.form.get('password')):
             return self.serve_forbidden(request)
 
         response.context.update(html = expr_to_html(expr), expr = expr)
@@ -162,8 +172,8 @@ class Expression(Application, PagingMixin):
     def feed(self, request, response):
         expr = self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
-        if (expr.auth_required(request.requester) and not
-            expr.cmp_password(request.form.get('password', ''))): return []
+        if expr.auth_required(request.requester, password=request.form.get('password')):
+            return self.serve_json(response, [])
 
         items = map(lambda item: dict(item,
                 initiator_thumb=item.initiator.get_thumb(70),

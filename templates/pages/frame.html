@@ -130,9 +130,18 @@
     </form>
   </div>
 
+  <div id='dia_password' class='dialog mandatory center border selected rounded'>
+    <form method='POST' action='{{ expr_url }}' target='expr' id='password_form'>
+      <h3>This expression needs a password<br>to be experienced</h3><br>
+      <input type='password' name='password' class='password'>
+      <input type='submit' class='submit btn rounded black' value='Experience'>
+    </form>
+  </div>
+
   <script>
     Hive.Menus.create();
     {% if error %} Hive.menus.login_menu.open(); {% endif %}
+    Hive.load_expr(expr);
   </script>
   {{ body }}
 {% endblock %}
@@ -168,7 +177,6 @@
 
 {% block dialogs %}
   {{ super() }}
-  {% include 'dialogs/password.html' %}
   <div id='dia_delete' class='newdialog center'>
     <h3>Are you sure you want to delete this expression?</h3>
     <div class='btns'>

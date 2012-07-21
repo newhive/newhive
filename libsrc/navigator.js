@@ -167,7 +167,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         previous_expr.hide();
         current_expr.show();
 
-        Hive.Menus.update_expr(current_expr.data());
+        Hive.load_expr(current_expr.data());
 
         o.cache_next();
 

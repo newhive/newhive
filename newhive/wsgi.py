@@ -129,7 +129,7 @@ site_pages = {
     ,'search'              : controllers['community'].index
     ,'tag'                 : controllers['community'].tag
     ,'random'              : controllers['expression'].random
-    ,'expression'          : controllers['expression'].info
+    ,'expr_info'           : controllers['expression'].info
     ,'expr_feed'           : controllers['expression'].feed
     ,'edit'                : controllers['expression'].edit_frame
     ,'user'                : controllers['user'].info

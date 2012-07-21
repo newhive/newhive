@@ -785,9 +785,10 @@ class Expr(HasSocial):
         return 0
 
     def cmp_password(self, v):
-        if not isinstance(v, (str, unicode)): return False
         password = self.get('password', '')
-        if password == '' or password == v: return True
+        if password == '': return True
+        if not isinstance(v, (str, unicode)): v = ''
+        if password == v: return True
         return crypt(v.encode('UTF8'), password) == password
 
     def set_password(self, v):
@@ -798,10 +799,11 @@ class Expr(HasSocial):
         upd = { 'password': self['password'], 'auth': 'password' if v else 'public' }
         self.update(**upd)
 
-    def auth_required(self, user=None):
-        if (    (self.get('auth') == 'password')
-            and (self.get('password', '') != '')
-            and (not user or user.id != self.get('owner')) ): return True
+    def auth_required(self, user=None, password=None):
+        if (self.get('auth') == 'password'):
+            if self.cmp_password(password): return False
+            if user and user.id == self.get('owner'): return False
+            return True
         return False
 
     @property

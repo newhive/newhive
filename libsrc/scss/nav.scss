@@ -1,6 +1,9 @@
 @import "common";
 
 $nav_size: 40px;
+// nav takes 3 layers. For invisible nav handles, the navigation,
+// and their submenus, (4, 5, 6) respectively
+$nav_layer: 4; 
 
 @media print { .nav { display: none; } }
 
@@ -37,7 +40,7 @@ img.thumb { background-color: $color_grey_medium; }
 
 .nav {
     margin: 7px 8px;
-    z-index: 4;
+    z-index: $nav_layer + 1;
     position: fixed;
     background-color: white;
     @include border-radius(5px);
@@ -76,7 +79,7 @@ img.thumb { background-color: $color_grey_medium; }
 
 .menu_handle {
     position: fixed;
-    z-index: 3;
+    z-index: $nav_layer;
 }
 
 
@@ -132,7 +135,7 @@ img.thumb { background-color: $color_grey_medium; }
     right: 0;
     top: 60px;
     position: fixed;
-    z-index: 4;
+    z-index: $nav_layer + 1;
 
     .edit_spacer { height: 46px; }
     .btn_box {
@@ -297,7 +300,7 @@ body.frame{
     display: none;
     border: 0px solid $color_unselected;
     background-color: white;
-    z-index: 5;
+    z-index: $nav_layer + 2;
     position: fixed;
     overflow: auto;
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
@@ -527,4 +530,8 @@ body.frame{
         float: right;
         color: $color_grey_medium;
     }
+}
+
+#dia_password {
+    padding: 20px;
 }
