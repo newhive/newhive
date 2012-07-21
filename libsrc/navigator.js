@@ -490,7 +490,7 @@ Hive.Navigator.Expr = function(data, opts){
         o.loading_started = true;
         o.frame = $('<iframe>')
             .attr('src', content_domain + o.id)
-            .css('left', 5000)
+            .css('left', -9999)
             .addClass('expr')
             .on('load', on_load(callback));
         content_element.append(o.frame);
