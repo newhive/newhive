@@ -13,7 +13,15 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     var height = opts.thumb_width + 2 * opts.margin + navigator_element.height();
     var expr_width = opts.thumb_width + 2 * opts.margin;
     if (!opts.visible_count) opts.visible_count = Math.round($(window).width() / expr_width * 2);
-    var history_manager = window.History;
+    var history_manager = function(){
+        var o = window.History;
+        _pushState = o.pushState;
+        o.pushState = function(data, title, url){
+            _pushState(data, title, url);
+            _gaq.push(['_trackPageView'])
+        };
+        return o;
+    }();
 
     // private variables
     var content_element,
@@ -491,7 +499,7 @@ Hive.Navigator.Expr = function(data, opts){
         var src = content_domain + (o.auth_required ? 'empty' : o.id);
         o.frame = $('<iframe>')
             .attr('src', src)
-            .css('left', 5000)
+            .css('left', -9999)
             .addClass('expr')
             .on('load', on_load(callback));
         content_element.append(o.frame);
