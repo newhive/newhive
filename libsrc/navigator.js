@@ -13,7 +13,15 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     var height = opts.thumb_width + 2 * opts.margin + navigator_element.height();
     var expr_width = opts.thumb_width + 2 * opts.margin;
     if (!opts.visible_count) opts.visible_count = Math.round($(window).width() / expr_width * 2);
-    var history_manager = window.History;
+    var history_manager = function(){
+        var o = window.History;
+        _pushState = o.pushState;
+        o.pushState = function(data, title, url){
+            _pushState(data, title, url);
+            _gaq.push(['_trackPageView'])
+        };
+        return o;
+    }();
 
     // private variables
     var content_element,
