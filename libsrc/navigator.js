@@ -164,7 +164,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             .css({left: left_offset, 'z-index': 2})
             .load(current_expr.show);
 
-
         function animate_complete(){
             $('iframe.expr').not(frame).css({left: -9999});
             frame.css('z-index', 1);
@@ -184,6 +183,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             fetch_function(opts.visible_count);
         }
 
+        // Garbage collect old frames
+        $.each(away.slice(3), function(i, expr){ expr.unload(); });
     };
 
     o.prev = function(){
@@ -505,6 +506,14 @@ Hive.Navigator.Expr = function(data, opts){
             .addClass('expr')
             .on('load', on_load(callback));
         content_element.append(o.frame);
+    };
+    o.unload = function(){
+        if (o.frame) {
+            o.frame.remove();
+            delete o.frame;
+            delete o.loading_started;
+            delete o.loaded;
+        };
     };
 
     o.data = function(){
