@@ -82,7 +82,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.move = function(event){
-        if (event instanceof WheelEvent){
+        if (typeof event == "number"){
+            o.pos_set(event + pos);
+        } else if (event instanceof WheelEvent){
             o.pos_set(event.wheelDelta + pos);
         } else {
             o.pos_set(event.offsetX);
@@ -101,6 +103,24 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
     };
 
+    var scroll_interval, scroll_speed;
+    o.scroll_speed = function(){
+        return scroll_speed / 30;
+    };
+    o.scroll = function(speed){
+        var interval_function = function(){
+            o.move(o.scroll_speed());
+        };
+        if (speed == 0) {
+            clearInterval(scroll_interval);
+            scroll_interval = false;
+        } else {
+            scroll_speed = speed;
+            if (!scroll_interval) {
+                scroll_interval = setInterval(interval_function, 30);
+            }
+        }
+    };
 
     // public methods
     var fetching_lock = {};
@@ -318,6 +338,18 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (old_inner) {
             old_inner.animate({opactiy: 0}, 5, function(){ old_inner.remove();});
         }
+
+        navigator_element.on('mousemove', function(e){
+            if (e.clientX < 300) {
+                o.scroll(300 - e.clientX);
+            } else if (e.clientX > width - 300) {
+                o.scroll((width - 300) - e.clientX);
+            } else {
+                o.scroll(0);
+            }
+        }).on('mouseleave', function(){
+            o.scroll(0);
+        });
 
         return o;
     };
