@@ -51,8 +51,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     var pos = 0;
     function clamp_pos(x){
-        var x_max = prev_list.length * expr_width - center.minus;
-        var x_min = center.minus - next_list.length * expr_width;
+        var x_max = prev_list.length * expr_width - center.minus + 2 * opts.margin;
+        var x_min = center.minus - next_list.length * expr_width - 2 * opts.margin;
 
         if (x_max < x_min) {
             return x_max;
@@ -94,9 +94,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         } else {
             delta = event.deltaX;
         }
-        if (pos > (prev_list.length - opts.visible_count) * expr_width) {
+        if (delta > 0 && pos > (prev_list.length - opts.visible_count) * expr_width) {
             o.fetch_prev();
-        } else if (-pos > (next_list.length - opts.visible_count) * expr_width) {
+        } else if (delta < 0 && -pos > (next_list.length - opts.visible_count) * expr_width) {
             o.fetch_next();
         };
     };
@@ -232,7 +232,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         list.element = element;
     };
 
-    var inner, current, next, prev, scrolling_elements, loupe, center;
+    var inner, current, next, prev, scrolling_elements, loupe, center, info;
     o.render = function(render_opts){
         render_opts = $.extend({hidden: false}, render_opts);
 
@@ -286,7 +286,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         o.pos_set(0);
 
         // Update tags, etc in info line
-        var info = navigator_element.find('.info');
+        info = navigator_element.find('.info');
 
         var query = URI(window.location.href).query(true);
         info.find('form').submit(o.search);
@@ -324,12 +324,14 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.show = function(){
         navigator_element.stop().clearQueue();
         navigator_element.animate({bottom: 0});
+        info.find('input').focus();
         return o;
     };
 
     o.hide = function(){
         navigator_element.stop().clearQueue();
         navigator_element.animate({bottom: -height-2*opts.margin});
+        info.find('input').blur();
         return o;
     };
 

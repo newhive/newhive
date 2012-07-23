@@ -54,7 +54,7 @@ class Expression(Application, PagingMixin):
         # check if auth is required so we can then strip password
         auth_required = expr.auth_required()
         if expr.auth_required(viewer, password):
-            for key in ['password', 'thumb', 'thumb_file_id']: del expr[key]
+            for key in ['password', 'thumb', 'thumb_file_id']: expr.pop(key, None)
             dict.update(expr, {
                  'tags': ''
                 ,'background': {}
@@ -120,6 +120,7 @@ class Expression(Application, PagingMixin):
                 , 'Network': (self.home_feed, None)
                 }
 
+        # Use key_map to map between keys used in querystring and those of database
         spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
         args = dfilter(args, ['sort', 'page', 'order', 'limit'])
         args['viewer'] = request.requester
@@ -141,8 +142,6 @@ class Expression(Application, PagingMixin):
             items_and_args = pager(request, response, args)
             exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
         else:
-            # Use key_map to map between keys used in querystring and those of database
-
             exprs = self.db.Expr.page(spec, **args)
 
         return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))

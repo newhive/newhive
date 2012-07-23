@@ -76,14 +76,17 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None):
+    def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None, filter=None):
         if page and not is_mongo_key(page):
             page = float(page)
         if type(spec) == dict:
             if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': page }
-            res = self.search(spec, sort=[(sort, order)], limit=limit)
+            res = self.search(spec, sort=[(sort, order)])
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
+                if filter:
+                    res = ifilter(filter, res)
+                res = islice(res, limit)
                 res = Page(list(res))
                 res.next = res[-1][sort] if len(res) == limit else None
             return res
@@ -367,7 +370,8 @@ class User(HasSocial):
 
     def can_view(self, expr):
         return expr and ( (expr.get('auth', 'public') == 'public') or
-            (self.id == expr['owner']) or (expr.id in self.starred_expr_ids) )
+                (self.id == expr['owner']) or
+                (expr.id in self.starred_expr_ids and not expr.auth_required()) )
 
     def feed_profile(self, spec={}, limit=40, **args):
         def query_feed(q):
@@ -669,8 +673,7 @@ class Expr(HasSocial):
 
         def page(self, spec, viewer=None, **opts):
             if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-            es = super(Expr.Collection, self).page(spec, **opts)
-            es[:] = filter(lambda e: viewer.can_view(e), es)
+            es = super(Expr.Collection, self).page(spec, filter= viewer.can_view, **opts)
             return es
 
         def random(self):
