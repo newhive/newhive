@@ -166,8 +166,6 @@ site_pages = {
     ,'robots.txt'          : app.robots
     ,'500'                 : newhive.utils.exception_test
     ,'password_recovery'   : controllers['user'].edit
-    ,'google98ed17c7e7aa091e.html' : lambda request, response: app.serve_html(response,
-        'google-site-verification: google98ed17c7e7aa091e.html')
 }
 
 dialogs = dict(
@@ -182,6 +180,8 @@ def handle(request): # HANDLER
        response for thenewhive.com must not contain unsanitized user content.
        Accepts werkzeug.Request, returns werkzeug.Response"""
 
+    if request.path == 'google98ed17c7e7aa091e.html' : return app.serve_html(response,
+        'google-site-verification: google98ed17c7e7aa091e.html')
     request, response = app.pre_process(request)
     request.owner = None
     request.is_owner = False
