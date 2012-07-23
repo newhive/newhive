@@ -37,8 +37,13 @@
   <div id='user_nav' class='nav'
     ><a href='{{ server_url }}'><div id='logo' class='hoverable icon left_edge'></div></a
     {% if user.logged_in %}
-      ><div id='username' class='text center text_btn hoverable name'
-        >{{ user.name }}<div class='count rounded{{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
+      {# ><div id='username' class='text center text_btn hoverable name'
+        >{{ user.name }}<div class='count rounded{{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div #}
+      ><div id='user_btn' class='hoverable center text_btn'
+        ><img class='user_thumb {{ 'none' if not user.has_thumb }}' src='{{ user.get_thumb(70) }}'
+        ><div class='text name'>{{ user.name }}<div class='count rounded
+          {{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
+      ></div
     {% endif %}
     ><div id='create_btn' class='center hoverable right_edge'
       ><a href='{{ create }}' onclick='return require_login()'
@@ -82,7 +87,7 @@
       <div class='bar'></div>
       <a href='{{ feed_url }}'><div class='menu_item'>Activity</div></a>
       <div id='user_activity_feed' class='items'>
-        {% for feed in user.feed_profile(viewer=user, limit=6) %}
+        {% for feed in user.feed_profile(viewer=user, limit=15) %}
           {% include "partials/feed.html" %}
         {% endfor %}
       </div>
@@ -99,7 +104,7 @@
       {% endif %}
       {% if owner %}
         ><div id='owner_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %} text_btn'
-          ><img class='owner_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
+          ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
           ><div class='text name'>by <span class='owner_name'>{{ owner.name }}</span></div
         ></div
         {% set nav_begin = False %}
@@ -137,11 +142,7 @@
         {#<div class='menu_item message'>Send message <div class='icon'></div></div>#}
         <div class='bar'></div>
         <div class='menu_item'>Activity</div>
-        <div class='items'>
-          {% for feed in owner.feed_profile(viewer=user, limit=6) %}
-            {% include "partials/feed.html" %}
-          {% endfor %}
-        </div>
+        <div class='items'><b>Loading...</b></div>
       </div>
     {% endif %}
 
@@ -208,6 +209,30 @@
     </div>
   {% endif %}
 
+  {% if not expr %}
+    <script>
+      (function(){
+          hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
+              $('#search_box').get(0).focus(); } });
+          if(logged_in) hover_menu( '#user_btn', '#user_menu', { offset_y: 8 });
+  
+          if(!logged_in) {
+              var login_menu = hover_menu( '#login_btn', '#login_menu', {
+                      open: function() { $('#username').get(0).focus(); },
+                      close_delay: 1000,
+                      offset_y: 8,
+                      layout_x: 'right',
+                  } );
+              {% if error %} login_menu.open().sticky = true; {% endif %}
+          }
+          {% if owner %}
+              hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right'});
+          {% endif %}
+          hover_menu('#share_btn', '#share_menu', { offset_y: 8 });
+      })();
+    </script>
+  {% endif %}
+
   {% block body %}
   {% endblock body %}
   <div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>
@@ -229,7 +254,6 @@
 
   <div id='dialogs'>
     {% block dialogs %}
-
       {% if user.logged_in %}
           {% include 'dialogs/referral.html' %}
           {% include 'dialogs/facebook_connect.html' %}

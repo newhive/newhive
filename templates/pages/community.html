@@ -143,31 +143,6 @@
   </div>
 {% endblock header %}
 
-{% block body %}
-  <script>
-    (function(){
-        hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
-            $('#search_box').get(0).focus(); } });
-        if(logged_in) hover_menu( '#username', '#user_menu', { offset_y: 8 });
-
-        if(!logged_in) {
-            var login_menu = hover_menu( '#login_btn', '#login_menu', {
-                    open: function() { $('#username').get(0).focus(); },
-                    close_delay: 1000,
-                    offset_y: 8,
-                    layout_x: 'right',
-                } );
-            {% if error %} login_menu.open().sticky = true; {% endif %}
-        }
-        {% if owner %}
-            hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right'});
-        {% endif %}
-        hover_menu('#share_btn', '#share_menu', { offset_y: 8 });
-    })();
-  </script>
-{% endblock %}
-
-
 {% macro left_tab(p1, label) %}
   <div class='tab_label {{ 'current' if p1 == path1 else 'hoverable' }}'
     ><a href='/{{ p1 }}'>{{ label }}</a></div>

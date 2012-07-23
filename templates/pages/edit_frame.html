@@ -1,0 +1,72 @@
+{% extends "main.html" %}
+
+{% block head %}
+{% endblock head %}
+
+{% block body %}
+
+{% include 'dialogs/editor_browsers.html' %}
+
+<div class='nav'>
+  <div class='nav_icon smpad center'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div>
+  <div class='nav_icon center smpad'><img id='btn_redo' title='redo' class='hoverable' src='{{ 'skin/1/redo.png'|asset_url }}'></div>
+  <div class='nav_icon smpad'></div>
+  <div class='nav_icon smpad'></div>
+  <div class='nav_icon center'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div>
+  <div class='nav_icon smpad'></div>
+  <div class='nav_icon center smpad hoverable medbold btn' title="Editor Help" id='btn_help'>?</div>
+  <script>
+   (function() { var b = $('#btn_help');
+     b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to: b, click_close: true } ) });
+     {% if show_help %}$('#btn_help').click(){% endif %} })();
+  </script>
+  <div class='nav_icon smpad'></div>
+  <div class='nav_icon'></div>
+  <div id='btn_save' class='btn medbold nav_icon hoverable center pad'>
+    Save
+    <img class='scale' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
+  </div>
+</div>
+
+<div id='menu_save' class='menu top'>
+  <div class='medbold'>Title</div>
+  <textarea id='title'>{{ expr.title }}</textarea>
+  <div class='spacer'></div>
+
+  <div class='medbold'>URL</div>
+  <div class=''>{{ server_name }}/{{ user.name }}</div>
+  <input id='url' type='text' value='{{ expr.name|e }}'>
+  <div class='spacer'></div>
+
+  <div class='medbold'>Tags</div>
+  <input id='tags_input' type='text' value='{{ expr.tags|e }}'>
+  <div class='spacer'></div>
+  <div class='spacer'></div>
+
+  <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle btn rounded'>
+    <span>Private</span>
+    <img src='{{ 'skin/1/drop_arrow.png'|asset_url }}'>
+  </div>
+  <div id='menu_privacy' class='menu medbold' style='width : 125px;'>
+    <div val='password' class='menu_item'>Private</div>
+    <div val='public' class='menu_item'>Public</div>
+  </div>
+
+  <div id='save_submit' style='float : right; padding : 5px' class='btn black rounded'>Save</div>
+
+  <div id='password_ui' style='display : none'>
+    <br><br><br>
+    <b>Optional password</b><br>
+    <input type='text' id='password' placeholder='{{ '****' if expr.password }}'>
+  </div>
+  <div class='spacer'></div>
+
+  <div id='btn_thumbnail'>
+    <div id='btn_thumbnail_text' class='hoverable'>Choose thumbnail <img class='scale' src='{{ 'skin/1/drop_arrow.png'|asset_url }}'></div>
+    <img id="current_thumb" width="70px" height="70px" src="{{expr.thumb}}">
+  </div>
+</div>
+
+{#<iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>#}
+
+{% endblock %}

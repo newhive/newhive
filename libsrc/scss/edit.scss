@@ -1,5 +1,9 @@
 @import "common";
 
+#happs { position: absolute; left: 0; top: 0; z-index: 0; }
+
+#edit_nav { right: 0; top: 0; }
+
 .ehapp, .ehapp > * { position : absolute; }
 .ehapp .shield { left : 0px; top : 0px; z-index: 2; width : 100%; height : 100%; }
 .select_border {
@@ -52,11 +56,12 @@
 
 #app_btns .active {
     background-color: $color_grey_medium;
+    right: 0; top: 60px;
 }
 .insert_btn { margin-right : 15px; cursor : default; }
 .btn { display : inline-block; padding : 5px; cursor : default; }
 .menu label { font-weight: normal; font-size: 15px; }
-#menu_save { top : 43px; right : 0px; padding : 10px; }
+#menu_save { top : 43px; right : 0px; padding : 10px; width: 220px; }
 #menu_save textarea { height : 2.5em; }
 #menu_save input, #menu_save textarea { width : 200px; }
 #menu_privacy .selected { display : none; }
