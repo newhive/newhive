@@ -622,7 +622,8 @@ Hive.Navigator.NetworkUpdater = function(){
             if (current_expr === last) return;
             var query = {limit: count, order: -direction};
             if (current_expr.feed) {
-                query.page = current_expr.feed[0].created;
+                var index = seek > 0 ? feed.length : 0;
+                query.page = current_expr.feed[index].created;
             } else {
                 query.expr = current_expr[o.paging_attr]
             }
