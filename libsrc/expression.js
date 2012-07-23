@@ -91,10 +91,11 @@ $(function() {
         document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
     });
 
-    var go_next = function(){ top.postMessage('next', parent_url); };
-    var go_prev = function(){ top.postMessage('prev', parent_url); };
+    var go_next = function(){ top.postMessage('next', Hive.parent_url); };
+    var go_prev = function(){ top.postMessage('prev', Hive.parent_url); };
 
     $(document.body).on('keydown', function(e){
+        // TODO: prevent piling up of messages on key repeat
         if(e.keyCode == 32) // space
             if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) go_next();
         if(e.keyCode == 39) // right arrow
@@ -103,10 +104,11 @@ $(function() {
             if(document.body.scrollLeft == 0) go_prev();
     });
 
-    $('#bg').on('click', function(e){
-        if(e.clientX > $(window).width() * .666) go_next();
-        if(e.clientX < $(window).width() * .333) go_prev();
-    });
+    // ends up being annoying a lot of times
+    //$('#bg').on('click', function(e){
+    //    if(e.clientX > $(window).width() * .666) go_next();
+    //    if(e.clientX < $(window).width() * .333) go_prev();
+    //});
 
 
     // TODO: listen for hide / show messages to unload / load <iframe>s, <object>s, and <embed>s
@@ -117,7 +119,7 @@ $(function() {
 
     // TODO: when click on right or left third, move to next or prev expr
     //$(window).click(function(e){
-    //    top.postMessage(e.clientX + ',' + e.clientY, parent_url);
+    //    top.postMessage(e.clientX + ',' + e.clientY, Hive.parent_url);
     //});
 
 
@@ -134,7 +136,8 @@ $(function() {
     //}
 
     Hive.show_expr = function(){
-        $.each(expr.apps, function(i, app){
+        if(!Hive.expr) return;
+        $.each(Hive.expr.apps, function(i, app){
             if (app.type == "hive.html") {
                 $('#app' + (app.id || app.z)).html(app.content);
             }

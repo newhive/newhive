@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <script src='{{ asset_bundle('expression.js')[0] }}'></script>
+  <script>
+Hive = { user: {{ user_client | json }}, parent_url: {{ url | json }},
+    expr: false };
+  </script>
+{% endblock %}
+
+{% block body_classes %}{{ super() }} expression{% endblock %}
+
+{% block main %}
+{% endblock %}

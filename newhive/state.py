@@ -785,17 +785,26 @@ class Expr(HasSocial):
         return 0
 
     def cmp_password(self, v):
-        if not isinstance(v, (str, unicode)): return False
         password = self.get('password', '')
-        if password == '' or password == v: return True
-        return crypt(v.encode('UTF8'), self['password']) == self['password']
+        if password == '': return True
+        if not isinstance(v, (str, unicode)): v = ''
+        if password == v: return True
+        return crypt(v.encode('UTF8'), password) == password
 
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
         self['password'] = crypt(v.encode('UTF8'), salt)
     def update_password(self, v):
         self.set_password(v)
-        self.update(password=self['password'])
+        upd = { 'password': self['password'], 'auth': 'password' if v else 'public' }
+        self.update(**upd)
+
+    def auth_required(self, user=None, password=None):
+        if (self.get('auth') == 'password'):
+            if self.cmp_password(password): return False
+            if user and user.id == self.get('owner'): return False
+            return True
+        return False
 
     @property
     def url(self): return abs_url() + self['owner_name'] + '/' + self['name']

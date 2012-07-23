@@ -129,7 +129,7 @@ site_pages = {
     ,'search'              : controllers['community'].index
     ,'tag'                 : controllers['community'].tag
     ,'random'              : controllers['expression'].random
-    ,'expression'          : controllers['expression'].info
+    ,'expr_info'           : controllers['expression'].info
     ,'expr_feed'           : controllers['expression'].feed
     ,'edit'                : controllers['expression'].edit_frame
     ,'user'                : controllers['user'].info
@@ -169,7 +169,8 @@ def handle(request): # HANDLER
     #      user content handler end editor, serves UNSAFE sandboxed content      #
     ##############################################################################
     if request.domain == config.content_domain:
-        if parts[0] == 'edit': return controllers['expression'].edit
+        if parts[0] == 'edit': return controllers['expression'].edit(request, response)
+        elif parts[0] == 'empty': return controllers['expression'].empty(request, response)
         return controllers['expression'].render(request, response)
 
 

@@ -175,7 +175,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         previous_expr.hide();
         current_expr.show();
 
-        Hive.Menus.update_expr(current_expr.data());
+        Hive.load_expr(current_expr.data());
 
         o.cache_next();
 
@@ -496,8 +496,9 @@ Hive.Navigator.Expr = function(data, opts){
     o.load = function(content_element, callback){
         if (o.frame) return;
         o.loading_started = true;
+        var src = content_domain + (o.auth_required ? 'empty' : o.id);
         o.frame = $('<iframe>')
-            .attr('src', content_domain + o.id)
+            .attr('src', src)
             .css('left', -9999)
             .addClass('expr')
             .on('load', on_load(callback));

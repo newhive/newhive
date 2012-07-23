@@ -3,8 +3,8 @@
 {% block head %}
   <script src='{{ asset_bundle('expression.js')[0] }}'></script>
   <script>
-      parent_url = {{ exp.url | json }};
-      expr = {{ exp | json }};
+Hive = { user: {{ user_client | json }}, parent_url: {{ expr.url | json }},
+    expr: {{ expr | json }} };
   </script>
 {% endblock %}
 
