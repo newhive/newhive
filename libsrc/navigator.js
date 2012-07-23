@@ -94,9 +94,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         } else {
             delta = event.deltaX;
         }
-        if (pos > (prev_list.length - opts.visible_count) * expr_width) {
+        if (delta > 0 && pos > (prev_list.length - opts.visible_count) * expr_width) {
             o.fetch_prev();
-        } else if (-pos > (next_list.length - opts.visible_count) * expr_width) {
+        } else if (delta < 0 && -pos > (next_list.length - opts.visible_count) * expr_width) {
             o.fetch_next();
         };
     };
