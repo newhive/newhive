@@ -37,7 +37,6 @@ img.thumb { background-color: $color_grey_medium; }
     &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
 }
 
-
 .nav {
     margin: 7px 8px;
     z-index: $nav_layer + 1;
@@ -91,6 +90,10 @@ img.thumb { background-color: $color_grey_medium; }
     }
 }
 
+#search_box {
+    width: 223px;
+}
+
 .menu_handle {
     position: fixed;
     z-index: $nav_layer;
@@ -117,6 +120,10 @@ img.thumb { background-color: $color_grey_medium; }
     background-image: asset_url('skin/1/logo.png');
     &.active { background-image: asset_url('skin/1/logo-hover.png'); }
     padding-right: 2px;
+}
+#logotype {
+    width: 230px * 40 / 50; height: $nav_size;
+    background-image: asset_url('skin/1/logotype_beta.png');
 }
 
 #create_btn { .text { padding-left: 6px; } }
