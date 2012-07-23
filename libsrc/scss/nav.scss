@@ -47,15 +47,18 @@ img.thumb { background-color: $color_grey_medium; }
     @include box-shadow(rgba(black, .3) 3px 3px 10px);
     cursor: pointer;
 
-    > * { display: inline-block; vertical-align: top; }
-    div { display: inline-block; }
-
-    .active, .active * {
+    .black_active.active, .black_active.active * {
         background-color: black;
-        color: white !important;
+        color: white;
     }
 
+    .pad { padding: 5px; }
+    .smpad { padding: 2px; }
+
     .center *, .center { vertical-align: middle; }
+
+    &.horiz > * { display: inline-block; }
+    &.horiz div { display: inline-block; }
 
     .text {
         font-weight: bold;
@@ -66,15 +69,21 @@ img.thumb { background-color: $color_grey_medium; }
     }
     .active .text { color: white; }
     .text_btn {
-        padding: 0 6px;
+        padding: 0 8px;
         cursor: pointer;
+    }
+
+    &.horiz {
+        > :first-child, > :first-child .icon { @include border-radius(5px 0 0 5px); }
+        > :last-child, > :last-child .icon { @include border-radius(0 5px 5px 0); }
+    }
+    &.vert {
+        > :first-child, > :first-child .icon { @include border-radius(5px 5px 0 0); }
+        > :last-child, > :last-child .icon { @include border-radius(0 0 5px 5px); }
     }
 
     .name { color: black; }
     .active.name, .active .name { color: white; }
-
-    .left_edge { @include border-radius(5px 0 0 5px); }
-    .right_edge { @include border-radius(0 5px 5px 0); }
 
     .user_thumb {
         width: $nav_size - 6;

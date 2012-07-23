@@ -95,6 +95,7 @@ class Expression(Application, PagingMixin):
         self.expr_prepare(resource, response.user)
         response.context.update(
              edit = abs_url(secure = True) + 'edit/' + resource.id
+            ,expr_frame = True
             ,title = resource.get('title', False)
             ,expr = resource
             ,expr_url = expr_url

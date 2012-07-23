@@ -34,22 +34,24 @@
 
 {% block main %}
   <div id='user_nav_handle' class='menu_handle'></div>
-  <div id='user_nav' class='nav'
-    ><a href='{{ server_url }}'><div id='logo' class='hoverable icon left_edge'></div></a
+  <div id='user_nav' class='nav horiz'
+    ><a href='{{ server_url }}'><div id='logo' class='hoverable icon black_active'></div></a
     {% if user.logged_in %}
       {# ><div id='username' class='text center text_btn hoverable name'
         >{{ user.name }}<div class='count rounded{{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div #}
-      ><div id='user_btn' class='hoverable center text_btn'
+      ><div id='user_btn' class='hoverable center text_btn black_active'
         ><img class='user_thumb {{ 'none' if not user.has_thumb }}' src='{{ user.get_thumb(70) }}'
         ><div class='text name'>{{ user.name }}<div class='count rounded
           {{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
       ></div
     {% endif %}
-    ><div id='create_btn' class='center hoverable right_edge'
-      ><a href='{{ create }}' onclick='return require_login()'
-        ><div class='text'>Create</div
-        ><div id='create_icon' class='icon right_edge'></div
-      ></a></div
+    {% if not editing %}
+      ><div id='create_btn' class='center hoverable black_active'
+        ><a href='{{ create }}' onclick='return require_login()'
+          ><div class='text'>Create</div
+          ><div id='create_icon' class='icon'></div
+        ></a></div
+    {% endif %}
   ></div>
 
   <div id='hive_menu' class='menu'>
@@ -96,21 +98,18 @@
 
   {% if not editing %}
     <div id='owner_nav_handle' class='menu_handle'></div>
-    <div id='owner_nav' class='nav'
-      {% set nav_begin = True %}
+    <div id='owner_nav' class='nav horiz'
       {% if not user.logged_in %}
-        ><div class='center'><div id='login_btn' class='text center hoverable text_btn left_edge'>Log In</div></div
-        {% set nav_begin = False %}
+        ><div class='center'><div id='login_btn' class='text center hoverable text_btn black_active'>Log In</div></div
       {% endif %}
       {% if owner %}
-        ><div id='owner_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %} text_btn'
+        ><div id='owner_btn' class='hoverable center text_btn black_active'
           ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
           ><div class='text name'>by <span class='owner_name'>{{ owner.name }}</span></div
         ></div
-        {% set nav_begin = False %}
       {% endif %}
-      ><div id='share_btn' class='hoverable center{% if nav_begin %} rounded{% else %} right_edge{% endif %}'
-        ><div id='share_icon' class='icon{% if nav_begin %} left_edge{% endif %}'></div
+      ><div id='share_btn' class='hoverable center black_active'
+        ><div id='share_icon' class='icon'></div
         ><div class='text'>Share</div
       ></div
     ></div>
@@ -209,7 +208,7 @@
     </div>
   {% endif %}
 
-  {% if not expr %}
+  {% if not expr_frame %}
     <script>
       (function(){
           hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
@@ -228,7 +227,7 @@
           {% if owner %}
               hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right'});
           {% endif %}
-          hover_menu('#share_btn', '#share_menu', { offset_y: 8 });
+          if($('#share_btn').length) hover_menu('#share_btn', '#share_menu', { offset_y: 8 });
       })();
     </script>
   {% endif %}

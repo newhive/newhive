@@ -29,21 +29,18 @@
 
 {% block body %}
 
-<div id='edit_nav' class='nav'>
- <div class='nav_icon smpad center'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div>
- <div class='nav_icon center smpad'><img id='btn_redo' title='redo' class='hoverable' src='{{ 'skin/1/redo.png'|asset_url }}'></div>
- <div class='nav_icon smpad'></div>
- <div class='nav_icon smpad'></div>
- <div class='nav_icon center'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div>
- <div class='nav_icon smpad'></div>
- <div class='nav_icon center smpad hoverable medbold btn' title="Editor Help" id='btn_help'>?</div>
- <div class='nav_icon smpad'></div>
- <div class='nav_icon'></div>
-  <div id='btn_save' class='btn medbold nav_icon hoverable center pad'>
-    Save
-    <img class='scale' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
-  </div>
-</div>
+<div id='edit_nav' class='nav horiz'
+ ><div class='center pad'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div
+ ><div class='center'><img id='btn_redo' title='redo' class='hoverable' src='{{ 'skin/1/redo.png'|asset_url }}'></div
+ ><div class='pad'></div
+ ><div class='center pad'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div
+ ><div class='smpad'></div
+ {#><div class='center hoverable text text_btn black_active' title="Editor Help" id='btn_help'>?</div#}
+ ><div id='btn_save' class='text text_btn hoverable center pad black_active'>
+   Save
+   <img src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
+ </div
+></div>
 <script>
   (function() { var b = $('#btn_help');
       b.click(function() { exprDialog('{{ site_pages['editor-help'] }}',
@@ -91,13 +88,13 @@
   </div>
 </div>
 
-<div id='app_btns' class='nav'
- ><div><img id='insert_text'  class='hoverable nav_icon' src='{{ 'skin/1/text.png'|asset_url }}'></div
- ><div><img id='insert_image' class='hoverable nav_icon' src='{{ 'skin/1/images.png'|asset_url }}'</div
- ><div><img id='insert_audio' class='hoverable nav_icon' src='{{ 'skin/1/audio.png'|asset_url }}'</div
- ><div><img id='insert_embed' class='hoverable nav_icon' src='{{ 'skin/1/embed.png'|asset_url }}'</div
- ><div><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'</div
- ><div><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'></div
+<div id='app_btns' class='nav vert'
+ ><div id='insert_text'  class='icon hoverable'></div
+ ><div id='insert_image' class='icon hoverable'></div
+ ><div id='insert_audio' class='icon hoverable'></div
+ ><div id='insert_embed' class='icon hoverable'></div
+ ><div id='insert_shape' class='icon hoverable'></div
+ ><div id='insert_file'  class='icon hoverable'></div
 ></div> 
 
 <div id='menu_text' class='menu medbold'>
@@ -300,7 +297,7 @@ blah blah
  ></div>
 </div>
 
-<div id='dia_edit_bg' class='dialog border selected' style='padding : 20px'>
+<div id='dia_edit_bg' class='dialog border selected'>
  <h2>Edit Background</h2>
  <div id='edit_bg_image'>
   <div id='bg_preview' class='border'><img id='bg_preview_img'></div>
