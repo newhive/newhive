@@ -121,7 +121,7 @@ class Collection(object):
                 if items.has_key(i): res.append(items[i])
             return res
 
-    def count(self, spec): return self.search(spec).count()
+    def count(self, spec={}): return self.search(spec).count()
 
     # self.new can be overridden to return custom object types
     def new(self, d): return self.entity(self, d)
