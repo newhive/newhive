@@ -605,7 +605,7 @@ hover_menu = function(handle, drawer, options) {
         }).on('blur', function(){
             o.sticky = false;
             o.delayed_close();
-        });
+        }).on('focus', o.cancel_close);
         drawer.mousedown(function(){ setTimeout(o.cancel_close, 1) });
     }
 

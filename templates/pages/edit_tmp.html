@@ -1,14 +1,8 @@
-{% extends "minimal.html" %}
+{% extends "main.html" %}
 
 {% block head %}
   {% for item in asset_bundle('edit.css') %}
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
-  {% endfor %}
-  {% for item in asset_bundle('app.css') %}
-    <link rel='stylesheet' type='text/css' href='{{ item }}'>
-  {% endfor %}
-  {% for item in asset_bundle('app.js') %}
-    <script src='{{ item }}'></script>
   {% endfor %}
   {% for item in asset_bundle('google_closure.js') %}
     <script src='{{ item }}'></script>
@@ -18,19 +12,12 @@
   {% endfor %}
   <script>
     Hive.Exp = {{ expr | json }}; // current expression from server
-    var logged_in = {{ user.logged_in|json }}, server_name = '{{ server_name }}',
-        secure_server = '{{ secure_server }}', server_url = '{{ server_url }}',
-        debug_mode = {{ debug|json }},
-        dialog_to_show = {{ dialog_to_show|json }},
-        new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
-    ;
-    window.addEventListener('message', function(m){
-        console.log(m);
-    }, false);
   </script>
 {% endblock head %}
 
 {% block body %}
+
+{% include 'dialogs/editor_browsers.html' %}
 
 <div id='edit_nav' class='nav horiz'
  ><div class='center pad'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div
