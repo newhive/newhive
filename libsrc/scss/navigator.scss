@@ -13,9 +13,14 @@
     z-index: 4;
     .info {
         margin: $margin 0;
+        padding-left: 5px;
         height: 45px;
         .search {
             width: 20%;
+            padding: 3px;
+            font-weight: bold;
+            font-size: 17px;
+            margin-top: 4px;
         }
         .tags_wrapper {
             max-width: 70%;
@@ -28,13 +33,25 @@
         }
         .tag {
             font-weight: bold;
-            font-size: 15px;
-            padding: 3px 6px;
-            margin: 9px 3px;
+            font-size: 17px;
+            padding: 5px 8px;
+            margin: 6px 3px;
             display: inline-block;
             cursor: pointer;
-            &.name { background: $color_pink; }
-            &.expr { background: $color_selected; }
+            &.name {
+                background: $color_highlight;
+                &:hover {
+                    background: $color_blue;
+                    color: $color_white;
+                }
+            }
+            &.expr {
+                background: $color_selected;
+                &:hover {
+                    background: $color_bright_red;
+                    color: $color_white;
+                }
+            }
             &.user { background: $color_bright_yellow; }
         }
     }
