@@ -348,7 +348,7 @@ body.frame{
 
 #login_menu {
     width: 190px; padding : 10px;
-    input[type=text], #login_menu input[type=password] { width: 170px; }
+    input[type=text], input[type=password] { width: 170px; }
     .password_recovery {
         font-weight: normal;
         font-size: 12px;
