@@ -180,9 +180,10 @@ def handle(request): # HANDLER
        response for thenewhive.com must not contain unsanitized user content.
        Accepts werkzeug.Request, returns werkzeug.Response"""
 
+    request, response = app.pre_process(request)
+    print request.path
     if request.path == 'google98ed17c7e7aa091e.html' : return app.serve_html(response,
         'google-site-verification: google98ed17c7e7aa091e.html')
-    request, response = app.pre_process(request)
     request.owner = None
     request.is_owner = False
     parts = request.path_parts = request.path.split('/')
