@@ -109,7 +109,32 @@ Hive.Menus = (function(){
 
         $('#comment_form').submit(o.post_comment);
 
-        $('.menu_item.message, .menu_item.embed').click(function(){showDialog('#dia_share')});
+        // email and embed menus
+        $(function(){
+            $('.menu_item.message').click(function(){showDialog('#dia_share')});
+            var dia = $('#dia_share');
+            dia.find('form').submit(function(e){
+                var submit = dia.find('input[type=submit]');
+                if (submit.hasClass('inactive')) return false;
+                submit.addClass('inactive');
+                var callback = function(){
+                    submit.removeClass('inactive');
+                    dia.find('#email_to').val('');
+                    dia.children().hide();
+                    var tmp = $('<h2>Your message has been sent</h2>').appendTo(dia);
+                    setTimeout(function(){
+                        dia.data('dialog').close();
+                        dia.children().show();
+                        tmp.remove();
+                    }, 1500);
+                };
+                asyncSubmit('#dia_share form', callback, {url: window.location.href});
+                _gaq.push(['_trackEvent', 'share', 'email']);
+                return false;
+            });
+
+            $('.menu_item.embed').click(function(){showDialog('#dia_embed')});
+        });
 
         var del_dialog;
         $('.delete_btn').click(function(){ del_dialog = showDialog('#dia_delete'); });

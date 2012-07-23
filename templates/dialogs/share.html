@@ -1,11 +1,8 @@
 {% set zero_count_string = "" %}
 <div id='dia_share' class='newdialog' >
     <h2>Email this expression:</h2>
-      <form id='mail_form' action='{{ secure_server }}' method='POST'>
-          <input type='hidden' name='forward' value='{{ url|e }}'/>
-          <input type='hidden' name='id' value='{{ exp.id if exp }}'/>
+      <form id='mail_form' action='' method='POST'>
           <input type='hidden' name='action' value='mail_them'/>
-          <input type='hidden' name='subject' value='{{ user.fullname|e }} has sent you an expression'/>
           <div class="line">
               <div class='medbold label align'>Email(s) </div>
               <input id='email_to' type='text' size='35' name='to'/>
@@ -16,7 +13,7 @@
           </div>
           <div class="line">
               <input id='send_copy' type='checkbox' name='send_copy' checked><label for='send_copy'> Send me a copy</label>
-              <input id='email_send' type='submit' class='btn black rounded' value='Send' onclick="_gaq.push(['_trackEvent', 'share', 'email']);">
+              <input id='email_send' type='submit' class='btn black rounded' value='Send' >
           </div>
       </form>
 </div>
