@@ -137,7 +137,7 @@ class Application(object):
     def serve_forbidden(self, request):
         response = Response()
         response.status_code = 403
-        return self.serve_text(response, 'That action is only available to logged in users.')
+        return self.serve_text(response, 'Sorry, not going to do that. Perhaps you are not logged in, or not using https?')
 
     def redirect(self, response, location, permanent=False):
         response.location = location

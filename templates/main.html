@@ -54,19 +54,36 @@
     {% endif %}
   ></div>
 
-  <div id='hive_menu' class='menu'>
-    {% if user.logged_in %}
-      <div id='hive_btns' class='btns'
-        ><a href='{{ server_url }}'><div class='menu_item default'>My Network</div></a
-        ><a href='{{ server_url }}/home/expressions'><div class='menu_item'>Featured</div></a
-        ><a href='{{ server_url }}/home/people'><div class='menu_item'>People</div></a
-      ></div>
-    {% endif %}
-    <a href='{{ server_url }}random'><div class='random_btn icon hoverable rounded' title="View Random Expression"></div></a>
-    <form method='GET' action='{{ server_url }}search' name='search_form'>
-      <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
-      <div class='hoverable icon scale submit' title='Submit search' onclick='document.forms.search_form.submit()'></div>
-    </form>
+  <div id='hive_menu'>
+    <div class='menu find'>
+      <a href='{{ server_url }}random'><div class='random_btn icon hoverable rounded' title="View Random Expression"></div></a>
+      <form method='GET' action='{{ server_url }}search' name='search_form'>
+        <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
+        <div class='hoverable icon scale submit' title='Submit search' onclick='document.forms.search_form.submit()'></div>
+      </form>
+    </div><br>
+
+    <div class='menu links'
+      {% if user.logged_in %}
+        ><a href='{{ server_url }}'><div class='menu_item default primary'>My Network</div></a
+      {% endif %}
+      ><a href='{{ server_url }}home/expressions'><div class='menu_item primary'>Featured expressions</div></a
+      ><a href='{{ server_url }}home/people'><div class='menu_item primary'>People</div></a
+      ><a href='{{ server_url }}home/page'><div class='menu_item'>About New Hive</div></a
+      {% if user.logged_in %}
+        ><div class='menu_item'>Invite Friends</div
+        {% if user.has_facebook %}
+          ><div class='menu_item' id='fb_invite_menu_item'>Invite Facebook friends</div
+          ><div class='menu_item' id='fb_listen_menu_item'>Find Facebook friends</div
+        {% endif %}
+        ><a href='{{ secure_server }}settings'><div class='menu_item'>Settings</div></a
+        ><form id='logout_form' action='{{ secure_server }}' method='POST'
+          ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
+          ><input name='action' value='logout' type='hidden'
+          ><input type='hidden' name='url' value='{{ url }}'
+        ></form
+      {% endif %}
+    ></div>
   </div>
 
   {% if user.logged_in %}
@@ -77,15 +94,6 @@
           <a href='{{ expr.url }}'><img src='{{ expr.thumb }}' class='thumb'></a>
         {%- endfor %}
       </div>
-      <div id='user_btns' class='btns'
-        ><div class='menu_item'>Invite friends!</div
-        ><div class='menu_item'>Settings</div
-        ><form id='logout_form' action='{{ secure_server }}' method='POST'
-          ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
-          ><input name='action' value='logout' type='hidden'
-          ><input type='hidden' name='url' value='{{ url }}'
-        ></form
-      ></div>
       <div class='bar'></div>
       <a href='{{ feed_url }}'><div class='menu_item'>Activity</div></a>
       <div id='user_activity_feed' class='items'>
@@ -100,7 +108,7 @@
     <div id='owner_nav_handle' class='menu_handle'></div>
     <div id='owner_nav' class='nav horiz'
       {% if not user.logged_in %}
-        ><div class='center'><div id='login_btn' class='text center hoverable text_btn black_active'>Log In</div></div
+        ><div id='login_btn' class='text center hoverable text_btn black_active'>Log In</div
       {% endif %}
       {% if owner %}
         ><div id='owner_btn' class='hoverable center text_btn black_active'
@@ -108,10 +116,12 @@
           ><div class='text name'><span>by </span><span class='owner_name'>{{ owner.name }}</span></div
         ></div
       {% endif %}
-      ><div id='share_btn' class='hoverable center black_active'
-        ><div id='share_icon' class='icon'></div
-        ><div class='text'>Share</div
-      ></div
+      {% if community or expr %}
+        ><div id='share_btn' class='hoverable center black_active'
+          ><div id='share_icon' class='icon'></div
+          ><div class='text'>Share</div
+        ></div
+      {% endif %}
     ></div>
 
     {% if not user.logged_in %}

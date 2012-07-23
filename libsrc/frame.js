@@ -68,7 +68,30 @@ Hive.Menus = (function(){
 
         hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
             $('#search_box').get(0).focus(); }, group: o.nav_menu } );
-        if(logged_in) hover_menu( '#user_btn', '#user_menu', { offset_y: 8, group: o.nav_menu } );
+
+        if(logged_in){
+            hover_menu( '#user_btn', '#user_menu', { offset_y: 8, group: o.nav_menu, open: function(){
+                var div = $('#user_btn .count');
+                if(!div.hasClass('zero')){
+                    div.addClass('zero');
+                    logAction('notifications_open');
+                }
+            } } );
+            $('#fb_invite_menu_item').click(function(e){
+                _gaq.push(['_trackEvent', 'fb_connect', 'open_invite_dialog', 'user_menu']);
+                sendRequestViaMultiFriendSelector();
+            });
+            $('#fb_connect_menu_item').click(function(e){
+                _gaq.push(['_trackEvent', 'fb_connect', 'open_connect_dialog', 'user_menu']);
+                showDialog('#dia_facebook_connect');
+            });
+            $('#fb_listen_menu_item').click(function(e){
+                _gaq.push(['_trackEvent', 'fb_connect', 'open_listen_dialog', 'user_menu']);
+                e.stopPropagation();
+                $(this).addClass('menu_hover');
+                loadDialogPost('facebook_listen');
+            });
+        }
 
         if(!logged_in) {
             o.login_menu = hover_menu( '#login_btn', '#login_menu', {
@@ -84,6 +107,7 @@ Hive.Menus = (function(){
             close: function(){ $('#action_nav').show() } };
         hover_menu('#owner_btn', '#owner_menu', $.extend({ offset_y: 8, layout_x: 'right',
             group: nav_menu }, swap_action_nav));
+
         hover_menu('#share_btn', '#share_menu', $.extend({ offset_y: 8,
             group: nav_menu }, swap_action_nav));
 
@@ -349,3 +373,19 @@ var tag_list_html = function(tags, opts){
         return "<a href='" + opts.href(tag, opts) + "' class='tag " + opts.cls + "'>" + opts.prefix + tag + "</a>"
     }).join(opts.join);
 };
+
+function sendRequestViaMultiFriendSelector() {
+  function requestCallback(response) {
+    $('#dia_referral .btn_dialog_close').click();
+    if (response){
+      _gaq.push(['_trackEvent', 'fb_connect', 'invite_friends', undefined, response.to.length]);
+      showDialog('#dia_sent_invites_thanks');
+      $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
+    }
+  }
+  FB.ui({method: 'apprequests'
+    , message: 'Join me on The New Hive'
+    , title: 'Invite Friends to Join The New Hive'
+    , filters: ['app_non_users']
+  }, requestCallback);
+}

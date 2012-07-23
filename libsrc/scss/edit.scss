@@ -65,7 +65,7 @@
     .active { background-color: $color_grey_medium; }
     .insert_btn { cursor: default; }
     img { width: 50px; }
-    .icon { width: 50px; height: 37px; display: block; }
+    .icon { width: 67px; height: 50px; display: block; }
 
     #insert_text   { &.active { background-image: asset_url('skin/1/text-hover.png');   } background-image: asset_url('skin/1/text.png');   }
     #insert_image  { &.active { background-image: asset_url('skin/1/images-hover.png'); } background-image: asset_url('skin/1/images.png'); }

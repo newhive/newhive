@@ -62,6 +62,7 @@ class Community(Application, PagingMixin):
             ,path = res_path
             ,path1 = '/'.join(path[0:2])
             ,args = args
+            ,community = True
         ))
         response.context.update({
             'cards': content

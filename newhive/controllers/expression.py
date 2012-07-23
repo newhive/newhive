@@ -9,7 +9,7 @@ class Expression(Application, PagingMixin):
     def edit_frame(self, request, response):
         expr_id = lget(request.path_parts, 1)
         if not expr_id:
-            expr = dfilter(request.args, ['domain', 'name', 'tags'])
+            expr = self.db.Expr.new(dfilter(request.args, ['domain', 'name', 'tags']))
             expr['title'] = 'Untitled'
             expr['auth'] = 'public'
             self.db.ActionLog.create(request.requester, "new_expression_edit")
@@ -24,7 +24,7 @@ class Expression(Application, PagingMixin):
 
         response.context.update({
              'title'     : 'Editing: ' + expr.get('title')
-            ,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
+            #,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
             ,'expr'      : expr
             #,'show_help' : show_help
             ,'editing'   : True

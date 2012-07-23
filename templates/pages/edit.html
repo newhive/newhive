@@ -25,7 +25,37 @@
         new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
     ;
     window.addEventListener('message', function(m){
+        var on_response = function(ret) {
+            Hive.upload_finish();
+            if(typeof(ret) != 'object')
+                alert("Sorry, something is broken :(. Please send us feedback");
+            if(ret.error == 'overwrite') {
+                $('#expr_name').html(expr.name);
+                showDialog('#dia_overwrite');
+                $('#save_submit').removeClass('disabled');
+            }
+            else if(ret.location) {
+                //Hive.del_draft();
+                window.location = ret.location;
+            }
+        }
+
+        var on_error = function(ret) {
+            Hive.upload_finish();
+            if (ret.status == 403){
+                relogin(function(){ $('#btn_save').click(); });
+            }
+            $('#save_submit').removeClass('disabled');
+        }
+
         console.log(m);
+        $.ajax({
+            type : "POST",
+            dataType : 'json',
+            data : { action : 'expr_save', exp : JSON.stringify(Hive.state()) },
+            success : on_response,
+            error: on_error
+        });
     }, false);
   </script>
 {% endblock head %}

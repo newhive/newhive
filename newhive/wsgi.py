@@ -134,6 +134,7 @@ site_pages = {
     ,'edit'                : controllers['expression'].edit_frame
     ,'user'                : controllers['user'].info
     ,'settings'            : controllers['user'].edit
+    ,'password_recovery'   : controllers['user'].edit
     ,'signup'              : controllers['user'].invited # old invites in the wild may go here
     ,'invited'             : controllers['user'].invited
     ,'create_account'      : controllers['user'].new
@@ -148,7 +149,6 @@ site_pages = {
     ,'analytics'           : controllers['analytics'].default
     ,'robots.txt'          : app.robots
     ,'500'                 : newhive.utils.exception_test
-    ,'password_recovery'   : controllers['user'].edit
 }
 
 dialogs = dict(

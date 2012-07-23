@@ -305,7 +305,6 @@ body.frame{
 
 .menu {
     display: none;
-    border: 0px solid $color_unselected;
     background-color: white;
     z-index: $nav_layer + 2;
     position: fixed;
@@ -337,18 +336,6 @@ body.frame{
         }
     }
 
-    .btns {
-        font-size: 14px;
-        div {
-            display: inline-block;
-            margin: 4px;
-            padding: 4px;
-            color: black;
-            cursor: pointer;
-        }
-        .active { background-color: $color_selected; }
-    }
-
     // styling for common menu items
     .message .icon { background-image: asset_url('skin/1/send_message.png') }
 }
@@ -367,10 +354,38 @@ body.frame{
 }
 
 #hive_menu {
-    padding: 10px;
+    display: none;
+    z-index: $nav_layer + 2;
+    position: fixed;
+    overflow: auto;
+    cursor: default;
+    padding: 0 10px 10px 0;
 
+    .menu { display: inline-block; position: static; }
+    .find { }
+    .links {
+        color: $color_grey_medium;
+        margin-top: 8px;
+        cursor: pointer;
+
+        .primary { color: black; }
+        .menu_item {
+            border-color: $color_light_grey;
+            border-width: 1px 0 0 0;
+            border-style: solid;
+        }
+        :first-child .menu_item { border: none; }
+    }
     .btns {
-        margin-bottom: 10px;
+        font-size: 14px;
+        div {
+            display: inline-block;
+            margin: 4px;
+            padding: 4px;
+            color: black;
+            cursor: pointer;
+        }
+        .active { background-color: $color_selected; }
     }
 }
 

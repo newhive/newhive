@@ -755,26 +755,13 @@ var asset = function(path) {
     return hive_asset_paths[path];
 };
 
-function sendRequestViaMultiFriendSelector() {
-  function requestCallback(response) {
-    $('#dia_referral .btn_dialog_close').click();
-    if (response){
-      _gaq.push(['_trackEvent', 'fb_connect', 'invite_friends', undefined, response.to.length]);
-      showDialog('#dia_sent_invites_thanks');
-      $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
-    }
-  }
-  FB.ui({method: 'apprequests'
-    , message: 'Join me on The New Hive'
-    , title: 'Invite Friends to Join The New Hive'
-    , filters: ['app_non_users']
-  }, requestCallback);
-}
-
 // works as handler or function modifier
 function require_login(fn) {
     var check = function() {
-        if(logged_in) return fn.apply(null, arguments);
+        if(logged_in) {
+            if(fn) return fn.apply(null, arguments);
+            else return;
+        }
         showDialog('#dia_must_login');
         return false;
     }

@@ -126,7 +126,7 @@ class User(Application):
                 self.db.FriendJoined.create(new_user, friend)
 
     def edit(self, request, response):
-        if request.path.split('/')[0] == "password_recovery":
+        if lget(request.path_parts, 0) == "password_recovery":
             key = request.args.get('key')
             user_id = request.args.get('user')
             user = self.db.User.fetch(user_id)
@@ -148,6 +148,7 @@ class User(Application):
             response.context['facebook_connect_url'] = FacebookClient().authorize_url(
                                                            abs_url(secure=True)+ 'settings')
             return self.serve_page(response, 'pages/user_settings.html')
+        else: return self.serve_forbidden(response)
 
     def info(self, request, response):
         user = self.db.User.fetch(lget(request.path_parts, 1))
