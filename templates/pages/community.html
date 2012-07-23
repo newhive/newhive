@@ -54,7 +54,7 @@
 
 {% macro top_tab(p, label, class, text=True, attr='') %}
   {% set current = True if p == path %}
-  {% if not current %}<a href='/{{ p }}' {{ attr }}>{% endif %}<div class='tab_label {{ 'current' if current }} {{ class }} {{ 'text' if text else 'icon' }}'
+  {% if not current %}<a href='/{{owner.name + "/" if owner}}{{ p }}' {{ attr }}>{% endif %}<div class='tab_label {{ 'current' if current }} {{ class }} {{ 'text' if text else 'icon' }}'
     {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
 
@@ -170,7 +170,7 @@
 
 {% macro left_tab(p1, label) %}
   <div class='tab_label {{ 'current' if p1 == path1 else 'hoverable' }}'
-    ><a href='/{{ p1 }}'>{{ label }}</a></div>
+    ><a href='/{{owner.name + "/" if owner}}{{ p1 }}'>{{ label }}</a></div>
 {%- endmacro %}
 
 {% block left_column %}

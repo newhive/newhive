@@ -813,7 +813,7 @@ class Expr(HasSocial):
     def url(self): return abs_url() + self['owner_name'] + '/' + self['name']
 
     @property
-    def owner_url(self): return abs_url(domain = self.get('domain')) + 'profile'
+    def owner_url(self): return abs_url() + self.get('owner_name') + '/profile'
 
     def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
