@@ -206,7 +206,7 @@
 
       <div class='bar'></div>
       <div class='menu_item message'>Email <div class='icon'></div></div>
-      <div class='menu_item'>Embed</div>
+      <div class='menu_item embed'>Embed</div>
     </div>
   {% endif %}
 
@@ -255,6 +255,7 @@
 
   <div id='dialogs'>
     {% block dialogs %}
+    {% include 'dialogs/share.html' %}
       {% if user.logged_in %}
           {% include 'dialogs/referral.html' %}
           {% include 'dialogs/facebook_connect.html' %}

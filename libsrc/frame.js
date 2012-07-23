@@ -109,6 +109,8 @@ Hive.Menus = (function(){
 
         $('#comment_form').submit(o.post_comment);
 
+        $('.menu_item.message, .menu_item.embed').click(function(){showDialog('#dia_share')});
+
         var del_dialog;
         $('.delete_btn').click(function(){ del_dialog = showDialog('#dia_delete'); });
         $('#dia_delete .no_btn').click(function(){ del_dialog.close() });

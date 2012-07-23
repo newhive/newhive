@@ -409,6 +409,7 @@ input[type="text"].copy, textarea.copy {
     background-color : white;
     border: 5px solid $color_selected;
     @include box-shadow(05px 05px 05px #666);
+    @include border-radius(8px);
 
     h1, h2, h3 {
         font-family: $header_font;
@@ -485,4 +486,16 @@ input[type="text"].copy, textarea.copy {
 
 #login_error {
     font-size: 12px;
+}
+
+#dia_share {
+    input[type=text], textarea {
+        width: 450px;
+    }
+    textarea {
+        height: 100px;
+    }
+    input[type=submit] {
+        float: right;
+    }
 }
