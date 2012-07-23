@@ -52,7 +52,7 @@ img.thumb { background-color: $color_grey_medium; }
 
     .active, .active * {
         background-color: black;
-        color: white;
+        color: white !important;
     }
 
     .center *, .center { vertical-align: middle; }
@@ -75,6 +75,11 @@ img.thumb { background-color: $color_grey_medium; }
 
     .left_edge { @include border-radius(5px 0 0 5px); }
     .right_edge { @include border-radius(0 5px 5px 0); }
+
+    .user_thumb {
+        width: $nav_size - 6;
+        margin-right: 6px;
+    }
 }
 
 .menu_handle {
@@ -114,13 +119,6 @@ img.thumb { background-color: $color_grey_medium; }
 #owner_nav { height: $nav_size; right: 0; top: 0; }
 
 #login_btn { padding: 0 10px 0 10px; }
-
-#owner_btn {
-    .owner_thumb {
-        width: $nav_size - 6;
-        margin-right: 6px;
-    }
-}
 
 #share_btn {
     #share_icon { background-image: asset_url('skin/1/share.png'); }

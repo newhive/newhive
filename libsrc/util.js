@@ -445,7 +445,8 @@ hover_menu = function(handle, drawer, options) {
             ,auto_close: false
             ,hover_close: true
             ,close_delay: 500
-            ,offset_y: 0
+            ,offset_y: 8
+            ,offset_x: 8
             ,focus_persist: true
             ,hover: true
             ,open_condition: function(){ return true }
@@ -533,9 +534,7 @@ hover_menu = function(handle, drawer, options) {
         if(opts.layout){
             // pick top of menu based on if menu would go past bottom of
             // window if below handle, or above top of window if above the handle
-            var hp = handle.offset();
-            // shield element prevents hovering over gap between handle and menu from closing the menu
-            o.shield = $();
+            var hp = handle.parent().is(drawer.parent()) ? handle.position() : handle.offset();
 
             if( opts.layout == 'bottom' ){
                 var oy = handle.outerHeight() + opts.offset_y;
@@ -555,6 +554,8 @@ hover_menu = function(handle, drawer, options) {
                 css_opts.left = hp.left - opts.offset_x - drawer.outerWidth();
             }
 
+            // shield element prevents hovering over gap between handle and menu from closing the menu
+            o.shield = $();
             //if(opts.offset_y) o.shield.add($('<div>').css({
             //    'position': 'absolute',
             //    'left': hp.left,

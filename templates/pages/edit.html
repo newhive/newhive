@@ -1,23 +1,35 @@
-{% extends "main.html" %}
+{% extends "minimal.html" %}
 
 {% block head %}
+  {% for item in asset_bundle('edit.css') %}
+    <link rel='stylesheet' type='text/css' href='{{ item }}'>
+  {% endfor %}
+  {% for item in asset_bundle('app.css') %}
+    <link rel='stylesheet' type='text/css' href='{{ item }}'>
+  {% endfor %}
+  {% for item in asset_bundle('app.js') %}
+    <script src='{{ item }}'></script>
+  {% endfor %}
   {% for item in asset_bundle('google_closure.js') %}
     <script src='{{ item }}'></script>
   {% endfor %}
   {% for item in asset_bundle('edit.js') %}
     <script src='{{ item }}'></script>
   {% endfor %}
- 
-  {% for item in asset_bundle('edit.css') %}
-    <link rel='stylesheet' type='text/css' href='{{ item }}'>
-  {% endfor %}
- 
   <script>
-    Hive.Exp = {{ exp | json }}; // current expression from server
+    Hive.Exp = {{ expr | json }}; // current expression from server
+    var logged_in = {{ user.logged_in|json }}, server_name = '{{ server_name }}',
+        secure_server = '{{ secure_server }}', server_url = '{{ server_url }}',
+        debug_mode = {{ debug|json }},
+        dialog_to_show = {{ dialog_to_show|json }},
+        new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
+    ;
   </script>
 {% endblock head %}
 
-{% block nav_right %}
+{% block body %}
+
+<div id='edit_nav' class='nav'>
  <div class='nav_icon smpad center'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div>
  <div class='nav_icon center smpad'><img id='btn_redo' title='redo' class='hoverable' src='{{ 'skin/1/redo.png'|asset_url }}'></div>
  <div class='nav_icon smpad'></div>
@@ -25,112 +37,110 @@
  <div class='nav_icon center'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div>
  <div class='nav_icon smpad'></div>
  <div class='nav_icon center smpad hoverable medbold btn' title="Editor Help" id='btn_help'>?</div>
- <script>
-  (function() { var b = $('#btn_help');
-    b.click(function() { exprDialog('{{ site_pages['editor-help'] }}', { minimize_to: b, click_close: true } ) });
-    {% if show_help %}$('#btn_help').click(){% endif %} })();
- </script>
  <div class='nav_icon smpad'></div>
  <div class='nav_icon'></div>
   <div id='btn_save' class='btn medbold nav_icon hoverable center pad'>
     Save
     <img class='scale' src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
   </div>
-  
-  <div id='menu_save' class='menu top'>
-    <div class='medbold'>Title</div>
-    <textarea id='title'>{{ exp.title }}</textarea>
-    <div class='spacer'></div>
-  
-    <div class='medbold'>URL</div>
-    <div class=''>{{ exp.domain }}/</div>
-    <input id='url' type='text' value='{{ exp.name|e }}'>
-    <div class='spacer'></div>
-  
-    <div class='medbold'>Tags</div>
-    <input id='tags_input' type='text' value='{{ exp.tags|e }}'>
-    <div class='spacer'></div>
-    <div class='spacer'></div>
+</div>
+<script>
+  (function() { var b = $('#btn_help');
+      b.click(function() { exprDialog('{{ site_pages['editor-help'] }}',
+          { minimize_to: b, click_close: true } ) });
+     {% if show_help %}$('#btn_help').click();{% endif %}
+  })();
+</script>
 
-    <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle btn rounded'>
-      <span>Private</span>
-      <img src='{{ 'skin/1/drop_arrow.png'|asset_url }}'>
-    </div>
-    <div id='menu_privacy' class='menu medbold' style='width : 125px;'>
-      <div val='password' class='menu_item'>Private</div>
-      <div val='public' class='menu_item'>Public</div>
-    </div>
-
-    <div id='save_submit' style='float : right; padding : 5px' class='btn black rounded'>Save</div>
- 
-    <div id='password_ui' style='display : none'>
-      <br><br><br>
-      <b>Optional password</b><br>
-      <input type='text' id='password' value='{{ exp.password }}'>
-    </div>
-    <div class='spacer'></div>
-
-    <div id='btn_thumbnail'>
-      <div id='btn_thumbnail_text' class='hoverable'>Choose thumbnail <img class='scale' src='{{ 'skin/1/drop_arrow.png'|asset_url }}'></div>
-      <img id="current_thumb" width="70px" height="70px" src="{{exp.thumb}}">
-    </div>
-  </div>
-{% endblock %}
-
-{% block body %}
-
-{% include 'dialogs/editor_browsers.html' %}
-
-<div id='app_btns' class='nav'>
- <img id='insert_text'  class='hoverable nav_icon' src='{{ 'skin/1/text.png'|asset_url }}'
- ><img id='insert_image' class='hoverable nav_icon' src='{{ 'skin/1/images.png'|asset_url }}'
- ><img id='insert_audio' class='hoverable nav_icon' src='{{ 'skin/1/audio.png'|asset_url }}'
- ><img id='insert_embed' class='hoverable nav_icon' src='{{ 'skin/1/embed.png'|asset_url }}'
- ><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'
- ><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'>
- 
- <div id='menu_text' class='menu medbold'>
-  <div id='text_default' class='menu_item'>Normal</div>
-  <div id='text_header' class='menu_item'>Header</div>
-  <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
- </div>
- 
- <div id='menu_image' class='menu medbold'>
-  <div id='image_upload' class='menu_item'>Upload image</div>
-  <div id='image_background' class='menu_item'>Background</div>
-  <div id='image_from_url' class='menu_item'>Image URL</div>
-  <div id='image_embed_submenu' style='text-align: center; padding-bottom: 7px;'>
-    <form id='embed_image_form'>
-      <input type='text' id='image_embed_code' class='embed_box' style='width: 325px; height: 1.2em;'
-        placeholder='{{ ui.image_embed_textarea }}'>
-      <div class='spacer'></div>
-      <input id='image_embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
-    </form>
-  </div>
-  <!--<div id='image_webcam' class='menu_item'>Take picture</div>
-  <div id='image_search' class='menu_item'>Google images</div>-->
- </div>
- 
- <div id='menu_audio' class='menu medbold'>
-  <div id='audio_upload' class='menu_item'>Upload MP3</div>
- </div>
- 
- <div id='menu_file' class='menu medbold'>
-  <div class='menu_item menu_hover'>Upload file to link</div>
- </div>
- 
- <div id='menu_embed' class='menu'>
-  <span class='medbold'>Embed</span><br>
+<div id='menu_save' class='menu top'>
+  <div class='medbold'>Title</div>
+  <textarea id='title'>{{ expr.title }}</textarea>
   <div class='spacer'></div>
-  <div class='description'>{{ ui.embed_code_description }}</div>
-  <textarea id='embed_code' class='embed_box' placeholder='{{ui.embed_code_textarea}}'></textarea>
-  <div style='text-align : center'><input id='embed_done' type='submit' class='btn black rounded embed_button' value='Enter'></div>
+
+  <div class='medbold'>URL</div>
+  <div class=''>{{ server_name }}/</div>
+  <input id='url' type='text' value='{{ expr.name|e }}'>
+  <div class='spacer'></div>
+
+  <div class='medbold'>Tags</div>
+  <input id='tags_input' type='text' value='{{ expr.tags|e }}'>
+  <div class='spacer'></div>
+  <div class='spacer'></div>
+
+  <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle btn rounded'>
+    <span>Private</span>
+    <img src='{{ 'skin/1/drop_arrow.png'|asset_url }}'>
+  </div>
+  <div id='menu_privacy' class='menu medbold' style='width : 125px;'>
+    <div val='password' class='menu_item'>Private</div>
+    <div val='public' class='menu_item'>Public</div>
+  </div>
+
+  <div id='save_submit' style='float : right; padding : 5px' class='btn black rounded'>Save</div>
+
+  <div id='password_ui' style='display : none'>
+    <br><br><br>
+    <b>Optional password</b><br>
+    <input type='text' id='password' value='{{ expr.password }}'>
+  </div>
+  <div class='spacer'></div>
+
+  <div id='btn_thumbnail'>
+    <div id='btn_thumbnail_text' class='hoverable'>Choose thumbnail <img class='scale' src='{{ 'skin/1/drop_arrow.png'|asset_url }}'></div>
+    <img id="current_thumb" width="70px" height="70px" src="{{expr.thumb}}">
+  </div>
+</div>
+
+<div id='app_btns' class='nav'
+ ><div><img id='insert_text'  class='hoverable nav_icon' src='{{ 'skin/1/text.png'|asset_url }}'></div
+ ><div><img id='insert_image' class='hoverable nav_icon' src='{{ 'skin/1/images.png'|asset_url }}'</div
+ ><div><img id='insert_audio' class='hoverable nav_icon' src='{{ 'skin/1/audio.png'|asset_url }}'</div
+ ><div><img id='insert_embed' class='hoverable nav_icon' src='{{ 'skin/1/embed.png'|asset_url }}'</div
+ ><div><img id='insert_shape' class='hoverable nav_icon' src='{{ 'skin/1/shapes.png'|asset_url }}'</div
+ ><div><img id='insert_file'  class='hoverable nav_icon' src='{{ 'skin/1/upload.png'|asset_url }}'></div
+></div> 
+
+<div id='menu_text' class='menu medbold'>
+ <div id='text_default' class='menu_item'>Normal</div>
+ <div id='text_header' class='menu_item'>Header</div>
+ <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
+</div>
+
+<div id='menu_image' class='menu medbold'>
+ <div id='image_upload' class='menu_item'>Upload image</div>
+ <div id='image_background' class='menu_item'>Background</div>
+ <div id='image_from_url' class='menu_item'>Image URL</div>
+ <div id='image_embed_submenu' style='text-align: center; padding-bottom: 7px;'>
+   <form id='embed_image_form'>
+     <input type='text' id='image_embed_code' class='embed_box' style='width: 325px; height: 1.2em;'
+       placeholder='{{ ui.image_embed_textarea }}'>
+     <div class='spacer'></div>
+     <input id='image_embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
+   </form>
  </div>
- 
- <div id='menu_shape' class='menu medbold'>
-  <div id='shape_rectangle' class='menu_item'>Rectangle</div>
-  <div id='shape_sketch' class='menu_item'>Sketch</div>
- </div>
+ <!--<div id='image_webcam' class='menu_item'>Take picture</div>
+ <div id='image_search' class='menu_item'>Google images</div>-->
+</div>
+
+<div id='menu_audio' class='menu medbold'>
+ <div id='audio_upload' class='menu_item'>Upload MP3</div>
+</div>
+
+<div id='menu_file' class='menu medbold'>
+ <div class='menu_item menu_hover'>Upload file to link</div>
+</div>
+
+<div id='menu_embed' class='menu'>
+ <span class='medbold'>Embed</span><br>
+ <div class='spacer'></div>
+ <div class='description'>{{ ui.embed_code_description }}</div>
+ <textarea id='embed_code' class='embed_box' placeholder='{{ui.embed_code_textarea}}'></textarea>
+ <div style='text-align : center'><input id='embed_done' type='submit' class='btn black rounded embed_button' value='Enter'></div>
+</div>
+
+<div id='menu_shape' class='menu medbold'>
+ <div id='shape_rectangle' class='menu_item'>Rectangle</div>
+ <div id='shape_sketch' class='menu_item'>Sketch</div>
 </div>
 
 <img id='loading' src='{{ 'skin/1/loading.gif'|asset_url }}'>
@@ -311,4 +321,7 @@ blah blah
 
 {% include 'expr_background.html' %}
 <div id='grid_guide'></div>
+
+<div id='happs'></div>
+
 {% endblock %}
