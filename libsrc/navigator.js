@@ -103,9 +103,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
     };
 
+    // Hive.Navigator.scroll sets auto-scrolling speed, cancels scrolling if called with speed=0
     var scroll_interval, scroll_speed;
     o.scroll_speed = function(){
-        return scroll_speed / 30;
+        return scroll_speed / 20;
     };
     o.scroll = function(speed){
         var interval_function = function(){
@@ -339,7 +340,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             old_inner.animate({opactiy: 0}, 5, function(){ old_inner.remove();});
         }
 
-        navigator_element.on('mousemove', function(e){
+        // event handlers for auto-scrolling based on mouse position
+        inner.on('mousemove', function(e){
             if (e.clientX < 300) {
                 o.scroll(300 - e.clientX);
             } else if (e.clientX > width - 300) {
