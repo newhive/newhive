@@ -167,7 +167,7 @@ function showDialog(name, opts) {
                 .css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
 
             if(!o.opts.mandatory) {
-                if( o.opts.close_btn && ! dialog.find('.btn_dialog_close') )
+                if( o.opts.close_btn && ! dialog.find('.btn_dialog_close').length )
                     $('<div class="btn_dialog_close">').prependTo(dialog).click(o.close);
                 o.shield.click(o.close);
                 if(o.opts.click_close) dialog.click(o.close);
