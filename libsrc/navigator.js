@@ -108,7 +108,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     // Hive.Navigator.scroll sets auto-scrolling speed, cancels scrolling if called with speed=0
     var scroll_interval, scroll_speed;
     o.scroll_speed = function(){
-        return scroll_speed / 20;
+        return scroll_speed / 12;
     };
     o.scroll = function(speed){
         var interval_function = function(){
@@ -345,10 +345,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         // event handlers for auto-scrolling based on mouse position
         inner.on('mousemove', function(e){
-            if (e.clientX < 300) {
-                o.scroll(300 - e.clientX);
-            } else if (e.clientX > width - 300) {
-                o.scroll((width - 300) - e.clientX);
+            if (e.clientX < 200) {
+                o.scroll(200 - e.clientX);
+            } else if (e.clientX > width - 200) {
+                o.scroll((width - 200) - e.clientX);
             } else {
                 o.scroll(0);
             }
@@ -369,7 +369,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.hide = function(){
         navigator_element.stop().clearQueue();
         navigator_element.animate({bottom: -height-2*opts.margin});
-        if (!Modernizr.touch) info.find('input').blur();
+        if (info && !Modernizr.touch) info.find('input').blur();
         return o;
     };
 
@@ -622,7 +622,8 @@ Hive.Navigator.NetworkUpdater = function(){
             if (current_expr === last) return;
             var query = {limit: count, order: -direction};
             if (current_expr.feed) {
-                query.page = current_expr.feed[0].created;
+                var index = seek > 0 ? feed.length : 0;
+                query.page = current_expr.feed[index].created;
             } else {
                 query.expr = current_expr[o.paging_attr]
             }

@@ -43,11 +43,6 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 .btn_dialog_close, #btn_dialog_close { position: absolute; width: 20px; height: 20px; background-image: asset_url("skin/1/close.png");
     right:10px; top:5px; z-index : 100; }
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
-input[type="text"].copy, textarea.copy {
-    border: none;
-    font-family: helvetica, verdana, sans-serif;
-    white-space: pre-wrap;
-}
 .dialog h3 {
   font-family: $header_font;
   font-weight: normal;
@@ -409,6 +404,7 @@ input[type="text"].copy, textarea.copy {
     background-color : white;
     border: 5px solid $color_selected;
     @include box-shadow(05px 05px 05px #666);
+    @include border-radius(8px);
 
     h1, h2, h3 {
         font-family: $header_font;
@@ -485,4 +481,25 @@ input[type="text"].copy, textarea.copy {
 
 #login_error {
     font-size: 12px;
+}
+
+#dia_share {
+    input[type=text], textarea {
+        width: 450px;
+    }
+    textarea {
+        height: 100px;
+    }
+    input[type=submit] {
+        float: right;
+    }
+}
+
+#dia_embed {
+    textarea {
+        width: 400px;
+        height: 85px;
+        font-family: helvetica, verdana, sans-serif;
+        white-space: pre-wrap;
+    }
 }

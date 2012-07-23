@@ -119,7 +119,7 @@
       {% if community or expr %}
         ><div id='share_btn' class='hoverable center black_active'
           ><div id='share_icon' class='icon'></div
-          ><div class='text'>Share</div
+          ><div class='text'><span>Share</span></div
         ></div
       {% endif %}
     ></div>
@@ -144,7 +144,7 @@
         {#<div class='menu_item'>Profile</div>#}
         <div class='menu_item listen off'>
           <span class='off'>Listen to</span>
-          <span class='on'>Unlisten to</span>
+          <span class='on' title="Stop listening">Listening to</span>
           <span class='owner_name'>{{ owner.name }}</span>
           <div class='icon'></div>
         </div>
@@ -215,7 +215,7 @@
 
       <div class='bar'></div>
       <div class='menu_item message'>Email <div class='icon'></div></div>
-      <div class='menu_item'>Embed</div>
+      <div class='menu_item embed'>Embed</div>
     </div>
   {% endif %}
 
@@ -264,6 +264,8 @@
 
   <div id='dialogs'>
     {% block dialogs %}
+    {% include 'dialogs/share.html' %}
+    {% include 'dialogs/embed.html' %}
       {% if user.logged_in %}
           {% include 'dialogs/referral.html' %}
           {% include 'dialogs/facebook_connect.html' %}

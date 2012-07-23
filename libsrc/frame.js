@@ -127,8 +127,38 @@ Hive.Menus = (function(){
             '#star_menu .items') });
         $('#broadcast_btn').click(function(){ o.feed_toggle('broadcast', Hive.expr.id,
             '#broadcast_btn', '#broadcast_menu .items') });
+        $('#owner_menu .menu_item.listen').click(function(){
+            o.feed_toggle('star', Hive.expr.owner.id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
+        });
 
         $('#comment_form').submit(o.post_comment);
+
+        // email and embed menus
+        $(function(){
+            $('.menu_item.message').click(require_login(function(){showDialog('#dia_share')}));
+            var dia = $('#dia_share');
+            dia.find('form').submit(function(e){
+                var submit = dia.find('input[type=submit]');
+                if (submit.hasClass('inactive')) return false;
+                submit.addClass('inactive');
+                var callback = function(){
+                    submit.removeClass('inactive');
+                    dia.find('#email_to').val('');
+                    dia.children().hide();
+                    var tmp = $('<h2>Your message has been sent</h2>').appendTo(dia);
+                    setTimeout(function(){
+                        dia.data('dialog').close();
+                        dia.children().show();
+                        tmp.remove();
+                    }, 1500);
+                };
+                asyncSubmit('#dia_share form', callback, {url: window.location.href});
+                _gaq.push(['_trackEvent', 'share', 'email']);
+                return false;
+            });
+
+            $('.menu_item.embed').click(function(){showDialog('#dia_embed')});
+        });
 
         var del_dialog;
         $('.delete_btn').click(function(){ del_dialog = showDialog('#dia_delete'); });
@@ -236,8 +266,10 @@ Hive.Menus = (function(){
         $('.broadcast .count').html(expr.counts.Broadcast).toggleClass('zero', is_empty(expr.counts.Broadcast));
         $('.comment .count').html(expr.counts.Comment).toggleClass('zero', is_empty(expr.counts.Comment));
 
-        // TODO: update share URLs
+        // update share URLs and embed dialog
         o.update_share_urls(expr);
+        var embed_link = $( $('#dia_embed textarea').val() ).attr('src', expr.url);
+        $('#dia_embed textarea').val(embed_link.outerHTML());
 
         $('#expr_menu .big_card .title').html(expr.title);
         $('#expr_menu .big_card .thumb').attr('src', expr.thumb);
@@ -302,29 +334,15 @@ Hive.Menus = (function(){
         alert("Sorry, something went wrong. Try refreshing the page and trying again.");
     };
 
-    o.click_listen = require_login(function(entity) {
-        btn = $('.listen.' + entity); // grab all listen buttons for this user
-        if(btn.hasClass('inactive')) return;
-
-        var state = btn.hasClass('off');
-        _gaq.push(['_trackEvent', state ? 'listen' : 'unlisten']);
-        btn.addClass('inactive');
-        $.post('', { action: 'star', entity: entity }, function(data) {
-            btn.removeClass('inactive');
-            if(!data) { o.server_error(); return }
-            o.btn_state(btn, state);
-        }, 'json');
-
-        return false;
-    });
-
-    o.feed_toggle = require_login(function(action, entity, btn, items) {
+    o.feed_toggle = require_login(function(action, entity, btn, items, opts) {
         btn = $(btn); items = $(items);
         if(btn.hasClass('inactive')) return;
         btn.addClass('inactive');
 
+        var ga_action = (opts && opts.ga) || action;
+
         var state = btn.hasClass('off');
-        _gaq.push(['_trackEvent', (state ? '' : 'un') + action]);
+        _gaq.push(['_trackEvent', (state ? '' : 'un') + ga_action, entity]);
         $.post('', { action: action, entity: entity, state: state }, function(data) {
             var count_e = btn.find('.count');
             var count = parseInt(count_e.html());
@@ -334,10 +352,10 @@ Hive.Menus = (function(){
             if(!data) { o.server_error(); return; }
             if(data.state) {
                 count_e.html(count + 1);
-                o.face_link(user.name, user.id, user.thumb).prependTo(items);
+                if (items.length) o.face_link(user.name, user.id, user.thumb).prependTo(items);
             } else {
                 count_e.html(count - 1);
-                items.find('.' + user.id).remove();
+                if (items.length) items.find('.' + user.id).remove();
             };
             o.btn_state(btn, data.state);
         }, 'json');

@@ -369,7 +369,7 @@ function img_fill(img) {
 
 function asyncSubmit(form, callback, opts) {
     var opts = $.extend({ dataType : 'text' }, opts);
-    var url = $(form).attr('action')? $(form).attr('action') : server_url
+    var url = opts.url || $(form).attr('action') || server_url;
     $.post(url, $(form).serialize(), callback, opts.dataType);
     return false;
 }

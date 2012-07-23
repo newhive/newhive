@@ -35,7 +35,7 @@
     </div>
     <div class='feed_thumbs {{ "inactive_hide" if hide_feed }}'>{% for f in item.feed %}{%
         if f.class_name != 'NewExpr' and f.class_name != 'UpdatedExpr' %}<a href='{{ f.initiator.url }}'><img
-        src='{{ f.initiator.get_thumb(70) }}'
+        src='{{ f.initiator.get_thumb(70) if f.initiator }}'
         title='{{ f.initiator.name }} {{ f.action_name }}'
         {% if item.feed|length == 1 %}class='big'{% endif %}
     ></a>{% endif %}{% endfor %}</div>

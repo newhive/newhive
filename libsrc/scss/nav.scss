@@ -154,6 +154,7 @@ img.thumb { background-color: $color_grey_medium; }
         @include box-shadow(rgba(black, .3) 3px 3px 10px);
         font-weight: bold;
         color: black;
+        &.on { color: white; }
         cursor: pointer;
         float: right;
         clear: both;
