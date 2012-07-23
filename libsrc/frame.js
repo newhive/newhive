@@ -163,7 +163,7 @@ Hive.Menus = (function(){
             , pinterest: function(url, title, thumb){ return "http://pinterest.com/pin/create/button/?url=" + url + "&media=" + thumb }
             , stumble: function(url, title){ return 'http://www.stumbleupon.com/submit?url=' + url + '&title=' + title }
             , gplus: function(url){ return "https://plusone.google.com/_/+1/confirm?hl=en-US&url=" + url }
-            , linkedin: function(url){ return "http://www.linkedin.com/shareArticle?mini=true&url=" + url + "&title=" + title }
+            , linkedin: function(url, title){ return "http://www.linkedin.com/shareArticle?mini=true&url=" + url + "&title=" + title }
             , reddit: function(url){ return 'http://www.reddit.com/submit?url=' + url }
         };
         var share_menu = $('#share_menu');
