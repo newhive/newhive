@@ -281,22 +281,6 @@ Hive.Menus = (function(){
         alert("Sorry, something went wrong. Try refreshing the page and trying again.");
     };
 
-    o.click_listen = require_login(function(entity) {
-        btn = $('.listen.' + entity); // grab all listen buttons for this user
-        if(btn.hasClass('inactive')) return;
-
-        var state = btn.hasClass('off');
-        _gaq.push(['_trackEvent', state ? 'listen' : 'unlisten']);
-        btn.addClass('inactive');
-        $.post('', { action: 'star', entity: entity }, function(data) {
-            btn.removeClass('inactive');
-            if(!data) { o.server_error(); return }
-            o.btn_state(btn, state);
-        }, 'json');
-
-        return false;
-    });
-
     o.feed_toggle = require_login(function(action, entity, btn, items, opts) {
         btn = $(btn); items = $(items);
         if(btn.hasClass('inactive')) return;
