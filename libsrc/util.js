@@ -477,6 +477,7 @@ hover_menu = function(handle, drawer, options) {
         if(opts.hover_close && ! close_timer) {
             close_timer = setTimeout(o.close, close_delay || opts.close_delay);
         }
+        if(opts.group.delayed_close) opts.group.delayed_close();
     };
     o.cancel_close = function(e) {
         if(close_timer) {
@@ -509,8 +510,6 @@ hover_menu = function(handle, drawer, options) {
         opts.close();
         handle.get(0).busy = false;
         handle.removeClass('active');
-
-        if(opts.group.delayed_close) opts.group.delayed_close();
 
         return o;
     }
@@ -606,7 +605,7 @@ hover_menu = function(handle, drawer, options) {
         }).on('blur', function(){
             o.sticky = false;
             o.delayed_close();
-        });
+        }).on('focus', o.cancel_close);
         drawer.mousedown(function(){ setTimeout(o.cancel_close, 1) });
     }
 

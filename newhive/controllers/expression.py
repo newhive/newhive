@@ -6,25 +6,7 @@ from newhive import utils, mail
 from pymongo.connection import DuplicateKeyError
 
 class Expression(Application, PagingMixin):
-
     def edit_frame(self, request, response):
-        expr = self.db.Expr.fetch(lget(request.path_parts, 1), meta=True)
-        if not (request.requester.logged_in or expr): return self.serve_404(request, response)
-        if expr.auth_required(response.user): return self.serve_forbidden(request)
-
-        show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
-        if show_help: request.requester.increment({'flags.default-instructional': 1})
-
-        response.context.update({
-             'title'     : 'Editing: ' + expr.get('title')
-            ,'editor_url': abs_url(domain = config.content_domain) + 'edit/' + expr.id
-            ,'expr'      : expr
-            ,'show_help' : show_help
-            ,'editing'   : True
-        })
-        return self.serve_page(response, 'pages/edit_frame.html')
-
-    def edit(self, request, response):
         expr_id = lget(request.path_parts, 1)
         if not expr_id:
             expr = dfilter(request.args, ['domain', 'name', 'tags'])
@@ -33,10 +15,52 @@ class Expression(Application, PagingMixin):
             self.db.ActionLog.create(request.requester, "new_expression_edit")
         else:
             expr = self.db.Expr.fetch(expr_id)
-            if not expr: return self.serve_404(request, response)
             self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
-        response.context.update({ 'expr': expr })
-        return self.serve_page(response, 'pages/edit.html')
+        if not (request.requester.logged_in or expr): return self.serve_404(request, response)
+        if expr.auth_required(response.user): return self.serve_forbidden(request)
+
+        #show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
+        #if show_help: request.requester.increment({'flags.default-instructional': 1})
+
+        response.context.update({
+             'title'     : 'Editing: ' + expr.get('title')
+            ,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
+            ,'expr'      : expr
+            #,'show_help' : show_help
+            ,'editing'   : True
+        })
+        return self.serve_page(response, 'pages/edit_tmp.html')
+
+    #def edit_frame(self, request, response):
+    #    expr = self.db.Expr.fetch(lget(request.path_parts, 1), meta=True)
+    #    if not (request.requester.logged_in or expr): return self.serve_404(request, response)
+    #    if expr.auth_required(response.user): return self.serve_forbidden(request)
+
+    #    show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
+    #    if show_help: request.requester.increment({'flags.default-instructional': 1})
+
+    #    response.context.update({
+    #         'title'     : 'Editing: ' + expr.get('title')
+    #        ,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
+    #        ,'expr'      : expr
+    #        ,'show_help' : show_help
+    #        ,'editing'   : True
+    #    })
+    #    return self.serve_page(response, 'pages/edit_frame.html')
+
+    #def edit(self, request, response):
+    #    expr_id = lget(request.path_parts, 1)
+    #    if not expr_id:
+    #        expr = dfilter(request.args, ['domain', 'name', 'tags'])
+    #        expr['title'] = 'Untitled'
+    #        expr['auth'] = 'public'
+    #        self.db.ActionLog.create(request.requester, "new_expression_edit")
+    #    else:
+    #        expr = self.db.Expr.fetch(expr_id)
+    #        if not expr: return self.serve_404(request, response)
+    #        self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
+    #    response.context.update({ 'expr': expr })
+    #    return self.serve_page(response, 'pages/edit.html')
 
     # destructively prepare state.Expr for client consumption
     def expr_prepare(self, expr, viewer=None, password=None):
@@ -94,7 +118,8 @@ class Expression(Application, PagingMixin):
             + ('empty' if resource.auth_required() else resource.id) )
         self.expr_prepare(resource, response.user)
         response.context.update(
-             edit = abs_url(secure = True) + 'edit/' + resource.id
+             edit_url = abs_url(secure = True) + 'edit/' + resource.id
+            ,expr_frame = True
             ,title = resource.get('title', False)
             ,expr = resource
             ,expr_url = expr_url
@@ -251,7 +276,8 @@ class Expression(Application, PagingMixin):
             res.update(**upd)
             new_expression = False
             self.db.ActionLog.create(request.requester, "update_expression", data={'expr_id': res.id})
-        return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
+
+        return dict( new = new_expression, error = False, id = res.id, location = res.url )
 
 
     def delete(self, request, response):
