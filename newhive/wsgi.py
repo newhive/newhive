@@ -166,6 +166,8 @@ site_pages = {
     ,'robots.txt'          : app.robots
     ,'500'                 : newhive.utils.exception_test
     ,'password_recovery'   : controllers['user'].edit
+    ,'google98ed17c7e7aa091e.html' : lambda request, response: app.serve_html(response,
+        'google-site-verification: google98ed17c7e7aa091e.html')
 }
 
 dialogs = dict(
