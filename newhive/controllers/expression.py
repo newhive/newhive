@@ -55,7 +55,7 @@ class Expression(Application, PagingMixin):
         # check if auth is required so we can then strip password
         auth_required = expr.auth_required()
         if expr.auth_required(viewer, password):
-            for key in ['password', 'thumb', 'thumb_file_id']: del expr[key]
+            for key in ['password', 'thumb', 'thumb_file_id']: expr.pop(key, None)
             dict.update(expr, {
                  'tags': ''
                 ,'background': {}
