@@ -111,7 +111,7 @@ Hive.Menus = (function(){
 
         // email and embed menus
         $(function(){
-            $('.menu_item.message').click(function(){showDialog('#dia_share')});
+            $('.menu_item.message').click(require_login(function(){showDialog('#dia_share')}));
             var dia = $('#dia_share');
             dia.find('form').submit(function(e){
                 var submit = dia.find('input[type=submit]');
