@@ -242,8 +242,10 @@ Hive.Menus = (function(){
         $('.broadcast .count').html(expr.counts.Broadcast).toggleClass('zero', is_empty(expr.counts.Broadcast));
         $('.comment .count').html(expr.counts.Comment).toggleClass('zero', is_empty(expr.counts.Comment));
 
-        // TODO: update share URLs
+        // update share URLs and embed dialog
         o.update_share_urls(expr);
+        var embed_link = $( $('#dia_embed textarea').val() ).attr('src', expr.url);
+        $('#dia_embed textarea').val(embed_link.outerHTML());
 
         $('#expr_menu .big_card .title').html(expr.title);
         $('#expr_menu .big_card .thumb').attr('src', expr.thumb);

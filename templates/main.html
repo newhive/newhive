@@ -256,6 +256,7 @@
   <div id='dialogs'>
     {% block dialogs %}
     {% include 'dialogs/share.html' %}
+    {% include 'dialogs/embed.html' %}
       {% if user.logged_in %}
           {% include 'dialogs/referral.html' %}
           {% include 'dialogs/facebook_connect.html' %}
