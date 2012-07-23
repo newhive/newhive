@@ -369,7 +369,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.hide = function(){
         navigator_element.stop().clearQueue();
         navigator_element.animate({bottom: -height-2*opts.margin});
-        if (!Modernizr.touch) info.find('input').blur();
+        if (info && !Modernizr.touch) info.find('input').blur();
         return o;
     };
 
