@@ -155,6 +155,29 @@ Hive.Menus = (function(){
     }
 
     // AJAXy diddling for all content in above menus
+    o.update_share_urls = function(expr){
+        var update_functions = {
+            facebook: function(url){ return 'http://www.facebook.com/sharer.php?u=' + url }
+            , twitter: function(url){ return 'http://twitter.com/share?url=' + url }
+            , tumblr: function(url){ return 'http://www.tumblr.com/share?v=3&u=' + url }
+            , pinterest: function(url, title, thumb){ return "http://pinterest.com/pin/create/button/?url=" + url + "&media=" + thumb }
+            , stumble: function(url, title){ return 'http://www.stumbleupon.com/submit?url=' + url + '&title=' + title }
+            , gplus: function(url){ return "https://plusone.google.com/_/+1/confirm?hl=en-US&url=" + url }
+            , linkedin: function(url, title){ return "http://www.linkedin.com/shareArticle?mini=true&url=" + url + "&title=" + title }
+            , reddit: function(url){ return 'http://www.reddit.com/submit?url=' + url }
+        };
+        var share_menu = $('#share_menu');
+        $.each(update_functions, function(key, fun){
+            var link = share_menu.find('a.' + key);
+            var href = fun(
+                encodeURIComponent(expr.url)
+                , encodeURIComponent(expr.title)
+                , encodeURIComponent(expr.thumb)
+            );
+            link.attr('href', href);
+        });
+    };
+
     o.update_expr = function(expr){
         if(!o.navigator_menu.opened) Hive.navigator.current_expr().frame.get(0).focus();
         var set_class = function(o, b, c){ return o[b ? 'addClass' : 'removeClass'](c) };
@@ -190,6 +213,7 @@ Hive.Menus = (function(){
         $('.comment .count').html(expr.counts.Comment).toggleClass('zero', is_empty(expr.counts.Comment));
 
         // TODO: update share URLs
+        o.update_share_urls(expr);
 
         $('#expr_menu .big_card .title').html(expr.title);
         $('#expr_menu .big_card .thumb').attr('src', expr.thumb);

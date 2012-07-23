@@ -67,7 +67,7 @@ img.thumb { background-color: $color_grey_medium; }
         line-height: $nav_size;
         vertical-align: middle;
     }
-    .active .text { color: white; }
+    .active .text, .active.text { color: white; }
     .text_btn {
         padding: 0 8px;
         cursor: pointer;
@@ -355,7 +355,7 @@ body.frame{
 
 #login_menu {
     width: 190px; padding : 10px;
-    input[type=text], #login_menu input[type=password] { width: 170px; }
+    input[type=text], input[type=password] { width: 170px; }
     .password_recovery {
         font-weight: normal;
         font-size: 12px;

@@ -105,7 +105,7 @@
       {% if owner %}
         ><div id='owner_btn' class='hoverable center text_btn black_active'
           ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
-          ><div class='text name'>by <span class='owner_name'>{{ owner.name }}</span></div
+          ><div class='text name'><span>by </span><span class='owner_name'>{{ owner.name }}</span></div
         ></div
       {% endif %}
       ><div id='share_btn' class='hoverable center black_active'
@@ -147,6 +147,7 @@
 
     <div id='share_menu' class='menu'>
       {% set here = url | urlencode %}
+      {% set large_thumb = (expr.thumb if expr else "") | urlencode %}
       <div id="like_buttons">
         <div>
           <a class='facebook' onClick="logShare('facebook');" target="_blank" href='http://www.facebook.com/sharer.php?u={{ here }}'>
@@ -161,13 +162,13 @@
               <div class="count">&nbsp;{{ exp.analytic_count("twitter") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
             </div>
           </a>
-          <a class='tumblr' onClick="logShare('tumblr');" target="_blank">
+          <a class='tumblr' onClick="logShare('tumblr');" target="_blank" href="http://www.tumblr.com/share?v=3&u={{here}}">
             <div class="like_button tumblr">
               <img src='{{ 'skin/1/social/tumblr.png'|asset_url }}' title='Share on Tumblr'>
               <div class="count">&nbsp;{{ exp.analytic_count("tumblr") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
             </div>
           </a>
-          <a class='pinterest' onClick="logShare('pinterest');" target="_blank">
+          <a class='pinterest' onClick="logShare('pinterest');" target="_blank" href="http://pinterest.com/pin/create/button/?url={{here}}&media={{large_thumb}}">
             <div class="like_button pinterest">
               <img src='{{ 'skin/1/social/pinterest.png'|asset_url }}' title='Share on Pinterest'>
               <div class="count">&nbsp;{{ exp.analytic_count("pinterest") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
@@ -181,13 +182,13 @@
               <div class="count">&nbsp;{{ exp.analytic_count("stumble") | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
             </div>
           </a>
-          <a href="https://plusone.google.com/_/+1/confirm?hl=en-US&url={{ here }}" title="Google+">
+          <a class='gplus' onClick="logShare('gplus');" target="_blank" href="https://plusone.google.com/_/+1/confirm?hl=en-US&url={{ here }}" title="Google+">
             <div class="like_button gplus">
               <img src="{{ 'skin/1/social/plus_one.png'|asset_url }}"/>
               <div class="count">&nbsp;{{ exp.analytic_count('gplus') | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>
             </div>
           </a>
-          <a href="https://plusone.google.com/_/+1/confirm?hl=en-US&url=ADD_YOUR_URL" >
+          <a class='linkedin' onClick="logShare('linkedin');" target="_blank" href="http://www.linkedin.com/shareArticle?mini=true&url={{ here }}&title={{ title | e | urlencode }}" >
             <div class="like_button linkedin">
               <img src="{{ 'skin/1/social/linkedin.png'|asset_url }}" title="Share to Linked In"/>
               <div class="count">&nbsp;{{ exp.analytic_count('linkedin') | no_zero | large_number if exp and exp.id else zero_count_string }}&nbsp;</div>

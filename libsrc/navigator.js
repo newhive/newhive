@@ -82,14 +82,18 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.move = function(event){
-        if (event instanceof WheelEvent){
+        if (typeof event == "number"){
+            o.pos_set(event + pos);
+        } else if (event instanceof WheelEvent){
             o.pos_set(event.wheelDelta + pos);
         } else {
             o.pos_set(event.offsetX);
         }
     };
     o.move_end = function(event){
-        if (event instanceof WheelEvent){
+        if (typeof event == "number"){
+            delta = event;
+        } else if (event instanceof WheelEvent){
             delta = event.wheelDelta;
         } else {
             delta = event.deltaX;
@@ -101,6 +105,26 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
     };
 
+    // Hive.Navigator.scroll sets auto-scrolling speed, cancels scrolling if called with speed=0
+    var scroll_interval, scroll_speed;
+    o.scroll_speed = function(){
+        return scroll_speed / 20;
+    };
+    o.scroll = function(speed){
+        var interval_function = function(){
+            o.move(o.scroll_speed());
+            o.move_end(o.scroll_speed());
+        };
+        if (speed == 0) {
+            clearInterval(scroll_interval);
+            scroll_interval = false;
+        } else {
+            scroll_speed = speed;
+            if (!scroll_interval) {
+                scroll_interval = setInterval(interval_function, 30);
+            }
+        }
+    };
 
     // public methods
     var fetching_lock = {};
@@ -164,7 +188,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             .css({left: left_offset, 'z-index': 2})
             .load(current_expr.show);
 
-
         function animate_complete(){
             $('iframe.expr').not(frame).css({left: -9999});
             frame.css('z-index', 1);
@@ -184,6 +207,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             fetch_function(opts.visible_count);
         }
 
+        // Garbage collect old frames
+        $.each(away.slice(3), function(i, expr){ expr.unload(); });
     };
 
     o.prev = function(){
@@ -318,20 +343,33 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             old_inner.animate({opactiy: 0}, 5, function(){ old_inner.remove();});
         }
 
+        // event handlers for auto-scrolling based on mouse position
+        inner.on('mousemove', function(e){
+            if (e.clientX < 300) {
+                o.scroll(300 - e.clientX);
+            } else if (e.clientX > width - 300) {
+                o.scroll((width - 300) - e.clientX);
+            } else {
+                o.scroll(0);
+            }
+        }).on('mouseleave', function(){
+            o.scroll(0);
+        });
+
         return o;
     };
 
     o.show = function(){
         navigator_element.stop().clearQueue();
         navigator_element.animate({bottom: 0});
-        info.find('input').focus();
+        if (!Modernizr.touch) info.find('input').focus();
         return o;
     };
 
     o.hide = function(){
         navigator_element.stop().clearQueue();
         navigator_element.animate({bottom: -height-2*opts.margin});
-        info.find('input').blur();
+        if (!Modernizr.touch) info.find('input').blur();
         return o;
     };
 
@@ -505,6 +543,14 @@ Hive.Navigator.Expr = function(data, opts){
             .addClass('expr')
             .on('load', on_load(callback));
         content_element.append(o.frame);
+    };
+    o.unload = function(){
+        if (o.frame) {
+            o.frame.remove();
+            delete o.frame;
+            delete o.loading_started;
+            delete o.loaded;
+        };
     };
 
     o.data = function(){
