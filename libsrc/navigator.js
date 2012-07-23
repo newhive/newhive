@@ -51,8 +51,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     var pos = 0;
     function clamp_pos(x){
-        var x_max = prev_list.length * expr_width - center.minus;
-        var x_min = center.minus - next_list.length * expr_width;
+        var x_max = prev_list.length * expr_width - center.minus + 2 * opts.margin;
+        var x_min = center.minus - next_list.length * expr_width - 2 * opts.margin;
 
         if (x_max < x_min) {
             return x_max;
