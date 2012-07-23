@@ -91,7 +91,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
     };
     o.move_end = function(event){
-        if (event instanceof WheelEvent){
+        if (typeof event == "number"){
+            delta = event;
+        } else if (event instanceof WheelEvent){
             delta = event.wheelDelta;
         } else {
             delta = event.deltaX;
@@ -111,6 +113,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.scroll = function(speed){
         var interval_function = function(){
             o.move(o.scroll_speed());
+            o.move_end(o.scroll_speed());
         };
         if (speed == 0) {
             clearInterval(scroll_interval);
