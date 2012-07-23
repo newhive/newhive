@@ -100,7 +100,7 @@
       {% if owner %}
         ><div id='owner_btn' class='hoverable center{% if nav_begin %} left_edge{% endif %} text_btn'
           ><img class='owner_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
-          ><div class='text name'>by <span class='owner_name'>{{ owner.name }}</span></div
+          ><div class='text name'><span>by </span><span class='owner_name'>{{ owner.name }}</span></div
         ></div
         {% set nav_begin = False %}
       {% endif %}
