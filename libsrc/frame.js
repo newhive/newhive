@@ -103,6 +103,9 @@ Hive.Menus = (function(){
             '#star_menu .items') });
         $('#broadcast_btn').click(function(){ o.feed_toggle('broadcast', Hive.expr.id,
             '#broadcast_btn', '#broadcast_menu .items') });
+        $('#owner_menu .menu_item.listen').click(function(){
+            o.feed_toggle('star', Hive.expr.owner.id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
+        });
 
         $('#comment_form').submit(o.post_comment);
 
@@ -294,13 +297,15 @@ Hive.Menus = (function(){
         return false;
     });
 
-    o.feed_toggle = require_login(function(action, entity, btn, items) {
+    o.feed_toggle = require_login(function(action, entity, btn, items, opts) {
         btn = $(btn); items = $(items);
         if(btn.hasClass('inactive')) return;
         btn.addClass('inactive');
 
+        var ga_action = (opts && opts.ga) || action;
+
         var state = btn.hasClass('off');
-        _gaq.push(['_trackEvent', (state ? '' : 'un') + action]);
+        _gaq.push(['_trackEvent', (state ? '' : 'un') + ga_action, entity]);
         $.post('', { action: action, entity: entity, state: state }, function(data) {
             var count_e = btn.find('.count');
             var count = parseInt(count_e.html());
@@ -310,10 +315,10 @@ Hive.Menus = (function(){
             if(!data) { o.server_error(); return; }
             if(data.state) {
                 count_e.html(count + 1);
-                o.face_link(user.name, user.id, user.thumb).prependTo(items);
+                if (items.length) o.face_link(user.name, user.id, user.thumb).prependTo(items);
             } else {
                 count_e.html(count - 1);
-                items.find('.' + user.id).remove();
+                if (items.length) items.find('.' + user.id).remove();
             };
             o.btn_state(btn, data.state);
         }, 'json');
