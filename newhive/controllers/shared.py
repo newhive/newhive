@@ -92,10 +92,6 @@ class PagingMixin(object):
     @paging_decorator
     def home_feed(self, request, response, paging_args, **kwargs):
         if (request.path_parts, 1): response.context['title'] = 'Network'
-        c = copy.copy(paging_args)
-        if c.has_key('viewer'):
-            c['viewer'] = c['viewer'].get('name')
-        print c
         return request.requester.feed_network(**paging_args), {'tag': 'Network'}
 
     @paging_decorator
