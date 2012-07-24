@@ -75,6 +75,11 @@
     #insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
 }
 
+#menu_image {
+    width: 200px;
+    .embed_box { width: 150px; height: 1.2em; }
+}
+
 .btn { display: inline-block; padding: 5px; cursor: default; }
 .menu label { font-weight: normal; font-size: 15px; }
 #menu_save { top : 43px; right : 0px; padding : 10px; width: 220px; }
