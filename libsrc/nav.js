@@ -96,7 +96,7 @@ Hive.Menus = (function(){
         if($('#owner_btn').length) hover_menu('#owner_btn', '#owner_menu', $.extend({ offset_y: 8,
             layout_x: 'right', group: group }, swap_action_nav));
         $('#owner_menu .menu_item.listen').click(function(){
-            o.feed_toggle('star', Hive.expr.owner.id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
+            o.feed_toggle('star', Hive.expr ? Hive.expr.owner.id : owner_id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
         });
 
         if($('#share_btn').length) hover_menu('#share_btn', '#share_menu', $.extend({ offset_y: 8,

@@ -111,10 +111,10 @@
       {% if not user.logged_in %}
         ><div id='login_btn' class='text center hoverable text_btn black_active'>Log In</div
       {% endif %}
-      {% if owner %}
+      {% if owner and not user_is_owner %}
         ><div id='owner_btn' class='hoverable center text_btn black_active'
           ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
-          ><div class='text name'><span>by </span><span class='owner_name'>{{ owner.name }}</span></div
+          ><div class='text name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name }}</span></div
         ></div
       {% endif %}
       {% if community or expr %}
@@ -134,7 +134,7 @@
       </div>
     {% endif %}
 
-    {% if owner %}
+    {% if owner and not user_is_owner %}
       <div id='owner_menu' class='menu'>
         <a href='{{ owner.url }}' class='owner_url'><div class='menu_item default'>Expressions</div></a>
         <div class='thumbs'>
@@ -152,7 +152,15 @@
         {#<div class='menu_item message'>Send message <div class='icon'></div></div>#}
         <div class='bar'></div>
         <div class='menu_item'>Activity</div>
-        <div class='items'><b>Loading...</b></div>
+        <div class='items'>
+          {% if expr %}
+            <b>Loading...</b>
+          {% else %}
+            {% for feed in owner.feed_profile(viewer=user, limit=15) %}
+              {% include "partials/feed.html" %}
+            {% endfor %}
+          {% endif %}
+        </div>
       </div>
     {% endif %}
 

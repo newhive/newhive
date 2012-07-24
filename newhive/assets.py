@@ -26,7 +26,6 @@ class Assets(object):
         bucket_url = self.asset_bucket.generate_url(0)
         self.base_url = bucket_url[0:bucket_url.index('?')]
         self.local_base_url = '/lib/' #re.sub('https?:', '', abs_url()) + 'lib/'
-        self.secure_local_base_url = abs_url(secure=True) + 'lib/'
         self.default_local = False
 
     # return (path, name) tuples
@@ -148,7 +147,7 @@ class HiveAssets(Assets):
         print('Fetching assets for scss...')
         # first add assets that need to be local for weird browser requirements (fonts and flash)
         self.find('Jplayer.swf', local=True)
-        self.find('fonts', local=True)
+        #self.find('fonts', local=True) # fonts must have absolute SSL paths (css is served from s3)
         # now grab the rest of 'em
         self.find('')
 
