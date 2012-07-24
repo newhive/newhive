@@ -59,6 +59,8 @@ Hive.Menus = (function(){
                 }
             } } );
 
+            $('#hive_menu .email_invites').click(function(){ showDialog('#dia_referral') });
+
             $('#fb_invite_menu_item').click(function(e){
                 _gaq.push(['_trackEvent', 'fb_connect', 'open_invite_dialog', 'user_menu']);
                 sendRequestViaMultiFriendSelector();
@@ -72,6 +74,10 @@ Hive.Menus = (function(){
                 e.stopPropagation();
                 $(this).addClass('menu_hover');
                 loadDialogPost('facebook_listen');
+            });
+
+            $('#hive_menu .feedback').click(function(){
+                new_window(secure_server + 'feedback?url=' + window.location, 470, 400);
             });
         }
         else {

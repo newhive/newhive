@@ -71,12 +71,13 @@
       ><a href='{{ server_url }}home/people'><div class='menu_item primary'>People</div></a
       ><a href='{{ server_url }}home/page'><div class='menu_item'>About New Hive</div></a
       {% if user.logged_in %}
-        ><div class='menu_item'>Invite Friends</div
+        ><div class='menu_item email_invites'>Email invites</div
         {% if user.has_facebook %}
           ><div class='menu_item' id='fb_invite_menu_item'>Invite Facebook friends</div
           ><div class='menu_item' id='fb_listen_menu_item'>Find Facebook friends</div
         {% endif %}
         ><a href='{{ secure_server }}settings'><div class='menu_item'>Settings</div></a
+        ><div class='menu_item feedback'>Send us feedback</div
         ><form id='logout_form' action='{{ secure_server }}' method='POST'
           ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
           ><input name='action' value='logout' type='hidden'
