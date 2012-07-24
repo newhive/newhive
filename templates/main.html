@@ -44,6 +44,8 @@
         ><div class='text name'>{{ user.name }}<div class='count rounded
           {{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
       ></div
+    {% else %}
+        ><a href='{{ server_url }}'><div id='logotype' class='icon'></div></a
     {% endif %}
     {% if not editing %}
       ><div id='create_btn' class='center hoverable black_active'

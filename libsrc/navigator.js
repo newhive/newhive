@@ -150,10 +150,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 var exp = o.make_expr(expr);
                 towards.push(exp);
                 // Add to document
-                var card = exp.render_card().data('index', start + direction * (i+1)).click(function(){
-                    o.select($(this).data('index'));
-                });
-                element.append(card);
+                element.append(render_card(exp, start + direction * (i+1)));
             });
             fetching_lock[lock] = false;
         };
@@ -162,6 +159,19 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
     o.fetch_next = function(count){ return fetch(count, 1); };
     o.fetch_prev = function(count){ return fetch(count, -1); };
+
+    function render_card(expr, i) {
+        var timeout;
+        var card = expr.render_card().data('index', i).click(function(){
+            o.select($(this).data('index'));
+        }).hover(function(){
+            clearTimeout(timeout);
+            o.render_tags(expr);
+        }, function(){
+            timeout = setTimeout(function(){ o.render_tags(current_expr); }, 200);
+        });
+        return card;
+    };
 
     o.select = function(offset){
         var previous_expr = current_expr;
@@ -248,11 +258,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         element.empty();
         $.each(list, function(i, expr){
             if (!expr) return;
-            var el = expr.render_card();
-            el.data('index', (i + start_index) * direction).click(function(){
-                o.select($(this).data('index'));
-            });
-            element.append(el);
+            element.append(render_card(expr, (i + start_index) * direction));
         });
         list.element = element;
     };
@@ -317,24 +323,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         info.find('form').submit(o.search);
         set_context_box(build_search(query));
 
-        var expr_tags = o.current_expr().tags_index;
-        var owner_tags = o.current_expr().owner.tags;
-        if (owner_tags) {
-            owner_tags = $.grep(owner_tags, function(tag){ return $.inArray(tag, expr_tags) == -1 });
-        };
-
-        var href = function(tag,opts){ return o.search_string(opts.prefix + tag); };
-        var tag_html = [
-            tag_list_html(o.current_expr().owner.name, {cls: 'name', prefix: '@', href: href})
-            , tag_list_html(expr_tags, {cls: 'expr', href: href})
-            //, tag_list_html(owner_tags, {cls: 'user'})
-            ].join(' ')
-        info.find('.tags').html(tag_html)
-            .find('.tag').click(function(){
-                o.context($(this).html());
-                return false;
-            });
-
+        o.render_tags(o.current_expr());
 
         // Unless this is the initial render we now have two inner elements,
         // remove the old one, but do it in this roundabout way to prevent a
@@ -357,6 +346,27 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         });
 
         return o;
+    };
+
+    o.render_tags = function(expr){
+        var expr_tags = expr.tags_index;
+        var owner_tags = expr.owner.tags;
+        if (owner_tags) {
+            owner_tags = $.grep(owner_tags, function(tag){ return $.inArray(tag, expr_tags) == -1 });
+        };
+
+        var href = function(tag,opts){ return o.search_string(opts.prefix + tag); };
+        var tag_html = [
+            tag_list_html(expr.owner.name, {cls: 'name', prefix: '@', href: href})
+            , tag_list_html(expr_tags, {cls: 'expr', href: href})
+            //, tag_list_html(owner_tags, {cls: 'user'})
+            ].join(' ')
+        info.find('.tags').html(tag_html)
+            .find('.tag').click(function(){
+                o.context($(this).html());
+                return false;
+            });
+
     };
 
     o.show = function(){
