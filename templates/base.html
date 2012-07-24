@@ -35,6 +35,7 @@
    var _gaq = _gaq || [];
    _gaq.push(['_setAccount', 'UA-22827299-2']);
    _gaq.push(['_setDomainName', '.thenewhive.com']);
+   _gaq.push(['_setAllowLinker', true]);
    _gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
    //_gaq.push(['_setCustomVar', 2, 'wave{{ user['signup_group']|default('0') }}', '{{ user['name'] }}', 1]);
    _gaq.push(['_setCustomVar', 2, 'join_date', '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
