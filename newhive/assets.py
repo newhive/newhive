@@ -164,15 +164,11 @@ class HiveAssets(Assets):
 
         assets_env.register('google_closure.js', 'google_closure.js')
 
-        assets_env.register('frame.js',
-                'frame.js', 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
-                'history/history.adapter.jquery.js', 'jquery.transition.js',
-                filters='yui_js',
-                output='../lib/frame.js')
-
         assets_env.register('app.js',
                 'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
                 'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'Modernizr.js', 'util.js',
+                'nav.js', 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
+                'history/history.adapter.jquery.js', 'jquery.transition.js',
                 filters='yui_js',
                 output='../lib/app.js')
 
