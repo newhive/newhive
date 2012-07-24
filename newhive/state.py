@@ -753,14 +753,7 @@ class Expr(HasSocial):
         return self.increment({counter: 1})
 
     @property
-    def views(self):
-        if self.has_key('views'):
-            if self.has_key('owner_views'):
-                return self['views'] - self['owner_views']
-            else:
-                return self['views']
-        else:
-            return 0
+    def views(self): return self.get('views', 0)
 
     def qualified_url(self):
       return "http://" + self['domain'] + "/" + self['name']

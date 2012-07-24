@@ -198,6 +198,9 @@ class Expression(Application, PagingMixin):
         if expr.auth_required(request.requester, password=request.form.get('password')):
             return self.serve_json(response, [])
 
+        if request.owner == expr.get('owner'): expr.increment_counter('owner_views')
+        else: expr.increment_counter('views')
+
         items = map(lambda item: dict(item,
                 initiator_thumb=item.initiator.get_thumb(70),
                 created_friendly=friendly_date(item['created'])

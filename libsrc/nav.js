@@ -44,8 +44,67 @@ Hive.Menus = (function(){
         $('#owner_nav_handle').width($('#owner_nav').outerWidth());
     };
 
+    o.init = function(group){
+        if(!group) group = { menus: [] };
+
+        hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
+            $('#search_box').get(0).focus(); }, group: group } );
+
+        if(logged_in) {
+            hover_menu( '#user_btn', '#user_menu', { offset_y: 8, group: group, open: function(){
+                var div = $('#user_btn .count');
+                if(!div.hasClass('zero')){
+                    div.addClass('zero');
+                    logAction('notifications_open');
+                }
+            } } );
+
+            $('#hive_menu .email_invites').click(function(){ showDialog('#dia_referral') });
+
+            $('#fb_invite_menu_item').click(function(e){
+                _gaq.push(['_trackEvent', 'fb_connect', 'open_invite_dialog', 'user_menu']);
+                sendRequestViaMultiFriendSelector();
+            });
+            $('#fb_connect_menu_item').click(function(e){
+                _gaq.push(['_trackEvent', 'fb_connect', 'open_connect_dialog', 'user_menu']);
+                showDialog('#dia_facebook_connect');
+            });
+            $('#fb_listen_menu_item').click(function(e){
+                _gaq.push(['_trackEvent', 'fb_connect', 'open_listen_dialog', 'user_menu']);
+                e.stopPropagation();
+                $(this).addClass('menu_hover');
+                loadDialogPost('facebook_listen');
+            });
+
+            $('#hive_menu .feedback').click(function(){
+                new_window(secure_server + 'feedback?url=' + window.location, 470, 400);
+            });
+        }
+        else {
+            o.login_menu = hover_menu( '#login_btn', '#login_menu', {
+                open: function() { $('#username').get(0).focus(); },
+                close_delay: 1000,
+                offset_y: 8,
+                layout_x: 'right',
+                group: group
+            } );
+        }
+
+        var swap_action_nav = { open: function(){ $('#action_nav').hide() },
+            close: function(){ $('#action_nav').show() } };
+
+        if($('#owner_btn').length) hover_menu('#owner_btn', '#owner_menu', $.extend({ offset_y: 8,
+            layout_x: 'right', group: group }, swap_action_nav));
+        $('#owner_menu .menu_item.listen').click(function(){
+            o.feed_toggle('star', Hive.expr ? Hive.expr.owner.id : owner_id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
+        });
+
+        if($('#share_btn').length) hover_menu('#share_btn', '#share_menu', $.extend({ offset_y: 8,
+            group: group }, swap_action_nav));
+    };
+
     // initialize menus for frame page, then close them after delay
-    o.create = function(){
+    o.expr_init = function(){
         var speed = 100,
             drawers = $('#user_nav,#owner_nav,#action_nav'),
             handles = $('.menu_handle').add('#navigator_handle').add('#navigator'),
@@ -66,50 +125,7 @@ Hive.Menus = (function(){
             nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false,
                 open_menu: open_nav, close_menu: close_nav, opened: true, close_delay: 800 } );
 
-        hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
-            $('#search_box').get(0).focus(); }, group: o.nav_menu } );
-
-        if(logged_in){
-            hover_menu( '#user_btn', '#user_menu', { offset_y: 8, group: o.nav_menu, open: function(){
-                var div = $('#user_btn .count');
-                if(!div.hasClass('zero')){
-                    div.addClass('zero');
-                    logAction('notifications_open');
-                }
-            } } );
-            $('#fb_invite_menu_item').click(function(e){
-                _gaq.push(['_trackEvent', 'fb_connect', 'open_invite_dialog', 'user_menu']);
-                sendRequestViaMultiFriendSelector();
-            });
-            $('#fb_connect_menu_item').click(function(e){
-                _gaq.push(['_trackEvent', 'fb_connect', 'open_connect_dialog', 'user_menu']);
-                showDialog('#dia_facebook_connect');
-            });
-            $('#fb_listen_menu_item').click(function(e){
-                _gaq.push(['_trackEvent', 'fb_connect', 'open_listen_dialog', 'user_menu']);
-                e.stopPropagation();
-                $(this).addClass('menu_hover');
-                loadDialogPost('facebook_listen');
-            });
-        }
-
-        if(!logged_in) {
-            o.login_menu = hover_menu( '#login_btn', '#login_menu', {
-                open: function() { $('#username').get(0).focus(); },
-                close_delay: 1500,
-                offset_y: 8,
-                layout_x: 'right',
-                group: nav_menu
-            } );
-        }
-
-        var swap_action_nav = { open: function(){ $('#action_nav').hide() },
-            close: function(){ $('#action_nav').show() } };
-        hover_menu('#owner_btn', '#owner_menu', $.extend({ offset_y: 8, layout_x: 'right',
-            group: nav_menu }, swap_action_nav));
-
-        hover_menu('#share_btn', '#share_menu', $.extend({ offset_y: 8,
-            group: nav_menu }, swap_action_nav));
+        o.init(nav_menu);
 
         o.action_nav_top = 70;
         var menu_top = o.action_nav_top + 4;
@@ -127,9 +143,6 @@ Hive.Menus = (function(){
             '#star_menu .items') });
         $('#broadcast_btn').click(function(){ o.feed_toggle('broadcast', Hive.expr.id,
             '#broadcast_btn', '#broadcast_menu .items') });
-        $('#owner_menu .menu_item.listen').click(function(){
-            o.feed_toggle('star', Hive.expr.owner.id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
-        });
 
         $('#comment_form').submit(o.post_comment);
 
@@ -157,7 +170,10 @@ Hive.Menus = (function(){
                 return false;
             });
 
-            $('.menu_item.embed').click(function(){showDialog('#dia_embed')});
+            $('.menu_item.embed').click(function(){
+                showDialog('#dia_embed');
+                $('#dia_embed textarea').get(0).focus();
+            });
         });
 
         var del_dialog;
@@ -392,7 +408,7 @@ var tag_list_html = function(tags, opts){
     }).join(opts.join);
 };
 
-function sendRequestViaMultiFriendSelector() {
+var sendRequestViaMultiFriendSelector = function(){
   function requestCallback(response) {
     $('#dia_referral .btn_dialog_close').click();
     if (response){
@@ -406,4 +422,4 @@ function sendRequestViaMultiFriendSelector() {
     , title: 'Invite Friends to Join The New Hive'
     , filters: ['app_non_users']
   }, requestCallback);
-}
+};

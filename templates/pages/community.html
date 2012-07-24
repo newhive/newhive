@@ -9,17 +9,15 @@
 
 {% block head %}
   {{ super() }}
-  {% if profile and user_is_owner %}
-    <script>
+  <script>
+    {% if profile and user_is_owner %}
       $(function(){
           var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
           var hoverout = function(){ $('#profile_thumb .message').remove(); };
           $('#profile_thumb img').hover(hoverin, hoverout);
       });
-    </script>
-  {% endif %}
-  {% if home and not user.logged_in %}
-    <script>
+    {% endif %}
+    {% if home and not user.logged_in %}
       function homepage_header() {
           var header = $('#homepage_header')
           if (header.length > 0)
@@ -36,8 +34,9 @@
         homepage_header();
         $('.fathead').width($(window).width()-50);
       });
-    </script>
-  {% endif %}
+    {% endif %}
+    {% if owner %}var owner_id = {{ owner.id | json }};{% endif %}
+  </script>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} community {{ 'home' if home }}{{ 'profile' if profile }}{% endblock %}

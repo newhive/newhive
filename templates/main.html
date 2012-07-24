@@ -67,18 +67,19 @@
 
     <div class='menu links'
       {% if user.logged_in %}
-        ><a href='{{ server_url }}'><div class='menu_item default primary'>My Network</div></a
+        ><a href='{{ server_url }}'><div class='menu_item default primary'>My network</div></a
       {% endif %}
       ><a href='{{ server_url }}home/expressions'><div class='menu_item primary'>Featured expressions</div></a
       ><a href='{{ server_url }}home/people'><div class='menu_item primary'>People</div></a
       ><a href='{{ server_url }}home/page'><div class='menu_item'>About New Hive</div></a
       {% if user.logged_in %}
-        ><div class='menu_item'>Invite Friends</div
+        ><div class='menu_item email_invites'>Email invites</div
         {% if user.has_facebook %}
           ><div class='menu_item' id='fb_invite_menu_item'>Invite Facebook friends</div
           ><div class='menu_item' id='fb_listen_menu_item'>Find Facebook friends</div
         {% endif %}
         ><a href='{{ secure_server }}settings'><div class='menu_item'>Settings</div></a
+        ><div class='menu_item feedback'>Send us feedback</div
         ><form id='logout_form' action='{{ secure_server }}' method='POST'
           ><div onclick='$("#logout_form").submit()' class='menu_item'>Log out</div
           ><input name='action' value='logout' type='hidden'
@@ -110,12 +111,12 @@
     <div id='owner_nav_handle' class='menu_handle'></div>
     <div id='owner_nav' class='nav horiz'
       {% if not user.logged_in %}
-        ><div id='login_btn' class='text center hoverable text_btn black_active'>Log In</div
+        ><div id='login_btn' class='text center hoverable text_btn black_active'><span>Log In</span></div
       {% endif %}
-      {% if owner %}
+      {% if owner and not user_is_owner %}
         ><div id='owner_btn' class='hoverable center text_btn black_active'
           ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
-          ><div class='text name'><span>by </span><span class='owner_name'>{{ owner.name }}</span></div
+          ><div class='text name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name }}</span></div
         ></div
       {% endif %}
       {% if community or expr %}
@@ -135,7 +136,7 @@
       </div>
     {% endif %}
 
-    {% if owner %}
+    {% if owner and not user_is_owner %}
       <div id='owner_menu' class='menu'>
         <a href='{{ owner.url }}' class='owner_url'><div class='menu_item default'>Expressions</div></a>
         <div class='thumbs'>
@@ -153,7 +154,15 @@
         {#<div class='menu_item message'>Send message <div class='icon'></div></div>#}
         <div class='bar'></div>
         <div class='menu_item'>Activity</div>
-        <div class='items'><b>Loading...</b></div>
+        <div class='items'>
+          {% if expr %}
+            <b>Loading...</b>
+          {% else %}
+            {% for feed in owner.feed_profile(viewer=user, limit=15) %}
+              {% include "partials/feed.html" %}
+            {% endfor %}
+          {% endif %}
+        </div>
       </div>
     {% endif %}
 
@@ -214,36 +223,18 @@
           </a>
         </div>
       </div>
-
-      <div class='bar'></div>
-      <div class='menu_item message'>Email <div class='icon'></div></div>
-      <div class='menu_item embed'>Embed</div>
+      {% if expr %}
+        <div class='bar'></div>
+        <div class='menu_item message'>Email <div class='icon'></div></div>
+        <div class='menu_item embed'>Embed</div>
+      {% endif %}
     </div>
   {% endif %}
 
-  {% if not expr_frame %}
-    <script>
-      (function(){
-          hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
-              $('#search_box').get(0).focus(); } });
-          if(logged_in) hover_menu( '#user_btn', '#user_menu', { offset_y: 8 });
-  
-          if(!logged_in) {
-              var login_menu = hover_menu( '#login_btn', '#login_menu', {
-                      open: function() { $('#username').get(0).focus(); },
-                      close_delay: 1000,
-                      offset_y: 8,
-                      layout_x: 'right',
-                  } );
-              {% if error %} login_menu.open().sticky = true; {% endif %}
-          }
-          {% if owner %}
-              hover_menu('#owner_btn', '#owner_menu', { offset_y: 8, layout_x: 'right'});
-          {% endif %}
-          if($('#share_btn').length) hover_menu('#share_btn', '#share_menu', { offset_y: 8 });
-      })();
-    </script>
-  {% endif %}
+  <script>
+    {% if not expr_frame %}Hive.Menus.init();{% endif %}
+    {% if error %}Hive.Menus.login_menu.open().sticky = true;{% endif %}
+  </script>
 
   {% block body %}
   {% endblock body %}

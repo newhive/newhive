@@ -665,6 +665,8 @@ function eraseCookie(name) {
     createCookie(name,"",-1);
 }
 
+function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
+
 var positionHacks = Funcs(noop);
 var place_apps = function() {
    $('.happ').each(function(i, app_div) {

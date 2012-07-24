@@ -9,9 +9,6 @@
 {% endblock %}
 {% block head %}
   {{super()}}
-  {% for asset in asset_bundle('frame.js') %}
-    <script src='{{ asset }}'></script>
-  {% endfor %}
   <script type='text/javascript'>
       // TODO: temporary, should probably hide this better
       var expr = {{ expr | json}};
@@ -139,8 +136,7 @@
   </div>
 
   <script>
-    Hive.Menus.create();
-    {% if error %} Hive.menus.login_menu.open(); {% endif %}
+    Hive.Menus.expr_init();
     Hive.load_expr(expr);
   </script>
   {{ body }}
