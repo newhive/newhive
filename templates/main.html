@@ -111,7 +111,7 @@
     <div id='owner_nav_handle' class='menu_handle'></div>
     <div id='owner_nav' class='nav horiz'
       {% if not user.logged_in %}
-        ><div id='login_btn' class='text center hoverable text_btn black_active'>Log In</div
+        ><div id='login_btn' class='text center hoverable text_btn black_active'><span>Log In</span></div
       {% endif %}
       {% if owner and not user_is_owner %}
         ><div id='owner_btn' class='hoverable center text_btn black_active'
