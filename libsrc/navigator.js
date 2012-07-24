@@ -370,7 +370,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.show = function(){
-        navigator_element.stop().clearQueue();
+        navigator_element.stop().clearQueue().show();
         navigator_element.animate({bottom: 0});
         if (info && !Modernizr.touch) info.find('input').focus();
         return o;
@@ -378,7 +378,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.hide = function(){
         navigator_element.stop().clearQueue();
-        navigator_element.animate({bottom: -height-2*opts.margin});
+        var complete = function(){ navigator_element.hide() };
+        navigator_element.animate({bottom: -height-2*opts.margin}, {complete: complete});
         if (info && !Modernizr.touch) info.find('input').blur();
         return o;
     };
