@@ -96,17 +96,22 @@ class Collection(object):
             if not page: page = '0'
 
             if is_mongo_key(page):
-                start = spec.index(page)
-                end = start + limit * -order
-                if end > start:
-                    if start == len(spec): return []
-                    sub_spec = spec[start+1:end+1]
-                else:
-                    if start == 0: return []
-                    if end - 1 < 0:
-                        sub_spec = spec[start-1::-1]
+                try:
+                    start = spec.index(page)
+                    end = start + limit * -order
+                    if end > start:
+                        if start == len(spec): return []
+                        sub_spec = spec[start+1:end+1]
                     else:
-                        sub_spec = spec[start-1:end-1:-1]
+                        if start == 0: return []
+                        if end - 1 < 0:
+                            sub_spec = spec[start-1::-1]
+                        else:
+                            sub_spec = spec[start-1:end-1:-1]
+                except ValueError:
+                    # TODO: would be better to raise a custom excpetion here so this situation
+                    # could be handled differently depending on application
+                    sub_spec = [] #paging element not in list
             else:
                 page = int(page)
                 end = (page + 1) * limit
