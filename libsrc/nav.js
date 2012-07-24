@@ -204,8 +204,8 @@ Hive.Menus = (function(){
     };
 
     o.user_link = function(name, id){
-        return $('<a>').attr('href', '/' + name).addClass(id)
-            .click(function(){ Hive.navigator.context('@' + name); return false; });
+        return $('<a>').attr('href', '/' + name).addClass(id);
+            //.click(function(){ Hive.navigator.context('@' + name); return false; });
     };
     o.face_link = function(name, id, thumb){
         return o.user_link(name, id).append( $('<img>').attr('src', thumb).addClass('thumb') );
@@ -258,6 +258,7 @@ Hive.Menus = (function(){
         if(!o.navigator_menu.opened) Hive.navigator.current_expr().frame.get(0).focus();
         var set_class = function(o, b, c){ return o[b ? 'addClass' : 'removeClass'](c) };
 
+        $('.edit_url').attr('href', secure_server + 'edit/' + expr.id);
         $('.expr_id').val(expr.id); // for delete dialog
         $('.btn_box.edit,.btn_box.delete').toggleClass('none', user.id != expr.owner.id);
 

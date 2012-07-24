@@ -118,8 +118,7 @@ class Expression(Application, PagingMixin):
             + ('empty' if resource.auth_required() else resource.id) )
         self.expr_prepare(resource, response.user)
         response.context.update(
-             edit_url = abs_url(secure = True) + 'edit/' + resource.id
-            ,expr_frame = True
+             expr_frame = True
             ,title = resource.get('title', False)
             ,expr = resource
             ,expr_url = expr_url

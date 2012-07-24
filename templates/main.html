@@ -113,7 +113,7 @@
       {% if not user.logged_in %}
         ><div id='login_btn' class='text center hoverable text_btn black_active'><span>Log In</span></div
       {% endif %}
-      {% if owner and not user_is_owner %}
+      {% if expr or (owner and not user_is_owner) %}
         ><div id='owner_btn' class='hoverable center text_btn black_active'
           ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
           ><div class='text name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name }}</span></div
@@ -136,7 +136,7 @@
       </div>
     {% endif %}
 
-    {% if owner and not user_is_owner %}
+    {% if expr or (owner and not user_is_owner) %}
       <div id='owner_menu' class='menu'>
         <a href='{{ owner.url }}' class='owner_url'><div class='menu_item default'>Expressions</div></a>
         <div class='thumbs'>
