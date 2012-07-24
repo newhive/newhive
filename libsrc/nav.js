@@ -191,7 +191,9 @@ Hive.Menus = (function(){
         });
 
         window.addEventListener('message', function(m){
-            if(m.data == 'focus') nav_menu.close();
+            if(m.data != 'focus') return;
+            nav_menu.close(true);
+            o.navigator_menu.close(true);
         }, false);
 
         $(window).resize(o.layout);
