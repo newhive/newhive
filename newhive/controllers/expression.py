@@ -147,7 +147,7 @@ class Expression(Application, PagingMixin):
 
         # Use key_map to map between keys used in querystring and those of database
         spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
-        args = dfilter(args, ['sort', 'page', 'order', 'limit'])
+        args = dfilter(args, ['sort', 'page', 'expr', 'order', 'limit'])
         args['viewer'] = request.requester
 
         default = (None, 'updated')
