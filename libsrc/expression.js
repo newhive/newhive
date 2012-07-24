@@ -108,7 +108,7 @@ $(function() {
             if(document.body.scrollLeft == 0) go_prev();
     });
 
-    $(window).click(function(){ send_top('focus'); };
+    $(window).click(function(){ send_top('focus'); });
 
     // ends up being annoying a lot of times
     //$('#bg').on('click', function(e){

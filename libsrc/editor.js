@@ -1,7 +1,7 @@
 /* Copyright 2010, A Reflection Of Inc */
 // thenewhive.com client-side expression editor version 0.1
 
-var Hive = {};
+if(!Hive) Hive = {};
 
 // gives an array function for moving an element around
 Hive.has_shuffle = function(arr) {
@@ -2098,7 +2098,7 @@ Hive.init = function() {
     var image_menu = hover_menu($('#insert_image'), $('#menu_image'), { layout: 'center_y', min_y: 77 });
     var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'),
         { click_persist: $('#image_embed_code'), auto_close: false,
-            open: function(){ $('#image_embed_code').focus(); } });
+            open: function(){ $('#image_embed_code').focus(); }, group: image_menu });
     $('#embed_image_form').submit(function(){
         Hive.embed_code('#image_embed_code');
         image_embed_menu.close();
