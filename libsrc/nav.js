@@ -190,6 +190,10 @@ Hive.Menus = (function(){
             close_delay: 800
         });
 
+        window.addEventListener('message', function(m){
+            if(m.data == 'focus') nav_menu.close();
+        }, false);
+
         $(window).resize(o.layout);
         o.update_expr(expr);
 

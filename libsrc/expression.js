@@ -91,11 +91,15 @@ $(function() {
         document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
     });
 
-    var go_next = function(){ top.postMessage('next', Hive.parent_url); };
-    var go_prev = function(){ top.postMessage('prev', Hive.parent_url); };
+    var send_top = function(msg){ top.postMessage(msg, Hive.parent_url); },
+        go_next = function(){ send_top('next'); },
+        go_prev = function(){ send_top('prev'); };
 
+    var paging_sent = false;
     $(document.body).on('keydown', function(e){
-        // TODO: prevent piling up of messages on key repeat
+        if(paging_sent) return;
+        paging_sent = true;
+
         if(e.keyCode == 32) // space
             if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) go_next();
         if(e.keyCode == 39) // right arrow
@@ -103,6 +107,8 @@ $(function() {
         if(e.keyCode == 37)
             if(document.body.scrollLeft == 0) go_prev();
     });
+
+    $(window).click(function(){ send_top('focus'); };
 
     // ends up being annoying a lot of times
     //$('#bg').on('click', function(e){
