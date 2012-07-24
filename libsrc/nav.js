@@ -170,7 +170,10 @@ Hive.Menus = (function(){
                 return false;
             });
 
-            $('.menu_item.embed').click(function(){showDialog('#dia_embed')});
+            $('.menu_item.embed').click(function(){
+                showDialog('#dia_embed');
+                $('#dia_embed textarea').get(0).focus();
+            });
         });
 
         var del_dialog;

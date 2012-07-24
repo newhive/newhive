@@ -65,7 +65,7 @@
 
     <div class='menu links'
       {% if user.logged_in %}
-        ><a href='{{ server_url }}'><div class='menu_item default primary'>My Network</div></a
+        ><a href='{{ server_url }}'><div class='menu_item default primary'>My network</div></a
       {% endif %}
       ><a href='{{ server_url }}home/expressions'><div class='menu_item primary'>Featured expressions</div></a
       ><a href='{{ server_url }}home/people'><div class='menu_item primary'>People</div></a
@@ -213,10 +213,11 @@
           </a>
         </div>
       </div>
-
-      <div class='bar'></div>
-      <div class='menu_item message'>Email <div class='icon'></div></div>
-      <div class='menu_item embed'>Embed</div>
+      {% if expr %}
+        <div class='bar'></div>
+        <div class='menu_item message'>Email <div class='icon'></div></div>
+        <div class='menu_item embed'>Embed</div>
+      {% endif %}
     </div>
   {% endif %}
 
