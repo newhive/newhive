@@ -187,7 +187,7 @@ class Expression(Application, PagingMixin):
         if expr.auth_required() and not expr.cmp_password(request.form.get('password')):
             return self.serve_forbidden(request)
 
-        response.context.update(html = expr_to_html(expr), expr = expr)
+        response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
         return self.serve_page(response, 'pages/expr.html')
 
     def empty(self, request, response): return self.serve_page(response, 'pages/expr_empty.html')
