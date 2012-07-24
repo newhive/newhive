@@ -1,0 +1,313 @@
+{% extends "main.html" %}
+
+{% block head %}
+  {% for item in asset_bundle('edit.css') %}
+    <link rel='stylesheet' type='text/css' href='{{ item }}'>
+  {% endfor %}
+  {% for item in asset_bundle('google_closure.js') %}
+    <script src='{{ item }}'></script>
+  {% endfor %}
+  {% for item in asset_bundle('edit.js') %}
+    <script src='{{ item }}'></script>
+  {% endfor %}
+  <script>
+    Hive.Exp = {{ expr | json }}; // current expression from server
+  </script>
+{% endblock head %}
+
+{% block body %}
+
+{% include 'dialogs/editor_browsers.html' %}
+
+<div id='edit_nav' class='nav horiz'
+ ><div class='center pad'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div
+ ><div class='center'><img id='btn_redo' title='redo' class='hoverable' src='{{ 'skin/1/redo.png'|asset_url }}'></div
+ ><div class='pad'></div
+ ><div class='center pad'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div
+ ><div class='smpad'></div
+ {#><div class='center hoverable text text_btn black_active' title="Editor Help" id='btn_help'>?</div#}
+ ><div id='btn_save' class='text text_btn hoverable center pad black_active'>
+   Save
+   <img src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
+ </div
+></div>
+<script>
+  (function() { var b = $('#btn_help');
+      b.click(function() { exprDialog('{{ site_pages['editor-help'] }}',
+          { minimize_to: b, click_close: true } ) });
+     {% if show_help %}$('#btn_help').click();{% endif %}
+  })();
+</script>
+
+<div id='menu_save' class='menu top'>
+  <div class='medbold'>Title</div>
+  <textarea id='title'>{{ expr.title }}</textarea>
+  <div class='spacer'></div>
+
+  <div class='medbold'>URL</div>
+  <div class=''>{{ server_name }}/</div>
+  <input id='url' type='text' value='{{ expr.name|e }}'>
+  <div class='spacer'></div>
+
+  <div class='medbold'>Tags</div>
+  <input id='tags_input' type='text' value='{{ expr.tags|e }}'>
+  <div class='spacer'></div>
+  <div class='spacer'></div>
+
+  <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle btn rounded'>
+    <span>Private</span>
+    <img src='{{ 'skin/1/drop_arrow.png'|asset_url }}'>
+  </div>
+
+  <div id='save_submit' style='float : right; padding : 5px' class='btn black rounded'>Save</div>
+
+  <div id='password_ui' style='display : none'>
+    <br><br><br>
+    <b>Optional password</b><br>
+    <input type='text' id='password' value='{{ expr.password }}'>
+  </div>
+  <div class='spacer'></div>
+
+  <div id='btn_thumbnail'>
+    <div id='btn_thumbnail_text' class='hoverable'>Choose thumbnail <img class='scale' src='{{ 'skin/1/drop_arrow.png'|asset_url }}'></div>
+    <img id="current_thumb" width="70px" height="70px" src="{{expr.thumb}}">
+  </div>
+</div>
+<div id='menu_privacy' class='menu medbold' style='width : 125px;'>
+  <div val='password' class='menu_item'>Private</div>
+  <div val='public' class='menu_item'>Public</div>
+</div>
+
+<div id='app_btns' class='nav vert'
+ ><div id='insert_text'  class='icon hoverable'></div
+ ><div id='insert_image' class='icon hoverable'></div
+ ><div id='insert_audio' class='icon hoverable'></div
+ ><div id='insert_embed' class='icon hoverable'></div
+ ><div id='insert_shape' class='icon hoverable'></div
+ ><div id='insert_file'  class='icon hoverable'></div
+></div> 
+
+<div id='menu_text' class='menu medbold'>
+ <div id='text_default' class='menu_item'>Normal</div>
+ <div id='text_header' class='menu_item'>Header</div>
+ <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
+</div>
+
+<div id='menu_image' class='menu medbold'>
+ <div id='image_upload' class='menu_item'>Upload image</div>
+ <div id='image_background' class='menu_item'>Background</div>
+ <div id='image_from_url' class='menu_item'>Image URL</div>
+ <div id='image_embed_submenu' style='text-align: center; padding-bottom: 7px;'>
+   <form id='embed_image_form'>
+     <input type='text' id='image_embed_code' class='embed_box'
+       placeholder='{{ ui.image_embed_textarea }}'>
+     <input id='image_embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
+   </form>
+ </div>
+ <!--<div id='image_webcam' class='menu_item'>Take picture</div>
+ <div id='image_search' class='menu_item'>Google images</div>-->
+</div>
+
+<div id='menu_audio' class='menu medbold'>
+ <div id='audio_upload' class='menu_item'>Upload MP3</div>
+</div>
+
+<div id='menu_file' class='menu medbold'>
+ <div class='menu_item menu_hover'>Upload file to link</div>
+</div>
+
+<div id='menu_embed' class='menu'>
+ <span class='medbold'>Embed</span><br>
+ <div class='spacer'></div>
+ <div class='description'>{{ ui.embed_code_description }}</div>
+ <textarea id='embed_code' class='embed_box' placeholder='{{ui.embed_code_textarea}}'></textarea>
+ <div style='text-align : center'><input id='embed_done' type='submit' class='btn black rounded embed_button' value='Enter'></div>
+</div>
+
+<div id='menu_shape' class='menu medbold'>
+ <div id='shape_rectangle' class='menu_item'>Rectangle</div>
+ <div id='shape_sketch' class='menu_item'>Sketch</div>
+</div>
+
+<img id='loading' src='{{ 'skin/1/loading.gif'|asset_url }}'>
+
+<div id='controls_common' class='controls_src'>
+ <!--<img class='control undo   hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'>-->
+ <img class='control copy   hoverable tip_N' src='{{ 'skin/1/copy.png'|asset_url }}' title='Duplicate Element'>
+ <img class='control remove hoverable tip_NE' src='{{ 'skin/1/delete_sm.png'|asset_url }}' title='delete'>
+ <div class='control stack'><img class='stack_up hoverable' src='{{ 'skin/1/stack_up.png'|asset_url }}' title='move to front'><img class='stack_down hoverable' src='{{ 'skin/1/stack_down.png'|asset_url }}' title='move to back'></div>
+</div>
+
+<div id='controls_text' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button link hoverable tip_W'     src='{{ 'skin/1/link.png'|asset_url }}' title='Link'
+  ><!--<img class='button fontsize hoverable' src='{{ 'skin/1/text_size.png'|asset_url }}'
+  >--><img class='button fontname'           src='{{ 'skin/1/font.png'|asset_url }}'
+  ><img class='button color'              src='{{ 'skin/1/color.png'|asset_url }}'
+  ><img class='button bold hoverable'     src='{{ 'skin/1/bold.png'|asset_url }}'     cmd='+bold'
+  ><img class='button italic hoverable'   src='{{ 'skin/1/italic.png'|asset_url }}'   cmd='+italic'
+  ><img class='button align'              src='{{ 'skin/1/justify.png'|asset_url }}'  
+  ><img class='button unformat hoverable' src='{{ 'skin/1/unformat.png'|asset_url }}' cmd='+removeFormat' title='unformat'
+  ><!--<div class='control drawer border fontsize'
+    ><span class='option fs1' style='font-size : .75em' val = '.75'>a</span
+    > <span class='option fs2' style='font-size :   1em' val =   '1'>a</span
+    > <span class='option fs3' style='font-size : 1.5em' val = '1.5'>a</span
+    > <span class='option fs4' style='font-size :   2em' val =   '2'>a</span
+    > <span class='option fs5' style='font-size :   3em' val =   '3'>a</span
+    > <span class='option fs5' style='font-size :   5em' val =   '5'>a</span
+    > <span class='option fs5' style='font-size :   8em' val =   '8'>a</span
+  ></div
+  >--><div class='control drawer border fontname'
+   ><div class='option' style='font-family:Georgia'         cmd='+fontName' val='Georgia'        >Georgia       </div
+   ><div class='option' style='font-family:Helvetica'       cmd='+fontName' val='Helvetica'      >Helvetica     </div
+   ><div class='option' style='font-family:Courier New'     cmd='+fontName' val='Courier New'    >Courier New   </div
+   ><div class='option' style='font-family:Times'           cmd='+fontName' val='Times'          >Times         </div
+   ><div class='option' style='font-family:Trebuchet'       cmd='+fontName' val='Trebuchet'      >Trebuchet     </div
+   ><div class='option' style='font-family:Museo'           cmd='+fontName' val='Museo'          >Museo         </div
+   ><div class='option' style='font-family:BPscript'        cmd='+fontName' val='BPscript'       >BPscript      </div
+   ><div class='option' style='font-family:Code'            cmd='+fontName' val='Code'           >Code          </div
+   ><div class='option' style='font-family:Comic Zine'      cmd='+fontName' val='Comic Zine'     >Comic Zine    </div
+   ><div class='option' style='font-family:Folk Outline'    cmd='+fontName' val='Folk Outline'   >Folk Outline  </div
+   ><div class='option' style='font-family:Folk Shadow'     cmd='+fontName' val='Folk Shadow'    >Folk Shadow   </div
+   ><div class='option' style='font-family:Folk Sketches'   cmd='+fontName' val='Folk Sketches'  >Folk Sketches </div
+   ><div class='option' style='font-family:Folk'            cmd='+fontName' val='Folk'           >Folk          </div
+   ><div class='option' style='font-family:Lane'            cmd='+fontName' val='Lane'           >Lane          </div
+   ><div class='option' style='font-family:Lane Posh'       cmd='+fontName' val='Lane Posh'      >Lane Posh     </div
+   ><div class='option' style='font-family:Lane Up'         cmd='+fontName' val='Lane Up'        >Lane Up       </div
+   ><div class='option' style='font-family:League Gothic'   cmd='+fontName' val='League Gothic'  >League Gothic </div
+   ><div class='option' style='font-family:Lemon Chi'       cmd='+fontName' val='Lemon Chi'      >Lemon Chi     </div
+   ><div class='option' style='font-family:Lilly'           cmd='+fontName' val='Lilly'          >Lilly         </div
+   ><div class='option' style='font-family:Lobster'         cmd='+fontName' val='Lobster'        >Lobster       </div
+   ><div class='option' style='font-family:Matiz'           cmd='+fontName' val='Matiz'          >Matiz         </div
+   ><div class='option' style='font-family:Quicksand'       cmd='+fontName' val='Quicksand'      >Quicksand     </div
+   ><div class='option' style='font-family:Bitstream Mono'  cmd='+fontName' val='Bitstream Mono' >Bitstream     </div
+
+   ><div class='option' style='font-family:Folks'           cmd='+fontName' val='Folks'          >Folks        </div
+   ><div class='option' style='font-family:Merge'           cmd='+fontName' val='Merge'          >Merge        </div
+   ><div class='option' style='font-family:Bebas'           cmd='+fontName' val='Bebas'          >Bebas        </div
+   ><div class='option' style='font-family:Arvo'            cmd='+fontName' val='Arvo'           >Arvo         </div
+   ><div class='option' style='font-family:St Ryde'         cmd='+fontName' val='St Ryde'        >St Ryde      </div
+   ><div class='option' style='font-family:Chunk Five'      cmd='+fontName' val='Chunk Five'     >Chunk Five   </div
+   ><div class='option' style='font-family:Droid Serif'     cmd='+fontName' val='Droid Serif'    >Droid Serif  </div
+   ><div class='option' style='font-family:Komika Title'    cmd='+fontName' val='Komika Title'   >Komika Title </div
+   ><div class='option' style='font-family:Banda'           cmd='+fontName' val='Banda'          >Banda        </div
+   ><div class='option' style='font-family:Pacifico'        cmd='+fontName' val='Pacifico'       >Pacifico     </div
+   ><div class='option' style='font-family:Fjord'           cmd='+fontName' val='Fjord'          >Fjord        </div
+   ><div class='option' style='font-family:Josefin Slab'    cmd='+fontName' val='Josefin Slab'   >Josefin Slab </div
+   ><div class='option' style='font-family:Nevis'           cmd='+fontName' val='Nevis'          >Nevis        </div
+   ><div class='option' style='font-family:Lobster Two'     cmd='+fontName' val='Lobster Two'    >Lobster Two  </div
+   ><div class='option' style='font-family:Crimson'         cmd='+fontName' val='Crimson'        >Crimson      </div
+   ><div class='option' style='font-family:Classic Round'   cmd='+fontName' val='Classic Round'  >Classic Round</div
+   ><div class='option' style='font-family:Novecento'       cmd='+fontName' val='Novecento'      >Novecento   </div
+  ></div
+  ><div class='control drawer border color'></div
+  ><div class='control drawer border align'
+   ><div><nobr
+    ><img class='option small hoverable' cmd='+justifyLeft'    src='{{ 'skin/1/justify_left.png'|asset_url }}' 
+    ><img class='option small hoverable' cmd='+justifyRight'   src='{{ 'skin/1/justify_right.png'|asset_url }}'
+   ></nobr></div
+   ><div
+    ><img class='option small hoverable' cmd='+justifyCenter'  src='{{ 'skin/1/justify_center.png'|asset_url }}'
+    ><img class='option small hoverable' cmd='+justifyFull'    src='{{ 'skin/1/justify_full.png'|asset_url }}'  
+   ></div
+  ></div
+ ></div>
+</div>
+
+<div id='controls_image' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button link hoverable tip_W' src='{{ 'skin/1/link.png'|asset_url }}' title='Link'
+  ><img class='button set_bg hoverable' src='{{ 'skin/1/fullscreen.png'|asset_url }}' title='make background'
+ ></div
+></div>
+
+<div id='controls_html' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button opacity tip_N' title='Opacity' src='{{ 'skin/1/opacity.png'|asset_url }}' title='Opacity'
+ ></div
+></div>
+
+<div id='controls_rectangle' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button color hoverable' src='{{ 'skin/1/color.png'|asset_url }}' title="Color"
+  {#><img class='button stroke hoverable tip_N' src='{{ 'skin/1/border_color.png'|asset_url }}' title='Border color'
+  ><img class='button blank bwidth hoverable tip_N' src='{{ 'skin/1/border_width.png'|asset_url }}' title='Border width'
+  ><div class='button blank bstyle hoverable' title='Border style'></div#}
+  ><img class='button blank rounding hoverable tip_N' src='{{ 'skin/1/rounded_corners.png'|asset_url }}' title='corner rounding'
+  {#><div class='control drawer bstyle'
+   ><div class='border hoverable' style='border-style: solid;' title='Solid border'></div
+   ><div class='border hoverable' style='border-style: dashed;' title='Dashed border'></div
+   ><div class='border none hoverable' style='border-style: none;' title='No border'></div
+  ></div#}
+ ></div>
+</div>
+
+<div id='controls_misc' class='controls_src'>
+ <img class='control drag resize hoverable tip_SE' src='{{ 'skin/1/resize.png'|asset_url }}' title="Resize">
+ <img class='control drag resize_h hoverable tip_E' src='{{ 'skin/1/resize_h.png'|asset_url }}' title="Resize">
+ <img class='button color hoverable' src='{{ 'skin/1/color.png'|asset_url }}' title="Color">
+ <img class='button opacity tip_N' src='{{ 'skin/1/opacity.png'|asset_url }}' title='Opacity'>
+ <div class='control drawer color border'></div>
+</div>
+
+<div id='controls_sketch' class='controls_src'>
+ <div class='control buttons'
+  {#><img class='button link hoverable tip_W'     src='{{ 'skin/1/link.png'|asset_url }}' title='Link'#}
+  ><img class='button fill hoverable tip_N' src='{{ 'skin/1/color.png'|asset_url }}' title='fill color'
+  ><img class='button brush rounding hoverable tip_N' src='{{ 'skin/1/brush_icon.png'|asset_url }}' title='brush'
+  ><img class='button size rounding hoverable tip_N' src='{{ 'skin/1/brush_size.png'|asset_url }}' title='brush size'
+  {#><div class='button about blank rounding hoverable tip_N' title='about'>?</div#}
+
+  ><div class='control drawer fill border'></div
+  ><div class='control drawer border brush'
+   ><div class='option' val="sketchy">sketchy</div
+   ><div class='option' val="shaded" >shaded </div
+   ><div class='option' val="chrome" >chrome </div
+   ><div class='option' val="fur"    >fur    </div
+   ><div class='option' val="longfur">longfur</div
+   ><div class='option' val="web"    >web    </div
+   ><div class='option' val="simple" >simple </div
+   ><div class='option' val="squares">squares</div
+   ><div class='option' val="ribbon" >ribbon </div
+   ><div class='option' val="circles">circles</div
+   ><div class='option' val="grid"   >grid   </div
+  ></div
+  ><div class='control drawer border about'>
+blah blah
+  </div
+  {#><img class='button stroke hoverable tip_N' src='{{ 'skin/1/border_color.png'|asset_url }}' title='Border color'#}
+  {#><img class='button blank bwidth hoverable tip_N' src='{{ 'skin/1/border_width.png'|asset_url }}' title='Border width'#}
+  {#><div class='button blank bstyle hoverable' title='Border style'></div#}
+  {#><div class='control drawer bstyle'
+   ><div class='border hoverable' style='border-style : solid;' title='Solid border'></div
+   ><div class='border hoverable' style='border-style : dashed;' title='Dashed border'></div
+   ><div class='border none hoverable' style='border-style : none;' title='No border'></div
+  ></div#}
+ ></div>
+</div>
+
+<div id='dia_edit_bg' class='dialog border selected'>
+ <h2>Edit Background</h2>
+ <div id='edit_bg_image'>
+  <div id='bg_preview' class='border'><img id='bg_preview_img'></div>
+  <div id='bg_opacity_label' class='small_text'>opacity: <input id='bg_opacity' type='text' size='3' value='100%'></div>
+  <div id='bg_upload' class='btn black small_text rounded'>Upload Image</div>
+  <div id='bg_remove' class='btn black small_text rounded'>Clear</div>
+ </div>
+ <div id='color_pick' style='float : right; position : relative;'></div>
+</div>
+
+<div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
+ <h2>Overwrite?</h2>
+ You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
+ <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
+ <input id='save_overwrite' type='button' class='btn black rounded' value='No' onclick='closeDialog()'>
+</div>
+{% include "dialogs/thumbnail.html" %}
+
+{% include 'expr_background.html' %}
+<div id='grid_guide'></div>
+
+<div id='happs'></div>
+
+{% endblock %}

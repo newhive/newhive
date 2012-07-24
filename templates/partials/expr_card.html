@@ -1,10 +1,11 @@
+{% set args = args | querystring %}
 {% set link = item.url + args %}
 <div class='expr card item border_right border_bottom with_hide' draggable='false'>
   <input type='hidden' class='item_id' value='{{ item.id }}'>
   <a href='{{ link }}'><img src='{{ item.thumb }}' class='thumb'>
   <div class='title'>{{ item.title|e }}</div></a>
   <div class='tags {{ "active_hide" if item.feed and item.feed[0].text }}'>
-    {% for t in item.tags_index %}<a href='{{ server }}tag/{{ t|e }}' class='tag' value='{{ t|e }}'>#{{ t }}</a> {% endfor %}
+    {% for t in item.tags_index %}<a href='{{ server_url }}tag/{{ t|e }}' class='tag' value='{{ t|e }}'>#{{ t }}</a> {% endfor %}
   </div>
   {% if item.feed and item.feed[0].text %}
     <div class='comment inactive_hide'>"{{ item.feed[0].text }}"</div>
@@ -14,7 +15,7 @@
   {% endif %}
   <div class='stats'>
     <span class='active_hide'>
-      <img src='{{ 'skin/1/views_sm.png'|asset_url }}'> {{ item.views() }}
+      <img src='{{ 'skin/1/views_sm.png'|asset_url }}'> {{ item.views }}
       {% if item.analytics and item.analytics.Star %}<img src='{{ 'skin/1/like_sm.png'|asset_url }}'> {{ item.analytics.Star.count }}{% endif %}
       {% if item.auth != 'public' %}<img src='{{ 'skin/1/private_sm.png'|asset_url }}'>{% endif %}
     </span>
@@ -34,7 +35,7 @@
     </div>
     <div class='feed_thumbs {{ "inactive_hide" if hide_feed }}'>{% for f in item.feed %}{%
         if f.class_name != 'NewExpr' and f.class_name != 'UpdatedExpr' %}<a href='{{ f.initiator.url }}'><img
-        src='{{ f.initiator.get_thumb(70) }}'
+        src='{{ f.initiator.get_thumb(70) if f.initiator }}'
         title='{{ f.initiator.name }} {{ f.action_name }}'
         {% if item.feed|length == 1 %}class='big'{% endif %}
     ></a>{% endif %}{% endfor %}</div>

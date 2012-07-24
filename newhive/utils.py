@@ -1,4 +1,4 @@
-import time, random, re, base64
+import time, random, re, base64, copy
 from datetime import datetime
 from newhive import config
 
@@ -68,15 +68,18 @@ def abs_url(secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
     ssl = secure or config.always_ssl
+    domain = domain or config.server_name
+    if domain.find('.' + config.server_name) > -1:
+        (subdomain, domain) = domain.split('.', 1)
+    if config.dev_prefix: domain = config.dev_prefix + '.' + domain
     proto = 'https' if ssl else 'http'
     port = config.ssl_port if ssl else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
-    rv = (proto + '://' + 
+    return (
+        proto + '://' + 
         (subdomain + '.' if subdomain else '') +
-        (domain or config.server_name) + port + '/')
-    if config.dev_prefix:
-        rv = rv.replace(config.server_name, config.dev_prefix + '.' + config.server_name)
-    return rv
+        domain + port + '/'
+    )
 
 def uniq(seq, idfun=None):
     # order preserving 
@@ -173,3 +176,23 @@ def timer(func):
     t1 = now()
     print t1 - t0
     return r
+
+def key_map(original, transformation, filter=False):
+    output = copy.copy(original)
+    for old, new in transformation.items():
+        if output.has_key(old):
+            output[new] = output.pop(old)
+    if filter:
+        return dfilter(output, transformation.values())
+    else:
+        return output
+
+def is_mongo_key(string):
+    return isinstance(string, basestring) and re.match('[0-9a-f]{24}', string)
+
+def set_trace():
+    if config.interactive:
+        import ipdb;
+        return ipdb.set_trace
+    else:
+        return lambda: None

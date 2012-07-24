@@ -1,11 +1,12 @@
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from werkzeug import url_unquote
 from werkzeug.urls import url_decode
 from newhive.mail import send_mail
+from newhive import utils
 
 
-class MailController(ApplicationController):
+class Mail(Application):
 
     def mail_us(self, request, response):
         if not request.form.get('email'): return False
@@ -71,7 +72,8 @@ class MailController(ApplicationController):
             ,'sender_url': request.requester.url
             })
 
-        exp = self.db.Expr.fetch(request.form.get('id'))
+        print request.path.split('/', 1)
+        exp = self.db.Expr.named(*request.path.split('/', 1))
 
         if exp:
             exp.increment({'analytics.email.count': 1})
@@ -90,7 +92,7 @@ class MailController(ApplicationController):
 
         heads = {
              'To' : request.form.get('to')
-            ,'Subject' : request.form.get('subject', '')
+            ,'Subject' : request.requester.get('fullname') + " has sent you an expression"
             ,'Reply-to' : request.requester.get('email', '')
             }
 

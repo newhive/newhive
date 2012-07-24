@@ -1,0 +1,187 @@
+{% extends "main.html" %}
+
+{% block meta %}
+ <meta property="og:title" content='{{ title |e }}' />
+ <meta property="og:type" content="newhive:expression" />
+ <meta property="og:image" content='{{ expr.thumb |e }}' />
+ <meta property="fb:admins" content="1007003" />
+ <meta property="description" contents="{{ title |e }}, an expression by {{owner.fullname}}" />
+{% endblock %}
+{% block head %}
+  {{super()}}
+  <script type='text/javascript'>
+      // TODO: temporary, should probably hide this better
+      var expr = {{ expr | json}};
+      var user = {{ user_client | json }};
+      var content_domain = {{ content_domain | json }};
+  </script>
+{% endblock %}
+{% block body_classes %}{{super()}} frame{% endblock %}
+
+{% block body %}
+  <div id='navigator_handle' class='menu_handle'></div>
+  <div id="navigator" class="navigator">
+    <div class="info">
+      <div class="icon random_btn hoverable rounded"></div>
+      <form method='get' onsubmit="Hive.navigator.search(); return false">
+        <input type="text" class="search">
+        <div class="hoverable icon scale submit" title="Submit search" onclick="Hive.navigator.search()"></div>
+      </form>
+      <div class="tags_wrapper">
+        <div class="tags"></div>
+      </div>
+    </div>
+  </div>
+  <div id="expression_frames">
+    <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
+  </div>
+
+  <div id='action_nav_handle' class='menu_handle'></div>
+  <div id='action_nav'>
+    <a href='{{ edit_url }}'><div class='btn_box edit hoverable'>
+      <div class='nav_btn'>
+        <span class='text'>Edit</span>
+        <div class='icon'></div>
+      </div>
+    </div></a>
+    <div id='view_btn' class='btn_box view hoverable'>
+      <div class='nav_btn'>
+        <div class='edge'></div>
+        <div class='icon'></div>
+        <div class='count'></div>
+      </div>
+    </div>
+    <div id='star_btn' class='btn_box star hoverable' data-title-off='show some love' data-title-on='stop loving'>
+      <div class='nav_btn'>
+        <div class='edge'></div>
+        <div class='icon'></div>
+        <div class='count'></div>
+      </div>
+    </div>
+    <div id='broadcast_btn' class='btn_box broadcast hoverable' data-title-off='broadcast to listeners' data-title-on='stop broadcasting'>
+      <div class='nav_btn'>
+        <div class='edge'></div>
+        <div class='icon'></div>
+        <div class='count'></div>
+      </div>
+    </div>
+    <div id='comment_btn' class='btn_box comment hoverable'>
+      <div class='nav_btn'>
+        <div class='edge'></div>
+        <div class='icon'></div>
+        <div class='count'></div>
+      </div>
+    </div>
+    <div class='btn_box delete hoverable'>
+      <div class='nav_btn'>
+        <span class='text'>Delete</span>
+        <div class='icon'></div>
+      </div>
+    </div>
+  </div>
+
+  <div id='expr_menu' class='menu'>
+    <div class='expr_card big_card'>
+      <img src='{{ expr.get_thumb(190) }}' class='thumb'>
+      <div class='card_text'>
+        <div class='title'>{{ expr.title | e }}</div>
+        <div class='tags'>{% for tag in expr.tags_index %}
+          <a href='{{ expr.url }}?tag={{ tag }}'>#{{ tag }}</a>
+        {% endfor %}</div>
+        <div class='byline timestamp'>Jul 1</div>
+      </div>
+    </div>
+    <div class='items'>
+      <b>Loading...</b>
+      {# TODO: create content for javascript-less clients #}
+      {#% for feed in expr.feed_page(viewer=user) %}
+        {% include "partials/feed.html" %}
+      {% endfor %#}
+    </div>
+  </div>
+
+  <div id='star_menu' class='menu action_menu face_menu'>
+    <span class='header'>Love</span>
+    <div class='info'>Show this expression some love, and be notified of updates and comments.</div>
+    {# TODO: create content for javascript-less clients #}
+    <div class='items'><b>Loading...</b></div>
+  </div>
+
+  <div id='broadcast_menu' class='menu action_menu face_menu'>
+    <span class='header'>Broadcast</span>
+    <div class='info'>Broadcast this expression out to your listeners.</div>
+    {# TODO: create content for javascript-less clients #}
+    <div class='items'><b>Loading...</b></div>
+  </div>
+
+  <div id='comment_menu' class='menu action_menu'>
+    <span class='header'>Comment</span>
+    <div class='info off'>Leave a comment to begin</div>
+    <div class='info on'>Join the conversation around this expression</div>
+    {# TODO: create content for javascript-less clients #}
+    <div class='items'><b>Loading...</b></div>
+    <form id='comment_form' method='POST'>
+      <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
+      <input type='submit' value='Enter' class='submit btn black rounded'>
+      <input type='hidden' name='action' value='comment'>
+    </form>
+  </div>
+
+  <div id='dia_password' class='dialog mandatory center border selected rounded'>
+    <form method='POST' action='{{ expr_url }}' target='expr' id='password_form'>
+      <h3>This expression needs a password<br>to be experienced</h3><br>
+      <input type='password' name='password' class='password'>
+      <input type='submit' class='submit btn rounded black' value='Experience'>
+    </form>
+  </div>
+
+  <script>
+    Hive.Menus.expr_init();
+    Hive.load_expr(expr);
+  </script>
+  {{ body }}
+{% endblock %}
+
+{# clear layout for community pages #}
+{% block content %}
+{% endblock %}
+
+{% block footer_scripts %}
+<script>
+  $(function(){
+      //pagethrough_btns = $('.pagethrough');
+      //var navigator_height = (Hive && Hive.navigator) ? Hive.navigator.height() : 0;
+      //pagethrough_btns.css('top', ($(window).height() - pagethrough_btns.height() - navigator_height) / 2);
+      //$('#pagethrough_prev').attr('title', "previous "
+      //  + context_to_string({plural: false}))
+      //  .click(function(){
+      //    logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'prev'});
+      //    var url = $(this).attr('href');
+      //    setTimeout(function() { window.location = url; }, 100);
+      //    return false;
+      //  });
+      //$('#pagethrough_next').attr('title', "next "
+      //  + context_to_string({plural: false})).click(function(){
+      //    logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'next'});
+      //    var url = $(this).attr('href');
+      //    setTimeout(function() { window.location = url; }, 100);
+      //    return false;
+      //  });
+  });
+</script>
+{% endblock footer_scripts %}
+
+{% block dialogs %}
+  {{ super() }}
+  <div id='dia_delete' class='newdialog center'>
+    <h3>Are you sure you want to delete this expression?</h3>
+    <div class='btns'>
+      <form method='POST' action='{{ secure_server }}'>
+        <input type='hidden' name='action' value='expr_delete'>
+        <input type='hidden' name='id' value='{{ expr.id }}' class='expr_id'>
+        <input type='submit' value='Yes' class='btn'> &nbsp;
+        <input type='button' value='No' class='no_btn btn'>
+      </form>
+    </div>
+  </div>
+{% endblock %}

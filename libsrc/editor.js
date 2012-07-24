@@ -1,7 +1,7 @@
 /* Copyright 2010, A Reflection Of Inc */
 // thenewhive.com client-side expression editor version 0.1
 
-var Hive = {};
+if(!Hive) Hive = {};
 
 // gives an array function for moving an element around
 Hive.has_shuffle = function(arr) {
@@ -148,7 +148,7 @@ Hive.App = function(init_state, opts) {
     o.pos_set = function(pos){
         _pos = [ Math.round(pos[0]), Math.round(pos[1]) ];
         o.div.css({ 'left' : _pos[0], 'top' : _pos[1] });
-        if(o.controls) o.controls.pos_set([ _pos[0], _pos[1] + 50 ]);
+        if(o.controls) o.controls.pos_set([ _pos[0], _pos[1] ]);
     };
     o.pos_center = function() {
         var dims = o.dims();
@@ -261,7 +261,7 @@ Hive.App = function(init_state, opts) {
     o.div.click(function(e) { return Hive.Selection.app_click(o, e) });
     o.move_init = function(e) { return Hive.Selection.app_drag_init(o, e) };
     o.div.drag('init', o.move_init)
-    $('#content').append(o.div);
+    $('#happs').append(o.div);
 
     o.type(o); // add type-specific properties
     o.apps.add(o); // add to apps collection
@@ -291,7 +291,7 @@ Hive.Controls = function(app, multiselect) {
     o.pos_set = function(pos){ o.div.css({ 'left' : pos[0], 'top' : pos[1] }); };
     o.pos_update = function(){
         var p = o.app.pos();
-        o.div.css({ 'left': p[0], 'top': p[1] + 50 });
+        o.div.css({ 'left': p[0], 'top': p[1] });
     };
     o.dims = function() {
         var dims = o.app.dims();
@@ -322,7 +322,7 @@ Hive.Controls = function(app, multiselect) {
     };
 
     o.append_link_picker = function(d, opts) {
-        opts = $.extend({ open: noop }, opts);
+        opts = $.extend({ open: noop, close: noop }, opts);
         var e = $("<div class='control drawer link'><nobr><input type='text'> "
             + "<img class='hoverable' src='" + asset('skin/1/delete_sm.png')
             + "' title='Clear link'></nobr>");
@@ -344,7 +344,7 @@ Hive.Controls = function(app, multiselect) {
             ,click_persist : input
             ,close : function() {
                 if (opts.field_to_focus) opts.field_to_focus.focus();
-                if (opts && opts.close) opts.close();
+                opts.close();
                 set_link();
                 input.blur();
                 o.app.focus();
@@ -372,11 +372,11 @@ Hive.Controls = function(app, multiselect) {
         buttons.append(c);
     }
 
-    o.addControl = function(ctrls) { map(o.appendControl, ctrls.clone(false)); };
-    o.addButton = function(ctrls) { map(o.appendButton, ctrls.clone(false)); };
-    o.addControls = function(ctrls) { map(o.appendControl, ctrls.clone(false).children()); };
+    o.addControl = function(ctrls) { $.map(ctrls.clone(false), o.appendControl); };
+    o.addButton = function(ctrls) { $.map(ctrls.clone(false), o.appendButton); };
+    o.addControls = function(ctrls) { $.map(ctrls.clone(false).children(), o.appendControl); };
     o.hover_menu = function(h, d, opts) {
-        return hover_menu(h, d, $.extend({offsetY : o.padding + 1}, opts)) };
+        return hover_menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
     o.div = $("<div style='position: absolute; z-index: 3; width: 0; height: 0' class='controls'>");
     $('body').append(o.div);
@@ -415,7 +415,7 @@ Hive.Controls = function(app, multiselect) {
         d.find('.stack_up').click(o.app.stack_top);
         d.find('.stack_down').click(o.app.stack_bottom);
 
-        map(function(f){ f(o) }, o.app.make_controls);
+        $.map(o.app.make_controls, function(f){ f(o) });
 
         o.c.buttons = d.find('.buttons');
         d.find('.hoverable').each(function() { hover_add(this) });
@@ -1644,10 +1644,8 @@ Hive.Selection = function(){
     };
 
     o.update_focus = function(event){
-        // TODO: remove this offset when we base app positions on 0 = top of window
-        var nav_bar_offset = 50;
-        var select = { top: o.drag_pos[1] - nav_bar_offset, right: o.drag_pos[0] + o.drag_dims[0],
-            bottom: o.drag_pos[1] + o.drag_dims[1] - nav_bar_offset, left: o.drag_pos[0] };
+        var select = { top: o.drag_pos[1], right: o.drag_pos[0] + o.drag_dims[0],
+            bottom: o.drag_pos[1] + o.drag_dims[1], left: o.drag_pos[0] };
         o.old_selection = o.new_selection;
         o.new_selection = $.grep(Hive.Apps.all(), function(el){
             var dims = el.dims();
@@ -1779,7 +1777,7 @@ Hive.Selection = function(){
             Hive.drag_end();
             Hive.History.group('move group');
         };
-        o.pos = function(){ var p = o.app.pos(); return [ p[0], p[1] + 50 ]; }
+        o.pos = function(){ var p = o.app.pos(); return [ p[0], p[1] ]; }
 
         o.padding = 7;
 
@@ -2014,10 +2012,9 @@ Hive.init = function() {
     var old_env = Hive.env();
     $(window).resize(function(e) {
         var new_env = Hive.env();
-        map(function(a) {
+        $.map(Hive.Apps, function(a) {
             a.state_relative_set(new_env, a.state_relative(old_env));
-        }, Hive.Apps);
-        center($('#app_btns'), $('#nav_bg'));
+        });
         if(Hive.Selection.controls) Hive.Selection.controls.layout();
         old_env = new_env;
     });
@@ -2096,11 +2093,12 @@ Hive.init = function() {
     $('#insert_file' ).click(new_link);
     $('#menu_file'   ).click(new_link);
 
-    var image_menu = hover_menu($('#insert_image'), $('#menu_image'),
-        { click_persist : $('#image_embed_code'), auto_close: false});
+    hover_menu($('#insert_text'), $('#menu_text'), { layout: 'center_y', min_y: 77 });
+
+    var image_menu = hover_menu($('#insert_image'), $('#menu_image'), { layout: 'center_y', min_y: 77 });
     var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'),
         { click_persist: $('#image_embed_code'), auto_close: false,
-            open: function(){ $('#image_embed_code').focus(); } });
+            open: function(){ $('#image_embed_code').focus(); }, group: image_menu });
     $('#embed_image_form').submit(function(){
         Hive.embed_code('#image_embed_code');
         image_embed_menu.close();
@@ -2108,15 +2106,13 @@ Hive.init = function() {
         return false;
     });
 
-    hover_menu($('#insert_text'), $('#menu_text'));
-    hover_menu($('#insert_audio'), $('#menu_audio'));
-    hover_menu($('#insert_file'), $('#menu_file'));
+    hover_menu($('#insert_audio'), $('#menu_audio'), { layout: 'center_y', min_y: 77 });
 
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'),
-        { click_persist : $('#embed_code'), auto_close : false } );
+    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), {
+        layout: 'center_y', min_y: 77, open: function(){ $('#embed_code').get(0).focus() } });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
-    hover_menu($('#insert_shape'), $('#menu_shape'));
+    hover_menu($('#insert_shape'), $('#menu_shape'), { layout: 'center_y', min_y: 77 });
     $('#insert_shape,#shape_rectangle').click(function(e) {
         Hive.new_app({ type : 'hive.rectangle', content :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
@@ -2125,6 +2121,8 @@ Hive.init = function() {
     $('#shape_sketch').click(function(e) {
         Hive.new_app({ type : 'hive.sketch', dimensions : [700, 700 / 1.6] });
     });
+
+    hover_menu($('#insert_file'), $('#menu_file'), { layout: 'center_y', min_y: 77 });
     
     $('#btn_grid').click(Hive.toggle_grid);
     
@@ -2159,7 +2157,7 @@ Hive.init = function() {
             app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
     };
 
-    hover_menu($('#btn_save'), $('#menu_save'),
+    var save_menu = hover_menu($('#btn_save'), $('#menu_save'),
         { auto_height : false, auto_close : false,
             open: pickDefaultThumb, click_persist : '#menu_save' });
     $('#save_submit').click(function(){
@@ -2212,7 +2210,7 @@ Hive.init = function() {
 
     $('#url').change(checkUrl);
 
-    hover_menu($('#privacy' ), $('#menu_privacy'));
+    hover_menu($('#privacy' ), $('#menu_privacy'), { group: save_menu } );
     $('#menu_privacy').click(function(e) {
         $('#menu_privacy div').removeClass('selected');
         var t = $(e.target);
@@ -2239,7 +2237,7 @@ Hive.embed_code = function(element) {
         || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i))
         || (m = c.match(/http:\/\/youtu.be\/(.*)$/i))
     ) {
-        var url = 'http://www.youtube.com/v/' + m[1]
+        var url = '//www.youtube.com/v/' + m[1]
             + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1';
         app = { type : 'hive.html', content : 
               '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
@@ -2250,7 +2248,7 @@ Hive.embed_code = function(element) {
 
     else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i))
         app = { type : 'hive.html', content :
-            '<iframe src="http://player.vimeo.com/video/'
+            '<iframe src="//player.vimeo.com/video/'
             + m[2] + '?title=0&amp;byline=0&amp;portrait=0"'
             + 'style="width:100%;height:100%;border:0"></iframe>' };
 
@@ -2428,8 +2426,8 @@ Hive.bg_change = function(s){
 };
 
 function remove_all_apps() {
-    var aps = map(id, Hive.Apps); // store a copy of Apps so we can destructively update it
-    map(function(a) { a.remove() }, aps);
+    var aps = $.map(Hive.Apps, id); // store a copy of Apps so we can destructively update it
+    $.map(apps, function(a) { a.remove() });
 }
 
 Hive.append_color_picker = function(container, callback, init_color, opts) {
@@ -2443,15 +2441,15 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
     var manual_input = o.manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
 
     var to_rgb = function(c) {
-        return map(parseInt, $('<div>').css('color', c).css('color')
-            .replace(/[^\d,]/g,'').split(','));
+        return $.map($('<div>').css('color', c).css('color')
+            .replace(/[^\d,]/g,'').split(','), parseInt);
     }
     var to_hex = function(color) {
         if (typeof(color) == "string") color = to_rgb(color);
-        return '#' + map(function(c) {
+        return '#' + $.map(color, function(c) {
                 var s = c.toString(16);
-                return s.length == 1 ? '0' + s : s },
-            color).join('').toUpperCase();
+                return s.length == 1 ? '0' + s : s
+            }).join('').toUpperCase();
     }
     init_color = to_hex(init_color);
     var make_picker = function(c) {
@@ -2470,12 +2468,12 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
         var d = $("<div>").click(function(e){
             e.preventDefault();
         });
-        d.append(map(make_picker, cs));
+        d.append($.map(cs, make_picker));
         return d.get(0);
     }
-    by_sixes = map(function(n) { return colors.slice(n, n+6)}, [0, 6, 12, 18, 24, 30]);
+    var by_sixes = map(function(n) { return colors.slice(n, n+6)}, [0, 6, 12, 18, 24, 30]);
     var pickers = $("<div class='palette'>");
-    pickers.append(map(make_row, by_sixes));
+    pickers.append($.map(by_sixes, make_row));
     e.append(pickers);
 
     var hex_changed = false;
@@ -2561,7 +2559,7 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
             case 5: r = v, g = p, b = q; break;
         }
 
-        return map(Math.round, [r * 255, g * 255, b * 255]);
+        return $.map([r * 255, g * 255, b * 255], Math.round);
     }
 
     function rgbToHsv(r, g, b){

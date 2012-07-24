@@ -9,17 +9,15 @@
 
 {% block head %}
   {{ super() }}
-  {% if profile and user_is_owner %}
-    <script>
+  <script>
+    {% if profile and user_is_owner %}
       $(function(){
           var hoverin = function(){ $('#profile_thumb').append('<div class="message">Change Picture</div>'); };
           var hoverout = function(){ $('#profile_thumb .message').remove(); };
           $('#profile_thumb img').hover(hoverin, hoverout);
       });
-    </script>
-  {% endif %}
-  {% if home and not user.logged_in %}
-    <script>
+    {% endif %}
+    {% if home and not user.logged_in %}
       function homepage_header() {
           var header = $('#homepage_header')
           if (header.length > 0)
@@ -36,8 +34,9 @@
         homepage_header();
         $('.fathead').width($(window).width()-50);
       });
-    </script>
-  {% endif %}
+    {% endif %}
+    {% if owner %}var owner_id = {{ owner.id | json }};{% endif %}
+  </script>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} community {{ 'home' if home }}{{ 'profile' if profile }}{% endblock %}
@@ -54,7 +53,7 @@
 
 {% macro top_tab(p, label, class, text=True, attr='') %}
   {% set current = True if p == path %}
-  {% if not current %}<a href='/{{ p }}' {{ attr }}>{% endif %}<div class='tab_label {{ 'current' if current }} {{ class }} {{ 'text' if text else 'icon' }}'
+  {% if not current %}<a href='/{{owner.name + "/" if owner}}{{ p }}' {{ attr }}>{% endif %}<div class='tab_label {{ 'current' if current }} {{ class }} {{ 'text' if text else 'icon' }}'
     {% if not text %}title='{{ label }}'{% endif %}>{{ label if text }}</div>{% if not current %}</a>{% endif %}
 {%- endmacro %}
 
@@ -90,7 +89,7 @@
           <script>function profile_thumb_choose() { asyncUpload({post_action:'profile_thumb_set', success: function(data) { window.location = '' } }) };</script>
           <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
         {% endif %}
-        {% if owner.has_thumb() %}
+        {% if owner.has_thumb %}
           <img src='{{ owner.get_thumb() }}' alt="{{ owner.fullname|e }}"/>
         {% elif user_is_owner %}
           <div class="img placeholder">
@@ -145,7 +144,7 @@
 
 {% macro left_tab(p1, label) %}
   <div class='tab_label {{ 'current' if p1 == path1 else 'hoverable' }}'
-    ><a href='/{{ p1 }}'>{{ label }}</a></div>
+    ><a href='/{{owner.name + "/" if owner}}{{ p1 }}'>{{ label }}</a></div>
 {%- endmacro %}
 
 {% block left_column %}
@@ -187,9 +186,9 @@
     <div id='feed'>
       {% if show_prompts %}
         <div>
-          <a href='{{server}}home/expressions'><div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div></a>
+          <a href='{{ server_url }}home/expressions'><div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div></a>
           <div class='prompt link hoverable' id='prompt_allies' onclick='fb_listen_or_connect()'><div>Click here to connect to Facebook and follow / invite friends.</div></div>
-          <a href='{{server}}home/expressions/all'><div class='prompt hoverable' id='prompt_expressions'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div></a>
+          <a href='{{ server_url }}home/expressions/all'><div class='prompt hoverable' id='prompt_expressions'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div></a>
         </div>
       {% endif %}
       {% include 'page_parts/cards.html' %}
@@ -201,6 +200,7 @@
 {% block footer_scripts %}
   {{ super () }}
   <script>
+     paging_args = {{ args | json }};
      var load_page = null;
      var next_page = true;
      $(window).scroll(function() {

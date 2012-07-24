@@ -1,86 +1,211 @@
 import base64
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from newhive import utils, mail
 # TODO: handle this in model layer somehow
 from pymongo.connection import DuplicateKeyError
 
-class ExpressionController(ApplicationController):
-
-    def edit(self, request, response):
-        if not request.requester.logged_in: return self.serve_404(request, response)
-
-        exp_id = lget(request.path.split('/'), 1) #TODO: remove this hack once full routing is in place
-        if not exp_id:
-            exp = { 'domain' : lget(request.requester.get('sites'), 0) }
-            exp.update(dfilter(request.args, ['domain', 'name', 'tags']))
-            exp['title'] = 'Untitled'
-            exp['auth'] = 'public'
+class Expression(Application, PagingMixin):
+    def edit_frame(self, request, response):
+        expr_id = lget(request.path_parts, 1)
+        if not expr_id:
+            expr = self.db.Expr.new(dfilter(request.args, ['domain', 'name', 'tags']))
+            expr['title'] = 'Untitled'
+            expr['auth'] = 'public'
             self.db.ActionLog.create(request.requester, "new_expression_edit")
         else:
-            exp = self.db.Expr.fetch(exp_id)
-            if not exp: return self.serve_404(request, response)
-            self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': exp.id})
+            expr = self.db.Expr.fetch(expr_id)
+            self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
+        if not (request.requester.logged_in or expr): return self.serve_404(request, response)
+        if expr.auth_required(response.user): return self.serve_forbidden(request)
 
-        if request.requester.get('flags'):
-            show_help = request.requester['flags'].get('default-instructional') < 1
-        else: show_help = True
-        if show_help:
-            request.requester.increment({'flags.default-instructional': 1})
+        #show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
+        #if show_help: request.requester.increment({'flags.default-instructional': 1})
+
         response.context.update({
-             'title'     : 'Editing: ' + exp['title']
-            ,'sites'     : request.requester.get('sites')
-            ,'exp_js'    : re.sub('</script>', '<\\/script>', json.dumps(exp))
-            ,'exp'       : exp
-            ,'show_help' : show_help
+             'title'     : 'Editing: ' + expr.get('title')
+            #,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
+            ,'expr'      : expr
+            #,'show_help' : show_help
             ,'editing'   : True
         })
-        return self.serve_page(response, 'pages/edit.html')
+        return self.serve_page(response, 'pages/edit_tmp.html')
 
-    def show(self, request, response):
+    #def edit_frame(self, request, response):
+    #    expr = self.db.Expr.fetch(lget(request.path_parts, 1), meta=True)
+    #    if not (request.requester.logged_in or expr): return self.serve_404(request, response)
+    #    if expr.auth_required(response.user): return self.serve_forbidden(request)
+
+    #    show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
+    #    if show_help: request.requester.increment({'flags.default-instructional': 1})
+
+    #    response.context.update({
+    #         'title'     : 'Editing: ' + expr.get('title')
+    #        ,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
+    #        ,'expr'      : expr
+    #        ,'show_help' : show_help
+    #        ,'editing'   : True
+    #    })
+    #    return self.serve_page(response, 'pages/edit_frame.html')
+
+    #def edit(self, request, response):
+    #    expr_id = lget(request.path_parts, 1)
+    #    if not expr_id:
+    #        expr = dfilter(request.args, ['domain', 'name', 'tags'])
+    #        expr['title'] = 'Untitled'
+    #        expr['auth'] = 'public'
+    #        self.db.ActionLog.create(request.requester, "new_expression_edit")
+    #    else:
+    #        expr = self.db.Expr.fetch(expr_id)
+    #        if not expr: return self.serve_404(request, response)
+    #        self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
+    #    response.context.update({ 'expr': expr })
+    #    return self.serve_page(response, 'pages/edit.html')
+
+    # destructively prepare state.Expr for client consumption
+    def expr_prepare(self, expr, viewer=None, password=None):
+        owner = expr.owner
+        owner_info = dfilter(owner, ['name', 'fullname', 'tags'])
+        owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70), 'has_thumb': owner.has_thumb })
+
+        #expr_info = dfilter(expr, ['thumb', 'title', 'tags', 'tags_index', 'owner',
+        #    'owner_name', 'updated', 'name'])
+        counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
+            k, v in expr.get('analytics', {}).iteritems() ])
+        counts['Views'] = large_number(expr.views)
+        counts['Comment'] = large_number(expr.comment_count)
+
+        # check if auth is required so we can then strip password
+        auth_required = expr.auth_required()
+        if expr.auth_required(viewer, password):
+            for key in ['password', 'thumb', 'thumb_file_id']: expr.pop(key, None)
+            dict.update(expr, {
+                 'tags': ''
+                ,'background': {}
+                ,'apps': []
+                ,'title': '[Private]'
+                ,'tags_index': []
+            })
+
+        dict.update(expr, {
+            'id': expr.id,
+            'thumb': expr.get_thumb(),
+            'owner': owner_info,
+            'counts': counts,
+            'url': expr.url,
+            'auth_required': auth_required
+        })
+
+        return expr
+
+    # Controller for all navigation surrounding an expression
+    # Must only output trusted HTML
+    def frame(self, request, response, parts):
+        if request.is_xhr:
+            return self.infos(request, response)
+
+        path = '/'.join(parts)
         owner = response.context['owner']
-        resource = self.db.Expr.find(dict(domain=request.domain, name=request.path.lower()))
+        resource = self.db.Expr.meta(owner['name'], path)
         if not resource:
             if request.path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
-
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
-
         if is_owner: owner.unflag('expr_new')
 
-        if request.args.has_key('tag') or request.args.has_key('user'):
-            response.context.update(pagethrough = self._pagethrough(request, response, resource))
-
-        html = expr_to_html(resource)
-        auth_required = (resource.get('auth') == 'password' and resource.get('password')
-            and request.form.get('password') != resource.get('password')
-            and request.requester.id != resource['owner'])
+        expr_url = ( abs_url(domain = config.content_domain)
+            + ('empty' if resource.auth_required() else resource.id) )
+        self.expr_prepare(resource, response.user)
         response.context.update(
-             edit = abs_url(secure = True) + 'edit/' + resource.id
-            ,mtime = friendly_date(time_u(resource['updated']))
+             edit_url = abs_url(secure = True) + 'edit/' + resource.id
+            ,expr_frame = True
             ,title = resource.get('title', False)
-            ,starrers = resource.starrer_page()
-            ,auth_required = auth_required
-            ,body = html
-            ,exp = resource
-            ,exp_js = json.dumps(resource)
+            ,expr = resource
+            ,expr_url = expr_url
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
+            ,content_domain = abs_url(domain = config.content_domain)
             )
 
-        resource.increment_counter('views')
-        if is_owner: resource.increment_counter('owner_views')
-
-        template = resource.get('template', request.args.get('template', 'expression'))
+        template = resource.get('template', request.args.get('template', 'frame'))
 
         if request.requester.logged_in:
             self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
 
-        if template == 'none':
-            if auth_required: return Forbidden()
-            return self.serve_html(response, html)
+        return self.serve_page(response, 'pages/' + template + '.html')
 
-        else: return self.serve_page(response, 'pages/' + template + '.html')
+    def infos(self, request, response):
+        args = request.args.copy().to_dict(flat=True)
+        current_id = args.get('page')
+        tag = args.get('tag')
+
+        special_tags = {
+                'Featured': (self.expr_featured, 'id')
+                , 'Recent': (self.expr_all, 'updated')
+                , 'Network': (self.home_feed, None)
+                }
+
+        # Use key_map to map between keys used in querystring and those of database
+        spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
+        args = dfilter(args, ['sort', 'page', 'expr', 'order', 'limit'])
+        args['viewer'] = request.requester
+
+        default = (None, 'updated')
+        pager, paging_attr = special_tags.get(tag, default) if spec else (self.expr_all, 'updated')
+
+        if utils.is_mongo_key(current_id):
+            if paging_attr and paging_attr != 'id':
+                expr = self.db.Expr.fetch(current_id)
+                args['page'] = expr[paging_attr]
+            else:
+                args['sort'] = '_id'
+
+        if args.has_key('order'): args['order'] = int(args['order'])
+        if args.has_key('limit'): args['limit'] = int(args['limit'])
+
+        if pager:
+            items_and_args = pager(request, response, args)
+            exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
+        else:
+            exprs = self.db.Expr.page(spec, **args)
+
+        return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))
+
+    def info(self, request, response):
+        expr = self.db.Expr.fetch(lget(request.path_parts, 1))
+        if not expr: return self.serve_404(request, response)
+        return self.serve_json( response, self.expr_prepare(
+            expr, viewer=response.user, password=request.form.get('password')) )
+
+    # Renders the actual content of an expression.
+    # This output is untrusted and must never be served from config.server_name.
+    def render(self, request, response):
+        expr_id = lget(request.path_parts, 0)
+        expr = self.db.Expr.fetch(expr_id)
+        if not expr: return self.serve_404(request, response)
+
+        if expr.auth_required() and not expr.cmp_password(request.form.get('password')):
+            return self.serve_forbidden(request)
+
+        response.context.update(html = expr_to_html(expr), expr = expr)
+        return self.serve_page(response, 'pages/expr.html')
+
+    def empty(self, request, response): return self.serve_page(response, 'pages/expr_empty.html')
+
+    def feed(self, request, response):
+        expr = self.db.Expr.fetch(lget(request.path_parts, 1))
+        if not expr: return self.serve_404(request, response)
+        if expr.auth_required(request.requester, password=request.form.get('password')):
+            return self.serve_json(response, [])
+
+        if request.owner == expr.get('owner'): expr.increment_counter('owner_views')
+        else: expr.increment_counter('views')
+
+        items = map(lambda item: dict(item,
+                initiator_thumb=item.initiator.get_thumb(70),
+                created_friendly=friendly_date(item['created'])
+            ), expr.feed_page(viewer=request.requester, limit=0))
+        return self.serve_json(response, list(items))       
 
     def random(self, request, response):
         expr = self.db.Expr.random()
@@ -142,7 +267,7 @@ class ExpressionController(ApplicationController):
                   request.requester.give_invites(5)
             except DuplicateKeyError:
                 if exp.get('overwrite'):
-                    self.db.Expr.named(upd['domain'], upd['name']).delete()
+                    self.db.Expr.named(request.requester['name'], upd['name']).delete()
                     res = request.requester.expr_create(upd)
                     self.db.ActionLog.create(request.requester, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
                 else:
@@ -154,7 +279,8 @@ class ExpressionController(ApplicationController):
             res.update(**upd)
             new_expression = False
             self.db.ActionLog.create(request.requester, "update_expression", data={'expr_id': res.id})
-        return dict( new=new_expression, error=False, id=res.id, location=abs_url(domain = upd['domain']) + upd['name'] )
+
+        return dict( new = new_expression, error = False, id = res.id, location = res.url )
 
 
     def delete(self, request, response):
@@ -164,19 +290,6 @@ class ExpressionController(ApplicationController):
         e.delete()
         # TODO: garbage collect media files that are no longer referenced by expression
         return self.redirect(response, request.requester.url)
-
-
-    def add_comment(self, request, response):
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
-        commenter = request.requester
-        expression = self.db.Expr.fetch(request.form.get('expression'))
-        comment_text = request.form.get('comment')
-        comment = self.db.Comment.create(commenter, expression, {'text': comment_text})
-        if comment.initiator.id != expression.owner.id:
-            mail.mail_feed(self.jinja_env, comment, expression.owner)
-        response.context['comment'] = comment
-        return self.serve_page(response, 'partials/comment.html')
 
     def tag_update(self, request, response):
         tag = lget(normalize(request.form.get('value', '')), 0)
@@ -200,36 +313,6 @@ class ExpressionController(ApplicationController):
                 new_tags = re.sub(tag, '', expr['tags'])
         expr.update(tags=new_tags, updated=False)
         return tag
-
-    def _pagethrough(self, request, response, resource):
-        pagethrough = {'next': None, 'prev': None}
-        shared_spec = {}
-        url_args = {}
-        root = self.db.User.get_root()
-        loop = False
-        user = request.args.get('user')
-        if user:
-            loop = True
-            shared_spec.update({'owner_name': request.args.get('user')})
-            url_args.update({'user': user})
-        if request.args.has_key('tag'):
-            tag = request.args.get('tag', '')
-            root_tags = root.get('tagged', {})
-            if root_tags.has_key(tag):
-                ids = root_tags.get(tag, [])
-                shared_spec = ids
-            else:
-                tag = normalize(tag)[0]
-                if tag in ['recent']: shared_spec = {}
-                else:  shared_spec.update({'tags_index': tag})
-            url_args.update({'tag': tag})
-        pagethrough['next'] = resource.related_next(shared_spec, loop=loop)
-        pagethrough['prev'] = resource.related_prev(shared_spec, loop=loop)
-
-        if pagethrough['next']: pagethrough['next'] = pagethrough['next'].url + querystring(url_args)
-        if pagethrough['prev']: pagethrough['prev'] = pagethrough['prev'].url + querystring(url_args)
-
-        return pagethrough
 
     featured = {
             'project': [
@@ -288,22 +371,26 @@ def expr_to_html(exp):
     def html_for_app(app):
         content = app.get('content', '')
         more_css = ''
-        html = ''
-        if app.get('type') == 'hive.image':
+        type = app.get('type')
+        id = app.get('id', app['z'])
+        if type == 'hive.image':
             html = "<img src='%s'>" % content
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
-        elif app.get('type') == 'hive.sketch':
+        elif type == 'hive.sketch':
             html = "<img src='%s'>" % content.get('src')
-        elif app.get('type') == 'hive.rectangle':
+        elif type == 'hive.rectangle':
             c = app.get('content', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-        #elif app.get('type') == 'hive.audio':
-        #    html = "<div class='app_hive_audio'>" + content + "</div>"
-        else: html = content
+            html = ''
+        elif type == 'hive.html':
+            html = ""
+        else:
+            html = content
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ' style='%s'%s>%s</div>" % (css_for_app(app) + more_css, data, html)
+        return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
+            (type.replace('.', '_'), id, css_for_app(app) + more_css, data, html)
 
     return ''.join(map(html_for_app, apps))
 

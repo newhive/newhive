@@ -15,7 +15,8 @@ img.centered, div.centered {
     }
 
 // Page Layout
-body.main #content { top: 50px; }
+iframe.expr { position: absolute; z-index: 0; left: 0; top: 0; width: 100%; height: 100%; }
+body #content { top: 50px; }
 #primary_content{ clear: both; }
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;
@@ -43,15 +44,7 @@ input[type=text], input[type=password], textarea { border : 5px solid $color_uns
 input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : $color_selected; }
 input[type=button], input[type=submit] { border : none; }
 .hide { display: none !important; }
-.menu { display : none; border : 0px solid $color_unselected;
-    background-color : white; z-index : 2; font-size : 11pt; position : absolute;
-    -moz-box-shadow: 05px 05px 05px #888;
-    -webkit-box-shadow: 05px 05px 05px #888;
-    box-shadow: 05px 05px 05px #888;
-    overflow: auto;
-    }
-.menu_item { color : $color_18; padding : 5px 8px; cursor : default; font-size : 15pt; white-space: nowrap; }
-.menu_item:hover, .menu_hover { background-color : $color_selected; color: black; }
+
 .border { border : 5px solid $color_unselected; padding : 5px; }
 .selected { border-color: $color_selected; }
 .medbold { font-weight : bold; font-size : 1.2em; }
@@ -71,13 +64,10 @@ input[type=button], input[type=submit] { border : none; }
 }
 
 .rounded {
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
-    -khtml-border-radius: 5px;
-    border-radius: 5px;
+    @include border-radius(5px);
 }
 .black { background-color : black; color: white; }
-.error, .active { color: $color_active; }
+.error { color: $color_active; }
 .inactive { color: $color_24; }
 #user { position : fixed; display : inline-block; }
 .spacer { height : 10px; clear : both; }

@@ -1,40 +1,53 @@
-from os.path import dirname, join, abspath, normpath
-import os
-import json
-import time
-import webassets
-import webassets.script
+from os.path import dirname, join, abspath, normpath, isfile, isdir
+import os, json, time, webassets, webassets.script, re
 from boto.s3.key import Key as S3Key
 from boto.s3.connection import S3Connection
 from newhive import config
 from newhive.manage import git
-from newhive.utils import lget, now
+from newhive.utils import lget, now, abs_url
 from md5 import md5
 
 import logging
 logger = logging.getLogger(__name__)
 
+
+#class Asset(object):
+#    def __init__(self, path, version, host):
+
+
 class Assets(object):
-    def __init__(self, asset_path):
-        self.base_path = normpath(join(config.src_home, asset_path))
+    def __init__(self, asset_path, default_local=False):
         self.assets = {}
+        self.base_path = normpath(join(config.src_home, asset_path))
+        self.strip = len(self.base_path) + 1
 
         self.s3_con = S3Connection(config.aws_id, config.aws_secret)
         self.asset_bucket = self.s3_con.create_bucket(config.asset_bucket)
         bucket_url = self.asset_bucket.generate_url(0)
         self.base_url = bucket_url[0:bucket_url.index('?')]
+        self.local_base_url = '/lib/' #re.sub('https?:', '', abs_url()) + 'lib/'
+        self.default_local = False
 
     # return (path, name) tuples
-    def find(self, start_path='', recurse=True):
-        strip = len(self.base_path) + 1
+    def find(self, start_path='', recurse=True, local=None):
+        actual_path = join(self.base_path, start_path)
 
-        for dirname, subdirs, filenames in os.walk(join(self.base_path, start_path)):
-            if not recurse: subdirs[:] = [] # slice prevents subdirs being clobbered with new list
-            for n in filenames:
-                path = join(dirname, n)
-                name = path[strip:]
-                with open(path) as f: version = md5(f.read()).hexdigest()[:8]
-                self.assets[name] = (path, version)
+        if isfile(actual_path): self.add_file(actual_path, local=local)
+        elif isdir(actual_path):
+            for dirname, subdirs, filenames in os.walk(join(self.base_path, start_path)):
+                if not recurse: subdirs[:] = [] # slice prevents subdirs being clobbered with new list
+                for n in filenames: self.add_file(join(dirname, n), local=local)
+        else: raise Exception('Yo, this is not a file or directory: ' + actual_path)
+
+        return self
+
+    def add_file(self, path, local=None):
+        name = path[self.strip:]
+        if self.assets.get(name): return
+
+        if local == None: local = self.default_local
+        with open(path) as f: version = md5(f.read()).hexdigest()[:8]
+        self.assets[name] = (path, version, local)
 
         return self
 
@@ -48,8 +61,8 @@ class Assets(object):
             versions_key.name = versions_key_name
 
         print('Syncing all assets to s3...')
-        for name, (path, version) in self.assets.iteritems():
-            if not path: continue
+        for name, (path, version, local) in self.assets.iteritems():
+            if not path or local: continue
             if version != old_versions.get(name):
                 print 'uploading: '+ name
                 k = S3Key(self.asset_bucket)
@@ -68,8 +81,7 @@ class Assets(object):
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
         if not props: return '/not_found:' + name
-        path = self.base_url + name
-        return path + '?' + props[1]
+        return (self.local_base_url if props[2] else self.base_url) + name + '?' + props[1]
 
     def write_ruby(self, write_path):
         with open(join(config.src_home, write_path), 'w') as f:
@@ -113,6 +125,7 @@ class Assets(object):
             print message % (name)
         print "\nPassed %s/%s" % (valid, total)
 
+
 class HiveAssets(Assets):
 
     def __init__(self):
@@ -124,42 +137,75 @@ class HiveAssets(Assets):
         assets_env.updater = 'always'
         assets_env.url_expire = True
 
-        # get assets that webasset bundles depend on (just images and fonts), generate scss include
-        print('Fetching assets for scss...')
-        hive_assets = self.find('')
-
         if config.debug_mode:
             assets_env.debug = True
             assets_env.url = '/lib/libsrc'
-            hive_assets.base_url = '/lib/'
+            self.default_local = True
 
-        hive_assets.write_ruby('libsrc/scss/compiled.asset_paths.rb')
-        hive_assets.write_js('libsrc/compiled.asset_paths.js')
+        # get assets that webasset bundles depend on (just images and fonts), generate scss include
+        #
+        print('Fetching assets for scss...')
+        # first add assets that need to be local for weird browser requirements (fonts and flash)
+        self.find('Jplayer.swf', local=True)
+        #self.find('fonts', local=True) # fonts must have absolute SSL paths (css is served from s3)
+        # now grab the rest of 'em
+        self.find('')
+
+        self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
+        self.write_js('libsrc/compiled.asset_paths.js')
+
 
         print('Compiling css and js...')
-        assets_env.register('edit.js', 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js', filters='yui_js', output='../lib/edit.js')
-        assets_env.register('google_closure.js', 'google_closure.js')
-        assets_env.register('app.js', 'jquery_misc.js', 'util.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
-            'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'colors.js', filters='yui_js', output='../lib/app.js')
-        assets_env.register('harmony_sketch.js', 'harmony_sketch.js', filters='yui_js', output='../lib/harmony_sketch.js')
+        assets_env.register('edit.js',
+                'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js',
+                filters='yui_js',
+                output='../lib/edit.js')
 
-        assets_env.register('admin.js', 'raphael/raphael.js', 'raphael/g.raphael.js',
-                'raphael/g.pie.js', 'raphael/g.line.js', 'jquery.tablesorter.min.js',
+        assets_env.register('google_closure.js', 'google_closure.js')
+
+        assets_env.register('app.js',
+                'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
+                'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'Modernizr.js', 'util.js',
+                'nav.js', 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
+                'history/history.adapter.jquery.js', 'jquery.transition.js',
+                filters='yui_js',
+                output='../lib/app.js')
+
+        assets_env.register('harmony_sketch.js',
+                'harmony_sketch.js',
+                filters='yui_js',
+                output='../lib/harmony_sketch.js')
+
+        assets_env.register('admin.js',
+                'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js',
+                'raphael/g.line.js', 'jquery.tablesorter.min.js',
                 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js',
-                'admin.js', output='../lib/admin.js')
-        assets_env.register('admin.css', 'jquery-ui/jquery-ui-1.8.16.custom.css', output='../lib/admin.css')
+                output='../lib/admin.js')
+
+        assets_env.register('admin.css',
+                'jquery-ui/jquery-ui-1.8.16.custom.css',
+                output='../lib/admin.css')
 
         scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
-            "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
-            "scss/feed.scss", "scss/expression.scss", "scss/settings.scss",
-            "scss/signup_flow.scss", "scss/chart.scss", "scss/jplayer.scss",
-            filters=scss_filter,
-            output='scss.css',
-            debug=False)
-        edit_scss = webassets.Bundle('scss/edit.scss', filters=scss_filter, output='edit.css', debug=False)
-        minimal_scss = webassets.Bundle('scss/minimal.scss', 'scss/fonts.scss', filters=scss_filter, output='minimal.css', debug=False)
+                "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
+                "scss/expression.scss", "scss/settings.scss", "scss/signup_flow.scss",
+                "scss/chart.scss", "scss/jplayer.scss", "scss/navigator.scss",
+                filters=scss_filter,
+                output='scss.css',
+                debug=False)
+
+        edit_scss = webassets.Bundle('scss/edit.scss',
+                filters=scss_filter,
+                output='edit.css',
+                debug=False)
+
+        minimal_scss = webassets.Bundle('scss/minimal.scss',
+                'scss/fonts.scss',
+                filters=scss_filter,
+                output='minimal.css',
+                debug=False)
 
         assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
         assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
@@ -174,7 +220,7 @@ class HiveAssets(Assets):
             logger.info("Assets build complete in %s seconds", time.time() - t0)
 
         # add the assets we just compiled
-        hive_assets.find(recurse=False)
+        self.find(recurse=False)
 
     def urls_with_expiry(self):
         urls = self.urls()

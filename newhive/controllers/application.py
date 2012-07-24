@@ -7,7 +7,7 @@ from newhive.utils import b64decode
 import logging
 logger = logging.getLogger(__name__)
 
-class ApplicationController(object):
+class Application(object):
     def __init__(self, jinja_env=None, db=None, assets=None):
         self.jinja_env = jinja_env
         self.assets = assets
@@ -26,8 +26,10 @@ class ApplicationController(object):
         response = Response()
         # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
         response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : original_url }
-        request.requester = auth.authenticate_request(self.db, request, response)
+        response.user = request.requester = auth.authenticate_request(self.db, request, response)
+
         self.process_facebook(request)
+        response.context.update({ 'new_fb_connect': False })
         if request.args.has_key('code') and not request.form.get('fb_disconnect'):
             if request.requester.logged_in:
                 # if logged in, then connect facebook account if not already connected
@@ -43,19 +45,18 @@ class ApplicationController(object):
                     else:
                         logger.warn("Not connecting facebook account '%s' to TNH account '%s' because account is already connected to '%s'",
                                                                          profile['name'], request.requester['name'], existing_user['name'])
-                        response.context['dialog_to_show'] = '#dia_fb_account_duplicate'
                         response.context['existing_user'] = existing_user
                         response.context['facebook_name'] = profile['name']
+                        self.show_dialog(response, '#dia_fb_account_duplicate')
             else:
                 # if not logged in, try logging in with facebook credentials
                 fb_client = request.requester.fb_client
                 request.requester = auth.facebook_login(self.db, request, response)
                 fb_client.user = request.requester
                 request.requester.fb_client = fb_client
-                if not request.requester.id:
-                    response.context['dialog_to_show'] = '#dia_sign_in_or_join'
+                if not request.requester.id: self.show_dialog(response, '#dia_sign_in_or_join')
         response.context.update(facebook_authentication_url=self.fb_client.authorize_url(request.base_url))
-        response.user = request.requester
+
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
 
@@ -87,13 +88,16 @@ class ApplicationController(object):
              home_url = response.user.get_url()
             ,feed_url = response.user.get_url(path='profile/activity')
             ,user = response.user
+            ,user_client = { 'name': response.user.get('name'), 'id': response.user.id,
+                'thumb': response.user.get_thumb(70) }
             ,admin = response.user.get('name') in config.admins
             ,beta_tester = config.debug_mode or response.user.get('name') in config.beta_testers
             ,create = abs_url(secure = True) + 'edit'
-            ,server = abs_url()
+            ,server_url = abs_url()
             ,secure_server = abs_url(secure = True)
             ,server_name = config.server_name
-            ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k]) for k in config.site_pages])
+            ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k])
+                for k in config.site_pages])
             ,debug = config.debug_mode
             ,use_ga = config.live_server
             ,ui = ui
@@ -107,9 +111,10 @@ class ApplicationController(object):
                     _gaq.push(['_trackEvent', 'fb_connect', 'open_connect_dialog', 'auto']);
                 }
                 , minimize_to: '#user_menu_handle'}"""
-            context.update(dialog_to_show = '#dia_facebook_connect', dialog_to_show_opts=dia_opts)
+            self.show_dialog(response, '#dia_facebook_connect', opts=dia_opts)
             response.user.unflag('fb_connect_dialog')
         context.setdefault('icon', self.asset('skin/1/logo.png'))
+        context.setdefault('dialog_to_show', False)
         return self.jinja_env.get_template(template).render(context)
 
     def serve_json(self, response, val, as_text = False):
@@ -132,7 +137,7 @@ class ApplicationController(object):
     def serve_forbidden(self, request):
         response = Response()
         response.status_code = 403
-        return self.serve_text(response, 'That action is only available to logged in users.')
+        return self.serve_text(response, 'Sorry, not going to do that. Perhaps you are not logged in, or not using https?')
 
     def redirect(self, response, location, permanent=False):
         response.location = location
@@ -143,6 +148,9 @@ class ApplicationController(object):
         if not config.live_server:
             return self.serve_data(response, 'text/plain', "User-agent: *\nDisallow: /")
         else: return self.serve_404(None, response)
+
+    def show_dialog(self, response, dialog_selector, opts={}):
+        response.context.update(dialog_to_show = { 'name': dialog_selector, opts: opts })
 
     def process_facebook(self, request):
         # in order to get facebook credentials we use the following order of

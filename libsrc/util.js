@@ -155,21 +155,28 @@ function showDialog(name, opts) {
             o.opts = $.extend({
                 open : noop, close : noop, absolute : false, fade : true,
                 mandatory: dialog.hasClass('mandatory'),
-                layout: function() { center(dialog, $(window), opts) }
+                layout: function() { center(dialog, $(window), opts) },
+                close_btn: true
             }, opts);
 
-            o.shield = $("<div id='dialog_shield'>")[o.opts.fade ? 'addClass' : 'removeClass']('fade').appendTo(document.body);
-            if (! dialog.hasClass('newdialog')) dialog.addClass('dialog border selected');
-            dialog.detach().appendTo(document.body).css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+            o.shield = $("<div id='dialog_shield'>");
+            if(o.opts.fade) o.shield.addClass('fade');
+            o.shield.appendTo(document.body);
+
+            dialog.detach().appendTo(document.body)
+                .css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
+
             if(!o.opts.mandatory) {
-                o.btn_close = dialog.prepend('<div class="btn_dialog_close"></div>').children().first();
-                o.shield.add(o.btn_close).click(o.close);
+                if( o.opts.close_btn && ! dialog.find('.btn_dialog_close').length )
+                    $('<div class="btn_dialog_close">').prependTo(dialog).click(o.close);
+                o.shield.click(o.close);
                 if(o.opts.click_close) dialog.click(o.close);
             }
-            $(window).resize(function() { o.opts.layout(o.dialog) });
+
+            $(window).resize(function(){ o.opts.layout(o.dialog) });
             o.opts.layout(o.dialog);
 
-            if (o.opts.select) dialog.find(o.opts.select).focus().click();
+            if(o.opts.select) dialog.find(o.opts.select).click();
             o.index = showDialog.opened.length;
             showDialog.opened.push(o);
             o.opts.open();
@@ -178,7 +185,6 @@ function showDialog(name, opts) {
         o.close = function() {
             showDialog.opened.splice(showDialog.opened.indexOf(o), 1);
             o.shield.remove();
-            if(o.btn_close) o.btn_close.remove();
             $(window).unbind('resize', o.opts.layout);
             var clean_up = function() {
                 dialog.hide();
@@ -195,123 +201,6 @@ function showDialog(name, opts) {
 }
 showDialog.opened = [];
 closeDialog = function() { showDialog.opened[showDialog.opened.length - 1].close(); }
-
-var btn_listen_click = require_login(function(entity) {
-    btn = $('.listen_button.' + entity); // grab all listen buttons for this user
-    if (! btn.hasClass('inactive')) {
-        var action = btn.hasClass('starred') ? 'unstar' : 'star';
-        btn.addClass('inactive');
-        $.post('', {action: action, entity: entity }, function(data) {
-            btn.removeClass('inactive');
-            if (!data) alert("Something went wrong, please try again");
-            else if(data.unstarred) {
-                btn.removeClass('starred');
-                btn.attr('title', btn.attr('data-title-inactive'));
-                $('#dia_listeners .user_cards .' + data.unstarred).remove();
-            } else {
-                btn.addClass('starred');
-                btn.attr('title', btn.attr('data-title-active'));
-                $('#dia_listeners .user_cards').prepend(data);
-            };
-        }, 'json');
-    }
-    return false;
-});
-var btn_star_click = require_login(function(entity, btn) {
-    var btn = $(btn);
-    if (! btn.hasClass('inactive')) {
-        var action = btn.hasClass('starred') ? 'unstar' : 'star';
-        btn.addClass('inactive');
-        _gaq.push(['_trackEvent', 'like']);
-        $.post('', {action: action, entity: entity}, function(data) {
-            var count = parseInt(btn.attr('data-count'));
-            var btn_wrapper = btn.parent();
-            btn.removeClass('inactive');
-            if (!data) alert("Something went wrong, please try again");
-            else if(data.unstarred) {
-                btn.removeClass('starred');
-                btn_wrapper.attr('title', btn_wrapper.attr('data-title-inactive'));
-                btn.attr('data-count', count-1);
-                iconCounts();
-                $('#dia_starrers .user_cards .' + data.unstarred).remove();
-            } else {
-                btn.addClass('starred');
-                btn_wrapper.attr('title', btn_wrapper.attr('data-title-active'));
-                btn.attr('data-count', count+1);
-                iconCounts();
-                $('#dia_starrers .user_cards').prepend(data);
-            };
-        }, 'json');
-    }
-});
-function reloadFeed(){
-    $.get('?dialog=feed', function(data){
-        $('#feed_menu').html(data);
-        var count = $('#notification_count').html();
-        var count_div = $('#notifications .count').html(count);
-        if (count == "0"){
-            count_div.parent('.has_count').andSelf().addClass('zero');
-        } else {
-            count_div.parent('.has_count').andSelf().removeClass('zero');
-        }
-    });
-}
-
-var btn_broadcast_click = require_login(function(btn) {
-    var btn = $('#btn_broadcast');
-    if (! btn.hasClass('inactive')) {
-        btn.addClass('inactive');
-        _gaq.push(['_trackEvent', 'broadcast']);
-        $.post('', {'action': 'broadcast', 'domain': window.location.hostname, 'path': window.location.pathname }, function(data) {
-            var btn_wrapper = btn.parent();
-            btn.removeClass('inactive');
-            if (!data) { alert("Something went wrong, please try again"); return; }
-            btn.addClass('enabled');
-            //if(data.unstarred) {
-            //    btn.removeClass('starred');
-            //    btn_wrapper.attr('title', btn_wrapper.attr('data-title-inactive'));
-            //    btn.attr('data-count', count-1);
-            //    iconCounts();
-            //    $('#dia_starrers .user_cards .' + data.unstarred).remove();
-            //}
-        }, 'json');
-    }
-});
-
-var btn_comment_click = function(){
-    loadDialog("?dialog=comments");
-    _gaq.push(['_trackEvent', 'comment', 'open_dialog']);
-}
-
-
-function updateShareUrls(element, currentUrl) {
-    element = $(element);
-    var encodedUrl = encodeURIComponent(currentUrl), total=0;
-    var encodedTitle = encodeURIComponent(document.title)
-    element.find('.copy_url').val(currentUrl);
-    element.find('a.twitter')
-      .attr('href', 'http://twitter.com/share?url=' + encodedUrl);
-    element.find('a.facebook')
-      .attr('href', 'http://www.facebook.com/sharer.php?u=' + encodedUrl);
-    element.find('a.reddit')
-      .attr('href', 'http://www.reddit.com/submit?url=' + encodedUrl);
-    element.find('.gplus_button')
-      .attr('href', currentUrl);
-    element.find('a.stumble')
-      .attr('href', 'http://www.stumbleupon.com/submit?url=' + encodedUrl + '&title=' + encodedTitle);
-
-    element.find('.count').each(function(){
-      $(this).html($(this).html().replace(/^0$/, "-"))
-    });
-    //element.find('textarea[name=message]').html("Check out this expression:\n\n" + currentUrl);
-
-    // Activate Google Plus
-    (function() {
-      var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-      po.src = 'https://apis.google.com/js/plusone.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
-    })();
-}
 
 function id(x) { return x; };
 function noop() { };
@@ -388,22 +277,6 @@ function inArray(array, el){
 }
 
     
-function iconCounts() {
-    $('.has_count').each(function(){
-        var count = $(this).attr('data-count');
-        var count_div = $(this).find('.count');
-        if (count_div.length == 0){
-            count_div = $(this).append('<div class="count"></div>').children().last();
-        }
-        if (count == "0") {
-            count_div.parent('.has_count').andSelf().addClass('zero');
-        } else {
-            count_div.parent('.has_count').andSelf().removeClass('zero');
-        }
-        count_div.html(count);
-    });
-};
-
 var urlParams = {};
 (function () {
     var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
@@ -418,47 +291,26 @@ var urlParams = {};
  * Adds hover events for elements with class='hoverable'
  * ***/
 $(function () {
-    iconCounts();
-    $('#btn_share').click(function(){
-        logAction('share_button_click');
-        _gaq.push(['_trackEvent', 'share', 'open_dialog']);
-        var dialog = $('#dia_share');
-        if (dialog.length === 0 ) {
-            $.get("?dialog=share", function(data){
-                showDialog(data, { 'select' : '#expression_url' } );
-                updateShareUrls('#dia_share', window.location);
-            });
-        } else {
-            showDialog('#dia_share', { 'select' : '#expression_url' });
-            updateShareUrls('#dia_share', window.location);
-        }
-    });
-
   $(".hoverable").each(function() { hover_add(this) });
 
   // Cause external links to open in a new window
   // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
   $('a').each(link_target);
 
-  $(window).resize(place_apps);
+  if (! Modernizr.touch) {
+      $(window).resize(function(){
+          place_apps();
+      });
+  }
   place_apps();
 
   if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
-  if (dialog_to_show.name) { showDialog(dialog_to_show.name, dialog_to_show.opts); };
+  if( dialog_to_show ){ showDialog(dialog_to_show.name, dialog_to_show.opts); };
   if (new_fb_connect) {
       _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
       showDialog('#dia_fb_connect_landing');
   };
-  // This completely breaks the site on Ios, and is annoying
-  // Also likely to be seen by logged out users
-  //else if (!logged_in) {
-  //    var count = parseInt(readCookie('pageview_count'));
-  //    var signup = readCookie('signup_completed') == 'true';
-  //    if (! count ) count = 0;
-  //    count++;
-  //    if ((count == 5 || count == 15) && (!signup)) setTimeout("$('.signup_button').first().click();", 1000);
-  //    createCookie('pageview_count', count, 14);
-  //};
+
   var dia_referral = $('#dia_referral');
   dia_referral.find('input[type=submit]').click(function(){
       asyncSubmit(dia_referral.find('form'), function(){
@@ -478,18 +330,30 @@ function link_target(i, a) {
 
 
 function center(e, inside, opts) {
-    var opts = $.extend({ absolute : false, minimum : true }, opts);
-    var w = typeof(inside) == 'undefined' ? $(window) : inside;
     if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
-    pos = { left : (w.width() - e.outerWidth()) / 2, 'top' : (w.height() - e.outerHeight()) / 2 };
+
+    var w = typeof(inside) == 'undefined' ? $(window) : inside,
+        opts = $.extend({
+            absolute: false,
+            minimum: true,
+            h: true,
+            v: true 
+        }, opts),
+        pos = {}
+    ;
+
+    if(opts.h) pos.left = (w.width() - e.outerWidth()) / 2;
+    if(opts.v) pos.top = (w.height() - e.outerHeight()) / 2;
+
     if(opts.minimum) {
-        pos['left'] = Math.max(0, pos['left']);
-        pos['top'] = Math.max(0, pos['top']);
+        if(opts.h) pos.left = Math.max(0, pos.left);
+        if(opts.v) pos.top = Math.max(0, pos.top);
     }
     if(opts.absolute) {
-        pos['left'] += window.scrollX;
-        pos['top'] += window.scrollY;
+        if(opts.h) pos.left += window.scrollX;
+        if(opts.v) pos.top += window.scrollY;
     }
+
     e.css(pos);
 }
 
@@ -505,7 +369,7 @@ function img_fill(img) {
 
 function asyncSubmit(form, callback, opts) {
     var opts = $.extend({ dataType : 'text' }, opts);
-    var url = $(form).attr('action')? $(form).attr('action') : server_url
+    var url = opts.url || $(form).attr('action') || server_url;
     $.post(url, $(form).serialize(), callback, opts.dataType);
     return false;
 }
@@ -540,7 +404,8 @@ function asyncUpload(opts) {
     if(opts.multiple) { input.attr('multiple', 'multiple'); }
     for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
     form.appendTo(document.body);
-    setTimeout(function() { input.click() }, 0); // It's a mystery why this makes the upload dialog appear on some machines
+    // It's a mystery why this timout is needed to make the upload dialog appear on some machines
+    setTimeout(function() { input.click() }, 0);
 }
 
 function hovers_active(state){
@@ -569,100 +434,192 @@ function hover_add(o) {
 }
 
 hover_menu = function(handle, drawer, options) {
-    handle = $(handle); drawer = $(drawer);
-    var o = { handle : handle, drawer : drawer };
-    o.options = {
-         open : noop
-        ,close : noop
-        ,auto_close : true
-        ,hover_close : true
-        ,close_delay : 500
-        ,offsetY : 0
-        ,click_persist : false
-        ,hover : true
-        ,open_condition : function(){ return true }
-        ,auto_height : true
-    };
-    $.extend(o.options, options);
+    var handle = $(handle), drawer = $(drawer), o = { handle : handle, drawer : drawer },
+        menu_items = drawer.find('.menu_item'), close_timer = false,
+        opts = $.extend({
+             open: noop
+            ,close: noop
+            ,open_menu: function(){ drawer.show() }
+            ,close_menu: function(){ drawer.hide() }
+            ,sticky: false
+            ,auto_close: false
+            ,hover_close: true
+            ,close_delay: 500
+            ,offset_y: 8
+            ,offset_x: 8
+            ,focus_persist: true
+            ,hover: true
+            ,open_condition: function(){ return true }
+            ,auto_height: true
+            ,default_item: drawer.find('.menu_item.default')
+            ,layout: 'bottom'
+            ,layout_x: 'auto'
+            ,min_y: 0
+            ,group: hover_menu
+            ,animate_close: false
+            ,animate_open: false
+            ,custom_open: false
+            ,custom_close: false
+            ,opened: false
+        }, options)
+    ;
     if(!handle.length) throw("hover_menu has no handle");
     if(!drawer.length) throw("hover_menu has no drawer");
-    handle.get(0).hover_menu = o;
-    //drawer.remove();
-    //$(document.body).append(drawer);
+    if(!opts.group) opts.group = { menus: [] };
 
-    o.opened = false;
-    o.close_timer = null;
-    o.rollover = null;
-    if(handle.attr('src')) o.rollover = handle;
-    if(handle.find('img').length) o.rollover = handle.find('img');
-    if(o.rollover) {
-        o.handle_src = o.rollover.attr('src');
-        o.hover_src = hover_url(o.handle_src);
-    }
+    o.menus = [];
+    o.opened = opts.opened;
+    o.sticky = opts.sticky;
 
-    o.delayed_close = function(e) {
-        o.e = e;
-        if(o.options.hover_close) o.close_timer = setTimeout(o.close, o.options.close_delay);
-    }
-    o.cancel_close = function() { if(o.close_timer) clearTimeout(o.close_timer); }
+    o.delayed_close = function(close_delay) {
+        if(typeof(close_delay) != 'number') close_delay = false;
+        opts.default_item.removeClass('active');
+        if(opts.hover_close && ! close_timer) {
+            close_timer = setTimeout(o.close, close_delay || opts.close_delay);
+        }
+        if(opts.group.delayed_close) opts.group.delayed_close();
+    };
+    o.cancel_close = function(e) {
+        if(close_timer) {
+            clearTimeout(close_timer);
+            close_timer = false;
+        }
+    };
 
-    o.close = function() {
+    // for debugging
+    o.opts = function(){ return opts };
+    o.drawer = function(){ return drawer };
+
+    o.close = function(force) {
+        close_timer = false;
         if(!o.opened) return;
-        drawer.hide();
+
+        if(force) $.map(o.menus, function(m){ m.close(force) });
+        else if(o.sticky || $.inArray(true, $.map(o.menus, function(m){ return m.opened })) > -1) return;
+
+        if(opts.animate_close){
+            if(!opts.animate_open){
+                opts.animate_open = {};
+                for(p in opts.animate_close) opts.animate_open[p] = drawer.css(p);
+            }
+            drawer.animate(opts.animate_close, 100);
+        } else opts.close_menu();
+        if(o.shield) o.shield.remove();
+
         o.opened = false;
-        if(o.rollover) o.rollover.attr('src', o.handle_src);
-        handle.removeClass('active');
-        o.options.close();
+        opts.close();
         handle.get(0).busy = false;
+        handle.removeClass('active');
+
+        return o;
     }
+
     o.open = function() {
-        if(hover_menu.disabled) return;
+        if(hover_menu.disabled || ! opts.open_condition()) return;
+        handle.addClass('active');
+        opts.default_item.addClass('active');
         o.cancel_close();
-        if (!o.options.open_condition()) return;
         if(o.opened) return;
 
         o.opened = true;
+        if( opts.group.current && (opts.group.current != o) ) opts.group.current.close(true);
+        opts.group.current = o;
         handle.get(0).busy = true;
-        if(o.rollover) o.rollover.attr('src', o.hover_src);
-        handle.addClass('active');
-        if(o.options.click_persist) o.options.hover_close = true;
 
-        drawer.show();
-        var hp = handle.position();
-        var oy = handle.outerHeight() + o.options.offsetY;
-        // pick top of menu based on if menu would go past bottom of
-        // window if below handle, or above top of window if above the handle
+        if(opts.animate_open) drawer.animate(opts.animate_open, 100);
+        else opts.open_menu();
+
         var css_opts = {};
-        css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
-            && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
-            hp.top - drawer.outerHeight() - o.options.offsetY : hp.top + oy;
-        css_opts.left = handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
-            hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left;
-        if (o.options.auto_height) css_opts.drawer_height = bound(drawer.height(), 0, ( $(window).height() - 50 ) * 0.8);
+        if(opts.layout){
+            // pick top of menu based on if menu would go past bottom of
+            // window if below handle, or above top of window if above the handle
+            var hp = handle.parent().is(drawer.parent()) ? handle.position() : handle.offset();
+
+            if( opts.layout == 'bottom' ){
+                var oy = handle.outerHeight() + opts.offset_y;
+                css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
+                    && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
+                    hp.top - drawer.outerHeight() - opts.offset_y : hp.top + oy;
+
+                if( opts.layout_x == 'auto' ) opts.layout_x =
+                    (handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
+                        'right' : 'left');
+                css_opts.left = ( opts.layout_x == 'right' ?
+                    hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
+            }
+            else if( opts.layout == 'center_y' ){
+                css_opts.top = Math.max(opts.min_y, hp.top + handle.outerHeight() / 2 -
+                     drawer.outerHeight() / 2);
+                css_opts.left = hp.left - opts.offset_x - drawer.outerWidth();
+            }
+
+            // shield element prevents hovering over gap between handle and menu from closing the menu
+            o.shield = $();
+            //if(opts.offset_y) o.shield.add($('<div>').css({
+            //    'position': 'absolute',
+            //    'left': hp.left,
+            //    'top': hp.top + handle.outerHeight(),
+            //    'width': handle.outerWidth(),
+            //    'height': opts.offset_y,
+            //    'background-color': 'orange'
+            //});
+            //if(opts.offset_x) o.shield.add($('<div>').css({
+            //    'position': 'absolute',
+            //    'left': hp.left - opts.offset_x,
+            //    'top': hp.top,
+            //    'width': opts.offset_x,
+            //    'height': handle.outerHeight(),
+            //    'background-color': 'orange'
+            //});
+            o.shield.insertBefore(handle)
+                .mouseover(o.cancel_close)
+                .mouseout(o.delayed_close)
+            ;
+        }
+
+        if(opts.auto_height && css_opts.top + drawer.outerHeight() > $(window).height()) {
+            var scroller = drawer.find('.items');
+            scroller.css('max-height', $(window).height() - 50 - css_opts.top -
+                (drawer.outerHeight() - scroller.outerHeight()));
+        }
+
         drawer.css(css_opts);
-        o.options.open();
+
+        opts.open();
+        return o;
     }
 
-    if(o.options.hover) {
+    opts.group.menus.push(o);
+
+    if(opts.hover) {
         handle.hover(o.open, o.delayed_close);
-        drawer.hover(o.cancel_close, o.delayed_close);
-        handle.hover(o.open);
+        drawer.mouseover(o.cancel_close).mouseout(o.delayed_close);
     }
-    handle.click(o.open);
-    $(o.options.click_persist).bind('click contextmenu keydown', function() { o.options.hover_close = false; });
-
-    if(o.options.auto_close) drawer.click(o.close);
-    $(window).click(function(e) {
-        if(handle.get(0) == e.target
-            || $.contains(handle.get(0), e.target)
-            || drawer.get(0) == e.target
-            || $.contains(drawer.get(0), e.target)
-            ) return;
-        o.close();
+    handle.click(function(){
+        if(o.opened && opts.default_item) opts.default_item.click();
+        o.open();
     });
+    if(opts.focus_persist){
+        drawer.find('input[type=text],input[type=password],textarea').on('click keydown', function(){
+            o.sticky = true;
+        }).on('blur', function(){
+            o.sticky = false;
+            o.delayed_close();
+        }).on('focus', o.cancel_close);
+        drawer.mousedown(function(){ setTimeout(o.cancel_close, 1) });
+    }
+
+    menu_items.each(function(i, d){
+        var e = $(d);
+        e.mouseover(function(){ e.addClass('active'); });
+        e.mouseout(function(){ e.removeClass('active'); });
+    });
+
+    if(opts.auto_close) drawer.click(o.close);
 
     return o;
 }
+hover_menu.menus = [];
 
 var minimize = function(what, to, opts) {
     var o = $.extend({ 'to' : $(to).addClass('active'), 'what' : $(what), 'duration' : 700, 'complete' : noop }, opts);
@@ -796,28 +753,17 @@ var context_to_string = function(opt_arg){
     }
 };
 
-var asset = function(path) { return hive_asset_paths[path]; }
-
-function sendRequestViaMultiFriendSelector() {
-  function requestCallback(response) {
-    $('#dia_referral .btn_dialog_close').click();
-    if (response){
-      _gaq.push(['_trackEvent', 'fb_connect', 'invite_friends', undefined, response.to.length]);
-      showDialog('#dia_sent_invites_thanks');
-      $.post('/', {'action': 'facebook_invite', 'request_id': response.request, 'to': response.to.join(',')});
-    }
-  }
-  FB.ui({method: 'apprequests'
-    , message: 'Join me on The New Hive'
-    , title: 'Invite Friends to Join The New Hive'
-    , filters: ['app_non_users']
-  }, requestCallback);
-}
+var asset = function(path) {
+    return hive_asset_paths[path];
+};
 
 // works as handler or function modifier
 function require_login(fn) {
     var check = function() {
-        if(logged_in) return fn.apply(null, arguments);
+        if(logged_in) {
+            if(fn) return fn.apply(null, arguments);
+            else return;
+        }
         showDialog('#dia_must_login');
         return false;
     }
@@ -830,7 +776,6 @@ function relogin(success){
     showDialog(dia);
     var form = dia.find('form');
     var callback = function(data){
-        console.log(data);
         if (data.login) { 
             dia.find('.btn_dialog_close').click();
             success();
@@ -839,4 +784,15 @@ function relogin(success){
     form.find("[type=submit]").click(function(){
         return asyncSubmit(form, callback, {dataType: 'json'});
     });
+};
+
+function callback_log(message){
+    return function(){
+        console.log(message);
+    };
+};
+
+var log_stub = function(m){
+    window.m = m;
+    console.log(m);
 };

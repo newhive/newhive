@@ -1,5 +1,13 @@
 @import "common";
 
+#happs { position: absolute; left: 0; top: 0; z-index: 0; }
+
+#edit_nav {
+    right: 0;
+    top: 0;
+    padding-left: 4px;
+}
+
 .ehapp, .ehapp > * { position : absolute; }
 .ehapp .shield { left : 0px; top : 0px; z-index: 2; width : 100%; height : 100%; }
 .select_border {
@@ -51,12 +59,30 @@
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
 #app_btns {
-    .nav_icon.active { background-color: $color_grey_medium; }
+    right: 0;
+    top: 70px;
+
+    .active { background-color: $color_grey_medium; }
+    .insert_btn { cursor: default; }
+    img { width: 50px; }
+    .icon { width: 67px; height: 50px; display: block; }
+
+    #insert_text   { &.active { background-image: asset_url('skin/1/text-hover.png');   } background-image: asset_url('skin/1/text.png');   }
+    #insert_image  { &.active { background-image: asset_url('skin/1/images-hover.png'); } background-image: asset_url('skin/1/images.png'); }
+    #insert_audio  { &.active { background-image: asset_url('skin/1/audio-hover.png');  } background-image: asset_url('skin/1/audio.png');  }
+    #insert_embed  { &.active { background-image: asset_url('skin/1/embed-hover.png');  } background-image: asset_url('skin/1/embed.png');  }
+    #insert_shape  { &.active { background-image: asset_url('skin/1/shapes-hover.png'); } background-image: asset_url('skin/1/shapes.png'); }
+    #insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
 }
-.insert_btn { margin-right : 15px; cursor : default; }
-.btn { display : inline-block; padding : 5px; cursor : default; }
+
+#menu_image {
+    width: 200px;
+    .embed_box { width: 150px; height: 1.2em; }
+}
+
+.btn { display: inline-block; padding: 5px; cursor: default; }
 .menu label { font-weight: normal; font-size: 15px; }
-#menu_save { top : 43px; right : 0px; padding : 10px; }
+#menu_save { top : 43px; right : 0px; padding : 10px; width: 220px; }
 #menu_save textarea { height : 2.5em; }
 #menu_save input, #menu_save textarea { width : 200px; }
 #menu_privacy .selected { display : none; }
@@ -75,13 +101,18 @@
 }
 .color_picker .shades { width : 120px; height : 120px; float : left; }
 
-#dia_edit_bg h2 { margin : 0 0 20px; text-align : center; }
-#edit_bg_image { float : left; margin-right : 30px; }
-#bg_preview { width : 120px; height : 80px; overflow : hidden; }
-#bg_preview img { width : 100%; }
-.small_text { font-size : x-small; }
-#bg_opacity_label { margin : 5px; }
-#bg_opacity { font-size : xx-small; }
+#dia_edit_bg {
+    width: 560px;
+    padding: 20px;
+
+    .small_text { font-size : x-small; }
+    h2 { margin : 0 0 20px; text-align : center; }
+    #edit_bg_image { float : left; margin-right : 30px; }
+    #bg_preview { width : 120px; height : 80px; overflow : hidden; }
+    #bg_preview img { width : 100%; }
+    #bg_opacity_label { margin : 5px; }
+    #bg_opacity { font-size : xx-small; }
+}
 
 #btn_thumbnail_wrapper { padding-top: 8px; }
 #btn_thumbnail_text { float: left; margin-right: 5px; font-weight : bold; cursor : default; }
@@ -112,7 +143,6 @@ input, textarea { font-size : inherit; }
 
 .dialogue_handle { background-color : $color_selected; }
 #loading { position : fixed; z-index: 3; display : none; }
-#app_btns { top : 0; left : 300px; width : 402px; height : 50px; }
 
 .hive_selection {
     background: $color_light_grey;

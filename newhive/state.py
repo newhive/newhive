@@ -16,7 +16,7 @@ from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredenti
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of
+from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of, is_mongo_key, set_trace
 
 import logging
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class Collection(object):
         self.entity = entity
 
     def fetch_empty(self, key, keyname='_id'): return self.find_empty({ keyname : key })
-    def fetch(self, key, keyname='_id'): return self.find({ keyname : key })
+    def fetch(self, key, keyname='_id', **opts): return self.find({ keyname : key }, **opts)
 
     def find_empty(self, spec, **opts):
         res = self.find(spec, **opts)
@@ -72,33 +72,61 @@ class Collection(object):
     def search(self, spec, **opts):
         return Cursor(self, self._col.find(spec=spec, **opts))
 
-    def last(self, spec, **opts):
+    def last(self, spec={}, **opts):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None):
+    def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None, filter=None):
+        if page and not is_mongo_key(page):
+            page = float(page)
         if type(spec) == dict:
-            if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': float(page) }
-            res = self.search(spec, sort=[(sort, order)], limit=limit)
+            if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': page }
+            res = self.search(spec, sort=[(sort, order)])
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
-                res = Page(res)
+                if filter:
+                    res = ifilter(filter, res)
+                res = islice(res, limit)
+                res = Page(list(res))
                 res.next = res[-1][sort] if len(res) == limit else None
             return res
+
         elif type(spec) == list:
-            if not page: page = 0
-            page = int(page)
-            end = (page + 1) * limit
             spec = uniq(spec)
+            if not page: page = '0'
+
+            if is_mongo_key(page):
+                try:
+                    start = spec.index(page)
+                    end = start + limit * -order
+                    if end > start:
+                        if start == len(spec): return []
+                        sub_spec = spec[start+1:end+1]
+                    else:
+                        if start == 0: return []
+                        if end - 1 < 0:
+                            sub_spec = spec[start-1::-1]
+                        else:
+                            sub_spec = spec[start-1:end-1:-1]
+                except ValueError:
+                    # TODO: would be better to raise a custom excpetion here so this situation
+                    # could be handled differently depending on application
+                    sub_spec = [] #paging element not in list
+            else:
+                page = int(page)
+                end = (page + 1) * limit
+                sub_spec = spec[ page * limit : end ]
+
             items = {}
-            for e in self.search({'_id': {'$in': spec[ page * limit : end ] }}): items[e.id] = e
+            for e in self.search({'_id': {'$in': sub_spec }}): items[e.id] = e
             res = Page()
-            res.next = page + 1 if end <= len(spec) else None
-            for i in spec:
+            if type(page) == int:
+                res.next = page + 1 if end <= len(spec) else None
+            for i in sub_spec:
                 if items.has_key(i): res.append(items[i])
             return res
 
-    def count(self, spec): return self.search(spec).count()
+    def count(self, spec={}): return self.search(spec).count()
 
     # self.new can be overridden to return custom object types
     def new(self, d): return self.entity(self, d)
@@ -207,55 +235,8 @@ class HasSocial(Entity):
 
     @property
     @memoized
-    def broadcaster_count(self):
+    def broadcast_count(self):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
-
-    def related_next(self, spec={}, loop=True):
-        if type(spec) == dict:
-            shared_spec = spec
-            try:
-                spec = {'updated':{'$lt': self['updated']}}
-                spec.update(shared_spec)
-                cur = self._col.find(spec).sort([('updated', -1)]).limit(1)
-                return self.collection.new(cur[0])
-            except IndexError:
-                if loop:
-                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated', -1)]).limit(1)[0])
-                    except IndexError: return None
-                else: return None
-        elif type(spec) == list:
-            try: index = spec.index(self.id)
-            except ValueError: return None #in this case the expression isn't in the collection to begin with
-
-            try: return self.db.Expr.fetch(spec[index+1])
-            except IndexError:
-                if loop: return self.db.Expr.fetch(spec[0])
-                else: return None
-        else: raise "argument must be a mongodb spec dicionary or a list of object ids"
-
-    def related_prev(self, spec={}, loop=True):
-        if type(spec) == dict:
-            shared_spec = spec
-            try:
-                spec = {'updated':{'$gt': self['updated']}}
-                spec.update(shared_spec)
-                cur = self._col.find(spec).sort([('updated', 1)]).limit(1)
-                return self.collection.new(cur[0])
-            except IndexError:
-                if loop:
-                    try: return self.collection.new(self._col.find(shared_spec).sort([('updated',1)]).limit(1)[0])
-                    except IndexError: return None
-                else: return None
-        elif type(spec) == list:
-            try: index = spec.index(self.id)
-            except ValueError: return None #in this case the expression isn't in the collection to begin with
-
-            try: return self.db.Expr.fetch(spec[index-1])
-            except IndexError:
-                if loop: return self.db.Expr.fetch(spec[-1])
-                else: return None
-        else: raise "argument must be a mongodb spec dicionary or a list of object ids"
-
 
 @Database.register
 class KeyWords(Entity):
@@ -394,7 +375,8 @@ class User(HasSocial):
 
     def can_view(self, expr):
         return expr and ( (expr.get('auth', 'public') == 'public') or
-            (self.id == expr['owner']) or (expr.id in self.starred_expr_ids) )
+                (self.id == expr['owner']) or
+                (expr.id in self.starred_expr_ids and not expr.auth_required()) )
 
     def feed_profile(self, spec={}, limit=40, **args):
         def query_feed(q):
@@ -408,21 +390,36 @@ class User(HasSocial):
     def feed_profile_entities(self, **args):
         res = self.feed_profile(**args)
         for i, item in enumerate(res):
-            if item.type == 'SystemMessage' or item.type == 'FriendJoined': continue
+            if item.type == 'FriendJoined': continue
             entity = item.initiator if item.entity.id == self.id else item.entity
             entity.feed = [item]
             res[i] = entity
         return res
 
-    def feed_network(self, limit=40, **args):
-        res = self.feed_search({ '$or': [
-            { 'initiator': {'$in': self.starred_user_ids}, 'class_name': {'$in': ['NewExpr', 'Broadcast']} }
-            ,{ 'initiator': self.id, 'class_name': 'Broadcast' }
-            ,{ 'entity': {'$in': self.starred_expr_ids}, 'class_name': {'$in':['Comment', 'UpdatedExpr']},
-                'initiator': { '$ne': self.id } }
-        ] } , auth='public', **args)
+    def feed_network(self, limit=40, expr=None, **args):
+        user_action = {
+                'initiator': {'$in': self.starred_user_ids},
+                'class_name': {'$in': ['NewExpr', 'Broadcast']}
+                }
+        own_broadcast = { 'initiator': self.id, 'class_name': 'Broadcast' }
+        expression_action = {
+                'entity': {'$in': self.starred_expr_ids}
+                , 'class_name': {'$in':['Comment', 'UpdatedExpr']}
+                , 'initiator': { '$ne': self.id }
+                }
+        or_clause = [user_action, own_broadcast, expression_action]
+
+        # In some cases we have an expression but no feed item to page relative
+        # to.  In this case, look up the most recent appropriate feed item with
+        # that expression as entity
+        if expr:
+            feed_start = self.feed_search({'entity': expr, '$or': or_clause },
+                    viewer=args['viewer'], limit=1
+                    ).next()
+            args['page'] = feed_start['created']
+        res = self.feed_search({ '$or': or_clause }, auth='public', limit=limit, **args)
         page = Page(self.feed_group(res, limit))
-        page.next = page[-1].feed[-1]['created'] if len(page) == limit else None
+        page.next = page[-1]['feed'][-1]['created'] if len(page) == limit else None
         return page
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
@@ -439,11 +436,11 @@ class User(HasSocial):
         for item in res:
             i = index_of(exprs, lambda e: e.id == item['entity'])
             if i == -1:
-                item.entity.feed = [item]
+                item.entity['feed'] = [item]
                 exprs.append(item.entity)
-            elif len(exprs[i].feed) < feed_limit:
-                if index_of(exprs[i].feed, lambda e: e['initiator'] == item['initiator']) != -1: continue
-                exprs[i].feed.append(item)
+            elif len(exprs[i]['feed']) < feed_limit:
+                if index_of(exprs[i]['feed'], lambda e: e['initiator'] == item['initiator']) != -1: continue
+                exprs[i]['feed'].append(item)
             if len(exprs) == limit: break
         return exprs
 
@@ -461,6 +458,7 @@ class User(HasSocial):
         self.db.InviteNote.create(self.db.User.named(config.site_user), self, data={'count':count})
 
     def cmp_password(self, v):
+        if not isinstance(v, (str, unicode)): return False
         return crypt(v.encode('UTF8'), self['password']) == self['password']
 
     def set_password(self, v):
@@ -471,13 +469,14 @@ class User(HasSocial):
         self.update(password=self['password'])
 
     def get_url(self, path='profile'):
-        return abs_url(domain = self.get('sites', [config.server_name])[0]) + path
+        return abs_url() + self.get('name', '') + '/' + path
     url = property(get_url)
-
+ 
+    @property
     def has_thumb(self):
         id = self.get('thumb_file_id')
         url = self.get('profile_thumb')
-        return (id and id != '') or (url and url != '')
+        return True if ( (id and id != '') or (url and url != '') ) else False
 
     def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
@@ -544,6 +543,7 @@ class User(HasSocial):
     @property
     def facebook_id(self):
         if self.has_key('facebook'): return self['facebook'].get('id')
+        else: return False
 
     @property
     def fb_thumb(self):
@@ -579,8 +579,7 @@ class User(HasSocial):
         return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}, 'facebook.disconnected': {'$exists': False}})
 
     @property
-    def expressions(self):
-        return self.db.Expr.search({'owner': self.id})
+    def expressions(self): return self.get_exprs()
 
     def delete(self):
         # Facebook Disconnect
@@ -636,17 +635,24 @@ def media_path(user, f_id=None):
 class Expr(HasSocial):
     cname = 'expr'
     indexes = [
-         (['domain', 'name'], {'unique':True})
+         (['owner_name', 'name'], {'unique':True})
         ,['owner', 'updated']
-        ,'updated'
+        ,'domain'
         ,'tags_index'
+        ,'updated'
         ,'random'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
 
     class Collection(Collection):
-        def named(self, domain, name): return self.find({'domain' : domain, 'name' : name})
+        def named(self, username, name): return self.find({'owner_name': username, 'name': name})
+        def meta(self,  username, name): return self.find({'owner_name': username, 'name': name},
+            fields={ 'apps': 0, 'background': 0, 'images': 0 })
+
+        def fetch(self, key, keyname='_id', meta=False):
+            opts = dict(fields={ 'apps': 0, 'background': 0, 'images': 0 }) if meta else {}
+            return super(Expr.Collection, self).fetch(key, keyname, **opts)
 
         def popular_tags(self):
             map_js = Code("function () {"
@@ -672,8 +678,7 @@ class Expr(HasSocial):
 
         def page(self, spec, viewer=None, **opts):
             if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-            es = super(Expr.Collection, self).page(spec, **opts)
-            es[:] = filter(lambda e: viewer.can_view(e), es)
+            es = super(Expr.Collection, self).page(spec, filter= viewer.can_view, **opts)
             return es
 
         def random(self):
@@ -690,7 +695,7 @@ class Expr(HasSocial):
     def related_prev(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()
-            shared_spec.update({'auth': 'public'})
+            shared_spec.update({'auth': 'public', 'apps': {'$exists': True}})
         else: shared_spec = spec
         return super(Expr, self).related_prev(shared_spec, **kwargs)
 
@@ -747,14 +752,8 @@ class Expr(HasSocial):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
         return self.increment({counter: 1})
 
-    def views(self):
-        if self.has_key('views'):
-            if self.has_key('owner_views'):
-                return self['views'] - self['owner_views']
-            else:
-                return self['views']
-        else:
-            return 0
+    @property
+    def views(self): return self.get('views', 0)
 
     def qualified_url(self):
       return "http://" + self['domain'] + "/" + self['name']
@@ -786,11 +785,33 @@ class Expr(HasSocial):
       else:
         return 0
 
-    @property
-    def url(self): return abs_url(domain=self['domain']) + self['name']
+    def cmp_password(self, v):
+        password = self.get('password', '')
+        if password == '': return True
+        if not isinstance(v, (str, unicode)): v = ''
+        if password == v: return True
+        return crypt(v.encode('UTF8'), password) == password
+
+    def set_password(self, v):
+        salt = "$6$" + junkstr(8)
+        self['password'] = crypt(v.encode('UTF8'), salt)
+    def update_password(self, v):
+        self.set_password(v)
+        upd = { 'password': self['password'], 'auth': 'password' if v else 'public' }
+        self.update(**upd)
+
+    def auth_required(self, user=None, password=None):
+        if (self.get('auth') == 'password'):
+            if self.cmp_password(password): return False
+            if user and user.id == self.get('owner'): return False
+            return True
+        return False
 
     @property
-    def owner_url(self): return abs_url(domain = self.get('domain')) + 'profile'
+    def url(self): return abs_url() + self['owner_name'] + '/' + self['name']
+
+    @property
+    def owner_url(self): return abs_url() + self.get('owner_name') + '/profile'
 
     def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
@@ -817,6 +838,16 @@ class Expr(HasSocial):
             self.update_cmd({'$set': {'analytics.Comment.count': len(comments)}})
         return comments
     comments = property(get_comments)
+
+    def feed_page(self, viewer=None, **opts):
+        if self.get('auth') == 'password' and self.get('password'):
+            # TODO: add support for password matching
+            if self.owner.id != get_id(viewer): return []
+        
+        items = self.db.Feed.page({ 'entity': self.id,
+            'class_name': {'$in': ['Star', 'Comment', 'Broadcast']} }, **opts)
+
+        return items
 
     @property
     def comment_count(self):
@@ -1043,6 +1074,7 @@ class Feed(Entity):
         class_name = type(self).__name__
         self.update(class_name=class_name)
         super(Feed, self).create()
+
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
         if self.entity['owner'] != self['initiator']: self.entity.owner.notify(self)
 
@@ -1135,6 +1167,13 @@ class NewExpr(Feed):
 class UpdatedExpr(Feed):
     action_name = 'updated'
 
+    def create(self):
+        super(UpdatedExpr, self).create()
+        # if most recent in feed is an update to same expression, delete it
+        prev = self.db.UpdatedExpr.last({ 'initiator': self['initiator'], 'entity': self['entity'] })
+        if prev: prev.delete()
+        return self
+
 @Database.register
 class FriendJoined(Feed):
     def viewable(self, viewer):
@@ -1143,14 +1182,6 @@ class FriendJoined(Feed):
     def create(self):
         if self.db.FriendJoined.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         return super(FriendJoined, self).create()
-
-@Database.register
-class SystemMessage(Feed):
-    class Collection(Feed.Collection):
-        def create(self, entity, data={}):
-            initiator = self.db.User.get_root()
-            return super(SystemMessage.Collection, self).create(initiator, entity, data)
-
 
 @Database.register
 class Referral(Entity):

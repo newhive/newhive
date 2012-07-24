@@ -1,6 +1,6 @@
 import crypt, pickle, urllib, time
 from newhive.controllers.shared import *
-from newhive.controllers.application import ApplicationController
+from newhive.controllers import Application
 from newhive.utils import normalize, junkstr
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 from newhive import mail, auth
@@ -8,7 +8,7 @@ from newhive import mail, auth
 import logging
 logger = logging.getLogger(__name__)
 
-class UserController(ApplicationController):
+class User(Application):
 
     def new(self, request, response):
         if request.requester.logged_in: return self.redirect(response, request.requester.url)
@@ -126,7 +126,7 @@ class UserController(ApplicationController):
                 self.db.FriendJoined.create(new_user, friend)
 
     def edit(self, request, response):
-        if request.path.split('/')[0] == "password_recovery":
+        if lget(request.path_parts, 0) == "password_recovery":
             key = request.args.get('key')
             user_id = request.args.get('user')
             user = self.db.User.fetch(user_id)
@@ -148,6 +148,23 @@ class UserController(ApplicationController):
             response.context['facebook_connect_url'] = FacebookClient().authorize_url(
                                                            abs_url(secure=True)+ 'settings')
             return self.serve_page(response, 'pages/user_settings.html')
+        else: return self.serve_forbidden(response)
+
+    def info(self, request, response):
+        user = self.db.User.fetch(lget(request.path_parts, 1))
+        if not user: return self.serve_404(request, response)
+
+        items = user.feed_profile(viewer=request.requester, limit=20)
+        tmpl = self.jinja_env.get_template('partials/feed.html')
+        feed_html = ''.join([ tmpl.render(dict(response.context, feed=item, user=request.requester)) for item in items ])
+
+        exprs = [ { 'thumb': e.get_thumb(70), 'url': e.url } for e in user.expr_page(limit=5) ]
+
+        return self.serve_json(response, dict(
+             feed_html = feed_html
+            ,exprs = exprs
+            ,listening = user.id in request.requester.starred_user_ids
+        ))
 
     def facebook_canvas(self, request, response, args={}):
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited' + querystring({'request_ids': request.args.get('request_ids','')}) + '";</script></html>')
@@ -281,14 +298,14 @@ class UserController(ApplicationController):
         return self.serve_page(response, "pages/email_confirmation.html")
 
     def login(self, request, response):
-        if auth.handle_login(self.db, request, response):
-            if request.is_xhr:
-                return self.serve_json(response, {'login': True})
-            else:
-                return self.redirect(response, request.form.get('url', request.requester.url))
+        success = auth.handle_login(self.db, request, response)
+        if success:
+            if request.is_xhr: return self.serve_json(response, {'login': True})
+            return self.redirect( response, request.form.get('url', abs_url()) )
 
     def logout(self, request, response):
         auth.handle_logout(self.db, request, response)
+        return self.redirect( response, request.form.get('url', abs_url()) )
 
     def log(self, request, response):
         action = request.form.get('log_action')
