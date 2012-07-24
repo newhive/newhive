@@ -55,7 +55,9 @@ class Application(object):
                 fb_client.user = request.requester
                 request.requester.fb_client = fb_client
                 if not request.requester.id: self.show_dialog(response, '#dia_sign_in_or_join')
-        response.context.update(facebook_authentication_url=self.fb_client.authorize_url(request.base_url))
+        response.context.update(
+                facebook_authentication_url=self.fb_client.authorize_url(request.base_url)
+                , use_ga = config.live_server)
 
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
@@ -99,7 +101,6 @@ class Application(object):
             ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k])
                 for k in config.site_pages])
             ,debug = config.debug_mode
-            ,use_ga = config.live_server
             ,ui = ui
             ,template = template
             ,facebook_app_id = config.facebook_app_id
