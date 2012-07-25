@@ -108,7 +108,7 @@ class Expression(Application, PagingMixin):
         owner = response.context['owner']
         resource = self.db.Expr.meta(owner['name'], path)
         if not resource:
-            if request.path == '': return self.redirect(response, owner.url)
+            if path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
