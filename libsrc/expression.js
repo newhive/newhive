@@ -92,14 +92,16 @@ $(function() {
     });
 
     var send_top = function(msg){ top.postMessage(msg, Hive.parent_url); },
-        go_next = function(){ send_top('next'); },
-        go_prev = function(){ send_top('prev'); };
+        paging_sent = false,
+        page = function(direction){
+            if(paging_sent) return;
+            paging_sent = true;
+            send_top(direction);
+        },
+        go_next = function(){ page('next') },
+        go_prev = function(){ page('prev') };
 
-    var paging_sent = false;
     $(document.body).on('keydown', function(e){
-        if(paging_sent) return;
-        paging_sent = true;
-
         if(e.keyCode == 32) // space
             if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) go_next();
         if(e.keyCode == 39) // right arrow
@@ -110,11 +112,11 @@ $(function() {
 
     $(window).click(function(){ send_top('focus'); });
 
-    // ends up being annoying a lot of times
-    //$('#bg').on('click', function(e){
-    //    if(e.clientX > $(window).width() * .666) go_next();
-    //    if(e.clientX < $(window).width() * .333) go_prev();
-    //});
+    // TODO: ends up being annoying a lot of times
+    $('#bg').on('click', function(e){
+        if(e.clientX > $(window).width() * .8) go_next();
+        if(e.clientX < $(window).width() * .2) go_prev();
+    });
 
 
     // TODO: listen for hide / show messages to unload / load <iframe>s, <object>s, and <embed>s
@@ -142,6 +144,7 @@ $(function() {
     //}
 
     Hive.show_expr = function(){
+        paging_sent = false;
         if(!Hive.expr) return;
         $.each(Hive.expr.apps, function(i, app){
             if (app.type == "hive.html") {
