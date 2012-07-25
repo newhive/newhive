@@ -32,6 +32,7 @@ Hive.password_dialog = function(){
 
 Hive.Menus = (function(){
     var o = {};
+    o.slow_close = 1100;
 
     o.layout = function(){
         var action_nav = $('#action_nav'),
@@ -83,7 +84,7 @@ Hive.Menus = (function(){
         else {
             o.login_menu = hover_menu( '#login_btn', '#login_menu', {
                 open: function() { $('#username').get(0).focus(); },
-                close_delay: 1000,
+                close_delay: o.slow_close,
                 offset_y: 8,
                 layout_x: 'right',
                 group: group
@@ -123,7 +124,7 @@ Hive.Menus = (function(){
                 $('#action_nav').animate({ right: 0 }, speed);
             };
             nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false,
-                open_menu: open_nav, close_menu: close_nav, opened: true, close_delay: 800 } );
+                open_menu: open_nav, close_menu: close_nav, opened: true, close_delay: o.slow_close } );
 
         o.init(nav_menu);
 
@@ -187,7 +188,7 @@ Hive.Menus = (function(){
             open_menu: Hive.navigator.show,
             close_menu: Hive.navigator.hide,
             group: false,
-            close_delay: 800
+            close_delay: o.slow_close
         });
 
         window.addEventListener('message', function(m){
