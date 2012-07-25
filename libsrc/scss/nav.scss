@@ -315,7 +315,7 @@ body.frame{
     display: none;
     background-color: white;
     z-index: $nav_layer + 2;
-    position: fixed;
+    position: absolute;
     overflow: auto;
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include border-radius(5px);
@@ -364,7 +364,7 @@ body.frame{
 #hive_menu {
     display: none;
     z-index: $nav_layer + 2;
-    position: fixed;
+    position: absolute;
     overflow: auto;
     cursor: default;
     padding: 0 10px 10px 0;
