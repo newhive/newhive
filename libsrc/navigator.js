@@ -582,13 +582,17 @@ Hive.Navigator.Expr = function(data, opts){
     o.show = function(){
         var f = o.frame;
         f.attr('name', 'expr');
-        f[0].contentWindow.postMessage('show', '*');
+        if (f[0].contentWindow) {
+            f[0].contentWindow.postMessage('show', '*');
+        }
     };
 
     o.hide = function(){
         var f = o.frame;
         f.attr('name', '');
-        f[0].contentWindow.postMessage('hide', '*');
+        if (f[0].contentWindow) {
+            f[0].contentWindow.postMessage('hide', '*');
+        }
     };
 
     o.render_card = function(){
