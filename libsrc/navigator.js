@@ -538,7 +538,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         o.populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
-        navigator_element.hover(function(){ o.show(); sticky = true; }, function(){ sticky = false; });
+        navigator_element.css('height', height);
         return o;
     };
 
