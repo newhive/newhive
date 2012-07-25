@@ -18,7 +18,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         _pushState = o.pushState;
         o.pushState = function(data, title, url){
             _pushState(data, title, url);
-            _gaq.push(['_trackPageView', url])
+            _gaq.push(['_trackPageview', url])
         };
         return o;
     }();
@@ -659,7 +659,6 @@ Hive.Navigator.create = function(navigator, viewer){
     $(window).resize(o.render);
     $(window).on('statechange', function(){ // Note: We are using statechange instead of popstate
         var state = History.getState(); // Note: We are using History.getState() instead of event.state
-        console.log(state);
         var select_expr = function(){
             if (state.data.id != o.current_id()) {
                 o.select_by_id(state.data.id);
