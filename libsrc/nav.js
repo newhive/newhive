@@ -266,7 +266,8 @@ Hive.Menus = (function(){
         var is_owner = expr.owner.id == user.id;
         $('#owner_btn').toggleClass('none', is_owner);
         if(!is_owner){
-            $('.owner_name').html(expr.owner_name);
+            var owner_name = expr.owner_name[0].toUpperCase() + expr.owner_name.slice(1);
+            $('.owner_name').html(owner_name);
             $('#owner_btn .user_thumb').attr('src', expr.owner.thumb)
                 .toggleClass('none', !expr.owner.has_thumb);
             $('.owner_url').attr('href', expr.owner.url);

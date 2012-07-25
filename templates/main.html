@@ -41,7 +41,7 @@
         >{{ user.name }}<div class='count rounded{{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div #}
       ><div id='user_btn' class='hoverable center text_btn black_active'
         ><img class='user_thumb {{ 'none' if not user.has_thumb }}' src='{{ user.get_thumb(70) }}'
-        ><div class='text name'>{{ user.name }}<div class='count rounded
+        ><div class='text name'>{{ user.name | capitalize }}<div class='count rounded
           {{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
       ></div
     {% else %}
@@ -116,7 +116,7 @@
       {% if expr or (owner and not user_is_owner) %}
         ><div id='owner_btn' class='hoverable center text_btn black_active'
           ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
-          ><div class='text name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name }}</span></div
+          ><div class='text name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name | capitalize }}</span></div
         ></div
       {% endif %}
       {% if community or expr %}
