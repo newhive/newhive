@@ -177,7 +177,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var previous_expr = current_expr;
         var left_offset = $(window).width();
         animate_slide(offset);
-        if (offset > 0){
+        if (offset >= 0){
             var towards = next_list;
             var away = prev_list;
             var fetch_function = o.fetch_next;
@@ -221,6 +221,16 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         $.each(away.slice(3), function(i, expr){ expr.unload(); });
     };
 
+    o.load_expr = function(id){
+        var callback = function(data){
+            current_expr = o.make_expr(data);
+            current_expr.load(content_element);
+            history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+            o.populate_navigator(function(){ o.select(0) });
+        };
+        $.getJSON('/expr_info/' + id, callback);
+    };
+
     o.prev = function(){
         return function(){ o.select(-1); }
     }();
@@ -248,6 +258,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 pos = pos + 1;
             } else {
                 // Not found in either case, this shouldn't happen normally
+                o.load_expr(id);
                 return false;
             }
         }
