@@ -796,3 +796,23 @@ var log_stub = function(m){
     window.m = m;
     console.log(m);
 };
+
+// debugging function logs time between events, grouped by label
+function time_since_last(label, extra_log) {
+    var that = time_since_last;
+    var delta;
+    var time = Date.now();
+
+    if (!that.storage) that.storage = {};
+    if (that.storage[label]) {
+        delta = time - that.storage[label];
+    } else {
+        delta = NaN;
+    }
+    that.storage[label] = time;
+
+    if (typeof(extra_log) == "undefined") { console.log(label, time, delta); }
+    else { console.log(label, extra_log, time, delta); }
+    return delta;
+};
+
