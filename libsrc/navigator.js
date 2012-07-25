@@ -18,7 +18,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         _pushState = o.pushState;
         o.pushState = function(data, title, url){
             _pushState(data, title, url);
-            _gaq.push(['_trackPageView'])
+            _gaq.push(['_trackPageView', url])
         };
         return o;
     }();
