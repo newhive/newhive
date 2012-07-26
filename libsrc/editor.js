@@ -2298,7 +2298,6 @@ Hive.embed_code = function(element) {
 
     else if(c.match(/^https?:\/\//i)) {
         var error = function(data, msg){
-            if(data) console.log(data);
             alert('Sorry, failed to load url ' + c + '.\n' + msg);
             Hive.upload_finish();
         };
