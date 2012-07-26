@@ -27,14 +27,8 @@ logger = logging.getLogger(__name__)
 logger.info("Initializing WSGI")
 
 
-##############################################################################
-#                   Ass sets, oh my! (static content tool chain)             #
-##############################################################################
-
 hive_assets = HiveAssets()
-if __name__ != "__main__":
-    hive_assets.bundle_and_compile()
-    hive_assets.push_s3()
+if __name__ != "__main__": hive_assets.bundle()
 
 ##############################################################################
 #                                jinja setup                                 #

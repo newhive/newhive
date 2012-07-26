@@ -164,7 +164,7 @@ class HiveAssets(Assets):
             self.push_s3()
 
     def bundle(self):
-        if config.debug_mode: self.webassets_bundle()
+        if config.debug_mode: self.build()
         self.find('')
 
     def webassets_init(self):
