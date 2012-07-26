@@ -113,6 +113,7 @@ Hive.Menus = (function(){
                 $('#user_nav').animate({ left: -50, top: -50 }, { complete:
                     function(){ drawers.hide() } }, speed);
                 $('#owner_nav').animate({ right: -50, top: -50 }, speed);
+                Hive.navigator.hide(speed);
                 $('#action_nav').animate({ right: -50 }, speed);
                 Hive.navigator.current_expr().frame.get(0).focus();
             },
@@ -121,6 +122,7 @@ Hive.Menus = (function(){
                 $('#user_nav').animate({ left: 0, top: 0 }, speed);
                 $('#owner_nav').animate({ right: 0, top: 0 }, speed);
                 $('#action_nav').animate({ right: 0 }, speed);
+                Hive.navigator.show(speed);
             };
             nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false,
                 open_menu: open_nav, close_menu: close_nav, opened: false, close_delay: 800 } );
@@ -188,19 +190,19 @@ Hive.Menus = (function(){
         $('#dia_delete .no_btn').click(function(){ del_dialog.close() });
 
         Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames', {hidden: true});
-        o.navigator_menu = hover_menu('#navigator_handle', '#navigator', {
-            layout: false,
-            opened: false,
-            open_menu: Hive.navigator.show,
-            close_menu: Hive.navigator.hide,
-            group: false,
-            close_delay: 800
-        });
+        //o.navigator_menu = hover_menu('#navigator_handle', '#navigator', {
+        //    layout: false,
+        //    opened: false,
+        //    open_menu: Hive.navigator.show,
+        //    close_menu: Hive.navigator.hide,
+        //    //group: false,
+        //    close_delay: 800
+        //});
 
         window.addEventListener('message', function(m){
             if(m.data != 'focus') return;
             nav_menu.close(true);
-            o.navigator_menu.close(true);
+            //o.navigator_menu.close(true);
         }, false);
 
         $(window).resize(o.layout);
@@ -270,7 +272,7 @@ Hive.Menus = (function(){
     };
 
     o.update_expr = function(expr){
-        if(!o.navigator_menu.opened) Hive.navigator.current_expr().frame.get(0).focus();
+        if(!nav_menu.opened) Hive.navigator.current_expr().frame.get(0).focus();
         var set_class = function(o, b, c){ return o[b ? 'addClass' : 'removeClass'](c) };
 
         $('.expr_id').val(expr.id); // for delete dialog

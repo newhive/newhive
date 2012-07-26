@@ -580,3 +580,16 @@ body.frame {
         right: -60px;
     }
 }
+
+#left_nav_handle, #right_nav_handle {
+    width: 2px;
+    height: 100%;
+}
+#left_nav_handle { left: 0; }
+#right_nav_handle { right: 0; }
+#top_nav_handle { 
+    top: 0;
+    height: 15px;
+    width: 100%;
+}
+

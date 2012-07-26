@@ -381,17 +381,19 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     };
 
-    o.show = function(){
+    o.show = function(speed){
+        speed = speed || 100;
         navigator_element.stop().clearQueue().show();
-        navigator_element.animate({bottom: 0});
+        navigator_element.animate({bottom: 0}, speed);
         if (info && !Modernizr.touch) info.find('input').focus();
         return o;
     };
 
-    o.hide = function(){
+    o.hide = function(speed){
+        speed = speed || 100;
         navigator_element.stop().clearQueue();
         var complete = function(){ navigator_element.hide() };
-        navigator_element.animate({bottom: -height*1.1}, {complete: complete});
+        navigator_element.animate({bottom: -height*1.1}, {complete: complete}, speed);
         if (info && !Modernizr.touch) info.find('input').blur();
         return o;
     };
