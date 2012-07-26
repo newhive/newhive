@@ -287,20 +287,6 @@ body.frame{
             overflow: hidden;
         }
     }
-    // big_card specific overrides
-    .expr_card.big_card {
-        .card_text {
-            bottom: 5px;
-            padding: 7px;
-        }
-        .title { font-size: 22px; }
-        .byline {
-            font-size: 12px;
-            position: absolute;
-            right: 6px;
-            bottom: 4px;
-        }
-    }
     // navigator specific overrides
     .navigator .expr_card {
         .card_text {
@@ -439,6 +425,21 @@ body.frame{
     width: 250px;
     overflow: hidden;
 
+    .card_text {
+        bottom: 5px;
+        padding: 7px;
+    }
+    .title { font-size: 22px; }
+    .tags a { float: left; margin-right: 5px; }
+    .byline {
+        font-size: 12px;
+        right: 6px;
+        bottom: 4px;
+        float: right;
+        display: inline-block;
+        margin: 5px 0 0 5px;
+    }
+
     .items .item {
         padding: 5px;
         clear: both;
@@ -451,7 +452,6 @@ body.frame{
         }
         .user { font-weight: bold; }
         .text { font-size: 13px; height: 32px; overflow: hidden; }
-        .time { font-size: 12px; float: right; padding-right: 2px; }
     }
 }
 

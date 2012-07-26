@@ -93,7 +93,8 @@ class Expression(Application, PagingMixin):
             'owner': owner_info,
             'counts': counts,
             'url': expr.url,
-            'auth_required': auth_required
+            'auth_required': auth_required,
+            'updated_friendly': friendly_date(expr['updated'])
         })
 
         return expr

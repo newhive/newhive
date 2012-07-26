@@ -85,10 +85,10 @@
       <img src='{{ expr.get_thumb(190) }}' class='thumb'>
       <div class='card_text'>
         <div class='title'>{{ expr.title | e }}</div>
-        <div class='tags'>{% for tag in expr.tags_index %}
+        <span class='tags'>{% for tag in expr.tags_index %}
           <a href='{{ expr.url }}?tag={{ tag }}'>#{{ tag }}</a>
-        {% endfor %}</div>
-        <div class='byline timestamp'>Jul 1</div>
+        {% endfor %}</span>
+        <div class='byline time'>Jul 1</div>
       </div>
     </div>
     <div class='items'>

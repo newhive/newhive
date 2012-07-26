@@ -178,8 +178,8 @@ Hive.Menus = (function(){
         });
 
         var del_dialog;
-        $('.delete_btn').click(function(){ del_dialog = showDialog('#dia_delete'); });
-        $('#dia_delete .no_btn').click(function(){ del_dialog.close() });
+        $('#action_nav .delete').click(function(){ del_dialog = showDialog('#dia_delete'); });
+        $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
         Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames');
         o.navigator_menu = hover_menu('#navigator_handle', '#navigator', {
@@ -299,6 +299,7 @@ Hive.Menus = (function(){
         $('#expr_menu .big_card .title').html(expr.title);
         $('#expr_menu .big_card .thumb').attr('src', expr.thumb);
         $('#expr_menu .tags').html(tag_list_html(expr.tags_index));
+        $('#expr_menu .time').html(expr.updated_friendly);
 
         // load expr's feed items: stars, broadcasts, comments
         var load_feed = function(data, status, jqXHR){
