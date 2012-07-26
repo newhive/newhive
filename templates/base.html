@@ -20,8 +20,8 @@
         new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
     ;
  </script>
- {% if debug %}{# unminified version for development #}
-   <script src='http://code.jquery.com/jquery-1.7.2.js'></script>
+ {% if debug %}
+   <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js'></script>
  {% else %}
    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
  {% endif %}
