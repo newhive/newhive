@@ -6,7 +6,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         {
             thumb_width: 166,
             text_height: 40,
-            margin: 5
+            margin: 5,
+            hidden: false
         },
         opts
     );
@@ -318,7 +319,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         // Build the new navigator
         navigator_element.css('height', height)
             .css('font-size', opts.thumb_width/190 + 'em');
-        if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
+        //if (render_opts.hidden) navigator_element.css('bottom', -height - 2 * opts.margin);
         navigator_element.append(inner).append(loupe);
 
         build([current_expr], current, 0, 1);
@@ -390,7 +391,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.hide = function(){
         navigator_element.stop().clearQueue();
         var complete = function(){ navigator_element.hide() };
-        navigator_element.animate({bottom: -height-2*opts.margin}, {complete: complete});
+        navigator_element.animate({bottom: -height*1.1}, {complete: complete});
         if (info && !Modernizr.touch) info.find('input').blur();
         return o;
     };
@@ -509,7 +510,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 next_list = $.map(data, o.make_expr);
                 next_list.loaded = true;
                 if (prev_list.loaded) {
-                    o.render().show();
+                    o.render();
                     callback();
                 }
             });
@@ -517,7 +518,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 prev_list = $.map(data, o.make_expr);
                 prev_list.loaded = true;
                 if (next_list.loaded) {
-                    o.render().show();
+                    o.render();
                     callback();
                 }
             });
@@ -538,7 +539,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         o.populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
-        navigator_element.css('height', height);
+        // if opts.hidden is true, render initially offscreen, then hide
+        // completely for better mobile browser experience
+        var bottom = opts.hidden ? -height * 1.1 : 0;
+        navigator_element.css({'height': height, bottom: bottom});
+        if (opts.hidden) setTimeout(function(){ navigator_element.hide(); }, 1000);
         return o;
     };
 
@@ -667,8 +672,8 @@ Hive.Navigator.NetworkUpdater = function(){
     return o;
 };
 
-Hive.Navigator.create = function(navigator, viewer){
-    var o = Hive.Navigator($(navigator), $(viewer))
+Hive.Navigator.create = function(navigator, viewer, opts){
+    var o = Hive.Navigator($(navigator), $(viewer), opts)
         //.set_updater(Hive.Navigator.NetworkUpdater())
         .initialize();
     $(window).resize(o.render);

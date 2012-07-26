@@ -123,21 +123,28 @@ Hive.Menus = (function(){
                 $('#action_nav').animate({ right: 0 }, speed);
             };
             nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false,
-                open_menu: open_nav, close_menu: close_nav, opened: true, close_delay: 800 } );
+                open_menu: open_nav, close_menu: close_nav, opened: false, close_delay: 800 } );
 
         o.init(nav_menu);
 
         o.action_nav_top = 70;
         var menu_top = o.action_nav_top + 4;
-        hover_menu('#view_btn', '#expr_menu', { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
-        hover_menu('#star_btn', '#star_menu', { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
-        hover_menu('#broadcast_btn', '#broadcast_menu', { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
-        hover_menu('#comment_btn', '#comment_menu', { layout: 'center_y', min_y: menu_top,
-            offset_x: 13, open: function(){
-                $('#comment_menu textarea').get(0).focus();
-                var box = $('#comment_menu .items');
-                box.scrollTop(box.get(0).scrollHeight);
-            }, group: nav_menu });
+        hover_menu('#view_btn', '#expr_menu',
+            { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
+        hover_menu('#star_btn', '#star_menu',
+            { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
+        hover_menu('#broadcast_btn', '#broadcast_menu',
+            { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
+        hover_menu('#comment_btn', '#comment_menu',
+            {
+                layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu,
+                open: function(){
+                    $('#comment_menu textarea').get(0).focus();
+                    var box = $('#comment_menu .items');
+                    box.scrollTop(box.get(0).scrollHeight);
+                }
+            }
+        );
 
         $('#star_btn').click(function(){ o.feed_toggle('star', Hive.expr.id, '#star_btn',
             '#star_menu .items') });
@@ -180,10 +187,10 @@ Hive.Menus = (function(){
         $('.delete_btn').click(function(){ del_dialog = showDialog('#dia_delete'); });
         $('#dia_delete .no_btn').click(function(){ del_dialog.close() });
 
-        Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames');
+        Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames', {hidden: true});
         o.navigator_menu = hover_menu('#navigator_handle', '#navigator', {
             layout: false,
-            opened: true,
+            opened: false,
             open_menu: Hive.navigator.show,
             close_menu: Hive.navigator.hide,
             group: false,
@@ -199,8 +206,16 @@ Hive.Menus = (function(){
         $(window).resize(o.layout);
         o.update_expr(expr);
 
-        o.navigator_menu.delayed_close(5000);
-        nav_menu.delayed_close(5000);
+        // In order to make sure the navigator and the nav are rendered,
+        // initially they are placed offscreen but not hidden (by css and init
+        // function for nav and navigator respectively).  However, for a good
+        // mobile experience, they need to be hidden, so we hide after a delay,
+        // (again, this is handled by init function in case of navigator)
+        setTimeout(function(){
+            nav_menu.drawer().hide();
+        }, 500 );
+        //o.navigator_menu.delayed_close(5000);
+        //nav_menu.delayed_close(5000);
     };
 
     o.user_link = function(name, id){

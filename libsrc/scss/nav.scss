@@ -67,6 +67,7 @@ img.thumb { background-color: $color_grey_medium; }
         vertical-align: middle;
     }
     .active .text, .active.text { color: white; }
+
     .text_btn {
         padding: 0 8px;
         cursor: pointer;
@@ -564,4 +565,18 @@ body.frame{
 
 #dia_password {
     padding: 20px;
+}
+
+body.frame {
+    #user_nav {
+        left: -50px;
+        top: -60px;
+    }
+    #owner_nav {
+        right: -50px;
+        top: -60px;
+    }
+    #action_nav {
+        right: -60px;
+    }
 }
