@@ -1,6 +1,6 @@
 #! /bin/sh
+# intended to be called from git post-receive hook
 
-# Copy this file to /usr/local/sbin
-
-chown -R www-data:adm /var/www/newhive
+chown -R www-data:adm .
+bin/build_assets.py
 apache2ctl graceful

@@ -131,39 +131,63 @@ class HiveAssets(Assets):
     def __init__(self):
         super(HiveAssets, self).__init__('lib')
 
-    def bundle_and_compile(self):
-        assets_env = webassets.Environment(join(config.src_home, 'libsrc'), '/lib')
-        self.assets_env = assets_env
-        assets_env.updater = 'always'
-        assets_env.url_expire = True
+    def build(self):
+        self.webassets_init()
 
-        if config.debug_mode:
-            assets_env.debug = True
-            assets_env.url = '/lib/libsrc'
-            self.default_local = True
+        print('Assembling hive assets...')
 
-        # get assets that webasset bundles depend on (just images and fonts), generate scss include
-        #
-        print('Fetching assets for scss...')
-        # first add assets that need to be local for weird browser requirements (fonts and flash)
+        ## First assemble hive assets that scss and JavaScript need
+
+        # Assets with weird browser requirements need to be local (fonts and flash)
+        # first grab assets for JavaScript
         self.find('Jplayer.swf', local=True)
-        #self.find('fonts', local=True) # fonts must have absolute SSL paths (css is served from s3)
-        # now grab the rest of 'em
-        self.find('')
-
-        self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
+        self.find('skin')
         self.write_js('libsrc/compiled.asset_paths.js')
 
+        # Fonts are NOT handled by hive assets for now
+        # fonts must have absolute SSL paths (css is served from s3)
+        #self.find('fonts', local=True)
+        self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
+        
+        ## now grab the rest of 'em
+        self.find('')
 
-        print('Compiling css and js...')
-        assets_env.register('edit.js',
+        self.webassets_bundle()
+
+        if not config.debug_mode:
+            self.assets_env.auto_build = False
+            cmd = webassets.script.CommandLineEnvironment(self.assets_env, logger)
+            logger.info("Forcing rebuild of webassets"); t0 = time.time()
+            cmd.build()
+            logger.info("Assets build complete in %s seconds", time.time() - t0)
+
+            self.push_s3()
+
+    def bundle(self):
+        if config.debug_mode: self.webassets_bundle()
+        self.find('')
+
+    def webassets_init(self):
+        self.assets_env = webassets.Environment(join(config.src_home, 'libsrc'), '/lib')
+        self.assets_env.updater = 'always'
+        self.assets_env.url_expire = True
+
+        if config.debug_mode:
+            self.assets_env.debug = True
+            self.assets_env.url = '/lib/libsrc'
+            self.default_local = True
+
+    def webassets_bundle(self):
+        print('Bundling webassets...')
+
+        self.assets_env.register('edit.js',
                 'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js',
                 filters='yui_js',
                 output='../lib/edit.js')
 
-        assets_env.register('google_closure.js', 'google_closure.js')
+        self.assets_env.register('google_closure.js', 'google_closure.js')
 
-        assets_env.register('app.js',
+        self.assets_env.register('app.js',
                 'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
                 'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'Modernizr.js', 'util.js',
                 'nav.js', 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
@@ -171,18 +195,18 @@ class HiveAssets(Assets):
                 filters='yui_js',
                 output='../lib/app.js')
 
-        assets_env.register('harmony_sketch.js',
+        self.assets_env.register('harmony_sketch.js',
                 'harmony_sketch.js',
                 filters='yui_js',
                 output='../lib/harmony_sketch.js')
 
-        assets_env.register('admin.js',
+        self.assets_env.register('admin.js',
                 'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js',
                 'raphael/g.line.js', 'jquery.tablesorter.min.js',
                 'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js',
                 output='../lib/admin.js')
 
-        assets_env.register('admin.css',
+        self.assets_env.register('admin.css',
                 'jquery-ui/jquery-ui-1.8.16.custom.css',
                 output='../lib/admin.css')
 
@@ -207,20 +231,10 @@ class HiveAssets(Assets):
                 output='minimal.css',
                 debug=False)
 
-        assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
-        assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
-        assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
-        assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
-
-        if not config.debug_mode:
-            assets_env.auto_build = False
-            cmd = webassets.script.CommandLineEnvironment(assets_env, logger)
-            logger.info("Forcing rebuild of webassets"); t0 = time.time()
-            cmd.build()
-            logger.info("Assets build complete in %s seconds", time.time() - t0)
-
-        # add the assets we just compiled
-        self.find(recurse=False)
+        self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
+        self.assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
+        self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
+        self.assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
     def urls_with_expiry(self):
         urls = self.urls()
