@@ -138,10 +138,6 @@
     </form>
   </div>
 
-  <script>
-    Hive.Menus.expr_init();
-    Hive.load_expr(expr);
-  </script>
   {{ body }}
 {% endblock %}
 
@@ -149,30 +145,10 @@
 {% block content %}
 {% endblock %}
 
-{% block footer_scripts %}
-<script>
-  $(function(){
-      //pagethrough_btns = $('.pagethrough');
-      //var navigator_height = (Hive && Hive.navigator) ? Hive.navigator.height() : 0;
-      //pagethrough_btns.css('top', ($(window).height() - pagethrough_btns.height() - navigator_height) / 2);
-      //$('#pagethrough_prev').attr('title', "previous "
-      //  + context_to_string({plural: false}))
-      //  .click(function(){
-      //    logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'prev'});
-      //    var url = $(this).attr('href');
-      //    setTimeout(function() { window.location = url; }, 100);
-      //    return false;
-      //  });
-      //$('#pagethrough_next').attr('title', "next "
-      //  + context_to_string({plural: false})).click(function(){
-      //    logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'next'});
-      //    var url = $(this).attr('href');
-      //    setTimeout(function() { window.location = url; }, 100);
-      //    return false;
-      //  });
-  });
-</script>
-{% endblock footer_scripts %}
+{% block footer_scripts %}<script>
+  Hive.Menus.expr_init();
+  Hive.load_expr(expr);
+</script>{% endblock footer_scripts %}
 
 {% block dialogs %}
   {{ super() }}

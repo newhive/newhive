@@ -33,6 +33,9 @@
 {% block body_classes %}{{ super() }} main {% endblock body_classes%}
 
 {% block main %}
+  {% block body %}
+  {% endblock body %}
+
   <div id='user_nav_handle' class='menu_handle'></div>
   <div id='user_nav' class='nav horiz'
     ><a href='{{ server_url }}'><div id='logo' class='hoverable icon black_active'></div></a
@@ -89,6 +92,15 @@
     ></div>
   </div>
 
+  {% if not user.logged_in %}
+    <div id='login_menu' class='menu top'>
+      <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
+        <img src='{{ 'skin/1/fb_sign_in.png'|asset_url }}' style='margin: 2px 0 2px -4px;'>
+      </a>
+      {% include 'page_parts/log_in.html' %}
+    </div>
+  {% endif %}
+
   {% if user.logged_in %}
     <div id='user_menu' class='menu feed_menu'>
       <a href='{{ home_url }}'><div class='menu_item default'>Expressions</div></a>
@@ -98,7 +110,7 @@
         {%- endfor %}
       </div>
       <div class='bar'></div>
-      <a href='{{ feed_url }}'><div class='menu_item'>Activity</div></a>
+      <a href='{{ user.url }}activity'><div class='menu_item'>Activity</div></a>
       <div id='user_activity_feed' class='items'>
         {% for feed in user.feed_profile(viewer=user, limit=15) %}
           {% include "partials/feed.html" %}
@@ -127,15 +139,6 @@
       {% endif %}
     ></div>
 
-    {% if not user.logged_in %}
-      <div id='login_menu' class='menu top'>
-        <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
-          <img src='{{ 'skin/1/fb_sign_in.png'|asset_url }}' style='margin: 2px 0 2px -4px;'>
-        </a>
-        {% include 'page_parts/log_in.html' %}
-      </div>
-    {% endif %}
-
     {% if expr or (owner and not user_is_owner) %}
       <div id='owner_menu' class='menu'>
         <a href='{{ owner.url }}' class='owner_url'><div class='menu_item default'>Expressions</div></a>
@@ -153,7 +156,7 @@
         </div>
         {#<div class='menu_item message'>Send message <div class='icon'></div></div>#}
         <div class='bar'></div>
-        <div class='menu_item'>Activity</div>
+        <a href='{{ owner.url }}activity'><div class='menu_item'>Activity</div></a>
         <div class='items'>
           {% if expr %}
             <b>Loading...</b>
@@ -236,8 +239,6 @@
     {% if error %}Hive.Menus.login_menu.open().sticky = true;{% endif %}
   </script>
 
-  {% block body %}
-  {% endblock body %}
   <div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>
   <div id='content'>
     {% block content %}

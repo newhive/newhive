@@ -108,14 +108,14 @@ Hive.Menus = (function(){
     o.expr_init = function(){
         var speed = 100,
             drawers = $('#user_nav,#owner_nav,#action_nav'),
-            handles = $('.menu_handle').add('#navigator_handle').add('#navigator'),
+            handles = $('.menu_handle').add('#navigator'),
             close_nav = function(){
                 drawers.stop().clearQueue();
                 $('#user_nav').animate({ left: -50, top: -50 }, { complete:
                     function(){ drawers.hide() } }, speed);
                 $('#owner_nav').animate({ right: -50, top: -50 }, speed);
-                Hive.navigator.hide(speed);
                 $('#action_nav').animate({ right: -50 }, speed);
+                Hive.navigator.hide(speed);
                 Hive.navigator.current_expr().frame.get(0).focus();
             },
             open_nav = function(){
@@ -191,12 +191,12 @@ Hive.Menus = (function(){
         $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
         Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames', {hidden: true});
-        //o.navigator_menu = hover_menu('#navigator_handle', '#navigator', {
+        //o.navigator_menu = hover_menu(handles, '#navigator', {
         //    layout: false,
         //    opened: false,
         //    open_menu: Hive.navigator.show,
         //    close_menu: Hive.navigator.hide,
-        //    group: false,
+        //    group: nav_menu,
         //    close_delay: o.slow_close
         //});
 
