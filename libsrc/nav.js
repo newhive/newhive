@@ -354,7 +354,9 @@ Hive.Menus = (function(){
 
             box = $('#comment_menu .items').html('');
             $.map(o.feeds.Comment, function(item){ o.comment_card(item).prependTo(box); });
-            o.btn_state('#comment_btn', feed_member(o.feeds.Comment));
+            var has_commented = feed_member(o.feeds.Comment);
+            o.btn_state('#comment_btn', has_commented);
+            $('#comment_menu').toggleClass('on', has_commented).toggleClass('off', !has_commented);
         };
         var feed_url = server_url + 'expr_feed/' + expr.id;
         if(expr.password) $.post(feed_url, { password: expr.password }, load_feed, 'json');
