@@ -2297,24 +2297,25 @@ Hive.embed_code = function(element) {
     }
 
     else if(c.match(/^https?:\/\//i)) {
-        var error = function(data){
-            alert('Sorry, failed to load url ' + c);
+        var error = function(data, msg){
+            if(data) console.log(data);
+            alert('Sorry, failed to load url ' + c + '.\n' + msg);
             Hive.upload_finish();
         };
         var callback = function(data) {
-            if (data.error) {
+            if( data.error ){
                 if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i)){
                     app = { type : 'hive.image', content : c }
                     Hive.new_app(app);
                 } else {
-                    return error();
+                    return error(false, data.error);
                 }
             }
             Hive.new_file(data, { load: Hive.upload_finish });
             $(element).val('');
         }
         Hive.upload_start();
-        $.ajax(server_url, {
+        $.ajax(secure_server, {
             data: { action: 'file_create', remote: true, url: c }
             , success: callback
             , dataType: 'json'
