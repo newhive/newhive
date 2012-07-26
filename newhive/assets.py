@@ -11,10 +11,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-#class Asset(object):
-#    def __init__(self, path, version, host):
-
-
 class Assets(object):
     def __init__(self, asset_path, default_local=False):
         self.assets = {}
