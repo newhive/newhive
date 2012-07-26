@@ -181,7 +181,9 @@ class HiveAssets(Assets):
                 filters='yui_js',
                 output='../lib/edit.js')
 
-        self.assets_env.register('google_closure.js', 'google_closure.js')
+        self.assets_env.register('google_closure.js', 'google_closure.js',
+            filters = 'yui_js',
+            output = '../lib/google_closure.js')
 
         self.assets_env.register('app.js',
                 'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
