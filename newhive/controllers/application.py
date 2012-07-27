@@ -88,7 +88,6 @@ class Application(object):
         context = response.context
         context.update(
              home_url = response.user.get_url()
-            ,feed_url = response.user.get_url(path='profile/activity')
             ,user = response.user
             ,user_client = { 'name': response.user.get('name'), 'id': response.user.id,
                 'thumb': response.user.get_thumb(70) }

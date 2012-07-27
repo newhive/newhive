@@ -468,7 +468,7 @@ class User(HasSocial):
         self.set_password(v)
         self.update(password=self['password'])
 
-    def get_url(self, path='profile'):
+    def get_url(self, path='profile/'):
         return abs_url() + self.get('name', '') + '/' + path
     url = property(get_url)
  

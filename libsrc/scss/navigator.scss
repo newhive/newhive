@@ -1,4 +1,5 @@
 @import "common";
+@import "nav";
 
 .navigator {
     $margin: 5px;
@@ -10,7 +11,7 @@
     left: 0;
     bottom: 0;
     background: rgba(255,255,255,0.92);
-    z-index: 4;
+    z-index: $nav_layer + 1;
     .info {
         margin: $margin 0;
         padding-left: 5px;

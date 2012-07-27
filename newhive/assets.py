@@ -11,10 +11,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-#class Asset(object):
-#    def __init__(self, path, version, host):
-
-
 class Assets(object):
     def __init__(self, asset_path, default_local=False):
         self.assets = {}
@@ -131,96 +127,138 @@ class HiveAssets(Assets):
     def __init__(self):
         super(HiveAssets, self).__init__('lib')
 
-    def bundle_and_compile(self):
-        assets_env = webassets.Environment(join(config.src_home, 'libsrc'), '/lib')
-        self.assets_env = assets_env
-        assets_env.updater = 'always'
-        assets_env.url_expire = True
+    def build(self):
+        self.webassets_init()
 
-        if config.debug_mode:
-            assets_env.debug = True
-            assets_env.url = '/lib/libsrc'
-            self.default_local = True
+        print('Assembling hive assets...')
 
-        # get assets that webasset bundles depend on (just images and fonts), generate scss include
-        #
-        print('Fetching assets for scss...')
-        # first add assets that need to be local for weird browser requirements (fonts and flash)
+        ## First assemble hive assets that scss and JavaScript need
+
+        # Assets with weird browser requirements need to be local (fonts and flash)
+        # first grab assets for JavaScript
         self.find('Jplayer.swf', local=True)
-        #self.find('fonts', local=True) # fonts must have absolute SSL paths (css is served from s3)
-        # now grab the rest of 'em
-        self.find('')
-
-        self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
+        self.find('skin')
         self.write_js('libsrc/compiled.asset_paths.js')
 
+        # Fonts are NOT handled by hive assets for now
+        # fonts must have absolute SSL paths (css is served from s3)
+        self.find('fonts', local=True) # prevent fonts from being uploaded to s3
+        self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
+        
+        self.webassets_bundle()
 
-        print('Compiling css and js...')
-        assets_env.register('edit.js',
-                'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js',
-                filters='yui_js',
-                output='../lib/edit.js')
+        if not config.debug_mode:
+            self.assets_env.auto_build = False
+            cmd = webassets.script.CommandLineEnvironment(self.assets_env, logger)
 
-        assets_env.register('google_closure.js', 'google_closure.js')
+            print("Forcing rebuild of webassets"); t0 = time.time()
+            cmd.build()
+            # actually get webassets to build bundles (webassets is very lazy)
+            for b in self.final_bundles: self.assets_env[b].urls()
+            print("Assets build complete in %s seconds", time.time() - t0)
 
-        assets_env.register('app.js',
-                'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
-                'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'Modernizr.js', 'util.js',
-                'nav.js', 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
-                'history/history.adapter.jquery.js', 'jquery.transition.js',
-                filters='yui_js',
-                output='../lib/app.js')
+        ## now grab the rest of 'em after compiling our webassets shit
+        self.find('')
 
-        assets_env.register('harmony_sketch.js',
-                'harmony_sketch.js',
-                filters='yui_js',
-                output='../lib/harmony_sketch.js')
+        if not config.debug_mode: self.push_s3()
 
-        assets_env.register('admin.js',
-                'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js',
-                'raphael/g.line.js', 'jquery.tablesorter.min.js',
-                'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js',
-                output='../lib/admin.js')
+    def bundle(self):
+        if config.debug_mode: self.build()
+        self.find('')
 
-        assets_env.register('admin.css',
-                'jquery-ui/jquery-ui-1.8.16.custom.css',
-                output='../lib/admin.css')
+    def webassets_init(self):
+        self.assets_env = webassets.Environment(join(config.src_home, 'libsrc'), '/lib')
+        self.assets_env.updater = 'always'
+        self.assets_env.url_expire = True
+
+        if config.debug_mode:
+            self.assets_env.debug = True
+            self.assets_env.url = '/lib/libsrc'
+            self.default_local = True
+            self.auto_build = True
+
+    def webassets_bundle(self):
+        print('Bundling webassets...')
+
+        opts = { }
+
+        self.assets_env.register('edit.js',
+            'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js',
+            filters='yui_js',
+            output='../lib/edit.js',
+            **opts)
+
+        self.assets_env.register('google_closure.js', 'google_closure.js',
+            filters = 'yui_js',
+            output = '../lib/google_closure.js',
+            **opts)
+
+        self.assets_env.register('app.js',
+            'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
+            'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'Modernizr.js', 'util.js',
+            'nav.js', 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
+            'history/history.adapter.jquery.js', 'jquery.transition.js',
+            filters='yui_js',
+            output='../lib/app.js',
+            **opts)
+
+        self.assets_env.register('harmony_sketch.js',
+            'harmony_sketch.js',
+            filters='yui_js',
+            output='../lib/harmony_sketch.js',
+            **opts)
+
+        self.assets_env.register('admin.js',
+            'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js',
+            'raphael/g.line.js', 'jquery.tablesorter.min.js',
+            'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js',
+            output='../lib/admin.js',
+            **opts)
+
+        self.assets_env.register('admin.css',
+            'jquery-ui/jquery-ui-1.8.16.custom.css',
+            output='../lib/admin.css',
+            **opts)
 
         scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
-                "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
-                "scss/expression.scss", "scss/settings.scss", "scss/signup_flow.scss",
-                "scss/chart.scss", "scss/jplayer.scss", "scss/navigator.scss",
-                filters=scss_filter,
-                output='scss.css',
-                debug=False)
+            "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
+            "scss/expression.scss", "scss/settings.scss", "scss/signup_flow.scss",
+            "scss/chart.scss", "scss/jplayer.scss", "scss/navigator.scss",
+            filters=scss_filter,
+            output='scss.css',
+            **opts)
 
         edit_scss = webassets.Bundle('scss/edit.scss',
-                filters=scss_filter,
-                output='edit.css',
-                debug=False)
+            filters=scss_filter,
+            output='edit.css',
+            debug=False,
+            **opts)
 
         minimal_scss = webassets.Bundle('scss/minimal.scss',
-                'scss/fonts.scss',
-                filters=scss_filter,
-                output='minimal.css',
-                debug=False)
+            'scss/fonts.scss',
+            filters=scss_filter,
+            output='minimal.css',
+            debug=False,
+            **opts)
 
-        assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
-        assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
-        assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
-        assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
+        self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css', **opts)
+        self.assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css', **opts)
+        self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css', **opts)
+        self.assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js', **opts)
 
-        if not config.debug_mode:
-            assets_env.auto_build = False
-            cmd = webassets.script.CommandLineEnvironment(assets_env, logger)
-            logger.info("Forcing rebuild of webassets"); t0 = time.time()
-            cmd.build()
-            logger.info("Assets build complete in %s seconds", time.time() - t0)
-
-        # add the assets we just compiled
-        self.find(recurse=False)
+        self.final_bundles = [
+            'app.css',
+            'edit.css',
+            'minimal.css',
+            'expression.js',
+            'edit.js',
+            'google_closure.js',
+            'app.js',
+            'harmony_sketch.js',
+            'admin.js',
+            'admin.css']
 
     def urls_with_expiry(self):
         urls = self.urls()

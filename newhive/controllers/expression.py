@@ -1,4 +1,4 @@
-import base64
+import base64, jinja2
 from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive import utils, mail
@@ -93,7 +93,8 @@ class Expression(Application, PagingMixin):
             'owner': owner_info,
             'counts': counts,
             'url': expr.url,
-            'auth_required': auth_required
+            'auth_required': auth_required,
+            'updated_friendly': friendly_date(expr['updated'])
         })
 
         return expr
@@ -191,6 +192,14 @@ class Expression(Application, PagingMixin):
 
     def empty(self, request, response): return self.serve_page(response, 'pages/expr_empty.html')
 
+    def feed_prepare(self, item):
+        item = dict(item,
+            initiator_thumb = item.initiator.get_thumb(70),
+            created_friendly = friendly_date(item['created'])
+        )
+        if item.has_key('text'): item['text'] = jinja2.escape(item['text'])
+        return item
+
     def feed(self, request, response):
         expr = self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
@@ -200,10 +209,7 @@ class Expression(Application, PagingMixin):
         if request.owner == expr.get('owner'): expr.increment_counter('owner_views')
         else: expr.increment_counter('views')
 
-        items = map(lambda item: dict(item,
-                initiator_thumb=item.initiator.get_thumb(70),
-                created_friendly=friendly_date(item['created'])
-            ), expr.feed_page(viewer=request.requester, limit=0))
+        items = map(self.feed_prepare, expr.feed_page(viewer=request.requester, limit=0))
         return self.serve_json(response, list(items))       
 
     def random(self, request, response):

@@ -605,8 +605,34 @@ Hive.App.Html = function(o) {
     setTimeout(function(){ o.load(); }, 100);
 
     return o;
-}
+};
 Hive.registerApp(Hive.App.Html, 'hive.html');
+
+Hive.App.Script = function(o){
+    o.content = function(){ return o.content_element.html(); };
+
+    o.run = function(){
+        o.script_element.html(o.content_element.val()).remove().appendTo('body');
+    };
+
+    function controls(o) {
+        o.addControls($('#controls_script'));
+        o.div.find('.code').click(o.app.run);
+        return o;
+    }
+    o.make_controls.push(controls);
+    Hive.App.has_shield(o);
+
+    o.focus.add(function(){ o.content_element.focus() });
+    o.unfocus.add(function(){ o.content_element.blur() });
+
+    o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
+    o.script_element = $('<script>').html(o.init_state.content);
+    o.load();
+
+    return o;
+};
+Hive.registerApp(Hive.App.Script, 'hive.script');
 
 var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
@@ -2271,24 +2297,24 @@ Hive.embed_code = function(element) {
     }
 
     else if(c.match(/^https?:\/\//i)) {
-        var error = function(data){
-            alert('Sorry, failed to load url ' + c);
+        var error = function(data, msg){
+            alert('Sorry, failed to load url ' + c + '.\n' + msg);
             Hive.upload_finish();
         };
         var callback = function(data) {
-            if (data.error) {
+            if( data.error ){
                 if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i)){
                     app = { type : 'hive.image', content : c }
                     Hive.new_app(app);
                 } else {
-                    return error();
+                    return error(false, data.error);
                 }
             }
             Hive.new_file(data, { load: Hive.upload_finish });
             $(element).val('');
         }
         Hive.upload_start();
-        $.ajax(server_url, {
+        $.ajax(secure_server, {
             data: { action: 'file_create', remote: true, url: c }
             , success: callback
             , dataType: 'json'
