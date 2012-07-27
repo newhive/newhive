@@ -151,7 +151,7 @@ class HiveAssets(Assets):
             self.assets_env.auto_build = False
             cmd = webassets.script.CommandLineEnvironment(self.assets_env, logger)
             logger.info("Forcing rebuild of webassets"); t0 = time.time()
-            cmd.rebuild()
+            cmd.build()
             logger.info("Assets build complete in %s seconds", time.time() - t0)
 
             self.push_s3()
