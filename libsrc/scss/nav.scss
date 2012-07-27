@@ -492,7 +492,7 @@ body.frame{
             float: left;
         }
         .comment { float: left; }
-        .text { position: relative; float: right; width: 490px; margin-right: 10px; }
+        .text { position: relative; float: right; width: 490px; margin-right: 10px; white-space: pre-wrap; }
         .user { display: block; font-weight: bold; margin-top: 5px; }
         .time { font-size: 12px; position: absolute; right: 0; bottom: 0; padding-right: 2px; }
     }

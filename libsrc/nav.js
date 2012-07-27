@@ -420,6 +420,7 @@ Hive.Menus = (function(){
             o.comment_card(data).appendTo(items);
             items.scrollTop(items.get(0).scrollHeight);
             o.btn_state('#comment_btn', true);
+            $('#comment_form textarea').val('');
         }, 'json');
 
         return false;

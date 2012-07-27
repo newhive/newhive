@@ -142,7 +142,7 @@ class HiveAssets(Assets):
 
         # Fonts are NOT handled by hive assets for now
         # fonts must have absolute SSL paths (css is served from s3)
-        #self.find('fonts', local=True)
+        self.find('fonts', local=True) # prevent fonts from being uploaded to s3
         self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
         
         ## now grab the rest of 'em
