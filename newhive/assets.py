@@ -150,8 +150,11 @@ class HiveAssets(Assets):
         if not config.debug_mode:
             self.assets_env.auto_build = False
             cmd = webassets.script.CommandLineEnvironment(self.assets_env, logger)
+
             logger.info("Forcing rebuild of webassets"); t0 = time.time()
             cmd.build()
+            # actually get webassets to build bundles (webassets is very lazy)
+            for b in self.final_bundles: self.assets_env[b].urls()
             logger.info("Assets build complete in %s seconds", time.time() - t0)
 
             self.push_s3()
@@ -244,6 +247,18 @@ class HiveAssets(Assets):
         self.assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css', **opts)
         self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css', **opts)
         self.assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js', **opts)
+
+        self.final_bundles = [
+            'app.css',
+            'edit.css',
+            'minimal.css',
+            'expression.js',
+            'edit.js',
+            'google_closure.js',
+            'app.js',
+            'harmony_sketch.js',
+            'admin.js',
+            'admin.css']
 
     def urls_with_expiry(self):
         urls = self.urls()
