@@ -127,7 +127,7 @@ class HiveAssets(Assets):
     def __init__(self):
         super(HiveAssets, self).__init__('lib')
 
-    def build(self):
+    def build(self, force=False):
         self.webassets_init()
 
         print('Assembling hive assets...')
@@ -147,7 +147,7 @@ class HiveAssets(Assets):
         
         self.webassets_bundle()
 
-        if not config.debug_mode:
+        if force or not config.debug_mode:
             self.assets_env.auto_build = False
             cmd = webassets.script.CommandLineEnvironment(self.assets_env, logger)
 
