@@ -151,11 +151,11 @@ class HiveAssets(Assets):
             self.assets_env.auto_build = False
             cmd = webassets.script.CommandLineEnvironment(self.assets_env, logger)
 
-            logger.info("Forcing rebuild of webassets"); t0 = time.time()
+            print("Forcing rebuild of webassets"); t0 = time.time()
             cmd.build()
             # actually get webassets to build bundles (webassets is very lazy)
             for b in self.final_bundles: self.assets_env[b].urls()
-            logger.info("Assets build complete in %s seconds", time.time() - t0)
+            print("Assets build complete in %s seconds", time.time() - t0)
 
         ## now grab the rest of 'em after compiling our webassets shit
         self.find('')
