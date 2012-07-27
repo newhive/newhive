@@ -157,10 +157,10 @@ class HiveAssets(Assets):
             for b in self.final_bundles: self.assets_env[b].urls()
             logger.info("Assets build complete in %s seconds", time.time() - t0)
 
-            self.push_s3()
-
         ## now grab the rest of 'em after compiling our webassets shit
         self.find('')
+
+        if not config.debug_mode: self.push_s3()
 
     def bundle(self):
         if config.debug_mode: self.build()
