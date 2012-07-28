@@ -173,10 +173,13 @@ class Entity(dict):
         self._col = col._col
         self.db = col.db
         self.mdb = self.db.mdb
-        self.id = doc.get('_id')
+
+    @property
+    def id(self):
+        self.setdefault('_id', str(pymongo.objectid.ObjectId()))
+        return self['_id']
 
     def create(self):
-        self.id = self['_id'] = str(pymongo.objectid.ObjectId())
         self['created'] = now()
         self['updated'] = now()
         self._col.insert(self, safe=True)
@@ -925,6 +928,7 @@ class File(Entity):
         return self.UNKNOWN
 
     def set_thumb(self, w, h, file=False):
+        print self
         name = str(w) + 'x' + str(h)
         if not (self._file or file): self.download()
         if not file: file = self._file
@@ -1011,7 +1015,7 @@ class File(Entity):
 
         self['url'] = self.store(self._file, self.id, self['name'])
         self._file.seek(0)
-        self['md5'] = md5(f.read()).hexdigest()
+        self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
 
         if self.media_type == self.IMAGE:

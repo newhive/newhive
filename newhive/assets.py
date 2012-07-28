@@ -185,13 +185,13 @@ class HiveAssets(Assets):
         self.assets_env.register('edit.js',
             'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js',
             filters='yui_js',
-            output='../lib/edit.js',
-            **opts)
+            output='../lib/edit.js'
+            )
 
         self.assets_env.register('google_closure.js', 'google_closure.js',
             filters = 'yui_js',
-            output = '../lib/google_closure.js',
-            **opts)
+            output = '../lib/google_closure.js'
+            )
 
         self.assets_env.register('app.js',
             'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
@@ -199,26 +199,26 @@ class HiveAssets(Assets):
             'nav.js', 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
             'history/history.adapter.jquery.js', 'jquery.transition.js',
             filters='yui_js',
-            output='../lib/app.js',
-            **opts)
+            output='../lib/app.js'
+            )
 
         self.assets_env.register('harmony_sketch.js',
             'harmony_sketch.js',
             filters='yui_js',
-            output='../lib/harmony_sketch.js',
-            **opts)
+            output='../lib/harmony_sketch.js'
+            )
 
         self.assets_env.register('admin.js',
             'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js',
             'raphael/g.line.js', 'jquery.tablesorter.min.js',
             'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js',
-            output='../lib/admin.js',
-            **opts)
+            output='../lib/admin.js'
+            )
 
         self.assets_env.register('admin.css',
             'jquery-ui/jquery-ui-1.8.16.custom.css',
-            output='../lib/admin.css',
-            **opts)
+            output='../lib/admin.css'
+            )
 
         scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
@@ -228,25 +228,26 @@ class HiveAssets(Assets):
             "scss/chart.scss", "scss/jplayer.scss", "scss/navigator.scss",
             filters=scss_filter,
             output='scss.css',
-            **opts)
+            debug=False
+            )
 
         edit_scss = webassets.Bundle('scss/edit.scss',
             filters=scss_filter,
             output='edit.css',
-            debug=False,
-            **opts)
+            debug=False
+            )
 
         minimal_scss = webassets.Bundle('scss/minimal.scss',
             'scss/fonts.scss',
             filters=scss_filter,
             output='minimal.css',
-            debug=False,
-            **opts)
+            debug=False
+            )
 
-        self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css', **opts)
-        self.assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css', **opts)
-        self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css', **opts)
-        self.assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js', **opts)
+        self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
+        self.assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
+        self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
+        self.assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
         self.final_bundles = [
             'app.css',
