@@ -872,12 +872,8 @@ class Expr(HasSocial):
 
 def generate_thumb(file, size):
     # resize and crop image to size tuple, preserving aspect ratio, save over original
-    try:
-        file.seek(0)
-        imo = Img.open(file)
-    except:
-        print "failed to opem image file " + str(file)
-        return False
+    file.seek(0)
+    imo = Img.open(file)
     #print "Thumbnail Generation:   initial size: " + str(imo.size),
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
@@ -896,7 +892,7 @@ def generate_thumb(file, size):
 @Database.register
 class File(Entity):
     cname = 'file'
-    _file = None #temporary path
+    _file = None #temporary fd
 
     IMAGE, UNKNOWN = range(2)
 
@@ -913,7 +909,7 @@ class File(Entity):
     def download(self):
         try: response = urllib.urlopen(self['url'])
         except:
-            print 'urlopen fail: ' + self['url']
+            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.get('url'))
             return False
         if response.getcode() != 200:
             print 'http fail ' + str(response.getcode()) + ': ' + self['url']
@@ -928,18 +924,24 @@ class File(Entity):
         return self.UNKNOWN
 
     def set_thumb(self, w, h, file=False):
-        print self
         name = str(w) + 'x' + str(h)
-        if not (self._file or file): self.download()
-        if not file: file = self._file
+        if not file: file = self.file
 
-        thumb = generate_thumb(file, (w,h))
+        try: thumb = generate_thumb(file, (w,h))
+        except:
+            print 'failed to generate thumb for file: ' + self.id
+            return False # thumb generation is non-critical so we eat exception
         self.store(thumb, self.id + '_' + name, 'thumb_' + name)
 
         self.setdefault('thumbs', {})
         self['version'] = self['thumbs'].get(name, 0) + 1
         url = "%s_%s?v=%s" % (self['url'], name, self['version'])
         return {'url': url, 'file': thumb}
+
+    def set_thumbs(self):
+        if self.media_type != self.IMAGE: return
+        thumb190 = self.set_thumb(190,190)
+        if thumb190: self.set_thumb(70,70, file=thumb190['file'])
 
     def get_thumb(self, w, h):
         name = str(w) + 'x' + str(h)
@@ -975,9 +977,7 @@ class File(Entity):
             self['protocol'] = 'file'
             owner = self.db.User.fetch(self['owner'])
             self['fs_path'] = media_path(owner)
-            with open(joinpath(self['fs_path'], id), 'w') as f:
-                self._file.seek(0)
-                f.write(self._file.read())
+            with open(joinpath(self['fs_path'], id), 'w') as f: f.write(file.read())
             return abs_url() + 'file/' + owner['name'] + '/' + name
 
     def create(self):
@@ -1014,25 +1014,21 @@ class File(Entity):
                 self._file = newfile
 
         self['url'] = self.store(self._file, self.id, self['name'])
-        self._file.seek(0)
-        self['md5'] = md5(self._file.read()).hexdigest()
+        self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
-
-        if self.media_type == self.IMAGE:
-            thumb190 = self.set_thumb(190,190)['file']
-            self.set_thumb(70,70, file=thumb190)
-
+        self.set_thumbs()
+        self._file.close()
         super(File, self).create()
         return self
 
     # download file from source and reupload
-    def reset(self):
+    def reset_file(self, file=None):
         self.pop('s3_bucket', None)
         self.pop('fs_path', None)
-        self.store(self.file, self.id, self['name'])
-        if self.media_type == self.IMAGE:
-            thumb190 = self.set_thumb(190,190)['file']
-            self.set_thumb(70,70, file=thumb190)
+        if not file: file = self.file
+        self['url'] = self.store(file, self.id, self.get('name', 'untitled'))
+        self.set_thumbs()
+        if self._file: self._file.close()
         self.save()
 
     def delete_files(self):
