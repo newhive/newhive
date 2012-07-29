@@ -227,6 +227,7 @@ Hive.App = function(init_state, opts) {
             id: o.id
         });
         if(opacity != 1) s.opacity = opacity;
+        if(init_state.file_id) s.file_id = init_state.file_id;
         return s;
     };
 
@@ -1850,6 +1851,11 @@ Hive.History.init = function(){
     var o = Hive.History, group_start;
     o.current = -1;
 
+    // These two methods are used to collapse multiple history actions into one. Example:
+    //     Hive.History.begin()
+    //     // code that that creates a lot of history actions
+    //     Hive.History.group('group move')
+    // TODO: replace begin and group with existing version of saver
     o.begin = function(){ group_start = o.current + 1 };
     o.group = function(name){
         var group_length = o.current - group_start + 1;
@@ -1865,6 +1871,7 @@ Hive.History.init = function(){
         o.update_btn_titles();
     };
 
+    // pushes an action into the history stack
     o.save = function(undo, redo, action_name){
         if( o[o.current + 1] ) o.splice(o.current + 1); // clear redo stack when saving
         o.push({ undo: undo, redo: redo, name: action_name });
@@ -1895,23 +1902,31 @@ Hive.History.init = function(){
         $('#btn_redo').attr('title', next ? 'redo ' + next.name : 'nothing to redo');
     };
 
-    o.saver = function(getter, setter, name, redo_getter, redo_setter){
+    // Wrapper around o.save() for creating a history action from a getter and a setter
+    // instead of an undo redo action. This is useful for the pattern of:
+    //     var history_point = Hive.History.saver(get_foo_state, set_foo_state, 'foo');
+    //     // perform some action that changes foo state
+    //     history_point.save();
+    // There is also history_point.exec(foo_state) for the case where no user interaction is
+    // needed to change the state
+    o.saver = function(getter, setter, name){
         var o2 = { name: name };
-        if(!redo_getter) redo_getter = getter;
-        if(!redo_setter) redo_setter = setter;
         o2.old_state = getter();
+
         o2.save = function(){
-            o2.new_state = redo_getter();
+            o2.new_state = getter();
             o.save(
                 function(){ setter(o2.old_state) },
-                function(){ redo_setter(o2.new_state) },
+                function(){ setter(o2.new_state) },
                 o2.name
             );
         };
+
         o2.exec = function(state){
-            redo_setter(state);
+            setter(state);
             o2.save();
         };
+
         return o2;
     };
 
@@ -1953,8 +1968,7 @@ Hive.new_app = function(s, opts) {
 };
 
 Hive.new_file = function(files, opts) {
-    for (i=0; i < files.length; i++) {
-        var file = files[i];
+    $.map(files, function(file, i){
         var app = $.extend({ file_id: file.file_id, file_name: file.name,
             type_specific: file.type_specific }, opts);
 
@@ -1982,7 +1996,7 @@ Hive.new_file = function(files, opts) {
         }
 
         Hive.new_app(app, { offset: [20*i, 20*i] } );
-    };
+    });
     return false;
 }
 
@@ -2091,15 +2105,14 @@ Hive.init = function() {
         start: Hive.upload_start, error: uploadErrorCallback,
         success: function(data) { 
             Hive.Exp.images.push(data);
-            data['load'] = Hive.upload_finish; 
-            Hive.bg_change(data); 
+            Hive.bg_set(data, Hive.upload_finish);
         } 
     }); });
 
     Hive.bg_set(Hive.Exp.background);
 
 
-    var new_file = function() { asyncUpload({
+    var upload_file = function() { asyncUpload({
         multiple: true, start: Hive.upload_start, success: Hive.new_file,
         error: uploadErrorCallback
     }); };
@@ -2112,10 +2125,10 @@ Hive.init = function() {
             Hive.new_app(app);
         }
     }); };
-    $('#insert_image').click(new_file);
-    $('#image_upload').click(new_file);
-    $('#insert_audio').click(new_file);
-    $('#audio_upload').click(new_file);
+    $('#insert_image').click(upload_file);
+    $('#image_upload').click(upload_file);
+    $('#insert_audio').click(upload_file);
+    $('#audio_upload').click(upload_file);
     $('#insert_file' ).click(new_link);
     $('#menu_file'   ).click(new_link);
 
@@ -2430,19 +2443,24 @@ Hive.bg_color_set = function(c) {
     Hive.bg_div.add('#bg_preview').css('background-color', c);
     Hive.Exp.background.color = c;
 };
-Hive.bg_set = function(app_state) {
-    Hive.bg_color_set(app_state.color ? app_state.color : '');
+Hive.bg_set = function(bg, load) {
+    Hive.Exp.background = bg;
+    if(bg.color) Hive.bg_color_set(bg.color);
 
-    var url = Hive.Exp.background.url = app_state.content || app_state.url;
-    if(app_state.opacity) Hive.Exp.background.opacity = app_state.opacity;
-    var img = Hive.bg_div.find('img'), imgs = img.add('#bg_preview_img');
+    var img = Hive.bg_div.find('img'),
+        imgs = img.add('#bg_preview_img'),
+        url = bg.content || bg.url;
+    if(url) bg.url = url;
 
-    if(url) imgs.show();
+    if(bg.url) imgs.show();
     else { imgs.hide(); return }
 
-    imgs.attr('src', url);
-    img.load(function(){ setTimeout(place_apps, 0); });
-    if(app_state.opacity) imgs.css('opacity', app_state.opacity);
+    imgs.attr('src', bg.url);
+    img.load(function(){
+        setTimeout(place_apps, 0);
+        if(load) load();
+    });
+    if(bg.opacity) imgs.css('opacity', bg.opacity);
 };
 Hive.bg_change = function(s){
     Hive.History.saver(
