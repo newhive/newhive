@@ -2,29 +2,16 @@
 
 {% block head %}
  <meta property="og:title" content='{{ title }}' />
- <meta property="og:image" content='{{ exp.thumb }}' />
- <meta property="og:url" content='{{ "http://www." + domain + "/" + exp["name"] }}' />
+ <meta property="og:image" content='{{ expr.thumb }}' />
+ <meta property="og:url" content='{{ "http://www." + domain + "/" + expr["name"] }}' />
  <meta property="og:type" content="article" />
  <meta property="fb:admins" content="1007003" />
- <script src='{{ asset_bundle('expression.js')[0] }}'></script>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression minimal{% endblock %}
 
-
 {% block main %}
- <a href='{{ exp.url }}' target='_top'><img src='{{ 'skin/1/logo_embed.png'|asset_url }}' style='position: fixed; left: 5px; bottom: 5px; z-index: 2'></a>
- {% if auth_required %}
-  <script>
-   $(function() {
-       showDialog('#dia_password');
-       $('#password_input').select();
-   });
-  </script>
- {% else %}
-  {% include 'expr_background.html' %}
-  <div id='content'>{{ body }}</div>
- {% endif %}
-
+ <a href='{{ expr.url }}' target='_top'><img src='{{ 'skin/1/logo_embed.png'|asset_url }}' style='position: fixed; left: 5px; bottom: 5px; z-index: 2'></a>
+ <iframe src='{{ expr_url }}' class='expr' name='expr' style='position: absolute; left: 0; top: 0;'></iframe>
  {% include 'dialogs/password.html' %}
 {% endblock %}

@@ -130,15 +130,7 @@
     </form>
   </div>
 
-  <div id='dia_password' class='dialog mandatory center border selected rounded'>
-    <form method='POST' action='{{ expr_url }}' target='expr' id='password_form'>
-      <h3>This expression needs a password<br>to be experienced</h3><br>
-      <input type='password' name='password' class='password'>
-      <input type='submit' class='submit btn rounded black' value='Experience'>
-    </form>
-  </div>
-
-  {{ body }}
+  {% include "dialogs/password.html" %}
 {% endblock %}
 
 {# clear layout for community pages #}
