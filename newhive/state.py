@@ -180,6 +180,7 @@ class Entity(dict):
         return self['_id']
 
     def create(self):
+        self['_id'] = self.id
         self['created'] = now()
         self['updated'] = now()
         self._col.insert(self, safe=True)
