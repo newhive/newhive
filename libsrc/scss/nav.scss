@@ -288,20 +288,6 @@ body.frame{
             overflow: hidden;
         }
     }
-    // big_card specific overrides
-    .expr_card.big_card {
-        .card_text {
-            bottom: 5px;
-            padding: 7px;
-        }
-        .title { font-size: 22px; }
-        .byline {
-            font-size: 12px;
-            position: absolute;
-            right: 6px;
-            bottom: 4px;
-        }
-    }
     // navigator specific overrides
     .navigator .expr_card {
         .card_text {
@@ -316,7 +302,7 @@ body.frame{
     display: none;
     background-color: white;
     z-index: $nav_layer + 2;
-    position: fixed;
+    position: absolute;
     overflow: auto;
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include border-radius(5px);
@@ -356,8 +342,9 @@ body.frame{
         font-weight: normal;
         font-size: 12px;
         color: black;
-        margin-right: 3px;
+        margin-right: 15px;
         white-space: nowrap;
+        float: left;
     }
     .submit { float: right; }
 }
@@ -365,7 +352,7 @@ body.frame{
 #hive_menu {
     display: none;
     z-index: $nav_layer + 2;
-    position: fixed;
+    position: absolute;
     overflow: auto;
     cursor: default;
     padding: 0 10px 10px 0;
@@ -439,6 +426,21 @@ body.frame{
     width: 250px;
     overflow: hidden;
 
+    .card_text {
+        bottom: 5px;
+        padding: 7px;
+    }
+    .title { font-size: 22px; }
+    .tags a { float: left; margin-right: 5px; }
+    .byline {
+        font-size: 12px;
+        right: 6px;
+        bottom: 4px;
+        float: right;
+        display: inline-block;
+        margin: 5px 0 0 5px;
+    }
+
     .items .item {
         padding: 5px;
         clear: both;
@@ -451,7 +453,6 @@ body.frame{
         }
         .user { font-weight: bold; }
         .text { font-size: 13px; height: 32px; overflow: hidden; }
-        .time { font-size: 12px; float: right; padding-right: 2px; }
     }
 }
 
@@ -491,7 +492,7 @@ body.frame{
             float: left;
         }
         .comment { float: left; }
-        .text { position: relative; float: right; width: 490px; margin-right: 10px; }
+        .text { position: relative; float: right; width: 490px; margin-right: 10px; white-space: pre-wrap; }
         .user { display: block; font-weight: bold; margin-top: 5px; }
         .time { font-size: 12px; position: absolute; right: 0; bottom: 0; padding-right: 2px; }
     }
@@ -586,10 +587,10 @@ body.frame {
     height: 100%;
 }
 #left_nav_handle { left: 0; }
-#right_nav_handle { right: 0; }
+#right_nav_handle { right: 0; width: 40px; }
 #top_nav_handle { 
     top: 0;
-    height: 15px;
+    height: 40px;
     width: 100%;
 }
 

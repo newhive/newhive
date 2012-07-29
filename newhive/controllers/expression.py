@@ -1,4 +1,4 @@
-import base64
+import base64, jinja2
 from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive import utils, mail
@@ -7,6 +7,7 @@ from pymongo.connection import DuplicateKeyError
 
 class Expression(Application, PagingMixin):
     def edit_frame(self, request, response):
+        if not request.requester.logged_in: return self.serve_404(request, response)
         expr_id = lget(request.path_parts, 1)
         if not expr_id:
             expr = self.db.Expr.new(dfilter(request.args, ['domain', 'name', 'tags']))
@@ -15,8 +16,8 @@ class Expression(Application, PagingMixin):
             self.db.ActionLog.create(request.requester, "new_expression_edit")
         else:
             expr = self.db.Expr.fetch(expr_id)
+            if not expr: return self.serve_404(request, response)
             self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
-        if not (request.requester.logged_in or expr): return self.serve_404(request, response)
         if expr.auth_required(response.user): return self.serve_forbidden(request)
 
         #show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
@@ -93,7 +94,8 @@ class Expression(Application, PagingMixin):
             'owner': owner_info,
             'counts': counts,
             'url': expr.url,
-            'auth_required': auth_required
+            'auth_required': auth_required,
+            'updated_friendly': friendly_date(expr['updated'])
         })
 
         return expr
@@ -108,7 +110,7 @@ class Expression(Application, PagingMixin):
         owner = response.context['owner']
         resource = self.db.Expr.meta(owner['name'], path)
         if not resource:
-            if request.path == '': return self.redirect(response, owner.url)
+            if path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
@@ -118,8 +120,7 @@ class Expression(Application, PagingMixin):
             + ('empty' if resource.auth_required() else resource.id) )
         self.expr_prepare(resource, response.user)
         response.context.update(
-             edit_url = abs_url(secure = True) + 'edit/' + resource.id
-            ,expr_frame = True
+             expr_frame = True
             ,title = resource.get('title', False)
             ,expr = resource
             ,expr_url = expr_url
@@ -192,6 +193,14 @@ class Expression(Application, PagingMixin):
 
     def empty(self, request, response): return self.serve_page(response, 'pages/expr_empty.html')
 
+    def feed_prepare(self, item):
+        item = dict(item,
+            initiator_thumb = item.initiator.get_thumb(70),
+            created_friendly = friendly_date(item['created'])
+        )
+        if item.has_key('text'): item['text'] = jinja2.escape(item['text'])
+        return item
+
     def feed(self, request, response):
         expr = self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
@@ -201,10 +210,7 @@ class Expression(Application, PagingMixin):
         if request.owner == expr.get('owner'): expr.increment_counter('owner_views')
         else: expr.increment_counter('views')
 
-        items = map(lambda item: dict(item,
-                initiator_thumb=item.initiator.get_thumb(70),
-                created_friendly=friendly_date(item['created'])
-            ), expr.feed_page(viewer=request.requester, limit=0))
+        items = map(self.feed_prepare, expr.feed_page(viewer=request.requester, limit=0))
         return self.serve_json(response, list(items))       
 
     def random(self, request, response):

@@ -27,14 +27,8 @@ logger = logging.getLogger(__name__)
 logger.info("Initializing WSGI")
 
 
-##############################################################################
-#                   Ass sets, oh my! (static content tool chain)             #
-##############################################################################
-
 hive_assets = HiveAssets()
-if __name__ != "__main__":
-    hive_assets.bundle_and_compile()
-    hive_assets.push_s3()
+if __name__ != "__main__": hive_assets.bundle()
 
 ##############################################################################
 #                                jinja setup                                 #
@@ -215,13 +209,13 @@ def handle(request): # HANDLER
     # handle redirection
     else:
         if request.domain.startswith('www.'):
-            return app.redirect(response, re.sub('www.', '', request.url, 1))
+            return app.redirect(response, re.sub('www.', '', request.url, 1), permanent=True)
 
         for redirect_from in config.redirect_domains:
             if request.domain == redirect_from or request.domain.endswith('.' + redirect_from):
                 name = request.domain[0:-len(redirect_from)].strip('.')
                 new_url = abs_url() + name + ('/' if name else '') + request.path
-                return app.redirect(response, new_url)
+                return app.redirect(response, new_url, permanent=True)
 
 
     ##############################################################################

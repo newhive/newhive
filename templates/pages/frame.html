@@ -41,7 +41,7 @@
   <div id='right_nav_handle' class='menu_handle'></div>
   <div id='top_nav_handle' class='menu_handle'></div>
   <div id='action_nav'>
-    <a href='{{ edit_url }}'><div class='btn_box edit hoverable'>
+    <a class='edit_url'><div class='btn_box edit hoverable'>
       <div class='nav_btn'>
         <span class='text'>Edit</span>
         <div class='icon'></div>
@@ -88,10 +88,10 @@
       <img src='{{ expr.get_thumb(190) }}' class='thumb'>
       <div class='card_text'>
         <div class='title'>{{ expr.title | e }}</div>
-        <div class='tags'>{% for tag in expr.tags_index %}
+        <span class='tags'>{% for tag in expr.tags_index %}
           <a href='{{ expr.url }}?tag={{ tag }}'>#{{ tag }}</a>
-        {% endfor %}</div>
-        <div class='byline timestamp'>Jul 1</div>
+        {% endfor %}</span>
+        <div class='byline time'>Jul 1</div>
       </div>
     </div>
     <div class='items'>
@@ -130,49 +130,17 @@
     </form>
   </div>
 
-  <div id='dia_password' class='dialog mandatory center border selected rounded'>
-    <form method='POST' action='{{ expr_url }}' target='expr' id='password_form'>
-      <h3>This expression needs a password<br>to be experienced</h3><br>
-      <input type='password' name='password' class='password'>
-      <input type='submit' class='submit btn rounded black' value='Experience'>
-    </form>
-  </div>
-
-  <script>
-    Hive.Menus.expr_init();
-    Hive.load_expr(expr);
-  </script>
-  {{ body }}
+  {% include "dialogs/password.html" %}
 {% endblock %}
 
 {# clear layout for community pages #}
 {% block content %}
 {% endblock %}
 
-{% block footer_scripts %}
-<script>
-  $(function(){
-      //pagethrough_btns = $('.pagethrough');
-      //var navigator_height = (Hive && Hive.navigator) ? Hive.navigator.height() : 0;
-      //pagethrough_btns.css('top', ($(window).height() - pagethrough_btns.height() - navigator_height) / 2);
-      //$('#pagethrough_prev').attr('title', "previous "
-      //  + context_to_string({plural: false}))
-      //  .click(function(){
-      //    logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'prev'});
-      //    var url = $(this).attr('href');
-      //    setTimeout(function() { window.location = url; }, 100);
-      //    return false;
-      //  });
-      //$('#pagethrough_next').attr('title', "next "
-      //  + context_to_string({plural: false})).click(function(){
-      //    logAction('pagethrough_clicked', {'expr_id': expr_id, 'context': urlParams, href: $(this).attr('href'), direction: 'next'});
-      //    var url = $(this).attr('href');
-      //    setTimeout(function() { window.location = url; }, 100);
-      //    return false;
-      //  });
-  });
-</script>
-{% endblock footer_scripts %}
+{% block footer_scripts %}<script>
+  Hive.Menus.expr_init();
+  Hive.load_expr(expr);
+</script>{% endblock footer_scripts %}
 
 {% block dialogs %}
   {{ super() }}

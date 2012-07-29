@@ -1,7 +1,6 @@
 /lib/*.js
 /lib/*.css
-/libsrc/edit.css
-/libsrc/minimal.css
+/libsrc/*.css
 compiled.*
 /libsrc/.webassets-cache
 /.sass-cache

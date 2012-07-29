@@ -1,6 +1,7 @@
 import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
 import operator as op
 from os.path import join as joinpath
+from md5 import md5
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 from wsgiref.handlers import format_date_time
@@ -172,10 +173,14 @@ class Entity(dict):
         self._col = col._col
         self.db = col.db
         self.mdb = self.db.mdb
-        self.id = doc.get('_id')
+
+    @property
+    def id(self):
+        self.setdefault('_id', str(pymongo.objectid.ObjectId()))
+        return self['_id']
 
     def create(self):
-        self.id = self['_id'] = str(pymongo.objectid.ObjectId())
+        self['_id'] = self.id
         self['created'] = now()
         self['updated'] = now()
         self._col.insert(self, safe=True)
@@ -468,7 +473,7 @@ class User(HasSocial):
         self.set_password(v)
         self.update(password=self['password'])
 
-    def get_url(self, path='profile'):
+    def get_url(self, path='profile/'):
         return abs_url() + self.get('name', '') + '/' + path
     url = property(get_url)
  
@@ -627,9 +632,9 @@ class Session(Entity):
     cname = 'session'
 
 
-def media_path(user, f_id=None):
+def media_path(user, name=None):
     p = joinpath(config.media_path, user['name'])
-    return joinpath(p, f_id) if f_id else p
+    return joinpath(p, name) if name else p
 
 @Database.register
 class Expr(HasSocial):
@@ -868,12 +873,8 @@ class Expr(HasSocial):
 
 def generate_thumb(file, size):
     # resize and crop image to size tuple, preserving aspect ratio, save over original
-    try:
-        file.seek(0)
-        imo = Img.open(file)
-    except:
-        print "failed to opem image file " + str(file)
-        return False
+    file.seek(0)
+    imo = Img.open(file)
     #print "Thumbnail Generation:   initial size: " + str(imo.size),
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
@@ -892,7 +893,9 @@ def generate_thumb(file, size):
 @Database.register
 class File(Entity):
     cname = 'file'
-    _file = None #temporary path
+    _file = None #temporary fd
+
+    IMAGE, UNKNOWN = range(2)
 
     def __del__(self):
         if hasattr(self, "_file") and type(self._file) == file and (not self._file.closed):
@@ -907,7 +910,7 @@ class File(Entity):
     def download(self):
         try: response = urllib.urlopen(self['url'])
         except:
-            print 'urlopen fail: ' + self['url']
+            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.get('url'))
             return False
         if response.getcode() != 200:
             print 'http fail ' + str(response.getcode()) + ': ' + self['url']
@@ -916,44 +919,67 @@ class File(Entity):
         self._file.write(response.read())
         return True
 
+    @property
+    def media_type(self):
+        if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']: return self.IMAGE
+        return self.UNKNOWN
+
     def set_thumb(self, w, h, file=False):
         name = str(w) + 'x' + str(h)
-        if not (self._file or file): self.download()
-        if not file: file = self._file
+        if not file: file = self.file
 
-        thumb = generate_thumb(file, (w,h))
-        self.store_aws(thumb, self.id + '_' + name, 'thumb_' + name)
+        try: thumb = generate_thumb(file, (w,h))
+        except:
+            print 'failed to generate thumb for file: ' + self.id
+            return False # thumb generation is non-critical so we eat exception
+        self.store(thumb, self.id + '_' + name, 'thumb_' + name)
 
-        thumbs = self.get('thumbs')
-        if not thumbs: thumbs = self['thumbs'] = {}
-        version = int(thumbs.get(name, 0)) + 1
-        thumbs[name] = version
-        url = "%s_%s?v=%s" % (self['url'], name, version)
-        self.update(thumbs=thumbs)
+        self.setdefault('thumbs', {})
+        self['version'] = self['thumbs'].get(name, 0) + 1
+        url = "%s_%s?v=%s" % (self['url'], name, self['version'])
         return {'url': url, 'file': thumb}
 
-    def get_thumb(self, w, h, generate=False):
-        name = str(w) + 'x' + str(h)
-        if not self.get('thumbs', {}).get(name):
-            if not generate: return False
-            else: return set_thumb(w,h)['url']
+    def set_thumbs(self):
+        if self.media_type != self.IMAGE: return
+        thumb190 = self.set_thumb(190,190)
+        if thumb190: self.set_thumb(70,70, file=thumb190['file'])
 
-        return "%s_%s%s" % (self['url'].split('?')[0], name, ('?v=' + str(self['thumbs'][name])) if type(self['thumbs'][name]) == int else '')
+    def get_thumb(self, w, h):
+        name = str(w) + 'x' + str(h)
+        version = self.get('thumbs', {}).get(name)
+        if version == None: return False
+        return "%s_%s%s" % (self['url'].split('?')[0], name, '?v=' + str(version))
 
     def get_default_thumb(self):
         return self.get_thumb(190,190)
     default_thumb = property(get_default_thumb)
 
+    @property
+    def thumb_keys(self): return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
 
-    def store_aws(self, file, id, name):
+    def store(self, file, id, name):
         file.seek(0)
-        b = self.db.s3_con.get_bucket(self.get('s3_bucket', random.choice(self.db.s3_buckets).name))
-        k = S3Key(b)
-        k.name = id
-        k.set_contents_from_file(file, headers={ 'Content-Disposition' : 'inline; filename=' + name,
-            'Content-Type' : self['mime'], 'Cache-Control': 'max-age=' + str(86400 * 3650) })
-        k.make_public()
-        return k.generate_url(86400 * 3600, query_auth=False)
+
+        if config.aws_id:
+            self['protocol'] = 's3'
+            self.setdefault('s3_bucket', random.choice(self.db.s3_buckets).name)
+            b = self.db.s3_con.get_bucket(self['s3_bucket'])
+            k = S3Key(b)
+            k.name = id
+            name_escaped = urllib.quote_plus(name.encode('utf8'))
+            k.set_contents_from_file(file, headers = {
+                'Content-Disposition': 'inline; filename=' + name_escaped,
+                'Content-Type' : self['mime'],
+                'Cache-Control': 'max-age=' + str(86400 * 3650)
+            })
+            k.make_public()
+            return k.generate_url(86400 * 3600, query_auth=False)
+        else:
+            self['protocol'] = 'file'
+            owner = self.db.User.fetch(self['owner'])
+            self['fs_path'] = media_path(owner)
+            with open(joinpath(self['fs_path'], id), 'w') as f: f.write(file.read())
+            return abs_url() + 'file/' + owner['name'] + '/' + name
 
     def create(self):
         """ Uploads file to s3 if config.aws_id is defined, otherwise
@@ -962,11 +988,10 @@ class File(Entity):
 
         self._file = self['tmp_file']
         del self['tmp_file']
-        super(File, self).create()
         self['owner']
 
         # Image optimization
-        if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
+        if self.media_type == self.IMAGE:
             self._file.seek(0)
             imo = Img.open(self._file)
             #except:
@@ -989,35 +1014,35 @@ class File(Entity):
                 self._file.close()
                 self._file = newfile
 
-        url = None
-        if config.aws_id:
-            dict.update(self, s3_bucket=random.choice(config.s3_buckets))
-            url = self.store_aws(self._file, self.id, urllib.quote_plus(self['name'].encode('utf8')))
-            dict.update(self, url=url)
-            if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
-                thumb190 = self.set_thumb(190,190)['file']
-                self.set_thumb(70,70, file=thumb190)
-        else:
-            owner = self.db.User.fetch(self['owner'])
-            name = self.id + mimetypes.guess_extension(mime)
-            fs_path = media_path(owner) + '/' + name
-            f = open(fs_path, 'w')
-            self._file.seek(0)
-            f.write(self._file.read())
-            f.close()
-            url = abs_url() + 'file/' + owner['name'] + '/' + name
-
-        self.update(url=url, s3_bucket=self.get('s3_bucket'))
+        self['url'] = self.store(self._file, self.id, self['name'])
+        self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
+        self['size'] = os.fstat(self._file.fileno()).st_size
+        self.set_thumbs()
+        self._file.close()
+        super(File, self).create()
         return self
 
+    # download file from source and reupload
+    def reset_file(self, file=None):
+        self.pop('s3_bucket', None)
+        self.pop('fs_path', None)
+        if not file: file = self.file
+        self['url'] = self.store(file, self.id, self.get('name', 'untitled'))
+        self.set_thumbs()
+        if self._file: self._file.close()
+        self.save()
+
+    def delete_files(self):
+        for k in self.thumb_keys + [self.id]:
+            if self.get('s3_bucket'):
+                k = self.db.s3_con.get_bucket(self['s3_bucket']).get_key(self.id)
+                if k: k.delete()
+            elif self.get('fs_path'):
+                os.remove(joinpath(self['fs_path'], k))
+
     def delete(self):
-        if self.get('s3_bucket'):
-            k = self.db.s3_con.get_bucket(self['s3_bucket']).get_key(self.id)
-            if k: k.delete()
-        elif self.get('fs_path'): os.remove(self['fs_path'])
-
+        self.delete_files()
         super(File, self).delete()
-
 
 @Database.register
 class ActionLog(Entity):

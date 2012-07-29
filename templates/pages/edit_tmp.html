@@ -20,6 +20,9 @@
 {% include 'dialogs/editor_browsers.html' %}
 
 <div id='edit_nav' class='nav horiz'
+ {% if not user.logged_in %}
+   ><div id='login_btn' class='text center hoverable text_btn black_active'><span>Log In</span></div
+ {% endif %}
  ><div class='center pad'><img id='btn_undo' title='undo' class='hoverable' src='{{ 'skin/1/undo.png'|asset_url }}'></div
  ><div class='center'><img id='btn_redo' title='redo' class='hoverable' src='{{ 'skin/1/redo.png'|asset_url }}'></div
  ><div class='pad'></div
@@ -45,7 +48,7 @@
   <div class='spacer'></div>
 
   <div class='medbold'>URL</div>
-  <div class=''>{{ server_name }}/</div>
+  <div class=''>{{ server_name }}/{{ user.name }}/</div>
   <input id='url' type='text' value='{{ expr.name|e }}'>
   <div class='spacer'></div>
 
@@ -223,7 +226,13 @@
 
 <div id='controls_html' class='controls_src'>
  <div class='control buttons'
-  ><img class='button opacity tip_N' title='Opacity' src='{{ 'skin/1/opacity.png'|asset_url }}' title='Opacity'
+  ><img class='button opacity tip_N' title='Opacity' src='{{ 'skin/1/opacity.png'|asset_url }}'
+ ></div
+></div>
+
+<div id='controls_script' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button code' title='Run' src='{{ 'skin/1/opacity.png'|asset_url }}'
  ></div
 ></div>
 
