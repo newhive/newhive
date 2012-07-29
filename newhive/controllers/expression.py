@@ -7,6 +7,7 @@ from pymongo.connection import DuplicateKeyError
 
 class Expression(Application, PagingMixin):
     def edit_frame(self, request, response):
+        if not request.requester.logged_in: return self.serve_404(request, response)
         expr_id = lget(request.path_parts, 1)
         if not expr_id:
             expr = self.db.Expr.new(dfilter(request.args, ['domain', 'name', 'tags']))
@@ -15,8 +16,8 @@ class Expression(Application, PagingMixin):
             self.db.ActionLog.create(request.requester, "new_expression_edit")
         else:
             expr = self.db.Expr.fetch(expr_id)
+            if not expr: return self.serve_404(request, response)
             self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
-        if not (request.requester.logged_in or expr): return self.serve_404(request, response)
         if expr.auth_required(response.user): return self.serve_forbidden(request)
 
         #show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
