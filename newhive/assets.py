@@ -220,6 +220,9 @@ class HiveAssets(Assets):
             output='../lib/admin.css'
             )
 
+        # Note: IMPORTANT any time a file that is imported into other scss
+        # files is changed (i.e. common.scss is imported into almost every
+        # file), the webassets cache must be cleared
         scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
