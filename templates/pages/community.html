@@ -103,7 +103,7 @@
           </a>
         {% endif %}
       </div>
-      <span class='fathead'>{% if owner.has_homepage %}<a href='/'>{% endif %}{{ owner.fullname|e }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + user_tag if user_tag }}</span>
+      <span class='fathead'>{% if owner.has_homepage %}<a href='/{{ owner.name }}'>{% endif %}{{ owner.fullname|e }}{% if owner.has_homepage %}</a>{% endif %}{{ ': ' + user_tag if user_tag }}</span>
     </div>
   {% endif %}
   <div id='card_header'>
