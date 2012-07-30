@@ -262,7 +262,8 @@ class Expression(Application, PagingMixin):
                 ,'file_id' : res.id
             })
 
-        if not exp.id or upd['name'] != res['name'] or upd['domain'] != res['domain']:
+        print type(exp), type(upd), type(res)
+        if not res or upd['name'] != res['name'] or upd['domain'] != res['domain']:
             try:
               new_expression = True
               res = request.requester.expr_create(upd)
