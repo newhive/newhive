@@ -162,11 +162,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var timeout;
         var card = expr.render_card().data('index', i).click(function(){
             o.select($(this).data('index'));
-        }).hover(function(){
-            clearTimeout(timeout);
-            o.render_tags(expr);
-        }, function(){
-            timeout = setTimeout(function(){ o.render_tags(current_expr); }, 200);
         });
         return card;
     };
