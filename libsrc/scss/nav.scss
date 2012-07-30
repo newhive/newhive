@@ -1,6 +1,5 @@
 @import "common";
 
-$nav_size: 40px;
 // nav takes 3 layers. For invisible nav handles, the navigation,
 // and their submenus, (4, 5, 6) respectively
 $nav_layer: 4; 
@@ -30,8 +29,8 @@ img.thumb { background-color: $color_grey_medium; }
 }
 .icon.submit {
     display: inline-block;
-    width: .44 * $nav_height;
-    height: .44 * $nav_height;
+    width: 22px;
+    height: 22px;
     background-image: asset_url('skin/1/search_arrow.png');
     vertical-align: middle;
     &:hover { background-image: asset_url('skin/1/search_arrow-hover.png');}
