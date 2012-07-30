@@ -172,8 +172,8 @@ class Expression(Application, PagingMixin):
 
         return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))
 
-    def info(self, request, response):
-        expr = self.db.Expr.fetch(lget(request.path_parts, 1))
+    def info(self, request, response, expr=None):
+        expr = expr or self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
         return self.serve_json( response, self.expr_prepare(
             expr, viewer=response.user, password=request.form.get('password')) )
@@ -217,7 +217,10 @@ class Expression(Application, PagingMixin):
         expr = self.db.Expr.random()
         if request.requester.logged_in:
             self.db.ActionLog.create(request.requester, "view_random_expression", data={'expr_id': expr.id})
-        return self.redirect(response, expr.url)
+        if request.is_json:
+            return self.info(request, response, expr)
+        else:
+            return self.redirect(response, expr.url)
 
     def dialog(self, request, response):
         owner = request.owner

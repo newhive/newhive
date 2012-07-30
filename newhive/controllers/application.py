@@ -20,6 +20,7 @@ class Application(object):
         request = newhive.utils.Request(request)
         request.environ['hive.request'] = request
         request.environ['wsgi.url_scheme'] = request.headers.get('X-Forwarded-Proto', request.environ['wsgi.url_scheme'])
+        request.is_json = request.args.get('json', False);
         original_url = request.url
         if config.dev_prefix:
             request.environ['HTTP_HOST'] = request.environ.get('HTTP_HOST', '').replace(config.dev_prefix + '.', '')

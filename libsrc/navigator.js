@@ -162,11 +162,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var timeout;
         var card = expr.render_card().data('index', i).click(function(){
             o.select($(this).data('index'));
-        }).hover(function(){
-            clearTimeout(timeout);
-            o.render_tags(expr);
-        }, function(){
-            timeout = setTimeout(function(){ o.render_tags(current_expr); }, 200);
         });
         return card;
     };
@@ -219,14 +214,18 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         $.each(away.slice(3), function(i, expr){ expr.unload(); });
     };
 
+    function show_expression_not_in_list(data){
+        current_expr = o.make_expr(data);
+        current_expr.load(content_element);
+        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        o.populate_navigator(function(){ o.select(0) });
+    };
     o.load_expr = function(id){
-        var callback = function(data){
-            current_expr = o.make_expr(data);
-            current_expr.load(content_element);
-            history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
-            o.populate_navigator(function(){ o.select(0) });
-        };
-        $.getJSON('/expr_info/' + id, callback);
+        $.getJSON('/expr_info/' + id, show_expression_not_in_list);
+    };
+    o.random = function(){
+        //o.context('');
+        $.getJSON('/random?json=1', show_expression_not_in_list);
     };
 
     o.prev = function(){
@@ -329,7 +328,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         info = navigator_element.find('.info');
 
         var query = URI(window.location.href).query(true);
-        info.find('form').submit(o.search);
         set_context_box(build_search(query));
 
         o.render_tags(o.current_expr());
@@ -339,6 +337,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         // flash of a blank element,
         if (old_inner) {
             old_inner.animate({opactiy: 0}, 5, function(){ old_inner.remove();});
+        } else {
+            // Things we only want to happen on initial render go here
+            info.find('form').submit(o.search);
+            info.find('.random_btn').click(o.random);
         }
 
         // event handlers for auto-scrolling based on mouse position
@@ -453,7 +455,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     // e.g.: "@thenewhive #art" => "http://currenturl.com/path?user=thenewhive&tag=art"
     o.search_string = function(string){
         var string = string || navigator_element.find('input').val();
-        var tags = (" " + string).match(/(.?)[a-z0-9]+/gi);
+        var tags = (" " + string).match(/(.?)[a-z0-9]+/gi) || [];
         tags = $.map(tags, function(el){
             return el.replace('@', 'user=').replace('#', 'tag=').replace(/^[^a-z]/, 'text=')
         });
