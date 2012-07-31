@@ -1038,7 +1038,6 @@ class File(Entity):
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         self.set_thumbs()
-        self._file.close()
         super(File, self).create()
         return self
 
