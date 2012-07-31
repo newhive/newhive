@@ -227,7 +227,7 @@ class HiveAssets(Assets):
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
             "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
-            "scss/expression.scss", "scss/settings.scss", "scss/signup_flow.scss",
+            "scss/frame.scss", "scss/settings.scss", "scss/signup_flow.scss",
             "scss/chart.scss", "scss/jplayer.scss", "scss/navigator.scss",
             filters=scss_filter,
             output='scss.css',
@@ -240,8 +240,7 @@ class HiveAssets(Assets):
             debug=False
             )
 
-        minimal_scss = webassets.Bundle('scss/minimal.scss',
-            'scss/fonts.scss',
+        minimal_scss = webassets.Bundle('scss/minimal.scss', 'scss/fonts.scss',
             filters=scss_filter,
             output='minimal.css',
             debug=False

@@ -402,5 +402,8 @@ def expr_to_html(exp):
         return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
             (type.replace('.', '_'), id, css_for_app(app) + more_css, data, html)
 
-    return ''.join(map(html_for_app, apps))
+    app_html = map(html_for_app, apps)
+    if exp.has_key('dimensions'):
+        app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
+    return ''.join(app_html)
 
