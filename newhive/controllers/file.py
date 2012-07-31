@@ -60,10 +60,12 @@ class File(Application):
             with os.tmpfile() as local_file:
                 local_file.write(file.read())
 
-                file_record = self.db.File.create({'owner': request.requester.id, 'tmp_file': local_file, 'name': file.filename, 'mime': mime})
+                file_record = self.db.File.create({'owner': request.requester.id,
+                    'tmp_file': local_file, 'name': file.filename, 'mime': mime})
                 data = handler(file, local_file, file_record, mime)
 
-                data.update({'mime': mime, 'name': file.filename, 'file_id': file_record.id, 'url': file_record.get('url')})
+                data.update({'mime': mime, 'name': file.filename, 'file_id': file_record.id,
+                    'url': file_record.get('url')})
                 rv.append(data)
 
         return rv
@@ -105,4 +107,3 @@ class File(Application):
         if hasattr(file, 'url'): data['url'] = file.url
         data['filename'] = file.filename
         return data
-

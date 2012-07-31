@@ -17,7 +17,7 @@ from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredenti
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-from newhive.utils import now, time_s, time_u, junkstr, normalize, abs_url, memoized, uniq, bound, index_of, is_mongo_key, set_trace
+from newhive.utils import *
 
 import logging
 logger = logging.getLogger(__name__)
@@ -186,13 +186,16 @@ class Entity(dict):
         self._col.insert(self, safe=True)
         return self
 
-    def save(self): return self.update_cmd(self)
+    def save(self):
+        self['updated'] = now()
+        return self.update_cmd(self)
 
     def reload(self):
         dict.update(self, self.db.User.fetch(self.id))
 
     def update(self, **d):
         if not d.has_key('updated'): d['updated'] = now()
+        elif not d['updated']: del d['updated']
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d }, safe=True)
     def update_cmd(self, d, **opts): return self._col.update({ '_id' : self.id }, d, **opts)
@@ -389,6 +392,8 @@ class User(HasSocial):
             return list(self.feed_search(q, limit=limit, **args))
         activity = query_feed({'initiator': self.id}) + query_feed({'entity_owner': self.id})
         activity.sort(cmp=lambda x, y: cmp(x['created'], y['created']), reverse=True)
+        for i, v in enumerate(activity):
+            if v == lget(activity, i + 1): del activity[i]
         page = Page(activity[0:limit])
         page.next = page[-1]['created'] if len(page) == limit else None
         return page
@@ -642,10 +647,10 @@ class Expr(HasSocial):
     indexes = [
          (['owner_name', 'name'], {'unique':True})
         ,['owner', 'updated']
-        ,'domain'
         ,'tags_index'
         ,'updated'
         ,'random'
+        ,'file_id'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
@@ -678,8 +683,8 @@ class Expr(HasSocial):
 
         def with_url(cls, url):
             """ Convenience utility function not used in production, retrieve Expr from full URL """
-            [(domain, port, name)] = re.findall(r'//(.*?)(:\d+)?/(.*)$', url)
-            return cls.named(domain, name)
+            [(port, user, name)] = re.findall(config.server_name + r'/(:\d+)?(\w+)/(.*)$', url)
+            return cls.named(user, name)
 
         def page(self, spec, viewer=None, **opts):
             if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
@@ -710,6 +715,23 @@ class Expr(HasSocial):
         return self._owner
     owner = property(get_owner)
 
+
+    def update(self, **d):
+        d.update(self._update_tags(d))
+        d.update(self._collect_files(d))
+
+        super(Expr, self).update(**d)
+        self.owner.get_expr_count(force_update=True)
+        self.build_search_index()
+        return self
+
+    def _update_tags(self, d={}):
+        upd = {}
+        tags = d.get('tags') or self.get('tags', '')
+        if tags: upd['tags_index'] = normalize(tags)
+        dict.update(self, upd)
+        return upd
+
     def build_search_index(self):
         texts = {
                 'tags': self.get('tags')
@@ -717,22 +739,21 @@ class Expr(HasSocial):
                 }
         self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
 
-    def update_tags(self, d={}):
-        upd = {}
-        tags = d.get('tags') or self.get('tags', '')
-        if tags: upd['tags_index'] = normalize(tags)
-        dict.update(self, upd)
-        return upd
+    def _collect_files(self, d):
+        ids = ( self.get('file_id', []) +
+            ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] ) +
+            self._match_id(d.get('background', {}).get('url')) )
+        for a in d.get('apps', []): ids.extend( self._match_id( a.get('content') ) )
+        ids = list( set( ids ) )
+        ids.sort()
 
-    def update(self, **d):
-        d.update(self.update_tags(d))
-        super(Expr, self).update(**d)
-        last_update = self.db.UpdatedExpr.last({ 'initiator' : self['owner'] })
-        if not last_update or now() - last_update['created'] > 14400:
-            feed = self.db.UpdatedExpr.create(self.owner, self)
-        self.owner.get_expr_count(force_update=True)
-        self.build_search_index()
-        return self
+        if ids != self.get('file_id'): return { 'file_id': ids }
+        else: return {}
+
+    def _match_id(self, s):
+        if not isinstance(s, (str, unicode)): return []
+        return map(lambda m: m[0], re.findall(r'/([0-9a-f]{24})(\b|_)', s))
+
 
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
@@ -741,7 +762,8 @@ class Expr(HasSocial):
         self['random'] = random.random()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
-        self.update_tags()
+        self._update_tags()
+        dict.update(self, self._collect_files(self))
         super(Expr, self).create()
         feed = self.db.NewExpr.create(self.owner, self)
         self.owner.get_expr_count(force_update=True)
@@ -935,8 +957,8 @@ class File(Entity):
         self.store(thumb, self.id + '_' + name, 'thumb_' + name)
 
         self.setdefault('thumbs', {})
-        self['version'] = self['thumbs'].get(name, 0) + 1
-        url = "%s_%s?v=%s" % (self['url'], name, self['version'])
+        version = self['thumbs'][name] = self['thumbs'].get(name, 0) + 1
+        url = "%s_%s?v=%s" % (self['url'], name, version)
         return {'url': url, 'file': thumb}
 
     def set_thumbs(self):
@@ -1038,11 +1060,10 @@ class File(Entity):
                 k = self.db.s3_con.get_bucket(self['s3_bucket']).get_key(self.id)
                 if k: k.delete()
             elif self.get('fs_path'):
-                os.remove(joinpath(self['fs_path'], k))
+                try: os.remove(self['fs_path'])
+                except:
+                    print 'can not delete missing file: ' + self['fs_path']
 
-    def delete(self):
-        self.delete_files()
-        super(File, self).delete()
 
 @Database.register
 class ActionLog(Entity):
@@ -1193,10 +1214,10 @@ class UpdatedExpr(Feed):
     action_name = 'updated'
 
     def create(self):
-        super(UpdatedExpr, self).create()
-        # if most recent in feed is an update to same expression, delete it
+        # if there's another update to this expr within 24 hours, delete it
         prev = self.db.UpdatedExpr.last({ 'initiator': self['initiator'], 'entity': self['entity'] })
-        if prev: prev.delete()
+        if prev and now() - prev['created'] < 86400: prev.delete()
+        super(UpdatedExpr, self).create()
         return self
 
 @Database.register

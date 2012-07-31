@@ -397,15 +397,15 @@ function asyncUpload(opts) {
     }
 
     var tname = 'upload' + Math.random();
-    form = $("<form method='POST' enctype='multipart/form-data' style='position : absolute; left : -1000px'>").
-        attr('target', tname).attr('action', opts.action);
+    form = $('<form>').css({ position: 'absolute', left: -1000 }).addClass('async_upload')
+        .attr({ method: 'POST', target: tname, action: opts.action, enctype: 'multipart/form-data' });
     target = $("<iframe style='position : absolute; left : -1000px'></iframe>").attr('name', tname).appendTo(form).load(onload);
     var input = $("<input type='file'>").attr('name', opts.file_name).change(function() { opts.start(); form.submit() }).appendTo(form);
     if(opts.multiple) { input.attr('multiple', 'multiple'); }
     for(p in opts.data) $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
     form.appendTo(document.body);
     // It's a mystery why this timout is needed to make the upload dialog appear on some machines
-    setTimeout(function() { input.click() }, 0);
+    setTimeout(function() { input.click() }, 50);
 }
 
 function hovers_active(state){

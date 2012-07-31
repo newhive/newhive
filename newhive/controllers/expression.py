@@ -235,7 +235,7 @@ class Expression(Application, PagingMixin):
 
         res = self.db.Expr.fetch(exp.id)
         upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb', 'images'])
-        upd['name'] = upd['name'].lower().strip()
+        upd['name'] = upd['name'].lower().strip('/ ')
 
         # if user has not picked a thumbnail, pick the latest image added
         thumb_file_id = exp.get('thumb_file_id')
@@ -262,7 +262,6 @@ class Expression(Application, PagingMixin):
                 ,'file_id' : res.id
             })
 
-        print type(exp), type(upd), type(res)
         if not res or upd['name'] != res['name'] or upd['domain'] != res['domain']:
             try:
               new_expression = True
@@ -285,6 +284,8 @@ class Expression(Application, PagingMixin):
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
             res.update(**upd)
             new_expression = False
+
+            self.db.UpdatedExpr.create(res.owner, res)
             self.db.ActionLog.create(request.requester, "update_expression", data={'expr_id': res.id})
 
         return dict( new = new_expression, error = False, id = res.id, location = res.url )
