@@ -224,7 +224,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         $.getJSON('/expr_info/' + id, show_expression_not_in_list);
     };
     o.random = function(){
-        //o.context('');
+        set_context_box('');
         $.getJSON('/random?json=1', show_expression_not_in_list);
     };
 
@@ -327,9 +327,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         // Update tags, etc in info line
         info = navigator_element.find('.info');
 
-        var query = URI(window.location.href).query(true);
-        set_context_box(build_search(query));
-
         o.render_tags(o.current_expr());
 
         // Unless this is the initial render we now have two inner elements,
@@ -367,7 +364,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             owner_tags = $.grep(owner_tags, function(tag){ return $.inArray(tag, expr_tags) == -1 });
         };
 
-        var href = function(tag,opts){ return o.search_string(opts.prefix + tag); };
+        var href = function(tag,opts){ return o.current_url(opts.prefix + tag); };
         var tag_html = [
             tag_list_html(expr.owner.name, {cls: 'name', prefix: '@', href: href})
             , tag_list_html(expr_tags, {cls: 'expr', href: href})
@@ -413,8 +410,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         return current_expr.id;
     };
 
-    o.current_url = function(){
-        return '/' + current_expr.owner_name + '/' + current_expr.name + window.location.search;
+    o.current_url = function(context){
+        return '/' + current_expr.owner_name + '/' + current_expr.name + o.search_string(context);
     };
 
     o.visible_count = function(){
@@ -454,18 +451,18 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     // returns url with querystring based on tag-styled string
     // e.g.: "@thenewhive #art" => "http://currenturl.com/path?user=thenewhive&tag=art"
     o.search_string = function(string){
-        var string = string || navigator_element.find('input').val();
+        var string = string || current_context || navigator_element.find('input').val();
         var tags = (" " + string).match(/(.?)[a-z0-9]+/gi) || [];
         tags = $.map(tags, function(el){
             return el.replace('@', 'user=').replace('#', 'tag=').replace(/^[^a-z]/, 'text=')
         });
-        return window.location.origin + window.location.pathname + "?" + tags.join('&');
+        return tags.length ? "?" + tags.join('&') : '';
     };
 
     // Update url, push history state and repopulate navigator based on new context
     o.search = function(){
-        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.search_string());
-        o.populate_navigator();
+        var context = navigator_element.find('input').val();
+        o.context(context);
     };
 
     // Pick appropriate updater strategy based on context
@@ -494,7 +491,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.context = function(str) {
         if (typeof(str) == "undefined") return current_context;
         set_context_box(str)
-        o.search();
+        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        o.populate_navigator();
     };
 
     // Factory method for Expr objects
@@ -535,9 +533,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             current_expr.show();
         };
         var frame = content_element.find('iframe').on('load', on_frame_load);
-        history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
         var query = URI(window.location.href).query(true);
-        change_context(build_search(query));
+        set_context_box(build_search(query));
+
+        history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
         o.populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
