@@ -291,7 +291,7 @@ class Expression(Application, PagingMixin):
             self.db.UpdatedExpr.create(res.owner, res)
             self.db.ActionLog.create(request.requester, "update_expression", data={'expr_id': res.id})
 
-        return dict( new = new_expression, error = False, id = res.id, location = res.url )
+        return dict( new = new_expression, error = False, id = res.id, location = res.url + "?user=" + res['owner_name'])
 
 
     def delete(self, request, response):
