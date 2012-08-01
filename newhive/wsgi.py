@@ -13,7 +13,7 @@ from werkzeug.exceptions import HTTPException, NotFound
 from urlparse import urlparse
 import jinja2
 
-from newhive import config
+from newhive import config, utils
 from newhive.utils import abs_url, now
 from newhive.assets import HiveAssets
 from newhive.extra_json import extra_json
