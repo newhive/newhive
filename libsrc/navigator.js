@@ -46,6 +46,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
         var query_list = []
         build(query_list, query.user, "@");
+        build(query_list, query.auth, ":");
         build(query_list, query.tag, "#");
         return query_list.join(" ");
     };
@@ -454,7 +455,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var string = string || current_context || navigator_element.find('input').val();
         var tags = (" " + string).match(/(.?)[a-z0-9]+/gi) || [];
         tags = $.map(tags, function(el){
-            return el.replace('@', 'user=').replace('#', 'tag=').replace(/^[^a-z]/, 'text=')
+            return el.replace('@', 'user=')
+                     .replace('#', 'tag=')
+                     .replace(':', 'auth=')
+                     .replace(/^[^a-z]/, 'text=')
         });
         return tags.length ? "?" + tags.join('&') : '';
     };
