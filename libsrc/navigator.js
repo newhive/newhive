@@ -221,11 +221,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
         o.populate_navigator(function(){ o.select(0) });
     };
-    o.load_expr = function(id){
+    function load_expr(id){
         $.getJSON('/expr_info/' + id, show_expression_not_in_list);
     };
     o.random = function(){
-        set_context_box('');
+        change_context('');
         $.getJSON('/random?json=1', show_expression_not_in_list);
     };
 
@@ -256,7 +256,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 pos = pos + 1;
             } else {
                 // Not found in either case, this shouldn't happen normally
-                o.load_expr(id);
+                load_expr(id);
                 return false;
             }
         }
@@ -472,6 +472,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     // Pick appropriate updater strategy based on context
     var current_context;
     function change_context(str){
+        navigator_element.find('input').val(str);
         current_context = str;
         switch(str) {
             case "#Network":
@@ -487,16 +488,18 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
     };
 
-    function set_context_box(str){
-        navigator_element.find('input').val(str);
-        change_context(str);
+    o.context = function(str, push_state) {
+        if (typeof(str) == "undefined") return current_context;
+        return o.set_context(str, push_state);
     };
 
-    o.context = function(str) {
-        if (typeof(str) == "undefined") return current_context;
-        set_context_box(str)
-        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+    o.set_context = function(str, push_state) {
+        change_context(str)
         o.populate_navigator();
+        if (push_state !== false) {
+            history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        }
+        return o;
     };
 
     // Factory method for Expr objects
@@ -538,9 +541,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
         var frame = content_element.find('iframe').on('load', on_frame_load);
         var query = URI(window.location.href).query(true);
-        set_context_box(build_search(query));
+        change_context(build_search(query));
 
-        history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
+        history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
         o.populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
@@ -690,7 +693,8 @@ Hive.Navigator.create = function(navigator, viewer, opts){
             }
         };
         if (state.data.context != o.context()){
-            o.populate_navigator(select_expr);
+            o.set_context(state.data.context, false);
+            //o.populate_navigator(select_expr);
         } else {
             select_expr();
         }
