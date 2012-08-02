@@ -158,7 +158,8 @@ class User(Application):
         tmpl = self.jinja_env.get_template('partials/feed.html')
         feed_html = ''.join([ tmpl.render(dict(response.context, feed=item, user=request.requester)) for item in items ])
 
-        exprs = [ { 'thumb': e.get_thumb(70), 'url': e.url } for e in user.expr_page(limit=5) ]
+        exprs = [ { 'id': e.id, 'title': e.get('title'), 'thumb': e.get_thumb(70), 'url': e.url }
+            for e in user.expr_page(limit=5) ]
 
         return self.serve_json(response, dict(
              feed_html = feed_html

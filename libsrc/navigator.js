@@ -223,6 +223,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
     o.load_expr = function(id){
         $.getJSON('/expr_info/' + id, show_expression_not_in_list);
+        return o;
     };
     o.random = function(){
         set_context_box('');
@@ -497,6 +498,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         set_context_box(str)
         history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
         o.populate_navigator();
+        return o;
     };
 
     // Factory method for Expr objects
