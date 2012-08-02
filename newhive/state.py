@@ -427,7 +427,9 @@ class User(HasSocial):
                     viewer=args['viewer'], limit=1
                     ).next()
             args['page'] = feed_start['created']
-        res = self.feed_search({ '$or': or_clause }, auth='public', limit=limit, **args)
+        # produces an iterable for all network feed items
+        res = self.feed_search({ '$or': or_clause }, auth='public', **args)
+        # groups feed items by ther expressions (entity attribute), and applies page limit
         page = Page(self.feed_group(res, limit))
         page.next = page[-1]['feed'][-1]['created'] if len(page) == limit else None
         return page

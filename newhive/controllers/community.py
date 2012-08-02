@@ -119,7 +119,7 @@ class Community(Application, PagingMixin):
 
         if request.owner:
             tags = map(
-                    lambda t: {'url': '/profile/expressions?tag=' + t, 'name': t},
+                    lambda t: {'url': '/' + request.owner['name'] + '/profile/expressions?tag=' + t, 'name': t},
                     request.owner.get('tags', []))
         else:
             tags = map(
