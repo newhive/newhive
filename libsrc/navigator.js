@@ -170,6 +170,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.select = function(offset){
         var previous_expr = current_expr;
         var left_offset = $(window).width();
+
+        // clicking on a card in navigator during animation causes strange behavior.
+        // since inner is replaced after the animation is complete, just unbind click
+        // handler on inner elements
+        inner.find('.expr_card').off('click');
         animate_slide(offset);
         if (offset >= 0){
             var towards = next_list;
