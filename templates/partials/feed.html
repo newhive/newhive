@@ -36,7 +36,7 @@
           {% if feed.entity_class == "User" %}
             {{ "are" if feed['initiator'] == user.id else "is" }} listening to
           {% else %}
-            like{{ 's' if feed['initiator'] != user.id }}
+            love{{ 's' if feed['initiator'] != user.id }}
           {% endif %}
         {% endif %}
         {{ "created a new expression" if feed.class_name == "NewExpr" }} 
