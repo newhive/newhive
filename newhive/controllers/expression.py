@@ -147,7 +147,8 @@ class Expression(Application, PagingMixin):
                 }
 
         # Use key_map to map between keys used in querystring and those of database
-        spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name'}, filter=True)
+        spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name', 'auth': 'auth'}, filter=True)
+        if spec.get('auth') == 'private': spec['auth'] = 'password'
         args = dfilter(args, ['sort', 'page', 'expr', 'order', 'limit'])
         args['viewer'] = request.requester
 
@@ -291,7 +292,7 @@ class Expression(Application, PagingMixin):
             self.db.UpdatedExpr.create(res.owner, res)
             self.db.ActionLog.create(request.requester, "update_expression", data={'expr_id': res.id})
 
-        return dict( new = new_expression, error = False, id = res.id, location = res.url )
+        return dict( new = new_expression, error = False, id = res.id, location = res.url + "?user=" + res['owner_name'])
 
 
     def delete(self, request, response):

@@ -720,7 +720,7 @@ class Expr(HasSocial):
 
     def update(self, **d):
         d.update(self._update_tags(d))
-        d.update(self._collect_files(d))
+        if not d.has_key('file_id'): d.update(self._collect_files(d))
 
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
@@ -748,9 +748,7 @@ class Expr(HasSocial):
         for a in d.get('apps', []): ids.extend( self._match_id( a.get('content') ) )
         ids = list( set( ids ) )
         ids.sort()
-
-        if ids != self.get('file_id'): return { 'file_id': ids }
-        else: return {}
+        return { 'file_id': ids }
 
     def _match_id(self, s):
         if not isinstance(s, (str, unicode)): return []
@@ -1042,7 +1040,6 @@ class File(Entity):
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         self.set_thumbs()
-        self._file.close()
         super(File, self).create()
         return self
 

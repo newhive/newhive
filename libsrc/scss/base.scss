@@ -86,3 +86,6 @@ $placeholder_color: black;
 }
 #btn_help { color : #696E76; }
 #btn_help.active { color : white; }
+.color_active {
+    color: $color_active;
+}

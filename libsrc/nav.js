@@ -371,7 +371,7 @@ Hive.Menus = (function(){
 
     o.action_name = function(i){
         if(i.class_name == 'Comment') return 'commented';
-        if(i.class_name == 'Star') return 'loved';
+        if(i.class_name == 'Star') return 'loves';
         if(i.class_name == 'Broadcast') return 'broadcast';
     };
 

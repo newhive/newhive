@@ -190,8 +190,8 @@ def key_map(original, transformation, filter=False):
 def is_mongo_key(string):
     return isinstance(string, basestring) and re.match('[0-9a-f]{24}', string)
 
-def set_trace():
-    if config.interactive:
+def set_trace(interactive=False):
+    if interactive or config.interactive:
         import ipdb;
         return ipdb.set_trace
     else:

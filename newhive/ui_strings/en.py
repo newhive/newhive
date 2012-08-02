@@ -1,7 +1,11 @@
-intro_paragraph = """<b>We believe that your life is a blank canvas <span class='active'>+</span> you decide what goes on it.<br>
-The New Hive is your radically simple, drag <span class='active'>+</span> drop self publishing tool.</b>"""
+intro_paragraph = """<b>We believe that your life is a blank canvas <span class='color_active'>+</span> you decide what goes on it.<br>
+The New Hive is your radically simple, DIY self publishing tool.</b>"""
 
-embed_code_description = """Paste in the <b>URL</b> for Vimeo <span class='active'>+</span> YouTube videos or enter the <b>embed code</b> found on the share button of many sites including: Grooveshark, Soundcloud, Google Maps, Mailchimp, Tokbox, Flickr, PayPal, Ted <span class='active'>+</span> more. We also support <b>iframes</b>."""
+embed_code_description = """Paste in the <b>URL</b> for Vimeo <span
+class='color_active'>+</span> YouTube videos or enter the <b>embed code</b>
+found on the share button of many sites including: Grooveshark, Soundcloud,
+Google Maps, Mailchimp, Tokbox, Flickr, PayPal, Ted <span
+class='color_active'>+</span> more. We also support <b>iframes</b>."""
 embed_code_textarea = """Paste your url or embed code here"""
 image_embed_textarea = """Paste the web address for the image"""
 image_embed_as_background = """Set as background image"""

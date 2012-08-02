@@ -273,10 +273,10 @@ class User(Application):
         if not mime in ['image/jpeg', 'image/png', 'image/gif']:
             response.context['error'] = "File must be either JPEG, PNG or GIF and be less than 10 MB"
 
-        tmp_file = os.tmpfile()
-        file.save(tmp_file)
-        res = self.db.File.create(dict(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime))
-        tmp_file.close()
+        with os.tmpfile() as tmp_file:
+            file.save(tmp_file)
+            res = self.db.File.create(dict(owner=request.requester.id, tmp_file=tmp_file, name=file.filename, mime=mime))
+
         request.requester.update(thumb_file_id = res.id, profile_thumb=res.get_thumb(190,190))
         return { 'name': file.filename, 'mime' : mime, 'file_id' : res.id, 'url' : res.get('url'), 'thumb': res.get_thumb(190,190) }
 
