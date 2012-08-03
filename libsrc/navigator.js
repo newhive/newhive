@@ -488,6 +488,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 }
                 o.set_updater(Hive.Navigator.NetworkUpdater());
                 break;
+            case "#Recent":
+               o.context('#All');
+               break;
             default:
                 o.set_updater(Hive.Navigator.Updater());
                 break;
