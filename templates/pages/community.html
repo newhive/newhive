@@ -203,14 +203,16 @@
      paging_args = {{ args | json }};
      var load_page = null;
      var next_page = true;
+     var c = 0;
      $(window).scroll(function() {
-         if(($(window).scrollTop() > $(document).height() - $(window).height() * 2) && !load_page && next_page) {
+         if(($(window).scrollTop() > $('#content').height() - $(window).height() * 2) && !load_page && next_page) {
              var next = $('.next_page').attr('href');
              if(!next) {
-                 next_page = false;
+                 //next_page = false;
                  return;
              }
              load_page = $.get(next, {}, function(data) {
+                 console.log('loading');
                  load_page = null;
                  $('.next_page').remove();
                  $('#feed').append(data);

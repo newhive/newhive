@@ -291,11 +291,16 @@ Hive.Menus = (function(){
 
             // load owner's info: feed items in owner_menu, expr links and thumbs, listening status
             $.getJSON(server_url + 'user/' + expr.owner.id, function(data, status, jqXHR){
+                console.log(data);
                 var thumbs = $('#owner_menu .thumbs');
                 thumbs.html('');
                 $.map(data.exprs, function(e){
-                    $('<a>').attr('href', e.url).append(
-                        $('<img>').attr('src', e.thumb).addClass('thumb')).prependTo(thumbs);
+                    $('<a>').attr({ 'href': e.url + '?user=' + expr.owner.name, 'title': e.title })
+                        .click(function(){
+                            Hive.navigator.load_expr(e.id).context('@' + expr.owner.name);
+                            return false;
+                        })
+                        .append($('<img>').attr('src', e.thumb).addClass('thumb')).appendTo(thumbs);
                 });
                 $('#owner_menu .listen').removeClass('on off').addClass(data.listening ? 'on' : 'off');
                 $('#owner_menu .items').html(data.feed_html);
