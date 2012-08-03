@@ -387,6 +387,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.show = function(speed){
         speed = speed || 100;
+        clearTimeout(navigator_element.initial_hide_timeout);
         navigator_element.stop().clearQueue().show();
         navigator_element.animate({bottom: 0}, speed);
         if (info && !Modernizr.touch) info.find('input').focus();
@@ -562,7 +563,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         // completely for better mobile browser experience
         var bottom = opts.hidden ? -height * 1.1 : 0;
         navigator_element.css({'height': height, bottom: bottom});
-        if (opts.hidden) setTimeout(function(){ navigator_element.hide(); }, 1000);
+        if (opts.hidden){
+            navigator_element.initial_hide_timeout = setTimeout(function(){ navigator_element.hide(); }, 1000);
+        }
         return o;
     };
 
