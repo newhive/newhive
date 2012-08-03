@@ -142,8 +142,8 @@ class Expression(Application, PagingMixin):
 
         special_tags = {
                 'Featured': (self.expr_featured, 'id')
-                , 'Recent': (self.expr_all, 'updated')
                 , 'Network': (self.home_feed, None)
+                , 'All': (None, 'updated')
                 }
 
         # Use key_map to map between keys used in querystring and those of database
@@ -169,6 +169,7 @@ class Expression(Application, PagingMixin):
             items_and_args = pager(request, response, args)
             exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
         else:
+            if spec.get('tags_index') == "All": spec.pop('tags_index')
             exprs = self.db.Expr.page(spec, **args)
 
         return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))
