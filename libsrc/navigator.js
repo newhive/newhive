@@ -505,10 +505,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.set_context = function(str, push_state) {
         change_context(str);
-        o.populate_navigator();
         if (push_state !== false) {
             history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
         }
+        // populate_navigator depends on current url so must come after pushState
+        o.populate_navigator();
         return o;
     };
 
