@@ -37,27 +37,32 @@
   {% endblock body %}
 
   <div id='user_nav_handle' class='menu_handle'></div>
-  <div id='user_nav' class='nav horiz'
-    ><a href='{{ server_url }}'><div id='logo' class='hoverable icon black_active'></div></a
-    {% if user.logged_in %}
-      {# ><div id='username' class='text center text_btn hoverable name'
-        >{{ user.name }}<div class='count rounded{{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div #}
-      ><div id='user_btn' class='hoverable center text_btn black_active'
-        ><img class='user_thumb {{ 'none' if not user.has_thumb }}' src='{{ user.get_thumb(70) }}'
-        ><div class='text name'>{{ user.name | capitalize }}<div class='count rounded
-          {{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
-      ></div
-    {% else %}
-        ><a href='{{ server_url }}'><div id='logotype' class='icon'></div></a
+  <div id='user_nav'>
+    <div id='user_nav_inner' class='horiz'
+      ><a href='{{ server_url }}'><div id='logo' class='hoverable icon black_active'></div></a
+      {% if user.logged_in %}
+        {# ><div id='username' class='text center text_btn hoverable name'
+          >{{ user.name }}<div class='count rounded{{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div #}
+        ><div id='user_btn' class='hoverable center text_btn black_active'
+          ><img class='user_thumb {{ 'none' if not user.has_thumb }}' src='{{ user.get_thumb(70) }}'
+          ><div class='text name'>{{ user.name | capitalize }}<div class='count rounded
+            {{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
+        ></div
+      {% else %}
+          ><a href='{{ server_url }}'><div id='logotype' class='icon'></div></a
+      {% endif %}
+      {% if not editing %}
+        ><div id='create_btn' class='center hoverable black_active'
+          ><a href='{{ create }}' onclick='return require_login()'
+            ><div class='text'>Create</div
+            ><div id='create_icon' class='icon'></div
+          ></a></div
+      {% endif %}
+    ></div>
+    {% if not user.logged_in %}
+      <div id='join_the_party' onclick="require_login();">JOIN THE PARTY!</div>
     {% endif %}
-    {% if not editing %}
-      ><div id='create_btn' class='center hoverable black_active'
-        ><a href='{{ create }}' onclick='return require_login()'
-          ><div class='text'>Create</div
-          ><div id='create_icon' class='icon'></div
-        ></a></div
-    {% endif %}
-  ></div>
+</div>
 
   <div id='hive_menu'>
     <div class='menu find'>
