@@ -37,7 +37,7 @@ img.thumb { background-color: $color_grey_medium; }
 }
 
 .nav {
-    margin: 7px 8px;
+    margin: 8px 10px;
     z-index: $nav_layer + 1;
     position: fixed;
     background-color: white;
@@ -154,7 +154,7 @@ img.thumb { background-color: $color_grey_medium; }
     .edit_spacer { height: 46px; }
     .btn_box {
         display: table;
-        margin: 4px 8px;
+        margin: 4px 12px;
         height: 59px;
         background-color: white;
         @include border-radius(5px);
@@ -582,7 +582,7 @@ body.frame {
 }
 
 #left_nav_handle, #right_nav_handle {
-    width: 2px;
+    width: 40px;
     height: 100%;
 }
 #left_nav_handle { left: 0; }

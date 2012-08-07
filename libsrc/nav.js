@@ -45,10 +45,11 @@ Hive.password_dialog = function(){
 };
 
 Hive.Menus = (function(){
-    var o = {};
-    o.slow_close = 1100;
-    o.pad_right = 0;
-    o.pad_bottom = 0;
+    var o = {}, opts = {
+        slow_close: 1100,
+        pad_right: 0,
+        pad_bottom: 0
+    };
 
     o.layout = function(dims){
         var action_nav = $('#action_nav'),
@@ -60,10 +61,13 @@ Hive.Menus = (function(){
         $('#user_nav_handle').width($('#user_nav').outerWidth());
         $('#owner_nav_handle').width($('#owner_nav').outerWidth());
 
-        o.pad_right = $(window).width() - dims[0] + 5;
-        o.pad_bottom = $(window).height() - dims[1];
-        $('#action_nav_handle, #owner_nav_handle, #right_nav_handle').css('right', o.pad_right);
-        $('#navigator_handle').css('bottom', o.pad_bottom);
+        opts.pad_right = $(window).width() - dims[0];
+        opts.pad_bottom = $(window).height() - dims[1];
+        $('#action_nav_handle, #owner_nav_handle, #right_nav_handle').css('right', opts.pad_right + 3);
+        $('#navigator_handle').css('bottom', opts.pad_bottom);
+
+        Hive.navigator.layout({ pad_bottom: opts.pad_bottom, pad_right: opts.pad_right });
+        if( o.nav_menu.opened ) $('#action_nav, #owner_nav').css('right', opts.pad_right);
     };
 
     o.init = function(group){
@@ -105,7 +109,7 @@ Hive.Menus = (function(){
         else {
             o.login_menu = hover_menu( '#login_btn', '#login_menu', {
                 open: function() { $('#username').get(0).focus(); },
-                close_delay: o.slow_close,
+                close_delay: opts.slow_close,
                 offset_y: 8,
                 layout_x: 'right',
                 group: group
@@ -142,12 +146,13 @@ Hive.Menus = (function(){
             open_nav = function(){
                 drawers.stop().clearQueue().show();
                 $('#user_nav').animate({ left: 0, top: 0 }, speed);
-                $('#owner_nav').animate({ right: o.pad_right, top: 0 }, speed);
-                $('#action_nav').animate({ right: o.pad_right }, speed);
-                Hive.navigator.show(speed, o.pad_bottom);
+                $('#owner_nav').animate({ right: opts.pad_right, top: 0 }, speed);
+                $('#action_nav').animate({ right: opts.pad_right }, speed);
+                console.log({ speed: speed, pad_bottom: opts.pad_bottom, pad_right: opts.pad_right });
+                Hive.navigator.show();
             };
-            nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false, open_delay: 300,
-                open_menu: open_nav, close_menu: close_nav, opened: false, close_delay: o.slow_close } );
+            nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false, open_delay: 400,
+                open_menu: open_nav, close_menu: close_nav, opened: false, close_delay: opts.slow_close } );
 
         o.init(nav_menu);
 

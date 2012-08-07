@@ -1,13 +1,16 @@
 if (typeof(Hive) == "undefined") Hive = {};
 
 Hive.Navigator = function(navigator_element, content_element, opts){
-    var o = {};
+    var o = { opened: false };
     opts = $.extend(
         {
             thumb_width: 166,
             text_height: 40,
             margin: 5,
-            hidden: false
+            hidden: false,
+            speed: 100,
+            pad_bottom: 0,
+            pad_right: 0
         },
         opts
     );
@@ -382,15 +385,23 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     };
 
-    o.show = function(speed, bottom){
-        speed = speed || 100;
-        navigator_element.stop().clearQueue().show();
-        navigator_element.animate({bottom: bottom}, speed);
+    o.layout = function( args ){
+        $.extend(opts, args);
+        if( o.opened ) navigator_element.css({ bottom: opts.pad_bottom,
+            width: $(window).width() - opts.pad_right });
+    };
+
+    o.show = function(){
+        o.opened = true;
+        navigator_element.stop().clearQueue()
+            .width($(window).width() - opts.pad_right).show()
+            .animate({ bottom: opts.pad_bottom }, opts.speed);
         if (info && !Modernizr.touch) info.find('input').focus();
         return o;
     };
 
     o.hide = function(speed){
+        o.opened = false;
         speed = speed || 100;
         navigator_element.stop().clearQueue();
         var complete = function(){ navigator_element.hide() };
