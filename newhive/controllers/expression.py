@@ -185,9 +185,10 @@ class Expression(Application, PagingMixin):
     def render(self, request, response):
         expr_id = lget(request.path_parts, 0)
         expr = self.db.Expr.fetch(expr_id)
+        password = request.form.get('password') or request.args.get('password')
         if not expr: return self.serve_404(request, response)
 
-        if expr.auth_required() and not expr.cmp_password(request.form.get('password')):
+        if expr.auth_required() and not expr.cmp_password(password):
             return self.serve_forbidden(request)
 
         response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)

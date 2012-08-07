@@ -3,32 +3,32 @@ if (typeof(Hive) == "undefined") Hive = {};
 Hive.load_expr = function(expr){
     Hive.expr = expr;
 
-    if(expr.auth_required){
-        $('#password_form').attr('action', content_domain + expr.id);
-        if(expr.password){
-            // already authorized, pass password along to newhiveexpression.com
-            $('#password_form .password').val(expr.password);
-            $('#password_form').submit();
-        } else {
-            Hive.password_dialog();
-            return;
-        }
-    }
+    //if(expr.auth_required){
+    //    $('#password_form').attr('action', content_domain + expr.id);
+    //    if(expr.password){
+    //        // already authorized, pass password along to newhiveexpression.com
+    //        $('#password_form .password').val(expr.password);
+    //        $('#password_form').submit();
+    //    } else {
+    //        //Hive.password_dialog();
+    //        return;
+    //    }
+    //}
 
     Hive.Menus.update_expr(expr);
 }
 
-Hive.password_dialog = function(){
-    var dia = showDialog('#dia_password'), pass_field = $('#password_form .password');
-    pass_field.get(0).focus();
-    $('#password_form').submit(function(){
-        dia.close();
-        $.post(server_url + 'expr_info/' + Hive.expr.id, { password: pass_field.val() }, function(expr){
-            $.extend(Hive.expr, expr);
-            Hive.Menus.update_expr(Hive.expr);
-        }, 'json');
-    });
-};
+//Hive.password_dialog = function(){
+//    var dia = showDialog('#dia_password'), pass_field = $('#password_form .password');
+//    pass_field.get(0).focus();
+//    $('#password_form').submit(function(){
+//        dia.close();
+//        $.post(server_url + 'expr_info/' + Hive.expr.id, { password: pass_field.val() }, function(expr){
+//            $.extend(Hive.expr, expr);
+//            Hive.Menus.update_expr(Hive.expr);
+//        }, 'json');
+//    });
+//};
 
 Hive.Menus = (function(){
     var o = {};

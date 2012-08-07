@@ -816,3 +816,8 @@ function time_since_last(label, extra_log) {
     return delta;
 };
 
+$(window).keydown(function(e){
+    if (e.keyCode == 113){
+        noop();
+    }
+});

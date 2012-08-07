@@ -192,20 +192,20 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             current_expr = towards.shift();
         }
 
-        if (!current_expr.loading_started) current_expr.load(content_element);
-        var frame = current_expr.frame
-            .css({left: left_offset, 'z-index': 2})
-            .load(current_expr.show);
+        if (!current_expr.loading_started) current_expr.load();
+        var frame = current_expr.frame;
+            //.css({left: left_offset, 'z-index': 2})
+            //.load(current_expr.show);
 
         function animate_complete(){
             $('iframe.expr').not(frame).css({left: -9999});
             frame.css('z-index', 1);
         };
-        frame.animate({left: 0}, {complete: animate_complete});
+        //frame.animate({left: 0}, {complete: animate_complete});
         history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
 
         previous_expr.hide();
-        current_expr.show();
+        current_expr.show(offset);
 
         Hive.load_expr(current_expr.data());
 
@@ -222,7 +222,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     function show_expression_not_in_list(data){
         current_expr = o.make_expr(data);
-        current_expr.load(content_element);
+        current_expr.load();
         history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
         o.populate_navigator(function(){ o.select(0) });
     };
@@ -443,13 +443,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             if ( next_list[i] && !next_list[i].loading_started){
                 setTimeout( function(){
                     //console.log('caching');
-                    next_list[i].load(content_element, o.cache_next);
+                    next_list[i].load(o.cache_next);
                 }, 500);
                 break;
             } else if (prev_list[i] && !prev_list[i].loading_started){
                 setTimeout( function(){
                     //console.log('caching');
-                    prev_list[i].load(content_element, o.cache_next);
+                    prev_list[i].load(o.cache_next);
                 }, 500);
                 break;
             }
@@ -516,7 +516,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     // Factory method for Expr objects
     o.make_expr = function(data){
-        return Hive.Navigator.Expr(data, opts);
+        return Hive.Navigator.Expr(data, content_element, opts);
     };
 
     // Populate navigator from scratch
@@ -572,7 +572,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     return o;
 };
 
-Hive.Navigator.Expr = function(data, opts){
+Hive.Navigator.Expr = function(data, content_element, opts){
     var o = $.extend({}, data);
 
     o.url =  '/' + o.owner_name + '/' + o.name;
@@ -582,10 +582,11 @@ Hive.Navigator.Expr = function(data, opts){
         o.loaded = true;
         callback();
     };
-    o.load = function(content_element, callback){
+
+    o.load = function(callback, src){
         if (o.frame) return;
         o.loading_started = true;
-        var src = content_domain + (o.auth_required ? 'empty' : o.id);
+        var src = src || content_domain + (o.auth_required ? 'empty' : o.id);
         o.frame = $('<iframe>')
             .attr('src', src)
             .css('left', -9999)
@@ -593,6 +594,7 @@ Hive.Navigator.Expr = function(data, opts){
             .on('load', on_load(callback));
         content_element.append(o.frame);
     };
+
     o.unload = function(){
         if (o.frame) {
             o.frame.remove();
@@ -606,7 +608,57 @@ Hive.Navigator.Expr = function(data, opts){
         return data;
     };
 
-    o.show = function(){
+    function animate(direction){
+        var width = $(window).width();
+        var final = {'left': 0};
+        o.frame.css({'z-index': 2});
+        function animate_complete(){
+            $('iframe.expr').not(o.frame).css({left: -9999});
+            o.frame.css('z-index', 1);
+        };
+        if (!direction || direction == 0){
+            // in place
+            o.frame.css(final);
+            animate_complete();
+        } else if (direction > 0) {
+            // from the right
+            o.frame.css({'left': width});
+            o.frame.animate(final, animate_complete);
+        } else {
+            // from the left
+            o.frame.css({'left': -width});
+            o.frame.animate(final, animate_complete);
+        }
+    };
+    function reload_private(password){
+        o.unload();
+        var src = content_domain + o.id + "?password=" + password;
+        o.load(noop, src);
+        $.post(server_url + 'expr_info/' + o.id, { password: password }, function(expr){
+            $.extend(Hive.expr, expr);
+            Hive.Menus.update_expr(Hive.expr);
+        }, 'json');
+    };
+    function password_dialog(){
+        if (o.password){
+            // already authorized, pass password along to newhiveexpression.com
+            reload_private(o.password);
+        } else {
+            var dia = showDialog('#dia_password');
+            var pass_field = $('#password_form .password');
+            pass_field.get(0).focus();
+            $('#password_form').submit(function(e){
+                dia.close();
+                reload_private(pass_field.val());
+                e.preventDefault();
+            });
+        };
+    };
+    o.show = function(direction){
+        if (o.auth_required){
+            password_dialog();
+        }
+        animate(direction);
         var f = o.frame;
         f.attr('name', 'expr');
         if (f[0].contentWindow) {
