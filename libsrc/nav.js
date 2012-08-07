@@ -2,19 +2,6 @@ if (typeof(Hive) == "undefined") Hive = {};
 
 Hive.load_expr = function(expr){
     Hive.expr = expr;
-
-    //if(expr.auth_required){
-    //    $('#password_form').attr('action', content_domain + expr.id);
-    //    if(expr.password){
-    //        // already authorized, pass password along to newhiveexpression.com
-    //        $('#password_form .password').val(expr.password);
-    //        $('#password_form').submit();
-    //    } else {
-    //        //Hive.password_dialog();
-    //        return;
-    //    }
-    //}
-
     Hive.Menus.update_expr(expr);
 }
 
@@ -31,10 +18,13 @@ Hive.load_expr = function(expr){
 //};
 
 Hive.Menus = (function(){
-    var o = {};
-    o.slow_close = 1100;
+    var o = {}, opts = {
+        slow_close: 1100,
+        pad_right: 0,
+        pad_bottom: 0
+    };
 
-    o.layout = function(){
+    o.layout = function(dims){
         var action_nav = $('#action_nav'),
             top = ($(window).height() - Hive.navigator.height() - 47) / 2
                 - action_nav.outerHeight() / 2 + 47;
@@ -43,6 +33,14 @@ Hive.Menus = (function(){
 
         $('#user_nav_handle').width($('#user_nav').outerWidth());
         $('#owner_nav_handle').width($('#owner_nav').outerWidth());
+
+        opts.pad_right = $(window).width() - dims[0];
+        opts.pad_bottom = $(window).height() - dims[1];
+        $('#action_nav_handle, #owner_nav_handle, #right_nav_handle').css('right', opts.pad_right + 3);
+        $('#navigator_handle').css('bottom', opts.pad_bottom);
+
+        Hive.navigator.layout({ pad_bottom: opts.pad_bottom, pad_right: opts.pad_right });
+        if( o.nav_menu.opened ) $('#action_nav, #owner_nav').css('right', opts.pad_right);
     };
 
     o.init = function(group){
@@ -84,7 +82,7 @@ Hive.Menus = (function(){
         else {
             o.login_menu = hover_menu( '#login_btn', '#login_menu', {
                 open: function() { $('#username').get(0).focus(); },
-                close_delay: o.slow_close,
+                close_delay: opts.slow_close,
                 offset_y: 8,
                 layout_x: 'right',
                 group: group
@@ -106,7 +104,7 @@ Hive.Menus = (function(){
 
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
-        var speed = 100,
+        var speed = 300,
             drawers = $('#user_nav,#owner_nav,#action_nav'),
             handles = $('.menu_handle').add('#navigator'),
             close_nav = function(){
@@ -121,12 +119,12 @@ Hive.Menus = (function(){
             open_nav = function(){
                 drawers.stop().clearQueue().show();
                 $('#user_nav').animate({ left: 0, top: 0 }, speed);
-                $('#owner_nav').animate({ right: 0, top: 0 }, speed);
-                $('#action_nav').animate({ right: 0 }, speed);
-                Hive.navigator.show(speed);
+                $('#owner_nav').animate({ right: opts.pad_right, top: 0 }, speed);
+                $('#action_nav').animate({ right: opts.pad_right }, speed);
+                Hive.navigator.show();
             };
-            nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false,
-                open_menu: open_nav, close_menu: close_nav, opened: false, close_delay: o.slow_close } );
+            nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false, open_delay: 400,
+                open_menu: open_nav, close_menu: close_nav, opened: false, close_delay: opts.slow_close } );
 
         o.init(nav_menu);
 
@@ -191,6 +189,7 @@ Hive.Menus = (function(){
         $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
         Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames', {hidden: true});
+        Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {
         //    layout: false,
         //    opened: false,
@@ -201,12 +200,18 @@ Hive.Menus = (function(){
         //});
 
         window.addEventListener('message', function(m){
-            if(m.data != 'focus') return;
-            nav_menu.close(true);
-            //o.navigator_menu.close(true);
+            if(m.data == 'focus') {
+                nav_menu.close(true);
+                //o.navigator_menu.close(true);
+            }
+            else if( m.data.match(/^layout=/) ){
+                var dims = m.data.split('=')[1].split(',');
+                o.layout(dims);    
+            }
         }, false);
 
-        $(window).resize(o.layout);
+        o.layout([ $(window).width(), $(window).height() ]);
+
         o.update_expr(expr);
 
         // In order to make sure the navigator and the nav are rendered,
@@ -273,7 +278,7 @@ Hive.Menus = (function(){
     };
 
     o.update_expr = function(expr){
-        if(!nav_menu.opened) Hive.navigator.current_expr().frame.get(0).focus();
+        //if(!nav_menu.opened) expr.frame.get(0).focus();
         var set_class = function(o, b, c){ return o[b ? 'addClass' : 'removeClass'](c) };
 
         $('.edit_url').attr('href', secure_server + 'edit/' + expr.id);
@@ -291,15 +296,15 @@ Hive.Menus = (function(){
 
             // load owner's info: feed items in owner_menu, expr links and thumbs, listening status
             $.getJSON(server_url + 'user/' + expr.owner.id, function(data, status, jqXHR){
-                console.log(data);
                 var thumbs = $('#owner_menu .thumbs');
                 thumbs.html('');
                 $.map(data.exprs, function(e){
                     $('<a>').attr({ 'href': e.url + '?user=' + expr.owner.name, 'title': e.title })
-                        .click(function(){
-                            Hive.navigator.load_expr(e.id).context('@' + expr.owner.name);
-                            return false;
-                        })
+                        // TODO: enable this when Navigator supports changing both expression and context
+                        //.click(function(){
+                        //    Hive.navigator.context('@' + expr.owner.name).select_by_id(e.id);
+                        //    return false;
+                        //})
                         .append($('<img>').attr('src', e.thumb).addClass('thumb')).appendTo(thumbs);
                 });
                 $('#owner_menu .listen').removeClass('on off').addClass(data.listening ? 'on' : 'off');
@@ -366,8 +371,6 @@ Hive.Menus = (function(){
         var feed_url = server_url + 'expr_feed/' + expr.id;
         if(expr.password) $.post(feed_url, { password: expr.password }, load_feed, 'json');
         else $.getJSON(feed_url, load_feed);
-
-        o.layout();
     };
 
     o.update_user = function(user_data){
@@ -398,7 +401,6 @@ Hive.Menus = (function(){
             var count = parseInt(count_e.html());
             btn.removeClass('inactive');
 
-            console.log(data);
             if(!data) { o.server_error(); return; }
             if(data.state) {
                 count_e.html(count + 1);
