@@ -243,7 +243,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.select_by_id = function(id){
         var ids, return_ids, pos;
-        if (id === o.current_id()) return;
+        if (id === o.current_id()) return o;
         return_ids = function(el) { return el.id };
 
         // Look for id in prev_list
@@ -261,7 +261,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             } else {
                 // Not found in either case, this shouldn't happen normally
                 o.load_expr(id);
-                return false;
+                return o;
             }
         }
         o.select(pos);

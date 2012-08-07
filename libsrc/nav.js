@@ -148,7 +148,6 @@ Hive.Menus = (function(){
                 $('#user_nav').animate({ left: 0, top: 0 }, speed);
                 $('#owner_nav').animate({ right: opts.pad_right, top: 0 }, speed);
                 $('#action_nav').animate({ right: opts.pad_right }, speed);
-                console.log({ speed: speed, pad_bottom: opts.pad_bottom, pad_right: opts.pad_right });
                 Hive.navigator.show();
             };
             nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false, open_delay: 400,
@@ -328,10 +327,11 @@ Hive.Menus = (function(){
                 thumbs.html('');
                 $.map(data.exprs, function(e){
                     $('<a>').attr({ 'href': e.url + '?user=' + expr.owner.name, 'title': e.title })
-                        .click(function(){
-                            Hive.navigator.select_by_id(e.id).context('@' + expr.owner.name);
-                            return false;
-                        })
+                        // TODO: enable this when Navigator supports changing both expression and context
+                        //.click(function(){
+                        //    Hive.navigator.context('@' + expr.owner.name).select_by_id(e.id);
+                        //    return false;
+                        //})
                         .append($('<img>').attr('src', e.thumb).addClass('thumb')).appendTo(thumbs);
                 });
                 $('#owner_menu .listen').removeClass('on off').addClass(data.listening ? 'on' : 'off');
