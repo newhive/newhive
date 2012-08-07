@@ -238,6 +238,8 @@ Hive.Menus = (function(){
             }
         }, false);
 
+        o.layout([ $(window).width(), $(window).height() ]);
+
         o.update_expr(expr);
 
         // In order to make sure the navigator and the nav are rendered,
