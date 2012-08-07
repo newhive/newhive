@@ -116,8 +116,7 @@ class Expression(Application, PagingMixin):
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
         if is_owner: owner.unflag('expr_new')
 
-        expr_url = ( abs_url(domain = config.content_domain)
-            + ('empty' if resource.auth_required() else resource.id) )
+        expr_url = ( abs_url(domain = config.content_domain) + resource.id)
         self.expr_prepare(resource, response.user)
         response.context.update(
              expr_frame = True
@@ -185,16 +184,17 @@ class Expression(Application, PagingMixin):
     def render(self, request, response):
         expr_id = lget(request.path_parts, 0)
         expr = self.db.Expr.fetch(expr_id)
-        password = request.form.get('password') or request.args.get('password')
+        password = request.form.get('password')
         if not expr: return self.serve_404(request, response)
 
         if expr.auth_required() and not expr.cmp_password(password):
-            return self.serve_forbidden(request)
+            response.context.update(empty=True);
 
         response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
-        return self.serve_page(response, 'pages/expr.html')
-
-    def empty(self, request, response): return self.serve_page(response, 'pages/expr_empty.html')
+        if request.form.get('partial'):
+            return self.serve_page(response, 'pages/expr_content_only.html')
+        else:
+            return self.serve_page(response, 'pages/expr.html')
 
     def feed_prepare(self, item):
         item = dict(item,

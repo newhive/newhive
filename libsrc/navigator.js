@@ -586,7 +586,7 @@ Hive.Navigator.Expr = function(data, content_element, opts){
     o.load = function(callback, src){
         if (o.frame) return;
         o.loading_started = true;
-        var src = src || content_domain + (o.auth_required ? 'empty' : o.id);
+        var src = src || content_domain + o.id;
         o.frame = $('<iframe>')
             .attr('src', src)
             .css('left', -9999)
@@ -631,9 +631,9 @@ Hive.Navigator.Expr = function(data, content_element, opts){
         }
     };
     function reload_private(password){
-        o.unload();
-        var src = content_domain + o.id + "?password=" + password;
-        o.load(noop, src);
+        if (o.frame[0].contentWindow) {
+            o.frame[0].contentWindow.postMessage({action: 'show', password: password}, '*');
+        }
         $.post(server_url + 'expr_info/' + o.id, { password: password }, function(expr){
             $.extend(Hive.expr, expr);
             Hive.Menus.update_expr(Hive.expr);
@@ -657,20 +657,21 @@ Hive.Navigator.Expr = function(data, content_element, opts){
     o.show = function(direction){
         if (o.auth_required){
             password_dialog();
+        } else {
+            if (o.frame[0].contentWindow) {
+                o.frame[0].contentWindow.postMessage({action: 'show'}, '*');
+            }
         }
         animate(direction);
         var f = o.frame;
         f.attr('name', 'expr');
-        if (f[0].contentWindow) {
-            f[0].contentWindow.postMessage('show', '*');
-        }
     };
 
     o.hide = function(){
         var f = o.frame;
         f.attr('name', '');
         if (f[0].contentWindow) {
-            f[0].contentWindow.postMessage('hide', '*');
+            f[0].contentWindow.postMessage({action: 'hide'}, '*');
         }
     };
 
