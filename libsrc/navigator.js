@@ -190,7 +190,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (!current_expr.loading_started) current_expr.load(content_element);
         var frame = current_expr.frame
             .css({left: left_offset, 'z-index': 2})
-            .load(current_expr.show);
+            .one('load', current_expr.show);
 
         function animate_complete(){
             $('iframe.expr').not(frame).css({left: -9999});
@@ -202,7 +202,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         previous_expr.hide();
         current_expr.show();
 
-        Hive.load_expr(current_expr.data());
+        Hive.load_expr(current_expr);
 
         o.cache_next();
 
@@ -262,6 +262,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             }
         }
         o.select(pos);
+        
+        return o;
     };
 
     function build(list, element, direction, start_index){
@@ -380,10 +382,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     };
 
-    o.show = function(speed){
+    o.show = function(speed, bottom){
         speed = speed || 100;
         navigator_element.stop().clearQueue().show();
-        navigator_element.animate({bottom: 0}, speed);
+        navigator_element.animate({bottom: bottom}, speed);
         if (info && !Modernizr.touch) info.find('input').focus();
         return o;
     };
@@ -570,7 +572,7 @@ Hive.Navigator.Expr = function(data, opts){
     o.load = function(content_element, callback){
         if (o.frame) return;
         o.loading_started = true;
-        var src = content_domain + (o.auth_required ? 'empty' : o.id);
+        var src = content_domain + o.id;
         o.frame = $('<iframe>')
             .attr('src', src)
             .css('left', -9999)
@@ -593,7 +595,6 @@ Hive.Navigator.Expr = function(data, opts){
 
     o.show = function(){
         var f = o.frame;
-        f.attr('name', 'expr');
         if (f[0].contentWindow) {
             f[0].contentWindow.postMessage('show', '*');
         }
@@ -601,7 +602,6 @@ Hive.Navigator.Expr = function(data, opts){
 
     o.hide = function(){
         var f = o.frame;
-        f.attr('name', '');
         if (f[0].contentWindow) {
             f[0].contentWindow.postMessage('hide', '*');
         }

@@ -119,6 +119,9 @@ $(function() {
     });
 
 
+    var layout = function(){ send_top('layout=' + $(window).width() + ',' + $(window).height()); };
+    $(window).resize(layout);
+
     // TODO: listen for hide / show messages to unload / load <iframe>s, <object>s, and <embed>s
     //window.addEventListener("message", function(e){
     //    var a = e.data.split(',');
@@ -151,6 +154,7 @@ $(function() {
                 $('#app' + (app.id || app.z)).html(app.content);
             }
         });
+        layout();
     };
     Hive.hide_expr = function(){
         $('.happ.hive_html').html('');
@@ -158,5 +162,12 @@ $(function() {
     window.addEventListener('message', function(m){
         if ( m.data == "show" ) Hive.show_expr();
         if ( m.data == "hide" ) Hive.hide_expr();
+        if ( m.data.match(/password/) ){
+            var pass = m.data.split('=')[1];
+            $('<form>').attr({ method: 'POST', action: '?' })
+                .append($('<input>').attr({ type: 'hidden', name: 'password', value: pass }))
+                .appendTo('body')
+                .submit();
+        }
     }, false);
 });

@@ -384,7 +384,7 @@ class User(HasSocial):
     def can_view(self, expr):
         return expr and ( (expr.get('auth', 'public') == 'public') or
                 (self.id == expr['owner']) or
-                (expr.id in self.starred_expr_ids and not expr.auth_required()) )
+                (expr.id in self.starred_expr_ids) )
 
     def feed_profile(self, spec={}, limit=40, **args):
         def query_feed(q):

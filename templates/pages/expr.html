@@ -2,15 +2,19 @@
 
 {% block head %}
   <script src='{{ asset_bundle('expression.js')[0] }}'></script>
-  <script>
-Hive = { user: {{ user_client | json }}, parent_url: {{ expr.url | json }},
-    expr: {{ expr | json }} };
-  </script>
+  {% if not auth_required %}
+    <script>
+      Hive = { user: {{ user_client | json }}, parent_url: {{ expr.url | json }},
+          expr: {{ expr | json }} };
+    </script>
+  {% endif %}
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression{% endblock %}
 
 {% block main %}
-  {% include 'expr_background.html' %}
-  {{ html }}
+  {% if not auth_required %}
+    {% include 'expr_background.html' %}
+    {{ html }}
+  {% endif %}
 {% endblock %}

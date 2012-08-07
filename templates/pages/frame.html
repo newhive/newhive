@@ -33,7 +33,7 @@
     </div>
   </div>
   <div id="expression_frames">
-    <iframe src='{{ expr_url }}' class='expr' name='expr'></iframe>
+    <iframe src='{{ expr_url }}' class='expr'></iframe>
   </div>
 
   <div id='action_nav_handle' class='menu_handle'></div>
@@ -139,7 +139,6 @@
 
 {% block footer_scripts %}<script>
   Hive.Menus.expr_init();
-  Hive.load_expr(expr);
 </script>{% endblock footer_scripts %}
 
 {% block dialogs %}

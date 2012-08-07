@@ -444,6 +444,7 @@ hover_menu = function(handle, drawer, options) {
             ,sticky: false
             ,auto_close: false
             ,hover_close: true
+            ,open_delay: 100
             ,close_delay: 500
             ,offset_y: 8
             ,offset_x: 8
@@ -458,8 +459,6 @@ hover_menu = function(handle, drawer, options) {
             ,group: hover_menu
             ,animate_close: false
             ,animate_open: false
-            ,custom_open: false
-            ,custom_close: false
             ,opened: false
         }, options)
     ;
@@ -592,7 +591,8 @@ hover_menu = function(handle, drawer, options) {
     opts.group.menus.push(o);
 
     if(opts.hover) {
-        handle.hover(o.open, o.delayed_close);
+        handle.on('hover', null, { delay: opts.open_delay }, o.open)
+            .on('hoverend', o.delayed_close);
         drawer.mouseover(o.cancel_close).mouseout(o.delayed_close);
     }
     handle.click(function(){
