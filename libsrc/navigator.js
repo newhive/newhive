@@ -631,12 +631,16 @@ Hive.Navigator.Expr = function(data, content_element, opts){
         }
     };
     function reload_private(password){
-        if (o.frame[0].contentWindow) {
+        function post_message(){
             o.frame[0].contentWindow.postMessage({action: 'show', password: password}, '*');
         }
+        if (o.frame[0].contentWindow) {
+            post_message();
+            o.frame.load(post_message);
+        }
         $.post(server_url + 'expr_info/' + o.id, { password: password }, function(expr){
-            $.extend(Hive.expr, expr);
-            Hive.Menus.update_expr(Hive.expr);
+            $.extend(o, expr);
+            Hive.Menus.update_expr(o);
         }, 'json');
     };
     function password_dialog(){

@@ -161,7 +161,7 @@ $(function() {
     };
     window.addEventListener('message', function(m){
         if ( m.data.action == "show" ) {
-            if (m.data.password){
+            if (m.data.password && !$('body').children().length){
                 $('body').load('', {password: m.data.password, partial: true}, Hive.show_expr);
             } else {
                 Hive.show_expr();
