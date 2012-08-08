@@ -592,9 +592,12 @@ Hive.Navigator.Expr = function(data, content_element, opts){
     o.url =  '/' + o.owner_name + '/' + o.name;
 
     function on_load(callback){
-        if (!$.isFunction(callback)) callback = noop;
-        o.loaded = true;
-        callback();
+        return function(){
+            if (!$.isFunction(callback)) callback = noop;
+            o.loaded = true;
+            o.show();
+            callback();
+        };
     };
 
     o.load = function(callback, src){

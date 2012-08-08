@@ -139,7 +139,6 @@ Hive.Page = (function(){
     };
 
     o.show = function(){
-        console.log('showing');
         o.paging_sent = false;
         if(!Hive.expr) return;
 
@@ -152,7 +151,10 @@ Hive.Page = (function(){
 
         $.each(Hive.expr.apps, function(i, app){
             if (app.type == "hive.html") {
-                $('#app' + (app.id || app.z)).html(app.content);
+                var element = $('#app' + (app.id || app.z));
+                if (!element.html()){
+                    element.html(app.content);
+                }
             }
         });
 
