@@ -22,8 +22,12 @@ Hive.Page = (function(){
     o.init = function(){
         window.addEventListener('message', function(m){
             if ( m.data.action == "show" ) {
+                function callback(data){
+                    $('body').html(data);
+                    setTimeout(o.show, 0);
+                };
                 if (m.data.password && !$('body').children().length){
-                    $('body').load('', { password: m.data.password, partial: true }, o.show);
+                    $.post('', { password: m.data.password, partial: true }, callback);
                 } else {
                     o.show();
                 }
