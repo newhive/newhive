@@ -4,7 +4,7 @@ Hi {{ user_name }},
   "{{ message }}"
 {% elif type == "Star" %}
   {% if entity_type == "Expr" %}
-    likes your expression
+    loves your expression
     Now they can keep track of your expression and be notified of updates and discussions.
   {% elif entity_type == "User" %}
     is now listening to you
