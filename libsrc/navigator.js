@@ -627,7 +627,7 @@ Hive.Navigator.Expr = function(data, content_element, opts){
 
     function animate(direction){
         var width = $(window).width();
-        var final = {'left': 0};
+        var final_pos = {'left': 0};
         o.frame.css({'z-index': 2});
         function animate_complete(){
             $('iframe.expr').not(o.frame).css({left: -9999});
@@ -635,16 +635,16 @@ Hive.Navigator.Expr = function(data, content_element, opts){
         };
         if (!direction || direction == 0){
             // in place
-            o.frame.css(final);
+            o.frame.css(final_pos);
             animate_complete();
         } else if (direction > 0) {
             // from the right
             o.frame.css({'left': width});
-            o.frame.animate(final, animate_complete);
+            o.frame.animate(final_pos, animate_complete);
         } else {
             // from the left
             o.frame.css({'left': -width});
-            o.frame.animate(final, animate_complete);
+            o.frame.animate(final_pos, animate_complete);
         }
     };
     function reload_private(password){
