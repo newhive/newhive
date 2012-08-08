@@ -47,6 +47,8 @@ class Community(Application, PagingMixin):
             match_extent -= 1
         if not query: return self.serve_404(request, response)
 
+        if query == self.expr_all and not request.requester.logged_in:
+            return self.redirect(response, abs_url());
         items_and_args = query(request, response)
         content, args = items_and_args if type(items_and_args) == tuple else (items_and_args, None)
         if content == None: return self.serve_404(request, response)
