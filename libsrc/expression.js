@@ -1,6 +1,6 @@
 if (typeof Hive == "undefined") Hive = {};
 
-$(function() {
+Hive.process_apps = function(){
     ///////////////////////////////////////////////////////////////////////////
     //                      jPlayer shenanigans                              //
     ///////////////////////////////////////////////////////////////////////////
@@ -145,10 +145,14 @@ $(function() {
     //        createCookie('ie_warning_count', count, 30);
     //    }
     //}
+};
 
+$(function() {
     Hive.show_expr = function(){
+        Hive.process_apps();
         paging_sent = false;
         if(!Hive.expr) return;
+        place_apps();
         $.each(Hive.expr.apps, function(i, app){
             if (app.type == "hive.html") {
                 $('#app' + (app.id || app.z)).html(app.content);
@@ -160,14 +164,13 @@ $(function() {
         $('.happ.hive_html').html('');
     };
     window.addEventListener('message', function(m){
-        if ( m.data == "show" ) Hive.show_expr();
-        if ( m.data == "hide" ) Hive.hide_expr();
-        if ( m.data.match(/password/) ){
-            var pass = m.data.split('=')[1];
-            $('<form>').attr({ method: 'POST', action: '?' })
-                .append($('<input>').attr({ type: 'hidden', name: 'password', value: pass }))
-                .appendTo('body')
-                .submit();
+        if ( m.data.action == "show" ) {
+            if (m.data.password && !$('body').children().length){
+                $('body').load('', {password: m.data.password, partial: true}, Hive.show_expr);
+            } else {
+                Hive.show_expr();
+            }
         }
+        if ( m.data.action == "hide" ) Hive.hide_expr();
     }, false);
 });

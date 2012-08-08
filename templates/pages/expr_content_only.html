@@ -1,0 +1,6 @@
+<body>
+    {% include 'page_parts/expr_body.html' %}
+    <script>
+        Hive.expr = {{ expr | json }};
+    </script>
+</body>

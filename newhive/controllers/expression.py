@@ -141,8 +141,8 @@ class Expression(Application, PagingMixin):
 
         special_tags = {
                 'Featured': (self.expr_featured, 'id')
-                , 'Recent': (self.expr_all, 'updated')
                 , 'Network': (self.home_feed, None)
+                , 'All': (None, 'updated')
                 }
 
         # Use key_map to map between keys used in querystring and those of database
@@ -168,6 +168,7 @@ class Expression(Application, PagingMixin):
             items_and_args = pager(request, response, args)
             exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
         else:
+            if spec.get('tags_index') == "All": spec.pop('tags_index')
             exprs = self.db.Expr.page(spec, **args)
 
         return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))
@@ -183,17 +184,17 @@ class Expression(Application, PagingMixin):
     def render(self, request, response):
         expr_id = lget(request.path_parts, 0)
         expr = self.db.Expr.fetch(expr_id)
+        password = request.form.get('password')
         if not expr: return self.serve_404(request, response)
 
-        response.context.update(
-            html = expr_to_html(expr),
-            expr = expr,
-            auth_required = expr.auth_required() and not expr.cmp_password(request.form.get('password')),
-            use_ga = False
-        )
-        return self.serve_page(response, 'pages/expr.html')
+        if expr.auth_required() and not expr.cmp_password(password):
+            response.context.update(empty=True);
 
-    def empty(self, request, response): return self.serve_page(response, 'pages/expr_empty.html')
+        response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
+        if request.form.get('partial'):
+            return self.serve_page(response, 'pages/expr_content_only.html')
+        else:
+            return self.serve_page(response, 'pages/expr.html')
 
     def feed_prepare(self, item):
         item = dict(item,

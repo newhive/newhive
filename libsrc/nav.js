@@ -2,47 +2,20 @@ if (typeof(Hive) == "undefined") Hive = {};
 
 Hive.load_expr = function(expr){
     Hive.expr = expr;
-
-    if(expr.auth_required){
-        $('[name=expr]').removeAttr('name');
-        expr.frame.attr('name', 'expr');
-        //console.log(expr.frame);
-        $('.password_form').attr('action', content_domain + expr.id);
-        if(expr.password){
-            // already authorized, pass password along to expr frame,
-            // where it's posted to newhiveexpression.com
-            //console.log('one load handler');
-            //expr.frame.one('load', function(){
-            //    console.log('sending password');
-            //    this.contentWindow.postMessage('password=' + expr.password, '*');
-            //});
-            //expr.frame.one('load', function(){
-            var f = $('#auto_password_form');
-            f.find('.password').val(expr.password);
-            //console.log('submitting password form to ' + f.attr('action') + ' with pass ' + f.find('.password').val());
-            f.submit();
-            //console.log(expr.frame);
-            //});
-        } else {
-            Hive.password_dialog();
-            return;
-        }
-    }
-
     Hive.Menus.update_expr(expr);
 }
 
-Hive.password_dialog = function(){
-    var dia = showDialog('#dia_password'), pass_field = $('#password_form .password');
-    pass_field.get(0).focus();
-    $('#password_form').submit(function(){
-        dia.close();
-        $.post(server_url + 'expr_info/' + Hive.expr.id, { password: pass_field.val() }, function(expr){
-            $.extend(Hive.expr, expr);
-            Hive.Menus.update_expr(Hive.expr);
-        }, 'json');
-    });
-};
+//Hive.password_dialog = function(){
+//    var dia = showDialog('#dia_password'), pass_field = $('#password_form .password');
+//    pass_field.get(0).focus();
+//    $('#password_form').submit(function(){
+//        dia.close();
+//        $.post(server_url + 'expr_info/' + Hive.expr.id, { password: pass_field.val() }, function(expr){
+//            $.extend(Hive.expr, expr);
+//            Hive.Menus.update_expr(Hive.expr);
+//        }, 'json');
+//    });
+//};
 
 Hive.Menus = (function(){
     var o = {}, opts = {
