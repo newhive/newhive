@@ -70,6 +70,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
     };
     o.pos_set = function(x, offset, animate, callback){
+        if (typeof(x) === "undefined") x = 0; offset = 0;
         if (animate){
             var new_inner_pos = clamp_pos(x + offset);
             var deficit = x + offset - new_inner_pos;
@@ -284,24 +285,30 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     var inner, current, next, prev, scrolling_elements, loupe, center, info;
-    o.render = function(render_opts){
-        render_opts = $.extend({hidden: false}, render_opts);
-
-        var width = $(window).width();
-
+    function position_containers(width){
         // Points on the screen immediately left and right of the center thumbnail
         center = {
             minus: Math.floor((width - opts.thumb_width) / 2),
             plus: Math.floor((width + opts.thumb_width) / 2)
         };
+        current.css('left', center.minus);
+        next.css('left', center.plus);
+        prev.css('right', center.plus);
+        loupe.data('offset', center.minus - opts.margin);
+    };
+    o.position_containers = position_containers;
+    o.render = function(render_opts){
+        render_opts = $.extend({hidden: false}, render_opts);
+
+        var width = navigator_element.width();
 
         //if (inner) o.pos_set(0);
         var old_inner = inner;
         inner = $('<div>').addClass('navigator_inner');
 
-        current = $('<div>').addClass('current').css('left', center.minus);
-        next = $('<div>').addClass('container next').css('left', center.plus);
-        prev = $('<div>').addClass('container prev').css('right', center.plus);
+        current = $('<div>').addClass('current');
+        next = $('<div>').addClass('container next');
+        prev = $('<div>').addClass('container prev');
 
         inner.append(next).append(prev).append(current);
 
@@ -310,8 +317,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (!loupe.length) loupe = $('<div>').addClass('loupe border selected')
         loupe.css('width', opts.thumb_width)
             .css('height', opts.thumb_width)
-            .css('margin-top', -opts.margin)
-            .data('offset', center.minus - opts.margin);
+            .css('margin-top', -opts.margin);
+
+        position_containers(width);
 
         inner.drag(function(e, dd){
             o.move(dd);
@@ -392,8 +400,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.layout = function( args ){
         $.extend(opts, args);
-        if( o.opened ) navigator_element.css({ bottom: opts.pad_bottom,
-            width: $(window).width() - opts.pad_right });
+        console.log('layout', args, o.opened);
+        var width = $(window).width() - opts.pad_right;
+        navigator_element.css({ width: width });
+        // don't set bottom unless navigator is open, or else it will bring it into the frame
+        if (o.opened) navigator_element.css({bottom: opts.pad_bottom});
+        position_containers(width);
+        o.pos_set();
     };
 
     o.show = function(speed){
