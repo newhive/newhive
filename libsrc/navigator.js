@@ -595,7 +595,6 @@ Hive.Navigator.Expr = function(data, content_element, opts){
         return function(){
             if (!$.isFunction(callback)) callback = noop;
             o.loaded = true;
-            o.show();
             callback();
         };
     };
