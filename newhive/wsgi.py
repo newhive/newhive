@@ -189,7 +189,7 @@ def handle(request): # HANDLER
             if r != None: return app.serve_json(response, r, as_text = True)
         else:
             return app.serve_forbidden(request)
-           
+
         print reqaction
         print "************************would return status 204 here*************************"
         #return Response(status=204) # 204 status = no content
