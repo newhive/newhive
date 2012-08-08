@@ -4,6 +4,7 @@ from os.path import join as joinpath
 from md5 import md5
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
+from lxml import html
 from wsgiref.handlers import format_date_time
 from newhive import social_stats, config
 from itertools import ifilter, islice
@@ -286,7 +287,13 @@ class KeyWords(Entity):
 @Database.register
 class User(HasSocial):
     cname = 'user'
-    indexes = [ ('updated', -1), ('name', {'unique':True}), ('sites', {'unique':True}), 'facebook.id' ]
+    indexes = [
+        ('updated', -1),
+        ('name', {'unique':True}),
+        ('sites', {'unique':True}),
+        'facebook.id',
+        'text_index'
+    ]
     
     # fields = dict(
     #     name = str
@@ -336,13 +343,13 @@ class User(HasSocial):
         self['referrals'] = 0
         self['flags'] = {}
         assert self.has_key('referrer')
+        self.build_search(self)
         super(User, self).create()
-        self.build_search_index()
         return self
 
     def update(self, **d):
+        self.build_search(d)
         super(User, self).update(**d)
-        self.build_search_index()
         return self
 
     @property
@@ -456,9 +463,8 @@ class User(HasSocial):
             if len(exprs) == limit: break
         return exprs
 
-    def build_search_index(self):
-        texts = {'name': self.get('name'), 'fullname': self.get('fullname')}
-        self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
+    def build_search(self, d):
+        d['text_index'] = list( set( normalize( self['name'] + ' ' + self.get('fullname', '') ) ) )
 
     def new_referral(self, d, decrement=True):
         if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
@@ -650,6 +656,7 @@ class Expr(HasSocial):
          (['owner_name', 'name'], {'unique':True})
         ,['owner', 'updated']
         ,'tags_index'
+        ,'text_index'
         ,'updated'
         ,'random'
         ,'file_id'
@@ -719,27 +726,24 @@ class Expr(HasSocial):
 
 
     def update(self, **d):
-        d.update(self._update_tags(d))
-        if not d.has_key('file_id'): d.update(self._collect_files(d))
-
+        if not d.has_key('file_id'): self._collect_files(d)
+        self.build_search(d)
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
-        self.build_search_index()
         return self
 
-    def _update_tags(self, d={}):
-        upd = {}
-        tags = d.get('tags') or self.get('tags', '')
-        if tags: upd['tags_index'] = normalize(tags)
-        dict.update(self, upd)
-        return upd
+    def build_search(self, d):
+        tags = d.get('tags')
+        if tags: d['tags_index'] = list( set( normalize(tags) ) )
 
-    def build_search_index(self):
-        texts = {
-                'tags': self.get('tags')
-                , 'title': self.get('title')
-                }
-        self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
+        text_index = normalize( self.get('title', '') )
+        for a in d.get('apps', []):
+            if a.get('type') in ['hive.html', 'hive.text'] and a.get('content', '').strip():
+                text = html.fromstring( a.get('content') ).text_content()
+                text_index.extend( normalize(text) )
+
+        text_index = list( set( text_index ) )
+        if text_index: d['text_index'] = text_index
 
     def _collect_files(self, d):
         ids = ( self.get('file_id', []) +
@@ -748,7 +752,7 @@ class Expr(HasSocial):
         for a in d.get('apps', []): ids.extend( self._match_id( a.get('content') ) )
         ids = list( set( ids ) )
         ids.sort()
-        return { 'file_id': ids }
+        d['file_id'] = ids
 
     def _match_id(self, s):
         if not isinstance(s, (str, unicode)): return []
@@ -762,12 +766,11 @@ class Expr(HasSocial):
         self['random'] = random.random()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
-        self._update_tags()
-        dict.update(self, self._collect_files(self))
+        self._collect_files(self)
+        self.build_search_index(self)
         super(Expr, self).create()
         feed = self.db.NewExpr.create(self.owner, self)
         self.owner.get_expr_count(force_update=True)
-        self.build_search_index()
         return self
 
     def delete(self):
