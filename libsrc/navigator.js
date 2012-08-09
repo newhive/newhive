@@ -70,6 +70,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
     };
     o.pos_set = function(x, offset, animate, callback){
+        if (typeof(x) === "undefined") x = 0; offset = 0;
         if (animate){
             var new_inner_pos = clamp_pos(x + offset);
             var deficit = x + offset - new_inner_pos;
@@ -173,6 +174,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.select = function(offset){
         var previous_expr = current_expr;
         var left_offset = $(window).width();
+
+        // clicking on a card in navigator during animation causes strange behavior.
+        // since inner is replaced after the animation is complete, just unbind click
+        // handler on inner elements
+        inner.find('.expr_card').off('click');
         animate_slide(offset);
         if (offset >= 0){
             var towards = next_list;
@@ -190,20 +196,20 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             current_expr = towards.shift();
         }
 
-        if (!current_expr.loading_started) current_expr.load(content_element);
-        var frame = current_expr.frame
-            .css({left: left_offset, 'z-index': 2})
-            .one('load', current_expr.show);
+        if (!current_expr.loading_started) current_expr.load();
+        var frame = current_expr.frame;
+            //.css({left: left_offset, 'z-index': 2})
+            //.load(current_expr.show);
 
         function animate_complete(){
             $('iframe.expr').not(frame).css({left: -9999});
             frame.css('z-index', 1);
         };
-        frame.animate({left: 0}, {complete: animate_complete});
+        //frame.animate({left: 0}, {complete: animate_complete});
         history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
 
         previous_expr.hide();
-        current_expr.show();
+        current_expr.show(offset);
 
         Hive.load_expr(current_expr);
 
@@ -220,16 +226,16 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     function show_expression_not_in_list(data){
         current_expr = o.make_expr(data);
-        current_expr.load(content_element);
+        current_expr.load();
         history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
         o.populate_navigator(function(){ o.select(0) });
     };
-    o.load_expr = function(id){
+    function load_expr(id){
         $.getJSON('/expr_info/' + id, show_expression_not_in_list);
         return o;
     };
     o.random = function(){
-        set_context_box('');
+        change_context('');
         $.getJSON('/random?json=1', show_expression_not_in_list);
     };
 
@@ -260,7 +266,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 pos = pos + 1;
             } else {
                 // Not found in either case, this shouldn't happen normally
-                o.load_expr(id);
+                load_expr(id);
                 return o;
             }
         }
@@ -279,24 +285,30 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     var inner, current, next, prev, scrolling_elements, loupe, center, info;
-    o.render = function(render_opts){
-        render_opts = $.extend({hidden: false}, render_opts);
-
-        var width = $(window).width();
-
+    function position_containers(width){
         // Points on the screen immediately left and right of the center thumbnail
         center = {
             minus: Math.floor((width - opts.thumb_width) / 2),
             plus: Math.floor((width + opts.thumb_width) / 2)
         };
+        current.css('left', center.minus);
+        next.css('left', center.plus);
+        prev.css('right', center.plus);
+        loupe.data('offset', center.minus - opts.margin);
+    };
+    o.position_containers = position_containers;
+    o.render = function(render_opts){
+        render_opts = $.extend({hidden: false}, render_opts);
+
+        var width = navigator_element.width();
 
         //if (inner) o.pos_set(0);
         var old_inner = inner;
         inner = $('<div>').addClass('navigator_inner');
 
-        current = $('<div>').addClass('current').css('left', center.minus);
-        next = $('<div>').addClass('container next').css('left', center.plus);
-        prev = $('<div>').addClass('container prev').css('right', center.plus);
+        current = $('<div>').addClass('current');
+        next = $('<div>').addClass('container next');
+        prev = $('<div>').addClass('container prev');
 
         inner.append(next).append(prev).append(current);
 
@@ -305,8 +317,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (!loupe.length) loupe = $('<div>').addClass('loupe border selected')
         loupe.css('width', opts.thumb_width)
             .css('height', opts.thumb_width)
-            .css('margin-top', -opts.margin)
-            .data('offset', center.minus - opts.margin);
+            .css('margin-top', -opts.margin);
+
+        position_containers(width);
 
         inner.drag(function(e, dd){
             o.move(dd);
@@ -387,11 +400,18 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.layout = function( args ){
         $.extend(opts, args);
-        if( o.opened ) navigator_element.css({ bottom: opts.pad_bottom,
-            width: $(window).width() - opts.pad_right });
+        console.log('layout', args, o.opened);
+        var width = $(window).width() - opts.pad_right;
+        navigator_element.css({ width: width });
+        // don't set bottom unless navigator is open, or else it will bring it into the frame
+        if (o.opened) navigator_element.css({bottom: opts.pad_bottom});
+        position_containers(width);
+        o.pos_set();
     };
 
-    o.show = function(){
+    o.show = function(speed){
+        speed = speed || 100;
+        clearTimeout(navigator_element.initial_hide_timeout);
         o.opened = true;
         navigator_element.stop().clearQueue()
             .width($(window).width() - opts.pad_right).show()
@@ -450,13 +470,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             if ( next_list[i] && !next_list[i].loading_started){
                 setTimeout( function(){
                     //console.log('caching');
-                    next_list[i].load(content_element, o.cache_next);
+                    next_list[i].load(o.cache_next);
                 }, 500);
                 break;
             } else if (prev_list[i] && !prev_list[i].loading_started){
                 setTimeout( function(){
                     //console.log('caching');
-                    prev_list[i].load(content_element, o.cache_next);
+                    prev_list[i].load(o.cache_next);
                 }, 500);
                 break;
             }
@@ -486,6 +506,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     // Pick appropriate updater strategy based on context
     var current_context;
     function change_context(str){
+        if (!str) str = "#All";
+        navigator_element.find('input').val(str);
         current_context = str;
         switch(str) {
             case "#Network":
@@ -495,28 +517,33 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 }
                 o.set_updater(Hive.Navigator.NetworkUpdater());
                 break;
+            case "#Recent":
+               o.context('#All');
+               break;
             default:
                 o.set_updater(Hive.Navigator.Updater());
                 break;
         }
     };
 
-    function set_context_box(str){
-        navigator_element.find('input').val(str);
-        change_context(str);
+    o.context = function(str, push_state) {
+        if (typeof(str) == "undefined") return current_context;
+        return o.set_context(str, push_state);
     };
 
-    o.context = function(str) {
-        if (typeof(str) == "undefined") return current_context;
-        set_context_box(str)
-        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+    o.set_context = function(str, push_state) {
+        change_context(str);
+        if (push_state !== false) {
+            history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        }
+        // populate_navigator depends on current url so must come after pushState
         o.populate_navigator();
         return o;
     };
 
     // Factory method for Expr objects
     o.make_expr = function(data){
-        return Hive.Navigator.Expr(data, opts);
+        return Hive.Navigator.Expr(data, content_element, opts);
     };
 
     // Populate navigator from scratch
@@ -553,9 +580,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
         var frame = content_element.find('iframe').on('load', on_frame_load);
         var query = URI(window.location.href).query(true);
-        set_context_box(build_search(query));
+        change_context(build_search(query));
 
-        history_manager.replaceState(current_expr.data(), current_expr.title, o.current_url());
+        history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
         o.populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
@@ -563,27 +590,32 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         // completely for better mobile browser experience
         var bottom = opts.hidden ? -height * 1.1 : 0;
         navigator_element.css({'height': height, bottom: bottom});
-        if (opts.hidden) setTimeout(function(){ navigator_element.hide(); }, 1000);
+        if (opts.hidden){
+            navigator_element.initial_hide_timeout = setTimeout(function(){ navigator_element.hide(); }, 1000);
+        }
         return o;
     };
 
     return o;
 };
 
-Hive.Navigator.Expr = function(data, opts){
+Hive.Navigator.Expr = function(data, content_element, opts){
     var o = $.extend({}, data);
 
     o.url =  '/' + o.owner_name + '/' + o.name;
 
     function on_load(callback){
-        if (!$.isFunction(callback)) callback = noop;
-        o.loaded = true;
-        callback();
+        return function(){
+            if (!$.isFunction(callback)) callback = noop;
+            o.loaded = true;
+            callback();
+        };
     };
-    o.load = function(content_element, callback){
+
+    o.load = function(callback, src){
         if (o.frame) return;
         o.loading_started = true;
-        var src = content_domain + o.id;
+        var src = src || content_domain + o.id;
         o.frame = $('<iframe>')
             .attr('src', src)
             .css('left', -9999)
@@ -591,6 +623,7 @@ Hive.Navigator.Expr = function(data, opts){
             .on('load', on_load(callback));
         content_element.append(o.frame);
     };
+
     o.unload = function(){
         if (o.frame) {
             o.frame.remove();
@@ -604,17 +637,71 @@ Hive.Navigator.Expr = function(data, opts){
         return data;
     };
 
-    o.show = function(){
-        var f = o.frame;
-        if (f[0].contentWindow) {
-            f[0].contentWindow.postMessage('show', '*');
+    function animate(direction){
+        var width = $(window).width();
+        var final_pos = {'left': 0};
+        o.frame.css({'z-index': 2});
+        function animate_complete(){
+            $('iframe.expr').not(o.frame).css({left: -9999});
+            o.frame.css('z-index', 1);
+        };
+        if (!direction || direction == 0){
+            // in place
+            o.frame.css(final_pos);
+            animate_complete();
+        } else if (direction > 0) {
+            // from the right
+            o.frame.css({'left': width});
+            o.frame.animate(final_pos, animate_complete);
+        } else {
+            // from the left
+            o.frame.css({'left': -width});
+            o.frame.animate(final_pos, animate_complete);
         }
+    };
+    function reload_private(password){
+        function post_message(){
+            o.frame[0].contentWindow.postMessage({action: 'show', password: password}, '*');
+        }
+        if (o.frame[0].contentWindow) {
+            post_message();
+            o.frame.load(post_message);
+        }
+        $.post(server_url + 'expr_info/' + o.id, { password: password }, function(expr){
+            $.extend(o, expr);
+            Hive.Menus.update_expr(o);
+        }, 'json');
+    };
+    function password_dialog(){
+        if (o.password){
+            // already authorized, pass password along to newhiveexpression.com
+            reload_private(o.password);
+        } else {
+            var dia = showDialog('#dia_password');
+            var pass_field = $('#password_form .password');
+            pass_field.get(0).focus();
+            $('#password_form').submit(function(e){
+                dia.close();
+                reload_private(pass_field.val());
+                e.preventDefault();
+            });
+        };
+    };
+    o.show = function(direction){
+        if (o.auth_required){
+            password_dialog();
+        } else {
+            if (o.frame[0].contentWindow) {
+                o.frame[0].contentWindow.postMessage({action: 'show'}, '*');
+            }
+        }
+        animate(direction);
     };
 
     o.hide = function(){
         var f = o.frame;
         if (f[0].contentWindow) {
-            f[0].contentWindow.postMessage('hide', '*');
+            f[0].contentWindow.postMessage({action: 'hide'}, '*');
         }
     };
 
@@ -703,7 +790,8 @@ Hive.Navigator.create = function(navigator, viewer, opts){
             }
         };
         if (state.data.context != o.context()){
-            o.populate_navigator(select_expr);
+            o.set_context(state.data.context, false);
+            //o.populate_navigator(select_expr);
         } else {
             select_expr();
         }

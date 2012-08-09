@@ -136,8 +136,8 @@ class Expression(Application, PagingMixin):
 
         special_tags = {
                 'Featured': (self.expr_featured, 'id')
-                , 'Recent': (self.expr_all, 'updated')
                 , 'Network': (self.home_feed, None)
+                , 'All': (None, 'updated')
                 }
 
         # Use key_map to map between keys used in querystring and those of database
@@ -163,6 +163,7 @@ class Expression(Application, PagingMixin):
             items_and_args = pager(request, response, args)
             exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
         else:
+            if spec.get('tags_index') == "All": spec.pop('tags_index')
             exprs = self.db.Expr.page(spec, **args)
 
         return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))
@@ -178,17 +179,16 @@ class Expression(Application, PagingMixin):
     def render(self, request, response):
         expr_id = lget(request.path_parts, 0)
         expr = self.db.Expr.fetch(expr_id)
+        password = request.form.get('password')
         if not expr: return self.serve_404(request, response)
 
-        response.context.update(
-            html = expr_to_html(expr),
-            expr = expr,
-            auth_required = expr.auth_required() and not expr.cmp_password(request.form.get('password')),
-            use_ga = False
-        )
-        return self.serve_page(response, 'pages/expr.html')
+        if expr.auth_required() and not expr.cmp_password(password): expr = False
+        response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
 
-    def empty(self, request, response): return self.serve_page(response, 'pages/expr_empty.html')
+        if request.form.get('partial'):
+            return self.serve_page(response, 'pages/expr_content_only.html')
+        else:
+            return self.serve_page(response, 'pages/expr.html')
 
     def feed_prepare(self, item):
         item = dict(item,
@@ -361,9 +361,7 @@ class Expression(Application, PagingMixin):
 # www_expression -> String, this maybe should go in state.Expr
 def expr_to_html(exp):
     """Converts JSON object representing an expression to HTML"""
-
-    if not exp: return exp
-    apps = exp.get('apps', [])
+    if not exp: return ''
 
     def css_for_app(app):
         return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
@@ -400,7 +398,7 @@ def expr_to_html(exp):
         return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
             (type.replace('.', '_'), id, css_for_app(app) + more_css, data, html)
 
-    app_html = map(html_for_app, apps)
+    app_html = map( html_for_app, exp.get('apps', []) )
     if exp.has_key('dimensions'):
         app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
     return ''.join(app_html)

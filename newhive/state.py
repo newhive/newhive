@@ -1194,7 +1194,7 @@ class Comment(Feed):
 class Star(Feed):
     @property
     def action_name(self):
-        return 'likes' if self['entity_class'] == 'Expr' else 'listening'
+        return 'loves' if self['entity_class'] == 'Expr' else 'listening'
 
     def create(self):
         if self['entity_class'] == 'User' and self.entity['owner'] == self['initiator']:
