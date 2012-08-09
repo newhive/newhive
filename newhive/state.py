@@ -1134,7 +1134,7 @@ class Feed(Entity):
         super(Feed, self).create()
 
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
-        if self.entity['owner'] != self['initiator']: self.entity.owner.notify(self)
+        if self.entity.owner.id != self['initiator']: self.entity.owner.notify(self)
 
         return self
 
@@ -1197,8 +1197,8 @@ class Star(Feed):
         return 'loves' if self['entity_class'] == 'Expr' else 'listening'
 
     def create(self):
-        if self['entity_class'] == 'User' and self.entity['owner'] == self['initiator']:
-            raise "You mustn't listen to yourself. It is confusing."
+        if self['entity_class'] == 'User' and self.entity.owner.id == self['initiator']:
+            raise "Excuse me, you mustn't listen to yourself. It is confusing."
         if self['initiator'] in self.entity.starrer_ids: return True
         return super(Star, self).create()
 
