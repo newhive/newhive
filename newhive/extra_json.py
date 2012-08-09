@@ -1,4 +1,5 @@
 import datetime
+import jinja2
 from simplejson import JSONEncoder, dumps
 
 class JSONEncoderForHTML(JSONEncoder):
@@ -31,6 +32,8 @@ class JSONEncoderExtra(JSONEncoderForHTML):
     def default(self, obj):
         if isinstance(obj, (datetime.date, datetime.datetime)):
             return obj.isoformat()
+        elif isinstance(obj, jinja2.runtime.Undefined):
+            return None
         else:
             return JSONEncoderForHTML.default(self, obj)
 
