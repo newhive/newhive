@@ -161,11 +161,7 @@ class User(Application):
         exprs = [ { 'id': e.id, 'title': e.get('title'), 'thumb': e.get_thumb(70), 'url': e.url }
             for e in user.expr_page(limit=5) ]
 
-        return self.serve_json(response, dict(
-             feed_html = feed_html
-            ,exprs = exprs
-            ,listening = user.id in request.requester.starred_user_ids
-        ))
+        return self.serve_json( response, dict(feed_html = feed_html, exprs = exprs) )
 
     def facebook_canvas(self, request, response, args={}):
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited' + querystring({'request_ids': request.args.get('request_ids','')}) + '";</script></html>')

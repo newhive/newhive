@@ -3,7 +3,7 @@
 {% block head %}
   <script src='{{ asset_bundle('expression.js')[0] }}'></script>
   <script>
-Hive = { user: {{ user_client | json }}, parent_url: {{ url | json }},
+Hive = { user: {{ client_user | json }}, parent_url: {{ url | json }},
     expr: false };
   </script>
 {% endblock %}

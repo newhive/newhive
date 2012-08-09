@@ -10,10 +10,7 @@
 {% block head %}
   {{super()}}
   <script type='text/javascript'>
-      // TODO: temporary, should probably hide this better
-      var expr = {{ expr | json}};
-      var user = {{ user_client | json }};
-      var content_domain = {{ content_domain | json }};
+    var expr = {{ expr | json}};
   </script>
 {% endblock %}
 {% block body_classes %}{{super()}} frame{% endblock %}

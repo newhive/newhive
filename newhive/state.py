@@ -327,7 +327,6 @@ class User(HasSocial):
         self.logged_in = False
         self.fb_client = None
         self.owner = self
-        self['owner'] = self.id
 
     def expr_create(self, d):
         doc = dict(owner = self.id, name = '', domain = self['sites'][0])
@@ -598,6 +597,17 @@ class User(HasSocial):
 
     @property
     def expressions(self): return self.get_exprs()
+
+    def client_view(self, viewer=None):
+        user = dfilter( self, ['fullname', 'profile_thumb', 'name', 'tags'] )
+        user.update(
+            id = self.id,
+            url = self.url,
+            thumb = self.get_thumb(70),
+            has_thumb = self.has_thumb
+        )
+        if viewer: user.update( listening = self.id in viewer.starred_user_ids )
+        return user
 
     def delete(self):
         # Facebook Disconnect

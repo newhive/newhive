@@ -25,7 +25,6 @@ class Expression(Application, PagingMixin):
 
         response.context.update({
              'title'     : 'Editing: ' + expr.get('title')
-            #,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
             ,'expr'      : expr
             #,'show_help' : show_help
             ,'editing'   : True
@@ -42,7 +41,6 @@ class Expression(Application, PagingMixin):
 
     #    response.context.update({
     #         'title'     : 'Editing: ' + expr.get('title')
-    #        ,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
     #        ,'expr'      : expr
     #        ,'show_help' : show_help
     #        ,'editing'   : True
@@ -67,10 +65,8 @@ class Expression(Application, PagingMixin):
     def expr_prepare(self, expr, viewer=None, password=None):
         owner = expr.owner
         owner_info = dfilter(owner, ['name', 'fullname', 'tags'])
-        owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70), 'has_thumb': owner.has_thumb })
+        owner_info.update({ 'id': owner.id,  })
 
-        #expr_info = dfilter(expr, ['thumb', 'title', 'tags', 'tags_index', 'owner',
-        #    'owner_name', 'updated', 'name'])
         counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
             k, v in expr.get('analytics', {}).iteritems() ])
         counts['Views'] = large_number(expr.views)
@@ -91,7 +87,7 @@ class Expression(Application, PagingMixin):
         dict.update(expr, {
             'id': expr.id,
             'thumb': expr.get_thumb(),
-            'owner': owner_info,
+            'owner': owner.client_view(viewer=viewer),
             'counts': counts,
             'url': expr.url,
             'auth_required': auth_required,
@@ -117,15 +113,14 @@ class Expression(Application, PagingMixin):
         if is_owner: owner.unflag('expr_new')
 
         expr_url = abs_url(domain = config.content_domain) + resource.id
-        self.expr_prepare(resource, response.user)
+        self.expr_prepare(resource, viewer=response.user)
         response.context.update(
              expr_frame = True
             ,title = resource.get('title', False)
             ,expr = resource
             ,expr_url = expr_url
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
-            ,content_domain = abs_url(domain = config.content_domain)
-            )
+        )
 
         template = resource.get('template', request.args.get('template', 'frame'))
 

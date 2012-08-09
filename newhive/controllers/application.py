@@ -88,16 +88,15 @@ class Application(object):
     def render_template(self, response, template):
         context = response.context
         context.update(
-             home_url = response.user.get_url()
-            ,user = response.user
-            ,user_client = { 'name': response.user.get('name'), 'id': response.user.id,
-                'thumb': response.user.get_thumb(70) }
+             user = response.user
+            ,client_user = response.user.client_view(viewer=response.user)
             ,admin = response.user.get('name') in config.admins
             ,beta_tester = config.debug_mode or response.user.get('name') in config.beta_testers
             ,create = abs_url(secure = True) + 'edit'
             ,server_url = abs_url()
             ,secure_server = abs_url(secure = True)
             ,server_name = config.server_name
+            ,content_domain = abs_url(domain = config.content_domain)
             ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k])
                 for k in config.site_pages])
             ,debug = config.debug_mode

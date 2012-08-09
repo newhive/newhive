@@ -122,11 +122,13 @@ Hive.Menus = (function(){
         if($('#owner_btn').length) hover_menu('#owner_btn', '#owner_menu', $.extend({ offset_y: 8,
             layout_x: 'right', group: group }, swap_action_nav));
         $('#owner_menu .menu_item.listen').click(function(){
-            o.feed_toggle('star', Hive.expr ? Hive.expr.owner.id : owner_id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
+            o.feed_toggle('star', o.owner.id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
         });
 
         if($('#share_btn').length) hover_menu('#share_btn', '#share_menu', $.extend({ offset_y: 8,
             group: group }, swap_action_nav));
+
+        o.update_owner( owner );
     };
 
     // initialize menus for frame page, then close them after delay
@@ -273,9 +275,7 @@ Hive.Menus = (function(){
     };
 
     o.btn_state = function(btn, state){
-        btn = $(btn);
-        btn.toggleClass('on', state);
-        btn.toggleClass('off', !state);
+        btn = $(btn).toggleClass('on', state).toggleClass('off', !state);
         if(btn.attr('data-title-on'))
             btn.attr('title', btn.attr('data-title-' + (state ? 'on' : 'off') ));
     }
@@ -312,32 +312,12 @@ Hive.Menus = (function(){
         $('.expr_id').val(expr.id); // for delete dialog
         $('.btn_box.edit,.btn_box.delete').toggleClass('none', user.id != expr.owner.id);
 
-        var is_owner = expr.owner.id == user.id;
-        $('#owner_btn').toggleClass('none', is_owner);
-        if(!is_owner){
-            var owner_name = expr.owner_name[0].toUpperCase() + expr.owner_name.slice(1);
-            $('.owner_name').html(owner_name);
-            $('#owner_btn .user_thumb').attr('src', expr.owner.thumb)
-                .toggleClass('none', !expr.owner.has_thumb);
-            $('.owner_url').attr('href', expr.owner.url);
-
-            // load owner's info: feed items in owner_menu, expr links and thumbs, listening status
-            $.getJSON(server_url + 'user/' + expr.owner.id, function(data, status, jqXHR){
-                var thumbs = $('#owner_menu .thumbs');
-                thumbs.html('');
-                $.map(data.exprs, function(e){
-                    $('<a>').attr({ 'href': e.url + '?user=' + expr.owner.name, 'title': e.title })
-                        // TODO: enable this when Navigator supports changing both expression and context
-                        //.click(function(){
-                        //    Hive.navigator.context('@' + expr.owner.name).select_by_id(e.id);
-                        //    return false;
-                        //})
-                        .append($('<img>').attr('src', e.thumb).addClass('thumb')).appendTo(thumbs);
-                });
-                $('#owner_menu .listen').removeClass('on off').addClass(data.listening ? 'on' : 'off');
-                $('#owner_menu .items').html(data.feed_html);
-            });
-        }
+        var owner_name = expr.owner_name[0].toUpperCase() + expr.owner_name.slice(1);
+        $('.owner_name').html(owner_name);
+        $('#owner_btn .user_thumb').attr('src', expr.owner.thumb)
+            .toggleClass('none', !expr.owner.has_thumb);
+        $('.owner_url').attr('href', expr.owner.url);
+        o.update_owner( expr.owner );
 
         var is_empty = function(v){ return !v || (v == '0') };
         $('.view .count').html(expr.counts.Views);
@@ -398,6 +378,35 @@ Hive.Menus = (function(){
         var feed_url = server_url + 'expr_feed/' + expr.id;
         if(expr.password) $.post(feed_url, { password: expr.password }, load_feed, 'json');
         else $.getJSON(feed_url, load_feed);
+    };
+
+    // load owner's info: feed items in owner_menu, expr links and thumbs, listening status
+    o.owner = false;
+    o.update_owner = function( owner ){
+        if( o.owner && o.owner.id == owner.id ) return;
+        o.owner = owner;
+
+        var is_owner = owner.id == user.id;
+        $('#owner_btn').toggleClass('none', is_owner);
+        if( is_owner ) return;
+
+        $('#owner_menu .listen').removeClass('on off').addClass( owner.listening ? 'on' : 'off' );
+
+        $.getJSON(server_url + 'user/' + owner.id, function(data, status, jqXHR){
+            var thumbs = $('#owner_menu .thumbs');
+            thumbs.html('');
+            $.map(data.exprs, function(e){
+                $('<a>').attr({ 'href': e.url + '?user=' + owner.name, 'title': e.title })
+                    // TODO: enable this when Navigator supports changing both expression and context
+                    //.click(function(){
+                    //    Hive.navigator.context('@' + owner.name).select_by_id(e.id);
+                    //    return false;
+                    //})
+                    .append($('<img>').attr('src', e.thumb).addClass('thumb')).appendTo(thumbs);
+            });
+
+            $('#owner_menu .items').html(data.feed_html);
+        });
     };
 
     o.update_user = function(user_data){

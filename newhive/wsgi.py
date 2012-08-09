@@ -229,11 +229,11 @@ def handle(request): # HANDLER
     response.context.update(
          domain = request.domain
         ,owner = owner
-        ,owner_url = owner.url
+        ,client_owner = owner.client_view(viewer=response.user)
         ,path = request.path
         ,user_is_owner = request.is_owner
         ,listeners = owner.starrer_page()
-        )
+    )
 
     if parts[0] == 'profile': return controllers['community'].index(request, response)
     if parts[0] == 'expressions': return app.redirect(response, owner.url)
