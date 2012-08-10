@@ -202,16 +202,16 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             current_expr = towards.shift();
         }
 
-        if (!current_expr.loading_started) current_expr.load();
+        if (!current_expr.loading_started){
+            current_expr.load(function(){ current_expr.show(); });
+        }
         var frame = current_expr.frame;
-            //.css({left: left_offset, 'z-index': 2})
-            //.load(current_expr.show);
 
         function animate_complete(){
             $('iframe.expr').not(frame).css({left: -9999});
             frame.css('z-index', 1);
         };
-        //frame.animate({left: 0}, {complete: animate_complete});
+
         history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
 
         previous_expr.hide();
@@ -476,13 +476,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         for (i=0; i<1; i++) {
             if ( next_list[i] && !next_list[i].loading_started){
                 setTimeout( function(){
-                    //console.log('caching');
                     next_list[i].load(o.cache_next);
                 }, 500);
                 break;
             } else if (prev_list[i] && !prev_list[i].loading_started){
                 setTimeout( function(){
-                    //console.log('caching');
                     prev_list[i].load(o.cache_next);
                 }, 500);
                 break;
@@ -702,7 +700,7 @@ Hive.Navigator.Expr = function(data, content_element, opts){
                 o.frame[0].contentWindow.postMessage({action: 'show'}, '*');
             }
         }
-        animate(direction);
+        if (typeof(direction) != "undefined") animate(direction);
     };
 
     o.hide = function(){
