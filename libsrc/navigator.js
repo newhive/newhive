@@ -70,7 +70,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
     };
     o.pos_set = function(x, offset, animate, callback){
-        if (typeof(x) === "undefined") x = 0; offset = 0;
+        if (typeof(x) === "undefined") {
+            x = 0; offset = 0;
+        }
         if (animate){
             var new_inner_pos = clamp_pos(x + offset);
             var deficit = x + offset - new_inner_pos;
@@ -291,7 +293,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             minus: Math.floor((width - opts.thumb_width) / 2),
             plus: Math.floor((width + opts.thumb_width) / 2)
         };
-        current.css('left', center.minus);
+        if (current) current.css('left', center.minus);
         next.css('left', center.plus);
         prev.css('right', center.plus);
         loupe.data('offset', center.minus - opts.margin);
@@ -400,13 +402,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.layout = function( args ){
         $.extend(opts, args);
-        console.log('layout', args, o.opened);
         var width = $(window).width() - opts.pad_right;
         navigator_element.css({ width: width });
         // don't set bottom unless navigator is open, or else it will bring it into the frame
         if (o.opened) navigator_element.css({bottom: opts.pad_bottom});
         position_containers(width);
-        o.pos_set();
     };
 
     o.show = function(speed){
