@@ -104,7 +104,7 @@ class User(Application):
 
         request.form = dict(username = args['name'], secret = args['password'])
         self.login(request, response)
-        return self.redirect(response, abs_url(subdomain=config.site_user) + config.site_pages['welcome'])
+        return self.redirect(response, abs_url() + config.site_user + '/' + config.site_pages['welcome'] + "?user=" + config.site_user)
 
     def _check_referral(self, request):
         # Get either key of a Referral object in our db, or a facebook id
