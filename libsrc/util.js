@@ -1,3 +1,4 @@
+if (typeof(Hive) == "undefined") Hive = {};
 /*** For debugging.
  * Returns a function that calls that.callback no less than min_delay
  * milliseconds apart. Useful for wrapping mouse event handlers ***/
@@ -770,6 +771,19 @@ function require_login(fn) {
     if(fn) return check;
     else return check();
 }
+
+Hive.login_submit = function(form){
+    var form = $(form);
+    var identifier = form.parent().attr('id') || form.parents('.dialog').attr('id');
+    form.find('[name=url]').val(window.location.href);
+    _gaq.push(['_trackEvent', 'login', identifier]);
+};
+
+Hive.logout_submit = function(form){
+    var form = $(form);
+    form.find('[name=url]').val(window.location.href);
+    _gaq.push(['_trackEvent', 'logout']);
+};
 
 function relogin(success){
     var dia = $('#dia_relogin');
