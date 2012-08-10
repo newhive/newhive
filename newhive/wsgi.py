@@ -190,8 +190,7 @@ def handle(request): # HANDLER
         else:
             return app.serve_forbidden(request)
 
-        print reqaction
-        print "************************would return status 204 here*************************"
+        logger.warn('falling through post handler on action "%s"', reqaction)
         #return Response(status=204) # 204 status = no content
 
 
