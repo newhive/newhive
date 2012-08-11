@@ -755,14 +755,18 @@ class Expr(HasSocial):
         text_index = list( set( text_index ) )
         if text_index: d['text_index'] = text_index
 
-    def _collect_files(self, d):
-        ids = ( self.get('file_id', []) +
-            ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] ) +
-            self._match_id(d.get('background', {}).get('url')) )
-        for a in d.get('apps', []): ids.extend( self._match_id( a.get('content') ) )
+    def _collect_files(self, d, old=True, thumb=True, background=True, apps=True):
+        ids = []
+        if old: ids += self.get('file_id', [])
+        if thumb: ids += ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] )
+        if background: self._match_id(d.get('background', {}).get('url'))
+        if apps:
+            for a in d.get('apps', []):
+                ids.extend( self._match_id( a.get('content') ) )
         ids = list( set( ids ) )
         ids.sort()
         d['file_id'] = ids
+        return ids
 
     def _match_id(self, s):
         if not isinstance(s, (str, unicode)): return []
