@@ -64,7 +64,7 @@ def normalize(ws):
     return filter( lambda s: re.match('\w', s, flags=re.UNICODE),
         re.split('\W', ws.lower(), flags=re.UNICODE) )
 
-def abs_url(secure = False, domain = None, subdomain = None):
+def abs_url(path='', secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
     ssl = secure or config.always_ssl
@@ -76,9 +76,10 @@ def abs_url(secure = False, domain = None, subdomain = None):
     port = config.ssl_port if ssl else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
     return (
-        proto + '://' + 
+        proto + '://' +
         (subdomain + '.' if subdomain else '') +
-        domain + port + '/'
+        domain + port + '/' +
+        re.sub('^/', '', path)
     )
 
 def uniq(seq, idfun=None):

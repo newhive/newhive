@@ -69,8 +69,14 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             return x;
         }
     };
+    function loupe_pos(x){
+        if (typeof(x) === "undefined") x = pos;
+        loupe.css({left: x + loupe.data('offset')});
+    };
     o.pos_set = function(x, offset, animate, callback){
-        if (typeof(x) === "undefined") x = 0; offset = 0;
+        if (typeof(x) === "undefined") {
+            x = 0; offset = 0;
+        }
         if (animate){
             var new_inner_pos = clamp_pos(x + offset);
             var deficit = x + offset - new_inner_pos;
@@ -79,7 +85,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         } else {
             var clamped_x = clamp_pos(x);
             inner.css({'left': clamped_x});
-            loupe.css({'left': clamped_x + loupe.data('offset')});
+            loupe_pos(clamped_x);
         }
         pos = clamped_x;
     };
@@ -196,16 +202,16 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             current_expr = towards.shift();
         }
 
-        if (!current_expr.loading_started) current_expr.load();
+        if (!current_expr.loading_started){
+            current_expr.load(function(){ current_expr.show(); });
+        }
         var frame = current_expr.frame;
-            //.css({left: left_offset, 'z-index': 2})
-            //.load(current_expr.show);
 
         function animate_complete(){
             $('iframe.expr').not(frame).css({left: -9999});
             frame.css('z-index', 1);
         };
-        //frame.animate({left: 0}, {complete: animate_complete});
+
         history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
 
         previous_expr.hide();
@@ -291,10 +297,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             minus: Math.floor((width - opts.thumb_width) / 2),
             plus: Math.floor((width + opts.thumb_width) / 2)
         };
-        current.css('left', center.minus);
-        next.css('left', center.plus);
-        prev.css('right', center.plus);
-        loupe.data('offset', center.minus - opts.margin);
+        if (current) {
+            current.css('left', center.minus);
+            next.css('left', center.plus);
+            prev.css('right', center.plus);
+            loupe.data('offset', center.minus - opts.margin);
+            loupe_pos();
+        }
     };
     o.position_containers = position_containers;
     o.render = function(render_opts){
@@ -400,13 +409,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.layout = function( args ){
         $.extend(opts, args);
-        console.log('layout', args, o.opened);
         var width = $(window).width() - opts.pad_right;
         navigator_element.css({ width: width });
         // don't set bottom unless navigator is open, or else it will bring it into the frame
         if (o.opened) navigator_element.css({bottom: opts.pad_bottom});
         position_containers(width);
-        o.pos_set();
     };
 
     o.show = function(speed){
@@ -469,13 +476,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         for (i=0; i<1; i++) {
             if ( next_list[i] && !next_list[i].loading_started){
                 setTimeout( function(){
-                    //console.log('caching');
                     next_list[i].load(o.cache_next);
                 }, 500);
                 break;
             } else if (prev_list[i] && !prev_list[i].loading_started){
                 setTimeout( function(){
-                    //console.log('caching');
                     prev_list[i].load(o.cache_next);
                 }, 500);
                 break;
@@ -695,7 +700,7 @@ Hive.Navigator.Expr = function(data, content_element, opts){
                 o.frame[0].contentWindow.postMessage({action: 'show'}, '*');
             }
         }
-        animate(direction);
+        if (typeof(direction) != "undefined") animate(direction);
     };
 
     o.hide = function(){

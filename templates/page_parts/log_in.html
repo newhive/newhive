@@ -1,4 +1,4 @@
-<form action='{{ secure_server }}' method='POST'>
+<form action='{{ secure_server }}' method='POST' onsubmit="Hive.login_submit(this);">
   <div class="field username">
       <input id='username' type='text' name='username' value='{{ user['name'] }}' placeholder='Username or email'>
       <div class='spacer'></div>

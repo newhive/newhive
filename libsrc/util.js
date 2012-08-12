@@ -1,3 +1,4 @@
+if (typeof(Hive) == "undefined") Hive = {};
 /*** For debugging.
  * Returns a function that calls that.callback no less than min_delay
  * milliseconds apart. Useful for wrapping mouse event handlers ***/
@@ -293,9 +294,8 @@ var urlParams = {};
 $(function () {
   $(".hoverable").each(function() { hover_add(this) });
 
-  // Cause external links to open in a new window
-  // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
-  $('a').each(link_target);
+  // Cause external links and forms to open in a new window
+  update_targets();
 
   if (! Modernizr.touch) {
       $(window).resize(function(){
@@ -322,10 +322,19 @@ $(function () {
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
+function update_targets(){
+    $('a, form').each(link_target);
+}
 function link_target(i, a) {
-    var re = new RegExp(server_name), a = $(a), href = $(a).attr('href');
-    if(href && href.indexOf('http') == 0 && !re.test(href))
-        $(a).attr('target', '_blank');
+    // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
+    var re = new RegExp(server_name + '|newhiveexpression.com'), a = $(a),
+        href = a.attr('href') || a.attr('action');
+    if(href && href.indexOf('http') === 0 && !re.test(href)) {
+        a.attr('target', '_blank');
+    } else {
+        a.attr('target', '_top');
+    }
+    if(a.is('form')) console.log(a, href);
 }
 
 
@@ -770,6 +779,19 @@ function require_login(fn) {
     if(fn) return check;
     else return check();
 }
+
+Hive.login_submit = function(form){
+    var form = $(form);
+    var identifier = form.parent().attr('id') || form.parents('.dialog').attr('id');
+    form.find('[name=url]').val(window.location.href);
+    _gaq.push(['_trackEvent', 'login', identifier]);
+};
+
+Hive.logout_submit = function(form){
+    var form = $(form);
+    form.find('[name=url]').val(window.location.href);
+    _gaq.push(['_trackEvent', 'logout']);
+};
 
 function relogin(success){
     var dia = $('#dia_relogin');
