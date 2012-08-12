@@ -322,13 +322,18 @@ $(function () {
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
-function update_targets(){ $('a, form').each(link_target); }
+function update_targets(){
+    $('a, form').each(link_target);
+}
 function link_target(i, a) {
     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
     var re = new RegExp(server_name + '|newhiveexpression.com'), a = $(a),
         href = a.attr('href') || a.attr('action');
-    if(href && href.indexOf('http') == 0 && !re.test(href))
+    if(href && href.indexOf('http') === 0 && !re.test(href)) {
         a.attr('target', '_blank');
+    } else {
+        a.attr('target', '_top');
+    }
     if(a.is('form')) console.log(a, href);
 }
 
