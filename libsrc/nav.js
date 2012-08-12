@@ -104,29 +104,52 @@ Hive.Menus = (function(){
 
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
-        var speed = 300,
+        var config = Hive.config.frame;
+        function animate_each(state, speed, callback){
+            var fun = speed ? 'animate' : 'css';
+            $.each(state, function(selector, style){
+                $(selector)[fun](style, speed, callback);
+            });
+        };
+        var open_state = {
+                '#user_nav': {left: 0, top: 0}
+                , '#owner_nav': { right: opts.pad_right, top: 0 }
+                , '#action_nav': { right: opts.pad_right }
+            };
+        var close_state = {
+                '#user_nav': {left: -50, top: -60}
+                , '#owner_nav': { right: -50, top: -60 }
+                , '#action_nav': { right: -50 }
+            };
+        var speed = 300, auto_close_timeout,
             drawers = $('#user_nav,#owner_nav,#action_nav'),
             handles = $('.menu_handle').add('#navigator'),
             close_nav = function(){
+                clearTimeout(auto_close_timeout);
                 drawers.stop().clearQueue();
-                $('#user_nav').animate({ left: -50, top: -50 }, { complete:
-                    function(){ drawers.hide() } }, speed);
-                $('#owner_nav').animate({ right: -50, top: -50 }, speed);
-                $('#action_nav').animate({ right: -50 }, speed);
+                animate_each(close_state, speed, drawers.hide);
                 Hive.navigator.hide(speed);
                 Hive.navigator.current_expr().frame.get(0).focus();
             },
             open_nav = function(){
+                clearTimeout(auto_close_timeout);
                 drawers.stop().clearQueue().show();
-                $('#user_nav').animate({ left: 0, top: 0 }, speed);
-                $('#owner_nav').animate({ right: opts.pad_right, top: 0 }, speed);
-                $('#action_nav').animate({ right: opts.pad_right }, speed);
-                Hive.navigator.show();
+                animate_each(open_state, speed);
+                Hive.navigator.show(speed);
             };
-            nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false, open_delay: 400,
-                open_menu: open_nav, close_menu: close_nav, opened: false, close_delay: opts.slow_close } );
+
+        var nav_menu = o.nav_menu = hover_menu(handles, drawers,
+                { layout: false, open_delay: 400, open_menu: open_nav, close_menu: close_nav,
+                opened: config.open_initially, close_delay: opts.slow_close
+                });
 
         o.init(nav_menu);
+        var initial_state = config.open_initially ? open_state : close_state;
+        animate_each(initial_state, 0);
+        drawers.show();
+        if (config.open_initially && config.auto_close_delay){
+            auto_close_timeout = setTimeout(nav_menu.close, config.auto_close_delay);
+        };
 
         o.action_nav_top = 70;
         var menu_top = o.action_nav_top + 4;
@@ -188,7 +211,11 @@ Hive.Menus = (function(){
         $('#action_nav .delete').click(function(){ del_dialog = showDialog('#dia_delete'); });
         $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
-        Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames', {hidden: true});
+        Hive.navigator = Hive.Navigator.create(
+            '#navigator',
+            '#expression_frames',
+            {hidden: !config.open_initially}
+        );
         Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {
         //    layout: false,
@@ -219,9 +246,11 @@ Hive.Menus = (function(){
         // function for nav and navigator respectively).  However, for a good
         // mobile experience, they need to be hidden, so we hide after a delay,
         // (again, this is handled by init function in case of navigator)
-        setTimeout(function(){
-            nav_menu.drawer().hide();
-        }, 500 );
+        if (!config.open_initially) {
+            setTimeout(function(){
+                nav_menu.drawer().hide();
+            }, 500 );
+        }
         //o.navigator_menu.delayed_close(5000);
         //nav_menu.delayed_close(5000);
     };

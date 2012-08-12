@@ -194,7 +194,7 @@ class HiveAssets(Assets):
             )
 
         self.assets_env.register('app.js',
-            'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
+            'config.js', 'jquery_misc.js', 'colors.js', 'rotate.js', 'hover.js', 'drag.js', 'dragndrop.js',
             'compiled.asset_paths.js', 'jplayer/jquery.jplayer.js', 'Modernizr.js', 'util.js',
             'nav.js', 'navigator.js', 'URI.js', 'history/history.js', 'history/history.html4.js',
             'history/history.adapter.jquery.js', 'jquery.transition.js',
