@@ -294,9 +294,8 @@ var urlParams = {};
 $(function () {
   $(".hoverable").each(function() { hover_add(this) });
 
-  // Cause external links to open in a new window
-  // see http://css-tricks.com/snippets/jquery/open-external-links-in-new-window/
-  $('a').each(link_target);
+  // Cause external links and forms to open in a new window
+  update_targets();
 
   if (! Modernizr.touch) {
       $(window).resize(function(){
@@ -323,10 +322,14 @@ $(function () {
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
 
+function update_targets(){ $('a, form').each(link_target); }
 function link_target(i, a) {
-    var re = new RegExp(server_name), a = $(a), href = $(a).attr('href');
+    // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
+    var re = new RegExp(server_name + '|newhiveexpression.com'), a = $(a),
+        href = a.attr('href') || a.attr('action');
     if(href && href.indexOf('http') == 0 && !re.test(href))
-        $(a).attr('target', '_blank');
+        a.attr('target', '_blank');
+    if(a.is('form')) console.log(a, href);
 }
 
 

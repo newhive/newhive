@@ -162,6 +162,7 @@ Hive.Page = (function(){
             }
         });
 
+        update_targets();
         o.layout_parent();
     };
 

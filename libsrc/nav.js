@@ -281,11 +281,12 @@ Hive.Menus = (function(){
         //if(!nav_menu.opened) expr.frame.get(0).focus();
         var set_class = function(o, b, c){ return o[b ? 'addClass' : 'removeClass'](c) };
 
+        var is_owner = user ? (user.id == expr.owner.id) : false;
+
         $('.edit_url').attr('href', secure_server + 'edit/' + expr.id);
         $('.expr_id').val(expr.id); // for delete dialog
-        $('.btn_box.edit,.btn_box.delete').toggleClass('none', user.id != expr.owner.id);
+        $('.btn_box.edit,.btn_box.delete').toggleClass( 'none', ! is_owner );
 
-        var is_owner = expr.owner.id == user.id;
         $('#owner_btn').toggleClass('none', is_owner);
         if(!is_owner){
             var owner_name = expr.owner_name[0].toUpperCase() + expr.owner_name.slice(1);
