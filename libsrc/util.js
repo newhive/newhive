@@ -870,6 +870,9 @@ Hive.AB_Test = {
         //     descriptive string describing the test
         //   auto_weight:
         //     if set to true each test case has an equal probability of being chosen
+        //   logged_in_case:
+        //     value matching the caseID mapping to the case that should be
+        //     used for logged in users
         //
         // Case definition
         //   Each case is defined as an object literal with the following attributes
@@ -930,8 +933,12 @@ Hive.AB_Test = {
             $.extend(o.config_doc, o.chosen_case.config_overrides);
         };
 
-        // Use case defined in cookie if set, else pick a random case
-        var case_id = readCookie("AB_" + o.id) || pick_random_case();
+        // Use case for logged in user if set, else case defined in cookie if
+        // set, else pick a random case. Can't just use || with assignment
+        // because case_id could be 0
+        var case_id = logged_in && o.logged_in_case;
+        if (!case_id && case_id !== 0) case_id = readCookie("AB_" + o.id);
+        if (!case_id && case_id !== 0) case_id = pick_random_case();
         assign_group(case_id);
 
         update_config();
