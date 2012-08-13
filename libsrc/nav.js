@@ -174,10 +174,14 @@ Hive.Menus = (function(){
             }
         );
 
-        $('#star_btn').click(function(){ o.feed_toggle('star', Hive.expr.id, '#star_btn',
-            '#star_menu .items') });
-        $('#broadcast_btn').click(function(){ o.feed_toggle('broadcast', Hive.expr.id,
-            '#broadcast_btn', '#broadcast_menu .items') });
+        $('#star_btn').click(function(){
+            o.feed_toggle('star', Hive.expr.id, '#star_btn', '#star_menu .items');
+        });
+        $('#broadcast_btn').click(function(){
+            if (Hive.expr.owner.id != user.id){
+                o.feed_toggle('broadcast', Hive.expr.id, '#broadcast_btn', '#broadcast_menu .items');
+            }
+        });
 
         $('#comment_form').submit(o.post_comment);
 
