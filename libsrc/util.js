@@ -334,7 +334,6 @@ function link_target(i, a) {
     } else {
         a.attr('target', '_top');
     }
-    if(a.is('form')) console.log(a, href);
 }
 
 
