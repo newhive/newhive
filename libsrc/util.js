@@ -656,7 +656,6 @@ function createCookie(name,value,expiry) {
     }
     else var expires = "";
     var cookie = name + "=" + escape(value) + expires + "; path=/; domain=" + server_url.split('/')[2] + ";";
-    console.log(cookie);
     document.cookie = cookie;
 }
 
@@ -844,93 +843,99 @@ function time_since_last(label, extra_log) {
 //    }
 //});
 
-Hive.AB_test = function(opts){
-    // Required options (oxymoron I know, but named arguments are easier to work with than positional)
-    //   id:
-    //     short name used for cookie name and google analytics variable.
-    //     conventionally 3 characters all caps, e.g. `NAV`
-    //   config_doc:
-    //     the configuration document or sub-doc that gets extended by each test case.
-    //     e.g. `Hive.config.frame`
-    //   start_date:
-    //     javascript Date object
-    //   duration:
-    //     number of days to run test
-    //   cases:
-    //     mapping of test cases of the form {caseID: definition}. caseID can be any
-    //     short alphanumeric, but is conventionally an integer (this goes in
-    //     the cookie and GA variable). See "Case definition" below
-    //
-    // Optional options (haha)
-    //   name:
-    //     descriptive string describing the test
-    //   auto_weight:
-    //     if set to true each test case has an equal probability of being chosen
-    //
-    // Case definition
-    //   Each case is defined as an object literal with the following attributes
-    //     config_overrides:
-    //       this is a mapping of config options that override values set in the `config_doc`,
-    //       e.g. {open_initially: false, auto_close_delay: 5000}
-    //     weight:
-    //       weighted probability of this case being chose. optional if `auto_weight` is true
-    //       these probabilities get normalized, so can really be any number
-    //     name:
-    //       optional descriptive string describing this case
+Hive.AB_Test = {
+    tests: [],
+    ga_string: function(){
+        return $.map(Hive.AB_Test.tests, function(el){ return el.id + el.chosen_case_id }).join(',');
+    },
+    add_test: function(opts){
+        // Required options (oxymoron I know, but named arguments are easier to work with than positional)
+        //   id:
+        //     short name used for cookie name and google analytics variable.
+        //     conventionally 3 characters all caps, e.g. `NAV`
+        //   config_doc:
+        //     the configuration document or sub-doc that gets extended by each test case.
+        //     e.g. `Hive.config.frame`
+        //   start_date:
+        //     javascript Date object
+        //   duration:
+        //     number of days to run test
+        //   cases:
+        //     mapping of test cases of the form {caseID: definition}. caseID can be any
+        //     short alphanumeric, but is conventionally an integer (this goes in
+        //     the cookie and GA variable). See "Case definition" below
+        //
+        // Optional options (haha)
+        //   name:
+        //     descriptive string describing the test
+        //   auto_weight:
+        //     if set to true each test case has an equal probability of being chosen
+        //
+        // Case definition
+        //   Each case is defined as an object literal with the following attributes
+        //     config_overrides:
+        //       this is a mapping of config options that override values set in the `config_doc`,
+        //       e.g. {open_initially: false, auto_close_delay: 5000}
+        //     weight:
+        //       weighted probability of this case being chose. optional if `auto_weight` is true
+        //       these probabilities get normalized, so can really be any number
+        //     name:
+        //       optional descriptive string describing this case
 
-    var o = $.extend({}, opts);
+        var o = $.extend({}, opts);
 
-    // Stop execution if the current time is not in the test time range
-    o.end_date = new Date(o.start_date.getTime() + o.duration * 24 * 3600 * 1000);
-    var now = Date.now();
-    if (o.start_date > now || o.end_date < now) return;
+        // Stop execution if the current time is not in the test time range
+        o.end_date = new Date(o.start_date.getTime() + o.duration * 24 * 3600 * 1000);
+        var now = Date.now();
+        if (o.start_date > now || o.end_date < now) return;
 
-    // Register the test with Hive.AB_test, used to set GA variables
-    if (typeof(Hive.AB_test.tests == "undefined")) Hive.AB_test.tests = [];
-    Hive.AB_test.tests.push(o);
+        // Register the test with Hive.AB_Test, used to set GA variables
+        Hive.AB_Test.tests.push(o);
 
-    // this function ensures that the sum of weights of cases = 1
-    function normalize_weights(){
-        var total = 0;
-        $.each(o.cases, function(i, test_case){
-            total += o.auto_weight ? 1 : test_case.weight;
-        });
-        $.each(o.cases, function(i, test_case){
-            var weight = o.auto_weight ? 1 : test_case.weight;
-            test_case.weight = weight / total;
-        });
-    };
+        // this function ensures that the sum of weights of cases = 1
+        function normalize_weights(){
+            var total = 0;
+            $.each(o.cases, function(i, test_case){
+                total += o.auto_weight ? 1 : test_case.weight;
+            });
+            $.each(o.cases, function(i, test_case){
+                var weight = o.auto_weight ? 1 : test_case.weight;
+                test_case.weight = weight / total;
+            });
+        };
 
-    function pick_random_case(){
-        normalize_weights();
-        var rand = Math.random();
-        var current = 0;
-        var chosen_id;
-        $.each(o.cases, function(i, test_case){
-            if (typeof(chosen_id) != "undefined") return;
-            current = current + test_case.weight;
-            if (current > rand) {
-                chosen_id = i;
-            }
-        });
-        return chosen_id;
-    };
+        function pick_random_case(){
+            normalize_weights();
+            var rand = Math.random();
+            var current = 0;
+            var chosen_id;
+            $.each(o.cases, function(i, test_case){
+                if (typeof(chosen_id) != "undefined") return;
+                current = current + test_case.weight;
+                if (current > rand) {
+                    chosen_id = i;
+                }
+            });
+            return chosen_id;
+        };
 
-    function assign_group(id){
-        o.chosen_case = o.cases[id];
-        createCookie("AB_" + o.id, id, o.end_date)
-    };
+        function assign_group(id){
+            o.chosen_case = o.cases[id];
+            o.chosen_case_id = id;
+            createCookie("AB_" + o.id, id, o.end_date)
+        };
 
-    // Does the actual overriding of config_doc with chosen case definition
-    function update_config(){
-        $.extend(o.config_doc, o.chosen_case.config_overrides);
-    };
+        // Does the actual overriding of config_doc with chosen case definition
+        function update_config(){
+            $.extend(o.config_doc, o.chosen_case.config_overrides);
+        };
 
-    // Use case defined in cookie if set, else pick a random case
-    var case_id = readCookie("AB_" + o.id) || pick_random_case();
-    assign_group(case_id);
+        // Use case defined in cookie if set, else pick a random case
+        var case_id = readCookie("AB_" + o.id) || pick_random_case();
+        assign_group(case_id);
 
-    update_config();
+        update_config();
 
-    return o;
+        return o;
+    }
 };

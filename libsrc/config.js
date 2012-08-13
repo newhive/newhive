@@ -8,7 +8,7 @@ Hive.config = {
 }
 
 // See Hive.AB_test definition in util.js for explanation of options
-Hive.AB_test({
+Hive.AB_Test.add_test({
     name: 'nav/navigator initially open or closed'
     , id: 'NAV'
     , auto_weight: true
@@ -26,3 +26,6 @@ Hive.AB_test({
         }
     }
 });
+
+_gaq.push(['_setCustomVar', 4, 'AB_javascript', Hive.AB_Test.ga_string()]);
+_gaq.push(['_trackPageview']);

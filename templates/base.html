@@ -7,6 +7,17 @@
  <meta property="og:site_name" content='The New Hive' />
  <meta property="fb:app_id" content="153421698080835" />
  <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
+ <script>
+   var _gaq = _gaq || [];
+   _gaq.push(['_setAccount', 'UA-22827299-2']);
+   _gaq.push(['_setDomainName', 'none']);
+   _gaq.push(['_setAllowLinker', true]);
+   _gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
+   _gaq.push(['_setCustomVar', 2, 'join_date', '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
+   _gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
+   // Pageview now handled in config.js after custom var set
+   //_gaq.push(['_trackPageview']);
+ </script>
 
  {% for item in asset_bundle('app.css') %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
@@ -32,16 +43,6 @@
  {% block head %}{% endblock %}
 
  <script type="text/javascript">
-   var _gaq = _gaq || [];
-   _gaq.push(['_setAccount', 'UA-22827299-2']);
-   _gaq.push(['_setDomainName', 'none']);
-   _gaq.push(['_setAllowLinker', true]);
-   _gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
-   //_gaq.push(['_setCustomVar', 2, 'wave{{ user['signup_group']|default('0') }}', '{{ user['name'] }}', 1]);
-   _gaq.push(['_setCustomVar', 2, 'join_date', '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
-   _gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
-   _gaq.push(['_trackPageview']);
-  
    {% if use_ga %}
     (function() {
       var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
