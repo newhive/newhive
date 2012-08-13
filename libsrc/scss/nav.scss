@@ -593,16 +593,8 @@ body.frame{
 }
 
 body.frame {
-    #user_nav {
-        left: -50px;
-        top: -60px;
-    }
-    #owner_nav {
-        right: -50px;
-        top: -60px;
-    }
-    #action_nav {
-        right: -60px;
+    #user_nav, #owner_nav, #action_nav {
+        display: none;
     }
 }
 
