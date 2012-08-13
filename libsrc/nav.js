@@ -121,35 +121,39 @@ Hive.Menus = (function(){
                 , '#owner_nav': { right: -50, top: -60 }
                 , '#action_nav': { right: -50 }
             };
-        var speed = 300, auto_close_timeout,
+        var speed = 300,
             drawers = $('#user_nav,#owner_nav,#action_nav'),
             handles = $('.menu_handle').add('#navigator'),
             close_nav = function(){
-                clearTimeout(auto_close_timeout);
                 drawers.stop().clearQueue();
                 animate_each(close_state, speed, drawers.hide);
                 Hive.navigator.hide(speed);
                 Hive.navigator.current_expr().frame.get(0).focus();
             },
             open_nav = function(){
-                clearTimeout(auto_close_timeout);
                 drawers.stop().clearQueue().show();
                 animate_each(open_state, speed);
                 Hive.navigator.show(speed);
             };
 
-        var nav_menu = o.nav_menu = hover_menu(handles, drawers,
-                { layout: false, open_delay: 400, open_menu: open_nav, close_menu: close_nav,
-                opened: config.open_initially, close_delay: opts.slow_close
-                });
+        var nav_menu = o.nav_menu = hover_menu(
+            handles,
+            drawers,
+            {
+                layout: false,
+                open_delay: 400,
+                open_menu: open_nav,
+                close_menu: close_nav,
+                opened: config.open_initially,
+                close_delay: opts.slow_close,
+                auto_close_delay: config.auto_close_delay
+            }
+        );
 
         o.init(nav_menu);
         var initial_state = config.open_initially ? open_state : close_state;
         animate_each(initial_state, 0);
         drawers.show();
-        if (config.open_initially && config.auto_close_delay){
-            auto_close_timeout = setTimeout(nav_menu.close, config.auto_close_delay);
-        };
 
         o.action_nav_top = 70;
         var menu_top = o.action_nav_top + 4;

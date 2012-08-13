@@ -443,7 +443,15 @@ hover_menu = function(handle, drawer, options) {
             ,open_menu: function(){ drawer.show() }
             ,close_menu: function(){ drawer.hide() }
             ,sticky: false
+
+            // auto_close should be deprecated, it's never set to true in our project @2012-08-12
             ,auto_close: false
+
+            // auto_close_delay is the amount of time after which the menu
+            // closes on its own if the user doesn't trigger open or close
+            // through any mouse action, assuming `opened` is set to true
+            ,auto_close_delay: 0
+
             ,hover_close: true
             ,open_delay: 100
             ,close_delay: 500
@@ -617,6 +625,7 @@ hover_menu = function(handle, drawer, options) {
     });
 
     if(opts.auto_close) drawer.click(o.close);
+    if(opts.opened && opts.auto_close_delay){ o.delayed_close(opts.auto_close_delay); }
 
     return o;
 }
