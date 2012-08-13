@@ -1046,7 +1046,13 @@ Hive.goog_rte = function(content_element, app){
 
     var previous_range = {};
     this.content_element.on('paste', function(){
-        setTimeout(that.strip_sizes, 0);
+        setTimeout(function(){
+            that.strip_sizes();
+
+            // Unformat all text, google RTE doesn't have selectAll so we use browser
+            document.execCommand('selectAll');
+            that.execCommand('+removeFormat');
+        }, 0);
 
         // Paste unformatting code
         //    var current_range = that.getRange();
