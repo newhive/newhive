@@ -121,7 +121,7 @@
     <div id='top_tabs'>
       {% if path1 == 'home/expressions' %}
           {{ top_tab('home/expressions', 'Featured') }}
-        | {{ top_tab('home/expressions/all', 'All', attr="onclick='return require_login()'") }}
+        | {{ top_tab('home/expressions/all', 'All', attr="onclick='return require_login(" + '"all"' + ")'") }}
       {% endif %}
 
       {% if (path1 == 'profile/expressions') and user_is_owner %}
@@ -181,7 +181,7 @@
 
 {% block right_column %}
   {% if require_login and not user.logged_in %}
-    <script>$(function() { require_login(); });</script>
+    <script>$(function() { require_login('restricted_page'); });</script>
   {% else %}
     <div id='feed'>
       {% if show_prompts %}

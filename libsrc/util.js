@@ -774,13 +774,19 @@ var asset = function(path) {
 };
 
 // works as handler or function modifier
-function require_login(fn) {
+function require_login(label, fn) {
+    if (typeof(fn) == "undefined" && typeof(label) == "function"){
+        fn = label;
+        label = undefined;
+    }
     var check = function() {
         if(logged_in) {
             if(fn) return fn.apply(null, arguments);
             else return;
         }
         showDialog('#dia_must_login');
+        $('#dia_must_login [name=initiating_action]').val(label);
+        _gaq.push(['_trackEvent', 'signup', 'open_dialog', label]);
         return false;
     }
     if(fn) return check;

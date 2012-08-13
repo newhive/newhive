@@ -1,6 +1,7 @@
 <form {% if form_id%}id="{{form_id}}"{% endif %} class='signup_form' action='{{ secure_server }}' method='POST'>
   <input type='hidden' name='forward' value='{{url}}'/>
   <input type='hidden' name='action' value='mail_us'/>
+  <input type='hidden' name='initiating_action' value='' />
   <div class="field name">
       <input type='text' name='name' placeholder='Name'>
       <div class='spacer'></div>
@@ -34,7 +35,8 @@
                     else {
                         $(that).find('input[name=message]').val('');
                         var dialog = $(that).parents('.dialog');
-                        _gaq.push(['_trackEvent', 'signup', 'submit', dialog.attr('id')]);
+                        var label = $(that).find('[name=initiating_action]').val();
+                        _gaq.push(['_trackEvent', 'signup', 'submit', label]);
                         dialog.find('.btn_dialog_close').click();
                         showDialog(data);
                     }

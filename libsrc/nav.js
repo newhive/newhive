@@ -183,7 +183,7 @@ Hive.Menus = (function(){
 
         // email and embed menus
         $(function(){
-            $('.menu_item.message').click(require_login(function(){showDialog('#dia_share')}));
+            $('.menu_item.message').click(require_login('email', function(){showDialog('#dia_share')}));
             var dia = $('#dia_share');
             dia.find('form').submit(function(e){
                 var submit = dia.find('input[type=submit]');
@@ -420,7 +420,7 @@ Hive.Menus = (function(){
         alert("Sorry, something went wrong. Try refreshing the page and trying again.");
     };
 
-    o.feed_toggle = require_login(function(action, entity, btn, items, opts) {
+    o.feed_toggle = require_login('feed_toggle', function(action, entity, btn, items, opts) {
         btn = $(btn); items = $(items);
         if(btn.hasClass('inactive')) return;
         btn.addClass('inactive');
@@ -446,7 +446,7 @@ Hive.Menus = (function(){
         }, 'json');
     });
 
-    o.post_comment = require_login(function(){
+    o.post_comment = require_login('comment', function(){
         btn = $('#comment_form .submit'); items = $('#comment_menu .items');
         if(btn.hasClass('inactive')) return;
         btn.addClass('inactive');
