@@ -15,6 +15,7 @@ Hive.AB_Test.add_test({
     , config_doc: Hive.config.frame
     , start_date: new Date(2012,7,12) // Remember months are 0-indexed
     , duration: 7
+    , logged_in_case: 1
     , cases: {
         0: {
             name: 'open initially'
