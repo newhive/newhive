@@ -128,7 +128,9 @@ Hive.Menus = (function(){
             handles = $('.menu_handle').add('#navigator'),
             close_nav = function(){
                 drawers.stop().clearQueue();
-                animate_each(close_state, speed, drawers.hide);
+                // For some reason just using drawers.hide as the callback for animate didn't work
+                var callback = function(){ drawers.hide(); };
+                animate_each(close_state, speed, callback);
                 Hive.navigator.hide(speed);
                 Hive.navigator.current_expr().frame.get(0).focus();
             },
