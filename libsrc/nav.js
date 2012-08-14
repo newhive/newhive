@@ -140,18 +140,31 @@ Hive.Menus = (function(){
                 Hive.navigator.show(speed);
             };
 
+        var shared_hover_menu_opts = {
+            layout: false,
+            open_delay: 400,
+            close_delay: opts.slow_close,
+            group: false
+        }
+
         var nav_menu = o.nav_menu = hover_menu(
             handles,
             drawers,
-            {
-                layout: false,
-                open_delay: 400,
-                open_menu: open_nav,
-                close_menu: close_nav,
-                opened: config.open_initially,
-                close_delay: opts.slow_close,
-                auto_close_delay: config.auto_close_delay
-            }
+            $.extend(
+                {opened: config.open_initially, open_menu: open_nav, close_menu: close_nav},
+                shared_hover_menu_opts
+            )
+        );
+        var navigator_hover_menu = hover_menu(
+            $('#navigator_handle, #user_nav, #owner_nav, #action_nav'),
+            $('#navigator'),
+            $.extend(
+                { opened: false,
+                  open_menu: function(){ Hive.navigator.show(speed); },
+                  close_menu: function(){ Hive.navigator.hide(speed); }
+                },
+                shared_hover_menu_opts
+            )
         );
 
         o.init(nav_menu);
@@ -226,7 +239,7 @@ Hive.Menus = (function(){
         Hive.navigator = Hive.Navigator.create(
             '#navigator',
             '#expression_frames',
-            {hidden: !config.open_initially}
+            {hidden: true}
         );
         Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {

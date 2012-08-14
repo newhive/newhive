@@ -417,7 +417,12 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         position_containers(width);
     };
 
+    var already_shown;
     o.show = function(speed){
+        if (!already_shown) {
+            _gaq.push(['_trackEvent', 'navigator', 'initial open']);
+            already_shown = true;
+        }
         speed = speed || 100;
         clearTimeout(navigator_element.initial_hide_timeout);
         o.opened = true;
