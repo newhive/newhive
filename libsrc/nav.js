@@ -111,11 +111,13 @@ Hive.Menus = (function(){
                 $(selector)[fun](style, speed, callback);
             });
         };
-        var open_state = {
+        var open_state = function(opts){
+            return {
                 '#user_nav': {left: 0, top: 0}
                 , '#owner_nav': { right: opts.pad_right, top: 0 }
                 , '#action_nav': { right: opts.pad_right }
             };
+        };
         var close_state = {
                 '#user_nav': {left: -50, top: -60}
                 , '#owner_nav': { right: -50, top: -60 }
@@ -126,13 +128,15 @@ Hive.Menus = (function(){
             handles = $('.menu_handle').add('#navigator'),
             close_nav = function(){
                 drawers.stop().clearQueue();
-                animate_each(close_state, speed, drawers.hide);
+                // For some reason just using drawers.hide as the callback for animate didn't work
+                var callback = function(){ drawers.hide(); };
+                animate_each(close_state, speed, callback);
                 Hive.navigator.hide(speed);
                 Hive.navigator.current_expr().frame.get(0).focus();
             },
             open_nav = function(){
                 drawers.stop().clearQueue().show();
-                animate_each(open_state, speed);
+                animate_each(open_state(opts), speed);
                 Hive.navigator.show(speed);
             };
 
@@ -151,7 +155,7 @@ Hive.Menus = (function(){
         );
 
         o.init(nav_menu);
-        var initial_state = config.open_initially ? open_state : close_state;
+        var initial_state = config.open_initially ? open_state(opts) : close_state;
         animate_each(initial_state, 0);
         drawers.show();
 
