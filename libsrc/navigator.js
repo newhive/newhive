@@ -420,7 +420,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     var already_shown;
     o.show = function(speed){
         if (!already_shown) {
-            _gaq.push(['_trackEvent', 'navigator', 'initial open']);
+            _gaq.push(['_trackEvent', 'navigator', 'initial open', undefined, undefined, true]);
             already_shown = true;
         }
         speed = speed || 100;
