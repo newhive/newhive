@@ -2057,11 +2057,13 @@ Hive.init = function() {
         }
     };
     //setInterval(Hive.set_draft, 5000);
-    window.onbeforeunload = function(){
-        //try { Hive.set_draft(); }
-        //catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
-        return "If you leave this page any unsaved changes to your expression will be lost.";
-    };
+    if (!debug_mode){
+        window.onbeforeunload = function(){
+            //try { Hive.set_draft(); }
+            //catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
+            return "If you leave this page any unsaved changes to your expression will be lost.";
+        };
+    }
     //var draft = Hive.get_draft();
     //if(draft) Hive.Exp = draft;
 
