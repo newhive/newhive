@@ -367,7 +367,11 @@ Hive.Controls = function(app, multiselect) {
         var close_on_delay = function(){
             setTimeout(function(){m.close(true)}, 0);
         };
-        e.find('img').click(function() { input.val(''); o.app.link(''); close_on_delay(); });
+        e.find('img').click(function() {
+            input.focus();
+            input.val('');
+            close_on_delay();
+        });
         input.keypress(function(e) {
             if(e.keyCode == 13) {
                 close_on_delay();
@@ -979,9 +983,16 @@ Hive.goog_rte = function(content_element, app){
     }
 
     this.make_link = function(href) {
-        that.restore_selection()
+        if (!that.restore_selection()){
+            var selection = that.content_element.find('.hive_selection')[0];
+            goog.dom.Range.createFromNodeContents(selection).select();
+        }
         // TODO: don't use browser API directly
-        document.execCommand('createlink', false, href);
+        if (href === ''){
+            document.execCommand('unlink', false);
+        } else {
+            document.execCommand('createlink', false, href);
+        }
     };
 
     var saved_range;
@@ -991,9 +1002,10 @@ Hive.goog_rte = function(content_element, app){
     };
 
     this.restore_selection = function(){
-        if (!saved_range || saved_range.isDisposed()) return;
+        if (!saved_range || saved_range.isDisposed()) return false;
         saved_range.restore();
         saved_range = false;
+        return true;
     };
 
     // Wrap a node around selecte text, even if selection spans multiple block elements
