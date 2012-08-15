@@ -328,13 +328,19 @@ Hive.Controls = function(app, multiselect) {
             + "<img class='hoverable' src='" + asset('skin/1/delete_sm.png')
             + "' title='Clear link'></nobr>");
         d.append(e);
-        var input = e.find('input');
+
+        // set_link is called when input is blurred
         var set_link = function(){
             var v = input.val();
             // TODO: improve URL guessing
             if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
             o.app.link(v);
         };
+
+        // Don't have to worry about duplicating handlers because all elements
+        // were just created from scratch
+        var input = e.find('input').on('blur', set_link);
+
         var m = o.hover_menu(d.find('.button.link'), e, {
              open : function() {
                  var link = o.app.link();
@@ -344,20 +350,27 @@ Hive.Controls = function(app, multiselect) {
              }
             ,click_persist : input
             ,close : function() {
-                if (opts.field_to_focus) opts.field_to_focus.focus();
+                // No need for explicit call to set_link here because it is
+                // handled on blur, and blur is always triggered by one of the
+                // clauses below
+                if (opts.field_to_focus) {
+                    opts.field_to_focus.focus();
+                } else {
+                    input.blur();
+                }
                 opts.close();
-                set_link();
-                input.blur();
-                o.app.focus();
             }
             ,auto_close : false
         });
 
-        e.find('img').click(function() { input.val(''); o.app.link(''); m.close(); });
+        // timeout needed to get around firefox bug
+        var close_on_delay = function(){
+            setTimeout(function(){m.close(true)}, 0);
+        };
+        e.find('img').click(function() { input.val(''); o.app.link(''); close_on_delay(); });
         input.keypress(function(e) {
             if(e.keyCode == 13) {
-                // timeout needed to get around firefox bug
-                setTimeout(m.close, 0);
+                close_on_delay();
             }
         });
         return m;
