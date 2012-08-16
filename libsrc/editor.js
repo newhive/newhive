@@ -324,17 +324,29 @@ Hive.Controls = function(app, multiselect) {
 
     o.append_link_picker = function(d, opts) {
         opts = $.extend({ open: noop, close: noop }, opts);
-        var e = $("<div class='control drawer link'><nobr><input type='text'> "
-            + "<img class='hoverable' src='" + asset('skin/1/delete_sm.png')
-            + "' title='Clear link'></nobr>");
+        var e = $("<div class='control drawer link'>");
+        var cancel_btn = $("<img>").addClass('hoverable')
+            .attr('src', asset('skin/1/delete_sm.png'))
+            .attr('title', 'Clear link')
+            .css('margin', '12px 0 0 5px');
+        var input = $('<input type="text">');
+
         d.append(e);
-        var input = e.find('input');
+        Hive.input_frame(input, e);
+        e.append(cancel_btn);
+
+        // set_link is called when input is blurred
         var set_link = function(){
             var v = input.val();
             // TODO: improve URL guessing
             if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
             o.app.link(v);
         };
+
+        // Don't have to worry about duplicating handlers because all elements
+        // were just created from scratch
+        input.on('blur', set_link);
+
         var m = o.hover_menu(d.find('.button.link'), e, {
              open : function() {
                  var link = o.app.link();
@@ -344,20 +356,31 @@ Hive.Controls = function(app, multiselect) {
              }
             ,click_persist : input
             ,close : function() {
-                if (opts.field_to_focus) opts.field_to_focus.focus();
+                // No need for explicit call to set_link here because it is
+                // handled on blur, and blur is always triggered by one of the
+                // clauses below
+                if (opts.field_to_focus) {
+                    opts.field_to_focus.focus();
+                } else {
+                    input.blur();
+                }
                 opts.close();
-                set_link();
-                input.blur();
-                o.app.focus();
             }
             ,auto_close : false
         });
 
-        e.find('img').click(function() { input.val(''); o.app.link(''); m.close(); });
+        // timeout needed to get around firefox bug
+        var close_on_delay = function(){
+            setTimeout(function(){m.close(true)}, 0);
+        };
+        e.find('img').click(function() {
+            input.focus();
+            input.val('');
+            close_on_delay();
+        });
         input.keypress(function(e) {
             if(e.keyCode == 13) {
-                // timeout needed to get around firefox bug
-                setTimeout(m.close, 0);
+                close_on_delay();
             }
         });
         return m;
@@ -692,13 +715,6 @@ Hive.App.Text = function(o) {
         //if(!v) o.rte.edit('unlink');
         //else o.rte.make_link(v);
         o.rte.make_link(v);
-    }
-    o.link_set = function(href) {
-        if (!v){
-            o.rte.edit('unlink');
-        } else {
-            o.rte.make_link(v);
-        };
     };
 
     o.calcWidth = function() {
@@ -761,16 +777,9 @@ Hive.App.Text = function(o) {
 
         var link_open = function(){
             var link = o.app.rte.get_link();
-            // wrap-unwrap-wrap hack fixes firefox being unable to wrap selection initially
-            o.app.rte.wrap_selection();
-            o.app.rte.unwrap_selection();
-            o.app.rte.wrap_selection();
         }
-        var link_close = function(){
-            o.app.rte.unwrap_selection();
-        };
         o.link_menu = o.append_link_picker(d.find('.buttons'),
-                        {open: link_open, close: link_close, field_to_focus: o.app.content_element});
+                        {open: link_open, field_to_focus: o.app.content_element});
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
@@ -783,13 +792,10 @@ Hive.App.Text = function(o) {
         var color_picker = Hive.append_color_picker(
             d.find('.drawer.color'),
             function(v) {
-                o.app.rte.unwrap_selection();
                 o.app.rte.exec_command('+foreColor', v);
-                o.app.rte.wrap_selection();
-                o.app.content_element.blur();
             },
             undefined,
-            {field_to_focus: o.app.content_element}
+            {field_to_focus: o.app.content_element, iframe: true}
         );
         o.color_menu = o.hover_menu(
             d.find('.button.color'),
@@ -804,17 +810,7 @@ Hive.App.Text = function(o) {
                         var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
                         color_picker.update_initial_color(current_color);
                     }
-                    // wrap-unwrap-wrap hack fixes firefox being unable to wrap selection initially
-                    o.app.rte.wrap_selection();
-                    o.app.rte.unwrap_selection();
-                    o.app.rte.wrap_selection();
-                    o.app.content_element.blur();
                 },
-                close: function(){
-                    o.app.content_element.focus();
-                    o.app.rte.unwrap_selection();
-                    o.app.rte.unwrap_all_selections();
-                }
             }
         );
 
@@ -966,9 +962,12 @@ Hive.goog_rte = function(content_element, app){
     }
 
     this.make_link = function(href) {
-        that.restore_selection()
         // TODO: don't use browser API directly
-        document.execCommand('createlink', false, href);
+        if (href === ''){
+            document.execCommand('unlink', false);
+        } else {
+            document.execCommand('createlink', false, href);
+        }
     };
 
     var saved_range;
@@ -978,9 +977,10 @@ Hive.goog_rte = function(content_element, app){
     };
 
     this.restore_selection = function(){
-        if (!saved_range || saved_range.isDisposed()) return;
+        if (!saved_range || saved_range.isDisposed()) return false;
         saved_range.restore();
         saved_range = false;
+        return true;
     };
 
     // Wrap a node around selecte text, even if selection spans multiple block elements
@@ -2032,11 +2032,13 @@ Hive.init = function() {
         }
     };
     //setInterval(Hive.set_draft, 5000);
-    window.onbeforeunload = function(){
-        //try { Hive.set_draft(); }
-        //catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
-        return "If you leave this page any unsaved changes to your expression will be lost.";
-    };
+    if (!debug_mode){
+        window.onbeforeunload = function(){
+            //try { Hive.set_draft(); }
+            //catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
+            return "If you leave this page any unsaved changes to your expression will be lost.";
+        };
+    }
     //var draft = Hive.get_draft();
     //if(draft) Hive.Exp = draft;
 
@@ -2481,6 +2483,7 @@ function remove_all_apps() {
 }
 
 Hive.append_color_picker = function(container, callback, init_color, opts) {
+    opts = $.extend({iframe: false}, opts);
     var o = {};
     init_color = init_color || '#FFFFFF';
     var e = $('<div>').addClass('color_picker');
@@ -2589,7 +2592,11 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
 
     e.append(bar);
     e.append(shades);
-    e.append(manual_input);
+    if (opts.iframe){
+        Hive.input_frame(manual_input, e, {width: 124});
+    } else {
+        e.append(manual_input);
+    }
 
     function hsvToRgb(h, s, v){
         var r, g, b;
@@ -2637,6 +2644,28 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
 };
 
 Hive.random_str = function(){ return Math.random().toString(16).slice(2); };
+
+Hive.input_frame = function(input, parent, opts){
+    opts = $.extend({width: 200, height: 45}, opts)
+
+    var frame = $('<iframe>')
+        .width(opts.width).height(opts.height)
+        .css({
+            'display': 'inline-block',
+            'float': 'left',
+            'margin-top': '5px'
+        });
+    parent.append(frame);
+    frame.contents().find('body').append(input)
+        .css({'margin': 0, 'overflow': 'hidden'});
+    input.css({
+        'border': '5px solid hsl(164, 57%, 74%)',
+        'width': '100%',
+        'padding': '5px',
+        'font-size': '17px'
+    });
+
+};
 
 // Convenience functions for interactive coding
 function sel(n) {
