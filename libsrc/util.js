@@ -327,8 +327,9 @@ function update_targets(){
 }
 function link_target(i, a) {
     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
-    var re = new RegExp(server_name + '|newhiveexpression.com'), a = $(a),
-        href = a.attr('href') || a.attr('action');
+    var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
+    var a = $(a), href = a.attr('href') || a.attr('action');
+
     if(href && href.indexOf('http') === 0 && !re.test(href)) {
         a.attr('target', '_blank');
     } else {
