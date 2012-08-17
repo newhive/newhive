@@ -327,14 +327,14 @@ function update_targets(){
 }
 function link_target(i, a) {
     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
-    var re = new RegExp(server_name + '|newhiveexpression.com'), a = $(a),
-        href = a.attr('href') || a.attr('action');
+    var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
+    var a = $(a), href = a.attr('href') || a.attr('action');
+
     if(href && href.indexOf('http') === 0 && !re.test(href)) {
         a.attr('target', '_blank');
     } else {
         a.attr('target', '_top');
     }
-    if(a.is('form')) console.log(a, href);
 }
 
 
@@ -451,7 +451,15 @@ hover_menu = function(handle, drawer, options) {
             ,open_menu: function(){ drawer.show() }
             ,close_menu: function(){ drawer.hide() }
             ,sticky: false
+
+            // auto_close should be deprecated, it's never set to true in our project @2012-08-12
             ,auto_close: false
+
+            // auto_close_delay is the amount of time after which the menu
+            // closes on its own if the user doesn't trigger open or close
+            // through any mouse action, assuming `opened` is set to true
+            ,auto_close_delay: 0
+
             ,hover_close: true
             ,open_delay: 100
             ,close_delay: 500
@@ -625,6 +633,7 @@ hover_menu = function(handle, drawer, options) {
     });
 
     if(opts.auto_close) drawer.click(o.close);
+    if(opts.opened && opts.auto_close_delay){ o.delayed_close(opts.auto_close_delay); }
 
     return o;
 }
@@ -651,14 +660,20 @@ var minimize = function(what, to, opts) {
 }
 
 // from http://www.quirksmode.org/js/cookies.html#script
-function createCookie(name,value,days) {
-    if (days) {
-        var date = new Date();
-        date.setTime(date.getTime()+(days*24*60*60*1000));
+function createCookie(name,value,expiry) {
+    var date;
+    if (expiry) {
+        if (typeof(days) == "number"){
+            date = new Date();
+            date.setTime(date.getTime()+(expiry*24*60*60*1000));
+        } else {
+            date = expiry;
+        }
         var expires = "; expires="+date.toGMTString();
     }
     else var expires = "";
-    document.cookie = name+"="+escape(value)+expires+"; path=/; domain=.thenewhive.com;";
+    var cookie = name + "=" + escape(value) + expires + "; path=/; domain=" + server_url.split('/')[2] + ";";
+    document.cookie = cookie;
 }
 
 function readCookie(name) {
@@ -733,7 +748,7 @@ var fix_borders = function(items){
 
     // fix top tab placement
     var card_width = $('#feed .card').outerWidth();
-    $('#top_tabs').css({'right': $('#feed').outerWidth() - columns * card_width });
+    $('#top_tabs').css({'right': Math.min( $('#feed').outerWidth() - 245, $('#feed').outerWidth() - columns * card_width ) });
 }
 
 var context_to_string = function(opt_arg){
@@ -767,13 +782,19 @@ var asset = function(path) {
 };
 
 // works as handler or function modifier
-function require_login(fn) {
+function require_login(label, fn) {
+    if (typeof(fn) == "undefined" && typeof(label) == "function"){
+        fn = label;
+        label = undefined;
+    }
     var check = function() {
         if(logged_in) {
             if(fn) return fn.apply(null, arguments);
             else return;
         }
         showDialog('#dia_must_login');
+        $('#dia_must_login [name=initiating_action]').val(label);
+        _gaq.push(['_trackEvent', 'signup', 'open_dialog', label]);
         return false;
     }
     if(fn) return check;
@@ -838,8 +859,113 @@ function time_since_last(label, extra_log) {
     return delta;
 };
 
-$(window).keydown(function(e){
-    if (e.keyCode == 113){
-        noop();
+// useful for inserting a breakpoing
+//$(window).keydown(function(e){
+//    if (e.keyCode == 113){ // F2
+//        noop();
+//    }
+//});
+
+Hive.AB_Test = {
+    tests: [],
+    ga_string: function(){
+        return $.map(Hive.AB_Test.tests, function(el){ return el.id + el.chosen_case_id }).join(',');
+    },
+    add_test: function(opts){
+        // Required options (oxymoron I know, but named arguments are easier to work with than positional)
+        //   id:
+        //     short name used for cookie name and google analytics variable.
+        //     conventionally 3 characters all caps, e.g. `NAV`
+        //   config_doc:
+        //     the configuration document or sub-doc that gets extended by each test case.
+        //     e.g. `Hive.config.frame`
+        //   start_date:
+        //     javascript Date object
+        //   duration:
+        //     number of days to run test
+        //   cases:
+        //     mapping of test cases of the form {caseID: definition}. caseID can be any
+        //     short alphanumeric, but is conventionally an integer (this goes in
+        //     the cookie and GA variable). See "Case definition" below
+        //
+        // Optional options (haha)
+        //   name:
+        //     descriptive string describing the test
+        //   auto_weight:
+        //     if set to true each test case has an equal probability of being chosen
+        //   logged_in_case:
+        //     value matching the caseID mapping to the case that should be
+        //     used for logged in users
+        //
+        // Case definition
+        //   Each case is defined as an object literal with the following attributes
+        //     config_overrides:
+        //       this is a mapping of config options that override values set in the `config_doc`,
+        //       e.g. {open_initially: false, auto_close_delay: 5000}
+        //     weight:
+        //       weighted probability of this case being chose. optional if `auto_weight` is true
+        //       these probabilities get normalized, so can really be any number
+        //     name:
+        //       optional descriptive string describing this case
+
+        var o = $.extend({}, opts);
+
+        // Stop execution if the current time is not in the test time range
+        o.end_date = new Date(o.start_date.getTime() + o.duration * 24 * 3600 * 1000);
+        var now = Date.now();
+        if (o.start_date > now || o.end_date < now) return;
+
+        // Register the test with Hive.AB_Test, used to set GA variables
+        Hive.AB_Test.tests.push(o);
+
+        // this function ensures that the sum of weights of cases = 1
+        function normalize_weights(){
+            var total = 0;
+            $.each(o.cases, function(i, test_case){
+                total += o.auto_weight ? 1 : test_case.weight;
+            });
+            $.each(o.cases, function(i, test_case){
+                var weight = o.auto_weight ? 1 : test_case.weight;
+                test_case.weight = weight / total;
+            });
+        };
+
+        function pick_random_case(){
+            normalize_weights();
+            var rand = Math.random();
+            var current = 0;
+            var chosen_id;
+            $.each(o.cases, function(i, test_case){
+                if (typeof(chosen_id) != "undefined") return;
+                current = current + test_case.weight;
+                if (current > rand) {
+                    chosen_id = i;
+                }
+            });
+            return chosen_id;
+        };
+
+        function assign_group(id){
+            o.chosen_case = o.cases[id];
+            o.chosen_case_id = id;
+            createCookie("AB_" + o.id, id, o.end_date)
+        };
+
+        // Does the actual overriding of config_doc with chosen case definition
+        function update_config(){
+            $.extend(o.config_doc, o.chosen_case.config_overrides);
+        };
+
+        // Use case for logged in user if set, else case defined in cookie if
+        // set, else pick a random case. Can't just use || with assignment
+        // because case_id could be 0
+        var case_id = logged_in && o.logged_in_case;
+        if (!case_id && case_id !== 0) case_id = readCookie("AB_" + o.id);
+        if (!case_id && case_id !== 0) case_id = pick_random_case();
+        assign_group(case_id);
+
+        update_config();
+
+        return o;
     }
-});
+};

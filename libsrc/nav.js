@@ -106,29 +106,60 @@ Hive.Menus = (function(){
 
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
+        var config = Hive.config.frame;
+        function animate_each(state, speed, callback){
+            var fun = speed ? 'animate' : 'css';
+            $.each(state, function(selector, style){
+                $(selector)[fun](style, speed, callback);
+            });
+        };
+        var open_state = function(opts){
+            return {
+                '#user_nav': {left: 0, top: 0}
+                , '#owner_nav': { right: opts.pad_right, top: 0 }
+                , '#action_nav': { right: opts.pad_right }
+            };
+        };
+        var close_state = {
+                '#user_nav': {left: -50, top: -60}
+                , '#owner_nav': { right: -50, top: -60 }
+                , '#action_nav': { right: -50 }
+            };
         var speed = 300,
             drawers = $('#user_nav,#owner_nav,#action_nav'),
             handles = $('.menu_handle').add('#navigator'),
             close_nav = function(){
                 drawers.stop().clearQueue();
-                $('#user_nav').animate({ left: -50, top: -50 }, { complete:
-                    function(){ drawers.hide() } }, speed);
-                $('#owner_nav').animate({ right: -50, top: -50 }, speed);
-                $('#action_nav').animate({ right: -50 }, speed);
+                // For some reason just using drawers.hide as the callback for animate didn't work
+                var callback = function(){ drawers.hide(); };
+                animate_each(close_state, speed, callback);
                 Hive.navigator.hide(speed);
                 Hive.navigator.current_expr().frame.get(0).focus();
             },
             open_nav = function(){
                 drawers.stop().clearQueue().show();
-                $('#user_nav').animate({ left: 0, top: 0 }, speed);
-                $('#owner_nav').animate({ right: opts.pad_right, top: 0 }, speed);
-                $('#action_nav').animate({ right: opts.pad_right }, speed);
-                Hive.navigator.show();
+                animate_each(open_state(opts), speed);
+                Hive.navigator.show(speed);
             };
-            nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false, open_delay: 400,
-                open_menu: open_nav, close_menu: close_nav, opened: false, close_delay: opts.slow_close } );
+
+        var nav_menu = o.nav_menu = hover_menu(
+            handles,
+            drawers,
+            {
+                layout: false,
+                open_delay: 400,
+                open_menu: open_nav,
+                close_menu: close_nav,
+                opened: config.open_initially,
+                close_delay: opts.slow_close,
+                auto_close_delay: config.auto_close_delay
+            }
+        );
 
         o.init(nav_menu);
+        var initial_state = config.open_initially ? open_state(opts) : close_state;
+        animate_each(initial_state, 0);
+        drawers.show();
 
         o.action_nav_top = 70;
         var menu_top = o.action_nav_top + 4;
@@ -149,16 +180,20 @@ Hive.Menus = (function(){
             }
         );
 
-        $('#star_btn').click(function(){ o.feed_toggle('star', Hive.expr.id, '#star_btn',
-            '#star_menu .items') });
-        $('#broadcast_btn').click(function(){ o.feed_toggle('broadcast', Hive.expr.id,
-            '#broadcast_btn', '#broadcast_menu .items') });
+        $('#star_btn').click(function(){
+            o.feed_toggle('star', Hive.expr.id, '#star_btn', '#star_menu .items');
+        });
+        $('#broadcast_btn').click(function(){
+            if (Hive.expr.owner.id != user.id){
+                o.feed_toggle('broadcast', Hive.expr.id, '#broadcast_btn', '#broadcast_menu .items');
+            }
+        });
 
         $('#comment_form').submit(o.post_comment);
 
         // email and embed menus
         $(function(){
-            $('.menu_item.message').click(require_login(function(){showDialog('#dia_share')}));
+            $('.menu_item.message').click(require_login('email', function(){showDialog('#dia_share')}));
             var dia = $('#dia_share');
             dia.find('form').submit(function(e){
                 var submit = dia.find('input[type=submit]');
@@ -190,7 +225,11 @@ Hive.Menus = (function(){
         $('#action_nav .delete').click(function(){ del_dialog = showDialog('#dia_delete'); });
         $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
-        Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames', {hidden: true});
+        Hive.navigator = Hive.Navigator.create(
+            '#navigator',
+            '#expression_frames',
+            {hidden: !config.open_initially}
+        );
         Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {
         //    layout: false,
@@ -221,9 +260,11 @@ Hive.Menus = (function(){
         // function for nav and navigator respectively).  However, for a good
         // mobile experience, they need to be hidden, so we hide after a delay,
         // (again, this is handled by init function in case of navigator)
-        setTimeout(function(){
-            nav_menu.drawer().hide();
-        }, 500 );
+        if (!config.open_initially) {
+            setTimeout(function(){
+                nav_menu.drawer().hide();
+            }, 500 );
+        }
         //o.navigator_menu.delayed_close(5000);
         //nav_menu.delayed_close(5000);
     };
@@ -398,7 +439,7 @@ Hive.Menus = (function(){
         alert("Sorry, something went wrong. Try refreshing the page and trying again.");
     };
 
-    o.feed_toggle = require_login(function(action, entity, btn, items, opts) {
+    o.feed_toggle = require_login('feed_toggle', function(action, entity, btn, items, opts) {
         btn = $(btn); items = $(items);
         if(btn.hasClass('inactive')) return;
         btn.addClass('inactive');
@@ -424,7 +465,7 @@ Hive.Menus = (function(){
         }, 'json');
     });
 
-    o.post_comment = require_login(function(){
+    o.post_comment = require_login('comment', function(){
         btn = $('#comment_form .submit'); items = $('#comment_menu .items');
         if(btn.hasClass('inactive')) return;
         btn.addClass('inactive');

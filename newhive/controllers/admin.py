@@ -123,8 +123,13 @@ class Admin(Application):
     def error_log(self, request, response):
         id = lget(request.path.split('/'), 2)
         if id:
+            def format_frame(original_frame):
+                frame = {'filename': '', 'lineno': '', 'function_name': ''}
+                frame.update(original_frame)
+                return '  File "%(filename)s", line %(lineno)s, in %(function_name)s\n    ' % frame + frame.get('current_line', '').strip()
+
             response.context['error'] = self.db.ErrorLog.find({'_id': id})
-            response.context['traceback'] = '\n'.join(['  File "%(filename)s", line %(lineno)s, in %(function_name)s\n    ' % frame + frame['current_line'].strip() for frame in response.context['error'].get('stack_frames')])
+            response.context['traceback'] = '\n'.join([format_frame(frame) for frame in response.context['error'].get('stack_frames')])
 
             return self.serve_page(response, 'pages/admin/error.html')
         else:

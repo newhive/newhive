@@ -197,3 +197,8 @@ def set_trace(interactive=False):
         return ipdb.set_trace
     else:
         return lambda: None
+
+def serializable_filter(dictionary):
+    return {key.replace('.', '-'): val
+            for key, val in dictionary.iteritems()
+            if type(val) in [bool, str, int, float, tuple, unicode]}

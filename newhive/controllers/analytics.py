@@ -282,3 +282,28 @@ class Analytics(Application):
         c['dates'], c['data'] = analytics.pageviews(self.db, start, end)
         return self.serve_page(response, 'partials/charts/time.html')
 
+    def js_error_log(self, request, response):
+        args = request.args
+        log_entry = {
+                'type': 'javascript'
+                , 'environ': newhive.utils.serializable_filter(request.environ)
+                , 'exception': args.get('err')
+                , 'stack_frames': [{
+                    'filename': args.get('fl'),
+                    'lineno': args.get('ln')
+                    }]
+                , 'url': args.get('sn')
+                , 'code_revision': newhive.manage.git.current_revision
+                , 'dev_prefix': config.dev_prefix
+                }
+
+        request = request.environ.get('hive.request')
+        if request and hasattr(request, 'requester'):
+            log_entry.update({'requester': {'id': request.requester.id
+                                            , 'name': request.requester.get('name')}})
+
+        self.db.ErrorLog.create(log_entry)
+
+        response_data = "jsErrLog.removeScript(" + request.args.get('i') + ");"
+        return self.serve_data(response, mime='application/javascript', data=response_data)
+

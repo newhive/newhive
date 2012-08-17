@@ -148,7 +148,7 @@ class Application(object):
         # just came from facebook via a redirect, rather than the cookie set by the
         # javascript sdk, which could be older
         if request.args.has_key('code'):
-            user.fb_client.add_auth(request.args['code'], abs_url(request.path))
+            user.fb_client.add_auth(request.args['code'], abs_url(request.path, secure=request.is_secure))
         if fb_cookie and fb_cookie.get('user_id') == user.facebook_id:
             user.fb_client.add_auth(fb_cookie.get('code'), '')
 

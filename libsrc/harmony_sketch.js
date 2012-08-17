@@ -1,5 +1,5 @@
 const REV = 6,
-       BRUSHES = ["sketchy", "shaded", "chrome", "fur", "longfur", "web", "", "simple", "squares", "ribbon", "", "circles", "grid"],
+       BRUSHES = ["sketchy", "shaded", "chrome", "fur", "longfur", "web", "", "simple", "squares", "ribbon", "", "circles", "grid", 'eraser'],
        USER_AGENT = navigator.userAgent.toLowerCase();
 
 var SCREEN_WIDTH = 1400, //window.innerWidth,
@@ -292,6 +292,7 @@ function cleanPopUps()
 {
 }
 
+
 function chrome( context )
 {
     this.init( context );
@@ -366,6 +367,8 @@ chrome.prototype =
         
     }
 }
+
+
 function circles( context )
 {
     this.init( context );
@@ -428,6 +431,8 @@ circles.prototype =
         
     }
 }
+
+
 function fur( context )
 {
     this.init( context );
@@ -499,6 +504,8 @@ fur.prototype =
         
     }
 }
+
+
 function grid( context )
 {
     this.init( context );
@@ -764,12 +771,14 @@ shaded.prototype =
         
     }
 }
-function simple( context )
+
+
+function simple_old( context )
 {
     this.init( context );
 }
 
-simple.prototype =
+simple_old.prototype =
 {
     context: null,
 
@@ -810,6 +819,64 @@ simple.prototype =
         
     }
 }
+
+
+function simple( context )
+{
+    this.init( context );
+}
+
+simple.prototype =
+{
+    context: null,
+
+    prevMouseX: null, prevMouseY: null,
+
+    init: function( context )
+    {
+        this.context = context;
+        this.context.globalCompositeOperation = 'source-over';
+        this.context.lineCap = 'round';
+    },
+
+    destroy: function()
+    {
+    },
+
+    strokeStart: function( mouseX, mouseY )
+    {
+        this.prevMouseX = mouseX;
+        this.prevMouseY = mouseY;
+    },
+
+    stroke: function( mouseX, mouseY )
+    {
+        var i, dx, dy, d;
+        
+        this.context.lineWidth = BRUSH_SIZE;
+        this.context.strokeStyle = "rgba(" + COLOR[0] + ", " + COLOR[1] + ", " + COLOR[2] + ", " + BRUSH_PRESSURE + ")";
+        this.context.beginPath();
+        this.context.moveTo(this.prevMouseX, this.prevMouseY);
+        this.context.lineTo(mouseX, mouseY);
+        this.context.stroke();
+
+        this.prevMouseX = mouseX;
+        this.prevMouseY = mouseY;
+    },
+
+    strokeEnd: function()
+    {
+    }
+}
+
+
+function eraser( context ){
+    this.context = context;
+    this.context.globalCompositeOperation = 'destination-out';
+}
+eraser.prototype = simple.prototype;
+
+
 function sketchy( context )
 {
     this.init( context );

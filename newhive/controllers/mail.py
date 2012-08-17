@@ -80,7 +80,8 @@ class Mail(Application):
             owner = self.db.User.fetch(exp.get('owner'))
             log_data['expr_id'] = exp.id
             response.context.update({
-              'short_url': (exp.get('domain') + '/' + exp.get('name'))
+              'url': exp.url
+              ,'short_url': exp.url.split('//')[1]
               ,'tags': exp.get('tags')
               ,'thumbnail_url': exp.get('thumb', self.asset('skin/1/thumb_0.png'))
               ,'user_url': owner.url
