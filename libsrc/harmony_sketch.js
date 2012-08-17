@@ -836,6 +836,7 @@ simple.prototype =
     {
         this.context = context;
         this.context.globalCompositeOperation = 'source-over';
+        this.context.lineCap = 'round';
     },
 
     destroy: function()
