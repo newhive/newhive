@@ -123,27 +123,31 @@ Hive.Menus = (function(){
                 , '#owner_nav': { right: -50, top: -60 }
                 , '#action_nav': { right: -50 }
             };
-        var speed = 300,
-            drawers = $('#user_nav,#owner_nav,#action_nav'),
-            handles = $('.menu_handle').add('#navigator'),
-            close_nav = function(){
+        var speed = config.speed,
+            drawers = $('#user_nav,#owner_nav,#action_nav');
+        var handles = $('.nav_handle');
+        if (config.navigator.opens_nav) handles.add('#navigator');
+        var close_nav = function(){
+                if (config.nav.opens_navigator) Hive.navigator.hide(speed);
+                if (! config.nav.hideable) return;
                 drawers.stop().clearQueue();
                 // For some reason just using drawers.hide as the callback for animate didn't work
                 var callback = function(){ drawers.hide(); };
                 animate_each(close_state, speed, callback);
-                Hive.navigator.hide(speed);
                 Hive.navigator.current_expr().frame.get(0).focus();
             },
             open_nav = function(){
                 drawers.stop().clearQueue().show();
                 animate_each(open_state(opts), speed);
-                Hive.navigator.show(speed);
+                if (config.nav.opens_navigator){
+                    Hive.navigator.show(speed);
+                }
             };
 
         var shared_hover_menu_opts = {
             layout: false,
-            open_delay: 400,
-            close_delay: opts.slow_close,
+            open_delay: config.open_delay,
+            close_delay: config.close_delay,
             group: false
         }
 
@@ -151,12 +155,17 @@ Hive.Menus = (function(){
             handles,
             drawers,
             $.extend(
-                {opened: config.open_initially, open_menu: open_nav, close_menu: close_nav},
+                {opened: config.nav.open_initially, open_menu: open_nav, close_menu: close_nav},
                 shared_hover_menu_opts
             )
         );
+        if (config.auto_close_delay) nav_menu.delayed_close(config.auto_close_delay);
+        var navigator_handles = '#navigator_handle';
+        if (config.nav.opens_navigator){
+            navigator_handles += ", .nav_handle";
+        }
         var navigator_hover_menu = hover_menu(
-            $('#navigator_handle, #user_nav, #owner_nav, #action_nav'),
+            $(navigator_handles),
             $('#navigator'),
             $.extend(
                 { opened: false,
@@ -168,7 +177,7 @@ Hive.Menus = (function(){
         );
 
         o.init(nav_menu);
-        var initial_state = config.open_initially ? open_state(opts) : close_state;
+        var initial_state = config.nav.open_initially ? open_state(opts) : close_state;
         animate_each(initial_state, 0);
         drawers.show();
 
@@ -239,7 +248,7 @@ Hive.Menus = (function(){
         Hive.navigator = Hive.Navigator.create(
             '#navigator',
             '#expression_frames',
-            {hidden: true}
+            {hidden: !config.navigator.open_initially}
         );
         Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {
@@ -271,7 +280,7 @@ Hive.Menus = (function(){
         // function for nav and navigator respectively).  However, for a good
         // mobile experience, they need to be hidden, so we hide after a delay,
         // (again, this is handled by init function in case of navigator)
-        if (!config.open_initially) {
+        if (!config.nav.open_initially) {
             setTimeout(function(){
                 nav_menu.drawer().hide();
             }, 500 );

@@ -36,7 +36,7 @@
   {% block body %}
   {% endblock body %}
 
-  <div id='user_nav_handle' class='menu_handle'></div>
+  <div id='user_nav_handle' class='menu_handle nav_handle'></div>
   <div id='user_nav'>
     <div id='user_nav_inner' class='horiz'
       ><a href='{{ server_url }}'><div id='logo' class='hoverable icon black_active'></div></a
@@ -125,7 +125,7 @@
   {% endif %}
 
   {% if not editing %}
-    <div id='owner_nav_handle' class='menu_handle'></div>
+    <div id='owner_nav_handle' class='menu_handle nav_handle'></div>
     <div id='owner_nav' class='nav horiz'
       {% if not user.logged_in %}
         ><div id='login_btn' class='text center hoverable text_btn black_active'><span>Log In</span></div
