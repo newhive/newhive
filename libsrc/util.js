@@ -876,9 +876,6 @@ Hive.AB_Test = {
         //   id:
         //     short name used for cookie name and google analytics variable.
         //     conventionally 3 characters all caps, e.g. `NAV`
-        //   config_doc:
-        //     the configuration document or sub-doc that gets extended by each test case.
-        //     e.g. `Hive.config.frame`
         //   start_date:
         //     javascript Date object
         //   duration:
@@ -899,9 +896,9 @@ Hive.AB_Test = {
         //
         // Case definition
         //   Each case is defined as an object literal with the following attributes
-        //     config_overrides:
-        //       this is a mapping of config options that override values set in the `config_doc`,
-        //       e.g. {open_initially: false, auto_close_delay: 5000}
+        //     config_override:
+        //       function to update config document, gets called after test case is chosen
+        //       e.g. function(){ Hive.config.frame.nav.hideable = true; }
         //     weight:
         //       weighted probability of this case being chose. optional if `auto_weight` is true
         //       these probabilities get normalized, so can really be any number
