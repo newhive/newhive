@@ -179,7 +179,9 @@ Hive.Menus = (function(){
                 shared_hover_menu_opts
             )
         );
-        if (config.auto_close_delay) nav_menu.delayed_close(config.auto_close_delay);
+        if (config.auto_close_delay && config.nav.hideable) {
+            nav_menu.delayed_close(config.auto_close_delay);
+        }
         var navigator_handles = '#navigator_handle';
         if (config.nav.opens_navigator){
             navigator_handles += ", .nav_handle";
