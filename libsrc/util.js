@@ -950,17 +950,12 @@ Hive.AB_Test = {
             createCookie(cookie_name, id, o.end_date)
         };
 
-        // Does the actual overriding of config_doc with chosen case definition
-        function update_config(){
-            $.extend(o.config_doc, o.chosen_case.config_overrides);
-        };
-
         // Use case specified in querystring (for debugging), else use case for
         // logged in user if set, else case defined in cookie if set, else pick
         // a random case. Can't just use || with assignment because case_id
         // could be 0
         var case_id = URI(window.location.href).query(true)[cookie_name];
-        if (!case_id && case_id !== 0) case_id = logged_in && o.logged_in_case;
+        if (!case_id && case_id !== 0 && logged_in) case_id = o.logged_in_case;
         if (!case_id && case_id !== 0) case_id = readCookie(cookie_name);
         if (!case_id && case_id !== 0) case_id = pick_random_case();
         assign_group(case_id);
