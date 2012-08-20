@@ -105,6 +105,19 @@ Hive.Menus = (function(){
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
         var config = Hive.config.frame;
+        var fullscreen = Hive.is_fullscreen();
+        $(window).resize(function(){
+            var new_fullscreen = Hive.is_fullscreen();
+            // Set the nav to close if we've just moved to fullscreen
+            if (!fullscreen && new_fullscreen) {
+                //nav_menu.close();
+                nav_menu.delayed_close(1000);
+            } else if (fullscreen && !new_fullscreen){
+                nav_menu.open();
+            }
+            fullscreen = new_fullscreen;
+        });
+
         function animate_each(state, speed, callback){
             var fun = speed ? 'animate' : 'css';
             $.each(state, function(selector, style){
@@ -125,18 +138,20 @@ Hive.Menus = (function(){
             };
         var speed = config.speed,
             drawers = $('#user_nav,#owner_nav,#action_nav');
-        var handles = $('.nav_handle');
+        var handles = $('.nav_handle').add(drawers);
         if (config.navigator.opens_nav) handles.add('#navigator');
         var close_nav = function(){
                 if (config.nav.opens_navigator) Hive.navigator.hide(speed);
-                if (! config.nav.hideable) return;
                 drawers.stop().clearQueue();
                 // For some reason just using drawers.hide as the callback for animate didn't work
                 var callback = function(){ drawers.hide(); };
                 animate_each(close_state, speed, callback);
                 Hive.navigator.current_expr().frame.get(0).focus();
-            },
-            open_nav = function(){
+            };
+        var close_condition = function(){
+            return config.nav.hideable || Hive.is_fullscreen();
+        };
+        var open_nav = function(){
                 drawers.stop().clearQueue().show();
                 animate_each(open_state(opts), speed);
                 if (config.nav.opens_navigator){
@@ -155,7 +170,12 @@ Hive.Menus = (function(){
             handles,
             drawers,
             $.extend(
-                {opened: config.nav.open_initially, open_menu: open_nav, close_menu: close_nav},
+                {
+                    opened: config.nav.open_initially,
+                    open_menu: open_nav,
+                    close_menu: close_nav,
+                    close_condition: close_condition
+                },
                 shared_hover_menu_opts
             )
         );
@@ -168,7 +188,7 @@ Hive.Menus = (function(){
             $(navigator_handles),
             $('#navigator'),
             $.extend(
-                { opened: false,
+                { opened: config.navigator.open_initially,
                   open_menu: function(){ Hive.navigator.show(speed); },
                   close_menu: function(){ Hive.navigator.hide(speed); }
                 },

@@ -467,7 +467,8 @@ hover_menu = function(handle, drawer, options) {
             ,offset_x: 8
             ,focus_persist: true
             ,hover: true
-            ,open_condition: function(){ return true }
+            ,open_condition: function(){ return true; }
+            ,close_condition: function(){ return true; }
             ,auto_height: true
             ,default_item: drawer.find('.menu_item.default')
             ,layout: 'bottom'
@@ -507,6 +508,7 @@ hover_menu = function(handle, drawer, options) {
     o.drawer = function(){ return drawer };
 
     o.close = function(force) {
+        if (!opts.close_condition()) return;
         close_timer = false;
         if(!o.opened) return;
 
@@ -967,4 +969,10 @@ Hive.AB_Test = {
 
         return o;
     }
+};
+
+Hive.is_fullscreen = function(){
+    return !window.screenTop && !window.screenY
+           || 
+           document.height == window.screen.height && document.width == window.screen.width;
 };
