@@ -1456,7 +1456,7 @@ Hive.App.Sketch = function(o) {
     }; };
     o.set_content = function(c) {
         if(c.src) o.win.set_image(c.src);
-        if(c.brush) o.win.set_brush(c.brush);
+        if(c.brush) o.set_brush(c.brush);
         if(c.fill_color) o.win.COLOR = c.fill_color;
         if(c.brush_size) o.win.BRUSH_SIZE = c.brush_size;
     };
@@ -1469,6 +1469,11 @@ Hive.App.Sketch = function(o) {
 
     o.focus.add(function() { o.win.focus() });
 
+    o.set_brush = function( val ){
+        o.brush_name = val;
+        o.win.set_brush(val);
+    };
+
     function controls(o) {
         var common = $.extend({}, o);
         
@@ -1477,9 +1482,12 @@ Hive.App.Sketch = function(o) {
 
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'),
             { auto_close : false });
-        o.hover_menu(o.div.find('.button.brush'), o.div.find('.drawer.brush'));
+        var brush_btn = o.div.find('.button.brush')
+            .click( function(){ o.app.set_brush( o.app.brush_name ) });
+        o.hover_menu(brush_btn, o.div.find('.drawer.brush'));
+        o.div.find('.button.eraser').click( function(){ o.app.win.set_brush( 'eraser' ) });
         o.div.find('.drawer.brush .option').each(function(i, e) { $(e).click(function() {
-            o.app.win.set_brush($(e).attr('val'));
+            o.app.set_brush($(e).attr('val'));
         }); })
 
         return o;
