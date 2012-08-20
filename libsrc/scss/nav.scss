@@ -58,8 +58,10 @@ img.thumb { background-color: $color_grey_medium; }
 
     .center *, .center { vertical-align: middle; }
 
-    &.horiz > * { display: inline-block; }
-    &.horiz div { display: inline-block; }
+    &.horiz > *, &.horiz div {
+        display: inline-block;
+        vertical-align: middle;
+    }
 
     .text {
         font-weight: bold;
@@ -138,9 +140,11 @@ img.thumb { background-color: $color_grey_medium; }
     background-image: asset_url('skin/1/logotype_beta.png');
 }
 
-#create_btn { .text { padding-left: 6px; } }
-#create_icon { background-image: asset_url('skin/1/create.png'); }
-.active #create_icon { background-image: asset_url('skin/1/create-hover.png'); }
+#create_btn {
+    .text { padding-left: 6px; }
+    #create_icon { background-image: asset_url('skin/1/create.png'); }
+    &.active #create_icon { background-image: asset_url('skin/1/create-hover.png'); }
+}
 
 #join_the_party {
     float: left;

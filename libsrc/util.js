@@ -489,7 +489,7 @@ hover_menu = function(handle, drawer, options) {
     o.sticky = opts.sticky;
 
     o.delayed_close = function(close_delay) {
-        if(typeof(close_delay) != 'number') close_delay = false;
+            if(typeof(close_delay) != 'number') close_delay = false;
         opts.default_item.removeClass('active');
         if(opts.hover_close && ! close_timer) {
             close_timer = setTimeout(o.close, close_delay || opts.close_delay);
