@@ -549,7 +549,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     // Factory method for Expr objects
     o.make_expr = function(data){
-        return Hive.Navigator.Expr(data, content_element, opts);
+        if (data.owner){
+            return Hive.Navigator.Expr(data, content_element, opts);
+        } else {
+            return Hive.Navigator.User(data, content_element, opts);
+        }
     };
 
     // Populate navigator from scratch
@@ -606,10 +610,69 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     return o;
 };
 
-Hive.Navigator.Expr = function(data, content_element, opts){
+// Abstract base class for User and Expr
+Hive.Navigator.Item = function(data, content_element, opts){
     var o = $.extend({}, data);
+    o.load = noop;
+    o.unload = noop;
+    o.data = function(){ return data; };
+    o.show = noop;
+    o.hide = noop;
+
+    o.render_card = function(){
+        var content = o._card_content();
+        var el = $('<div>')
+            .addClass('element expr_card')
+            .css('height', opts.thumb_width);
+        var im = $('<img>')
+            .attr('src', content.thumb)
+            .css('width', opts.thumb_width)
+            .css('height', opts.thumb_width);
+        var byline = $('<div class="hover">')
+            .append(content.hover);
+        var text = $('<div class="card_text">')
+            .append('<div class="base">' + content.base + '</div>')
+            .append(byline)
+            .css('width', opts.thumb_width);
+        el.append(im).append(text);
+        return el;
+    };
+
+    return o;
+};
+
+// Subclasses Hive.Navigator.Item
+// Navigator's representation of a user
+Hive.Navigator.User = function(data, content_element, opts){
+    var o = Hive.Navigator.Item(data, content_element, opts);
+    o.show = function(){
+        window.location = o.url;
+    };
+    o._card_content = function(){
+        return {
+            thumb: o.thumb,
+            base: o.name,
+            hover: o.fullname
+        };
+    };
+
+    return o;
+};
+
+// Subclasses Hive.Navigator.Item
+// Navigator's representation of an expression
+Hive.Navigator.Expr = function(data, content_element, opts){
+    var o = Hive.Navigator.Item(data, content_element, opts);
 
     o.url =  '/' + o.owner_name + '/' + o.name;
+
+    o._card_content = function(){
+        return {
+            thumb: o.thumb,
+            base: o.title,
+            hover: '<span class="by">by</span> ' + o.owner.name 
+        };
+    };
 
     function on_load(callback){
         return function(){
@@ -638,10 +701,6 @@ Hive.Navigator.Expr = function(data, content_element, opts){
             delete o.loading_started;
             delete o.loaded;
         };
-    };
-
-    o.data = function(){
-        return data;
     };
 
     function animate(direction){
@@ -711,25 +770,6 @@ Hive.Navigator.Expr = function(data, content_element, opts){
             f[0].contentWindow.postMessage({action: 'hide'}, '*');
         }
     };
-
-    o.render_card = function(){
-        var el = $('<div>')
-            .addClass('element expr_card')
-            .css('height', opts.thumb_width);
-        var im = $('<img>')
-            .attr('src', o.thumb)
-            .css('width', opts.thumb_width)
-            .css('height', opts.thumb_width);
-        var byline = $('<div class="byline">')
-            .append('<span class="by">by</span> ' + o.owner.name )
-            .append('<span>');
-        var text = $('<div class="card_text">')
-            .append('<div class="title">' + o.title + '</div>')
-            .append(byline)
-            .css('width', opts.thumb_width);
-        el.append(im).append(text);
-        return el;
-   };
 
     return o;
 };
