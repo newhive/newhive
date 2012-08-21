@@ -750,7 +750,7 @@ var fix_borders = function(items){
 
     // fix top tab placement
     var card_width = $('#feed .card').outerWidth();
-    $('#top_tabs').css({'right': $('#feed').outerWidth() - columns * card_width });
+    $('#top_tabs').css({'right': Math.min( $('#feed').outerWidth() - 245, $('#feed').outerWidth() - columns * card_width ) });
 }
 
 var context_to_string = function(opt_arg){

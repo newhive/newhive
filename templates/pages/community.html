@@ -238,7 +238,7 @@
          $('#action_input').val('user_tag_remove');
          $('#value_input').val(current_tag);
          $('#upload_form').submit();
-         $('#upload_target').load(function() { window.location = '{{ home_url }}' });
+         $('#upload_target').load(function() { window.location = '{{ user.url }}' });
      }
      $(function(){ 
        fix_borders('#feed .item');
