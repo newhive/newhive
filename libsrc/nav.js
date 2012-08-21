@@ -104,29 +104,104 @@ Hive.Menus = (function(){
 
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
-        var speed = 300,
-            drawers = $('#user_nav,#owner_nav,#action_nav'),
-            handles = $('.menu_handle').add('#navigator'),
-            close_nav = function(){
-                drawers.stop().clearQueue();
-                $('#user_nav').animate({ left: -50, top: -50 }, { complete:
-                    function(){ drawers.hide() } }, speed);
-                $('#owner_nav').animate({ right: -50, top: -50 }, speed);
-                $('#action_nav').animate({ right: -50 }, speed);
-                Hive.navigator.hide(speed);
-                Hive.navigator.current_expr().frame.get(0).focus();
-            },
-            open_nav = function(){
-                drawers.stop().clearQueue().show();
-                $('#user_nav').animate({ left: 0, top: 0 }, speed);
-                $('#owner_nav').animate({ right: opts.pad_right, top: 0 }, speed);
-                $('#action_nav').animate({ right: opts.pad_right }, speed);
-                Hive.navigator.show();
+        var config = Hive.config.frame;
+        var fullscreen = Hive.is_fullscreen();
+        $(window).resize(function(){
+            var new_fullscreen = Hive.is_fullscreen();
+            // Set the nav to close if we've just moved to fullscreen
+            if (!fullscreen && new_fullscreen) {
+                //nav_menu.close();
+                nav_menu.delayed_close(1000);
+            } else if (fullscreen && !new_fullscreen){
+                nav_menu.open();
+            }
+            fullscreen = new_fullscreen;
+        });
+
+        function animate_each(state, speed, callback){
+            var fun = speed ? 'animate' : 'css';
+            $.each(state, function(selector, style){
+                $(selector)[fun](style, speed, callback);
+            });
+        };
+        var open_state = function(opts){
+            return {
+                '#user_nav': {left: 0, top: 0}
+                , '#owner_nav': { right: opts.pad_right, top: 0 }
+                , '#action_nav': { right: opts.pad_right }
             };
-            nav_menu = o.nav_menu = hover_menu(handles, drawers, { layout: false, open_delay: 400,
-                open_menu: open_nav, close_menu: close_nav, opened: false, close_delay: opts.slow_close } );
+        };
+        var close_state = {
+                '#user_nav': {left: -50, top: -60}
+                , '#owner_nav': { right: -50, top: -60 }
+                , '#action_nav': { right: -50 }
+            };
+        var speed = config.speed,
+            drawers = $('#user_nav,#owner_nav,#action_nav');
+        var handles = $('.nav_handle').add(drawers);
+        if (config.navigator.opens_nav) handles.add('#navigator');
+        var close_nav = function(){
+                if (config.nav.opens_navigator) Hive.navigator.hide(speed);
+                drawers.stop().clearQueue();
+                // For some reason just using drawers.hide as the callback for animate didn't work
+                var callback = function(){ drawers.hide(); };
+                animate_each(close_state, speed, callback);
+                Hive.navigator.current_expr().frame.get(0).focus();
+            };
+        var close_condition = function(){
+            return config.nav.hideable || Hive.is_fullscreen();
+        };
+        var open_nav = function(){
+                drawers.stop().clearQueue().show();
+                animate_each(open_state(opts), speed);
+                if (config.nav.opens_navigator){
+                    Hive.navigator.show(speed);
+                }
+            };
+
+        var shared_hover_menu_opts = {
+            layout: false,
+            open_delay: config.open_delay,
+            close_delay: config.close_delay,
+            group: false
+        }
+
+        var nav_menu = o.nav_menu = hover_menu(
+            handles,
+            drawers,
+            $.extend(
+                {
+                    opened: config.nav.open_initially,
+                    open_menu: open_nav,
+                    close_menu: close_nav,
+                    close_condition: close_condition
+                },
+                shared_hover_menu_opts
+            )
+        );
+        if (config.auto_close_delay && config.nav.hideable) {
+            nav_menu.delayed_close(config.auto_close_delay);
+        }
+        var navigator_handles = '#navigator_handle';
+        if (config.nav.opens_navigator){
+            navigator_handles += ", .nav_handle";
+        }
+        var navigator_hover_menu = hover_menu(
+            $(navigator_handles),
+            $('#navigator'),
+            $.extend(
+                { opened: config.navigator.open_initially,
+                  open_menu: function(){ Hive.navigator.show(speed); },
+                  close_menu: function(){ Hive.navigator.hide(speed); }
+                },
+                shared_hover_menu_opts
+            )
+        );
 
         o.init(nav_menu);
+        var initial_state = config.nav.open_initially ? open_state(opts) : close_state;
+        animate_each(initial_state, 0);
+        drawers.show();
 
         o.action_nav_top = 70;
         var menu_top = o.action_nav_top + 4;
@@ -147,16 +222,20 @@ Hive.Menus = (function(){
             }
         );
 
-        $('#star_btn').click(function(){ o.feed_toggle('star', Hive.expr.id, '#star_btn',
-            '#star_menu .items') });
-        $('#broadcast_btn').click(function(){ o.feed_toggle('broadcast', Hive.expr.id,
-            '#broadcast_btn', '#broadcast_menu .items') });
+        $('#star_btn').click(function(){
+            o.feed_toggle('star', Hive.expr.id, '#star_btn', '#star_menu .items');
+        });
+        $('#broadcast_btn').click(function(){
+            if (Hive.expr.owner.id != user.id){
+                o.feed_toggle('broadcast', Hive.expr.id, '#broadcast_btn', '#broadcast_menu .items');
+            }
+        });
 
         $('#comment_form').submit(o.post_comment);
 
         // email and embed menus
         $(function(){
-            $('.menu_item.message').click(require_login(function(){showDialog('#dia_share')}));
+            $('.menu_item.message').click(require_login('email', function(){showDialog('#dia_share')}));
             var dia = $('#dia_share');
             dia.find('form').submit(function(e){
                 var submit = dia.find('input[type=submit]');
@@ -188,7 +267,11 @@ Hive.Menus = (function(){
         $('#action_nav .delete').click(function(){ del_dialog = showDialog('#dia_delete'); });
         $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
-        Hive.navigator = Hive.Navigator.create('#navigator', '#expression_frames', {hidden: true});
+        Hive.navigator = Hive.Navigator.create(
+            '#navigator',
+            '#expression_frames',
+            {hidden: !config.navigator.open_initially}
+        );
         Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {
         //    layout: false,
@@ -219,9 +302,11 @@ Hive.Menus = (function(){
         // function for nav and navigator respectively).  However, for a good
         // mobile experience, they need to be hidden, so we hide after a delay,
         // (again, this is handled by init function in case of navigator)
-        setTimeout(function(){
-            nav_menu.drawer().hide();
-        }, 500 );
+        if (!config.nav.open_initially) {
+            setTimeout(function(){
+                nav_menu.drawer().hide();
+            }, 500 );
+        }
         //o.navigator_menu.delayed_close(5000);
         //nav_menu.delayed_close(5000);
     };
@@ -281,11 +366,12 @@ Hive.Menus = (function(){
         //if(!nav_menu.opened) expr.frame.get(0).focus();
         var set_class = function(o, b, c){ return o[b ? 'addClass' : 'removeClass'](c) };
 
+        var is_owner = user ? (user.id == expr.owner.id) : false;
+
         $('.edit_url').attr('href', secure_server + 'edit/' + expr.id);
         $('.expr_id').val(expr.id); // for delete dialog
-        $('.btn_box.edit,.btn_box.delete').toggleClass('none', user.id != expr.owner.id);
+        $('.btn_box.edit,.btn_box.delete').toggleClass( 'none', ! is_owner );
 
-        var is_owner = expr.owner.id == user.id;
         $('#owner_btn').toggleClass('none', is_owner);
         if(!is_owner){
             var owner_name = expr.owner_name[0].toUpperCase() + expr.owner_name.slice(1);
@@ -387,7 +473,7 @@ Hive.Menus = (function(){
         alert("Sorry, something went wrong. Try refreshing the page and trying again.");
     };
 
-    o.feed_toggle = require_login(function(action, entity, btn, items, opts) {
+    o.feed_toggle = require_login('feed_toggle', function(action, entity, btn, items, opts) {
         btn = $(btn); items = $(items);
         if(btn.hasClass('inactive')) return;
         btn.addClass('inactive');
@@ -413,7 +499,7 @@ Hive.Menus = (function(){
         }, 'json');
     });
 
-    o.post_comment = require_login(function(){
+    o.post_comment = require_login('comment', function(){
         btn = $('#comment_form .submit'); items = $('#comment_menu .items');
         if(btn.hasClass('inactive')) return;
         btn.addClass('inactive');

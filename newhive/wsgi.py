@@ -142,6 +142,7 @@ site_pages = {
     ,'admin'               : controllers['admin'].default
     ,'analytics'           : controllers['analytics'].default
     ,'robots.txt'          : app.robots
+    ,'error_log.js'        : controllers['analytics'].js_error_log
     ,'500'                 : newhive.utils.exception_test
 }
 
@@ -190,8 +191,7 @@ def handle(request): # HANDLER
         else:
             return app.serve_forbidden(request)
 
-        print reqaction
-        print "************************would return status 204 here*************************"
+        logger.warn('falling through post handler on action "%s"', reqaction)
         #return Response(status=204) # 204 status = no content
 
 
@@ -257,23 +257,18 @@ def handle_safe(request):
     try:
         return handle(request)
     except Exception as e:
-        import socket
         from werkzeug.debug.tbtools import get_current_traceback
-        hostname = socket.gethostname()
         traceback = get_current_traceback(skip=1, show_hidden_frames=False
                 , ignore_system_exceptions=True)
-        def serializable_filter(dictionary):
-            return {key.replace('.', '-'): val
-                    for key, val in dictionary.iteritems()
-                    if type(val) in [bool, str, int, float, tuple, unicode]}
         def privacy_filter(dictionary):
             for key in ['password', 'secret', 'old_password']:
                 if dictionary.has_key(key): dictionary.update({key: "******"})
             return dictionary
         log_entry = {
-                'exception': traceback.exception
-                , 'environ': serializable_filter(request.environ)
-                , 'form': privacy_filter(serializable_filter(request.form))
+                'type': 'python'
+                , 'exception': traceback.exception
+                , 'environ': utils.serializable_filter(request.environ)
+                , 'form': privacy_filter(utils.serializable_filter(request.form))
                 , 'url': request.url
                 , 'stack_frames': [
                         {

@@ -14,7 +14,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         },
         opts
     );
-    var height = opts.thumb_width + 2 * opts.margin + navigator_element.height();
+    var height = opts.thumb_width + 2 * opts.margin +
+                 navigator_element.find('.info').outerHeight(true);
     var expr_width = opts.thumb_width + 2 * opts.margin;
     if (!opts.visible_count) opts.visible_count = Math.round($(window).width() / expr_width * 2);
     var history_manager = function(){
@@ -416,20 +417,25 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         position_containers(width);
     };
 
+    var already_shown;
     o.show = function(speed){
-        speed = speed || 100;
+        if (!already_shown) {
+            _gaq.push(['_trackEvent', 'navigator', 'initial open', undefined, undefined, true]);
+            already_shown = true;
+        }
+        speed = speed || opts.speed;
         clearTimeout(navigator_element.initial_hide_timeout);
         o.opened = true;
         navigator_element.stop().clearQueue()
             .width($(window).width() - opts.pad_right).show()
-            .animate({ bottom: opts.pad_bottom }, opts.speed);
+            .animate({ bottom: opts.pad_bottom }, speed);
         if (info && !Modernizr.touch) info.find('input').focus();
         return o;
     };
 
     o.hide = function(speed){
         o.opened = false;
-        speed = speed || 100;
+        speed = speed || opts.speed;
         navigator_element.stop().clearQueue();
         var complete = function(){ navigator_element.hide() };
         navigator_element.animate({bottom: -height*1.1}, {complete: complete}, speed);
@@ -595,6 +601,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         // completely for better mobile browser experience
         var bottom = opts.hidden ? -height * 1.1 : 0;
         navigator_element.css({'height': height, bottom: bottom});
+        navigator_element.show();
         if (opts.hidden){
             navigator_element.initial_hide_timeout = setTimeout(function(){ navigator_element.hide(); }, 1000);
         }

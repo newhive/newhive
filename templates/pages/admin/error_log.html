@@ -34,7 +34,13 @@ Page {{page}}
   <td><a href="/admin/error_log/{{error.id}}">{{ error.created | epoch_to_string }}</td>
   <td>{{ error.get('environ').HTTP_X_FORWARDED_FOR or error.get('environ').REMOTE_ADDR }}</td>
   <td>{{ error.get('requester').name | e}}</td>
-  <td>{{ error.get('environ').HTTP_HOST | e}}{{ error.get('environ').PATH_INFO | e}}</td>
+  <td>
+    {% if error.get('type') == 'javascript' %}
+      {{ error.url }}
+    {% else %}
+      {{ error.get('environ').HTTP_HOST | e}}{{ error.get('environ').PATH_INFO | e}}
+    {% endif %}
+  </td>
   <td>{{ error.form.action | e if error.has_key('form')}}</td>
   <td>{{ error.get('exception') | e | truncate(60)}}</td>
   <td>{{ error.get('stack_frames')[-1].filename | strip_filenames}}</td>

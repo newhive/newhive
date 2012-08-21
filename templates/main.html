@@ -36,7 +36,7 @@
   {% block body %}
   {% endblock body %}
 
-  <div id='user_nav_handle' class='menu_handle'></div>
+  <div id='user_nav_handle' class='menu_handle nav_handle'></div>
   <div id='user_nav'>
     <div id='user_nav_inner' class='horiz'
       ><a href='{{ server_url }}'><div id='logo' class='hoverable icon black_active'></div></a
@@ -53,14 +53,14 @@
       {% endif %}
       {% if not editing %}
         ><div id='create_btn' class='center hoverable black_active'
-          ><a href='{{ create }}' onclick='return require_login()'
+          ><a href='{{ create }}' onclick='return require_login("create")'
             ><div class='text'>Create</div
             ><div id='create_icon' class='icon'></div
           ></a></div
       {% endif %}
     ></div>
     {% if not user.logged_in %}
-      <div id='join_the_party' onclick="require_login();">JOIN THE PARTY!</div>
+      <div id='join_the_party' onclick="require_login('call_to_action');">JOIN THE PARTY!</div>
     {% endif %}
 </div>
 
@@ -125,10 +125,10 @@
   {% endif %}
 
   {% if not editing %}
-    <div id='owner_nav_handle' class='menu_handle'></div>
+    <div id='owner_nav_handle' class='menu_handle nav_handle'></div>
     <div id='owner_nav' class='nav horiz'
       {% if not user.logged_in %}
-        ><div id='login_btn' class='text center hoverable text_btn black_active'><span>Log In</span></div
+        ><div id='login_btn' class='center hoverable text_btn black_active'><div class="text">Log In</div></div
       {% endif %}
       {% if expr or (owner and not user_is_owner) %}
         ><div id='owner_btn' class='hoverable center text_btn black_active'

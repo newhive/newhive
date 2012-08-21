@@ -11,6 +11,7 @@ logger.setLevel(logging.DEBUG)
 log_file = join(config.src_home, 'log', 'newhive.log')
 fh = logging.FileHandler(log_file)
 fh.setLevel(logging.DEBUG)
+fh.set_name('file')
 
 # create console handler with a higher log level
 ch = logging.StreamHandler()
@@ -18,6 +19,7 @@ if config.debug_mode:
     ch.setLevel(logging.DEBUG)
 else:
     ch.setLevel(logging.ERROR)
+ch.set_name('stderr')
 
 # create formatter and add it to the handlers
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')

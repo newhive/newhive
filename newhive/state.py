@@ -816,8 +816,11 @@ class Expr(HasSocial):
         password = self.get('password', '')
         if password == '': return True
         if not isinstance(v, (str, unicode)): v = ''
-        if password == v: return True
-        return crypt(v.encode('UTF8'), password) == password
+        return password == v
+        # This implementation doesn't work for non-ascii text, we need to look
+        # into this before enabling hashed expression passwords
+        #if password == v: return True
+        #return crypt(v.encode('UTF8'), password) == password
 
     def set_password(self, v):
         salt = "$6$" + junkstr(8)
