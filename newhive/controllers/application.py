@@ -120,9 +120,11 @@ class Application(object):
         return response
 
     def robots(self, request, response):
-        if not config.live_server:
-            return self.serve_data(response, 'text/plain', "User-agent: *\nDisallow: /")
-        else: return self.serve_404(None, response)
+        if config.live_server:
+            txt = "User-agent: *\nDisallow:"
+        else:
+            txt = "User-agent: *\nDisallow: /"
+        return self.serve_data(response, 'text/plain', txt)
 
     def show_dialog(self, response, dialog_selector, opts={}):
         response.context.update(dialog_to_show = { 'name': dialog_selector, opts: opts })
