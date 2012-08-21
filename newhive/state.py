@@ -746,12 +746,13 @@ class Expr(HasSocial):
         tags = d.get('tags')
         if tags: d['tags_index'] = list( set( normalize(tags) ) )
 
-        text_index = normalize( self.get('title', '') )
+        d['title_index'] = list( set( normalize( self.get('title', '') ) ) )
+
+        text_index = []
         for a in d.get('apps', []):
             if a.get('type') in ['hive.html', 'hive.text'] and a.get('content', '').strip():
                 text = html.fromstring( a.get('content') ).text_content()
                 text_index.extend( normalize(text) )
-
         text_index = list( set( text_index ) )
         if text_index: d['text_index'] = text_index
 
@@ -781,7 +782,7 @@ class Expr(HasSocial):
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         self._collect_files(self)
-        self.build_search_index(self)
+        self.build_search(self)
         super(Expr, self).create()
         feed = self.db.NewExpr.create(self.owner, self)
         self.owner.get_expr_count(force_update=True)

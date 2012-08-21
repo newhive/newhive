@@ -80,6 +80,12 @@ class Community(Application, PagingMixin):
 
     def search(self, request, response):
         query = request.args.get('q', '')
+        spec = self.parse_query( query )
+
+        if spec.get('text_index'):
+            results = self.db.User.search({ 'text_index': spec['text_index'] }, limit=40)
+
+
         res = self.db.KeyWords.search_page(query, **query_args(request))
         entities = { 'User': self.db.User, 'Expr': self.db.Expr }
         for i, e in enumerate(res): res[i] = entities[e['doc_type']].fetch(e['doc'])
@@ -91,6 +97,26 @@ class Community(Application, PagingMixin):
         # TODO: if search matches one or more tags, return tags argument
         return res
 
+    def parse_query(self, q):
+        """ Parses search query into MongoDB spec
+            #tag @user and :ATTR are parsed (where ATTR is "public" or "private")
+        """
+
+        # split into lower-cased words with possible [@#:] prefix
+        spec = {}
+        tags = []
+        text = []
+        for pattern in re.findall(r'(\b|\W+)(\w+)', q.lower()):
+            prefix = re.sub( r'[^#@:]', '', pattern[0] )
+            if prefix == '@': spec['owner_name'] = pattern[1]
+            if prefix == '#': tags.append( pattern[1] )
+            if prefix == ':': spec['auth'] = 'public' if pattern[1] == 'public' else 'password'
+            else: text.append( pattern[1] )
+
+        if text: spec.update( text_index = {'$all': text} )
+        if tags: spec.update( tags_index = {'$all': tags} ) 
+        return spec
+        
     def tag(self, request, response):
         tag = lget(request.path_parts, 1)
         items = self.db.Expr.page({ 'tags_index': tag }, **query_args(request))
