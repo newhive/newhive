@@ -1,4 +1,4 @@
-import crypt, urllib, time
+import crypt, urllib, time, json, re
 import newhive.state
 from newhive.state import abs_url
 from newhive import config
@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
 def send_mail(headers, body):
+    def to_json(data):
+        j = json.dumps(data)
+        return re.compile('(["\]}])([,:])(["\[{])').sub('\1\2 \3', j)
     t0 = time.time()
     smtp = SMTP(config.email_server, config.email_port)
     logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
@@ -23,6 +26,7 @@ def send_mail(headers, body):
     msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
     msg['To'] = headers['To']
     msg['From'] = headers.get('From', 'The New Hive <noreply@thenewhive.com>')
+    if headers.has_key('X-SMTPAPI'): msg['X-SMTPAPI'] = to_json(headers['X-SMTPAPI'])
 
     if type(body) == dict:
         plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
@@ -60,6 +64,7 @@ def mail_invite(jinja_env, db, email, name=False, force_resend=False):
     heads = {
         'To': email
         ,'Subject' : "You have a beta invitation to thenewhive.com"
+        ,'X-SMTPAPI': {'category': 'site_referral'}
         }
 
     context = {

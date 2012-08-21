@@ -108,7 +108,7 @@ class Mail(Application):
             send_mail(heads, body)
         return self.redirect(response, request.form.get('forward'))
 
-    def mail_referral(self, request, response):
+    def user_referral(self, request, response):
         user = request.requester
         for i in range(0,4):
             name = request.form.get('name_' + str(i))
@@ -120,6 +120,10 @@ class Mail(Application):
                  'To' : to_email
                 ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
                 ,'Reply-to' : user.get('email', '')
+                ,'X-SMTPAPI': {
+                    'category': 'user_referral'
+                    , 'unique_args': {'initiator': user.get('name'), 'referral_id': referral.id}
+                    }
                 }
             context = {
                  'referrer_url': user.url
