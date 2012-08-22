@@ -133,19 +133,26 @@ class Admin(Application):
 
             return self.serve_page(response, 'pages/admin/error.html')
         else:
+            args = request.args.copy()
             query = {
                     'created': {'$exists': True}
                     , '$or': [{'dev_prefix': {'$exists': False}}, {'dev_prefix': config.dev_prefix}]
                     }
-            page = int(request.args.get('page', 1))
-            if request.args.has_key('before'): query['created'] = {'$lt': float(request.args.get('before'))}
-            if request.args.has_key('after'): query['created'] = {'$gt': float(request.args.get('after'))}
+            page = int(args.pop('page', 1))
+            if args.has_key('before'): query['created'] = {'$lt': float(args.pop('before'))}
+            if args.has_key('after'): query['created'] = {'$gt': float(args.pop('after'))}
+            query.update(args.to_dict())
             count = self.db.ErrorLog.count({})
             page_size = 500
             errors = list(self.db.ErrorLog.search(query, sort=[('created', -1)], limit=page_size))
             response.context['page'] = page
-            response.context['newer'] = {'exists': page > 1, 'date': errors[0]['created'], 'page': page - 1}
-            response.context['older'] = {'exists': page*page_size < count, 'date': errors[-1]['created'], 'page': page + 1}
+            if len(errors):
+                response.context['newer'] = {'exists': page > 1, 'date': errors[0]['created'], 'page': page - 1}
+                response.context['older'] = {'exists': page*page_size < count, 'date': errors[-1]['created'], 'page': page + 1}
+            else:
+                response.context['newer'] = {'exists': False}
+                response.context['older'] = {'exists': False}
+
             response.context['errors'] = errors
             return self.serve_page(response, 'pages/admin/error_log.html')
 
