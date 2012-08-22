@@ -15,19 +15,32 @@ import logging
 logger = logging.getLogger(__name__)
 
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
-def send_mail(headers, body):
+def send_mail(headers, body, category=None, unique_args=None):
     def to_json(data):
         j = json.dumps(data)
         return re.compile('(["\]}])([,:])(["\[{])').sub('\1\2 \3', j)
+
+    # smtp connection setup and timings
     t0 = time.time()
     smtp = SMTP(config.email_server, config.email_port)
+    if config.email_user and config.email_password:
+        smtp.login(config.email_user, config.email_password)
     logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
+
+    # Message header assembly
     msg = MIMEMultipart('alternative')
     msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
     msg['To'] = headers['To']
     msg['From'] = headers.get('From', 'The New Hive <noreply@thenewhive.com>')
-    if headers.has_key('X-SMTPAPI'): msg['X-SMTPAPI'] = to_json(headers['X-SMTPAPI'])
 
+    # Sendgrid smtp api setup
+    if category or unique_args:
+        smtpapi = {}
+        if category:    smtpapi.update({'category': category})
+        if unique_args: smtpapi.update({'unique_args': unique_args})
+        msg['X-SMTPAPI'] = to_json(smtpapi)
+
+    # Message body assembly
     if type(body) == dict:
         plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
         html = MIMEText(body['html'].encode('utf-8'), 'html')
@@ -36,15 +49,14 @@ def send_mail(headers, body):
         part1 = MIMEText(body.encode('utf-8'), 'plain')
         msg.attach(part1)
 
-    if config.email_user and config.email_password:
-        smtp.login(config.email_user, config.email_password)
-
-    # Unicode support is super wonky.  see http://radix.twistedmatrix.com/2010/07/how-to-send-good-unicode-email-with.html
+    # Unicode support is super wonky.  see
+    # http://radix.twistedmatrix.com/2010/07/how-to-send-good-unicode-email-with.html
     io = StringIO()
     g = Generator(io, False) # second argument means "should I mangle From?"
     g.flatten(msg)
     encoded_msg = io.getvalue()
 
+    # Send mail, but if we're in debug mode only send to admins
     if config.debug_mode and not msg['To'] in config.admin_emails:
         logger.warn("Not sending mail to %s in debug mode" % (msg['To']))
     else:
@@ -54,7 +66,7 @@ def send_mail(headers, body):
         return sent
 
 
-def mail_invite(jinja_env, db, email, name=False, force_resend=False):
+def site_referral(jinja_env, db, email, name=False, force_resend=False):
     if db.Referral.find(email, keyname='to') and not force_resend:
         return False
 
@@ -64,7 +76,6 @@ def mail_invite(jinja_env, db, email, name=False, force_resend=False):
     heads = {
         'To': email
         ,'Subject' : "You have a beta invitation to thenewhive.com"
-        ,'X-SMTPAPI': {'category': 'site_referral'}
         }
 
     context = {
@@ -75,10 +86,10 @@ def mail_invite(jinja_env, db, email, name=False, force_resend=False):
          'plain': jinja_env.get_template("emails/invitation.txt").render(context)
         ,'html': jinja_env.get_template("emails/invitation.html").render(context)
         }
-    send_mail(heads, body)
+    send_mail(heads, body, 'site_referral')
     return referral.id
 
-def mail_email_confirmation(jinja_env, user, email):
+def email_confirmation(jinja_env, user, email):
     secret = crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date'))))
     link = abs_url(secure=True) + "email_confirmation?user=" + user.id + "&email=" + urllib.quote(email) + "&secret=" + urllib.quote(secret)
     heads = {
@@ -94,9 +105,9 @@ def mail_email_confirmation(jinja_env, user, email):
         'plain': jinja_env.get_template("emails/email_confirmation.txt").render(context)
         ,'html': jinja_env.get_template("emails/email_confirmation.html").render(context)
         }
-    send_mail(heads, body)
+    send_mail(heads, body, 'email_confirmation')
 
-def mail_temporary_password(jinja_env, user, recovery_link):
+def temporary_password(jinja_env, user, recovery_link):
     heads = {
         'To' : user.get('email')
         , 'Subject' : 'Password recovery for thenewhive.com'
@@ -110,7 +121,7 @@ def mail_temporary_password(jinja_env, user, recovery_link):
         'plain': jinja_env.get_template("emails/password_recovery.txt").render(context)
         ,'html': jinja_env.get_template("emails/password_recovery.html").render(context)
         }
-    send_mail(heads, body)
+    send_mail(heads, body, 'temporary_password')
 
 def mail_feed(jinja_env, feed, recipient, dry_run=False):
     initiator_name = feed.get('initiator_name')
@@ -151,10 +162,11 @@ def mail_feed(jinja_env, feed, recipient, dry_run=False):
     if dry_run:
         return heads
     elif recipient_name in config.admins or ( not config.debug_mode ):
-        send_mail(heads, body)
+        sendgrid_args = {'initiator': initiator_name, 'recipient': recipient_name}
+        send_mail(heads, body, 'mail_feed', sendgrid_args)
         return heads
 
-def mail_user_register_thankyou(jinja_env, user):
+def user_register_thankyou(jinja_env, user):
     user_profile_url = user.url
     user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
     heads = {
@@ -172,4 +184,4 @@ def mail_user_register_thankyou(jinja_env, user):
          'plain': jinja_env.get_template("emails/thank_you_register.txt").render(context)
         ,'html': jinja_env.get_template("emails/thank_you_register.html").render(context)
         }
-    send_mail(heads, body)
+    send_mail(heads, body, 'user_register_thankyou')

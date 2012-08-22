@@ -1,6 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.mail import mail_invite
+from newhive.mail import site_referral
 import logging
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class Admin(Application):
                 contact = self.db.Contact.fetch(id)
                 name = form.get('name_' + id)
                 if contact.get('email'):
-                    referral_id = mail_invite(self.jinja_env, self.db, contact['email'], name)
+                    referral_id = site_referral(self.jinja_env, self.db, contact['email'], name)
                     if referral_id:
                         contact.update(referral_id=referral_id)
                     else:

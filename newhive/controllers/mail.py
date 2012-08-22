@@ -39,7 +39,7 @@ class Mail(Application):
         form.update({'msg': body})
         if not config.debug_mode:
             send_mail(heads, body)
-        self.db.Contact.create(form)
+        contact = self.db.Contact.create(form)
 
         # mail_signup thank you
         context = {
@@ -55,7 +55,7 @@ class Mail(Application):
              'plain': self.jinja_env.get_template("emails/thank_you_signup.txt").render(context)
             ,'html': self.jinja_env.get_template("emails/thank_you_signup.html").render(context)
             }
-        send_mail(heads,body)
+        send_mail(heads, body, 'signup_request', {'contact_id': contact.id, 'url': form['url']})
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
@@ -101,7 +101,8 @@ class Mail(Application):
              'plain': self.render_template(response, "emails/share.txt")
             ,'html': self.render_template(response, "emails/share.html")
             }
-        send_mail(heads, body)
+        sendgrid_args = {'initiator': request.requester.get('name'), 'expr_id': exp.id}
+        send_mail(heads, body, 'share_expr', unique_args=sendgrid_args)
         self.db.ActionLog.create(request.requester, 'share', data=log_data)
         if request.form.get('send_copy'):
             heads.update(To = request.requester.get('email', ''))
@@ -120,10 +121,6 @@ class Mail(Application):
                  'To' : to_email
                 ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
                 ,'Reply-to' : user.get('email', '')
-                ,'X-SMTPAPI': {
-                    'category': 'user_referral'
-                    , 'unique_args': {'initiator': user.get('name'), 'referral_id': referral.id}
-                    }
                 }
             context = {
                  'referrer_url': user.url
@@ -135,7 +132,8 @@ class Mail(Application):
                  'plain': self.jinja_env.get_template("emails/user_invitation.txt").render(context)
                 ,'html': self.jinja_env.get_template("emails/user_invitation.html").render(context)
                 }
-            send_mail(heads, body)
+            sendgrid_args = {'initiator': user.get('name'), 'referral_id': referral.id}
+            send_mail(heads, body, category="user_referral", unique_args=sendgrid_args)
         return self.redirect(response, request.form.get('forward'))
 
 
@@ -159,5 +157,5 @@ class Mail(Application):
         print send_mail(heads, body)
         if request.form.get('send_copy'):
             heads.update(To = request.requester.get('email', ''))
-            send_mail(heads, body)
+            send_mail(heads, body, 'mail_feedback', {'initiator': request.requester.get('name')})
         response.context['success'] = True

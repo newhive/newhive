@@ -99,7 +99,7 @@ class User(Application):
             if file:
                 file.update(owner=user.id)
 
-        try: mail.mail_user_register_thankyou(self.jinja_env, user)
+        try: mail.user_register_thankyou(self.jinja_env, user)
         except: pass # TODO: log an error
 
         request.form = dict(username = args['name'], secret = args['password'])
@@ -210,7 +210,7 @@ class User(Application):
         if user:
             key = junkstr(16)
             recovery_link = abs_url(secure=True) + 'password_recovery?key=' + key + '&user=' + user.id
-            mail.mail_temporary_password(self.jinja_env, user, recovery_link)
+            mail.temporary_password(self.jinja_env, user, recovery_link)
             user.update(password_recovery = key)
             return self.serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
         else:
@@ -245,7 +245,7 @@ class User(Application):
         email = request.form.get('email')
         if email and email != request.requester.get('email'):
             user.update(email_confirmation_request_date=time.time())
-            mail.mail_email_confirmation(self.jinja_env, user, email)
+            mail.email_confirmation(self.jinja_env, user, email)
             message = message + ui.email_change_success_message + " "
         if request.form.get('friends_to_listen'):
             new_friends = len(request.form['friends_to_listen'].split(','))
