@@ -1,6 +1,6 @@
 <form {% if form_id%}id="{{form_id}}"{% endif %} class='signup_form' action='{{ secure_server }}' method='POST'>
   <input type='hidden' name='forward' value='{{url}}'/>
-  <input type='hidden' name='action' value='mail_us'/>
+  <input type='hidden' name='action' value='signup_request'/>
   <input type='hidden' name='initiating_action' value='' />
   <div class="field name">
       <input type='text' name='name' placeholder='Name'>

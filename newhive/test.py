@@ -122,7 +122,7 @@ class SignupTest(Test):
         """Test the request invite form"""
         email = 'test+{}@thenewhive.com'.format(utils.junkstr(8).lower())
         data = {
-                'action': 'mail_us'
+                'action': 'signup_request'
                 , 'name': 'test'
                 , 'email': email
                 , 'referral': 'referral field'

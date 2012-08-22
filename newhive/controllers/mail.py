@@ -8,7 +8,7 @@ from newhive import utils
 
 class Mail(Application):
 
-    def mail_us(self, request, response):
+    def signup_request(self, request, response):
         if not request.form.get('email'): return False
         form = {
             'name': request.form.get('name')
