@@ -59,7 +59,7 @@ class Mail(Application):
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
-    def mail_them(self, request, response):
+    def share_expr(self, request, response):
         if not request.form.get('message') or not request.form.get('to'): return False
 
         log_data = {'service': 'email', 'to': request.form.get('to')}

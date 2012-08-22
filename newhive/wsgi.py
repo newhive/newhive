@@ -107,7 +107,7 @@ actions = dict(
     ,facebook_invite   = controllers['user'].facebook_invite
     ,facebook_listen   = controllers['user'].facebook_listen
     ,signup_request    = controllers['mail'].signup_request
-    ,mail_them         = controllers['mail'].mail_them
+    ,share_expr        = controllers['mail'].share_expr
     ,user_referral     = controllers['mail'].user_referral
     ,mail_feedback     = controllers['mail'].mail_feedback
     ,admin_update      = controllers['admin'].admin_update
@@ -176,7 +176,7 @@ def handle(request): # HANDLER
     if reqaction:
         # these can be performed over non-ssl connections
         insecure_actions = [
-            'comment', 'star', 'broadcast', 'log', 'signup_request', 'tag_add', 'mail_them'
+            'comment', 'star', 'broadcast', 'log', 'signup_request', 'tag_add', 'share_expr'
             , 'user_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite'
             , 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
         non_logged_in_actions = ['login', 'log', 'user_create', 'signup_request', 'password_recovery_1'
