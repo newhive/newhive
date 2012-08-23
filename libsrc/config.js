@@ -68,6 +68,7 @@ Hive.AB_Test.add_test({
     , id: 'CTA'
     , start_date: new Date(2012,7,23)
     , duration: 30
+    , logged_out_only: true
     , cases: {
         0: {
             name: 'join the party'

@@ -875,7 +875,10 @@ function time_since_last(label, extra_log) {
 Hive.AB_Test = {
     tests: [],
     ga_string: function(){
-        return $.map(Hive.AB_Test.tests, function(el){ return el.id + el.chosen_case_id }).join(',');
+        var map_function = function(el){
+            if (el.active) return el.id + el.chosen_case_id;
+        };
+        return $.map(Hive.AB_Test.tests, map_function).join(',');
     },
     add_test: function(opts){
         // Required options (oxymoron I know, but named arguments are easier to work with than positional)
@@ -899,6 +902,9 @@ Hive.AB_Test = {
         //   logged_in_case:
         //     value matching the caseID mapping to the case that should be
         //     used for logged in users
+        //   logged_out_only:
+        //     if set to true the test will only apply to logged out users.
+        //     cookie and GA variable will not be set for logged in users
         //
         // Case definition
         //   Each case is defined as an object literal with the following attributes
@@ -953,6 +959,13 @@ Hive.AB_Test = {
             o.chosen_case_id = id;
             createCookie(cookie_name, id, o.end_date)
         };
+
+        if (opts.logged_out_only && logged_in){
+            o.active = false;
+            return o;
+        } else {
+            o.active = true;
+        }
 
         // Use case specified in querystring (for debugging), else use case for
         // logged in user if set, else case defined in cookie if set, else pick
