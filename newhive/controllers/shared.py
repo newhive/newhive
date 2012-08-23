@@ -7,7 +7,7 @@ import urllib
 
 def admins(server):
     def access_controlled(self, request, response, *arg, **kwarg):
-        if request.requester.get('name') not in config.admins:
+        if not request.requester.is_admin:
             return self.serve_404(request, response, *arg, **kwarg)
         elif not request.is_secure:
             return self.redirect(

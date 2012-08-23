@@ -633,6 +633,10 @@ class User(HasSocial):
         if not groups: return ''
         return ",".join(["%s%s" % item for item in groups.iteritems()])
 
+    @property
+    def is_admin(self):
+        return self.get('name') in config.admins
+
 
 @Database.register
 class Session(Entity):
