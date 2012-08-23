@@ -693,7 +693,7 @@ Hive.Navigator.Expr = function(data, content_element, opts){
             // already authorized, pass password along to newhiveexpression.com
             reload_private(o.password);
         } else {
-            var dia = showDialog('#dia_password', {'close': History.back});
+            var dia = showDialog('#dia_password', {manual_close: History.back});
             var pass_field = $('#password_form .password');
             pass_field.get(0).focus();
             if (invalid) dia.dialog.find('.error').show();

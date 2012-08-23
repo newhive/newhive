@@ -155,6 +155,7 @@ function showDialog(name, opts) {
             o.opened = true;
             o.opts = $.extend({
                 open : noop, close : noop, absolute : false, fade : true,
+                manual_close: noop, // Function to run if dialog is closed by clicking button or shield
                 mandatory: dialog.hasClass('mandatory'),
                 layout: function() { center(dialog, $(window), opts) },
                 close_btn: true
@@ -168,10 +169,11 @@ function showDialog(name, opts) {
                 .css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
 
             if(!o.opts.mandatory) {
+                var manual_close = function(){ o.close(true); };
                 if( o.opts.close_btn && ! dialog.find('.btn_dialog_close').length )
-                    $('<div class="btn_dialog_close">').prependTo(dialog).click(o.close);
-                o.shield.click(o.close);
-                if(o.opts.click_close) dialog.click(o.close);
+                    $('<div class="btn_dialog_close">').prependTo(dialog).click(manual_close);
+                o.shield.click(manual_close);
+                if(o.opts.click_close) dialog.click(manual_close);
             }
 
             $(window).resize(function(){ o.opts.layout(o.dialog) });
@@ -183,13 +185,15 @@ function showDialog(name, opts) {
             o.opts.open();
         }
 
-        o.close = function() {
+        o.close = function(manual) {
+            // If manual is true this means dialog was closed by clicking button or shield
             showDialog.opened.splice(showDialog.opened.indexOf(o), 1);
             o.shield.remove();
             $(window).unbind('resize', o.opts.layout);
             var clean_up = function() {
                 dialog.hide();
                 o.opts.close();
+                if (manual) o.opts.manual_close();
                 o.opened = false;
             }
             if(o.opts.minimize_to) minimize(dialog, $(o.opts.minimize_to), { 'complete' : clean_up });
