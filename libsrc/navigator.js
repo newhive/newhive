@@ -680,11 +680,15 @@ Hive.Navigator.Expr = function(data, content_element, opts){
             o.frame.load(post_message);
         }
         $.post(server_url + 'expr_info/' + o.id, { password: password }, function(expr){
-            $.extend(o, expr);
-            Hive.Menus.update_expr(o);
+            if (expr.invalid_password){
+                password_dialog(true);
+            } else {
+                $.extend(o, expr);
+                Hive.Menus.update_expr(o);
+            }
         }, 'json');
     };
-    function password_dialog(){
+    function password_dialog(invalid){
         if (o.password){
             // already authorized, pass password along to newhiveexpression.com
             reload_private(o.password);
@@ -692,6 +696,7 @@ Hive.Navigator.Expr = function(data, content_element, opts){
             var dia = showDialog('#dia_password');
             var pass_field = $('#password_form .password');
             pass_field.get(0).focus();
+            if (invalid) dia.dialog.find('.error').show();
             $('#password_form').submit(function(e){
                 dia.close();
                 reload_private(pass_field.val());

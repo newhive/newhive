@@ -86,6 +86,7 @@ class Expression(Application, PagingMixin):
                 ,'apps': []
                 ,'title': '[Private]'
                 ,'tags_index': []
+                ,'invalid_password': True
             })
 
         dict.update(expr, {
@@ -189,6 +190,7 @@ class Expression(Application, PagingMixin):
 
         if expr.auth_required() and not expr.cmp_password(password):
             response.context.update(empty=True);
+            self.expr_prepare(expr, viewer=request.requester, password=password)
 
         response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
         if request.form.get('partial'):

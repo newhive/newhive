@@ -594,6 +594,10 @@ body.frame{
 
 #dia_password {
     padding: 20px;
+    .error {
+        color: $color_active;
+        display: none;
+    }
 }
 
 body.frame {
