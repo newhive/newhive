@@ -191,6 +191,8 @@ class Expression(Application, PagingMixin):
         if expr.auth_required() and not expr.cmp_password(password):
             response.context.update(empty=True);
             self.expr_prepare(expr, viewer=request.requester, password=password)
+            # return status forbidden so the client knows their password was invalid
+            response.status_code = 403
 
         response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
         if request.form.get('partial'):

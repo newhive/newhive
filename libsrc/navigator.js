@@ -697,7 +697,7 @@ Hive.Navigator.Expr = function(data, content_element, opts){
             var pass_field = $('#password_form .password');
             pass_field.get(0).focus();
             if (invalid) dia.dialog.find('.error').show();
-            $('#password_form').submit(function(e){
+            $('#password_form').off('submit').submit(function(e){
                 dia.close();
                 reload_private(pass_field.val());
                 e.preventDefault();
