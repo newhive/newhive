@@ -1,20 +1,25 @@
-import pymongo
-
 def mnot(e): return {'$not': e}
 
-def m(**d):
+def mq(**d):
     return Query(d)
 
 class Query(dict):
     def __init__(self, d):
         dict.update(self, d)
 
+    def is1(self, key, *l):
+        self.setdefault(key, {})
+        self[key].update({ '$in': l })
+        return self
+
     def gt(self, key, val):
-        self[key] = {'$gt': val}
+        self.setdefault(key, {})
+        self[key].update({ '$gt': val })
         return self
 
     def lt(self, key, val):
-        self[key] = {'$lt': val}
+        self.setdefault(key, {})
+        self[key].update({ '$lt': val })
         return self
 
     def bt(self, key, val1, val2):
@@ -22,8 +27,9 @@ class Query(dict):
         self.lt(key, val2)
         return self
 
-    def all(self, key, val):
-        self[key] = {'$all': val}
+    def all(self, key, *l):
+        if type( l[0] ) == list: l = l[0]
+        self[key] = {'$all': l}
         return self
 
     def exists(self, key):

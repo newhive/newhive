@@ -202,3 +202,8 @@ def serializable_filter(dictionary):
     return {key.replace('.', '-'): val
             for key, val in dictionary.iteritems()
             if type(val) in [bool, str, int, float, tuple, unicode]}
+
+def count(L):
+    c = {}
+    for v in L: c[v] = c.get(v, 0) + 1
+    return sorted([(c[v], v) for v in c])

@@ -22,6 +22,21 @@ var SCREEN_WIDTH = 1400, //window.innerWidth,
     shiftKeyIsDown = false,
     altKeyIsDown = false;
 
+// TODO:
+//     support for transparrent brush colors
+//     blurred brushes
+//     undo
+
+// a bit of code for blurred brushes
+// var radgrad = ctx.createRadialGradient(60,60,0,60,60,60);
+// radgrad.addColorStop(0, 'rgba(255,0,0,1)');
+// radgrad.addColorStop(0.8, 'rgba(228,0,0,.9)');
+// radgrad.addColorStop(1, 'rgba(228,0,0,0)');
+// 
+// ctx.fillStyle = radgrad;
+// ctx.fillRect(0,0,150,150);
+
+
 function init()
 {
     var embed;
