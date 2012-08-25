@@ -131,7 +131,7 @@ def mail_feed(jinja_env, feed, recipient, dry_run=False):
         context['url'] = context['url'] + "?loadDialog=comments"
     elif type(feed) == newhive.state.Star:
         if feed['entity_class'] == "Expr":
-            heads['Subject'] = initiator_name + ' likes "' + expression_title + '"'
+            heads['Subject'] = initiator_name + ' loves "' + expression_title + '"'
         elif feed['entity_class'] == "User":
             context['title'] = feed.initiator.get('fullname')
             context['url'] = feed.initiator.url

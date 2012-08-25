@@ -87,6 +87,7 @@ Hive.Menus = (function(){
                 layout_x: 'right',
                 group: group
             } );
+            $('#call_to_action').html(Hive.config.nav.call_to_action);
         }
 
         var swap_action_nav = { open: function(){ $('#action_nav').hide() },
@@ -107,6 +108,19 @@ Hive.Menus = (function(){
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
         var config = Hive.config.frame;
+        var fullscreen = Hive.is_fullscreen();
+        $(window).resize(function(){
+            var new_fullscreen = Hive.is_fullscreen();
+            // Set the nav to close if we've just moved to fullscreen
+            if (!fullscreen && new_fullscreen) {
+                //nav_menu.close();
+                nav_menu.delayed_close(1000);
+            } else if (fullscreen && !new_fullscreen){
+                nav_menu.open();
+            }
+            fullscreen = new_fullscreen;
+        });
+
         function animate_each(state, speed, callback){
             var fun = speed ? 'animate' : 'css';
             $.each(state, function(selector, style){
@@ -125,39 +139,70 @@ Hive.Menus = (function(){
                 , '#owner_nav': { right: -50, top: -60 }
                 , '#action_nav': { right: -50 }
             };
-        var speed = 300,
-            drawers = $('#user_nav,#owner_nav,#action_nav'),
-            handles = $('.menu_handle').add('#navigator'),
-            close_nav = function(){
+        var speed = config.speed,
+            drawers = $('#user_nav,#owner_nav,#action_nav');
+        var handles = $('.nav_handle').add(drawers);
+        if (config.navigator.opens_nav) handles.add('#navigator');
+        var close_nav = function(){
+                if (config.nav.opens_navigator) Hive.navigator.hide(speed);
                 drawers.stop().clearQueue();
                 // For some reason just using drawers.hide as the callback for animate didn't work
                 var callback = function(){ drawers.hide(); };
                 animate_each(close_state, speed, callback);
-                Hive.navigator.hide(speed);
                 Hive.navigator.current_expr().frame.get(0).focus();
-            },
-            open_nav = function(){
+            };
+        var close_condition = function(){
+            return config.nav.hideable || Hive.is_fullscreen();
+        };
+        var open_nav = function(){
                 drawers.stop().clearQueue().show();
                 animate_each(open_state(opts), speed);
-                Hive.navigator.show(speed);
+                if (config.nav.opens_navigator){
+                    Hive.navigator.show(speed);
+                }
             };
+
+        var shared_hover_menu_opts = {
+            layout: false,
+            open_delay: config.open_delay,
+            close_delay: config.close_delay,
+            group: false
+        }
 
         var nav_menu = o.nav_menu = hover_menu(
             handles,
             drawers,
-            {
-                layout: false,
-                open_delay: 400,
-                open_menu: open_nav,
-                close_menu: close_nav,
-                opened: config.open_initially,
-                close_delay: opts.slow_close,
-                auto_close_delay: config.auto_close_delay
-            }
+            $.extend(
+                {
+                    opened: config.nav.open_initially,
+                    open_menu: open_nav,
+                    close_menu: close_nav,
+                    close_condition: close_condition
+                },
+                shared_hover_menu_opts
+            )
+        );
+        if (config.auto_close_delay && config.nav.hideable) {
+            nav_menu.delayed_close(config.auto_close_delay);
+        }
+        var navigator_handles = '#navigator_handle';
+        if (config.nav.opens_navigator){
+            navigator_handles += ", .nav_handle";
+        }
+        var navigator_hover_menu = hover_menu(
+            $(navigator_handles),
+            $('#navigator'),
+            $.extend(
+                { opened: config.navigator.open_initially,
+                  open_menu: function(){ Hive.navigator.show(speed); },
+                  close_menu: function(){ Hive.navigator.hide(speed); }
+                },
+                shared_hover_menu_opts
+            )
         );
 
         o.init(nav_menu);
-        var initial_state = config.open_initially ? open_state(opts) : close_state;
+        var initial_state = config.nav.open_initially ? open_state(opts) : close_state;
         animate_each(initial_state, 0);
         drawers.show();
 
@@ -228,7 +273,7 @@ Hive.Menus = (function(){
         Hive.navigator = Hive.Navigator.create(
             '#navigator',
             '#expression_frames',
-            {hidden: !config.open_initially}
+            {hidden: !config.navigator.open_initially}
         );
         Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {
@@ -260,7 +305,7 @@ Hive.Menus = (function(){
         // function for nav and navigator respectively).  However, for a good
         // mobile experience, they need to be hidden, so we hide after a delay,
         // (again, this is handled by init function in case of navigator)
-        if (!config.open_initially) {
+        if (!config.nav.open_initially) {
             setTimeout(function(){
                 nav_menu.drawer().hide();
             }, 500 );

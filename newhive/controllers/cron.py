@@ -29,7 +29,7 @@ class Cron(Application):
         return self.serve_json(response, status)
 
 
-    def email_star_broadcast(self, delay=60, span=60):
+    def email_star_broadcast(self, delay=0, span=600):
         spec = {'send_email': True, 'created': {"$gt": now() - delay - span, "$lt": now() - delay } }
 
         stats = { 'send_count': 0, 'matched': 0 }

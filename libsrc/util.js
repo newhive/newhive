@@ -155,6 +155,7 @@ function showDialog(name, opts) {
             o.opened = true;
             o.opts = $.extend({
                 open : noop, close : noop, absolute : false, fade : true,
+                manual_close: noop, // Function to run if dialog is closed by clicking button or shield
                 mandatory: dialog.hasClass('mandatory'),
                 layout: function() { center(dialog, $(window), opts) },
                 close_btn: true
@@ -168,10 +169,11 @@ function showDialog(name, opts) {
                 .css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
 
             if(!o.opts.mandatory) {
+                var manual_close = function(){ o.close(true); };
                 if( o.opts.close_btn && ! dialog.find('.btn_dialog_close').length )
-                    $('<div class="btn_dialog_close">').prependTo(dialog).click(o.close);
-                o.shield.click(o.close);
-                if(o.opts.click_close) dialog.click(o.close);
+                    $('<div class="btn_dialog_close">').prependTo(dialog).click(manual_close);
+                o.shield.click(manual_close);
+                if(o.opts.click_close) dialog.click(manual_close);
             }
 
             $(window).resize(function(){ o.opts.layout(o.dialog) });
@@ -183,13 +185,15 @@ function showDialog(name, opts) {
             o.opts.open();
         }
 
-        o.close = function() {
+        o.close = function(manual) {
+            // If manual is true this means dialog was closed by clicking button or shield
             showDialog.opened.splice(showDialog.opened.indexOf(o), 1);
             o.shield.remove();
             $(window).unbind('resize', o.opts.layout);
             var clean_up = function() {
                 dialog.hide();
                 o.opts.close();
+                if (manual) o.opts.manual_close();
                 o.opened = false;
             }
             if(o.opts.minimize_to) minimize(dialog, $(o.opts.minimize_to), { 'complete' : clean_up });
@@ -467,7 +471,8 @@ hover_menu = function(handle, drawer, options) {
             ,offset_x: 8
             ,focus_persist: true
             ,hover: true
-            ,open_condition: function(){ return true }
+            ,open_condition: function(){ return true; }
+            ,close_condition: function(){ return true; }
             ,auto_height: true
             ,default_item: drawer.find('.menu_item.default')
             ,layout: 'bottom'
@@ -488,7 +493,7 @@ hover_menu = function(handle, drawer, options) {
     o.sticky = opts.sticky;
 
     o.delayed_close = function(close_delay) {
-        if(typeof(close_delay) != 'number') close_delay = false;
+            if(typeof(close_delay) != 'number') close_delay = false;
         opts.default_item.removeClass('active');
         if(opts.hover_close && ! close_timer) {
             close_timer = setTimeout(o.close, close_delay || opts.close_delay);
@@ -507,6 +512,7 @@ hover_menu = function(handle, drawer, options) {
     o.drawer = function(){ return drawer };
 
     o.close = function(force) {
+        if (!opts.close_condition()) return;
         close_timer = false;
         if(!o.opened) return;
 
@@ -869,16 +875,16 @@ function time_since_last(label, extra_log) {
 Hive.AB_Test = {
     tests: [],
     ga_string: function(){
-        return $.map(Hive.AB_Test.tests, function(el){ return el.id + el.chosen_case_id }).join(',');
+        var map_function = function(el){
+            if (el.active) return el.id + el.chosen_case_id;
+        };
+        return $.map(Hive.AB_Test.tests, map_function).join(',');
     },
     add_test: function(opts){
         // Required options (oxymoron I know, but named arguments are easier to work with than positional)
         //   id:
         //     short name used for cookie name and google analytics variable.
         //     conventionally 3 characters all caps, e.g. `NAV`
-        //   config_doc:
-        //     the configuration document or sub-doc that gets extended by each test case.
-        //     e.g. `Hive.config.frame`
         //   start_date:
         //     javascript Date object
         //   duration:
@@ -896,12 +902,15 @@ Hive.AB_Test = {
         //   logged_in_case:
         //     value matching the caseID mapping to the case that should be
         //     used for logged in users
+        //   logged_out_only:
+        //     if set to true the test will only apply to logged out users.
+        //     cookie and GA variable will not be set for logged in users
         //
         // Case definition
         //   Each case is defined as an object literal with the following attributes
-        //     config_overrides:
-        //       this is a mapping of config options that override values set in the `config_doc`,
-        //       e.g. {open_initially: false, auto_close_delay: 5000}
+        //     config_override:
+        //       function to update config document, gets called after test case is chosen
+        //       e.g. function(){ Hive.config.frame.nav.hideable = true; }
         //     weight:
         //       weighted probability of this case being chose. optional if `auto_weight` is true
         //       these probabilities get normalized, so can really be any number
@@ -909,7 +918,7 @@ Hive.AB_Test = {
         //       optional descriptive string describing this case
 
         var o = $.extend({}, opts);
-
+        var cookie_name = "AB_" + o.id;
         // Stop execution if the current time is not in the test time range
         o.end_date = new Date(o.start_date.getTime() + o.duration * 24 * 3600 * 1000);
         var now = Date.now();
@@ -948,24 +957,34 @@ Hive.AB_Test = {
         function assign_group(id){
             o.chosen_case = o.cases[id];
             o.chosen_case_id = id;
-            createCookie("AB_" + o.id, id, o.end_date)
+            createCookie(cookie_name, id, o.end_date)
         };
 
-        // Does the actual overriding of config_doc with chosen case definition
-        function update_config(){
-            $.extend(o.config_doc, o.chosen_case.config_overrides);
-        };
+        if (opts.logged_out_only && logged_in){
+            o.active = false;
+            return o;
+        } else {
+            o.active = true;
+        }
 
-        // Use case for logged in user if set, else case defined in cookie if
-        // set, else pick a random case. Can't just use || with assignment
-        // because case_id could be 0
-        var case_id = logged_in && o.logged_in_case;
-        if (!case_id && case_id !== 0) case_id = readCookie("AB_" + o.id);
+        // Use case specified in querystring (for debugging), else use case for
+        // logged in user if set, else case defined in cookie if set, else pick
+        // a random case. Can't just use || with assignment because case_id
+        // could be 0
+        var case_id = URI(window.location.href).query(true)[cookie_name];
+        if (!case_id && case_id !== 0 && logged_in) case_id = o.logged_in_case;
+        if (!case_id && case_id !== 0) case_id = readCookie(cookie_name);
         if (!case_id && case_id !== 0) case_id = pick_random_case();
         assign_group(case_id);
 
-        update_config();
+        o.chosen_case.config_override();
 
         return o;
     }
+};
+
+Hive.is_fullscreen = function(){
+    return !window.screenTop && !window.screenY
+           || 
+           document.height == window.screen.height && document.width == window.screen.width;
 };

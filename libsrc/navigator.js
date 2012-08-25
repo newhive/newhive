@@ -417,20 +417,25 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         position_containers(width);
     };
 
+    var already_shown;
     o.show = function(speed){
-        speed = speed || 100;
+        if (!already_shown) {
+            _gaq.push(['_trackEvent', 'navigator', 'initial open', undefined, undefined, true]);
+            already_shown = true;
+        }
+        speed = speed || opts.speed;
         clearTimeout(navigator_element.initial_hide_timeout);
         o.opened = true;
         navigator_element.stop().clearQueue()
             .width($(window).width() - opts.pad_right).show()
-            .animate({ bottom: opts.pad_bottom }, opts.speed);
+            .animate({ bottom: opts.pad_bottom }, speed);
         if (info && !Modernizr.touch) info.find('input').focus();
         return o;
     };
 
     o.hide = function(speed){
         o.opened = false;
-        speed = speed || 100;
+        speed = speed || opts.speed;
         navigator_element.stop().clearQueue();
         var complete = function(){ navigator_element.hide() };
         navigator_element.animate({bottom: -height*1.1}, {complete: complete}, speed);
@@ -734,19 +739,24 @@ Hive.Navigator.Expr = function(data, content_element, opts){
             o.frame.load(post_message);
         }
         $.post(server_url + 'expr_info/' + o.id, { password: password }, function(expr){
-            $.extend(o, expr);
-            Hive.Menus.update_expr(o);
+            if (expr.invalid_password){
+                password_dialog(true);
+            } else {
+                $.extend(o, expr);
+                Hive.Menus.update_expr(o);
+            }
         }, 'json');
     };
-    function password_dialog(){
+    function password_dialog(invalid){
         if (o.password){
             // already authorized, pass password along to newhiveexpression.com
             reload_private(o.password);
         } else {
-            var dia = showDialog('#dia_password');
+            var dia = showDialog('#dia_password', {manual_close: History.back});
             var pass_field = $('#password_form .password');
             pass_field.get(0).focus();
-            $('#password_form').submit(function(e){
+            if (invalid) dia.dialog.find('.error').show();
+            $('#password_form').off('submit').submit(function(e){
                 dia.close();
                 reload_private(pass_field.val());
                 e.preventDefault();
