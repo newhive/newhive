@@ -16,6 +16,9 @@ Hive.config = {
             hideable: true,
             opens_nav: false
         }
+    },
+    nav: {
+        call_to_action: 'JOIN THE PARTY!'
     }
 }
 
@@ -40,25 +43,49 @@ Hive.config = {
 //    }
 //});
 
-Hive.AB_Test.add_test({
-    name: 'nav/navigator initially open or closed'
-    , id: 'NAVB'
-    , auto_weight: true
-    , start_date: new Date(2012,7,18) // Remember months are 0-indexed
-    , duration: 7
-    , cases: {
-        0: {
-            name: 'hideable'
-            , config_override: function(){
-                Hive.config.frame.nav.hideable = true;
-            }
-        }, 
-        1: {
-            name: 'not hideable'
-            , config_override: noop
-        }
-    }
-});
+//Hive.AB_Test.add_test({
+//    name: 'nav/navigator initially open or closed'
+//    , id: 'NAVB'
+//    , auto_weight: true
+//    , start_date: new Date(2012,7,18) // Remember months are 0-indexed
+//    , duration: 7
+//    , cases: {
+//        0: {
+//            name: 'hideable'
+//            , config_override: function(){
+//                Hive.config.frame.nav.hideable = true;
+//            }
+//        }, 
+//        1: {
+//            name: 'not hideable'
+//            , config_override: noop
+//        }
+//    }
+//});
+
+//Hive.AB_Test.add_test({
+//    name: 'call to action copy text'
+//    , id: 'CTA'
+//    , start_date: new Date(2012,7,23)
+//    , duration: 30
+//    , logged_out_only: true
+//    , cases: {
+//        0: {
+//            name: 'join the party'
+//            , weight: 1
+//            , config_override: function(){
+//                Hive.config.nav.call_to_action = 'JOIN THE PARTY!';
+//            }
+//        },
+//        1: {
+//            name: 'request invite'
+//            , weight: 1
+//            , config_override: function(){
+//                Hive.config.nav.call_to_action = 'REQUEST &nbsp;INVITE!';
+//            }
+//        }
+//    }
+//});
 
 _gaq.push(['_setCustomVar', 4, 'AB_javascript', Hive.AB_Test.ga_string()]);
 _gaq.push(['_trackPageview']);

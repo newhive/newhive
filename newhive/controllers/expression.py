@@ -86,6 +86,7 @@ class Expression(Application, PagingMixin):
                 ,'apps': []
                 ,'title': '[Private]'
                 ,'tags_index': []
+                ,'invalid_password': True
             })
 
         dict.update(expr, {
@@ -189,6 +190,9 @@ class Expression(Application, PagingMixin):
 
         if expr.auth_required() and not expr.cmp_password(password):
             response.context.update(empty=True);
+            self.expr_prepare(expr, viewer=request.requester, password=password)
+            # return status forbidden so the client knows their password was invalid
+            response.status_code = 403
 
         response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
         if request.form.get('partial'):
@@ -260,12 +264,12 @@ class Expression(Application, PagingMixin):
             data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
             f = os.tmpfile()
             f.write(data)
-            res = self.db.File.create(dict(owner=request.requester.id, tmp_file=f, name='sketch', mime='image/png'))
+            file_res = self.db.File.create(dict(owner=request.requester.id, tmp_file=f, name='sketch', mime='image/png'))
             f.close()
             app.update({
                  'type' : 'hive.image'
-                ,'content' : res['url']
-                ,'file_id' : res.id
+                ,'content' : file_res['url']
+                ,'file_id' : file_res.id
             })
 
         if not res or upd['name'] != res['name'] or upd['domain'] != res['domain']:

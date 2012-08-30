@@ -87,6 +87,7 @@ Hive.Menus = (function(){
                 layout_x: 'right',
                 group: group
             } );
+            $('#call_to_action').html(Hive.config.nav.call_to_action);
         }
 
         var swap_action_nav = { open: function(){ $('#action_nav').hide() },

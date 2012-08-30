@@ -789,7 +789,7 @@ Hive.App.Text = function(o) {
 
         o.hover_menu(d.find('.button.fontname'), d.find('.drawer.fontname'));
 
-        var color_picker = Hive.append_color_picker(
+        o.color_picker = Hive.append_color_picker(
             d.find('.drawer.color'),
             function(v) {
                 o.app.rte.exec_command('+foreColor', v);
@@ -808,7 +808,7 @@ Hive.App.Text = function(o) {
                     var range = o.app.rte.getRange();
                     if (range){
                         var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
-                        color_picker.update_initial_color(current_color);
+                        o.color_picker.set_color(current_color);
                     }
                 },
             }
@@ -1456,7 +1456,7 @@ Hive.App.Sketch = function(o) {
     }; };
     o.set_content = function(c) {
         if(c.src) o.win.set_image(c.src);
-        if(c.brush) o.win.set_brush(c.brush);
+        if(c.brush) o.set_brush(c.brush);
         if(c.fill_color) o.win.COLOR = c.fill_color;
         if(c.brush_size) o.win.BRUSH_SIZE = c.brush_size;
     };
@@ -1469,6 +1469,11 @@ Hive.App.Sketch = function(o) {
 
     o.focus.add(function() { o.win.focus() });
 
+    o.set_brush = function( val ){
+        o.brush_name = val;
+        o.win.set_brush(val);
+    };
+
     function controls(o) {
         var common = $.extend({}, o);
         
@@ -1477,9 +1482,12 @@ Hive.App.Sketch = function(o) {
 
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'),
             { auto_close : false });
-        o.hover_menu(o.div.find('.button.brush'), o.div.find('.drawer.brush'));
+        var brush_btn = o.div.find('.button.brush')
+            .click( function(){ o.app.set_brush( o.app.brush_name ) });
+        o.hover_menu(brush_btn, o.div.find('.drawer.brush'));
+        o.div.find('.button.eraser').click( function(){ o.app.win.set_brush( 'eraser' ) });
         o.div.find('.drawer.brush .option').each(function(i, e) { $(e).click(function() {
-            o.app.win.set_brush($(e).attr('val'));
+            o.app.set_brush($(e).attr('val'));
         }); })
 
         return o;
@@ -2166,7 +2174,7 @@ Hive.init = function() {
                 'border-style' : 'solid', 'border-radius' : 0 } });
     });
     $('#shape_sketch').click(function(e) {
-        Hive.new_app({ type : 'hive.sketch', dimensions : [700, 700 / 1.6] });
+        Hive.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6], content: { brush: 'simple', brush_size: 10 } });
     });
 
     hover_menu($('#insert_file'), $('#menu_file'), { layout: 'center_y', min_y: 77 });
@@ -2485,7 +2493,7 @@ function remove_all_apps() {
 Hive.append_color_picker = function(container, callback, init_color, opts) {
     opts = $.extend({iframe: false}, opts);
     var o = {};
-    init_color = init_color || '#FFFFFF';
+    init_color = init_color || '#000000';
     var e = $('<div>').addClass('color_picker');
     container.append(e);
     var bar = $("<img class='hue_bar'>");
@@ -2495,7 +2503,7 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
 
     var to_rgb = function(c) {
         return $.map($('<div>').css('color', c).css('color')
-            .replace(/[^\d,]/g,'').split(','), parseInt);
+            .replace(/[^\d,]/g,'').split(','), function(v){ return parseInt(v) });
     }
     var to_hex = function(color) {
         if (typeof(color) == "string") color = to_rgb(color);
@@ -2554,11 +2562,6 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
         }
     });
 
-    o.update_initial_color = function(color){
-        manual_input.val(to_hex(color));
-        set_color(color);
-    };
-
     // saturated color picked from color bar
     var hsv = [0, 0, 1];
     var get_hue = function(e) {
@@ -2574,6 +2577,10 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
     }
     set_color(init_color);
+    o.set_color = function(color){
+        manual_input.val(to_hex(color));
+        set_color(color);
+    };
 
     var x = 1, y = 0; // gamma (x), saturation (y)
     var get_shade = function(e) {

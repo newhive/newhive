@@ -155,6 +155,7 @@ function showDialog(name, opts) {
             o.opened = true;
             o.opts = $.extend({
                 open : noop, close : noop, absolute : false, fade : true,
+                manual_close: noop, // Function to run if dialog is closed by clicking button or shield
                 mandatory: dialog.hasClass('mandatory'),
                 layout: function() { center(dialog, $(window), opts) },
                 close_btn: true
@@ -168,10 +169,11 @@ function showDialog(name, opts) {
                 .css('position', o.opts.absolute ? 'absolute' : 'fixed').show();
 
             if(!o.opts.mandatory) {
+                var manual_close = function(){ o.close(true); };
                 if( o.opts.close_btn && ! dialog.find('.btn_dialog_close').length )
-                    $('<div class="btn_dialog_close">').prependTo(dialog).click(o.close);
-                o.shield.click(o.close);
-                if(o.opts.click_close) dialog.click(o.close);
+                    $('<div class="btn_dialog_close">').prependTo(dialog).click(manual_close);
+                o.shield.click(manual_close);
+                if(o.opts.click_close) dialog.click(manual_close);
             }
 
             $(window).resize(function(){ o.opts.layout(o.dialog) });
@@ -183,13 +185,15 @@ function showDialog(name, opts) {
             o.opts.open();
         }
 
-        o.close = function() {
+        o.close = function(manual) {
+            // If manual is true this means dialog was closed by clicking button or shield
             showDialog.opened.splice(showDialog.opened.indexOf(o), 1);
             o.shield.remove();
             $(window).unbind('resize', o.opts.layout);
             var clean_up = function() {
                 dialog.hide();
                 o.opts.close();
+                if (manual) o.opts.manual_close();
                 o.opened = false;
             }
             if(o.opts.minimize_to) minimize(dialog, $(o.opts.minimize_to), { 'complete' : clean_up });
@@ -750,7 +754,7 @@ var fix_borders = function(items){
 
     // fix top tab placement
     var card_width = $('#feed .card').outerWidth();
-    $('#top_tabs').css({'right': $('#feed').outerWidth() - columns * card_width });
+    $('#top_tabs').css({'right': Math.min( $('#feed').outerWidth() - 245, $('#feed').outerWidth() - columns * card_width ) });
 }
 
 var context_to_string = function(opt_arg){
@@ -871,7 +875,10 @@ function time_since_last(label, extra_log) {
 Hive.AB_Test = {
     tests: [],
     ga_string: function(){
-        return $.map(Hive.AB_Test.tests, function(el){ return el.id + el.chosen_case_id }).join(',');
+        var map_function = function(el){
+            if (el.active) return el.id + el.chosen_case_id;
+        };
+        return $.map(Hive.AB_Test.tests, map_function).join(',');
     },
     add_test: function(opts){
         // Required options (oxymoron I know, but named arguments are easier to work with than positional)
@@ -895,6 +902,9 @@ Hive.AB_Test = {
         //   logged_in_case:
         //     value matching the caseID mapping to the case that should be
         //     used for logged in users
+        //   logged_out_only:
+        //     if set to true the test will only apply to logged out users.
+        //     cookie and GA variable will not be set for logged in users
         //
         // Case definition
         //   Each case is defined as an object literal with the following attributes
@@ -949,6 +959,13 @@ Hive.AB_Test = {
             o.chosen_case_id = id;
             createCookie(cookie_name, id, o.end_date)
         };
+
+        if (opts.logged_out_only && logged_in){
+            o.active = false;
+            return o;
+        } else {
+            o.active = true;
+        }
 
         // Use case specified in querystring (for debugging), else use case for
         // logged in user if set, else case defined in cookie if set, else pick
