@@ -412,7 +412,7 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_network(self, limit=40, expr=None, **args):
+    def feed_network(self, spec={}, limit=40, expr=None, **args):
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
                 'class_name': {'$in': ['NewExpr', 'Broadcast']}
@@ -436,7 +436,7 @@ class User(HasSocial):
         # produces an iterable for all network feed items
         res = self.feed_search({ '$or': or_clause }, auth='public', **args)
         # groups feed items by ther expressions (entity attribute), and applies page limit
-        page = Page(self.feed_group(res, limit))
+        page = Page(self.feed_group(res, limit, spec=spec))
         page.next = page[-1]['feed'][-1]['created'] if len(page) == limit else None
         return page
 
@@ -448,10 +448,14 @@ class User(HasSocial):
         if limit: res = islice(res, limit)
         return res
 
-    def feed_group(self, res, limit, feed_limit=6):
+    def feed_group(self, res, limit, spec={}, feed_limit=6):
         """" group feed items by expression """
         exprs = []
+        filter = True if spec.items() else False
         for item in res:
+            if filter:
+                spec['_id'] = item['entity']
+                if not self.db.Expr.search(spec).count(): continue
             i = index_of(exprs, lambda e: e.id == item['entity'])
             if i == -1:
                 item.entity['feed'] = [item]
@@ -1291,8 +1295,3 @@ def tags_by_frequency(query):
     counts = [[tags[t], t] for t in tags]
     counts.sort(reverse=True)
     return counts
-
-def count(L):
-    c = {}
-    for v in L: c[v] = c.get(v, 0) + 1
-    return sorted([(c[v], v) for v in c])

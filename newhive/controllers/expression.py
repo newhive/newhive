@@ -1,6 +1,6 @@
 import base64, jinja2
 from newhive.controllers.shared import *
-from newhive.controllers import Community
+from newhive.controllers.community import Community
 from newhive import utils, mail
 # TODO: handle this in model layer somehow
 from pymongo.connection import DuplicateKeyError
@@ -94,45 +94,6 @@ class Expression(Community, PagingMixin):
 
         return self.serve_page(response, 'pages/' + template + '.html')
 
-    def infos(self, request, response):
-        args = request.args.copy().to_dict(flat=True)
-        current_id = args.get('page')
-        tag = args.get('tag')
-
-        special_tags = {
-                'Featured': (self.expr_featured, 'id')
-                , 'Network': (self.home_feed, None)
-                , 'All': (None, 'updated')
-                }
-
-        # Use key_map to map between keys used in querystring and those of database
-        spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name', 'auth': 'auth'}, filter=True)
-        if spec.get('auth') == 'private': spec['auth'] = 'password'
-        args = dfilter(args, ['sort', 'page', 'expr', 'order', 'limit'])
-        args['viewer'] = request.requester
-
-        default = (None, 'updated')
-        pager, paging_attr = special_tags.get(tag, default) if spec else (self.expr_all, 'updated')
-
-        if utils.is_mongo_key(current_id):
-            if paging_attr and paging_attr != 'id':
-                expr = self.db.Expr.fetch(current_id)
-                args['page'] = expr[paging_attr]
-            else:
-                args['sort'] = '_id'
-
-        if args.has_key('order'): args['order'] = int(args['order'])
-        if args.has_key('limit'): args['limit'] = int(args['limit'])
-
-        if pager:
-            items_and_args = pager(request, response, args)
-            exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
-        else:
-            if spec.get('tags_index') == "All": spec.pop('tags_index')
-            exprs = self.db.Expr.page(spec, **args)
-
-        return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))
-
     def info(self, request, response, expr=None):
         expr = expr or self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
@@ -147,17 +108,12 @@ class Expression(Community, PagingMixin):
         password = request.form.get('password')
         if not expr: return self.serve_404(request, response)
 
-<<<<<<< HEAD
-        if expr.auth_required() and not expr.cmp_password(password): expr = False
-=======
         if expr.auth_required() and not expr.cmp_password(password):
-            response.context.update(empty=True);
-            self.expr_prepare(expr, viewer=request.requester, password=password)
+            expr = False
             # return status forbidden so the client knows their password was invalid
             response.status_code = 403
 
->>>>>>> 84719c77bb21086c68fca43fed60f0629c75e2c2
-        response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
+        response.context.update(html = self.expr_to_html(expr), expr = expr, use_ga = False)
 
         if request.form.get('partial'):
             return self.serve_page(response, 'pages/expr_content_only.html')
@@ -295,85 +251,3 @@ class Expression(Community, PagingMixin):
                 new_tags = re.sub(tag, '', expr['tags'])
         expr.update(tags=new_tags, updated=False)
         return tag
-
-    featured = {
-            'project': [
-                '4f1c4f08ba2839741f0000bf',
-                '4f149949ba28397ae300000d',
-                '4f1b7691ba283920a6000011',
-                '4f040705ba28390a870000e1',
-                '4f22dfa4ba283945d9000329',
-                '4f186b7fba283929fd000295',
-                '4f207c37ba283940b4000013',
-                '4f1b8269ba283920a600007b',
-                '4f2051abba28394fe900002e',
-                '4f2328e5ba2839283f000039',
-                '4f1e7aa6ba2839302c0000e4',
-                '4f234d79ba28391fe8000115',
-                '4f0d0be0ba283909eb000151',
-                '4f07b8afba2839255d0000f8',
-                '4f1b467bba28390d2b00023f',
-                '4f1ddbb5ba283939d5000008',
-                '4f1f2ef2ba2839689300001e',
-                '4f207176ba28392c34000002',
-                '4f206183ba283912bb000029',
-                '4f177b04ba28395b0a00016d',
-                '4f12533eba283932ae00000d',
-                '4f1ddbb5ba283939d5000008',
-                '4f1df138ba283939d500009a']
-            ,'wish' : [
-                '4f247c60ba283927490002b5',
-                '4f1c4c3bba283973250000ba',
-                '4f1b726eba283920a6000000',
-                '4f1a04f3ba283938500000c0',
-                '4f186b7fba283929fd000295',
-                '4f174437ba28394fc5000320']
-            }
-
-
-
-# www_expression -> String, this maybe should go in state.Expr
-def expr_to_html(exp):
-    """Converts JSON object representing an expression to HTML"""
-    if not exp: return ''
-
-    def css_for_app(app):
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
-            app['position'][0],
-            app['position'][1],
-            app['dimensions'][0],
-            app['dimensions'][1],
-            'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
-            app['z'],
-            app.get('opacity', 1) or 1
-            )
-
-    def html_for_app(app):
-        content = app.get('content', '')
-        more_css = ''
-        type = app.get('type')
-        id = app.get('id', app['z'])
-        if type == 'hive.image':
-            html = "<img src='%s'>" % content
-            link = app.get('href')
-            if link: html = "<a href='%s'>%s</a>" % (link, html)
-        elif type == 'hive.sketch':
-            html = "<img src='%s'>" % content.get('src')
-        elif type == 'hive.rectangle':
-            c = app.get('content', {})
-            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-            html = ''
-        elif type == 'hive.html':
-            html = ""
-        else:
-            html = content
-        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
-        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
-            (type.replace('.', '_'), id, css_for_app(app) + more_css, data, html)
-
-    app_html = map( html_for_app, exp.get('apps', []) )
-    if exp.has_key('dimensions'):
-        app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
-    return ''.join(app_html)
-
