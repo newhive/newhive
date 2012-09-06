@@ -23,7 +23,6 @@ body.profile {
     }
     img, .placeholder{ 
       width: 180px; 
-      @include border-radius(7px);
     }
     .placeholder{
       border: 1px dashed #CCC;
