@@ -307,3 +307,9 @@ class Analytics(Application):
         response_data = "jsErrLog.removeScript(" + request.args.get('i') + ");"
         return self.serve_data(response, mime='application/javascript', data=response_data)
 
+    @admins
+    def engagement_pyramid(self, request, response):
+        data = analytics.engagement_pyramid(self.db)
+        out = data[['viewers', 'starrers', 'sharers', 'creators']] / data.counts
+        response.context['data'] = out
+        return self.serve_page(response, 'pages/analytics/engagement_pyramid.html')

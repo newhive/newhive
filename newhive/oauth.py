@@ -1,4 +1,4 @@
-import httplib2, os, urllib, datetime, json, re, threading, Queue
+import httplib2, os, urllib, datetime, json, re
 
 from apiclient.discovery import build
 from apiclient.http import BatchHttpRequest
@@ -70,7 +70,10 @@ class GAClient(object):
     def find_segment_id(self, name):
         if not hasattr(self, 'segments'):
             self.segments = self.management.segments().list().execute()['items']
-        return filter(lambda x: x['name'] == name, self.segments)[0]['segmentId']
+        try:
+            return filter(lambda x: x['name'] == name, self.segments)[0]['segmentId']
+        except IndexError as e:
+            raise KeyError("segment '{}' not found in google analytics".format(name))
 
 class GAQuery(object):
 
@@ -113,7 +116,7 @@ class GAQuery(object):
             return self._query.get('segment')
 
         # if segment in argument is not in the form of a GA id, find it by name
-        if re.match('^gaid::', segment): new_semgent = segment
+        if re.match('^gaid::', segment): new_segment = segment
         else: new_segment = self.client.find_segment_id(segment)
 
         self._query.update(segment=new_segment)
@@ -128,27 +131,27 @@ class GAQuery(object):
     def find_one(self):
         return self.client.find_one(self.query)
 
-    def cohort(self):
+    def cohort(self, series, reduce_function=lambda x: x):
         # save segment for restoring later
         segment = self.segment()
 
-        result = {}
         batch = BatchHttpRequest()
 
         def callback_builder(res, date):
             def callback(id, result, error):
-                res[date] = result
+                res[date] = reduce_function(result)
             return callback
 
-        for month in range(1, datetime.date.today().month + 1):
-            date = datetime.date(2012, month, 1)
+        for date in series.keys():
             cohort_name = date.strftime("%Y-%m Cohort")
-            self.segment(cohort_name)
-            batch.add(self.query(), callback_builder(result, date))
+            try:
+                self.segment(cohort_name)
+                batch.add(self.query(), callback_builder(series, date))
+            except KeyError:
+                pass
         self.segment(segment)
 
         batch.execute(http=self.client.http)
-        return result
 
 class FacebookClient(object):
 
