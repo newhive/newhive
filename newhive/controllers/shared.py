@@ -157,7 +157,6 @@ class PagingMixin(object):
         print spec
         if search.get('network'): exprs = request.owner.feed_network(spec=spec, **args)
         else: exprs = self.db.Expr.page(spec, **args)
-        print exprs
         return exprs
 
     def parse_query(self, q):
@@ -170,8 +169,8 @@ class PagingMixin(object):
         for pattern in re.findall(r'(\b|\W+)(\w+)', q.lower()):
             prefix = re.sub( r'[^#@:]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1]
-            if prefix == '#': search['tags'].append( pattern[1] )
-            if prefix == ':':
+            elif prefix == '#': search['tags'].append( pattern[1] )
+            elif prefix == ':':
                 if pattern[1] == 'public':  search['auth'] = 'public' 
                 if pattern[1] == 'private': search['auth'] = 'password'
                 if pattern[1] == 'featured': search['featured'] = True
