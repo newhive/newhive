@@ -1,0 +1,20 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block table_head %}
+<tr>
+    <th>Cohort</th>
+    {% for col in data.columns %}
+    <th>{{col}}</th>
+    {% endfor %}
+</tr>
+{% endblock %}
+{% block table_body %}
+{% for row in data.values %}
+<tr>
+    <td>{{ data.index[loop.index0].strftime("%b %y") }}</td>
+    {% for cell in row %}
+    <td>{{ cell | percentage | round(2) }}</td>
+    {% endfor %}
+</tr>
+{% endfor %}
+{% endblock %}
