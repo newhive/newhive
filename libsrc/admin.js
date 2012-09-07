@@ -97,4 +97,6 @@ Hive.chart.Time = function(x_axis, y_series, opts) {
     return o;
 };
 
+Hive.DataFrame = function(index, columns, values){
+}
 //function(d) { return Math.round(d * 100) + "%" } String conversion function for percents

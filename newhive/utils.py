@@ -38,6 +38,10 @@ def datetime_to_int(dt):
 def datetime_to_str(dt):
     return str(datetime_to_int(dt))
 
+def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
+
+def epoch_to_string(epoch_time):
+    return time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(epoch_time))
 
 def junkstr(length):
     """Creates a random base 64 string"""

@@ -984,7 +984,5 @@ Hive.AB_Test = {
 };
 
 Hive.is_fullscreen = function(){
-    return !window.screenTop && !window.screenY
-           || 
-           document.height == window.screen.height && document.width == window.screen.width;
+    return document.height == window.screen.height && document.width == window.screen.width;
 };
