@@ -60,7 +60,17 @@ class Collection(object):
         self.entity = entity
 
     def fetch_empty(self, key, keyname='_id'): return self.find_empty({ keyname : key })
-    def fetch(self, key, keyname='_id', **opts): return self.find({ keyname : key }, **opts)
+    def fetch(self, key, keyname='_id', **opts):
+        if type(key) == list:
+            items = {}
+            res = []
+            for e in self.search({'_id': {'$in': key }}):
+                items[e.id] = e
+            for i in key:
+                if items.has_key(i): res.append(items[i])
+            return res
+        else:
+            return self.find({ keyname : key }, **opts)
 
     def find_empty(self, spec, **opts):
         res = self.find(spec, **opts)
@@ -118,13 +128,9 @@ class Collection(object):
                 end = (page + 1) * limit
                 sub_spec = spec[ page * limit : end ]
 
-            items = {}
-            for e in self.search({'_id': {'$in': sub_spec }}): items[e.id] = e
-            res = Page()
+            res = Page(self.fetch(sub_spec))
             if type(page) == int:
                 res.next = page + 1 if end <= len(spec) else None
-            for i in sub_spec:
-                if items.has_key(i): res.append(items[i])
             return res
 
     def count(self, spec={}): return self.search(spec).count()

@@ -101,6 +101,14 @@ class Admin(Application):
         site_user.save()
 
     @admins
+    def featured(self, request, response):
+        root = self.db.User.get_root()
+        featured_ids = root.get('tagged').get('Featured')
+        exprs = self.db.Expr.fetch(featured_ids)
+        response.context.update(cards=exprs)
+        return self.serve_page(response, 'pages/admin/featured.html')
+
+    @admins
     def home(self, request, response):
         root = self.db.User.get_root()
         if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
