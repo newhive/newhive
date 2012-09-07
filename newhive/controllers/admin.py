@@ -56,7 +56,6 @@ class Admin(Application):
 
     @admins
     def add_referral(self, request, response):
-        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         form = request.form.copy()
         action = form.pop('action')
         number = int(form.pop('number'))
@@ -74,7 +73,6 @@ class Admin(Application):
 
     @admins
     def bulk_invite(self, request, resposne):
-        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         form = request.form.copy()
         for key in form:
             parts = key.split('_')
@@ -91,7 +89,6 @@ class Admin(Application):
 
     @admins
     def admin_update(self, request, response):
-        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         for k in ['tags', 'tagged']:
             v = json.loads(request.form.get(k))
             if v: self.db.User.get_root().update(**{ k : v })
@@ -111,7 +108,6 @@ class Admin(Application):
     @admins
     def home(self, request, response):
         root = self.db.User.get_root()
-        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         response.context['tags_js'] = json.dumps(root.get('tags'))
         response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
         response.context['featured_tags_js'] = json.dumps(self.db.User.site_user['config']['featured_tags'])

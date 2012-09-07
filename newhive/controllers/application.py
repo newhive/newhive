@@ -32,7 +32,7 @@ class Application(object):
         self.process_facebook(request, response)
         response.context.update(
                 facebook_authentication_url=self.fb_client.authorize_url(abs_url(request.path))
-                , use_ga = config.live_server)
+                , use_ga = config.live_server and not request.requester.is_admin)
 
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'x-requested-with')
@@ -66,7 +66,7 @@ class Application(object):
             ,user = response.user
             ,user_client = { 'name': response.user.get('name'), 'id': response.user.id,
                 'thumb': response.user.get_thumb(70) }
-            ,admin = response.user.get('name') in config.admins
+            ,admin = response.user.is_admin
             ,beta_tester = config.debug_mode or response.user.get('name') in config.beta_testers
             ,create = abs_url(secure = True) + 'edit'
             ,server_url = abs_url()
