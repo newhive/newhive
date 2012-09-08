@@ -906,6 +906,10 @@ class Expr(HasSocial):
         return count
     share_count = property(get_share_count)
 
+    @property
+    def is_featured(self):
+        return self.id in self.db.User.get_root()['tagged'].get('Featured', [])
+
     public = property(lambda self: self.get('auth') == "public")
 
 
