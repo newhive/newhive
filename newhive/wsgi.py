@@ -116,6 +116,7 @@ actions = dict(
     ,thumbnail_relink  = controllers['admin'].thumbnail_relink
     ,dialog            = dialog_map
     ,add_to_featured   = controllers['admin'].add_to_featured
+    ,update_featured   = controllers['admin'].update_featured
 )
 
 site_pages = {

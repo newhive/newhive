@@ -98,14 +98,6 @@ class Admin(Application):
         site_user.save()
 
     @admins
-    def featured(self, request, response):
-        root = self.db.User.get_root()
-        featured_ids = root.get('tagged').get('Featured')
-        exprs = self.db.Expr.fetch(featured_ids)
-        response.context.update(cards=exprs)
-        return self.serve_page(response, 'pages/admin/featured.html')
-
-    @admins
     def home(self, request, response):
         root = self.db.User.get_root()
         response.context['tags_js'] = json.dumps(root.get('tags'))
@@ -163,11 +155,31 @@ class Admin(Application):
     @admins
     def _index(self, request, response):
         logger.debug('_index')
-        return self.redirect(response, abs_url(secure=True, subdomain="thenewhive") + 'admin')
+        return self.redirect(response, abs_url(secure=True) + "thenewhive/admin")
 
     @admins
     def add_to_featured(self, request, response):
         root = self.db.User.get_root()
         root['tagged']['_Featured'] = [request.form.get('id')] + root['tagged'].get('_Featured', [])
-        root.save()
+        root.save(updated=False)
+        return self.serve_json(response, True)
+
+    @admins
+    def featured(self, request, response):
+        root = self.db.User.get_root()
+        response.context.update({
+            'provisionary': self.db.Expr.fetch(root['tagged'].get('_Featured')) or []
+            , 'featured': self.db.Expr.fetch(root['tagged'].get('Featured')) or []
+            })
+        return self.serve_page(response, 'pages/admin/featured.html')
+
+    @admins
+    def update_featured(self, request, response):
+        root = self.db.User.get_root()
+        new_featured = request.form.get('featured').split(',')
+        print; print request.form
+        if new_featured:
+            root['tagged']['_Featured'] = []
+            root['tagged']['Featured'] = new_featured
+            root.save(updated=False)
         return self.serve_json(response, True)

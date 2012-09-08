@@ -192,8 +192,8 @@ class Entity(dict):
         self._col.insert(self, safe=True)
         return self
 
-    def save(self):
-        self['updated'] = now()
+    def save(self, updated=True):
+        if updated: self['updated'] = now()
         return self.update_cmd(self)
 
     def reload(self):
