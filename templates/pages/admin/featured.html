@@ -1,0 +1,84 @@
+{% extends "main.html" %}
+
+{% block head %}
+  {{ super() }}
+  {% for item in asset_bundle('admin.js') %}
+   <script src='{{ item }}'></script>
+  {% endfor %}
+{% endblock %}
+
+{% block left_column %}
+  <div id="save_btn" class="btn black rounded">Save</div>
+{% endblock left_column %}
+
+{% block right_column %}
+  <div id="feed">
+  {% for item in provisionary %}
+    {% set card_classes = "provisionary" %}
+    {% include "partials/expr_card.html" %}
+  {% endfor %}
+  
+  {% for item in featured %}
+    {% if loop.index < 200 %}
+    {% include "partials/expr_card.html" %}
+    {% else %}
+    <input type="hidden" class="hidden_item_id" value="{{item.id}}">
+    {% endif %}
+  {% endfor %}
+  </div>
+{% endblock right_column %}
+
+{% block footer_scripts %}
+  <script>
+      feed = $('#feed');
+      items = feed.find('.item');
+      buttons = $('<div class="feature_btn">').appendTo(items);
+      buttons.click( function(){
+          $(this).parent().toggleClass('provisionary');
+      });
+      feed_borders = function(){
+          fix_borders(items.selector);
+      };
+      feed_borders();
+      feed.sortable({
+          stop: feed_borders
+      });
+      var get_ids = function(){
+          var confirmed = $(items.selector).not('.provisionary').find('.item_id').add('.hidden_item_id');
+          return confirmed.map(function(i,el){
+              return $(el).val();
+          }).get().join(',');
+      };
+      $('#save_btn').click(function(){
+          var that = $(this);
+          if (that.hasClass('inactive')) return;
+          that.addClass('inactive');
+          $.post('', {
+              action: 'update_featured'
+              , featured: get_ids()
+          }, function(){ window.location = '/home/expressions'});
+      });
+  </script>
+  <style>
+      #primary_content {
+          margin-top: 20px;
+      }
+      .feature_btn {
+          width: 40px;
+          height: 40px;
+          position: absolute;
+          left: 5px;
+          top: 5px;
+          background: url('{{ 'skin/1/logo.png' | asset_url }}');
+      }
+      .feature_btn:hover {
+          background: rgba(0,0,0,0.3) url('{{ 'skin/1/logo.png' | asset_url }}');
+      }
+      .item.provisionary .feature_btn{
+          background: url('{{ 'skin/1/logo-hover.png' | asset_url }}');
+      }
+      .item.provisionary .feature_btn:hover{
+          background: rgba(0,0,0,0.3) url('{{ 'skin/1/logo-hover.png' | asset_url }}');
+      }
+  </style>
+{% endblock footer_scripts %}
