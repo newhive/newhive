@@ -486,10 +486,11 @@ class User(HasSocial):
         self.set_password(v)
         self.update(password=self['password'])
 
-    def get_url(self, path='profile/'):
-        return abs_url() + self.get('name', '') + '/' + path
+    def get_url(self, path='profile/', relative=False, secure=False):
+        base = '/' if relative else abs_url(secure=secure)
+        return base + self.get('name', '') + '/' + path
     url = property(get_url)
- 
+
     @property
     def has_thumb(self):
         id = self.get('thumb_file_id')
@@ -847,8 +848,10 @@ class Expr(HasSocial):
             return True
         return False
 
-    @property
-    def url(self): return abs_url() + self['owner_name'] + '/' + self['name']
+    def get_url(self, relative=False, secure=False):
+        base = '/' if relative else abs_url(secure=secure)
+        return base + self['owner_name'] + '/' + self['name']
+    url = property(get_url)
 
     @property
     def owner_url(self): return abs_url() + self.get('owner_name') + '/profile'
