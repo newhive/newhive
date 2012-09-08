@@ -78,6 +78,21 @@ Hive.Menus = (function(){
             $('#hive_menu .feedback').click(function(){
                 new_window(secure_server + 'feedback?url=' + window.location, 470, 400);
             });
+
+            $('#add_to_featured .false').click(function(){
+                if (window.location.protocol != "https:") {
+                    alert('must view expression over https to add to featured')
+                    return;
+                }
+                var that = $(this);
+                if (that.hasClass('inactive')) return;
+                that.addClass('inactive');
+                $.post('', {action: 'add_to_featured', id: expr.id}, function(data){
+                    that.removeClass('inactive');
+                    Hive.expr.featured = data;
+                    Hive.Menus.update_expr(Hive.expr);
+                });
+            });
         }
         else {
             o.login_menu = hover_menu( '#login_btn', '#login_menu', {
@@ -414,6 +429,9 @@ Hive.Menus = (function(){
         $('#expr_menu .big_card .thumb').attr('src', expr.thumb);
         $('#expr_menu .tags').html(tag_list_html(expr.tags_index));
         $('#expr_menu .time').html(expr.updated_friendly);
+
+        $('#add_to_featured').find('.' + expr.featured.toString()).show();
+        $('#add_to_featured').find('.' + (!expr.featured).toString()).hide();
 
         // load expr's feed items: stars, broadcasts, comments
         var load_feed = function(data, status, jqXHR){

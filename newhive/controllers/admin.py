@@ -164,3 +164,10 @@ class Admin(Application):
     def _index(self, request, response):
         logger.debug('_index')
         return self.redirect(response, abs_url(secure=True, subdomain="thenewhive") + 'admin')
+
+    @admins
+    def add_to_featured(self, request, response):
+        root = self.db.User.get_root()
+        root['tagged']['_Featured'] = [request.form.get('id')] + root['tagged'].get('_Featured', [])
+        root.save()
+        return self.serve_json(response, True)

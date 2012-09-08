@@ -115,6 +115,7 @@ actions = dict(
     ,bulk_invite       = controllers['admin'].bulk_invite
     ,thumbnail_relink  = controllers['admin'].thumbnail_relink
     ,dialog            = dialog_map
+    ,add_to_featured   = controllers['admin'].add_to_featured
 )
 
 site_pages = {

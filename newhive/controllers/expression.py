@@ -99,6 +99,11 @@ class Expression(Application, PagingMixin):
             'updated_friendly': friendly_date(expr['updated'])
         })
 
+        if viewer.is_admin:
+            dict.update(expr, {
+                'featured': expr.is_featured
+            })
+
         return expr
 
     # Controller for all navigation surrounding an expression
