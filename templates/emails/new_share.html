@@ -1,0 +1,71 @@
+{% extends "emails/colorful.html" %}
+
+{% macro link(entity, class='', id='') -%}
+<a href="{{ entity.url }}" title="{{ entity.title or entity.fullname }}" class="{{ class }}" id="{{ id}}">
+    {{ caller() }}
+</a>
+{%- endmacro %}
+
+{% block body%}
+
+{% if recipient %}
+    <h2 id="greeting" class="line">
+        Hi {{ recipient.name }},
+    </h2>
+{% endif %}
+
+{% if header_1 or header_2 %}
+<h2 id="main_message">
+        <div class="line">
+            {% call link(initiator, class="sender") %}
+                {{ initiator.name }}
+            {% endcall %}
+            {{ header_1 }}
+        </div>
+        <div class="line">
+            {{ header_2 }}
+        </div>
+    </h2>
+{% endif %}
+
+{% if message %}
+    <p id="message">
+        {{ message | escape | html_breaks }}
+    </p>
+{% endif %}
+
+{% if expr %}
+    <div id="card">
+        {% call link(expr) %}
+            <img src="{{ expr.thumb }}" />
+        {% endcall %}
+        <div class="data">
+            <h3 class="title">
+                {% call link(expr) %}
+                    {{ expr.title }}
+                {% endcall %}
+            </h3>
+            <p class="tags">
+                {% for tag in expr.tags_index %}#{{tag}} {% endfor %}
+            </p>
+            <h4 class="name">
+                {% call link(expr.owner) %}{{ expr.owner_name }}{% endcall %}
+            </h4>
+        </div>
+    </div>
+    <h3 id="text_link">
+        {% call link(expr) %}{{ expr.url | clean_url }}{% endcall %}
+    </h3>
+{% endif %}
+
+<h4 id="footer_message">
+    {% if recipient %}
+        Love Newhive?<br/>
+        <a href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
+    {% else %}
+        Want to make your own expression?<br/>
+        <a href="{{ signup_url }}" title="Create your account">Create your Newhive account!</a>
+    {% endif %}
+</h4>
+
+{% endblock %}

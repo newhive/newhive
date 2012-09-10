@@ -1,0 +1,108 @@
+@import "colors";
+
+$color_email_black: #000001; // to fool google
+$space1: 45px;
+$space2: 20px;
+$space3: 12px;
+$space4: 5px;
+
+#body {
+    color: $color_email_black;
+    padding: $space2 $space1;
+    p, h2, h3, h4, h5 {
+        margin: 0;
+        padding: 0;
+    }
+    
+    p{
+        font-size: 18px;
+        line-height: 21px;
+    }
+    
+    a{
+        text-decoration: none;
+        color: $color_email_black;
+    }
+    
+    h2{
+        font-size: 40px;
+    
+        letter-spacing: -2px;
+        .line{
+            margin: $space4 0;
+            background: white;
+        }
+    }
+    
+    h3{
+        font-size: 23px;
+    }
+    
+    h4{
+        font-size: 19px;
+    }
+
+    .line, & > p{
+        padding-left: $space3;
+        clear: both;
+    }
+    
+    
+    #greeting{
+        background: $color_selected;
+    }
+    
+    #main_message{
+        margin-top: $space2;
+        .sender { color: $color_bright_red; }
+    }
+    
+    #message{
+        margin-top: $space2;
+    }
+    
+    #card{
+        margin-top: $space2;
+        overflow: auto;
+        background: white;
+        img {
+            width: 190px;
+            height: 190px;
+        }
+        img, .data {
+            float: left;
+        }
+        .data {
+            margin-left: $space2;
+            width: 266px;
+        }
+        .title {
+            margin-top: 34px;
+        }
+        .tags{
+            margin-top: 8px;
+            height: $space1 + 18px;
+        }
+        .name{
+            //margin-top: $space1;
+        }
+    }
+    
+    #text_link{
+        margin-top: $space2;
+        text-align: center;
+        a {color: $color_bright_red;}
+    }
+    
+    #footer_message{
+        margin: $space2 0;
+        text-align: center;
+        line-height: 30px;
+        a {
+            background: $color_highlight;
+            color: $color_email_black;
+            padding: 2px 5px;
+            
+        }
+    }
+}

@@ -1,5 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers import Application
+from newhive.inliner import inline_styles
 from werkzeug import url_unquote
 from werkzeug.urls import url_decode
 from newhive.mail import send_mail
@@ -60,16 +61,19 @@ class Mail(Application):
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
     def share_expr(self, request, response):
-        if not request.form.get('message') or not request.form.get('to'): return False
+        recipient_address = request.form.get('to')
+        if not request.form.get('message') or not recipient_address: return False
 
-        log_data = {'service': 'email', 'to': request.form.get('to')}
+        recipient = self.db.User.fetch(recipient_address, key='email')
+
+        log_data = {'service': 'email', 'to': recipient_address}
 
         response.context.update({
-             'message': request.form.get('message')
-            ,'url': request.form.get('forward')
-            ,'title': request.form.get('forward')
-            ,'sender_fullname': request.requester.get('fullname')
-            ,'sender_url': request.requester.url
+            'message': request.form.get('message')
+            ,'initiator': request.requester
+            ,'recipient': recipient
+            , 'header_1': 'has sent'
+            , 'header_2': 'you an expression:'
             })
 
         print request.path.split('/', 1)
@@ -77,29 +81,22 @@ class Mail(Application):
 
         if exp:
             exp.increment({'analytics.email.count': 1})
-            owner = self.db.User.fetch(exp.get('owner'))
             log_data['expr_id'] = exp.id
-            response.context.update({
-              'url': exp.url
-              ,'short_url': exp.url.split('//')[1]
-              ,'tags': exp.get('tags')
-              ,'thumbnail_url': exp.get('thumb', self.asset('skin/1/thumb_0.png'))
-              ,'user_url': owner.url
-              ,'user_name': owner.get('name')
-              ,'title': exp.get('title')
-              })
+            response.context.update({ 'expr': exp })
         else:
             log_data['url'] = request.form.get('forward')
 
         heads = {
-             'To' : request.form.get('to')
+             'To' : recipient_address
             ,'Subject' : request.requester.get('fullname') + " has sent you an expression"
             ,'Reply-to' : request.requester.get('email', '')
             }
 
+        html = self.render_template(response, "emails/new_share.html")
+        html = inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
         body = {
              'plain': self.render_template(response, "emails/share.txt")
-            ,'html': self.render_template(response, "emails/share.html")
+            ,'html': html
             }
         sendgrid_args = {'initiator': request.requester.get('name'), 'expr_id': exp.id}
         send_mail(heads, body, 'share_expr', unique_args=sendgrid_args)

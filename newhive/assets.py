@@ -156,6 +156,9 @@ class HiveAssets(Assets):
             # actually get webassets to build bundles (webassets is very lazy)
             for b in self.final_bundles: self.assets_env[b].urls()
             print("Assets build complete in %s seconds", time.time() - t0)
+        else:
+            # actually get webassets to build bundles (webassets is very lazy)
+            for b in self.final_bundles: self.assets_env[b].urls()
 
         ## now grab the rest of 'em after compiling our webassets shit
         self.find('')
@@ -254,15 +257,23 @@ class HiveAssets(Assets):
             debug=False
             )
 
+        email_scss = webassets.Bundle('scss/email.scss',
+            filters=scss_filter,
+            output='email.css',
+            debug=False
+            )
+
         self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
         self.assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
         self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
+        self.assets_env.register('email.css', email_scss, output='../lib/email.css')
         self.assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
         self.final_bundles = [
             'app.css',
             'edit.css',
             'minimal.css',
+            'email.css',
             'expression.js',
             'edit.js',
             'google_closure.js',

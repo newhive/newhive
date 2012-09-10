@@ -50,6 +50,8 @@ jinja_env.filters.update({
         lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
     ,'asset_url': hive_assets.url
     ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
+    ,'clean_url': lambda s: re.match('https?://([^?]*)', s).groups()[0]
+    ,'html_breaks': lambda s: re.sub('\n', '<br/>', str(s))
 })
 jinja_env.globals.update({
      'colors': newhive.colors.colors

@@ -292,8 +292,14 @@ class KeyWords(Entity):
 @Database.register
 class User(HasSocial):
     cname = 'user'
-    indexes = [ ('updated', -1), ('name', {'unique':True}), ('sites', {'unique':True}), 'facebook.id' ]
-    
+    indexes = [
+            ('updated', -1),
+            ('name', {'unique':True}),
+            ('sites', {'unique':True}),
+            'facebook.id',
+            'email'
+            ]
+
     # fields = dict(
     #     name = str
     #    ,password = str
