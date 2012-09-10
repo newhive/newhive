@@ -57,13 +57,13 @@ def send_mail(headers, body, category=None, unique_args=None):
     encoded_msg = io.getvalue()
 
     # Send mail, but if we're in debug mode only send to admins
-    if config.debug_mode and not msg['To'] in config.admin_emails:
-        logger.warn("Not sending mail to %s in debug mode" % (msg['To']))
-    else:
+    if config.live_server or msg['To'] in config.admin_emails:
         t0 = time.time()
         sent = smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
         logger.debug('SMTP sendmail time %d ms', (time.time() - t0) * 1000)
         return sent
+    else:
+        logger.warn("Not sending mail to %s in debug mode" % (msg['To']))
 
 
 def site_referral(jinja_env, db, email, name=False, force_resend=False):
