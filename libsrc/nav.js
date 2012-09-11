@@ -246,7 +246,7 @@ Hive.Menus = (function(){
                     submit.removeClass('inactive');
                     dia.find('#email_to').val('');
                     dia.children().hide();
-                    var tmp = $('<h2>Your message has been sent</h2>').appendTo(dia);
+                    var tmp = $('<h2>Your message has been sent.</h2>').appendTo(dia);
                     setTimeout(function(){
                         dia.data('dialog').close();
                         dia.children().show();
