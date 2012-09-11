@@ -8,22 +8,22 @@
 
 {% block body%}
 
-{% if recipient %}
+{% if recipient and recipient.name %}
     <h2 id="greeting" class="line">
         Hi {{ recipient.name }},
     </h2>
 {% endif %}
 
-{% if header_1 or header_2 %}
+{% if header %}
 <h2 id="main_message">
         <div class="line">
             {% call link(initiator, class="sender") %}
                 {{ initiator.name }}
             {% endcall %}
-            {{ header_1 }}
+            {{ header[0] }}
         </div>
         <div class="line">
-            {{ header_2 }}
+            {{ header[1] }}
         </div>
     </h2>
 {% endif %}
@@ -35,31 +35,11 @@
 {% endif %}
 
 {% if expr %}
-    <div id="card">
-        {% call link(expr) %}
-            <img src="{{ expr.thumb }}" />
-        {% endcall %}
-        <div class="data">
-            <h3 class="title">
-                {% call link(expr) %}
-                    {{ expr.title }}
-                {% endcall %}
-            </h3>
-            <p class="tags">
-                {% for tag in expr.tags_index %}#{{tag}} {% endfor %}
-            </p>
-            <h4 class="name">
-                {% call link(expr.owner) %}{{ expr.owner_name }}{% endcall %}
-            </h4>
-        </div>
-    </div>
-    <h3 id="text_link">
-        {% call link(expr) %}{{ expr.url | clean_url }}{% endcall %}
-    </h3>
+  {% include 'emails/parts/expr_card.html' %}
 {% endif %}
 
 <h4 id="footer_message">
-    {% if recipient %}
+    {% if recipient and recipient.name %}
         Love Newhive?<br/>
         <a href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
     {% else %}

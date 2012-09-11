@@ -1,10 +1,9 @@
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.inliner import inline_styles
 from werkzeug import url_unquote
 from werkzeug.urls import url_decode
 from newhive.mail import send_mail
-from newhive import utils
+from newhive import utils, mail
 
 
 class Mail(Application):
@@ -64,46 +63,25 @@ class Mail(Application):
         recipient_address = request.form.get('to')
         if not request.form.get('message') or not recipient_address: return False
 
-        recipient = self.db.User.fetch(recipient_address, key='email')
+        recipient = self.db.User.fetch(recipient_address, keyname='email')
+        recipient = recipient or {'email': recipient_address}
+        expr = self.db.Expr.named(*request.path.split('/', 1))
 
-        log_data = {'service': 'email', 'to': recipient_address}
+        mail.mail_expr_action(
+                jinja_env = self.jinja_env
+                , category = 'share_expr'
+                , initiator = request.requester
+                , recipient = recipient
+                , expr = expr
+                , message = request.form.get('message')
+                , header_message = ['has sent', 'you an expression']
+                )
 
-        response.context.update({
-            'message': request.form.get('message')
-            ,'initiator': request.requester
-            ,'recipient': recipient
-            , 'header_1': 'has sent'
-            , 'header_2': 'you an expression:'
-            })
+        expr.increment({'analytics.email.count': 1})
 
-        print request.path.split('/', 1)
-        exp = self.db.Expr.named(*request.path.split('/', 1))
-
-        if exp:
-            exp.increment({'analytics.email.count': 1})
-            log_data['expr_id'] = exp.id
-            response.context.update({ 'expr': exp })
-        else:
-            log_data['url'] = request.form.get('forward')
-
-        heads = {
-             'To' : recipient_address
-            ,'Subject' : request.requester.get('fullname') + " has sent you an expression"
-            ,'Reply-to' : request.requester.get('email', '')
-            }
-
-        html = self.render_template(response, "emails/new_share.html")
-        html = inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
-        body = {
-             'plain': self.render_template(response, "emails/share.txt")
-            ,'html': html
-            }
-        sendgrid_args = {'initiator': request.requester.get('name'), 'expr_id': exp.id}
-        send_mail(heads, body, 'share_expr', unique_args=sendgrid_args)
+        log_data = {'service': 'email', 'to': recipient_address, 'expr_id': expr.id}
         self.db.ActionLog.create(request.requester, 'share', data=log_data)
-        if request.form.get('send_copy'):
-            heads.update(To = request.requester.get('email', ''))
-            send_mail(heads, body)
+
         return self.redirect(response, request.form.get('forward'))
 
     def user_referral(self, request, response):

@@ -1,7 +1,7 @@
 import crypt, urllib, time, json, re
 import newhive.state
 from newhive.state import abs_url
-from newhive import config
+from newhive import config, inliner, utils
 from cStringIO import StringIO
 from smtplib import SMTP
 from email.mime.multipart import MIMEMultipart
@@ -55,6 +55,13 @@ def send_mail(headers, body, category=None, unique_args=None):
     g = Generator(io, False) # second argument means "should I mangle From?"
     g.flatten(msg)
     encoded_msg = io.getvalue()
+
+    # write e-mail to file for debugging
+    if config.debug_mode:
+        path = '/lib/tmp/' + utils.junkstr(10) + '.html'
+        with open(config.src_home + path, 'w') as f:
+            f.write(body['html'])
+        logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
 
     # Send mail, but if we're in debug mode only send to admins
     if config.live_server or msg['To'] in config.admin_emails:
@@ -123,48 +130,35 @@ def temporary_password(jinja_env, user, recovery_link):
         }
     send_mail(heads, body, 'temporary_password')
 
-def mail_feed(jinja_env, feed, recipient, dry_run=False):
-    initiator_name = feed.get('initiator_name')
-    recipient_name = recipient.get('name')
-    expression_title = feed.entity.get('title')
-    context = {
-        'user_name' : recipient_name
-        , 'user_url' : recipient.url
-        , 'initiator_name': initiator_name
-        , 'initiator_url': feed.initiator.url
-        , 'url': feed.entity.url
-        , 'thumbnail_url': feed.entity.thumb
-        , 'title': expression_title
-        , 'type': feed['class_name']
-        , 'entity_type': feed['entity_class']
-        }
-    heads = {
-        'To': recipient.get('email')
-        }
+def mail_feed(jinja_env, feed, dry_run=False):
+
+    subject = None
     if type(feed) == newhive.state.Comment:
-        context['message'] = feed.get('text')
-        heads['Subject'] = initiator_name + ' commented on "' + expression_title + '"'
-        context['url'] = context['url'] + "?loadDialog=comments"
+        message = feed.get('text')
+        header_message = ['commented on', 'your expression']
     elif type(feed) == newhive.state.Star:
         if feed['entity_class'] == "Expr":
-            heads['Subject'] = initiator_name + ' loves "' + expression_title + '"'
+            header_message = ['loves', 'your expression']
+            message = "Now they can keep track of your expression and be notified of updates and discussions."
+            subject = feed.initiator.get('name') + ' loves "' + feed.entity.get('title') + '"'
         elif feed['entity_class'] == "User":
-            context['title'] = feed.initiator.get('fullname')
-            context['url'] = feed.initiator.url
-            context['thumbnail_url'] = feed.initiator.thumb
-            heads['Subject'] = initiator_name + " is now listening to you"
+            header_message = ['is now', 'listening to you']
+            message = "Now they will receive updates about what you're creating and broadcasting."
     elif type(feed) == newhive.state.Broadcast:
-        heads['Subject'] = initiator_name + ' broadcast "' + expression_title + '"'
-    body = {
-        'plain': jinja_env.get_template("emails/feed.txt").render(context)
-        , 'html': jinja_env.get_template("emails/feed.html").render(context)
-        }
-    if dry_run:
-        return heads
-    elif recipient_name in config.admins or ( not config.debug_mode ):
-        sendgrid_args = {'initiator': initiator_name, 'recipient': recipient_name}
-        send_mail(heads, body, 'mail_feed', sendgrid_args)
-        return heads
+        message = "Your expression has been broadcast to their network of listeners."
+        header_message = ['broadcast', 'your expression']
+        subject = feed.initiator.get('name') + ' broadcast "' + feed.entity.get('title') + '"'
+
+    mail_expr_action(
+            jinja_env = jinja_env
+            , category = 'mail_feed'
+            , initiator = feed.initiator
+            , recipient = feed.entity.owner
+            , expr = feed.entity
+            , message = message
+            , header_message = header_message
+            , subject = subject
+            )
 
 def user_register_thankyou(jinja_env, user):
     user_profile_url = user.url
@@ -185,3 +179,34 @@ def user_register_thankyou(jinja_env, user):
         ,'html': jinja_env.get_template("emails/thank_you_register.html").render(context)
         }
     send_mail(heads, body, 'user_register_thankyou')
+
+
+def mail_expr_action(jinja_env, category, initiator, recipient, expr, message, header_message, subject=None):
+
+        context = {
+            'message': message
+            ,'initiator': initiator
+            ,'recipient': recipient
+            , 'header': header_message
+            , 'expr': expr
+            }
+
+        heads = {
+             'To' : recipient.get('email')
+            ,'Subject' : subject or initiator.get('name') + ' ' + ' '.join(header_message)
+            ,'Reply-to' : initiator.get('email', '')
+            }
+
+        html = jinja_env.get_template("emails/expr_action.html").render(context)
+        html = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
+
+        body = {
+             'plain': jinja_env.get_template("emails/share.txt").render(context)
+            ,'html': html
+            }
+        sendgrid_args = {'initiator': initiator.get('name'), 'expr_id': expr.id}
+        send_mail(heads, body, category=category, unique_args=sendgrid_args)
+
+        # if request.form.get('send_copy'):
+        #     heads.update(To = request.requester.get('email', ''))
+        #     send_mail(heads, body)
