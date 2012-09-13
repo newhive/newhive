@@ -6,10 +6,14 @@ $space2: 20px;
 $space3: 12px;
 $space4: 5px;
 
+.outer {
+    background-color: $color_charcoal;
+}
+
 #body {
     color: $color_email_black;
     padding: $space2 $space1;
-    p, h2, h3, h4, h5 {
+    p, h1, h2, h3, h4, h5 {
         margin: 0;
         padding: 0;
     }
@@ -103,6 +107,17 @@ $space4: 5px;
             color: $color_email_black;
             padding: 2px 5px;
             
+        }
+    }
+
+    #milestone_card{
+        margin-top: $space3;
+        background: white;
+        padding: $space3;
+        h1 {
+            font-size: 110px;
+            line-height: 110px;
+            letter-spacing: -5px;
         }
     }
 }

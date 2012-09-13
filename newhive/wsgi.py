@@ -40,6 +40,7 @@ jinja_env.filters.update({
      'time': friendly_date
     ,'epoch_to_string': epoch_to_string
     ,'length_bucket': length_bucket
+    ,'number': lambda n: '{:,}'.format(n)       # adds ',' thousands separator
     ,'large_number': large_number
     ,'no_zero': no_zero
     ,'json': extra_json

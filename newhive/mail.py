@@ -2,6 +2,7 @@ import crypt, urllib, time, json, re
 import newhive.state
 from newhive.state import abs_url
 from newhive import config, inliner, utils
+import newhive.ui_strings.en as ui
 from cStringIO import StringIO
 from smtplib import SMTP
 from email.mime.multipart import MIMEMultipart
@@ -189,6 +190,7 @@ def mail_expr_action(jinja_env, category, initiator, recipient, expr, message, h
             ,'recipient': recipient
             , 'header': header_message
             , 'expr': expr
+            , 'server_url': abs_url()
             }
 
         heads = {
@@ -210,3 +212,27 @@ def mail_expr_action(jinja_env, category, initiator, recipient, expr, message, h
         # if request.form.get('send_copy'):
         #     heads.update(To = request.requester.get('email', ''))
         #     send_mail(heads, body)
+
+def milestone(jinja_env, expr, milestone):
+    context = {
+        'message': ui.milestone_message
+        , 'expr': expr
+        , 'milestone': milestone
+        , 'server_url': abs_url()
+        }
+
+    heads = {
+        'To': expr.owner.get('email')
+        , 'Subject': 'Your expression "{}" has {} views'.format(expr['title'], milestone)
+        }
+
+    html = jinja_env.get_template("emails/milestone.html").render(context)
+    html = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
+
+    body = {
+         'plain': jinja_env.get_template("emails/share.txt").render(context)
+        ,'html': html
+        }
+    sendgrid_args = {'expr_id': expr.id, 'milestone': milestone}
+    send_mail(heads, body, category='milestone', unique_args=sendgrid_args)
+

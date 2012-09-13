@@ -45,3 +45,22 @@ class Cron(Application):
         for item in self.db.Broadcast.search(spec): send(item)
 
         return stats
+
+    def email_milestone(self, expr):
+        milestones = [20, 50] + [int(math.pow(10, n)) for n in range(2,8)]
+        def next_milestone(n):
+            for m in milestones:
+                if m > n: return m
+
+        def send(expr):
+            expr_milestones = expr.get('milestones', {})
+            last_milestone = max([int(m) for m in expr_milestones.keys()])
+            next = next_milestone(last_milestone)
+
+            if expr.get('views', 0) >= next:
+                expr_milestones.update({str(next): now()})
+                expr.update(milestones=expr_milestones)
+                newhive.mail.milestone(self.jinja_env, expr, next)
+
+        for expr in self.db.Expr({'auth': 'public', 'views': {'$gt': 0}}):
+            send(expr)

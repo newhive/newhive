@@ -1,12 +1,12 @@
 {% extends "emails/colorful.html" %}
 
+{% block body%}
+
 {% macro link(entity, class='', id='') -%}
 <a href="{{ entity.url }}" title="{{ entity.title or entity.fullname }}" class="{{ class }}" id="{{ id}}">
     {{ caller() }}
 </a>
 {%- endmacro %}
-
-{% block body%}
 
 {% if recipient and recipient.name %}
     <h2 id="greeting" class="line">
@@ -14,19 +14,21 @@
     </h2>
 {% endif %}
 
-{% if header %}
-<h2 id="main_message">
-        <div class="line">
-            {% call link(initiator, class="sender") %}
-                {{ initiator.name }}
-            {% endcall %}
-            {{ header[0] }}
-        </div>
-        <div class="line">
-            {{ header[1] }}
-        </div>
-    </h2>
-{% endif %}
+{% block main_message scoped %}
+    {% if header %}
+    <h2 id="main_message">
+            <div class="line">
+                {% call link(initiator, class="sender") %}
+                    {{ initiator.name }}
+                {% endcall %}
+                {{ header[0] }}
+            </div>
+            <div class="line">
+                {{ header[1] }}
+            </div>
+        </h2>
+    {% endif %}
+{% endblock %}
 
 {% if message %}
     <p id="message">
@@ -38,14 +40,16 @@
   {% include 'emails/parts/expr_card.html' %}
 {% endif %}
 
-<h4 id="footer_message">
-    {% if recipient and recipient.name %}
-        Love Newhive?<br/>
-        <a href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
-    {% else %}
-        Want to make your own expression?<br/>
-        <a href="{{ signup_url }}" title="Create your account">Create your Newhive account!</a>
-    {% endif %}
-</h4>
+{% block footer_message %}
+    <h4 id="footer_message">
+        {% if recipient and recipient.name %}
+            Love Newhive?<br/>
+            <a href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
+        {% else %}
+            Want to make your own expression?<br/>
+            <a href="{{ signup_url }}" title="Create your account">Create your Newhive account!</a>
+        {% endif %}
+    </h4>
+{% endblock %}
 
 {% endblock %}

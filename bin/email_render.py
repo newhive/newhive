@@ -25,7 +25,9 @@ context = {
     'initiator': db.User.named('cara'),
     'recipient': db.User.named('duffy'),
     'header_1': 'has sent',
-    'header_2': 'you an expression'
+    'header_2': 'you an expression',
+    'milestone': random.choice([20,50,100,1000,10000])
+    , 'server_url': newhive.utils.abs_url()
 }
 
 def write_file(data, filename, index):
@@ -35,7 +37,7 @@ def write_file(data, filename, index):
 index = open('lib/email/index.html', 'w')
 index.write("<html><body>")
 for type in ['html', 'txt']:
-    for template in ['base', 'colorful', 'invitation', 'user_invitation', 'reminder_invitation', 'share', 'new_share', 'thank_you_signup']:
+    for template in ['base', 'colorful', 'invitation', 'user_invitation', 'reminder_invitation', 'share', 'milestone', 'thank_you_signup']:
         try:
             temp = jinja_env.get_template('emails/' + template + '.' + type)
 
