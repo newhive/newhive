@@ -16,11 +16,6 @@ def admins(server):
             return server(self, request, response, *arg, **kwarg)
     return access_controlled
 
-def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
-
-def epoch_to_string(epoch_time):
-    return time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(epoch_time))
-
 def querystring(args):
     if not args: return ''
     parms = []

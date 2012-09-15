@@ -24,7 +24,6 @@
         .other { background: $color_highlight; }
     }
     .thumb {
-        @include border-radius(7px);
         width: 180px;
         height: 180px;
     }

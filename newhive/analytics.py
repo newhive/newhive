@@ -405,11 +405,14 @@ class CohortAnalysis:
                                                  , 'incomplete': incomplete}
         return rv
 
+def _cohort_range(stop_date=datetime.datetime.now()):
+    return  pandas.DateRange(start = datetime.datetime(2011,12,1,12)
+                             , end = stop_date
+                             , offset = pandas.DateOffset(months=1)
+                             )
+
 def _cohort_users(db, stop_date=datetime.datetime.now()):
-    cohort_range = pandas.DateRange(start = datetime.datetime(2011,12,1,12)
-                               , end = stop_date
-                               , offset = pandas.DateOffset(months=1)
-                               )
+    cohort_range = _cohort_range(stop_date)
     data = []
     for date in cohort_range:
         item = {'names': [], 'ids': [], 'counts': 0.0}
@@ -470,6 +473,49 @@ def active(db, period=7):
 
     #data = [mr_col.find({'_id.date': datetime_to_int(date)}).count() for date in dr]
     return (data, dr)
+
+def engagement_pyramid(db):
+
+    end_date = datetime.datetime.now()
+    start_date = end_date - pandas.DateOffset(months=1)
+
+    query = oauth.GAQuery()
+    query.start_date(start_date).end_date(end_date)
+    query.metrics(['ga:visitors'])
+    query.dimensions(['ga:customVarValue1'])
+
+    print "getting cohorts"
+    cohort_users = _cohort_users(db)
+
+    print "running 'viewers' query with GA"
+    res_series = pandas.TimeSeries(index=cohort_users.index, name='viewers')
+    query.cohort(res_series, lambda x: x['totalResults'])
+    cohort_users = cohort_users.join(res_series)
+
+    print "running 'sharers' query with GA"
+    query.filters(['ga:eventCategory==share'])
+    res_series = pandas.TimeSeries(index=cohort_users.index, name='sharers')
+    query.cohort(res_series, lambda x: x['totalResults'])
+    cohort_users = cohort_users.join(res_series)
+
+    print "running 'starrers' query with GA"
+    query.filters(['ga:eventCategory==star'])
+    res_series = pandas.TimeSeries(index=cohort_users.index, name='starrers')
+    query.cohort(res_series, lambda x: x['totalResults'])
+    cohort_users = cohort_users.join(res_series)
+
+    print "running 'creators' query with mongodb"
+    res_series = pandas.TimeSeries(index=cohort_users.index, name='creators')
+    for date in cohort_users.index:
+        cursor = db.Expr.search({
+            'owner': {'$in': cohort_users.ids[date]}
+            , 'created': {'$lt': datetime_to_int(end_date), '$gt': datetime_to_int(start_date)}
+            })
+        res_series[date] = len(cursor.distinct('owner'))
+    cohort_users = cohort_users.join(res_series)
+
+    return cohort_users
+
 
 if __name__ == '__main__':
     from newhive.state import Database
