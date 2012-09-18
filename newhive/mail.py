@@ -47,13 +47,6 @@ def send_mail(headers, body, category=None, unique_args=None):
         html = MIMEText(body['html'].encode('utf-8'), 'html')
         msg.attach(plain); msg.attach(html)
 
-        # write e-mail to file for debugging
-        if config.debug_mode:
-            path = '/lib/tmp/' + utils.junkstr(10) + '.html'
-            with open(config.src_home + path, 'w') as f:
-                f.write(body['html'])
-            logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
-
     else:
         part1 = MIMEText(body.encode('utf-8'), 'plain')
         msg.attach(part1)
@@ -76,15 +69,40 @@ def send_mail(headers, body, category=None, unique_args=None):
 
 
 class Mailer(object):
+    recipient = None
+    unsubscribable = True
+
     def __init__(self, jinja_env=None, db=None):
         self.db = db
         self.jinja_env = jinja_env
 
-    def send_mail(self, *args, **kwargs):
+    def send_mail(self, heads, body, **kwargs):
+        heads.update(To=self.recipient.get('email'))
         if hasattr(self, 'name'):
             kwargs.update(category=self.name)
-        send_mail(*args, **kwargs)
+        if isinstance(self.recipient, newhive.state.User):
+            subscriptions = self.recipient.get('email_subscriptions', [])
+            unsubscribed = self.unsubscribable and not self.name in subscriptions
+        else:
+            unsubscribed = self.db.Unsubscribes.find({
+                'email': self.recipient['email']
+                , 'name': {'$in': ['all', self.name]}
+                })
+        logger.info("to: {}\tname: {}\tstatus: {}".format(
+            self.recipient.get('email')
+            , self.name
+            , 'unsubscribed' if unsubscribed else 'sent'
+            ))
 
+        # write e-mail to file for debugging
+        if config.debug_mode:
+            path = '/lib/tmp/' + utils.junkstr(10) + '.html'
+            with open(config.src_home + path, 'w') as f:
+                f.write(body['html'])
+            logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
+
+        if not unsubscribed:
+            send_mail(heads, body, **kwargs)
 
 class SiteReferral(Mailer):
     name = 'site_referral'
