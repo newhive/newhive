@@ -1,6 +1,9 @@
 @import "common";
 
 .user_settings {
+    .row {
+        clear: both;
+    }
     .column{
       float: left;
       width: 300px;

@@ -68,7 +68,25 @@ def send_mail(headers, body, category=None, unique_args=None):
         logger.warn("Not sending mail to %s in debug mode" % (msg['To']))
 
 
+#registry = []
+class MetaMailer(type):
+    registry = []
+    def __new__(cls, clsname, bases, attrs):
+        newclass = super(cls, MetaMailer).__new__(cls, clsname, bases, attrs)
+        # register non-abstract mailers
+        if hasattr(newclass, 'name'):
+            assert hasattr(newclass, 'sent_to')
+            cls.registry.append(newclass)
+        return newclass
+
+    @classmethod
+    def unsubscribable(cls, type):
+        def test(x):
+            return x.unsubscribable and type in x.sent_to
+        return filter(test, cls.registry)
+
 class Mailer(object):
+    __metaclass__ = MetaMailer
     recipient = None
     unsubscribable = True
 
@@ -109,7 +127,7 @@ class Mailer(object):
 
 class SiteReferral(Mailer):
     name = 'site_referral'
-    sent_to = ['nonusers']
+    sent_to = ['nonuser']
     unsubscribable = True
 
     def send(self, email, name=False, force_resend=False):
@@ -138,6 +156,7 @@ class SiteReferral(Mailer):
 class EmailConfirmation(Mailer):
     name = 'email_confirmation'
     unsubscribable = False
+    sent_to = ['user']
 
     def send(user, email):
         self.recipient = user
@@ -164,6 +183,7 @@ class EmailConfirmation(Mailer):
 class TemporaryPassword(Mailer):
     name = 'temporary_password'
     unsubscribable = False
+    sent_to = ['user']
 
     def send(user, recovery_link):
         self.recipient = user
@@ -189,6 +209,7 @@ class ExprAction(Mailer):
     @property
     def initiator(self): return self.feed.initiator
     subject = None
+    sent_to = ['user']
 
     def send(self):
         context = {
@@ -218,6 +239,7 @@ class ExprAction(Mailer):
 
 class Comment(ExprAction):
     name = 'comment'
+    ui_name = 'People comment on my expression'
     @property
     def message(self): return self.feed.get('text')
 
@@ -228,6 +250,7 @@ class Comment(ExprAction):
 
 class UserStar(ExprAction):
     name = 'listen'
+    ui_name = 'People are listening to me'
     message = "Now they will receive updates about what you're creating and broadcasting."
     header_message = ['is now', 'listening to you']
     @property
@@ -235,6 +258,7 @@ class UserStar(ExprAction):
 
 class ExprStar(ExprAction):
     name = 'love'
+    ui_name = 'People love my expression'
     message = "Now they can keep track of your expression and be notified of updates and discussions."
     header_message = ['loves', 'your expression']
     @property
@@ -246,6 +270,7 @@ class ExprStar(ExprAction):
 
 class Broadcast(ExprAction):
     name = 'broadcast'
+    ui_name = 'People broadcast my expression'
     message = "Your expression has been broadcast to their network of listeners."
     header_message = ['broadcast', 'your expression']
 
@@ -276,6 +301,7 @@ class Feed(Mailer):
 class UserRegisterConfirmation(Mailer):
     name = 'user_register_confirmation'
     unsubscribable = False
+    sent_to = ['nonuser']
 
     def send(self, user):
         user_profile_url = user.url
@@ -300,9 +326,11 @@ class UserRegisterConfirmation(Mailer):
 class ShareExpr(ExprAction):
 
     name = 'share_expr'
+    ui_name = 'People share an expression with me'
     header_message = ['has sent', 'you an expression']
     recipient = None
     initiator = None
+    sent_to = ['user', 'nonuser']
 
     def send(self, expr, initiator, recipient, message):
         self.card = expr
@@ -313,6 +341,8 @@ class ShareExpr(ExprAction):
 
 class Milestone(Mailer):
     name = 'milestone'
+    ui_name = "Updates about my expression's views"
+    sent_to = ['user']
 
     def send(self, expr, milestone):
         context = {

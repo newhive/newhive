@@ -147,6 +147,8 @@ class User(Application):
             response.context['f'] = request.requester
             response.context['facebook_connect_url'] = FacebookClient().authorize_url(
                                                            abs_url(secure=True)+ 'settings')
+            response.context['email_subscriptions'] = request.requester.get('email_subscriptions', [])
+            response.context['email_types'] = mail.MetaMailer.unsubscribable('user')
             return self.serve_page(response, 'pages/user_settings.html')
         else: return self.serve_forbidden(response)
 
@@ -255,6 +257,11 @@ class User(Application):
             message = message + "Your Facebook account has been disconnected. This means you'll have to sign in using your New Hive username and password in the future."
             user.facebook_disconnect()
             user.reload()
+        email_subscriptions = [x for x in request.form.items() if x[1] == 'on' and x[0].startswith('email_')]
+        email_subscriptions = [x[0].split('_',1)[1] for x in email_subscriptions]
+        if email_subscriptions != request.requester.get('email_subscriptions'):
+            user.update(email_subscriptions=email_subscriptions)
+            message = message + ui.email_subscription_change_success_message + " "
         response.context['message'] = message
         request.requester.reload()
         return self.edit(request, response)

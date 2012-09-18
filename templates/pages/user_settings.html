@@ -186,7 +186,7 @@ var profile_thumb_choose = function(){
  </div>
 
  <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
-
+   <div class="row">
      <div class="column" id="column_1" style='clear : both; text-align:left; margin : 0 0px 50px 0; vertical-align : top;'>
        <input type='hidden' name='action' value='{{"password_recovery_2" if password_recovery else "user_update" if update else "user_create"}}'>
        <input type='hidden' name='thumb_file_id' value='{{f.thumb_file_id}}'>
@@ -302,6 +302,23 @@ var profile_thumb_choose = function(){
        {% endif %}
      {% endif %}
    </div>
+ </div>
+ <div class="row">
+     <b>Email Settings:</b>
+ </div>
+ <div class="row">
+     {% for column in email_types | slice(2) %}
+     <div class="column">
+         {% for type in column %}
+         <div>
+             {% set id = "email_" + type.name %}
+             <input type="checkbox" name="{{id}}" {{"checked='checked'" if type.name in email_subscriptions}}/>
+             <label for="{{id}}">{{type.ui_name}}</label>
+         </div>
+         {% endfor %}
+     </div>
+     {% endfor %}
+ </div>
  </form>
 {% endblock %}
 
