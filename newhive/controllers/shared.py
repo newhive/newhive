@@ -66,7 +66,7 @@ def query_args(request):
     args = dfilter(args, ['sort', 'page', 'expr', 'order', 'limit'])
     args['viewer'] = request.requester
     if args.has_key('order'): args['order'] = int(args['order'])
-    if args.has_key('limit'): args['limit'] = int(args['limit'])
+    if args.has_key('limit'): args['limit'] = min( 100, int(args['limit']) )
     return args
 
 class PagingMixin(object):
@@ -133,43 +133,4 @@ class PagingMixin(object):
 
     @paging_decorator
     def search(self, request, response, args):
-        search = self.parse_query( request.args.get('q', '') )
-        sort = 'updated'
-
-        page_anchor = args.get('page')
-        if is_mongo_key(page_anchor):
-            res = self.db.Expr.fetch(page_anchor) or self.db.User.fetch(page_anchor)
-            args['page'] = res[sort]
-        
-        spec = {}
-        if search.get('text'): spec['text_index'] = { '$all': search['text'] }
-        if search.get('tags'): spec['tags_index'] = { '$all': search['tags'] }
-        if search.get('user'): spec['owner_name'] = search['user']
-        if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
-        if search.get('featured'):
-            spec['_id'] = { '$in': self.db.User.root_user['tagged']['Featured'] }
-
-        print spec
-        if search.get('network'): exprs = request.owner.feed_network(spec=spec, **args)
-        else: exprs = self.db.Expr.page(spec, **args)
-        return exprs
-
-    def parse_query(self, q):
-        """ Parses search query into MongoDB spec
-            #tag @user and :ATTR are parsed (where ATTR is "public" or "private")
-        """
-
-        # split into lower-cased words with possible [@#:] prefix
-        search = { 'text': [], 'tags': [] }
-        for pattern in re.findall(r'(\b|\W+)(\w+)', q.lower()):
-            prefix = re.sub( r'[^#@:]', '', pattern[0] )
-            if prefix == '@': search['user'] = pattern[1]
-            elif prefix == '#': search['tags'].append( pattern[1] )
-            elif prefix == ':':
-                if pattern[1] == 'public':  search['auth'] = 'public' 
-                if pattern[1] == 'private': search['auth'] = 'password'
-                if pattern[1] == 'featured': search['featured'] = True
-                if pattern[1] == 'network': search['network'] = True
-            else: search['text'].append( pattern[1] )
-
-        return search
+        return self.db.query( request.args.get('q', ''), **args )

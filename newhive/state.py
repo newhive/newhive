@@ -54,6 +54,62 @@ class Database:
                 key = map(lambda a: a if type(a) == tuple else (a, 1), [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
 
+    def query(self, q, viewer=None, limit=40, **args):
+        args['viewer'] = viewer
+        args['limit'] = limit
+        search = self.parse_query(q)
+        sort = 'updated'
+
+        page_anchor = args.get('page')
+        if is_mongo_key(page_anchor):
+            res = self.Expr.fetch(page_anchor) or self.User.fetch(page_anchor)
+            args['page'] = res[sort]
+        
+        # substitute featured with network when not logged in
+        if not viewer and search.get('network'):
+            search['featured'] = True
+            del search['network']
+
+        spec = {}
+        if search.get('text'): spec['text_index'] = { '$all': search['text'] }
+        if search.get('tags'): spec['tags_index'] = { '$all': search['tags'] }
+        if search.get('user'): spec['owner_name'] = search['user']
+        if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
+        if search.get('featured'):
+            spec['_id'] = { '$in': self.User.root_user['tagged']['Featured'] }
+
+        if search.get('network'):
+            results = viewer.feed_network(spec=spec, **args)
+        else:
+            users = self.User.page(spec, **args)
+            exprs = self.Expr.page(spec, **args)
+            results = users + exprs
+            results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+
+        page = Page(results)
+        page.next = page[-1][sort] if len(page) == limit else None
+        return page
+
+    def parse_query(self, q):
+        """ Parses search query into MongoDB spec
+            #tag @user and :ATTR are parsed (where ATTR is "public" or "private")
+        """
+
+        # split into lower-cased words with possible [@#:] prefix
+        search = { 'text': [], 'tags': [] }
+        for pattern in re.findall(r'(\b|\W+)(\w+)', q.lower()):
+            prefix = re.sub( r'[^#@:]', '', pattern[0] )
+            if prefix == '@': search['user'] = pattern[1]
+            elif prefix == '#': search['tags'].append( pattern[1] )
+            elif prefix == ':':
+                if pattern[1] == 'public':  search['auth'] = 'public' 
+                if pattern[1] == 'private': search['auth'] = 'password'
+                if pattern[1] == 'featured': search['featured'] = True
+                if pattern[1] == 'network': search['network'] = True
+            else: search['text'].append( pattern[1] )
+
+        return search
+
 class Collection(object):
     def __init__(self, db, entity):
         self.db = db

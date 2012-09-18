@@ -64,9 +64,6 @@ class Expression(Community, PagingMixin):
     # Controller for all navigation surrounding an expression
     # Must only output trusted HTML
     def frame(self, request, response, parts):
-        if request.is_xhr:
-            return self.infos(request, response)
-
         path = '/'.join(parts)
         owner = response.context['owner']
         resource = self.db.Expr.meta(owner['name'], path)
