@@ -77,9 +77,12 @@ class Mailer(object):
         self.jinja_env = jinja_env
 
     def send_mail(self, heads, body, **kwargs):
+
         heads.update(To=self.recipient.get('email'))
         if hasattr(self, 'name'):
             kwargs.update(category=self.name)
+
+        # check subscription status
         if isinstance(self.recipient, newhive.state.User):
             subscriptions = self.recipient.get('email_subscriptions', [])
             unsubscribed = self.unsubscribable and not self.name in subscriptions
@@ -137,6 +140,7 @@ class EmailConfirmation(Mailer):
     unsubscribable = False
 
     def send(user, email):
+        self.recipient = user
         secret = crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date'))))
         link = abs_url(secure=True) +\
                 "email_confirmation?user=" + user.id +\
@@ -155,23 +159,28 @@ class EmailConfirmation(Mailer):
             'plain': self.jinja_env.get_template("emails/email_confirmation.txt").render(context)
             ,'html': self.jinja_env.get_template("emails/email_confirmation.html").render(context)
             }
-        send_mail(heads, body, 'email_confirmation')
+        self.send_mail(heads, body)
 
-def temporary_password(jinja_env, user, recovery_link):
-    heads = {
-        'To' : user.get('email')
-        , 'Subject' : 'Password recovery for thenewhive.com'
-        }
-    context = {
-        'recovery_link': recovery_link
-        ,'user_fullname' : user['fullname']
-        ,'user_name': user['name']
-        }
-    body = {
-        'plain': jinja_env.get_template("emails/password_recovery.txt").render(context)
-        ,'html': jinja_env.get_template("emails/password_recovery.html").render(context)
-        }
-    send_mail(heads, body, 'temporary_password')
+class TemporaryPassword(Mailer):
+    name = 'temporary_password'
+    unsubscribable = False
+
+    def send(user, recovery_link):
+        self.recipient = user
+        heads = {
+            'To' : user.get('email')
+            , 'Subject' : 'Password recovery for thenewhive.com'
+            }
+        context = {
+            'recovery_link': recovery_link
+            ,'user_fullname' : user['fullname']
+            ,'user_name': user['name']
+            }
+        body = {
+            'plain': self.jinja_env.get_template("emails/password_recovery.txt").render(context)
+            ,'html': self.jinja_env.get_template("emails/password_recovery.html").render(context)
+            }
+        self.send_mail(heads, body)
 
 class ExprAction(Mailer):
 

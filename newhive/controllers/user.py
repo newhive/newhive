@@ -210,7 +210,7 @@ class User(Application):
         if user:
             key = junkstr(16)
             recovery_link = abs_url(secure=True) + 'password_recovery?key=' + key + '&user=' + user.id
-            mail.temporary_password(self.jinja_env, user, recovery_link)
+            mail.TemporaryPassword(jinja_env=self.jinja_env, db=self.db).send(user, recovery_link)
             user.update(password_recovery = key)
             return self.serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
         else:
