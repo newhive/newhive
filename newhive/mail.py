@@ -46,6 +46,14 @@ def send_mail(headers, body, category=None, unique_args=None):
         plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
         html = MIMEText(body['html'].encode('utf-8'), 'html')
         msg.attach(plain); msg.attach(html)
+
+        # write e-mail to file for debugging
+        if config.debug_mode:
+            path = '/lib/tmp/' + utils.junkstr(10) + '.html'
+            with open(config.src_home + path, 'w') as f:
+                f.write(body['html'])
+            logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
+
     else:
         part1 = MIMEText(body.encode('utf-8'), 'plain')
         msg.attach(part1)
@@ -57,13 +65,6 @@ def send_mail(headers, body, category=None, unique_args=None):
     g.flatten(msg)
     encoded_msg = io.getvalue()
 
-    # write e-mail to file for debugging
-    if config.debug_mode:
-        path = '/lib/tmp/' + utils.junkstr(10) + '.html'
-        with open(config.src_home + path, 'w') as f:
-            f.write(body['html'])
-        logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
-
     # Send mail, but if we're in debug mode only send to admins
     if config.live_server or msg['To'] in config.admin_emails:
         t0 = time.time()
@@ -74,46 +75,69 @@ def send_mail(headers, body, category=None, unique_args=None):
         logger.warn("Not sending mail to %s in debug mode" % (msg['To']))
 
 
-def site_referral(jinja_env, db, email, name=False, force_resend=False):
-    if db.Referral.find(email, keyname='to') and not force_resend:
-        return False
+class Mailer(object):
+    def __init__(self, jinja_env=None, db=None):
+        self.db = db
+        self.jinja_env = jinja_env
 
-    user = db.User.named(config.site_user)
-    referral = user.new_referral({'name': name, 'to': email})
+    def send_mail(self, *args, **kwargs):
+        if hasattr(self, 'name'):
+            kwargs.update(category=self.name)
+        send_mail(*args, **kwargs)
 
-    heads = {
-        'To': email
-        ,'Subject' : "You have a beta invitation to thenewhive.com"
-        }
 
-    context = {
-        'name': name
-        ,'url': referral.url
-        }
-    body = {
-         'plain': jinja_env.get_template("emails/invitation.txt").render(context)
-        ,'html': jinja_env.get_template("emails/invitation.html").render(context)
-        }
-    send_mail(heads, body, 'site_referral')
-    return referral.id
+class SiteReferral(Mailer):
+    name = 'site_referral'
+    sent_to = ['nonusers']
+    unsubscribable = True
 
-def email_confirmation(jinja_env, user, email):
-    secret = crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date'))))
-    link = abs_url(secure=True) + "email_confirmation?user=" + user.id + "&email=" + urllib.quote(email) + "&secret=" + urllib.quote(secret)
-    heads = {
-        'To' : email
-        , 'Subject' : 'Confirm change of e-mail address for thenewhive.com'
-        }
-    context = {
-        'user_fullname' : user['fullname']
-        ,'user_name': user['name']
-        ,'link' : link
-        }
-    body = {
-        'plain': jinja_env.get_template("emails/email_confirmation.txt").render(context)
-        ,'html': jinja_env.get_template("emails/email_confirmation.html").render(context)
-        }
-    send_mail(heads, body, 'email_confirmation')
+    def send(self, email, name=False, force_resend=False):
+        if db.Referral.find(email, keyname='to') and not force_resend:
+            return False
+
+        user = db.User.named(config.site_user)
+        referral = user.new_referral({'name': name, 'to': email})
+
+        heads = {
+            'To': email
+            ,'Subject' : "You have a beta invitation to thenewhive.com"
+            }
+
+        context = {
+            'name': name
+            ,'url': referral.url
+            }
+        body = {
+             'plain': jinja_env.get_template("emails/invitation.txt").render(context)
+            ,'html': jinja_env.get_template("emails/invitation.html").render(context)
+            }
+        self.send_mail(heads, body)
+        return referral.id
+
+class EmailConfirmation(Mailer):
+    name = 'email_confirmation'
+    unsubscribable = False
+
+    def send(user, email):
+        secret = crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date'))))
+        link = abs_url(secure=True) +\
+                "email_confirmation?user=" + user.id +\
+                "&email=" + urllib.quote(email) +\
+                "&secret=" + urllib.quote(secret)
+        heads = {
+            'To' : email
+            , 'Subject' : 'Confirm change of e-mail address for thenewhive.com'
+            }
+        context = {
+            'user_fullname' : user['fullname']
+            ,'user_name': user['name']
+            ,'link' : link
+            }
+        body = {
+            'plain': self.jinja_env.get_template("emails/email_confirmation.txt").render(context)
+            ,'html': self.jinja_env.get_template("emails/email_confirmation.html").render(context)
+            }
+        send_mail(heads, body, 'email_confirmation')
 
 def temporary_password(jinja_env, user, recovery_link):
     heads = {
@@ -131,108 +155,157 @@ def temporary_password(jinja_env, user, recovery_link):
         }
     send_mail(heads, body, 'temporary_password')
 
-def mail_feed(jinja_env, feed, dry_run=False):
+class ExprAction(Mailer):
 
+    @property
+    def recipient(self): return self.feed.entity.owner
+    @property
+    def initiator(self): return self.feed.initiator
     subject = None
-    if type(feed) == newhive.state.Comment:
-        message = feed.get('text')
-        header_message = ['commented on', 'your expression']
-    elif type(feed) == newhive.state.Star:
-        if feed['entity_class'] == "Expr":
-            header_message = ['loves', 'your expression']
-            message = "Now they can keep track of your expression and be notified of updates and discussions."
-            subject = feed.initiator.get('name') + ' loves "' + feed.entity.get('title') + '"'
-        elif feed['entity_class'] == "User":
-            header_message = ['is now', 'listening to you']
-            message = "Now they will receive updates about what you're creating and broadcasting."
-    elif type(feed) == newhive.state.Broadcast:
-        message = "Your expression has been broadcast to their network of listeners."
-        header_message = ['broadcast', 'your expression']
-        subject = feed.initiator.get('name') + ' broadcast "' + feed.entity.get('title') + '"'
 
-    mail_expr_action(
-            jinja_env = jinja_env
-            , category = 'mail_feed'
-            , initiator = feed.initiator
-            , recipient = feed.entity.owner
-            , expr = feed.entity
-            , message = message
-            , header_message = header_message
-            , subject = subject
-            )
-
-def user_register_thankyou(jinja_env, user):
-    user_profile_url = user.url
-    user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
-    heads = {
-        'To' : user['email']
-        , 'Subject' : 'Thank you for creating an account on thenewhive.com'
-        }
-    context = {
-        'user_fullname' : user['fullname']
-        , 'user_home_url' : user_home_url
-        , 'user_home_url_display' : re.sub(r'^https?://', '', user_home_url)
-        , 'user_profile_url' : user_profile_url
-        , 'user_profile_url_display' : re.sub(r'^https?://', '', user_profile_url)
-        }
-    body = {
-         'plain': jinja_env.get_template("emails/thank_you_register.txt").render(context)
-        ,'html': jinja_env.get_template("emails/thank_you_register.html").render(context)
-        }
-    send_mail(heads, body, 'user_register_thankyou')
-
-
-def mail_expr_action(jinja_env, category, initiator, recipient, expr, message, header_message, subject=None):
-
+    def send(self):
         context = {
-            'message': message
-            ,'initiator': initiator
-            ,'recipient': recipient
-            , 'header': header_message
-            , 'expr': expr
+            'message': self.message
+            ,'initiator': self.initiator
+            ,'recipient': self.recipient
+            , 'header': self.header_message
+            , 'expr': self.card
             , 'server_url': abs_url()
             }
 
         heads = {
-             'To' : recipient.get('email')
-            ,'Subject' : subject or initiator.get('name') + ' ' + ' '.join(header_message)
-            ,'Reply-to' : initiator.get('email', '')
+             'To' : self.recipient.get('email')
+            ,'Subject' : self.subject or self.initiator.get('name') + ' ' + ' '.join(self.header_message)
+            ,'Reply-to' : self.initiator.get('email', '')
             }
 
-        html = jinja_env.get_template("emails/expr_action.html").render(context)
+        html = self.jinja_env.get_template("emails/expr_action.html").render(context)
         html = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
 
         body = {
-             'plain': jinja_env.get_template("emails/share.txt").render(context)
+             'plain': self.jinja_env.get_template("emails/share.txt").render(context)
             ,'html': html
             }
-        sendgrid_args = {'initiator': initiator.get('name'), 'expr_id': expr.id}
-        send_mail(heads, body, category=category, unique_args=sendgrid_args)
+        sendgrid_args = {'initiator': self.initiator.get('name'), 'expr_id': self.card.id}
+        self.send_mail(heads, body, unique_args=sendgrid_args)
 
-        # if request.form.get('send_copy'):
-        #     heads.update(To = request.requester.get('email', ''))
-        #     send_mail(heads, body)
+class Comment(ExprAction):
+    name = 'comment'
+    @property
+    def message(self): return self.feed.get('text')
 
-def milestone(jinja_env, expr, milestone):
-    context = {
-        'message': ui.milestone_message
-        , 'expr': expr
-        , 'milestone': milestone
-        , 'server_url': abs_url()
-        }
+    header_message = ['commented on', 'your expression']
 
-    heads = {
-        'To': expr.owner.get('email')
-        , 'Subject': 'Your expression "{}" has {} views'.format(expr['title'], milestone)
-        }
+    @property
+    def card(self): return self.feed.entity
 
-    html = jinja_env.get_template("emails/milestone.html").render(context)
-    html = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
+class UserStar(ExprAction):
+    name = 'listen'
+    message = "Now they will receive updates about what you're creating and broadcasting."
+    header_message = ['is now', 'listening to you']
+    @property
+    def card(self): return self.feed.initiator
 
-    body = {
-         'plain': jinja_env.get_template("emails/share.txt").render(context)
-        ,'html': html
-        }
-    sendgrid_args = {'expr_id': expr.id, 'milestone': milestone}
-    send_mail(heads, body, category='milestone', unique_args=sendgrid_args)
+class ExprStar(ExprAction):
+    name = 'love'
+    message = "Now they can keep track of your expression and be notified of updates and discussions."
+    header_message = ['loves', 'your expression']
+    @property
+    def subject(self):
+        return self.feed.initiator.get('name') + ' loves "' + self.feed.entity.get('title') + '"'
 
+    @property
+    def card(self): return self.feed.entity
+
+class Broadcast(ExprAction):
+    name = 'broadcast'
+    message = "Your expression has been broadcast to their network of listeners."
+    header_message = ['broadcast', 'your expression']
+
+    @property
+    def subject(self):
+        return self.feed.initiator.get('name') + ' broadcast "' + self.feed.entity.get('title') + '"'
+
+    @property
+    def card(self):
+        return self.feed.entity
+
+class Feed(Mailer):
+    def send(self, feed):
+        if type(feed) == newhive.state.Comment:
+            mailer_class = Comment
+        elif type(feed) == newhive.state.Star:
+            if feed['entity_class'] == "Expr":
+                mailer_class = ExprStar
+            elif feed['entity_class'] == "User":
+                mailer_class = UserStar
+        elif type(feed) == newhive.state.Broadcast:
+            mailer_class = Broadcast
+
+        mailer = mailer_class(self.jinja_env, self.db)
+        mailer.feed = feed
+        mailer.send()
+
+class UserRegisterConfirmation(Mailer):
+    name = 'user_register_confirmation'
+    unsubscribable = False
+
+    def send(self, user):
+        user_profile_url = user.url
+        user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
+        heads = {
+            'To' : user['email']
+            , 'Subject' : 'Thank you for creating an account on thenewhive.com'
+            }
+        context = {
+            'user_fullname' : user['fullname']
+            , 'user_home_url' : user_home_url
+            , 'user_home_url_display' : re.sub(r'^https?://', '', user_home_url)
+            , 'user_profile_url' : user_profile_url
+            , 'user_profile_url_display' : re.sub(r'^https?://', '', user_profile_url)
+            }
+        body = {
+             'plain': self.jinja_env.get_template("emails/thank_you_register.txt").render(context)
+            ,'html': self.jinja_env.get_template("emails/thank_you_register.html").render(context)
+            }
+        self.send_mail(heads, body)
+
+class ShareExpr(ExprAction):
+
+    name = 'share_expr'
+    header_message = ['has sent', 'you an expression']
+    recipient = None
+    initiator = None
+
+    def send(self, expr, initiator, recipient, message):
+        self.card = expr
+        self.initiator = initiator
+        self.recipient = recipient
+        self.message = message
+        super(ShareExpr, self).send()
+
+class Milestone(Mailer):
+    name = 'milestone'
+
+    def send(self, expr, milestone):
+        context = {
+            'message': ui.milestone_message
+            , 'expr': expr
+            , 'milestone': milestone
+            , 'server_url': abs_url()
+            }
+
+        heads = {
+            'To': expr.owner.get('email')
+            , 'Subject': 'Your expression "{}" has {} views'.format(expr['title'], milestone)
+            }
+
+        html = self.jinja_env.get_template("emails/milestone.html").render(context)
+        html = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
+
+        body = {
+             'plain': self.jinja_env.get_template("emails/share.txt").render(context)
+            ,'html': html
+            }
+        sendgrid_args = {'expr_id': expr.id, 'milestone': milestone}
+        self.send_mail(heads, body, unique_args=sendgrid_args)

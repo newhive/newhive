@@ -1,6 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.mail import site_referral
+from newhive.mail import SiteReferral
 import logging
 logger = logging.getLogger(__name__)
 
@@ -74,6 +74,7 @@ class Admin(Application):
     @admins
     def bulk_invite(self, request, resposne):
         form = request.form.copy()
+        mailer = SiteReferral(db=self.db, jinja_env=self.jinja_env)
         for key in form:
             parts = key.split('_')
             if parts[0] == 'check':
@@ -81,7 +82,7 @@ class Admin(Application):
                 contact = self.db.Contact.fetch(id)
                 name = form.get('name_' + id)
                 if contact.get('email'):
-                    referral_id = site_referral(self.jinja_env, self.db, contact['email'], name)
+                    referral_id = mailer.send(contact['email'], name)
                     if referral_id:
                         contact.update(referral_id=referral_id)
                     else:

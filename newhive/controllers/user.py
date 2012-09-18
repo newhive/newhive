@@ -99,7 +99,7 @@ class User(Application):
             if file:
                 file.update(owner=user.id)
 
-        try: mail.user_register_thankyou(self.jinja_env, user)
+        try: mail.UserRegisterConfirmation(self.jinja_env).send(user)
         except: pass # TODO: log an error
 
         request.form = dict(username = args['name'], secret = args['password'])
@@ -245,7 +245,7 @@ class User(Application):
         email = request.form.get('email')
         if email and email != request.requester.get('email'):
             user.update(email_confirmation_request_date=time.time())
-            mail.email_confirmation(self.jinja_env, user, email)
+            mail.EmailConfirmation(db=self.db, jinja_env=self.jinja_env).send(user, email)
             message = message + ui.email_change_success_message + " "
         if request.form.get('friends_to_listen'):
             new_friends = len(request.form['friends_to_listen'].split(','))

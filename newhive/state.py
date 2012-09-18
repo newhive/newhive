@@ -347,6 +347,7 @@ class User(HasSocial):
         self['fullname'] = self.get('fullname', self['name'])
         self['referrals'] = 0
         self['flags'] = {}
+        self['email_subscriptions'] = config.default_email_subscriptions
         assert self.has_key('referrer')
         super(User, self).create()
         self.build_search_index()

@@ -67,20 +67,12 @@ class Mail(Application):
         recipient = recipient or {'email': recipient_address}
         expr = self.db.Expr.named(*request.path.split('/', 1))
 
-        mail.mail_expr_action(
-                jinja_env = self.jinja_env
-                , category = 'share_expr'
-                , initiator = request.requester
-                , recipient = recipient
-                , expr = expr
-                , message = request.form.get('message')
-                , header_message = ['has sent', 'you an expression']
-                )
-
         expr.increment({'analytics.email.count': 1})
 
         log_data = {'service': 'email', 'to': recipient_address, 'expr_id': expr.id}
         self.db.ActionLog.create(request.requester, 'share', data=log_data)
+
+        mail.ShareExpr(self.jinja_env).send(expr, request.requester, recipient, request.form.get('message'))
 
         return self.redirect(response, request.form.get('forward'))
 
