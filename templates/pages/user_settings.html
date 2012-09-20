@@ -313,7 +313,7 @@ var profile_thumb_choose = function(){
          <div>
              {% set id = "email_" + type.name %}
              <input type="checkbox" name="{{id}}" {{"checked='checked'" if type.name in email_subscriptions}}/>
-             <label for="{{id}}">{{type.ui_name}}</label>
+             <label for="{{id}}">{{ui.email_subscription_ui[type.name]}}</label>
          </div>
          {% endfor %}
      </div>

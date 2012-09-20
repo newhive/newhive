@@ -239,7 +239,6 @@ class ExprAction(Mailer):
 
 class Comment(ExprAction):
     name = 'comment'
-    ui_name = 'People comment on my expression'
     @property
     def message(self): return self.feed.get('text')
 
@@ -250,7 +249,6 @@ class Comment(ExprAction):
 
 class UserStar(ExprAction):
     name = 'listen'
-    ui_name = 'People are listening to me'
     message = "Now they will receive updates about what you're creating and broadcasting."
     header_message = ['is now', 'listening to you']
     @property
@@ -258,7 +256,6 @@ class UserStar(ExprAction):
 
 class ExprStar(ExprAction):
     name = 'love'
-    ui_name = 'People love my expression'
     message = "Now they can keep track of your expression and be notified of updates and discussions."
     header_message = ['loves', 'your expression']
     @property
@@ -270,7 +267,6 @@ class ExprStar(ExprAction):
 
 class Broadcast(ExprAction):
     name = 'broadcast'
-    ui_name = 'People broadcast my expression'
     message = "Your expression has been broadcast to their network of listeners."
     header_message = ['broadcast', 'your expression']
 
@@ -326,7 +322,6 @@ class UserRegisterConfirmation(Mailer):
 class ShareExpr(ExprAction):
 
     name = 'share_expr'
-    ui_name = 'People share an expression with me'
     header_message = ['has sent', 'you an expression']
     recipient = None
     initiator = None
@@ -341,7 +336,6 @@ class ShareExpr(ExprAction):
 
 class Milestone(Mailer):
     name = 'milestone'
-    ui_name = "Updates about my expression's views"
     sent_to = ['user']
 
     def send(self, expr, milestone):
