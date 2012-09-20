@@ -217,6 +217,11 @@ class ExprAction(Mailer):
     subject = None
     sent_to = ['user']
 
+    @property
+    def featured_expressions(self):
+        exprs = self.initiator.get_top_expressions(6)
+        if exprs.count() >= 6: return exprs
+
     def send(self):
         context = {
             'message': self.message
@@ -225,6 +230,7 @@ class ExprAction(Mailer):
             , 'header': self.header_message
             , 'expr': self.card
             , 'server_url': abs_url()
+            , 'featured_exprs': self.featured_expressions
             }
 
         heads = {

@@ -40,6 +40,17 @@
   {% include 'emails/parts/expr_card.html' %}
 {% endif %}
 
+{% if featured_exprs %}
+    <div id="featured_exprs">
+        <h4>Check out some of {{initiator.name}}'s expressions:</h4>
+        {% for expr in featured_exprs -%}
+          <a href="{{expr.url}}" title="{{expr.title}}" id="{{expr.id}}"
+              ><img class="featured_thumb" src="{{expr.thumb}}"/
+          ></a>
+        {%- endfor %}
+    </div>
+{% endif %}
+
 {% block footer_message %}
     <h4 id="footer_message">
         {% if recipient and recipient.name %}

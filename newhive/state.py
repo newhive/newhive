@@ -145,15 +145,25 @@ class Collection(object):
     def map_reduce(self, *a, **b): return self._col.map_reduce(*a, **b)
 
 class Cursor(object):
-    def __init__(self, collection, cursor): 
+    def __init__(self, collection, cursor):
         self.collection = collection
         self._cur = cursor
 
+        # wrap pymongo.cursor.Cursor methods. mongodb cursors allow chaining of
+        # methods like sort and limit, however in this case rather than
+        # returning a pymongo.cursor.Cursor instance we want to return a
+        # newhive.state.Cursor instance, but for methods like count that return
+        # an integer or some other value, just return that
         def mk_wrap(self, method):
             wrapped = getattr(self._cur, m)
-            def wrap(*a, **b): return wrapped(*a, **b)
+            def wrap(*a, **b):
+                rv = wrapped(*a, **b)
+                if type(rv) == pymongo.cursor.Cursor: return self
+                else: return rv
             return wrap
-        for m in ['count', 'distinct', 'explain', 'sort']: setattr(self, m, mk_wrap(self, m))
+
+        for m in ['count', 'distinct', 'explain', 'sort', 'limit']:
+            setattr(self, m, mk_wrap(self, m))
 
     def __len__(self): return self.count()
 
@@ -604,8 +614,16 @@ class User(HasSocial):
         friends = self.fb_client.friends()
         return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}, 'facebook.disconnected': {'$exists': False}})
 
-    @property
-    def expressions(self): return self.get_exprs()
+    def get_expressions(self, auth=None):
+        spec = {'owner': self.id}
+        if auth: spec.update(auth=auth)
+        return self.db.Expr.search(spec)
+    expressions = property(get_expressions)
+
+    def get_top_expressions(self, count=5):
+        return self.get_expressions(auth='public').sort([('views', -1)]).limit(count)
+    top_expressions = property(get_top_expressions)
+
 
     def delete(self):
         # Facebook Disconnect
