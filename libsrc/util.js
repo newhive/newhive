@@ -334,6 +334,9 @@ function link_target(i, a) {
     var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
     var a = $(a), href = a.attr('href') || a.attr('action');
 
+    // Don't change target if it's already set
+    if (a.attr('target')) return;
+
     if(href && href.indexOf('http') === 0 && !re.test(href)) {
         a.attr('target', '_blank');
     } else {
