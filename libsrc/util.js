@@ -814,10 +814,12 @@ Hive.login_submit = function(form){
     _gaq.push(['_trackEvent', 'login', identifier]);
 };
 
-Hive.logout_submit = function(form){
-    var form = $(form);
+Hive.logout_submit = function(that){
+    var form = $(that).parents('form');
     form.find('[name=url]').val(window.location.href);
     _gaq.push(['_trackEvent', 'logout']);
+    // Delay ensures that event is tracked
+    setTimeout(function(){ form.submit(); }, 800);
 };
 
 function relogin(success){

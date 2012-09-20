@@ -88,8 +88,8 @@
         {% endif %}
         ><a href='{{ secure_server }}settings'><div class='menu_item'>Settings</div></a
         ><div class='menu_item feedback'>Send Us Feedback</div
-        ><form id='logout_form' action='{{ secure_server }}' method='POST' onsubmit="Hive.logout_submit(this);"
-          ><div onclick='$("#logout_form").submit()' class='menu_item'>Log Out</div
+          ><form id='logout_form' action='{{ secure_server }}' method='POST'
+            ><div onclick="Hive.logout_submit(this);" class='menu_item'>Log Out</div
           ><input name='action' value='logout' type='hidden'
           ><input type='hidden' name='url' value='{{ url }}'
         ></form
