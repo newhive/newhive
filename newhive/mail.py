@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
-def send_mail(headers, body, category=None, unique_args=None):
+def send_mail(headers, body, category=None, filters=None, unique_args=None):
     def to_json(data):
         j = json.dumps(data)
         return re.compile('(["\]}])([,:])(["\[{])').sub('\1\2 \3', j)
@@ -35,10 +35,11 @@ def send_mail(headers, body, category=None, unique_args=None):
     msg['From'] = headers.get('From', 'The New Hive <noreply@thenewhive.com>')
 
     # Sendgrid smtp api setup
-    if category or unique_args:
+    if category or unique_args or filters:
         smtpapi = {}
         if category:    smtpapi.update({'category': category})
         if unique_args: smtpapi.update({'unique_args': unique_args})
+        if filters:     smtpapi.update({'filters': filters})
         msg['X-SMTPAPI'] = to_json(smtpapi)
 
     # Message body assembly
@@ -94,11 +95,16 @@ class Mailer(object):
         self.db = db
         self.jinja_env = jinja_env
 
-    def send_mail(self, heads, body, **kwargs):
+    def send_mail(self, heads, body, filters=None, category=None, **kwargs):
+        if not filters: filters = {}
 
         heads.update(To=self.recipient.get('email'))
-        if hasattr(self, 'name'):
-            kwargs.update(category=self.name)
+        if not category and hasattr(self, 'name'):
+            category=self.name
+
+        filters.update(clicktrack={'settings': {'enable': 1}})
+        if not self.unsubscribable:
+            filters.update(bypass_list_management={'settings': {'enable': 1}})
 
         # check subscription status
         if isinstance(self.recipient, newhive.state.User):
@@ -123,7 +129,7 @@ class Mailer(object):
             logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
 
         if not unsubscribed:
-            send_mail(heads, body, **kwargs)
+            send_mail(heads, body, filters=filters, category=category, **kwargs)
 
 class SiteReferral(Mailer):
     name = 'site_referral'
