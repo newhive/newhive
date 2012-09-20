@@ -18,10 +18,11 @@
     {% if header %}
     <h2 id="main_message">
             <div class="line">
-                {% call link(initiator, class="sender") %}
+                {% call link(initiator, class="sender") -%}
                     {{ initiator.name }}
-                {% endcall %}
+                {%- endcall %}
                 {{ header[0] }}
+                <img src="{{icon}}"/>
             </div>
             <div class="line">
                 {{ header[1] }}

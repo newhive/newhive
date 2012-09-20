@@ -59,6 +59,10 @@ $space4: 5px;
     #main_message{
         margin-top: $space2;
         .sender { color: $color_bright_red; }
+        img {
+            float: right;
+            margin-right: 5px;
+        }
     }
     
     #message{

@@ -231,6 +231,7 @@ class ExprAction(Mailer):
             , 'expr': self.card
             , 'server_url': abs_url()
             , 'featured_exprs': self.featured_expressions
+            , 'icon': self.db.assets.url('skin/1/email/' + self.name + '.png')
             }
 
         heads = {
@@ -254,7 +255,7 @@ class Comment(ExprAction):
     @property
     def message(self): return self.feed.get('text')
 
-    header_message = ['commented on', 'your expression']
+    header_message = ['commented', 'on your expression']
 
     @property
     def card(self): return self.feed.entity
