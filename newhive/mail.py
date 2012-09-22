@@ -92,23 +92,14 @@ class MetaMailer(type):
 class Mailer(object):
     __metaclass__ = MetaMailer
     recipient = None
+    initiator = None
     unsubscribable = True
 
     def __init__(self, jinja_env=None, db=None):
         self.db = db
         self.jinja_env = jinja_env
 
-    def send_mail(self, heads, body, filters=None, category=None, **kwargs):
-        if not filters: filters = {}
-
-        heads.update(To=self.recipient.get('email'))
-        if not category and hasattr(self, 'name'):
-            category=self.name
-
-        filters.update(clicktrack={'settings': {'enable': 1}})
-        if not self.unsubscribable:
-            filters.update(bypass_list_management={'settings': {'enable': 1}})
-
+    def check_subscription(self):
         # check subscription status
         if isinstance(self.recipient, newhive.state.User):
             subscriptions = self.recipient.get('email_subscriptions', config.default_email_subscriptions)
@@ -118,21 +109,48 @@ class Mailer(object):
                 'email': self.recipient['email']
                 , 'name': {'$in': ['all', self.name]}
                 })
+        return not unsubscribed
+
+    def send_mail(self, heads, body, filters=None, **kwargs):
+        if not filters: filters = {}
+
+        record = {'email': self.recipient.get('email'), 'category': self.name }
+        if type(self.recipient) == newhive.state.User:
+            record.update({'recipient': self.recipient.id, 'recipient_name': self.recipient.get('name')})
+        if type(self.initiator) == newhive.state.User:
+            record.update({'initiator': self.initiator.id, 'initiator_name': self.initiator.get('name')})
+
+        heads.update(To=self.recipient.get('email'))
+
+        filters.update(clicktrack={'settings': {'enable': 1}})
+        if not self.unsubscribable:
+            filters.update(bypass_list_management={'settings': {'enable': 1}})
+
+        subscribed = self.check_subscription()
+        record.update(sent=subscribed)
+
         logger.info("to: {}\tname: {}\tstatus: {}".format(
             self.recipient.get('email')
             , self.name
-            , 'unsubscribed' if unsubscribed else 'sent'
+            , 'unsubscribed' if not subscribed else 'sent'
             ))
 
         # write e-mail to file for debugging
         if config.debug_mode:
             path = '/lib/tmp/' + utils.junkstr(10) + '.html'
             with open(config.src_home + path, 'w') as f:
+                f.write('<div><pre>')
+                for key, val in heads.items():
+                    f.write("{:<20}{}\n".format(key + ":", val))
+                f.write('</pre></div>')
                 f.write(body['html'])
             logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
+            record.update(debug_url=abs_url(secure=True) + path)
 
-        if not unsubscribed:
-            send_mail(heads, body, filters=filters, category=category, **kwargs)
+        if subscribed:
+            send_mail(heads, body, filters=filters, category=self.name, **kwargs)
+
+        self.db.MailLog.create(record)
 
 class SiteReferral(Mailer):
     name = 'site_referral'

@@ -1125,6 +1125,11 @@ class ActionLog(Entity):
 
 
 @Database.register
+class MailLog(Entity):
+    indexes = ['initiator', 'recipient', 'category', 'created']
+    cname = 'mail_log'
+
+@Database.register
 class Feed(Entity):
     cname = 'feed'
     indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
