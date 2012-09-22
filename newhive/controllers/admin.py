@@ -1,6 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.mail import SiteReferral
+from newhive import mail
 import logging
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class Admin(Application):
     @admins
     def bulk_invite(self, request, resposne):
         form = request.form.copy()
-        mailer = SiteReferral(db=self.db, jinja_env=self.jinja_env)
+        mailer = mail.SiteReferral(db=self.db, jinja_env=self.jinja_env)
         for key in form:
             parts = key.split('_')
             if parts[0] == 'check':
@@ -177,9 +177,13 @@ class Admin(Application):
     @admins
     def update_featured(self, request, response):
         root = self.db.User.get_root()
-        new_featured = request.form.get('featured').split(',')
-        print; print request.form
+        new_featured = uniq(request.form.get('featured').split(','))
         if new_featured:
+            new_set = set(new_featured)
+            old_set = set(root['tagged']['Featured'])
+            mailer = mail.Featured(db=self.db, jinja_env=self.jinja_env)
+            for id in new_set.difference(old_set):
+                mailer.send(self.db.Expr.fetch(id))
             root['tagged']['_Featured'] = []
             root['tagged']['Featured'] = new_featured
             root.save(updated=False)
