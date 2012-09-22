@@ -72,7 +72,7 @@ class Mail(Application):
         log_data = {'service': 'email', 'to': recipient_address, 'expr_id': expr.id}
         self.db.ActionLog.create(request.requester, 'share', data=log_data)
 
-        mail.ShareExpr(self.jinja_env).send(expr, request.requester, recipient, request.form.get('message'))
+        mail.ShareExpr(self.jinja_env, db=self.db).send(expr, request.requester, recipient, request.form.get('message'))
 
         return self.redirect(response, request.form.get('forward'))
 
