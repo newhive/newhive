@@ -79,6 +79,7 @@ class Database:
             spec['_id'] = { '$in': self.User.root_user['tagged']['Featured'] }
 
         if search.get('network'):
+            print spec, args
             results = viewer.feed_network(spec=spec, **args)
         else:
             users = self.User.page(spec, **args)
@@ -95,18 +96,21 @@ class Database:
             #tag @user and :ATTR are parsed (where ATTR is "public" or "private")
         """
 
-        # split into lower-cased words with possible [@#:] prefix
+        # split into words with possible [@#] prefix
         search = { 'text': [], 'tags': [] }
-        for pattern in re.findall(r'(\b|\W+)(\w+)', q.lower()):
-            prefix = re.sub( r'[^#@:]', '', pattern[0] )
-            if prefix == '@': search['user'] = pattern[1]
-            elif prefix == '#': search['tags'].append( pattern[1] )
-            elif prefix == ':':
-                if pattern[1] == 'public':  search['auth'] = 'public' 
-                if pattern[1] == 'private': search['auth'] = 'password'
-                if pattern[1] == 'featured': search['featured'] = True
-                if pattern[1] == 'network': search['network'] = True
-            else: search['text'].append( pattern[1] )
+        for pattern in re.findall(r'(\b|\W+)(\w+)', q):
+            prefix = re.sub( r'[^#@]', '', pattern[0] )
+            if prefix == '@': search['user'] = pattern[1].lower()
+            elif prefix == '#':
+                if pattern[1] == 'Featured': search['featured'] = True
+                elif pattern[1] == 'Network': search['network'] = True
+                elif pattern[1] == 'Public': search['auth'] = 'public' 
+                elif pattern[1] == 'Private': search['auth'] = 'password'
+                elif pattern[1] == 'Activity': search['activity'] = True
+                elif pattern[1] == 'Listening': search['listening'] = True
+                elif pattern[1] == 'Listeners': search['listeners'] = True
+                else: search['tags'].append( pattern[1].lower() )
+            else: search['text'].append( pattern[1].lower() )
 
         return search
 
@@ -973,6 +977,11 @@ class Expr(HasSocial):
 
     public = property(lambda self: self.get('auth') == "public")
 
+    def client_view(self, viewer=None):
+        dict.update(self,
+            id = self.id
+        )
+        return self
 
 def generate_thumb(file, size):
     # resize and crop image to size tuple, preserving aspect ratio, save over original

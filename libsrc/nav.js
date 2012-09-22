@@ -444,12 +444,12 @@ Hive.Menus = (function(){
     // load owner's info: feed items in owner_menu, expr links and thumbs, listening status
     o.owner = false;
     o.update_owner = function( owner ){
-        if( o.owner && o.owner.id == owner.id ) return;
+        if( ! owner || o.owner && o.owner.id == owner.id ) return;
         o.owner = owner;
 
-        var is_owner = owner.id == user.id;
+        var is_owner = (user && owner) ? (user.id == owner.id) : false;
         $('#owner_btn').toggleClass('none', is_owner);
-        if( is_owner ) return;
+        if( !owner || is_owner ) return;
 
         $('#owner_menu .listen').removeClass('on off').addClass( owner.listening ? 'on' : 'off' );
 

@@ -1,4 +1,5 @@
 import os, re, json, time, mimetypes, math
+from functools import partial
 from datetime import datetime
 from newhive import config, colors, auth
 import newhive.ui_strings.en as ui
@@ -69,6 +70,8 @@ def query_args(request):
     if args.has_key('limit'): args['limit'] = min( 100, int(args['limit']) )
     return args
 
+def link_args(response, args): response.context.update( args = args )
+
 class PagingMixin(object):
 
     def set_next_page(self, request, response, items):
@@ -81,27 +84,31 @@ class PagingMixin(object):
         def wrapped(self, request, response, args=None, **kwargs):
             paging_args = query_args(request)
             if args: paging_args.update(args)
-            cards_and_args = func(self, request, response, paging_args, **kwargs)
-            (cards, args) = cards_and_args if type(cards_and_args) == tuple else (cards_and_args, None)
-            response.context.update( cards = cards, args = args )
+            cards = func(self, request, response, paging_args, **kwargs)
             self.set_next_page( request, response, cards )
+            viewer = paging_args.get('viewer')
+            response.context.update( cards = map(
+                lambda o: o.client_view( viewer = viewer ), cards ) )
         return wrapped
 
     @paging_decorator
     def expr_featured(self, request, response, paging_args, **kwargs):
         if (request.path_parts, 1): response.context['title'] = 'Featured Expressions'
-        return self.db.Expr.page(self.db.User.root_user['tagged']['Featured'], **paging_args), {'tag': 'Featured'}
+        link_args(response, {'q': '#Featured'})
+        return self.db.Expr.page(self.db.User.root_user['tagged']['Featured'], **paging_args)
 
     @paging_decorator
     def expr_all(self, request, response, paging_args, **kwargs):
         response.context['title'] = 'All Expressions'
         #quality_filter = [{'views': {'$gt': 25}}, {'analytics.Star': {'$gt': 0}}]
-        return self.db.Expr.page({'auth': 'public'}, **paging_args), {'tag': 'All'}
+        link_args(response, {'q': '#All'})
+        return self.db.Expr.page({'auth': 'public'}, **paging_args)
 
     @paging_decorator
     def home_feed(self, request, response, paging_args, **kwargs):
         if (request.path_parts, 1): response.context['title'] = 'Network'
-        return request.requester.feed_network(**paging_args), {'tag': 'Network'}
+        link_args(response, {'q': '#Network'})
+        return request.requester.feed_network(**paging_args)
 
     @paging_decorator
     def people(self, request, response, paging_args, **kwargs):
@@ -110,17 +117,19 @@ class PagingMixin(object):
 
     @paging_decorator
     def user_exprs(self, request, response, paging_args, auth=None, **kwargs):
-        args = {'user': request.owner['name']}
         if auth: args['auth'] = auth.replace('password', 'private')
-        return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **paging_args), args
+        link_args(response, { 'user': request.owner['name'] })
+        return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **paging_args)
 
     @paging_decorator
     def feed_network(self, request, response, paging_args, **kwargs):
+        #link_args(response, {'q': '#Network'})
         return request.owner.feed_network(**paging_args)
 
-    def feed_profile(self, request, response, by_owner=False, spec={}, **args):
+    def feed_activity(self, request, response, by_owner=False, spec={}, **args):
         args.update(query_args(request))
         if by_owner: spec.update({'initiator': request.owner.id})
+        #link_args(response, { 'q': query } )
         return request.owner.feed_profile_entities(spec=spec, **args)
 
     @paging_decorator
@@ -133,4 +142,6 @@ class PagingMixin(object):
 
     @paging_decorator
     def search(self, request, response, args):
-        return self.db.query( request.args.get('q', ''), **args )
+        query = request.args.get('q', '')
+        link_args(response, { 'q': query } )
+        return self.db.query( query, **args )

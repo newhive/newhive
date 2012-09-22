@@ -18,12 +18,15 @@ class Community(Application, PagingMixin):
             ,'home/people'                : self.people
             ,'home/page'                  : self.expr_page
             ,'profile/expressions'        : self.user_exprs
-            ,'profile/expressions/public' : partial(self.user_exprs, auth='public')
-            ,'profile/expressions/private': partial(self.user_exprs, auth='password')
-            ,'profile/activity'           : self.feed_profile
-            ,'profile/activity/like'      : partial(self.feed_profile, by_owner=True, spec={'class_name':'Star', 'entity_class':'Expr'})
-            ,'profile/activity/discussion': partial(self.feed_profile, spec={'class_name':'Comment'})
-            ,'profile/activity/broadcast' : partial(self.feed_profile, by_owner=True, spec={'class_name':'Broadcast'})
+            ,'profile/expressions/public' : partial( self.user_exprs, auth='public' )
+            ,'profile/expressions/private': partial( self.user_exprs, auth='password' )
+            ,'profile/activity'           : self.feed_activity
+            ,'profile/activity/like'      : partial( self.feed_activity, by_owner=True,
+                spec={'class_name':'Star', 'entity_class':'Expr'} )
+            ,'profile/activity/discussion': partial( self.feed_activity,
+                spec={'class_name':'Comment'} )
+            ,'profile/activity/broadcast' : partial( self.feed_activity,
+                by_owner=True, spec={'class_name':'Broadcast'} )
             ,'profile/activity/network'   : self.feed_network
             ,'profile/listening'          : self.listening
             ,'profile/listening/listeners': self.listeners
@@ -82,7 +85,7 @@ class Community(Application, PagingMixin):
             tag_page = True,
             tag = tag,
             home = True,
-            args = { 'tag': tag },
+            args = { 'q': '#' + tag },
             title = "#{}".format(tag),
             description = "Expressions tagged '{}'".format(tag)
         ))
@@ -90,8 +93,9 @@ class Community(Application, PagingMixin):
 
     def page(self, request, response):
         def expr_info(expr):
-            expr['thumb'] = expr.get_thumb()
-            return dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name'])
+            info = dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name'])
+            dict.update(info, id = expr.id, thumb = expr.get_thumb() )
+            return info
 
         if request.args.get('json'):
             json = map(expr_info, response.context.get('cards'))

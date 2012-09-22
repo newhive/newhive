@@ -28,10 +28,6 @@
      js.src = "//connect.facebook.net/en_US/all.js";
      ref.parentNode.insertBefore(js, ref);
    }(document));
-
-
-    var user = {{ client_user | json }}, owner = {{ client_owner | json }},
-        content_domain = {{ content_domain | json }};
 </script>
 {% endblock head %}
 {% block body_classes %}{{ super() }} main {% endblock body_classes%}

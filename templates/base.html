@@ -29,6 +29,8 @@
         debug_mode = {{ debug|json }},
         dialog_to_show = {{ dialog_to_show|json }},
         new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
+        user = {{ client_user | json }}, owner = {{ client_owner | json }},
+        content_domain = {{ content_domain | json }}
     ;
  </script>
  {% if debug %}
