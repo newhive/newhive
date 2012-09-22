@@ -109,7 +109,7 @@ class Mailer(object):
 
         # check subscription status
         if isinstance(self.recipient, newhive.state.User):
-            subscriptions = self.recipient.get('email_subscriptions', [])
+            subscriptions = self.recipient.get('email_subscriptions', config.default_email_subscriptions)
             unsubscribed = self.unsubscribable and not self.name in subscriptions
         else:
             unsubscribed = self.db.Unsubscribes.find({
