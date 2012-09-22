@@ -28,7 +28,7 @@ logger.info("Initializing WSGI")
 
 
 hive_assets = HiveAssets()
-if __name__ != "__main__": hive_assets.bundle()
+hive_assets.bundle()
 
 ##############################################################################
 #                                jinja setup                                 #

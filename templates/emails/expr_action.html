@@ -1,5 +1,6 @@
 {% extends "emails/colorful.html" %}
 
+{% block body_classes%}{{super()}} {{type}}{% endblock %}
 {% block body%}
 
 {% macro link(entity, class='', id='') -%}
@@ -17,14 +18,16 @@
 {% block main_message scoped %}
     {% if header %}
     <h2 id="main_message">
-            <div class="line">
-                {% call link(initiator, class="sender") -%}
-                    {{ initiator.name }}
-                {%- endcall %}
+            <div class="line" id="line1">
+                {% if initiator %}
+                    {% call link(initiator, class="sender") -%}
+                        {{ initiator.name }}
+                    {%- endcall %}
+                {% endif %}
                 {{ header[0] }}
                 <img src="{{icon}}"/>
             </div>
-            <div class="line">
+            <div class="line" id="line2">
                 {{ header[1] }}
             </div>
         </h2>
@@ -52,11 +55,11 @@
     </div>
 {% endif %}
 
-{% block footer_message %}
+{% block footer_message scoped %}
     <h4 id="footer_message">
         {% if recipient and recipient.name %}
             Love Newhive?<br/>
-            <a href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
+            <a class="highlight" href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
         {% else %}
             Want to make your own expression?<br/>
             <a href="{{ signup_url }}" title="Create your account">Create your Newhive account!</a>

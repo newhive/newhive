@@ -10,6 +10,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 from email.generator import Generator
 from email import Charset
+from jinja2 import TemplateNotFound
 from werkzeug import url_unquote
 
 import logging
@@ -216,6 +217,7 @@ class ExprAction(Mailer):
     def initiator(self): return self.feed.initiator
     subject = None
     sent_to = ['user']
+    template = "emails/expr_action"
 
     @property
     def featured_expressions(self):
@@ -231,23 +233,32 @@ class ExprAction(Mailer):
             , 'expr': self.card
             , 'server_url': abs_url()
             , 'featured_exprs': self.featured_expressions
-            , 'icon': self.db.assets.url('skin/1/email/' + self.name + '.png')
+            , 'type': self.name
             }
+        icon = self.db.assets.url('skin/1/email/' + self.name + '.png', return_debug=False)
+        if icon: context.update(icon=icon)
 
         heads = {
              'To' : self.recipient.get('email')
             ,'Subject' : self.subject or self.initiator.get('name') + ' ' + ' '.join(self.header_message)
-            ,'Reply-to' : self.initiator.get('email', '')
             }
 
-        html = self.jinja_env.get_template("emails/expr_action.html").render(context)
-        html = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
+        body = {}
+        try:
+            html = self.jinja_env.get_template(self.template + ".html").render(context)
+            body['html'] = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
+        except TemplateNotFound: pass
 
-        body = {
-             'plain': self.jinja_env.get_template("emails/share.txt").render(context)
-            ,'html': html
+        try: body['plain'] = self.jinja_env.get_template(self.template + ".txt").render(context)
+        except TemplateNotFound: pass
+
+        # make sure that at least one of html or plain is present
+        assert body
+
+        sendgrid_args = {
+            'initiator': self.initiator and self.initiator.get('name')
+            , 'expr_id': self.card.id
             }
-        sendgrid_args = {'initiator': self.initiator.get('name'), 'expr_id': self.card.id}
         self.send_mail(heads, body, unique_args=sendgrid_args)
 
 class Comment(ExprAction):
@@ -346,6 +357,23 @@ class ShareExpr(ExprAction):
         self.recipient = recipient
         self.message = message
         super(ShareExpr, self).send()
+
+class Featured(ExprAction):
+    name = 'featured'
+    sent_to = ['user']
+    unsubscribable = True
+    header_message = ['Congratulations.', 'We featured your expression!']
+    message = 'We added your expression to the featured collection.'
+    initiator = None
+    recipient = None
+    featured_expressions = None
+    subject = "Congratulations, we featured your expression!"
+    template = "emails/featured"
+
+    def send(self, expr):
+        self.recipient = expr.owner
+        self.card = expr
+        super(Featured, self).send()
 
 class Milestone(Mailer):
     name = 'milestone'

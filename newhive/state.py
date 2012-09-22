@@ -33,7 +33,7 @@ class Database:
     def add_collection(self, col):
         pass
 
-    def __init__(self, config, assets=None):
+    def __init__(self, config, assets=None, db_name=None):
         self.config = config
         self.assets = assets
 
@@ -43,7 +43,7 @@ class Database:
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
-        self.mdb = self.con[config.database]
+        self.mdb = self.con[db_name or config.database]
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
         for col in self.collections:

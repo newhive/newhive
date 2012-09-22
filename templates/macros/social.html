@@ -1,0 +1,51 @@
+{% macro social_icons(url, thumbnail='', copy='', counts={}) %}
+{% set title = copy | e | urlencode %}
+<a class='facebook' onClick="logShare('facebook');" target="_blank" title='Share on Facebook'
+    href='http://www.facebook.com/sharer.php?u={{ url }}&title={{ title }}'>
+    <div class="like_button facebook">
+      <img src='{{ 'skin/1/social/facebook.png'|asset_url }}'>
+    </div>
+  </a>
+  <a class='twitter' onClick="logShare('twitter');" target="_blank" title='Share on Twitter'
+      href='http://twitter.com/share?status={{ title }}+{{ url }}'>
+    <div class="like_button twitter">
+      <img src='{{ 'skin/1/social/twitter.png'|asset_url }}'>
+    </div>
+  </a>
+  <a class='tumblr' onClick="logShare('tumblr');" target="_blank" title='Share on Tumblr'
+      href="http://www.tumblr.com/share?v=3&u={{url}}&t={{ title }}">
+    <div class="like_button tumblr">
+      <img src='{{ 'skin/1/social/tumblr.png'|asset_url }}'>
+    </div>
+  </a>
+  <a class='pinterest' onClick="logShare('pinterest');" target="_blank" title='Share on Pinterest'
+      href="http://pinterest.com/pin/create/button/?url={{url}}&media={{thumbnail}}">
+    <div class="like_button pinterest">
+      <img src='{{ 'skin/1/social/pinterest.png'|asset_url }}'>
+    </div>
+  </a>
+  <a class='stumble' onClick="logShare('stumble');" target="_blank" title="Submit to Stumbleupon"
+      href='http://www.stumbleupon.com/submit?url={{ url }}&title={{ title }}'>
+    <div class="like_button stumble">
+      <img src='{{ 'skin/1/social/stumbleupon.png'|asset_url }}'/>
+    </div>
+  </a>
+  <a class='gplus' onClick="logShare('gplus');" target="_blank" title="Share on Google+"
+      href="https://plusone.google.com/_/+1/confirm?hl=en-US&url={{ url }}">
+    <div class="like_button gplus">
+      <img src="{{ 'skin/1/social/plus_one.png'|asset_url }}"/>
+    </div>
+  </a>
+  <a class='linkedin' onClick="logShare('linkedin');" target="_blank" title="Share on LinkedIn"
+      href="http://www.linkedin.com/shareArticle?mini=true&url={{ url }}&title={{ title }}" >
+    <div class="like_button linkedin">
+      <img src="{{ 'skin/1/social/linkedin.png'|asset_url }}"/>
+    </div>
+  </a>
+  <a class='reddit' onClick="logShare('reddit');" target="_blank" title="Submit to Reddit"
+      href='http://www.reddit.com/submit?url={{ url }}&title={{ title }}'>
+    <div class="like_button reddit">
+      <img src='{{ 'skin/1/social/reddit.png'|asset_url }}'>
+    </div>
+  </a>
+{% endmacro %}

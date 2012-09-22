@@ -37,13 +37,16 @@ $space4: 5px;
             background: white;
         }
     }
-    
     h3{
         font-size: 23px;
     }
     
     h4{
         font-size: 19px;
+    }
+
+    .hightlight{
+        background-color: $color_highlight;
     }
 
     .line, & > p{
@@ -90,6 +93,7 @@ $space4: 5px;
         .tags{
             margin-top: 8px;
             height: $space1 + 18px;
+            overflow: hidden;
         }
         .name{
             //margin-top: $space1;
@@ -117,8 +121,7 @@ $space4: 5px;
         margin: $space2 0;
         text-align: center;
         line-height: 30px;
-        a {
-            background: $color_highlight;
+        a, .highlight {
             color: $color_email_black;
             padding: 2px 5px;
             
@@ -135,4 +138,21 @@ $space4: 5px;
             letter-spacing: -5px;
         }
     }
+
+    // Specific type overrides
+    &.featured {
+        h2{
+            font-size: 37px;
+        }
+        #main_message #line1 {
+            color: $color_active;
+        }
+        #share_icons{
+            margin-top: $space4;
+        }
+        .like_button{
+            display: inline-block;
+        }
+    }
+    
 }
