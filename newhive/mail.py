@@ -45,10 +45,12 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None):
 
     # Message body assembly
     if type(body) == dict:
-        plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
-        html = MIMEText(body['html'].encode('utf-8'), 'html')
-        msg.attach(plain); msg.attach(html)
-
+        if body.has_key('plain'):
+            plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
+            msg.attach(plain)
+        if body.has_key('html'):
+            html = MIMEText(body['html'].encode('utf-8'), 'html')
+            msg.attach(html)
     else:
         part1 = MIMEText(body.encode('utf-8'), 'plain')
         msg.attach(part1)
