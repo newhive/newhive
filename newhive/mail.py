@@ -224,8 +224,9 @@ class ExprAction(Mailer):
         exprs = self.initiator.get_top_expressions(6)
         if exprs.count() >= 6: return exprs
 
-    def send(self):
-        context = {
+    def send(self, context=None):
+        if not context: context = {}
+        context.update({
             'message': self.message
             ,'initiator': self.initiator
             ,'recipient': self.recipient
@@ -234,7 +235,7 @@ class ExprAction(Mailer):
             , 'server_url': abs_url()
             , 'featured_exprs': self.featured_expressions
             , 'type': self.name
-            }
+            })
         icon = self.db.assets.url('skin/1/email/' + self.name + '.png', return_debug=False)
         if icon: context.update(icon=icon)
 
@@ -356,6 +357,12 @@ class ShareExpr(ExprAction):
         self.initiator = initiator
         self.recipient = recipient
         self.message = message
+        context = {}
+        if not self.recipient.id:
+            referral = initiator.new_referral(
+                    {'to': recipient.get('email'), 'type': 'email'}
+                    , decrement=False)
+            context['signup_url'] = referral.url
         super(ShareExpr, self).send()
 
 class Featured(ExprAction):
