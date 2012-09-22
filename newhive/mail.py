@@ -267,7 +267,8 @@ class ExprAction(Mailer):
         body = {}
         try:
             html = self.jinja_env.get_template(self.template + ".html").render(context)
-            body['html'] = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
+            dir = '/libsrc/' if config.debug_mode else '/lib/'
+            body['html'] = inliner.inline_styles(html, css_path=config.src_home + dir + "email.css")
         except TemplateNotFound: pass
 
         try: body['plain'] = self.jinja_env.get_template(self.template + ".txt").render(context)
