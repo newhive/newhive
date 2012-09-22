@@ -136,7 +136,7 @@ class Mailer(object):
             ))
 
         # write e-mail to file for debugging
-        if config.debug_mode:
+        if not config.live_server:
             path = '/lib/tmp/' + utils.junkstr(10) + '.html'
             with open(config.src_home + path, 'w') as f:
                 f.write('<div><pre>')
