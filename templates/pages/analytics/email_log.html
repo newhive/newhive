@@ -1,0 +1,27 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block table_head %}
+<tr>
+    <th>Date</th>
+    <th>Category</th>
+    <th>Email</th>
+    <th>Recipient</th>
+    <th>Sender</th>
+    <th>Sent</th>
+    <th>URL</th>
+</tr>
+{% endblock %}
+
+{% block table_body %}
+{% for row in data %}
+    <tr>
+        <td data-type="epoch_date">{{ row.created }}</td>
+        <td>{{ row.category }}</td>
+        <td>{{ row.email }}</td>
+        <td>{{ row.recipient_name }}</td>
+        <td>{{ row.initiator_name }}</td>
+        <td>{{ row.sent }}</td>
+        <td><a href="{{ row.debug_url }}">{{ row.debug_url }}</a></td>
+    </tr>
+{% endfor %}
+{% endblock %}

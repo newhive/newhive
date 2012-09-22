@@ -313,3 +313,8 @@ class Analytics(Application):
         out = data[['viewers', 'starrers', 'sharers', 'creators']] / data.counts
         response.context['data'] = out
         return self.serve_page(response, 'pages/analytics/engagement_pyramid.html')
+
+    @admins
+    def email_log(self, request, response):
+        response.context['data'] = self.db.MailLog.search({}, sort=[('created', -1)], limit=500)
+        return self.serve_page(response, 'pages/analytics/email_log.html')
