@@ -147,7 +147,8 @@ class User(Application):
             response.context['f'] = request.requester
             response.context['facebook_connect_url'] = FacebookClient().authorize_url(
                                                            abs_url(secure=True)+ 'settings')
-            response.context['email_subscriptions'] = request.requester.get('email_subscriptions', [])
+            response.context['email_subscriptions'] = request.requester.get('email_subscriptions'
+                    , config.default_email_subscriptions)
             response.context['email_types'] = mail.MetaMailer.unsubscribable('user')
             return self.serve_page(response, 'pages/user_settings.html')
         else: return self.serve_forbidden(response)
