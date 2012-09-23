@@ -1130,6 +1130,11 @@ class MailLog(Entity):
     cname = 'mail_log'
 
 @Database.register
+class Unsubscribes(Entity):
+    indexes = ['email']
+    cname = 'unsubscribes'
+
+@Database.register
 class Feed(Entity):
     cname = 'feed'
     indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]

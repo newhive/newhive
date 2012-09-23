@@ -30,6 +30,7 @@ class Application(object):
         response.user = request.requester = auth.authenticate_request(self.db, request, response)
 
         self.process_facebook(request, response)
+        self.process_email_campaign(request, response)
         response.context.update(
                 facebook_authentication_url=self.fb_client.authorize_url(abs_url(request.path))
                 , use_ga = config.live_server and not request.requester.is_admin)
@@ -40,6 +41,22 @@ class Application(object):
         request.path = request.path.strip('/') # drop leading and trailing '/'s
         request.domain = request.host.split(':')[0].lower()
         return (request, response)
+
+    def process_email_campaign(self, request, response):
+        email_id = request.args.get('email_id')
+        if not email_id: return
+
+        email = self.db.MailLog.fetch(email_id)
+        if not email:
+            logger.warn('could not find email_id ' + email_id)
+            return
+
+        email.update_cmd({'$set': {'click': True}, '$push': {'click_dates': now()}})
+        response.context['ga_commands'] = [
+                ['_setCampMediumKey', 'email']
+                , ['_setCampSourceKey', email.get('category')]
+                ]
+
 
     def default(self, request, response):
         method = lget(request.path_parts, 1, '_index')

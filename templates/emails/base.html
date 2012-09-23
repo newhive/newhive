@@ -24,6 +24,10 @@
 </h1>
 {%- endmacro %}
 
+{% macro track_link(url, title, email_id, class='', id='') %}
+<a href="{{ url | modify_query({'email_id': email_id}) }}" title="title" class="{{class}}" id="{{id}}">{{ caller() }}</a>
+{% endmacro %}
+
 {% set table_width = 'width="586px"' %}
 
 <html>

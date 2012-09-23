@@ -1,4 +1,4 @@
-import crypt, urllib, time, json, re
+import crypt, urllib, time, json, re, pymongo
 import newhive.state
 from newhive.state import abs_url
 from newhive import config, inliner, utils
@@ -111,10 +111,11 @@ class Mailer(object):
                 })
         return not unsubscribed
 
-    def send_mail(self, heads, body, filters=None, **kwargs):
+    def send_mail(self, heads, body, filters=None, log_id=None, **kwargs):
         if not filters: filters = {}
 
         record = {'email': self.recipient.get('email'), 'category': self.name }
+        if log_id: record.update({'_id': str(log_id)})
         if type(self.recipient) == newhive.state.User:
             record.update({'recipient': self.recipient.id, 'recipient_name': self.recipient.get('name')})
         if type(self.initiator) == newhive.state.User:
@@ -246,6 +247,7 @@ class ExprAction(Mailer):
 
     def send(self, context=None):
         if not context: context = {}
+        log_id = pymongo.objectid.ObjectId()
         context.update({
             'message': self.message
             ,'initiator': self.initiator
@@ -255,6 +257,7 @@ class ExprAction(Mailer):
             , 'server_url': abs_url()
             , 'featured_exprs': self.featured_expressions
             , 'type': self.name
+            , 'email_id': str(log_id)
             })
         icon = self.db.assets.url('skin/1/email/' + self.name + '.png', return_debug=False)
         if icon: context.update(icon=icon)
@@ -281,7 +284,7 @@ class ExprAction(Mailer):
             'initiator': self.initiator and self.initiator.get('name')
             , 'expr_id': self.card.id
             }
-        self.send_mail(heads, body, unique_args=sendgrid_args)
+        self.send_mail(heads, body, unique_args=sendgrid_args, log_id=log_id)
 
 class Comment(ExprAction):
     name = 'comment'
@@ -379,12 +382,12 @@ class ShareExpr(ExprAction):
         self.recipient = recipient
         self.message = message
         context = {}
-        if not self.recipient.id:
+        if not hasattr(self.recipient, 'id'):
             referral = initiator.new_referral(
                     {'to': recipient.get('email'), 'type': 'email'}
                     , decrement=False)
             context['signup_url'] = referral.url
-        super(ShareExpr, self).send()
+        super(ShareExpr, self).send(context)
 
 class Featured(ExprAction):
     name = 'featured'

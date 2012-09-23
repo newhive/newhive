@@ -1,13 +1,14 @@
 {% extends "emails/colorful.html" %}
 
 {% block body_classes%}{{super()}} {{type}}{% endblock %}
-{% block body%}
+{% block body %}
 
 {% macro link(entity, class='', id='') -%}
-<a href="{{ entity.url }}" title="{{ entity.title or entity.fullname }}" class="{{ class }}" id="{{ id}}">
+<a href="{{ entity.url | modify_query({'email_id': email_id})}}" title="{{ entity.title or entity.fullname }}" class="{{ class }}" id="{{ id}}">
     {{ caller() }}
 </a>
 {%- endmacro %}
+{% from "emails/base.html" import track_link %}
 
 {% if recipient and recipient.name %}
     <h2 id="greeting" class="line">
@@ -62,7 +63,9 @@
             <a class="highlight" href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
         {% else %}
             Want to make your own expression?<br/>
-            <a href="{{ signup_url }}" title="Create your account">Create your Newhive account!</a>
+            {% call track_link(signup_url, "Create your account", email_id) -%}
+                Create your Newhive account!
+            {%- endcall %}
         {% endif %}
     </h4>
 {% endblock %}

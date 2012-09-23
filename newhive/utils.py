@@ -206,3 +206,23 @@ def serializable_filter(dictionary):
     return {key.replace('.', '-'): val
             for key, val in dictionary.iteritems()
             if type(val) in [bool, str, int, float, tuple, unicode]}
+
+import urlparse
+import werkzeug.urls
+class URL(object):
+    def __init__(self, string):
+        self.scheme, self.netloc, self.path, self.params, self._query, self.fragment = urlparse.urlparse(string)
+        self._query = werkzeug.urls.url_decode(self._query)
+
+    @property
+    def query(self):
+        return self._query
+
+    def get_url(self):
+        query = werkzeug.url_encode(self._query)
+        return urlparse.ParseResult(self.scheme, self.netloc, self.path, self.params, query, self.fragment).geturl()
+
+def modify_query(url_string, d):
+    url = URL(url_string)
+    url.query.update(d)
+    return url.get_url()
