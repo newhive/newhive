@@ -8,7 +8,8 @@
     <th>Recipient</th>
     <th>Initiator</th>
     <th>Sent</th>
-    <th>URL</th>
+    <th>Unsubscribed</th>
+    <th>Preview</th>
 </tr>
 {% endblock %}
 
@@ -21,7 +22,8 @@
         <td>{{ row.recipient_name }}</td>
         <td>{{ row.initiator_name }}</td>
         <td>{{ row.sent }}</td>
-        <td><a href="{{ row.debug_url }}">{{ row.debug_url }}</a></td>
+        <td>{{ row.unsubscribe }}</td>
+        <td><a href="{{ row.debug_url }}">link</a></td>
     </tr>
 {% endfor %}
 {% endblock %}

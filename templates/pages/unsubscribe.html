@@ -5,8 +5,9 @@
     <h1>Email unsubscribe</h1>
     <h3>Confirm your email address:</h3>
     <div id="email">{{ email }}</div>
-    <form>
-        <input type="hidden" value="{{ initiator.id }}"></input>
+    <form method='POST' action='{{ secure_server }}' id="unsubscribe_form">
+        <input type="hidden" name="action" value="unsubscribe"></input>
+        <input type="hidden" name="user" value="{{ initiator.id }}"></input>
         <div class="checkbox">
             <input type="radio" name="unsubscribe" value="user" id="radio_user" checked="checked"></input>
             <label for="radio_user">Emails from <span id="username">{{initiator.name}}</span></label>
@@ -17,4 +18,18 @@
         </div>
         <input type="submit" class="btn black rounded" value="Unsubscribe"></input>
     </form>
+{% endblock %}
+
+{% block head %}
+    {{super()}}
+    <script>
+        $(function(){
+            var form = $('#unsubscribe_form');
+            var unsubscribe = function(e){
+                e.preventDefault();
+                $.post('', form.serialize());
+            };
+            form.submit(unsubscribe).find('input[type=submit]').click(unsubscribe);
+        });
+    </script>
 {% endblock %}

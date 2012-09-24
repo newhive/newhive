@@ -363,8 +363,19 @@ class User(Application):
         logger.debug('Facebook listen response time %d ms', (time.time() - t0)*1000)
         return self.serve_page(response, 'dialogs/facebook_listen.html')
 
-    def unsubscribe(self, request, response):
+    def unsubscribe_form(self, request, response):
         email = self.db.MailLog.fetch(request.args.get('email_id'))
         response.context['email'] = email.get('email')
         response.context['initiator'] = self.db.User.fetch(email.get('initiator'))
         return self.serve_page(response, 'pages/unsubscribe.html')
+
+    def unsubscribe(self, request, response):
+        email = self.db.MailLog.fetch(request.args.get('email_id'))
+        email_addr = email['email']
+        unsub = self.db.Unsubscribes.fetch_empty(email_addr, keyname='email')
+        if request.form.get('unsubscribe') == 'user':
+            unsub.update_cmd({'$set': {'email': email_addr}, '$push': {'users': request.form.get('user')}}, upsert=True)
+        elif request.form.get('unsubscribe') == 'all':
+            unsub.update_cmd({'$set': {'all': True, 'email': email_addr}}, upsert=True)
+        email.update(unsubscribe=request.form.get('unsubscribe'), unsubscribe_date=now())
+        return self.serve_json(response, True)

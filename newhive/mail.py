@@ -107,10 +107,8 @@ class Mailer(object):
             subscriptions = self.recipient.get('email_subscriptions', config.default_email_subscriptions)
             unsubscribed = self.unsubscribable and not self.name in subscriptions
         else:
-            unsubscribed = self.db.Unsubscribes.find({
-                'email': self.recipient['email']
-                , 'name': {'$in': ['all', self.name]}
-                })
+            unsub = self.db.Unsubscribes.fetch(self.recipient['email'], keyname='email')
+            unsubscribed = unsub and (unsub.get('all') or self.initiator.id in unsub.get('users'))
         return not unsubscribed
 
     def body(self, context):
