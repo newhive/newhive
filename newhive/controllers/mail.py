@@ -40,22 +40,9 @@ class Mail(Application):
         if not config.debug_mode:
             send_mail(heads, body)
         contact = self.db.Contact.create(form)
+        sendgrid_args = {'contact_id': contact.id, 'url': form['url']}
 
-        # mail_signup thank you
-        context = {
-            'url': 'http://thenewhive.com'
-            ,'thumbnail_url': self.asset('skin/1/thumb_0.png')
-            ,'name': form.get('name')
-            }
-        heads = {
-            'To': form.get('email')
-            ,'Subject': 'Thank you for signing up for a beta account on The New Hive'
-            }
-        body = {
-             'plain': self.jinja_env.get_template("emails/thank_you_signup.txt").render(context)
-            ,'html': self.jinja_env.get_template("emails/thank_you_signup.html").render(context)
-            }
-        send_mail(heads, body, 'signup_request', {'contact_id': contact.id, 'url': form['url']})
+        mail.SignupRequest(db=self.db, jinja_env=self.jinja_env).send(form.get('email'), form.get('name'), sendgrid_args)
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
@@ -83,26 +70,9 @@ class Mail(Application):
             to_email = request.form.get('to_' + str(i))
             if user['referrals'] <= 0 or not to_email or len(to_email) == 0: break
             referral = user.new_referral({'name': name, 'to': to_email})
+            mail.UserReferral(db=self.db, jinja_env=self.jinja_env).send(referral, user)
 
-            heads = {
-                 'To' : to_email
-                ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
-                ,'Reply-to' : user.get('email', '')
-                }
-            context = {
-                 'referrer_url': user.url
-                ,'referrer_name': user.get('fullname')
-                ,'url': (abs_url(secure=True) + 'invited?key=' + referral['key'] + '&email=' + to_email)
-                ,'name': name
-                }
-            body = {
-                 'plain': self.jinja_env.get_template("emails/user_invitation.txt").render(context)
-                ,'html': self.jinja_env.get_template("emails/user_invitation.html").render(context)
-                }
-            sendgrid_args = {'initiator': user.get('name'), 'referral_id': referral.id}
-            send_mail(heads, body, category="user_referral", unique_args=sendgrid_args)
         return self.redirect(response, request.form.get('forward'))
-
 
     def mail_feedback(self, request, response):
         if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')

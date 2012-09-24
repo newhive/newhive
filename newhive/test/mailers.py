@@ -7,6 +7,7 @@ mail.send_real_email = False
 class MailerTest(unittest.TestCase):
     def setUp(self):
         self.test_user = db.User.named('test')
+        self.test_nonuser = {'email': 'test+nonuser@thenewhive.com', 'name': 'Nonuser'}
 
 class ShareExpr(MailerTest):
     def setUp(self):
@@ -92,7 +93,6 @@ class Featured(MailerTest):
         expr = db.Expr.random()
         self.mailer.send(expr)
 
-
 class Milestone(MailerTest):
     def setUp(self):
         super(Milestone, self).setUp()
@@ -102,21 +102,20 @@ class Milestone(MailerTest):
         expr = db.Expr.random()
         self.mailer.send(expr, random.choice(config.milestones))
 
+class SignupRequest(MailerTest):
+    def setUp(self):
+        super(SignupRequest, self).setUp()
+        self.mailer = mail.SignupRequest(db=db, jinja_env=jinja_env)
 
-#class EmailConfirmation(MailerTest):
-#    def setUp(self):
-#        super(EmailConfirmation, self).setUp()
-#        self.mailer = mail.EmailConfirmation(db=db, jinja_env=jinja_env)
-#class EmailConfirmation(MailerTest):
-#    def setUp(self):
-#        super(EmailConfirmation, self).setUp()
-#        self.mailer = mail.EmailConfirmation(db=db, jinja_env=jinja_env)
-#class EmailConfirmation(MailerTest):
-#    def setUp(self):
-#        super(EmailConfirmation, self).setUp()
-#class EmailConfirmation(MailerTest):
-#    def setUp(self):
-#        super(EmailConfirmation, self).setUp()
-#class EmailConfirmation(MailerTest):
-#    def setUp(self):
-#        super(EmailConfirmation, self).setUp()
+    def test_signup_request(self):
+        self.mailer.send(self.test_nonuser['email'], self.test_nonuser['name'], {})
+
+class UserReferral(MailerTest):
+    def setUp(self):
+        super(UserReferral, self).setUp()
+        self.mailer = mail.UserReferral(db=db, jinja_env=jinja_env)
+
+    def test_user_referral(self):
+        recipient = {'name': self.test_nonuser['name'], 'to': self.test_nonuser['email']}
+        referral = self.test_user.new_referral(recipient, decrement=False)
+        self.mailer.send(referral, self.test_user)

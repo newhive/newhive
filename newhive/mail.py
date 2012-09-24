@@ -431,3 +431,41 @@ class Milestone(Mailer):
         sendgrid_args = {'expr_id': expr.id, 'milestone': milestone}
 
         self.send_mail(context, unique_args=sendgrid_args)
+
+class SignupRequest(Mailer):
+    name = 'signup_request'
+    sent_to = ['nonuser']
+    template = "emails/thank_you_signup"
+    unsubscribable = False
+    subject = 'Thank you for signing up for a beta account on The New Hive'
+    inline_css = False
+
+    def send(self, email, name, unique_args):
+        self.recipient = {'email': email}
+        context = {
+            'url': 'http://thenewhive.com'
+            ,'thumbnail_url': self.db.assets.url('skin/1/thumb_0.png')
+            ,'name': name
+            }
+        self.send_mail(context, unique_args=unique_args)
+
+class UserReferral(Mailer):
+    name = 'user_referral'
+    sent_to = ['nonuser']
+    template = "emails/user_invitation"
+    unsubscribable = True
+    inline_css = False
+
+    @property
+    def subject(self): return self.initiator.get('fullname') + ' has invited you to The New Hive'
+
+    def send(self, referral, initiator):
+        self.initiator = initiator
+        self.recipient = {'email': referral['to']}
+        context = {
+             'referrer_url': initiator.url
+            ,'referrer_name': initiator.get('fullname')
+            ,'url': (abs_url(secure=True) + 'invited?key=' + referral['key'] + '&email=' + referral['to'])
+            ,'name': referral['name']
+            }
+        self.send_mail(context, unique_args={'referral_id': referral.id})
