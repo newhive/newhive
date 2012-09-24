@@ -221,6 +221,7 @@ def handle(request): # HANDLER
             if request.domain == redirect_from or request.domain.endswith('.' + redirect_from):
                 name = request.domain[0:-len(redirect_from)].strip('.')
                 new_url = abs_url() + name + ('/' if name else '') + request.path
+                if request.query_string: new_url += '?' + request.query_string
                 return app.redirect(response, new_url, permanent=True)
 
 

@@ -8,6 +8,7 @@ from oauth2client import tools
 
 from newhive import config
 from newhive.utils import abs_url
+from ssl import SSLError
 
 import logging
 logger = logging.getLogger(__name__)
@@ -227,27 +228,31 @@ class FacebookClient(object):
             headers = {
                 'content-type': 'application/x-www-form-urlencoded',
             }
-            http = httplib2.Http(timeout=1)
+            http = httplib2.Http(timeout=0.2)
 
             logger.info("Exchanging code for new token")
-            resp, content = http.request(self.token_uri, method='POST', body=body,
-                                         headers=headers)
-            logger.info("Token exchange response: %s", content)
-            if resp.status == 200:
-                d = dict([el.split('=') for el in content.split('&')])
-                access_token = d['access_token']
-                refresh_token = d.get('refresh_token', None)
-                token_expiry = None
-                if 'expires' in d:
-                    token_expiry = datetime.datetime.utcnow() + datetime.timedelta(
-                                                        seconds=int(d['expires']))
+            try:
+                resp, content = http.request(self.token_uri, method='POST', body=body,
+                                             headers=headers)
+                logger.info("Token exchange response: %s", content)
+                if resp.status == 200:
+                    d = dict([el.split('=') for el in content.split('&')])
+                    access_token = d['access_token']
+                    refresh_token = d.get('refresh_token', None)
+                    token_expiry = None
+                    if 'expires' in d:
+                        token_expiry = datetime.datetime.utcnow() + datetime.timedelta(
+                                                            seconds=int(d['expires']))
 
-                self._credentials = OAuth2Credentials(access_token, self.client_id,
-                                         self.client_secret, refresh_token, token_expiry,
-                                         self.token_uri, self.user_agent,
-                                         id_token=d.get('id_token', None))
-                return self._credentials
-            else: error = error + str(content) + "\n"
+                    self._credentials = OAuth2Credentials(access_token, self.client_id,
+                                             self.client_secret, refresh_token, token_expiry,
+                                             self.token_uri, self.user_agent,
+                                             id_token=d.get('id_token', None))
+                    return self._credentials
+                else: error = error + str(content) + "\n"
+            except SSLError as e:
+                logger.warn("SSLError occurred exchanging facebook code for token")
+                error = error + "SSLError: " + e.message + "\n"
         else:
             raise FlowExchangeError(error)
 
