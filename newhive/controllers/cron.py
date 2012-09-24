@@ -33,7 +33,7 @@ class Cron(Application):
         spec = {'send_email': True, 'created': {"$gt": now() - delay - span, "$lt": now() - delay } }
 
         stats = { 'send_count': 0, 'matched': 0 }
-        mailer = newhive.mail.Feed(jinja_env = self.jinja_env)
+        mailer = newhive.mail.Feed(db = self.db, jinja_env = self.jinja_env)
         def send(item):
             stats['matched'] += 1
             if item.initiator.id == item.entity.owner.id: return
@@ -52,7 +52,7 @@ class Cron(Application):
             for m in milestones:
                 if m > n: return m
 
-        mailer = newhive.mail.Milestone(jinja_env = self.jinja_env)
+        mailer = newhive.mail.Milestone(db = self.db, jinja_env = self.jinja_env)
         def send(expr):
             expr_milestones = expr.get('milestones', {})
             last_milestone = max([int(m) for m in expr_milestones.keys()])

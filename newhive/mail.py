@@ -16,6 +16,8 @@ from werkzeug import url_unquote
 import logging
 logger = logging.getLogger(__name__)
 
+send_real_email = True
+
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
 def send_mail(headers, body, category=None, filters=None, unique_args=None):
     def to_json(data):
@@ -63,7 +65,7 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None):
     encoded_msg = io.getvalue()
 
     # Send mail, but if we're in debug mode only send to admins
-    if config.live_server or msg['To'] in config.admin_emails:
+    if send_real_email and (config.live_server or msg['To'] in config.admin_emails):
         t0 = time.time()
         sent = smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
         logger.debug('SMTP sendmail time %d ms', (time.time() - t0) * 1000)
@@ -98,6 +100,12 @@ class Mailer(object):
     def __init__(self, jinja_env=None, db=None):
         self.db = db
         self.jinja_env = jinja_env
+
+    def jinja_context(self):
+        return {
+           'type': self.name
+           , 'email_id': str(pymongo.objectid.ObjectId())
+           }
 
     def check_subscription(self):
         # check subscription status
@@ -159,10 +167,11 @@ class SiteReferral(Mailer):
     unsubscribable = True
 
     def send(self, email, name=False, force_resend=False):
-        if db.Referral.find(email, keyname='to') and not force_resend:
+        if self.db.Referral.find(email, keyname='to') and not force_resend:
             return False
+        self.recipient = {'email': email}
 
-        user = db.User.named(config.site_user)
+        user = self.db.User.named(config.site_user)
         referral = user.new_referral({'name': name, 'to': email})
 
         heads = {
@@ -170,13 +179,14 @@ class SiteReferral(Mailer):
             ,'Subject' : "You have a beta invitation to thenewhive.com"
             }
 
-        context = {
+        context = self.jinja_context()
+        context.update({
             'name': name
             ,'url': referral.url
-            }
+            })
         body = {
-             'plain': jinja_env.get_template("emails/invitation.txt").render(context)
-            ,'html': jinja_env.get_template("emails/invitation.html").render(context)
+             'plain': self.jinja_env.get_template("emails/invitation.txt").render(context)
+            ,'html': self.jinja_env.get_template("emails/invitation.html").render(context)
             }
         self.send_mail(heads, body)
         return referral.id
@@ -186,9 +196,9 @@ class EmailConfirmation(Mailer):
     unsubscribable = False
     sent_to = ['user']
 
-    def send(user, email):
+    def send(self, user, email, request_date):
         self.recipient = user
-        secret = crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date'))))
+        secret = crypt.crypt(email, "$6$" + str(request_date))
         link = abs_url(secure=True) +\
                 "email_confirmation?user=" + user.id +\
                 "&email=" + urllib.quote(email) +\
@@ -197,11 +207,12 @@ class EmailConfirmation(Mailer):
             'To' : email
             , 'Subject' : 'Confirm change of e-mail address for thenewhive.com'
             }
-        context = {
+        context = self.jinja_context()
+        context.update({
             'user_fullname' : user['fullname']
             ,'user_name': user['name']
             ,'link' : link
-            }
+            })
         body = {
             'plain': self.jinja_env.get_template("emails/email_confirmation.txt").render(context)
             ,'html': self.jinja_env.get_template("emails/email_confirmation.html").render(context)
@@ -213,17 +224,18 @@ class TemporaryPassword(Mailer):
     unsubscribable = False
     sent_to = ['user']
 
-    def send(user, recovery_link):
+    def send(self, user, recovery_link):
         self.recipient = user
         heads = {
             'To' : user.get('email')
             , 'Subject' : 'Password recovery for thenewhive.com'
             }
-        context = {
+        context = self.jinja_context()
+        context.update({
             'recovery_link': recovery_link
             ,'user_fullname' : user['fullname']
             ,'user_name': user['name']
-            }
+            })
         body = {
             'plain': self.jinja_env.get_template("emails/password_recovery.txt").render(context)
             ,'html': self.jinja_env.get_template("emails/password_recovery.html").render(context)
@@ -247,7 +259,9 @@ class ExprAction(Mailer):
 
     def send(self, context=None):
         if not context: context = {}
-        log_id = pymongo.objectid.ObjectId()
+        default_context = self.jinja_context()
+        context.update(default_context)
+
         context.update({
             'message': self.message
             ,'initiator': self.initiator
@@ -256,8 +270,6 @@ class ExprAction(Mailer):
             , 'expr': self.card
             , 'server_url': abs_url()
             , 'featured_exprs': self.featured_expressions
-            , 'type': self.name
-            , 'email_id': str(log_id)
             })
         icon = self.db.assets.url('skin/1/email/' + self.name + '.png', return_debug=False)
         if icon: context.update(icon=icon)
@@ -284,7 +296,7 @@ class ExprAction(Mailer):
             'initiator': self.initiator and self.initiator.get('name')
             , 'expr_id': self.card.id
             }
-        self.send_mail(heads, body, unique_args=sendgrid_args, log_id=log_id)
+        self.send_mail(heads, body, unique_args=sendgrid_args, log_id=context['email_id'])
 
 class Comment(ExprAction):
     name = 'comment'
@@ -355,13 +367,14 @@ class UserRegisterConfirmation(Mailer):
             'To' : user['email']
             , 'Subject' : 'Thank you for creating an account on thenewhive.com'
             }
-        context = {
+        context = self.jinja_context()
+        context.update({
             'user_fullname' : user['fullname']
             , 'user_home_url' : user_home_url
             , 'user_home_url_display' : re.sub(r'^https?://', '', user_home_url)
             , 'user_profile_url' : user_profile_url
             , 'user_profile_url_display' : re.sub(r'^https?://', '', user_profile_url)
-            }
+            })
         body = {
              'plain': self.jinja_env.get_template("emails/thank_you_register.txt").render(context)
             ,'html': self.jinja_env.get_template("emails/thank_you_register.html").render(context)
@@ -411,12 +424,13 @@ class Milestone(Mailer):
     sent_to = ['user']
 
     def send(self, expr, milestone):
-        context = {
+        context = self.jinja_context()
+        context.update({
             'message': ui.milestone_message
             , 'expr': expr
             , 'milestone': milestone
             , 'server_url': abs_url()
-            }
+            })
 
         heads = {
             'To': expr.owner.get('email')

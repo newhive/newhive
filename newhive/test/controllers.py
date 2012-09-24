@@ -10,14 +10,8 @@ import copy
 import unittest
 from werkzeug.test import Client
 from newhive import config, utils
-from newhive.wsgi import application, hive_assets, Response, db
+from newhive.wsgi import application, hive_assets, Response, db, jinja_env
 from bs4 import BeautifulSoup #html parser
-
-# diable stderr logging
-import logging
-logger = logging.getLogger('newhive')
-for handler in logger.handlers:
-    if handler.name == 'stderr': logger.removeHandler(handler)
 
 class Test(unittest.TestCase):
     """Base newhive test case.  Has handy methods for performing a request on
@@ -199,7 +193,6 @@ class ExpressionTest(Test):
         response = self.open(data=data)
         print response.status
         self.assertStatus(response, 303)
-
 
 # this organization feature isn't really used right now
 def suite():

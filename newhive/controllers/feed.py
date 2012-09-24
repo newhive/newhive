@@ -45,7 +45,7 @@ class Feed(Application):
 
         comment = self.db.Comment.create(user, expr, {'text': text})
         if user.id != expr.owner.id:
-            mail.mail_feed(self.jinja_env, comment, expr.owner)
+            mail.Feed(db=self.db, jinja_env=self.jinja_env).send(comment)
         comment['initiator_thumb'] = user.get_thumb(70)
         response.context['comment'] = comment
         return comment
