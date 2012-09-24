@@ -185,9 +185,9 @@ var profile_thumb_choose = function(){
    <p class="active" id="error">{{message |e}}</p>
  </div>
 
- <form id='form' style="display: block; margin: 0 auto; width: 80%;" method='POST'>
+ <form id='form' method='POST'>
    <div class="row">
-     <div class="column" id="column_1" style='clear : both; text-align:left; margin : 0 0px 50px 0; vertical-align : top;'>
+     <div class="column" id="column_1">
        <input type='hidden' name='action' value='{{"password_recovery_2" if password_recovery else "user_update" if update else "user_create"}}'>
        <input type='hidden' name='thumb_file_id' value='{{f.thumb_file_id}}'>
        {% if password_recovery %}
@@ -204,25 +204,10 @@ var profile_thumb_choose = function(){
        <b>Display Name</b><br>
        <input type='text' name='fullname' value='{{f.fullname}}' {{'disabled="disabled"' if password_recovery}}><br>
        <br>
-       <br>
-       <b class='error'>Terms of Service</b><br>
-       <br>
-       <b>
-         <span class='inactive'>1.</span> You own your information<br>
-         <span class='inactive'>2.</span> We'll never put ads on your<br>&nbsp;&nbsp;&nbsp;&nbsp;expressions<br>
-         <span class='inactive'>3.</span> Have fun<br>
-         <span class='inactive'>4.</span> Don't be mean or obscene<br>
-         <span class='inactive'>5.</span> Encourage expression<br>
-       </b><br>
+       <b>Email</b><br>
+       <input type='text' name='email' value='{{q.email if q.email else f.email}}' {{'disabled="disabled"' if password_recovery}}><br>
 
-       {% set tos_page = '/lib/doc/tos.html' %}
-       <a href='{{ tos_page }}' target='_new' onclick="loadDialog('{{ tos_page }}'); return false;" style='padding : 5px; background-color : {{ colors[34] }}'><b>Read full terms of service</b></a><br>
-       <br>
-       
-       {% if not update %}
-       <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
-       {% endif %}
- 
+
      </div>
      <div class="column" id="column_2">
        {% if update and not password_recovery %}
@@ -239,10 +224,6 @@ var profile_thumb_choose = function(){
        <input id='p2' type='password' value='{{f.secret}}'><br>
        <br>
        
-       <b>Email</b><br>
-       <input type='text' name='email' value='{{q.email if q.email else f.email}}' {{'disabled="disabled"' if password_recovery}}><br>
-       <br>
-
        {% if not update %}
        Optional:<br/>
        <div id="gender_wrapper">
@@ -267,19 +248,31 @@ var profile_thumb_choose = function(){
        {% endif %}
    
    {% if update %}
-     {% if user.has_facebook %}
-       <div style="margin-bottom:20px; font-size:13px;">
-         <input name="fb_disconnect" type="checkbox" id='fb_disconnect'><label for="fb_disconnect">Disconnect your Facebook Account</label>
-         <input name="fb_disconnect_allow_finding" type="hidden">
-       </div>
-     {% endif %}
-     <input class='black btn rounded' type='submit' value='Save Changes' >
    {% else %}
      <input class='black btn rounded' type='submit' value='Create Account'>
    {% endif %}
    </div>
    <div class="column" id="column_3">
-     {% if friends and not update%}
+       <b class='error'>Terms of Service</b><br>
+       <br>
+       <b>
+         <span class='inactive'>1.</span> You own your information<br>
+         <span class='inactive'>2.</span> We'll never put ads on your<br>&nbsp;&nbsp;&nbsp;&nbsp;expressions<br>
+         <span class='inactive'>3.</span> Have fun<br>
+         <span class='inactive'>4.</span> Don't be mean or obscene<br>
+         <span class='inactive'>5.</span> Encourage expression<br>
+       </b><br>
+
+       {% set tos_page = '/lib/doc/tos.html' %}
+       <a href='{{ tos_page }}' target='_new' onclick="loadDialog('{{ tos_page }}'); return false;" id="full_tos"><b>Read full terms</b></a><br>
+       <br>
+       
+       {% if not update %}
+       <input type='checkbox' id='tos' name='tos'><label for='tos'><b> I agree to the Terms of Service</b></label><br>
+       {% endif %}
+
+
+      {% if friends and not update%}
        <h3>Listen to your Friends:</h3>
        {% if listening_count and listening_count > 0 %}
        <p>You are already listening to {{listening_count}} facebook friend{{"s" if listening_count>1}}</p>
@@ -295,22 +288,22 @@ var profile_thumb_choose = function(){
          {% endfor %}
        {% endif %}
      {% endif %}
-     {% if update and not password_recovery%}
-       {% if not user.has_facebook %}
-         <a href="{{facebook_authentication_url}}" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'settings']);"><img class='centered' src='{{ 'skin/1/connect_with_fb_lg.png'|asset_url }}'/></a>
-       {% else %}
-       {% endif %}
-     {% endif %}
    </div>
  </div>
- <div class="row">
-     <b>Email Settings:</b>
+ <div class="row" style="margin-top: 17px;">
+     <div class="column">
+         <b>Email Subscriptions:</b>
+     </div>
+     <div class="column">&nbsp;</div>
+     <div class="column">
+         <b>External accounts:</b>
+     </div>
  </div>
  <div class="row">
      {% for column in email_types | slice(2) %}
      <div class="column">
          {% for type in column %}
-         <div>
+         <div class="checkbox">
              {% set id = "email_" + type.name %}
              <input type="checkbox" name="{{id}}" {{"checked='checked'" if type.name in email_subscriptions}}/>
              <label for="{{id}}">{{ui.email_subscription_ui[type.name]}}</label>
@@ -318,7 +311,26 @@ var profile_thumb_choose = function(){
          {% endfor %}
      </div>
      {% endfor %}
+
+     <div class="column">
+     {% if update and not password_recovery%}
+       {% if user.has_facebook %}
+       <div class="checkbox">
+         <input name="fb_disconnect" type="checkbox" id='fb_disconnect'><label for="fb_disconnect">Disconnect your Facebook Account</label>
+         <input name="fb_disconnect_allow_finding" type="hidden">
+       </div>
+       {% else %}
+         <a href="{{facebook_authentication_url}}" target="_top" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'auth_link', 'settings']);"><img class='centered' src='{{ 'skin/1/connect_with_fb_lg.png'|asset_url }}'/></a>
+       {% endif %}
+     {% endif %}
+     </div>
  </div>
+ <div class="row">
+     <div class="column">&nbsp;</div>
+     <div class="column">&nbsp;</div>
+     <div class="column">
+         <input class='black btn rounded' type='submit' value='Save Changes' >
+     </div>
  </form>
 {% endblock %}
 

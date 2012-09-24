@@ -12,7 +12,7 @@ image_embed_as_background = """Set as background image"""
 
 # User Settings
 create_account_title = "Create your account"
-update_account_title = "Update your information"
+update_account_title = "Settings"
 password_change_success_message = "Your password has been changed successfully."
 password_change_failure_message = "Sorry, the old password you entered is incorrect."
 fullname_change_success_message = "Your name has been changed successfully."
