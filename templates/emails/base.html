@@ -66,6 +66,17 @@
       </p>
       {% endblock %}
     </td></tr>
+  </table>
+
+  {% if unsubscribe_url %}
+  <div id="unsubscribe">
+      {{ unsubscribe_text }},
+      {% call track_link(unsubscribe_url, 'Unsubscribe', email_id) %}
+          click here
+      {%- endcall %}.
+  </div>
+  {% endif %}
+
 </body>
 </html>
 

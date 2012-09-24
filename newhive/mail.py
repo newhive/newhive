@@ -146,6 +146,21 @@ class Mailer(object):
         if type(self.initiator) == newhive.state.User:
             record.update({'initiator': self.initiator.id, 'initiator_name': self.initiator.get('name')})
 
+        # Bypass sendgrid list management, we have our own system
+        filters.update(bypass_list_management={'settings': {'enable': 1}})
+        if self.unsubscribable:
+            if isinstance(self.recipient, newhive.state.User):
+                context.update({
+                    'unsubscribe_url': abs_url(secure=True) + "settings"
+                    , 'unsubscribe_text': "To manage your email subscriptions"
+                    })
+            else:
+                context.update({
+                    'unsubscribe_url': abs_url(secure=True) + "unsubscribe"
+                    , 'unsubscribe_text': "To unsubscribe from this or all emails from newhive"
+                     })
+
+        # build heads and body
         context.update({
            'type': self.name
            , 'email_id': email_id
@@ -153,14 +168,6 @@ class Mailer(object):
         body = self.body(context)
         heads = self.heads()
         heads.update(To=self.recipient.get('email'))
-
-        if self.unsubscribable:
-            if isinstance(self.recipient, newhive.state.User):
-                pass
-            else:
-                pass
-        else:
-            filters.update(bypass_list_management={'settings': {'enable': 1}})
 
         subscribed = self.check_subscription()
         record.update(sent=subscribed)
