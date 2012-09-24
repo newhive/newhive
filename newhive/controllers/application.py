@@ -32,7 +32,7 @@ class Application(object):
         self.process_facebook(request, response)
         self.process_email_campaign(request, response)
         response.context.update(
-                facebook_authentication_url=self.fb_client.authorize_url(abs_url(request.path))
+                facebook_authentication_url=self.fb_client.authorize_url(abs_url(request.path, secure=request.is_secure))
                 , use_ga = config.live_server and not request.requester.is_admin)
 
         response.headers.add('Access-Control-Allow-Origin', '*')
