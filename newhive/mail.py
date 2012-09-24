@@ -96,6 +96,7 @@ class Mailer(object):
     recipient = None
     initiator = None
     unsubscribable = True
+    inline_css = True
 
     def __init__(self, jinja_env=None, db=None):
         self.db = db
@@ -115,8 +116,10 @@ class Mailer(object):
         body = {}
         try:
             html = self.jinja_env.get_template(self.template + ".html").render(context)
-            dir = '/libsrc/' if config.debug_mode else '/lib/'
-            body['html'] = inliner.inline_styles(html, css_path=config.src_home + dir + "email.css")
+            if self.inline_css:
+                dir = '/libsrc/' if config.debug_mode else '/lib/'
+                html = inliner.inline_styles(html, css_path=config.src_home + dir + "email.css")
+            body['html'] = html
         except TemplateNotFound: pass
 
         try: body['plain'] = self.jinja_env.get_template(self.template + ".txt").render(context)
@@ -199,6 +202,7 @@ class SiteReferral(Mailer):
     unsubscribable = True
     template = 'emails/invitation'
     subject = "You have a beta invitation to thenewhive.com"
+    inline_css = False
 
     def send(self, email, name=False, force_resend=False):
         if self.db.Referral.find(email, keyname='to') and not force_resend:
@@ -222,6 +226,7 @@ class EmailConfirmation(Mailer):
     sent_to = ['user']
     template = 'emails/email_confirmation'
     subject = 'Confirm change of e-mail address for thenewhive.com'
+    inline_css = False
 
     def send(self, user, email, request_date):
         self.recipient = user
@@ -243,6 +248,7 @@ class TemporaryPassword(Mailer):
     sent_to = ['user']
     template = 'emails/password_recovery'
     subject = 'Password recovery for thenewhive.com'
+    inline_css = False
 
     def send(self, user, recovery_link):
         self.recipient = user
@@ -353,8 +359,10 @@ class UserRegisterConfirmation(Mailer):
     sent_to = ['nonuser']
     template = 'emails/thank_you_register'
     subject = 'Thank you for creating an account on thenewhive.com'
+    inline_css = False
 
     def send(self, user):
+        self.recipient = user
         user_profile_url = user.url
         user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
         context = {
@@ -408,8 +416,10 @@ class Milestone(Mailer):
     name = 'milestone'
     sent_to = ['user']
     subject = None
+    template = "emails/milestone"
 
     def send(self, expr, milestone):
+        self.recipient = expr.owner
         context = {
             'message': ui.milestone_message
             , 'expr': expr

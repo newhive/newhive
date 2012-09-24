@@ -1,7 +1,7 @@
-import unittest
+import unittest, random
 from newhive.wsgi import db, jinja_env
 from newhive.utils import abs_url, now
-from newhive import mail
+from newhive import mail, config
 mail.send_real_email = False
 
 class MailerTest(unittest.TestCase):
@@ -74,6 +74,33 @@ class Broadcast(FeedMailerTest):
     def test_broadcast(self):
         broadcast = db.Broadcast.last()
         self.mailer.send(broadcast)
+
+class UserRegisterConfirmation(MailerTest):
+    def setUp(self):
+        super(UserRegisterConfirmation, self).setUp()
+        self.mailer = mail.UserRegisterConfirmation(db=db, jinja_env=jinja_env)
+
+    def test_user_register_confirmation(self):
+        self.mailer.send(self.test_user)
+
+class Featured(MailerTest):
+    def setUp(self):
+        super(Featured, self).setUp()
+        self.mailer = mail.Featured(db=db, jinja_env=jinja_env)
+
+    def test_featured(self):
+        expr = db.Expr.random()
+        self.mailer.send(expr)
+
+
+class Milestone(MailerTest):
+    def setUp(self):
+        super(Milestone, self).setUp()
+        self.mailer = mail.Milestone(db=db, jinja_env=jinja_env)
+
+    def test_milestone(self):
+        expr = db.Expr.random()
+        self.mailer.send(expr, random.choice(config.milestones))
 
 
 #class EmailConfirmation(MailerTest):

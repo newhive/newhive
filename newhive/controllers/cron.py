@@ -47,9 +47,8 @@ class Cron(Application):
         return stats
 
     def email_milestone(self, expr):
-        milestones = [20, 50] + [int(math.pow(10, n)) for n in range(2,8)]
         def next_milestone(n):
-            for m in milestones:
+            for m in config.milestones:
                 if m > n: return m
 
         mailer = newhive.mail.Milestone(db = self.db, jinja_env = self.jinja_env)
