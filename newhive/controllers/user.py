@@ -362,3 +362,9 @@ class User(Application):
             response.context['friends'] = friends
         logger.debug('Facebook listen response time %d ms', (time.time() - t0)*1000)
         return self.serve_page(response, 'dialogs/facebook_listen.html')
+
+    def unsubscribe(self, request, response):
+        email = self.db.MailLog.fetch(request.args.get('email_id'))
+        response.context['email'] = email.get('email')
+        response.context['initiator'] = self.db.User.fetch(email.get('initiator'))
+        return self.serve_page(response, 'pages/unsubscribe.html')

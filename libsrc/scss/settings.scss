@@ -117,3 +117,26 @@
     &:hover { color: $color_active; }
   }
 }
+
+body.unsubscribe {
+    #right_column {
+        margin-top: 12%;
+    }
+    h1 {
+        font-family: Museo, Helvetica, Verdana, sans-serif;
+    }
+    #email, #username {
+        color: $color_active;
+    }
+    #email {
+        font-size: 30px;
+        margin-bottom: 32px;
+    }
+    .checkbox {
+        margin: 10px 0;
+        font-weight: bold;
+    }
+    input[type=submit]{
+        margin-top: 21px;
+    }
+}

@@ -141,6 +141,7 @@ site_pages = {
     ,'user_check'          : controllers['user'].user_check
     ,'email_confirmation'  : controllers['user'].confirm_email
     ,'fbcanvas'            : controllers['user'].facebook_canvas
+    ,'unsubscribe'         : controllers['user'].unsubscribe
     ,'feedback'            : app.page('pages/feedback.html')
     ,'file'                : app.serve_404
     ,'cron'                : controllers['cron'].cron

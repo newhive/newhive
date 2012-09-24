@@ -1,0 +1,20 @@
+{% extends "main.html" %}
+
+{% block body_classes %}{{super()}} unsubscribe {% endblock %}
+{% block right_column %}
+    <h1>Email unsubscribe</h1>
+    <h3>Confirm your email address:</h3>
+    <div id="email">{{ email }}</div>
+    <form>
+        <input type="hidden" value="{{ initiator.id }}"></input>
+        <div class="checkbox">
+            <input type="radio" name="unsubscribe" value="user" id="radio_user" checked="checked"></input>
+            <label for="radio_user">Emails from <span id="username">{{initiator.name}}</span></label>
+        </div>
+        <div class="checkbox">
+            <input type="radio" name="unsubscribe" value="all" id="radio_all"></input>
+            <label for="radio_all">All newhive emails</label>
+        </div>
+        <input type="submit" class="btn black rounded" value="Unsubscribe"></input>
+    </form>
+{% endblock %}
