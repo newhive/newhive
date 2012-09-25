@@ -187,7 +187,7 @@ class Mailer(object):
                 for key, val in heads.items():
                     f.write("{:<20}{}\n".format(key + ":", val))
                 f.write('</pre></div>')
-                f.write(body['html'])
+                f.write(body['html'].encode('utf-8'))
             logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
             record.update(debug_url=abs_url(secure=True) + path)
 
@@ -435,17 +435,23 @@ class Milestone(Mailer):
 class SignupRequest(Mailer):
     name = 'signup_request'
     sent_to = ['nonuser']
-    template = "emails/thank_you_signup"
+    template = "emails/signup_request"
     unsubscribable = False
     subject = 'Thank you for signing up for a beta account on The New Hive'
-    inline_css = False
+    header_message = ['<span class="active">Thank you</span> for signing', 'up for a beta account. :)']
+    message = "<b>We are getting The New Hive ready for you.<br/>" + \
+              "Expect to get a beta invitation in your inbox ASAP.<br/>" + \
+              "We look forward to seeing your expressions!<br/><br/>" + \
+              "Talk to you soon,</b><br/>The New Hive team"
 
     def send(self, email, name, unique_args):
-        self.recipient = {'email': email}
+        self.recipient = {'email': email, 'name': name}
         context = {
-            'url': 'http://thenewhive.com'
-            ,'thumbnail_url': self.db.assets.url('skin/1/thumb_0.png')
-            ,'name': name
+            'featured_exprs': self.db.Expr.featured(6)
+            , 'recipient': self.recipient
+            , 'message': self.message
+            , 'message_safe': True
+            , 'header': self.header_message
             }
         self.send_mail(context, unique_args=unique_args)
 

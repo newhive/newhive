@@ -733,6 +733,14 @@ class Expr(HasSocial):
             rand = random.random()
             return self.find(dict(random = {'$gte': rand}, auth='public', apps={'$exists': True}))
 
+        @property
+        def featured_ids(self):
+            return self.db.User.get_root()['tagged']['Featured']
+
+        def featured(self, limit):
+            query = self.featured_ids[0:limit]
+            return self.db.Expr.fetch(query)
+
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()

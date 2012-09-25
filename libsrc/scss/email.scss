@@ -61,7 +61,7 @@ $space4: 5px;
     
     #main_message{
         margin-top: $space2;
-        .sender { color: $color_bright_red; }
+        .sender, .active { color: $color_bright_red; }
         img {
             float: right;
             margin-right: 5px;
@@ -116,6 +116,13 @@ $space4: 5px;
             height: 74px;
             margin: 3px;
         }
+        h4.site {
+            margin: 7px 0;
+            span {
+                background-color: $color_highlight;
+                padding: 2px 4px;
+            }
+        }
     }
     #footer_message{
         margin: $space2 0;
@@ -154,7 +161,6 @@ $space4: 5px;
             display: inline-block;
         }
     }
-    
 }
 
 #unsubscribe {

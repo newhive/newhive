@@ -25,11 +25,11 @@
                         {{ initiator.name }}
                     {%- endcall %}
                 {% endif %}
-                {{ header[0] }}
+                {{ header[0] | safe }}
                 <img src="{{icon}}"/>
             </div>
             <div class="line" id="line2">
-                {{ header[1] }}
+                {{ header[1] | safe }}
             </div>
         </h2>
     {% endif %}
@@ -37,7 +37,11 @@
 
 {% if message %}
     <p id="message">
+        {% if message_safe %}
+        {{ message | safe }}
+        {% else %}
         {{ message | escape | html_breaks }}
+        {% endif %}
     </p>
 {% endif %}
 
@@ -47,7 +51,15 @@
 
 {% if featured_exprs %}
     <div id="featured_exprs">
-        <h4>Check out some of {{initiator.name}}'s expressions:</h4>
+        {% if initiator and initiator.name %}
+        <h4 class="user"><span>
+            Check out some of {{initiator.name}}'s expressions:
+        </h4></span>
+        {% else %}
+        <h4 class="site"><span>
+            Explore Expressions
+        </h4></span>
+        {% endif %}
         {% for expr in featured_exprs -%}
           <a href="{{expr.url}}" title="{{expr.title}}" id="{{expr.id}}"
               ><img class="featured_thumb" src="{{expr.thumb}}"/
@@ -58,7 +70,7 @@
 
 {% block footer_message scoped %}
     <h4 id="footer_message">
-        {% if recipient and recipient.name %}
+        {% if recipient and recipient.id %}
             Love Newhive?<br/>
             <a class="highlight" href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
         {% else %}

@@ -49,4 +49,4 @@ def _inline_styles(document, css):
         if element.tag not in ignore_list:
             element.set('style', style.getCssText(separator=u''))
 
-    return etree.tostring(document, method="xml", pretty_print=True, encoding='UTF-8')
+    return etree.tostring(document, method="xml", pretty_print=True)
