@@ -9,6 +9,10 @@ class MailerTest(unittest.TestCase):
         self.test_user = db.User.named('test')
         self.test_nonuser = {'email': 'test+nonuser@thenewhive.com', 'name': 'Nonuser'}
 
+    def get_expr(self):
+        #return db.Expr.fetch("504fb8e063dade0b7401d422") # contains unicode title
+        return db.Expr.random()
+
 class ShareExpr(MailerTest):
     def setUp(self):
         super(ShareExpr, self).setUp()
@@ -16,13 +20,13 @@ class ShareExpr(MailerTest):
         self.message = 'test message\nsecond line'
 
     def test_to_nonuser(self):
-        expr = db.Expr.random()
+        expr = self.get_expr()
         initiator = self.test_user
         recipient = {'email': 'duffytilleman@gmail.com'}
         self.mailer.send(expr, initiator, recipient, self.message)
 
     def test_to_user(self):
-        expr = db.Expr.random()
+        expr = self.get_expr()
         initiator = self.test_user
         recipient = db.User.named('duffy')
         self.mailer.send(expr, initiator, recipient, self.message)
@@ -90,7 +94,7 @@ class Featured(MailerTest):
         self.mailer = mail.Featured(db=db, jinja_env=jinja_env)
 
     def test_featured(self):
-        expr = db.Expr.random()
+        expr = self.get_expr()
         self.mailer.send(expr)
 
 class Milestone(MailerTest):
@@ -99,7 +103,7 @@ class Milestone(MailerTest):
         self.mailer = mail.Milestone(db=db, jinja_env=jinja_env)
 
     def test_milestone(self):
-        expr = db.Expr.random()
+        expr = self.get_expr()
         self.mailer.send(expr, random.choice(config.milestones))
 
 class SignupRequest(MailerTest):

@@ -48,10 +48,10 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None):
     # Message body assembly
     if type(body) == dict:
         if body.has_key('plain'):
-            plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
+            plain = MIMEText(body['plain'].encode('utf-8'), 'plain', 'UTF-8')
             msg.attach(plain)
         if body.has_key('html'):
-            html = MIMEText(body['html'].encode('utf-8'), 'html')
+            html = MIMEText(body['html'].encode('utf-8'), 'html', 'UTF-8')
             msg.attach(html)
     else:
         part1 = MIMEText(body.encode('utf-8'), 'plain')
@@ -185,7 +185,8 @@ class Mailer(object):
             with open(config.src_home + path, 'w') as f:
                 f.write('<div><pre>')
                 for key, val in heads.items():
-                    f.write("{:<20}{}\n".format(key + ":", val))
+                    s = u"{:<20}{}\n".format(key + u":", val)
+                    f.write(s.encode('utf-8'))
                 f.write('</pre></div>')
                 f.write(body['html'].encode('utf-8'))
             logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
@@ -427,7 +428,7 @@ class Milestone(Mailer):
             , 'server_url': abs_url()
             }
 
-        self.subject = 'Your expression "{}" has {} views'.format(expr['title'], milestone)
+        self.subject = u'Your expression "{}" has {} views'.format(expr['title'], milestone)
         sendgrid_args = {'expr_id': expr.id, 'milestone': milestone}
 
         self.send_mail(context, unique_args=sendgrid_args)
