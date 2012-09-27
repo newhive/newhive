@@ -443,10 +443,10 @@ class SignupRequest(Mailer):
     unsubscribable = False
     subject = 'Thank you for signing up for a beta account on The New Hive'
     header_message = ['<span class="active">Thank you</span> for signing', 'up for a beta account. :)']
-    message = "<b>We are getting The New Hive ready for you.<br/>" + \
+    message = "We are getting The New Hive ready for you.<br/>" + \
               "Expect to get a beta invitation in your inbox ASAP.<br/>" + \
               "We look forward to seeing your expressions!<br/><br/>" + \
-              "Talk to you soon,</b><br/>The New Hive team"
+              "Talk to you soon,<br/><b>The New Hive team</b>"
 
     def send(self, email, name, unique_args):
         self.recipient = {'email': email, 'name': name}

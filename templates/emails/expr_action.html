@@ -57,7 +57,7 @@
         </h4></span>
         {% else %}
         <h4 class="site"><span>
-            Explore Expressions
+            Explore expressions
         </h4></span>
         {% endif %}
         {% for expr in featured_exprs -%}
@@ -71,12 +71,12 @@
 {% block footer_message scoped %}
     <h4 id="footer_message">
         {% if recipient and recipient.id %}
-            Love Newhive?<br/>
+            Love NewHive?<br/>
             <a class="highlight" href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
         {% else %}
             Want to make your own expression?<br/>
             {% call track_link(signup_url, "Create your account", email_id) -%}
-                Create your Newhive account!
+                Create your NewHive account!
             {%- endcall %}
         {% endif %}
     </h4>

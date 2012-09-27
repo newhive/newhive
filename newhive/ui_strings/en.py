@@ -36,5 +36,5 @@ email_subscription_ui = {
     , 'broadcast': 'People broadcast my expression'
     , 'share_expr': 'People share an expression with me'
     , 'milestone': "Updates about my expression's views"
-    , 'featured': "Newhive features my expression"
+    , 'featured': "NewHive features my expression"
     }
