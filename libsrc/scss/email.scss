@@ -12,7 +12,7 @@ $space4: 5px;
 
 #body {
     color: $color_email_black;
-    padding: $space2 $space1;
+    padding: $space1 $space1 $space2 $space1;
     p, h1, h2, h3, h4, h5 {
         margin: 0;
         padding: 0;
@@ -29,7 +29,7 @@ $space4: 5px;
     }
     
     h2{
-        font-size: 40px;
+        font-size: 37px;
     
         letter-spacing: -2px;
         .line{
@@ -60,7 +60,7 @@ $space4: 5px;
     }
     
     #main_message{
-        margin-top: $space2;
+        margin-top: $space3;
         .sender, .active { color: $color_bright_red; }
         img {
             float: right;
