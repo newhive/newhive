@@ -243,28 +243,6 @@ class Mailer(object):
 
         self.db.MailLog.create(record)
 
-class SiteReferral(Mailer):
-    name = 'site_referral'
-    unsubscribable = False
-    sent_to = ['nonuser']
-    template = 'emails/invitation'
-    subject = "You have a beta invitation to thenewhive.com"
-
-    def send(self, email, name=False, force_resend=False):
-        self.recipient = {'email': email, 'name': name}
-
-        user = self.db.User.named(config.site_user)
-        referral = user.new_referral({'name': name, 'to': email})
-
-        context = {
-            'recipient': self.recipient
-            , 'url': referral.url
-            , 'logo': self.db.assets.url('skin/1/newhive_logo_lg.png')
-            }
-
-        self.send_mail(context)
-        return referral.id
-
 class EmailConfirmation(Mailer):
     name = 'email_confirmation'
     unsubscribable = False
@@ -519,3 +497,25 @@ class UserReferral(Mailer):
             , 'logo': self.db.assets.url('skin/1/newhive_logo_lg.png')
             }
         self.send_mail(context, unique_args={'referral_id': referral.id})
+
+class SiteReferral(Mailer):
+    name = 'site_referral'
+    unsubscribable = False
+    sent_to = ['nonuser']
+    template = 'emails/invitation'
+    subject = "You have a beta invitation to thenewhive.com"
+
+    def send(self, email, name=False, force_resend=False):
+        self.recipient = {'email': email, 'name': name}
+
+        user = self.db.User.named(config.site_user)
+        referral = user.new_referral({'name': name, 'to': email})
+
+        context = {
+            'recipient': self.recipient
+            , 'url': referral.url
+            , 'logo': self.db.assets.url('skin/1/newhive_logo_lg.png')
+            }
+
+        self.send_mail(context)
+        return referral.id
