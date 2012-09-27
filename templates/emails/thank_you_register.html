@@ -1,20 +1,19 @@
-{% extends "emails/invitation.html" %}
+{% extends "emails/site.html" %}
 {% from "emails/parts/featured_exprs.html" import expr_cards %}
 
-{% block content%}
-    <div id="main_message" class="onediv">
-      <div class="line">
-        <h2>
-          Welcome to <span class="active">NewHive</span>!<br/>
-          We're so happy you're here. :)
-        </h2>
-        <p>
-          NewHive is your blank canvas on the web. Use<br/>
-          the editor to drag + drop medai, create web pages,<br/>
-          + organize content to share privately or publicly.
-        </p>
-      </div>
-    </div>
+{% block main_message %}
+    <h2>
+      Welcome to <span class="active">NewHive</span>!<br/>
+      We're so happy you're here. :)
+    </h2>
+    <p>
+      NewHive is your blank canvas on the web. Use<br/>
+      the editor to drag + drop media, create web pages,<br/>
+      + organize content to share privately or publicly.
+    </p>
+{% endblock %}
+
+{% block lower_content %}
     <div id="create">
       <h3>
         <img src="{{create_icon}}"/>
@@ -22,5 +21,4 @@
       </h3>
     </div>
     {{ expr_cards(featured_exprs) }}
-
 {% endblock %}

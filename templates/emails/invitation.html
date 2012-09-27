@@ -1,40 +1,28 @@
-{% extends "emails/colorful.html" %}
+{% extends "emails/site.html" %}
 
-{% block body_classes%}{{super()}} {{type}}{% endblock %}
-{% block body %}
-    <div id="logo">
-        <img src="{{ logo }}"/>
-    </div>
-    <h2 id="greeting" class="line">
-        Hi {{ recipient.name or "there"}},
-    </h2>
-    {% block content %}
-        <h2 id="main_message" class="onediv">
-            <div class="line">
-                {% if initiator %}
-                Congratulations!<br/>
-                Your friend <a href={{initiator.url}} class="active">{{ initiator.fullname }}</a>
-                has invited you to join <span class="active">NewHive</span>,
-                your online blank canvas <span class="plus">+</span>
-                self-publishing toolkit.
-                {% else %}
-                <span class="active">Congratulations!</span> You've<br/>
-                been invited to join NewHive,<br/>
-                your online blank canvas <span class="plus">+</span><br/>
-                self-publishing toolkit.
-                {% endif %}
-            </div>
-        </h2>
-        <h2 id="create_account"><a href="{{url}}">
-            <span>
-                Click here to
-            </span><br/><span>
-                create your account
-            </span>
-        </h2>
-    {% endblock content %}
-    <h4 id="footer_message">
-        Questions or feedback?<br/>
-        <a href="mailto:info@newhive.com">info@newhive.com</a>
-    </h4>
+{% block main_message %}
+  <h2>
+    {% if initiator %}
+      Congratulations!<br/>
+      Your friend <a href={{initiator.url}} class="active">{{ initiator.fullname }}</a>
+      has invited you to join <span class="active">NewHive</span>,
+      your online blank canvas <span class="plus">+</span>
+      self-publishing toolkit.
+    {% else %}
+      <span class="active">Congratulations!</span> You've<br/>
+      been invited to join NewHive,<br/>
+      your online blank canvas <span class="plus">+</span><br/>
+      self-publishing toolkit.
+    {% endif %}
+  </h2>
 {% endblock %}
+
+{% block lower_content %}
+  <h2 id="create_account"><a href="{{url}}">
+      <span>
+          Click here to
+      </span><br/><span>
+          create your account
+      </span>
+  </h2>
+{% endblock lower_content %}

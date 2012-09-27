@@ -3,7 +3,7 @@
 $color_email_black: #000001; // to fool google
 $space1: 45px;
 $space2: 20px;
-$space3: 12px;
+$space3: 15px;
 $space4: 5px;
 
 .outer {
@@ -47,10 +47,6 @@ $space4: 5px;
             margin: $space4 0;
             background: white;
         }
-        &.onediv .line {
-            padding-top: 8px;
-            padding-bottom: 8px;
-        }
     }
     h3{
         font-size: 23px;
@@ -75,7 +71,7 @@ $space4: 5px;
     
     #logo {
         text-align: center;
-        margin-bottom: $space1;
+        margin-bottom: $space1 - 3px;
     }
     
     #greeting{
@@ -139,8 +135,8 @@ $space4: 5px;
             height: 74px;
             margin: 3px;
         }
-        h4 {
-            margin: 7px 0;
+        h3, h4 {
+            margin: 7px 0 10px 0;
             span {
                 padding: 2px 4px;
             }
@@ -182,6 +178,23 @@ $space4: 5px;
     }
 
     // Specific type overrides
+    &.site {
+      #main_message .line {
+        padding-top: $space3;
+        padding-bottom: $space3;
+        h2 {
+          line-height: 37px;
+        }
+        p {
+          margin-top: $space3;
+        }
+      }
+      #footer_message {
+        margin-top: $space1;
+        line-height: 25px;
+      }
+    }
+
     &.featured {
         h2{
             font-size: 37px;
@@ -210,10 +223,13 @@ $space4: 5px;
         h2 {
             line-height: 37px;
         }
-        #footer_message {
-            margin-top: $space1;
-            line-height: 25px;
-        }
+    }
+
+    &.user_register_confirmation {
+      p {
+        font-size: 20px;
+        line-height: auto;
+      }
     }
 }
 
