@@ -158,7 +158,7 @@ class Admin(Application):
         logger.debug('_index')
         return self.redirect(response, abs_url(secure=True) + "thenewhive/admin")
 
-    @admins
+    @admins_insecure
     def add_to_featured(self, request, response):
         root = self.db.User.get_root()
         root['tagged']['_Featured'] = [request.form.get('id')] + root['tagged'].get('_Featured', [])

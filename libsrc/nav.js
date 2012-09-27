@@ -79,18 +79,15 @@ Hive.Menus = (function(){
                 new_window(secure_server + 'feedback?url=' + window.location, 470, 400);
             });
 
-            $('#add_to_featured .false').click(function(){
-                if (window.location.protocol != "https:") {
-                    alert('must view expression over https to add to featured')
-                    return;
-                }
+            $('#add_to_featured').click(function(){
                 var that = $(this);
                 if (that.hasClass('inactive')) return;
                 that.addClass('inactive');
-                $.post('', {action: 'add_to_featured', id: expr.id}, function(data){
+                $.post('/', {action: 'add_to_featured', id: Hive.expr.id}, function(data){
                     that.removeClass('inactive');
                     Hive.expr.featured = data;
                     Hive.Menus.update_expr(Hive.expr);
+                    alert('(re)added to featured');
                 });
             });
         }
