@@ -10,6 +10,15 @@ $space4: 5px;
     background-color: $color_charcoal;
 }
 
+#header_logotype {
+    color: #ffffff;
+    font-size: 37px;
+    letter-spacing: -2px;
+    font-weight: bold;
+    vertical-align: bottom;
+    padding-left: 15px;
+}
+
 #body {
     color: $color_email_black;
     padding: $space1 $space1 $space2 $space1;
