@@ -270,15 +270,13 @@ class TemporaryPassword(Mailer):
     unsubscribable = False
     sent_to = ['user']
     template = 'emails/password_recovery'
-    subject = 'Password recovery for thenewhive.com'
-    inline_css = False
+    subject = 'Password recovery for newhive.com'
 
     def send(self, user, recovery_link):
         self.recipient = user
         context = {
             'recovery_link': recovery_link
-            ,'user_fullname' : user['fullname']
-            ,'user_name': user['name']
+            , 'recipient': self.recipient
             }
         self.send_mail(context)
 
@@ -392,7 +390,6 @@ class UserRegisterConfirmation(Mailer):
             , 'create_link' : abs_url(secure=True) + "edit"
             , 'create_icon': self.db.assets.url('skin/1/create.png')
             , 'featured_exprs': self.db.Expr.featured(6)
-            , 'logo': self.db.assets.url('skin/1/newhive_logo_lg.png')
             }
         self.send_mail(context)
 
@@ -493,7 +490,6 @@ class UserReferral(Mailer):
             'initiator': initiator
             , 'recipient': {'name': referral.get('name')}
             , 'url': referral.url
-            , 'logo': self.db.assets.url('skin/1/newhive_logo_lg.png')
             }
         self.send_mail(context, unique_args={'referral_id': referral.id})
 
@@ -513,7 +509,6 @@ class SiteReferral(Mailer):
         context = {
             'recipient': self.recipient
             , 'url': referral.url
-            , 'logo': self.db.assets.url('skin/1/newhive_logo_lg.png')
             }
 
         self.send_mail(context)

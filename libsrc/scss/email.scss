@@ -155,6 +155,13 @@ $space4: 5px;
       }
     }
 
+    #password_reset {
+      margin: $space1 - 10px 0;
+      a {
+        padding: 0 5px;
+      }
+    }
+
     #footer_message{
         margin: $space2 0;
         text-align: center;
@@ -162,7 +169,6 @@ $space4: 5px;
         a, .highlight {
             color: $color_email_black;
             padding: 2px 5px;
-            
         }
     }
 
@@ -185,7 +191,7 @@ $space4: 5px;
         h2 {
           line-height: 37px;
         }
-        p {
+        h2 + p {
           margin-top: $space3;
         }
       }
