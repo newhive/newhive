@@ -41,9 +41,15 @@ $space4: 5px;
         font-size: 37px;
     
         letter-spacing: -2px;
+    }
+    h2, #main_message {
         .line{
             margin: $space4 0;
             background: white;
+        }
+        &.onediv .line {
+            padding-top: 8px;
+            padding-bottom: 8px;
         }
     }
     h3{
@@ -133,14 +139,26 @@ $space4: 5px;
             height: 74px;
             margin: 3px;
         }
-        h4.site {
+        h4 {
             margin: 7px 0;
             span {
-                background-color: $color_highlight;
                 padding: 2px 4px;
             }
         }
     }
+
+    #create {
+      margin: $space2 0;
+      text-align: center;
+      img, a {
+        vertical-align: middle;
+      }
+      a {
+        padding: 2px 5px;
+        background: $color_highlight;
+      }
+    }
+
     #footer_message{
         margin: $space2 0;
         text-align: center;
@@ -180,10 +198,6 @@ $space4: 5px;
     }
 
     &.site_referral, &.user_referral {
-        #main_message .line {
-            padding-top: 8px;
-            padding-bottom: 8px;
-        }
         #create_account {
             margin-top: $space1;
             text-align: center;

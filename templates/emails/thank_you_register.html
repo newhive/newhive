@@ -1,30 +1,26 @@
-{% extends "emails/colorful.html" %}
-{% block body%}
+{% extends "emails/invitation.html" %}
+{% from "emails/parts/featured_exprs.html" import expr_cards %}
 
-<h2 style="margin: 20px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
-  Hi <span style="color: #f72e4d;">{{user_fullname}}</span>,
-</h2>
-<h2 style="margin:  5px 0 0 45px; font-size: 40px; letter-spacing: -2px; padding-left: 12px; background-color: #ffffff; width: 484px;">
- welcome aboard! 
-</h2>
+{% block content%}
+    <div id="main_message" class="onediv">
+      <div class="line">
+        <h2>
+          Welcome to <span class="active">NewHive</span>!<br/>
+          We're so happy you're here. :)
+        </h2>
+        <p>
+          NewHive is your blank canvas on the web. Use<br/>
+          the editor to drag + drop medai, create web pages,<br/>
+          + organize content to share privately or publicly.
+        </p>
+      </div>
+    </div>
+    <div id="create">
+      <h3>
+        <img src="{{create_icon}}"/>
+        <a href="{{create_link}}" title="Create an expression">Create an expression</a>
+      </h3>
+    </div>
+    {{ expr_cards(featured_exprs) }}
 
-<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;">
-  The next step is to customize your homepage, which is <a href="
-    {{ user_home_url }}" style="text-decoration: none; color: #7ba008;">
-    {{ user_home_url_display }}</a>.  Also, by clicking on your name, you'll go to <a
-    href="{{ user_profile_url }}" style="text-decoration: none;
-    color: #7ba008;">{{ user_profile_url_display }}</a>. This is a list of all your
-  public expressions, and a good way to show your friends what you're up to!
-</p>
-<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px;">
-  Have a question or comment?  We want to hear from you!  Hit that lil
-  <span style="background-color: #FFFFFF; padding: 2px; font-weight: bold; font-size: 20px;">Feedback</span> button in the bottom right corner of every page (while you're
-  logged in) and we'll get the message!  Or email us anytime at <a
-    href="mailto:info@thenewhive.com" style="text-decoration: none; color:
-    #222222;">info@thenewhive.com</a>.
-</p>
-<p style="font-size: 18px; padding: 0 57px; line-height: 21px; margin-top: 30px; margin-bottom: 50px;">
-  <strong>Have fun,</strong><br/> 
-  The New Hive team
-</p>
 {% endblock %}

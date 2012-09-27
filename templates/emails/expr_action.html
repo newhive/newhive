@@ -49,22 +49,8 @@
 {% endif %}
 
 {% if featured_exprs %}
-    <div id="featured_exprs">
-        {% if initiator and initiator.name %}
-        <h4 class="user"><span>
-            Check out some of {{initiator.name}}'s expressions:
-        </h4></span>
-        {% else %}
-        <h4 class="site"><span>
-            Explore expressions
-        </h4></span>
-        {% endif %}
-        {% for expr in featured_exprs -%}
-          <a href="{{expr.url}}" title="{{expr.title}}" id="{{expr.id}}"
-              ><img class="featured_thumb" src="{{expr.thumb}}"/
-          ></a>
-        {%- endfor %}
-    </div>
+  {% from "emails/parts/featured_exprs.html" import expr_cards %}
+  {{ expr_cards(featured_exprs, initiator) }}
 {% endif %}
 
 {% block footer_message scoped %}

@@ -382,18 +382,17 @@ class UserRegisterConfirmation(Mailer):
     sent_to = ['nonuser']
     template = 'emails/thank_you_register'
     subject = 'Thank you for creating an account on thenewhive.com'
-    inline_css = False
 
     def send(self, user):
         self.recipient = user
         user_profile_url = user.url
         user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
         context = {
-            'user_fullname' : user['fullname']
-            , 'user_home_url' : user_home_url
-            , 'user_home_url_display' : re.sub(r'^https?://', '', user_home_url)
-            , 'user_profile_url' : user_profile_url
-            , 'user_profile_url_display' : re.sub(r'^https?://', '', user_profile_url)
+            'recipient': user
+            , 'create_link' : abs_url(secure=True) + "edit"
+            , 'create_icon': self.db.assets.url('skin/1/create.png')
+            , 'featured_exprs': self.db.Expr.featured(6)
+            , 'logo': self.db.assets.url('skin/1/newhive_logo_lg.png')
             }
         self.send_mail(context)
 

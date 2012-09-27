@@ -14,6 +14,9 @@ class MailerTest(unittest.TestCase):
         #return db.Expr.fetch("504fb8e063dade0b7401d422") # contains unicode title
         return db.Expr.random()
 
+    def get_user(self):
+        return db.Expr.random().owner
+
 class ShareExpr(MailerTest):
     def setUp(self):
         super(ShareExpr, self).setUp()
@@ -87,7 +90,7 @@ class UserRegisterConfirmation(MailerTest):
         self.mailer = mail.UserRegisterConfirmation(db=db, jinja_env=jinja_env)
 
     def test_user_register_confirmation(self):
-        self.mailer.send(self.test_user)
+        self.mailer.send(self.get_user())
 
 class Featured(MailerTest):
     def setUp(self):
