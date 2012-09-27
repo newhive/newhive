@@ -202,23 +202,21 @@ class Mailer(object):
 
 class SiteReferral(Mailer):
     name = 'site_referral'
+    unsubscribable = False
     sent_to = ['nonuser']
-    unsubscribable = True
     template = 'emails/invitation'
     subject = "You have a beta invitation to thenewhive.com"
-    inline_css = False
 
     def send(self, email, name=False, force_resend=False):
-        if self.db.Referral.find(email, keyname='to') and not force_resend:
-            return False
-        self.recipient = {'email': email}
+        self.recipient = {'email': email, 'name': name}
 
         user = self.db.User.named(config.site_user)
         referral = user.new_referral({'name': name, 'to': email})
 
         context = {
-            'name': name
-            ,'url': referral.url
+            'recipient': self.recipient
+            , 'url': referral.url
+            , 'logo': self.db.assets.url('skin/1/newhive_logo_lg.png')
             }
 
         self.send_mail(context)
@@ -462,9 +460,8 @@ class SignupRequest(Mailer):
 class UserReferral(Mailer):
     name = 'user_referral'
     sent_to = ['nonuser']
-    template = "emails/user_invitation"
+    template = "emails/invitation"
     unsubscribable = True
-    inline_css = False
 
     @property
     def subject(self): return self.initiator.get('fullname') + ' has invited you to The New Hive'
@@ -473,9 +470,9 @@ class UserReferral(Mailer):
         self.initiator = initiator
         self.recipient = {'email': referral['to']}
         context = {
-             'referrer_url': initiator.url
-            ,'referrer_name': initiator.get('fullname')
-            ,'url': (abs_url(secure=True) + 'invited?key=' + referral['key'] + '&email=' + referral['to'])
-            ,'name': referral['name']
+            'initiator': initiator
+            , 'recipient': {'name': referral.get('name')}
+            , 'url': referral.url
+            , 'logo': self.db.assets.url('skin/1/newhive_logo_lg.png')
             }
         self.send_mail(context, unique_args={'referral_id': referral.id})

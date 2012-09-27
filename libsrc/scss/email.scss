@@ -49,11 +49,19 @@ $space4: 5px;
         background-color: $color_highlight;
     }
 
+    .plus {
+        color: $color_blue;
+    }
+
     .line, & > p{
         padding-left: $space3;
         clear: both;
     }
     
+    #logo {
+        text-align: center;
+        margin-bottom: $space1;
+    }
     
     #greeting{
         background: $color_selected;
@@ -152,13 +160,36 @@ $space4: 5px;
             font-size: 37px;
         }
         #main_message #line1 {
-            color: $color_active;
+            color: $color_bright_red;
         }
         #share_icons{
             margin-top: $space4;
         }
         .like_button{
             display: inline-block;
+        }
+    }
+
+    &.site_referral, &.user_referral {
+        #main_message .line {
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+        #create_account {
+            margin-top: $space1;
+            text-align: center;
+            span {
+                background: $color_highlight;
+                padding: 0 10px;
+            }
+            line-height: 46px;
+        }
+        h2 {
+            line-height: 37px;
+        }
+        #footer_message {
+            margin-top: $space1;
+            line-height: 25px;
         }
     }
 }
