@@ -3,6 +3,7 @@ from newhive.wsgi import db, jinja_env
 from newhive.utils import abs_url, now
 from newhive import mail, config
 mail.send_real_email = False
+mail.css_debug = True
 
 class MailerTest(unittest.TestCase):
     def setUp(self):

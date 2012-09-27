@@ -17,6 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 send_real_email = True
+css_debug = False
 
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
 def send_mail(headers, body, category=None, filters=None, unique_args=None):
@@ -116,11 +117,12 @@ class Mailer(object):
         body = {}
         try:
             html = self.jinja_env.get_template(self.template + ".html").render(context)
-            if self.inline_css:
+            if self.inline_css and not css_debug:
                 dir = '/libsrc/' if config.debug_mode else '/lib/'
                 html = inliner.inline_styles(html, css_path=config.src_home + dir + "email.css")
             body['html'] = html
-        except TemplateNotFound: pass
+        except TemplateNotFound as e:
+            if e.message != self.template + '.html': raise e
 
         try: body['plain'] = self.jinja_env.get_template(self.template + ".txt").render(context)
         except TemplateNotFound: pass
@@ -165,6 +167,7 @@ class Mailer(object):
         context.update({
            'type': self.name
            , 'email_id': email_id
+           , 'css_debug': css_debug and self.inline_css
            })
         body = self.body(context)
         heads = self.heads()
@@ -181,7 +184,7 @@ class Mailer(object):
 
         # write e-mail to file for debugging
         if not config.live_server:
-            path = '/lib/tmp/' + utils.junkstr(10) + '.html'
+            path = '/lib/tmp/' + email_id + '.html'
             with open(config.src_home + path, 'w') as f:
                 f.write('<div><pre>')
                 for key, val in heads.items():

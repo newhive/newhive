@@ -31,7 +31,11 @@
 {% set table_width = 'width="586px"' %}
 
 <html>
-<head></head>
+    <head>
+        {% if css_debug %}
+            <link rel='stylesheet' href='/lib/libsrc/email.css'>
+        {% endif %}
+    </head>
 
 <body style="font-family: Helvetica, Verdana, sans-serif;">
 
