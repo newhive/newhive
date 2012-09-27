@@ -1,7 +1,7 @@
 import crypt, urllib, time, json, re, pymongo
 import newhive.state
 from newhive.state import abs_url
-from newhive import config, inliner, utils
+from newhive import config, utils
 import newhive.ui_strings.en as ui
 from cStringIO import StringIO
 from smtplib import SMTP
@@ -12,6 +12,9 @@ from email.generator import Generator
 from email import Charset
 from jinja2 import TemplateNotFound
 from werkzeug import url_unquote
+import cssutils #sudo pip install cssutils
+from lxml import etree #sudo apt-get install python-lxml
+import lxml.html
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,6 +23,44 @@ send_real_email = True
 css_debug = False
 
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
+
+class EmailHtml(object):
+    def __init__(self, html_string):
+        self.html = lxml.html.fromstring(html_string)
+
+    def inline_css(self, css_path):
+        css = cssutils.parseFile(css_path)
+        document = self.html
+        elms = {} # stores all inlined elements.
+        for rule in css:
+            if hasattr(rule, 'selectorText'):
+                for element in document.cssselect(rule.selectorText):
+                    if element not in elms:
+                        elms[element] = cssutils.css.CSSStyleDeclaration()
+                        inline_styles = element.get('style')
+                        if inline_styles:
+                            for p in cssutils.css.CSSStyleDeclaration(cssText=inline_styles):
+                                elms[element].setProperty(p)
+
+                    for p in rule.style:
+                        elms[element].setProperty(p.name, p.value, p.priority)
+
+        # Set inline style attributes unless the element is not worth styling.
+        for element, style in elms.iteritems():
+            if element.tag not in ignore_list:
+                element.set('style', style.getCssText(separator=u''))
+
+    def tag_links(self, queryargs):
+        #add tracking variable to links
+        for a in self.html.xpath('//a'):
+            href = a.get('href')
+            # regex could be done in xpath, but then I'd have to kill myself
+            if re.match('^https?://[a-z0-9-.]*newhive.com', href):
+                a.set('href', utils.modify_query(href, queryargs))
+
+    def tounicode(self):
+        return etree.tounicode(self.html, method="xml", pretty_print=True)
+
 def send_mail(headers, body, category=None, filters=None, unique_args=None):
     def to_json(data):
         j = json.dumps(data)
@@ -116,11 +157,13 @@ class Mailer(object):
     def body(self, context):
         body = {}
         try:
-            html = self.jinja_env.get_template(self.template + ".html").render(context)
+            html_string = self.jinja_env.get_template(self.template + ".html").render(context)
+            html = EmailHtml(html_string)
+            html.tag_links({'email_id': context.get('email_id')})
             if self.inline_css and not css_debug:
                 dir = '/libsrc/' if config.debug_mode else '/lib/'
-                html = inliner.inline_styles(html, css_path=config.src_home + dir + "email.css")
-            body['html'] = html
+                html.inline_css(config.src_home + dir + "email.css")
+            body['html'] = html.tounicode()
         except TemplateNotFound as e:
             if e.message != self.template + '.html': raise e
 

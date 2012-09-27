@@ -24,10 +24,6 @@
 </h1>
 {%- endmacro %}
 
-{% macro track_link(url, title, email_id, class='', id='') %}
-<a href="{{ url | modify_query({'email_id': email_id}) }}" title="title" class="{{class}}" id="{{id}}">{{ caller() }}</a>
-{% endmacro %}
-
 {% set table_width = 'width="586px"' %}
 
 <html>
@@ -75,9 +71,7 @@
   {% if unsubscribe_url %}
   <div id="unsubscribe">
       {{ unsubscribe_text }},
-      {% call track_link(unsubscribe_url, 'Unsubscribe', email_id) %}
-          click here
-      {%- endcall %}.
+      <a href="{{unsubscribe_url}}" title='Unsubscribe'>click here</a>
   </div>
   {% endif %}
 
