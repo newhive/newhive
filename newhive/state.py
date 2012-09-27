@@ -1303,7 +1303,7 @@ class Referral(Entity):
     @property
     def url(self):
         url = abs_url(secure=True) + 'signup?key=' + self.get('key')
-        if self.get('email'): url += '&email=' + self['email']
+        if self.get('to'): url += '&email=' + self['to']
         return url
 
 
