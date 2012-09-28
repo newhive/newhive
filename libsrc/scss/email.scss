@@ -219,7 +219,7 @@ $space4: 5px;
             color: $color_bright_red;
         }
         #share_icons{
-            margin-top: $space4;
+            margin-top: $space4 + 4px;
         }
         .like_button{
             display: inline-block;
@@ -228,7 +228,8 @@ $space4: 5px;
 
     &.site_referral, &.user_referral {
         #create_account {
-            margin-top: $space1;
+            margin-top: $space1 - 6px;
+            margin-bottom: -9px;
             text-align: center;
             span {
                 background: $color_highlight;
@@ -238,6 +239,7 @@ $space4: 5px;
         }
         h2 {
             line-height: 37px;
+            font-size: 34px;
         }
     }
 

@@ -25,7 +25,9 @@
                     {%- endcall %}
                 {% endif %}
                 {{ header[0] | safe }}
+                {% block action_icon %}
                 <img src="{{icon}}"/>
+                {% endblock %}
             </div>
             <div class="line" id="line2">
                 {{ header[1] | safe }}
@@ -59,10 +61,10 @@
     <h4 id="footer_message">
         {% if recipient and recipient.id %}
             Love NewHive?<br/>
-            <a class="highlight" href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
+            <a class="highlight" href="{{ server_url }}" title="Invite your friends">Invite your friends!</a>
         {% else %}
             Want to make your own expression?<br/>
-            <a href="{{signup_url}}" title="Create your account">Create your NewHive account!</a>
+            <a class="highlight" href="{{signup_url}}" title="Create your account">Create your NewHive account!</a>
         {% endif %}
     </h4>
 {% endblock %}
