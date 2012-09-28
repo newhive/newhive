@@ -107,6 +107,8 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None):
     g = Generator(io, False) # second argument means "should I mangle From?"
     g.flatten(msg)
     encoded_msg = io.getvalue()
+    if config.debug_mode:
+        with open(config.src_home + '/log/last_email.txt', 'w') as f: f.write(encoded_msg)
 
     # Send mail, but if we're in debug mode only send to admins
     if send_real_email and (config.live_server or msg['To'] in config.admin_emails):
