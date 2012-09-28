@@ -1,4 +1,5 @@
 import unittest, random
+import newhive.test
 from newhive.wsgi import db, jinja_env
 from newhive.utils import abs_url, now
 from newhive import mail, config
@@ -83,6 +84,16 @@ class Broadcast(FeedMailerTest):
     def test_broadcast(self):
         broadcast = db.Broadcast.last()
         self.mailer.send(broadcast)
+
+class MultiFeedTest(FeedMailerTest):
+    def test_multiple_feeds(self):
+        newhive.test.logger.debug('test_multiple_feeds\n')
+        for feed in db.Star.search({'entity_class': 'Expr'}, sort=[('created', -1)], limit=2):
+            self.mailer.send(feed)
+        for feed in db.Star.search({'entity_class': 'User'}, sort=[('created', -1)], limit=2):
+            self.mailer.send(feed)
+        for feed in db.Broadcast.search({}, sort=[('created', -1)], limit=2):
+            self.mailer.send(feed)
 
 class Welcome(MailerTest):
     def setUp(self):

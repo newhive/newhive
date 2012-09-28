@@ -63,17 +63,18 @@ class EmailHtml(object):
     def tounicode(self):
         return etree.tounicode(self.html, method="xml", pretty_print=True)
 
-def send_mail(headers, body, category=None, filters=None, unique_args=None):
+def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp=None):
     def to_json(data):
         j = json.dumps(data)
         return re.compile('(["\]}])([,:])(["\[{])').sub('\1\2 \3', j)
 
     # smtp connection setup and timings
     t0 = time.time()
-    smtp = SMTP(config.email_server, config.email_port)
-    if config.email_user and config.email_password:
-        smtp.login(config.email_user, config.email_password)
-    logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
+    if not smtp:
+        smtp = SMTP(config.email_server, config.email_port)
+        if config.email_user and config.email_password:
+            smtp.login(config.email_user, config.email_password)
+        logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
 
     # Message header assembly
     msg = MIMEMultipart('alternative')
@@ -144,9 +145,18 @@ class Mailer(object):
     unsubscribable = True
     inline_css = True
 
-    def __init__(self, jinja_env=None, db=None):
+    def __init__(self, jinja_env=None, db=None, smtp=None):
         self.db = db
         self.jinja_env = jinja_env
+        t0 = time.time()
+        if smtp:
+            self.smtp = smtp
+        else:
+            self.smtp = SMTP(config.email_server, config.email_port)
+            if config.email_user and config.email_password:
+                self.smtp.login(config.email_user, config.email_password)
+            logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
+
 
     def check_subscription(self):
         # check subscription status
@@ -243,7 +253,7 @@ class Mailer(object):
             record.update(debug_url=abs_url(secure=True) + path)
 
         if subscribed:
-            send_mail(heads, body, filters=filters, category=self.name, **kwargs)
+            send_mail(heads, body, filters=filters, category=self.name, smtp=self.smtp, **kwargs)
 
         self.db.MailLog.create(record)
 
@@ -361,6 +371,10 @@ class Broadcast(ExprAction):
         return self.feed.entity
 
 class Feed(Mailer):
+    def __init__(self, *args, **kwargs):
+        super(Feed, self).__init__(*args, **kwargs)
+        self.mailers = {}
+
     def send(self, feed):
         if type(feed) == newhive.state.Comment:
             mailer_class = Comment
@@ -372,7 +386,9 @@ class Feed(Mailer):
         elif type(feed) == newhive.state.Broadcast:
             mailer_class = Broadcast
 
-        mailer = mailer_class(self.jinja_env, self.db)
+        if not self.mailers.has_key(mailer_class):
+            self.mailers[mailer_class] = mailer_class(self.jinja_env, self.db, smtp=self.smtp)
+        mailer = self.mailers[mailer_class]
         mailer.feed = feed
         mailer.send()
 
