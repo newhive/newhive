@@ -373,9 +373,11 @@ class User(Application):
         email = self.db.MailLog.fetch(request.args.get('email_id'))
         email_addr = email['email']
         unsub = self.db.Unsubscribes.fetch_empty(email_addr, keyname='email')
-        if request.form.get('unsubscribe') == 'user':
+        type = request.form.get('unsubscribe')
+        if type == 'user':
             unsub.update_cmd({'$set': {'email': email_addr}, '$push': {'users': request.form.get('user')}}, upsert=True)
-        elif request.form.get('unsubscribe') == 'all':
+        elif type == 'all':
             unsub.update_cmd({'$set': {'all': True, 'email': email_addr}}, upsert=True)
-        email.update(unsubscribe=request.form.get('unsubscribe'), unsubscribe_date=now())
-        return self.serve_json(response, True)
+        email.update(unsubscribe=type, unsubscribe_date=now())
+        response_dict = {'type': type, 'name': request.form.get('username')}
+        return self.serve_json(response, response_dict)
