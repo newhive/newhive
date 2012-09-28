@@ -28,7 +28,7 @@ logger.info("Initializing WSGI")
 
 
 hive_assets = HiveAssets()
-if __name__ != "__main__": hive_assets.bundle()
+hive_assets.bundle()
 
 ##############################################################################
 #                                jinja setup                                 #
@@ -40,6 +40,7 @@ jinja_env.filters.update({
      'time': friendly_date
     ,'epoch_to_string': epoch_to_string
     ,'length_bucket': length_bucket
+    ,'number': lambda n: '{:,}'.format(n)       # adds ',' thousands separator
     ,'large_number': large_number
     ,'no_zero': no_zero
     ,'json': extra_json
@@ -50,6 +51,8 @@ jinja_env.filters.update({
         lambda name: re.sub(r'^(/var/www/newhive/|/usr/local/lib/python[\d.]*/dist-packages/)', '', name)
     ,'asset_url': hive_assets.url
     ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
+    ,'clean_url': lambda s: re.match('https?://([^?]*)', s).groups()[0]
+    ,'html_breaks': lambda s: re.sub('\n', '<br/>', str(s))
 })
 jinja_env.globals.update({
      'colors': newhive.colors.colors
@@ -106,15 +109,17 @@ actions = dict(
     ,log               = controllers['user'].log
     ,facebook_invite   = controllers['user'].facebook_invite
     ,facebook_listen   = controllers['user'].facebook_listen
-    ,mail_us           = controllers['mail'].mail_us
-    ,mail_them         = controllers['mail'].mail_them
-    ,mail_referral     = controllers['mail'].mail_referral
+    ,signup_request    = controllers['mail'].signup_request
+    ,share_expr        = controllers['mail'].share_expr
+    ,user_referral     = controllers['mail'].user_referral
     ,mail_feedback     = controllers['mail'].mail_feedback
     ,admin_update      = controllers['admin'].admin_update
     ,add_referral      = controllers['admin'].add_referral
     ,bulk_invite       = controllers['admin'].bulk_invite
     ,thumbnail_relink  = controllers['admin'].thumbnail_relink
     ,dialog            = dialog_map
+    ,add_to_featured   = controllers['admin'].add_to_featured
+    ,update_featured   = controllers['admin'].update_featured
 )
 
 site_pages = {
@@ -176,10 +181,10 @@ def handle(request): # HANDLER
     if reqaction:
         # these can be performed over non-ssl connections
         insecure_actions = [
-            'comment', 'star', 'broadcast', 'log', 'mail_us', 'tag_add', 'mail_them'
-            , 'mail_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite'
+            'comment', 'star', 'broadcast', 'log', 'signup_request', 'tag_add', 'share_expr'
+            , 'user_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite'
             , 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove']
-        non_logged_in_actions = ['login', 'log', 'user_create', 'mail_us', 'password_recovery_1'
+        non_logged_in_actions = ['login', 'log', 'user_create', 'signup_request', 'password_recovery_1'
             , 'password_recovery_2', 'mail_feedback', 'file_create']
         if ( (reqaction in insecure_actions or request.is_secure) and
              (reqaction in non_logged_in_actions or request.requester.logged_in)

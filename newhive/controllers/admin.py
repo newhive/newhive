@@ -1,6 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.mail import mail_invite
+from newhive import mail
 import logging
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,6 @@ class Admin(Application):
 
     @admins
     def add_referral(self, request, response):
-        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         form = request.form.copy()
         action = form.pop('action')
         number = int(form.pop('number'))
@@ -74,8 +73,8 @@ class Admin(Application):
 
     @admins
     def bulk_invite(self, request, resposne):
-        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         form = request.form.copy()
+        mailer = mail.SiteReferral(db=self.db, jinja_env=self.jinja_env)
         for key in form:
             parts = key.split('_')
             if parts[0] == 'check':
@@ -83,7 +82,7 @@ class Admin(Application):
                 contact = self.db.Contact.fetch(id)
                 name = form.get('name_' + id)
                 if contact.get('email'):
-                    referral_id = mail_invite(self.jinja_env, self.db, contact['email'], name)
+                    referral_id = mailer.send(contact['email'], name)
                     if referral_id:
                         contact.update(referral_id=referral_id)
                     else:
@@ -91,7 +90,6 @@ class Admin(Application):
 
     @admins
     def admin_update(self, request, response):
-        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         for k in ['tags', 'tagged']:
             v = json.loads(request.form.get(k))
             if v: self.db.User.get_root().update(**{ k : v })
@@ -103,7 +101,6 @@ class Admin(Application):
     @admins
     def home(self, request, response):
         root = self.db.User.get_root()
-        if not request.requester['name'] in config.admins: raise exceptions.BadRequest()
         response.context['tags_js'] = json.dumps(root.get('tags'))
         response.context['tagged_js'] = json.dumps(root.get('tagged'), indent=2)
         response.context['featured_tags_js'] = json.dumps(self.db.User.site_user['config']['featured_tags'])
@@ -159,4 +156,35 @@ class Admin(Application):
     @admins
     def _index(self, request, response):
         logger.debug('_index')
-        return self.redirect(response, abs_url(secure=True, subdomain="thenewhive") + 'admin')
+        return self.redirect(response, abs_url(secure=True) + "thenewhive/admin")
+
+    @admins
+    def add_to_featured(self, request, response):
+        root = self.db.User.get_root()
+        root['tagged']['_Featured'] = [request.form.get('id')] + root['tagged'].get('_Featured', [])
+        root.save(updated=False)
+        return self.serve_json(response, True)
+
+    @admins
+    def featured(self, request, response):
+        root = self.db.User.get_root()
+        response.context.update({
+            'provisionary': self.db.Expr.fetch(root['tagged'].get('_Featured')) or []
+            , 'featured': self.db.Expr.fetch(root['tagged'].get('Featured')) or []
+            })
+        return self.serve_page(response, 'pages/admin/featured.html')
+
+    @admins
+    def update_featured(self, request, response):
+        root = self.db.User.get_root()
+        new_featured = uniq(request.form.get('featured').split(','))
+        if new_featured:
+            new_set = set(new_featured)
+            old_set = set(root['tagged']['Featured'])
+            mailer = mail.Featured(db=self.db, jinja_env=self.jinja_env)
+            for id in new_set.difference(old_set):
+                mailer.send(self.db.Expr.fetch(id))
+            root['tagged']['_Featured'] = []
+            root['tagged']['Featured'] = new_featured
+            root.save(updated=False)
+        return self.serve_json(response, True)

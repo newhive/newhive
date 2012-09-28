@@ -5,7 +5,7 @@
   </h3>
   <form id='referral_form' action='/' method='POST'>
     <input type='hidden' name='forward' value='{{ url }}' />
-    <input type='hidden' name='action' value='mail_referral'/>
+    <input type='hidden' name='action' value='user_referral'/>
     <div class="label">Enter contact info below to send invitation(s)</div>
     {% set referral_lines = user.referrals if user.referrals <= 5 else 5 %}
     {% for i in range(0, referral_lines) %}

@@ -48,7 +48,7 @@
 
       </table>
     </td></tr>
-    <tr><td style="background-color: {% block body_color %}#D0E0F0{% endblock %};" {{ table_width }} >
+    <tr><td id="body" class="{% block body_classes %}{% endblock %}" style="background-color: {% block body_color %}#D0E0F0{% endblock %};" {{ table_width }} >
       {% block body %}
       {% endblock %}
     </td></tr>

@@ -8,7 +8,7 @@ import urllib
 
 def admins(server):
     def access_controlled(self, request, response, *arg, **kwarg):
-        if request.requester.get('name') not in config.admins:
+        if not request.requester.is_admin:
             return self.serve_404(request, response, *arg, **kwarg)
         elif not request.is_secure:
             return self.redirect(
@@ -48,13 +48,13 @@ def no_zero(num):
 
 def large_number(number):
     if type(number) != int: return number
-    if number < 10000: return str(number)
+    if number < 10000: return '{:,}'.format(number)
     elif 10000 <= number < 1000000:
         return str(int(number/1000)) + "K"
     elif 1000000 <= number < 10000000:
         return str(math.floor(number/100000)/10) + "M"
     elif 10000000 <= number:
-        return str(int(number/1000000)) + "M"
+        return "{:,}".format(int(number/1000000)) + "M"
 
 def length_bucket(t):
     l = len(t)

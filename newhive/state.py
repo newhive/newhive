@@ -34,7 +34,7 @@ class Database:
     def add_collection(self, col):
         pass
 
-    def __init__(self, config, assets=None):
+    def __init__(self, config, assets=None, db_name=None):
         self.config = config
         self.assets = assets
 
@@ -44,7 +44,7 @@ class Database:
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
-        self.mdb = self.con[config.database]
+        self.mdb = self.con[db_name or config.database]
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
         for col in self.collections:
@@ -121,7 +121,17 @@ class Collection(object):
         self.entity = entity
 
     def fetch_empty(self, key, keyname='_id'): return self.find_empty({ keyname : key })
-    def fetch(self, key, keyname='_id', **opts): return self.find({ keyname : key }, **opts)
+    def fetch(self, key, keyname='_id', **opts):
+        if type(key) == list:
+            items = {}
+            res = []
+            for e in self.search({'_id': {'$in': key }}):
+                items[e.id] = e
+            for i in key:
+                if items.has_key(i): res.append(items[i])
+            return res
+        else:
+            return self.find({ keyname : key }, **opts)
 
     def find_empty(self, spec, **opts):
         res = self.find(spec, **opts)
@@ -179,13 +189,9 @@ class Collection(object):
                 end = (page + 1) * limit
                 sub_spec = spec[ page * limit : end ]
 
-            items = {}
-            for e in self.search({'_id': {'$in': sub_spec }}): items[e.id] = e
-            res = Page()
+            res = Page(self.fetch(sub_spec))
             if type(page) == int:
                 res.next = page + 1 if end <= len(spec) else None
-            for i in sub_spec:
-                if items.has_key(i): res.append(items[i])
             return res
 
     def count(self, spec={}): return self.search(spec).count()
@@ -200,15 +206,25 @@ class Collection(object):
     def map_reduce(self, *a, **b): return self._col.map_reduce(*a, **b)
 
 class Cursor(object):
-    def __init__(self, collection, cursor): 
+    def __init__(self, collection, cursor):
         self.collection = collection
         self._cur = cursor
 
+        # wrap pymongo.cursor.Cursor methods. mongodb cursors allow chaining of
+        # methods like sort and limit, however in this case rather than
+        # returning a pymongo.cursor.Cursor instance we want to return a
+        # newhive.state.Cursor instance, but for methods like count that return
+        # an integer or some other value, just return that
         def mk_wrap(self, method):
             wrapped = getattr(self._cur, m)
-            def wrap(*a, **b): return wrapped(*a, **b)
+            def wrap(*a, **b):
+                rv = wrapped(*a, **b)
+                if type(rv) == pymongo.cursor.Cursor: return self
+                else: return rv
             return wrap
-        for m in ['count', 'distinct', 'explain', 'sort']: setattr(self, m, mk_wrap(self, m))
+
+        for m in ['count', 'distinct', 'explain', 'sort', 'limit']:
+            setattr(self, m, mk_wrap(self, m))
 
     def __len__(self): return self.count()
 
@@ -247,8 +263,8 @@ class Entity(dict):
         self._col.insert(self, safe=True)
         return self
 
-    def save(self):
-        self['updated'] = now()
+    def save(self, updated=True):
+        if updated: self['updated'] = now()
         return self.update_cmd(self)
 
     def reload(self):
@@ -352,6 +368,7 @@ class User(HasSocial):
         ('name', {'unique':True}),
         ('sites', {'unique':True}),
         'facebook.id',
+        'email',
         'text_index'
     ]
     
@@ -401,6 +418,7 @@ class User(HasSocial):
         self['fullname'] = self.get('fullname', self['name'])
         self['referrals'] = 0
         self['flags'] = {}
+        self['email_subscriptions'] = config.default_email_subscriptions
         assert self.has_key('referrer')
         self.build_search(self)
         super(User, self).create()
@@ -549,10 +567,11 @@ class User(HasSocial):
         self.set_password(v)
         self.update(password=self['password'])
 
-    def get_url(self, path='profile/'):
-        return abs_url() + self.get('name', '') + '/' + path
+    def get_url(self, path='profile/', relative=False, secure=False):
+        base = '/' if relative else abs_url(secure=secure)
+        return base + self.get('name', '') + '/' + path
     url = property(get_url)
- 
+
     @property
     def has_thumb(self):
         id = self.get('thumb_file_id')
@@ -659,8 +678,16 @@ class User(HasSocial):
         friends = self.fb_client.friends()
         return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}, 'facebook.disconnected': {'$exists': False}})
 
-    @property
-    def expressions(self): return self.get_exprs()
+    def get_expressions(self, auth=None):
+        spec = {'owner': self.id}
+        if auth: spec.update(auth=auth)
+        return self.db.Expr.search(spec)
+    expressions = property(get_expressions)
+
+    def get_top_expressions(self, count=5):
+        return self.get_expressions(auth='public').sort([('views', -1)]).limit(count)
+    top_expressions = property(get_top_expressions)
+
 
     def client_view(self, viewer=None):
         user = dfilter( self, ['fullname', 'profile_thumb', 'name', 'tags'] )
@@ -712,6 +739,10 @@ class User(HasSocial):
         groups = self.get('groups')
         if not groups: return ''
         return ",".join(["%s%s" % item for item in groups.iteritems()])
+
+    @property
+    def is_admin(self):
+        return self.get('name') in config.admins
 
 
 @Database.register
@@ -919,8 +950,10 @@ class Expr(HasSocial):
             return True
         return False
 
-    @property
-    def url(self): return abs_url() + self['owner_name'] + '/' + self['name']
+    def get_url(self, relative=False, secure=False):
+        base = '/' if relative else abs_url(secure=secure)
+        return base + self['owner_name'] + '/' + self['name']
+    url = property(get_url)
 
     @property
     def owner_url(self): return abs_url() + self.get('owner_name') + '/profile'
@@ -974,6 +1007,10 @@ class Expr(HasSocial):
             count += self.analytic_count(item)
         return count
     share_count = property(get_share_count)
+
+    @property
+    def is_featured(self):
+        return self.id in self.db.User.get_root()['tagged'].get('Featured', [])
 
     public = property(lambda self: self.get('auth') == "public")
 

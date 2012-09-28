@@ -99,7 +99,7 @@ class User(Application):
             if file:
                 file.update(owner=user.id)
 
-        try: mail.mail_user_register_thankyou(self.jinja_env, user)
+        try: mail.UserRegisterConfirmation(self.jinja_env).send(user)
         except: pass # TODO: log an error
 
         request.form = dict(username = args['name'], secret = args['password'])
@@ -147,6 +147,9 @@ class User(Application):
             response.context['f'] = request.requester
             response.context['facebook_connect_url'] = FacebookClient().authorize_url(
                                                            abs_url(secure=True)+ 'settings')
+            response.context['email_subscriptions'] = request.requester.get('email_subscriptions'
+                    , config.default_email_subscriptions)
+            response.context['email_types'] = mail.MetaMailer.unsubscribable('user')
             return self.serve_page(response, 'pages/user_settings.html')
         else: return self.serve_forbidden(response)
 
@@ -206,7 +209,7 @@ class User(Application):
         if user:
             key = junkstr(16)
             recovery_link = abs_url(secure=True) + 'password_recovery?key=' + key + '&user=' + user.id
-            mail.mail_temporary_password(self.jinja_env, user, recovery_link)
+            mail.TemporaryPassword(jinja_env=self.jinja_env, db=self.db).send(user, recovery_link)
             user.update(password_recovery = key)
             return self.serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
         else:
@@ -241,7 +244,7 @@ class User(Application):
         email = request.form.get('email')
         if email and email != request.requester.get('email'):
             user.update(email_confirmation_request_date=time.time())
-            mail.mail_email_confirmation(self.jinja_env, user, email)
+            mail.EmailConfirmation(db=self.db, jinja_env=self.jinja_env).send(user, email)
             message = message + ui.email_change_success_message + " "
         if request.form.get('friends_to_listen'):
             new_friends = len(request.form['friends_to_listen'].split(','))
@@ -251,6 +254,11 @@ class User(Application):
             message = message + "Your Facebook account has been disconnected. This means you'll have to sign in using your New Hive username and password in the future."
             user.facebook_disconnect()
             user.reload()
+        email_subscriptions = [x for x in request.form.items() if x[1] == 'on' and x[0].startswith('email_')]
+        email_subscriptions = [x[0].split('_',1)[1] for x in email_subscriptions]
+        if email_subscriptions != request.requester.get('email_subscriptions'):
+            user.update(email_subscriptions=email_subscriptions)
+            message = message + ui.email_subscription_change_success_message + " "
         response.context['message'] = message
         request.requester.reload()
         return self.edit(request, response)

@@ -23,6 +23,8 @@ admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
                    'duffy.tilleman@gmail.com', 'duffy@lumana.org',
                    'straussss@gmail.com', 'quuxman@gmail.com']
 
+default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured']
+
 beta_testers    = [
                    'darkluna'
                   , 'philco'

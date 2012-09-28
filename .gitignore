@@ -1,5 +1,6 @@
 /lib/*.js
 /lib/*.css
+/lib/tmp
 /libsrc/*.css
 compiled.*
 /libsrc/.webassets-cache

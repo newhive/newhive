@@ -33,11 +33,11 @@ class Cron(Application):
         spec = {'send_email': True, 'created': {"$gt": now() - delay - span, "$lt": now() - delay } }
 
         stats = { 'send_count': 0, 'matched': 0 }
+        mailer = newhive.mail.Feed(jinja_env = self.jinja_env)
         def send(item):
             stats['matched'] += 1
-            recipient = item.entity.owner
-            if item.initiator.id == recipient.id: return
-            headers = newhive.mail.mail_feed(self.jinja_env, item, recipient, dry_run = False)
+            if item.initiator.id == item.entity.owner.id: return
+            mailer.send(item)
             stats['send_count'] += 1
             item.update(send_email=False, email_sent=now())
 
@@ -45,3 +45,23 @@ class Cron(Application):
         for item in self.db.Broadcast.search(spec): send(item)
 
         return stats
+
+    def email_milestone(self, expr):
+        milestones = [20, 50] + [int(math.pow(10, n)) for n in range(2,8)]
+        def next_milestone(n):
+            for m in milestones:
+                if m > n: return m
+
+        mailer = newhive.mail.Milestone(jinja_env = self.jinja_env)
+        def send(expr):
+            expr_milestones = expr.get('milestones', {})
+            last_milestone = max([int(m) for m in expr_milestones.keys()])
+            next = next_milestone(last_milestone)
+
+            if expr.get('views', 0) >= next:
+                expr_milestones.update({str(next): now()})
+                expr.update(milestones=expr_milestones)
+                mailer.send(expr, next)
+
+        for expr in self.db.Expr({'auth': 'public', 'views': {'$gt': 0}}):
+            send(expr)

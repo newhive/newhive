@@ -3,12 +3,12 @@ from newhive.controllers import Application
 from werkzeug import url_unquote
 from werkzeug.urls import url_decode
 from newhive.mail import send_mail
-from newhive import utils
+from newhive import utils, mail
 
 
 class Mail(Application):
 
-    def mail_us(self, request, response):
+    def signup_request(self, request, response):
         if not request.form.get('email'): return False
         form = {
             'name': request.form.get('name')
@@ -39,7 +39,7 @@ class Mail(Application):
         form.update({'msg': body})
         if not config.debug_mode:
             send_mail(heads, body)
-        self.db.Contact.create(form)
+        contact = self.db.Contact.create(form)
 
         # mail_signup thank you
         context = {
@@ -55,60 +55,28 @@ class Mail(Application):
              'plain': self.jinja_env.get_template("emails/thank_you_signup.txt").render(context)
             ,'html': self.jinja_env.get_template("emails/thank_you_signup.html").render(context)
             }
-        send_mail(heads,body)
+        send_mail(heads, body, 'signup_request', {'contact_id': contact.id, 'url': form['url']})
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
-    def mail_them(self, request, response):
-        if not request.form.get('message') or not request.form.get('to'): return False
+    def share_expr(self, request, response):
+        recipient_address = request.form.get('to')
+        if not request.form.get('message') or not recipient_address: return False
 
-        log_data = {'service': 'email', 'to': request.form.get('to')}
+        recipient = self.db.User.fetch(recipient_address, keyname='email')
+        recipient = recipient or {'email': recipient_address}
+        expr = self.db.Expr.named(*request.path.split('/', 1))
 
-        response.context.update({
-             'message': request.form.get('message')
-            ,'url': request.form.get('forward')
-            ,'title': request.form.get('forward')
-            ,'sender_fullname': request.requester.get('fullname')
-            ,'sender_url': request.requester.url
-            })
+        expr.increment({'analytics.email.count': 1})
 
-        print request.path.split('/', 1)
-        exp = self.db.Expr.named(*request.path.split('/', 1))
-
-        if exp:
-            exp.increment({'analytics.email.count': 1})
-            owner = self.db.User.fetch(exp.get('owner'))
-            log_data['expr_id'] = exp.id
-            response.context.update({
-              'url': exp.url
-              ,'short_url': exp.url.split('//')[1]
-              ,'tags': exp.get('tags')
-              ,'thumbnail_url': exp.get('thumb', self.asset('skin/1/thumb_0.png'))
-              ,'user_url': owner.url
-              ,'user_name': owner.get('name')
-              ,'title': exp.get('title')
-              })
-        else:
-            log_data['url'] = request.form.get('forward')
-
-        heads = {
-             'To' : request.form.get('to')
-            ,'Subject' : request.requester.get('fullname') + " has sent you an expression"
-            ,'Reply-to' : request.requester.get('email', '')
-            }
-
-        body = {
-             'plain': self.render_template(response, "emails/share.txt")
-            ,'html': self.render_template(response, "emails/share.html")
-            }
-        send_mail(heads, body)
+        log_data = {'service': 'email', 'to': recipient_address, 'expr_id': expr.id}
         self.db.ActionLog.create(request.requester, 'share', data=log_data)
-        if request.form.get('send_copy'):
-            heads.update(To = request.requester.get('email', ''))
-            send_mail(heads, body)
+
+        mail.ShareExpr(self.jinja_env).send(expr, request.requester, recipient, request.form.get('message'))
+
         return self.redirect(response, request.form.get('forward'))
 
-    def mail_referral(self, request, response):
+    def user_referral(self, request, response):
         user = request.requester
         for i in range(0,4):
             name = request.form.get('name_' + str(i))
@@ -131,7 +99,8 @@ class Mail(Application):
                  'plain': self.jinja_env.get_template("emails/user_invitation.txt").render(context)
                 ,'html': self.jinja_env.get_template("emails/user_invitation.html").render(context)
                 }
-            send_mail(heads, body)
+            sendgrid_args = {'initiator': user.get('name'), 'referral_id': referral.id}
+            send_mail(heads, body, category="user_referral", unique_args=sendgrid_args)
         return self.redirect(response, request.form.get('forward'))
 
 
@@ -155,5 +124,5 @@ class Mail(Application):
         print send_mail(heads, body)
         if request.form.get('send_copy'):
             heads.update(To = request.requester.get('email', ''))
-            send_mail(heads, body)
+            send_mail(heads, body, 'mail_feedback', {'initiator': request.requester.get('name')})
         response.context['success'] = True

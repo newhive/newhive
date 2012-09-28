@@ -58,20 +58,20 @@
             $(this).find('.thumb.tnh').hide();
         });
         $('#dia_facebook_listen .listen').click(function(){
-            var action = ($(this).hasClass('active') ? 'unstar' : 'star' );
+            var state = !$(this).hasClass('active');
             var entity = $(this).data('id');
             var callback = function(that){
                 return function(data){
-                    if (data.state == 'starred') {
+                    if (data.state) {
                         _gaq.push(['_trackEvent', 'fb_connect', 'listen_to_freind', $(that).data('id')]);
                         $(that).addClass('active').attr('title', 'Stop Listening');
                     }
-                    else if (data.state == 'unstarred') {
+                    else if (data.state === false) {
                         $(that).removeClass('active').attr('title', 'Start Listening');
                     };
                 }
             };
-            $.post('', {action: action, entity: entity, entity_class: 'User', dataType: 'json'}, callback(this), 'json');
+            $.post('', {action: 'star', state: state, entity: entity}, callback(this), 'json');
         });
         $('#listen_to_all').click(function(){
             if (! $(this).hasClass('disabled') ) {

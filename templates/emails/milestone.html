@@ -1,0 +1,26 @@
+{% extends "emails/expr_action.html" %}
+
+{% block main_message %}
+<div id="milestone_card">
+    <table><tr>
+        <td width="310px">
+            <h1>{{ milestone | large_number }}</h1>
+        </td>
+        <td>
+            <img src="{{ server_url }}lib/skin/1/views_lg.png">
+        </td>
+    </tr></table>
+    <h3>
+        Your expression has<br/>
+        been viewed {{ milestone | number }} times!
+    </h3>
+</div>
+{% endblock %}
+
+{% block footer_message %}
+    <h3 id="footer_message">
+        <a href="{{ server_url }}edit" title="Create a new expression">
+            Create a new expression
+        </a>
+    </h3>
+{% endblock %}

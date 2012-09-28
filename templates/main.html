@@ -94,6 +94,12 @@
           ><input type='hidden' name='url' value='{{ url }}'
         ></form
       {% endif %}
+      {% if user.is_admin %}
+          ><div class='menu_item' id="add_to_featured">
+              <span class="false">+Add To Featured</span>
+              <span class="true">Featured Expression</span>
+          </div
+      {% endif %}
     ></div>
   </div>
 

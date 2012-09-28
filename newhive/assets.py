@@ -73,11 +73,13 @@ class Assets(object):
 
         return self
 
-    def url(self, name):
+    def url(self, name, return_debug=True):
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
-        if not props: return '/not_found:' + name
-        return (self.local_base_url if props[2] else self.base_url) + name + '?' + props[1]
+        if props:
+            return (self.local_base_url if props[2] else self.base_url) + name + '?' + props[1]
+        elif return_debug:
+            return '/not_found:' + name
 
     def write_ruby(self, write_path):
         with open(join(config.src_home, write_path), 'w') as f:
@@ -156,6 +158,9 @@ class HiveAssets(Assets):
             # actually get webassets to build bundles (webassets is very lazy)
             for b in self.final_bundles: self.assets_env[b].urls()
             print("Assets build complete in %s seconds", time.time() - t0)
+        else:
+            # actually get webassets to build bundles (webassets is very lazy)
+            for b in self.final_bundles: self.assets_env[b].urls()
 
         ## now grab the rest of 'em after compiling our webassets shit
         self.find('')
@@ -254,15 +259,23 @@ class HiveAssets(Assets):
             debug=False
             )
 
+        email_scss = webassets.Bundle('scss/email.scss',
+            filters=scss_filter,
+            output='email.css',
+            debug=False
+            )
+
         self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
         self.assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
         self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
+        self.assets_env.register('email.css', email_scss, output='../lib/email.css')
         self.assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
         self.final_bundles = [
             'app.css',
             'edit.css',
             'minimal.css',
+            'email.css',
             'expression.js',
             'edit.js',
             'google_closure.js',

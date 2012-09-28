@@ -1,0 +1,70 @@
+{% extends "emails/colorful.html" %}
+
+{% block body_classes%}{{super()}} {{type}}{% endblock %}
+{% block body%}
+
+{% macro link(entity, class='', id='') -%}
+<a href="{{ entity.url }}" title="{{ entity.title or entity.fullname }}" class="{{ class }}" id="{{ id}}">
+    {{ caller() }}
+</a>
+{%- endmacro %}
+
+{% if recipient and recipient.name %}
+    <h2 id="greeting" class="line">
+        Hi {{ recipient.name }},
+    </h2>
+{% endif %}
+
+{% block main_message scoped %}
+    {% if header %}
+    <h2 id="main_message">
+            <div class="line" id="line1">
+                {% if initiator %}
+                    {% call link(initiator, class="sender") -%}
+                        {{ initiator.name }}
+                    {%- endcall %}
+                {% endif %}
+                {{ header[0] }}
+                <img src="{{icon}}"/>
+            </div>
+            <div class="line" id="line2">
+                {{ header[1] }}
+            </div>
+        </h2>
+    {% endif %}
+{% endblock %}
+
+{% if message %}
+    <p id="message">
+        {{ message | escape | html_breaks }}
+    </p>
+{% endif %}
+
+{% if expr %}
+  {% include 'emails/parts/expr_card.html' %}
+{% endif %}
+
+{% if featured_exprs %}
+    <div id="featured_exprs">
+        <h4>Check out some of {{initiator.name}}'s expressions:</h4>
+        {% for expr in featured_exprs -%}
+          <a href="{{expr.url}}" title="{{expr.title}}" id="{{expr.id}}"
+              ><img class="featured_thumb" src="{{expr.thumb}}"/
+          ></a>
+        {%- endfor %}
+    </div>
+{% endif %}
+
+{% block footer_message scoped %}
+    <h4 id="footer_message">
+        {% if recipient and recipient.name %}
+            Love Newhive?<br/>
+            <a class="highlight" href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
+        {% else %}
+            Want to make your own expression?<br/>
+            <a href="{{ signup_url }}" title="Create your account">Create your Newhive account!</a>
+        {% endif %}
+    </h4>
+{% endblock %}
+
+{% endblock %}
