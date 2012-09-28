@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
         you can log in using this method before performing any test cases that
         require a logged in user"""
 
-        user = {'username': 'test', 'secret': 'test'}
+        user = {'username': 'test', 'secret': 'triangle22'}
         if self.logged_in: return True
         data = {'action': 'login', 'url': utils.abs_url()}
         data.update(user)
@@ -55,6 +55,8 @@ class Test(unittest.TestCase):
         if resp.status == '303 SEE OTHER':
             self.user = db.User.named(user['username'])
             self.logged_in = True
+        else:
+            raise Exception("login failed, status {}".format(resp.status))
         if admin:
             config.admins.append(user['username'])
         return self.logged_in
