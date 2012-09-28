@@ -343,6 +343,7 @@ class UserStar(ExprAction):
     name = 'listen'
     message = "Now they will receive updates about what you're creating and broadcasting."
     header_message = ['is now', 'listening to you']
+    template = 'emails/listen'
     @property
     def card(self): return self.feed.initiator
 

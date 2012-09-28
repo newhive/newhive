@@ -152,11 +152,12 @@ $space4: 5px;
         }
     }
 
-    #create {
+    .central_call_to_action {
       margin: $space2 0;
       text-align: center;
       img, a {
         vertical-align: middle;
+        margin: 0 5px;
       }
       a {
         padding: 2px 5px;

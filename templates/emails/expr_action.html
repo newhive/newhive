@@ -48,6 +48,8 @@
   {% include 'emails/parts/expr_card.html' %}
 {% endif %}
 
+{% block below_card %}{% endblock %}
+
 {% if featured_exprs %}
   {% from "emails/parts/featured_exprs.html" import expr_cards %}
   {{ expr_cards(featured_exprs, initiator) }}
