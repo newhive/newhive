@@ -42,7 +42,8 @@ class Mail(Application):
         contact = self.db.Contact.create(form)
         sendgrid_args = {'contact_id': contact.id, 'url': form['url']}
 
-        mail.SignupRequest(db=self.db, jinja_env=self.jinja_env).send(form.get('email'), form.get('name'), sendgrid_args)
+        mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
+        mailer.send(form.get('email'), form.get('name'), sendgrid_args)
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
@@ -66,12 +67,13 @@ class Mail(Application):
 
     def user_referral(self, request, response):
         user = request.requester
+        mailer = mail.UserReferral(db=self.db, jinja_env=self.jinja_env)
         for i in range(0,4):
             name = request.form.get('name_' + str(i))
             to_email = request.form.get('to_' + str(i))
             if user['referrals'] <= 0 or not to_email or len(to_email) == 0: break
             referral = user.new_referral({'name': name, 'to': to_email})
-            mail.UserReferral(db=self.db, jinja_env=self.jinja_env).send(referral, user)
+            mailer.send(referral, user)
 
         return self.redirect(response, request.form.get('forward'))
 

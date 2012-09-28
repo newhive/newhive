@@ -100,7 +100,7 @@ class User(Application):
                 file.update(owner=user.id)
 
         try: mail.Welcome(db = self.db, jinja_env=self.jinja_env).send(user)
-        except: pass # TODO: log an error
+        except: logger.error("unable to welcome send email for {}".format(user.get('email')))
 
         request.form = dict(username = args['name'], secret = args['password'])
         self.login(request, response)
@@ -247,8 +247,9 @@ class User(Application):
             message = message + ui.fullname_change_success_message + " "
         email = request.form.get('email')
         if email and email != request.requester.get('email'):
-            user.update(email_confirmation_request_date=time.time())
-            mail.EmailConfirmation(db=self.db, jinja_env=self.jinja_env).send(user, email)
+            request_date = time.time()
+            user.update(email_confirmation_request_date=request_date)
+            mail.EmailConfirmation(db=self.db, jinja_env=self.jinja_env).send(user, email, request_date)
             message = message + ui.email_change_success_message + " "
         if request.form.get('friends_to_listen'):
             new_friends = len(request.form['friends_to_listen'].split(','))
