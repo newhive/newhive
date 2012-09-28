@@ -248,8 +248,7 @@ class EmailConfirmation(Mailer):
     unsubscribable = False
     sent_to = ['user']
     template = 'emails/email_confirmation'
-    subject = 'Confirm change of e-mail address for thenewhive.com'
-    inline_css = False
+    subject = 'Confirm change of e-mail address for newhive.com'
 
     def send(self, user, email, request_date):
         self.recipient = user
@@ -259,8 +258,7 @@ class EmailConfirmation(Mailer):
                 "&email=" + urllib.quote(email) +\
                 "&secret=" + urllib.quote(secret)
         context = {
-            'user_fullname' : user['fullname']
-            ,'user_name': user['name']
+            'recipient': self.recipient
             ,'link' : link
             }
         self.send_mail(context)

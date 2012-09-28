@@ -58,6 +58,11 @@ $space4: 5px;
 
     .highlight{
         background-color: $color_highlight;
+        padding: 0 5px;
+    }
+
+    .grey {
+      color: $color_grey_medium;
     }
 
     .plus {
@@ -187,7 +192,7 @@ $space4: 5px;
     &.site {
       #main_message .line {
         padding-top: $space3;
-        padding-bottom: $space3;
+        padding-bottom: $space3 + 3px;
         h2 {
           line-height: 37px;
         }
