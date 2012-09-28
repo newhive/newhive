@@ -25,6 +25,8 @@ css_debug = False
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
 
 class EmailHtml(object):
+    ignore_list = ['html', 'head', 'title', 'meta', 'link', 'script']
+
     def __init__(self, html_string):
         self.html = lxml.html.fromstring(html_string)
 
@@ -47,7 +49,7 @@ class EmailHtml(object):
 
         # Set inline style attributes unless the element is not worth styling.
         for element, style in elms.iteritems():
-            if element.tag not in ignore_list:
+            if element.tag not in self.ignore_list:
                 element.set('style', style.getCssText(separator=u''))
 
     def tag_links(self, queryargs):
