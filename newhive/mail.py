@@ -405,10 +405,8 @@ class ShareExpr(ExprAction):
 
     def heads(self):
         heads = super(ShareExpr, self).heads()
-        print self.bcc
         if self.bcc:
             heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
-            print heads
         return heads
 
     def send(self, expr, initiator, recipient, message, bcc=False):
