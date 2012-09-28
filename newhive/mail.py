@@ -376,11 +376,11 @@ class Feed(Mailer):
         mailer.feed = feed
         mailer.send()
 
-class UserRegisterConfirmation(Mailer):
-    name = 'user_register_confirmation'
+class Welcome(Mailer):
+    name = 'welcome'
     unsubscribable = False
     sent_to = ['nonuser']
-    template = 'emails/thank_you_register'
+    template = 'emails/welcome'
     subject = 'Welcome to NewHive! :)'
 
     def send(self, user):

@@ -84,12 +84,12 @@ class Broadcast(FeedMailerTest):
         broadcast = db.Broadcast.last()
         self.mailer.send(broadcast)
 
-class UserRegisterConfirmation(MailerTest):
+class Welcome(MailerTest):
     def setUp(self):
-        super(UserRegisterConfirmation, self).setUp()
-        self.mailer = mail.UserRegisterConfirmation(db=db, jinja_env=jinja_env)
+        super(Welcome, self).setUp()
+        self.mailer = mail.Welcome(db=db, jinja_env=jinja_env)
 
-    def test_user_register_confirmation(self):
+    def test_welcome(self):
         self.mailer.send(self.get_user())
 
 class Featured(MailerTest):

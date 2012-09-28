@@ -99,7 +99,7 @@ class User(Application):
             if file:
                 file.update(owner=user.id)
 
-        try: mail.UserRegisterConfirmation(self.jinja_env).send(user)
+        try: mail.Welcome(db = self.db, jinja_env=self.jinja_env).send(user)
         except: pass # TODO: log an error
 
         request.form = dict(username = args['name'], secret = args['password'])
