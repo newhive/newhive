@@ -381,7 +381,7 @@ class UserRegisterConfirmation(Mailer):
     unsubscribable = False
     sent_to = ['nonuser']
     template = 'emails/thank_you_register'
-    subject = 'Thank you for creating an account on thenewhive.com'
+    subject = 'Welcome to NewHive! :)'
 
     def send(self, user):
         self.recipient = user
