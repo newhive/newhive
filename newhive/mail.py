@@ -401,11 +401,20 @@ class ShareExpr(ExprAction):
     initiator = None
     sent_to = ['user', 'nonuser']
 
-    def send(self, expr, initiator, recipient, message):
+    def heads(self):
+        heads = super(ShareExpr, self).heads()
+        print self.bcc
+        if self.bcc:
+            heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
+            print heads
+        return heads
+
+    def send(self, expr, initiator, recipient, message, bcc=False):
         self.card = expr
         self.initiator = initiator
         self.recipient = recipient
         self.message = message
+        self.bcc = bcc
         context = {}
         if not hasattr(self.recipient, 'id'):
             referral = initiator.new_referral(
