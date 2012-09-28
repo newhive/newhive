@@ -524,7 +524,7 @@ class SiteReferral(Mailer):
     unsubscribable = False
     sent_to = ['nonuser']
     template = 'emails/invitation'
-    subject = "You have a beta invitation to thenewhive.com"
+    subject = "Congratulations, here is your NewHive invite!"
 
     def send(self, email, name=False, force_resend=False):
         self.recipient = {'email': email, 'name': name}
