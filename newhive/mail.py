@@ -305,7 +305,7 @@ class ExprAction(Mailer):
 
     @property
     def featured_expressions(self):
-        exprs = self.initiator.get_top_expressions(6)
+        exprs = self.initiator.recent_expressions
         if exprs.count() >= 6: return exprs
 
     def send(self, context=None):

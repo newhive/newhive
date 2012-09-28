@@ -620,10 +620,13 @@ class User(HasSocial):
         return self.db.Expr.search(spec)
     expressions = property(get_expressions)
 
-    def get_top_expressions(self, count=5):
+    def get_top_expressions(self, count=6):
         return self.get_expressions(auth='public').sort([('views', -1)]).limit(count)
     top_expressions = property(get_top_expressions)
 
+    def get_recent_expressions(self, count=6):
+        return self.get_expressions(auth='public').sort([('created', -1)]).limit(count)
+    recent_expressions = property(get_recent_expressions)
 
     def delete(self):
         # Facebook Disconnect
