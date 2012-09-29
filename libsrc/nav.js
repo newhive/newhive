@@ -427,8 +427,8 @@ Hive.Menus = (function(){
         $('#expr_menu .tags').html(tag_list_html(expr.tags_index));
         $('#expr_menu .time').html(expr.updated_friendly);
 
-        $('#add_to_featured').find('.' + expr.featured.toString()).show();
-        $('#add_to_featured').find('.' + (!expr.featured).toString()).hide();
+        $('#add_to_featured').find('.' + (!!Hive.expr.featured).toString()).show();
+        $('#add_to_featured').find('.' + (!Hive.expr.featured).toString()).hide();
 
         // load expr's feed items: stars, broadcasts, comments
         var load_feed = function(data, status, jqXHR){
