@@ -3,6 +3,7 @@ from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive.utils import now
 import newhive.mail
+from newhive import config
 
 class Cron(Application):
     key = 'VaUcZjzozgiV'
@@ -46,21 +47,29 @@ class Cron(Application):
 
         return stats
 
-    def email_milestone(self, expr):
+    def email_milestone(self):
         def next_milestone(n):
             for m in config.milestones:
                 if m > n: return m
 
         mailer = newhive.mail.Milestone(db = self.db, jinja_env = self.jinja_env)
+        stats = { 'send_count': 0, 'matched': 0 }
         def send(expr):
             expr_milestones = expr.get('milestones', {})
-            last_milestone = max([int(m) for m in expr_milestones.keys()])
+            if expr_milestones:
+                last_milestone = max([int(m) for m in expr_milestones.keys()])
+            else:
+                last_milestone = 0
             next = next_milestone(last_milestone)
 
             if expr.get('views', 0) >= next:
                 expr_milestones.update({str(next): now()})
                 expr.update(milestones=expr_milestones)
+                stats['matched'] += 1
+                stats['send_count'] += 1
                 mailer.send(expr, next)
 
-        for expr in self.db.Expr({'auth': 'public', 'views': {'$gt': 0}}):
+        for expr in self.db.Expr.search({'auth': 'public', 'views': {'$gt': 0}}):
             send(expr)
+
+        return stats

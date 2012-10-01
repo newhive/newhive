@@ -1,8 +1,8 @@
-import math
+import copy
 from newhive import state, config
 from newhive.utils import now
 
-milestones = [20, 50] + [int(math.pow(10, n)) for n in range(2,8)]
+milestones = copy.copy(config.milestones)
 milestones.reverse()
 
 db = state.Database(config)
