@@ -16,7 +16,7 @@ aws_secret      = False
 s3_buckets      = []
 asset_bucket    = None
 
-admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack']
+admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack', 'fred']
 admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
                    'cara@thenewhive.com', 'zach@thenewhive.com',
                    'duffy@thenewhive.com', 'info@thenewhive.com',
