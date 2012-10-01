@@ -24,7 +24,7 @@ admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
                    'straussss@gmail.com', 'quuxman@gmail.com']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured']
-milestones = [20, 50, 100, 1000, 10000, 100000, 1000000, 10000000]
+milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 10000000]
 
 beta_testers    = [
                    'darkluna'
