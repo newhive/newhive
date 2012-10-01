@@ -15,9 +15,9 @@ def latest_milestone(num):
 def migrate(expr):
     views = expr.get('views')
     if views:
-        expr.update(milestones={str(latest_milestone(views)): 0})
+        expr.update(milestones={str(latest_milestone(views)): 0}, updated=False)
 
-def main():
+def main(db):
     print "running migration: setting initial expression view milestones"
     t0 = now()
     for expr in db.Expr.search({}): migrate(expr)
