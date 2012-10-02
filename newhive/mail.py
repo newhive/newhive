@@ -304,13 +304,17 @@ class ExprAction(Mailer):
     template = "emails/expr_action"
 
     @property
-    def featured_expressions(self):
+    def featured_exprs(self):
         exprs = self.initiator.recent_expressions
-        if exprs.count() >= 6: return exprs
+        if exprs.count() >= 6:
+            return (exprs, 'user')
+        else:
+            return (self.db.Expr.featured(6), 'site')
 
     def send(self, context=None):
         if not context: context = {}
 
+        featured, featured_type = self.featured_exprs
         context.update({
             'message': self.message
             ,'initiator': self.initiator
@@ -318,7 +322,8 @@ class ExprAction(Mailer):
             , 'header': self.header_message
             , 'expr': self.card
             , 'server_url': abs_url()
-            , 'featured_exprs': self.featured_expressions
+            , 'featured_exprs': featured
+            , 'featured_type': featured_type
             })
         icon = self.db.assets.url('skin/1/email/' + self.name + '.png', return_debug=False)
         if icon: context.update(icon=icon)
@@ -448,7 +453,7 @@ class Featured(ExprAction):
     message = 'We added your expression to the featured collection.'
     initiator = None
     recipient = None
-    featured_expressions = None
+    featured_exprs = (None, None)
     subject = "Congratulations, we featured your expression!"
     template = "emails/featured"
 
