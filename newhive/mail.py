@@ -80,7 +80,7 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp
     msg = MIMEMultipart('alternative')
     msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
     msg['To'] = headers['To']
-    msg['From'] = headers.get('From', 'The New Hive <noreply@thenewhive.com>')
+    msg['From'] = headers.get('From', 'NewHive <noreply@newhive.com>')
 
     # Sendgrid smtp api setup
     if category or unique_args or filters:
