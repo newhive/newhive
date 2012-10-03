@@ -186,7 +186,7 @@ def handle(request): # HANDLER
         insecure_actions = [
             'comment', 'star', 'broadcast', 'log', 'signup_request', 'tag_add', 'share_expr'
             , 'user_referral', 'password_recovery_1', 'mail_feedback', 'facebook_invite'
-            , 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove', 'add_to_featured', 'expr_save'
+            , 'dialog', 'profile_thumb_set', 'user_tag_add', 'user_tag_remove', 'add_to_featured'
             ]
         non_logged_in_actions = ['login', 'log', 'user_create', 'signup_request', 'password_recovery_1'
             , 'password_recovery_2', 'mail_feedback', 'file_create', 'unsubscribe']
