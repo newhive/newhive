@@ -148,6 +148,12 @@ class Analytics(Application):
 
     def signups_per_hour(self, request, response):
         response.context['data'] = json.dumps(analytics.contacts_per_hour(self.db.mdb))
+        response.context['title'] = "Signups per hour"
+        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
+
+    def signups_per_day(self, request, response):
+        response.context['data'] = json.dumps(analytics.contacts_per_day(self.db.mdb))
+        response.context['title'] = "Signups per day"
         return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
      #else:
     #    return serve_404(self, request, response)

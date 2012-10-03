@@ -183,6 +183,19 @@ def pageviews(db, start_datetime, end_datetime):
 
 def contacts_per_hour(db, end=now()):
     end = datetime.datetime.fromtimestamp(end)
+    end = end.replace(minute=0, second=0, microsecond=0)
+    hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=1), periods=48)
+    contacts = db.contact_log.find({'created':{'$gt': time.mktime(hourly[0].timetuple())}}, {'created': True})
+    contact_times = sorted([datetime.datetime.utcfromtimestamp(c['created']) for c in contacts])
+    data = pandas.Series(1, contact_times)
+    data = pandas.Series(data.groupby(hourly.asof).sum())
+
+    return {  'times': [time.mktime(x.timetuple()) for x in data.index.tolist()]
+            , 'values': data.values.tolist()
+            }
+
+def contacts_per_day(db, end=now()):
+    end = datetime.datetime.fromtimestamp(end)
     end = end.replace(hour=12, minute=0, second=0, microsecond=0)
     hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=24), periods=120)
     contacts = db.contact_log.find({'created':{'$gt': time.mktime(hourly[0].timetuple())}}, {'created': True})
