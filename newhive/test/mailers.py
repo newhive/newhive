@@ -13,6 +13,7 @@ class MailerTest(unittest.TestCase):
 
     def get_expr(self):
         #return db.Expr.fetch("504fb8e063dade0b7401d422") # contains unicode title
+        #return random.choice(db.User.named('dain').expressions) # dain's expressions all have long titles/tags/urls and unicode in the title
         return db.Expr.random()
 
     def get_user(self):

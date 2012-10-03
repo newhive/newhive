@@ -948,6 +948,10 @@ class Expr(HasSocial):
 
     public = property(lambda self: self.get('auth') == "public")
 
+    @property
+    def tag_string(self):
+        return ' '.join(["#" + tag for tag in self.get('tags_index', [])])
+
 
 def generate_thumb(file, size):
     # resize and crop image to size tuple, preserving aspect ratio, save over original

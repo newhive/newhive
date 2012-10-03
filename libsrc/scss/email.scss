@@ -106,7 +106,10 @@ $space4: 5px;
         background: white;
         img {
             width: 190px;
-            height: 190px;
+            background: black;
+        }
+        img, table {
+          height: 190px;
         }
         img, .data {
             float: left;
@@ -116,7 +119,6 @@ $space4: 5px;
             width: 266px;
         }
         .title {
-            margin-top: 34px;
         }
         .tags{
             margin-top: 8px;
