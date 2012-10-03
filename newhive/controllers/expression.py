@@ -296,7 +296,7 @@ class Expression(Application, PagingMixin):
                     self.db.ActionLog.create(request.requester, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
         else:
             if not res['owner'] == request.requester.id:
-                raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+                #raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
             res.update(**upd)
             new_expression = False
 
