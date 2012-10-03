@@ -339,9 +339,7 @@ function link_target(i, a) {
 
     if(href && href.indexOf('http') === 0 && !re.test(href)) {
         a.attr('target', '_blank');
-    } else if (href == '') {
-        // do nothing
-    } else {
+    } else if (href && href.indexOf('http') === 0 && re.test(href)) {
         a.attr('target', '_top');
     }
 }
