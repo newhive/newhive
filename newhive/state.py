@@ -1313,6 +1313,7 @@ class Referral(Entity):
 @Database.register
 class Contact(Entity):
     cname = 'contact_log'
+    indexes = ['created']
 
 @Database.register
 class ErrorLog(Entity):

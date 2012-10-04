@@ -92,6 +92,8 @@ class User(Application):
             if referral['reuse'] <= 0: referral.update(used=True)
         else:
             referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
+            contact = self.db.Contact.find({'referral_id': referral.id})
+            if contact: contact.update(user_created=user.id)
 
         user.give_invites(5)
         if args.has_key('thumb_file_id'):
