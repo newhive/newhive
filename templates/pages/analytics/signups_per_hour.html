@@ -7,7 +7,7 @@
   var chart;
   $(function(){
     chart = d3.select("#content").append("svg").attr("class", "chart").attr("width", 1300).attr("height", 620);
-    chart.opts = {width: 1200, height: 500, paddingTop: 10, paddingLeft: 20};
+    chart.opts = {width: 1200, height: 500, paddingTop: 10, paddingLeft: 40};
     var y = chart.y = d3.scale.linear().domain([0, d3.max(data.values)]).range([0, chart.opts.height]);
     var x = chart.x = function(d,i) { return Math.floor(chart.opts.width/data.values.length) * i + chart.opts.paddingLeft + 10 };
     x.rangeBand = function() { return chart.opts.width/data.values.length };
