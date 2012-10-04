@@ -5,10 +5,9 @@ Hive.Page = (function(){
     o.initialized = false;
 
     o.send_top = function(msg){
-        top.postMessage(msg, Hive.parent_url);
         //TODO: replace this hack with the right parent_url from the server
-        top.postMessage(msg, Hive.parent_url.replace(/^http/, 'https'));
-        top.postMessage(msg, Hive.parent_url.replace(/^https/, 'http'));
+        window.parent.postMessage(msg, Hive.parent_url.replace(/^http/, 'https'));
+        window.parent.postMessage(msg, Hive.parent_url.replace(/^https/, 'http'));
     },
         
     o.paging_sent = false;
