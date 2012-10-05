@@ -1,7 +1,7 @@
 import crypt, pickle, urllib, time
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.utils import normalize, junkstr
+from newhive.utils import normalize, junkstr, set_cookie, get_cookie
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 from newhive import mail, auth
 
@@ -46,7 +46,13 @@ class User(Application):
         else:
             response.context['f']['email'] = referral.get('to', '')
 
-        return self.serve_page(response, 'pages/user_settings.html')
+        ab_variations = ['pages/user_settings.html', 'pages/signup.html']
+        group = request.cookies.get('AB_SIG')
+        if not group and group != None:
+            group = random.randint(0, len(ab_variations) - 1)
+            set_cookie(response, 'AB_SIG', group, secure=True)
+        template = ab_variations[int(group)]
+        return self.serve_page(response, template)
 
     def create(self, request, response):
         """ Checks if the referral code matches one found in database.

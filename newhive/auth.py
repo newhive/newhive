@@ -1,6 +1,6 @@
 from werkzeug import exceptions
 from newhive import config, oauth
-from newhive.utils import junkstr
+from newhive.utils import junkstr, set_cookie, get_cookie, rm_cookie
 from newhive.oauth import FacebookClient, FlowExchangeError
 import newhive.ui_strings.en as ui
 
@@ -139,14 +139,3 @@ def cmp_secret(session, request, response):
         return True
     return False # Cookies are funky, but just return false and let the user login again.
 
-import datetime
-def set_cookie(response, name, data, secure = False, expires = True):
-    expiration = None if expires else datetime.datetime(2100, 1, 1)
-    max_age = 0 if expires else None
-    response.set_cookie(name, value = data, secure = secure,
-        # no longer using subdomains
-        #domain = None if secure else '.' + config.server_name, httponly = True,
-        expires = expiration)
-def get_cookie(request, name): return request.cookies.get(name, False)
-def rm_cookie(response, name, secure = False): response.delete_cookie(name,
-    domain = None if secure else '.' + config.server_name)
