@@ -72,10 +72,10 @@ input[type=button], input[type=submit] { border : none; }
 #user { position : fixed; display : inline-block; }
 .spacer { height : 10px; clear : both; }
 
-$placeholder_color: black;
+$placeholder_color: $color_light_charcoal;
 ::-webkit-input-placeholder { color: $placeholder_color; }
 :-moz-placeholder { color: $placeholder_color; }
-
+:-ms-input-placeholder { color: $placeholder_color; }
 
 .form_validation_info.valid {
   color: green;

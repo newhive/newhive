@@ -20,3 +20,145 @@ body.invited{
   height: 257px;
   margin-top: 50px;
 }
+
+body.signup #right_column {
+    width: 900px;
+    margin: 0 auto;
+    $input_width: 350px;
+
+    input[type=text], input[type=password], input[type=submit], form {
+        display: block;
+    }
+
+    h1 {
+        font-family: Museo, Helvetica, Verdana, sans-serif;
+        span { vertical-align: middle; }
+        .plus {
+            color: $color_blue;
+            font-family: Nevis;
+            font-size: 1.6em;
+            padding: 0 6px 0 0;
+        }
+    }
+
+    h3 {
+        background: $color_highlight;
+        display: inline-block;
+        padding: 2px 10px;
+        span { color: $color_blue; }
+    }
+
+    h1 {
+        margin: 0;
+    }
+    h3 {
+        margin: -5px 0 0 20px;
+    }
+
+    #header {
+        margin: 40px 0;
+    }
+
+    #facebook_connect {
+        width: 188px;
+        position: absolute;
+        top: 24px;
+        left: 600px;
+    }
+
+    input, #url, #terms_header {
+        font-size: 20px;
+    }
+
+    input[type=text], input[type=password], #url {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #url, #terms_header {
+        padding: 0 0 5px 10px;
+        span {
+            font-weight: bold;
+            color: $color_selected;
+        }
+    }
+
+    .column {
+        margin: 0 20px;
+        float: left;
+    }
+
+
+    #profile_thumb {
+        .placeholder, img {
+            width: 140px;
+            height: 140px;
+        }
+        #thumb_text {
+            margin-top: 47px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+    }
+
+    input[type=text], input[type=password] {
+        width: $input_width;
+        margin: 10px 0;
+        &:focus {
+            outline: none;
+        }
+    }
+
+    #terms {
+        padding-top: 37px;
+        .term, label {
+            font-weight: bold;
+        }
+        #terms_header {
+            color: $color_blue;
+        }
+        .numeral {
+            color: $color_blue;
+        }
+        #fullterms  {
+            margin: 10px 0;
+            a {
+                padding: 4px 8px;
+                background: $color_tan;
+                color: $color_charcoal;
+                font-weight: bold;
+                @include border-radius(5px);
+            }
+        }
+        #tos{
+            margin: 20px 0;
+        }
+    }
+
+    input[type=submit] {
+        font-size: 26px;
+        font-weight: bold;
+        font-family: Bebas, Helvetica, Verdana, sans-serif;
+        background-color: $color_active;
+        color: white;
+        &:hover {
+            background-color: $color_blue;
+        }
+    }
+
+    .invalid {
+        border-color: desaturate(lighten($color_active, 20%), 20%) !important;
+    }
+    label.invalid {
+        border: 2px solid;
+    }
+    .validation {
+        font-size: 14px;
+        font-weight: bold;
+        color: $color_active;
+        margin: -8px 0 8px 0;
+        max-width: $input_width;
+    }
+}

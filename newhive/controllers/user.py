@@ -17,6 +17,7 @@ class User(Application):
             response.context.pop('dialog_to_show')
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
+        response.context['facebook_connect_url'] = FacebookClient().authorize_url(request.url)
 
         if request.args.has_key('code'):
             fb_profile = request.requester.fb_client.me()
@@ -70,6 +71,7 @@ class User(Application):
             ,'email'    : args.get('email').lower()
             #,'flags'    : { 'add_invites_on_save' : True }
         })
+        if not args.get('fullname'): args['fullname'] = args['name']
         if request.args.has_key('code'):
             credentials = request.requester.fb_client.exchange()
             fb_profile = request.requester.fb_client.me()
