@@ -11,7 +11,10 @@
 //  v1.0: Original
 ///////////////////////////////////////////////////////////////////////////////
 
-if (!debug_mode) {
+//if (!debug_mode) {
+// DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED
+// DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED DISABLED
+if (false) {
   if (!window.jsErrLog)
   	window.jsErrLog = { };
   
@@ -34,7 +37,7 @@ if (!debug_mode) {
   // add the hook to the onError event
   // - first store any existing error handler for the page
   jsErrLog.fnPreviousOnErrorHandler = window.onerror; 
-  // - attach our error handler
+  // - attach our error handlerjkk
   window.onerror=function(msg, file_loc, line_no){
   	jsErrLog.ErrorTrap(msg, file_loc, line_no);
   	if(typeof(jsErrLog.fnPreviousOnErrorHandler) == "function") {
