@@ -140,7 +140,7 @@ class Admin(Application):
             if args.has_key('after'): query['created'] = {'$gt': float(args.pop('after'))}
             query.update(args.to_dict())
             count = self.db.ErrorLog.count({})
-            page_size = 500
+            page_size = 200
             errors = list(self.db.ErrorLog.search(query, sort=[('created', -1)], limit=page_size))
             response.context['page'] = page
             if len(errors):

@@ -1322,7 +1322,7 @@ class Contact(Entity):
 @Database.register
 class ErrorLog(Entity):
     cname = 'error_log'
-    indexes = ['created']
+    indexes = ['created', 'type']
 
 ## utils
 
