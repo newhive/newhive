@@ -114,7 +114,9 @@ class User(Application):
 
         request.form = dict(username = args['name'], secret = args['password'])
         self.login(request, response)
-        return self.redirect(response, abs_url() + config.site_user + '/' + config.site_pages['welcome'] + "?user=" + config.site_user)
+        redirect_url = self.site_page_url('welcome')
+        redirect_url.query.update({'ga_event': 'create_account'})
+        return self.redirect(response, redirect_url)
 
     def _check_referral(self, request):
         # Get either key of a Referral object in our db, or a facebook id

@@ -29,8 +29,10 @@ class Application(object):
         response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : original_url }
         response.user = request.requester = auth.authenticate_request(self.db, request, response)
 
-        self.process_facebook(request, response)
-        self.process_email_campaign(request, response)
+        self._process_facebook(request, response)
+        self._process_email_campaign(request, response)
+        self._process_ga_commands(request, response)
+
         response.context.update(
                 facebook_authentication_url=self.fb_client.authorize_url(abs_url(request.path, secure=request.is_secure))
                 , use_ga = config.live_server and not request.requester.is_admin)
@@ -42,7 +44,7 @@ class Application(object):
         request.domain = request.host.split(':')[0].lower()
         return (request, response)
 
-    def process_email_campaign(self, request, response):
+    def _process_email_campaign(self, request, response):
         email_id = request.args.get('email_id')
         if not email_id: return
 
@@ -57,6 +59,13 @@ class Application(object):
                 , ['_setCampSourceKey', email.get('category')]
                 ]
 
+    def _process_ga_commands(self, request, response):
+        ga_event = request.args.get('ga_event')
+        if not ga_event: return
+
+        commands = response.context.get('ga_commands', [])
+        commands.append(['_trackEvent', ga_event])
+        response.context['ga_commands'] = commands
 
     def default(self, request, response):
         method = lget(request.path_parts, 1, '_index')
@@ -132,7 +141,7 @@ class Application(object):
         return self.serve_text(response, 'Sorry, not going to do that. Perhaps you are not logged in, or not using https?')
 
     def redirect(self, response, location, permanent=False):
-        response.location = location
+        response.location = str(location)
         response.status_code = 301 if permanent else 303
         return response
 
@@ -146,7 +155,7 @@ class Application(object):
     def show_dialog(self, response, dialog_selector, opts={}):
         response.context.update(dialog_to_show = { 'name': dialog_selector, opts: opts })
 
-    def process_facebook(self, request, response):
+    def _process_facebook(self, request, response):
         # in order to get facebook credentials we use the following order of
         # preference:
         # 
@@ -215,3 +224,9 @@ class Application(object):
             return json.loads(data)
         else:
             return None
+
+    def site_page_url(self, name):
+        url = AbsUrl(user=config.site_user, page=config.site_pages[name])
+        url.query.update({'user': config.site_user})
+        return url
+
