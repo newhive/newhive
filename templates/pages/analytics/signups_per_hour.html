@@ -7,8 +7,9 @@
   var chart;
   $(function(){
     chart = d3.select("#content").append("svg").attr("class", "chart").attr("width", 1300).attr("height", 620);
-    chart.opts = {width: 1200, height: 500, paddingTop: 10, paddingLeft: 20};
+    chart.opts = {width: 1200, height: 500, paddingTop: 10, paddingLeft: 40};
     var y = chart.y = d3.scale.linear().domain([0, d3.max(data.values)]).range([0, chart.opts.height]);
+    var y_pct = chart.y = d3.scale.linear().domain([0, 1]).range([0, chart.opts.height]);
     var x = chart.x = function(d,i) { return Math.floor(chart.opts.width/data.values.length) * i + chart.opts.paddingLeft + 10 };
     x.rangeBand = function() { return chart.opts.width/data.values.length };
     x.label = function(d,i){ return x(d,i) + x.rangeBand()/4};
@@ -34,17 +35,47 @@
       .attr("transform", function(d,i){ return "rotate(45," + x.label(d,i) + "," + y.label(d,i) + ")"})
       .text(function(d,i){return epochToDate(data.times[i])});
 
-    chart.selectAll("rect")
-      .data(data.values).enter().append("rect")
+    chart.selectAll("rect.series1")
+      .data(data.values).enter().append("rect").attr('class', 'series1')
       .attr("x", x).attr("width", x.rangeBand() - 1).attr("height", y)
       .attr("y", function(d) { return chart.opts.height + chart.opts.paddingTop - y(d) })
       .style("fill", "steelblue");
 
+      if (data.values_2) {
+        chart.selectAll("rect.series2")
+          .data(data.values_2).enter().append("rect").attr("class", "series2")
+          .attr("x", x).attr("width", x.rangeBand() - 1).attr("height", y)
+          .attr("y", function(d) { return chart.opts.height + chart.opts.paddingTop - y(d) })
+          .style("fill", "green");
+      }
+
+      if (data.percent) {
+        var line = d3.svg.line()
+          .x(function(d,i){ return x(d,i) + x.rangeBand()/2})
+          .y(function(d){ return chart.opts.height + chart.opts.paddingTop - y_pct(d) });
+        chart.append("svg:path")
+          .attr("d", line(data.percent));
+        chart.selectAll("rect.series1")
+          .append("svg:title").text(function(d,i) {
+            return data.values_2[i] + "/" + data.values[i] + "  " + Math.round(data.percent[i] * 100) + "%" 
+          });
+      }
+
   });
 </script>
+  <style type="text/css">
+      path {
+        stroke-width: 2;
+        fill: none;
+        stroke: black;
+      }
+      path, .series2{
+        pointer-events: none;
+      }
+  </style>
 {% endblock %}
 
-{% block header %}<h1>Signups Per Day</h1>{% endblock %}
+{% block header %}<h1>{{title}}</h1>{% endblock %}
 {% block table_classes %}{% endblock %}
 {% block table_head %}
 {% endblock %}

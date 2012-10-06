@@ -304,6 +304,9 @@ Hive.Menus = (function(){
                 var dims = m.data.split('=')[1].split(',');
                 o.layout(dims);    
             }
+            else if (m.data == 'signup') {
+                require_login('drawoneme');
+            }
         }, false);
 
         o.layout([ $(window).width(), $(window).height() ]);

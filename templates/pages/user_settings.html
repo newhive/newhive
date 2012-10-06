@@ -247,10 +247,6 @@ var profile_thumb_choose = function(){
          <input type="hidden" val='{{f.facebook | json }}' name="facebook">
        {% endif %}
    
-   {% if update %}
-   {% else %}
-     <input class='black btn rounded' type='submit' value='Create Account'>
-   {% endif %}
    </div>
    <div class="column" id="column_3">
        <b class='error'>Terms of Service</b><br>
@@ -290,6 +286,7 @@ var profile_thumb_choose = function(){
      {% endif %}
    </div>
  </div>
+ {% if update %}
  <div class="row" style="margin-top: 17px;">
      <div class="column">
          <b>Email Subscriptions:</b>
@@ -299,6 +296,7 @@ var profile_thumb_choose = function(){
          <b>External accounts:</b>
      </div>
  </div>
+ {% endif %}
  <div class="row">
      {% for column in email_types | slice(2) %}
      <div class="column">
@@ -329,7 +327,11 @@ var profile_thumb_choose = function(){
      <div class="column">&nbsp;</div>
      <div class="column">&nbsp;</div>
      <div class="column">
+     {% if update %}
          <input class='black btn rounded' type='submit' value='Save Changes' >
+     {% else %}
+         <input class='black btn rounded' type='submit' value='Create Account'>
+     {% endif %}
      </div>
  </form>
 {% endblock %}

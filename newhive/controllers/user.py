@@ -1,7 +1,7 @@
 import crypt, pickle, urllib, time
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.utils import normalize, junkstr
+from newhive.utils import normalize, junkstr, set_cookie, get_cookie
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 from newhive import mail, auth
 
@@ -17,6 +17,7 @@ class User(Application):
             response.context.pop('dialog_to_show')
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
+        response.context['facebook_connect_url'] = FacebookClient().authorize_url(request.url)
 
         if request.args.has_key('code'):
             fb_profile = request.requester.fb_client.me()
@@ -45,7 +46,13 @@ class User(Application):
         else:
             response.context['f']['email'] = referral.get('to', '')
 
-        return self.serve_page(response, 'pages/user_settings.html')
+        ab_variations = ['pages/user_settings.html', 'pages/signup.html']
+        group = request.cookies.get('AB_SIG')
+        if not group and group != None:
+            group = random.randint(0, len(ab_variations) - 1)
+            set_cookie(response, 'AB_SIG', group, secure=True)
+        template = ab_variations[int(group)]
+        return self.serve_page(response, template)
 
     def create(self, request, response):
         """ Checks if the referral code matches one found in database.
@@ -70,6 +77,7 @@ class User(Application):
             ,'email'    : args.get('email').lower()
             #,'flags'    : { 'add_invites_on_save' : True }
         })
+        if not args.get('fullname'): args['fullname'] = args['name']
         if request.args.has_key('code'):
             credentials = request.requester.fb_client.exchange()
             fb_profile = request.requester.fb_client.me()
@@ -92,6 +100,8 @@ class User(Application):
             if referral['reuse'] <= 0: referral.update(used=True)
         else:
             referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
+            contact = self.db.Contact.find({'referral_id': referral.id})
+            if contact: contact.update(user_created=user.id)
 
         user.give_invites(5)
         if args.has_key('thumb_file_id'):
@@ -104,7 +114,9 @@ class User(Application):
 
         request.form = dict(username = args['name'], secret = args['password'])
         self.login(request, response)
-        return self.redirect(response, abs_url() + config.site_user + '/' + config.site_pages['welcome'] + "?user=" + config.site_user)
+        redirect_url = self.site_page_url('welcome')
+        redirect_url.query.update({'ga_event': 'create_account'})
+        return self.redirect(response, redirect_url)
 
     def _check_referral(self, request):
         # Get either key of a Referral object in our db, or a facebook id
