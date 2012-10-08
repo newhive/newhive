@@ -2,7 +2,7 @@ import newhive
 import newhive.state
 
 def find_failed_facebook_signups(start_date, end_date = None):
-    from newhive.wsgi import *
+    from newhive.wsgi import re, db, uniq, now
 
     if not end_date: end_date = now()
     regex = re.compile('^FlowExchangeError')
@@ -45,3 +45,12 @@ class DatabaseCopier(object):
 
         if raw_input("y/n: ") == "y":
             self.db_to.Expr.create(expr_from)
+
+def restore_expr_timestamps_from_test():
+    db_test = newhive.state.Database(newhive.config, db_name='test')
+    db_live = newhive.state.Database(newhive.config, db_name='hive')
+    for expr in db_live.Expr.search({}):
+        old_expr = db_test.Expr.fetch(expr.id)
+        if old_expr and old_expr['updated'] != expr['updated']:
+            print expr['owner_name'], expr['name'], old_expr['updated'], expr['updated']
+            expr.update(updated=old_expr['updated'])
