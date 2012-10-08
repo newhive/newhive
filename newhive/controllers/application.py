@@ -64,7 +64,7 @@ class Application(object):
         if not ga_event: return
 
         commands = response.context.get('ga_commands', [])
-        commands.append(['_trackEvent', ga_event])
+        commands.append(['_trackEvent', ga_event, 'complete'])
         response.context['ga_commands'] = commands
 
     def default(self, request, response):

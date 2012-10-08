@@ -820,7 +820,7 @@ Hive.login_submit = function(form){
 Hive.logout_submit = function(that){
     var form = $(that).parents('form');
     form.find('[name=url]').val(window.location.href);
-    _gaq.push(['_trackEvent', 'logout']);
+    _gaq.push(['_trackEvent', 'logout', 'complete']);
     // Delay ensures that event is tracked
     setTimeout(function(){ form.submit(); }, 800);
 };
