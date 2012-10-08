@@ -191,6 +191,8 @@ def signups(db, end=None, period='hours', start=None):
         start = datetime.datetime.fromtimestamp(start)
         start = start.replace(minute=0, second=0, microsecond=0)
 
+    if not period is 'hours': start = start.replace(hour=8)
+
     hourly = pandas.DateRange(start=start, end=end, offset=pandas.DateOffset(**{period: 1}))
     start_epoch = datetime_to_int(hourly[0])
     end_epoch = datetime_to_int(hourly[-1] + hourly.offset)
