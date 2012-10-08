@@ -64,7 +64,7 @@ class Cron(Application):
 
             if expr.get('views', 0) >= next:
                 expr_milestones.update({str(next): now()})
-                expr.update(milestones=expr_milestones)
+                expr.update(milestones=expr_milestones, updated=False)
                 stats['matched'] += 1
                 stats['send_count'] += 1
                 mailer.send(expr, next)
