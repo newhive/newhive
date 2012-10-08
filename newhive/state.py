@@ -1309,8 +1309,12 @@ class Referral(Entity):
 
     @property
     def url(self):
-        url = abs_url(secure=True) + 'signup?key=' + self.get('key')
-        if self.get('to'): url += '&email=' + self['to']
+        #url = abs_url(secure=True) + 'signup?key=' + self.get('key')
+        #if self.get('to'): url += '&email=' + self['to']
+
+        # skip "invited" page
+        url = AbsUrl('create_account/' + self.get('key'))
+        if self.get('to'): url.query.update({'email': self['to']})
         return url
 
 
