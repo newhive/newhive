@@ -308,7 +308,18 @@ $(function () {
   }
   place_apps();
 
-  if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
+  dialog_actions = {
+      comments: function(){ $('#comment_btn').click(); }
+  };
+  if (urlParams.loadDialog) {
+      action = dialog_actions[urlParams.loadDialog];
+      if (action) {
+          action();
+      } else {
+          loadDialog("?dialog=" + urlParams.loadDialog);
+      }
+  }
+
   if( dialog_to_show ){ showDialog(dialog_to_show.name, dialog_to_show.opts); };
   if (new_fb_connect) {
       _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
