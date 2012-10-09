@@ -27,7 +27,11 @@
 {% set table_width = 'width="586px"' %}
 
 <html>
-<head></head>
+    <head>
+        {% if css_debug %}
+            <link rel='stylesheet' href='/lib/libsrc/email.css'>
+        {% endif %}
+    </head>
 
 <body style="font-family: Helvetica, Verdana, sans-serif;">
 
@@ -41,8 +45,10 @@
 
         {# logotype approximation #}
         <tr height="50px">
-          <td style="background-color: #696e76; color: #ffffff; font-size: 37px; letter-spacing: -2px; font-weight: bold; vertical-align: bottom; padding-left: 15px;" colspan="9">
+          <td id="header_logotype" class="outer" colspan="9">
+            {% block header_logotype %}
             <a href="http://newhive.com" style="text-decoration: none; color: #ffffff">newhive.com</a>
+            {% endblock %}
           </td>
         </tr>
 
@@ -52,16 +58,25 @@
       {% block body %}
       {% endblock %}
     </td></tr>
-    <tr><td style="background-color: #696e76;" height="30px" {{ table_width }}>
+    <tr><td class="outer" height="30px" {{ table_width }}>
       {% block footer %}
       <p style="text-align: center; color: #ffffff;">
-        <a href="mailto:info@thenewhive.com" style="text-decoration: none; color: #ffffff;">info@thenewhive.com</a> 
+        <a href="mailto:info@newhive.com" style="text-decoration: none; color: #ffffff;">info@newhive.com</a> 
         | <a href="http://newhive.com" style="text-decoration: none; color: #ffffff;">newhive.com</a> 
         | <a href="http://www.facebook.com/pages/The-New-Hive/122884201115568" style="text-decoration: none; color: #ffffff;">facebook </a>
         | <a href="http://twitter.com/#!/NewHive" style="text-decoration: none; color: #ffffff;">twitter</a>
       </p>
       {% endblock %}
     </td></tr>
+  </table>
+
+  {% if unsubscribe_url %}
+  <div id="unsubscribe">
+      {{ unsubscribe_text }},
+      <a href="{{unsubscribe_url}}" title='Unsubscribe'>click here</a>
+  </div>
+  {% endif %}
+
 </body>
 </html>
 

@@ -3,16 +3,29 @@
 $color_email_black: #000001; // to fool google
 $space1: 45px;
 $space2: 20px;
-$space3: 12px;
+$space3: 15px;
 $space4: 5px;
 
 .outer {
     background-color: $color_charcoal;
 }
 
+#header_logotype {
+    color: #ffffff;
+    font-size: 37px;
+    letter-spacing: -2px;
+    font-weight: bold;
+    vertical-align: bottom;
+    padding-left: 15px;
+    a {
+      text-decoration: none;
+      color: white;
+    }
+}
+
 #body {
     color: $color_email_black;
-    padding: $space2 $space1;
+    padding: $space1 $space1 $space2 $space1;
     p, h1, h2, h3, h4, h5 {
         margin: 0;
         padding: 0;
@@ -29,9 +42,11 @@ $space4: 5px;
     }
     
     h2{
-        font-size: 40px;
+        font-size: 37px;
     
         letter-spacing: -2px;
+    }
+    h2, #main_message {
         .line{
             margin: $space4 0;
             background: white;
@@ -45,8 +60,17 @@ $space4: 5px;
         font-size: 19px;
     }
 
-    .hightlight{
+    .highlight{
         background-color: $color_highlight;
+        padding: 0 5px;
+    }
+
+    .grey {
+      color: $color_grey_medium;
+    }
+
+    .plus {
+        color: $color_blue;
     }
 
     .line, & > p{
@@ -54,14 +78,18 @@ $space4: 5px;
         clear: both;
     }
     
+    #logo {
+        text-align: center;
+        margin-bottom: $space1 - 3px;
+    }
     
     #greeting{
         background: $color_selected;
     }
     
     #main_message{
-        margin-top: $space2;
-        .sender { color: $color_bright_red; }
+        margin-top: $space3;
+        .sender, .active { color: $color_bright_red; }
         img {
             float: right;
             margin-right: 5px;
@@ -78,7 +106,10 @@ $space4: 5px;
         background: white;
         img {
             width: 190px;
-            height: 190px;
+            background: black;
+        }
+        img, table {
+          height: 190px;
         }
         img, .data {
             float: left;
@@ -88,7 +119,6 @@ $space4: 5px;
             width: 266px;
         }
         .title {
-            margin-top: 34px;
         }
         .tags{
             margin-top: 8px;
@@ -116,7 +146,34 @@ $space4: 5px;
             height: 74px;
             margin: 3px;
         }
+        h3, h4 {
+            margin: 7px 0 10px 0;
+            span {
+                padding: 2px 4px;
+            }
+        }
     }
+
+    .central_call_to_action {
+      margin: $space2 0;
+      text-align: center;
+      img, a {
+        vertical-align: middle;
+        margin: 0 5px;
+      }
+      a {
+        padding: 2px 5px;
+        background: $color_highlight;
+      }
+    }
+
+    #password_reset {
+      margin: $space1 - 10px 0;
+      a {
+        padding: 0 5px;
+      }
+    }
+
     #footer_message{
         margin: $space2 0;
         text-align: center;
@@ -124,7 +181,6 @@ $space4: 5px;
         a, .highlight {
             color: $color_email_black;
             padding: 2px 5px;
-            
         }
     }
 
@@ -140,19 +196,65 @@ $space4: 5px;
     }
 
     // Specific type overrides
+    &.site {
+      #main_message .line {
+        padding-top: $space3;
+        padding-bottom: $space3 + 3px;
+        h2 {
+          line-height: 37px;
+        }
+        h2 + p {
+          margin-top: $space3;
+        }
+      }
+      #footer_message {
+        margin-top: $space1;
+        line-height: 25px;
+      }
+    }
+
     &.featured {
         h2{
             font-size: 37px;
         }
         #main_message #line1 {
-            color: $color_active;
+            color: $color_bright_red;
         }
         #share_icons{
-            margin-top: $space4;
+            margin-top: $space4 + 4px;
         }
         .like_button{
             display: inline-block;
         }
     }
-    
+
+    &.site_referral, &.user_referral {
+        #create_account {
+            margin-top: $space1 - 6px;
+            margin-bottom: -9px;
+            text-align: center;
+            span {
+                background: $color_highlight;
+                padding: 0 10px;
+            }
+            line-height: 46px;
+            a { text-decoration: underline; }
+        }
+        h2 {
+            line-height: 37px;
+            font-size: 34px;
+        }
+    }
+
+    &.welcome {
+      p {
+        font-size: 20px;
+        line-height: auto;
+      }
+    }
+}
+
+#unsubscribe {
+    margin-top: 5px;
+    font-size: 13px;
 }

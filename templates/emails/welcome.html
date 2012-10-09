@@ -1,0 +1,28 @@
+{% extends "emails/site.html" %}
+{% from "emails/parts/featured_exprs.html" import expr_cards %}
+
+{% block header_logotype %}
+  <a href="{{ 'http://' + recipient.name + '.newhive.com' }}">{{ recipient.name + '.newhive.com' }}</a>
+{% endblock %}
+
+{% block main_message %}
+    <h2>
+      Welcome to <span class="active">NewHive</span>!<br/>
+      We're so happy you're here. :)
+    </h2>
+    <p>
+      NewHive is your blank canvas on the web. Use<br/>
+      the editor to drag + drop media, create web pages,<br/>
+      + organize content to share privately or publicly.
+    </p>
+{% endblock %}
+
+{% block lower_content %}
+    <div id="create" class="central_call_to_action">
+      <h3>
+        <img src="{{create_icon}}"/>
+        <a href="{{create_link}}" title="Create an expression">Create an expression</a>
+      </h3>
+    </div>
+    {{ expr_cards(featured_exprs) }}
+{% endblock %}

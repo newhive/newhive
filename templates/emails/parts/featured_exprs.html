@@ -1,0 +1,19 @@
+{% macro expr_cards(exprs, user=None) %}
+    <div id="featured_exprs">
+        {% if user and user.name %}
+        <h4 class="user"><span>
+            Check out some of {{user.name}}'s expressions:
+        </h4></span>
+        {% else %}
+        <h3 class="site"><span>
+            Explore expressions
+        </h3></span>
+        {% endif %}
+        {% for expr in exprs -%}
+          <a href="{{expr.url}}" title="{{expr.title}}" id="{{expr.id}}"
+              ><img class="featured_thumb" src="{{expr.thumb}}"/
+          ></a>
+        {%- endfor %}
+    </div>
+{% endmacro %}
+

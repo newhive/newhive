@@ -181,7 +181,56 @@ def pageviews(db, start_datetime, end_datetime):
     data = list(views[:, 1])
     return (index, data)
 
+def signups(db, end=None, period='hours', start=None):
+    if not end: end = now()
+    end = datetime.datetime.fromtimestamp(end)
+    end = end.replace(minute=0, second=0, microsecond=0)
+    if not start:
+        start = end - pandas.DateOffset(hours=48)
+    else:
+        start = datetime.datetime.fromtimestamp(start)
+        start = start.replace(minute=0, second=0, microsecond=0)
+
+    if not period is 'hours': start = start.replace(hour=8)
+
+    hourly = pandas.DateRange(start=start, end=end, offset=pandas.DateOffset(**{period: 1}))
+    start_epoch = datetime_to_int(hourly[0])
+    end_epoch = datetime_to_int(hourly[-1] + hourly.offset)
+    spec = {'created': {'$gt': start_epoch, '$lt': end_epoch}}
+
+    def group_data(cursor):
+        contact_times = sorted([datetime.datetime.utcfromtimestamp(c['created']) for c in cursor])
+        data = pandas.Series(1, contact_times)
+        data = pandas.Series(data.groupby(hourly.asof).sum())
+        return data.reindex(index=hourly, fill_value=0)
+
+    cursor = db.contact_log.find(spec, {'created': True})
+    contacts = group_data(cursor)
+
+    spec.update({'user_created': {'$exists': True}})
+    cursor = db.contact_log.find(spec, {'created': True})
+    created_contacts = group_data(cursor)
+
+    return {  'times': [time.mktime(x.timetuple()) for x in hourly.tolist()]
+            , 'values': contacts.values.tolist()
+            , 'values_2': created_contacts.values.tolist()
+            , 'percent': (created_contacts / contacts).values.tolist()
+            }
+
 def contacts_per_hour(db, end=now()):
+    end = datetime.datetime.fromtimestamp(end)
+    end = end.replace(minute=0, second=0, microsecond=0)
+    hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=1), periods=48)
+    contacts = db.contact_log.find({'created':{'$gt': time.mktime(hourly[0].timetuple())}}, {'created': True})
+    contact_times = sorted([datetime.datetime.utcfromtimestamp(c['created']) for c in contacts])
+    data = pandas.Series(1, contact_times)
+    data = pandas.Series(data.groupby(hourly.asof).sum())
+
+    return {  'times': [time.mktime(x.timetuple()) for x in data.index.tolist()]
+            , 'values': data.values.tolist()
+            }
+
+def contacts_per_day(db, end=now()):
     end = datetime.datetime.fromtimestamp(end)
     end = end.replace(hour=12, minute=0, second=0, microsecond=0)
     hourly = pandas.DateRange(end=end, offset=pandas.DateOffset(hours=24), periods=120)

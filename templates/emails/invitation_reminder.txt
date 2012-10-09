@@ -1,0 +1,8 @@
+Hi {{ recipient.name or "there"}},
+
+{{ message }}
+
+{{ url }}
+
+Cheers!
+The NewHive Team

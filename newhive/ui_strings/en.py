@@ -12,7 +12,7 @@ image_embed_as_background = """Set as background image"""
 
 # User Settings
 create_account_title = "Create your account"
-update_account_title = "Update your information"
+update_account_title = "Settings"
 password_change_success_message = "Your password has been changed successfully."
 password_change_failure_message = "Sorry, the old password you entered is incorrect."
 fullname_change_success_message = "Your name has been changed successfully."
@@ -36,5 +36,5 @@ email_subscription_ui = {
     , 'broadcast': 'People broadcast my expression'
     , 'share_expr': 'People share an expression with me'
     , 'milestone': "Updates about my expression's views"
-    , 'featured': "Newhive features my expression"
+    , 'featured': "NewHive features my expression"
     }

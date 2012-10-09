@@ -1,16 +1,23 @@
 @import "common";
 
 .user_settings {
+    form {
+        width: 80%;
+        margin: 0 auto;
+        display: block;
+    }
     .row {
         clear: both;
+        overflow: auto;
     }
     .column{
       float: left;
-      width: 300px;
+      width: 312px;
+      margin-right: 20px;
       h3 { margin-top: 0; }
     }
     input[type="text"], input[type="password"] {
-        width: 217px;
+        width: 237px;
     }
     #gender_wrapper {
         width: 120px;
@@ -40,6 +47,14 @@
           background: asset_url("skin/1/people_small_active.png");
         }
       }
+    }
+    input[type=submit]{
+    }
+    .checkbox {
+        margin-top: 5px;
+    }
+    #full_tos {
+        color: $color_blue;
     }
 }
 
@@ -100,4 +115,27 @@
     color: $color_blue;
     &:hover { color: $color_active; }
   }
+}
+
+body.unsubscribe {
+    #right_column {
+        margin-top: 12%;
+    }
+    h1 {
+        font-family: Museo, Helvetica, Verdana, sans-serif;
+    }
+    #email, #username {
+        color: $color_active;
+    }
+    #email {
+        font-size: 30px;
+        margin-bottom: 32px;
+    }
+    .checkbox {
+        margin: 10px 0;
+        font-weight: bold;
+    }
+    input[type=submit]{
+        margin-top: 21px;
+    }
 }

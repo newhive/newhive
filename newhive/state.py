@@ -684,10 +684,13 @@ class User(HasSocial):
         return self.db.Expr.search(spec)
     expressions = property(get_expressions)
 
-    def get_top_expressions(self, count=5):
+    def get_top_expressions(self, count=6):
         return self.get_expressions(auth='public').sort([('views', -1)]).limit(count)
     top_expressions = property(get_top_expressions)
 
+    def get_recent_expressions(self, count=6):
+        return self.get_expressions(auth='public').sort([('created', -1)]).limit(count)
+    recent_expressions = property(get_recent_expressions)
 
     def client_view(self, viewer=None):
         user = dfilter( self, ['fullname', 'profile_thumb', 'name', 'tags'] )
@@ -808,6 +811,14 @@ class Expr(HasSocial):
         def random(self):
             rand = random.random()
             return self.find(dict(random = {'$gte': rand}, auth='public', apps={'$exists': True}))
+
+        @property
+        def featured_ids(self):
+            return self.db.User.get_root()['tagged']['Featured']
+
+        def featured(self, limit):
+            query = self.featured_ids[0:limit]
+            return self.db.Expr.fetch(query)
 
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
@@ -1020,6 +1031,11 @@ class Expr(HasSocial):
         )
         return self
 
+    @property
+    def tag_string(self):
+        return ' '.join(["#" + tag for tag in self.get('tags_index', [])])
+
+
 def generate_thumb(file, size):
     # resize and crop image to size tuple, preserving aspect ratio, save over original
     file.seek(0)
@@ -1207,6 +1223,16 @@ class ActionLog(Entity):
 
 
 @Database.register
+class MailLog(Entity):
+    indexes = ['initiator', 'recipient', 'category', 'created']
+    cname = 'mail_log'
+
+@Database.register
+class Unsubscribes(Entity):
+    indexes = ['email']
+    cname = 'unsubscribes'
+
+@Database.register
 class Feed(Entity):
     cname = 'feed'
     indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
@@ -1358,7 +1384,7 @@ class FriendJoined(Feed):
 @Database.register
 class Referral(Entity):
     cname = 'referral'
-    indexes = [ 'key', 'request_id' ]
+    indexes = [ 'key', 'request_id', 'created' ]
 
     def create(self):
         self['key'] = junkstr(16)
@@ -1366,19 +1392,24 @@ class Referral(Entity):
 
     @property
     def url(self):
-        url = abs_url(secure=True) + 'signup?key=' + self.get('key')
-        if self.get('email'): url += '&email=' + self['email']
+        #url = abs_url(secure=True) + 'signup?key=' + self.get('key')
+        #if self.get('to'): url += '&email=' + self['to']
+
+        # skip "invited" page
+        url = AbsUrl('create_account/' + self.get('key'))
+        if self.get('to'): url.query.update({'email': self['to']})
         return url
 
 
 @Database.register
 class Contact(Entity):
     cname = 'contact_log'
+    indexes = ['created']
 
 @Database.register
 class ErrorLog(Entity):
     cname = 'error_log'
-    indexes = ['created']
+    indexes = ['created', 'type']
 
 ## utils
 

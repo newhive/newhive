@@ -40,22 +40,15 @@ class Mail(Application):
         if not config.debug_mode:
             send_mail(heads, body)
         contact = self.db.Contact.create(form)
+        sendgrid_args = {'contact_id': contact.id, 'url': form['url']}
 
-        # mail_signup thank you
-        context = {
-            'url': 'http://thenewhive.com'
-            ,'thumbnail_url': self.asset('skin/1/thumb_0.png')
-            ,'name': form.get('name')
-            }
-        heads = {
-            'To': form.get('email')
-            ,'Subject': 'Thank you for signing up for a beta account on The New Hive'
-            }
-        body = {
-             'plain': self.jinja_env.get_template("emails/thank_you_signup.txt").render(context)
-            ,'html': self.jinja_env.get_template("emails/thank_you_signup.html").render(context)
-            }
-        send_mail(heads, body, 'signup_request', {'contact_id': contact.id, 'url': form['url']})
+        #mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
+        #mailer.send(form.get('email'), form.get('name'), sendgrid_args)
+
+        mailer = mail.SiteReferral(db=self.db, jinja_env=self.jinja_env)
+        referral_id = mailer.send(form.get('email'), form.get('name'))
+        if referral_id:
+            contact.update(referral_id=referral_id)
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
@@ -72,37 +65,22 @@ class Mail(Application):
         log_data = {'service': 'email', 'to': recipient_address, 'expr_id': expr.id}
         self.db.ActionLog.create(request.requester, 'share', data=log_data)
 
-        mail.ShareExpr(self.jinja_env).send(expr, request.requester, recipient, request.form.get('message'))
+        mailer = mail.ShareExpr(self.jinja_env, db=self.db)
+        mailer.send(expr, request.requester, recipient, request.form.get('message'), request.form.get('send_copy'))
 
         return self.redirect(response, request.form.get('forward'))
 
     def user_referral(self, request, response):
         user = request.requester
+        mailer = mail.UserReferral(db=self.db, jinja_env=self.jinja_env)
         for i in range(0,4):
             name = request.form.get('name_' + str(i))
             to_email = request.form.get('to_' + str(i))
             if user['referrals'] <= 0 or not to_email or len(to_email) == 0: break
             referral = user.new_referral({'name': name, 'to': to_email})
+            mailer.send(referral, user)
 
-            heads = {
-                 'To' : to_email
-                ,'Subject' : user.get('fullname') + ' has invited you to The New Hive'
-                ,'Reply-to' : user.get('email', '')
-                }
-            context = {
-                 'referrer_url': user.url
-                ,'referrer_name': user.get('fullname')
-                ,'url': (abs_url(secure=True) + 'invited?key=' + referral['key'] + '&email=' + to_email)
-                ,'name': name
-                }
-            body = {
-                 'plain': self.jinja_env.get_template("emails/user_invitation.txt").render(context)
-                ,'html': self.jinja_env.get_template("emails/user_invitation.html").render(context)
-                }
-            sendgrid_args = {'initiator': user.get('name'), 'referral_id': referral.id}
-            send_mail(heads, body, category="user_referral", unique_args=sendgrid_args)
         return self.redirect(response, request.form.get('forward'))
-
 
     def mail_feedback(self, request, response):
         if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')

@@ -1,0 +1,28 @@
+{% extends "emails/colorful.html" %}
+
+{% block body_classes%}{{super()}} {{type}} {{super_type}} site{% endblock %}
+
+{% block body %}
+    <div id="logo">
+        <img src="{{ 'skin/1/newhive_logo_lg.png' | asset_url(abs=True) }}"/>
+    </div>
+
+    <h2 id="greeting" class="line">
+        Hi {{ recipient.name or "there"}},
+    </h2>
+
+    <div id="main_message">
+        <div class="line">
+          {% block main_message %}
+          {% endblock %}
+        </div>
+    </div>
+
+    {% block lower_content %}
+    {% endblock %}
+
+    <h4 id="footer_message">
+        Questions or feedback?<br/>
+        <a href="mailto:info@newhive.com">info@newhive.com</a>
+    </h4>
+{% endblock %}

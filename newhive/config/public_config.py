@@ -16,7 +16,7 @@ aws_secret      = False
 s3_buckets      = []
 asset_bucket    = None
 
-admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack']
+admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack', 'fred']
 admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
                    'cara@thenewhive.com', 'zach@thenewhive.com',
                    'duffy@thenewhive.com', 'info@thenewhive.com',
@@ -24,6 +24,7 @@ admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
                    'straussss@gmail.com', 'quuxman@gmail.com']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured']
+milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 10000000]
 
 beta_testers    = [
                    'darkluna'

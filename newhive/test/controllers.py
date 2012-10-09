@@ -10,14 +10,8 @@ import copy
 import unittest
 from werkzeug.test import Client
 from newhive import config, utils
-from newhive.wsgi import application, hive_assets, Response, db
+from newhive.wsgi import application, hive_assets, Response, db, jinja_env
 from bs4 import BeautifulSoup #html parser
-
-# diable stderr logging
-import logging
-logger = logging.getLogger('newhive')
-for handler in logger.handlers:
-    if handler.name == 'stderr': logger.removeHandler(handler)
 
 class Test(unittest.TestCase):
     """Base newhive test case.  Has handy methods for performing a request on
@@ -53,7 +47,7 @@ class Test(unittest.TestCase):
         you can log in using this method before performing any test cases that
         require a logged in user"""
 
-        user = {'username': 'test', 'secret': 'test'}
+        user = {'username': 'test', 'secret': 'triangle22'}
         if self.logged_in: return True
         data = {'action': 'login', 'url': utils.abs_url()}
         data.update(user)
@@ -61,6 +55,8 @@ class Test(unittest.TestCase):
         if resp.status == '303 SEE OTHER':
             self.user = db.User.named(user['username'])
             self.logged_in = True
+        else:
+            raise Exception("login failed, status {}".format(resp.status))
         if admin:
             config.admins.append(user['username'])
         return self.logged_in
@@ -199,7 +195,6 @@ class ExpressionTest(Test):
         response = self.open(data=data)
         print response.status
         self.assertStatus(response, 303)
-
 
 # this organization feature isn't really used right now
 def suite():

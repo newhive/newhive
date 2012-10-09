@@ -1,7 +1,7 @@
 {% extends "emails/colorful.html" %}
 
 {% block body_classes%}{{super()}} {{type}}{% endblock %}
-{% block body%}
+{% block body %}
 
 {% macro link(entity, class='', id='') -%}
 <a href="{{ entity.url }}" title="{{ entity.title or entity.fullname }}" class="{{ class }}" id="{{ id}}">
@@ -24,11 +24,13 @@
                         {{ initiator.name }}
                     {%- endcall %}
                 {% endif %}
-                {{ header[0] }}
+                {{ header[0] | safe }}
+                {% block action_icon %}
                 <img src="{{icon}}"/>
+                {% endblock %}
             </div>
             <div class="line" id="line2">
-                {{ header[1] }}
+                {{ header[1] | safe }}
             </div>
         </h2>
     {% endif %}
@@ -36,7 +38,11 @@
 
 {% if message %}
     <p id="message">
+        {% if message_safe %}
+        {{ message | safe }}
+        {% else %}
         {{ message | escape | html_breaks }}
+        {% endif %}
     </p>
 {% endif %}
 
@@ -44,25 +50,21 @@
   {% include 'emails/parts/expr_card.html' %}
 {% endif %}
 
+{% block below_card %}{% endblock %}
+
 {% if featured_exprs %}
-    <div id="featured_exprs">
-        <h4>Check out some of {{initiator.name}}'s expressions:</h4>
-        {% for expr in featured_exprs -%}
-          <a href="{{expr.url}}" title="{{expr.title}}" id="{{expr.id}}"
-              ><img class="featured_thumb" src="{{expr.thumb}}"/
-          ></a>
-        {%- endfor %}
-    </div>
+  {% from "emails/parts/featured_exprs.html" import expr_cards %}
+  {{ expr_cards(featured_exprs, None if featured_type == 'site' else initiator) }}
 {% endif %}
 
 {% block footer_message scoped %}
     <h4 id="footer_message">
-        {% if recipient and recipient.name %}
-            Love Newhive?<br/>
-            <a class="highlight" href="{{ invite_friends_url }}" title="Invite your friends">Invite your friends!</a>
+        {% if recipient and recipient.id %}
+            Love NewHive?<br/>
+            <a class="highlight" href="{{ server_url | modify_query({'loadDialog': 'email_invites'}) }}" title="Invite your friends">Invite your friends!</a>
         {% else %}
             Want to make your own expression?<br/>
-            <a href="{{ signup_url }}" title="Create your account">Create your Newhive account!</a>
+            <a class="highlight" href="{{signup_url}}" title="Create your account">Create your NewHive account!</a>
         {% endif %}
     </h4>
 {% endblock %}

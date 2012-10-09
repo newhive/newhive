@@ -1,7 +1,7 @@
-import crypt, urllib, time, json, re
+import crypt, urllib, time, json, re, pymongo, random
 import newhive.state
 from newhive.state import abs_url
-from newhive import config, inliner, utils
+from newhive import config, utils
 import newhive.ui_strings.en as ui
 from cStringIO import StringIO
 from smtplib import SMTP
@@ -12,28 +12,75 @@ from email.generator import Generator
 from email import Charset
 from jinja2 import TemplateNotFound
 from werkzeug import url_unquote
+import cssutils #sudo pip install cssutils
+from lxml import etree #sudo apt-get install python-lxml
+import lxml.html
 
 import logging
 logger = logging.getLogger(__name__)
 
+send_real_email = True
+css_debug = False
+
 Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
-def send_mail(headers, body, category=None, filters=None, unique_args=None):
+
+class EmailHtml(object):
+    ignore_list = ['html', 'head', 'title', 'meta', 'link', 'script']
+
+    def __init__(self, html_string):
+        self.html = lxml.html.fromstring(html_string)
+
+    def inline_css(self, css_path):
+        css = cssutils.parseFile(css_path)
+        document = self.html
+        elms = {} # stores all inlined elements.
+        for rule in css:
+            if hasattr(rule, 'selectorText'):
+                for element in document.cssselect(rule.selectorText):
+                    if element not in elms:
+                        elms[element] = cssutils.css.CSSStyleDeclaration()
+                        inline_styles = element.get('style')
+                        if inline_styles:
+                            for p in cssutils.css.CSSStyleDeclaration(cssText=inline_styles):
+                                elms[element].setProperty(p)
+
+                    for p in rule.style:
+                        elms[element].setProperty(p.name, p.value, p.priority)
+
+        # Set inline style attributes unless the element is not worth styling.
+        for element, style in elms.iteritems():
+            if element.tag not in self.ignore_list:
+                element.set('style', style.getCssText(separator=u''))
+
+    def tag_links(self, queryargs):
+        #add tracking variable to links
+        for a in self.html.xpath('//a'):
+            href = a.get('href')
+            # regex could be done in xpath, but then I'd have to kill myself
+            if re.match('^https?://[a-z0-9-.]*newhive.com', href):
+                a.set('href', utils.modify_query(href, queryargs))
+
+    def tounicode(self):
+        return etree.tounicode(self.html, method="xml", pretty_print=True)
+
+def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp=None):
     def to_json(data):
         j = json.dumps(data)
         return re.compile('(["\]}])([,:])(["\[{])').sub('\1\2 \3', j)
 
     # smtp connection setup and timings
     t0 = time.time()
-    smtp = SMTP(config.email_server, config.email_port)
-    if config.email_user and config.email_password:
-        smtp.login(config.email_user, config.email_password)
-    logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
+    if not smtp:
+        smtp = SMTP(config.email_server, config.email_port)
+        if config.email_user and config.email_password:
+            smtp.login(config.email_user, config.email_password)
+        logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
 
     # Message header assembly
     msg = MIMEMultipart('alternative')
     msg['Subject'] = Header(headers['Subject'].encode('utf-8'), 'UTF-8').encode()
     msg['To'] = headers['To']
-    msg['From'] = headers.get('From', 'The New Hive <noreply@thenewhive.com>')
+    msg['From'] = headers.get('From', 'NewHive <noreply@newhive.com>')
 
     # Sendgrid smtp api setup
     if category or unique_args or filters:
@@ -45,10 +92,12 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None):
 
     # Message body assembly
     if type(body) == dict:
-        plain = MIMEText(body['plain'].encode('utf-8'), 'plain')
-        html = MIMEText(body['html'].encode('utf-8'), 'html')
-        msg.attach(plain); msg.attach(html)
-
+        if body.has_key('plain'):
+            plain = MIMEText(body['plain'].encode('utf-8'), 'plain', 'UTF-8')
+            msg.attach(plain)
+        if body.has_key('html'):
+            html = MIMEText(body['html'].encode('utf-8'), 'html', 'UTF-8')
+            msg.attach(html)
     else:
         part1 = MIMEText(body.encode('utf-8'), 'plain')
         msg.attach(part1)
@@ -59,9 +108,11 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None):
     g = Generator(io, False) # second argument means "should I mangle From?"
     g.flatten(msg)
     encoded_msg = io.getvalue()
+    if config.debug_mode:
+        with open(config.src_home + '/log/last_email.txt', 'w') as f: f.write(encoded_msg)
 
     # Send mail, but if we're in debug mode only send to admins
-    if config.live_server or msg['To'] in config.admin_emails:
+    if send_real_email and (config.live_server or msg['To'] in config.admin_emails):
         t0 = time.time()
         sent = smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
         logger.debug('SMTP sendmail time %d ms', (time.time() - t0) * 1000)
@@ -90,124 +141,166 @@ class MetaMailer(type):
 class Mailer(object):
     __metaclass__ = MetaMailer
     recipient = None
+    initiator = None
     unsubscribable = True
+    inline_css = True
 
-    def __init__(self, jinja_env=None, db=None):
+    def __init__(self, jinja_env=None, db=None, smtp=None):
         self.db = db
         self.jinja_env = jinja_env
+        t0 = time.time()
+        if smtp:
+            self.smtp = smtp
+        else:
+            self.smtp = SMTP(config.email_server, config.email_port)
+            if config.email_user and config.email_password:
+                self.smtp.login(config.email_user, config.email_password)
+            logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
 
-    def send_mail(self, heads, body, filters=None, category=None, **kwargs):
-        if not filters: filters = {}
 
-        heads.update(To=self.recipient.get('email'))
-        if not category and hasattr(self, 'name'):
-            category=self.name
-
-        filters.update(clicktrack={'settings': {'enable': 1}})
-        if not self.unsubscribable:
-            filters.update(bypass_list_management={'settings': {'enable': 1}})
-
+    def check_subscription(self):
         # check subscription status
         if isinstance(self.recipient, newhive.state.User):
             subscriptions = self.recipient.get('email_subscriptions', config.default_email_subscriptions)
             unsubscribed = self.unsubscribable and not self.name in subscriptions
         else:
-            unsubscribed = self.db.Unsubscribes.find({
-                'email': self.recipient['email']
-                , 'name': {'$in': ['all', self.name]}
-                })
+            unsub = self.db.Unsubscribes.fetch(self.recipient['email'], keyname='email')
+            unsubscribed = unsub and (unsub.get('all') or self.initiator.id in unsub.get('users'))
+        return not unsubscribed
+
+    def body(self, context):
+        body = {}
+        try:
+            html_string = self.jinja_env.get_template(self.template + ".html").render(context)
+            html = EmailHtml(html_string)
+            html.tag_links({'email_id': context.get('email_id')})
+            if self.inline_css and not css_debug:
+                dir = '/libsrc/' if config.debug_mode else '/lib/'
+                html.inline_css(config.src_home + dir + "email.css")
+            body['html'] = html.tounicode()
+        except TemplateNotFound as e:
+            if e.message != self.template + '.html': raise e
+
+        try: body['plain'] = self.jinja_env.get_template(self.template + ".txt").render(context)
+        except TemplateNotFound: pass
+
+        return body
+
+    def heads(self):
+        heads = {
+             'To' : self.recipient.get('email')
+            ,'Subject' : self.subject
+            }
+        return heads
+
+
+    def send_mail(self, context=None, filters=None, **kwargs):
+        if not filters: filters = {}
+        if not context: context = {}
+
+        email_id = str(pymongo.objectid.ObjectId())
+
+        record = {'_id': email_id, 'email': self.recipient.get('email'), 'category': self.name }
+        if type(self.recipient) == newhive.state.User:
+            record.update({'recipient': self.recipient.id, 'recipient_name': self.recipient.get('name')})
+        if type(self.initiator) == newhive.state.User:
+            record.update({'initiator': self.initiator.id, 'initiator_name': self.initiator.get('name')})
+        if kwargs.has_key('unique_args'): record['unique_args'] = kwargs['unique_args']
+
+        # Bypass sendgrid list management, we have our own system
+        filters.update(bypass_list_management={'settings': {'enable': 1}})
+        if self.unsubscribable:
+            if isinstance(self.recipient, newhive.state.User):
+                context.update({
+                    'unsubscribe_url': abs_url(secure=True) + "settings"
+                    , 'unsubscribe_text': "To manage your email subscriptions"
+                    })
+            else:
+                context.update({
+                    'unsubscribe_url': abs_url(secure=True) + "unsubscribe"
+                    , 'unsubscribe_text': "To unsubscribe from this or all emails from newhive"
+                     })
+
+        # build heads and body
+        context.update({
+           'type': self.name
+           , 'email_id': email_id
+           , 'css_debug': css_debug and self.inline_css
+           })
+
+        if hasattr(self.__class__.__base__, 'name'):
+            context['super_type'] = self.__class__.__base__.name
+
+        body = self.body(context)
+        heads = self.heads()
+        heads.update(To=self.recipient.get('email'))
+
+        subscribed = self.check_subscription()
+        record.update(sent=subscribed)
+
         logger.info("to: {}\tname: {}\tstatus: {}".format(
             self.recipient.get('email')
             , self.name
-            , 'unsubscribed' if unsubscribed else 'sent'
+            , 'unsubscribed' if not subscribed else 'sent'
             ))
 
         # write e-mail to file for debugging
-        if config.debug_mode:
-            path = '/lib/tmp/' + utils.junkstr(10) + '.html'
+        if not config.live_server:
+            path = '/lib/tmp/' + email_id + '.html'
             with open(config.src_home + path, 'w') as f:
-                f.write(body['html'])
+                f.write('<div><pre>')
+                for key, val in heads.items():
+                    s = u"{:<20}{}\n".format(key + u":", val)
+                    f.write(s.encode('utf-8'))
+                f.write('</pre></div>')
+                if body.has_key('html'):
+                    f.write(body['html'].encode('utf-8'))
+                else:
+                    f.write('<pre style="font-family: sans-serif;">')
+                    f.write(body['plain'].encode('utf-8'))
+                    f.write('</pre>')
             logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
+            record.update(debug_url=abs_url(secure=True) + path)
 
-        if not unsubscribed:
-            send_mail(heads, body, filters=filters, category=category, **kwargs)
+        if subscribed:
+            send_mail(heads, body, filters=filters, category=self.name, smtp=self.smtp, **kwargs)
 
-class SiteReferral(Mailer):
-    name = 'site_referral'
-    sent_to = ['nonuser']
-    unsubscribable = True
-
-    def send(self, email, name=False, force_resend=False):
-        if db.Referral.find(email, keyname='to') and not force_resend:
-            return False
-
-        user = db.User.named(config.site_user)
-        referral = user.new_referral({'name': name, 'to': email})
-
-        heads = {
-            'To': email
-            ,'Subject' : "You have a beta invitation to thenewhive.com"
-            }
-
-        context = {
-            'name': name
-            ,'url': referral.url
-            }
-        body = {
-             'plain': jinja_env.get_template("emails/invitation.txt").render(context)
-            ,'html': jinja_env.get_template("emails/invitation.html").render(context)
-            }
-        self.send_mail(heads, body)
-        return referral.id
+        self.db.MailLog.create(record)
 
 class EmailConfirmation(Mailer):
     name = 'email_confirmation'
     unsubscribable = False
     sent_to = ['user']
+    template = 'emails/email_confirmation'
+    subject = 'Confirm change of e-mail address for newhive.com'
 
-    def send(user, email):
+    def send(self, user, email, request_date):
         self.recipient = user
-        secret = crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date'))))
+        secret = crypt.crypt(email, "$6$" + str(request_date))
         link = abs_url(secure=True) +\
                 "email_confirmation?user=" + user.id +\
                 "&email=" + urllib.quote(email) +\
                 "&secret=" + urllib.quote(secret)
-        heads = {
-            'To' : email
-            , 'Subject' : 'Confirm change of e-mail address for thenewhive.com'
-            }
         context = {
-            'user_fullname' : user['fullname']
-            ,'user_name': user['name']
+            'recipient': self.recipient
             ,'link' : link
             }
-        body = {
-            'plain': self.jinja_env.get_template("emails/email_confirmation.txt").render(context)
-            ,'html': self.jinja_env.get_template("emails/email_confirmation.html").render(context)
-            }
-        self.send_mail(heads, body)
+        self.send_mail(context)
 
 class TemporaryPassword(Mailer):
     name = 'temporary_password'
     unsubscribable = False
     sent_to = ['user']
+    template = 'emails/password_recovery'
+    subject = 'Password recovery for newhive.com'
 
-    def send(user, recovery_link):
+    def send(self, user, recovery_link):
         self.recipient = user
-        heads = {
-            'To' : user.get('email')
-            , 'Subject' : 'Password recovery for thenewhive.com'
-            }
         context = {
             'recovery_link': recovery_link
-            ,'user_fullname' : user['fullname']
-            ,'user_name': user['name']
+            , 'recipient': self.recipient
             }
-        body = {
-            'plain': self.jinja_env.get_template("emails/password_recovery.txt").render(context)
-            ,'html': self.jinja_env.get_template("emails/password_recovery.html").render(context)
-            }
-        self.send_mail(heads, body)
+        self.send_mail(context)
 
 class ExprAction(Mailer):
 
@@ -215,17 +308,23 @@ class ExprAction(Mailer):
     def recipient(self): return self.feed.entity.owner
     @property
     def initiator(self): return self.feed.initiator
-    subject = None
+    @property
+    def subject(self): return self.initiator.get('name') + ' ' + ' '.join(self.header_message)
     sent_to = ['user']
     template = "emails/expr_action"
 
     @property
-    def featured_expressions(self):
-        exprs = self.initiator.get_top_expressions(6)
-        if exprs.count() >= 6: return exprs
+    def featured_exprs(self):
+        exprs = self.initiator.recent_expressions
+        if exprs.count() >= 6:
+            return (exprs, 'user')
+        else:
+            return (self.db.Expr.featured(6), 'site')
 
     def send(self, context=None):
         if not context: context = {}
+
+        featured, featured_type = self.featured_exprs
         context.update({
             'message': self.message
             ,'initiator': self.initiator
@@ -233,34 +332,17 @@ class ExprAction(Mailer):
             , 'header': self.header_message
             , 'expr': self.card
             , 'server_url': abs_url()
-            , 'featured_exprs': self.featured_expressions
-            , 'type': self.name
+            , 'featured_exprs': featured
+            , 'featured_type': featured_type
             })
         icon = self.db.assets.url('skin/1/email/' + self.name + '.png', return_debug=False)
         if icon: context.update(icon=icon)
-
-        heads = {
-             'To' : self.recipient.get('email')
-            ,'Subject' : self.subject or self.initiator.get('name') + ' ' + ' '.join(self.header_message)
-            }
-
-        body = {}
-        try:
-            html = self.jinja_env.get_template(self.template + ".html").render(context)
-            body['html'] = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
-        except TemplateNotFound: pass
-
-        try: body['plain'] = self.jinja_env.get_template(self.template + ".txt").render(context)
-        except TemplateNotFound: pass
-
-        # make sure that at least one of html or plain is present
-        assert body
 
         sendgrid_args = {
             'initiator': self.initiator and self.initiator.get('name')
             , 'expr_id': self.card.id
             }
-        self.send_mail(heads, body, unique_args=sendgrid_args)
+        self.send_mail(context, unique_args=sendgrid_args)
 
 class Comment(ExprAction):
     name = 'comment'
@@ -276,6 +358,7 @@ class UserStar(ExprAction):
     name = 'listen'
     message = "Now they will receive updates about what you're creating and broadcasting."
     header_message = ['is now', 'listening to you']
+    template = 'emails/listen'
     @property
     def card(self): return self.feed.initiator
 
@@ -304,6 +387,10 @@ class Broadcast(ExprAction):
         return self.feed.entity
 
 class Feed(Mailer):
+    def __init__(self, *args, **kwargs):
+        super(Feed, self).__init__(*args, **kwargs)
+        self.mailers = {}
+
     def send(self, feed):
         if type(feed) == newhive.state.Comment:
             mailer_class = Comment
@@ -315,34 +402,30 @@ class Feed(Mailer):
         elif type(feed) == newhive.state.Broadcast:
             mailer_class = Broadcast
 
-        mailer = mailer_class(self.jinja_env, self.db)
+        if not self.mailers.has_key(mailer_class):
+            self.mailers[mailer_class] = mailer_class(self.jinja_env, self.db, smtp=self.smtp)
+        mailer = self.mailers[mailer_class]
         mailer.feed = feed
         mailer.send()
 
-class UserRegisterConfirmation(Mailer):
-    name = 'user_register_confirmation'
+class Welcome(Mailer):
+    name = 'welcome'
     unsubscribable = False
     sent_to = ['nonuser']
+    template = 'emails/welcome'
+    subject = 'Welcome to NewHive! :)'
 
     def send(self, user):
+        self.recipient = user
         user_profile_url = user.url
         user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
-        heads = {
-            'To' : user['email']
-            , 'Subject' : 'Thank you for creating an account on thenewhive.com'
-            }
         context = {
-            'user_fullname' : user['fullname']
-            , 'user_home_url' : user_home_url
-            , 'user_home_url_display' : re.sub(r'^https?://', '', user_home_url)
-            , 'user_profile_url' : user_profile_url
-            , 'user_profile_url_display' : re.sub(r'^https?://', '', user_profile_url)
+            'recipient': user
+            , 'create_link' : abs_url(secure=True) + "edit"
+            , 'create_icon': self.db.assets.url('skin/1/create.png')
+            , 'featured_exprs': self.db.Expr.featured(6)
             }
-        body = {
-             'plain': self.jinja_env.get_template("emails/thank_you_register.txt").render(context)
-            ,'html': self.jinja_env.get_template("emails/thank_you_register.html").render(context)
-            }
-        self.send_mail(heads, body)
+        self.send_mail(context)
 
 class ShareExpr(ExprAction):
 
@@ -352,18 +435,25 @@ class ShareExpr(ExprAction):
     initiator = None
     sent_to = ['user', 'nonuser']
 
-    def send(self, expr, initiator, recipient, message):
+    def heads(self):
+        heads = super(ShareExpr, self).heads()
+        if self.bcc:
+            heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
+        return heads
+
+    def send(self, expr, initiator, recipient, message, bcc=False):
         self.card = expr
         self.initiator = initiator
         self.recipient = recipient
         self.message = message
+        self.bcc = bcc
         context = {}
-        if not self.recipient.id:
+        if not hasattr(self.recipient, 'id'):
             referral = initiator.new_referral(
                     {'to': recipient.get('email'), 'type': 'email'}
                     , decrement=False)
             context['signup_url'] = referral.url
-        super(ShareExpr, self).send()
+        super(ShareExpr, self).send(context)
 
 class Featured(ExprAction):
     name = 'featured'
@@ -373,7 +463,7 @@ class Featured(ExprAction):
     message = 'We added your expression to the featured collection.'
     initiator = None
     recipient = None
-    featured_expressions = None
+    featured_exprs = (None, None)
     subject = "Congratulations, we featured your expression!"
     template = "emails/featured"
 
@@ -385,8 +475,11 @@ class Featured(ExprAction):
 class Milestone(Mailer):
     name = 'milestone'
     sent_to = ['user']
+    subject = None
+    template = "emails/milestone"
 
     def send(self, expr, milestone):
+        self.recipient = expr.owner
         context = {
             'message': ui.milestone_message
             , 'expr': expr
@@ -394,17 +487,95 @@ class Milestone(Mailer):
             , 'server_url': abs_url()
             }
 
-        heads = {
-            'To': expr.owner.get('email')
-            , 'Subject': 'Your expression "{}" has {} views'.format(expr['title'], milestone)
-            }
-
-        html = self.jinja_env.get_template("emails/milestone.html").render(context)
-        html = inliner.inline_styles(html, css_path=config.src_home + "/libsrc/email.css")
-
-        body = {
-             'plain': self.jinja_env.get_template("emails/share.txt").render(context)
-            ,'html': html
-            }
+        self.subject = u'Your expression "{}" has {} views'.format(expr['title'], milestone)
         sendgrid_args = {'expr_id': expr.id, 'milestone': milestone}
-        self.send_mail(heads, body, unique_args=sendgrid_args)
+
+        self.send_mail(context, unique_args=sendgrid_args)
+
+class SignupRequest(Mailer):
+    name = 'signup_request'
+    sent_to = ['nonuser']
+    template = "emails/signup_request"
+    unsubscribable = False
+    subject = 'Thank you for signing up for a beta account on The New Hive'
+    header_message = ['<span class="active">Thank you</span> for signing', 'up for a beta account. :)']
+    message = "We are getting The New Hive ready for you.<br/>" + \
+              "Expect to get a beta invitation in your inbox ASAP.<br/>" + \
+              "We look forward to seeing your expressions!<br/><br/>" + \
+              "Talk to you soon,<br/><b>The New Hive team</b>"
+
+    def send(self, email, name, unique_args):
+        self.recipient = {'email': email, 'name': name}
+        context = {
+            'featured_exprs': self.db.Expr.featured(6)
+            , 'recipient': self.recipient
+            , 'message': self.message
+            , 'message_safe': True
+            , 'header': self.header_message
+            }
+        self.send_mail(context, unique_args=unique_args)
+
+class UserReferral(Mailer):
+    name = 'user_referral'
+    sent_to = ['nonuser']
+    template = "emails/invitation"
+    unsubscribable = True
+
+    @property
+    def subject(self): return self.initiator.get('fullname') + ' has invited you to The New Hive'
+
+    def send(self, referral, initiator):
+        self.initiator = initiator
+        self.recipient = {'email': referral['to']}
+        context = {
+            'initiator': initiator
+            , 'recipient': {'name': referral.get('name')}
+            , 'url': referral.url
+            }
+        self.send_mail(context, unique_args={'referral_id': referral.id})
+
+class SiteReferral(Mailer):
+    name = 'site_referral'
+    unsubscribable = False
+    sent_to = ['nonuser']
+    template = 'emails/invitation'
+    subject = "Congratulations, here is your NewHive invite!"
+
+    def send(self, email, name=False, force_resend=False):
+        self.recipient = {'email': email, 'name': name}
+
+        user = self.db.User.named(config.site_user)
+        referral = user.new_referral({'name': name, 'to': email})
+
+        context = {
+            'recipient': self.recipient
+            , 'url': referral.url
+            }
+
+        self.send_mail(context)
+        return referral.id
+
+class SiteReferralReminder(SiteReferral):
+    name = 'site_referral_reminder'
+    unsubscribable = True
+    template = 'emails/invitation_reminder'
+    subject = "A friendly reminder to create your NewHive account"
+
+    def send(self, referral):
+        self.recipient = {'email': referral.get('to'), 'name': referral.get('name')}
+
+        messages = {
+                "A": "We noticed you recently signed up for New Hive, your online blank canvas. Congratulations, you've been invited to join the beta party! Click the link below to create your account and reserve your URL. :)"
+                , "B": "Just one more step and you are a part of NewHive's exclusive beta test! Click on the link below to create your profile and start expressing yourself. :)"
+                , "C": "We noticed you recently signed up for New Hive, your online blank canvas. Click on the link below to join the party!"
+                }
+
+        version, message = random.choice(messages.items())
+
+        context = {
+                'recipient': self.recipient
+                , 'url': referral.url
+                , 'message': message
+                }
+
+        self.send_mail(context, unique_args={'referral_id': referral.id, 'version': version})

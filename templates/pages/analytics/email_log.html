@@ -1,0 +1,31 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block table_head %}
+<tr>
+    <th>Date</th>
+    <th>Category</th>
+    <th>Email</th>
+    <th>Recipient</th>
+    <th>Initiator</th>
+    <th>Sent</th>
+    <th>Clicked</th>
+    <th>Unsubscribed</th>
+    <th>Preview</th>
+</tr>
+{% endblock %}
+
+{% block table_body %}
+{% for row in data %}
+    <tr>
+        <td data-type="epoch_date">{{ row.created }}</td>
+        <td>{{ row.category }}</td>
+        <td>{{ row.email }}</td>
+        <td>{{ row.recipient_name }}</td>
+        <td>{{ row.initiator_name }}</td>
+        <td>{{ row.sent }}</td>
+        <td>{{ "Yes" if row.click else "" }}</td>
+        <td>{{ row.unsubscribe }}</td>
+        <td><a href="{{ row.debug_url }}">link</a></td>
+    </tr>
+{% endfor %}
+{% endblock %}

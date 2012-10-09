@@ -308,7 +308,19 @@ $(function () {
   }
   place_apps();
 
-  if (urlParams.loadDialog) loadDialog("?dialog=" + urlParams.loadDialog);
+  dialog_actions = {
+      comments: function(){ $('#comment_btn').click(); }
+      , email_invites: function(){ $('#hive_menu .email_invites').click(); }
+  };
+  if (urlParams.loadDialog) {
+      action = dialog_actions[urlParams.loadDialog];
+      if (action) {
+          action();
+      } else {
+          loadDialog("?dialog=" + urlParams.loadDialog);
+      }
+  }
+
   if( dialog_to_show ){ showDialog(dialog_to_show.name, dialog_to_show.opts); };
   if (new_fb_connect) {
       _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
@@ -339,7 +351,7 @@ function link_target(i, a) {
 
     if(href && href.indexOf('http') === 0 && !re.test(href)) {
         a.attr('target', '_blank');
-    } else {
+    } else if (href && href.indexOf('http') === 0 && re.test(href)) {
         a.attr('target', '_top');
     }
 }
@@ -820,7 +832,7 @@ Hive.login_submit = function(form){
 Hive.logout_submit = function(that){
     var form = $(that).parents('form');
     form.find('[name=url]').val(window.location.href);
-    _gaq.push(['_trackEvent', 'logout']);
+    _gaq.push(['_trackEvent', 'logout', 'complete']);
     // Delay ensures that event is tracked
     setTimeout(function(){ form.submit(); }, 800);
 };

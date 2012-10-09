@@ -17,6 +17,14 @@ def admins(server):
             return server(self, request, response, *arg, **kwarg)
     return access_controlled
 
+def admins_insecure(server):
+    def access_controlled(self, request, response, *arg, **kwarg):
+        if not request.requester.is_admin:
+            return self.serve_404(request, response, *arg, **kwarg)
+        else:
+            return server(self, request, response, *arg, **kwarg)
+    return access_controlled
+
 def querystring(args):
     if not args: return ''
     parms = []

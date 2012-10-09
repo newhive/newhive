@@ -4,7 +4,11 @@ Hive.Page = (function(){
     var o = {};
     o.initialized = false;
 
-    o.send_top = function(msg){ top.postMessage(msg, Hive.parent_url); },
+    o.send_top = function(msg){
+        //TODO: replace this hack with the right parent_url from the server
+        window.parent.postMessage(msg, Hive.parent_url.replace(/^http/, 'https'));
+        window.parent.postMessage(msg, Hive.parent_url.replace(/^https/, 'http'));
+    },
         
     o.paging_sent = false;
     o.page = function(direction){

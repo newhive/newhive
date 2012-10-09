@@ -11,13 +11,21 @@ class Analytics(Application):
         super(Analytics, self).__init__(*a, **b)
         self.mdb = b['db'].mdb # direct reference to pymongo db
 
+    def _iso_args(self, args):
+        start = args.get('start')
+        if start: start = int(time.mktime(time.strptime(start, "%Y-%m-%d")))
+        end = args.get('end')
+        if end: end = int(time.mktime(time.strptime(end, "%Y-%m-%d")))
+        return (start, end)
+
     def active_users(self, request, response):
         analytics.user_first_month(self.db)
         if request.args.has_key('start') and request.args.has_key('end'):
             response.context['start'] = request.args.get('start')
             response.context['end'] = request.args.get('end')
-            start = int(time.mktime(time.strptime(request.args.get('start'), "%Y-%m-%d")))
-            end = int(time.mktime(time.strptime(request.args.get('end'), "%Y-%m-%d")))
+            start, end = self._iso_args(args)
+            #start = int(time.mktime(time.strptime(request.args.get('start'), "%Y-%m-%d")))
+            #end = int(time.mktime(time.strptime(request.args.get('end'), "%Y-%m-%d")))
             active_users, custom_histogram = analytics.active_users(start=start, end=end)
         else:
             event = request.args.get('event')
@@ -146,8 +154,23 @@ class Analytics(Application):
 
         return self.serve_page(response, 'pages/analytics/funnel2.html')
 
+    def signups(self, request, response):
+        period = request.args.get('period', 'hour')
+        kwargs = {}
+        kwargs['period'] = period + 's'
+        kwargs['start'], kwargs['end'] = self._iso_args(request.args)
+        response.context['data'] = json.dumps(analytics.signups(self.db.mdb, **kwargs))
+        response.context['title'] = 'Signups per ' + period
+        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
+
     def signups_per_hour(self, request, response):
         response.context['data'] = json.dumps(analytics.contacts_per_hour(self.db.mdb))
+        response.context['title'] = "Signups per hour"
+        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
+
+    def signups_per_day(self, request, response):
+        response.context['data'] = json.dumps(analytics.contacts_per_day(self.db.mdb))
+        response.context['title'] = "Signups per day"
         return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
      #else:
     #    return serve_404(self, request, response)
@@ -313,3 +336,9 @@ class Analytics(Application):
         out = data[['viewers', 'starrers', 'sharers', 'creators']] / data.counts
         response.context['data'] = out
         return self.serve_page(response, 'pages/analytics/engagement_pyramid.html')
+
+    @admins
+    def email_log(self, request, response):
+        spec = dfilter(request.args, ['category', 'initiator_name', 'recipient_name', 'email'])
+        response.context['data'] = self.db.MailLog.search(spec, sort=[('created', -1)], limit=500)
+        return self.serve_page(response, 'pages/analytics/email_log.html')

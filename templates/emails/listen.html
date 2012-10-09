@@ -1,0 +1,18 @@
+{% extends "emails/expr_action.html" %}
+
+{% block below_card %}
+    <div id="create" class="central_call_to_action">
+      <h3>
+        <img src="{{icon}}"/>
+        <a href="{{initiator.url}}" title="Listen to {{initiator.name}}">Listen to {{initiator.name}}</a>
+      </h3>
+    </div>
+{% endblock %}
+
+{% block footer_message %}
+    {# intentionally empty to override super-template #}
+{% endblock %}
+
+{% block action_icon %}
+    {# intentionally empty to override super-template #}
+{% endblock %}

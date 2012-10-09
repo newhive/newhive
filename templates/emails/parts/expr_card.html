@@ -2,27 +2,29 @@
     {% call link(expr) %}
         <img src="{{ expr.thumb }}" />
     {% endcall %}
+    <table height=190><tr><td style="vertical-align: middle">
     <div class="data">
-        <h3 class="title">
-            {% call link(expr) %}
-                {{ expr.title or expr.fullname }}
-            {% endcall %}
-        </h3>
-        <p class="tags">
-            {% if expr.tags_index %}
-                {% for tag in expr.tags_index %}#{{tag}} {% endfor %}
-            {% endif %}
-        </p>
+        <div class="title_tags">
+            <h3 class="title">
+                {% call link(expr) %}
+                    {{ (expr.title or expr.fullname) | truncate(38) }}
+                {% endcall %}
+            </h3>
+            <p class="tags">
+                {{ expr.tag_string | truncate(55) }}
+            </p>
+        </div>
         <h4 class="name">
             {% call link(expr.owner) %}
                 {% if expr.owner_name %}
                     {{ expr.owner_name }}
-                {% else %}
+                {% elif expr.expr_count > 0 %}
                     {{ expr.expr_count }} expressions
                 {% endif %}
             {% endcall %}
         </h4>
     </div>
+    </td></tr></table>
 </div>
 <h3 id="text_link">
     {% call link(expr) %}{{ expr.url | clean_url }}{% endcall %}
