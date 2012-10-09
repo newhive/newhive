@@ -64,8 +64,7 @@ class Application(object):
         context.update(
              home_url = response.user.get_url()
             ,user = response.user
-            ,user_client = { 'name': response.user.get('name'), 'id': response.user.id,
-                'thumb': response.user.get_thumb(70) }
+            ,client_user = response.user.client_view()
             ,admin = response.user.is_admin
             ,beta_tester = config.debug_mode or response.user.get('name') in config.beta_testers
             ,create = abs_url(secure = True) + 'edit'

@@ -93,7 +93,7 @@ class Community(Application, PagingMixin):
 
     def page(self, request, response):
         def expr_info(expr):
-            info = dfilter(expr, ['_id', 'thumb', 'title', 'tags', 'owner', 'owner_name'])
+            info = dfilter(expr, ['_id', 'name', 'feed', 'thumb', 'title', 'tags', 'tags_index', 'owner', 'owner_name'])
             dict.update(info, id = expr.id, thumb = expr.get_thumb() )
             return info
 
@@ -117,44 +117,6 @@ class Community(Application, PagingMixin):
             response.context.update({ 'title': request.owner['fullname'] })
 
         return self.serve_page(response, 'pages/community.html')
-
-    # destructively prepare state.Expr for client consumption
-    def expr_prepare(self, expr, viewer=None, password=None):
-        owner = expr.owner
-        owner_info = dfilter(owner, ['name', 'fullname', 'tags'])
-        owner_info.update({ 'id': owner.id,  })
-
-        counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
-            k, v in expr.get('analytics', {}).iteritems() ])
-        counts['Views'] = large_number(expr.views)
-        counts['Comment'] = large_number(expr.comment_count)
-
-        # check if auth is required so we can then strip password
-        auth_required = expr.auth_required()
-        if expr.auth_required(viewer, password):
-            for key in ['password', 'thumb', 'thumb_file_id']: expr.pop(key, None)
-            dict.update(expr, {
-                 'tags': ''
-                ,'background': {}
-                ,'apps': []
-                ,'title': '[Private]'
-                ,'tags_index': []
-            })
-
-        dict.update(expr, {
-            'id': expr.id,
-            'thumb': expr.get_thumb(),
-            'owner': owner.client_view(viewer=viewer),
-            'counts': counts,
-            'url': expr.url,
-            'auth_required': auth_required,
-            'updated_friendly': friendly_date(expr['updated'])
-        })
-
-        if viewer.is_admin:
-            dict.update(expr, { 'featured': expr.is_featured })
-
-        return expr
 
     def expr_to_html(self, exp):
         """Converts JSON object representing an expression to HTML"""

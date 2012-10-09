@@ -396,10 +396,12 @@ Hive.Menus = (function(){
         o.update_owner( expr.owner );
 
         var is_empty = function(v){ return !v || (v == '0') };
-        $('.view .count').html(expr.counts.Views);
-        $('.star .count').html(expr.counts.Star).toggleClass('zero', is_empty(expr.counts.Star));
-        $('.broadcast .count').html(expr.counts.Broadcast).toggleClass('zero', is_empty(expr.counts.Broadcast));
-        $('.comment .count').html(expr.counts.Comment).toggleClass('zero', is_empty(expr.counts.Comment));
+        if( expr.counts ){
+            $('.view .count').html(expr.counts.Views);
+            $('.star .count').html(expr.counts.Star).toggleClass('zero', is_empty(expr.counts.Star));
+            $('.broadcast .count').html(expr.counts.Broadcast).toggleClass('zero', is_empty(expr.counts.Broadcast));
+            $('.comment .count').html(expr.counts.Comment).toggleClass('zero', is_empty(expr.counts.Comment));
+        }
 
         // update share URLs and embed dialog
         o.update_share_urls(expr);
@@ -411,8 +413,9 @@ Hive.Menus = (function(){
         $('#expr_menu .tags').html(tag_list_html(expr.tags_index));
         $('#expr_menu .time').html(expr.updated_friendly);
 
-        $('#add_to_featured').find('.' + expr.featured.toString()).show();
-        $('#add_to_featured').find('.' + (!expr.featured).toString()).hide();
+        var featured = expr.featured ? 'true' : 'false';
+        $('#add_to_featured').find('.' + featured).show();
+        $('#add_to_featured').find('.' + featured).hide();
 
         // load expr's feed items: stars, broadcasts, comments
         var load_feed = function(data, status, jqXHR){

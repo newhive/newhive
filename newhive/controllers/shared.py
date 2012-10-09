@@ -1,7 +1,7 @@
 import os, re, json, time, mimetypes, math
 from functools import partial
 from datetime import datetime
-from newhive import config, colors, auth
+from newhive import config, colors, auth, state
 import newhive.ui_strings.en as ui
 from newhive.utils import *
 import urllib
@@ -88,7 +88,7 @@ class PagingMixin(object):
             self.set_next_page( request, response, cards )
             viewer = paging_args.get('viewer')
             response.context.update( cards = map(
-                lambda o: o.client_view( viewer = viewer ), cards ) )
+                lambda o: self.item_prepare( o, viewer = viewer ), cards ) )
         return wrapped
 
     @paging_decorator
@@ -145,3 +145,40 @@ class PagingMixin(object):
         query = request.args.get('q', '')
         link_args(response, { 'q': query } )
         return self.db.query( query, **args )
+
+    # destructively prepare state.Expr for client consumption
+    def item_prepare(self, item, viewer=None, password=None):
+        if type( item ) == state.User: return item
+        expr = item
+
+        counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
+            k, v in expr.get('analytics', {}).iteritems() ])
+        counts['Views'] = large_number(expr.views)
+        counts['Comment'] = large_number(expr.comment_count)
+
+        # check if auth is required so we can then strip password
+        auth_required = expr.auth_required()
+        if expr.auth_required(viewer, password):
+            for key in ['password', 'thumb', 'thumb_file_id']: expr.pop(key, None)
+            dict.update(expr, {
+                 'tags': ''
+                ,'background': {}
+                ,'apps': []
+                ,'title': '[Private]'
+                ,'tags_index': []
+            })
+
+        dict.update(expr, {
+            'id': expr.id,
+            'thumb': expr.get_thumb(),
+            'owner': expr.owner.client_view(viewer=viewer),
+            'counts': counts,
+            'url': expr.url,
+            'auth_required': auth_required,
+            'updated_friendly': friendly_date(expr['updated'])
+        })
+
+        if viewer.is_admin:
+            dict.update(expr, { 'featured': expr.is_featured })
+
+        return expr

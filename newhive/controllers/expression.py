@@ -75,7 +75,7 @@ class Expression(Community, PagingMixin):
         if is_owner: owner.unflag('expr_new')
 
         expr_url = abs_url(domain = config.content_domain) + resource.id
-        self.expr_prepare(resource, viewer=response.user)
+        self.item_prepare(resource, viewer=response.user)
         response.context.update(
              expr_frame = True
             ,title = resource.get('title', False)
@@ -94,7 +94,7 @@ class Expression(Community, PagingMixin):
     def info(self, request, response, expr=None):
         expr = expr or self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
-        return self.serve_json( response, self.expr_prepare(
+        return self.serve_json( response, self.item_prepare(
             expr, viewer=response.user, password=request.form.get('password')) )
 
     # Renders the actual content of an expression.

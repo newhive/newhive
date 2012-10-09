@@ -438,7 +438,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.current_url = function(context){
         var url = URI('/' + current_expr.owner_name + '/' + current_expr.name);
-        url.addQuery({ q: o.context() });
+        url.addQuery({ q: escape( o.context() ) });
         return url.toString();
     };
 
