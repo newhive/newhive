@@ -339,5 +339,6 @@ class Analytics(Application):
 
     @admins
     def email_log(self, request, response):
-        response.context['data'] = self.db.MailLog.search({}, sort=[('created', -1)], limit=500)
+        spec = dfilter(request.args, ['category', 'initiator_name', 'recipient_name', 'email'])
+        response.context['data'] = self.db.MailLog.search(spec, sort=[('created', -1)], limit=500)
         return self.serve_page(response, 'pages/analytics/email_log.html')
