@@ -48,7 +48,7 @@ class User(Application):
 
         ab_variations = ['pages/user_settings.html', 'pages/signup.html']
         group = request.cookies.get('AB_SIG')
-        if not group and group != None:
+        if group is None:
             group = random.randint(0, len(ab_variations) - 1)
             set_cookie(response, 'AB_SIG', group, secure=True)
         template = ab_variations[int(group)]
