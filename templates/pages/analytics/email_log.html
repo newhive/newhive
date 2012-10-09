@@ -8,6 +8,7 @@
     <th>Recipient</th>
     <th>Initiator</th>
     <th>Sent</th>
+    <th>Clicked</th>
     <th>Unsubscribed</th>
     <th>Preview</th>
 </tr>
@@ -22,6 +23,7 @@
         <td>{{ row.recipient_name }}</td>
         <td>{{ row.initiator_name }}</td>
         <td>{{ row.sent }}</td>
+        <td>{{ "Yes" if row.click else "" }}</td>
         <td>{{ row.unsubscribe }}</td>
         <td><a href="{{ row.debug_url }}">link</a></td>
     </tr>
