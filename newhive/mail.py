@@ -226,6 +226,10 @@ class Mailer(object):
            , 'email_id': email_id
            , 'css_debug': css_debug and self.inline_css
            })
+
+        if hasattr(self.__class__.__base__, 'name'):
+            context['super_type'] = self.__class__.__base__.name
+
         body = self.body(context)
         heads = self.heads()
         heads.update(To=self.recipient.get('email'))
@@ -544,3 +548,19 @@ class SiteReferral(Mailer):
 
         self.send_mail(context)
         return referral.id
+
+class SiteReferralReminder(SiteReferral):
+    name = 'site_referral_reminder'
+    unsubscribable = True
+    template = 'emails/invitation_reminder'
+    subject = "A friendly reminder to create your NewHive account"
+
+    def send(self, referral):
+        self.recipient = {'email': referral.get('to'), 'name': referral.get('name')}
+
+        context = {
+                'recipient': self.recipient
+                , 'url': referral.url
+                }
+
+        self.send_mail(context, unique_args={'referral_id': referral.id})

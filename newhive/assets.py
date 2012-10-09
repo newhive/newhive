@@ -73,11 +73,13 @@ class Assets(object):
 
         return self
 
-    def url(self, name, return_debug=True):
+    def url(self, name, abs=False, return_debug=True):
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
         if props:
-            return (self.local_base_url if props[2] else self.base_url) + name + '?' + props[1]
+            url = (self.local_base_url if props[2] else self.base_url) + name + '?' + props[1]
+            if abs and url.startswith('/'): url = abs_url() + url[1:]
+            return url
         elif return_debug:
             return '/not_found:' + name
 

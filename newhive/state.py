@@ -1301,7 +1301,7 @@ class FriendJoined(Feed):
 @Database.register
 class Referral(Entity):
     cname = 'referral'
-    indexes = [ 'key', 'request_id' ]
+    indexes = [ 'key', 'request_id', 'created' ]
 
     def create(self):
         self['key'] = junkstr(16)

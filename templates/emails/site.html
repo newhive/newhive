@@ -1,10 +1,10 @@
 {% extends "emails/colorful.html" %}
 
-{% block body_classes%}{{super()}} {{type}} site{% endblock %}
+{% block body_classes%}{{super()}} {{type}} {{super_type}} site{% endblock %}
 
 {% block body %}
     <div id="logo">
-        <img src="{{ 'skin/1/newhive_logo_lg.png' | asset_url }}"/>
+        <img src="{{ 'skin/1/newhive_logo_lg.png' | asset_url(abs=True) }}"/>
     </div>
 
     <h2 id="greeting" class="line">

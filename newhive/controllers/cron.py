@@ -73,3 +73,26 @@ class Cron(Application):
             send(expr)
 
         return stats
+
+    def site_referral_reminder(self, delay=48*3600, span=60):
+        spec = {
+                'user_created': {'$exists': False}
+                , 'reuse': {'$exists': False}
+                , 'user': self.db.User.site_user.id
+                , 'created': {'$gt': now() - delay - span, '$lt': now() - delay }
+                }
+        stats = {'send_count': 0}
+
+        mailer = newhive.mail.SiteReferralReminder(db=self.db, jinja_env=self.jinja_env)
+
+        sent_emails = []
+        for referral in self.db.Referral.search(spec):
+            address = referral.get('to')
+            if address not in sent_emails:
+                mailer.send(referral)
+                referral.update_cmd({'$push': {'reminder_sent': now()}})
+                stats['send_count'] += 1
+                sent_emails.append(address)
+
+        return stats
+
