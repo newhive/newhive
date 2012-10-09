@@ -82,7 +82,7 @@ class Cron(Application):
                 , 'created': {'$gt': now() - delay - span, '$lt': now() - delay }
                 , 'to': re.compile(r'@')
                 }
-        stats = {'send_count': 0}
+        stats = {'send_count': 0, 'timestamp': now(), 'args': {'delay': delay, 'span': span}}
 
         mailer = newhive.mail.SiteReferralReminder(db=self.db, jinja_env=self.jinja_env)
 
