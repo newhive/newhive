@@ -310,6 +310,7 @@ $(function () {
 
   dialog_actions = {
       comments: function(){ $('#comment_btn').click(); }
+      , email_invites: function(){ $('#hive_menu .email_invites').click(); }
   };
   if (urlParams.loadDialog) {
       action = dialog_actions[urlParams.loadDialog];
