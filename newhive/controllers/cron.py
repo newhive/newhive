@@ -80,6 +80,7 @@ class Cron(Application):
                 , 'reuse': {'$exists': False}
                 , 'user': self.db.User.site_user.id
                 , 'created': {'$gt': now() - delay - span, '$lt': now() - delay }
+                , 'to': re.compile(r'@')
                 }
         stats = {'send_count': 0}
 
