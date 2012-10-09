@@ -139,3 +139,18 @@ class UserReferral(MailerTest):
         recipient = {'name': self.test_nonuser['name'], 'to': self.test_nonuser['email']}
         referral = self.test_user.new_referral(recipient, decrement=False)
         self.mailer.send(referral, self.test_user)
+
+class SiteReferralReminder(MailerTest):
+    def setUp(self):
+        super(SiteReferralReminder, self).setUp()
+        self.mailer = mail.SiteReferralReminder(db=db, jinja_env=jinja_env)
+
+    def test_site_referral_reminder(self):
+        spec = {
+                'user_created': {'$exists': False}
+                , 'reuse': {'$exists': False}
+                , 'user': db.User.site_user.id
+                }
+        offset = random.randint(1,100)
+        ref = db.Referral.search(spec, sort=[('created', -1)], offset=offset, limit=1)[0]
+        self.mailer.send(ref)

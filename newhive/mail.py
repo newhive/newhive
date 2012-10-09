@@ -1,4 +1,4 @@
-import crypt, urllib, time, json, re, pymongo
+import crypt, urllib, time, json, re, pymongo, random
 import newhive.state
 from newhive.state import abs_url
 from newhive import config, utils
@@ -205,6 +205,7 @@ class Mailer(object):
             record.update({'recipient': self.recipient.id, 'recipient_name': self.recipient.get('name')})
         if type(self.initiator) == newhive.state.User:
             record.update({'initiator': self.initiator.id, 'initiator_name': self.initiator.get('name')})
+        if kwargs.has_key('unique_args'): record['unique_args'] = kwargs['unique_args']
 
         # Bypass sendgrid list management, we have our own system
         filters.update(bypass_list_management={'settings': {'enable': 1}})
@@ -252,7 +253,12 @@ class Mailer(object):
                     s = u"{:<20}{}\n".format(key + u":", val)
                     f.write(s.encode('utf-8'))
                 f.write('</pre></div>')
-                f.write(body['html'].encode('utf-8'))
+                if body.has_key('html'):
+                    f.write(body['html'].encode('utf-8'))
+                else:
+                    f.write('<pre style="font-family: sans-serif;">')
+                    f.write(body['plain'].encode('utf-8'))
+                    f.write('</pre>')
             logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
             record.update(debug_url=abs_url(secure=True) + path)
 
@@ -558,9 +564,18 @@ class SiteReferralReminder(SiteReferral):
     def send(self, referral):
         self.recipient = {'email': referral.get('to'), 'name': referral.get('name')}
 
+        messages = {
+                "A": "We noticed you recently signed up for New Hive, your online blank canvas. Congratulations, you've been invited to join the beta party! Click the link below to create your account and reserve your URL. :)"
+                , "B": "Just one more step and you are a part of NewHive's exclusive beta test! Click on the link below to create your profile and start expressing yourself. :)"
+                , "C": "We noticed you recently signed up for New Hive, your online blank canvas. Click on the link below to join the party!"
+                }
+
+        version, message = random.choice(messages.items())
+
         context = {
                 'recipient': self.recipient
                 , 'url': referral.url
+                , 'message': message
                 }
 
-        self.send_mail(context, unique_args={'referral_id': referral.id})
+        self.send_mail(context, unique_args={'referral_id': referral.id, 'version': version})
