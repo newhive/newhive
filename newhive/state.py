@@ -58,13 +58,7 @@ class Database:
         args['viewer'] = viewer
         args['limit'] = limit
         search = self.parse_query(q)
-        sort = 'updated'
 
-        page_anchor = args.get('page')
-        if is_mongo_key(page_anchor):
-            res = self.Expr.fetch(page_anchor) or self.User.fetch(page_anchor)
-            args['page'] = res[sort]
-        
         # substitute featured with network when not logged in
         if not viewer and search.get('network'):
             search['featured'] = True
@@ -81,14 +75,18 @@ class Database:
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
         else:
+            sort = 'updated'
+
             users = self.User.page(spec, **args)
             exprs = self.Expr.page(spec, **args)
             results = users + exprs
             results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
 
-        page = Page(results)
-        page.next = page[-1][sort] if len(page) == limit else None
-        return page
+            # redo pagination property after merging possible user results with expr results
+            results = Page(results)
+            results.next = results[-1][sort] if len(results) == limit else None
+
+        return results
 
     def parse_query(self, q):
         """ Parses search query into MongoDB spec
@@ -492,6 +490,8 @@ class User(HasSocial):
         return res
 
     def feed_network(self, spec={}, limit=40, page=None, **args):
+        #print 'feed_network(: ', args
+        #return []
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
                 'class_name': {'$in': ['NewExpr', 'Broadcast']}
@@ -508,9 +508,12 @@ class User(HasSocial):
         # to.  In this case, look up the most recent appropriate feed item with
         # that expression as entity
         if is_mongo_key(page):
-            feed_start = self.feed_search({'entity': page, '$or': or_clause },
-                    viewer=args['viewer'], limit=1)
-            if feed_start.count(): args['page'] = feed_start.next()['created']
+            print dict( spec={'entity': page, '$or': or_clause }, viewer=args['viewer'], limit=1 )
+            feed_start = list( self.feed_search({'entity': page, '$or': or_clause },
+                    viewer=args['viewer'], limit=1) )
+            if len( feed_start ): page = feed_start[0]['created']
+            else: page = None
+
         # produces an iterable for all network feed items
         res = self.feed_search({ '$or': or_clause }, auth='public', page=page, **args)
         # groups feed items by ther expressions (entity attribute), and applies page limit

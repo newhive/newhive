@@ -438,7 +438,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     o.current_url = function(context){
         var url = URI('/' + current_expr.owner_name + '/' + current_expr.name);
-        url.addQuery({ q: escape( o.context() ) });
+        url.addQuery({ q: o.context() });
         return url.toString();
     };
 
@@ -561,7 +561,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var query = URI(window.location.href).query(true).q;
         change_context(query);
 
-        history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        // normalize the URL, not really sure why this is necessary
+        //history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+
         o.populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
