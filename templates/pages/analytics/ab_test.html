@@ -1,0 +1,25 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block header %}
+<h1>{{ title }}</h1>
+{% endblock header %}
+
+{% block table_head %}
+<tr>
+    <th></th>
+    {% for header in data.columns.tolist() %}
+    <th>{{ header }}</th>
+    {% endfor %}
+</tr>
+{% endblock %}
+
+{% block table_body %}
+{% for row_label, row in data.iterrows() %}
+    <tr>
+        <td>{{ row_label }}</td>
+        {% for val in row %}
+        <td>{{ val }}</td>
+        {% endfor %}
+    </tr>
+{% endfor %}
+{% endblock %}

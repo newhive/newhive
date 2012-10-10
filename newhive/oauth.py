@@ -1,4 +1,4 @@
-import httplib2, os, urllib, datetime, json, re
+import httplib2, os, urllib, datetime, json, re, copy
 
 from apiclient.discovery import build
 from apiclient.http import BatchHttpRequest
@@ -72,15 +72,26 @@ class GAClient(object):
         if not hasattr(self, 'segments'):
             self.segments = self.management.segments().list().execute()['items']
         try:
-            return filter(lambda x: x['name'] == name, self.segments)[0]['segmentId']
+            segments = filter(lambda x: x['name'].startswith(name), self.segments)
+            if len(segments) > 1:
+                logger.warn("more than one GA segment matches '{}'".format(name))
+            return segments[0]['segmentId']
         except IndexError as e:
             raise KeyError("segment '{}' not found in google analytics".format(name))
 
 class GAQuery(object):
 
-    def __init__(self):
+    def __init__(self, start_date=None, end_date=None, dimensions=None, metrics=None, filters=None, segment=None):
         self._query = {}
         self.client = GAClient()
+        for arg in ['start_date', 'end_date', 'dimensions', 'metrics', 'filters', 'segment']:
+            val = eval(arg)
+            if val: getattr(self, arg)(val)
+
+    def __copy__(self):
+        new_copy = GAQuery()
+        new_copy._query = copy.copy(self._query)
+        return new_copy
 
     def _ga_date(self, date):
         if hasattr(date, 'strftime'):
@@ -127,7 +138,7 @@ class GAQuery(object):
         return self.client.query(self._query, execute=False)
 
     def execute(self):
-        return self.client.query(self._query)
+        return QueryResponse(self.client.query(self._query))
 
     def find_one(self):
         return self.client.find_one(self.query)
@@ -153,6 +164,16 @@ class GAQuery(object):
         self.segment(segment)
 
         batch.execute(http=self.client.http)
+
+class QueryResponse(dict):
+
+    def __getattr__(self, name):
+        if name in ['rows', 'query', 'columnHeader']:
+            return self[name]
+
+    @property
+    def total(self):
+        return float(self['totalsForAllResults'].values()[0])
 
 class FacebookClient(object):
 

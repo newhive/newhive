@@ -1,5 +1,6 @@
 import datetime, pandas
 import newhive
+import newhive.ab
 from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive import analytics
@@ -342,3 +343,20 @@ class Analytics(Application):
         spec = dfilter(request.args, ['category', 'initiator_name', 'recipient_name', 'email'])
         response.context['data'] = self.db.MailLog.search(spec, sort=[('created', -1)], limit=500)
         return self.serve_page(response, 'pages/analytics/email_log.html')
+
+    @admins
+    def ab_test(self, request, response):
+        tests = {
+                'sig': newhive.ab.AB_SIG()
+                }
+        page = lget(request.path.split('/'), 2)
+        if page:
+            test = tests.get(page)
+            if not test: return self.serve_404(response)
+            response.context['data'] = test.data()
+            response.context['title'] = test.name
+            return self.serve_page(response, 'pages/analytics/ab_test.html')
+        else:
+            response.context['tests'] = tests
+            return self.serve_page(response, 'pages/analytics/ab_tests.html')
+
