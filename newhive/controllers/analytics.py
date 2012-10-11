@@ -353,7 +353,7 @@ class Analytics(Application):
         page = lget(request.path.split('/'), 2)
         if page:
             test = tests.get(page)
-            if not test: return self.serve_404(response)
+            if not test: return self.serve_404(request, response)
             response.context['data'] = test.data()
             response.context['title'] = test.name
             return self.serve_page(response, 'pages/analytics/ab_test.html')
