@@ -69,5 +69,7 @@ always_ssl      = False
 
 interactive = False
 
+auto_invite = False
+
 from os.path import dirname, join, normpath
 src_home        = normpath(join(dirname(__file__), "../.."))
