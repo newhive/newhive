@@ -361,3 +361,8 @@ class Analytics(Application):
             response.context['tests'] = tests
             return self.serve_page(response, 'pages/analytics/ab_tests.html')
 
+    @admins
+    def ga_segments(self, request, response):
+        ga = newhive.oauth.GAClient()
+        segments = ga.management.segments().list().execute()['items']
+        return self.serve_json(response, segments)
