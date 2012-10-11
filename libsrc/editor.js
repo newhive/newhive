@@ -2663,14 +2663,16 @@ Hive.input_frame = function(input, parent, opts){
             'margin-top': '5px'
         });
     parent.append(frame);
-    frame.contents().find('body').append(input)
-        .css({'margin': 0, 'overflow': 'hidden'});
     input.css({
         'border': '5px solid hsl(164, 57%, 74%)',
         'width': '100%',
         'padding': '5px',
         'font-size': '17px'
     });
+    setTimeout(function(){
+        frame.contents().find('body').append(input)
+            .css({'margin': 0, 'overflow': 'hidden'});
+        }, 100);
 
 };
 
