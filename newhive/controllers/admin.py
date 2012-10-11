@@ -157,7 +157,23 @@ class Admin(Application):
                 response.context['older'] = {'exists': False}
 
             response.context['errors'] = errors
+            #response.context['summary'] = self._error_summary(errors)
+
             return self.serve_page(response, 'pages/admin/error_log.html')
+
+    def _error_summary(self, errors):
+        start = datetime.datetime.fromtimestamp(errors[-1])
+        start.replace(hour=8, minute=0, second=0, microsecond=0)
+        end = datetime.datetime.fromtimestamp(errors[0])
+        date_range = pandas.DateRange(start=start, end=end, offset=pandas.DateOffset(hours=6))
+        times = [datetime.datetime.fromtimestamp(e['created']) for e in errors]
+        data = pandas.Series(1, times)
+        data = pandas.Series(data.groupby(date_range.asof).sum())
+        data = data.reindex(index=date_range, fill_value=0)
+        return {
+            'times': [time.mktime(x.timetuple()) for x in date_range.tolist()]
+            , 'counts': data.values.tolist()
+            }
 
     @admins
     def _index(self, request, response):
