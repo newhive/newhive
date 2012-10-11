@@ -347,7 +347,8 @@ class Analytics(Application):
     @admins
     def ab_test(self, request, response):
         tests = {
-                'sig': newhive.ab.AB_SIG()
+                'sig': newhive.ab.AB_SIG(self.db)
+                , 'reminder_email': newhive.ab.AB_ReferralReminder(self.db)
                 }
         page = lget(request.path.split('/'), 2)
         if page:
