@@ -2,7 +2,7 @@ import time, datetime, re, pandas, newhive, pandas, numpy
 from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
-from newhive.utils import datetime_to_int, datetime_to_str
+from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id
 
 import logging
 logger = logging.getLogger(__name__)
@@ -522,6 +522,36 @@ def active(db, period=7):
 
     #data = [mr_col.find({'_id.date': datetime_to_int(date)}).count() for date in dr]
     return (data, dr)
+
+def _active_users_ga(db, period=7):
+    """Return users present in GA logs in last 'period' days"""
+    end_date = datetime.datetime.now()
+    start_date = end_date - pandas.DateOffset(days=period)
+    query = oauth.GAQuery(start_date=start_date, end_date=end_date)
+    query.metrics(['ga:visits']).dimensions(['ga:customVarValue1'])
+    names = [row[0] for row in query.execute().rows]
+    return db.User.search({'name': {'$in': names}})
+
+def _id_range(date, offset):
+    """Return a mongodb spec dictionary that will match ids of objects created
+    between date and date + offset"""
+    return {'_id': {'$gt': datetime_to_id(date), '$lt': datetime_to_id(date + offset)}}
+
+def active_users_by_signup_date(db, users, offset=pandas.DateOffset(days=1)):
+    """Given a list of 'active' users, bucket them according to signup date and
+    return a DataFrame with columns: active, total and ratio"""
+    start_date = datetime.datetime(2011,4,1,8)
+    times = [datetime.datetime.fromtimestamp(u['created']) for u in users]
+    times = pandas.Series(1, times)
+    range = pandas.DateRange(start=start_date, end=datetime.datetime.now(), offset=offset)
+    active = pandas.Series(times.groupby(range.asof).sum(), name='active')
+    data = pandas.DataFrame({'active': active})
+    cursors = [db.User.search(_id_range(date, offset)) for date in active.index]
+    data['total'] = [c.count() for c in cursors]
+    data['ratio'] = data['active'] / data['total']
+    #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
+    return data
+
 
 def engagement_pyramid(db):
 
