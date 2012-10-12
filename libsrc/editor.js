@@ -361,9 +361,8 @@ Hive.Controls = function(app, multiselect) {
                 // clauses below
                 if (opts.field_to_focus) {
                     opts.field_to_focus.focus();
-                } else {
-                    input.blur();
                 }
+                input.blur();
                 opts.close();
             }
             ,auto_close : false
@@ -2672,7 +2671,7 @@ Hive.input_frame = function(input, parent, opts){
     setTimeout(function(){
         frame.contents().find('body').append(input)
             .css({'margin': 0, 'overflow': 'hidden'});
-        }, 100);
+        }, 200);
 
 };
 
