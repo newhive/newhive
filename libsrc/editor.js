@@ -2654,7 +2654,12 @@ Hive.random_str = function(){ return Math.random().toString(16).slice(2); };
 Hive.input_frame = function(input, parent, opts){
     opts = $.extend({width: 200, height: 45}, opts)
 
-    var frame = $('<iframe>')
+    var frame_load = function(){
+        frame.contents().find('body')
+            .append(input)
+            .css({'margin': 0, 'overflow': 'hidden'});
+    };
+    var frame = $('<iframe>').load(frame_load)
         .width(opts.width).height(opts.height)
         .css({
             'display': 'inline-block',
@@ -2668,11 +2673,6 @@ Hive.input_frame = function(input, parent, opts){
         'padding': '5px',
         'font-size': '17px'
     });
-    setTimeout(function(){
-        frame.contents().find('body').append(input)
-            .css({'margin': 0, 'overflow': 'hidden'});
-        }, 200);
-
 };
 
 // Convenience functions for interactive coding
