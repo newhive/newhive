@@ -162,19 +162,7 @@ class Analytics(Application):
         kwargs['start'], kwargs['end'] = self._iso_args(request.args)
         response.context['data'] = json.dumps(analytics.signups(self.db.mdb, **kwargs))
         response.context['title'] = 'Signups per ' + period
-        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
-
-    def signups_per_hour(self, request, response):
-        response.context['data'] = json.dumps(analytics.contacts_per_hour(self.db.mdb))
-        response.context['title'] = "Signups per hour"
-        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
-
-    def signups_per_day(self, request, response):
-        response.context['data'] = json.dumps(analytics.contacts_per_day(self.db.mdb))
-        response.context['title'] = "Signups per day"
-        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
-     #else:
-    #    return serve_404(self, request, response)
+        return self.serve_page(response, 'pages/analytics/active_total_chart.html')
 
     def by_stars(self, request, response, args={}):
         exprs = {}
@@ -366,3 +354,9 @@ class Analytics(Application):
         ga = newhive.oauth.GAClient()
         segments = ga.management.segments().list().execute()['items']
         return self.serve_json(response, segments)
+
+    @admins
+    def retention(self, request, response):
+        response.context['data'] = analytics.retention(self.db)
+        response.context['title'] = "D1-D30 Retention"
+        return self.serve_page(response, 'pages/analytics/active_total_chart.html')

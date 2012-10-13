@@ -1,4 +1,4 @@
-import time, datetime, re, pandas, newhive, pandas, numpy
+import time, datetime, re, pandas, newhive, pandas, numpy, pytz
 from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
@@ -211,10 +211,10 @@ def signups(db, end=None, period='hours', start=None):
     cursor = db.contact_log.find(spec, {'created': True})
     created_contacts = group_data(cursor)
 
-    return {  'times': [time.mktime(x.timetuple()) for x in hourly.tolist()]
-            , 'values': contacts.values.tolist()
-            , 'values_2': created_contacts.values.tolist()
-            , 'percent': (created_contacts / contacts).values.tolist()
+    return {  'index': [time.mktime(x.timetuple()) for x in hourly.tolist()]
+            , 'total': contacts.values.tolist()
+            , 'active': created_contacts.values.tolist()
+            , 'ratio': (created_contacts / contacts).values.tolist()
             }
 
 def contacts_per_hour(db, end=now()):
@@ -525,33 +525,50 @@ def active(db, period=7):
 
 def _active_users_ga(db, period=7):
     """Return users present in GA logs in last 'period' days"""
-    end_date = datetime.datetime.now()
-    start_date = end_date - pandas.DateOffset(days=period)
+    tz = pytz.timezone('US/Pacific')
+    end_date = datetime.datetime.now(tz) - pandas.DateOffset(days=1)
+    start_date = end_date - pandas.DateOffset(days=period-1)
     query = oauth.GAQuery(start_date=start_date, end_date=end_date)
     query.metrics(['ga:visits']).dimensions(['ga:customVarValue1'])
     names = [row[0] for row in query.execute().rows]
     return db.User.search({'name': {'$in': names}})
 
-def _id_range(date, offset):
+def _id_range(start, end=None, offset=None):
     """Return a mongodb spec dictionary that will match ids of objects created
     between date and date + offset"""
-    return {'_id': {'$gt': datetime_to_id(date), '$lt': datetime_to_id(date + offset)}}
+    end = end or start + offset
+    return {'_id': {'$gt': datetime_to_id(start), '$lt': datetime_to_id(end)}}
 
-def active_users_by_signup_date(db, users, offset=pandas.DateOffset(days=1)):
+def active_users_by_signup_date(db, users, freq=pandas.datetools.Day()):
     """Given a list of 'active' users, bucket them according to signup date and
     return a DataFrame with columns: active, total and ratio"""
-    start_date = datetime.datetime(2011,4,1,8)
-    times = [datetime.datetime.fromtimestamp(u['created']) for u in users]
-    times = pandas.Series(1, times)
-    range = pandas.DateRange(start=start_date, end=datetime.datetime.now(), offset=offset)
-    active = pandas.Series(times.groupby(range.asof).sum(), name='active')
-    data = pandas.DataFrame({'active': active})
-    cursors = [db.User.search(_id_range(date, offset)) for date in active.index]
-    data['total'] = [c.count() for c in cursors]
+
+    def group(cursor, freq):
+        series = pandas.Series(1, [datetime.datetime.fromtimestamp(u['created']) for u in cursor])
+        series = series.tz_localize('UTC').tz_convert('US/Pacific')
+        return series.resample('D', how="sum", label="start").fillna(0)
+
+    data = pandas.DataFrame({'active': group(users, freq)})
+    total = db.User._col.find(_id_range(data.index[0], data.index[-1] + freq), {'created': 1})
+    data['total'] = group(total, freq)
     data['ratio'] = data['active'] / data['total']
     #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
     return data
 
+def retention(db, json=True):
+    active = _active_users_ga(db, 1)
+    data = active_users_by_signup_date(db, active)
+    data.ratio = data.ratio.fillna(0)
+    subset = data[-30:]
+    if json:
+        return data_frame_to_json(subset)
+    else:
+        return subset
+
+def data_frame_to_json(df):
+    output = {name: series.tolist() for name, series in df.iterkv()}
+    output['index'] = [datetime_to_int(date) for date in df.index]
+    return output
 
 def engagement_pyramid(db):
 
