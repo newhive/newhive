@@ -357,6 +357,8 @@ class Analytics(Application):
 
     @admins
     def retention(self, request, response):
-        response.context['data'] = analytics.retention(self.db)
-        response.context['title'] = "D1-D30 Retention"
+        freq = request.args.get('freq', 'D')
+        response.context['title'] = "{}1-{}30 Retention".format(freq, freq)
+        if freq == 'M': freq = 'MS'
+        response.context['data'] = analytics.retention(self.db, freq)
         return self.serve_page(response, 'pages/analytics/active_total_chart.html')

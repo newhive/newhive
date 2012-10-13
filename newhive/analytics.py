@@ -539,25 +539,26 @@ def _id_range(start, end=None, offset=None):
     end = end or start + offset
     return {'_id': {'$gt': datetime_to_id(start), '$lt': datetime_to_id(end)}}
 
-def active_users_by_signup_date(db, users, freq=pandas.datetools.Day()):
+def active_users_by_signup_date(db, users, freq='D'):
     """Given a list of 'active' users, bucket them according to signup date and
     return a DataFrame with columns: active, total and ratio"""
 
-    def group(cursor, freq):
+    def group(cursor):
         series = pandas.Series(1, [datetime.datetime.fromtimestamp(u['created']) for u in cursor])
         series = series.tz_localize('UTC').tz_convert('US/Pacific')
-        return series.resample('D', how="sum", label="start").fillna(0)
+        return series.resample(freq, how="sum", label="start").fillna(0)
 
-    data = pandas.DataFrame({'active': group(users, freq)})
-    total = db.User._col.find(_id_range(data.index[0], data.index[-1] + freq), {'created': 1})
-    data['total'] = group(total, freq)
+    data = pandas.DataFrame({'active': group(users)})
+    total = db.User._col.find(_id_range(data.index[0], data.index[-1] + data.index.freq), {'created': 1})
+    data['total'] = group(total)
     data['ratio'] = data['active'] / data['total']
     #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
     return data
 
-def retention(db, json=True):
-    active = _active_users_ga(db, 1)
-    data = active_users_by_signup_date(db, active)
+def retention(db, freq="D", json=True):
+    days = {'D': 1, 'W': 7, 'M': 30, 'MS': 30}.get(freq)
+    active = _active_users_ga(db, days)
+    data = active_users_by_signup_date(db, active, freq)
     data.ratio = data.ratio.fillna(0)
     subset = data[-30:]
     if json:
