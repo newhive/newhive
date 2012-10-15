@@ -15,7 +15,7 @@ class AB_SIG(AB_Test):
         queries['events'] = GAQuery(filters=['ga:eventCategory==create_account']
                         , metrics=['ga:uniqueEvents']
                         , start_date='2012-10-08'
-                        , end_date=datetime.datetime.now()
+                        , end_date='2012-10-15'
                         )
         queries['views'] = copy.copy(queries['events'])
         queries['views'].filters(['ga:pagePath=~^/create_account']).metrics(['ga:uniquePageviews'])
