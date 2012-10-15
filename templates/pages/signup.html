@@ -43,15 +43,22 @@
         };
 
         var profile_thumb_choose = function(){
-            asyncUpload({
-                post_action: 'profile_thumb_set',
+            var thumb_form = asyncUpload({
                 success: function(data){
                     $('input[name=thumb_file_id]').val(data.file_id);
-                    $('#profile_thumb a').html('<img src="' + data.thumb + '"/>');
-                }
+                    $('#profile_thumb').html('<img src="' + data.thumb + '"/>');
+                },
+                input_click: false
             });
+            var thumb_div = $('#profile_thumb');
+            var form_css = {opacity: 0, height: thumb_div.height(), width: thumb_div.width(), overflow: 'hidden'};
+            $.extend(form_css, thumb_div.offset());
+            thumb_form.css(form_css);
+            thumb_form.find('input[type=file]')
+                .css({height: $('#profile_thumb').height()});
             return false;
         };
+        $(profile_thumb_choose);
 
         validate = {
             name: function(flash){
@@ -155,10 +162,8 @@
         </div>
     </div>
     {% endif %}
-    {# hide profile thumb picker until it is fixed
     <div class="column" id="photo">
         <div id='profile_thumb'>
-            <a href="#" onclick="profile_thumb_choose();" alt="Choose Picture">
                 {% if f.thumb %}
                     <img src="{{f.thumb}}"/>
                 {% else %}
@@ -166,10 +171,8 @@
                         <div id="thumb_text">Upload a<br/>Picture</div>
                     </div>
                 {% endif %}
-            </a>
        </div>
     </div>
-    #}
 
     <div class="column" id="inputs">
         <div id="url">newhive.com/<span></span></div>
