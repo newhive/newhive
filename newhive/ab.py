@@ -1,6 +1,6 @@
 import datetime, copy
 import pandas
-from newhive.oauth import GAQuery
+from newhive.analytics.ga import GAQuery
 
 class AB_Test(object):
     def __init__(self, db):

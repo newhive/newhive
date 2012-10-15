@@ -1,8 +1,9 @@
 import time, datetime, re, pandas, newhive, pandas, numpy, pytz
-from newhive import state, oauth
+from newhive import state, oauth, analytics
 from newhive.state import now
 from brownie.datastructures import OrderedDict
 from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id
+from newhive.analytics.ga import GAClient, GAQuery
 
 import logging
 logger = logging.getLogger(__name__)
@@ -148,12 +149,12 @@ def funnel2(db, start_datetime, end_datetime):
     referral_ids = [s.get('referral_id') for s in signups]
     accounts_created = db.referral.find({'_id': {'$in': referral_ids}, 'user_created': {'$exists': True}})
 
-    ga = oauth.GAClient()
+    ga = GAClient()
     views = ga.find_one({
         'start_date': start_datetime.strftime("%Y-%m-%d")
         , 'end_date': ga_end_datetime.strftime("%Y-%m-%d")
         , 'metrics': 'ga:pageviews'
-        , 'filters': oauth.ga_filters['expressions']
+        , 'filters': analytics.ga.ga_filters['expressions']
         })
     return {'users': avg_users
             , 'expressions': avg_exprs
@@ -170,7 +171,7 @@ def pageviews(db, start_datetime, end_datetime):
     start = time.mktime(start_datetime.timetuple())
     end = time.mktime(end_datetime.timetuple())
 
-    ga = oauth.GAClient()
+    ga = GAClient()
     views = ga.find_time_series({
         'start_date': start_datetime.strftime("%Y-%m-%d")
         , 'end_date': ga_end_datetime.strftime("%Y-%m-%d")
@@ -528,7 +529,7 @@ def _active_users_ga(db, period=7):
     tz = pytz.timezone('US/Pacific')
     end_date = datetime.datetime.now(tz) - pandas.DateOffset(days=1)
     start_date = end_date - pandas.DateOffset(days=period-1)
-    query = oauth.GAQuery(start_date=start_date, end_date=end_date)
+    query = GAQuery(start_date=start_date, end_date=end_date)
     query.metrics(['ga:visits']).dimensions(['ga:customVarValue1'])
     names = [row[0] for row in query.execute().rows]
     return db.User.search({'name': {'$in': names}})
@@ -576,7 +577,7 @@ def engagement_pyramid(db):
     end_date = datetime.datetime.now()
     start_date = end_date - pandas.DateOffset(months=1)
 
-    query = oauth.GAQuery()
+    query = GAQuery()
     query.start_date(start_date).end_date(end_date)
     query.metrics(['ga:visitors'])
     query.dimensions(['ga:customVarValue1'])
