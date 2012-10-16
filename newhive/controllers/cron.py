@@ -27,6 +27,7 @@ class Cron(Application):
         opts = dict((k, int(v)) for k, v in opts_serial.iteritems())
 
         status = method(**opts)
+        status.update({'timestamp': now(), 'args': opts})
         return self.serve_json(response, status)
 
 
@@ -82,7 +83,7 @@ class Cron(Application):
                 , 'created': {'$gt': now() - delay - span, '$lt': now() - delay }
                 , 'to': re.compile(r'@')
                 }
-        stats = {'send_count': 0, 'timestamp': now(), 'args': {'delay': delay, 'span': span}}
+        stats = {'send_count': 0}
 
         mailer = newhive.mail.SiteReferralReminder(db=self.db, jinja_env=self.jinja_env)
 
