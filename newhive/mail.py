@@ -3,6 +3,7 @@ import newhive.state
 from newhive.state import abs_url
 from newhive import config, utils
 import newhive.ui_strings.en as ui
+from newhive.manage.ec2 import public_hostname
 from cStringIO import StringIO
 from smtplib import SMTP
 from email.mime.multipart import MIMEMultipart
@@ -245,22 +246,21 @@ class Mailer(object):
             ))
 
         # write e-mail to file for debugging
-        if not config.live_server:
-            path = '/lib/tmp/' + email_id + '.html'
-            with open(config.src_home + path, 'w') as f:
-                f.write('<div><pre>')
-                for key, val in heads.items():
-                    s = u"{:<20}{}\n".format(key + u":", val)
-                    f.write(s.encode('utf-8'))
-                f.write('</pre></div>')
-                if body.has_key('html'):
-                    f.write(body['html'].encode('utf-8'))
-                else:
-                    f.write('<pre style="font-family: sans-serif;">')
-                    f.write(body['plain'].encode('utf-8'))
-                    f.write('</pre>')
-            logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
-            record.update(debug_url=abs_url(secure=True) + path)
+        path = '/www_tmp/' + email_id + utils.junkstr(4) + '.html'
+        with open(config.src_home + path, 'w') as f:
+            f.write('<div><pre>')
+            for key, val in heads.items():
+                s = u"{:<20}{}\n".format(key + u":", val)
+                f.write(s.encode('utf-8'))
+            f.write('</pre></div>')
+            if body.has_key('html'):
+                f.write(body['html'].encode('utf-8'))
+            else:
+                f.write('<pre style="font-family: sans-serif;">')
+                f.write(body['plain'].encode('utf-8'))
+                f.write('</pre>')
+        logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
+        record.update(debug_url= 'https://' + public_hostname + path)
 
         if subscribed:
             send_mail(heads, body, filters=filters, category=self.name, smtp=self.smtp, **kwargs)

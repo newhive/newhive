@@ -17,6 +17,7 @@ from newhive import config, utils
 from newhive.utils import abs_url, now
 from newhive.assets import HiveAssets
 from newhive.extra_json import extra_json
+from newhive.manage.ec2 import public_hostname
 import newhive.colors
 import newhive.state
 import newhive.manage.git
@@ -148,6 +149,7 @@ site_pages = {
     ,'cron'                : controllers['cron'].cron
     ,'admin_home'          : controllers['admin'].home
     ,'admin'               : controllers['admin'].default
+    ,'www_tmp'             : controllers['admin'].www_tmp
     ,'analytics'           : controllers['analytics'].default
     ,'robots.txt'          : app.robots
     ,'error_log.js'        : controllers['analytics'].js_error_log
@@ -208,7 +210,7 @@ def handle(request): # HANDLER
     ##############################################################################
     #                          site and user url handler                         #
     ##############################################################################
-    if request.domain == config.server_name:
+    if request.domain in [config.server_name, public_hostname]:
         if site_pages.has_key(parts[0]):
             return site_pages.get(parts[0], app.serve_404)(request, response)
         else:
