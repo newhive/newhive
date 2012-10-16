@@ -36,7 +36,7 @@ class Analytics(Application):
         if request.args.has_key('start') and request.args.has_key('end'):
             response.context['start'] = request.args.get('start')
             response.context['end'] = request.args.get('end')
-            start, end = self._iso_args(args)
+            start, end = self._iso_args(request.args)
             #start = int(time.mktime(time.strptime(request.args.get('start'), "%Y-%m-%d")))
             #end = int(time.mktime(time.strptime(request.args.get('end'), "%Y-%m-%d")))
             active_users, custom_histogram = analytics.active_users(start=start, end=end)
@@ -369,6 +369,7 @@ class Analytics(Application):
     @index
     def email_log(self, request, response):
         """Email log"""
+        start, end = self._iso_args(request.args)
         spec = dfilter(request.args, ['category', 'initiator_name', 'recipient_name', 'email'])
         response.context['data'] = self.db.MailLog.search(spec, sort=[('created', -1)], limit=500)
         return self.serve_page(response, 'pages/analytics/email_log.html')

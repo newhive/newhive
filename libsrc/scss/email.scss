@@ -228,18 +228,19 @@ $space4: 5px;
         }
     }
 
-    &.site_referral, &.user_referral {
-        #create_account {
-            margin-top: $space1 - 6px;
-            margin-bottom: -9px;
-            text-align: center;
-            span {
-                background: $color_highlight;
-                padding: 0 10px;
-            }
-            line-height: 46px;
-            a { text-decoration: underline; }
+    .cta {
+        margin-top: $space1 - 6px;
+        margin-bottom: -9px;
+        text-align: center;
+        span {
+            background: $color_highlight;
+            padding: 0 10px;
         }
+        line-height: 46px;
+        a { text-decoration: underline; }
+    }
+
+    &.site_referral, &.user_referral, &.user_invites_reminder {
         h2 {
             line-height: 37px;
             font-size: 34px;
@@ -251,6 +252,15 @@ $space4: 5px;
         font-size: 20px;
         line-height: auto;
       }
+    }
+
+    &.user_invites_reminder {
+        p {
+            margin-top: 14px;
+        }
+        #lower_paragraph {
+            margin-top: $space1 - 6px;
+        }
     }
 }
 

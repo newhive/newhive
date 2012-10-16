@@ -98,3 +98,16 @@ class Cron(Application):
 
         return stats
 
+    def user_invites_reminder(self, delay=0, span=0):
+        mailer = newhive.mail.UserInvitesReminder(db = self.db, jinja_env = self.jinja_env)
+        stats = {'send_count': 0}
+
+        spec = {
+                'created': {'$gt': now() - span - delay, '$lt': now() - delay}
+                , 'referrals': {'$gt': 0}
+                }
+        for user in self.db.User.search(spec):
+            mailer.send(user)
+            stats['send_count'] += 1
+
+        return stats

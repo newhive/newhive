@@ -154,3 +154,12 @@ class SiteReferralReminder(MailerTest):
         offset = random.randint(1,100)
         ref = db.Referral.search(spec, sort=[('created', -1)], offset=offset, limit=1)[0]
         self.mailer.send(ref)
+
+class UserInvitesReminder(MailerTest):
+    def setUp(self):
+        super(UserInvitesReminder, self).setUp()
+        self.mailer = mail.UserInvitesReminder(db=db, jinja_env=jinja_env)
+
+    def test_user_invites_reminder(self):
+        user = self.get_user()
+        self.mailer.send(user)
