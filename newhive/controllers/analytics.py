@@ -1,15 +1,26 @@
 import datetime, pandas
 import newhive
+import newhive.ab
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive import analytics
+from newhive.analytics import analytics
 from newhive.utils import now, datetime_to_int
 import operator as op
 
+_index = []
 class Analytics(Application):
     def __init__(self, *a, **b):
         super(Analytics, self).__init__(*a, **b)
         self.mdb = b['db'].mdb # direct reference to pymongo db
+
+    @admins
+    def _index(self, request, response):
+        response.context['pages'] = [{'path': p.__name__, 'name': p.__doc__} for p in _index]
+        return self.serve_page(response, 'pages/analytics/index.html')
+
+    def index(method):
+        _index.append(method)
+        return method
 
     def _iso_args(self, args):
         start = args.get('start')
@@ -18,12 +29,14 @@ class Analytics(Application):
         if end: end = int(time.mktime(time.strptime(end, "%Y-%m-%d")))
         return (start, end)
 
+    @index
     def active_users(self, request, response):
+        """Users active in action log"""
         analytics.user_first_month(self.db)
         if request.args.has_key('start') and request.args.has_key('end'):
             response.context['start'] = request.args.get('start')
             response.context['end'] = request.args.get('end')
-            start, end = self._iso_args(args)
+            start, end = self._iso_args(request.args)
             #start = int(time.mktime(time.strptime(request.args.get('start'), "%Y-%m-%d")))
             #end = int(time.mktime(time.strptime(request.args.get('end'), "%Y-%m-%d")))
             active_users, custom_histogram = analytics.active_users(start=start, end=end)
@@ -38,7 +51,9 @@ class Analytics(Application):
         response.context['active_users_js'] = json.dumps(active_users)
         return self.serve_page(response, 'pages/analytics/active_users.html')
 
+    @index
     def invites(self, request, response):
+        """Invites log"""
         invites = list(self.db.Referral.search({'created': {'$gt': now() - 60*60*24*30 } }))
         cache = {}
 
@@ -51,7 +66,9 @@ class Analytics(Application):
         response.context['invites'] = invites
         return self.serve_page(response, 'pages/analytics/invites.html')
 
+    @index
     def funnel1(self, request, response):
+        """Funnel 1"""
         exclude = [self.db.User.get_root().id]
         exclude = exclude + [self.db.User.named(name).id for name in config.admins]
         weekly = {}
@@ -81,21 +98,27 @@ class Analytics(Application):
         response.context['monthly'] = monthly
         return self.serve_page(response, 'pages/analytics/funnel1.html')
 
+    @index
     def app_count(self, request, response):
+        """Total apps in expressions by type"""
         response.context['data'] = analytics.app_count(self.db).items()
         response.context['title'] = 'App Type Count'
         return self.serve_page(response, 'pages/analytics/generic.html')
 
+    @index
     def active_user_growth(self, request, response):
+        """Active user count over time"""
         period = int(lget(request.path.split('/'), 2, 7))
-        data, daterange = newhive.analytics.active(self.db, period)
+        data, daterange = analytics.active(self.db, period)
         dates = [datetime_to_int(date) for date in daterange]
         response.context['json_data'] = json.dumps({'counts': data, 'dates': dates})
         response.context['title'] = 'Active User Growth'
         return self.serve_page(response, 'pages/analytics/user_growth.html')
 
 
+    @index
     def user_growth(self, request, response):
+        """Total user account count over time"""
         users = self.db.User.search({}, sort=[('created', 1)])
         res = []
         dates = []
@@ -112,7 +135,9 @@ class Analytics(Application):
         response.context['title'] = 'User Growth: (' + str(len(users)) + ' users)'
         return self.serve_page(response, 'pages/analytics/user_growth.html')
 
+    @index
     def last_login(self, request, response):
+        """Users by time since last login"""
         act_log = self.db.ActionLog.search({})
         res = {}
         for a in act_log:
@@ -133,7 +158,9 @@ class Analytics(Application):
         response.context['data'] = json.dumps({'days_ago': days_ago, 'timeslice': timeslice})
         return self.serve_page(response, 'pages/analytics/last_login.html')
 
+    @index
     def funnel2(self, request, response):
+        """Funnel 2"""
         import pandas
         weekly_range = pandas.DateRange(datetime(2011,11,6), end = datetime.now(), offset=pandas.DateOffset(days=7))
         monthly_range = pandas.DateRange(datetime(2011,11,1), end = datetime.now(), offset=pandas.DateOffset(months=1))
@@ -154,28 +181,20 @@ class Analytics(Application):
 
         return self.serve_page(response, 'pages/analytics/funnel2.html')
 
+    @index
     def signups(self, request, response):
+        """Signups and accounts created over last time period (configurable)"""
         period = request.args.get('period', 'hour')
         kwargs = {}
         kwargs['period'] = period + 's'
         kwargs['start'], kwargs['end'] = self._iso_args(request.args)
         response.context['data'] = json.dumps(analytics.signups(self.db.mdb, **kwargs))
         response.context['title'] = 'Signups per ' + period
-        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
+        return self.serve_page(response, 'pages/analytics/active_total_chart.html')
 
-    def signups_per_hour(self, request, response):
-        response.context['data'] = json.dumps(analytics.contacts_per_hour(self.db.mdb))
-        response.context['title'] = "Signups per hour"
-        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
-
-    def signups_per_day(self, request, response):
-        response.context['data'] = json.dumps(analytics.contacts_per_day(self.db.mdb))
-        response.context['title'] = "Signups per day"
-        return self.serve_page(response, 'pages/analytics/signups_per_hour.html')
-     #else:
-    #    return serve_404(self, request, response)
-
+    @index
     def by_stars(self, request, response, args={}):
+        """Top Expressions by Love Count"""
         exprs = {}
         for r in self.db.Feed.search({'class_name':'Star', 'entity_class':'Expr'}):
             exprs[r['entity']] = exprs.get(r['entity'], []) + [r['initiator_name']]
@@ -193,6 +212,7 @@ class Analytics(Application):
         return self.serve_page(response, 'pages/analytics/by_stars.html')
 
     def cohort(self, request, response):
+        """Cohort analysis"""
         cohort_users = analytics._cohort_users(self.db)
         cohort_map = {
                 "active_users": {
@@ -244,7 +264,9 @@ class Analytics(Application):
             return self.serve_page(response, 'pages/analytics/cohort_chart.html')
         return self.serve_page(response, 'pages/analytics/cohort_base.html')
 
+    @index
     def cohort_dashboard(self, request, response):
+        """Cohort dashboard"""
         url_parts = request.path.split('/')
         print url_parts
         year = int(lget(url_parts, 2, 0))
@@ -277,12 +299,14 @@ class Analytics(Application):
         return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')
 
     @admins
+    @index
     def impressions_per_user(self, request, response):
+        """Users grouped by total expression impressions"""
         url_parts = request.path.split('/')
         view = lget(url_parts, 2, 'chart')
         if view == 'top':
             # collection is a mongodb collection
-            collection = newhive.analytics.overall_impressions(self.db, histogram=False)
+            collection = analytics.overall_impressions(self.db, histogram=False)
             user_list = collection.find({}, sort=[('value.views', -1)], limit=100)
             users = []
             for item in user_list:
@@ -293,12 +317,14 @@ class Analytics(Application):
             return self.serve_page(response, 'pages/analytics/impressions_top.html')
 
         elif view == 'chart':
-            hist, bin_edges = newhive.analytics.overall_impressions(self.db)
+            hist, bin_edges = analytics.overall_impressions(self.db)
             response.context['data'] = list(hist[1:15])
             response.context['edges'] = list(bin_edges[1:16])
             return self.serve_page(response, 'pages/analytics/impressions.html')
 
+    @index
     def pageviews(self, request, response):
+        """Pageviews"""
         end = datetime.now()
         start = datetime(2012,1,1)
         c = response.context
@@ -331,14 +357,54 @@ class Analytics(Application):
         return self.serve_data(response, mime='application/javascript', data=response_data)
 
     @admins
+    @index
     def engagement_pyramid(self, request, response):
+        """Engagement pyramid"""
         data = analytics.engagement_pyramid(self.db)
         out = data[['viewers', 'starrers', 'sharers', 'creators']] / data.counts
         response.context['data'] = out
         return self.serve_page(response, 'pages/analytics/engagement_pyramid.html')
 
     @admins
+    @index
     def email_log(self, request, response):
+        """Email log"""
+        start, end = self._iso_args(request.args)
         spec = dfilter(request.args, ['category', 'initiator_name', 'recipient_name', 'email'])
         response.context['data'] = self.db.MailLog.search(spec, sort=[('created', -1)], limit=500)
         return self.serve_page(response, 'pages/analytics/email_log.html')
+
+    @admins
+    @index
+    def ab_test(self, request, response):
+        """AB test results"""
+        tests = {
+                'sig': newhive.ab.AB_SIG(self.db)
+                , 'reminder_email': newhive.ab.AB_ReferralReminder(self.db)
+                }
+        page = lget(request.path.split('/'), 2)
+        if page:
+            test = tests.get(page)
+            if not test: return self.serve_404(request, response)
+            response.context['data'] = test.data()
+            response.context['title'] = test.name
+            return self.serve_page(response, 'pages/analytics/ab_test.html')
+        else:
+            response.context['tests'] = tests
+            return self.serve_page(response, 'pages/analytics/ab_tests.html')
+
+    @admins
+    def ga_segments(self, request, response):
+        ga = newhive.oauth.GAClient()
+        segments = ga.management.segments().list().execute()['items']
+        return self.serve_json(response, segments)
+
+    @admins
+    @index
+    def retention(self, request, response):
+        """User Retention D1-D30 or W1-W30"""
+        freq = request.args.get('freq', 'D')
+        response.context['title'] = "{}1-{}30 Retention".format(freq, freq)
+        if freq == 'M': freq = 'MS'
+        response.context['data'] = analytics.retention(self.db, freq)
+        return self.serve_page(response, 'pages/analytics/active_total_chart.html')

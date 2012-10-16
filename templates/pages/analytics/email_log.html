@@ -18,7 +18,9 @@
 {% for row in data %}
     <tr>
         <td data-type="epoch_date">{{ row.created }}</td>
-        <td>{{ row.category }}</td>
+        <td><a href="?category={{ row.category}}">
+                {{ row.category }}
+        </a></td>
         <td>{{ row.email }}</td>
         <td>{{ row.recipient_name }}</td>
         <td>{{ row.initiator_name }}</td>

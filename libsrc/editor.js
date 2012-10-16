@@ -361,9 +361,8 @@ Hive.Controls = function(app, multiselect) {
                 // clauses below
                 if (opts.field_to_focus) {
                     opts.field_to_focus.focus();
-                } else {
-                    input.blur();
                 }
+                input.blur();
                 opts.close();
             }
             ,auto_close : false
@@ -2655,7 +2654,12 @@ Hive.random_str = function(){ return Math.random().toString(16).slice(2); };
 Hive.input_frame = function(input, parent, opts){
     opts = $.extend({width: 200, height: 45}, opts)
 
-    var frame = $('<iframe>')
+    var frame_load = function(){
+        frame.contents().find('body')
+            .append(input)
+            .css({'margin': 0, 'overflow': 'hidden'});
+    };
+    var frame = $('<iframe>').load(frame_load)
         .width(opts.width).height(opts.height)
         .css({
             'display': 'inline-block',
@@ -2663,15 +2667,12 @@ Hive.input_frame = function(input, parent, opts){
             'margin-top': '5px'
         });
     parent.append(frame);
-    frame.contents().find('body').append(input)
-        .css({'margin': 0, 'overflow': 'hidden'});
     input.css({
         'border': '5px solid hsl(164, 57%, 74%)',
         'width': '100%',
         'padding': '5px',
         'font-size': '17px'
     });
-
 };
 
 // Convenience functions for interactive coding

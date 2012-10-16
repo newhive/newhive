@@ -1,8 +1,9 @@
-import time, datetime, re, pandas, newhive, pandas, numpy
-from newhive import state, oauth
+import time, datetime, re, pandas, newhive, pandas, numpy, pytz
+from newhive import state, oauth, analytics
 from newhive.state import now
 from brownie.datastructures import OrderedDict
-from newhive.utils import datetime_to_int, datetime_to_str
+from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id
+from newhive.analytics.ga import GAClient, GAQuery
 
 import logging
 logger = logging.getLogger(__name__)
@@ -148,12 +149,12 @@ def funnel2(db, start_datetime, end_datetime):
     referral_ids = [s.get('referral_id') for s in signups]
     accounts_created = db.referral.find({'_id': {'$in': referral_ids}, 'user_created': {'$exists': True}})
 
-    ga = oauth.GAClient()
+    ga = GAClient()
     views = ga.find_one({
         'start_date': start_datetime.strftime("%Y-%m-%d")
         , 'end_date': ga_end_datetime.strftime("%Y-%m-%d")
         , 'metrics': 'ga:pageviews'
-        , 'filters': oauth.ga_filters['expressions']
+        , 'filters': analytics.ga.ga_filters['expressions']
         })
     return {'users': avg_users
             , 'expressions': avg_exprs
@@ -170,7 +171,7 @@ def pageviews(db, start_datetime, end_datetime):
     start = time.mktime(start_datetime.timetuple())
     end = time.mktime(end_datetime.timetuple())
 
-    ga = oauth.GAClient()
+    ga = GAClient()
     views = ga.find_time_series({
         'start_date': start_datetime.strftime("%Y-%m-%d")
         , 'end_date': ga_end_datetime.strftime("%Y-%m-%d")
@@ -211,10 +212,10 @@ def signups(db, end=None, period='hours', start=None):
     cursor = db.contact_log.find(spec, {'created': True})
     created_contacts = group_data(cursor)
 
-    return {  'times': [time.mktime(x.timetuple()) for x in hourly.tolist()]
-            , 'values': contacts.values.tolist()
-            , 'values_2': created_contacts.values.tolist()
-            , 'percent': (created_contacts / contacts).values.tolist()
+    return {  'index': [time.mktime(x.timetuple()) for x in hourly.tolist()]
+            , 'total': contacts.values.tolist()
+            , 'active': created_contacts.values.tolist()
+            , 'ratio': (created_contacts / contacts).values.tolist()
             }
 
 def contacts_per_hour(db, end=now()):
@@ -523,12 +524,60 @@ def active(db, period=7):
     #data = [mr_col.find({'_id.date': datetime_to_int(date)}).count() for date in dr]
     return (data, dr)
 
+def _active_users_ga(db, period=7):
+    """Return users present in GA logs in last 'period' days"""
+    tz = pytz.timezone('US/Pacific')
+    end_date = datetime.datetime.now(tz) - pandas.DateOffset(days=1)
+    start_date = end_date - pandas.DateOffset(days=period-1)
+    query = GAQuery(start_date=start_date, end_date=end_date)
+    query.metrics(['ga:visits']).dimensions(['ga:customVarValue1'])
+    names = [row[0] for row in query.execute().rows]
+    return db.User.search({'name': {'$in': names}})
+
+def _id_range(start, end=None, offset=None):
+    """Return a mongodb spec dictionary that will match ids of objects created
+    between date and date + offset"""
+    end = end or start + offset
+    return {'_id': {'$gt': datetime_to_id(start), '$lt': datetime_to_id(end)}}
+
+def active_users_by_signup_date(db, users, freq='D'):
+    """Given a list of 'active' users, bucket them according to signup date and
+    return a DataFrame with columns: active, total and ratio"""
+
+    def group(cursor):
+        series = pandas.Series(1, [datetime.datetime.fromtimestamp(u['created']) for u in cursor])
+        series = series.tz_localize('UTC').tz_convert('US/Pacific')
+        return series.resample(freq, how="sum", label="start").fillna(0)
+
+    data = pandas.DataFrame({'active': group(users)})
+    total = db.User._col.find(_id_range(data.index[0], data.index[-1] + data.index.freq), {'created': 1})
+    data['total'] = group(total)
+    data['ratio'] = data['active'] / data['total']
+    #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
+    return data
+
+def retention(db, freq="D", json=True):
+    days = {'D': 1, 'W': 7, 'M': 30, 'MS': 30}.get(freq)
+    active = _active_users_ga(db, days)
+    data = active_users_by_signup_date(db, active, freq)
+    data.ratio = data.ratio.fillna(0)
+    subset = data[-30:]
+    if json:
+        return data_frame_to_json(subset)
+    else:
+        return subset
+
+def data_frame_to_json(df):
+    output = {name: series.tolist() for name, series in df.iterkv()}
+    output['index'] = [datetime_to_int(date) for date in df.index]
+    return output
+
 def engagement_pyramid(db):
 
     end_date = datetime.datetime.now()
     start_date = end_date - pandas.DateOffset(months=1)
 
-    query = oauth.GAQuery()
+    query = GAQuery()
     query.start_date(start_date).end_date(end_date)
     query.metrics(['ga:visitors'])
     query.dimensions(['ga:customVarValue1'])

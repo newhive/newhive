@@ -46,13 +46,7 @@ class User(Application):
         else:
             response.context['f']['email'] = referral.get('to', '')
 
-        ab_variations = ['pages/user_settings.html', 'pages/signup.html']
-        group = request.cookies.get('AB_SIG')
-        if group is None:
-            group = random.randint(0, len(ab_variations) - 1)
-            set_cookie(response, 'AB_SIG', group, secure=True)
-        template = ab_variations[int(group)]
-        return self.serve_page(response, template)
+        return self.serve_page(response, 'pages/signup.html')
 
     def create(self, request, response):
         """ Checks if the referral code matches one found in database.

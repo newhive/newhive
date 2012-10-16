@@ -579,3 +579,27 @@ class SiteReferralReminder(SiteReferral):
                 }
 
         self.send_mail(context, unique_args={'referral_id': referral.id, 'version': version})
+
+class UserInvitesReminder(Mailer):
+    name = 'user_invites_reminder'
+    unsubscribable = False
+    template = "emails/user_invites_reminder"
+    sent_to = ['user']
+
+    @property
+    def subject(self):
+        return "You've got {} invites to share from NewHive beta.".format(self.recipient.get('referrals'))
+
+    def send(self, user):
+        self.recipient = user
+        if not user.get('referrals'):
+            logger.info('not sending invites reminder to {}, no referrals available'.format(user['name']))
+            return
+
+        url = utils.AbsUrl()
+        url.query.update({'loadDialog': 'email_invites'})
+        context = {
+                'recipient': self.recipient
+                , 'url': url}
+
+        self.send_mail(context)

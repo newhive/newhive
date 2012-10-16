@@ -3,6 +3,7 @@ from datetime import datetime
 from newhive import config
 import urlparse
 import werkzeug.urls
+import pymongo
 
 
 def lget(L, i, *default):
@@ -26,6 +27,9 @@ def dfilter(d, keys):
     return r
 def dupdate(d1, d2): return dict(d1.items() + d2.items())
 
+
+def datetime_to_id(d):
+    return str(pymongo.objectid.ObjectId.from_datetime(d))
 
 def now(): return time.time()
 

@@ -1,0 +1,10 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block content %}
+<h1>AB Tests</h1>
+
+{% for path, test in tests.iteritems() %}
+<h3><a href="ab_test/{{path}}">{{ test.name }}</a></h3>
+{% endfor %}
+
+{% endblock content %}

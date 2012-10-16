@@ -1282,6 +1282,11 @@ class Feed(Entity):
 
         return self
 
+    def delete(self):
+        class_name = type(self).__name__
+        self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': -1}})
+        super(Feed, self).delete()
+
     @property
     def entity(self):
         if not self._entity:

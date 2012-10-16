@@ -7,12 +7,31 @@
     float: left; 
     margin-right: 20px;
   }
+  .item h4 {
+      margin-bottom: 0;
+  }
 </style>
 {% endblock head %}
 
 
 {% block content %}
 <h1>{{user_object.name}}</h1>
+
+<div>
+    <div class="item">
+        <h4>User since</h4>{{ user_object.created | time }}
+    </div>
+    <div class="item">
+        <h4>Email</h4>{{ user_object.email }}
+    </div>
+    <div class="item">
+        <h4>
+            Email Subscriptions
+            <a href="/analytics/email_log/?recipient_name={{user_object.name}}">(see emails)</a>
+        </h4>
+        {{ user_object.email_subscriptions | join(', ') }}
+    </div>
+</div>
 
 <div class='section'>
     <h3>Private Expressions: ({{expression_counts.private}})</h3>

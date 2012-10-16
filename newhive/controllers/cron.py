@@ -27,6 +27,7 @@ class Cron(Application):
         opts = dict((k, int(v)) for k, v in opts_serial.iteritems())
 
         status = method(**opts)
+        status.update({'timestamp': now(), 'args': opts})
         return self.serve_json(response, status)
 
 
@@ -97,3 +98,16 @@ class Cron(Application):
 
         return stats
 
+    def user_invites_reminder(self, delay=0, span=0):
+        mailer = newhive.mail.UserInvitesReminder(db = self.db, jinja_env = self.jinja_env)
+        stats = {'send_count': 0}
+
+        spec = {
+                'created': {'$gt': now() - span - delay, '$lt': now() - delay}
+                , 'referrals': {'$gt': 0}
+                }
+        for user in self.db.User.search(spec):
+            mailer.send(user)
+            stats['send_count'] += 1
+
+        return stats

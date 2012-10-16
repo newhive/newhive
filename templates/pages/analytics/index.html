@@ -1,0 +1,10 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+{% for page in pages %}
+<h3><a href="/analytics/{{page.path}}">{{ page.name or page.path }}</a></h3>
+{% endfor %}
+
+{% endblock %}

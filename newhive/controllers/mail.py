@@ -42,13 +42,14 @@ class Mail(Application):
         contact = self.db.Contact.create(form)
         sendgrid_args = {'contact_id': contact.id, 'url': form['url']}
 
-        #mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
-        #mailer.send(form.get('email'), form.get('name'), sendgrid_args)
-
-        mailer = mail.SiteReferral(db=self.db, jinja_env=self.jinja_env)
-        referral_id = mailer.send(form.get('email'), form.get('name'))
-        if referral_id:
-            contact.update(referral_id=referral_id)
+        if config.auto_invite:
+            mailer = mail.SiteReferral(db=self.db, jinja_env=self.jinja_env)
+            referral_id = mailer.send(form.get('email'), form.get('name'))
+            if referral_id:
+                contact.update(referral_id=referral_id)
+        else:
+            mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
+            mailer.send(form.get('email'), form.get('name'), sendgrid_args)
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
