@@ -226,7 +226,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         return o;
     };
     o.random = function(){
-        change_context('');
+        context('');
         $.getJSON('/random?json=1', show_expression_not_in_list);
     };
 
@@ -480,24 +480,18 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         o.context(context);
     };
 
-    // Pick appropriate updater strategy based on context
-    var current_context;
-    function change_context(str){
+    o.context = function(str, push_state) {
+        if (typeof(str) == "undefined") return current_context;
+
         if (!str) str = '#Featured';
         navigator_element.find('input').val(str);
         current_context = str;
-    };
 
-    o.context = function(str, push_state) {
-        if (typeof(str) == "undefined") return current_context;
-        return o.set_context(str, push_state);
-    };
-
-    o.set_context = function(str, push_state) {
-        change_context(str);
         if (push_state !== false) {
-            history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+            history_manager.pushState( {id: current_expr.id, context: current_context},
+                current_expr.title, o.current_url() );
         }
+
         // populate_navigator depends on current url so must come after pushState
         o.populate_navigator();
         return o;
@@ -537,13 +531,16 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     var last;
     o.updater = function(direction, current_expr, count, callback){
-        if (current_expr === last) return;
+        if (!current_expr || current_expr === last) return;
+
+        search_args = { q: o.context(), limit: count, order: -direction, json: 't' };
         var page = current_expr.id, feed = current_expr.feed;
         if( feed && feed.length) page = feed[ (direction === 1) ? feed.length - 1 : 0 ]['created'];
-        var uri = URI(server_url + 'search');
-        uri.addQuery({ q: o.context(), page: current_expr.id,
-            limit: count, order: -direction, json: 't' });
-        console.log( uri.toString() );
+        search_args.page = page
+
+        var uri = URI( server_url + 'search' );
+        uri.addQuery( search_args );
+
         $.getJSON(uri.toString(), function(data, status, jqXHR){
             if (!data.length) last = current_expr;
             callback(data, status, jqXHR);
@@ -559,7 +556,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
         var frame = content_element.find('iframe').on('load', on_frame_load);
         var query = URI(window.location.href).query(true).q;
-        change_context(query);
+        o.context(query);
 
         // normalize the URL, not really sure why this is necessary
         //history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
@@ -567,6 +564,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         o.populate_navigator();
         current_expr.frame = frame;
         current_expr.show();
+
         // if opts.hidden is true, render initially offscreen, then hide
         // completely for better mobile browser experience
         var bottom = opts.hidden ? -height * 1.1 : 0;
@@ -761,7 +759,7 @@ Hive.Navigator.create = function(navigator, viewer, opts){
             }
         };
         if (state.data.context != o.context()){
-            o.set_context(state.data.context, false);
+            o.context(state.data.context, false);
             //o.populate_navigator(select_expr);
         } else {
             select_expr();

@@ -146,12 +146,16 @@ class Collection(object):
         return self.find(spec, **opts)
 
     def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None, filter=None):
-        if page and not is_mongo_key(page):
+        page_is_id = is_mongo_key(page)
+        if page and not page_is_id:
             page = float(page)
+
         if type(spec) == dict:
+            if page_is_id:
+                page_start = self.fetch(page)
+                page = page_start[sort] if page_start else None
+
             if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': page }
-            #print 'page, sort: ', page, sort
-            #print 'spec[', sort, ']: ', spec[sort]
             res = self.search(spec, sort=[(sort, order)])
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -166,7 +170,7 @@ class Collection(object):
             spec = uniq(spec)
             if not page: page = '0'
 
-            if is_mongo_key(page):
+            if page_is_id:
                 try:
                     start = spec.index(page)
                     end = start + limit * -order
@@ -490,8 +494,6 @@ class User(HasSocial):
         return res
 
     def feed_network(self, spec={}, limit=40, page=None, **args):
-        #print 'feed_network(: ', args
-        #return []
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
                 'class_name': {'$in': ['NewExpr', 'Broadcast']}
@@ -508,7 +510,6 @@ class User(HasSocial):
         # to.  In this case, look up the most recent appropriate feed item with
         # that expression as entity
         if is_mongo_key(page):
-            print dict( spec={'entity': page, '$or': or_clause }, viewer=args['viewer'], limit=1 )
             feed_start = list( self.feed_search({'entity': page, '$or': or_clause },
                     viewer=args['viewer'], limit=1) )
             if len( feed_start ): page = feed_start[0]['created']
