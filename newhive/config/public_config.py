@@ -71,5 +71,7 @@ interactive = False
 
 auto_invite = False
 
+initial_invite_count = 5
+
 from os.path import dirname, join, normpath
 src_home        = normpath(join(dirname(__file__), "../.."))

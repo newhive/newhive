@@ -104,7 +104,7 @@ class Cron(Application):
 
         spec = {
                 'created': {'$gt': now() - span - delay, '$lt': now() - delay}
-                , 'referrals': {'$gt': 0}
+                , 'referrals': config.initial_invite_count
                 }
         for user in self.db.User.search(spec):
             mailer.send(user)
