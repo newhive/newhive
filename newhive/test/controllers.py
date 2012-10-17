@@ -195,15 +195,3 @@ class ExpressionTest(Test):
         response = self.open(data=data)
         print response.status
         self.assertStatus(response, 303)
-
-# this organization feature isn't really used right now
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(UserTest('test_profile_thumb_set'))
-    return suite
-
-# don't call tests this way anyhow, see comment at top of file
-#if __name__ == '__main__':
-    #config.interactive = True
-    #unittest.main()
-    #unittest.TextTestRunner().run(suite())
