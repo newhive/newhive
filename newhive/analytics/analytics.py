@@ -614,11 +614,40 @@ def engagement_pyramid(db):
 
     return cohort_users
 
+def milestone_email_cadence(db, offset=86400):
+    extract = lambda l: (
+            datetime.datetime.fromtimestamp(l['created'])
+            , l['recipient_name']
+            , l['unique_args']['expr_id']
+            , l['unique_args']['milestone']
+            )
+
+    m = [extract(l) for l in db.MailLog.search({'created': {'$gt': now() - offset}, 'category': 'milestone'})]
+
+    df = pandas.DataFrame(m, columns=['created', 'user', 'expr', 'milestone'])
+
+    for name, group in df.groupby('user'):
+        if len(group) > 1:
+            user = db.User.named(name)
+            median = pandas.np.median([e['views'] for e in user.get_expressions('public')]) if user else 'NA'
+            print "{}  median views: {}".format(name, median)
+            print group
+            print
+
+def user_expression_summary(user, p=False):
+    data = [(e['name'], e['views']) for e in user.get_expressions('public')]
+    data = data or [('', 0)]
+    data = pandas.DataFrame(data, columns=['name', 'views'])
+    if p:
+        print data.describe()
+        print data
+    return data
 
 if __name__ == '__main__':
     from newhive.state import Database
     import newhive.config
     db = Database(newhive.config)
+    db_live = Database(newhive.config, db_name='hive')
     #ch = logging.StreamHandler()
     #ch.setLevel(logging.debug)
     #formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
