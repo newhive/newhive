@@ -1,5 +1,6 @@
 import unittest
 from newhive import state, config
+from newhive.utils import now
 import newhive.controllers.cron
 
 db = state.Database(config)
@@ -37,3 +38,9 @@ class MilestoneCheck(unittest.TestCase):
         self.expr.update(milestones={'20': 0}, views=30)
         milestone = self.f(self.expr, self.mailer)
         self.assertIs(milestone, False)
+
+    def test_high_frequency_milestones(self):
+        self.expr.update(milestones={'20': now() - 3600}, views=80)
+        milestone = self.f(self.expr, self.mailer)
+        self.assertIs(milestone, False)
+

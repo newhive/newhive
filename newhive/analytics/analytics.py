@@ -614,7 +614,7 @@ def engagement_pyramid(db):
 
     return cohort_users
 
-def milestone_email_cadence(db, offset=86400):
+def milestone_email_cadence(db, offset=86400, cutoff=2):
     extract = lambda l: (
             datetime.datetime.fromtimestamp(l['created'])
             , l['recipient_name']
@@ -627,7 +627,7 @@ def milestone_email_cadence(db, offset=86400):
     df = pandas.DataFrame(m, columns=['created', 'user', 'expr', 'milestone'])
 
     for name, group in df.groupby('user'):
-        if len(group) > 1:
+        if len(group) >= cutoff:
             user = db.User.named(name)
             median = pandas.np.median([e['views'] for e in user.get_expressions('public')]) if user else 'NA'
             print "{}  median views: {}".format(name, median)
