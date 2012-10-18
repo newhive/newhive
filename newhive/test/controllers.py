@@ -164,14 +164,14 @@ class SignupTest(Test):
         referral = self.test_invite_from_contact_log()
         self.log_out()
 
-        path = referral.url.split('/')[-1]
+        path = referral.url.path
         response = self.open(path=path)
         self.assertStatus(response, 200)
 
         # even if response is 200, invite could be used, so check that we're
-        # looking at the 'invited' page
+        # looking at the create account or 'signup' page
         soup = BeautifulSoup(response.data)
-        self.assertIn('invited', soup.body['class'])
+        self.assertIn('signup', soup.body['class'])
 
         return response
 
