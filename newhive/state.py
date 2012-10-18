@@ -619,7 +619,7 @@ class User(HasSocial):
     top_expressions = property(get_top_expressions)
 
     def get_recent_expressions(self, count=6):
-        return self.get_expressions(auth='public').sort([('created', -1)]).limit(count)
+        return self.get_expressions(auth='public').sort([('updated', -1)]).limit(count)
     recent_expressions = property(get_recent_expressions)
 
     def delete(self):
