@@ -3,11 +3,23 @@ import newhive
 import newhive.ab
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.analytics import analytics
+from newhive.analytics import analytics, queries
 from newhive.utils import now, datetime_to_int
 import operator as op
 
 _index = []
+
+def data_frame_to_json(df):
+    output = {name: series.tolist() for name, series in df.iterkv()}
+    if hasattr(df.index[0], 'timetuple'):
+        index = [datetime_to_int(date) for date in df.index]
+    elif type(df.index[0]) == pandas.np.int64:
+        index = map(int, df.index)
+    else:
+        index = map(str, df.index)
+    output['index'] = index
+    return output
+
 class Analytics(Application):
     def __init__(self, *a, **b):
         super(Analytics, self).__init__(*a, **b)
@@ -406,5 +418,16 @@ class Analytics(Application):
         freq = request.args.get('freq', 'D')
         response.context['title'] = "{}1-{}30 Retention".format(freq, freq)
         if freq == 'M': freq = 'MS'
-        response.context['data'] = analytics.retention(self.db, freq)
+        data = analytics.retention(self.db, freq)
+        response.context['data'] = data_frame_to_json(data)
         return self.serve_page(response, 'pages/analytics/active_total_chart.html')
+
+    @admins
+    @index
+    def user_median_views(self, request, response):
+        """Median Views by User"""
+        data = queries.UserMedianViews(self.db).execute()
+        data = data.sort('median_views', ascending=False)
+        response.context['data'] = data_frame_to_json(data)
+        response.context['title'] = """Median Views by User"""
+        return self.serve_page(response, 'pages/analytics/median_views.html')

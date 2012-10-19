@@ -131,6 +131,7 @@ class SignupTest(Test):
 
         # Check newly created contact record
         record = db.Contact.last()
+        print record
         self.assertEqual(record['email'], email)
 
         return record

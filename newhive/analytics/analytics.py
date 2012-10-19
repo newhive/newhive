@@ -1,5 +1,5 @@
 import time, datetime, re, pandas, newhive, pandas, numpy, pytz
-from newhive import state, oauth, analytics
+from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
 from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id
@@ -556,21 +556,13 @@ def active_users_by_signup_date(db, users, freq='D'):
     #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
     return data
 
-def retention(db, freq="D", json=True):
+def retention(db, freq="D"):
     days = {'D': 1, 'W': 7, 'M': 30, 'MS': 30}.get(freq)
     active = _active_users_ga(db, days)
     data = active_users_by_signup_date(db, active, freq)
     data.ratio = data.ratio.fillna(0)
     subset = data[-30:]
-    if json:
-        return data_frame_to_json(subset)
-    else:
-        return subset
-
-def data_frame_to_json(df):
-    output = {name: series.tolist() for name, series in df.iterkv()}
-    output['index'] = [datetime_to_int(date) for date in df.index]
-    return output
+    return subset
 
 def engagement_pyramid(db):
 
@@ -641,6 +633,13 @@ def user_expression_summary(user, p=False):
     if p:
         print data.describe()
         print data
+    return data
+
+def user_median_views(db):
+    cursor = db.User.search({'analytics.expressions.count': {'$gt': 0}})
+    data = [(u['name'], user_expression_summary(u).views.median()) for u in cursor]
+    data = pandas.DataFrame(data, columns=['user', 'median_views'])
+    data.timestamp = datetime.datetime.now()
     return data
 
 if __name__ == '__main__':
