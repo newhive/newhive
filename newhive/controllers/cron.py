@@ -63,7 +63,7 @@ class Cron(Application):
         last_milestone = max([int(m) for m in milestones.keys()]) if milestones else 0
         new_milestone = latest_milestone(views)
 
-        seconds_since_last = now() - max(milestones.values())
+        seconds_since_last = now() - max(milestones.values()) if milestones else float('inf')
         if new_milestone > last_milestone and seconds_since_last > 86400:
             median = user_expression_summary(expr.owner).views.median()
             if new_milestone >= median:
