@@ -57,6 +57,7 @@ class Application(object):
         response.context['ga_commands'] = [
                 ['_setCampMediumKey', 'email']
                 , ['_setCampSourceKey', email.get('category')]
+                , ['_setCustomVar', 5, 'campaign', 'email:' + email.get('category'), 2]
                 ]
 
     def _process_ga_commands(self, request, response):
