@@ -480,6 +480,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         o.context(context);
     };
 
+    var current_context = null;
     o.context = function(str, push_state) {
         if (typeof(str) == "undefined") return current_context;
 

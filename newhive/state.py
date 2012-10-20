@@ -854,7 +854,8 @@ class Expr(HasSocial):
 
     def build_search(self, d):
         tags = d.get('tags')
-        if tags: d['tags_index'] = list( set( normalize(tags) ) )
+        tag_list = []
+        if tags: tag_list = d['tags_index'] = list( set( normalize(tags) ) )
 
         d['title_index'] = list( set( normalize( self.get('title', '') ) ) )
 
@@ -863,7 +864,7 @@ class Expr(HasSocial):
             if a.get('type') in ['hive.html', 'hive.text'] and a.get('content', '').strip():
                 text = html.fromstring( a.get('content') ).text_content()
                 text_index.extend( normalize(text) )
-        text_index = list( set( text_index ) )
+        text_index = list( set( text_index + tag_list ) )
         if text_index: d['text_index'] = text_index
 
     def _collect_files(self, d, old=True, thumb=True, background=True, apps=True):
