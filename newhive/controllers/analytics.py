@@ -3,7 +3,7 @@ import newhive
 import newhive.ab
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.analytics import analytics, queries
+from newhive.analytics import analytics, queries, functions
 from newhive.utils import now, datetime_to_int
 import operator as op
 
@@ -18,6 +18,7 @@ def data_frame_to_json(df):
     else:
         index = map(str, df.index)
     output['index'] = index
+    output = {str(key): val for key, val in output.iteritems()}
     return output
 
 class Analytics(Application):
@@ -414,13 +415,35 @@ class Analytics(Application):
     @admins
     @index
     def retention(self, request, response):
-        """User Retention D1-D30 or W1-W30"""
+        """Snapshot of User Retention D1-D30 or W1-W30"""
         freq = request.args.get('freq', 'D')
         response.context['title'] = "{}1-{}30 Retention".format(freq, freq)
         if freq == 'M': freq = 'MS'
         data = analytics.retention(self.db, freq)
         response.context['data'] = data_frame_to_json(data)
         return self.serve_page(response, 'pages/analytics/active_total_chart.html')
+
+    @admins
+    @index
+    def retention2(self, request, response):
+        """D0-D7 Retention change over time"""
+        data = queries.DailyRetention(self.db).execute(datetime(2012,10,1))
+        total = data.pop('total')
+        average = data / total
+        smoothed = pandas.DataFrame([functions.smooth(average[d], window_len=5) for d in average]).transpose()
+        smoothed.index = average.index
+        smoothed = smoothed * 100
+        average = average.fillna(0)
+        #json = {}
+        #json['columns'] = map(str, smoothed.columns.tolist())
+        #json['data'] = [c.tolist() for name, c in smoothed.iteritems()]
+        #json['index'] = map(datetime_to_int, smoothed.index)
+        #json['column_map'] = {str(name): i for i, name in enumerate(smoothed.columns)}
+        #response.context['json'] = json
+        average['index'] = map(datetime_to_int, average.index)
+        smoothed['index'] = map(datetime_to_int, smoothed.index)
+        response.context['data'] = [v.to_dict() for k, v in smoothed.transpose().iteritems()]
+        return self.serve_page(response, 'pages/analytics/retention2.html')
 
     @admins
     @index
