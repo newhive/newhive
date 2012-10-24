@@ -468,5 +468,6 @@ class Analytics(Application):
         data = analytics.ga_summary(date)
         response.context['data'] = data_frame_to_json(data, outtype='list')
         response.context['meta'] = {'date': str(date)}
+        response.context['title'] = "Visits and Visitor Summary"
 
         return self.serve_page(response, 'pages/analytics/ga_summary.html')
