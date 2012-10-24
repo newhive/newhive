@@ -2,8 +2,10 @@ import time, datetime, re, pandas, newhive, pandas, numpy, pytz
 from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
-from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id
+from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, local_date
 from newhive.analytics.ga import GAClient, GAQuery
+from newhive.analytics import queries
+Day = pandas.datetools.Day
 
 import logging
 logger = logging.getLogger(__name__)
@@ -528,6 +530,7 @@ def _active_users_ga(db, period=7):
     """Return users present in GA logs in last 'period' days"""
     tz = pytz.timezone('US/Pacific')
     end_date = datetime.datetime.now(tz) - pandas.DateOffset(days=1)
+    end_date = local_date()
     start_date = end_date - pandas.DateOffset(days=period-1)
     query = GAQuery(start_date=start_date, end_date=end_date)
     query.metrics(['ga:visits']).dimensions(['ga:customVarValue1'])
@@ -641,6 +644,12 @@ def user_median_views(db):
     data = pandas.DataFrame(data, columns=['user', 'median_views'])
     data.timestamp = datetime.datetime.now()
     return data
+
+def ga_summary(date):
+    q = queries.GASummary()
+    d = q.execute(date)
+    index = [0,1,7,28]
+    return pandas.DataFrame([d.dataframe.ix[date - Day(day)] for day in index], index=index)
 
 if __name__ == '__main__':
     from newhive.state import Database

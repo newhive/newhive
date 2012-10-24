@@ -9,6 +9,12 @@ from newhive import config
 from newhive.analytics.datastore import *
 from newhive.analytics import functions
 from newhive.analytics.ga import GAQuery, QueryResponse
+from newhive.utils import local_date
+#from pandas.datetools import Day
+Day = pandas.datetools.Day
+
+import logging
+logger = logging.getLogger(__name__)
 
 connection = pymongo.Connection(host=config.database_host, port=config.database_port)
 adb = connection.analytics
@@ -20,14 +26,42 @@ class Query(object):
     collection_name = None
     max_age = datetime.timedelta(days=1)
 
-    def __init__(self, source_db, persistence_db=adb):
+    def _serialize(self, data):
+        dtype = type(data)
+        if dtype == pandas.DataFrame:
+            rv = dataframe_to_record(data)
+        elif dtype == dict:
+            rv = data
+        elif dtype == QueryResponse:
+            rv = dict(data)
+        else:
+            raise ValueError("Cannot serialize object of type {}".format(dtype))
+        rv.update(type=str(dtype))
+        return rv
+
+    def _deserialize(self, record):
+        dtype = record.get('type')
+        if dtype == str(pandas.DataFrame):
+            return record_to_dataframe(record)
+        elif dtype == str(dict):
+            return record
+        elif dtype == str(QueryResponse):
+            return QueryResponse(record)
+        else:
+            return record_to_dataframe(record)
+
+    def _spec(self, args, kwargs):
+        serialized_args = map(lambda a: str(a) if type(a) is datetime.date else a, args)
+        return {'args': serialized_args, 'kwargs': kwargs, 'source_db': self.db.mdb.name if self.db else None}
+
+    def __init__(self, source_db=None, persistence_db=adb):
         """source_db is nehive.state.Database, persistance_db is pymongo database"""
         self.db = source_db
         self.collection = persistence_db[self.collection_name]
 
-    def _persist(self, args, kwargs, dataframe):
-        record = dataframe_to_record(dataframe)
-        record.update({'args': args, 'kwargs': kwargs, 'source_db': self.db.mdb.name})
+    def _persist(self, args, kwargs, data):
+        record = self._serialize(data)
+        record.update(self._spec(args, kwargs))
         self.collection.insert(record)
 
     def results(self):
@@ -35,11 +69,13 @@ class Query(object):
             self.execute(*args, **kwargs)
 
     def execute(self, *args, **kwargs):
-        spec = {'args': args, 'kwargs': kwargs, 'source_db': self.db.mdb.name}
+        spec = self._spec(args, kwargs)
         result = self.collection.find_one(spec, sort=[('_id', -1)])
         if result and (dtnow() - result['_id'].generation_time) < self.max_age:
-            return record_to_dataframe(result)
+            logger.info('using cached result')
+            return self._deserialize(result)
         else:
+            logger.info('cached result not present or too old, reexecuting query')
             return self.reexecute(*args, **kwargs)
 
     def reexecute(self, *args, **kwargs):
@@ -100,6 +136,42 @@ class DailyRetention(Query):
         return total, pandas.Series(active, index=days)
 
     def _execute(self, start):
+        def populate_active_collection():
+
+            def find_latest():
+                record = adb.daily_active.find_one({}, {'date': True}, sort=[('date', -1)])
+                return record['date']
+
+            def store_result(date):
+                def callback(id, result, error):
+                    if error is not None:
+                        print error
+                    else:
+                        result = QueryResponse(result)
+                        users = [r[0] for r in result.rows]
+                        newdoc = {'date': date, 'users': users, 'total': result.total}
+                        adb.daily_active.update({'date': date}, {'$set': newdoc}, upsert=True)
+                return callback
+
+            query = GAQuery(metrics=['ga:visits'], dimensions=['ga:customVarValue1'])
+            # slight overlap ensures possibly incomplete latest day gets overwritten with complete data
+            start = find_latest()
+            today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            while start < datetime.datetime.now():
+                batch = apiclient.http.BatchHttpRequest()
+                range = pandas.DatetimeIndex(start=start, periods=10, freq='D')
+                for timestamp in range:
+                    date = timestamp.to_datetime()
+                    if date >= today:
+                        continue
+                    query.start_date(date).end_date(date)
+                    batch.add(query.query(), store_result(date))
+                batch.execute(http=httplib2.Http())
+                print "finished batch starting {}".format(start)
+                start += pandas.DateOffset(days=10)
+                time.sleep(1)
+
+        populate_active_collection()
         self._grouped = UserJoinDates(self.db).execute().groupby('date')
         end = datetime.datetime.today()
         drange = pandas.DatetimeIndex(start=start, end=end, freq='D')
@@ -113,48 +185,15 @@ class DailyRetention(Query):
         data['total'] = totals
         return data
 
-def retention():
-    data = DailyRetention(db_live).execute(datetime.datetime(2012,10,1))
-    total = data.pop('total')
-    average = data / total
-    smoothed = pandas.DataFrame([functions.smooth(average[d]) for d in average]).transpose()
-    smoothed.index = average.index
-    return average, smoothed
+class GASummary(Query):
+    collection_name = 'ga_summary'
 
-def populate_active_collection():
-
-    def find_latest():
-        record = adb.daily_active.find_one({}, {'date': True}, sort=[('date', -1)])
-        return record['date']
-
-    def store_result(date):
-        def callback(id, result, error):
-            if error is not None:
-                print error
-            else:
-                result = QueryResponse(result)
-                users = [r[0] for r in result.rows]
-                newdoc = {'date': date, 'users': users, 'total': result.total}
-                adb.daily_active.update({'date': date}, {'$set': newdoc}, upsert=True)
-        return callback
-
-    query = GAQuery(metrics=['ga:visits'], dimensions=['ga:customVarValue1'])
-    # slight overlap ensures possibly incomplete latest day gets overwritten with complete data
-    start = find_latest()
-    today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    while start < datetime.datetime.now():
-        batch = apiclient.http.BatchHttpRequest()
-        range = pandas.DatetimeIndex(start=start, periods=10, freq='D')
-        for timestamp in range:
-            date = timestamp.to_datetime()
-            if date >= today:
-                continue
-            query.start_date(date).end_date(date)
-            batch.add(query.query(), store_result(date))
-        batch.execute(http=httplib2.Http())
-        print "finished batch starting {}".format(start)
-        start += pandas.DateOffset(days=10)
-        time.sleep(1)
+    def _execute(self, date):
+        if date >= local_date(): logger.warn('running GASummary on unfinished day')
+        q = GAQuery(dimensions=['ga:date'], metrics=['ga:visitors', 'ga:visits', 'ga:newVisits'])
+        q.end_date(date)
+        q.start_date(date - pandas.DateOffset(days=35))
+        return q.execute()
 
 
 if __name__ == "__main__":

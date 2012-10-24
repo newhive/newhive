@@ -1,4 +1,4 @@
-import time, random, re, base64, copy
+import time, random, re, base64, copy, pytz, pandas
 from datetime import datetime
 from newhive import config
 import pymongo
@@ -248,3 +248,9 @@ def set_cookie(response, name, data, secure = False, expires = True):
 def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name, secure = False): response.delete_cookie(name,
     domain = None if secure else '.' + config.server_name)
+
+def local_date():
+    tz = pytz.timezone('US/Pacific')
+    dt = datetime.now(tz)
+    return dt.date()
+

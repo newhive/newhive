@@ -5,6 +5,9 @@ import oauth2client
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow, OAuth2Credentials, FlowExchangeError, AccessTokenCredentialsError
 from newhive import config
+from newhive.utils import memoized
+import pandas
+import datetime
 
 ga_filters = {
         'expressions': 'ga:hostname!=thenewhive.com;' + ";".join(['ga:pagePath!~' + path for path in ['^/expressions', '^/feed', '^/listening', '^/starred']])
@@ -103,15 +106,15 @@ class GAQuery(object):
         return self
 
     def dimensions(self, dimensions):
-        self._query.update(dimensions=';'.join(dimensions))
+        self._query.update(dimensions=','.join(dimensions))
         return self
 
     def metrics(self, metrics):
-        self._query.update(metrics=';'.join(metrics))
+        self._query.update(metrics=','.join(metrics))
         return self
 
     def filters(self, filters):
-        self._query.update(filters=';'.join(filters))
+        self._query.update(filters=','.join(filters))
         return self
 
     def segment(self, segment=None, unset=False):
@@ -167,5 +170,16 @@ class QueryResponse(dict):
     @property
     def total(self):
         return float(self['totalsForAllResults'].values()[0])
+
+    @property
+    @memoized
+    def dataframe(self):
+        df = pandas.DataFrame(self.rows, columns=['index'] + self['query']['metrics'])
+        if self['query']['dimensions'] == 'ga:date':
+            df.index = map(lambda x: datetime.datetime.strptime(str(x), "%Y%m%d"), df.pop('index'))
+        else:
+            df.index = df.pop('index')
+        df = df.applymap(int)
+        return df
 
 

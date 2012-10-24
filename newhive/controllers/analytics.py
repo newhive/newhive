@@ -4,21 +4,26 @@ import newhive.ab
 from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive.analytics import analytics, queries, functions
-from newhive.utils import now, datetime_to_int
+from newhive.utils import now, datetime_to_int, local_date
 import operator as op
 
 _index = []
 
-def data_frame_to_json(df):
-    output = {name: series.tolist() for name, series in df.iterkv()}
+def data_frame_to_json(df, outtype='dict'):
     if hasattr(df.index[0], 'timetuple'):
         index = [datetime_to_int(date) for date in df.index]
     elif type(df.index[0]) == pandas.np.int64:
         index = map(int, df.index)
     else:
         index = map(str, df.index)
-    output['index'] = index
-    output = {str(key): val for key, val in output.iteritems()}
+    if outtype == 'dict':
+        output = {name: series.tolist() for name, series in df.iterkv()}
+        output['index'] = index
+        output = {str(key): val for key, val in output.iteritems()}
+    elif outtype == 'list':
+        output = df.copy()
+        output['index'] = index
+        output = [v.to_dict() for k, v in output.transpose().astype(float).iteritems()]
     return output
 
 class Analytics(Application):
@@ -454,3 +459,14 @@ class Analytics(Application):
         response.context['data'] = data_frame_to_json(data)
         response.context['title'] = """Median Views by User"""
         return self.serve_page(response, 'pages/analytics/median_views.html')
+
+    @admins
+    @index
+    def visitor_summary(self, request, response):
+        """Visits and Visitor Summary"""
+        date = local_date() - pandas.DateOffset(days=1)
+        data = analytics.ga_summary(date)
+        response.context['data'] = data_frame_to_json(data, outtype='list')
+        response.context['meta'] = {'date': str(date)}
+
+        return self.serve_page(response, 'pages/analytics/ga_summary.html')
