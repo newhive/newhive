@@ -1379,6 +1379,11 @@ Hive.App.Image = function(o) {
         o.dims_set(dims);
     }
 
+    o.natural_size = function() {
+        var img = o.div.find('img')[0];
+        o.dims_set([img.naturalWidth, img.naturalHeight]);
+    };
+
     function controls(o) {
         o.addControls($('#controls_image'));
         o.append_link_picker(o.div.find('.buttons'));
