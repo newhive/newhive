@@ -19,7 +19,7 @@ function Funcs(fn, filter) {
     if(fn) o.push(fn);
     var callback = function() {
         if (!filter || filter()){
-            for(i in o) o[i].apply(this, arguments);
+            for(var i in o) o[i].apply(this, arguments);
         }
     };
     callback.handlers = o;
@@ -546,7 +546,7 @@ hover_menu = function(handle, drawer, options) {
         if(opts.animate_close){
             if(!opts.animate_open){
                 opts.animate_open = {};
-                for(p in opts.animate_close) opts.animate_open[p] = drawer.css(p);
+                for(var p in opts.animate_close) opts.animate_open[p] = drawer.css(p);
             }
             drawer.animate(opts.animate_close, 100);
         } else opts.close_menu();
