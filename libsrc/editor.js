@@ -65,7 +65,8 @@ Hive.Apps.init = function(initial_state, load) {
 };
 
 Hive.env = function(){
-    return { scale: $(window).width() / 1000 };
+    scale = Hive.Exp.fixed_width ? 1 : $(window).width() / 1000;
+    return {scale: scale};
 };
 
 // Creates generic initial object for all App types.
@@ -402,7 +403,7 @@ Hive.Controls = function(app, multiselect) {
         return hover_menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
     o.div = $("<div style='position: absolute; z-index: 3; width: 0; height: 0' class='controls'>");
-    $('body').append(o.div);
+    $('#controls').append(o.div);
 
     // add borders
     o.select_box = $("<div style='position: absolute'>");
@@ -1360,7 +1361,7 @@ Hive.App.Image = function(o) {
                     iw = ih * o.aspect;
                 }
             } else {
-                iw = 1000 * o.imageWidth / ww;
+                iw = o.imageWidth / Hive.env().scale;
                 ih = iw / o.aspect;
             }
             o.init_state.dimensions = [ iw, ih ];
@@ -1690,8 +1691,8 @@ Hive.Selection = function(){
         o.new_selection = $.grep(Hive.Apps.all(), function(el){
             var dims = el.dims();
             var pos = el.pos();
-            return (select.top <= pos[1] && select.left <= pos[0]
-                && select.right >= pos[0] + dims[0] && select.bottom >= pos[1] + dims[1]);
+            return (select.top <= pos[1] && select.left <= pos[0] + o.offset
+                && select.right >= pos[0] + dims[0] + o.offset && select.bottom >= pos[1] + dims[1]);
         });
         if (o.old_selection.length != o.new_selection.length){
             o.update($.unique($.merge(o.new_selection, o.initial_elements)));
@@ -1700,6 +1701,7 @@ Hive.Selection = function(){
 
     o.drag_start = function(e, dd) {
         Hive.drag_start();
+        o.offset = $('#happs').offset().left;
 
         o.new_selection = [];
         o.dragging = true;
@@ -1825,7 +1827,7 @@ Hive.Selection = function(){
     });
 
     $(function() {
-        $('#grid_guide').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
+        $('#grid_guide, #happs').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
 
         // Fallthrough click handler that unfocuses all apps if user clicks on background.
         $(window).click(function(e) {
@@ -2075,6 +2077,9 @@ Hive.init = function() {
     });
     $(window).resize();
 
+    if (Hive.Exp.fixed_width){
+        Hive.make_fixed(Hive.Exp.fixed_width);
+    }
 
     $('#insert_text,#text_default').click(function(e) {
         Hive.new_app({ type : 'hive.text', content : '' });
@@ -2482,6 +2487,25 @@ Hive.bg_change = function(s){
         function(){ return $.extend(true, {}, Hive.Exp.background) },
         Hive.bg_set, 'change background'
     ).exec(s);
+};
+
+Hive.make_fixed = function(width){
+    if (width === false){
+        delete Hive.Exp.fixed_width;
+        $('#happs, #controls').attr('style', '');
+    } else {
+        Hive.Exp.fixed_width = width;
+        $('#happs, #controls').css({
+            width: Hive.Exp.fixed_width, 
+            margin: '0 auto', 
+            position: 'relative', 
+        });
+        $('#happs').css({
+            'border-left': '1px dashed rgba(127,127,127,0.5)', 
+            'border-right': '1px dashed rgba(127,127,127,0.5)', 
+            height: '100%'
+        });
+    }
 };
 
 function remove_all_apps() {

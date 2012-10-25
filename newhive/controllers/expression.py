@@ -249,7 +249,7 @@ class Expression(Application, PagingMixin):
         if not exp: raise ValueError('missing or malformed exp')
 
         res = self.db.Expr.fetch(exp.id)
-        upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb', 'images'])
+        upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb', 'images', 'fixed_width'])
         upd['name'] = upd['name'].lower().strip('/ ')
 
         # if user has not picked a thumbnail, pick the latest image added
@@ -417,6 +417,11 @@ def expr_to_html(exp):
 
     app_html = map(html_for_app, apps)
     if exp.has_key('dimensions'):
-        app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
+        app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(
+            exp['dimensions'][1])
+            )
+    if exp.has_key('fixed_width'):
+        app_html = ['<div class="expr_container" style="width: {}px">'.format(exp['fixed_width'])] + \
+                app_html + ['</div>']
     return ''.join(app_html)
 

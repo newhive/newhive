@@ -723,35 +723,37 @@ function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=ye
 
 var positionHacks = Funcs(noop);
 var place_apps = function() {
-   $('.happ').each(function(i, app_div) {
-       var e = $(this);
-       var s = e.parent().width() / 1000;
-       if(!e.data('css')) {
-           var c = {}, props = ['left', 'top', 'width', 'height'];
-           if($(app_div).css('border-radius').indexOf('px') > 0) $.merge(props,
-                    ['border-top-left-radius', 'border-top-right-radius',
-                        'border-bottom-right-radius', 'border-bottom-left-radius']
-                );
-           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, props);
-           var scale = parseFloat(e.attr('data-scale'));
-           if(scale) c['font-size'] = scale;
-           e.data('css', c);
-           var a; if(a = e.attr('data-angle')) e.rotate(parseFloat(a));
-           e.css('opacity', this.style.opacity);
-       }
-       var c = $.extend({}, e.data('css'));
-       for(var p in c) {
-           if(p == 'font-size') c[p] = (c[p] * s) + 'em';
-           else c[p] = Math.round(c[p] * s);
-       }
-       e.css(c);
-   });
-   positionHacks();
-   $('.happfill').each(function(i, div) {
-       var e = $(div);
-       //e.width(e.parent().width()).height(e.parent().height());
-       img_fill(e.find('img'))
-   });
+    var win_width = $(window).width();
+    $('.happfill').each(function(i, div) {
+        var e = $(div);
+        //e.width(e.parent().width()).height(e.parent().height());
+        img_fill(e.find('img'))
+    });
+    if (Hive.expr && Hive.expr.fixed_width) return;
+    $('.happ').each(function(i, app_div) {
+        var e = $(this);
+        var s = e.parent().width() / 1000;
+        if(!e.data('css')) {
+            var c = {}, props = ['left', 'top', 'width', 'height'];
+            if($(app_div).css('border-radius').indexOf('px') > 0) $.merge(props,
+                     ['border-top-left-radius', 'border-top-right-radius',
+                         'border-bottom-right-radius', 'border-bottom-left-radius']
+                 );
+            map(function(p) { c[p] = parseFloat(app_div.style[p]) }, props);
+            var scale = parseFloat(e.attr('data-scale'));
+            if(scale) c['font-size'] = scale;
+            e.data('css', c);
+            var a; if(a = e.attr('data-angle')) e.rotate(parseFloat(a));
+            e.css('opacity', this.style.opacity);
+        }
+        var c = $.extend({}, e.data('css'));
+        for(var p in c) {
+            if(p == 'font-size') c[p] = (c[p] * s) + 'em';
+            else c[p] = Math.round(c[p] * s);
+        }
+        e.css(c);
+    });
+    positionHacks();
 }
 
 var fix_borders = function(items){

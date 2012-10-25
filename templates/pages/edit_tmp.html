@@ -15,6 +15,7 @@
   </script>
 {% endblock head %}
 
+{% block body_classes %}{{ super() }} edit{% endblock %}
 {% block body %}
 
 {% include 'dialogs/editor_browsers.html' %}
@@ -318,6 +319,7 @@ blah blah
 {% include 'expr_background.html' %}
 <div id='grid_guide'></div>
 
+<div id='controls'></div>
 <div id='happs'></div>
 
 {% endblock %}
