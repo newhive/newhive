@@ -199,7 +199,12 @@ class Expression(Application, PagingMixin):
             # return status forbidden so the client knows their password was invalid
             response.status_code = 403
 
-        response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
+        response.context.update(
+                html = expr_to_html(expr)
+                , expr = expr
+                , use_ga = False
+                , expr_script = expr.get('script')
+                , expr_style = expr.get('style'))
         if request.form.get('partial'):
             return self.serve_page(response, 'pages/expr_content_only.html')
         else:
@@ -249,7 +254,11 @@ class Expression(Application, PagingMixin):
         if not exp: raise ValueError('missing or malformed exp')
 
         res = self.db.Expr.fetch(exp.id)
-        upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb', 'images', 'fixed_width'])
+        allowed_attributes = ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password'
+                              , 'tags', 'background', 'thumb', 'images']
+        if request.requester.is_admin:
+            allowed_attributes.extend(['fixed_width', 'script', 'style'])
+        upd = dfilter(exp, allowed_attributes)
         upd['name'] = upd['name'].lower().strip('/ ')
 
         # if user has not picked a thumbnail, pick the latest image added

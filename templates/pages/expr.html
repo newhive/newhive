@@ -9,6 +9,16 @@
           expr: {{ "false" if empty else expr | json }}
       });
   </script>
+  {% if expr_script %}
+      <script>
+          {{ expr_script }}
+      </script>
+  {% endif %}
+  {% if expr_style %}
+      <style>
+          {{ expr_style }}
+      </style>
+  {% endif %}
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression{% endblock %}

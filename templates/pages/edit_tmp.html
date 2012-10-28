@@ -89,6 +89,9 @@
  ><div id='insert_embed' class='icon hoverable'></div
  ><div id='insert_shape' class='icon hoverable'></div
  ><div id='insert_file'  class='icon hoverable'></div
+ {% if user.is_admin %}
+ ><div id='labs'  class='icon hoverable'></div
+ {% endif %}
 ></div> 
 
 <div id='menu_text' class='menu medbold'>
@@ -132,6 +135,14 @@
  <div id='shape_rectangle' class='menu_item'>Rectangle</div>
  <div id='shape_sketch' class='menu_item'>Sketch</div>
 </div>
+
+{% if user.is_admin %}
+<div id='menu_labs' class='menu medbold'>
+ <div id='make_fixed' class='menu_item'>Make Fixed-Width</div>
+ <div id='edit_script' class='menu_item'>Edit scripts</div>
+ <div id='edit_style' class='menu_item'>Edit styles</div>
+</div>
+{% endif %}
 
 <img id='loading' src='{{ 'skin/1/loading.gif'|asset_url }}'>
 
@@ -308,6 +319,17 @@ blah blah
  <div id='color_pick' style='float : right; position : relative;'></div>
 </div>
 
+<div id='dia_edit_script' class='dialog border selected'>
+ <h2>Edit Expression Scripts</h2>
+ <p class="small_text">(won't execute while editing)</p>
+ <textarea id="expr_script_input" class="code">{{ expr.script }}</textarea>
+</div>
+
+<div id='dia_edit_style' class='dialog border selected'>
+ <h2>Edit Expression CSS</h2>
+ <textarea id="expr_style_input" class="code">{{ expr.style }}</textarea>
+</div>
+
 <div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
  <h2>Overwrite?</h2>
  You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
@@ -322,4 +344,5 @@ blah blah
 <div id='controls'></div>
 <div id='happs'></div>
 
+<style id="expr_style">{{ expr.style }}</style>
 {% endblock %}

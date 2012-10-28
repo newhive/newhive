@@ -2187,6 +2187,50 @@ Hive.init = function() {
     });
 
     hover_menu($('#insert_file'), $('#menu_file'), { layout: 'center_y', min_y: 77 });
+
+    hover_menu($('#labs'), $('#menu_labs'), { layout: 'center_y', min_y: 77 });
+    var set_make_fixed_text = function(){
+        var text = Hive.Exp.fixed_width ? "Make Auto-Scaling" : "Make Fixed-Width";
+        $('#make_fixed').text(text);
+    };
+    set_make_fixed_text();
+    $('#make_fixed').click(function(e) {
+        if (Hive.Exp.fixed_width){
+            Hive.make_fixed(false);
+        } else {
+            Hive.make_fixed(1000);
+        }
+        set_make_fixed_text();
+    });
+    $('#edit_script').click(function() {
+        showDialog('#dia_edit_script', {
+            fade: false,
+            close: function() {
+                var style = $('#expr_script_input').val();
+                Hive.Exp.style = style;
+            }
+            //open: function(){ history_point = Hive.History.saver(
+            //    function(){ return $.extend(true, {}, Hive.Exp.background) },
+            //    Hive.bg_set, 'change background'
+            //) },
+            //close: function(){ history_point.save() }
+        });
+    });
+    $('#edit_style').click(function() {
+        showDialog('#dia_edit_style', {
+            fade: false,
+            //open: function(){ history_point = Hive.History.saver(
+            //    function(){ return $.extend(true, {}, Hive.Exp.background) },
+            //    Hive.bg_set, 'change background'
+            //) },
+            close: function(){
+                var style = $('#expr_style_input').val();
+                Hive.Exp.style = style;
+                $('#expr_style').html( style );
+                //history_point.save()
+            }
+        });
+    });
     
     $('#btn_grid').click(Hive.toggle_grid);
     
