@@ -632,6 +632,12 @@ Hive.App.Html = function(o) {
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
 
+Hive.App.RawHtml = function(o) {
+    o = Hive.App.Html(o);
+    return o;
+};
+Hive.registerApp(Hive.App.RawHtml, 'hive.raw_html');
+
 Hive.App.Script = function(o){
     o.content = function(){ return o.content_element.html(); };
 

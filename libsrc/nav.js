@@ -115,6 +115,69 @@ Hive.Menus = (function(){
             group: group }, swap_action_nav));
     };
 
+    o.home_init = function(){
+        // Perform standard menu initialization
+        o.init();
+
+        // Set up special version of navigator
+        if (!Hive.navigator) {
+            Hive.navigator = Hive.Navigator.create(
+                '#navigator',
+                '#expression_frames',
+                {
+                    hidden: false,
+                    initial_replaceState: false
+                }
+            );
+        }
+        Hive.navigator.current_expr().site_expr= true;
+        Hive.navigator.set_context('#Featured', false);
+        Hive.navigator.populate_navigator();
+        var drawers = $('#owner_nav');
+        drawers.show();
+
+        // Set up owner nav customizations
+        var learn_btn = $('<div>')
+            .attr('id', 'learn_btn')
+            .attr('class', 'hoverable center text_btn black_active')
+            .append('<div>')
+          .children()
+            .attr('class', 'text')
+            .append('<span>Learn</span>')
+          .parent();
+
+        var facebook = $('<a>')
+            .attr('href', 'http://facebook.com/thenewhive')
+            .append('<img>')
+          .children()
+            .attr('src',  asset('skin/1/facebook.png'))
+          .parent();
+
+        var twitter = $('<a>')
+            .attr('href', 'http://twitter.com/newhive')
+            .append('<img>')
+          .children()
+            .attr('src',  asset('skin/1/twitter.png'))
+          .parent();
+
+        var social_icons = $('<div>')
+            .attr('id', 'social_icons')
+            .append(facebook).append(twitter);
+
+        $('#owner_nav').append(learn_btn).append(social_icons);
+
+        $('#owner_btn').hide();
+
+        var uninitialize = function(){
+            Hive.Menus.expr_init();
+            Hive.load_expr(Hive.navigator.current_expr());
+            learn_btn.remove();
+            social_icons.remove();
+            $('#owner_btn').show();
+        };
+        Hive.navigator.element.one("click", uninitialize);
+    };
+
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
         var config = Hive.config.frame;
@@ -154,7 +217,7 @@ Hive.Menus = (function(){
         var handles = $('.nav_handle').add(drawers);
         if (config.navigator.opens_nav) handles.add('#navigator');
         var close_nav = function(){
-                if (config.nav.opens_navigator) Hive.navigator.hide(speed);
+                if (config.nav.opens_navigator && config.navigator.hideable) Hive.navigator.hide(speed);
                 drawers.stop().clearQueue();
                 // For some reason just using drawers.hide as the callback for animate didn't work
                 var callback = function(){ drawers.hide(); };
@@ -205,6 +268,7 @@ Hive.Menus = (function(){
             $.extend(
                 { opened: config.navigator.open_initially,
                   open_menu: function(){ Hive.navigator.show(speed); },
+                  close_condition: function(){ return config.navigator.hideable; },
                   close_menu: function(){ Hive.navigator.hide(speed); }
                 },
                 shared_hover_menu_opts
@@ -280,11 +344,13 @@ Hive.Menus = (function(){
         $('#action_nav .delete').click(function(){ del_dialog = showDialog('#dia_delete'); });
         $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
-        Hive.navigator = Hive.Navigator.create(
-            '#navigator',
-            '#expression_frames',
-            {hidden: !config.navigator.open_initially}
-        );
+        if (!Hive.navigator) {
+            Hive.navigator = Hive.Navigator.create(
+                '#navigator',
+                '#expression_frames',
+                {hidden: !config.navigator.open_initially}
+            );
+        }
         Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {
         //    layout: false,

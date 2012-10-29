@@ -2,6 +2,7 @@ if (typeof(Hive) == "undefined") Hive = {};
 
 Hive.Navigator = function(navigator_element, content_element, opts){
     var o = { opened: false };
+    o.element = navigator_element;
     opts = $.extend(
         {
             thumb_width: 166,
@@ -10,7 +11,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             hidden: false,
             speed: 100,
             pad_bottom: 0,
-            pad_right: 0
+            pad_right: 0,
+            initial_replaceState: true
         },
         opts
     );
@@ -165,7 +167,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             fetching_lock[lock] = false;
         };
         var final_expr = towards[towards.length - 1];
-        update_function(final_expr, count, callback);
+        update_function(final_expr, o.context(), count, callback);
     };
     o.fetch_next = function(count){ return fetch(count, 1); };
     o.fetch_prev = function(count){ return fetch(count, -1); };
@@ -213,7 +215,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             frame.css('z-index', 1);
         };
 
-        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        history_manager.pushState(
+            { id: current_expr.id, context: o.context()},
+            current_expr.title,
+            o.current_url(o.context())
+        );
 
         previous_expr.hide();
         current_expr.show(offset);
@@ -479,6 +485,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.cache_next = function(){
+        return;
         for (i=0; i<1; i++) {
             if ( next_list[i] && !next_list[i].loading_started){
                 setTimeout( function(){
@@ -494,19 +501,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
     };
 
-    // returns url with querystring based on tag-styled string
-    // e.g.: "@thenewhive #art" => "http://currenturl.com/path?user=thenewhive&tag=art"
-    o.search_string = function(string){
-        var string = string || current_context || navigator_element.find('input').val();
-        var tags = (" " + string).match(/(.?)[a-z0-9]+/gi) || [];
-        tags = $.map(tags, function(el){
-            return el.replace('@', 'user=')
-                     .replace('#', 'tag=')
-                     .replace(':', 'auth=')
-                     .replace(/^[^a-z]/, 'text=')
-        });
-        return tags.length ? "?" + tags.join('&') : '';
-    };
+    o.search_string = Hive.Navigator.search_string;
 
     // Update url, push history state and repopulate navigator based on new context
     o.search = function(){
@@ -563,7 +558,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         next_list = [];
         prev_list = [];
         if (updater) {
-            updater.next(current_expr, o.visible_count(), function(data){
+            updater.next(current_expr, o.context(), o.visible_count(), function(data){
                 next_list = $.map(data, o.make_expr);
                 next_list.loaded = true;
                 if (prev_list.loaded) {
@@ -571,7 +566,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                     callback();
                 }
             });
-            updater.prev(current_expr, o.visible_count(), function(data){
+            updater.prev(current_expr, o.context(), o.visible_count(), function(data){
                 prev_list = $.map(data, o.make_expr);
                 prev_list.loaded = true;
                 if (next_list.loaded) {
@@ -593,8 +588,14 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var query = URI(window.location.href).query(true);
         change_context(build_search(query));
 
-        history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
-        o.populate_navigator();
+        if (opts.initial_replaceState){
+            history_manager.replaceState(
+                { id: current_expr.id, context: o.context()},
+                current_expr.title,
+                o.current_url(o.context())
+            );
+            o.populate_navigator();
+        }
         current_expr.frame = frame;
         current_expr.show();
         // if opts.hidden is true, render initially offscreen, then hide
@@ -610,6 +611,23 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     return o;
 };
+
+// returns url with querystring based on tag-styled string
+// e.g.: "@thenewhive #art" => "http://currenturl.com/path?user=thenewhive&tag=art"
+Hive.Navigator.search_string = function(string){
+    if (!string)
+        console.log('warning, search_string called without argument', string);
+    var string = string || navigator_element.find('input').val();
+    var tags = (" " + string).match(/(.?)[a-z0-9]+/gi) || [];
+    tags = $.map(tags, function(el){
+        return el.replace('@', 'user=')
+                 .replace('#', 'tag=')
+                 .replace(':', 'auth=')
+                 .replace(/^[^a-z]/, 'text=')
+    });
+    return tags.length ? "?" + tags.join('&') : '';
+};
+
 
 Hive.Navigator.Expr = function(data, content_element, opts){
     var o = $.extend({}, data);
@@ -750,10 +768,17 @@ Hive.Navigator.Updater = function(){
 
     seek = function(direction){
         var last;
-        return function(current_expr, count, callback){
+        return function(current_expr, context, count, callback){
+            //console.log(current_expr.site_expr);
+            if (current_expr.site_expr && direction === -1) {
+                callback([]);
+                return;
+            }
             if (current_expr === last) return;
-            var uri = URI(window.location.href);
+            var uri = URI(current_expr.url + Hive.Navigator.search_string(context));
             uri.addQuery({page: current_expr[o.paging_attr], limit: count, order: -direction});
+            if (current_expr.site_expr)
+                uri.removeQuery('page');
             $.getJSON(uri.toString(), function(data, status, jqXHR){
                 if (!data.length) last = current_expr;
                 callback(data, status, jqXHR);

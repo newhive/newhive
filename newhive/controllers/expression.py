@@ -118,12 +118,47 @@ class Expression(Application, PagingMixin):
         if not resource:
             if path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
+        return self.serve_expression_frame(request, response, resource)
+
+        #is_owner = request.requester.logged_in and owner.id == request.requester.id
+        #if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
+        #if is_owner: owner.unflag('expr_new')
+
+        #expr_url = abs_url(domain = config.content_domain) + resource.id
+        #self.expr_prepare(resource, response.user)
+        #response.context.update(
+        #     expr_frame = True
+        #    ,title = resource.get('title', False)
+        #    ,expr = resource
+        #    ,expr_url = expr_url
+        #    ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
+        #    ,content_domain = abs_url(domain = config.content_domain)
+        #    )
+
+        #template = resource.get('template', request.args.get('template', 'frame'))
+
+        #if request.requester.logged_in:
+        #    self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
+
+        #return self.serve_page(response, 'pages/' + template + '.html')
+
+    def serve_expression_frame(self, request, response, resource, template=None):
+        owner = resource.owner
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
-        if is_owner: owner.unflag('expr_new')
-
+        if is_owner: resource.owner.unflag('expr_new')
         expr_url = abs_url(domain = config.content_domain) + resource.id
         self.expr_prepare(resource, response.user)
+
+        response.context.update(
+             domain = request.domain
+            ,owner = owner
+            ,owner_url = owner.url
+            ,path = request.path
+            ,user_is_owner = request.is_owner
+            ,listeners = owner.starrer_page()
+            )
+
         response.context.update(
              expr_frame = True
             ,title = resource.get('title', False)
@@ -133,12 +168,15 @@ class Expression(Application, PagingMixin):
             ,content_domain = abs_url(domain = config.content_domain)
             )
 
-        template = resource.get('template', request.args.get('template', 'frame'))
-
-        if request.requester.logged_in:
-            self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
-
+        template = template or resource.get('template', request.args.get('template', 'frame'))
         return self.serve_page(response, 'pages/' + template + '.html')
+
+    def site_expression(self, request, response):
+        expressions = {
+                '': ['duffy', 'homepage']
+                }
+        expr = self.db.Expr.named(*expressions.get(request.path))
+        return self.serve_expression_frame(request, response, expr, template="home")
 
     def infos(self, request, response):
         args = request.args.copy().to_dict(flat=True)
@@ -393,8 +431,8 @@ def expr_to_html(exp):
         return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
             app['position'][0],
             app['position'][1],
-            app['dimensions'][0],
-            app['dimensions'][1],
+            app['dimensions'][0] if not app.get('type') == 'hive.raw_html' else '',
+            app['dimensions'][1] if not app.get('type') == 'hive.raw_html' else '',
             'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
             app['z'],
             app.get('opacity', 1) or 1
