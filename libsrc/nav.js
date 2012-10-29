@@ -137,13 +137,13 @@ Hive.Menus = (function(){
         drawers.show();
 
         // Set up owner nav customizations
-        var learn_btn = $('<div>')
-            .attr('id', 'learn_btn')
+        var about_btn = $('<div>')
+            .attr('id', 'about_btn')
             .attr('class', 'hoverable center text_btn black_active')
             .append('<div>')
           .children()
             .attr('class', 'text')
-            .append('<span>Learn</span>')
+            .append('<span>About</span>')
           .parent();
 
         var facebook = $('<a>')
@@ -362,6 +362,7 @@ Hive.Menus = (function(){
         //});
 
         window.addEventListener('message', function(m){
+            console.log(m);
             if(m.data == 'focus') {
                 nav_menu.close(true);
                 //o.navigator_menu.close(true);

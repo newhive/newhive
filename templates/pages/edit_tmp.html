@@ -138,6 +138,7 @@
 
 {% if user.is_admin %}
 <div id='menu_labs' class='menu medbold'>
+ <div id='raw_html' class='menu_item'>Insert Raw HTML Div</div>
  <div id='make_fixed' class='menu_item'>Make Fixed-Width</div>
  <div id='edit_script' class='menu_item'>Edit scripts</div>
  <div id='edit_style' class='menu_item'>Edit styles</div>
@@ -242,6 +243,13 @@
  ></div
 ></div>
 
+<div id='controls_raw_html' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button edit tip_N' title='Edit Contents' src='{{ 'skin/1/edit.png'|asset_url }}'
+ ></div
+></div>
+
+
 <div id='controls_script' class='controls_src'>
  <div class='control buttons'
   ><img class='button code' title='Run' src='{{ 'skin/1/opacity.png'|asset_url }}'
@@ -319,15 +327,20 @@ blah blah
  <div id='color_pick' style='float : right; position : relative;'></div>
 </div>
 
-<div id='dia_edit_script' class='dialog border selected'>
+<div id='dia_edit_script' class='dialog border selected code_editor'>
  <h2>Edit Expression Scripts</h2>
  <p class="small_text">(won't execute while editing)</p>
  <textarea id="expr_script_input" class="code">{{ expr.script }}</textarea>
 </div>
 
-<div id='dia_edit_style' class='dialog border selected'>
+<div id='dia_edit_style' class='dialog border selected code_editor'>
  <h2>Edit Expression CSS</h2>
  <textarea id="expr_style_input" class="code">{{ expr.style }}</textarea>
+</div>
+
+<div id='dia_edit_code' class='dialog border selected code_editor'>
+ <h2>Edit Contents</h2>
+ <textarea id="" class="code">{{ expr.style }}</textarea>
 </div>
 
 <div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>

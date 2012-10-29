@@ -428,6 +428,24 @@ def expr_to_html(exp):
     apps = exp.get('apps', [])
 
     def css_for_app(app):
+        css = {
+                'left': app['position'][0]
+                , 'top': app['position'][1]
+                , 'z-index': app['z']
+                , 'width': app['dimensions'][0]
+                , 'height': app['dimensions'][1]
+                , 'opacity': app.get('opacity', 1)
+                , 'font-size': app.get('scale')
+                }
+        rv = "left: {left}px; top: {top}px; z-index: {z-index}; opacity: {opacity};".format(**css)
+        if not app.get('type') == 'hive.raw_html':
+            rv += "width: {width}px; height: {height}px; ".format(**css)
+        if app.get('scale'):
+            rv += "font-size: {font-size}em;".format(**css)
+        return rv
+
+        rv =  "".join(["{}: {};".format(key, val) for key, val in css.iteritems()])
+
         return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
             app['position'][0],
             app['position'][1],
