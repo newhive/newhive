@@ -126,13 +126,16 @@ Hive.Menus = (function(){
                 '#expression_frames',
                 {
                     hidden: false,
-                    initial_replaceState: false
+                    initial_replaceState: false,
+                    show_current: false
                 }
             );
         }
-        Hive.navigator.current_expr().site_expr= true;
+        Hive.navigator.current_expr().site_expr = true;
         Hive.navigator.set_context('#Featured', false);
         Hive.navigator.populate_navigator();
+
+
         var drawers = $('#owner_nav');
         drawers.show();
 
@@ -164,19 +167,47 @@ Hive.Menus = (function(){
             .attr('id', 'social_icons')
             .append(facebook).append(twitter);
 
-        $('#owner_nav').append(learn_btn).append(social_icons);
+        $('#owner_nav').append(about_btn).append(social_icons);
 
         $('#owner_btn').hide();
+
+        add_window_message_listeners();
 
         var uninitialize = function(){
             Hive.Menus.expr_init();
             Hive.load_expr(Hive.navigator.current_expr());
-            learn_btn.remove();
+            about_btn.remove();
             social_icons.remove();
             $('#owner_btn').show();
+            $('#navigator').find('.navigator_inner .current, .loupe').show()
+            Hive.navigator.update_opts({show_current: true});
         };
         Hive.navigator.element.one("click", uninitialize);
     };
+
+    var window_message_listeneres_added;
+    var add_window_message_listeners = function(nav_menu){
+        if (window_message_listeneres_added) return;
+        window.addEventListener('message', function(m){
+            console.log(m.data);
+            if(m.data == 'focus' && nav_menu) {
+                nav_menu.close(true);
+                //o.navigator_menu.close(true);
+            }
+            else if( m.data.match(/^layout=/) && nav_menu ){
+                var dims = m.data.split('=')[1].split(',');
+                o.layout(dims);
+            }
+            else if (m.data == 'signup') {
+                require_login('drawoneme');
+            }
+            else if (m.data == 'video') {
+                showDialog('#dia_video');
+            }
+        }, false);
+        window_message_listeneres_added = true;
+    };
+
 
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
@@ -361,20 +392,7 @@ Hive.Menus = (function(){
         //    close_delay: o.slow_close
         //});
 
-        window.addEventListener('message', function(m){
-            console.log(m);
-            if(m.data == 'focus') {
-                nav_menu.close(true);
-                //o.navigator_menu.close(true);
-            }
-            else if( m.data.match(/^layout=/) ){
-                var dims = m.data.split('=')[1].split(',');
-                o.layout(dims);    
-            }
-            else if (m.data == 'signup') {
-                require_login('drawoneme');
-            }
-        }, false);
+        add_window_message_listeners(nav_menu);
 
         o.layout([ $(window).width(), $(window).height() ]);
 

@@ -2,7 +2,12 @@
 
 {% block footer_scripts %}<script>
     Hive.config.frame.navigator.open_initially = true;
-    Hive.config.frame.navigator.hideable = false;
+    //Hive.config.frame.navigator.hideable = false;
     //Hive.Menus.expr_init();
     Hive.Menus.home_init();
 </script>{% endblock footer_scripts %}
+
+{% block dialogs %}
+    {{ super() }}
+    {% include 'dialogs/video.html' %}
+{% endblock %}

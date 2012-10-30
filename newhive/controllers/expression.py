@@ -173,7 +173,7 @@ class Expression(Application, PagingMixin):
 
     def site_expression(self, request, response):
         expressions = {
-                '': ['duffy', 'homepage']
+                '': ['thenewhive', 'home']
                 }
         expr = self.db.Expr.named(*expressions.get(request.path))
         return self.serve_expression_frame(request, response, expr, template="home")
@@ -443,18 +443,6 @@ def expr_to_html(exp):
         if app.get('scale'):
             rv += "font-size: {font-size}em;".format(**css)
         return rv
-
-        rv =  "".join(["{}: {};".format(key, val) for key, val in css.iteritems()])
-
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
-            app['position'][0],
-            app['position'][1],
-            app['dimensions'][0] if not app.get('type') == 'hive.raw_html' else '',
-            app['dimensions'][1] if not app.get('type') == 'hive.raw_html' else '',
-            'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
-            app['z'],
-            app.get('opacity', 1) or 1
-            )
 
     def html_for_app(app):
         content = app.get('content', '')
