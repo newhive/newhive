@@ -530,11 +530,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         });
     };
 
-    var last;
+    var last = [];
     o.updater = function(direction, current_expr, count, callback){
-        if (!current_expr || current_expr === last) return;
+        if (!current_expr || last[direction]) return;
 
-        search_args = { q: o.context(), limit: count, order: -direction, json: 't' };
+        search_args = { q: o.context(), limit: count, order: -direction, json: 't', expr_only: 't' };
         var page = current_expr.id, feed = current_expr.feed;
         if( feed && feed.length) page = feed[ (direction === 1) ? feed.length - 1 : 0 ]['created'];
         search_args.page = page
@@ -542,8 +542,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var uri = URI( server_url + 'search' );
         uri.addQuery( search_args );
 
+        console.log(uri.toString());
         $.getJSON(uri.toString(), function(data, status, jqXHR){
-            if (!data.length) last = current_expr;
+            console.log(data);
+            if (data.length < count) last[direction] = true;
             callback(data, status, jqXHR);
         });
     };

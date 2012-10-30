@@ -98,7 +98,7 @@ class Community(Application, PagingMixin):
             return info
 
         if request.args.get('json'):
-            json = map(expr_info, response.context.get('cards'))
+            json = response.context.get('cards')
             return self.serve_json(response, json)
         if request.args.get('partial'):
             return self.serve_page(response, 'page_parts/cards.html')

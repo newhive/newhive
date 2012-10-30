@@ -161,7 +161,6 @@ dialogs = dict(
 
 def handle(request): # HANDLER
     """The HTTP handler, main entry point from Werkzeug. """
-    print request.url
 
     request, response = app.pre_process(request)
     request.owner = None

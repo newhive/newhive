@@ -54,7 +54,7 @@ class Database:
                 key = map(lambda a: a if type(a) == tuple else (a, 1), [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
 
-    def query(self, q, viewer=None, limit=40, **args):
+    def query(self, q='', viewer=None, limit=40, expr_only=None, **args):
         args['viewer'] = viewer
         args['limit'] = limit
         search = self.parse_query(q)
@@ -76,15 +76,14 @@ class Database:
             results = viewer.feed_network(spec=spec, **args)
         else:
             sort = 'updated'
+            results = self.Expr.page(spec, **args)
+            if not expr_only:
+                results = results + self.User.page(spec, **args)
+                results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
 
-            users = self.User.page(spec, **args)
-            exprs = self.Expr.page(spec, **args)
-            results = users + exprs
-            results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
-
-            # redo pagination property after merging possible user results with expr results
-            results = Page(results)
-            results.next = results[-1][sort] if len(results) == limit else None
+                # redo pagination property after merging possible user results with expr results
+                results = Page(results)
+                results.next = results[-1][sort] if len(results) == limit else None
 
         return results
 

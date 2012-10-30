@@ -151,11 +151,11 @@ class PagingMixin(object):
     def search(self, request, response, args):
         query = request.args.get('q', '')
         link_args(response, { 'q': query } )
-        return self.db.query( query, **args )
+        return self.db.query( query, expr_only = request.args.get('expr_only'), **args )
 
     # destructively prepare state.Expr for client consumption
     def item_prepare(self, item, viewer=None, password=None):
-        if type( item ) == state.User: return item
+        if type( item ) == state.User: return item.client_view()
         expr = item
 
         counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
