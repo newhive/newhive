@@ -248,7 +248,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     function show_expression_not_in_list(data){
         current_expr = o.make_expr(data);
         current_expr.load();
-        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url(o.context()));
         o.populate_navigator(function(){ o.select(0) });
     };
     function load_expr(id){
@@ -419,9 +419,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             , tag_list_html(expr_tags, {cls: 'expr', href: href})
             //, tag_list_html(owner_tags, {cls: 'user'})
             ].join(' ')
-        var tags = $(tag_html);
+        var tags = $(tag_html).filter('a');
         tags.each(function(i, el){ $(el).css('background-color', colors.tag_color(i + 1, tags.length)); });
-        tags.click(function(){
+        tags.click(function(e){
+            e.preventDefault();
             o.context($(this).html());
             return false;
         });
@@ -555,7 +556,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     o.set_context = function(str, push_state) {
         change_context(str);
         if (push_state !== false) {
-            history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+            history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url(o.context()));
         }
         // populate_navigator depends on current url so must come after pushState
         o.populate_navigator();
