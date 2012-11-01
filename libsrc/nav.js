@@ -43,7 +43,7 @@ Hive.Menus = (function(){
         if( o.nav_menu.opened ) $('#action_nav, #owner_nav').css('right', opts.pad_right);
     };
 
-    o.init = function(group){
+    o.init = function(group, hide_action_nav){
         if(!group) group = { menus: [] };
 
         hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
@@ -102,8 +102,13 @@ Hive.Menus = (function(){
             $('#call_to_action').html(Hive.config.nav.call_to_action);
         }
 
-        var swap_action_nav = { open: function(){ $('#action_nav').hide() },
-            close: function(){ $('#action_nav').show() } };
+        var swap_action_nav = {
+            open: function(){ $('#action_nav').hide(); },
+            close: function(){
+                if (hide_action_nav) return;
+                $('#action_nav').show();
+            }
+        };
 
         if($('#owner_btn').length) hover_menu('#owner_btn', '#owner_menu', $.extend({ offset_y: 8,
             layout_x: 'right', group: group }, swap_action_nav));
@@ -117,7 +122,7 @@ Hive.Menus = (function(){
 
     o.home_init = function(){
         // Perform standard menu initialization
-        o.init();
+        o.init(undefined, true);
 
         // Set up special version of navigator
         if (!Hive.navigator) {
@@ -169,7 +174,7 @@ Hive.Menus = (function(){
 
         $('#owner_nav').append(about_btn).append(social_icons);
 
-        $('#owner_btn').hide();
+        $('#owner_btn, #action_nav').hide();
 
         add_window_message_listeners();
 
