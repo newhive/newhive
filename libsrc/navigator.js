@@ -419,12 +419,14 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             , tag_list_html(expr_tags, {cls: 'expr', href: href})
             //, tag_list_html(owner_tags, {cls: 'user'})
             ].join(' ')
-        info.find('.tags').html(tag_html)
-            .find('.tag').click(function(){
-                o.context($(this).html());
-                return false;
-            });
+        var tags = $(tag_html);
+        tags.each(function(i, el){ $(el).css('background-color', colors.tag_color(i + 1, tags.length)); });
+        tags.click(function(){
+            o.context($(this).html());
+            return false;
+        });
 
+        info.find('.tags').html('').append(tags);
     };
 
     o.layout = function( args ){
