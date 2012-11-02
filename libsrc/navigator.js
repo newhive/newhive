@@ -422,8 +422,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var tags = $(tag_html).filter('a');
         tags.each(function(i, el){ $(el).css('background-color', colors.tag_color(i + 1, tags.length)); });
         tags.click(function(e){
-            e.preventDefault();
             o.context($(this).html());
+            e.preventDefault();
             return false;
         });
 
