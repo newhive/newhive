@@ -56,10 +56,9 @@ def launch_instance(name, category='dev', git_branch = 'master', **kwargs):
     print "Launching instance with ami: {} and args \n{}".format(image.id, run_args)
     reservation = conn.run_instances(image.id, **run_args)
     instance = reservation.instances[0]
-    print "\nServer starting"
 
     # Poll for instance startup
-    print "\nRemote login credentials"
+    print "\nWhile instance is launching, enter remote login credentials:"
     username = raw_input("username: ")
     password = getpass.getpass("password: ")
     status = instance.update()
@@ -69,9 +68,9 @@ def launch_instance(name, category='dev', git_branch = 'master', **kwargs):
         status = instance.update()
     print "instance status {}".format(status)
 
-    print "\nsetting server name"
+    print "\nsetting server name for ec2 console"
     instance.add_tag("Name", name)
-    print "adding dns route"
+    print "adding dns routes for {}.newhive.com and {}.newhiveexpression.com".format(name)
     manage.route53.add_cname('newhive.com', name, instance.public_dns_name, no_confirmation=True)
     manage.route53.add_cname('newhiveexpression.com', name, instance.public_dns_name, no_confirmation=True)
 
@@ -84,8 +83,8 @@ def launch_instance(name, category='dev', git_branch = 'master', **kwargs):
         except Exception as e:
             return False
 
-    time.sleep(1)
-    print "\nattempting to establish ssh connection"
+    print "\nWaiting 20 seconds for server to startup, then attempting to establish ssh connection"
+    time.sleep(20)
     connected = connect()
     while not connected:
         print "retrying ssh connection"
@@ -112,7 +111,7 @@ def launch_instance(name, category='dev', git_branch = 'master', **kwargs):
             'sudo /var/www/newhive/bin/set_server_name {name}',
             'echo',
             'echo "restarting apache"',
-            'apache2ctl graceful',
+            'sudo apache2ctl graceful',
         ]).format(git_branch=git_branch, name=name)
     remote_exec(command)
 
