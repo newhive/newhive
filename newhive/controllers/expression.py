@@ -174,6 +174,7 @@ class Expression(Application, PagingMixin):
     def site_expression(self, request, response):
         expressions = {
                 '': ['thenewhive', 'home']
+                ,'about': ['thenewhive', 'about']
                 }
         expr = self.db.Expr.named(*expressions.get(request.path))
         return self.serve_expression_frame(request, response, expr, template="home")
