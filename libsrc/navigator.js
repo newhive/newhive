@@ -415,7 +415,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         var href = function(tag,opts){ return o.current_url(opts.prefix + tag); };
         var tag_html = [
-            tag_list_html(expr.owner.name, {cls: 'name', prefix: '@', href: href})
+            expr.site_expr ? '' : tag_list_html(expr.owner.name, {cls: 'name', prefix: '@', href: href})
             , tag_list_html(expr_tags, {cls: 'expr', href: href})
             //, tag_list_html(owner_tags, {cls: 'user'})
             ].join(' ')
