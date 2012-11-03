@@ -54,7 +54,7 @@ class Database:
                 key = map(lambda a: a if type(a) == tuple else (a, 1), [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
 
-    def query(self, q='', viewer=None, limit=40, expr_only=None, **args):
+    def query(self, q, viewer=None, limit=40, expr_only=None, **args):
         args['viewer'] = viewer
         args['limit'] = limit
         search = self.parse_query(q)
@@ -69,11 +69,11 @@ class Database:
         if search.get('tags'): spec['tags_index'] = { '$all': search['tags'] }
         if search.get('user'): spec['owner_name'] = search['user']
         if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
-        if search.get('featured'):
-            spec['_id'] = { '$in': self.User.root_user['tagged']['Featured'] }
 
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
+        elif search.get('featured'):
+            return self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -252,10 +252,11 @@ class Entity(dict):
         self._col = col._col
         self.db = col.db
         self.mdb = self.db.mdb
+        self.setdefault('_id', str(pymongo.objectid.ObjectId()))
+        self['id'] = self.id
 
     @property
     def id(self):
-        self.setdefault('_id', str(pymongo.objectid.ObjectId()))
         return self['_id']
 
     def create(self):
@@ -696,13 +697,13 @@ class User(HasSocial):
     recent_expressions = property(get_recent_expressions)
 
     def client_view(self, viewer=None):
-        user = dfilter( self, ['fullname', 'profile_thumb', 'name', 'tags'] )
-        user.update(
-            id = self.id,
+        user = self.db.User.new( dfilter( self,
+            ['fullname', 'profile_thumb', 'name', 'tags', 'updated', 'created'] ) )
+        dict.update(user, dict(
             url = self.url,
             thumb = self.get_thumb(70),
             has_thumb = self.has_thumb
-        )
+        ) )
         if viewer: user.update( listening = self.id in viewer.starred_user_ids )
         return user
 
@@ -1030,9 +1031,6 @@ class Expr(HasSocial):
     public = property(lambda self: self.get('auth') == "public")
 
     def client_view(self, viewer=None):
-        dict.update(self,
-            id = self.id
-        )
         return self
 
     @property

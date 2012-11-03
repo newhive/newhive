@@ -89,7 +89,7 @@ class Community(Application, PagingMixin):
             title = "#{}".format(tag),
             description = "Expressions tagged '{}'".format(tag)
         ))
-        return self.page(request, response, items)
+        return self.page(request, response)
 
     def page(self, request, response):
         def expr_info(expr):

@@ -481,6 +481,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     var current_context = null;
+    var last = [];
     o.context = function(str, push_state) {
         if (typeof(str) == "undefined") return current_context;
 
@@ -494,6 +495,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
 
         // populate_navigator depends on current url so must come after pushState
+        last = [];
         o.populate_navigator();
         return o;
     };
@@ -530,7 +532,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         });
     };
 
-    var last = [];
     o.updater = function(direction, current_expr, count, callback){
         if (!current_expr || last[direction]) return;
 
