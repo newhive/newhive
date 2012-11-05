@@ -28,7 +28,7 @@ class Query(object):
 
     def _serialize(self, data):
         dtype = type(data)
-        if dtype == pandas.DataFrame:
+        if dtype in [pandas.DataFrame, pandas.Series]:
             rv = dataframe_to_record(data)
         elif dtype == dict:
             rv = data
@@ -70,6 +70,7 @@ class Query(object):
 
     def execute(self, *args, **kwargs):
         spec = self._spec(args, kwargs)
+        spec.update(invalidated = {'$exists': False})
         result = self.collection.find_one(spec, sort=[('_id', -1)])
         if result and (dtnow() - result['_id'].generation_time) < self.max_age:
             logger.info('using cached result')
@@ -82,6 +83,12 @@ class Query(object):
         result = self._execute(*args, **kwargs)
         self._persist(args, kwargs, result)
         return result
+
+    def invalidate_cache(self, drop=False):
+        if drop:
+            self.collection.remove()
+        else:
+            self.collection.update({}, {'$set': {'invalidated': True}}, multi=True)
 
 class UserJoinDates(Query):
     collection_name = 'user_join_dates'
@@ -104,6 +111,23 @@ class UserMedianViews(Query):
         data.index = data.pop('user')
         return data
 
+class ExpressionCreateDates(Query):
+    collection_name = 'expression_create_dates'
+
+    def _execute(self):
+        cursor = self.db.Expr.search({'apps': {'$exists': True}})
+        data = [(u.get('owner_name'), u.get('name'), datetime.datetime.fromtimestamp(u['created'])) for u in cursor]
+        data = pandas.DataFrame(data, columns=['user', 'expr', 'created'])
+        data['date'] = data.created.apply(lambda d: (d - pandas.DateOffset(hours=8)).date())
+        return data
+
+class ExpressionsCreatedPerDay(Query):
+    collection_name = 'expressions_per_day'
+
+    def _execute(self):
+        ecd = ExpressionCreateDates(self.db).execute()
+        epd = ecd.groupby('date').count().created
+        return epd
 
 class DailyRetention(Query):
     collection_name = 'daily_retention'
