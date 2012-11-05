@@ -79,7 +79,7 @@
         ><a href='{{ server_url }}home/expressions'><div class='menu_item primary'>Expressions</div></a
         ><a href='{{ server_url }}home/people'><div class='menu_item primary'>People</div></a
       {% endif %}
-      ><a href='{{ server_url }}home/page'><div class='menu_item'>About New Hive</div></a
+      ><a href='{{ server_url }}thenewhive/about'><div class='menu_item'>About New Hive</div></a
       {% if user.logged_in %}
         ><div class='menu_item email_invites'>Email Invites</div
         {% if user.has_facebook %}
@@ -134,7 +134,7 @@
     <div id='owner_nav_handle' class='menu_handle nav_handle'></div>
     <div id='owner_nav' class='nav horiz'
       {% if not user.logged_in %}
-        ><div id='login_btn' class='center hoverable text_btn black_active'><div class="text">Log In</div></div
+      ><div id='login_btn' class='center hoverable text_btn black_active'><div class="text"><span>Log In</span></div></div
       {% endif %}
       {% if expr or (owner and not user_is_owner) %}
         ><div id='owner_btn' class='hoverable center text_btn black_active'

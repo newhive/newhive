@@ -529,7 +529,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     // Pick appropriate updater strategy based on context
     var current_context;
     function change_context(str){
-        if (!str) str = "#All";
+        if (!str) str = "#Featured";
         navigator_element.find('input').val(str);
         current_context = str;
         switch(str) {

@@ -148,7 +148,7 @@ Hive.Menus = (function(){
         var about_btn = $('<div>')
             .attr('id', 'about_btn')
             .attr('class', 'hoverable center text_btn black_active')
-            .click(function(){ window.location = server_url + 'about' })
+            .click(function(){ window.location = server_url + 'thenewhive/about' })
             .append('<div>')
           .children()
             .attr('class', 'text')
