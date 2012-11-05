@@ -1,4 +1,4 @@
-import time, random, re, base64, copy
+import time, random, re, base64, copy, pytz, pandas
 from datetime import datetime
 from newhive import config
 import urlparse
@@ -50,11 +50,11 @@ def epoch_to_string(epoch_time):
     return time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(epoch_time))
 
 def junkstr(length):
-    """Creates a random base 64 string"""
+    """Creates a random base 62 string"""
 
     def chrange(c1, c2): return [chr(i) for i in range(ord(c1), ord(c2)+1)]
-    chrs = chrange('0', '9') + chrange('A', 'Z') + chrange('a', 'z') + ['.', '-']
-    return ''.join([chrs[random.randrange(0, 64)] for _ in range(length)])
+    chrs = chrange('0', '9') + chrange('A', 'Z') + chrange('a', 'z')
+    return ''.join([chrs[random.randrange(0, 62)] for _ in range(length)])
 
 def lget(L, i, *default):
     try: return L[i]
@@ -253,3 +253,9 @@ def set_cookie(response, name, data, secure = False, expires = True):
 def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name, secure = False): response.delete_cookie(name,
     domain = None if secure else '.' + config.server_name)
+
+def local_date():
+    tz = pytz.timezone('US/Pacific')
+    dt = datetime.now(tz)
+    return dt.date()
+

@@ -1,9 +1,11 @@
 import time, datetime, re, pandas, newhive, pandas, numpy, pytz
-from newhive import state, oauth, analytics
+from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
-from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id
+from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, local_date
 from newhive.analytics.ga import GAClient, GAQuery
+from newhive.analytics import queries
+Day = pandas.datetools.Day
 
 import logging
 logger = logging.getLogger(__name__)
@@ -528,6 +530,7 @@ def _active_users_ga(db, period=7):
     """Return users present in GA logs in last 'period' days"""
     tz = pytz.timezone('US/Pacific')
     end_date = datetime.datetime.now(tz) - pandas.DateOffset(days=1)
+    end_date = local_date()
     start_date = end_date - pandas.DateOffset(days=period-1)
     query = GAQuery(start_date=start_date, end_date=end_date)
     query.metrics(['ga:visits']).dimensions(['ga:customVarValue1'])
@@ -556,21 +559,13 @@ def active_users_by_signup_date(db, users, freq='D'):
     #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
     return data
 
-def retention(db, freq="D", json=True):
+def retention(db, freq="D"):
     days = {'D': 1, 'W': 7, 'M': 30, 'MS': 30}.get(freq)
     active = _active_users_ga(db, days)
     data = active_users_by_signup_date(db, active, freq)
     data.ratio = data.ratio.fillna(0)
     subset = data[-30:]
-    if json:
-        return data_frame_to_json(subset)
-    else:
-        return subset
-
-def data_frame_to_json(df):
-    output = {name: series.tolist() for name, series in df.iterkv()}
-    output['index'] = [datetime_to_int(date) for date in df.index]
-    return output
+    return subset
 
 def engagement_pyramid(db):
 
@@ -614,11 +609,53 @@ def engagement_pyramid(db):
 
     return cohort_users
 
+def milestone_email_cadence(db, offset=86400, cutoff=2):
+    extract = lambda l: (
+            datetime.datetime.fromtimestamp(l['created'])
+            , l['recipient_name']
+            , l['unique_args']['expr_id']
+            , l['unique_args']['milestone']
+            )
+
+    m = [extract(l) for l in db.MailLog.search({'created': {'$gt': now() - offset}, 'category': 'milestone'})]
+
+    df = pandas.DataFrame(m, columns=['created', 'user', 'expr', 'milestone'])
+
+    for name, group in df.groupby('user'):
+        if len(group) >= cutoff:
+            user = db.User.named(name)
+            median = pandas.np.median([e['views'] for e in user.get_expressions('public')]) if user else 'NA'
+            print "{}  median views: {}".format(name, median)
+            print group
+            print
+
+def user_expression_summary(user, p=False):
+    data = [(e['name'], e['views']) for e in user.get_expressions('public')]
+    data = data or [('', 0)]
+    data = pandas.DataFrame(data, columns=['name', 'views'])
+    if p:
+        print data.describe()
+        print data
+    return data
+
+def user_median_views(db):
+    cursor = db.User.search({'analytics.expressions.count': {'$gt': 0}})
+    data = [(u['name'], user_expression_summary(u).views.median()) for u in cursor]
+    data = pandas.DataFrame(data, columns=['user', 'median_views'])
+    data.timestamp = datetime.datetime.now()
+    return data
+
+def ga_summary(date):
+    q = queries.GASummary()
+    d = q.execute(date)
+    index = [0,1,7,28]
+    return pandas.DataFrame([d.dataframe.ix[date - Day(day)] for day in index], index=index)
 
 if __name__ == '__main__':
     from newhive.state import Database
     import newhive.config
     db = Database(newhive.config)
+    db_live = Database(newhive.config, db_name='hive')
     #ch = logging.StreamHandler()
     #ch.setLevel(logging.debug)
     #formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')

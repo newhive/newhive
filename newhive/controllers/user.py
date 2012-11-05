@@ -97,7 +97,7 @@ class User(Application):
             contact = self.db.Contact.find({'referral_id': referral.id})
             if contact: contact.update(user_created=user.id)
 
-        user.give_invites(5)
+        user.give_invites(config.initial_invite_count)
         if args.has_key('thumb_file_id'):
             file = self.db.File.fetch(args.get('thumb_file_id'))
             if file:

@@ -3,11 +3,31 @@ import newhive
 import newhive.ab
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.analytics import analytics
-from newhive.utils import now, datetime_to_int
+from newhive.analytics import analytics, queries, functions
+from newhive.utils import now, datetime_to_int, local_date
 import operator as op
 
 _index = []
+
+def data_frame_to_json(df, outtype='dict'):
+    if type(df) == pandas.Series:
+        df = pandas.DataFrame(df)
+    if hasattr(df.index[0], 'timetuple'):
+        index = [datetime_to_int(date) for date in df.index]
+    elif type(df.index[0]) == pandas.np.int64:
+        index = map(int, df.index)
+    else:
+        index = map(str, df.index)
+    if outtype == 'dict':
+        output = {name: series.tolist() for name, series in df.iterkv()}
+        output['index'] = index
+        output = {str(key): val for key, val in output.iteritems()}
+    elif outtype == 'list':
+        output = df.copy()
+        output['index'] = index
+        output = [v.to_dict() for k, v in output.transpose().astype(float).iteritems()]
+    return output
+
 class Analytics(Application):
     def __init__(self, *a, **b):
         super(Analytics, self).__init__(*a, **b)
@@ -22,12 +42,20 @@ class Analytics(Application):
         _index.append(method)
         return method
 
-    def _iso_args(self, args):
-        start = args.get('start')
-        if start: start = int(time.mktime(time.strptime(start, "%Y-%m-%d")))
-        end = args.get('end')
-        if end: end = int(time.mktime(time.strptime(end, "%Y-%m-%d")))
-        return (start, end)
+    def _iso_args(self, args, output='epoch'):
+        start_end = (args.get('start'), args.get('end'))
+
+        # a little functional programming for fun and profit
+        funcs = [ lambda x: datetime.strptime(x, "%Y-%m-%d") ]
+        if output == 'epoch':
+            funcs.append( lambda x: int(time.mktime(x.timetuple())) )
+        elif output == 'date':
+            funcs.append( lambda x: x.date() )
+
+        for func in funcs:
+            start_end = map(lambda x: func(x) if x else None, start_end)
+
+        return start_end
 
     @index
     def active_users(self, request, response):
@@ -402,9 +430,71 @@ class Analytics(Application):
     @admins
     @index
     def retention(self, request, response):
-        """User Retention D1-D30 or W1-W30"""
+        """Snapshot of User Retention D1-D30 or W1-W30"""
         freq = request.args.get('freq', 'D')
         response.context['title'] = "{}1-{}30 Retention".format(freq, freq)
         if freq == 'M': freq = 'MS'
-        response.context['data'] = analytics.retention(self.db, freq)
+        data = analytics.retention(self.db, freq)
+        response.context['data'] = data_frame_to_json(data)
         return self.serve_page(response, 'pages/analytics/active_total_chart.html')
+
+    @admins
+    @index
+    def retention2(self, request, response):
+        """D0-D7 Retention change over time"""
+        data = queries.DailyRetention(self.db).execute(datetime(2012,10,1))
+        total = data.pop('total')
+        average = data / total
+        smoothed = pandas.DataFrame([functions.smooth(average[d], window_len=5) for d in average]).transpose()
+        smoothed.index = average.index
+        smoothed = smoothed * 100
+        average = average.fillna(0)
+        #json = {}
+        #json['columns'] = map(str, smoothed.columns.tolist())
+        #json['data'] = [c.tolist() for name, c in smoothed.iteritems()]
+        #json['index'] = map(datetime_to_int, smoothed.index)
+        #json['column_map'] = {str(name): i for i, name in enumerate(smoothed.columns)}
+        #response.context['json'] = json
+        average['index'] = map(datetime_to_int, average.index)
+        smoothed['index'] = map(datetime_to_int, smoothed.index)
+        response.context['data'] = [v.to_dict() for k, v in smoothed.transpose().iteritems()]
+        return self.serve_page(response, 'pages/analytics/retention2.html')
+
+    @admins
+    @index
+    def user_median_views(self, request, response):
+        """Median Views by User"""
+        data = queries.UserMedianViews(self.db).execute()
+        data = data.sort('median_views', ascending=False)
+        response.context['data'] = data_frame_to_json(data)
+        response.context['title'] = """Median Views by User"""
+        return self.serve_page(response, 'pages/analytics/median_views.html')
+
+    @admins
+    @index
+    def visitor_summary(self, request, response):
+        """Visits and Visitor Summary"""
+        date = local_date() - pandas.DateOffset(days=1)
+        data = analytics.ga_summary(date)
+        response.context['data'] = data_frame_to_json(data, outtype='list')
+        response.context['meta'] = {'date': str(date)}
+        response.context['title'] = "Visits and Visitor Summary"
+
+        return self.serve_page(response, 'pages/analytics/ga_summary.html')
+
+    @admins
+    @index
+    def expressions_per_day(self, request, response):
+        """Expressions per day"""
+        start, end = self._iso_args(request.args, output='date')
+        data = queries.ExpressionsCreatedPerDay(self.db).execute()
+        if not start: start = local_date() - pandas.DateOffset(days=30)
+        data = data[ data.index >= start ]
+        if end: data = data[ data.index <= end ]
+        data = pandas.DataFrame(data)
+        data['total'] = data.pop('created')
+        response.context['data'] = data_frame_to_json(data)
+        response.context['title'] = "Expressions created per day"
+        response.context['table'] = data.to_html()
+        return self.serve_page(response, 'pages/analytics/active_total_chart.html')
+

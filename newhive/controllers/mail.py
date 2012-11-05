@@ -69,7 +69,7 @@ class Mail(Application):
         mailer = mail.ShareExpr(self.jinja_env, db=self.db)
         mailer.send(expr, request.requester, recipient, request.form.get('message'), request.form.get('send_copy'))
 
-        return self.redirect(response, request.form.get('forward'))
+        return self.serve_json(response, True)
 
     def user_referral(self, request, response):
         user = request.requester

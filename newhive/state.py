@@ -615,12 +615,6 @@ class User(HasSocial):
         return bool(self.mdb.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
     has_homepage = property(_has_homepage)
 
-    def delete(self):
-        for e in self.db.Expr.search({'owner': self.id}): e.delete()
-        self.db.KeyWords.remove_entries(self)
-        for e in self.my_stars: e.delete()
-        return super(User, self).delete()
-
     @property
     def facebook_credentials(self):
         if not hasattr(self, '_facebook_credentials'):
@@ -693,7 +687,7 @@ class User(HasSocial):
     top_expressions = property(get_top_expressions)
 
     def get_recent_expressions(self, count=6):
-        return self.get_expressions(auth='public').sort([('created', -1)]).limit(count)
+        return self.get_expressions(auth='public').sort([('updated', -1)]).limit(count)
     recent_expressions = property(get_recent_expressions)
 
     def client_view(self, viewer=None):
@@ -711,16 +705,16 @@ class User(HasSocial):
         # Facebook Disconnect
         self.facebook_disconnect()
 
-        # Expressions Cleanup
-        for e in self.expressions:
-            e.delete()
-
         # Search Index Cleanup
         self.db.KeyWords.remove_entries(self)
 
         # Feed Cleanup
         for feed_item in self.db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
             feed_item.delete()
+
+        # Expressions Cleanup
+        for e in self.expressions:
+            e.delete()
 
         return super(User, self).delete()
 
@@ -1282,7 +1276,8 @@ class Feed(Entity):
 
     def delete(self):
         class_name = type(self).__name__
-        self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': -1}})
+        if self.entity:
+            self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': -1}})
         super(Feed, self).delete()
 
     @property

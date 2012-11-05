@@ -131,6 +131,7 @@ class SignupTest(Test):
 
         # Check newly created contact record
         record = db.Contact.last()
+        print record
         self.assertEqual(record['email'], email)
 
         return record
@@ -164,14 +165,14 @@ class SignupTest(Test):
         referral = self.test_invite_from_contact_log()
         self.log_out()
 
-        path = referral.url.split('/')[-1]
+        path = referral.url.path
         response = self.open(path=path)
         self.assertStatus(response, 200)
 
         # even if response is 200, invite could be used, so check that we're
-        # looking at the 'invited' page
+        # looking at the create account or 'signup' page
         soup = BeautifulSoup(response.data)
-        self.assertIn('invited', soup.body['class'])
+        self.assertIn('signup', soup.body['class'])
 
         return response
 
@@ -195,15 +196,3 @@ class ExpressionTest(Test):
         response = self.open(data=data)
         print response.status
         self.assertStatus(response, 303)
-
-# this organization feature isn't really used right now
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(UserTest('test_profile_thumb_set'))
-    return suite
-
-# don't call tests this way anyhow, see comment at top of file
-#if __name__ == '__main__':
-    #config.interactive = True
-    #unittest.main()
-    #unittest.TextTestRunner().run(suite())

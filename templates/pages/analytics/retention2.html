@@ -1,0 +1,147 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+{{ super() }}
+<style>
+
+svg {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+</style>
+
+<script>
+var data = {{ data | json}};
+
+data.forEach(function(d) {
+    d.index = new Date(d.index * 1000)
+});
+
+var margin = {top: 20, right: 80, bottom: 30, left: 50},
+    width = $(window).width() - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var parseDate = d3.time.format("%Y%m%d").parse;
+
+var x = d3.time.scale()
+    .domain(d3.extent(data, function(d) { return d.index }))
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([0,100])
+    .range([height, 0]);
+
+var color = d3.scale.category10();
+
+var columns = d3.keys(data[0]).filter(function(key) { return key !== "index" && parseInt(key) < 8; });
+color.domain(columns);
+
+var dNs = color.domain().map(function(name) {
+  return {
+    name: name,
+    values: data.map(function(d) {
+      return {date: d.index, percent: +d[name]};
+    })
+  };
+});
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var line = d3.svg.line()
+//    .interpolate("basis")
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.percent); });
+
+var rowBuilder = function(d){
+    var label = ["<th>" + d.index + "</th>"];
+    var data = $.map(columns, function(name){
+        return "<td>" + d[name] + "</td>"
+    });
+    return label.concat(data).join('\n');
+}
+
+var svg;
+$(function(){
+    $('#content').empty();
+    svg = d3.select("#content").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Retention %");
+
+    var dN = svg.selectAll(".dN")
+        .data(dNs)
+      .enter().append("g")
+        .attr("class", "dN");
+
+    var dropNA = function(array){
+        return $.grep(array, function(el){ return !isNaN(el.percent) })
+    };
+    dN.append("path")
+        .attr("class", "line")
+        .attr("d", function(d) {
+            return line(dropNA(d.values));
+        })
+        .style("stroke", function(d) { return color(d.name); });
+
+    dN.append("text")
+        .attr("transform", function(d) {
+            var tmp = dropNA(d.values);
+            var last = tmp[tmp.length - 1];
+            return "translate(" + x(last.date) + "," + y(last.percent) + ")";
+        })
+        .attr("x", 3)
+        .attr("dy", ".35em")
+        .text(function(d) { return "D" + d.name + " ret."; });
+
+    var table = d3.select('#content').append('table');
+    table.append('tbody').selectAll('tr')
+        .data(data)
+      .enter().append('tr')
+        .html(rowBuilder);
+
+});
+
+//d3.tsv("data.tsv", function(error, data) {
+//
+</script>
+
+{% endblock %}

@@ -1,6 +1,8 @@
 from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive import mail
+from werkzeug import Response
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -210,3 +212,9 @@ class Admin(Application):
             root['tagged']['Featured'] = new_featured
             root.save(updated=False)
         return self.serve_json(response, True)
+
+    def www_tmp(self, request, response):
+        fil = file(config.src_home + '/www_tmp/' + request.path.split('/', 1)[1])
+        res = Response(fil, direct_passthrough=True)
+        res.content_type = 'text/html; charset=utf-8'
+        return res
