@@ -788,15 +788,9 @@ Hive.Navigator.Updater = function(){
         return function(current_expr, context, count, callback){
             //console.log(current_expr.site_expr);
             if (!current_expr) return;
-            if (current_expr.site_expr && direction === -1) {
-                callback([]);
-                return;
-            }
             if (current_expr === last) return;
             var uri = URI(current_expr.url + Hive.Navigator.search_string(context));
             uri.addQuery({page: current_expr[o.paging_attr], limit: count, order: -direction});
-            if (current_expr.site_expr)
-                uri.removeQuery('page');
             $.getJSON(uri.toString(), function(data, status, jqXHR){
                 if (!data.length) last = current_expr;
                 callback(data, status, jqXHR);

@@ -120,9 +120,13 @@ class Collection(object):
                         else:
                             sub_spec = spec[start-1:end-1:-1]
                 except ValueError:
+                    # paging element not in list
                     # TODO: would be better to raise a custom excpetion here so this situation
                     # could be handled differently depending on application
-                    sub_spec = [] #paging element not in list
+                    if order < 0:
+                        sub_spec = spec[0: limit]
+                    else:
+                        sub_spec = []
             else:
                 page = int(page)
                 end = (page + 1) * limit
