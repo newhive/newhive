@@ -1,6 +1,12 @@
 @import "common";
 
-#happs { position: absolute; left: 0; top: 0; z-index: 0; }
+#happs {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;
+    pointer-events: none;
+}
 
 #edit_nav {
     right: 0;

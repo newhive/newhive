@@ -1874,7 +1874,7 @@ Hive.Selection = function(){
     });
 
     $(function() {
-        $('#grid_guide, #happs').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
+        $('#grid_guide').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
 
         // Fallthrough click handler that unfocuses all apps if user clicks on background.
         $(window).click(function(e) {
