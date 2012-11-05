@@ -501,7 +501,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.cache_next = function(){
-        return;
         for (i=0; i<1; i++) {
             if ( next_list[i] && !next_list[i].loading_started){
                 setTimeout( function(){
