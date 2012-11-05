@@ -73,8 +73,11 @@ class Community(Application, PagingMixin):
 
     def expr_page(self, request, response):
         page = lget(request.path_parts, 2, 'about')
-        response.context['title'] = page
-        return self.expr_to_html( self.db.Expr.named( config.site_user, lget(request.path_parts, 2, 'about') ) )
+        response.context.update({
+            'title': page,
+            'content': self.expr_to_html( self.db.Expr.named(
+                config.site_user, lget(request.path_parts, 2, 'about') ) )
+        })
 
     def tag(self, request, response):
         tag = lget(request.path_parts, 1)

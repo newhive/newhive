@@ -124,10 +124,17 @@ class PagingMixin(object):
         return self.db.User.page({}, **paging_args)
 
     @paging_decorator
-    def user_exprs(self, request, response, paging_args, auth=None, **kwargs):
+    def user_exprs(self, request, response, query_args, auth=None, **kwargs):
         if auth: args['auth'] = auth.replace('password', 'private')
-        link_args(response, { 'user': request.owner['name'] })
-        return request.owner.expr_page(auth=auth, tag=request.args.get('tag'), **paging_args)
+        tag = request.args.get('tag')
+
+        link_query = '@' + request.owner['name']
+        if tag:
+            link_query += ' #' + tag
+            query_args['tag'] = tag
+        link_args(response, { 'q': link_query })
+
+        return request.owner.expr_page(auth=auth, **query_args)
 
     @paging_decorator
     def feed_network(self, request, response, paging_args, **kwargs):
