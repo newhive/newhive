@@ -692,7 +692,7 @@ class User(HasSocial):
 
     def client_view(self, viewer=None):
         user = self.db.User.new( dfilter( self,
-            ['fullname', 'profile_thumb', 'name', 'tags', 'updated', 'created'] ) )
+            ['_id', 'fullname', 'profile_thumb', 'name', 'tags', 'updated', 'created'] ) )
         dict.update(user, dict(
             url = self.url,
             thumb = self.get_thumb(70),
