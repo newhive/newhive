@@ -209,7 +209,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
 
         for(i=0; i < Math.abs(offset); i++){
-            away.unshift(current_expr);
+            if (!current_expr.site_expr) {
+                away.unshift(current_expr);
+            }
             current_expr = towards.shift();
         }
 
