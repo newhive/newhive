@@ -402,7 +402,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             //, tag_list_html(owner_tags, {cls: 'user'})
             ].join(' ')
         var tags = $(tag_html).filter('a');
-        tags.each(function(i, el){ $(el).css('background-color', colors.tag_color(i + 1, tags.length)); });
+        tags.each(function(i, el){ $(el).css('background-color', colors.tag_color(i, tags.length)); });
         tags.click(function(e){
             o.context($(this).html());
             e.preventDefault();
