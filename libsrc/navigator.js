@@ -1,7 +1,10 @@
 if (typeof(Hive) == "undefined") Hive = {};
 
 Hive.Navigator = function(navigator_element, content_element, opts){
-    var o = { opened: false };
+    var o = { 
+        opened: false,
+        element: navigator_element
+    };
     opts = $.extend(
         {
             thumb_width: 166,
@@ -10,12 +13,19 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             hidden: false,
             speed: 100,
             pad_bottom: 0,
-            pad_right: 0
+            pad_right: 0,
+            show_current: true
         },
         opts
     );
-    var height = opts.thumb_width + 2 * opts.margin +
+    var height;
+    o.update_opts = function(new_opts){
+        $.extend(opts, new_opts);
+        height = opts.thumb_width + 2 * opts.margin +
                  navigator_element.find('.info').outerHeight(true);
+    };
+    o.update_opts({});
+
     var expr_width = opts.thumb_width + 2 * opts.margin;
     if (!opts.visible_count) opts.visible_count = Math.round($(window).width() / expr_width * 2);
     var history_manager = function(){
@@ -44,6 +54,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     var pos = 0;
     function clamp_pos(x){
         var x_max = prev_list.length * expr_width - center.minus + 2 * opts.margin;
+        if (!opts.show_current) x_max = x_max - expr_width;
         var x_min = center.minus - next_list.length * expr_width - 2 * opts.margin;
 
         if (x_max < x_min) {
@@ -183,7 +194,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         }
 
         for(i=0; i < Math.abs(offset); i++){
-            away.unshift(current_expr);
+            if (!current_expr.site_expr) away.unshift(current_expr);
             current_expr = towards.shift();
         }
 
@@ -292,6 +303,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
     o.position_containers = position_containers;
     o.render = function(render_opts){
+        console.log('navigator render');
         render_opts = $.extend({hidden: false}, render_opts);
 
         var width = navigator_element.width();
@@ -312,6 +324,11 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         loupe.css('width', opts.thumb_width)
             .css('height', opts.thumb_width)
             .css('margin-top', -opts.margin);
+
+        if (!opts.show_current) {
+            loupe.hide();
+            current.hide();
+        }
 
         position_containers(width);
 
