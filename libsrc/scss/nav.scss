@@ -360,7 +360,9 @@ body.frame{
         white-space: nowrap;
         &.active { background-color: $color_selected; }
         .icon {
-            float: right;
+            position: absolute;
+            right: 10px;
+            top: auto;
             width: 33px;
             height: 33px;
             margin: -7px -9px;
