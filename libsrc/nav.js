@@ -181,7 +181,10 @@ Hive.Menus = (function(){
 
         add_window_message_listeners();
 
+        uninitialized = false;
         var uninitialize = function(){
+            if (uninitialized) return;
+            uninitialized = true;
             Hive.Menus.expr_init();
             Hive.load_expr(Hive.navigator.current_expr());
             about_btn.remove();
@@ -190,7 +193,7 @@ Hive.Menus = (function(){
             $('#navigator').find('.navigator_inner .current, .loupe').show()
             Hive.navigator.update_opts({show_current: true});
         };
-        Hive.navigator.element.one("click", uninitialize);
+        Hive.navigator.element.find('.expr_card').live("click", uninitialize);
     };
 
     var window_message_listeneres_added;
