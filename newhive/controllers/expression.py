@@ -124,9 +124,10 @@ class Expression(Community, PagingMixin):
         return self.serve_page(response, 'pages/' + template + '.html')
 
     def site_expression(self, request, response):
+        if request.requester.logged_in and request.path == '':
+            return self.redirect(response, AbsUrl('home/network'))
         expressions = {
                 '': ['thenewhive', 'home']
-                ,'about': ['thenewhive', 'about']
                 }
         expr = self.db.Expr.named(*expressions.get(request.path))
         return self.serve_expression_frame(request, response, expr, template="home")
