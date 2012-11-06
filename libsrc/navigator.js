@@ -14,6 +14,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             speed: 100,
             pad_bottom: 0,
             pad_right: 0,
+            initial_replaceState: true,
             show_current: true
         },
         opts
@@ -582,10 +583,12 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var query = URI(window.location.href).query(true).q;
         o.context(query);
 
-        // normalize the URL, not really sure why this is necessary
-        //history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
 
-        o.populate_navigator();
+        if (opts.initial_replaceState) {
+            o.populate_navigator();
+            // normalize the URL, not really sure why this is necessary
+            //history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        }
         current_expr.frame = frame;
         current_expr.show();
 
