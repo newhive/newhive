@@ -120,9 +120,10 @@ textarea.code {
 
 .btn { display: inline-block; padding: 5px; cursor: default; }
 .menu label { font-weight: normal; font-size: 15px; }
-#menu_save { top : 43px; right : 0px; padding : 10px; width: 220px; }
+#menu_save { top : 43px; right : 0px; padding : 10px; width: 250px; }
 #menu_save textarea { height : 2.5em; }
 #menu_save input, #menu_save textarea { width : 200px; }
+#menu_save .note { color: $color_grey_medium }
 #menu_privacy .selected { display : none; }
 #right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }
