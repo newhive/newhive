@@ -579,13 +579,19 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
         var frame = content_element.find('iframe').on('load', on_frame_load);
 
-        var qargs = URI(window.location.href).query(true), query = '';
-        if( qargs.q ) query = qargs.q;
-        else {
-            if( qargs.user ) query = '@' + qargs.user;
-            if( qargs.tag ) query += (query ? ' ' : '') + '#' + qargs.tag;
+        // Backwards compatibility for querstrings of the tag=foo&user=bar
+        // variety, but don't run if initial_replaceState is false, (e.g. for
+        // the homepage) as changing context has the side effect of changing
+        // the url, and the homepage should never have legacy querystrings.
+        if (opts.initial_replaceState) {
+            var qargs = URI(window.location.href).query(true), query = '';
+            if( qargs.q ) query = qargs.q;
+            else {
+                if( qargs.user ) query = '@' + qargs.user;
+                if( qargs.tag ) query += (query ? ' ' : '') + '#' + qargs.tag;
+            }
+            o.context(query);
         }
-        o.context(query);
 
 
         if (opts.initial_replaceState) {
