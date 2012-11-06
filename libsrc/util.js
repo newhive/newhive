@@ -82,13 +82,14 @@ function logShare(service){
 };
 
 function exprDialog(url, opts) {
-    $.extend(opts, { absolute: true, layout : function(dia) {
-        dia.css({ width : '80%' });
-        dia.css({ height : dia.width() / parseFloat(dia.attr('data-aspect')) });
+    $.extend(opts, { absolute: true, layout : function(e) {
+        var w = e.parent().width(), h = e.parent().height(), a = parseFloat(e.attr('data-aspect'));
+        if(e.width() / e.height() < w / h) e.width(h * .8 * a).height(h * .8);
+        else e.width(w * .8).height(w * .8 / a);
+        center(e, $(window), opts);
         place_apps();
-        center(dia, $(window), opts);
     } });
-    return loadDialog(url + '?template=expr_iframe', opts);
+    return loadDialog(url + '?template=expr_dialog', opts);
 }
 exprDialog.loaded = {};
 
