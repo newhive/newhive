@@ -238,7 +238,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         return o;
     };
     o.random = function(){
-        context('');
+        o.context('#All');
         $.getJSON('/random?json=1', show_expression_not_in_list);
     };
 
@@ -578,7 +578,13 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             current_expr.show();
         };
         var frame = content_element.find('iframe').on('load', on_frame_load);
-        var query = URI(window.location.href).query(true).q;
+
+        var qargs = URI(window.location.href).query(true), query = '';
+        if( qargs.q ) query = qargs.q;
+        else {
+            if( qargs.user ) query = '@' + qargs.user;
+            if( qargs.tag ) query += (query ? ' ' : '') + '#' + qargs.tag;
+        }
         o.context(query);
 
 
