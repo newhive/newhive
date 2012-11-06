@@ -663,8 +663,8 @@ var sendRequestViaMultiFriendSelector = function(){
     }
   }
   FB.ui({method: 'apprequests'
-    , message: 'Join me on The New Hive'
-    , title: 'Invite Friends to Join The New Hive'
+    , message: 'Join me on NewHive'
+    , title: 'Invite Friends to Join NewHive'
     , filters: ['app_non_users']
   }, requestCallback);
 };
