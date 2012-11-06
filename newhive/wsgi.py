@@ -126,7 +126,8 @@ actions = dict(
 )
 
 site_pages = {
-     ''                    : controllers['community'].index
+     ''                    : controllers['expression'].site_expression
+    ,'about'               : controllers['expression'].site_expression
     ,'home'                : controllers['community'].index
     ,'search'              : controllers['community'].index
     ,'tag'                 : controllers['community'].tag

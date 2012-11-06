@@ -172,6 +172,14 @@ img.thumb { background-color: $color_grey_medium; }
     cursor: default;
 }
 
+#social_icons {
+    margin: 0 5px;
+    img {
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+}
+
 
 #action_nav_handle { width: 54px; right: 0; top: 60px; }
 #action_nav {

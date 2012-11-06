@@ -43,7 +43,7 @@ Hive.Menus = (function(){
         if( o.nav_menu.opened ) $('#action_nav, #owner_nav').css('right', opts.pad_right);
     };
 
-    o.init = function(group){
+    o.init = function(group, hide_action_nav){
         if(!group) group = { menus: [] };
 
         hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
@@ -102,8 +102,13 @@ Hive.Menus = (function(){
             $('#call_to_action').html(Hive.config.nav.call_to_action);
         }
 
-        var swap_action_nav = { open: function(){ $('#action_nav').hide() },
-            close: function(){ $('#action_nav').show() } };
+        var swap_action_nav = {
+            open: function(){ $('#action_nav').hide(); },
+            close: function(){
+                if (hide_action_nav) return;
+                $('#action_nav').show();
+            }
+        };
 
         if($('#owner_btn').length) hover_menu('#owner_btn', '#owner_menu', $.extend({ offset_y: 8,
             layout_x: 'right', group: group }, swap_action_nav));
@@ -116,6 +121,101 @@ Hive.Menus = (function(){
 
         o.update_owner( owner );
     };
+
+    o.home_init = function(){
+        // Perform standard menu initialization
+        o.init(undefined, true);
+
+        // Set up special version of navigator
+        if (!Hive.navigator) {
+            Hive.navigator = Hive.Navigator.create(
+                '#navigator',
+                '#expression_frames',
+                {
+                    hidden: false,
+                    initial_replaceState: false,
+                    show_current: false
+                }
+            );
+        }
+        Hive.navigator.current_expr().site_expr = true;
+        Hive.navigator.context('#Featured', false);
+        Hive.navigator.populate_navigator();
+
+
+        var drawers = $('#owner_nav');
+        drawers.show();
+
+        // Set up owner nav customizations
+        var about_btn = $('<div>')
+            .attr('id', 'about_btn')
+            .attr('class', 'hoverable center text_btn black_active')
+            .click(function(){ window.location = server_url + 'thenewhive/about' })
+            .append('<div>')
+          .children()
+            .attr('class', 'text')
+            .append('<span>About</span>')
+          .parent();
+
+        var facebook = $('<a>')
+            .attr('href', 'http://facebook.com/thenewhive')
+            .append('<img>')
+          .children()
+            .attr('src',  asset('skin/1/facebook.png'))
+          .parent();
+
+        var twitter = $('<a>')
+            .attr('href', 'http://twitter.com/newhive')
+            .append('<img>')
+          .children()
+            .attr('src',  asset('skin/1/twitter.png'))
+          .parent();
+
+        var social_icons = $('<div>')
+            .attr('id', 'social_icons')
+            .append(facebook).append(twitter);
+
+        $('#owner_nav').append(about_btn).append(social_icons);
+
+        $('#owner_btn, #action_nav').hide();
+
+        add_window_message_listeners();
+
+        var uninitialize = function(){
+            Hive.Menus.expr_init();
+            Hive.load_expr(Hive.navigator.current_expr());
+            about_btn.remove();
+            social_icons.remove();
+            $('#owner_btn').show();
+            $('#navigator').find('.navigator_inner .current, .loupe').show()
+            Hive.navigator.update_opts({show_current: true});
+        };
+        Hive.navigator.element.one("click", uninitialize);
+    };
+
+    var window_message_listeneres_added;
+    var add_window_message_listeners = function(nav_menu){
+        if (window_message_listeneres_added) return;
+        window.addEventListener('message', function(m){
+            console.log(m.data);
+            if(m.data == 'focus' && nav_menu) {
+                nav_menu.close(true);
+                //o.navigator_menu.close(true);
+            }
+            else if( m.data.match(/^layout=/) && nav_menu ){
+                var dims = m.data.split('=')[1].split(',');
+                o.layout(dims);
+            }
+            else if (m.data == 'signup') {
+                require_login('drawoneme');
+            }
+            else if (m.data == 'video') {
+                showDialog('#dia_video');
+            }
+        }, false);
+        window_message_listeneres_added = true;
+    };
+
 
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
@@ -156,7 +256,7 @@ Hive.Menus = (function(){
         var handles = $('.nav_handle').add(drawers);
         if (config.navigator.opens_nav) handles.add('#navigator');
         var close_nav = function(){
-                if (config.nav.opens_navigator) Hive.navigator.hide(speed);
+                if (config.nav.opens_navigator && config.navigator.hideable) Hive.navigator.hide(speed);
                 drawers.stop().clearQueue();
                 // For some reason just using drawers.hide as the callback for animate didn't work
                 var callback = function(){ drawers.hide(); };
@@ -207,6 +307,7 @@ Hive.Menus = (function(){
             $.extend(
                 { opened: config.navigator.open_initially,
                   open_menu: function(){ Hive.navigator.show(speed); },
+                  close_condition: function(){ return config.navigator.hideable; },
                   close_menu: function(){ Hive.navigator.hide(speed); }
                 },
                 shared_hover_menu_opts
@@ -282,11 +383,13 @@ Hive.Menus = (function(){
         $('#action_nav .delete').click(function(){ del_dialog = showDialog('#dia_delete'); });
         $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
-        Hive.navigator = Hive.Navigator.create(
-            '#navigator',
-            '#expression_frames',
-            {hidden: !config.navigator.open_initially}
-        );
+        if (!Hive.navigator) {
+            Hive.navigator = Hive.Navigator.create(
+                '#navigator',
+                '#expression_frames',
+                {hidden: !config.navigator.open_initially}
+            );
+        }
         Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {
         //    layout: false,
@@ -297,19 +400,7 @@ Hive.Menus = (function(){
         //    close_delay: o.slow_close
         //});
 
-        window.addEventListener('message', function(m){
-            if(m.data == 'focus') {
-                nav_menu.close(true);
-                //o.navigator_menu.close(true);
-            }
-            else if( m.data.match(/^layout=/) ){
-                var dims = m.data.split('=')[1].split(',');
-                o.layout(dims);    
-            }
-            else if (m.data == 'signup') {
-                require_login('drawoneme');
-            }
-        }, false);
+        add_window_message_listeners(nav_menu);
 
         o.layout([ $(window).width(), $(window).height() ]);
 

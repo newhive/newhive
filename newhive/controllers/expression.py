@@ -70,12 +70,48 @@ class Expression(Community, PagingMixin):
         if not resource:
             if path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
+        return self.serve_expression_frame(request, response, resource)
+
+        #is_owner = request.requester.logged_in and owner.id == request.requester.id
+        #if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
+        #if is_owner: owner.unflag('expr_new')
+
+        #expr_url = abs_url(domain = config.content_domain) + resource.id
+        #self.expr_prepare(resource, response.user)
+        #response.context.update(
+        #     expr_frame = True
+        #    ,title = resource.get('title', False)
+        #    ,expr = resource
+        #    ,expr_url = expr_url
+        #    ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
+        #    ,content_domain = abs_url(domain = config.content_domain)
+        #    )
+
+        #template = resource.get('template', request.args.get('template', 'frame'))
+
+        #if request.requester.logged_in:
+        #    self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
+
+        #return self.serve_page(response, 'pages/' + template + '.html')
+
+    def serve_expression_frame(self, request, response, resource, template=None):
+        owner = resource.owner
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
-        if is_owner: owner.unflag('expr_new')
-
+        if is_owner: resource.owner.unflag('expr_new')
         expr_url = abs_url(domain = config.content_domain) + resource.id
+
         self.item_prepare(resource, viewer=response.user)
+
+        response.context.update(
+             domain = request.domain
+            ,owner = owner
+            ,owner_url = owner.url
+            ,path = request.path
+            ,user_is_owner = request.is_owner
+            ,listeners = owner.starrer_page()
+            )
+
         response.context.update(
              expr_frame = True
             ,title = resource.get('title', False)
@@ -84,12 +120,16 @@ class Expression(Community, PagingMixin):
             ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
         )
 
-        template = resource.get('template', request.args.get('template', 'frame'))
-
-        if request.requester.logged_in:
-            self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
-
+        template = template or resource.get('template', request.args.get('template', 'frame'))
         return self.serve_page(response, 'pages/' + template + '.html')
+
+    def site_expression(self, request, response):
+        expressions = {
+                '': ['thenewhive', 'home']
+                ,'about': ['thenewhive', 'about']
+                }
+        expr = self.db.Expr.named(*expressions.get(request.path))
+        return self.serve_expression_frame(request, response, expr, template="home")
 
     def info(self, request, response, expr=None):
         expr = expr or self.db.Expr.fetch(lget(request.path_parts, 1))
@@ -110,8 +150,12 @@ class Expression(Community, PagingMixin):
             # return status forbidden so the client knows their password was invalid
             response.status_code = 403
 
-        response.context.update(html = self.expr_to_html(expr), expr = expr, use_ga = False)
-
+        response.context.update(
+                html = self.expr_to_html(expr)
+                , expr = expr
+                , use_ga = False
+                , expr_script = expr.get('script')
+                , expr_style = expr.get('style'))
         if request.form.get('partial'):
             return self.serve_page(response, 'pages/expr_content_only.html')
         else:
@@ -161,7 +205,11 @@ class Expression(Community, PagingMixin):
         if not exp: raise ValueError('missing or malformed exp')
 
         res = self.db.Expr.fetch(exp.id)
-        upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb', 'images'])
+        allowed_attributes = ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password'
+                              , 'tags', 'background', 'thumb', 'images']
+        if request.requester.is_admin:
+            allowed_attributes.extend(['fixed_width', 'script', 'style'])
+        upd = dfilter(exp, allowed_attributes)
         upd['name'] = upd['name'].lower().strip('/ ')
 
         # if user has not picked a thumbnail, pick the latest image added

@@ -126,15 +126,21 @@ class Community(Application, PagingMixin):
         if not exp: return ''
 
         def css_for_app(app):
-            return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
-                app['position'][0],
-                app['position'][1],
-                app['dimensions'][0],
-                app['dimensions'][1],
-                'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
-                app['z'],
-                app.get('opacity', 1) or 1
-                )
+            css = {
+                    'left': app['position'][0]
+                    , 'top': app['position'][1]
+                    , 'z-index': app['z']
+                    , 'width': app['dimensions'][0]
+                    , 'height': app['dimensions'][1]
+                    , 'opacity': app.get('opacity', 1)
+                    , 'font-size': app.get('scale')
+                    }
+            rv = "left: {left}px; top: {top}px; z-index: {z-index}; opacity: {opacity};".format(**css)
+            if not app.get('type') == 'hive.raw_html':
+                rv += "width: {width}px; height: {height}px; ".format(**css)
+            if app.get('scale'):
+                rv += "font-size: {font-size}em;".format(**css)
+            return rv
 
         def html_for_app(app):
             content = app.get('content', '')
@@ -163,6 +169,9 @@ class Community(Application, PagingMixin):
         app_html = map( html_for_app, exp.get('apps', []) )
         if exp.has_key('dimensions'):
             app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
+        if exp.has_key('fixed_width'):
+            app_html = ['<div class="expr_container" style="width: {}px">'.format(exp['fixed_width'])] + \
+                app_html + ['</div>']
         return ''.join(app_html)
 
 
