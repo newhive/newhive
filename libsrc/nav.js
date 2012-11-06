@@ -496,8 +496,8 @@ Hive.Menus = (function(){
 
         // update share URLs and embed dialog
         o.update_share_urls(expr);
-        var embed_link = $( $('#dia_embed textarea').val() ).attr('src', expr.url);
-        $('#dia_embed textarea').val(embed_link.outerHTML());
+        var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
+        $('#dia_embed textarea').val("<iframe src='" + embed_url + "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0' frameborder='0' vspace='0' hspace='0'></iframe>");
 
         $('#expr_menu .big_card .title').html(expr.title);
         $('#expr_menu .big_card .thumb').attr('src', expr.thumb);

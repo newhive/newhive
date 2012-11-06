@@ -115,9 +115,8 @@ class Expression(Community, PagingMixin):
         response.context.update(
              expr_frame = True
             ,title = resource.get('title', False)
-            ,expr = resource
+            ,expr = self.item_prepare(resource)
             ,expr_url = expr_url
-            ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
         )
 
         template = template or resource.get('template', request.args.get('template', 'frame'))
