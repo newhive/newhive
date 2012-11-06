@@ -98,7 +98,8 @@ class Database:
             prefix = re.sub( r'[^#@]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':
-                if pattern[1] == 'Featured': search['featured'] = True
+                if pattern[1] == 'All': search['all'] = True
+                elif pattern[1] == 'Featured': search['featured'] = True
                 elif pattern[1] == 'Network': search['network'] = True
                 elif pattern[1] == 'Public': search['auth'] = 'public' 
                 elif pattern[1] == 'Private': search['auth'] = 'password'

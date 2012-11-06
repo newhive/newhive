@@ -141,10 +141,9 @@ class PagingMixin(object):
         return request.owner.feed_network(**paging_args)
 
     @paging_decorator
-    def feed_activity(self, request, response, by_owner=False, spec={}, **args):
-        args.update(query_args(request))
+    def feed_activity(self, request, response, paging_args, spec={}, by_owner=False):
         if by_owner: spec.update({'initiator': request.owner.id})
-        return request.owner.feed_profile_entities(spec=spec, **args)
+        return request.owner.feed_profile_entities(spec=spec, **paging_args)
 
     @paging_decorator
     def listening(self, request, response, paging_args, **kwargs):
