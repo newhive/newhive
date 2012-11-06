@@ -775,10 +775,6 @@ var fix_borders = function(items){
             $(el).addClass('border_bottom');
         }
     });
-
-    // fix top tab placement
-    var card_width = $('#feed .card').outerWidth();
-    $('#top_tabs').css({'right': Math.min( $('#feed').outerWidth() - 245, $('#feed').outerWidth() - columns * card_width ) });
 }
 
 var context_to_string = function(opt_arg){

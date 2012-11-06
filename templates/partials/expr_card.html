@@ -39,9 +39,10 @@
         title='{{ f.initiator.name }} {{ f.action_name }}'
         {% if item.feed|length == 1 %}class='big'{% endif %}
     ></a>{% endif %}{% endfor %}</div>
-    <div class='feed_info{{ " create" if item.feed[0].class_name == "NewExpr" or item.feed[0].class_name == "UpdatedExpr" }} {{ "inactive_hide" if hide_feed }}'>
-      <div><a href='{{ item.feed[0].initiator.url }}'>{{ item.feed[0].initiator.name }}</a>&nbsp;
-        &nbsp;{{ item.feed[0].action_name }}</div>
+    <div class='feed_info{{ " create" if item.feed[0].class_name == "NewExpr" or
+      item.feed[0].class_name == "UpdatedExpr" }} {{ "inactive_hide" if hide_feed }}'>
+      <div><a href='{{ item.feed[0].initiator.url }}'>{{ item.feed[0].initiator.name }}</a></div><div>{{
+        item.feed[0].action_name }}</div>
     </div>
   {% endif %}
 </div>
