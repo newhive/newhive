@@ -304,7 +304,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
     o.position_containers = position_containers;
     o.render = function(render_opts){
-        console.log('navigator render');
         render_opts = $.extend({hidden: false}, render_opts);
 
         var width = navigator_element.width();
@@ -565,7 +564,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var uri = URI( server_url + 'search' );
         uri.addQuery( search_args );
 
-        console.log(uri.toString());
         $.getJSON(uri.toString(), function(data, status, jqXHR){
             if (data.length < count) last[direction] = true;
             callback(data, status, jqXHR);

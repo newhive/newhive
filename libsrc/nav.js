@@ -197,7 +197,6 @@ Hive.Menus = (function(){
     var add_window_message_listeners = function(nav_menu){
         if (window_message_listeneres_added) return;
         window.addEventListener('message', function(m){
-            console.log(m.data);
             if(m.data == 'focus' && nav_menu) {
                 nav_menu.close(true);
                 //o.navigator_menu.close(true);
@@ -583,7 +582,7 @@ Hive.Menus = (function(){
     };
 
     o.update_user = function(user_data){
-        console.log('update_user: ', user_data);
+        //console.log('update_user: ', user_data);
     };
 
     o.action_name = function(i){
