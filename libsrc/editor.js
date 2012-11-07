@@ -2049,12 +2049,10 @@ Hive.init = function() {
     //var draft = Hive.get_draft();
     //if(draft) Hive.Exp = draft;
 
-    if(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) && parseInt(RegExp.$1) < 5)
-        if(confirm("You're using an oldish version of Firefox. Click OK to get the newest version"))
-            window.location = 'http://www.mozilla.com/en-US/products/download.html';
-
-    if(!(/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) || /Chrome/.test(navigator.userAgent)))
+    var ua = navigator.userAgent;
+    if ( !ua.match(/(Firefox|Chrome|Safari)/i) || ua.match(/OS 5(_\d)+ like Mac OS X/i)) {
         showDialog('#editor_browsers');
+    }
 
     $(document.body).filedrop({
          data : { action : 'file_create' }
