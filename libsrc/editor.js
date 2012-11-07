@@ -1482,12 +1482,20 @@ Hive.App.Sketch = function(o) {
 
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'),
             { auto_close : false });
+        //TODO: What does this click on the brush handle do?
         var brush_btn = o.div.find('.button.brush')
-            .click( function(){ o.app.set_brush( o.app.brush_name ) });
-        o.hover_menu(brush_btn, o.div.find('.drawer.brush'));
+            .click( function(){
+                 o.app.set_brush( o.app.brush_name );
+
+            });
+        var brush_menu = o.hover_menu(brush_btn, o.div.find('.drawer.brush'));
         o.div.find('.button.eraser').click( function(){ o.app.win.set_brush( 'eraser' ) });
         o.div.find('.drawer.brush .option').each(function(i, e) { $(e).click(function() {
             o.app.set_brush($(e).attr('val'));
+
+            o.div.find('.drawer.brush .option').removeClass("selected");
+            $(e).addClass("selected");
+            brush_menu.close();
         }); })
 
         return o;
