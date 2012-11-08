@@ -368,7 +368,9 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         } else {
             // Things we only want to happen on initial render go here
             info.find('form').submit(o.search);
-            info.find('.random_btn').click(o.random);
+            $('.random_link').click(function(){
+                o.random(); return false;
+            });
         }
 
         // event handlers for auto-scrolling based on mouse position

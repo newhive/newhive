@@ -154,8 +154,8 @@ class Expression(Community, PagingMixin):
                 html = self.expr_to_html(expr)
                 , expr = expr
                 , use_ga = False
-                , expr_script = expr.get('script')
-                , expr_style = expr.get('style'))
+                , expr_script = expr.get('script') if expr else ''
+                , expr_style = expr.get('style')) if expr else ''
         if request.form.get('partial'):
             return self.serve_page(response, 'pages/expr_content_only.html')
         else:
