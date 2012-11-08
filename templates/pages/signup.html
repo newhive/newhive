@@ -15,7 +15,7 @@
             val_msg.html(message);
             if (flash) {
                 val_msg.css('color', 'white');
-                val_msg.animate({'color': '#F72E4D'});
+                val_msg.animate({'color': colors[1]});
             }
         };
 
@@ -184,12 +184,15 @@
     </div>
 
     <div class="column" id="terms">
-        <div class="term"><span class='numeral'>1.</span> You own your information.</div>
-        <div class="term"><span class='numeral'>2.</span> We'll never put ads on<br/>
-            &nbsp;&nbsp;&nbsp;&nbsp;your expressions.</div>
-       <div class="term"><span class='numeral'>3.</span> Have fun.</div>
-       <div class="term"><span class='numeral'>4.</span> Don't be mean or obscene.</div>
-       <div class="term"><span class='numeral'>5.</span> Encourage expression.</div>
+        <div id="terms_header">terms</div>
+        <div id="term_list">
+            <div class="term"><span class='numeral'>1.</span> You own your information.</div>
+            <div class="term"><span class='numeral'>2.</span> We'll never put ads on<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;your expressions.</div>
+            <div class="term"><span class='numeral'>3.</span> Have fun.</div>
+            <div class="term"><span class='numeral'>4.</span> Don't be mean or obscene.</div>
+            <div class="term"><span class='numeral'>5.</span> Encourage expression.</div>
+        </div>
         <div id="fullterms">
             {% set tos_page = '/lib/doc/tos.html' %}
             <a href='{{ tos_page }}' onclick="loadDialog('{{ tos_page }}'); return false;">
@@ -198,7 +201,7 @@
         </div>
         <input type='checkbox' id='tos' name='tos'/>
         <label for='tos' id="tos_label">Agree to terms of service</label>
-        <input type='submit' class="btn rounded" value='CREATE ACCOUNT'/>
+        <input type='submit' class="btn rounded black" value='CREATE ACCOUNT'/>
     </div>
 </form>
 {% endblock %}
