@@ -190,7 +190,7 @@ class PagingMixin(object):
             'updated_friendly': friendly_date(expr['updated'])
         })
 
-        if viewer.is_admin:
+        if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': expr.is_featured })
 
         return expr
