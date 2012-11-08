@@ -150,7 +150,7 @@ Hive.Menus = (function(){
         var about_btn = $('<div>')
             .attr('id', 'about_btn')
             .attr('class', 'hoverable center text_btn black_active')
-            .click(function(){ window.location = server_url + 'thenewhive/about' })
+            .click(function(){ window.location = server_url + 'thenewhive/about?q=%40thenewhive' })
             .append('<div>')
           .children()
             .attr('class', 'text')
@@ -181,7 +181,10 @@ Hive.Menus = (function(){
 
         add_window_message_listeners();
 
+        uninitialized = false;
         var uninitialize = function(){
+            if (uninitialized) return;
+            uninitialized = true;
             Hive.Menus.expr_init();
             Hive.load_expr(Hive.navigator.current_expr());
             about_btn.remove();
@@ -190,14 +193,13 @@ Hive.Menus = (function(){
             $('#navigator').find('.navigator_inner .current, .loupe').show()
             Hive.navigator.update_opts({show_current: true});
         };
-        Hive.navigator.element.one("click", uninitialize);
+        Hive.navigator.element.find('.expr_card').live("click", uninitialize);
     };
 
     var window_message_listeneres_added;
     var add_window_message_listeners = function(nav_menu){
         if (window_message_listeneres_added) return;
         window.addEventListener('message', function(m){
-            console.log(m.data);
             if(m.data == 'focus' && nav_menu) {
                 nav_menu.close(true);
                 //o.navigator_menu.close(true);
@@ -583,7 +585,7 @@ Hive.Menus = (function(){
     };
 
     o.update_user = function(user_data){
-        console.log('update_user: ', user_data);
+        //console.log('update_user: ', user_data);
     };
 
     o.action_name = function(i){
@@ -664,8 +666,8 @@ var sendRequestViaMultiFriendSelector = function(){
     }
   }
   FB.ui({method: 'apprequests'
-    , message: 'Join me on The New Hive'
-    , title: 'Invite Friends to Join The New Hive'
+    , message: 'Join me on NewHive'
+    , title: 'Invite Friends to Join NewHive'
     , filters: ['app_non_users']
   }, requestCallback);
 };

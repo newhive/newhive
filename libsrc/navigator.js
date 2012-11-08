@@ -14,6 +14,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             speed: 100,
             pad_bottom: 0,
             pad_right: 0,
+            initial_replaceState: true,
             show_current: true
         },
         opts
@@ -303,7 +304,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
     o.position_containers = position_containers;
     o.render = function(render_opts){
-        console.log('navigator render');
         render_opts = $.extend({hidden: false}, render_opts);
 
         var width = navigator_element.width();
@@ -564,7 +564,6 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         var uri = URI( server_url + 'search' );
         uri.addQuery( search_args );
 
-        console.log(uri.toString());
         $.getJSON(uri.toString(), function(data, status, jqXHR){
             if (data.length < count) last[direction] = true;
             callback(data, status, jqXHR);
@@ -580,18 +579,26 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         };
         var frame = content_element.find('iframe').on('load', on_frame_load);
 
-        var qargs = URI(window.location.href).query(true), query = '';
-        if( qargs.q ) query = qargs.q;
-        else {
-            if( qargs.user ) query = '@' + qargs.user;
-            if( qargs.tag ) query += (query ? ' ' : '') + '#' + qargs.tag;
+        // Backwards compatibility for querstrings of the tag=foo&user=bar
+        // variety, but don't run if initial_replaceState is false, (e.g. for
+        // the homepage) as changing context has the side effect of changing
+        // the url, and the homepage should never have legacy querystrings.
+        if (opts.initial_replaceState) {
+            var qargs = URI(window.location.href).query(true), query = '';
+            if( qargs.q ) query = qargs.q;
+            else {
+                if( qargs.user ) query = '@' + qargs.user;
+                if( qargs.tag ) query += (query ? ' ' : '') + '#' + qargs.tag;
+            }
+            o.context(query);
         }
-        o.context(query);
 
-        // normalize the URL, not really sure why this is necessary
-        //history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
 
-        o.populate_navigator();
+        if (opts.initial_replaceState) {
+            o.populate_navigator();
+            // normalize the URL, not really sure why this is necessary
+            //history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        }
         current_expr.frame = frame;
         current_expr.show();
 

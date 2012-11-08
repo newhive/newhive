@@ -497,12 +497,12 @@ class SignupRequest(Mailer):
     sent_to = ['nonuser']
     template = "emails/signup_request"
     unsubscribable = False
-    subject = 'Thank you for signing up for a beta account on The New Hive'
+    subject = 'Thank you for signing up for a beta account on NewHive'
     header_message = ['<span class="active">Thank you</span> for signing', 'up for a beta account. :)']
-    message = "We are getting The New Hive ready for you.<br/>" + \
+    message = "We are getting NewHive ready for you.<br/>" + \
               "Expect to get a beta invitation in your inbox ASAP.<br/>" + \
               "We look forward to seeing your expressions!<br/><br/>" + \
-              "Talk to you soon,<br/><b>The New Hive team</b>"
+              "Talk to you soon,<br/><b>The NewHive team</b>"
 
     def send(self, email, name, unique_args):
         self.recipient = {'email': email, 'name': name}
@@ -522,7 +522,7 @@ class UserReferral(Mailer):
     unsubscribable = True
 
     @property
-    def subject(self): return self.initiator.get('fullname') + ' has invited you to The New Hive'
+    def subject(self): return self.initiator.get('fullname') + ' has invited you to NewHive'
 
     def send(self, referral, initiator):
         self.initiator = initiator
@@ -565,9 +565,9 @@ class SiteReferralReminder(SiteReferral):
         self.recipient = {'email': referral.get('to'), 'name': referral.get('name')}
 
         messages = {
-                "A": "We noticed you recently signed up for New Hive, your online blank canvas. Congratulations, you've been invited to join the beta party! Click the link below to create your account and reserve your URL. :)"
+                "A": "We noticed you recently signed up for NewHive, your online blank canvas. Congratulations, you've been invited to join the beta party! Click the link below to create your account and reserve your URL. :)"
                 , "B": "Just one more step and you are a part of NewHive's exclusive beta test! Click on the link below to create your profile and start expressing yourself. :)"
-                , "C": "We noticed you recently signed up for New Hive, your online blank canvas. Click on the link below to join the party!"
+                , "C": "We noticed you recently signed up for NewHive, your online blank canvas. Click on the link below to join the party!"
                 }
 
         version, message = random.choice(messages.items())

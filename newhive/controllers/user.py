@@ -317,7 +317,7 @@ class User(Application):
 
     def logout(self, request, response):
         auth.handle_logout(self.db, request, response)
-        return self.redirect( response, request.form.get('url', abs_url()) )
+        return self.redirect( response, AbsUrl('') )
 
     def log(self, request, response):
         action = request.form.get('log_action')

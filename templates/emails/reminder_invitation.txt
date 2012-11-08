@@ -13,6 +13,6 @@ invitation.  Let us know how your experience is going...  and feel free to hit
 us up with any questions you might have!
 
 Cheers,
-{{ admin_name}} & The New Hive team
+{{ admin_name}} & The NewHive team
 
 {# newlines here on purpose #}
