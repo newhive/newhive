@@ -72,7 +72,6 @@
                     validation_message(input, 'Username must be from 3 to 24 letters and numbers, and start with a letter (no spaces or punctuation).', flash);
                     return false;
                 } else {
-                    validation_message(input);
                     user_check(n, flash);
                 }
                 return true;
@@ -120,7 +119,9 @@
 
         $(function(){
             $('#name').bind('change keydown keyup', function(){
-                $('#url span').html($(this).val());
+                var val = $(this).val();
+                if (val.length < 3 || validate.name())
+                    $('#url span').html(val);
             });
             $('#name').blur(validate.name);
             $('#email').blur(validate.email);

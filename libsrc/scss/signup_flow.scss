@@ -78,6 +78,11 @@ body.signup #right_column {
         box-sizing: border-box;
     }
 
+    #url {
+        width: $input_width;
+        overflow: hidden;
+    }
+
     #url, #terms_header {
         padding: 0 0 0 10px;
         span {
