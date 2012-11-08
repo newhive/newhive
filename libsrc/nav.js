@@ -193,7 +193,7 @@ Hive.Menus = (function(){
             $('#navigator').find('.navigator_inner .current, .loupe').show()
             Hive.navigator.update_opts({show_current: true});
         };
-        Hive.navigator.element.find('.expr_card').live("click", uninitialize);
+        Hive.navigator.update_opts({onexpressionchange: uninitialize});
     };
 
     var window_message_listeneres_added;

@@ -15,7 +15,8 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             pad_bottom: 0,
             pad_right: 0,
             initial_replaceState: true,
-            show_current: true
+            show_current: true,
+            onexpressionchange: noop
         },
         opts
     );
@@ -225,6 +226,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         // Garbage collect old frames
         $.each(away.slice(3), function(i, expr){ expr.unload(); });
+        opts.onexpressionchange(current_expr);
     };
 
     function show_expression_not_in_list(data){
