@@ -82,7 +82,7 @@
     #insert_text   { &.active { background-image: asset_url('skin/1/text-hover.png');   } background-image: asset_url('skin/1/text.png');   }
     #insert_image  { &.active { background-image: asset_url('skin/1/images-hover.png'); } background-image: asset_url('skin/1/images.png'); }
     #insert_audio  { &.active { background-image: asset_url('skin/1/audio-hover.png');  } background-image: asset_url('skin/1/audio.png');  }
-    #insert_embed  { &.active { background-image: asset_url('skin/1/embed-hover.png');  } background-image: asset_url('skin/1/embed.png');  }
+    #insert_embed  { &.active { background-image: asset_url('skin/1/editor_embed-hover.png');  } background-image: asset_url('skin/1/editor_embed.png');  }
     #insert_shape  { &.active { background-image: asset_url('skin/1/shapes-hover.png'); } background-image: asset_url('skin/1/shapes.png'); }
     #insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
     #labs          { &.active { background-image: asset_url('skin/1/labs-hover.png');   } background-image: asset_url('skin/1/labs.png'); }

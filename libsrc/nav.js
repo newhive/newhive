@@ -161,14 +161,14 @@ Hive.Menus = (function(){
             .attr('href', 'http://facebook.com/thenewhive')
             .append('<img>')
           .children()
-            .attr('src',  asset('skin/1/facebook.png'))
+            .attr('src',  asset('skin/1/social/facebook.png'))
           .parent();
 
         var twitter = $('<a>')
             .attr('href', 'http://twitter.com/newhive')
             .append('<img>')
           .children()
-            .attr('src',  asset('skin/1/twitter.png'))
+            .attr('src',  asset('skin/1/social/twitter.png'))
           .parent();
 
         var social_icons = $('<div>')

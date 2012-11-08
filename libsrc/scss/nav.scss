@@ -177,6 +177,8 @@ img.thumb { background-color: $color_grey_medium; }
     img {
         margin-right: 5px;
         vertical-align: middle;
+        width: 20px;
+        height: 20px;
     }
 }
 
@@ -371,6 +373,7 @@ body.frame{
 
     // styling for common menu items
     .message .icon { background-image: asset_url('skin/1/send_message.png') }
+    .embed .icon { background-image: asset_url('skin/1/embed_icon.png') }
 }
 
 #login_menu {
