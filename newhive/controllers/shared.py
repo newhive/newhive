@@ -94,9 +94,8 @@ class PagingMixin(object):
             if args: paging_args.update(args)
             cards = func(self, request, response, paging_args, **kwargs)
             self.set_next_page( request, response, cards )
-            viewer = paging_args.get('viewer')
             response.context.update( cards = map(
-                lambda o: self.item_prepare( o, viewer = viewer ), cards ) )
+                lambda o: self.item_prepare( o, viewer = request.requester ), cards ) )
         return wrapped
 
     @paging_decorator
