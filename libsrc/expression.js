@@ -5,17 +5,15 @@ Hive.Page = (function(){
     o.initialized = false;
 
     o.send_top = function(msg){
-        //TODO: replace this hack with the right parent_url from the server
-        window.parent.postMessage(msg, Hive.parent_url.replace(/^http/, 'https'));
-        window.parent.postMessage(msg, Hive.parent_url.replace(/^https/, 'http'));
-    },
+        window.parent.postMessage(msg, '*');
+    };
         
     o.paging_sent = false;
     o.page = function(direction){
         if(o.paging_sent) return;
         o.paging_sent = true;
         o.send_top(direction);
-    },
+    };
     o.page_next = function(){ o.page('next') },
     o.page_prev = function(){ o.page('prev') };
 

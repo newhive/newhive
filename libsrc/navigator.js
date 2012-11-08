@@ -561,7 +561,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if( feed && feed.length) page = feed[ (direction === 1) ? feed.length - 1 : 0 ]['created'];
         search_args.page = page
 
-        var uri = URI( server_url + 'search' );
+        var uri = URI( '/search' );
         uri.addQuery( search_args );
 
         $.getJSON(uri.toString(), function(data, status, jqXHR){
