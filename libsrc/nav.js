@@ -99,6 +99,7 @@ Hive.Menus = (function(){
                 layout_x: 'right',
                 group: group
             } );
+            if(error) $(function(){ o.login_menu.open().sticky = true; });
             $('#call_to_action').html(Hive.config.nav.call_to_action);
         }
 
