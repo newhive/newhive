@@ -373,7 +373,12 @@ body.frame{
 
     // styling for common menu items
     .message .icon { background-image: asset_url('skin/1/send_message.png') }
-    .embed .icon { background-image: asset_url('skin/1/embed_icon.png') }
+    .embed .icon { 
+        background-image: asset_url('skin/1/embed_icon.png');
+        width: 28px;
+        height: 28px;
+        margin: -6px -7px;
+    }
 }
 
 #login_menu {
