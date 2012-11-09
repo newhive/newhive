@@ -204,7 +204,7 @@ Hive.Menus = (function(){
                 nav_menu.close(true);
                 //o.navigator_menu.close(true);
             }
-            else if( msg.match(/^layout=/) ){
+            else if( msg.match(/^layout=/) && nav_menu ){
                 var dims = msg.split('=')[1].split(',');
                 o.layout(dims);
             }
