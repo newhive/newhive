@@ -70,7 +70,7 @@ def launch_instance(name, category='dev', git_branch = 'master', **kwargs):
 
     print "\nsetting server name for ec2 console"
     instance.add_tag("Name", name)
-    print "adding dns routes for {}.newhive.com and {}.newhiveexpression.com".format(name)
+    print "adding dns routes for {name}.newhive.com and {name}.newhiveexpression.com".format(name=name)
     manage.route53.add_cname('newhive.com', name, instance.public_dns_name, no_confirmation=True)
     manage.route53.add_cname('newhiveexpression.com', name, instance.public_dns_name, no_confirmation=True)
 
