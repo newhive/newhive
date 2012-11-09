@@ -73,7 +73,7 @@ class Database:
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
         elif search.get('featured'):
-            return self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
+            results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -175,10 +175,10 @@ class Collection(object):
                     start = spec.index(page)
                     end = start + limit * -order
                     if end > start:
-                        if start == len(spec): return []
+                        if start == len(spec): return Page([])
                         sub_spec = spec[start+1:end+1]
                     else:
-                        if start == 0: return []
+                        if start == 0: return Page([])
                         if end - 1 < 0:
                             sub_spec = spec[start-1::-1]
                         else:
@@ -197,8 +197,8 @@ class Collection(object):
                 sub_spec = spec[ page * limit : end ]
 
             res = Page(self.fetch(sub_spec))
-            if type(page) == int:
-                res.next = page + 1 if end <= len(spec) else None
+            if not type(page) == int: page = 0
+            res.next = page + 1 if end <= len(spec) else None
             return res
 
     def count(self, spec={}): return self.search(spec).count()
