@@ -102,7 +102,8 @@ class PagingMixin(object):
     def expr_featured(self, request, response, paging_args, **kwargs):
         if (request.path_parts, 1): response.context['title'] = 'Featured Expressions'
         link_args(response, {'q': '#Featured'})
-        return self.db.Expr.page(self.db.User.root_user['tagged']['Featured'], **paging_args)
+        res = self.db.query('#Featured', **paging_args)
+        return res
 
     @paging_decorator
     def expr_all(self, request, response, paging_args, **kwargs):
