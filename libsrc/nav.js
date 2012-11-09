@@ -121,6 +121,38 @@ Hive.Menus = (function(){
             group: group }, swap_action_nav));
 
         o.update_owner( owner );
+        //
+        // email and embed menus
+        $(function(){
+            $('.menu_item.message').click(require_login('email', function(){showDialog('#dia_share')}));
+            var dia = $('#dia_share');
+            dia.find('form').submit(function(e){
+                var submit = dia.find('input[type=submit]');
+                if (submit.hasClass('inactive')) return false;
+                submit.addClass('inactive');
+                var callback = function(){
+                    submit.removeClass('inactive');
+                    dia.find('#email_to').val('');
+                    dia.children().hide();
+                    var tmp = $('<h2>Your message has been sent.</h2>').appendTo(dia);
+                    setTimeout(function(){
+                        dia.data('dialog').close();
+                        dia.children().show();
+                        tmp.remove();
+                    }, 1500);
+                };
+                asyncSubmit('#dia_share form', callback, {url: window.location.href});
+                _gaq.push(['_trackEvent', 'share', 'email']);
+                return false;
+            });
+
+            $('.menu_item.embed').click(function(){
+                showDialog('#dia_embed');
+                $('#dia_embed textarea').get(0).focus();
+            });
+        });
+
+
     };
 
     o.home_init = function(){
@@ -143,6 +175,7 @@ Hive.Menus = (function(){
         Hive.navigator.context('#Featured', false);
         Hive.navigator.populate_navigator();
 
+        Hive.Menus.update_expr(Hive.navigator.current_expr());
 
         var drawers = $('#owner_nav');
         drawers.show();
@@ -349,36 +382,6 @@ Hive.Menus = (function(){
         });
 
         $('#comment_form').submit(o.post_comment);
-
-        // email and embed menus
-        $(function(){
-            $('.menu_item.message').click(require_login('email', function(){showDialog('#dia_share')}));
-            var dia = $('#dia_share');
-            dia.find('form').submit(function(e){
-                var submit = dia.find('input[type=submit]');
-                if (submit.hasClass('inactive')) return false;
-                submit.addClass('inactive');
-                var callback = function(){
-                    submit.removeClass('inactive');
-                    dia.find('#email_to').val('');
-                    dia.children().hide();
-                    var tmp = $('<h2>Your message has been sent.</h2>').appendTo(dia);
-                    setTimeout(function(){
-                        dia.data('dialog').close();
-                        dia.children().show();
-                        tmp.remove();
-                    }, 1500);
-                };
-                asyncSubmit('#dia_share form', callback, {url: window.location.href});
-                _gaq.push(['_trackEvent', 'share', 'email']);
-                return false;
-            });
-
-            $('.menu_item.embed').click(function(){
-                showDialog('#dia_embed');
-                $('#dia_embed textarea').get(0).focus();
-            });
-        });
 
         var del_dialog;
         $('#action_nav .delete').click(function(){ del_dialog = showDialog('#dia_delete'); });
