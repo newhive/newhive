@@ -188,7 +188,7 @@ class Expression(Community, PagingMixin):
         if request.is_json:
             return self.info(request, response, expr)
         else:
-            return self.redirect(response, expr.url)
+            return self.redirect(response, expr.url + querystring({ 'q': '#All' }))
 
     def dialog(self, request, response):
         owner = request.owner
