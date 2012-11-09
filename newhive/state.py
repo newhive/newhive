@@ -145,7 +145,7 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None, filter=None):
+    def page(self, spec, limit=40, page=0, sort='updated', order=-1, viewer=None, filter=None):
         page_is_id = is_mongo_key(page)
         if page and not page_is_id:
             page = float(page)
@@ -168,37 +168,33 @@ class Collection(object):
 
         elif type(spec) == list:
             spec = uniq(spec)
-            if not page: page = '0'
+            if not page: page = spec[0]
+            assert( page_is_id or is_mongo_key(page) )
 
-            if page_is_id:
-                try:
-                    start = spec.index(page)
-                    end = start + limit * -order
-                    if end > start:
-                        if start == len(spec): return Page([])
-                        sub_spec = spec[start+1:end+1]
+            try:
+                start = spec.index(page)
+                end = start + limit * -order
+                if end > start:
+                    if start == len(spec): return Page([])
+                    sub_spec = spec[start+1:end+1]
+                else:
+                    if start == 0: return Page([])
+                    if end - 1 < 0:
+                        sub_spec = spec[start-1::-1]
                     else:
-                        if start == 0: return Page([])
-                        if end - 1 < 0:
-                            sub_spec = spec[start-1::-1]
-                        else:
-                            sub_spec = spec[start-1:end-1:-1]
-                except ValueError:
-                    # paging element not in list
-                    # TODO: would be better to raise a custom excpetion here so this situation
-                    # could be handled differently depending on application
-                    if order < 0:
-                        sub_spec = spec[0: limit]
-                    else:
-                        sub_spec = []
-            else:
-                page = int(page)
-                end = (page + 1) * limit
-                sub_spec = spec[ page * limit : end ]
+                        sub_spec = spec[start-1:end-1:-1]
+            except ValueError:
+                # paging element not in list
+                # TODO: would be better to raise a custom excpetion here so this situation
+                # could be handled differently depending on application
+                if order < 0:
+                    end = limit
+                    sub_spec = spec[0: end]
+                else:
+                    return Page([])
 
             res = Page(self.fetch(sub_spec))
-            if not type(page) == int: page = 0
-            res.next = page + 1 if end <= len(spec) else None
+            res.next = lget( sub_spec, end )
             return res
 
     def count(self, spec={}): return self.search(spec).count()
