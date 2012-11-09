@@ -799,6 +799,9 @@ Hive.Navigator.create = function(navigator, viewer, opts){
                 o.select_by_id(state.data.id);
             }
         };
+        // This redirect applies for the home page, since replaceState was
+        // never called and there is no data saved with the state.
+        if (!state.data.context) window.location = window.location;
         if (state.data.context != o.context()){
             o.context(state.data.context, false);
             //o.populate_navigator(select_expr);
