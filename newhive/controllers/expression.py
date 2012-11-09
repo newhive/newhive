@@ -101,8 +101,6 @@ class Expression(Community, PagingMixin):
         if is_owner: resource.owner.unflag('expr_new')
         expr_url = abs_url(domain = config.content_domain) + resource.id
 
-        self.item_prepare(resource, viewer=response.user)
-
         response.context.update(
              domain = request.domain
             ,owner = owner
@@ -115,7 +113,7 @@ class Expression(Community, PagingMixin):
         response.context.update(
              expr_frame = True
             ,title = resource.get('title', False)
-            ,expr = self.item_prepare(resource)
+            ,expr = self.item_prepare(resource, viewer=response.user)
             ,expr_url = expr_url
         )
 

@@ -433,6 +433,11 @@ body.frame{
 
     .listen.off .icon { background-image: asset_url('skin/1/listen.png') }
     .listen.on .icon { background-image: asset_url('skin/1/listening.png') }
+    .owner_name { /* prevent long usernames from overlapping */
+        max-width: 135px;
+        overflow: hidden;
+        display: inline-block;
+    }
 }
 
 #share_menu {
