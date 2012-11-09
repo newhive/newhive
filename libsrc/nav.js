@@ -162,14 +162,14 @@ Hive.Menus = (function(){
             .attr('href', 'http://facebook.com/thenewhive')
             .append('<img>')
           .children()
-            .attr('src',  asset('skin/1/facebook.png'))
+            .attr('src',  asset('skin/1/social/facebook.png'))
           .parent();
 
         var twitter = $('<a>')
             .attr('href', 'http://twitter.com/newhive')
             .append('<img>')
           .children()
-            .attr('src',  asset('skin/1/twitter.png'))
+            .attr('src',  asset('skin/1/social/twitter.png'))
           .parent();
 
         var social_icons = $('<div>')
@@ -197,26 +197,24 @@ Hive.Menus = (function(){
         Hive.navigator.update_opts({onexpressionchange: uninitialize});
     };
 
-    var window_message_listeneres_added;
     var add_window_message_listeners = function(nav_menu){
-        if (window_message_listeneres_added) return;
-        window.addEventListener('message', function(m){
-            if(m.data == 'focus' && nav_menu) {
+        $(window).off('message').on('message', function(e){
+            var msg = e.originalEvent.data;
+            if(msg == 'focus' && nav_menu) {
                 nav_menu.close(true);
                 //o.navigator_menu.close(true);
             }
-            else if( m.data.match(/^layout=/) && nav_menu ){
-                var dims = m.data.split('=')[1].split(',');
+            else if( msg.match(/^layout=/) ){
+                var dims = msg.split('=')[1].split(',');
                 o.layout(dims);
             }
-            else if (m.data == 'signup') {
+            else if (msg == 'signup') {
                 require_login('drawoneme');
             }
-            else if (m.data == 'video') {
+            else if (msg == 'video') {
                 showDialog('#dia_video');
             }
-        }, false);
-        window_message_listeneres_added = true;
+        });
     };
 
 
