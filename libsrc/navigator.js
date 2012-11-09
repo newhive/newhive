@@ -240,7 +240,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         return o;
     };
     o.random = function(){
-        o.context('#All');
+        o.context('#All', 'replaceState');
         $.getJSON('/random?json=1', show_expression_not_in_list);
     };
 
@@ -507,15 +507,16 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
     var current_context = null;
     var last = [];
-    o.context = function(str, push_state) {
+    o.context = function(str, method) {
         if (typeof(str) == "undefined") return current_context;
+        if (typeof(method) == "undefined") method = "pushState";
 
-        if (!str) str = '#Featured';
+        if (!str) str = '#All';
         navigator_element.find('input').val(str);
         current_context = str;
 
-        if (push_state !== false) {
-            history_manager.pushState( {id: current_expr.id, context: current_context},
+        if (method !== false) {
+            history_manager[method]( {id: current_expr.id, context: current_context},
                 current_expr.title, o.current_url() );
         }
 
@@ -594,14 +595,18 @@ Hive.Navigator = function(navigator_element, content_element, opts){
                 if( qargs.user ) query = '@' + qargs.user;
                 if( qargs.tag ) query += (query ? ' ' : '') + '#' + qargs.tag;
             }
-            o.context(query);
+            if (!query) query = "#Featured";
+            o.context(query, "replaceState");
         }
 
 
         if (opts.initial_replaceState) {
             o.populate_navigator();
-            // normalize the URL, not really sure why this is necessary
-            //history_manager.replaceState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+            history_manager.replaceState(
+                {id: current_expr.id, context: o.context()},
+                current_expr.title,
+                window.location.href
+            );
         }
         current_expr.frame = frame;
         current_expr.show();
