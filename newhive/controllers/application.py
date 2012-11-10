@@ -99,8 +99,6 @@ class Application(object):
             ,secure_server = abs_url(secure = True)
             ,server_name = config.server_name
             ,content_domain = abs_url(domain = config.content_domain)
-            ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k])
-                for k in config.site_pages])
             ,debug = config.debug_mode
             ,ui = ui
             ,template = template
@@ -227,7 +225,7 @@ class Application(object):
             return None
 
     def site_page_url(self, name):
-        url = AbsUrl(user=config.site_user, page=config.site_pages[name])
+        url = AbsUrl(user=config.site_user, page=name)
         url.query.update({'user': config.site_user})
         return url
 
