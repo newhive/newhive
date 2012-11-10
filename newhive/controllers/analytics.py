@@ -10,8 +10,6 @@ import operator as op
 _index = []
 
 def data_frame_to_json(df, outtype='dict'):
-    if type(df) == pandas.Series:
-        df = pandas.DataFrame(df)
     if hasattr(df.index[0], 'timetuple'):
         index = [datetime_to_int(date) for date in df.index]
     elif type(df.index[0]) == pandas.np.int64:
@@ -42,20 +40,12 @@ class Analytics(Application):
         _index.append(method)
         return method
 
-    def _iso_args(self, args, output='epoch'):
-        start_end = (args.get('start'), args.get('end'))
-
-        # a little functional programming for fun and profit
-        funcs = [ lambda x: datetime.strptime(x, "%Y-%m-%d") ]
-        if output == 'epoch':
-            funcs.append( lambda x: int(time.mktime(x.timetuple())) )
-        elif output == 'date':
-            funcs.append( lambda x: x.date() )
-
-        for func in funcs:
-            start_end = map(lambda x: func(x) if x else None, start_end)
-
-        return start_end
+    def _iso_args(self, args):
+        start = args.get('start')
+        if start: start = int(time.mktime(time.strptime(start, "%Y-%m-%d")))
+        end = args.get('end')
+        if end: end = int(time.mktime(time.strptime(end, "%Y-%m-%d")))
+        return (start, end)
 
     @index
     def active_users(self, request, response):
@@ -481,20 +471,3 @@ class Analytics(Application):
         response.context['title'] = "Visits and Visitor Summary"
 
         return self.serve_page(response, 'pages/analytics/ga_summary.html')
-
-    @admins
-    @index
-    def expressions_per_day(self, request, response):
-        """Expressions per day"""
-        start, end = self._iso_args(request.args, output='date')
-        data = queries.ExpressionsCreatedPerDay(self.db).execute()
-        if not start: start = local_date() - pandas.DateOffset(days=30)
-        data = data[ data.index >= start ]
-        if end: data = data[ data.index <= end ]
-        data = pandas.DataFrame(data)
-        data['total'] = data.pop('created')
-        response.context['data'] = data_frame_to_json(data)
-        response.context['title'] = "Expressions created per day"
-        response.context['table'] = data.to_html()
-        return self.serve_page(response, 'pages/analytics/active_total_chart.html')
-
