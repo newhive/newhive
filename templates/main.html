@@ -160,9 +160,11 @@
         </div>
         {#<div class='menu_item'>Profile</div>#}
         <div class='menu_item listen off'>
-          <span class='off'>Listen to</span>
-          <span class='on' title="Stop listening">Listening to</span>
-          <span class='owner_name'>{{ owner.name | capitalize }}</span>
+          <div class='listen_text'>
+            <span class='off'>Listen to</span>
+            <span class='on' title="Stop listening">Listening to</span>
+            <span class='owner_name'>{{ owner.name | capitalize }}</span>
+          </div>
           <div class='icon'></div>
         </div>
         {#<div class='menu_item message'>Send message <div class='icon'></div></div>#}
