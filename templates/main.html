@@ -67,7 +67,7 @@
   <div id='hive_menu'>
     <div class='menu find'>
       <a href='/random' title="View Random Expression" class='random_link'><div class='random_btn icon hoverable rounded'></div></a>
-      <form method='GET' action='{{ server_url }}search' name='search_form'>
+      <form method='GET' action='/search' name='search_form'>
         <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
         <div class='hoverable icon scale submit' title='Submit search' onclick='document.forms.search_form.submit()'></div>
       </form>
@@ -75,11 +75,11 @@
 
     <div class='menu links'
       {% if user.logged_in %}
-        ><a href='{{ server_url }}home/network'><div class='menu_item default primary'>My Network</div></a
-        ><a href='{{ server_url }}home/expressions'><div class='menu_item primary'>Expressions</div></a
-        ><a href='{{ server_url }}home/people'><div class='menu_item primary'>People</div></a
+        ><a href='/home/network'><div class='menu_item default primary'>My Network</div></a
+        ><a href='/home/expressions'><div class='menu_item primary'>Expressions</div></a
+        ><a href='/home/people'><div class='menu_item primary'>People</div></a
       {% endif %}
-      ><a href='{{ server_url }}thenewhive/about?q=%40thenewhive'><div class='menu_item'>About NewHive</div></a
+      ><a href='/thenewhive/about?q=%40thenewhive'><div class='menu_item'>About NewHive</div></a
       {% if user.logged_in %}
         ><div class='menu_item email_invites'>Email Invites</div
         {% if user.has_facebook %}
@@ -162,7 +162,7 @@
         <div class='menu_item listen off'>
           <span class='off'>Listen to</span>
           <span class='on' title="Stop listening">Listening to</span>
-          <span class='owner_name'>{{ owner.name }}</span>
+          <span class='owner_name'>{{ owner.name | capitalize }}</span>
           <div class='icon'></div>
         </div>
         {#<div class='menu_item message'>Send message <div class='icon'></div></div>#}
