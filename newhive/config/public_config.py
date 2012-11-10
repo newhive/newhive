@@ -47,11 +47,6 @@ beta_testers = admins + beta_testers
 
 site_user       = 'thenewhive'
 admins.append(site_user)
-site_pages      = {
-     'editor-help'  : 'default-instructional'
-    ,'profile-help' : 'profile-help'
-    ,'welcome'      : 'welcome'
-    }
 
 content_domain = 'newhiveexpression.com'
 

@@ -45,7 +45,7 @@
   {% if profile and user_is_owner %}
     <div class='nav_icon text hoverable medbold center pad' onclick="" title="Help with your profile" style='margin-right : 8px;' id='btn_help'>?</div>
     <script>
-      $('#btn_help').click(function() { exprDialog('{{ site_pages['profile-help'] }}', { minimize_to : $('#btn_help') } ) });
+      $('#btn_help').click(function() { exprDialog('/thenewhive/profile-help', { minimize_to : $('#btn_help') } ) });
       {% if show_help %}$('#btn_help').click();{% endif %}
     </script>
   {% endif %}

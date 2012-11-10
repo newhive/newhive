@@ -37,7 +37,7 @@
 ></div>
 <script>
   (function() { var b = $('#btn_help');
-      b.click(function() { exprDialog('{{ site_pages['editor-help'] }}',
+      b.click(function() { exprDialog('/thenewhive/default-instructional',
           { minimize_to: b, click_close: true } ) });
      {% if show_help %}$('#btn_help').click();{% endif %}
   })();
