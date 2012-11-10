@@ -43,7 +43,7 @@ Hive.Menus = (function(){
         if( o.nav_menu.opened ) $('#action_nav, #owner_nav').css('right', opts.pad_right);
     };
 
-    o.init = function(group, hide_action_nav){
+    o.init = function(group){
         if(!group) group = { menus: [] };
 
         hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
@@ -106,8 +106,7 @@ Hive.Menus = (function(){
         var swap_action_nav = {
             open: function(){ $('#action_nav').hide(); },
             close: function(){
-                if (hide_action_nav) return;
-                $('#action_nav').show();
+                if ($.inArray('action', Hive.config.frame.nav.visible) != -1) $('#action_nav').show();
             }
         };
 
@@ -162,8 +161,8 @@ Hive.Menus = (function(){
     };
 
     o.home_init = function(){
-        // Perform standard menu initialization
-        o.init(undefined, true);
+        Hive.config.frame.navigator.hideable = false;
+        Hive.config.frame.nav.visible = ['owner'];
 
         // Set up special version of navigator
         if (!Hive.navigator) {
@@ -181,10 +180,7 @@ Hive.Menus = (function(){
         Hive.navigator.context('#Featured', false);
         Hive.navigator.populate_navigator();
 
-        Hive.Menus.update_expr(Hive.navigator.current_expr());
-
-        var drawers = $('#owner_nav');
-        drawers.show();
+        o.expr_init();
 
         // Set up owner nav customizations
         var about_btn = $('<div>')
@@ -217,16 +213,17 @@ Hive.Menus = (function(){
 
         $('#owner_nav').append(about_btn).append(social_icons);
 
-        $('#owner_btn, #action_nav').hide();
-
-        add_window_message_listeners();
+        $('#owner_btn').hide();
 
         uninitialized = false;
         var uninitialize = function(){
             if (uninitialized) return;
             uninitialized = true;
-            Hive.Menus.expr_init();
-            Hive.load_expr(Hive.navigator.current_expr());
+
+            Hive.config.frame.navigator.hideable = true;
+            Hive.config.frame.nav.visible = ['owner', 'user', 'action'];
+            Hive.Menus.show_drawers();
+
             about_btn.remove();
             social_icons.remove();
             $('#owner_btn').show();
@@ -357,7 +354,12 @@ Hive.Menus = (function(){
         o.init(nav_menu);
         var initial_state = config.nav.open_initially ? open_state(opts) : close_state;
         animate_each(initial_state, 0);
-        drawers.show();
+
+        o.show_drawers = function(){
+            var selector = $.map(Hive.config.frame.nav.visible, function(el){ return "#" + el + "_nav"; }).join(',');
+            drawers.filter(selector).show();
+        }
+        o.show_drawers();
 
         o.action_nav_top = 70;
         var menu_top = o.action_nav_top + 4;
