@@ -588,10 +588,13 @@ hover_menu = function(handle, drawer, options) {
                     && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
                     hp.top - drawer.outerHeight() - opts.offset_y : hp.top + oy;
 
-                if( opts.layout_x == 'auto' ) opts.layout_x =
-                    (handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
-                        'right' : 'left');
-                css_opts.left = ( opts.layout_x == 'right' ?
+                var layout_x = opts.layout_x;
+                if( layout_x == 'auto' ) {
+                    var drawer_right = handle.offset().left + drawer.outerWidth();
+                    var window_right = $(window).width() + window.scrollX;
+                    layout_x = (drawer_right > window_right) ? 'right' : 'left';
+                }
+                css_opts.left = ( layout_x == 'right' ?
                     hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
             }
             else if( opts.layout == 'center_y' ){

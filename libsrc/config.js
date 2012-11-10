@@ -9,7 +9,8 @@ Hive.config = {
         nav: {
             open_initially: true,
             hideable: false,
-            opens_navigator: false
+            opens_navigator: false,
+            visible: ['action', 'user', 'owner']
         },
         navigator: {
             open_initially: false,
