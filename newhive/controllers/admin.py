@@ -1,5 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers import Application
+import newhive.auth
 from newhive import mail
 from werkzeug import Response
 
@@ -61,6 +62,14 @@ class Admin(Application):
                     , 'private': private_expressions.count()
                     }
             return self.serve_page(response, 'pages/admin/user.html')
+
+    # Facilitates testing user-specific bugs.  Only use with permission of user!
+    @admins
+    def log_in_as(self, request, response):
+        user = request.args.get('user')
+        user = self.db.User.named(user)
+        newhive.auth.new_session(self.db, user, request, response)
+        return self.redirect(response, AbsUrl(user['name'] + '/profile'))
 
     @admins
     def add_referral(self, request, response):
