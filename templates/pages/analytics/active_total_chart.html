@@ -6,7 +6,7 @@
   var data = {{data}};
   var chart;
   $(function(){
-    chart = d3.select("#content").append("svg").attr("class", "chart").attr("width", 1300).attr("height", 620);
+    chart = d3.select("#chart").append("svg").attr("class", "chart").attr("width", 1300).attr("height", 620);
     chart.opts = {width: 1200, height: 500, paddingTop: 10, paddingLeft: 40};
     var y = chart.y = d3.scale.linear().domain([0, d3.max(data.total)]).range([0, chart.opts.height]);
     var y_pct = chart.y = d3.scale.linear().domain([0, 1]).range([0, chart.opts.height]);
@@ -75,9 +75,18 @@
   </style>
 {% endblock %}
 
+
 {% block header %}<h1>{{title}}</h1>{% endblock %}
-{% block table_classes %}{% endblock %}
-{% block table_head %}
-{% endblock %}
-{% block table_body %}
-{% endblock %}
+{% if table %}
+    {% block content %}
+        {{ super() }}
+        <div id="chart"></div>
+        {{ table | safe }}
+    {% endblock %}
+
+    {% block table_classes %}{% endblock %}
+    {% block table_head %}
+    {% endblock %}
+    {% block table_body %}
+    {% endblock %}
+{% endif %}
