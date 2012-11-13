@@ -696,7 +696,7 @@ class User(HasSocial):
             thumb = self.get_thumb(70),
             has_thumb = self.has_thumb
         ) )
-        if viewer: user.update( listening = self.id in viewer.starred_user_ids )
+        if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         return user
 
     def delete(self):

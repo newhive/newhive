@@ -1523,7 +1523,7 @@ Hive.App.Sketch = function(o) {
 
     function controls(o) {
         var common = $.extend({}, o);
-        
+       
         o.addControls($('#controls_sketch'));
         Hive.append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, '#000000');
 
@@ -1533,7 +1533,6 @@ Hive.App.Sketch = function(o) {
         var brush_btn = o.div.find('.button.brush')
             .click( function(){
                  o.app.set_brush( o.app.brush_name );
-
             });
         var brush_menu = o.hover_menu(brush_btn, o.div.find('.drawer.brush'));
         o.div.find('.button.eraser').click( function(){ o.app.win.set_brush( 'eraser' ) });
@@ -1544,6 +1543,7 @@ Hive.App.Sketch = function(o) {
             $(e).addClass("selected");
             brush_menu.close();
         }); })
+        o.div.find('.drawer.brush .option[val=' + o.app.brush_name + ']').click();
 
         return o;
     };
@@ -1561,8 +1561,8 @@ Hive.App.Sketch = function(o) {
     o.div.append(o.content_element);
     o.content_element.load(function() {
         o.win = o.content_element.get(0).contentWindow;
-        o.load();
         if(o.init_state.content) o.set_content(o.init_state.content);
+        o.load();
     });
     o.update_shield();
 
