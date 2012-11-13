@@ -562,9 +562,20 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         if (!current_expr || last[direction]) return;
 
         search_args = { q: o.context(), limit: count, order: -direction, json: 't', expr_only: 't' };
-        var page = current_expr.id, feed = current_expr.feed;
-        if( feed && feed.length) page = feed[ (direction === 1) ? feed.length - 1 : 0 ]['created'];
-        search_args.page = page
+        if (current_expr.site_expr) {
+            // If site_expr is true (e.g. homepage), show items from the start of the
+            // collection (accomplished by no setting the page  queryarg), and only
+            // populate the navigator in the forward direction.
+            if (direction < 0 ){
+                callback([]);
+                return;
+            }
+        } else {
+            var page = current_expr.id;
+            var feed = current_expr.feed;
+            if( feed && feed.length) page = feed[ (direction === 1) ? feed.length - 1 : 0 ]['created'];
+            search_args.page = page;
+        }
 
         var uri = URI( '/search' );
         uri.addQuery( search_args );
