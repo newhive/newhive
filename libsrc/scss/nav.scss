@@ -405,9 +405,11 @@ body.frame{
 
     .menu { display: inline-block; position: static; }
     .find { }
+    br + .links {
+        margin-top: 8px;
+    }
     .links {
         color: $color_grey_medium;
-        margin-top: 8px;
         cursor: pointer;
 
         .primary { color: black; }

@@ -46,8 +46,10 @@ Hive.Menus = (function(){
     o.init = function(group){
         if(!group) group = { menus: [] };
 
-        hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
-            $('#search_box').get(0).focus(); }, group: group } );
+        hover_menu( '#logo', '#hive_menu', { offset_y: 8, group: group, open: function(){
+            var search = $('#search_box').get(0);
+            if (search) search.focus();
+        }} );
 
         if(logged_in) {
             hover_menu( '#user_btn', '#user_menu', { offset_y: 8, group: group, open: function(){
@@ -177,8 +179,7 @@ Hive.Menus = (function(){
             );
         }
         Hive.navigator.current_expr().site_expr = true;
-        Hive.navigator.context('#Featured', false);
-        Hive.navigator.populate_navigator();
+        Hive.navigator.context('#Featured', false);  // also populates navigator
 
         o.expr_init();
 

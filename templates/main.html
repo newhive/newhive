@@ -65,13 +65,15 @@
 </div>
 
   <div id='hive_menu'>
-    <div class='menu find'>
-      <a href='/random' title="View Random Expression" class='random_link'><div class='random_btn icon hoverable rounded'></div></a>
-      <form method='GET' action='/search' name='search_form'>
-        <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
-        <div class='hoverable icon scale submit' title='Submit search' onclick='document.forms.search_form.submit()'></div>
-      </form>
-    </div><br>
+    {% if user.logged_in %}
+        <div class='menu find'>
+          <a href='/random' title="View Random Expression" class='random_link'><div class='random_btn icon hoverable rounded'></div></a>
+          <form method='GET' action='/search' name='search_form'>
+            <input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}' class='scale'/>
+            <div class='hoverable icon scale submit' title='Submit search' onclick='document.forms.search_form.submit()'></div>
+          </form>
+        </div><br>
+    {% endif %}
 
     <div class='menu links'
       {% if user.logged_in %}
