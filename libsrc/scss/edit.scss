@@ -56,6 +56,8 @@
 
 .control.stack { white-space : nowrap; }
 .control.buttons .button { margin-right : 2px; float : left; }
+.drawer.brush .option:hover { background-color: $color_selected; }
+.drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
 .button.blank { display : inline-block; background-image : asset_url('skin/1/button.png'); width : 28px; height : 28px; line-height : 28px; text-align : center; font-weight : bold; }
 .option.small { display : inline-block; }
