@@ -547,7 +547,7 @@ class User(HasSocial):
         return exprs
 
     def build_search(self, d):
-        d['text_index'] = list( set( normalize( self['name'] + ' ' + self.get('fullname', '') ) ) )
+        d['text_index'] = normalize( self['name'] + ' ' + self.get('fullname', '') )
 
     def new_referral(self, d, decrement=True):
         if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
@@ -847,9 +847,9 @@ class Expr(HasSocial):
     def build_search(self, d):
         tags = d.get('tags')
         tag_list = []
-        if tags: tag_list = d['tags_index'] = list( set( normalize(tags) ) )
+        if tags: tag_list = d['tags_index'] = normalize(tags)
 
-        d['title_index'] = list( set( normalize( self.get('title', '') ) ) )
+        d['title_index'] = normalize( self.get('title', '') )
 
         text_index = []
         for a in d.get('apps', []):
