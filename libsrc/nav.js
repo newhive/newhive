@@ -576,9 +576,7 @@ Hive.Menus = (function(){
         $('#owner_btn').toggleClass('none', is_owner);
         if( !owner || is_owner ) return;
 
-        $('#owner_menu .listen').removeClass('on off').addClass( owner.listening ? 'on' : 'off' );
-
-        $.getJSON(server_url + 'user/' + owner.id, function(data, status, jqXHR){
+        $.getJSON('/user/' + owner.id, function(data, status, jqXHR){
             var thumbs = $('#owner_menu .thumbs');
             thumbs.html('');
             $.map(data.exprs, function(e){
@@ -592,6 +590,8 @@ Hive.Menus = (function(){
             });
 
             $('#owner_menu .items').html(data.feed_html);
+
+            $('#owner_menu .listen').removeClass('on off').addClass( data.listening ? 'on' : 'off' );
         });
     };
 

@@ -160,7 +160,7 @@ class User(Application):
         else: return self.serve_forbidden(response)
 
     def info(self, request, response):
-        user = self.db.User.fetch(lget(request.path_parts, 1))
+        user = self.db.User.fetch(lget(request.path_parts, 1)).client_view(viewer = request.requester)
         if not user: return self.serve_404(request, response)
 
         items = user.feed_profile(viewer=request.requester, limit=20)
@@ -170,7 +170,7 @@ class User(Application):
         exprs = [ { 'id': e.id, 'title': e.get('title'), 'thumb': e.get_thumb(70), 'url': e.url }
             for e in user.expr_page(limit=5) ]
 
-        return self.serve_json( response, dict(feed_html = feed_html, exprs = exprs) )
+        return self.serve_json( response, dict(feed_html = feed_html, exprs = exprs, listening = user['listening'] ) )
 
     def facebook_canvas(self, request, response, args={}):
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited' + querystring({'request_ids': request.args.get('request_ids','')}) + '";</script></html>')
