@@ -300,11 +300,6 @@ class Entity(dict):
 
 # Common code between User and Expr
 class HasSocial(Entity):
-    # TODO: remove this after migration for deleting feed attribute
-    def __init__(self, col, doc):
-        if doc.has_key('feed'): del doc['feed']
-        super(HasSocial, self).__init__(col, doc)
-
     @property
     @memoized
     def starrer_ids(self):
@@ -487,7 +482,7 @@ class User(HasSocial):
         for i, item in enumerate(res):
             if item.type == 'FriendJoined': continue
             entity = item.initiator if item.entity.id == self.id else item.entity
-            entity.feed = [item]
+            entity['feed'] = [item]
             res[i] = entity
         return res
 
@@ -689,8 +684,10 @@ class User(HasSocial):
     recent_expressions = property(get_recent_expressions)
 
     def client_view(self, viewer=None):
-        user = self.db.User.new( dfilter( self,
-            ['_id', 'fullname', 'profile_thumb', 'name', 'tags', 'updated', 'created'] ) )
+        print self.get('feed')
+        user = self.db.User.new( dfilter( self, ['_id', 'fullname', 'profile_thumb', 'thumb_file_id',
+            'name', 'tags', 'updated', 'created', 'feed'] ) )
+        print 'filtered: ', user.get('feed')
         dict.update(user, dict(
             url = self.url,
             thumb = self.get_thumb(70),

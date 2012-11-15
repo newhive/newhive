@@ -94,8 +94,8 @@ class PagingMixin(object):
             if args: paging_args.update(args)
             cards = func(self, request, response, paging_args, **kwargs)
             self.set_next_page( request, response, cards )
-            response.context.update( cards = map(
-                lambda o: self.item_prepare(o), cards ) )
+            cards = map( lambda o: self.item_prepare(o), cards )
+            response.context.update( cards = cards)
         return wrapped
 
     @paging_decorator
@@ -164,8 +164,11 @@ class PagingMixin(object):
 
     # destructively prepare state.Expr for client consumption
     def item_prepare(self, item, viewer=None, password=None):
-        if type( item ) == state.User: return item.client_view(viewer=viewer)
-        expr = item
+        if type( item ) == state.User:
+            return item.client_view(viewer=viewer)
+        elif type( item ) == state.Expr:
+            expr = item
+        else: return item
 
         counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
             k, v in expr.get('analytics', {}).iteritems() ])
