@@ -31,13 +31,25 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     var expr_width = opts.thumb_width + 2 * opts.margin;
     if (!opts.visible_count) opts.visible_count = Math.round($(window).width() / expr_width * 2);
     var history_manager = function(){
-        var o = window.History;
-        _pushState = o.pushState;
-        o.pushState = function(data, title, url){
+        var navigator = o;
+        var hm = window.History;
+        _pushState = hm.pushState;
+        hm.pushState = function(data, title, url){
             _pushState(data, title, url);
             _gaq.push(['_trackPageview', url])
         };
-        return o;
+        var push_replace = function(method){
+            return function(expr){
+                hm[method](
+                    {id: expr.id, context: navigator.context(), site_expr: expr.site_expr}
+                    , expr.title
+                    , navigator.current_url()
+                );
+            };
+        };
+        hm.push = push_replace('pushState');
+        hm.replace = push_replace('replaceState');
+        return hm;
     }();
 
     // private variables
@@ -210,7 +222,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
             frame.css('z-index', 1);
         };
 
-        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        history_manager.push(current_expr);
 
         previous_expr.hide();
         current_expr.show(offset);
@@ -232,7 +244,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     function show_expression_not_in_list(data){
         current_expr = o.make_expr(data);
         current_expr.load();
-        history_manager.pushState({id: current_expr.id, context: o.context()}, current_expr.title, o.current_url());
+        history_manager.push(current_expr);
         o.populate_navigator(function(){ o.select(0) });
     };
     function load_expr(id){
@@ -240,7 +252,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
         return o;
     };
     o.random = function(){
-        o.context('#All', 'replaceState');
+        o.context('#All', 'replace');
         $.getJSON('/random?json=1', show_expression_not_in_list);
     };
 
@@ -462,7 +474,10 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     };
 
     o.current_url = function(context){
-        var url = URI('/' + current_expr.owner_name + '/' + current_expr.name);
+        var path = current_expr.site_expr ? 
+                window.location.pathname : '/' + current_expr.owner_name + '/' + current_expr.name;
+
+        var url = URI(path);
         url.addQuery({ q: o.context() });
         return url.toString();
     };
@@ -509,15 +524,14 @@ Hive.Navigator = function(navigator_element, content_element, opts){
     var last = [];
     o.context = function(str, method) {
         if (typeof(str) == "undefined") return current_context;
-        if (typeof(method) == "undefined") method = "pushState";
+        if (typeof(method) == "undefined") method = "push";
 
         if (!str) str = '#All';
         navigator_element.find('input').val(str);
         current_context = str;
 
         if (method !== false) {
-            history_manager[method]( {id: current_expr.id, context: current_context},
-                current_expr.title, o.current_url() );
+            history_manager[method](current_expr);
         }
 
         // populate_navigator depends on current url so must come after pushState
@@ -613,11 +627,7 @@ Hive.Navigator = function(navigator_element, content_element, opts){
 
         if (opts.initial_replaceState) {
             o.populate_navigator();
-            history_manager.replaceState(
-                {id: current_expr.id, context: o.context()},
-                current_expr.title,
-                window.location.href
-            );
+            history_manager.replace(current_expr);
         }
         current_expr.frame = frame;
         current_expr.show();
@@ -812,12 +822,13 @@ Hive.Navigator.create = function(navigator, viewer, opts){
         var state = History.getState(); // Note: We are using History.getState() instead of event.state
         var select_expr = function(){
             if (state.data.id != o.current_id()) {
+                if (state.data.site_expr) window.location = window.location;
                 o.select_by_id(state.data.id);
             }
         };
         // This redirect applies for the home page, since replaceState was
         // never called and there is no data saved with the state.
-        if (!state.data.context) window.location = window.location;
+        if (!state.data.context ) window.location = window.location;
         if (state.data.context != o.context()){
             o.context(state.data.context, false);
             //o.populate_navigator(select_expr);

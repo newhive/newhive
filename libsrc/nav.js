@@ -179,7 +179,8 @@ Hive.Menus = (function(){
             );
         }
         Hive.navigator.current_expr().site_expr = true;
-        Hive.navigator.context('#Featured', false);  // also populates navigator
+        var context = URI(window.location.href).query(true).q || '#Featured';
+        Hive.navigator.context(context, false);  // also populates navigator
 
         o.expr_init();
 
