@@ -2,7 +2,7 @@
 
 <a href='{{ item.get_url(relative=True) }}'><div class='user card item border_right border_bottom {{ item.id }} with_hide' draggable='false'>
   <input type='hidden' class='entity_id' value='{{ item.id }}'>
-  <img src='{{ item.get_thumb(70) }}' style='background: {{ colors[range(32)|random] }};' class='thumb'>
+  <img src='{{ item.get_thumb(190) }}' style='background: {{ colors[range(32)|random] }};' class='thumb'>
   <div class='title'>{{ item.fullname|e }}</div>
   <div class='tags'>{% if item and item.expr_count > 0 %}{{ item.expr_count ~ " expression" ~ ("s" if item.expr_count > 1) }}{% endif %}</div>
   <div class='other'><span>{{ item.name }}</span></div>

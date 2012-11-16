@@ -145,6 +145,15 @@ class memoized(object):
       """Support instance methods."""
       return functools.partial(self.__call__, obj)
 
+def cached(fn):
+    cache = { 'cached': False, 'cache': None }
+    def inner(self):
+        if not cache['cached']:
+            cache['cache'] = fn(self)
+            cache['cached'] = True
+        return cache['cache']
+    return inner
+
 def bound(num, lower_bound, upper_bound):
     if num < lower_bound: return lower_bound
     if num > upper_bound: return upper_bound

@@ -301,7 +301,7 @@ class Entity(dict):
 # Common code between User and Expr
 class HasSocial(Entity):
     @property
-    @memoized
+    @cached
     def starrer_ids(self):
         return [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
     @property
@@ -315,7 +315,7 @@ class HasSocial(Entity):
         return self.db.Star.search(spec)
 
     @property
-    @memoized
+    @cached
     def broadcast_count(self):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
 
@@ -444,19 +444,21 @@ class User(HasSocial):
         return self.db.Expr.page(spec, viewer=viewer, **args)
 
     @property
-    @memoized
+    @cached
     def my_stars(self):
         """ Feed records indicating what expressions a user likes and who they're listening to """
         return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
     @property
-    def starred_user_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
+    @cached
+    def starred_user_ids(self):
+        return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
     @property
     def starred_expr_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
 
     def starred_user_page(self, **args): return self.collection.page(self.starred_user_ids, **args)
 
     @property
-    @memoized
+    @cached
     def broadcast(self): return self.db.Broadcast.search({ 'initiator': self.id })
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
@@ -684,10 +686,8 @@ class User(HasSocial):
     recent_expressions = property(get_recent_expressions)
 
     def client_view(self, viewer=None):
-        print self.get('feed')
         user = self.db.User.new( dfilter( self, ['_id', 'fullname', 'profile_thumb', 'thumb_file_id',
             'name', 'tags', 'updated', 'created', 'feed'] ) )
-        print 'filtered: ', user.get('feed')
         dict.update(user, dict(
             url = self.url,
             thumb = self.get_thumb(70),
