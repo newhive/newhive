@@ -302,9 +302,9 @@ def handle_safe(request):
         db.ErrorLog.create(log_entry)
         raise
 
-from werkzeug.contrib.profiler import ProfilerMiddleware
-application = ProfilerMiddleware(handle_safe, sort_by=('cumulative', 'calls'))
-#application = handle_safe
+#from werkzeug.contrib.profiler import ProfilerMiddleware
+#application = ProfilerMiddleware(handle_safe, sort_by=('cumulative', 'calls'))
+application = handle_safe
 #application = handle_debug
 logger.info("WSGI initialization complete")
 

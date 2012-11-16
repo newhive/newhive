@@ -20,6 +20,7 @@ class Feed(Application):
             if not s: s = self.db.Star.create(request.requester, entity)
             state = True
 
+        print entity['name'], state
         return { 'state': state }
 
     def broadcast(self, request, response):

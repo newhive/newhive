@@ -146,12 +146,11 @@ class memoized(object):
       return functools.partial(self.__call__, obj)
 
 def cached(fn):
-    cache = { 'cached': False, 'cache': None }
     def inner(self):
-        if not cache['cached']:
-            cache['cache'] = fn(self)
-            cache['cached'] = True
-        return cache['cache']
+        prop = '_cache_' + fn.__name__
+        if not hasattr(self, prop):
+            setattr(self, prop, fn(self))
+        return getattr(self, prop)
     return inner
 
 def bound(num, lower_bound, upper_bound):

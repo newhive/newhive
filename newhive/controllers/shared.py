@@ -149,7 +149,9 @@ class PagingMixin(object):
 
     @paging_decorator
     def listening(self, request, response, paging_args, **kwargs):
-        return request.owner.starred_user_page(**paging_args)
+        res = request.owner.starred_user_page(**paging_args)
+        print res
+        return res
 
     @paging_decorator
     def listeners(self, request, response, paging_args, **kwargs):
