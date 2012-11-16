@@ -191,7 +191,7 @@ class Collection(object):
                     return Page([])
 
             res = Page(self.fetch(sub_spec))
-            res.next = sub_spec[-1]
+            res.next = lget(sub_spec, -1)
             return res
 
     def count(self, spec={}): return self.search(spec).count()

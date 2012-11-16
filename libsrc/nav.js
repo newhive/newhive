@@ -439,7 +439,8 @@ Hive.Menus = (function(){
             //.click(function(){ Hive.navigator.context('@' + name); return false; });
     };
     o.face_link = function(name, id, thumb){
-        return o.user_link(name, id).append( $('<img>').attr('src', thumb).addClass('thumb') );
+        return o.user_link(name, id).append(
+            $('<img>').attr({ src: thumb, title: name }).addClass('thumb') );
     };
     o.name_link = function(name, id){ return o.user_link(name, id).addClass('user').html(name); };
 
