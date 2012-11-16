@@ -31,26 +31,6 @@ def querystring(args):
     for a in args: parms.append((a, args[a]))
     return '?' + urllib.urlencode(parms)
 
-def friendly_date(then):
-    """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
-    if type(then) in [int, float]:
-      then = time_u(then)
-
-    now = datetime.utcnow()
-    dt = now - then
-    if dt.seconds < 60:
-        return "just now"
-    months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    s = months[then.month] + ' ' + str(then.day)
-    if then.year != now.year: s += ' ' + str(then.year)
-    if dt.days < 7:
-        if not dt.days:
-            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
-            else: (t, u) = (dt.seconds / 3600, 'hr')
-        else: (t, u) = (dt.days, 'day')
-        s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
-    return s
-
 def no_zero(num):
     return '' if num == 0 else num
 
