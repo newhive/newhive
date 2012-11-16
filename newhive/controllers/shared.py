@@ -84,7 +84,7 @@ class PagingMixin(object):
 
     def set_next_page(self, request, response, items):
         page = items.next
-        next_page = ( querystring({ 'partial': 't', 'page': page, 'q': request.args.get('q') })
+        next_page = ( querystring({ 'partial': 't', 'page': page, 'q': request.args.get('q', '') })
             if page else None )
         response.context.update( next_page = next_page )
 
@@ -149,9 +149,7 @@ class PagingMixin(object):
 
     @paging_decorator
     def listening(self, request, response, paging_args, **kwargs):
-        res = request.owner.starred_user_page(**paging_args)
-        print res
-        return res
+        return request.owner.starred_user_page(**paging_args)
 
     @paging_decorator
     def listeners(self, request, response, paging_args, **kwargs):
