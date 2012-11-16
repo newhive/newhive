@@ -30,9 +30,10 @@
   {% set active = entity.id in user.starred_user_ids %}
   {% set active_title = 'Stop listening to ' + entity['name'] %}
   {% set title = 'Listen to ' + entity['name'] %}
-  <div class="listen_button {{ 'starred' if active }} {{ class }} {{ entity.id }}"
-    onclick='return btn_listen_click({{ entity.id|json }})' title='{{ active_title if active else title }}'
-    data-title-active='{{active_title}}' data-title-inactive='{{title}}'></div>
+  <div class="listen_button {{ 'on' if active else 'off' }} {{ class }} {{ entity.id }}"
+    onclick='Hive.Menus.feed_toggle("star", {{ entity.id|json }}, {{ ("." + entity.id)|json }}, "", {ga:"listen"} ); return false'
+    title='{{ active_title if active else title }}'
+    data-title-on='{{active_title}}' data-title-off='{{title}}'></div>
 {%- endmacro %}
 
 {% macro person_thumb(url, name) %}
