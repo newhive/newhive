@@ -1,5 +1,6 @@
 import pandas
 import numpy
+from newhive.vendor import gviz
 
 def user_expression_summary(user, p=False):
     data = [(e['name'], e['views']) for e in user.get_expressions('public')]
@@ -66,3 +67,23 @@ def smooth(x, window_len=7, window='hanning'):
             w=eval('numpy.'+window+'(window_len)')
     y=numpy.convolve(w/w.sum(),s,mode='same')
     return y[window_len:-window_len+1]
+
+def json_types_from_record(rec):
+    def mapping(typ, i):
+        # to support: ["string", "number", "boolean", "date", "datetime", "timeofday"]
+        if typ == numpy.object_:
+            typ = type(rec[0][i])
+        if issubclass(typ, (int, float)):
+            return 'number'
+        elif issubclass(typ, basestring):
+            return 'string'
+        else:
+            raise ValueError("type {} not supported yet".format(typ))
+    types = [mapping(rec.dtype.fields[name][0].type, i) for i, name in enumerate(rec.dtype.names)]
+    return zip(rec.dtype.names, types)
+
+def dataframe_to_gviz_json(dataframe):
+    rec = dataframe.to_records()
+    dt = gviz.DataTable(json_types_from_record(rec), rec.tolist()).ToJSon()
+    return dt
+

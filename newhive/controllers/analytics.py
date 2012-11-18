@@ -5,6 +5,7 @@ from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive.analytics import analytics, queries, functions
 from newhive.utils import now, datetime_to_int, local_date
+from newhive.analytics.functions import dataframe_to_gviz_json
 import operator as op
 
 _index = []
@@ -476,11 +477,15 @@ class Analytics(Application):
         """Visits and Visitor Summary"""
         date = local_date() - pandas.DateOffset(days=1)
         data = analytics.ga_summary(date)
-        response.context['data'] = data_frame_to_json(data, outtype='list')
-        response.context['meta'] = {'date': str(date)}
-        response.context['title'] = "Visits and Visitor Summary"
+        #response.context['data'] = data_frame_to_json(data, outtype='list')
+        #response.context['meta'] = {'date': str(date)}
+        #response.context['title'] = "Visits and Visitor Summary"
 
-        return self.serve_page(response, 'pages/analytics/ga_summary.html')
+        #return self.serve_page(response, 'pages/analytics/ga_summary.html')
+
+        response.context['data'] = dataframe_to_gviz_json(data.transpose())
+        response.context['chart_type'] = "BarChart"
+        return self.serve_page(response, 'pages/analytics/google_chart.html')
 
     @admins
     @index
