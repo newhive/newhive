@@ -238,10 +238,16 @@ class AbsUrl(URL):
             path = user + '/' + page
         super(AbsUrl, self).__init__(abs_url(secure=secure) + path)
 
-def modify_query(url_string, d):
-    url = URL(url_string)
+def modify_query(url, d):
+    url_obj = isinstance(url, URL)
+    if not url_obj: url = URL(url)
+
     url.query.update(d)
-    return url.get_url()
+
+    if url_obj:
+        return url
+    else:
+        return url.get_url()
 
 def set_cookie(response, name, data, secure = False, expires = True):
     expiration = None if expires else datetime(2100, 1, 1)
