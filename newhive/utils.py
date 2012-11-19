@@ -4,6 +4,7 @@ from newhive import config
 import urlparse
 import werkzeug.urls
 import pymongo
+from brownie.datastructures import OrderedSet
 
 
 def lget(L, i, *default):
@@ -71,8 +72,8 @@ def dfilter(d, keys):
     return r
 
 def normalize(ws):
-    return filter( lambda s: re.match('\w', s, flags=re.UNICODE),
-        re.split('\W', ws.lower(), flags=re.UNICODE) )
+    return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
+        re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
 
 def abs_url(path='', secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
@@ -143,6 +144,14 @@ class memoized(object):
    def __get__(self, obj, objtype):
       """Support instance methods."""
       return functools.partial(self.__call__, obj)
+
+def cached(fn):
+    def inner(self):
+        prop = '_cache_' + fn.__name__
+        if not hasattr(self, prop):
+            setattr(self, prop, fn(self))
+        return getattr(self, prop)
+    return inner
 
 def bound(num, lower_bound, upper_bound):
     if num < lower_bound: return lower_bound

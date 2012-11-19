@@ -93,9 +93,18 @@
                 validation_message('#p1');
                 return true;
             },
+            p2: function(flash){
+                if ( $('#p1').val() != $('#p2').val() ) {
+                    validation_message('#p2', 'Passwords do not match.', flash);
+                    return false;
+                }
+                validation_message('#p2');
+                return true;
+            },
             password: function(flash){
                 var valid = true;
                 valid = validate.p1(flash) && valid;
+                valid = validate.p2(flash) && valid;
                 return valid;
             },
             tos: function(flash){
@@ -126,6 +135,7 @@
             $('#name').blur(validate.name);
             $('#email').blur(validate.email);
             $('#p1').blur(validate.p1);
+            $('#p2').blur(validate.p2);
             $('#form').submit(validate.all);
         });
     </script>
@@ -171,6 +181,7 @@
         <input type="text" name="fullname" placeholder="Full name (optional)" value="{{f.fullname}}"/>
         <input type="text" name="email" placeholder="Email" id="email" value="{{q.email or f.email}}"/>
         <input type="password" name="password" placeholder="Password" id="p1"/>
+        <input type="password" placeholder="Repeat Password" id="p2"/>
     </div>
 
     <div class="column" id="terms">

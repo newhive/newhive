@@ -191,7 +191,7 @@ class Collection(object):
                     return Page([])
 
             res = Page(self.fetch(sub_spec))
-            res.next = lget( sub_spec, end )
+            res.next = lget(sub_spec, -1)
             return res
 
     def count(self, spec={}): return self.search(spec).count()
@@ -300,13 +300,8 @@ class Entity(dict):
 
 # Common code between User and Expr
 class HasSocial(Entity):
-    # TODO: remove this after migration for deleting feed attribute
-    def __init__(self, col, doc):
-        if doc.has_key('feed'): del doc['feed']
-        super(HasSocial, self).__init__(col, doc)
-
     @property
-    @memoized
+    @cached
     def starrer_ids(self):
         return [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
     @property
@@ -320,7 +315,7 @@ class HasSocial(Entity):
         return self.db.Star.search(spec)
 
     @property
-    @memoized
+    @cached
     def broadcast_count(self):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
 
@@ -449,19 +444,21 @@ class User(HasSocial):
         return self.db.Expr.page(spec, viewer=viewer, **args)
 
     @property
-    @memoized
+    @cached
     def my_stars(self):
         """ Feed records indicating what expressions a user likes and who they're listening to """
         return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
     @property
-    def starred_user_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
+    @cached
+    def starred_user_ids(self):
+        return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
     @property
     def starred_expr_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
 
     def starred_user_page(self, **args): return self.collection.page(self.starred_user_ids, **args)
 
     @property
-    @memoized
+    @cached
     def broadcast(self): return self.db.Broadcast.search({ 'initiator': self.id })
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
@@ -487,7 +484,7 @@ class User(HasSocial):
         for i, item in enumerate(res):
             if item.type == 'FriendJoined': continue
             entity = item.initiator if item.entity.id == self.id else item.entity
-            entity.feed = [item]
+            entity['feed'] = [item]
             res[i] = entity
         return res
 
@@ -547,7 +544,7 @@ class User(HasSocial):
         return exprs
 
     def build_search(self, d):
-        d['text_index'] = list( set( normalize( self['name'] + ' ' + self.get('fullname', '') ) ) )
+        d['text_index'] = normalize( self['name'] + ' ' + self.get('fullname', '') )
 
     def new_referral(self, d, decrement=True):
         if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
@@ -689,8 +686,8 @@ class User(HasSocial):
     recent_expressions = property(get_recent_expressions)
 
     def client_view(self, viewer=None):
-        user = self.db.User.new( dfilter( self,
-            ['_id', 'fullname', 'profile_thumb', 'name', 'tags', 'updated', 'created'] ) )
+        user = self.db.User.new( dfilter( self, ['_id', 'fullname', 'profile_thumb', 'thumb_file_id',
+            'name', 'tags', 'updated', 'created', 'feed'] ) )
         dict.update(user, dict(
             url = self.url,
             thumb = self.get_thumb(70),
@@ -847,9 +844,9 @@ class Expr(HasSocial):
     def build_search(self, d):
         tags = d.get('tags')
         tag_list = []
-        if tags: tag_list = d['tags_index'] = list( set( normalize(tags) ) )
+        if tags: tag_list = d['tags_index'] = normalize(tags)
 
-        d['title_index'] = list( set( normalize( self.get('title', '') ) ) )
+        d['title_index'] = normalize( self.get('title', '') )
 
         text_index = []
         for a in d.get('apps', []):
