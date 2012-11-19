@@ -4,6 +4,7 @@ from newhive import config
 import urlparse
 import werkzeug.urls
 import pymongo
+from brownie.datastructures import OrderedSet
 
 
 def lget(L, i, *default):
@@ -71,8 +72,8 @@ def dfilter(d, keys):
     return r
 
 def normalize(ws):
-    return filter( lambda s: re.match('\w', s, flags=re.UNICODE),
-        re.split('\W', ws.lower(), flags=re.UNICODE) )
+    return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
+        re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
 
 def abs_url(path='', secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
@@ -143,6 +144,14 @@ class memoized(object):
    def __get__(self, obj, objtype):
       """Support instance methods."""
       return functools.partial(self.__call__, obj)
+
+def cached(fn):
+    def inner(self):
+        prop = '_cache_' + fn.__name__
+        if not hasattr(self, prop):
+            setattr(self, prop, fn(self))
+        return getattr(self, prop)
+    return inner
 
 def bound(num, lower_bound, upper_bound):
     if num < lower_bound: return lower_bound
@@ -238,10 +247,16 @@ class AbsUrl(URL):
             path = user + '/' + page
         super(AbsUrl, self).__init__(abs_url(secure=secure) + path)
 
-def modify_query(url_string, d):
-    url = URL(url_string)
+def modify_query(url, d):
+    url_obj = isinstance(url, URL)
+    if not url_obj: url = URL(url)
+
     url.query.update(d)
-    return url.get_url()
+
+    if url_obj:
+        return url
+    else:
+        return url.get_url()
 
 def set_cookie(response, name, data, secure = False, expires = True):
     expiration = None if expires else datetime(2100, 1, 1)

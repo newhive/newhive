@@ -26,7 +26,9 @@
                 {% endif %}
                 {{ header[0] | safe }}
                 {% block action_icon %}
-                <img src="{{icon}}"/>
+                  {% if icon %}
+                    <img src="{{icon}}"/>
+                  {% endif %}
                 {% endblock %}
             </div>
             <div class="line" id="line2">
@@ -53,7 +55,7 @@
 {% block below_card %}{% endblock %}
 
 {% if featured_exprs %}
-  {% from "emails/parts/featured_exprs.html" import expr_cards %}
+  {% from "emails/parts/featured_exprs.html" import expr_cards with context%}
   {{ expr_cards(featured_exprs, None if featured_type == 'site' else initiator) }}
 {% endif %}
 

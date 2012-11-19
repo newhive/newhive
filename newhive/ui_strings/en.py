@@ -27,7 +27,7 @@ invalid_password_recovery_link = """Sorry, the password recovery link you are
 
 facebook_flow_exhange_error = 'Either something went wrong with facebook login or your facebook account is not connected to NewHive.'
 
-milestone_message = "You can always keep track of the number of views by checking they eyeball icon on your expressions."
+milestone_message = "You can always keep track of the number of views by checking the eyeball icon on your expressions."
 
 email_subscription_ui = {
     'comment': 'People comment on my expression'

@@ -1,5 +1,5 @@
 {% extends "emails/site.html" %}
-{% from "emails/parts/featured_exprs.html" import expr_cards %}
+{% from "emails/parts/featured_exprs.html" import expr_cards with context %}
 
 {% block header_logotype %}
   <a href="{{ 'http://' + recipient.name + '.newhive.com' }}">{{ recipient.name + '.newhive.com' }}</a>
@@ -7,7 +7,7 @@
 
 {% block main_message %}
     <h2>
-      Welcome to <span class="active">NewHive</span>!<br/>
+      Welcome to <a href="{{ server_url }}" class="active">NewHive</a>!<br/>
       We're so happy you're here. :)
     </h2>
     <p>

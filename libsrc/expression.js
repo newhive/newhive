@@ -42,12 +42,6 @@ Hive.Page = (function(){
     };
 
     o.init_content = function(){
-        // TODO: ends up being annoying a lot of times
-        $('#bg').on('click', function(e){
-            if(e.clientX > $(window).width() * .8) o.page_next();
-            if(e.clientX < $(window).width() * .2) o.page_prev();
-        });
-
         // bonus paging and scrolling features
         // TODO: prevent scroll sticking after mouse-up outside of expr frame
         // TODO: figure out how to attach to all elements that don't have default drag behavior
