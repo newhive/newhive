@@ -26,7 +26,9 @@
                 {% endif %}
                 {{ header[0] | safe }}
                 {% block action_icon %}
-                <img src="{{icon}}"/>
+                  {% if icon %}
+                    <img src="{{icon}}"/>
+                  {% endif %}
                 {% endblock %}
             </div>
             <div class="line" id="line2">
