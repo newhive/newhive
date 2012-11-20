@@ -2238,7 +2238,9 @@ Hive.init = function() {
 
     ////////////////////////////////////////////////////////////////////////////////
     // Labs features
-    hover_menu($('#labs'), $('#menu_labs'), { layout: 'center_y', min_y: 77 });
+    if ($('#labs, #menu_labs').length == 2) {
+        hover_menu($('#labs'), $('#menu_labs'), { layout: 'center_y', min_y: 77 });
+    }
     var set_make_fixed_text = function(){
         var text = Hive.Exp.fixed_width ? "Make Auto-Scaling" : "Make Fixed-Width";
         $('#make_fixed').text(text);
