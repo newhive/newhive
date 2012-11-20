@@ -53,7 +53,7 @@ jinja_env.filters.update({
     ,'asset_url': hive_assets.url
     ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
     ,'clean_url': lambda s: re.match('https?://([^?]*)', s).groups()[0]
-    ,'html_breaks': lambda s: re.sub('\n', '<br/>', str(s))
+    ,'html_breaks': lambda s: re.sub('\n', '<br/>', unicode(s))
     ,'modify_query': utils.modify_query
 })
 jinja_env.globals.update({

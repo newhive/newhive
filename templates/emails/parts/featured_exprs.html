@@ -1,4 +1,5 @@
 {% macro expr_cards(exprs, user=None) %}
+  <a href="{{ server_url }}{{ user.name + "/profile" if user else "/home/featured" }}">
     <div id="featured_exprs">
         {% if user and user.name %}
         <h4 class="user"><span>
@@ -15,5 +16,6 @@
           ></a>
         {%- endfor %}
     </div>
+  </a>
 {% endmacro %}
 

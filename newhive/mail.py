@@ -1,6 +1,7 @@
 import crypt, urllib, time, json, re, pymongo, random
 import newhive.state
 from newhive.state import abs_url
+from newhive.utils import AbsUrl
 from newhive import config, utils
 import newhive.ui_strings.en as ui
 from newhive.manage.ec2 import public_hostname
@@ -227,6 +228,7 @@ class Mailer(object):
            'type': self.name
            , 'email_id': email_id
            , 'css_debug': css_debug and self.inline_css
+           , 'server_url': AbsUrl()
            })
 
         if hasattr(self.__class__.__base__, 'name'):
