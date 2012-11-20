@@ -51,7 +51,8 @@ class Community(Application, PagingMixin):
         if not query: return self.serve_404(request, response)
 
         # must be logged in to view all expressions
-        if query == self.expr_all and not request.requester.logged_in:
+        if query in [self.expr_all, self.expr_featured, self.home_feed, self.people, self.expr_page]\
+            and not request.requester.logged_in:
             return self.redirect(response, abs_url());
 
         query(request, response)
