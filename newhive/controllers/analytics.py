@@ -487,19 +487,36 @@ class Analytics(Application):
         response.context['chart_type'] = "BarChart"
         return self.serve_page(response, 'pages/analytics/google_chart.html')
 
+    def serve_gviz(self, response, data):
+        return self.serve_data(response, 'application/json', dataframe_to_gviz_json(data))
+
     @admins
     @index
     def expressions_per_day(self, request, response):
         """Expressions per day"""
-        start, end = self._iso_args(request.args, output='date')
         data = queries.ExpressionsCreatedPerDay(self.db).execute()
-        if not start: start = local_date() - pandas.DateOffset(days=30)
-        data = data[ data.index >= start ]
-        if end: data = data[ data.index <= end ]
-        data = pandas.DataFrame(data)
-        data['total'] = data.pop('created')
+        if request.is_xhr:
+            return self.serve_gviz(response, data)
+        json_data = dataframe_to_gviz_json(data)
+        response.context['data'] = json_data
+        response.context['chart_type'] = 'ColumnChart'
+        return self.serve_page(response, 'pages/analytics/google_chart.html')
+
         response.context['data'] = data_frame_to_json(data)
         response.context['title'] = "Expressions created per day"
         response.context['table'] = data.to_html()
         return self.serve_page(response, 'pages/analytics/active_total_chart.html')
 
+    @admins
+    @index
+    def ga_summary(self, request, response):
+        q = queries.GASummary()
+        data = q.execute(local_date() - pandas.DateOffset(days=1)).dataframe
+        data.index = data.index.map(lambda x: x.date())
+        return self.serve_gviz(response, data)
+
+    @admins
+    @index
+    def dashboard(self, request, response):
+        """New Dashboard"""
+        return self.serve_page(response, 'pages/analytics/dashboard.html')

@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 connection = pymongo.Connection(host=config.database_host, port=config.database_port)
 adb = connection.analytics
+min_start_date = datetime.date(2011, 4, 16)
 
 def dtnow():
     return datetime.datetime.now(pytz.utc)
@@ -127,6 +128,8 @@ class ExpressionsCreatedPerDay(Query):
     def _execute(self):
         ecd = ExpressionCreateDates(self.db).execute()
         epd = ecd.groupby('date').count().created
+        epd = pandas.DataFrame(epd)
+        epd['expressions_per_day'] = epd.pop('created')
         return epd
 
 class DailyRetention(Query):
@@ -216,7 +219,7 @@ class GASummary(Query):
         if date >= local_date(): logger.warn('running GASummary on unfinished day')
         q = GAQuery(dimensions=['ga:date'], metrics=['ga:visitors', 'ga:visits', 'ga:newVisits'])
         q.end_date(date)
-        q.start_date(date - pandas.DateOffset(days=35))
+        q.start_date(min_start_date)
         return q.execute()
 
 

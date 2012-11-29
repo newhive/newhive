@@ -1,3 +1,4 @@
+import datetime
 import pandas
 import numpy
 from newhive.vendor import gviz
@@ -77,6 +78,12 @@ def json_types_from_record(rec):
             return 'number'
         elif issubclass(typ, basestring):
             return 'string'
+        elif issubclass(typ, datetime.date):
+            return 'date'
+        elif issubclass(typ, datetime.datetime):
+            return 'datetime'
+        elif issubclass(typ, bool):
+            return 'boolean'
         else:
             raise ValueError("type {} not supported yet".format(typ))
     types = [mapping(rec.dtype.fields[name][0].type, i) for i, name in enumerate(rec.dtype.names)]

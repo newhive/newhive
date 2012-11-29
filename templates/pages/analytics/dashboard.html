@@ -1,0 +1,96 @@
+<html>
+  <head>
+    <!--Load the AJAX API-->
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="/lib/libsrc/analytics_dashboard.js"></script>
+    <script type="text/javascript">
+
+// Load the Visualization API and the piechart package.
+google.load('visualization', '1.0', {'packages':['controls']});
+
+// Set a callback to run when the Google Visualization API is loaded.
+google.setOnLoadCallback(drawDashboards);
+
+function drawDashboards(){
+    var data = {};
+
+    var loaded = 0;
+    $('#content').html('<h1 style="text-align: center;">Loading...</h1>');
+    var urls = ['expressions_per_day', 'ga_summary'];
+    $.each(urls, function(i, id){
+        $.getJSON('/analytics/' + id, function(d){
+            data[id] = new google.visualization.DataTable(d);
+            loaded++;
+            if (loaded == urls.length){
+                $('#content').empty();
+                callback();
+            }
+        });
+    });
+
+    var callback = function(){
+        var joined = google.visualization.data.join(
+                data.expressions_per_day, data.ga_summary, 'full', [[0,0]], [1], [1,2,3]);
+        var range = joined.getColumnRange(0);
+        var DAY = 86400000;
+
+        var defaultOptions = {
+            chartArea: { height: '80%', width: '70%' }
+        };
+
+        var expressions = new google.visualization.ChartWrapper({
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 1] }
+        });
+
+        var visitors = new google.visualization.ChartWrapper({
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 2] }
+        });
+
+        var visits = new google.visualization.ChartWrapper({
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 3, 4] }
+        });
+
+        var control = new google.visualization.ControlWrapper({
+            'controlType': 'ChartRangeFilter',
+            'height': 100,
+            'containerId': 'control',
+            'options': {
+                // Filter by the date axis.
+                'filterColumnIndex': 0,
+                'ui': {
+                    'chartType': 'LineChart',
+                    'chartOptions': $.extend({ 'hAxis': {'baselineColor': 'none'} }, defaultOptions),
+                    'chartView': {
+                        'columns': [0, 2]
+                    },
+                    // 1 day in milliseconds = 24 * 60 * 60 * 1000 = 86,400,000
+                    'minRangeSize': DAY * 7
+                }
+            },
+            // Initial range: 2012-02-09 to 2012-03-20.
+            'state': {'range': {'start': new Date(range.max - DAY * 31), 'end': range.max}}
+        });
+
+        dash = Dashboard('expressions_per_day');
+        dash.addChart(visitors);
+        dash.addChart(visits);
+        dash.addChart(expressions);
+        dash.addControl(control);
+        dash.data(joined);
+        dash.draw();
+    }
+};
+</script>
+
+</head>
+<body>
+    <div id="content"></div>
+</body>
+</html>
