@@ -17,7 +17,9 @@ class User(Application):
             response.context.pop('dialog_to_show')
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
-        response.context['facebook_connect_url'] = FacebookClient().authorize_url(request.url)
+        redirect_url = URL(request.url)
+        redirect_url.query.clear()
+        response.context['facebook_connect_url'] = FacebookClient().authorize_url(redirect_url)
 
         if request.args.has_key('code'):
             fb_profile = request.requester.fb_client.me()
