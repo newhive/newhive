@@ -7,7 +7,8 @@ from pymongo.connection import DuplicateKeyError
 
 class Expression(Community, PagingMixin):
     def edit_frame(self, request, response):
-        if not request.requester.logged_in: return self.serve_404(request, response)
+        if not request.requester.logged_in: return self.redirect(response, AbsUrl())
+        if not request.is_secure: return self.redirect(response, AbsUrl(request.path))
         expr_id = lget(request.path_parts, 1)
         if not expr_id:
             expr = self.db.Expr.new(dfilter(request.args, ['domain', 'name', 'tags']))

@@ -156,13 +156,6 @@
 <form id="form" method='POST'>
     <input type='hidden' name='thumb_file_id' value='{{f.thumb_file_id}}'>
     <input type='hidden' name='action' value='user_create'>
-    {% if f.thumb %}
-    <div class="column" id="photo">
-        <div id='profile_thumb'>
-            <img src="{{f.thumb}}"/>
-        </div>
-    </div>
-    {% endif %}
     <div class="column" id="photo">
         <div id='profile_thumb'>
                 {% if f.thumb %}

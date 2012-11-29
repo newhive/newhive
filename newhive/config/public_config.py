@@ -49,7 +49,7 @@ beta_testers = admins + beta_testers
 site_user       = 'thenewhive'
 admins.append(site_user)
 
-content_domain = 'newhiveexpression.com'
+content_domain = 'tnh.me'
 
 email_server    = 'localhost'
 email_user      = False
