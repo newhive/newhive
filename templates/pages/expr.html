@@ -6,11 +6,9 @@
   </script>
   <script src='{{ asset_bundle('expression.js')[0] }}'></script>
   {% if expr_script %}
-      <script id="expr_script">
-          $(function(){
-              {{ expr_script }}
-          });
-      </script>
+    <script id="expr_script">
+      {{ expr_script }}
+    </script>
   {% endif %}
   {% if expr_style %}
       <style>

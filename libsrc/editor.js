@@ -420,7 +420,10 @@ Hive.Controls = function(app, multiselect) {
 
     o.padding = 4;
     o.border_width = 5;
-    if(multiselect){ o.padding = 1; o.border_width = 2; }
+    if(multiselect){
+        o.padding = 1;
+        o.border_width = 2;
+    }
     else {
         o.addControls($('#controls_common'));
         var d = o.div;
@@ -632,7 +635,6 @@ Hive.App.Html = function(o) {
 Hive.registerApp(Hive.App.Html, 'hive.html');
 
 Hive.App.RawHtml = function(o) {
-
     Hive.App.has_resize(o);
     o.content = function() { return o.content_element.outerHTML(); };
     o.content_element = $(o.init_state.content).addClass('content');
@@ -1658,6 +1660,8 @@ Hive.Selection = function(){
     o.each = function(fn){ $.each(o.elements, fn) };
     o.make_controls = [];
     o.dragging = false;
+
+    Hive.App.has_resize(o);
 
     o.multi_test = function(e) { return e.shiftKey || e.ctrlKey; }
 
