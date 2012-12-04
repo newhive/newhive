@@ -9,7 +9,8 @@ from newhive import config
 from newhive.analytics.datastore import *
 from newhive.analytics import functions
 from newhive.analytics.ga import GAQuery, QueryResponse
-from newhive.utils import local_date
+import newhive.analytics.analytics
+from newhive.utils import local_date, dates_to_spec
 #from pandas.datetools import Day
 Day = pandas.datetools.Day
 
@@ -222,6 +223,33 @@ class GASummary(Query):
         q.start_date(min_start_date)
         return q.execute()
 
+class Active(Query):
+    collection_name = 'active'
+    def _execute(self, period):
+        input_name = "mr.actions_per_user_per_day"
+        mr_col = newhive.analytics.analytics.actions_per_user_per_day(self.db)
+        mr_col.ensure_index('_id.date')
+        offset = pandas.DateOffset(days=period)
+        start = newhive.utils.time_u(mr_col.find_one(sort=[('_id.date', 1)])['_id']['date'])
+        index = pandas.DateRange(start=start + offset, end=datetime.datetime.now(), offset=pandas.DateOffset(days=1))
+
+        def users_active_on(date):
+            cursor = mr_col.find({'_id.date': dates_to_spec(date - offset, date) })
+            return len(cursor.distinct('_id.name'))
+
+        data = pandas.DataFrame(index=index, data={'Active{}'.format(period): index.map(users_active_on)})
+        return data
+
+class ActiveGA(Query):
+    collection_name = 'active_ga'
+
+    def _execute(self):
+        q = GAQuery()\
+            .start_date(  min_start_date         )\
+            .end_date(    local_date()           )\
+            .metrics(     ['ga:visits']          )\
+            .dimensions(  ['ga:date', 'ga:customVarValue1'] )
+        return q.execute()
 
 if __name__ == "__main__":
     import newhive.state

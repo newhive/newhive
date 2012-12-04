@@ -134,6 +134,7 @@ class Analytics(Application):
         response.context['title'] = 'App Type Count'
         return self.serve_page(response, 'pages/analytics/generic.html')
 
+    # deprecated, see 'actives'
     @index
     def active_user_growth(self, request, response):
         """Active user count over time"""
@@ -143,7 +144,6 @@ class Analytics(Application):
         response.context['json_data'] = json.dumps({'counts': data, 'dates': dates})
         response.context['title'] = 'Active User Growth'
         return self.serve_page(response, 'pages/analytics/user_growth.html')
-
 
     @index
     def user_growth(self, request, response):
@@ -435,7 +435,10 @@ class Analytics(Application):
         freq = request.args.get('freq', 'D')
         response.context['title'] = "{}1-{}30 Retention".format(freq, freq)
         if freq == 'M': freq = 'MS'
-        data = analytics.retention(self.db, freq)
+        data = analytics.retention(self.db, freq, subset=False)
+        data.index = data.index.map(lambda x: x.date())
+        if request.is_xhr or request.is_json:
+            return self.serve_gviz(response, data)
         response.context['data'] = data_frame_to_json(data)
         return self.serve_page(response, 'pages/analytics/active_total_chart.html')
 
@@ -488,6 +491,7 @@ class Analytics(Application):
         return self.serve_page(response, 'pages/analytics/google_chart.html')
 
     def serve_gviz(self, response, data):
+        data = data.fillna(0)
         return self.serve_data(response, 'application/json', dataframe_to_gviz_json(data))
 
     @admins
@@ -495,7 +499,7 @@ class Analytics(Application):
     def expressions_per_day(self, request, response):
         """Expressions per day"""
         data = queries.ExpressionsCreatedPerDay(self.db).execute()
-        if request.is_xhr:
+        if request.is_xhr or request.is_json:
             return self.serve_gviz(response, data)
         json_data = dataframe_to_gviz_json(data)
         response.context['data'] = json_data
@@ -516,7 +520,15 @@ class Analytics(Application):
         return self.serve_gviz(response, data)
 
     @admins
+    def actives(self, request, response):
+        q = queries.Active(self.db)
+        data = q.execute(period=int(request.args.get('period', 1)) )
+        data.index = data.index.map(lambda x: x.date())
+        return self.serve_gviz(response, data)
+
+    @admins
     @index
     def dashboard(self, request, response):
         """New Dashboard"""
+        response.context['title'] = "Dashboard"
         return self.serve_page(response, 'pages/analytics/dashboard.html')

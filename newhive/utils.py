@@ -293,3 +293,10 @@ def friendly_date(then):
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
+
+def dates_to_spec(start, end=None, offset=None):
+    """Return a mongodb spec dictionary that will match ids of objects created
+    between date and date + offset"""
+    end = end or start + offset
+    return {'$gt': datetime_to_int(start), '$lte': datetime_to_int(end)}
+

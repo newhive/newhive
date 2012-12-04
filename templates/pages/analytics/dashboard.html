@@ -1,5 +1,41 @@
-<html>
-  <head>
+{% extends "base.html" %}
+{% block head %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .chart {
+            float: left;
+        }
+        #control_header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            width: 100%;
+        }
+        #control_header #control {
+            height: 100px;
+            width: 100%;
+        }
+        body #content {
+            top: 0;
+            padding-top: 100px;
+        }
+        .grouping {
+            overflow: hidden;
+        }
+        .grouping .chart {
+            width: 100%;
+        }
+        .columns2 .chart {
+            width: 50%;
+        }
+        .columns3 .chart {
+            width: 33%;
+        }
+    </style>
     <!--Load the AJAX API-->
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -16,45 +52,157 @@ function drawDashboards(){
     var data = {};
 
     var loaded = 0;
-    $('#content').html('<h1 style="text-align: center;">Loading...</h1>');
-    var urls = ['expressions_per_day', 'ga_summary'];
+    $('#content').prepend('<h1 id="loading" style="text-align: center;">Loading...</h1>');
+    var urls = [
+        'expressions_per_day',
+        'ga_summary',
+        'actives?period=1',
+        'actives?period=7',
+        'actives?period=30',
+        'retention',
+        'retention?freq=W',
+        'retention?freq=M'
+    ];
+
     $.each(urls, function(i, id){
-        $.getJSON('/analytics/' + id, function(d){
-            data[id] = new google.visualization.DataTable(d);
-            loaded++;
-            if (loaded == urls.length){
-                $('#content').empty();
-                callback();
-            }
+        $.ajax({
+            url: '/analytics/' + id,
+            success: function(d, textStatus, jqXHR){
+                console.log(id, jqXHR, textStatus);
+                data[id] = new google.visualization.DataTable(d);
+                loaded++;
+                if (loaded == urls.length){
+                    $('#loading').remove();
+                    callback();
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown){
+                console.log(id, jqXHR, textStatus, errorThrown);
+            },
+            dataType: 'json',
+            method: 'GET'
         });
     });
 
     var callback = function(){
-        var joined = google.visualization.data.join(
-                data.expressions_per_day, data.ga_summary, 'full', [[0,0]], [1], [1,2,3]);
-        var range = joined.getColumnRange(0);
+        function join(dataArray) {
+            var joined;
+            dataArray.forEach(function(el, i){
+                if (i == 0) joined = el;
+                else
+                {
+                    joined = google.visualization.data.join(
+                        joined,
+                        el,
+                        'full',
+                        [[0,0]],
+                        range(1, joined.getNumberOfColumns()),
+                        range(1, el.getNumberOfColumns())
+                    );
+                }
+            });
+            return joined;
+        };
+
+        var joined = join($.map(urls, function(el){ return data[el] }));
+        var timeRange = joined.getColumnRange(0);
         var DAY = 86400000;
 
         var defaultOptions = {
-            chartArea: { height: '80%', width: '70%' }
+            chartArea: { height: '80%', width: '90%' },
+            legend: { position: 'in', alignment: 'left' }
         };
 
-        var expressions = new google.visualization.ChartWrapper({
+        var charts = [];
+        charts.push(new google.visualization.ChartWrapper({
+            containerId: 'expressions',
             chartType: 'ColumnChart',
             options: defaultOptions,
             view: { columns: [0, 1] }
-        });
+        }));
 
-        var visitors = new google.visualization.ChartWrapper({
+        charts.push(new google.visualization.ChartWrapper({
+            containerId: 'visitors',
             chartType: 'ColumnChart',
             options: defaultOptions,
             view: { columns: [0, 2] }
-        });
+        }));
 
-        var visits = new google.visualization.ChartWrapper({
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'visits',
             chartType: 'ColumnChart',
             options: defaultOptions,
             view: { columns: [0, 3, 4] }
+        }));
+
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'active1',
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 5] }
+        }));
+
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'active7',
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 6] }
+        }));
+
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'active30',
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 7] }
+        }));
+
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'dau_total',
+            chartType: 'LineChart',
+            options: defaultOptions,
+            view: { columns: [
+                    0,
+                    {
+                        calc: function(dt, r){ return dt.getValue(r, 5) / dt.getValue(r, 2) }, 
+                        type: 'number'
+                    }
+                ]}
+        }));
+
+        var retConfigs = [
+            {title: "Daily", columns: [0,8,9,10]},
+            {title: "Weekly", columns: [0,11,12,13], groupWidth: '220%'}
+            ];
+            var calcColumn = function(el){
+                return function(d, r){
+                    return Math.max(0, d.getValue(r, el.columns[2]) - d.getValue(r, el.columns[1]));
+                };
+        };
+        $.each(retConfigs, function (i, el){
+            charts.push( new google.visualization.ChartWrapper({
+                containerId: 'retention_snapshot' + i,
+                chartType: 'ComboChart',
+                options: $.extend({
+                    title: el.title,
+                    seriesType: "bars",
+                    bar: {groupWidth: el.groupWidth || '61.8%'},
+                    series: [{}, {}, {type: "line", targetAxisIndex: 1}],
+                    vAxes: [{}, {minValue: 0, maxValue: 1}],
+                    interpolateNulls: true,
+                    isStacked: true
+                    }, defaultOptions),
+                view: { columns: [
+                    el.columns[0],
+                    el.columns[1],
+                    {
+                        calc: calcColumn(el),
+                        type: 'number',
+                        label: 'inactive'
+                    },
+                    el.columns[3]
+                    ]
+                }
+            }));
         });
 
         var control = new google.visualization.ControlWrapper({
@@ -70,18 +218,17 @@ function drawDashboards(){
                     'chartView': {
                         'columns': [0, 2]
                     },
-                    // 1 day in milliseconds = 24 * 60 * 60 * 1000 = 86,400,000
                     'minRangeSize': DAY * 7
                 }
             },
             // Initial range: 2012-02-09 to 2012-03-20.
-            'state': {'range': {'start': new Date(range.max - DAY * 31), 'end': range.max}}
+            'state': {'range': {'start': new Date(timeRange.max - DAY * 31), 'end': timeRange.max}}
         });
 
-        dash = Dashboard('expressions_per_day');
-        dash.addChart(visitors);
-        dash.addChart(visits);
-        dash.addChart(expressions);
+        dash = Dashboard('content');
+        $.each(charts, function(i, chart){
+                dash.addChart(chart);
+                });
         dash.addControl(control);
         dash.data(joined);
         dash.draw();
@@ -89,8 +236,36 @@ function drawDashboards(){
 };
 </script>
 
-</head>
-<body>
-    <div id="content"></div>
-</body>
-</html>
+{% endblock head %}
+
+{% block main %}
+    <div id="content">
+        <div id="control_header">
+            <div id="control"></div>
+        </div>
+        <div class="grouping columns2">
+            <h3>Visits and Visitors</h3>
+            <div class="chart" id="visitors"></div>
+            <div class="chart" id="visits"  ></div>
+        </div>
+        <div class="grouping columns3">
+            <h3>Daily, Weekly, Monthly Active</h3>
+            <div class="chart" id="active1" ></div>
+            <div class="chart" id="active7" ></div>
+            <div class="chart" id="active30"></div>
+        </div>
+        <div class="grouping">
+            <h3>Activities</h3>
+            <div class="chart" id="expressions"></div>
+        </div>
+        <div class="grouping">
+            <h3>Daily Active / Total Visits</h3>
+            <div class="chart" id="dau_total"></div>
+        </div>
+        <div class="grouping columns2">
+            <h3>Retention by Cohort</h3>
+            <div class="chart" id="retention_snapshot0"></div>
+            <div class="chart" id="retention_snapshot1"></div>
+        </div>
+    </div>
+{% endblock main %}

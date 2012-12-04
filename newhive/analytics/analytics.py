@@ -4,7 +4,6 @@ from newhive.state import now
 from brownie.datastructures import OrderedDict
 from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, local_date
 from newhive.analytics.ga import GAClient, GAQuery
-from newhive.analytics import queries
 Day = pandas.datetools.Day
 
 import logging
@@ -517,14 +516,14 @@ def active(db, period=7):
     mr_col.ensure_index('_id.date')
     offset = pandas.DateOffset(days=period)
     start = newhive.utils.time_u(mr_col.find_one(sort=[('_id.date', 1)])['_id']['date'])
-    dr = pandas.DateRange(start=start + offset, end=datetime.datetime.now(), offset=pandas.DateOffset(days=1))
-    data = []
-    for date in dr:
-        cursor = mr_col.find({'_id.date': {'$lte': datetime_to_int(date), '$gt': datetime_to_int(date - offset)}})
-        data.append(len(cursor.distinct('_id.name')))
+    index = pandas.DateRange(start=start + offset, end=datetime.datetime.now(), offset=pandas.DateOffset(days=1))
 
-    #data = [mr_col.find({'_id.date': datetime_to_int(date)}).count() for date in dr]
-    return (data, dr)
+    def users_active_on(date):
+        cursor = mr_col.find({'_id.date': {'$lte': datetime_to_int(date), '$gt': datetime_to_int(date - offset)}})
+        return len(cursor.distinct('_id.name'))
+
+    data = pandas.DataFrame(index=index, data={'active_users': index.map(users_active_on)})
+    return data
 
 def _active_users_ga(db, period=7):
     """Return users present in GA logs in last 'period' days"""
@@ -559,13 +558,13 @@ def active_users_by_signup_date(db, users, freq='D'):
     #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
     return data
 
-def retention(db, freq="D"):
+def retention(db, freq="D", subset=True):
     days = {'D': 1, 'W': 7, 'M': 30, 'MS': 30}.get(freq)
     active = _active_users_ga(db, days)
     data = active_users_by_signup_date(db, active, freq)
-    data.ratio = data.ratio.fillna(0)
-    subset = data[-30:]
-    return subset
+    data["Active Fraction"] = data.pop('ratio').fillna(0)
+    if subset: return data[-30:]
+    else: return data
 
 def engagement_pyramid(db):
 
@@ -644,12 +643,6 @@ def user_median_views(db):
     data = pandas.DataFrame(data, columns=['user', 'median_views'])
     data.timestamp = datetime.datetime.now()
     return data
-
-def ga_summary(date):
-    q = queries.GASummary()
-    d = q.execute(date)
-    index = [0,1,7,28]
-    return pandas.DataFrame([d.dataframe.ix[date - Day(day)] for day in index], index=index)
 
 if __name__ == '__main__':
     from newhive.state import Database

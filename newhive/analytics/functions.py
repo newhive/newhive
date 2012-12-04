@@ -80,7 +80,7 @@ def json_types_from_record(rec):
             return 'string'
         elif issubclass(typ, datetime.date):
             return 'date'
-        elif issubclass(typ, datetime.datetime):
+        elif issubclass(typ, (datetime.datetime, numpy.datetime64)):
             return 'datetime'
         elif issubclass(typ, bool):
             return 'boolean'
