@@ -192,11 +192,11 @@ function drawDashboards(){
         var retConfigs = [
             {title: "Daily", columns: [0,8,9,10]},
             {title: "Weekly", columns: [0,11,12,13], groupWidth: '220%'}
-            ];
-            var calcColumn = function(el){
-                return function(d, r){
-                    return Math.max(0, d.getValue(r, el.columns[2]) - d.getValue(r, el.columns[1]));
-                };
+        ];
+        var calcColumn = function(el){
+            return function(d, r){
+                return Math.max(0, d.getValue(r, el.columns[2]) - d.getValue(r, el.columns[1]));
+            };
         };
         $.each(retConfigs, function (i, el){
             charts.push( new google.visualization.ChartWrapper({
