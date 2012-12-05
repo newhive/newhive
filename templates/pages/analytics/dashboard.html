@@ -35,6 +35,25 @@
         .columns3 .chart {
             width: 33%;
         }
+
+        #loading {
+            margin-top: 200px;
+            text-align: center;
+            font-size: 22px;
+        }
+        #loading_container {
+            display: inline-block;
+            vertical-align: middle;
+            width: 400px;
+            height: 25px;
+            background-color: lightgrey;
+        }
+        #loading_container .done {
+            width: 0;
+            height: 100%;
+            background-color: steelblue;
+        }
+
     </style>
     <!--Load the AJAX API-->
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
@@ -52,7 +71,6 @@ function drawDashboards(){
     var data = {};
 
     var loaded = 0;
-    $('#content').prepend('<h1 id="loading" style="text-align: center;">Loading...</h1>');
     var urls = [
         'expressions_per_day',
         'ga_summary',
@@ -71,8 +89,10 @@ function drawDashboards(){
                 console.log(id, jqXHR, textStatus);
                 data[id] = new google.visualization.DataTable(d);
                 loaded++;
+                $('#loading_container .done').width(loaded / urls.length * 100 + "%");
                 if (loaded == urls.length){
                     $('#loading').remove();
+                    $('#content').show();
                     callback();
                 }
             },
@@ -239,7 +259,11 @@ function drawDashboards(){
 {% endblock head %}
 
 {% block main %}
-    <div id="content">
+    <div id="loading">
+        Loading Data... 
+        <div id="loading_container"><div class="done"></div></div>
+    </div>
+    <div id="content" style="display: none;">
         <div id="control_header">
             <div id="control"></div>
         </div>
