@@ -6,8 +6,8 @@ import pytz
 import apiclient.http
 import httplib2
 from newhive import config
-from newhive.analytics.datastore import *
 from newhive.analytics import functions
+from functions import dataframe_to_record, record_to_dataframe
 from newhive.analytics.ga import GAQuery, QueryResponse
 import newhive.analytics.analytics
 from newhive.utils import local_date, dates_to_spec
@@ -20,9 +20,6 @@ logger = logging.getLogger(__name__)
 connection = pymongo.Connection(host=config.database_host, port=config.database_port)
 adb = connection.analytics
 min_start_date = datetime.date(2011, 4, 16)
-
-def dtnow():
-    return datetime.datetime.now(pytz.utc)
 
 class Query(object):
     collection_name = None
@@ -74,7 +71,7 @@ class Query(object):
         spec = self._spec(args, kwargs)
         spec.update(invalidated = {'$exists': False})
         result = self.collection.find_one(spec, sort=[('_id', -1)])
-        if result and (dtnow() - result['_id'].generation_time) < self.max_age:
+        if result and (functions.dtnow() - result['_id'].generation_time) < self.max_age:
             logger.info('using cached result')
             return self._deserialize(result)
         else:
