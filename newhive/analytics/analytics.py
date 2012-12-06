@@ -606,15 +606,19 @@ def ga_summary(db):
     data.columns = data.columns.map(ga_column_name_to_title)
     data['Returning Visits'] = data['Visits'] - data['New Visits']
 
-    epd = queries.ExpressionsCreatedPerDay(db).execute()
-    epd.columns = ['Expressions Created']
-    data = data.join(epd)
-
     q = queries.Active(db)
     for period in [1,7,30]:
         active = q.execute(period)
         active.index = active.index.map(lambda x: x.date())
         data = data.join(active)
+
+    for q in [queries.UsersPerDay, queries.LovesPerDay, queries.ListensPerDay, queries.ExpressionsCreatedPerDay]:
+        per_day = q(db).execute()
+        data = data.join(per_day)
+
+    data["DAU/MAU"] = data["Active1"] / data["Active30"]
+    new = data["New Users Per Day"]
+    data["DAU/MAU'"] = (data["Active1"] - new) / ( data["Active30"] - new)
 
     data = data[data.index < local_date()]
     today = data.ix[local_date(-1)]
