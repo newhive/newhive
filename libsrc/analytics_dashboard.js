@@ -21,6 +21,7 @@ function Dashboard(id){
     };
 
     o.draw = function(){
+        $('#' + id).show();
         if (controls.length) {
             o.dash = new google.visualization.Dashboard($('#' + id)[0]);
             o.dash.bind(controls, charts);

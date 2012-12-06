@@ -5,12 +5,14 @@ import pandas
 import pytz
 import apiclient.http
 import httplib2
+import numpy
+
 from newhive import config
 from newhive.analytics import functions
 from functions import dataframe_to_record, record_to_dataframe
 from newhive.analytics.ga import GAQuery, QueryResponse
 import newhive.analytics.analytics
-from newhive.utils import local_date, dates_to_spec
+from newhive.utils import local_date, dates_to_spec, friendly_log_scale
 #from pandas.datetools import Day
 Day = pandas.datetools.Day
 
@@ -247,6 +249,35 @@ class ActiveGA(Query):
             .metrics(     ['ga:visits']          )\
             .dimensions(  ['ga:date', 'ga:customVarValue1'] )
         return q.execute()
+
+class UserImpressions(Query):
+    collection_name = 'user_impressions'
+
+    def _execute(self):
+
+        map_function = """
+            function() {
+                 if (typeof(this.apps) != "undefined" && this.apps.length > 0 && this.views && this.owner_views){
+                     emit(this.owner, {count: 1, views: this.views - this.owner_views});
+                 }
+            }
+            """
+
+        reduce = """
+            function(key, values) {
+                result = {count: 0, views: 0};
+                for (var i=0; i < values.length; i++) {
+                    result.count += values[i].count;
+                    result.views += values[i].views;
+                };
+                return result;
+            }"""
+
+        results_collection = self.db.mdb.expr.map_reduce(map_function, reduce, 'mr.overall_impressions_per_user')
+        data = pandas.Series([x['value']['views'] for x in results_collection.find()])
+        users, bins = numpy.histogram(data, friendly_log_scale(1, data.max() * 10, [1]))
+        return pandas.DataFrame.from_items([('lower', bins[:-1]), ('upper', bins[1:]), ('users', users)])
+
 
 if __name__ == "__main__":
     import newhive.state

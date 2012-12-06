@@ -300,3 +300,26 @@ def dates_to_spec(start, end=None, offset=None):
     end = end or start + offset
     return {'$gt': datetime_to_int(start), '$lte': datetime_to_int(end)}
 
+def friendly_log_scale(start, end=None, significands = None):
+    """
+    >>> friendly_log_scale(10)
+    [0, 1, 2, 5, 10]
+
+    >>> friendly_log_scale(500,2000)
+    [500, 1000, 2000]
+    """
+
+    if not significands: significands = [1,2,5]
+
+    if not end: start, end = (0, start)
+    rv = [0] if start is 0 else []
+
+    power = 0
+    while True:
+        for i in significands:
+            val = i * 10 ** power
+            if val > end:
+                return rv
+            if val >= start:
+                rv.append(val)
+        power += 1

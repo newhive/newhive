@@ -327,30 +327,6 @@ class Analytics(Application):
                 ]
         return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')
 
-    @admins
-    @index
-    def impressions_per_user(self, request, response):
-        """Users grouped by total expression impressions"""
-        url_parts = request.path.split('/')
-        view = lget(url_parts, 2, 'chart')
-        if view == 'top':
-            # collection is a mongodb collection
-            collection = analytics.overall_impressions(self.db, histogram=False)
-            user_list = collection.find({}, sort=[('value.views', -1)], limit=100)
-            users = []
-            for item in user_list:
-                user = self.db.User.fetch(item['_id'])
-                user.impressions = item['value']['views']
-                users.append(user)
-            response.context['users'] = users
-            return self.serve_page(response, 'pages/analytics/impressions_top.html')
-
-        elif view == 'chart':
-            hist, bin_edges = analytics.overall_impressions(self.db)
-            response.context['data'] = list(hist[1:15])
-            response.context['edges'] = list(bin_edges[1:16])
-            return self.serve_page(response, 'pages/analytics/impressions.html')
-
     @index
     def pageviews(self, request, response):
         """Pageviews"""
@@ -524,6 +500,12 @@ class Analytics(Application):
         q = queries.Active(self.db)
         data = q.execute(period=int(request.args.get('period', 1)) )
         data.index = data.index.map(lambda x: x.date())
+        return self.serve_gviz(response, data)
+
+    @admins
+    def total_impressions(self, request, response):
+        q = queries.UserImpressions(self.db)
+        data = q.execute();
         return self.serve_gviz(response, data)
 
     @admins

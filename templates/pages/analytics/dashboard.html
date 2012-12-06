@@ -8,6 +8,9 @@
         .chart {
             float: left;
         }
+        .dashboard {
+            display: none;
+        }
         #control_header {
             position: fixed;
             top: 0;
@@ -19,7 +22,7 @@
             height: 100px;
             width: 100%;
         }
-        body #content {
+        body #dashboard1 {
             top: 0;
             padding-top: 100px;
         }
@@ -48,10 +51,16 @@
             height: 25px;
             background-color: lightgrey;
         }
-        #loading_container .done {
+        #loading_container div {
             width: 0;
             height: 100%;
+            float: left;
+        }
+        #loading_container .done {
             background-color: steelblue;
+        }
+        #loading_container .errors {
+            background-color: salmon;
         }
 
     </style>
@@ -68,62 +77,104 @@ google.load('visualization', '1.0', {'packages':['controls']});
 google.setOnLoadCallback(drawDashboards);
 
 function drawDashboards(){
-    var data = {};
 
-    var loaded = 0;
-    var urls = [
-        'expressions_per_day',
-        'ga_summary',
-        'actives?period=1',
-        'actives?period=7',
-        'actives?period=30',
-        'retention',
-        'retention?freq=W',
-        'retention?freq=M'
-    ];
+    function join(dataArray) {
+        var joined;
+        dataArray.forEach(function(el, i){
+            if (i == 0) joined = el;
+            else
+            {
+                joined = google.visualization.data.join(
+                    joined,
+                    el,
+                    'full',
+                    [[0,0]],
+                    range(1, joined.getNumberOfColumns()),
+                    range(1, el.getNumberOfColumns())
+                );
+            }
+        });
+        return joined;
+    };
 
-    $.each(urls, function(i, id){
+    function loadDashboard2(){
         $.ajax({
-            url: '/analytics/' + id,
-            success: function(d, textStatus, jqXHR){
-                console.log(id, jqXHR, textStatus);
-                data[id] = new google.visualization.DataTable(d);
-                loaded++;
-                $('#loading_container .done').width(loaded / urls.length * 100 + "%");
-                if (loaded == urls.length){
-                    $('#loading').remove();
-                    $('#content').show();
-                    callback();
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown){
-                console.log(id, jqXHR, textStatus, errorThrown);
+            url: '/analytics/total_impressions',
+            success: function(d){
+                var data = new google.visualization.DataTable(d);
+                dashboard2(data);
             },
             dataType: 'json',
             method: 'GET'
         });
-    });
+    };
 
-    var callback = function(){
-        function join(dataArray) {
-            var joined;
-            dataArray.forEach(function(el, i){
-                if (i == 0) joined = el;
-                else
-                {
-                    joined = google.visualization.data.join(
-                        joined,
-                        el,
-                        'full',
-                        [[0,0]],
-                        range(1, joined.getNumberOfColumns()),
-                        range(1, el.getNumberOfColumns())
-                    );
-                }
-            });
-            return joined;
+    function dashboard2(data){
+        var dash = Dashboard('dashboard2');
+
+        var defaultOptions = {
+            chartArea: { height: '80%', width: '90%' },
+            legend: { position: 'in', alignment: 'left' }
         };
 
+        dash.data(data);
+        dash.addChart(
+            new google.visualization.ChartWrapper({
+              containerId: 'total_impressions',
+              chartType: 'PieChart',
+              options: { height: 300, title: 'Users' },
+              view: { columns: [
+                  {
+                      calc: function(dt, r){ return dt.getValue(r, 1) + " - " + dt.getValue(r,2) + " views"}, 
+                      type: 'string'
+                  },
+                  3
+                  ] }
+        }));
+        dash.draw();
+    };
+
+    function loadDashboard1(){
+        var data = {};
+
+        var loaded = 0;
+        var errors = 0;
+        var urls = [
+            'expressions_per_day',
+            'ga_summary',
+            'actives?period=1',
+            'actives?period=7',
+            'actives?period=30',
+            'retention',
+            'retention?freq=W',
+            'retention?freq=M'
+        ];
+
+        // Dashboard 1
+        $.each(urls, function(i, id){
+            $.ajax({
+                url: '/analytics/' + id,
+                success: function(d, textStatus, jqXHR){
+                    data[id] = new google.visualization.DataTable(d);
+                    loaded++;
+                    $('#loading_container .done').width(loaded / urls.length * 100 + "%");
+                    if (loaded == urls.length){
+                        $('#loading').remove();
+                        dashboard1(data, urls);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+                    console.log(id, jqXHR, textStatus, errorThrown);
+                    errors++;
+                    $('#loading_container .errors').width(errors / urls.length * 100 + "%");
+                },
+                dataType: 'json',
+                method: 'GET'
+            });
+        });
+    };
+
+    function dashboard1(data, urls){
         var joined = join($.map(urls, function(el){ return data[el] }));
         var timeRange = joined.getColumnRange(0);
         var DAY = 86400000;
@@ -245,14 +296,19 @@ function drawDashboards(){
             'state': {'range': {'start': new Date(timeRange.max - DAY * 31), 'end': timeRange.max}}
         });
 
-        dash = Dashboard('content');
+        dash = Dashboard('dashboard1');
         $.each(charts, function(i, chart){
                 dash.addChart(chart);
                 });
         dash.addControl(control);
         dash.data(joined);
         dash.draw();
-    }
+    };
+
+    // Main
+    loadDashboard1();
+    loadDashboard2();
+
 };
 </script>
 
@@ -261,9 +317,12 @@ function drawDashboards(){
 {% block main %}
     <div id="loading">
         Loading Data... 
-        <div id="loading_container"><div class="done"></div></div>
+        <div id="loading_container">
+          <div class="done"></div>
+          <div class="errors"></div>
+        </div>
     </div>
-    <div id="content" style="display: none;">
+    <div id="dashboard1" class="dashboard">
         <div id="control_header">
             <div id="control"></div>
         </div>
@@ -291,5 +350,12 @@ function drawDashboards(){
             <div class="chart" id="retention_snapshot0"></div>
             <div class="chart" id="retention_snapshot1"></div>
         </div>
+    </div>
+
+    <div id="dashboard2" class="dashboard">
+      <div class="grouping columns2">
+        <h3>Users Grouped by Total Impressions</h3>
+        <div class="chart" id="total_impressions"></div>
+      </div>
     </div>
 {% endblock main %}
