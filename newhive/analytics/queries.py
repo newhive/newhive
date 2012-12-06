@@ -112,25 +112,57 @@ class UserMedianViews(Query):
         data.index = data.pop('user')
         return data
 
-class ExpressionCreateDates(Query):
-    collection_name = 'expression_create_dates'
+class CreatedPerDay(Query):
 
-    def _execute(self):
-        cursor = self.db.Expr._col.find({'apps': {'$exists': True}}, fields=['owner_name', 'name', 'created'])
-        data = [(u.get('owner_name'), u.get('name'), datetime.datetime.fromtimestamp(u['created'])) for u in cursor]
-        data = pandas.DataFrame(data, columns=['user', 'expr', 'created'])
+    def _execute(self, collection, spec=None, fields=None):
+        if not spec:   spec   = {}
+        if not fields: fields = []
+        method = collection.find if type(collection) is pymongo.collection.Collection else collection.search
+        cursor = method(spec, fields=fields + ['created'])
+        def extract(item):
+            return [item.get(field) for field in fields] + \
+                   [datetime.datetime.fromtimestamp(item['created'])]
+        data = map(extract, cursor)
+        data = pandas.DataFrame(data, columns=fields + ['created'])
         data['date'] = data.created.apply(lambda d: (d - pandas.DateOffset(hours=8)).date())
-        return data
+        per_day = pandas.DataFrame(data.groupby('date').count().created)
+        per_day.columns = [self.name]
+        return per_day
 
-class ExpressionsCreatedPerDay(Query):
+class ExpressionsCreatedPerDay(CreatedPerDay):
+    name = 'Expressions Created/Day'
     collection_name = 'expressions_per_day'
 
     def _execute(self):
-        ecd = ExpressionCreateDates(self.db).execute()
-        epd = ecd.groupby('date').count().created
-        epd = pandas.DataFrame(epd)
-        epd['expressions_per_day'] = epd.pop('created')
-        return epd
+        collection = self.db.Expr._col
+        spec = {'apps': {'$exists': True}}
+        return super(ExpressionsCreatedPerDay, self)._execute(collection, spec)
+
+class LovesPerDay(CreatedPerDay):
+    name = 'Loves Per Day'
+    collection_name = 'loves_per_day'
+
+    def _execute(self):
+        collection = self.db.Star
+        spec = {'entity_class': 'Expr'}
+        return super(LovesPerDay, self)._execute(collection, spec)
+
+class ListensPerDay(CreatedPerDay):
+    name = 'Listens Per Day'
+    collection_name = 'listens_per_day'
+
+    def _execute(self):
+        collection = self.db.Star
+        spec = {'entity_class': 'User', 'entity': {'$ne': db.User.named('thenewhive').id}}
+        return super(ListensPerDay, self)._execute(collection, spec)
+
+class UsersPerDay(CreatedPerDay):
+    name = 'New Users Per Day'
+    collection_name = 'users_per_day'
+
+    def _execute(self):
+        collection = self.db.User._col
+        return super(UsersPerDay, self)._execute(collection)
 
 class DailyRetention(Query):
     collection_name = 'daily_retention'
