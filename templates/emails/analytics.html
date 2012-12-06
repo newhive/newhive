@@ -22,7 +22,7 @@
     {% for stat in stats %}
         <tr>
             <th>{{ stat }}</th>
-            <td>{{ ga_summary.today[stat] }}</td>
+            <td>{{ ga_summary.today[stat] | analytics_email_number_format }}</td>
             {% for name, val in ga_summary.change[stat].iterkv() %}
             {#<td>{{val | percent_change }}</td>#}
             <td>{{icon(val)}}</td>

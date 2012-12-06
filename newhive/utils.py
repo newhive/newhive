@@ -329,3 +329,20 @@ def un_camelcase(s): return re.sub(r'([A-Z])', r' \1', s)
 def percent_change(ratio, precision=0):
     s = "down" if ratio < 0 else "up"
     return ("{} {:." + str(precision) + "f}%").format(s, abs(ratio) * 100)
+
+def analytics_email_number_format(number):
+    """
+    >>> analytics_email_number_format(123)
+    '123'
+
+    >>> analytics_email_number_format(99.12345)
+    '99.12'
+
+    >>> analytics_email_number_format(0.000123)
+    '0.00012'
+    """
+
+    r = r'([0-9]*)(\.(0*)([0-9]*))?'
+    whole, remainder, zeros, decimal = re.match(r, str(number)).groups()
+    if not decimal: return whole
+    return whole + "." + zeros + decimal[:2]

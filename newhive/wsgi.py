@@ -56,6 +56,7 @@ jinja_env.filters.update({
     ,'html_breaks': lambda s: re.sub('\n', '<br/>', unicode(s))
     ,'modify_query': utils.modify_query
     ,'percent_change': utils.percent_change
+    ,'analytics_email_number_format': utils.analytics_email_number_format
 })
 jinja_env.globals.update({
      'colors': newhive.colors.colors
