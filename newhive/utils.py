@@ -269,10 +269,10 @@ def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name, secure = False): response.delete_cookie(name,
     domain = None if secure else '.' + config.server_name)
 
-def local_date():
+def local_date(offset=0):
     tz = pytz.timezone('US/Pacific')
     dt = datetime.now(tz)
-    return dt.date()
+    return dt.date() + pandas.DateOffset(days=offset)
 
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
@@ -323,3 +323,9 @@ def friendly_log_scale(start, end=None, significands = None):
             if val >= start:
                 rv.append(val)
         power += 1
+
+def un_camelcase(s): return re.sub(r'([A-Z])', r' \1', s)
+
+def percent_change(ratio, precision=0):
+    s = "down" if ratio < 0 else "up"
+    return ("{} {:." + str(precision) + "f}%").format(s, abs(ratio) * 100)

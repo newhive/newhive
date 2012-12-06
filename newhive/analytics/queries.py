@@ -11,7 +11,7 @@ from newhive import config
 from newhive.analytics import functions
 from functions import dataframe_to_record, record_to_dataframe
 from newhive.analytics.ga import GAQuery, QueryResponse
-import newhive.analytics.analytics
+import newhive.utils
 from newhive.utils import local_date, dates_to_spec, friendly_log_scale
 #from pandas.datetools import Day
 Day = pandas.datetools.Day
@@ -116,7 +116,7 @@ class ExpressionCreateDates(Query):
     collection_name = 'expression_create_dates'
 
     def _execute(self):
-        cursor = self.db.Expr.search({'apps': {'$exists': True}})
+        cursor = self.db.Expr._col.find({'apps': {'$exists': True}}, fields=['owner_name', 'name', 'created'])
         data = [(u.get('owner_name'), u.get('name'), datetime.datetime.fromtimestamp(u['created'])) for u in cursor]
         data = pandas.DataFrame(data, columns=['user', 'expr', 'created'])
         data['date'] = data.created.apply(lambda d: (d - pandas.DateOffset(hours=8)).date())
@@ -224,9 +224,32 @@ class GASummary(Query):
 
 class Active(Query):
     collection_name = 'active'
+
     def _execute(self, period):
-        input_name = "mr.actions_per_user_per_day"
-        mr_col = newhive.analytics.analytics.actions_per_user_per_day(self.db)
+        def actions_per_user_per_day():
+            map1 = """
+                function() {
+                    date = new Date((this.created - 12*3600) * 1000);
+                    day = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+                    emit({name: this.user_name, date: day/1000}, 1);
+                }"""
+
+            reduce = """
+                function(key, values) {
+                    var total=0;
+                    for (var i=0; i < values.length; i++) {
+                        total += values[i];
+                    }
+                    return total;
+                }"""
+
+            mr1_name = 'mr.actions_per_user_per_day'
+            mr1 = self.db.mdb[mr1_name]
+            latest = mr1.find_one(sort=[('_id.date', -1)])['_id']['date']
+            # The following line performs incremental map reduce, but depends on mongodb version >= 1.8
+            return self.db.ActionLog._col.map_reduce(map1, reduce, mr1_name, merge_output=True, query={'created': {'$gt': latest - 24*3600}})
+
+        mr_col = actions_per_user_per_day()
         mr_col.ensure_index('_id.date')
         offset = pandas.DateOffset(days=period)
         start = newhive.utils.time_u(mr_col.find_one(sort=[('_id.date', 1)])['_id']['date'])

@@ -2,8 +2,10 @@ import time, datetime, re, pandas, newhive, pandas, numpy, pytz
 from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
-from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, local_date
+from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, local_date, un_camelcase
 from newhive.analytics.ga import GAClient, GAQuery
+from newhive.analytics import queries
+from newhive.analytics.functions import ga_column_name_to_title
 Day = pandas.datetools.Day
 
 import logging
@@ -479,22 +481,6 @@ def _cohort_users(db, stop_date=datetime.datetime.now()):
         data.append(item)
     return pandas.DataFrame(data, index=cohort_range)
 
-
-def active(db, period=7):
-    input_name = "mr.actions_per_user_per_day"
-    mr_col = actions_per_user_per_day(db)
-    mr_col.ensure_index('_id.date')
-    offset = pandas.DateOffset(days=period)
-    start = newhive.utils.time_u(mr_col.find_one(sort=[('_id.date', 1)])['_id']['date'])
-    index = pandas.DateRange(start=start + offset, end=datetime.datetime.now(), offset=pandas.DateOffset(days=1))
-
-    def users_active_on(date):
-        cursor = mr_col.find({'_id.date': {'$lte': datetime_to_int(date), '$gt': datetime_to_int(date - offset)}})
-        return len(cursor.distinct('_id.name'))
-
-    data = pandas.DataFrame(index=index, data={'active_users': index.map(users_active_on)})
-    return data
-
 def _active_users_ga(db, period=7):
     """Return users present in GA logs in last 'period' days"""
     tz = pytz.timezone('US/Pacific')
@@ -613,6 +599,29 @@ def user_median_views(db):
     data = pandas.DataFrame(data, columns=['user', 'median_views'])
     data.timestamp = datetime.datetime.now()
     return data
+
+def ga_summary(db):
+    data = queries.GASummary().execute(local_date(-1)).dataframe
+    data.index = data.index.map(lambda x: x.date())
+    data.columns = data.columns.map(ga_column_name_to_title)
+    data['Returning Visits'] = data['Visits'] - data['New Visits']
+
+    epd = queries.ExpressionsCreatedPerDay(db).execute()
+    epd.columns = ['Expressions Created']
+    data = data.join(epd)
+
+    q = queries.Active(db)
+    for period in [1,7,30]:
+        active = q.execute(period)
+        active.index = active.index.map(lambda x: x.date())
+        data = data.join(active)
+
+    data = data[data.index < local_date()]
+    today = data.ix[local_date(-1)]
+    previous = data.ix[[-2, -8, -29]]
+    previous.index = ['DoD', 'WoW', 'MoM']
+    change =  today.map(float) / previous - 1
+    return {'today': today, 'change': change}
 
 if __name__ == '__main__':
     from newhive.state import Database

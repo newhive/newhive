@@ -134,17 +134,6 @@ class Analytics(Application):
         response.context['title'] = 'App Type Count'
         return self.serve_page(response, 'pages/analytics/generic.html')
 
-    # deprecated, see 'actives'
-    @index
-    def active_user_growth(self, request, response):
-        """Active user count over time"""
-        period = int(lget(request.path.split('/'), 2, 7))
-        data, daterange = analytics.active(self.db, period)
-        dates = [datetime_to_int(date) for date in daterange]
-        response.context['json_data'] = json.dumps({'counts': data, 'dates': dates})
-        response.context['title'] = 'Active User Growth'
-        return self.serve_page(response, 'pages/analytics/user_growth.html')
-
     @index
     def user_growth(self, request, response):
         """Total user account count over time"""
@@ -514,3 +503,9 @@ class Analytics(Application):
         """New Dashboard"""
         response.context['title'] = "Dashboard"
         return self.serve_page(response, 'pages/analytics/dashboard.html')
+
+    @admins
+    def email(self, request, response):
+        response.context['ga_summary'] = analytics.ga_summary(self.db)
+        #response.context['expressions'] = queries.ExpressionsCreatedPerDay(self.db).execute()
+        return self.serve_page(response, 'emails/analytics.html')

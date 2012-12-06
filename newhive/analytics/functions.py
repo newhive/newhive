@@ -3,6 +3,7 @@ import datetime, pytz
 import pandas
 import numpy
 from newhive.vendor import gviz
+from newhive.utils import un_camelcase
 
 def user_expression_summary(user, p=False):
     data = [(e['name'], e['views']) for e in user.get_expressions('public')]
@@ -107,3 +108,6 @@ def record_to_dataframe(document):
     for key, val in document['metadata'].iteritems():
         setattr(data, key, val)
     return data
+
+def ga_column_name_to_title(s):
+    return un_camelcase(s[3:]).title()
