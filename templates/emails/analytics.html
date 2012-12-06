@@ -1,0 +1,58 @@
+{% macro icon(val) -%}
+    {% set percent = (val * 100) | abs %}
+
+    {% if percent < 10 %}
+      {% set font="font-size: 0.8em;" %}
+    {% elif percent < 20 %}
+      {% set font="" %}
+    {% else %}
+        {% set font="font-weight: bold;" %}
+    {% endif %}
+
+    {% if val < 0 %}
+        <span style="vertical-align: middle; color: red; {{ font }};">⬇</span>
+    {% else %}
+        <span style="vertical-align: middle; color: green; {{ font }};">⬆</span>
+    {% endif %}
+    <span style="vertical-align: middle;">{{ "%d%%" | format(percent) }}</span>
+{%- endmacro %}
+
+{% macro grouping(title, stats) -%}
+    <tr height=5></tr>
+    {% for stat in stats %}
+        <tr>
+            <th>{{ stat }}</th>
+            <td>{{ ga_summary.today[stat] }}</td>
+            {% for name, val in ga_summary.change[stat].iterkv() %}
+            {#<td>{{val | percent_change }}</td>#}
+            <td>{{icon(val)}}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+{%- endmacro %}
+
+<head>
+    <style>
+        th, td { padding: 3px 8px; }
+        tbody th { text-align: right; }
+    </style>
+</head>
+
+<body>
+    {#    {% for stat in ga_summary.change %}{{ stat }}, {% endfor %} #}
+<table>
+    <thead>
+        <tr>
+            <th>Stat</th>
+            <th>Yesterday</th>
+            <th>vs. Day ago</th>
+            <th>vs. Week ago</th>
+            <th>vs. Month ago</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ grouping('', ['Visitors', 'Visits', 'Returning Visits', 'New Visits']) }}
+        {{ grouping('', ['Active1', 'Active7', 'Active30']) }}
+        {{ grouping('', ['Expressions Created']) }}
+    </tbody>
+</table>

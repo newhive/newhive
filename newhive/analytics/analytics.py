@@ -621,7 +621,7 @@ def ga_summary(db):
     previous = data.ix[[-2, -8, -29]]
     previous.index = ['DoD', 'WoW', 'MoM']
     change =  today.map(float) / previous - 1
-    return {'today': today, 'change': change}
+    return {'today': today.map(int), 'change': change}
 
 if __name__ == '__main__':
     from newhive.state import Database
