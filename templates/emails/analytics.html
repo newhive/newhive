@@ -31,20 +31,14 @@
     {% endfor %}
 {%- endmacro %}
 
-<head>
-    <style>
-        th, td { padding: 3px 8px; }
-        tbody th { text-align: right; }
-    </style>
-</head>
-
 <body>
     {#    {% for stat in summary.change %}{{ stat }}, {% endfor %} #}
-<table>
+    <h1>NewHive Analytics for {{date}}</h1>
+<table id="analytics_summary">
     <thead>
         <tr>
             <th>Stat</th>
-            <th>Yesterday</th>
+            <th>{{date}}</th>
             <th>vs. Day ago</th>
             <th>vs. Week ago</th>
             <th>vs. Month ago</th>
@@ -57,3 +51,7 @@
         {{ grouping('', ['Expressions Created/Day', 'Loves Per Day', 'Listens Per Day']) }}
     </tbody>
 </table>
+<h3><a href="{{link}}">
+        Go to Dashboard
+</a></h3>
+</body>

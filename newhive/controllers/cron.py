@@ -128,3 +128,10 @@ class Cron(Application):
             stats['send_count'] += 1
 
         return stats
+
+    def analytics(self):
+        mailer = newhive.mail.Analytics(db = self.db, jinja_env = self.jinja_env)
+        mailer.send('team@newhive.com')
+
+        stats = {'send_count': 1}
+        return stats
