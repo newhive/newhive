@@ -157,7 +157,7 @@ class ListensPerDay(CreatedPerDay):
 
     def _execute(self):
         collection = self.db.Star
-        spec = {'entity_class': 'User', 'entity': {'$ne': db.User.named('thenewhive').id}}
+        spec = {'entity_class': 'User', 'entity': {'$ne': self.db.User.named('thenewhive').id}}
         return super(ListensPerDay, self)._execute(collection, spec)
 
 class UsersPerDay(CreatedPerDay):
