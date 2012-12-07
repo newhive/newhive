@@ -4,6 +4,7 @@ from newhive.state import abs_url
 from newhive.utils import AbsUrl
 from newhive import config, utils
 import newhive.ui_strings.en as ui
+from newhive.analytics import analytics
 from newhive.manage.ec2 import public_hostname
 from cStringIO import StringIO
 from smtplib import SMTP
@@ -603,5 +604,23 @@ class UserInvitesReminder(Mailer):
         context = {
                 'recipient': self.recipient
                 , 'url': url}
+
+        self.send_mail(context)
+
+class Analytics(Mailer):
+    name = 'analytics'
+    unsubscribable = False
+    template = "emails/analytics"
+    sent_to = ['nonuser']
+    subject = 'Daily Analytics Summary'
+    inline_css = True
+
+    def send(self, address):
+        self.recipient = {'email': address, 'name': 'Team'}
+        context = {
+                'summary': analytics.summary(self.db),
+                'link': AbsUrl('analytics/dashboard'),
+                'date': utils.local_date(-1)
+                }
 
         self.send_mail(context)
