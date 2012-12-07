@@ -22,8 +22,8 @@
     {% for stat in stats %}
         <tr>
             <th>{{ stat }}</th>
-            <td>{{ ga_summary.today[stat] | analytics_email_number_format }}</td>
-            {% for name, val in ga_summary.change[stat].iterkv() %}
+            <td>{{ summary.today[stat] | analytics_email_number_format }}</td>
+            {% for name, val in summary.change[stat].iterkv() %}
             {#<td>{{val | percent_change }}</td>#}
             <td>{{icon(val)}}</td>
             {% endfor %}
@@ -39,7 +39,7 @@
 </head>
 
 <body>
-    {#    {% for stat in ga_summary.change %}{{ stat }}, {% endfor %} #}
+    {#    {% for stat in summary.change %}{{ stat }}, {% endfor %} #}
 <table>
     <thead>
         <tr>
@@ -53,7 +53,7 @@
     <tbody>
         {{ grouping('', ['Visitors', 'Visits', 'Returning Visits', 'New Visits']) }}
         {{ grouping('', ['New Users Per Day']) }}
-        {{ grouping('', ['Active1', 'Active7', 'Active30', "DAU/MAU", "DAU/MAU'"]) }}
+        {{ grouping('', ['Active1', 'Active7', 'Active30', "DAU/MAU"]) }}
         {{ grouping('', ['Expressions Created/Day', 'Loves Per Day', 'Listens Per Day']) }}
     </tbody>
 </table>

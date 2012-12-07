@@ -446,22 +446,6 @@ class Analytics(Application):
         response.context['title'] = """Median Views by User"""
         return self.serve_page(response, 'pages/analytics/median_views.html')
 
-    @admins
-    @index
-    def visitor_summary(self, request, response):
-        """Visits and Visitor Summary"""
-        date = local_date() - pandas.DateOffset(days=1)
-        data = analytics.ga_summary(date)
-        #response.context['data'] = data_frame_to_json(data, outtype='list')
-        #response.context['meta'] = {'date': str(date)}
-        #response.context['title'] = "Visits and Visitor Summary"
-
-        #return self.serve_page(response, 'pages/analytics/ga_summary.html')
-
-        response.context['data'] = dataframe_to_gviz_json(data.transpose())
-        response.context['chart_type'] = "BarChart"
-        return self.serve_page(response, 'pages/analytics/google_chart.html')
-
     def serve_gviz(self, response, data):
         data = data.fillna(0)
         return self.serve_data(response, 'application/json', dataframe_to_gviz_json(data))
@@ -472,7 +456,6 @@ class Analytics(Application):
         return self.serve_gviz(response, data)
 
     @admins
-    @index
     def ga_summary(self, request, response):
         q = queries.GASummary()
         data = q.execute(local_date() - pandas.DateOffset(days=1)).dataframe
@@ -501,6 +484,5 @@ class Analytics(Application):
 
     @admins
     def email(self, request, response):
-        response.context['ga_summary'] = analytics.ga_summary(self.db)
-        #response.context['expressions'] = queries.ExpressionsCreatedPerDay(self.db).execute()
+        response.context['summary'] = analytics.summary(self.db)
         return self.serve_page(response, 'emails/analytics.html')

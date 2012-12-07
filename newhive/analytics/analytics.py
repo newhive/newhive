@@ -601,7 +601,7 @@ def user_median_views(db):
     data.timestamp = datetime.datetime.now()
     return data
 
-def ga_summary(db):
+def summary(db):
     data = queries.GASummary().execute(local_date(-1)).dataframe
     data.index = data.index.map(lambda x: x.date())
     data.columns = data.columns.map(ga_column_name_to_title)
@@ -619,7 +619,7 @@ def ga_summary(db):
 
     data["DAU/MAU"] = data["Active1"] / data["Active30"]
     new = data["New Users Per Day"]
-    data["DAU/MAU'"] = (data["Active1"] - new) / ( data["Active30"] - new)
+    #data["DAU/MAU'"] = (data["Active1"] - new) / ( data["Active30"] - new)
 
     data = data[data.index < local_date()]
     today = data.ix[local_date(-1)]
