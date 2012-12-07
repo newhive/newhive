@@ -405,7 +405,6 @@ class Analytics(Application):
         return self.serve_json(response, segments)
 
     @admins
-    @index
     def retention(self, request, response):
         """Snapshot of User Retention D1-D30 or W1-W30"""
         freq = request.args.get('freq', 'D')
@@ -413,10 +412,7 @@ class Analytics(Application):
         if freq == 'M': freq = 'MS'
         data = analytics.retention(self.db, freq, subset=False)
         data.index = data.index.map(lambda x: x.date())
-        if request.is_xhr or request.is_json:
-            return self.serve_gviz(response, data)
-        response.context['data'] = data_frame_to_json(data)
-        return self.serve_page(response, 'pages/analytics/active_total_chart.html')
+        return self.serve_gviz(response, data)
 
     @admins
     @index

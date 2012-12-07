@@ -514,6 +514,7 @@ def active_users_by_signup_date(db, users, freq='D'):
     #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
     return data
 
+#TODO: move this into analytics.queries
 def retention(db, freq="D", subset=True):
     days = {'D': 1, 'W': 7, 'M': 30, 'MS': 30}.get(freq)
     active = _active_users_ga(db, days)
