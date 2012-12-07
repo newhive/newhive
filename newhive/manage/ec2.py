@@ -107,7 +107,7 @@ def launch_instance(name, category='dev', git_branch = 'master', **kwargs):
 
     print "adding dns routes for {name}.newhive.com and {name}.newhiveexpression.com".format(name=name)
     manage.route53.add_cname('newhive.com', name, instance.public_dns_name, no_confirmation=True)
-    manage.route53.add_cname('newhiveexpression.com', name, instance.public_dns_name, no_confirmation=True)
+    manage.route53.add_cname('tnh.me', name, instance.public_dns_name, no_confirmation=True)
 
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
