@@ -147,7 +147,8 @@ function drawDashboards(){
             'actives?period=30',
             'retention',
             'retention?freq=W',
-            'retention?freq=M'
+            'listens_per_day',
+            'loves_per_day'
         ];
 
         // Dashboard 1
@@ -189,7 +190,7 @@ function drawDashboards(){
             containerId: 'expressions',
             chartType: 'ColumnChart',
             options: defaultOptions,
-            view: { columns: [0, 1] }
+            view: { columns: [0, 1, 14, 15] }
         }));
 
         charts.push(new google.visualization.ChartWrapper({
@@ -235,7 +236,13 @@ function drawDashboards(){
                     0,
                     {
                         calc: function(dt, r){ return dt.getValue(r, 5) / dt.getValue(r, 2) }, 
-                        type: 'number'
+                        type: 'number',
+                        label: 'DAU/Total Visits'
+                    },
+                    {
+                        calc: function(dt, r){ return dt.getValue(r, 5) / dt.getValue(r, 7) }, 
+                        type: 'number',
+                        label: 'DAU/MAU'
                     }
                 ]}
         }));
@@ -338,17 +345,17 @@ function drawDashboards(){
             <div class="chart" id="active30"></div>
         </div>
         <div class="grouping">
-            <h3>Activities</h3>
-            <div class="chart" id="expressions"></div>
-        </div>
-        <div class="grouping">
-            <h3>Daily Active / Total Visits</h3>
+            <h3>Engagement</h3>
             <div class="chart" id="dau_total"></div>
         </div>
         <div class="grouping columns2">
-            <h3>Retention by Cohort</h3>
+            <h3>Retention Snapshot by Cohort</h3>
             <div class="chart" id="retention_snapshot0"></div>
             <div class="chart" id="retention_snapshot1"></div>
+        </div>
+        <div class="grouping">
+            <h3>Activities</h3>
+            <div class="chart" id="expressions"></div>
         </div>
     </div>
 

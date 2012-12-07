@@ -4,7 +4,7 @@ import newhive.ab
 from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive.analytics import analytics, queries, functions
-from newhive.utils import now, datetime_to_int, local_date
+from newhive.utils import now, datetime_to_int, local_date, camelcase
 from newhive.analytics.functions import dataframe_to_gviz_json
 import operator as op
 
@@ -33,6 +33,17 @@ class Analytics(Application):
     def __init__(self, *a, **b):
         super(Analytics, self).__init__(*a, **b)
         self.mdb = b['db'].mdb # direct reference to pymongo db
+
+    def default(self, request, response):
+        method = lget(request.path_parts, 1, '_index')
+        if hasattr(self, method):
+            return getattr(self, method)(request, response)
+        if hasattr(queries, camelcase(method)):
+            query = getattr(queries, camelcase(method))(self.db)
+            data = query.execute(**request.args)
+            return self.serve_gviz(response, data)
+        else:
+            return self.serve_404(request, response)
 
     @admins
     def _index(self, request, response):
@@ -460,21 +471,9 @@ class Analytics(Application):
         return self.serve_data(response, 'application/json', dataframe_to_gviz_json(data))
 
     @admins
-    @index
     def expressions_per_day(self, request, response):
-        """Expressions per day"""
         data = queries.ExpressionsCreatedPerDay(self.db).execute()
-        if request.is_xhr or request.is_json:
-            return self.serve_gviz(response, data)
-        json_data = dataframe_to_gviz_json(data)
-        response.context['data'] = json_data
-        response.context['chart_type'] = 'ColumnChart'
-        return self.serve_page(response, 'pages/analytics/google_chart.html')
-
-        response.context['data'] = data_frame_to_json(data)
-        response.context['title'] = "Expressions created per day"
-        response.context['table'] = data.to_html()
-        return self.serve_page(response, 'pages/analytics/active_total_chart.html')
+        return self.serve_gviz(response, data)
 
     @admins
     @index

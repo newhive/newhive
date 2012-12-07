@@ -326,6 +326,8 @@ def friendly_log_scale(start, end=None, significands = None):
 
 def un_camelcase(s): return re.sub(r'([A-Z])', r' \1', s)
 
+def camelcase(s): return " ".join(s.split('_')).title().replace(' ', '')
+
 def percent_change(ratio, precision=0):
     s = "down" if ratio < 0 else "up"
     return ("{} {:." + str(precision) + "f}%").format(s, abs(ratio) * 100)
