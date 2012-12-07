@@ -23,6 +23,10 @@ connection = pymongo.Connection(host=config.database_host, port=config.database_
 adb = connection.analytics
 min_start_date = datetime.date(2011, 4, 16)
 
+def clear_all_caches():
+    for col in adb.collection_names():
+        adb[col].remove()
+
 class Query(object):
     collection_name = None
     max_age = datetime.timedelta(days=1)
