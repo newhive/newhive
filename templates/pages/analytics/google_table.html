@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <script type='text/javascript' src='https://www.google.com/jsapi'></script>
+    <script type='text/javascript'>
+      google.load('visualization', '1', {packages:['table']});
+      google.setOnLoadCallback(drawTable);
+      function drawTable() {
+        var data = new google.visualization.DataTable({{data}});
+        var table = new google.visualization.Table(document.getElementById('table'));
+        table.draw(data, {showRowNumber: true});
+      }
+    </script>
+{% endblock %}
+
+{% block main %}
+<h1>{{ title }}</h1>
+<div id="table"></div>
+{# intentionally empty #}
+{% endblock %}
