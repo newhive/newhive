@@ -111,9 +111,35 @@ class UserMedianViews(Query):
 
     def _execute(self):
         cursor = self.db.User.search({'analytics.expressions.count': {'$gt': 0}})
-        data = [(u['name'], functions.user_expression_summary(u).views.median()) for u in cursor]
-        data = pandas.DataFrame(data, columns=['user', 'median_views'])
-        data.index = data.pop('user')
+        data = [(u['_id'], u['name'], functions.user_expression_summary(u).views.median()) for u in cursor]
+        data = pandas.DataFrame(data, columns=['id', 'user', 'median_views'])
+        data.index = data.pop('id')
+        return data
+
+class ExpressionViews(Query):
+    collection_name = 'expression_views'
+
+    def _execute(self):
+        cursor = self.db.Expr._col.find({'$or': [{'password': ''}, {'auth': 'public'}]}, ['owner', 'views'])
+        data = [[e['_id'], e['owner'], e.get('views', 0) ] for e in cursor]
+        data = pandas.DataFrame(data, columns=['id', 'owner', 'views'])
+        return data
+
+class UserExpressionSummary(Query):
+    collection_name = 'user_expression_summary'
+
+    def _execute(self):
+        expressions = ExpressionViews(self.db).execute()
+        grouped = expressions.groupby('owner')
+        data = grouped.aggregate([numpy.count_nonzero, numpy.sum, numpy.median])
+        data.columns = ['count', 'sum', 'median']
+
+        cursor = self.db.User._col.find({}, ['name', 'email'])
+        users = [[x['_id'], x['name'], x['email']] for x in cursor]
+        users = pandas.DataFrame(users, columns=['id', 'name', 'email'])
+        users.index = users.pop('id')
+
+        data = users.join(data, how='right')
         return data
 
 class CreatedPerDay(Query):
@@ -317,7 +343,7 @@ class UserImpressions(Query):
         map_function = """
             function() {
                  if (typeof(this.apps) != "undefined" && this.apps.length > 0 && this.views && this.owner_views){
-                     emit(this.owner, {count: 1, views: this.views - this.owner_views});
+                     emit(this.owner, {count: 1, views: this.views});
                  }
             }
             """

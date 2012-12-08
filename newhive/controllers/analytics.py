@@ -443,7 +443,7 @@ class Analytics(Application):
         data = queries.UserMedianViews(self.db).execute()
         data = data.sort('median_views', ascending=False)
         response.context['data'] = data_frame_to_json(data)
-        response.context['title'] = """Median Views by User"""
+        response.context['title'] = """Median Views by User (Of Public Expressions)"""
         return self.serve_page(response, 'pages/analytics/median_views.html')
 
     def serve_gviz(self, response, data):
@@ -454,6 +454,14 @@ class Analytics(Application):
     def expressions_per_day(self, request, response):
         data = queries.ExpressionsCreatedPerDay(self.db).execute()
         return self.serve_gviz(response, data)
+
+    @admins
+    @index
+    def user_expression_summary(self, request, response):
+        """Summary of views for users expressions"""
+        data = queries.UserExpressionSummary(self.db).execute()
+        response.context['data'] = dataframe_to_gviz_json(data)
+        return self.serve_page(response, 'pages/analytics/google_table.html')
 
     @admins
     def ga_summary(self, request, response):
