@@ -1408,6 +1408,10 @@ class ErrorLog(Entity):
     cname = 'error_log'
     indexes = ['created', 'type']
 
+@Database.register
+class Temp(Entity):
+    cname = 'temp'
+
 ## utils
 
 def get_id(entity_or_id):

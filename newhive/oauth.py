@@ -89,7 +89,7 @@ class FacebookClient(object):
             }
             http = httplib2.Http(timeout=0.2)
 
-            logger.info("Exchanging code for new token")
+            logger.info("Exchanging code {code} for new token".format(**auth))
             try:
                 resp, content = http.request(self.token_uri, method='POST', body=body,
                                              headers=headers)
@@ -130,6 +130,8 @@ class FacebookClient(object):
 
     @credentials.setter
     def credentials(self, value):
+        if type(value) is not OAuth2Credentials :
+            value = OAuth2Credentials.from_json(json.dumps(value))
         self._credentials = value
 
     @property
