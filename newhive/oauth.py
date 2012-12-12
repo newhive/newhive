@@ -87,7 +87,7 @@ class FacebookClient(object):
             headers = {
                 'content-type': 'application/x-www-form-urlencoded',
             }
-            http = httplib2.Http(timeout=0.2)
+            http = httplib2.Http(timeout=0.5)
 
             logger.info("Exchanging code {code} for new token".format(**auth))
             try:
