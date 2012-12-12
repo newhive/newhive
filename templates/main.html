@@ -36,13 +36,43 @@
   {% block body %}
   {% endblock body %}
 
+  <div id='nav'
+    ><a href='{{ server_url }}'><div id='logo' class='hoverable icon center'></div></a
+    {% if user.logged_in %}
+      ><div id='user_btn' class='text_btn center hoverable black_active'
+        ><img class='user_thumb {{ 'none' if not user.has_thumb }} icon center' src='{{ user.get_thumb(70) }}'
+        ><div class='text_btn center text'>{{ user.name | capitalize }}<div class='count rounded
+          {{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
+      ></div
+    {% else %}
+        ><a href=''><div id='sign_up_btn' class='text_btn center text'><span class='text'>Sign up</span></div></a
+        ><div id='login_btn' class='text_btn center hoverable'>Log In</div
+    {% endif %}
+    {% if not editing %}
+      ><a id='create_btn' class='text_btn center hoverable' href='{{ create }}' onclick='return require_login("create")'
+        ><div class='icon center'></div
+        ><div class='text_btn center text'>Create</div
+      ></a
+    {% endif %}
+    ><a href='/random' title="View Random Expression" class='random_link'
+      ><div class='random_btn icon center hoverable'></div></a
+    ><form method='GET' action='/search' name='search_form'
+      ><div class='center text'
+        ><input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}'
+        ><div class='hoverable submit' title='Submit search' onclick='document.forms.search_form.submit()'></div
+      ></div
+    ></form
+    ><div class='right'
+      {% block right_nav %}{% endblock %}
+    ></div
+  ></div>
+
+  {#
   <div id='user_nav_handle' class='menu_handle nav_handle'></div>
   <div id='user_nav'>
     <div id='user_nav_inner' class='horiz'
       ><a href='{{ server_url }}'><div id='logo' class='hoverable icon black_active'></div></a
       {% if user.logged_in %}
-        {# ><div id='username' class='text center text_btn hoverable name'
-          >{{ user.name }}<div class='count rounded{{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div #}
         ><div id='user_btn' class='hoverable center text_btn black_active'
           ><img class='user_thumb {{ 'none' if not user.has_thumb }}' src='{{ user.get_thumb(70) }}'
           ><div class='text name'>{{ user.name | capitalize }}<div class='count rounded
@@ -62,7 +92,8 @@
     {% if not user.logged_in %}
       <div id='call_to_action' onclick="require_login('call_to_action');">&nbsp;</div>
     {% endif %}
-</div>
+  </div>
+  #}
 
   <div id='hive_menu'>
     {% if user.logged_in %}
@@ -133,13 +164,10 @@
   {% endif %}
 
   {% if not editing %}
-    <div id='owner_nav_handle' class='menu_handle nav_handle'></div>
+    <div id='owner_nav_handle' class='menu_handle'></div>
     <div id='owner_nav' class='nav horiz'
-      {% if not user.logged_in %}
-      ><div id='login_btn' class='center hoverable text_btn black_active'><div class="text"><span>Log In</span></div></div
-      {% endif %}
       {% if expr or owner %}
-        ><div id='owner_btn' class='hoverable center text_btn black_active'
+        ><div id='owner_btn' class='hoverable center black_active'
           ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
           ><div class='text name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name | capitalize }}</span></div
         ></div

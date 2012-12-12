@@ -2,7 +2,7 @@ if (typeof(Hive) == "undefined") Hive = {};
 
 Hive.config = {
     frame: {
-        auto_close_delay: 5000,
+        init_close_delay: 5000,
         close_delay: 1100,
         open_delay: 500,
         speed: 300,
@@ -39,7 +39,7 @@ Hive.config = {
 //        }, 
 //        1: {
 //            name: 'closed_initially'
-//            , config_overrides: {open_initially: false, auto_close_delay: 5000}
+//            , config_overrides: {open_initially: false, init_close_delay: 5000}
 //        }
 //    }
 //});

@@ -43,6 +43,7 @@ html, body { background-color : white; height : 100%; }
 input[type=text], input[type=password], textarea {
     border: 5px solid $color_unselected;
     padding: 5px;
+    outline: none;
 }
 input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : $color_selected; }
 input[type=button], input[type=submit] { border : none; }

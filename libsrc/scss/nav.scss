@@ -1,18 +1,104 @@
 @import "common";
 
+#nav {
+    position: fixed;
+    bottom: 150px;
+    width: 100%;
+    height: $nav_size;
+    background-color: white;
+    @include box-shadow(rgba(black, .3) 3px 3px 10px);
+
+    .icon, .text_btn {
+        cursor: pointer;
+        background-size: 100% 100%;
+        &.active, &:hover {
+            color: white;
+            background-color: black;
+        }
+        font-weight: bold;
+    }
+    .center {
+        display: inline-block;
+        height: $nav_size;
+        line-height: $nav_size;
+        vertical-align: bottom;
+    }
+    .icon {
+        height: $nav_size;
+        width: $nav_size;
+    }
+    .text {
+        padding: 0 6px;
+    }
+
+    .user_thumb {
+        width: $nav_size - 6;
+        margin-right: 6px;
+    }
+
+    #logo {
+        width: $nav_size; height: $nav_size;
+        background-image: asset_url('skin/1/logo.png');
+        &.active { background-image: asset_url('skin/1/logo-hover.png'); }
+    }
+    #sign_up_btn {
+        padding: 0;
+        * {
+            padding: 0 6px;
+            background-color: $color_selected;
+        }
+        &:hover * { background: none; }
+    }
+    #create_btn {
+        .text { padding-left: 0px; }
+        .icon { background-image: asset_url('skin/1/create.png'); }
+        &.active .icon { background-image: asset_url('skin/1/create-hover.png'); }
+    }
+
+    .right {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: $nav_size;
+
+        #view_btn {
+            .icon { background-image: asset_url('skin/1/views.png'); }
+            &.active .icon { background-image: asset_url('skin/1/views-hover.png'); }
+        }
+        .star {
+            .icon { background-image: asset_url('skin/1/star.png'); }
+            &.active .icon { background-image: asset_url('skin/1/star-hover.png'); }
+            &.on .icon { background-image: asset_url('skin/1/star_on.png'); }
+            &.on { background-color: $color_bright_red; }
+            &.on.active .edge { background-image: asset_url('skin/1/star_bg_on-hover.png'); }
+        }
+        .broadcast {
+            .icon { background-image: asset_url('skin/1/broadcast.png'); }
+            &.active .icon { background-image: asset_url('skin/1/broadcast-hover.png'); }
+            &.on .icon { background-image: asset_url('skin/1/broadcast_on.png'); }
+            &.on {
+                background-image: asset_url('skin/1/broadcast_bg_on.png');
+                background-size: 100% 100%;
+            }
+        }
+        .edit {
+            .icon { background-image: asset_url('skin/1/edit.png'); }
+            &.active .icon { background-image: asset_url('skin/1/edit-hover.png'); }
+        }
+    }
+}
+
+#search_box {
+    width: 150px;
+    border: solid 1px $color_grey_medium;
+    &:focus { border-color: $color_selected; }    
+}
+
 // nav takes 3 layers. For invisible nav handles, the navigation,
 // and their submenus, (4, 5, 6) respectively
 $nav_layer: 4; 
 
 @media print { .nav { display: none; } }
-
-.icon {
-    height: $nav_size;
-    width: $nav_size;
-    display: inline-block;
-    vertical-align: middle;
-    background-size: 100% 100%;
-}
 
 img.thumb { background-color: $color_grey_medium; }
 
@@ -63,44 +149,10 @@ img.thumb { background-color: $color_grey_medium; }
         vertical-align: middle;
     }
 
-    .text {
-        font-weight: bold;
-        color: $color_grey_medium;
-        height: $nav_size;
-        line-height: $nav_size;
-        vertical-align: middle;
-    }
-    .active .text, .active.text { color: white; }
-
-    .text_btn {
-        padding: 0 8px;
-        cursor: pointer;
-    }
-
-    &.horiz {
-        > :first-child, > :first-child .icon { @include border-radius(5px 0 0 5px); }
-        > :last-child, > :last-child .icon { @include border-radius(0 5px 5px 0); }
-    }
-    &.vert {
-        > :first-child, > :first-child .icon { @include border-radius(5px 5px 0 0); }
-        > :last-child, > :last-child .icon { @include border-radius(0 0 5px 5px); }
-    }
-
-    .name { color: black; }
-    .active.name, .active .name { color: white; }
-
-    .user_thumb {
-        width: $nav_size - 6;
-        margin-right: 6px;
-    }
 }
 .nav {
     @include nav_position;
     @include nav_styles;
-}
-
-#search_box {
-    width: 200px;
 }
 
 .menu_handle {
@@ -127,23 +179,6 @@ img.thumb { background-color: $color_grey_medium; }
 #user_nav_inner {
     @include nav_styles;
     float: left;
-}
-
-#logo {
-    width: $nav_size; height: $nav_size;
-    background-image: asset_url('skin/1/logo.png');
-    &.active { background-image: asset_url('skin/1/logo-hover.png'); }
-    padding-right: 2px;
-}
-#logotype {
-    width: 152px; height: $nav_size;
-    background-image: asset_url('skin/1/logotype_beta.png');
-}
-
-#create_btn {
-    .text { padding-left: 6px; }
-    #create_icon { background-image: asset_url('skin/1/create.png'); }
-    &.active #create_icon { background-image: asset_url('skin/1/create-hover.png'); }
 }
 
 #call_to_action {
@@ -232,45 +267,9 @@ img.thumb { background-color: $color_grey_medium; }
         .icon { background-repeat: no-repeat; width: 38px; height: 28px; }
     }
 
-    .edit {
-        height: 38px;
-
-        .nav_btn { text-align: right; }
-        .icon {
-            margin: 5px 0;
-            display: inline-block;
-            background-image: asset_url('skin/1/edit.png');
-        }
-        .text { display: none; }
-        &.active {
-            width: 85px;
-            .text { display: inline; }
-        }
-    }
 
     .view {
-        .icon { background-image: asset_url('skin/1/views.png'); }
-        &.active .icon { background-image: asset_url('skin/1/views-hover.png'); }
         cursor: default;
-    }
-
-    .star {
-        .icon { background-image: asset_url('skin/1/star.png'); }
-        &.active .icon { background-image: asset_url('skin/1/star-hover.png'); }
-        &.on .icon { background-image: asset_url('skin/1/star_on.png'); }
-        &.on { background-color: $color_bright_red; }
-        &.on.active .edge { background-image: asset_url('skin/1/star_bg_on-hover.png'); }
-    }
-
-    .broadcast {
-        .icon { background-image: asset_url('skin/1/broadcast.png'); }
-        &.active .icon { background-image: asset_url('skin/1/broadcast-hover.png'); }
-        &.on .icon { background-image: asset_url('skin/1/broadcast_on.png'); }
-        &.on {
-            background-image: asset_url('skin/1/broadcast_bg_on.png');
-            background-size: 100% 100%;
-        }
-        &.on.active .edge { background-image: asset_url('skin/1/broadcast_bg_on-hover.png'); }
     }
 
     .comment {

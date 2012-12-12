@@ -15,8 +15,32 @@
 {% endblock %}
 {% block body_classes %}{{super()}} frame{% endblock %}
 
+{% block right_nav %}
+  ><div id='view_btn' class='view text_btn center hoverable'
+    ><div class='icon center'></div
+    ><div class='count center'></div
+  ></div
+  ><div id='star_btn' class='star text_btn center hoverable'
+      data-title-off='show some love' data-title-on='stop loving'
+    ><div class='icon center'></div
+    ><div class='count center'></div
+  ></div
+  ><div id='broadcast_btn' class='broadcast text_btn center hoverable'
+      data-title-off='broadcast to listeners' data-title-on='stop broadcasting'     
+    ><div class='icon center'></div
+    ><div class='count center'></div
+  ></div
+  ><div id='comment_btn' class='comment text_btn center hoverable'
+    ><div class='icon center'></div
+    ><div class='count center'></div
+  ></div
+  ><a class='edit edit_url text_btn center hoverable'
+    ><div class='icon center'></div
+    ><span class='text_btn center text'>Edit</span
+  ></a
+{% endblock %}
+
 {% block body %}
-  <div id='navigator_handle' class='menu_handle'></div>
   <div id="navigator" class="navigator">
     <div class="info">
       <a href='/random' title="View Random Expression" class='random_link'><div class='random_btn icon hoverable rounded'></div></a>
@@ -26,52 +50,12 @@
       </form>
       <div class="tags_wrapper">
         <div class="tags"></div>
-      </div>
-    </div>
   </div>
   <div id="expression_frames">
     <iframe src='{{ expr_url }}' class='expr'></iframe>
   </div>
 
-  <div id='action_nav_handle' class='menu_handle nav_handle'></div>
-  <div id='left_nav_handle' class='menu_handle nav_handle'></div>
-  <div id='right_nav_handle' class='menu_handle nav_handle'></div>
-  <div id='top_nav_handle' class='menu_handle nav_handle'></div>
   <div id='action_nav'>
-    <a class='edit_url'><div class='btn_box edit hoverable'>
-      <div class='nav_btn'>
-        <span class='text'>Edit</span>
-        <div class='icon'></div>
-      </div>
-    </div></a>
-    <div id='view_btn' class='btn_box view hoverable'>
-      <div class='nav_btn'>
-        <div class='edge'></div>
-        <div class='icon'></div>
-        <div class='count'></div>
-      </div>
-    </div>
-    <div id='star_btn' class='btn_box star hoverable' data-title-off='show some love' data-title-on='stop loving'>
-      <div class='nav_btn'>
-        <div class='edge'></div>
-        <div class='icon'></div>
-        <div class='count'></div>
-      </div>
-    </div>
-    <div id='broadcast_btn' class='btn_box broadcast hoverable' data-title-off='broadcast to listeners' data-title-on='stop broadcasting'>
-      <div class='nav_btn'>
-        <div class='edge'></div>
-        <div class='icon'></div>
-        <div class='count'></div>
-      </div>
-    </div>
-    <div id='comment_btn' class='btn_box comment hoverable'>
-      <div class='nav_btn'>
-        <div class='edge'></div>
-        <div class='icon'></div>
-        <div class='count'></div>
-      </div>
-    </div>
     <div class='btn_box delete hoverable'>
       <div class='nav_btn'>
         <span class='text'>Delete</span>

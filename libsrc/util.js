@@ -484,10 +484,10 @@ hover_menu = function(handle, drawer, options) {
             // auto_close should be deprecated, it's never set to true in our project @2012-08-12
             ,auto_close: false
 
-            // auto_close_delay is the amount of time after which the menu
+            // init_close_delay is the amount of time after which the menu
             // closes on its own if the user doesn't trigger open or close
             // through any mouse action, assuming `opened` is set to true
-            ,auto_close_delay: 0
+            ,init_close_delay: 0
 
             ,hover_close: true
             ,open_delay: 100
@@ -509,8 +509,8 @@ hover_menu = function(handle, drawer, options) {
             ,opened: false
         }, options)
     ;
-    if(!handle.length) throw("hover_menu has no handle");
-    if(!drawer.length) throw("hover_menu has no drawer");
+    if(!handle.length) log("hover_menu has no handle");
+    if(!drawer.length) log("hover_menu has no drawer");
     if(!opts.group) opts.group = { menus: [] };
 
     o.menus = [];
@@ -667,7 +667,7 @@ hover_menu = function(handle, drawer, options) {
     });
 
     if(opts.auto_close) drawer.click(o.close);
-    if(opts.opened && opts.auto_close_delay){ o.delayed_close(opts.auto_close_delay); }
+    if(opts.opened && opts.init_close_delay){ o.delayed_close(opts.init_close_delay); }
 
     return o;
 }
@@ -869,10 +869,9 @@ function callback_log(message){
     };
 };
 
-var log_stub = function(m){
-    window.m = m;
-    console.log(m);
-};
+var log = (window.console && console.log) ? function(msg){
+        console.log( msg );
+    } : noop;
 
 // debugging function logs time between events, grouped by label
 function time_since_last(label, extra_log) {
