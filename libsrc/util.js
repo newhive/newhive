@@ -216,7 +216,14 @@ function noop() { };
 //function apo(f) { var args = arguments; return function() { return f.apply(args[1], Array.prototype.slice.call(args, 2)); }; };
 //function accessor(name) { return function(o) { return o[name] } }
 function cp(f, g) { return function(a) { f(g(a)); } } // functional composition
-function range(n) { var l = []; while(n) l[--n] = n; return l; }
+function range(start, end) {
+    if (typeof(end) == "undefined") { end=start; start=0; }
+    var l = [];
+    for (var i = start; i < end; i++){
+        l.push(i);
+    }
+    return l;
+}
 
 function map(f, list) {
     var ret = [];

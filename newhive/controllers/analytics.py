@@ -4,7 +4,8 @@ import newhive.ab
 from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive.analytics import analytics, queries, functions
-from newhive.utils import now, datetime_to_int, local_date
+from newhive.utils import now, datetime_to_int, local_date, camelcase
+from newhive.analytics.functions import dataframe_to_gviz_json
 import operator as op
 
 _index = []
@@ -32,6 +33,17 @@ class Analytics(Application):
     def __init__(self, *a, **b):
         super(Analytics, self).__init__(*a, **b)
         self.mdb = b['db'].mdb # direct reference to pymongo db
+
+    def default(self, request, response):
+        method = lget(request.path_parts, 1, '_index')
+        if hasattr(self, method):
+            return getattr(self, method)(request, response)
+        if hasattr(queries, camelcase(method)):
+            query = getattr(queries, camelcase(method))(self.db)
+            data = query.execute(**request.args)
+            return self.serve_gviz(response, data)
+        else:
+            return self.serve_404(request, response)
 
     @admins
     def _index(self, request, response):
@@ -132,17 +144,6 @@ class Analytics(Application):
         response.context['data'] = analytics.app_count(self.db).items()
         response.context['title'] = 'App Type Count'
         return self.serve_page(response, 'pages/analytics/generic.html')
-
-    @index
-    def active_user_growth(self, request, response):
-        """Active user count over time"""
-        period = int(lget(request.path.split('/'), 2, 7))
-        data, daterange = analytics.active(self.db, period)
-        dates = [datetime_to_int(date) for date in daterange]
-        response.context['json_data'] = json.dumps({'counts': data, 'dates': dates})
-        response.context['title'] = 'Active User Growth'
-        return self.serve_page(response, 'pages/analytics/user_growth.html')
-
 
     @index
     def user_growth(self, request, response):
@@ -326,30 +327,6 @@ class Analytics(Application):
                 ]
         return self.serve_page(response, 'pages/analytics/cohort_dashboard.html')
 
-    @admins
-    @index
-    def impressions_per_user(self, request, response):
-        """Users grouped by total expression impressions"""
-        url_parts = request.path.split('/')
-        view = lget(url_parts, 2, 'chart')
-        if view == 'top':
-            # collection is a mongodb collection
-            collection = analytics.overall_impressions(self.db, histogram=False)
-            user_list = collection.find({}, sort=[('value.views', -1)], limit=100)
-            users = []
-            for item in user_list:
-                user = self.db.User.fetch(item['_id'])
-                user.impressions = item['value']['views']
-                users.append(user)
-            response.context['users'] = users
-            return self.serve_page(response, 'pages/analytics/impressions_top.html')
-
-        elif view == 'chart':
-            hist, bin_edges = analytics.overall_impressions(self.db)
-            response.context['data'] = list(hist[1:15])
-            response.context['edges'] = list(bin_edges[1:16])
-            return self.serve_page(response, 'pages/analytics/impressions.html')
-
     @index
     def pageviews(self, request, response):
         """Pageviews"""
@@ -428,15 +405,14 @@ class Analytics(Application):
         return self.serve_json(response, segments)
 
     @admins
-    @index
     def retention(self, request, response):
         """Snapshot of User Retention D1-D30 or W1-W30"""
         freq = request.args.get('freq', 'D')
         response.context['title'] = "{}1-{}30 Retention".format(freq, freq)
         if freq == 'M': freq = 'MS'
-        data = analytics.retention(self.db, freq)
-        response.context['data'] = data_frame_to_json(data)
-        return self.serve_page(response, 'pages/analytics/active_total_chart.html')
+        data = analytics.retention(self.db, freq, subset=False)
+        data.index = data.index.map(lambda x: x.date())
+        return self.serve_gviz(response, data)
 
     @admins
     @index
@@ -467,34 +443,54 @@ class Analytics(Application):
         data = queries.UserMedianViews(self.db).execute()
         data = data.sort('median_views', ascending=False)
         response.context['data'] = data_frame_to_json(data)
-        response.context['title'] = """Median Views by User"""
+        response.context['title'] = """Median Views by User (Of Public Expressions)"""
         return self.serve_page(response, 'pages/analytics/median_views.html')
 
-    @admins
-    @index
-    def visitor_summary(self, request, response):
-        """Visits and Visitor Summary"""
-        date = local_date() - pandas.DateOffset(days=1)
-        data = analytics.ga_summary(date)
-        response.context['data'] = data_frame_to_json(data, outtype='list')
-        response.context['meta'] = {'date': str(date)}
-        response.context['title'] = "Visits and Visitor Summary"
-
-        return self.serve_page(response, 'pages/analytics/ga_summary.html')
+    def serve_gviz(self, response, data):
+        data = data.fillna(0)
+        return self.serve_data(response, 'application/json', dataframe_to_gviz_json(data))
 
     @admins
-    @index
     def expressions_per_day(self, request, response):
-        """Expressions per day"""
-        start, end = self._iso_args(request.args, output='date')
         data = queries.ExpressionsCreatedPerDay(self.db).execute()
-        if not start: start = local_date() - pandas.DateOffset(days=30)
-        data = data[ data.index >= start ]
-        if end: data = data[ data.index <= end ]
-        data = pandas.DataFrame(data)
-        data['total'] = data.pop('created')
-        response.context['data'] = data_frame_to_json(data)
-        response.context['title'] = "Expressions created per day"
-        response.context['table'] = data.to_html()
-        return self.serve_page(response, 'pages/analytics/active_total_chart.html')
+        return self.serve_gviz(response, data)
 
+    @admins
+    @index
+    def user_expression_summary(self, request, response):
+        """Summary of views for users expressions"""
+        data = queries.UserExpressionSummary(self.db).execute()
+        response.context['data'] = dataframe_to_gviz_json(data)
+        return self.serve_page(response, 'pages/analytics/google_table.html')
+
+    @admins
+    def ga_summary(self, request, response):
+        q = queries.GASummary()
+        data = q.execute(local_date() - pandas.DateOffset(days=1)).dataframe
+        data.index = data.index.map(lambda x: x.date())
+        return self.serve_gviz(response, data)
+
+    @admins
+    def actives(self, request, response):
+        q = queries.Active(self.db)
+        data = q.execute(period=int(request.args.get('period', 1)) )
+        data.index = data.index.map(lambda x: x.date())
+        return self.serve_gviz(response, data)
+
+    @admins
+    def total_impressions(self, request, response):
+        q = queries.UserImpressions(self.db)
+        data = q.execute();
+        return self.serve_gviz(response, data)
+
+    @admins
+    @index
+    def dashboard(self, request, response):
+        """New Dashboard"""
+        response.context['title'] = "Dashboard"
+        return self.serve_page(response, 'pages/analytics/dashboard.html')
+
+    @admins
+    def email(self, request, response):
+        response.context['summary'] = analytics.summary(self.db)
+        return self.serve_page(response, 'emails/analytics.html')

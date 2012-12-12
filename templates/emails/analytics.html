@@ -1,0 +1,57 @@
+{% macro icon(val) -%}
+    {% set percent = (val * 100) | abs %}
+
+    {% if percent < 10 %}
+      {% set font="font-size: 0.8em;" %}
+    {% elif percent < 20 %}
+      {% set font="" %}
+    {% else %}
+        {% set font="font-weight: bold;" %}
+    {% endif %}
+
+    {% if val < 0 %}
+        <span style="vertical-align: middle; color: red; {{ font }};">⬇</span>
+    {% else %}
+        <span style="vertical-align: middle; color: green; {{ font }};">⬆</span>
+    {% endif %}
+    <span style="vertical-align: middle;">{{ "%d%%" | format(percent) }}</span>
+{%- endmacro %}
+
+{% macro grouping(title, stats) -%}
+    <tr height=5></tr>
+    {% for stat in stats %}
+        <tr>
+            <th>{{ stat }}</th>
+            <td>{{ summary.today[stat] | analytics_email_number_format }}</td>
+            {% for name, val in summary.change[stat].iterkv() %}
+            {#<td>{{val | percent_change }}</td>#}
+            <td>{{icon(val)}}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+{%- endmacro %}
+
+<body>
+    {#    {% for stat in summary.change %}{{ stat }}, {% endfor %} #}
+    <h1>NewHive Analytics for {{date}}</h1>
+<table id="analytics_summary">
+    <thead>
+        <tr>
+            <th>Stat</th>
+            <th>{{date}}</th>
+            <th>vs. Day ago</th>
+            <th>vs. Week ago</th>
+            <th>vs. Month ago</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ grouping('', ['Visitors', 'Visits', 'Returning Visits', 'New Visits']) }}
+        {{ grouping('', ['New Users Per Day']) }}
+        {{ grouping('', ['Active1', 'Active7', 'Active30', "DAU/MAU"]) }}
+        {{ grouping('', ['Expressions Created/Day', 'Loves Per Day', 'Listens Per Day']) }}
+    </tbody>
+</table>
+<h3><a href="{{link}}">
+        Go to Dashboard
+</a></h3>
+</body>

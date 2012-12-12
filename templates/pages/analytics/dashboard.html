@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+{% block head %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .chart {
+            float: left;
+        }
+        .dashboard {
+            display: none;
+        }
+        #control_header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            width: 100%;
+        }
+        #control_header #control {
+            height: 100px;
+            width: 100%;
+        }
+        body #dashboard1 {
+            top: 0;
+            padding-top: 100px;
+        }
+        .grouping {
+            overflow: hidden;
+        }
+        .grouping .chart {
+            width: 100%;
+        }
+        .columns2 .chart {
+            width: 50%;
+        }
+        .columns3 .chart {
+            width: 33%;
+        }
+
+        #loading {
+            margin-top: 200px;
+            text-align: center;
+            font-size: 22px;
+        }
+        #loading_container {
+            display: inline-block;
+            vertical-align: middle;
+            width: 400px;
+            height: 25px;
+            background-color: lightgrey;
+        }
+        #loading_container div {
+            width: 0;
+            height: 100%;
+            float: left;
+        }
+        #loading_container .done {
+            background-color: steelblue;
+        }
+        #loading_container .errors {
+            background-color: salmon;
+        }
+
+    </style>
+    <!--Load the AJAX API-->
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="/lib/libsrc/analytics_dashboard.js"></script>
+    <script type="text/javascript">
+
+// Load the Visualization API and the piechart package.
+google.load('visualization', '1.0', {'packages':['controls']});
+
+// Set a callback to run when the Google Visualization API is loaded.
+google.setOnLoadCallback(drawDashboards);
+
+function drawDashboards(){
+
+    function join(dataArray) {
+        var joined;
+        dataArray.forEach(function(el, i){
+            if (i == 0) joined = el;
+            else
+            {
+                joined = google.visualization.data.join(
+                    joined,
+                    el,
+                    'full',
+                    [[0,0]],
+                    range(1, joined.getNumberOfColumns()),
+                    range(1, el.getNumberOfColumns())
+                );
+            }
+        });
+        return joined;
+    };
+
+    function loadDashboard2(){
+        $.ajax({
+            url: '/analytics/total_impressions',
+            success: function(d){
+                var data = new google.visualization.DataTable(d);
+                dashboard2(data);
+            },
+            dataType: 'json',
+            method: 'GET'
+        });
+    };
+
+    function dashboard2(data){
+        var dash = Dashboard('dashboard2');
+
+        var defaultOptions = {
+            chartArea: { height: '80%', width: '90%' },
+            legend: { position: 'in', alignment: 'left' }
+        };
+
+        dash.data(data);
+        dash.addChart(
+            new google.visualization.ChartWrapper({
+              containerId: 'total_impressions',
+              chartType: 'PieChart',
+              options: { height: 300, title: 'Users' },
+              view: { columns: [
+                  {
+                      calc: function(dt, r){ return dt.getValue(r, 1) + " - " + dt.getValue(r,2) + " views"}, 
+                      type: 'string'
+                  },
+                  3
+                  ] }
+        }));
+        dash.draw();
+    };
+
+    function loadDashboard1(){
+        var data = {};
+
+        var loaded = 0;
+        var errors = 0;
+        var urls = [
+            'expressions_per_day',
+            'ga_summary',
+            'actives?period=1',
+            'actives?period=7',
+            'actives?period=30',
+            'retention',
+            'retention?freq=W',
+            'listens_per_day',
+            'loves_per_day'
+        ];
+
+        // Dashboard 1
+        $.each(urls, function(i, id){
+            $.ajax({
+                url: '/analytics/' + id,
+                success: function(d, textStatus, jqXHR){
+                    data[id] = new google.visualization.DataTable(d);
+                    loaded++;
+                    $('#loading_container .done').width(loaded / urls.length * 100 + "%");
+                    if (loaded == urls.length){
+                        $('#loading').remove();
+                        dashboard1(data, urls);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+                    console.log(id, jqXHR, textStatus, errorThrown);
+                    errors++;
+                    $('#loading_container .errors').width(errors / urls.length * 100 + "%");
+                },
+                dataType: 'json',
+                method: 'GET'
+            });
+        });
+    };
+
+    function dashboard1(data, urls){
+        var joined = join($.map(urls, function(el){ return data[el] }));
+        var timeRange = joined.getColumnRange(0);
+        var DAY = 86400000;
+
+        var defaultOptions = {
+            chartArea: { height: '80%', width: '90%' },
+            legend: { position: 'in', alignment: 'left' }
+        };
+
+        var charts = [];
+        charts.push(new google.visualization.ChartWrapper({
+            containerId: 'expressions',
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 1, 14, 15] }
+        }));
+
+        charts.push(new google.visualization.ChartWrapper({
+            containerId: 'visitors',
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 2] }
+        }));
+
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'visits',
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 3, 4] }
+        }));
+
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'active1',
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 5] }
+        }));
+
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'active7',
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 6] }
+        }));
+
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'active30',
+            chartType: 'ColumnChart',
+            options: defaultOptions,
+            view: { columns: [0, 7] }
+        }));
+
+        charts.push( new google.visualization.ChartWrapper({
+            containerId: 'dau_total',
+            chartType: 'LineChart',
+            options: defaultOptions,
+            view: { columns: [
+                    0,
+                    {
+                        calc: function(dt, r){ return dt.getValue(r, 5) / dt.getValue(r, 2) }, 
+                        type: 'number',
+                        label: 'DAU/Total Visits'
+                    },
+                    {
+                        calc: function(dt, r){ return dt.getValue(r, 5) / dt.getValue(r, 7) }, 
+                        type: 'number',
+                        label: 'DAU/MAU'
+                    }
+                ]}
+        }));
+
+        var retConfigs = [
+            {title: "Daily", columns: [0,8,9,10]},
+            {title: "Weekly", columns: [0,11,12,13], groupWidth: '220%'}
+        ];
+        var calcColumn = function(el){
+            return function(d, r){
+                return Math.max(0, d.getValue(r, el.columns[2]) - d.getValue(r, el.columns[1]));
+            };
+        };
+        $.each(retConfigs, function (i, el){
+            charts.push( new google.visualization.ChartWrapper({
+                containerId: 'retention_snapshot' + i,
+                chartType: 'ComboChart',
+                options: $.extend({
+                    title: el.title,
+                    seriesType: "bars",
+                    bar: {groupWidth: el.groupWidth || '61.8%'},
+                    series: [{}, {}, {type: "line", targetAxisIndex: 1}],
+                    vAxes: [{}, {minValue: 0, maxValue: 1}],
+                    interpolateNulls: true,
+                    isStacked: true
+                    }, defaultOptions),
+                view: { columns: [
+                    el.columns[0],
+                    el.columns[1],
+                    {
+                        calc: calcColumn(el),
+                        type: 'number',
+                        label: 'inactive'
+                    },
+                    el.columns[3]
+                    ]
+                }
+            }));
+        });
+
+        var control = new google.visualization.ControlWrapper({
+            'controlType': 'ChartRangeFilter',
+            'height': 100,
+            'containerId': 'control',
+            'options': {
+                // Filter by the date axis.
+                'filterColumnIndex': 0,
+                'ui': {
+                    'chartType': 'LineChart',
+                    'chartOptions': $.extend({ 'hAxis': {'baselineColor': 'none'} }, defaultOptions),
+                    'chartView': {
+                        'columns': [0, 2]
+                    },
+                    'minRangeSize': DAY * 7
+                }
+            },
+            // Initial range: 2012-02-09 to 2012-03-20.
+            'state': {'range': {'start': new Date(timeRange.max - DAY * 31), 'end': timeRange.max}}
+        });
+
+        dash = Dashboard('dashboard1');
+        $.each(charts, function(i, chart){
+                dash.addChart(chart);
+                });
+        dash.addControl(control);
+        dash.data(joined);
+        dash.draw();
+    };
+
+    // Main
+    loadDashboard1();
+    loadDashboard2();
+
+};
+</script>
+
+{% endblock head %}
+
+{% block main %}
+    <div id="loading">
+        Loading Data... 
+        <div id="loading_container">
+          <div class="done"></div>
+          <div class="errors"></div>
+        </div>
+    </div>
+    <div id="dashboard1" class="dashboard">
+        <div id="control_header">
+            <div id="control"></div>
+        </div>
+        <div class="grouping columns2">
+            <h3>Visits and Visitors</h3>
+            <div class="chart" id="visitors"></div>
+            <div class="chart" id="visits"  ></div>
+        </div>
+        <div class="grouping columns3">
+            <h3>Daily, Weekly, Monthly Active</h3>
+            <div class="chart" id="active1" ></div>
+            <div class="chart" id="active7" ></div>
+            <div class="chart" id="active30"></div>
+        </div>
+        <div class="grouping">
+            <h3>Engagement</h3>
+            <div class="chart" id="dau_total"></div>
+        </div>
+        <div class="grouping columns2">
+            <h3>Retention Snapshot by Cohort</h3>
+            <div class="chart" id="retention_snapshot0"></div>
+            <div class="chart" id="retention_snapshot1"></div>
+        </div>
+        <div class="grouping">
+            <h3>Activities</h3>
+            <div class="chart" id="expressions"></div>
+        </div>
+    </div>
+
+    <div id="dashboard2" class="dashboard">
+      <div class="grouping columns2">
+        <h3>Users Grouped by Total Impressions</h3>
+        <div class="chart" id="total_impressions"></div>
+      </div>
+    </div>
+{% endblock main %}

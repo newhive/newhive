@@ -268,3 +268,8 @@ $space4: 5px;
     margin-top: 5px;
     font-size: 13px;
 }
+
+#analytics_summary {
+    th, td { padding: 3px 8px; }
+    tbody th { text-align: right; }
+}

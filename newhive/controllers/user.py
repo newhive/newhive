@@ -22,6 +22,8 @@ class User(Application):
         response.context['facebook_connect_url'] = FacebookClient().authorize_url(redirect_url)
 
         if request.args.has_key('code'):
+            credentials = request.requester.fb_client.credentials
+            credential_store = self.db.Temp.create( json.loads(credentials.to_json()) )
             fb_profile = request.requester.fb_client.me()
             profile_picture_url = 'https://graph.facebook.com/' + fb_profile.get('id') + '/picture?type=large&return_ssl_resources=1'
             try:
@@ -41,6 +43,7 @@ class User(Application):
             response.context['f']['fullname'] = fb_profile['name']
             response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(fb_profile.get('gender'))
             response.context['f']['facebook'] = fb_profile
+            response.context['f']['credential_id'] = credential_store.id
             if profile_picture:
                 response.context['f']['thumb'] = profile_picture.get_thumb(190,190)
                 response.context['f']['thumb_file_id'] = profile_picture.id
@@ -74,11 +77,13 @@ class User(Application):
             #,'flags'    : { 'add_invites_on_save' : True }
         })
         if not args.get('fullname'): args['fullname'] = args['name']
-        if request.args.has_key('code'):
-            credentials = request.requester.fb_client.exchange()
+        credential_id = request.form.get('credential_id')
+        if credential_id:
+            credentials = self.db.Temp.fetch(credential_id)
+            request.requester.fb_client.credentials = credentials
             fb_profile = request.requester.fb_client.me()
             args.update({
-                'oauth': {'facebook': json.loads(credentials.to_json())}
+                'oauth': {'facebook': credentials}
                 ,'facebook' : fb_profile
             })
         if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})

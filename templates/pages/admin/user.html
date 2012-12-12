@@ -3,6 +3,9 @@
 {% block head %}
 {{ super() }}
 <style>
+    h1{
+        margin: 0.67em 0 0 0;
+    }
   .section { 
     float: left; 
     margin-right: 20px;
@@ -10,12 +13,29 @@
   .item h4 {
       margin-bottom: 0;
   }
+  #delete {
+      font-size: 12px;
+      color: grey;
+  }
 </style>
 {% endblock head %}
 
+{% block footer_scripts %}
+{{ super() }}
+<script>
+    function deleteAccount(){
+        if (confirm("Permanently Delete account?")) {
+            $.getJSON("?delete=true", function(){
+                $('#content').empty().append("<h1>{{user_object.name}} was deleted</h1>");
+            });
+        }
+    };
+</script>
+{% endblock %}
 
 {% block content %}
 <h1>{{user_object.name}}</h1>
+<a id="delete" onclick="deleteAccount(); return false" href="#">Delete Account</a>
 
 <div>
     <div class="item">
