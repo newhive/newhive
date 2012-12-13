@@ -60,7 +60,7 @@ class Query(object):
         return {'args': serialized_args, 'kwargs': kwargs, 'source_db': self.db.mdb.name if self.db else None}
 
     def __init__(self, source_db=None, persistence_db=adb):
-        """source_db is nehive.state.Database, persistance_db is pymongo database"""
+        """source_db is nehive.state.Database, persistence_db is pymongo database"""
         self.db = source_db
         self.collection = persistence_db[self.collection_name]
 
