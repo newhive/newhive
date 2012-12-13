@@ -20,7 +20,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 connection = pymongo.Connection(host=config.database_host, port=config.database_port)
-adb = connection.analytics
+adb = connection[config.analytics_db]
 min_start_date = datetime.date(2011, 4, 16)
 
 def clear_all_caches():
