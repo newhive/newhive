@@ -1,5 +1,9 @@
+import pickle
+import datetime, pytz
 import pandas
 import numpy
+from newhive.vendor import gviz
+from newhive.utils import un_camelcase
 
 def user_expression_summary(user, p=False):
     data = [(e['name'], e['views']) for e in user.get_expressions('public')]
@@ -66,3 +70,44 @@ def smooth(x, window_len=7, window='hanning'):
             w=eval('numpy.'+window+'(window_len)')
     y=numpy.convolve(w/w.sum(),s,mode='same')
     return y[window_len:-window_len+1]
+
+def json_types_from_record(rec):
+    def mapping(typ, i):
+        # to support: ["string", "number", "boolean", "date", "datetime", "timeofday"]
+        if typ == numpy.object_:
+            typ = type(rec[0][i])
+        if issubclass(typ, (int, float)):
+            return 'number'
+        elif issubclass(typ, basestring):
+            return 'string'
+        elif issubclass(typ, datetime.date):
+            return 'date'
+        elif issubclass(typ, (datetime.datetime, numpy.datetime64)):
+            return 'datetime'
+        elif issubclass(typ, bool):
+            return 'boolean'
+        else:
+            raise ValueError("type {} not supported yet".format(typ))
+    types = [mapping(rec.dtype.fields[name][0].type, i) for i, name in enumerate(rec.dtype.names)]
+    return zip(rec.dtype.names, types)
+
+def dataframe_to_gviz_json(dataframe):
+    rec = dataframe.to_records()
+    dt = gviz.DataTable(json_types_from_record(rec), rec.tolist()).ToJSon()
+    return dt
+
+def dtnow():
+    return datetime.datetime.now(pytz.utc)
+
+def dataframe_to_record(dataframe):
+    metadata = dict([(key,val) for key, val in dataframe.__dict__.iteritems() if not key.startswith('_')])
+    return {'data': pickle.dumps(dataframe), 'metadata': metadata}
+
+def record_to_dataframe(document):
+    data = pickle.loads(document['data'])
+    for key, val in document['metadata'].iteritems():
+        setattr(data, key, val)
+    return data
+
+def ga_column_name_to_title(s):
+    return un_camelcase(s[3:]).title()

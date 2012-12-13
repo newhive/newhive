@@ -47,6 +47,10 @@ class Admin(Application):
             return self.serve_page(response, 'pages/admin/users.html')
         else:
             user = self.db.User.named(p3)
+            if not user: return self.serve_404(request, response)
+            if request.args.get('delete'):
+                user.delete()
+                return self.serve_json(response, True)
             expressions = self.db.Expr.search(dict(owner=user.id))
             public_expressions = user.get_expressions(auth="public")
             private_expressions = user.get_expressions(auth="password")

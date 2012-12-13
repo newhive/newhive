@@ -191,7 +191,7 @@ class Application(object):
                     existing_user = self.db.User.find_by_facebook(profile.get('id'))
                     if not existing_user:
                         logger.info("Connecting facebook account '%s' to TNH account '%s'", profile['name'], request.requester['name'])
-                        request.requester.save_credentials(request.requester.fb_client.exchange(), profile=True)
+                        request.requester.save_credentials(credentials, profile=True)
                         response.context['new_fb_connect'] = True
                     else:
                         logger.warn("Not connecting facebook account '%s' to TNH account '%s' because account is already connected to '%s'",

@@ -269,10 +269,10 @@ def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name, secure = False): response.delete_cookie(name,
     domain = None if secure else '.' + config.server_name)
 
-def local_date():
+def local_date(offset=0):
     tz = pytz.timezone('US/Pacific')
     dt = datetime.now(tz)
-    return dt.date()
+    return dt.date() + pandas.DateOffset(days=offset)
 
 def friendly_date(then):
     """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
@@ -293,3 +293,58 @@ def friendly_date(then):
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
+
+def dates_to_spec(start, end=None, offset=None):
+    """Return a mongodb spec dictionary that will match ids of objects created
+    between date and date + offset"""
+    end = end or start + offset
+    return {'$gt': datetime_to_int(start), '$lte': datetime_to_int(end)}
+
+def friendly_log_scale(start, end=None, significands = None):
+    """
+    >>> friendly_log_scale(10)
+    [0, 1, 2, 5, 10]
+
+    >>> friendly_log_scale(500,2000)
+    [500, 1000, 2000]
+    """
+
+    if not significands: significands = [1,2,5]
+
+    if not end: start, end = (0, start)
+    rv = [0] if start is 0 else []
+
+    power = 0
+    while True:
+        for i in significands:
+            val = i * 10 ** power
+            if val > end:
+                return rv
+            if val >= start:
+                rv.append(val)
+        power += 1
+
+def un_camelcase(s): return re.sub(r'([A-Z])', r' \1', s)
+
+def camelcase(s): return " ".join(s.split('_')).title().replace(' ', '')
+
+def percent_change(ratio, precision=0):
+    s = "down" if ratio < 0 else "up"
+    return ("{} {:." + str(precision) + "f}%").format(s, abs(ratio) * 100)
+
+def analytics_email_number_format(number):
+    """
+    >>> analytics_email_number_format(123)
+    '123'
+
+    >>> analytics_email_number_format(99.12345)
+    '99.12'
+
+    >>> analytics_email_number_format(0.000123)
+    '0.00012'
+    """
+
+    r = r'([0-9]*)(\.(0*)([0-9]*))?'
+    whole, remainder, zeros, decimal = re.match(r, str(number)).groups()
+    if not decimal: return whole
+    return whole + "." + zeros + decimal[:2]

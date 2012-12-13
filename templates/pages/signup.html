@@ -4,6 +4,7 @@
 
 {% block head %}
     <script>
+        History.replaceState({}, window.title, window.location.href.split('?')[0]);
         function validation_message(element, message, flash) {
             element = $(element);
             var val_msg = element.next().filter('.validation');
@@ -155,6 +156,7 @@
 
 <form id="form" method='POST'>
     <input type='hidden' name='thumb_file_id' value='{{f.thumb_file_id}}'>
+    <input type='hidden' name='credential_id' value='{{f.credential_id}}'>
     <input type='hidden' name='action' value='user_create'>
     <div class="column" id="photo">
         <div id='profile_thumb'>
