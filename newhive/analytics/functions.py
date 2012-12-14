@@ -1,3 +1,14 @@
+"""
+    newhive.analytics.functions
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    place to put functions that can be used within or without
+    analtyics.queries.Query
+
+    could also be thought of/renamed newhive.analytics.utils
+
+"""
+
 import pickle
 import datetime, pytz
 import pandas

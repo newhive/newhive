@@ -1,3 +1,30 @@
+"""
+    newhive.analytics.queries module
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    This module contains the heavyweight analytics queries. The basic usage of
+    a query object is like so:
+
+        q = Query(source_db)
+        data = q.execute(args)
+
+    The source_db is optional, queries that only use data from GA for instance
+    won't need it.
+
+    All queries that inherit from Query have a built-in mechanism to cache
+    their results in the persistence_db, which is set in newhive.config.  Most
+    queries return a pandas.DataFrame, and these are serialized using the
+    dataframe_to_record function of the newhive.analytics.functions module.
+
+    In order to take advantage of this persistence, subclasses should not
+    override the `query` method but rather the `_query` method. Each subclass
+    also needs to define a class `collection_name` attribute to specify the
+    collection within persistence_db where the cached data should be stored
+
+    Subclasses can also specify the max_age at which cached results are
+    automatically discarded.
+
+"""
 import datetime
 import time
 import pymongo

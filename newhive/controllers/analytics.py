@@ -45,6 +45,12 @@ class Analytics(Application):
         else:
             return self.serve_404(request, response)
 
+    def serve_gviz(self, response, data):
+        """Give a pandas DataFrame, Serves out a json document in the format
+        specified by the google javascript visuzlization library"""
+        data = data.fillna(0)
+        return self.serve_data(response, 'application/json', dataframe_to_gviz_json(data))
+
     @admins
     def _index(self, request, response):
         response.context['pages'] = [{'path': p.__name__, 'name': p.__doc__} for p in _index]
@@ -445,10 +451,6 @@ class Analytics(Application):
         response.context['data'] = data_frame_to_json(data)
         response.context['title'] = """Median Views by User (Of Public Expressions)"""
         return self.serve_page(response, 'pages/analytics/median_views.html')
-
-    def serve_gviz(self, response, data):
-        data = data.fillna(0)
-        return self.serve_data(response, 'application/json', dataframe_to_gviz_json(data))
 
     @admins
     def expressions_per_day(self, request, response):
