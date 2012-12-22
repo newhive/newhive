@@ -15,41 +15,54 @@
 {% endblock %}
 {% block body_classes %}{{super()}} frame{% endblock %}
 
-{% block right_nav %}
-  ><div id='view_btn' class='view text_btn center hoverable'
+{% block right_nav %}<div id='view_btn' class='view center hoverable'
     ><div class='icon center'></div
     ><div class='count center'></div
   ></div
-  ><div id='star_btn' class='star text_btn center hoverable'
+  ><div id='star_btn' class='star center hoverable'
       data-title-off='show some love' data-title-on='stop loving'
     ><div class='icon center'></div
     ><div class='count center'></div
   ></div
-  ><div id='broadcast_btn' class='broadcast text_btn center hoverable'
+  ><div id='broadcast_btn' class='broadcast center hoverable'
       data-title-off='broadcast to listeners' data-title-on='stop broadcasting'     
     ><div class='icon center'></div
     ><div class='count center'></div
   ></div
-  ><div id='comment_btn' class='comment text_btn center hoverable'
+  ><div id='comment_btn' class='comment center hoverable'
     ><div class='icon center'></div
     ><div class='count center'></div
   ></div
-  ><a class='edit edit_url text_btn center hoverable'
+  {% if community or expr %}
+    ><div id='share_btn' class='share icon center hoverable black_active'
+  {% endif %}
+  {% if expr or owner %}
+    ><div id='owner_btn' class='hoverable center black_active'
+      ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
+      ><div class='text name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name | capitalize }}</span></div
+    ></div
+  {% endif %}
+  ><a class='edit edit_url text_btn center hoverable black_active'
     ><div class='icon center'></div
     ><span class='text_btn center text'>Edit</span
   ></a
-{% endblock %}
+  ><div id='plus_btn' class='plus icon center hoverable black_active'
+>{% endblock %}
 
 {% block body %}
   <div id="navigator" class="navigator">
     <div class="info">
       <a href='/random' title="View Random Expression" class='random_link'><div class='random_btn icon hoverable rounded'></div></a>
-      <form method='get' title="View random expression" onsubmit="Hive.navigator.search(); return false">
+      <form method='get' title="View random expression"
+        onsubmit="Hive.navigator.search(); return false">
         <input type="text" class="search">
-        <div class="hoverable icon scale submit" title="Submit search" onclick="Hive.navigator.search()"></div>
+        <div class="hoverable icon scale submit" title="Submit search"
+          onclick="Hive.navigator.search()"></div>
       </form>
       <div class="tags_wrapper">
         <div class="tags"></div>
+      </div>
+    </div>
   </div>
   <div id="expression_frames">
     <iframe src='{{ expr_url }}' class='expr'></iframe>

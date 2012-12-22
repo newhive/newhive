@@ -32,24 +32,26 @@
 {% endblock head %}
 {% block body_classes %}{{ super() }} main {% endblock body_classes%}
 
-{% block main %}
+{%- block main -%}
   {% block body %}
   {% endblock body %}
 
-  <div id='nav'
-    ><a href='{{ server_url }}'><div id='logo' class='hoverable icon center'></div></a
+  <div id='nav'>
+    <a href='{{ server_url }}'><div id='logo' class='hoverable icon center black_active'></div></a>
     {% if user.logged_in %}
-      ><div id='user_btn' class='text_btn center hoverable black_active'
-        ><img class='user_thumb {{ 'none' if not user.has_thumb }} icon center' src='{{ user.get_thumb(70) }}'
-        ><div class='text_btn center text'>{{ user.name | capitalize }}<div class='count rounded
-          {{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div
-      ></div
+      <div id='user_btn' class='text_btn center hoverable black_active'>
+        <img class='user_thumb {{ 'none' if not user.has_thumb }} icon center' src='{{ user.get_thumb(70) }}'>
+        <div class='text_btn center text'>{{ user.name | capitalize }}<div class='count rounded
+          {{ ' zero' if not user.notification_count }}'>{{ user.notification_count }}</div></div>
+      </div>
     {% else %}
-        ><a href=''><div id='sign_up_btn' class='text_btn center text'><span class='text'>Sign up</span></div></a
-        ><div id='login_btn' class='text_btn center hoverable'>Log In</div
+        <div id='sign_up_btn' class='text_btn center text hoverable black_active'>
+          <span class='text'>Sign up</span></div>
+        <div id='login_btn' class='text_btn center hoverable black_active'>Log In</div>
     {% endif %}
     {% if not editing %}
-      ><a id='create_btn' class='text_btn center hoverable' href='{{ create }}' onclick='return require_login("create")'
+      ><a id='create_btn' class='text_btn center hoverable black_active' href='{{ create }}'
+        onclick='return require_login("create")'
         ><div class='icon center'></div
         ><div class='text_btn center text'>Create</div
       ></a
@@ -59,12 +61,11 @@
     ><form method='GET' action='/search' name='search_form'
       ><div class='center text'
         ><input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}'
-        ><div class='hoverable submit' title='Submit search' onclick='document.forms.search_form.submit()'></div
+        ><input type='image' src='{{ 'skin/nav/search_submit.png'|asset_url }}'
+          class='hoverable submit' title='Submit search'
       ></div
     ></form
-    ><div class='right'
-      {% block right_nav %}{% endblock %}
-    ></div
+    ><div class='right'>{% block right_nav %}{% endblock %}</div
   ></div>
 
   {#
@@ -166,18 +167,6 @@
   {% if not editing %}
     <div id='owner_nav_handle' class='menu_handle'></div>
     <div id='owner_nav' class='nav horiz'
-      {% if expr or owner %}
-        ><div id='owner_btn' class='hoverable center black_active'
-          ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
-          ><div class='text name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name | capitalize }}</span></div
-        ></div
-      {% endif %}
-      {% if community or expr %}
-        ><div id='share_btn' class='hoverable center black_active'
-          ><div id='share_icon' class='icon'></div
-          ><div class='text'><span>Share</span></div
-        ></div
-      {% endif %}
     ></div>
 
     {% if expr or owner %}

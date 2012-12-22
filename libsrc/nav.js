@@ -49,7 +49,7 @@ Hive.Menus = (function(){
         hover_menu( '#logo', '#hive_menu', { offset_y: 8, group: group } );
 
         if(logged_in) {
-            hover_menu( '#user_btn', '#user_menu', { offset_y: 8, group: group, open: function(){
+            hover_menu( '#user_btn', '#user_menu', { group: group, open: function(){
                 var div = $('#user_btn .count');
                 if(!div.hasClass('zero')){
                     div.addClass('zero');
@@ -94,7 +94,6 @@ Hive.Menus = (function(){
             o.login_menu = hover_menu( '#login_btn', '#login_menu', {
                 open: function() { $('#username').get(0).focus(); },
                 close_delay: opts.slow_close,
-                offset_y: 8,
                 group: group
             } );
             if(error) $(function(){ o.login_menu.open().sticky = true; });
@@ -111,7 +110,7 @@ Hive.Menus = (function(){
         if ($('#owner_btn').length) {
             hover_menu(
                 '#owner_btn', '#owner_menu',
-                $.extend({ offset_y: 8, layout_x: 'right', group: group }, swap_action_nav)
+                $.extend({ offset_y: 8, group: group }, swap_action_nav)
             );
         }
         $('#owner_menu .menu_item.listen').click(function(){
@@ -121,7 +120,7 @@ Hive.Menus = (function(){
         if ($('#share_btn').length) {
             hover_menu(
                 '#share_btn', '#share_menu',
-                $.extend({ offset_y: 8, group: group }, swap_action_nav)
+                $.extend({ group: group }, swap_action_nav)
             );
         }
 
@@ -364,12 +363,12 @@ Hive.Menus = (function(){
         hover_menu('#view_btn', '#expr_menu',
             { group: nav_menu });
         hover_menu('#star_btn', '#star_menu',
-            { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
+            { group: nav_menu });
         hover_menu('#broadcast_btn', '#broadcast_menu',
-            { layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu });
+            { group: nav_menu });
         hover_menu('#comment_btn', '#comment_menu',
             {
-                layout: 'center_y', min_y: menu_top, offset_x: 13, group: nav_menu,
+                group: nav_menu,
                 open: function(){
                     $('#comment_menu textarea').get(0).focus();
                     var box = $('#comment_menu .items');

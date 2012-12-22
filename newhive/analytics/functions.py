@@ -2,7 +2,7 @@ import pickle
 import datetime, pytz
 import pandas
 import numpy
-from newhive.vendor import gviz
+from vendor import gviz
 from newhive.utils import un_camelcase
 
 def user_expression_summary(user, p=False):
