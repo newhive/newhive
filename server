@@ -10,7 +10,7 @@ if __name__ == '__main__':
     with open('log/newhive.log', 'a') as log: log.write("\n*****Server Start*****\n\n")
     parser = optparse.OptionParser()
     parser.add_option("-p", "--port", action="store", type="int", dest="port")
-    parser.add_option("--secure-port", action="store", type="int", dest="secure_port")
+    parser.add_option("-s", "--secure-port", action="store", type="int", dest="secure_port")
     parser.add_option("--ssl-only", action="store_true", dest="ssl_only", default=False)
     parser.add_option("--plain-only", action="store_true", dest="plain_only", default=False)
     parser.add_option("--debug", action="store_true", dest="debug")
