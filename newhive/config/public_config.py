@@ -20,11 +20,13 @@ s3_buckets      = []
 asset_bucket    = None
 
 admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack', 'fred']
-admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
-                   'cara@thenewhive.com', 'zach@thenewhive.com',
-                   'duffy@thenewhive.com', 'info@thenewhive.com',
-                   'duffy.tilleman@gmail.com', 'duffy@lumana.org',
-                   'straussss@gmail.com', 'quuxman@gmail.com']
+test_emails     = ['abram@thenewhive.com', 'andrew@thenewhive.com',
+                   'cara@thenewhive.com', 'zach@thenewhive.com', 'duffy@thenewhive.com',
+                   'info@thenewhive.com', 'duffy.tilleman@gmail.com', 'duffy@lumana.org',
+                   'straussss@gmail.com', 'quuxman@gmail.com', 'bugs@newhive.com',
+                   'bugs+feedback@newhive.com'
+                  ]
+
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
 # Note, could define milestones programmatically, but this is more readable:
