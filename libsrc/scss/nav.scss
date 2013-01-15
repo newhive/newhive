@@ -1,18 +1,19 @@
 @import "common";
 
+// nav takes 3 layers. For invisible nav handles, the navigation,
+// and their submenus, (4, 5, 6) respectively
+
 #nav {
     position: fixed;
-    bottom: 150px;
+    bottom: 0px;
     width: 100%;
     height: $nav_size;
     background-color: white;
-    @include box-shadow(rgba(black, .3) 3px 3px 10px);
+    @include box-shadow(rgba(black, .3) 0px 0px 20px);
     padding-right: 6px;
     z-index: $nav_layer + 1;
 
     .icon, .text_btn {
-        cursor: pointer;
-        * { cursor: pointer }
         background-size: 100% 100%;
         font-weight: bold;
     }
@@ -33,17 +34,27 @@
         background-color: black;
         color: white;
     }
+    .hoverable { cursor: pointer; }
+
+    .count {
+        padding: 1px 4px;
+        margin: 0 6px 0px -5px;
+        font-size: 11px;
+        &.zero { display: none; }
+        font-weight: bold;
+    }
 
     .user_thumb {
-        width: $nav_size - 6;
+        width: 32px;
+        height: 32px;
         margin-right: 6px;
+        padding: 6px 0;
     }
 
     #logo {
         width: $nav_size; height: $nav_size;
-        background-image: asset_url('skin/1/logo.png');
-        &.active { background-image: asset_url('skin/1/logo-hover.png'); }
-        margin-right: 6px;
+        background-image: asset_url('skin/nav/logo.png');
+        &.active { background-image: asset_url('skin/nav/logo-hover.png'); }
     }
     #sign_up_btn {
         * {
@@ -81,31 +92,28 @@
         height: $nav_size;
         padding-right: 6px;
 
-        .count {
-            padding: 1px 4px;
-            margin: 0 6px 0px -5px;
-        }
-        .count.zero { display: none; }
-
-        #view_btn {
+        #expr_btn {
             .icon { background-image: asset_url('skin/nav/views.png'); }
             &.active .icon { background-image: asset_url('skin/nav/views-hover.png'); }
             &.active { background-color: $color_selected; }
         }
         .star {
             .icon { background-image: asset_url('skin/nav/star.png'); }
+            &.on { background-color: $color_bright_red; }
             &.on .icon { background-image: asset_url('skin/nav/star_on.png'); }
-            &.active .icon { background-image: asset_url('skin/nav/star-hover.png'); }
             &.active { background-color: $color_selected; }
+            &.active .icon { background-image: asset_url('skin/nav/star-hover.png'); }
         }
         .broadcast {
             .icon { background-image: asset_url('skin/nav/broadcast.png'); }
+            &.on { background-color: $color_blue; }
             &.on .icon { background-image: asset_url('skin/nav/broadcast_on.png'); }
             &.active .icon { background-image: asset_url('skin/nav/broadcast-hover.png'); }
             &.active { background-color: $color_selected; }
         }
         .comment {
             .icon { background-image: asset_url('skin/nav/comment.png'); }
+            &.on { background-color: $color_blue; }
             &.on .icon { background-image: asset_url('skin/nav/comment_on.png'); }
             &.active .icon { background-image: asset_url('skin/nav/comment-hover.png'); }
             &.active { background-color: $color_selected; }
@@ -126,35 +134,38 @@
     }
 }
 
-// nav takes 3 layers. For invisible nav handles, the navigation,
-// and their submenus, (4, 5, 6) respectively
-
 @media print { #nav { display: none; } }
+
+
+.page_btn {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    z-index: $nav_layer + 1;
+    background-color: white;
+    background-repeat: no-repeat;
+    @include border-radius(22px);
+    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+
+    &:hover { background-color: black; }
+}
+#page_prev {
+    background-image: asset_url('skin/nav/page_prev.png');
+    &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
+    background-position: 8px 11px;
+    left: 10px;
+}
+#page_next {
+    background-image: asset_url('skin/nav/page_next.png');
+    &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
+    background-position: 14px 11px;
+    right: 10px;
+}
+
 
 img.thumb { background-color: $color_grey_medium; }
 
 .none, .off .on, .on .off { display: none !important }
-
-.items { overflow: hidden; }
-
-@mixin nav_styles {
-    background-color: white;
-    @include border-radius(5px);
-    @include box-shadow(rgba(black, .3) 3px 3px 10px);
-    cursor: pointer;
-
-
-    .pad { padding: 5px; }
-    .smpad { padding: 2px; }
-
-    .center *, .center { vertical-align: middle; }
-
-    &.horiz > *, &.horiz div {
-        display: inline-block;
-        vertical-align: middle;
-    }
-
-}
 
 .menu_handle {
     position: fixed;
@@ -176,11 +187,6 @@ img.thumb { background-color: $color_grey_medium; }
     }
 }
 
-#owner_nav_handle { height: $nav_size + 16; right: 0; top: 0; }
-#owner_nav { height: $nav_size; right: 0; top: 0; }
-
-#login_btn { padding: 0 10px 0 10px; }
-
 #social_icons {
     margin: 0 5px;
     img {
@@ -191,49 +197,15 @@ img.thumb { background-color: $color_grey_medium; }
     }
 }
 
-
-body.frame{
-    // Styles shared between navigator and big_card
-    .expr_card {
-        position: relative;
-        margin: 5px;
-
-        img {
-            width: 100%;
-        }
-
-        .card_text {
-            position: absolute;
-            background-color: rgba(0,0,0,0.7);
-            color: white;
-            width: 100%;
-            @include box-sizing(border-box);
-            bottom: 0;
-        }
-
-        .title {
-            font-weight: bold;
-        }
-
-        .byline {
-            overflow: hidden;
-        }
-    }
-    // navigator specific overrides
-    .navigator .expr_card {
-        .card_text {
-            font-weight: bold;
-            padding: 4px;
-        }
-    }
-}
-
-
 .menu {
-    display: none;
-    background-color: white;
     z-index: $nav_layer + 2;
     position: absolute;
+}
+
+.menu.drawer {
+    display: none;
+    z-index: $nav_layer + 2;
+    background-color: white;
     overflow: auto;
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include border-radius(5px);
@@ -250,27 +222,15 @@ body.frame{
     .thumbs .thumb { width: 44px; margin: 3px; }
 
     .menu_item {
+        display: block;
         padding: 5px 8px;
         font-weight: bold;
         white-space: nowrap;
         &.active { background-color: $color_selected; }
         .icon {
-            position: absolute;
-            right: 10px;
-            top: auto;
-            width: 33px;
-            height: 33px;
-            margin: -7px -9px;
+            float: right;
+            margin-top: -5px;
         }
-    }
-
-    // styling for common menu items
-    .message .icon { background-image: asset_url('skin/1/send_message.png') }
-    .embed .icon { 
-        background-image: asset_url('skin/1/embed_icon.png');
-        width: 28px;
-        height: 28px;
-        margin: -6px -7px;
     }
 }
 
@@ -289,41 +249,12 @@ body.frame{
 }
 
 #hive_menu {
-    display: none;
-    z-index: $nav_layer + 2;
-    position: absolute;
-    overflow: auto;
-    cursor: default;
-    padding: 0 10px 10px 0;
-
-    .menu { display: inline-block; position: static; }
-    .find { }
-    br + .links {
-        margin-top: 8px;
+    .menu_item {
+        border-color: $color_light_grey;
+        border-width: 1px 0 0 0;
+        border-style: solid;
     }
-    .links {
-        color: $color_grey_medium;
-        cursor: pointer;
-
-        .primary { color: black; }
-        .menu_item {
-            border-color: $color_light_grey;
-            border-width: 1px 0 0 0;
-            border-style: solid;
-        }
-        :first-child .menu_item { border: none; }
-    }
-    .btns {
-        font-size: 14px;
-        div {
-            display: inline-block;
-            margin: 4px;
-            padding: 4px;
-            color: black;
-            cursor: pointer;
-        }
-        .active { background-color: $color_selected; }
-    }
+    .menu_item:first-child { border: none; }
 }
 
 #user_menu { width: 260px; }
@@ -420,9 +351,8 @@ body.frame{
 }
 
 #comment_menu {
-    width: 575px;
+    width: 500px;
     padding: 15px;
-    border: 5px solid $color_selected;
 
     .items { overflow: auto; }
 
@@ -452,14 +382,6 @@ body.frame{
     }
     input { float: right; }
 }
-
-
-.count {
-    font-size: 11px;
-    &.zero { display: none; }
-    font-weight: bold;
-}
-
 
 
 .feed_item {
@@ -518,27 +440,4 @@ body.frame{
         color: $color_active;
         display: none;
     }
-}
-
-body.frame {
-    #user_nav, #owner_nav, #action_nav {
-        display: none;
-    }
-}
-
-#left_nav_handle, #right_nav_handle {
-    width: 40px;
-    height: 100%;
-}
-#left_nav_handle { left: 0; }
-#right_nav_handle { right: 0; }
-#top_nav_handle { 
-    top: 0;
-    height: 40px;
-    width: 100%;
-}
-#navigator_handle {
-    bottom: 0;
-    height: 50px;
-    width: 100%;
 }

@@ -497,18 +497,16 @@ hover_menu = function(handle, drawer, options) {
             ,init_close_delay: 0
 
             ,hover_close: true
-            ,open_delay: 100
-            ,close_delay: 500
-            ,offset_y: 8
-            ,offset_x: 8
+            ,open_delay: 0
+            ,close_delay: 300
+            ,offset_y: 10
             ,focus_persist: true
             ,hover: true
             ,open_condition: function(){ return true; }
             ,close_condition: function(){ return true; }
             ,auto_height: true
             ,default_item: drawer.find('.menu_item.default')
-            ,layout: 'bottom'
-            ,layout_x: 'auto'
+            ,layout: true
             ,min_y: 0
             ,group: hover_menu
             ,animate_close: false
@@ -519,16 +517,16 @@ hover_menu = function(handle, drawer, options) {
     if(!handle.length) log("hover_menu has no handle");
     if(!drawer.length) log("hover_menu has no drawer");
     if(!opts.group) opts.group = { menus: [] };
+    drawer.addClass('menu drawer');
 
     o.menus = [];
     o.opened = opts.opened;
     o.sticky = opts.sticky;
 
-    o.delayed_close = function(close_delay) {
-            if(typeof(close_delay) != 'number') close_delay = false;
+    o.delayed_close = function() {
         opts.default_item.removeClass('active');
         if(opts.hover_close && ! close_timer) {
-            close_timer = setTimeout(o.close, close_delay || opts.close_delay);
+            close_timer = setTimeout(o.close, opts.close_delay);
         }
         if(opts.group.delayed_close) opts.group.delayed_close();
     };
@@ -558,7 +556,7 @@ hover_menu = function(handle, drawer, options) {
             }
             drawer.animate(opts.animate_close, 100);
         } else opts.close_menu();
-        if(o.shield) o.shield.remove();
+        o.arrow_div.remove();
 
         o.opened = false;
         opts.close();
@@ -583,64 +581,36 @@ hover_menu = function(handle, drawer, options) {
         if(opts.animate_open) drawer.animate(opts.animate_open, 100);
         else opts.open_menu();
 
-        var css_opts = {};
-        if(opts.layout){
-            // pick top of menu based on if menu would go past bottom of
-            // window if below handle, or above top of window if above the handle
+        var css = {};
+        if( opts.layout ){
             var hp = handle.parent().is(drawer.parent()) ? handle.position() : handle.offset();
 
-            if( opts.layout == 'bottom' ){
-                var oy = handle.outerHeight() + opts.offset_y;
-                css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
-                    && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
-                    hp.top - drawer.outerHeight() - opts.offset_y : hp.top + oy;
+            // calculate x value for drawer if it was centered on handle position
+            css.left = hp.left + handle.outerWidth() / 2 - drawer.outerWidth() / 2;
+            // pick actual x value depending on centered x, drawer width, and window width
+            if( css.left + drawer.outerWidth() > $(window).width() - 10 )
+                css.left = hp.left + handle.outerWidth() - drawer.outerWidth(); // $(window).width() - drawer.outerWidth() - 10;
+            if( css.left < 10 ) css.left = hp.left; // css.left = 10;
 
-                var layout_x = opts.layout_x;
-                if( layout_x == 'auto' ) {
-                    var drawer_right = handle.offset().left + drawer.outerWidth();
-                    var window_right = $(window).width() + window.scrollX;
-                    layout_x = (drawer_right > window_right) ? 'right' : 'left';
-                }
-                css_opts.left = ( layout_x == 'right' ?
-                    hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
+            // calculate y depending on handle position, drawer height, and window height
+            var above = hp.top > $(window).height() / 2,
+                space = above ? hp.top - 20 : $(window).height() - hp.top - handle.outerHeight();
+            if( opts.auto_height && drawer.outerHeight() > space ) {
+                var scroller = drawer.find('.items');
+                scroller.css( 'max-height', space - ( drawer.outerHeight() - scroller.outerHeight() ) );
             }
-            else if( opts.layout == 'center_y' ){
-                css_opts.top = Math.max(opts.min_y, hp.top + handle.outerHeight() / 2 -
-                     drawer.outerHeight() / 2);
-                css_opts.left = hp.left - opts.offset_x - drawer.outerWidth();
-            }
+            css.top = above ? hp.top - opts.offset_y - drawer.outerHeight() :
+                hp.top + handle.outerHeight() + opts.offset_y;
 
-            // shield element prevents hovering over gap between handle and menu from closing the menu
-            o.shield = $();
-            //if(opts.offset_y) o.shield.add($('<div>').css({
-            //    'position': 'absolute',
-            //    'left': hp.left,
-            //    'top': hp.top + handle.outerHeight(),
-            //    'width': handle.outerWidth(),
-            //    'height': opts.offset_y,
-            //    'background-color': 'orange'
-            //});
-            //if(opts.offset_x) o.shield.add($('<div>').css({
-            //    'position': 'absolute',
-            //    'left': hp.left - opts.offset_x,
-            //    'top': hp.top,
-            //    'width': opts.offset_x,
-            //    'height': handle.outerHeight(),
-            //    'background-color': 'orange'
-            //});
-            o.shield.insertBefore(handle)
-                .mouseover(o.cancel_close)
-                .mouseout(o.delayed_close)
-            ;
+            // place arrow above or below handle
+            o.arrow_div = $('<img>').attr('src', asset( 'skin/nav/' +
+                ( above ? 'down' : 'up' ) + '_arrow.png' ) ).addClass('menu')
+                .css({ top: above ? hp.top - opts.offset_y - 1 : hp.top + handle.outerHeight() + 1,
+                    left: hp.left + handle.outerWidth() / 2 - 6 })
+                .appendTo( document.body );
         }
 
-        if(opts.auto_height && css_opts.top + drawer.outerHeight() > $(window).height()) {
-            var scroller = drawer.find('.items');
-            scroller.css('max-height', $(window).height() - 50 - css_opts.top -
-                (drawer.outerHeight() - scroller.outerHeight()));
-        }
-
-        drawer.css(css_opts);
+        drawer.css(css);
 
         opts.open();
         return o;
@@ -649,9 +619,9 @@ hover_menu = function(handle, drawer, options) {
     opts.group.menus.push(o);
 
     if(opts.hover) {
-        handle.on('hover', null, { delay: opts.open_delay }, o.open)
-            .on('hoverend', o.delayed_close);
-        drawer.mouseover(o.cancel_close).mouseout(o.delayed_close);
+        handle.mouseenter( function(){ setTimeout( o.open, opts.open_delay ) })
+            .mouseleave( o.delayed_close );
+        drawer.mouseenter(o.cancel_close).mouseleave(o.delayed_close);
     }
     handle.click(function(){
         if(o.opened && opts.default_item) opts.default_item.click();
@@ -848,7 +818,7 @@ Hive.login_submit = function(form){
 };
 
 Hive.logout_submit = function(that){
-    var form = $(that).parents('form');
+    var form = $('#logout_form');
     form.find('[name=url]').val(window.location.href);
     _gaq.push(['_trackEvent', 'logout', 'complete']);
     // Delay ensures that event is tracked
@@ -868,12 +838,6 @@ function relogin(success){
     form.find("[type=submit]").click(function(){
         return asyncSubmit(form, callback, {dataType: 'json'});
     });
-};
-
-function callback_log(message){
-    return function(){
-        console.log(message);
-    };
 };
 
 var log = (window.console && console.log) ? function(msg){

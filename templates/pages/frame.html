@@ -15,7 +15,7 @@
 {% endblock %}
 {% block body_classes %}{{super()}} frame{% endblock %}
 
-{% block right_nav %}<div id='view_btn' class='view center hoverable'
+{% block right_nav %}<div id='expr_btn' class='view center hoverable'
     ><div class='icon center'></div
     ><div class='count center'></div
   ></div
@@ -34,22 +34,27 @@
     ><div class='count center'></div
   ></div
   {% if community or expr %}
-    ><div id='share_btn' class='share icon center hoverable black_active'
+    ><div id='share_btn' class='share icon center hoverable black_active'></div
   {% endif %}
   {% if expr or owner %}
-    ><div id='owner_btn' class='hoverable center black_active'
-      ><img class='user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
-      ><div class='text name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name | capitalize }}</span></div
+    ><div id='owner_btn' class='text_btn center hoverable black_active'
+      ><img class='center user_thumb {{ 'none' if not owner.has_thumb }}' src='{{ owner.get_thumb(70) }}'
+      ><div class='text center name'>{% if expr %}<span>by </span>{% endif %}<span class='owner_name'>{{ owner.name | capitalize }}</span></div
     ></div
   {% endif %}
-  ><a class='edit edit_url text_btn center hoverable black_active'
-    ><div class='icon center'></div
-    ><span class='text_btn center text'>Edit</span
-  ></a
-  ><div id='plus_btn' class='plus icon center hoverable black_active'
+  {% if user_is_owner %}
+    ><a id='edit_btn' class='edit_url text_btn center hoverable black_active'
+      ><div class='icon center'></div
+      ><span class='text_btn center text'>Edit</span
+    ></a
+  {% endif %}
+  ><div id='plus_btn' class='plus icon center hoverable black_active'></div
 >{% endblock %}
 
 {% block body %}
+  <div id='page_prev' class='page_btn'></div>
+  <div id='page_next' class='page_btn'></div>
+
   <div id="navigator" class="navigator">
     <div class="info">
       <a href='/random' title="View Random Expression" class='random_link'><div class='random_btn icon hoverable rounded'></div></a>

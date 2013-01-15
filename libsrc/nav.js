@@ -24,29 +24,10 @@ Hive.Menus = (function(){
         pad_bottom: 0
     };
 
-    o.layout = function(dims){
-        var action_nav = $('#action_nav'),
-            top = ($(window).height() - Hive.navigator.height() - 47) / 2
-                - action_nav.outerHeight() / 2 + 47;
-        $('#action_nav_handle').height(action_nav.outerHeight()).add(action_nav)
-            .css('top', Math.max(o.action_nav_top, top));
-
-        $('#user_nav_handle').width($('#user_nav').outerWidth());
-        $('#owner_nav_handle').width($('#owner_nav').outerWidth());
-
-        opts.pad_right = $(window).width() - dims[0];
-        opts.pad_bottom = $(window).height() - dims[1];
-        $('#action_nav_handle, #owner_nav_handle, #right_nav_handle').css('right', opts.pad_right + 3);
-        $('#navigator_handle').css('bottom', opts.pad_bottom);
-
-        Hive.navigator.layout({ pad_bottom: opts.pad_bottom, pad_right: opts.pad_right });
-        if( o.nav_menu.opened ) $('#action_nav, #owner_nav').css('right', opts.pad_right);
-    };
-
     o.init = function(group){
         if(!group) group = { menus: [] };
 
-        hover_menu( '#logo', '#hive_menu', { offset_y: 8, group: group } );
+        hover_menu( '#logo', '#hive_menu', { group: group } );
 
         if(logged_in) {
             hover_menu( '#user_btn', '#user_menu', { group: group, open: function(){
@@ -107,16 +88,6 @@ Hive.Menus = (function(){
             }
         };
 
-        if ($('#owner_btn').length) {
-            hover_menu(
-                '#owner_btn', '#owner_menu',
-                $.extend({ offset_y: 8, group: group }, swap_action_nav)
-            );
-        }
-        $('#owner_menu .menu_item.listen').click(function(){
-            o.feed_toggle('star', o.owner.id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
-        });
-
         if ($('#share_btn').length) {
             hover_menu(
                 '#share_btn', '#share_menu',
@@ -124,8 +95,18 @@ Hive.Menus = (function(){
             );
         }
 
+        if ($('#owner_btn').length) {
+            hover_menu(
+                '#owner_btn', '#owner_menu',
+                $.extend({ group: group }, swap_action_nav)
+            );
+        }
+        $('#owner_menu .menu_item.listen').click(function(){
+            o.feed_toggle('star', o.owner.id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
+        });
+
         o.update_owner( owner );
-        //
+
         // email and embed menus
         $(function(){
             $('.menu_item.message').click(require_login('email', function(){showDialog('#dia_share')}));
@@ -230,27 +211,6 @@ Hive.Menus = (function(){
         Hive.navigator.update_opts({onexpressionchange: uninitialize});
     };
 
-    var add_window_message_listeners = function(nav_menu){
-        $(window).off('message').on('message', function(e){
-            var msg = e.originalEvent.data;
-            if(msg == 'focus' && nav_menu) {
-                nav_menu.close(true);
-                //o.navigator_menu.close(true);
-            }
-            else if( msg.match(/^layout=/) && nav_menu ){
-                var dims = msg.split('=')[1].split(',');
-                o.layout(dims);
-            }
-            else if (msg == 'signup') {
-                require_login('drawoneme');
-            }
-            else if (msg == 'video') {
-                showDialog('#dia_video');
-            }
-        });
-    };
-
-
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
         var config = Hive.config.frame;
@@ -300,13 +260,6 @@ Hive.Menus = (function(){
         var close_condition = function(){
             return config.nav.hideable || Hive.is_fullscreen();
         };
-        var open_nav = function(){
-                drawers.stop().clearQueue().show();
-                animate_each(open_state(opts), speed);
-                if (config.nav.opens_navigator){
-                    Hive.navigator.show(speed);
-                }
-            };
 
         var shared_hover_menu_opts = {
             layout: false,
@@ -335,40 +288,26 @@ Hive.Menus = (function(){
         if (config.nav.opens_navigator){
             navigator_handles += ", .nav_handle";
         }
-        var navigator_hover_menu = hover_menu(
-            $(navigator_handles),
-            $('#navigator'),
-            $.extend(
-                { opened: config.navigator.open_initially,
-                  open_menu: function(){ Hive.navigator.show(speed); },
-                  close_condition: function(){ return config.navigator.hideable; },
-                  close_menu: function(){ Hive.navigator.hide(speed); }
-                },
-                shared_hover_menu_opts
-            )
-        );
+        //var navigator_hover_menu = hover_menu(
+        //    $(navigator_handles),
+        //    $('#navigator'),
+        //    $.extend(
+        //        { opened: config.navigator.open_initially,
+        //          open_menu: function(){ Hive.navigator.show(speed); },
+        //          close_condition: function(){ return config.navigator.hideable; },
+        //          close_menu: function(){ Hive.navigator.hide(speed); }
+        //        },
+        //        shared_hover_menu_opts
+        //    )
+        //);
 
         o.init(nav_menu);
-        var initial_state = config.nav.open_initially ? open_state(opts) : close_state;
-        animate_each(initial_state, 0);
 
-        o.show_drawers = function(){
-            var selector = $.map(Hive.config.frame.nav.visible, function(el){ return "#" + el + "_nav"; }).join(',');
-            drawers.filter(selector).show();
-        }
-        o.show_drawers();
-
-        o.action_nav_top = 70;
-        var menu_top = o.action_nav_top + 4;
-        hover_menu('#view_btn', '#expr_menu',
-            { group: nav_menu });
-        hover_menu('#star_btn', '#star_menu',
-            { group: nav_menu });
-        hover_menu('#broadcast_btn', '#broadcast_menu',
-            { group: nav_menu });
+        hover_menu('#expr_btn', '#expr_menu');
+        hover_menu('#star_btn', '#star_menu');
+        hover_menu('#broadcast_btn', '#broadcast_menu');
         hover_menu('#comment_btn', '#comment_menu',
             {
-                group: nav_menu,
                 open: function(){
                     $('#comment_menu textarea').get(0).focus();
                     var box = $('#comment_menu .items');
@@ -389,6 +328,7 @@ Hive.Menus = (function(){
         $('#comment_form').submit(o.post_comment);
 
         var del_dialog;
+
         $('#action_nav .delete').click(function(){ del_dialog = showDialog('#dia_delete'); });
         $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
@@ -409,24 +349,14 @@ Hive.Menus = (function(){
         //    close_delay: o.slow_close
         //});
 
-        add_window_message_listeners(nav_menu);
-
-        o.layout([ $(window).width(), $(window).height() ]);
+        $(window).off('message').on('message', function(e){
+            var msg = e.originalEvent.data;
+            if(msg == 'focus' && nav_menu) {
+                nav_menu.close(true);
+            }
+        });
 
         o.update_expr(expr);
-
-        // In order to make sure the navigator and the nav are rendered,
-        // initially they are placed offscreen but not hidden (by css and init
-        // function for nav and navigator respectively).  However, for a good
-        // mobile experience, they need to be hidden, so we hide after a delay,
-        // (again, this is handled by init function in case of navigator)
-        if (!config.nav.open_initially) {
-            setTimeout(function(){
-                nav_menu.drawer().hide();
-            }, 500 );
-        }
-        //o.navigator_menu.delayed_close(5000);
-        //nav_menu.delayed_close(5000);
     };
 
     o.user_link = function(name, id){
@@ -487,7 +417,7 @@ Hive.Menus = (function(){
 
         $('.edit_url').attr('href', secure_server + 'edit/' + expr.id);
         $('.expr_id').val(expr.id); // for delete dialog
-        $('.btn_box.edit,.btn_box.delete').toggleClass( 'none', ! is_owner );
+        $('.edit_btn').toggleClass( 'none', ! is_owner );
 
         var owner_name = expr.owner_name[0].toUpperCase() + expr.owner_name.slice(1);
         $('.owner_name').html(owner_name);
