@@ -225,8 +225,8 @@ Hive.App = function(init_state, opts) {
             type: o.type.tname,
             z: o.layer(),
             content: o.content(),
-            id: o.id
         });
+            id: o.id
         if(opacity != 1) s.opacity = opacity;
         if(init_state.file_id) s.file_id = init_state.file_id;
         return s;
@@ -707,13 +707,14 @@ Hive.App.Text = function(o) {
 
     var content = o.init_state.content;
     o.content = function(content) {
+        return 'testS'
         if(typeof(content) != 'undefined') {
             // avoid 0-height content element in FF
-            if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
-            else o.rte.setHtml(false, content);
+            //if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
+            //else o.rte.setHtml(false, content);
         } else {
             // remove any remaining selection-saving carets
-            o.rte.content_element.find('span[id^="goog_"]').remove();
+            //o.rte.content_element.find('span[id^="goog_"]').remove();
             return o.rte.getCleanContents();
         }
     }
@@ -723,18 +724,18 @@ Hive.App.Text = function(o) {
         if (mode === edit_mode) return;
         if (mode) {
             o.unshield();
-            o.rte.remove_breaks();
+            /*o.rte.remove_breaks();
             o.rte.makeEditable();
-            o.rte.restore_cursor();
+            o.rte.restore_cursor();*/
             o.content_element
                 .bind('mousedown keydown', function(e){ e.stopPropagation(); });
             edit_mode = true;
         }
         else {
-            o.rte.unwrap_all_selections();
+            /*o.rte.unwrap_all_selections();
             o.rte.save_cursor();
             o.rte.add_breaks();
-            o.rte.make_uneditable();
+            o.rte.make_uneditable();*/
             o.content_element
                 .unbind('mousedown keydown')
                 .blur();
@@ -746,9 +747,18 @@ Hive.App.Text = function(o) {
     o.focus.add(function(){
         o.refresh_size();
         o.edit_mode(true);
+        o.codemirror.setOption("readOnly", false);
+        if (o.codemirror._old_cursor_selected)
+            o.codemirror.setSelection(o.codemirror._old_cursor_anchor, o.codemirror._old_cursor_head);
+        o.codemirror.focus();
     });
     o.unfocus.add(function(){
         o.edit_mode(false);
+        o.codemirror.setOption("readOnly", "nocursor");
+        o.codemirror._old_cursor_selected = o.codemirror.somethingSelected();
+        o.codemirror._old_cursor_head = o.codemirror.getCursor("head");
+        o.codemirror._old_cursor_anchor = o.codemirror.getCursor("anchor");
+        o.codemirror.setSelection(o.codemirror._old_cursor_head);
     });
 
     o.link = function(v) {
@@ -811,6 +821,116 @@ Hive.App.Text = function(o) {
         Hive.History.save(exec_cmd('+undo'), exec_cmd('+redo'), 'edit');
     };
 
+
+    o.ranges = new Array();
+    // Code for adding a range and flattening the resulting list of ranges
+    // TODO: Merges of the new range options and the old range options will not work. There is no "add" or "remove" bold, just add bold class
+    // TODO: Allow replaceWith by adding a new field to options that is handled by this function (replaceWith needs to get the text contained by the overlapping ranges to work properly)
+    // TODO: Add code that scans the overlapping ranges and decides whether properties like bold and italics should be remove or added to the selection
+    // TODO: Add real comments
+    // TODO: Add a way to do this recursively and remove all the repetitive code (idea: scan through and create a list of the fragments and their new options before creating)
+    o.ranges.add_mark = function (from, to, options) {
+        o.codemirror.operation(function() {
+            var start_pos = o.codemirror.posFromIndex(from);
+            var end_pos = o.codemirror.posFromIndex(to);
+            var conflicting_ranges = new Array();
+            var new_ranges = new Array();
+            if (start_pos > end_pos)
+            {
+                var temp_pos = start_pos;
+                start_pos = end_pos;
+                end_pos = temp_pos;
+            }
+            for (var rkey in o.ranges)
+            {
+                var rpos = o.ranges[rkey].find();
+                var rstart = o.codemirror.posFromIndex(rpos[0]);
+                var rend = o.codemirror.posFromIndex(rpos[1]);
+                var old_opts = o.ranges[rkey]._options;
+                var new_opts = old_opts;
+                var old_range = o.ranges[rkey];
+                var inner_elements = new Array();
+                // Check for any ranges that encompass the new one entirely
+                if (rstart < start_pos && rend > end_pos) {    
+                    o.ranges[rkey].clean();
+                    o.ranges.splice(rkey, 1);
+                    o.ranges[rstart] = o.codemirror.markText(o.codemirror.indexFromPos(rstart), o.codemirror.indexFromPos(start_pos), old_opts);
+                    o.ranges[rstart]._options = old_opts;
+                    for (var okey in options)
+                        new_opts[okey] = options[okey];
+                    o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(end_pos), new_opts);
+                    o.ranges[start_pos]._options = new_opts;
+                    o.ranges[end_pos] = o.codemirror.markText(o.codemirror.indexFromPos(end_pos), o.codemirror.indexFromPos(rend), new_opts);
+                    o.ranges[end_pos]._options = old_opts;
+                    return;
+                // Check for ranges that start outside and end inside the new range
+                } else if  (rstart < start_pos && rend > start_pos && rend < end_pos)  {
+                    o.ranges[rkey].clean();
+                    o.ranges.splice(rkey, 1);
+                    o.ranges[rstart] = o.codemirror.markText(o.codemirror.indexFromPos(rstart), o.codemirror.indexFromPos(start_pos), old_opts);
+                    o.ranges[rstart]._options = old_opts;
+                    for (var okey in options)
+                        new_opts[okey] = options[okey];
+                    o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(rend), new_opts);
+                    o.ranges[start_pos]._options = new_opts;
+                    start_pos = rend;
+                // Check for ranges that start inside and end outside the new range
+                } else if (rstart > start_pos && rstart < end_pos && rend > end_pos) {
+                    o.ranges[rkey].clean();
+                    o.ranges.splice(rkey, 1);
+                    for (var okey in options)
+                        new_opts[okey] = options[okey];
+                    o.ranges[rstart] = o.codemirror.markText(o.codemirror.indexFromPos(rstart), o.codemirror.indexFromPos(end_pos), new_opts);
+                    o.ranges[rstart]._options = new_opts;
+                    o.ranges[end_pos] = o.codemirror.markText(o.codemirror.indexFromPos(end_pos), o.codemirror.indexFromPos(rend), old_opts);
+                    o.ranges[end_pos]._options = old_opts;
+                    end_pos = rstart;
+                // Look for any ranges fully encompassed by the new range
+                } else if (rstart >= start_pos && rend <= end_pos) {
+                    inner_elements[rkey] = o.ranges[rkey];
+                }
+            }
+            inner_keys = new Array();
+            for (var rkey in inner_elements)
+                inner_keys.push(rkey);
+            inner_keys.sort(function(a,b){return a-b});
+            for (var key in inner_keys) {
+                var rkey = inner_keys[key];
+                var rpos = o.ranges[rkey].find();
+                var rstart = o.codemirror.posFromIndex(rpos[0]);
+                var rend = o.codemirror.posFromIndex(rpos[1]);
+                var old_opts = o.ranges[rkey]._options;
+                var new_opts = old_opts;
+                for (var okey in options)
+                        new_opts[okey] = options[okey];
+                var old_range = o.ranges[rkey];
+                if (rstart > start_pos) {
+                    o.ranges[rkey].clean();
+                    o.ranges.splice(rkey, 1);
+                    o.ranges[rstart] = o.codemirror.markText(o.codemirror.indexFromPos(rstart), o.codemirror.indexFromPos(rend), new_opts);
+                    o.ranges[rstart]._options = new_opts;
+                    o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(rstart), options);
+                    o.ranges[start_pos]._options = options;
+                    start_pos = rend;
+                } else {
+                    o.ranges[rkey].clean();
+                    o.ranges.splice(rkey, 1);
+                    o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(rend), new_opts);
+                    o.ranges[rstart]._options = new_opts;
+                    start_pos = rend;
+                }
+            }
+            if (start_pos != end_pos) {
+                o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(end_pos), options);
+                o.ranges[start_pos]._options = options;
+            }
+        });
+    };
+    o.handlers = new Object();
+    o.handlers.bold = function (value) {
+        o.ranges.add_mark(o.codemirror.getCursor("start"), o.codemirror.getCursor("end"), {className: "CodeMirror-mark-test"});
+    };
+
     function controls(o) {
         var common = $.extend({}, o), d = o.div;
 
@@ -866,7 +986,7 @@ Hive.App.Text = function(o) {
             $(el).bind('mousedown', function(e) {
                 e.preventDefault();
             }).click(function(){
-                o.app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
+                o.app.handlers[$(el).attr('cmd').replace("+", "")]($(el).attr('val'));
             });
         });
 
@@ -884,18 +1004,20 @@ Hive.App.Text = function(o) {
     o.content_element = $('<div></div>');
     o.content_element.attr('id', Hive.random_str()).addClass('text_content_element');
     o.div.append(o.content_element);
-    o.rte = new Hive.goog_rte(o.content_element, o);
-    goog.events.listen(o.rte.undo_redo.undoManager_,
-            goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
-            o.history_saver);
-    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
+    o.codemirror = CodeMirror(o.content_element.get(0), {value: o.content()});
+    o.codemirror.setSize("100%", "100%");
+    //o.rte = new Hive.goog_rte(o.content_element, o);
+    //goog.events.listen(o.rte.undo_redo.undoManager_,
+    //        goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
+    //        o.history_saver);
+    //Sgoog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
     o.shield();
 
     setTimeout(function(){ o.load(); }, 100);
     return o;
 }
 Hive.registerApp(Hive.App.Text, 'hive.text');
-
+/*
 
 Hive.goog_rte = function(content_element, app){
     var that = this;
@@ -1219,7 +1341,7 @@ Hive.goog_rte = function(content_element, app){
     }
 }
 goog.editor.Field.DELAYED_CHANGE_FREQUENCY = 100;
-goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
+goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);*/
 
 Hive.App.has_rotate = function(o) {
     var angle = o.init_state.angle ? o.init_state.angle : 0;
