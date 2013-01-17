@@ -17,9 +17,13 @@ class User(Application):
             response.context.pop('dialog_to_show')
         if (not referral or referral.get('used')): return self._bad_referral(request, response)
         response.context['action'] = 'create'
-        response.context['facebook_connect_url'] = FacebookClient().authorize_url(request.url)
+        redirect_url = URL(request.url)
+        redirect_url.query.clear()
+        response.context['facebook_connect_url'] = FacebookClient().authorize_url(redirect_url)
 
         if request.args.has_key('code'):
+            credentials = request.requester.fb_client.credentials
+            credential_store = self.db.Temp.create( json.loads(credentials.to_json()) )
             fb_profile = request.requester.fb_client.me()
             profile_picture_url = 'https://graph.facebook.com/' + fb_profile.get('id') + '/picture?type=large&return_ssl_resources=1'
             try:
@@ -39,6 +43,7 @@ class User(Application):
             response.context['f']['fullname'] = fb_profile['name']
             response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(fb_profile.get('gender'))
             response.context['f']['facebook'] = fb_profile
+            response.context['f']['credential_id'] = credential_store.id
             if profile_picture:
                 response.context['f']['thumb'] = profile_picture.get_thumb(190,190)
                 response.context['f']['thumb_file_id'] = profile_picture.id
@@ -46,13 +51,7 @@ class User(Application):
         else:
             response.context['f']['email'] = referral.get('to', '')
 
-        ab_variations = ['pages/user_settings.html', 'pages/signup.html']
-        group = request.cookies.get('AB_SIG')
-        if group is None:
-            group = random.randint(0, len(ab_variations) - 1)
-            set_cookie(response, 'AB_SIG', group, secure=True)
-        template = ab_variations[int(group)]
-        return self.serve_page(response, template)
+        return self.serve_page(response, 'pages/signup.html')
 
     def create(self, request, response):
         """ Checks if the referral code matches one found in database.
@@ -78,11 +77,13 @@ class User(Application):
             #,'flags'    : { 'add_invites_on_save' : True }
         })
         if not args.get('fullname'): args['fullname'] = args['name']
-        if request.args.has_key('code'):
-            credentials = request.requester.fb_client.exchange()
+        credential_id = request.form.get('credential_id')
+        if credential_id:
+            credentials = self.db.Temp.fetch(credential_id)
+            request.requester.fb_client.credentials = credentials
             fb_profile = request.requester.fb_client.me()
             args.update({
-                'oauth': {'facebook': json.loads(credentials.to_json())}
+                'oauth': {'facebook': credentials}
                 ,'facebook' : fb_profile
             })
         if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})
@@ -103,7 +104,7 @@ class User(Application):
             contact = self.db.Contact.find({'referral_id': referral.id})
             if contact: contact.update(user_created=user.id)
 
-        user.give_invites(5)
+        user.give_invites(config.initial_invite_count)
         if args.has_key('thumb_file_id'):
             file = self.db.File.fetch(args.get('thumb_file_id'))
             if file:
@@ -166,7 +167,7 @@ class User(Application):
         else: return self.serve_forbidden(response)
 
     def info(self, request, response):
-        user = self.db.User.fetch(lget(request.path_parts, 1))
+        user = self.db.User.fetch(lget(request.path_parts, 1)).client_view(viewer = request.requester)
         if not user: return self.serve_404(request, response)
 
         items = user.feed_profile(viewer=request.requester, limit=20)
@@ -176,11 +177,7 @@ class User(Application):
         exprs = [ { 'id': e.id, 'title': e.get('title'), 'thumb': e.get_thumb(70), 'url': e.url }
             for e in user.expr_page(limit=5) ]
 
-        return self.serve_json(response, dict(
-             feed_html = feed_html
-            ,exprs = exprs
-            ,listening = user.id in request.requester.starred_user_ids
-        ))
+        return self.serve_json( response, dict(feed_html = feed_html, exprs = exprs, listening = user['listening'] ) )
 
     def facebook_canvas(self, request, response, args={}):
         return self.serve_html(response, '<html><script>top.location.href="' + abs_url(secure=True) + 'invited' + querystring({'request_ids': request.args.get('request_ids','')}) + '";</script></html>')
@@ -327,7 +324,7 @@ class User(Application):
 
     def logout(self, request, response):
         auth.handle_logout(self.db, request, response)
-        return self.redirect( response, request.form.get('url', abs_url()) )
+        return self.redirect( response, AbsUrl('') )
 
     def log(self, request, response):
         action = request.form.get('log_action')

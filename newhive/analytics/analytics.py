@@ -1,8 +1,21 @@
-import time, datetime, re, pandas, newhive, pandas, numpy
+"""
+    newhive.analytics.analytics
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    This module is mostly legacy analytics code.  Over time most of this should
+    be either removed, migrated into a newhive.analytics.queries.Query or into
+    a funciton in newhive.analytics.functions
+
+"""
+import time, datetime, re, pandas, newhive, pandas, numpy, pytz
 from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
-from newhive.utils import datetime_to_int, datetime_to_str
+from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, local_date, un_camelcase
+from newhive.analytics.ga import GAClient, GAQuery
+from newhive.analytics import queries
+from newhive.analytics.functions import ga_column_name_to_title
+Day = pandas.datetools.Day
 
 import logging
 logger = logging.getLogger(__name__)
@@ -148,12 +161,12 @@ def funnel2(db, start_datetime, end_datetime):
     referral_ids = [s.get('referral_id') for s in signups]
     accounts_created = db.referral.find({'_id': {'$in': referral_ids}, 'user_created': {'$exists': True}})
 
-    ga = oauth.GAClient()
+    ga = GAClient()
     views = ga.find_one({
         'start_date': start_datetime.strftime("%Y-%m-%d")
         , 'end_date': ga_end_datetime.strftime("%Y-%m-%d")
         , 'metrics': 'ga:pageviews'
-        , 'filters': oauth.ga_filters['expressions']
+        , 'filters': analytics.ga.ga_filters['expressions']
         })
     return {'users': avg_users
             , 'expressions': avg_exprs
@@ -170,7 +183,7 @@ def pageviews(db, start_datetime, end_datetime):
     start = time.mktime(start_datetime.timetuple())
     end = time.mktime(end_datetime.timetuple())
 
-    ga = oauth.GAClient()
+    ga = GAClient()
     views = ga.find_time_series({
         'start_date': start_datetime.strftime("%Y-%m-%d")
         , 'end_date': ga_end_datetime.strftime("%Y-%m-%d")
@@ -211,10 +224,10 @@ def signups(db, end=None, period='hours', start=None):
     cursor = db.contact_log.find(spec, {'created': True})
     created_contacts = group_data(cursor)
 
-    return {  'times': [time.mktime(x.timetuple()) for x in hourly.tolist()]
-            , 'values': contacts.values.tolist()
-            , 'values_2': created_contacts.values.tolist()
-            , 'percent': (created_contacts / contacts).values.tolist()
+    return {  'index': [time.mktime(x.timetuple()) for x in hourly.tolist()]
+            , 'total': contacts.values.tolist()
+            , 'active': created_contacts.values.tolist()
+            , 'ratio': (created_contacts / contacts).values.tolist()
             }
 
 def contacts_per_hour(db, end=now()):
@@ -477,58 +490,54 @@ def _cohort_users(db, stop_date=datetime.datetime.now()):
         data.append(item)
     return pandas.DataFrame(data, index=cohort_range)
 
+def _active_users_ga(db, period=7):
+    """Return users present in GA logs in last 'period' days"""
+    tz = pytz.timezone('US/Pacific')
+    end_date = datetime.datetime.now(tz) - pandas.DateOffset(days=1)
+    end_date = local_date()
+    start_date = end_date - pandas.DateOffset(days=period-1)
+    query = GAQuery(start_date=start_date, end_date=end_date)
+    query.metrics(['ga:visits']).dimensions(['ga:customVarValue1'])
+    names = [row[0] for row in query.execute().rows]
+    return db.User.search({'name': {'$in': names}})
 
-def overall_impressions(db, histogram=True, key='owner'):
-    map_function = """
-        function() {
-             if (typeof(this.apps) != "undefined" && this.apps.length > 0 && this.views && this.owner_views){
-                 emit(this.""" + key + """, {count: 1, views: this.views - this.owner_views});
-             }
-        }
-        """
+def _id_range(start, end=None, offset=None):
+    """Return a mongodb spec dictionary that will match ids of objects created
+    between date and date + offset"""
+    end = end or start + offset
+    return {'_id': {'$gt': datetime_to_id(start), '$lt': datetime_to_id(end)}}
 
-    reduce = """
-        function(key, values) {
-            result = {count: 0, views: 0};
-            for (var i=0; i < values.length; i++) {
-                result.count += values[i].count;
-                result.views += values[i].views;
-            };
-            return result;
-        }"""
+def active_users_by_signup_date(db, users, freq='D'):
+    """Given a list of 'active' users, bucket them according to signup date and
+    return a DataFrame with columns: active, total and ratio"""
 
-    name = 'overall_impressions_per_user'
+    def group(cursor):
+        series = pandas.Series(1, [datetime.datetime.fromtimestamp(u['created']) for u in cursor])
+        series = series.tz_localize('UTC').tz_convert('US/Pacific')
+        return series.resample(freq, how="sum", label="start").fillna(0)
 
-    results_collection = db.mdb.expr.map_reduce(map_function, reduce, 'mr.' + name)
-    if histogram:
-        data = [x['value']['views'] for x in results_collection.find()]
-        bin_edges = [0,1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000, 2000000, 5000000]
-        hist, bin_edges = numpy.histogram(data, bin_edges)
-        return (map(int,hist), map(int,bin_edges))
-    else:
-        return results_collection
+    data = pandas.DataFrame({'active': group(users)})
+    total = db.User._col.find(_id_range(data.index[0], data.index[-1] + data.index.freq), {'created': 1})
+    data['total'] = group(total)
+    data['ratio'] = data['active'] / data['total']
+    #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
+    return data
 
-def active(db, period=7):
-    input_name = "mr.actions_per_user_per_day"
-    mr_col = actions_per_user_per_day(db)
-    mr_col.ensure_index('_id.date')
-    offset = pandas.DateOffset(days=period)
-    start = newhive.utils.time_u(mr_col.find_one(sort=[('_id.date', 1)])['_id']['date'])
-    dr = pandas.DateRange(start=start + offset, end=datetime.datetime.now(), offset=pandas.DateOffset(days=1))
-    data = []
-    for date in dr:
-        cursor = mr_col.find({'_id.date': {'$lte': datetime_to_int(date), '$gt': datetime_to_int(date - offset)}})
-        data.append(len(cursor.distinct('_id.name')))
-
-    #data = [mr_col.find({'_id.date': datetime_to_int(date)}).count() for date in dr]
-    return (data, dr)
+#TODO: move this into analytics.queries
+def retention(db, freq="D", subset=True):
+    days = {'D': 1, 'W': 7, 'M': 30, 'MS': 30}.get(freq)
+    active = _active_users_ga(db, days)
+    data = active_users_by_signup_date(db, active, freq)
+    data["Active Fraction"] = data.pop('ratio').fillna(0)
+    if subset: return data[-30:]
+    else: return data
 
 def engagement_pyramid(db):
 
     end_date = datetime.datetime.now()
     start_date = end_date - pandas.DateOffset(months=1)
 
-    query = oauth.GAQuery()
+    query = GAQuery()
     query.start_date(start_date).end_date(end_date)
     query.metrics(['ga:visitors'])
     query.dimensions(['ga:customVarValue1'])
@@ -565,11 +574,74 @@ def engagement_pyramid(db):
 
     return cohort_users
 
+def milestone_email_cadence(db, offset=86400, cutoff=2):
+    extract = lambda l: (
+            datetime.datetime.fromtimestamp(l['created'])
+            , l['recipient_name']
+            , l['unique_args']['expr_id']
+            , l['unique_args']['milestone']
+            )
+
+    m = [extract(l) for l in db.MailLog.search({'created': {'$gt': now() - offset}, 'category': 'milestone'})]
+
+    df = pandas.DataFrame(m, columns=['created', 'user', 'expr', 'milestone'])
+
+    for name, group in df.groupby('user'):
+        if len(group) >= cutoff:
+            user = db.User.named(name)
+            median = pandas.np.median([e['views'] for e in user.get_expressions('public')]) if user else 'NA'
+            print "{}  median views: {}".format(name, median)
+            print group
+            print
+
+def user_expression_summary(user, p=False):
+    data = [(e['name'], e['views']) for e in user.get_expressions('public')]
+    data = data or [('', 0)]
+    data = pandas.DataFrame(data, columns=['name', 'views'])
+    if p:
+        print data.describe()
+        print data
+    return data
+
+def user_median_views(db):
+    cursor = db.User.search({'analytics.expressions.count': {'$gt': 0}})
+    data = [(u['name'], user_expression_summary(u).views.median()) for u in cursor]
+    data = pandas.DataFrame(data, columns=['user', 'median_views'])
+    data.timestamp = datetime.datetime.now()
+    return data
+
+def summary(db):
+    data = queries.GASummary().execute(local_date(-1)).dataframe
+    data.index = data.index.map(lambda x: x.date())
+    data.columns = data.columns.map(ga_column_name_to_title)
+    data['Returning Visits'] = data['Visits'] - data['New Visits']
+
+    q = queries.Active(db)
+    for period in [1,7,30]:
+        active = q.execute(period)
+        active.index = active.index.map(lambda x: x.date())
+        data = data.join(active)
+
+    for q in [queries.UsersPerDay, queries.LovesPerDay, queries.ListensPerDay, queries.ExpressionsCreatedPerDay]:
+        per_day = q(db).execute()
+        data = data.join(per_day)
+
+    data["DAU/MAU"] = data["Active1"] / data["Active30"]
+    new = data["New Users Per Day"]
+    #data["DAU/MAU'"] = (data["Active1"] - new) / ( data["Active30"] - new)
+
+    data = data[data.index < local_date()]
+    today = data.ix[local_date(-1)]
+    previous = data.ix[[-2, -8, -29]]
+    previous.index = ['DoD', 'WoW', 'MoM']
+    change =  today.map(float) / previous - 1
+    return {'today': today, 'change': change}
 
 if __name__ == '__main__':
     from newhive.state import Database
     import newhive.config
     db = Database(newhive.config)
+    db_live = Database(newhive.config, db_name='hive')
     #ch = logging.StreamHandler()
     #ch.setLevel(logging.debug)
     #formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')

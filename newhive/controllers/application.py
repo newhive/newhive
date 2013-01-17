@@ -57,6 +57,7 @@ class Application(object):
         response.context['ga_commands'] = [
                 ['_setCampMediumKey', 'email']
                 , ['_setCampSourceKey', email.get('category')]
+                , ['_setCustomVar', 5, 'campaign', 'email:' + email.get('category'), 2]
                 ]
 
     def _process_ga_commands(self, request, response):
@@ -90,16 +91,14 @@ class Application(object):
         context.update(
              home_url = response.user.get_url()
             ,user = response.user
-            ,user_client = { 'name': response.user.get('name'), 'id': response.user.id,
-                'thumb': response.user.get_thumb(70) }
+            ,client_user = response.user.client_view()
             ,admin = response.user.is_admin
             ,beta_tester = config.debug_mode or response.user.get('name') in config.beta_testers
             ,create = abs_url(secure = True) + 'edit'
             ,server_url = abs_url()
             ,secure_server = abs_url(secure = True)
             ,server_name = config.server_name
-            ,site_pages = dict([(k, abs_url(subdomain=config.site_user) + config.site_pages[k])
-                for k in config.site_pages])
+            ,content_domain = abs_url(domain = config.content_domain)
             ,debug = config.debug_mode
             ,ui = ui
             ,template = template
@@ -192,7 +191,7 @@ class Application(object):
                     existing_user = self.db.User.find_by_facebook(profile.get('id'))
                     if not existing_user:
                         logger.info("Connecting facebook account '%s' to TNH account '%s'", profile['name'], request.requester['name'])
-                        request.requester.save_credentials(request.requester.fb_client.exchange(), profile=True)
+                        request.requester.save_credentials(credentials, profile=True)
                         response.context['new_fb_connect'] = True
                     else:
                         logger.warn("Not connecting facebook account '%s' to TNH account '%s' because account is already connected to '%s'",
@@ -226,7 +225,7 @@ class Application(object):
             return None
 
     def site_page_url(self, name):
-        url = AbsUrl(user=config.site_user, page=config.site_pages[name])
+        url = AbsUrl(user=config.site_user, page=name)
         url.query.update({'user': config.site_user})
         return url
 

@@ -4,12 +4,17 @@
 
 {% block body %}
     <div id="logo">
+      <a href="{{ server_url }}">
         <img src="{{ 'skin/1/newhive_logo_lg.png' | asset_url(abs=True) }}"/>
+      </a>
     </div>
 
     <h2 id="greeting" class="line">
         Hi {{ recipient.name or "there"}},
     </h2>
+
+    {% block upper_message %}
+    {% endblock %}
 
     <div id="main_message">
         <div class="line">
@@ -21,8 +26,10 @@
     {% block lower_content %}
     {% endblock %}
 
+    {% block footer_message %}
     <h4 id="footer_message">
         Questions or feedback?<br/>
         <a href="mailto:info@newhive.com">info@newhive.com</a>
     </h4>
+    {% endblock %}
 {% endblock %}

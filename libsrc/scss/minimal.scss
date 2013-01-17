@@ -7,6 +7,10 @@ a { color : inherit; text-decoration : none; }
 .happ img { width : 100%; }
 .happfill { position : fixed; top : 0; left : 0; width : 100%; height : 100%; }
 .happfill img { position : absolute; left : 0; top : 0; }
+.expression .expr_container {
+    position: relative;
+    margin: 0 auto;
+}
 h1 { font-size : 40px; }
 form { display : inline; }
 

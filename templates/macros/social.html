@@ -1,5 +1,6 @@
 {% macro social_icons(url, thumbnail='', copy='', counts={}) %}
 {% set title = copy | e | urlencode %}
+{% set url = url | urlencode %}
 <a class='facebook' onClick="logShare('facebook');" target="_blank" title='Share on Facebook'
     href='http://www.facebook.com/sharer.php?u={{ url }}&title={{ title }}'>
     <div class="like_button facebook">
@@ -7,7 +8,7 @@
     </div>
   </a>
   <a class='twitter' onClick="logShare('twitter');" target="_blank" title='Share on Twitter'
-      href='http://twitter.com/share?status={{ title }}+{{ url }}'>
+      href='http://twitter.com/intent/tweet?status={{ title }}%20{{ url }}'>
     <div class="like_button twitter">
       <img src='{{ 'skin/1/social/twitter.png'|asset_url }}'>
     </div>
@@ -19,7 +20,7 @@
     </div>
   </a>
   <a class='pinterest' onClick="logShare('pinterest');" target="_blank" title='Share on Pinterest'
-      href="http://pinterest.com/pin/create/button/?url={{url}}&media={{thumbnail}}">
+      href="http://pinterest.com/pin/create/button/?url={{url}}&media={{thumbnail}}&description={{ title }}">
     <div class="like_button pinterest">
       <img src='{{ 'skin/1/social/pinterest.png'|asset_url }}'>
     </div>
@@ -31,7 +32,7 @@
     </div>
   </a>
   <a class='gplus' onClick="logShare('gplus');" target="_blank" title="Share on Google+"
-      href="https://plusone.google.com/_/+1/confirm?hl=en-US&url={{ url }}">
+      href="https://plus.google.com/share?url={{ url }}">
     <div class="like_button gplus">
       <img src="{{ 'skin/1/social/plus_one.png'|asset_url }}"/>
     </div>

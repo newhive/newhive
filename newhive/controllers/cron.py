@@ -2,8 +2,11 @@ from itertools import chain
 from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive.utils import now
+from newhive.analytics.analytics import user_expression_summary
+import newhive.analytics.queries
 import newhive.mail
 from newhive import config
+
 
 class Cron(Application):
     key = 'VaUcZjzozgiV'
@@ -27,6 +30,7 @@ class Cron(Application):
         opts = dict((k, int(v)) for k, v in opts_serial.iteritems())
 
         status = method(**opts)
+        status.update({'timestamp': now(), 'args': opts})
         return self.serve_json(response, status)
 
 
@@ -47,30 +51,45 @@ class Cron(Application):
 
         return stats
 
-    def email_milestone(self):
-        def next_milestone(n):
-            for m in config.milestones:
-                if m > n: return m
+    @classmethod
+    def _milestone_check(self, expr):
 
-        mailer = newhive.mail.Milestone(db = self.db, jinja_env = self.jinja_env)
-        stats = { 'send_count': 0, 'matched': 0 }
-        def send(expr):
+        def latest_milestone(n):
+            for m in reversed(config.milestones):
+                if m <= n: return m
+            return 0
+
+        views = expr.get('views', 0)
+        milestones = expr.get('milestones')
+        last_milestone = max([int(m) for m in milestones.keys()]) if milestones else 0
+        new_milestone = latest_milestone(views)
+
+        seconds_since_last = now() - max(milestones.values()) if milestones else float('inf')
+        if new_milestone > last_milestone and seconds_since_last > 86400:
+            median = user_expression_summary(expr.owner).views.median()
+            if new_milestone >= median:
+                return new_milestone
+        return False
+
+    @classmethod
+    def _email_milestone_send(self, expr, mailer):
+        milestone = self._milestone_check(expr)
+        if milestone:
             expr_milestones = expr.get('milestones', {})
-            if expr_milestones:
-                last_milestone = max([int(m) for m in expr_milestones.keys()])
-            else:
-                last_milestone = 0
-            next = next_milestone(last_milestone)
+            expr_milestones.update({str(milestone): now()})
+            expr.update(milestones=expr_milestones, updated=False)
+            mailer.send(expr, milestone)
+            return milestone
+        return False
 
-            if expr.get('views', 0) >= next:
-                expr_milestones.update({str(next): now()})
-                expr.update(milestones=expr_milestones, updated=False)
-                stats['matched'] += 1
-                stats['send_count'] += 1
-                mailer.send(expr, next)
 
+    def email_milestone(self):
+        mailer = newhive.mail.Milestone(db = self.db, jinja_env = self.jinja_env)
+        stats = { 'send_count': 0}
         for expr in self.db.Expr.search({'auth': 'public', 'views': {'$gt': 0}}):
-            send(expr)
+            sent = self._email_milestone_send(expr, mailer)
+            if sent:
+                stats['send_count'] += 1
 
         return stats
 
@@ -82,7 +101,7 @@ class Cron(Application):
                 , 'created': {'$gt': now() - delay - span, '$lt': now() - delay }
                 , 'to': re.compile(r'@')
                 }
-        stats = {'send_count': 0, 'timestamp': now(), 'args': {'delay': delay, 'span': span}}
+        stats = {'send_count': 0}
 
         mailer = newhive.mail.SiteReferralReminder(db=self.db, jinja_env=self.jinja_env)
 
@@ -97,3 +116,24 @@ class Cron(Application):
 
         return stats
 
+    def user_invites_reminder(self, delay=0, span=0):
+        mailer = newhive.mail.UserInvitesReminder(db = self.db, jinja_env = self.jinja_env)
+        stats = {'send_count': 0}
+
+        spec = {
+                'created': {'$gt': now() - span - delay, '$lt': now() - delay}
+                , 'referrals': config.initial_invite_count
+                }
+        for user in self.db.User.search(spec):
+            mailer.send(user)
+            stats['send_count'] += 1
+
+        return stats
+
+    def analytics(self):
+        newhive.analytics.queries.clear_all_caches()
+        mailer = newhive.mail.Analytics(db = self.db, jinja_env = self.jinja_env)
+        mailer.send('team@newhive.com')
+
+        stats = {'send_count': 1}
+        return stats

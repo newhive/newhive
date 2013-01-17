@@ -1,0 +1,44 @@
+{% extends "emails/site.html" %}
+
+{% block upper_message %}
+<p><b>We're happy to have you here at NewHive. :)</b></p>
+{% endblock %}
+
+{% block main_message %}
+<h2>
+    You now have <span class="active">{{ recipient.referrals }}</span> invites <br/>
+    so you can invite your friends!
+</h2>
+{% endblock %}
+
+{% block lower_content %}
+    <h2 class="cta"><a href="{{url}}">
+        <span>
+            Click here to
+            </span><br/><span>
+            invite your friends
+        </span>
+    </a></h2>
+    <div id="lower_paragraph">
+    <p>
+        You can also invite your <b>Facebook friends</b> (as many as you 
+        want, at any time) by clicking "Invite Facebook friends" 
+        under the hive logo.
+    </p>
+
+    <p>
+        As you <b>create expressions</b>, you'll be given <b>more email
+        invitations</b> to share with friends. Feel free to email us at 
+        <b><a href="mailto:info@newhive.com">info@newhive.com</a></b> if you know you need more.
+    </p>
+
+    <p>
+        Cheers,<br/>
+        <b>The NewHive team</b>
+    </p>
+    </div>
+{% endblock %}
+
+{% block footer_message %}
+{# intentionally blank #}
+{% endblock %}

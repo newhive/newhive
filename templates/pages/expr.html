@@ -1,18 +1,24 @@
 {% extends "base.html" %}
 
 {% block head %}
-  <script src='{{ asset_bundle('expression.js')[0] }}'></script>
   <script>
-      $.extend(Hive, {
-          user: {{ user_client | json }},
-          parent_url: {{ expr.url | json }},
-          expr: {{ "false" if empty else expr | json }}
-      });
+    Hive = { user: {{ client_user | json }}, expr: {{ expr | json }} };
   </script>
+  <script src='{{ asset_bundle('expression.js')[0] }}'></script>
+  {% if expr_style %}
+    <style>
+      {{ expr_style }}
+    </style>
+  {% endif %}
 {% endblock %}
 
 {% block body_classes %}{{ super() }} expression{% endblock %}
 
 {% block main %}
   {% include 'page_parts/expr_body.html' %}
+  {% if expr_script %}
+    <script id="expr_script">
+      {{ expr_script }}
+    </script>
+  {% endif %}
 {% endblock %}

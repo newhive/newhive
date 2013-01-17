@@ -5,7 +5,7 @@
     {% if initiator %}
       Congratulations!<br/>
       Your friend <a href={{initiator.url}} class="active">{{ initiator.fullname }}</a>
-      has invited you to join <span class="active">NewHive</span>,
+      has invited you to join <a href="{{server_url}}" class="active">NewHive</a>,
       your online blank canvas <span class="plus">+</span>
       self-publishing toolkit.
     {% else %}
@@ -18,11 +18,11 @@
 {% endblock %}
 
 {% block lower_content %}
-  <h2 id="create_account"><a href="{{url}}">
+  <h2 id="create_account" class="cta"><a href="{{url}}">
       <span>
           Click here to
       </span><br/><span>
           create your account
       </span>
-  </h2>
+  </a></h2>
 {% endblock lower_content %}

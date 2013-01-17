@@ -505,3 +505,12 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
         white-space: pre-wrap;
     }
 }
+
+#dia_video {
+    width: auto;
+    padding: 10px;
+    img { width: 200px; }
+    iframe {
+        display: block;
+    }
+}

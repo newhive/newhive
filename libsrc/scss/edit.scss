@@ -1,6 +1,11 @@
 @import "common";
 
-#happs { position: absolute; left: 0; top: 0; z-index: 0; }
+#happs {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;
+}
 
 #edit_nav {
     right: 0;
@@ -51,6 +56,8 @@
 
 .control.stack { white-space : nowrap; }
 .control.buttons .button { margin-right : 2px; float : left; }
+.drawer.brush .option:hover { background-color: $color_selected; }
+.drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
 .button.blank { display : inline-block; background-image : asset_url('skin/1/button.png'); width : 28px; height : 28px; line-height : 28px; text-align : center; font-weight : bold; }
 .option.small { display : inline-block; }
@@ -77,9 +84,34 @@
     #insert_text   { &.active { background-image: asset_url('skin/1/text-hover.png');   } background-image: asset_url('skin/1/text.png');   }
     #insert_image  { &.active { background-image: asset_url('skin/1/images-hover.png'); } background-image: asset_url('skin/1/images.png'); }
     #insert_audio  { &.active { background-image: asset_url('skin/1/audio-hover.png');  } background-image: asset_url('skin/1/audio.png');  }
-    #insert_embed  { &.active { background-image: asset_url('skin/1/embed-hover.png');  } background-image: asset_url('skin/1/embed.png');  }
+    #insert_embed  { &.active { background-image: asset_url('skin/1/editor_embed-hover.png');  } background-image: asset_url('skin/1/editor_embed.png');  }
     #insert_shape  { &.active { background-image: asset_url('skin/1/shapes-hover.png'); } background-image: asset_url('skin/1/shapes.png'); }
     #insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
+    #labs          { &.active { background-image: asset_url('skin/1/labs-hover.png');   } background-image: asset_url('skin/1/labs.png'); }
+}
+
+textarea.code {
+    font-family: monospace;
+}
+
+.code_editor{
+    width: auto;
+    h2 {
+        margin: 10px 0 0 5px;
+    }
+    p {
+        margin: 0 0 0 5px;
+    }
+    .small_text {
+        font-size: 12px;
+        color: $color_grey_medium;
+    }
+    textarea {
+        margin-top: 10px;
+        width: 600px;
+        min-height: 200px;
+        font-size: 14px;
+    }
 }
 
 #menu_image {
@@ -89,9 +121,16 @@
 
 .btn { display: inline-block; padding: 5px; cursor: default; }
 .menu label { font-weight: normal; font-size: 15px; }
-#menu_save { top : 43px; right : 0px; padding : 10px; width: 220px; }
+#menu_save {
+    font-size: .85em;
+    width: 220px;
+    padding : 10px;
+    top : 43px;
+    right : 0px;
+}
 #menu_save textarea { height : 2.5em; }
 #menu_save input, #menu_save textarea { width : 200px; }
+#menu_save .note { color: $color_grey_medium }
 #menu_privacy .selected { display : none; }
 #right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }

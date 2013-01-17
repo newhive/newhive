@@ -9,7 +9,8 @@ Hive.config = {
         nav: {
             open_initially: true,
             hideable: false,
-            opens_navigator: false
+            opens_navigator: false,
+            visible: ['action', 'user', 'owner']
         },
         navigator: {
             open_initially: false,
@@ -88,24 +89,24 @@ Hive.config = {
 //});
 //
 //
-Hive.AB_Test.add_test({
-    name: 'signup page'
-    , id: 'SIG'
-    , start_date: new Date(2012,9,5)
-    , duration: 7 
-    , cases: {
-        0: {
-            name: 'old page'
-            , weight: 1
-            , config_override: noop
-        },
-        1: {
-            name: 'new page'
-            , weight: 1
-            , config_override: noop
-        }
-    }
-});
+//Hive.AB_Test.add_test({
+//    name: 'signup page'
+//    , id: 'SIG'
+//    , start_date: new Date(2012,9,5)
+//    , duration: 7 
+//    , cases: {
+//        0: {
+//            name: 'old page'
+//            , weight: 1
+//            , config_override: noop
+//        },
+//        1: {
+//            name: 'new page'
+//            , weight: 1
+//            , config_override: noop
+//        }
+//    }
+//});
 
 
 _gaq.push(['_setCustomVar', 4, 'AB_javascript', Hive.AB_Test.ga_string()]);

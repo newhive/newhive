@@ -45,7 +45,7 @@
   {% if profile and user_is_owner %}
     <div class='nav_icon text hoverable medbold center pad' onclick="" title="Help with your profile" style='margin-right : 8px;' id='btn_help'>?</div>
     <script>
-      $('#btn_help').click(function() { exprDialog('{{ site_pages['profile-help'] }}', { minimize_to : $('#btn_help') } ) });
+      $('#btn_help').click(function() { exprDialog('/thenewhive/profile-help', { minimize_to : $('#btn_help') } ) });
       {% if show_help %}$('#btn_help').click();{% endif %}
     </script>
   {% endif %}
@@ -72,7 +72,7 @@
           <a href="" onclick="return false;">Request Invite</a>
         </div>
         <div class='happ' style='left: 230px; top: 177px; width: 300px; z-index: 3;'>
-          <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://thenewhive.com" data-text="The New Hive is the easiest way to express yourself online. #expression" data-count="horizontal" data-via="newhive">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
+          <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://thenewhive.com" data-text="NewHive is the easiest way to express yourself online. #expression" data-count="horizontal" data-via="newhive">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
           <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fthenewhive.com&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:180px; height:20px;" allowTransparency="true"></iframe>
           {#<div class="fb-facepile" data-max-rows="1" data-width="300"></div>#}
         </div>
@@ -94,7 +94,7 @@
         {% elif user_is_owner %}
           <div class="img placeholder">
             <div class="img"></div> {# empty placeholder to keep vertical height and alignment consistent #}
-            <div class='text'>Click Here to<br/>Upload A Profile Image</div>
+            <div class='text'>Click here to<br/>upload a profile image</div>
           </div>
         {% else %}
           <div class="img"></div> {# empty placeholder to keep vertical height and alignment consistent #}
@@ -153,7 +153,6 @@
       {{ left_tab('home/expressions', 'Expressions') }}
       {% if user.logged_in %}{{ left_tab('home/network', 'My Network') }}{% endif %}
       {{ left_tab('home/people', 'People') }}
-      {{ left_tab('home/page', 'About') }}
     {% endif %}
     {% if profile %}
       {{ left_tab('profile/expressions', 'Expressions') }}
@@ -184,13 +183,6 @@
     <script>$(function() { require_login('restricted_page'); });</script>
   {% else %}
     <div id='feed'>
-      {% if show_prompts %}
-        <div>
-          <a href='{{ server_url }}home/expressions'><div class='prompt hoverable' id='prompt_interests'><div>Click the tags on the left to find people creating expressions about your interests.</div></div></a>
-          <div class='prompt link hoverable' id='prompt_allies' onclick='fb_listen_or_connect()'><div>Click here to connect to Facebook and follow / invite friends.</div></div>
-          <a href='{{ server_url }}home/expressions/all'><div class='prompt hoverable' id='prompt_expressions'><div>Click here or "Expressions" on the left to explore featured expressions and find people to listen to.</div></div></a>
-        </div>
-      {% endif %}
       {% include 'page_parts/cards.html' %}
       <div style='position:relative'>{{ content }}</div>
     </div>

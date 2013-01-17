@@ -139,3 +139,27 @@ body.unsubscribe {
         margin-top: 21px;
     }
 }
+
+#tos_container {
+    width : 600px;
+    height : 500px;
+    overflow : auto;
+    padding : 40px;
+    z-index: 8;
+    background: white;
+    h1 {
+        font-family: Museo;
+        font-weight: normal;
+        margin: 0;
+    }
+    h2 {
+        color: $color_active;
+        font-weight: bold;
+        font-family: Helvetica, Verdana, sans-serif;
+        font-size: 14px;
+    }
+    p {
+        color: $color_grey_medium;
+        font-size: 14px;
+    }
+}

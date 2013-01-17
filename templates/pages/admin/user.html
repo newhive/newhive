@@ -3,23 +3,65 @@
 {% block head %}
 {{ super() }}
 <style>
+    h1{
+        margin: 0.67em 0 0 0;
+    }
   .section { 
     float: left; 
     margin-right: 20px;
   }
+  .item h4 {
+      margin-bottom: 0;
+  }
+  #delete {
+      font-size: 12px;
+      color: grey;
+  }
 </style>
 {% endblock head %}
 
+{% block footer_scripts %}
+{{ super() }}
+<script>
+    function deleteAccount(){
+        if (confirm("Permanently Delete account?")) {
+            $.getJSON("?delete=true", function(){
+                $('#content').empty().append("<h1>{{user_object.name}} was deleted</h1>");
+            });
+        }
+    };
+</script>
+{% endblock %}
 
 {% block content %}
 <h1>{{user_object.name}}</h1>
+<a id="delete" onclick="deleteAccount(); return false" href="#">Delete Account</a>
+
+<div>
+    <div class="item">
+        <h4>User since</h4>{{ user_object.created | time }}
+    </div>
+    <div class="item">
+        <h4>Email</h4>{{ user_object.email }}
+    </div>
+    <div class="item">
+        <h4>
+            Email Subscriptions
+            <a href="/analytics/email_log/?recipient_name={{user_object.name}}">(see emails)</a>
+        </h4>
+        {{ user_object.email_subscriptions | join(', ') }}
+    </div>
+</div>
 
 <div class='section'>
     <h3>Private Expressions: ({{expression_counts.private}})</h3>
     <table class='tablesorter'>
         <tr><th>Expression Name</th><th>Date Created</th></tr>
         {% for expr in private_expressions %}
-            <tr><td>XXXXXX</td><td data-type="epoch_date">{{expr.created}}</td></tr>
+        <tr>
+            <td>XXXXXX</td>
+            <td data-type="epoch_date">{{expr.created}}</td>
+        </tr>
         {% endfor %}
     </table>
 </div>
@@ -27,9 +69,13 @@
 <div class='section'>
     <h3>Public Expressions: ({{expression_counts.public}})</h3>
     <table class='tablesorter'>
-        <tr><th>Expression Name</th><th>Date Created</th></tr>
+        <tr><th>Expression Name</th><th>Date Created</th><th>Views</th></tr>
         {% for expr in public_expressions %}
-            <tr><td><a href="{{expr.url}}">{{expr.name}}</a></td><td data-type="epoch_date">{{expr.created}}</td></tr>
+            <tr>
+                <td><a href="{{expr.url}}">{{expr.name}}</a></td>
+                <td data-type="epoch_date">{{expr.created}}</td>
+                <td>{{expr.views}}</td>
+            </tr>
         {% endfor %}
     </table>
 </div>

@@ -1,10 +1,34 @@
 from newhive.manage import ec2, slick53, aws_credentials
+from newhive.utils import memoized
 import boto
 
 slick53.patch(boto)
 
+@memoized
+def get_route53_connection():
+    return boto.connect_route53(*aws_credentials)
+
+def add_cname(zone_name, name, server_dns, wildcard=False, no_confirmation=False):
+    con = get_route53_connection()
+    zone = con.get_zone(zone_name)
+    fullname = name + '.' + zone_name
+    current_value = zone.get_cname(fullname)
+    if current_value:
+        if current_value.resource_records[0] == server_dns:
+            print "CNAME already set as requested, not doing anything."
+            return
+        else:
+            command, message = (zone.update_cname, 'Update')
+    else:
+        command, message = (zone.add_cname, 'Create')
+    if no_confirmation or raw_input("{} record for {:>17} CNAME {}? [YES/no]: ".format(message, fullname + '.', server_dns + '.')) == "YES":
+        command(fullname, server_dns, ttl=60, comment="added via update_zonefile script")
+    if wildcard:
+        if no_confirmation or raw_input("{} record for *.{:>15} CNAME {}? [YES/no]: ".format(message, fullname + '.', server_dns + '.')) == "YES":
+            command(u'\\052.' + fullname, server_dns, ttl=60, comment="added via update_zonefile script")
+
 def update_zonefile(zone_name):
-    con = boto.connect_route53(*aws_credentials)
+    con = get_route53_connection()
     zone = con.get_zone(zone_name)
 
     print "Fetching running servers"

@@ -1,0 +1,55 @@
+{% extends "pages/analytics/base.html" %}
+
+{% block head %}
+    {{ super() }}
+
+    <style>
+        #content div {
+            background: steelblue;
+            margin: 2px;
+            white-space: nowrap;
+            padding: 3px 0px 3px 3px;
+        }
+        #content div a {
+            color: black;
+        }
+        .num, .name {
+            display: inline-block;
+        }
+        .num {
+            min-width: 50px;
+            margin-right: 6px;
+        }
+    </style>
+
+    <script>
+        var data = {{ data | json }};
+        var chart;
+        $(function(){
+            var length = 500;
+            var x = d3.scale.linear().domain([0, d3.max(data.median_views)]).range(['0%', '95%']);
+            var text_function = function(d, i){
+                return [
+                    '<span class="num">'
+                    , String(Math.floor(d))
+                    , '</span><a href="/admin/users/',
+                    , data.user[i] 
+                    , '" class="name">'
+                    , data.user[i]
+                    , '</a>'
+                ].join('')
+            };
+            chart = d3.select('#content');
+            chart.selectAll("div")
+                .data(data.median_views.slice(0, length - 1))
+              .enter().append("div")
+                .style("width", x)
+                .html(text_function);
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+{# intentionally empty #}
+{% endblock %}

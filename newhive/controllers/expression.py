@@ -1,13 +1,14 @@
 import base64, jinja2
 from newhive.controllers.shared import *
-from newhive.controllers import Application
+from newhive.controllers.community import Community
 from newhive import utils, mail
 # TODO: handle this in model layer somehow
 from pymongo.connection import DuplicateKeyError
 
-class Expression(Application, PagingMixin):
+class Expression(Community, PagingMixin):
     def edit_frame(self, request, response):
-        if not request.requester.logged_in: return self.serve_404(request, response)
+        if not request.requester.logged_in: return self.redirect(response, AbsUrl())
+        if not request.is_secure: return self.redirect(response, AbsUrl(request.path))
         expr_id = lget(request.path_parts, 1)
         if not expr_id:
             expr = self.db.Expr.new(dfilter(request.args, ['domain', 'name', 'tags']))
@@ -25,7 +26,6 @@ class Expression(Application, PagingMixin):
 
         response.context.update({
              'title'     : 'Editing: ' + expr.get('title')
-            #,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
             ,'expr'      : expr
             #,'show_help' : show_help
             ,'editing'   : True
@@ -42,7 +42,6 @@ class Expression(Application, PagingMixin):
 
     #    response.context.update({
     #         'title'     : 'Editing: ' + expr.get('title')
-    #        ,'editor_url': abs_url(domain = config.content_domain, secure = True) + 'edit/' + expr.id
     #        ,'expr'      : expr
     #        ,'show_help' : show_help
     #        ,'editing'   : True
@@ -63,126 +62,78 @@ class Expression(Application, PagingMixin):
     #    response.context.update({ 'expr': expr })
     #    return self.serve_page(response, 'pages/edit.html')
 
-    # destructively prepare state.Expr for client consumption
-    def expr_prepare(self, expr, viewer=None, password=None):
-        owner = expr.owner
-        owner_info = dfilter(owner, ['name', 'fullname', 'tags'])
-        owner_info.update({ 'id': owner.id, 'url': owner.url, 'thumb': owner.get_thumb(70), 'has_thumb': owner.has_thumb })
-
-        #expr_info = dfilter(expr, ['thumb', 'title', 'tags', 'tags_index', 'owner',
-        #    'owner_name', 'updated', 'name'])
-        counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
-            k, v in expr.get('analytics', {}).iteritems() ])
-        counts['Views'] = large_number(expr.views)
-        counts['Comment'] = large_number(expr.comment_count)
-
-        # check if auth is required so we can then strip password
-        auth_required = expr.auth_required()
-        if expr.auth_required(viewer, password):
-            for key in ['password', 'thumb', 'thumb_file_id']: expr.pop(key, None)
-            dict.update(expr, {
-                 'tags': ''
-                ,'background': {}
-                ,'apps': []
-                ,'title': '[Private]'
-                ,'tags_index': []
-                ,'invalid_password': True
-            })
-
-        dict.update(expr, {
-            'id': expr.id,
-            'thumb': expr.get_thumb(),
-            'owner': owner_info,
-            'counts': counts,
-            'url': expr.url,
-            'auth_required': auth_required,
-            'updated_friendly': friendly_date(expr['updated'])
-        })
-
-        if viewer.is_admin:
-            dict.update(expr, {
-                'featured': expr.is_featured
-            })
-
-        return expr
-
     # Controller for all navigation surrounding an expression
     # Must only output trusted HTML
     def frame(self, request, response, parts):
-        if request.is_xhr:
-            return self.infos(request, response)
-
         path = '/'.join(parts)
         owner = response.context['owner']
         resource = self.db.Expr.meta(owner['name'], path)
         if not resource:
             if path == '': return self.redirect(response, owner.url)
             return self.serve_404(request, response)
+        return self.serve_expression_frame(request, response, resource)
+
+        #is_owner = request.requester.logged_in and owner.id == request.requester.id
+        #if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
+        #if is_owner: owner.unflag('expr_new')
+
+        #expr_url = abs_url(domain = config.content_domain) + resource.id
+        #self.expr_prepare(resource, response.user)
+        #response.context.update(
+        #     expr_frame = True
+        #    ,title = resource.get('title', False)
+        #    ,expr = resource
+        #    ,expr_url = expr_url
+        #    ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
+        #    ,content_domain = abs_url(domain = config.content_domain)
+        #    )
+
+        #template = resource.get('template', request.args.get('template', 'frame'))
+
+        #if request.requester.logged_in:
+        #    self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
+
+        #return self.serve_page(response, 'pages/' + template + '.html')
+
+    def serve_expression_frame(self, request, response, resource, template=None):
+        owner = resource.owner
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
-        if is_owner: owner.unflag('expr_new')
-
+        if is_owner: resource.owner.unflag('expr_new')
         expr_url = abs_url(domain = config.content_domain) + resource.id
-        self.expr_prepare(resource, response.user)
+
+        response.context.update(
+             domain = request.domain
+            ,owner = owner
+            ,owner_url = owner.url
+            ,path = request.path
+            ,user_is_owner = request.is_owner
+            ,listeners = owner.starrer_page()
+            )
+
         response.context.update(
              expr_frame = True
             ,title = resource.get('title', False)
-            ,expr = resource
+            ,expr = self.item_prepare(resource, viewer=response.user)
             ,expr_url = expr_url
-            ,embed_url = resource.url + querystring(dupdate(request.args, {'template':'embed'}))
-            ,content_domain = abs_url(domain = config.content_domain)
-            )
+        )
 
-        template = resource.get('template', request.args.get('template', 'frame'))
-
-        if request.requester.logged_in:
-            self.db.ActionLog.create(request.requester, "view_expression", data={'expr_id': resource.id})
-
+        template = template or resource.get('template', request.args.get('template', 'frame'))
         return self.serve_page(response, 'pages/' + template + '.html')
 
-    def infos(self, request, response):
-        args = request.args.copy().to_dict(flat=True)
-        current_id = args.get('page')
-        tag = args.get('tag')
-
-        special_tags = {
-                'Featured': (self.expr_featured, 'id')
-                , 'Network': (self.home_feed, None)
-                , 'All': (None, 'updated')
+    def site_expression(self, request, response):
+        if request.requester.logged_in and request.path == '':
+            return self.redirect(response, AbsUrl('home/network'))
+        expressions = {
+                '': ['thenewhive', 'home']
                 }
-
-        # Use key_map to map between keys used in querystring and those of database
-        spec = utils.key_map(args, {'tag': 'tags_index', 'user': 'owner_name', 'auth': 'auth'}, filter=True)
-        if spec.get('auth') == 'private': spec['auth'] = 'password'
-        args = dfilter(args, ['sort', 'page', 'expr', 'order', 'limit'])
-        args['viewer'] = request.requester
-
-        default = (None, 'updated')
-        pager, paging_attr = special_tags.get(tag, default) if spec else (self.expr_all, 'updated')
-
-        if utils.is_mongo_key(current_id):
-            if paging_attr and paging_attr != 'id':
-                expr = self.db.Expr.fetch(current_id)
-                args['page'] = expr[paging_attr]
-            else:
-                args['sort'] = '_id'
-
-        if args.has_key('order'): args['order'] = int(args['order'])
-        if args.has_key('limit'): args['limit'] = int(args['limit'])
-
-        if pager:
-            items_and_args = pager(request, response, args)
-            exprs = items_and_args[0] if type(items_and_args) == tuple else items_and_args
-        else:
-            if spec.get('tags_index') == "All": spec.pop('tags_index')
-            exprs = self.db.Expr.page(spec, **args)
-
-        return self.serve_json(response, map(lambda e: self.expr_prepare(e, response.user), exprs))
+        expr = self.db.Expr.named(*expressions.get(request.path))
+        return self.serve_expression_frame(request, response, expr, template="home")
 
     def info(self, request, response, expr=None):
         expr = expr or self.db.Expr.fetch(lget(request.path_parts, 1))
         if not expr: return self.serve_404(request, response)
-        return self.serve_json( response, self.expr_prepare(
+        return self.serve_json( response, self.item_prepare(
             expr, viewer=response.user, password=request.form.get('password')) )
 
     # Renders the actual content of an expression.
@@ -194,12 +145,16 @@ class Expression(Application, PagingMixin):
         if not expr: return self.serve_404(request, response)
 
         if expr.auth_required() and not expr.cmp_password(password):
-            response.context.update(empty=True);
-            self.expr_prepare(expr, viewer=request.requester, password=password)
+            expr = False
             # return status forbidden so the client knows their password was invalid
             response.status_code = 403
 
-        response.context.update(html = expr_to_html(expr), expr = expr, use_ga = False)
+        response.context.update(
+                html = self.expr_to_html(expr)
+                , expr = expr
+                , use_ga = False
+                , expr_script = expr.get('script') if expr else ''
+                , expr_style = expr.get('style')) if expr else ''
         if request.form.get('partial'):
             return self.serve_page(response, 'pages/expr_content_only.html')
         else:
@@ -232,7 +187,7 @@ class Expression(Application, PagingMixin):
         if request.is_json:
             return self.info(request, response, expr)
         else:
-            return self.redirect(response, expr.url)
+            return self.redirect(response, expr.url + querystring({ 'q': '#All' }))
 
     def dialog(self, request, response):
         owner = request.owner
@@ -249,7 +204,11 @@ class Expression(Application, PagingMixin):
         if not exp: raise ValueError('missing or malformed exp')
 
         res = self.db.Expr.fetch(exp.id)
-        upd = dfilter(exp, ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password', 'tags', 'background', 'thumb', 'images'])
+        allowed_attributes = ['name', 'domain', 'title', 'apps', 'dimensions', 'auth', 'password'
+                              , 'tags', 'background', 'thumb', 'images']
+        if request.requester.is_admin:
+            allowed_attributes.extend(['fixed_width', 'script', 'style'])
+        upd = dfilter(exp, allowed_attributes)
         upd['name'] = upd['name'].lower().strip('/ ')
 
         # if user has not picked a thumbnail, pick the latest image added
@@ -336,87 +295,3 @@ class Expression(Application, PagingMixin):
                 new_tags = re.sub(tag, '', expr['tags'])
         expr.update(tags=new_tags, updated=False)
         return tag
-
-    featured = {
-            'project': [
-                '4f1c4f08ba2839741f0000bf',
-                '4f149949ba28397ae300000d',
-                '4f1b7691ba283920a6000011',
-                '4f040705ba28390a870000e1',
-                '4f22dfa4ba283945d9000329',
-                '4f186b7fba283929fd000295',
-                '4f207c37ba283940b4000013',
-                '4f1b8269ba283920a600007b',
-                '4f2051abba28394fe900002e',
-                '4f2328e5ba2839283f000039',
-                '4f1e7aa6ba2839302c0000e4',
-                '4f234d79ba28391fe8000115',
-                '4f0d0be0ba283909eb000151',
-                '4f07b8afba2839255d0000f8',
-                '4f1b467bba28390d2b00023f',
-                '4f1ddbb5ba283939d5000008',
-                '4f1f2ef2ba2839689300001e',
-                '4f207176ba28392c34000002',
-                '4f206183ba283912bb000029',
-                '4f177b04ba28395b0a00016d',
-                '4f12533eba283932ae00000d',
-                '4f1ddbb5ba283939d5000008',
-                '4f1df138ba283939d500009a']
-            ,'wish' : [
-                '4f247c60ba283927490002b5',
-                '4f1c4c3bba283973250000ba',
-                '4f1b726eba283920a6000000',
-                '4f1a04f3ba283938500000c0',
-                '4f186b7fba283929fd000295',
-                '4f174437ba28394fc5000320']
-            }
-
-
-
-# www_expression -> String, this maybe should go in state.Expr
-def expr_to_html(exp):
-    """Converts JSON object representing an expression to HTML"""
-
-    if not exp: return exp
-    apps = exp.get('apps', [])
-
-    def css_for_app(app):
-        return "left:%fpx; top:%fpx; width:%fpx; height:%fpx; %sz-index : %d; opacity:%f;" % (
-            app['position'][0],
-            app['position'][1],
-            app['dimensions'][0],
-            app['dimensions'][1],
-            'font-size : ' + str(app['scale']) + 'em; ' if app.get('scale') else '',
-            app['z'],
-            app.get('opacity', 1) or 1
-            )
-
-    def html_for_app(app):
-        content = app.get('content', '')
-        more_css = ''
-        type = app.get('type')
-        id = app.get('id', app['z'])
-        if type == 'hive.image':
-            html = "<img src='%s'>" % content
-            link = app.get('href')
-            if link: html = "<a href='%s'>%s</a>" % (link, html)
-        elif type == 'hive.sketch':
-            html = "<img src='%s'>" % content.get('src')
-        elif type == 'hive.rectangle':
-            c = app.get('content', {})
-            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-            html = ''
-        elif type == 'hive.html':
-            html = ""
-        else:
-            html = content
-        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
-        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
-            (type.replace('.', '_'), id, css_for_app(app) + more_css, data, html)
-
-    app_html = map(html_for_app, apps)
-    if exp.has_key('dimensions'):
-        app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
-    return ''.join(app_html)
-
