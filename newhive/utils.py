@@ -78,7 +78,7 @@ def normalize(ws):
 def abs_url(path='', secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
-    ssl = secure or config.always_ssl
+    ssl = secure or config.always_secure
     domain = domain or config.server_name
     if domain.find('.' + config.server_name) > -1:
         (subdomain, domain) = domain.split('.', 1)
@@ -185,7 +185,9 @@ class Wrapper(object):
         return getattr(self._wrapped_obj, attr)
 
 class Request(Wrapper):
-    is_secure = property(lambda self: self._wrapped_obj.is_secure or self.headers.get('X-Forwarded-Proto') == 'https')
+    is_secure = property(lambda self:
+        self._wrapped_obj.is_secure or config.always_secure or
+            self.headers.get('X-Forwarded-Proto') == 'https')
 
 def exception_test(*args, **kwargs):
     raise Exception('dummy exception')
