@@ -1,3 +1,12 @@
+"""
+    newhive.analytics.analytics
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    This module is mostly legacy analytics code.  Over time most of this should
+    be either removed, migrated into a newhive.analytics.queries.Query or into
+    a funciton in newhive.analytics.functions
+
+"""
 import time, datetime, re, pandas, newhive, pandas, numpy, pytz
 from newhive import state, oauth
 from newhive.state import now

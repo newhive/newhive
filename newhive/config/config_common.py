@@ -10,6 +10,8 @@ email_port      = 2525
 media_path      = '/home/domains/thenewhive.com'
 redirect_domains = ['newhive.com', 'thenewhive.com']
 
+analytics_db    = 'analytics'
+
 ssl_ca          = False
 
 aws_id          = False
@@ -65,7 +67,7 @@ signup_group    = 2
 debug_mode      = False
 debug_unsecure  = False
 webassets_debug = False
-always_ssl      = False
+always_secure   = False
 
 interactive = False
 

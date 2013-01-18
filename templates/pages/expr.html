@@ -5,15 +5,10 @@
     Hive = { user: {{ client_user | json }}, expr: {{ expr | json }} };
   </script>
   <script src='{{ asset_bundle('expression.js')[0] }}'></script>
-  {% if expr_script %}
-    <script id="expr_script">
-      {{ expr_script }}
-    </script>
-  {% endif %}
   {% if expr_style %}
-      <style>
-          {{ expr_style }}
-      </style>
+    <style>
+      {{ expr_style }}
+    </style>
   {% endif %}
 {% endblock %}
 
@@ -21,4 +16,9 @@
 
 {% block main %}
   {% include 'page_parts/expr_body.html' %}
+  {% if expr_script %}
+    <script id="expr_script">
+      {{ expr_script }}
+    </script>
+  {% endif %}
 {% endblock %}

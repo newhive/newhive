@@ -1,3 +1,30 @@
+"""
+    newhive.analytics.queries module
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    This module contains the heavyweight analytics queries. The basic usage of
+    a query object is like so:
+
+        q = Query(source_db)
+        data = q.execute(args)
+
+    The source_db is optional, queries that only use data from GA for instance
+    won't need it.
+
+    All queries that inherit from Query have a built-in mechanism to cache
+    their results in the persistence_db, which is set in newhive.config.  Most
+    queries return a pandas.DataFrame, and these are serialized using the
+    dataframe_to_record function of the newhive.analytics.functions module.
+
+    In order to take advantage of this persistence, subclasses should not
+    override the `query` method but rather the `_query` method. Each subclass
+    also needs to define a class `collection_name` attribute to specify the
+    collection within persistence_db where the cached data should be stored
+
+    Subclasses can also specify the max_age at which cached results are
+    automatically discarded.
+
+"""
 import datetime
 import time
 import pymongo
@@ -20,7 +47,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 connection = pymongo.Connection(host=config.database_host, port=config.database_port)
-adb = connection.analytics
+adb = connection[config.analytics_db]
 min_start_date = datetime.date(2011, 4, 16)
 
 def clear_all_caches():
@@ -60,7 +87,7 @@ class Query(object):
         return {'args': serialized_args, 'kwargs': kwargs, 'source_db': self.db.mdb.name if self.db else None}
 
     def __init__(self, source_db=None, persistence_db=adb):
-        """source_db is nehive.state.Database, persistance_db is pymongo database"""
+        """source_db is nehive.state.Database, persistence_db is pymongo database"""
         self.db = source_db
         self.collection = persistence_db[self.collection_name]
 

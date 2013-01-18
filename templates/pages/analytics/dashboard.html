@@ -77,8 +77,15 @@ google.load('visualization', '1.0', {'packages':['controls']});
 google.setOnLoadCallback(drawDashboards);
 
 function drawDashboards(){
+    // A "dashboard" in google visualization lingo is a group of charts and
+    // controls where the control is used to filter data used in the chart.
+    // Our dashboard page contains multiple such "dashboards"
+
+    // See https://developers.google.com/chart/ for google documentation
 
     function join(dataArray) {
+        // Helper function to join separate data sources into a single
+        // google.visualization.DataTable
         var joined;
         dataArray.forEach(function(el, i){
             if (i == 0) joined = el;
@@ -98,6 +105,8 @@ function drawDashboards(){
     };
 
     function loadDashboard2(){
+        // Asynchronously load all data used in Dashboard 2 - which right now
+        // is the pie chart showing users grouped by total impressions
         $.ajax({
             url: '/analytics/total_impressions',
             success: function(d){
@@ -135,6 +144,8 @@ function drawDashboards(){
     };
 
     function loadDashboard1(){
+        // Asynchronously load all data used in Dashboard 1 - which right now
+        // is all charts controlled by the date range control
         var data = {};
 
         var loaded = 0;

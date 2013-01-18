@@ -1,10 +1,10 @@
 import re
-from public_config import *
-from private_config import *
+from config_common import *
+from config import *
+import commands
 
 if live_server:
     dev_prefix = None
 else:
-    with open('/etc/hostname') as f:
-        hostname = f.read().strip()
+    hostname = commands.getoutput('hostname')
     dev_prefix, server_name = re.match('(.*?)\.?([^.]*\.[^.]{2,4})$', hostname).groups()
