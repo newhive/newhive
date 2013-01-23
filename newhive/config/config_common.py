@@ -67,7 +67,7 @@ signup_group    = 2
 debug_mode      = False
 debug_unsecure  = False
 webassets_debug = False
-always_ssl      = False
+always_secure   = False
 
 interactive = False
 
