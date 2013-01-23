@@ -249,14 +249,15 @@ Hive.Menus = (function(){
             drawers = $('#user_nav,#owner_nav,#action_nav');
         var handles = $('.nav_handle').add(drawers);
         if (config.navigator.opens_nav) handles.add('#navigator');
+
         var close_nav = function(){
-                if (config.nav.opens_navigator && config.navigator.hideable) Hive.navigator.hide(speed);
-                drawers.stop().clearQueue();
-                // For some reason just using drawers.hide as the callback for animate didn't work
-                var callback = function(){ drawers.hide(); };
-                animate_each(close_state, speed, callback);
-                Hive.navigator.current_expr().frame.get(0).focus();
-            };
+            if (config.nav.opens_navigator && config.navigator.hideable) Hive.navigator.hide(speed);
+            drawers.stop().clearQueue();
+            // For some reason just using drawers.hide as the callback for animate didn't work
+            var callback = function(){ drawers.hide(); };
+            animate_each(close_state, speed, callback);
+            Hive.navigator.current_expr().frame.get(0).focus();
+        };
         var close_condition = function(){
             return config.nav.hideable || Hive.is_fullscreen();
         };
@@ -268,19 +269,19 @@ Hive.Menus = (function(){
             group: false
         }
 
-        var nav_menu = o.nav_menu = hover_menu(
-            handles,
-            drawers,
-            $.extend(
-                {
-                    opened: config.nav.open_initially,
-                    open_menu: open_nav,
-                    close_menu: close_nav,
-                    close_condition: close_condition
-                },
-                shared_hover_menu_opts
-            )
-        );
+        //var nav_menu = o.nav_menu = hover_menu(
+        //    handles,
+        //    drawers,
+        //    $.extend(
+        //        {
+        //            opened: config.nav.open_initially,
+        //            close_menu: close_nav,
+        //            close_condition: close_condition
+        //        },
+        //        shared_hover_menu_opts
+        //    )
+        //);
+
         if (config.init_close_delay && config.nav.hideable) {
             nav_menu.delayed_close(config.init_close_delay);
         }

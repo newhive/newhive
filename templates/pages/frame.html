@@ -136,9 +136,11 @@
 {% block content %}
 {% endblock %}
 
-{% block footer_scripts %}<script>
-    Hive.Menus.expr_init();
-</script>{% endblock footer_scripts %}
+{% block footer_scripts %}
+<script>
+//    Hive.Menus.expr_init();
+</script>
+{% endblock footer_scripts %}
 
 {% block dialogs %}
   {{ super() }}

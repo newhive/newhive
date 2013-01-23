@@ -198,6 +198,7 @@ img.thumb { background-color: $color_grey_medium; }
 }
 
 .menu {
+    display: none;
     z-index: $nav_layer + 2;
     position: absolute;
 }
