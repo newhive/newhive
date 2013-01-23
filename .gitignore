@@ -5,7 +5,7 @@
 compiled.*
 /libsrc/.webassets-cache
 /.sass-cache
-/newhive/config/private_config.py
+/newhive/config/config.py
 /newhive/config/GA_credentials.dat
 /newhive/config/aws.py
 *.pyc
