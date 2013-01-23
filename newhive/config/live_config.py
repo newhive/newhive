@@ -1,6 +1,7 @@
 live_server     = True
 
 database_host   = '10.99.10.179'
+database        = 'hive'
 
 # 'live' credentials
 aws_id         = 'AKIAIWCIMFL2FCYQR25A'
