@@ -3203,6 +3203,9 @@ window.CodeMirror = (function() {
     this.lines = [];
     this.type = type;
     this.cm = cm;
+    // Added by Alex Kiselev
+    this._options = {};
+    // End added code
   }
 
   TextMarker.prototype.clear = function() {
@@ -3249,8 +3252,12 @@ window.CodeMirror = (function() {
     var doc = cm.view.doc;
     var marker = new TextMarker(cm, type);
     if (type == "range" && !posLess(from, to)) return marker;
-    if (options) for (var opt in options) if (options.hasOwnProperty(opt))
+    if (options) for (var opt in options) if (options.hasOwnProperty(opt)) {
+      // Added by Alex Kiselev
+      marker["_options"][opt] = options[opt];
+      // End added code
       marker[opt] = options[opt];
+    }
     if (marker.replacedWith) {
       marker.collapsed = true;
       marker.replacedWith = elt("span", [marker.replacedWith], "CodeMirror-widget");

@@ -821,114 +821,12 @@ Hive.App.Text = function(o) {
         Hive.History.save(exec_cmd('+undo'), exec_cmd('+redo'), 'edit');
     };
 
-
-    o.ranges = new Array();
-    // Code for adding a range and flattening the resulting list of ranges
-    // TODO: Merges of the new range options and the old range options will not work. There is no "add" or "remove" bold, just add bold class
-    // TODO: Allow replaceWith by adding a new field to options that is handled by this function (replaceWith needs to get the text contained by the overlapping ranges to work properly)
-    // TODO: Add code that scans the overlapping ranges and decides whether properties like bold and italics should be remove or added to the selection
-    // TODO: Add real comments
-    // TODO: Add a way to do this recursively and remove all the repetitive code (idea: scan through and create a list of the fragments and their new options before creating)
-    o.ranges.add_mark = function (from, to, options) {
-        o.codemirror.operation(function() {
-            var start_pos = o.codemirror.posFromIndex(from);
-            var end_pos = o.codemirror.posFromIndex(to);
-            var conflicting_ranges = new Array();
-            var new_ranges = new Array();
-            if (start_pos > end_pos)
-            {
-                var temp_pos = start_pos;
-                start_pos = end_pos;
-                end_pos = temp_pos;
-            }
-            for (var rkey in o.ranges)
-            {
-                var rpos = o.ranges[rkey].find();
-                var rstart = o.codemirror.posFromIndex(rpos[0]);
-                var rend = o.codemirror.posFromIndex(rpos[1]);
-                var old_opts = o.ranges[rkey]._options;
-                var new_opts = old_opts;
-                var old_range = o.ranges[rkey];
-                var inner_elements = new Array();
-                // Check for any ranges that encompass the new one entirely
-                if (rstart < start_pos && rend > end_pos) {    
-                    o.ranges[rkey].clean();
-                    o.ranges.splice(rkey, 1);
-                    o.ranges[rstart] = o.codemirror.markText(o.codemirror.indexFromPos(rstart), o.codemirror.indexFromPos(start_pos), old_opts);
-                    o.ranges[rstart]._options = old_opts;
-                    for (var okey in options)
-                        new_opts[okey] = options[okey];
-                    o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(end_pos), new_opts);
-                    o.ranges[start_pos]._options = new_opts;
-                    o.ranges[end_pos] = o.codemirror.markText(o.codemirror.indexFromPos(end_pos), o.codemirror.indexFromPos(rend), new_opts);
-                    o.ranges[end_pos]._options = old_opts;
-                    return;
-                // Check for ranges that start outside and end inside the new range
-                } else if  (rstart < start_pos && rend > start_pos && rend < end_pos)  {
-                    o.ranges[rkey].clean();
-                    o.ranges.splice(rkey, 1);
-                    o.ranges[rstart] = o.codemirror.markText(o.codemirror.indexFromPos(rstart), o.codemirror.indexFromPos(start_pos), old_opts);
-                    o.ranges[rstart]._options = old_opts;
-                    for (var okey in options)
-                        new_opts[okey] = options[okey];
-                    o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(rend), new_opts);
-                    o.ranges[start_pos]._options = new_opts;
-                    start_pos = rend;
-                // Check for ranges that start inside and end outside the new range
-                } else if (rstart > start_pos && rstart < end_pos && rend > end_pos) {
-                    o.ranges[rkey].clean();
-                    o.ranges.splice(rkey, 1);
-                    for (var okey in options)
-                        new_opts[okey] = options[okey];
-                    o.ranges[rstart] = o.codemirror.markText(o.codemirror.indexFromPos(rstart), o.codemirror.indexFromPos(end_pos), new_opts);
-                    o.ranges[rstart]._options = new_opts;
-                    o.ranges[end_pos] = o.codemirror.markText(o.codemirror.indexFromPos(end_pos), o.codemirror.indexFromPos(rend), old_opts);
-                    o.ranges[end_pos]._options = old_opts;
-                    end_pos = rstart;
-                // Look for any ranges fully encompassed by the new range
-                } else if (rstart >= start_pos && rend <= end_pos) {
-                    inner_elements[rkey] = o.ranges[rkey];
-                }
-            }
-            inner_keys = new Array();
-            for (var rkey in inner_elements)
-                inner_keys.push(rkey);
-            inner_keys.sort(function(a,b){return a-b});
-            for (var key in inner_keys) {
-                var rkey = inner_keys[key];
-                var rpos = o.ranges[rkey].find();
-                var rstart = o.codemirror.posFromIndex(rpos[0]);
-                var rend = o.codemirror.posFromIndex(rpos[1]);
-                var old_opts = o.ranges[rkey]._options;
-                var new_opts = old_opts;
-                for (var okey in options)
-                        new_opts[okey] = options[okey];
-                var old_range = o.ranges[rkey];
-                if (rstart > start_pos) {
-                    o.ranges[rkey].clean();
-                    o.ranges.splice(rkey, 1);
-                    o.ranges[rstart] = o.codemirror.markText(o.codemirror.indexFromPos(rstart), o.codemirror.indexFromPos(rend), new_opts);
-                    o.ranges[rstart]._options = new_opts;
-                    o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(rstart), options);
-                    o.ranges[start_pos]._options = options;
-                    start_pos = rend;
-                } else {
-                    o.ranges[rkey].clean();
-                    o.ranges.splice(rkey, 1);
-                    o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(rend), new_opts);
-                    o.ranges[rstart]._options = new_opts;
-                    start_pos = rend;
-                }
-            }
-            if (start_pos != end_pos) {
-                o.ranges[start_pos] = o.codemirror.markText(o.codemirror.indexFromPos(start_pos), o.codemirror.indexFromPos(end_pos), options);
-                o.ranges[start_pos]._options = options;
-            }
-        });
-    };
     o.handlers = new Object();
     o.handlers.bold = function (value) {
-        o.ranges.add_mark(o.codemirror.getCursor("start"), o.codemirror.getCursor("end"), {className: "CodeMirror-mark-test"});
+        var mark_start = o.codemirror.getCursor("start");
+        var mark_end = o.codemirror.getCursor("end");
+        var mark_options = o.codemirror.combine_font_class(mark_start, mark_end, "CodeMirror-mark-test");
+        o.codemirror.add_mark(mark_start, mark_end, mark_options);
     };
 
     function controls(o) {
@@ -966,11 +864,11 @@ Hive.App.Text = function(o) {
                 open: function(){
                     // Update current color. Range should usually exist, but
                     // better to do nothing than throw error if not
-                    var range = o.app.rte.getRange();
+                    /*var range = o.app.rte.getRange();
                     if (range){
                         var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
                         o.color_picker.set_color(current_color);
-                    }
+                    }*/
                 },
             }
         );
@@ -1006,12 +904,284 @@ Hive.App.Text = function(o) {
     o.div.append(o.content_element);
     o.codemirror = CodeMirror(o.content_element.get(0), {value: o.content()});
     o.codemirror.setSize("100%", "100%");
+
     //o.rte = new Hive.goog_rte(o.content_element, o);
     //goog.events.listen(o.rte.undo_redo.undoManager_,
     //        goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
     //        o.history_saver);
     //Sgoog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
     o.shield();
+
+    o.ranges = new Object();
+
+    /**************************************************************************
+        Compare range options objects
+
+        Arguments:
+            options1 and options2: Options object (follows o.codemirror.markText format)
+            
+        Returns:
+            true if options are the same, false otherwise
+    **************************************************************************/
+    o.codemirror.compare_options = function (options1, options2) {
+        for (var opt in options1) {
+            if (!(opt in options2))
+                return false;
+            if (options1[opt] != options2[opt])
+                return false;
+        }
+        for (var opt in options2) {
+            if (!(opt in options1))
+                return false;
+            if (options1[opt] != options2[opt])
+                return false;
+        }
+        return true;
+    };
+
+    /**************************************************************************
+        Checks if option object is empty (no formatting, classes, etc)
+
+        Arguments:
+            options: Options object (follows o.codemirror.markText format)
+            
+        Returns:
+            true if options object is empty, false otherwise
+    **************************************************************************/
+    o.codemirror.empty_options = function (options) {
+        if ($.trim(options["className"]) != "")
+            return false;
+        return true;
+    }
+
+    /**************************************************************************
+        Combines ranges with the same options
+
+        Arguments:
+            None
+
+        Returns:
+            Nothing
+    **************************************************************************/
+    o.codemirror.merge_ranges = function () {
+        // Object properties are not going to be sorted!
+        // This snippet sorts the keys from beginning of the text to the end
+        var sorted_keys = [];
+        for(var rkey in o.ranges) {
+            sorted_keys[sorted_keys.length] = rkey;
+        }
+        sorted_keys.sort();
+
+        for (var skey in sorted_keys) {
+            var rkey = sorted_keys[skey];
+            var range = o.ranges[rkey];
+            var end_index = o.codemirror.indexFromPos(range.find()["to"]);
+            if (end_index in o.ranges) {
+                var next_range = o.ranges[sorted_keys[skey+1]];
+                if (o.codemirror.compare_options(range["_options"], next_range["_options"])) {
+                    var options = $.extend({}, range["_options"]);
+                    var start_pos = range.find()["from"];
+                    var end_pos = next_range.find()["to"];
+                    range.clear();
+                    next_range.clear();
+                    delete o.ranges[sorted_keys[skey+1]];
+                    delete o.ranges[rkey];
+                    o.ranges[rkey] = o.codemirror.markText(start_pos, end_pos, options);
+                    return o.codemirror.merge_ranges();
+                }
+            } else if (o.codemirror.empty_options(range["_options"])) {
+                range.clear();
+                delete o.ranges[rkey];
+                return o.codemirror.merge_ranges();
+            }
+        }
+    };
+
+    /**************************************************************************
+        Processes and combines options for marks
+
+        Arguments:
+            old_options: Options object (follows o.codemirror.markText format)
+            new_options: New options to process. Follows same format as old_options
+                except each class must have a "+" or a "-" sign for addition or
+                removal respectively. If there is no sign, the option is instead
+                toggled for each individual range.
+
+        Returns:
+            Processed old_options
+    **************************************************************************/
+    o.codemirror.process_options = function (range_options, new_options) {
+        var classes = new_options["className"].split(" ");
+        var old_classes = null;
+        var old_options = {};
+        // If range_options is null, create a basic options object
+        if (range_options == null) {
+            old_options = {className: ""};
+            old_classes = new Array();
+        } else {
+            old_options = $.extend({}, range_options);
+            old_classes = old_options["className"].split(" ");
+        }
+
+        for (var ckey in classes) {
+            var cls = classes[ckey].slice(1, classes[ckey].length);
+            // cls_index = index of class, or -1 if not found
+            var cls_index = $.inArray(cls, old_classes);
+            var cmd = classes[ckey].slice(0, 1);
+            // If the class starts with a "+", add it if it doesn't exist
+            if (classes[ckey].slice(0, 1) == "+") {
+                if (cls_index < 0) {
+                    old_classes[old_classes.length] = cls;
+                }
+            // If the class starts with a "-", remove it if it exists
+            } else if (classes[ckey].slice(0, 1) == "-") {
+                if (cls_index >= 0) {
+                    
+                    old_classes.splice(cls_index, 1);
+                }
+            // Add the class if it doesnt exist, remove it otherwise
+            } else
+                if (cls_index < 0)
+                    old_classes[old_classes.length] = classes[ckey];
+                else
+                    old_classes.splice(cls_index, 1);
+        }
+        //alert(old_classes);
+        old_classes = old_classes.join(" ");
+        old_options["className"] = old_classes;
+        return old_options;
+    }
+
+    /**************************************************************************
+        Searches through ranges within {from, to} and decides whether to add
+            or remove the font style class
+
+        Arguments:
+            from - {line, ch}: start of new mark (inclusive)
+            to - {line, ch}: end of new mark (exclusive)
+            cls - string: name of font class
+
+        Returns:
+            Options object for o.codemirror.add_mark
+    **************************************************************************/
+    o.codemirror.combine_font_class = function (from, to, cls) {
+        var start_index = o.codemirror.indexFromPos(from);
+        var end_index = o.codemirror.indexFromPos(to);
+        var cmd = "+";
+
+        // Object properties are not going to be sorted!
+        // This snippet sorts the keys from beginning of the text to the end
+        var sorted_keys = [];
+        for(var rkey in o.ranges) {
+            sorted_keys[sorted_keys.length] = rkey;
+        }
+        sorted_keys.sort();
+
+        for (var skey in sorted_keys) {
+            var rkey = sorted_keys[skey];
+            var rend_index = o.codemirror.indexFromPos(o.ranges[rkey].find()["to"]);
+
+            if (rkey >= end_index)
+                break;
+            if ((rkey >= start_index) || (rend_index > start_index && rend_index <= end_index)) {
+                var classes = o.ranges[rkey]._options["className"].split(" ");
+                if ($.inArray(cls, classes) >= 0) {
+                    cmd = '-';
+                    break;
+                }
+            }
+        }
+        //alert(cmd + cls);
+        return {className: cmd + cls};
+    }
+
+    /**************************************************************************
+        Combines an existing range with a new mark.
+
+        Arguments:
+            rkey - int: Index of existing range in o.ranges
+            from_index - int: Starting index of new mark (include)
+            to_index - int: Ending index of new mark (exclusive)
+            options: Dictionary of mark options. Reffer to o.codemirror.process_options
+                for syntax.
+
+        Returns:
+            Returns the index of the end of the last created mark. If the returned
+                index is less than to_index, then the function did not finish
+                creating the entire mark and the return value is the new 
+    **************************************************************************/
+    o.codemirror.combine_marks = function (rkey, from_index, to_index, options) {
+        var range = o.ranges[rkey];
+        var new_opts = o.codemirror.process_options(range["_options"], options);
+        var old_end = o.codemirror.indexFromPos(range.find()["to"]);
+        var old_opts = $.extend({}, range["_options"]);
+
+        var end_index = old_end;
+        if (to_index <= end_index)
+            end_index = to_index;
+
+        o.ranges[rkey].clear();
+        delete o.ranges[rkey];
+
+        // Create mark with no new options in the front
+        if (from_index > rkey)
+            o.ranges[rkey] = o.codemirror.markText(o.codemirror.posFromIndex(rkey), o.codemirror.posFromIndex(from_index), old_opts);
+
+        // Create mark with new options
+        o.ranges[from_index] = o.codemirror.markText(o.codemirror.posFromIndex(from_index), o.codemirror.posFromIndex(end_index), new_opts);
+
+        // Create mark with no new options at the end
+        if (old_end > end_index) {
+            o.ranges[to_index] = o.codemirror.markText(o.codemirror.posFromIndex(to_index), o.codemirror.posFromIndex(old_end), old_opts);
+            return old_end;
+        }
+
+        return end_index;
+    };
+
+    /**************************************************************************
+        Cleanly adds a new mark and flattens list of ranges
+
+        Arguments:
+            from - {line, ch}: start of new mark (inclusive)
+            to - {line, ch}: end of new mark (exclusive)
+            options: Dictionary of mark options. Reffer to o.codemirror.process_options
+                for syntax.
+
+        Returns:
+            Nothing
+    **************************************************************************/
+    o.codemirror.add_mark = function (from, to, options) {
+        var start_index = o.codemirror.indexFromPos(from);
+        var end_index = o.codemirror.indexFromPos(to);
+        var clean_options = o.codemirror.process_options(null, options);
+
+        // Object properties are not going to be sorted!
+        // This snippet sorts the keys from beginning of the text to the end
+        var sorted_keys = [];
+        for(var rkey in o.ranges) {
+            sorted_keys[sorted_keys.length] = rkey;
+        }
+        sorted_keys.sort();
+
+        for (var skey in sorted_keys) {
+            var rkey = sorted_keys[skey];
+            var old_end = o.codemirror.indexFromPos(o.ranges[rkey].find()["to"]);
+
+            if (rkey >= end_index)
+                break;
+
+            if (rkey > start_index) {
+                o.ranges[start_index] = o.codemirror.markText(o.codemirror.posFromIndex(start_index), o.codemirror.posFromIndex(rkey), clean_options);
+                start_index = rkey;
+            }
+
+            if (rkey >= start_index || (old_end > start_index && old_end <= end_index))
+                start_index = o.codemirror.combine_marks(rkey, start_index, end_index, options);
+        }
+        if (start_index <= end_index) 
+            o.ranges[start_index] = o.codemirror.markText(o.codemirror.posFromIndex(start_index), o.codemirror.posFromIndex(end_index), clean_options)
+    }
 
     setTimeout(function(){ o.load(); }, 100);
     return o;
