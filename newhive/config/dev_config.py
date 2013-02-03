@@ -1,8 +1,8 @@
 live_server     = False
 
 database_host   = '10.99.10.179'
-plain_port      = 1212
-ssl_port        = 1213
+#plain_port      = 1212
+#ssl_port        = 1213
 
 # 'live' credentials
 aws_id         = 'AKIAIWCIMFL2FCYQR25A'
