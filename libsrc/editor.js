@@ -225,8 +225,8 @@ Hive.App = function(init_state, opts) {
             type: o.type.tname,
             z: o.layer(),
             content: o.content(),
-            id: o.id
         });
+            id: o.id
         if(opacity != 1) s.opacity = opacity;
         if(init_state.file_id) s.file_id = init_state.file_id;
         return s;
@@ -707,13 +707,14 @@ Hive.App.Text = function(o) {
 
     var content = o.init_state.content;
     o.content = function(content) {
+        return 'testS'
         if(typeof(content) != 'undefined') {
             // avoid 0-height content element in FF
-            if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
-            else o.rte.setHtml(false, content);
+            //if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
+            //else o.rte.setHtml(false, content);
         } else {
             // remove any remaining selection-saving carets
-            o.rte.content_element.find('span[id^="goog_"]').remove();
+            //o.rte.content_element.find('span[id^="goog_"]').remove();
             return o.rte.getCleanContents();
         }
     }
@@ -723,18 +724,18 @@ Hive.App.Text = function(o) {
         if (mode === edit_mode) return;
         if (mode) {
             o.unshield();
-            o.rte.remove_breaks();
+            /*o.rte.remove_breaks();
             o.rte.makeEditable();
-            o.rte.restore_cursor();
+            o.rte.restore_cursor();*/
             o.content_element
                 .bind('mousedown keydown', function(e){ e.stopPropagation(); });
             edit_mode = true;
         }
         else {
-            o.rte.unwrap_all_selections();
+            /*o.rte.unwrap_all_selections();
             o.rte.save_cursor();
             o.rte.add_breaks();
-            o.rte.make_uneditable();
+            o.rte.make_uneditable();*/
             o.content_element
                 .unbind('mousedown keydown')
                 .blur();
@@ -746,9 +747,18 @@ Hive.App.Text = function(o) {
     o.focus.add(function(){
         o.refresh_size();
         o.edit_mode(true);
+        o.codemirror.setOption("readOnly", false);
+        if (o.codemirror._old_cursor_selected)
+            o.codemirror.setSelection(o.codemirror._old_cursor_anchor, o.codemirror._old_cursor_head);
+        o.codemirror.focus();
     });
     o.unfocus.add(function(){
         o.edit_mode(false);
+        o.codemirror.setOption("readOnly", "nocursor");
+        o.codemirror._old_cursor_selected = o.codemirror.somethingSelected();
+        o.codemirror._old_cursor_head = o.codemirror.getCursor("head");
+        o.codemirror._old_cursor_anchor = o.codemirror.getCursor("anchor");
+        o.codemirror.setSelection(o.codemirror._old_cursor_head);
     });
 
     o.link = function(v) {
@@ -811,6 +821,14 @@ Hive.App.Text = function(o) {
         Hive.History.save(exec_cmd('+undo'), exec_cmd('+redo'), 'edit');
     };
 
+    o.handlers = new Object();
+    o.handlers.bold = function (value) {
+        var mark_start = o.codemirror.getCursor("start");
+        var mark_end = o.codemirror.getCursor("end");
+        var mark_options = o.codemirror.combine_font_class(mark_start, mark_end, "CodeMirror-mark-test");
+        o.codemirror.add_mark(mark_start, mark_end, mark_options);
+    };
+
     function controls(o) {
         var common = $.extend({}, o), d = o.div;
 
@@ -846,11 +864,11 @@ Hive.App.Text = function(o) {
                 open: function(){
                     // Update current color. Range should usually exist, but
                     // better to do nothing than throw error if not
-                    var range = o.app.rte.getRange();
+                    /*var range = o.app.rte.getRange();
                     if (range){
                         var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
                         o.color_picker.set_color(current_color);
-                    }
+                    }*/
                 },
             }
         );
@@ -866,7 +884,7 @@ Hive.App.Text = function(o) {
             $(el).bind('mousedown', function(e) {
                 e.preventDefault();
             }).click(function(){
-                o.app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
+                o.app.handlers[$(el).attr('cmd').replace("+", "")]($(el).attr('val'));
             });
         });
 
@@ -884,18 +902,292 @@ Hive.App.Text = function(o) {
     o.content_element = $('<div></div>');
     o.content_element.attr('id', Hive.random_str()).addClass('text_content_element');
     o.div.append(o.content_element);
-    o.rte = new Hive.goog_rte(o.content_element, o);
-    goog.events.listen(o.rte.undo_redo.undoManager_,
-            goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
-            o.history_saver);
-    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
+    o.codemirror = CodeMirror(o.content_element.get(0), {value: o.content()});
+    o.codemirror.setSize("100%", "100%");
+
+    //o.rte = new Hive.goog_rte(o.content_element, o);
+    //goog.events.listen(o.rte.undo_redo.undoManager_,
+    //        goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
+    //        o.history_saver);
+    //Sgoog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
     o.shield();
+
+    o.ranges = new Object();
+
+    /**************************************************************************
+        Compare range options objects
+
+        Arguments:
+            options1 and options2: Options object (follows o.codemirror.markText format)
+            
+        Returns:
+            true if options are the same, false otherwise
+    **************************************************************************/
+    o.codemirror.compare_options = function (options1, options2) {
+        for (var opt in options1) {
+            if (!(opt in options2))
+                return false;
+            if (options1[opt] != options2[opt])
+                return false;
+        }
+        for (var opt in options2) {
+            if (!(opt in options1))
+                return false;
+            if (options1[opt] != options2[opt])
+                return false;
+        }
+        return true;
+    };
+
+    /**************************************************************************
+        Checks if option object is empty (no formatting, classes, etc)
+
+        Arguments:
+            options: Options object (follows o.codemirror.markText format)
+            
+        Returns:
+            true if options object is empty, false otherwise
+    **************************************************************************/
+    o.codemirror.empty_options = function (options) {
+        if ($.trim(options["className"]) != "")
+            return false;
+        return true;
+    }
+
+    /**************************************************************************
+        Combines ranges with the same options
+
+        Arguments:
+            None
+
+        Returns:
+            Nothing
+    **************************************************************************/
+    o.codemirror.merge_ranges = function () {
+        // Object properties are not going to be sorted!
+        // This snippet sorts the keys from beginning of the text to the end
+        var sorted_keys = [];
+        for(var rkey in o.ranges) {
+            sorted_keys[sorted_keys.length] = rkey;
+        }
+        sorted_keys.sort();
+
+        for (var skey in sorted_keys) {
+            var rkey = sorted_keys[skey];
+            var range = o.ranges[rkey];
+            var end_index = o.codemirror.indexFromPos(range.find()["to"]);
+            if (end_index in o.ranges) {
+                var next_range = o.ranges[sorted_keys[skey+1]];
+                if (o.codemirror.compare_options(range["_options"], next_range["_options"])) {
+                    var options = $.extend({}, range["_options"]);
+                    var start_pos = range.find()["from"];
+                    var end_pos = next_range.find()["to"];
+                    range.clear();
+                    next_range.clear();
+                    delete o.ranges[sorted_keys[skey+1]];
+                    delete o.ranges[rkey];
+                    o.ranges[rkey] = o.codemirror.markText(start_pos, end_pos, options);
+                    return o.codemirror.merge_ranges();
+                }
+            } else if (o.codemirror.empty_options(range["_options"])) {
+                range.clear();
+                delete o.ranges[rkey];
+                return o.codemirror.merge_ranges();
+            }
+        }
+    };
+
+    /**************************************************************************
+        Processes and combines options for marks
+
+        Arguments:
+            old_options: Options object (follows o.codemirror.markText format)
+            new_options: New options to process. Follows same format as old_options
+                except each class must have a "+" or a "-" sign for addition or
+                removal respectively. If there is no sign, the option is instead
+                toggled for each individual range.
+
+        Returns:
+            Processed old_options
+    **************************************************************************/
+    o.codemirror.process_options = function (range_options, new_options) {
+        var classes = new_options["className"].split(" ");
+        var old_classes = null;
+        var old_options = {};
+        // If range_options is null, create a basic options object
+        if (range_options == null) {
+            old_options = {className: ""};
+            old_classes = new Array();
+        } else {
+            old_options = $.extend({}, range_options);
+            old_classes = old_options["className"].split(" ");
+        }
+
+        for (var ckey in classes) {
+            var cls = classes[ckey].slice(1, classes[ckey].length);
+            // cls_index = index of class, or -1 if not found
+            var cls_index = $.inArray(cls, old_classes);
+            var cmd = classes[ckey].slice(0, 1);
+            // If the class starts with a "+", add it if it doesn't exist
+            if (classes[ckey].slice(0, 1) == "+") {
+                if (cls_index < 0) {
+                    old_classes[old_classes.length] = cls;
+                }
+            // If the class starts with a "-", remove it if it exists
+            } else if (classes[ckey].slice(0, 1) == "-") {
+                if (cls_index >= 0) {
+                    
+                    old_classes.splice(cls_index, 1);
+                }
+            // Add the class if it doesnt exist, remove it otherwise
+            } else
+                if (cls_index < 0)
+                    old_classes[old_classes.length] = classes[ckey];
+                else
+                    old_classes.splice(cls_index, 1);
+        }
+        //alert(old_classes);
+        old_classes = old_classes.join(" ");
+        old_options["className"] = old_classes;
+        return old_options;
+    }
+
+    /**************************************************************************
+        Searches through ranges within {from, to} and decides whether to add
+            or remove the font style class
+
+        Arguments:
+            from - {line, ch}: start of new mark (inclusive)
+            to - {line, ch}: end of new mark (exclusive)
+            cls - string: name of font class
+
+        Returns:
+            Options object for o.codemirror.add_mark
+    **************************************************************************/
+    o.codemirror.combine_font_class = function (from, to, cls) {
+        var start_index = o.codemirror.indexFromPos(from);
+        var end_index = o.codemirror.indexFromPos(to);
+        var cmd = "+";
+
+        // Object properties are not going to be sorted!
+        // This snippet sorts the keys from beginning of the text to the end
+        var sorted_keys = [];
+        for(var rkey in o.ranges) {
+            sorted_keys[sorted_keys.length] = rkey;
+        }
+        sorted_keys.sort();
+
+        for (var skey in sorted_keys) {
+            var rkey = sorted_keys[skey];
+            var rend_index = o.codemirror.indexFromPos(o.ranges[rkey].find()["to"]);
+
+            if (rkey >= end_index)
+                break;
+            if ((rkey >= start_index) || (rend_index > start_index && rend_index <= end_index)) {
+                var classes = o.ranges[rkey]._options["className"].split(" ");
+                if ($.inArray(cls, classes) >= 0) {
+                    cmd = '-';
+                    break;
+                }
+            }
+        }
+        //alert(cmd + cls);
+        return {className: cmd + cls};
+    }
+
+    /**************************************************************************
+        Combines an existing range with a new mark.
+
+        Arguments:
+            rkey - int: Index of existing range in o.ranges
+            from_index - int: Starting index of new mark (include)
+            to_index - int: Ending index of new mark (exclusive)
+            options: Dictionary of mark options. Reffer to o.codemirror.process_options
+                for syntax.
+
+        Returns:
+            Returns the index of the end of the last created mark. If the returned
+                index is less than to_index, then the function did not finish
+                creating the entire mark and the return value is the new 
+    **************************************************************************/
+    o.codemirror.combine_marks = function (rkey, from_index, to_index, options) {
+        var range = o.ranges[rkey];
+        var new_opts = o.codemirror.process_options(range["_options"], options);
+        var old_end = o.codemirror.indexFromPos(range.find()["to"]);
+        var old_opts = $.extend({}, range["_options"]);
+
+        var end_index = old_end;
+        if (to_index <= end_index)
+            end_index = to_index;
+
+        o.ranges[rkey].clear();
+        delete o.ranges[rkey];
+
+        // Create mark with no new options in the front
+        if (from_index > rkey)
+            o.ranges[rkey] = o.codemirror.markText(o.codemirror.posFromIndex(rkey), o.codemirror.posFromIndex(from_index), old_opts);
+
+        // Create mark with new options
+        o.ranges[from_index] = o.codemirror.markText(o.codemirror.posFromIndex(from_index), o.codemirror.posFromIndex(end_index), new_opts);
+
+        // Create mark with no new options at the end
+        if (old_end > end_index) {
+            o.ranges[to_index] = o.codemirror.markText(o.codemirror.posFromIndex(to_index), o.codemirror.posFromIndex(old_end), old_opts);
+            return old_end;
+        }
+
+        return end_index;
+    };
+
+    /**************************************************************************
+        Cleanly adds a new mark and flattens list of ranges
+
+        Arguments:
+            from - {line, ch}: start of new mark (inclusive)
+            to - {line, ch}: end of new mark (exclusive)
+            options: Dictionary of mark options. Reffer to o.codemirror.process_options
+                for syntax.
+
+        Returns:
+            Nothing
+    **************************************************************************/
+    o.codemirror.add_mark = function (from, to, options) {
+        var start_index = o.codemirror.indexFromPos(from);
+        var end_index = o.codemirror.indexFromPos(to);
+        var clean_options = o.codemirror.process_options(null, options);
+
+        // Object properties are not going to be sorted!
+        // This snippet sorts the keys from beginning of the text to the end
+        var sorted_keys = [];
+        for(var rkey in o.ranges) {
+            sorted_keys[sorted_keys.length] = rkey;
+        }
+        sorted_keys.sort();
+
+        for (var skey in sorted_keys) {
+            var rkey = sorted_keys[skey];
+            var old_end = o.codemirror.indexFromPos(o.ranges[rkey].find()["to"]);
+
+            if (rkey >= end_index)
+                break;
+
+            if (rkey > start_index) {
+                o.ranges[start_index] = o.codemirror.markText(o.codemirror.posFromIndex(start_index), o.codemirror.posFromIndex(rkey), clean_options);
+                start_index = rkey;
+            }
+
+            if (rkey >= start_index || (old_end > start_index && old_end <= end_index))
+                start_index = o.codemirror.combine_marks(rkey, start_index, end_index, options);
+        }
+        if (start_index <= end_index) 
+            o.ranges[start_index] = o.codemirror.markText(o.codemirror.posFromIndex(start_index), o.codemirror.posFromIndex(end_index), clean_options)
+    }
 
     setTimeout(function(){ o.load(); }, 100);
     return o;
 }
 Hive.registerApp(Hive.App.Text, 'hive.text');
-
+/*
 
 Hive.goog_rte = function(content_element, app){
     var that = this;
@@ -1219,7 +1511,7 @@ Hive.goog_rte = function(content_element, app){
     }
 }
 goog.editor.Field.DELAYED_CHANGE_FREQUENCY = 100;
-goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
+goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);*/
 
 Hive.App.has_rotate = function(o) {
     var angle = o.init_state.angle ? o.init_state.angle : 0;

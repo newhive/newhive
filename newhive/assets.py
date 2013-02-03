@@ -190,7 +190,7 @@ class HiveAssets(Assets):
         opts = { }
 
         self.assets_env.register('edit.js',
-            'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js',
+            'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js', 'codemirror.js',
             filters='yui_js',
             output='../lib/edit.js'
             )
@@ -249,7 +249,7 @@ class HiveAssets(Assets):
             debug=False
             )
 
-        edit_scss = webassets.Bundle('scss/edit.scss',
+        edit_scss = webassets.Bundle('scss/edit.scss', 'scss/codemirror.css',
             filters=scss_filter,
             output='edit.css',
             debug=False
