@@ -1,8 +1,7 @@
-import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
+import re, pymongo, bson.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
 import operator as op
 from os.path import join as joinpath
 from md5 import md5
-from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 from lxml import html
 from wsgiref.handlers import format_date_time
@@ -250,7 +249,7 @@ class Entity(dict):
         self._col = col._col
         self.db = col.db
         self.mdb = self.db.mdb
-        self.setdefault('_id', str(pymongo.objectid.ObjectId()))
+        self.setdefault('_id', str(bson.objectid.ObjectId()))
         self['id'] = self.id
 
     @property

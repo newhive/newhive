@@ -1,0 +1,2 @@
+Python dependencies
+    werkzeug pymongo boto oauth2 pandas brownie google-api-python-client

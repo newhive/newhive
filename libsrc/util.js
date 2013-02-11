@@ -242,9 +242,12 @@ function propsin(o, plist) {
 }
 // Combination of foldl and foldl1
 function reduce(f, list, left) {
-    var L = $.extend([], list), left;
-    if(left === undefined) left = L.shift();
-    while(right = L.shift()) left = f(left, right);
+    var i = 0;
+    if(left === undefined) {
+        left = L[0];
+        i = 1;
+    }
+    for(; i < list.length; i++){ left = f(left, L[i]) }
     return left;
 }
 function zip(list1, list2) {
@@ -258,7 +261,7 @@ op = {
     '*' : function(a, b) { return a * b },
     '/' : function(a, b) { return a / b },
     '%' : function(a, b) { return a % b }
-}
+};
 function bound(num, lower_bound, upper_bound) {
     if(num < lower_bound) return lower_bound;
     if(num > upper_bound) return upper_bound;
