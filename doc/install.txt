@@ -1,5 +1,5 @@
 Python library dependencies
-    werkzeug pymongo boto oauth2 paramiko cssutils lxml webassets
+    werkzeug pymongo boto oauth2 pil paramiko cssutils lxml webassets
     pandas brownie google-api-python-client # for analytics
 
 Application dependencies (Ubuntu packages)
