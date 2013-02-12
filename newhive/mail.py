@@ -15,8 +15,8 @@ from email.generator import Generator
 from email import Charset
 from jinja2 import TemplateNotFound
 from werkzeug import url_unquote
-import cssutils #sudo pip install cssutils
-from lxml import etree #sudo apt-get install python-lxml
+import cssutils
+from lxml import etree
 import lxml.html
 
 import logging
