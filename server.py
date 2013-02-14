@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python
 import os, optparse, sys
 from os.path  import dirname, exists, join as joinpath
 import newhive.config as config
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     #ssl_context.use_privatekey_file(config.ssl_key)
     #if config.ssl_ca:
     #    ssl_context.use_certificate_chain_file(config.ssl_ca)
-    #ssl_context = 'adhoc'
+    ssl_context = 'adhoc'
 
     def run_hive(port, ssl=False):
         run_simple(
@@ -52,7 +52,7 @@ if __name__ == '__main__':
               ,'/images' : joinpath(config.src_home, 'libsrc/scss/images')
               ,'/file' : config.media_path
             }
-          #, ssl_context = ssl_context if ssl else None
+          , ssl_context = ssl_context #if ssl else None
           #, processes = 0
           )
 
