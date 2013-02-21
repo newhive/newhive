@@ -9,8 +9,6 @@ from newhive.wsgi import application
 # run_simple is not so simple
 # also, SSL is broken
 if __name__ == '__main__':
-    with open('log/newhive.log', 'a') as log:
-        log.write("\n*****Server Start*****\n\n")
     parser = optparse.OptionParser()
     parser.add_option("-p", "--port", action="store", type="int", dest="port")
     parser.add_option("-s", "--secure-port", action="store", type="int", dest="secure_port",
