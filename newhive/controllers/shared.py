@@ -60,6 +60,31 @@ def query_args(request):
 
 def link_args(response, args): response.context.update( args = args )
 
+def friendly_date(then):
+    """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
+    if type(then) in [int, float]:
+      then = time_u(then)
+
+    now = datetime.utcnow()
+    dt = now - then
+    if dt.seconds < 60:
+        return "just now"
+    months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    s = months[then.month] + ' ' + str(then.day)
+    if then.year != now.year: s += ' ' + str(then.year)
+    if dt.days < 7:
+        if not dt.days:
+            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
+            else: (t, u) = (dt.seconds / 3600, 'hr')
+        else: (t, u) = (dt.days, 'day')
+        s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
+    return s
+
+def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
+
+def epoch_to_string(epoch_time):
+    return time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(epoch_time))
+
 class PagingMixin(object):
 
     def set_next_page(self, request, response, items):

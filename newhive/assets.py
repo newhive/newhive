@@ -200,6 +200,11 @@ class HiveAssets(Assets):
             output = '../lib/google_closure.js'
             )
 
+        self.assets_env.register('curl.js', 'curl.js',
+            filters = 'yui_js',
+            output = '../lib/curl.js'
+            )
+
         self.assets_env.register('vendor.js',
             'jquery_misc.js', 'rotate.js', 'hover.js', 'drag.js',
             'dragndrop.js', 'jplayer/jquery.jplayer.js', 'Modernizr.js',

@@ -1,17 +1,16 @@
 {% extends "main.html" %}
 
 {% block meta %}
- <meta property="og:title" content='{{ title |e }}' />
- <meta property="og:type" content="newhive:expression" />
- <meta property="og:image" content='{{ expr.thumb |e }}' />
- <meta property="fb:admins" content="1007003" />
- <meta property="description" contents="{{ title |e }}, an expression by {{owner.fullname}}" />
+  <meta property="og:title" content='{{ title |e }}' />
+  <meta property="og:type" content="newhive:expression" />
+  <meta property="og:image" content='{{ expr.thumb |e }}' />
+  <meta property="fb:admins" content="1007003" />
+  <meta property="description" contents="{{ title |e }}, an expression by
+    {{owner.fullname}}" />
 {% endblock %}
 {% block head %}
   {{super()}}
-  <script type='text/javascript'>
-    var expr = {{ expr | json}};
-  </script>
+  <script type='text/javascript'>var expr = {{ expr | json}};</script>
 {% endblock %}
 {% block body_classes %}{{super()}} frame{% endblock %}
 

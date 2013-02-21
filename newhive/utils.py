@@ -45,11 +45,6 @@ def datetime_to_int(dt):
 def datetime_to_str(dt):
     return str(datetime_to_int(dt))
 
-def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
-
-def epoch_to_string(epoch_time):
-    return time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(epoch_time))
-
 def junkstr(length):
     """Creates a random base 62 string"""
 
@@ -276,55 +271,11 @@ def local_date(offset=0):
     dt = datetime.now(tz)
     return dt.date() + pandas.DateOffset(days=offset)
 
-def friendly_date(then):
-    """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
-    if type(then) in [int, float]:
-      then = time_u(then)
-
-    now = datetime.utcnow()
-    dt = now - then
-    if dt.seconds < 60:
-        return "just now"
-    months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    s = months[then.month] + ' ' + str(then.day)
-    if then.year != now.year: s += ' ' + str(then.year)
-    if dt.days < 7:
-        if not dt.days:
-            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
-            else: (t, u) = (dt.seconds / 3600, 'hr')
-        else: (t, u) = (dt.days, 'day')
-        s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
-    return s
-
 def dates_to_spec(start, end=None, offset=None):
     """Return a mongodb spec dictionary that will match ids of objects created
     between date and date + offset"""
     end = end or start + offset
     return {'$gt': datetime_to_int(start), '$lte': datetime_to_int(end)}
-
-def friendly_log_scale(start, end=None, significands = None):
-    """
-    >>> friendly_log_scale(10)
-    [0, 1, 2, 5, 10]
-
-    >>> friendly_log_scale(500,2000)
-    [500, 1000, 2000]
-    """
-
-    if not significands: significands = [1,2,5]
-
-    if not end: start, end = (0, start)
-    rv = [0] if start is 0 else []
-
-    power = 0
-    while True:
-        for i in significands:
-            val = i * 10 ** power
-            if val > end:
-                return rv
-            if val >= start:
-                rv.append(val)
-        power += 1
 
 def un_camelcase(s): return re.sub(r'([A-Z])', r' \1', s)
 

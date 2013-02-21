@@ -1,8 +1,0 @@
-Python library dependencies
-    werkzeug pymongo boto oauth2 pil paramiko cssutils lxml webassets
-    pandas brownie google-api-python-client # for analytics
-
-Application dependencies (Ubuntu packages)
-	mongodb
-	ruby-sass
-	ruby-compass

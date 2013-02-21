@@ -3,7 +3,8 @@ import boto
 from newhive import config
 from newhive import manage
 from newhive.manage import aws_credentials
-from newhive.utils import memoized, local_date, now, friendly_date
+from newhive.utils import memoized, local_date, now
+from newhive.controllers.shared import friendly_date
 
 try:
     public_hostname = subprocess.check_output(['ec2metadata', '--public-hostname']).strip()

@@ -1,66 +1,81 @@
 <!DOCTYPE HTML>
 <html xmlns:og="http://ogp.me/ns#" xmlns:fb="http://www.facebook.com/2008/fbml">
 <head>
- <title>{{ 'NewHive' if not title else title + " - NewHive" | e}}</title>
- {% block meta %}
- {% endblock %}
- <meta property="og:site_name" content='NewHive' />
- <meta property="fb:app_id" content="153421698080835" />
- <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
- <script>
-   var _gaq = _gaq || [];
-   _gaq.push(['_setAccount', 'UA-22827299-2']);
-   _gaq.push(['_setDomainName', 'none']);
-   _gaq.push(['_setAllowLinker', true]);
-   _gaq.push(['_setCampaignTrack', true]);
-   _gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
-   _gaq.push(['_setCustomVar', 2, 'join_date', '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
-   _gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
-   {% for command in ga_commands %}
-   _gaq.push({{ command | json }});
-   {% endfor %}
-   // Pageview now handled in config.js after custom var set
-   //_gaq.push(['_trackPageview']);
+  <title>{{ 'NewHive' if not title else title + " - NewHive" | e}}</title>
+  {% block meta %}
+  {% endblock %}
+  <meta property="og:site_name" content='NewHive' />
+  <meta property="fb:app_id" content="153421698080835" />
+  <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
+  {% for item in asset_bundle('curl.js') %}
+      <script src='{{ item }}'></script>
+  {% endfor %}
+  <script>
+// define('server.state', [], {
+
+// })
+    logged_in = {{ user.logged_in|json }}, server_name = '{{ server_name }}',
+    secure_server = '{{ secure_server }}', server_url = '{{ server_url }}',
+    debug_mode = {{ debug|json }},
+    dialog_to_show = {{ dialog_to_show|json }},
+    new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
+    user = {{ client_user | json }}, owner = {{ client_owner | json }},
+    content_domain = {{ content_domain | json }},
+    error = {{ error | json }}
+;
  </script>
 
+ <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
  {% for item in asset_bundle('app.css') %}
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
- <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
- <script>
-    var logged_in = {{ user.logged_in|json }}, server_name = '{{ server_name }}',
-        secure_server = '{{ secure_server }}', server_url = '{{ server_url }}',
-        debug_mode = {{ debug|json }},
-        dialog_to_show = {{ dialog_to_show|json }},
-        new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
-        user = {{ client_user | json }}, owner = {{ client_owner | json }},
-        content_domain = {{ content_domain | json }},
-        error = {{ error | json }}
-    ;
- </script>
+
  {% if debug %}
-   <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js'></script>
+     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js'></script>
  {% else %}
-   <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
+     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
  {% endif %}
+
+ {# Site javascript, replace with Joose dependencies #}
  {% for item in asset_bundle('vendor.js') %}
-   <script src='{{ item }}'></script>
+     <script src='{{ item }}'></script>
  {% endfor %}
  {% for item in asset_bundle('app.js') %}
-   <script src='{{ item }}'></script>
+     <script src='{{ item }}'></script>
  {% endfor %}
 
  {% block head %}{% endblock %}
+ <script>
+// Analytics setup
+////////////////////
 
- <script type="text/javascript">
-   {% if use_ga %}
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-   {% endif %}
- </script>
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-22827299-2']);
+_gaq.push(['_setDomainName', 'none']);
+_gaq.push(['_setAllowLinker', true]);
+_gaq.push(['_setCampaignTrack', true]);
+_gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
+_gaq.push(['_setCustomVar', 2, 'join_date',
+    '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
+_gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
+{% for command in ga_commands %}
+    _gaq.push({{ command | json }});
+{% endfor %}
+
+_gaq.push(['_setCustomVar', 4, 'AB_javascript', Hive.AB_Test.ga_string()]);
+_gaq.push(['_trackPageview']);
+
+{% if use_ga %}(function() {
+    var ga = document.createElement('script');
+    ga.type = 'text/javascript';
+    ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') 
+        + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(ga, s);
+})();{% endif %}
+
+  </script>
 </head>
 <body class="{% block body_classes %}{{'logged_in' if user.logged_in else "logged_out"}}{{' admin' if admin}} {% endblock %}" >
  {% block main %}{% endblock %}
