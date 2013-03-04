@@ -11,6 +11,12 @@
       <script src='{{ item }}'></script>
   {% endfor %}
   <script>
+// configure curl
+curl({
+    baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
+    pluginPath: 'curl/plugin'
+});
+
 // define('server.state', [], {
 
 // })

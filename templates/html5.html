@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>{{ ('NewHive' if not title else title)|e }}</title>
+
+  {% block meta %}{% endblock %}
+
+  <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
+
+  {% for item in asset_bundle('curl.js') %}
+      <script src='{{ item }}'></script>
+  {% endfor %}
+  <script>
+
+// configure curl for development mode only
+curl({
+    baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
+    pluginPath: 'curl/plugin'
+});
+
+// var
+//     logged_in = {{ user.logged_in|json }}, server_name = '{{ server_name }}',
+//     secure_server = '{{ secure_server }}', server_url = '{{ server_url }}',
+//     debug_mode = {{ debug|json }},
+//     dialog_to_show = {{ dialog_to_show|json }},
+//     new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
+//     user = {{ client_user | json }}, owner = {{ client_owner | json }},
+//     content_domain = {{ content_domain | json }},
+//     error = {{ error | json }}
+// ;
+  </script>
+
+ {% block head %}{% endblock %}
+
+</head>
+<body class="{% block body_classes %}
+    {{'logged_in' if user.logged_in else "logged_out"}}
+    {{'admin' if admin }}
+  {% endblock %}">{% block body %}{% endblock %}</body>
+</html>
