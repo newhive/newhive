@@ -1,5 +1,5 @@
 require 'sass'
-require 'compiled.asset_paths'
+require './compiled.asset_paths.rb'
 
 module HiveAssets
     def asset_url(name, tail = '')
