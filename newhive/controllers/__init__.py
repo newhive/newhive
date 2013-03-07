@@ -1,4 +1,5 @@
 from application   import Application
+from api           import Api
 from expression    import Expression
 from feed          import Feed
 from user          import User

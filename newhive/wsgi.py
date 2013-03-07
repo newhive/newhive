@@ -75,7 +75,8 @@ server_env = {
 }
 
 controllers = {
-      'expression':  hivectrl.Expression(**server_env)
+      'api':         hivectrl.Api(**server_env)
+    , 'expression':  hivectrl.Expression(**server_env)
     , 'feed':        hivectrl.Feed(**server_env)
     , 'file':        hivectrl.File(**server_env)
     , 'user':        hivectrl.User(**server_env)
@@ -131,6 +132,7 @@ actions = dict(
 site_pages = {
      ''                    : controllers['expression'].site_expression
     ,'about'               : controllers['expression'].site_expression
+    ,'api'                 : controllers['api'].index
     ,'home'                : controllers['community'].index
     ,'search'              : controllers['community'].index
     ,'tag'                 : controllers['community'].tag
@@ -250,7 +252,6 @@ def handle(request): # HANDLER
         ,user_is_owner = request.is_owner
         ,listeners = owner.starrer_page()
     )
-
     if parts[0] == 'profile': return controllers['community'].index(request, response)
     if parts[0] == 'expressions': return app.redirect(response, owner.url)
     if config.debug_mode and request.path == 'robots.txt': return app.robots(request, response)
