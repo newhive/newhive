@@ -10,7 +10,6 @@ import datetime
 from os.path  import join
 from werkzeug import Request, Response, exceptions, url_unquote
 from werkzeug.routing import Map, Rule
-from werkzeug.exceptions import HTTPException, NotFound
 from urlparse import urlparse
 import jinja2
 
@@ -86,6 +85,10 @@ controllers = {
     , 'admin':       hivectrl.Admin(**server_env)
     }
 app = hivectrl.Application(**server_env)
+
+urls = Map([
+    Rule('/api')
+])
 
 def dialog_map(request, response, args=None):
     return dialogs.get(request.form['dialog'])(request, response, args)
