@@ -25,7 +25,7 @@ class Api(Application, PagingMixin):
         else:
             return self.serve_404(request, response)
     def api_expr_featured(self, request, response):
-        return self.expr_featured(request, response)
+        return self.serve_json(response, response.context.get('cards'))
         # return super(PagingMixin, self).expr_featured(**args)
     def serve_404(self, request, response):
         response.status_code = 404
