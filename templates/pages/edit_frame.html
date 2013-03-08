@@ -1,6 +1,7 @@
 {% extends "page.html" %}
 
 {% block head %}
+  {{ super() }}
   <script>curl(['edit/frame'], function(frame){ frame.load() });</script>
 {% endblock %}
 

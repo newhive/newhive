@@ -1,12 +1,15 @@
 {% extends "minimal.html" %}
 
 {% block head %}
+  {{ super() }}
+
   {% for item in asset_bundle('edit.css') %}
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
   {% endfor %}
   {% for item in asset_bundle('app.css') %}
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
   {% endfor %}
+  
   <script>
 curl(['edit'], function(edit){ edit.load( {{ expr | json }} ) });
   </script>

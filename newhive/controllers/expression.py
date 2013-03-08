@@ -26,13 +26,17 @@ class Expression(Community, PagingMixin):
 
         response.context.update({
              'title'     : 'Editing: ' + expr.get('title')
-            ,'editor_url': abs_url(domain=config.content_domain, secure=True) + 'edit'
-            ,'expr'      : expr
+            ,'editor_url': abs_url(domain=config.content_domain, secure=True) + 'edit/' + expr_id
             ,'editing'   : True
         })
         return self.serve_page(response, 'pages/edit_frame.html')
 
     def edit(self, request, response):
+        if not request.requester.logged_in: return self.redirect(response, AbsUrl())
+        if not request.is_secure: return self.redirect(response, AbsUrl(request.path))
+        expr_id = lget(request.path_parts, 1)
+        
+        response.context.update(expr=expr)
        # expr_id = lget(request.path_parts, 1)
        # if not expr_id:
        #     expr = dfilter(request.args, ['domain', 'name', 'tags'])
