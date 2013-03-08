@@ -5,8 +5,8 @@
   <script>curl(['edit/frame'], function(frame){ frame.load() });</script>
 {% endblock %}
 
-{% block body %}<iframe style='position: absolute; left: 0; top: 0; width:100%; height:100%; border:none'
-    src='{{ editor_url }}' class='expr' name='expr'></iframe>{% endblock %}
+{% block body %}<iframe style='position: absolute; left: 0; top: 0' src='{{ edit_url }}'
+	class='expr' name='expr'></iframe>{% endblock %}
 
 <div id='menu_save' class='menu top'>
   <div class='medbold'>Title</div>
