@@ -26,41 +26,29 @@ class Expression(Community, PagingMixin):
 
         response.context.update({
              'title'     : 'Editing: ' + expr.get('title')
-            ,'expr'      : expr
-            #,'show_help' : show_help
+            ,'editor_url': abs_url(domain=config.content_domain, secure=True) + 'edit/' + expr_id
             ,'editing'   : True
         })
-        return self.serve_page(response, 'pages/edit_tmp.html')
+        return self.serve_page(response, 'pages/edit_frame.html')
 
-    #def edit_frame(self, request, response):
-    #    expr = self.db.Expr.fetch(lget(request.path_parts, 1), meta=True)
-    #    if not (request.requester.logged_in or expr): return self.serve_404(request, response)
-    #    if expr.auth_required(response.user): return self.serve_forbidden(request)
-
-    #    show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
-    #    if show_help: request.requester.increment({'flags.default-instructional': 1})
-
-    #    response.context.update({
-    #         'title'     : 'Editing: ' + expr.get('title')
-    #        ,'expr'      : expr
-    #        ,'show_help' : show_help
-    #        ,'editing'   : True
-    #    })
-    #    return self.serve_page(response, 'pages/edit_frame.html')
-
-    #def edit(self, request, response):
-    #    expr_id = lget(request.path_parts, 1)
-    #    if not expr_id:
-    #        expr = dfilter(request.args, ['domain', 'name', 'tags'])
-    #        expr['title'] = 'Untitled'
-    #        expr['auth'] = 'public'
-    #        self.db.ActionLog.create(request.requester, "new_expression_edit")
-    #    else:
-    #        expr = self.db.Expr.fetch(expr_id)
-    #        if not expr: return self.serve_404(request, response)
-    #        self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
-    #    response.context.update({ 'expr': expr })
-    #    return self.serve_page(response, 'pages/edit.html')
+    def edit(self, request, response):
+        if not request.requester.logged_in: return self.redirect(response, AbsUrl())
+        if not request.is_secure: return self.redirect(response, AbsUrl(request.path))
+        expr_id = lget(request.path_parts, 1)
+        
+        response.context.update(expr=expr)
+       # expr_id = lget(request.path_parts, 1)
+       # if not expr_id:
+       #     expr = dfilter(request.args, ['domain', 'name', 'tags'])
+       #     expr['title'] = 'Untitled'
+       #     expr['auth'] = 'public'
+       #     self.db.ActionLog.create(request.requester, "new_expression_edit")
+       # else:
+       #     expr = self.db.Expr.fetch(expr_id)
+       #     if not expr: return self.serve_404(request, response)
+       #     self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
+       # response.context.update({ 'expr': expr })
+       return self.serve_page(response, 'pages/edit.html')
 
     # Controller for all navigation surrounding an expression
     # Must only output trusted HTML
