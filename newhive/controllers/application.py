@@ -94,7 +94,6 @@ class Application(object):
             ,client_user = response.user.client_view()
             ,admin = response.user.is_admin
             ,beta_tester = config.debug_mode or response.user.get('name') in config.beta_testers
-            ,create_url = abs_url(domain=config.content_domain, secure=True) + 'edit'
             ,server_url = abs_url()
             ,secure_server = abs_url(secure = True)
             ,server_name = config.server_name
