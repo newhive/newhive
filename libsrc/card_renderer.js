@@ -1,4 +1,4 @@
-define(['mustache!templates/expr_card.html'], function(exprCardTempl) {
+define(['mustache!templates/card_master.html'], function(exprCardTempl) {
     return function() {
         return {
             renderCards: function(CARDS_JSON) {

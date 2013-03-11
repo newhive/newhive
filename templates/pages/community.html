@@ -38,8 +38,8 @@
     {% if owner %}var owner_id = {{ owner.id | json }};{% endif %}
   </script>
   <script>
-  curl(['community'], function(community) {
-      community().renderCards({{ cards|json }});
+  curl(['card_renderer'], function(cardRenderer) {
+      cardRenderer().renderCards({{ cards|json }});
   });
   </script>
 {% endblock %}
