@@ -37,6 +37,7 @@
     {% endif %}
     {% if owner %}var owner_id = {{ owner.id | json }};{% endif %}
   </script>
+
 {% endblock %}
 
 {% block body_classes %}{{ super() }} community {{ 'home' if home }}{{ 'profile' if profile }}{% endblock %}
@@ -183,8 +184,7 @@
     <script>$(function() { require_login('restricted_page'); });</script>
   {% else %}
     <div id='feed'>
-      {% include 'page_parts/cards.html' %}
-      <div style='position:relative'>{{ content }}</div>
+      <div class="feed-content" style='position:relative'>{{ content }}</div>
     </div>
   {% endif %}
 {% endblock right_column %}

@@ -9,3 +9,5 @@ compiled.*
 /newhive/config/GA_credentials.dat
 /newhive/config/aws.py
 *.pyc
+*.DS_Store
+log/
