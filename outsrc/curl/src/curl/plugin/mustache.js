@@ -27,8 +27,7 @@ define(['text/mustache'], function(Mustache){
 		x.onreadystatechange = function (e) {
 			if (x.readyState === 4) {
 				if (x.status < 400) {
-                    console.log('got response text: ', x.responseText);
-					callback(Mustache.compile(x.responseText));
+					callback(x.responseText);
 				}
 				else {
 					errback(new Error('fetchText() failed. status: ' + x.statusText));
@@ -40,7 +39,6 @@ define(['text/mustache'], function(Mustache){
 
 	return {
 		'load': function (resourceId, require, callback, config) {
-			console.log(resourceId, require, callback, config);
 			window.req = require;
             // TODO: Get this working properly with assets
             fetchText('/lib/libsrc/' + resourceId, callback);
