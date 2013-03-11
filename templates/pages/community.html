@@ -37,7 +37,11 @@
     {% endif %}
     {% if owner %}var owner_id = {{ owner.id | json }};{% endif %}
   </script>
-
+  <script>
+  curl(['community'], function(community) {
+      community().renderCards({{ cards|json }});
+  });
+  </script>
 {% endblock %}
 
 {% block body_classes %}{{ super() }} community {{ 'home' if home }}{{ 'profile' if profile }}{% endblock %}

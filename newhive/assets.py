@@ -217,7 +217,7 @@ class HiveAssets(Assets):
 
         self.assets_env.register('app.js',
             'colors.js', 'compiled.asset_paths.js', 'util.js',  'ui/util.js',
-            'config.js', 'nav.js', 'navigator.js', 'community.js',
+            'config.js', 'nav.js', 'navigator.js',
             filters='yui_js',
             output='../lib/app.js'
             )
