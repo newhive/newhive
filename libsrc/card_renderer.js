@@ -17,17 +17,19 @@ define(['text/mustache',
         return function() {
             return {
                 renderCards: function(CARDS_JSON) {
-                    for (var cardIdx = 0; cardIdx < CARDS_JSON.length; cardIdx++) {
-                        CARDS_JSON[cardIdx]['getImgAsset'] = function() {
-                            return function(asset, render) {
-                                var imgURL = hive_asset_paths[asset];
-                                console.log('imgURL:',imgURL,'asset', asset);
-                                return '<img src="' + imgURL + '"/>';
-                            } 
-                        };
-                        var renderedHTML = compiledMaster(CARDS_JSON[cardIdx]);
-                        $('#feed .feed-content').append($(renderedHTML));
-                    }
+                    if (!CARDS_JSON.cards) CARDS_JSON = {cards: CARDS_JSON};
+                    CARDS_JSON['getImgAsset'] = function() {
+                        return function(asset, render) {
+                            var imgURL = hive_asset_paths[asset];
+                            return '<img src="' + imgURL + '"/>';
+                        } 
+                    };
+                    var renderedHTML = compiledMaster(CARDS_JSON);
+                    $('#feed .feed-content').append($(renderedHTML));
+                    // for (var cardIdx = 0; cardIdx < CARDS_JSON.length; cardIdx++) {
+                    //     
+                    //     
+                    // }
                 }
             };
         }
