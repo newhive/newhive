@@ -18,6 +18,13 @@ define(['text/mustache',
             return {
                 renderCards: function(CARDS_JSON) {
                     for (var cardIdx = 0; cardIdx < CARDS_JSON.length; cardIdx++) {
+                        CARDS_JSON[cardIdx]['getImgAsset'] = function() {
+                            return function(asset, render) {
+                                var imgURL = hive_asset_paths[asset];
+                                console.log('imgURL:',imgURL,'asset', asset);
+                                return '<img src="' + imgURL + '"/>';
+                            } 
+                        };
                         var renderedHTML = compiledMaster(CARDS_JSON[cardIdx]);
                         $('#feed .feed-content').append($(renderedHTML));
                     }

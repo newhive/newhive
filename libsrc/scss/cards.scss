@@ -1,6 +1,17 @@
 @import "common";
 
 #feed .card {
+    & h3 {
+        margin-left:-25px;
+        margin: 10px 0 10px -25px;
+        font-size:20pt;
+    }
+    .expr-owner {
+        float:left;
+    }
+    .expr-stats {
+        float:right;
+    }
     &.item { 
         position: relative; 
         padding: 13px 13px 5px 13px; 
@@ -13,6 +24,20 @@
         }
         &.border_bottom {
             border-bottom: 1px solid $color_light_grey;
+        }
+    }
+    &.flat-item {
+        position: relative; 
+        padding: 13px 13px 5px 13px; 
+        height: 300px;
+        width: 450px;
+        background-image: asset_url('skin/1/feed_item.png'); 
+        &.border_bottom {
+            border-bottom: 1px solid $color_light_grey;
+        }
+        & img.owner-thumb {
+            width:30px;
+            height:30px;
         }
     }
     &.item:hover { 
