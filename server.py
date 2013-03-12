@@ -3,7 +3,7 @@
 import os, optparse, sys
 from os.path  import dirname, exists, join as joinpath
 import newhive.config as config
-from newhive.wsgi import application
+from newhive.app import application
 
 
 # run_simple is not so simple

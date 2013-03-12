@@ -1,7 +1,7 @@
-import crypt, pickle, urllib, time
+import crypt, urllib, time
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.utils import normalize, junkstr, set_cookie, get_cookie
+from newhive.utils import normalize, junkstr
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 from newhive import mail, auth
 
