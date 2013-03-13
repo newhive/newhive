@@ -35,8 +35,8 @@ class Api(Application, PagingMixin):
 
 # Maybe instead use this for more explicitness: TransactionData = namedtuple('RequestMeta' 'user ...')
 class TransactionData(object):
-    """ Put stuff in one of these that doesn't really go in either the request or response,
-    but is specific to a request / response """
+    """ One of these is associated with each request cycle to put stuff in
+    that doesn't really go in either the Request or Response objects """
     pass
 
 class Controller(object):
@@ -56,11 +56,16 @@ class Controller(object):
                 * Authenticate request, and if given credentials, set auth cookies
             returns (TransactionData, Response) tuple
                 """
+
         response = Response()
         tdata = TransactionData()
-        # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
-        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url }
         tdata.user = auth.authenticate_request(self.db, request, response)
+
+        # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
+        # the context is for passing to views to render a response.
+        # The f dictionary of form fields may be left alone to mirror the request, or validated and adjusted
+        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url }
+
         return (tdata, response)
 
     def serve_data(self, response, mime, data):
@@ -79,7 +84,10 @@ class Controller(object):
         })
 
 class ModelController(Controller):
-    model_name = None # str of newhive.state class name that a type of controller is most related to
+    # str of newhive.state class name that a type of controller is most related to
+    # set this in child class so instances get the appropriate model attribute when constructed
+    model_name = None 
+
     model = None
 
     def __init__(self, **args):
@@ -91,6 +99,9 @@ class ModelController(Controller):
         data = self.model.fetch(id)
         if data is None: self.serve_404(request, response)
         return self.serve_json(response, data)
+
+    def page(self, tdata, request, response):
+        pass
 
 class Expr(ModelController):
     model_name = 'Expr'

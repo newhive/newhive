@@ -242,21 +242,25 @@ class Entity(dict):
     @property
     def type(self): return self.__class__.__name__
 
-    def __init__(self, col, doc):
+    def __init__(self, collection, doc):
+        self.id = doc.get('id')
+        if self.id: del doc['id']
         dict.update(self, doc)
-        self.collection = col
-        self._col = col._col
-        self.db = col.db
+
+        self.collection = collection
+        self._col = collection._col
+        self.db = collection.db
         self.mdb = self.db.mdb
-        self.setdefault('_id', str(bson.objectid.ObjectId()))
-        self['id'] = self.id
 
     @property
     def id(self):
         return self['_id']
+    @id.setter
+    def id(self, v):
+        self['_id'] = v
 
     def create(self):
-        self['_id'] = self.id
+        if not self.id: self.id = str(bson.objectid.ObjectId())
         self['created'] = now()
         self['updated'] = now()
         self._col.insert(self, safe=True)
@@ -316,42 +320,6 @@ class HasSocial(Entity):
     @cached
     def broadcast_count(self):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
-
-@Database.register
-class KeyWords(Entity):
-    cname = 'key_words'
-    indexes = [ ['doc_type', 'weight', 'words'], 'doc']
-
-    class Collection(Collection):
-        def remove_entries(self, doc):
-            self._col.remove({'doc' : doc.id })
-
-        def set_words(self, doc, texts, updated):
-            """ Takes a dictionary of { weight : text } pairs """
-
-    #        assert(type(doc) in classes.values())
-            self.remove_entries(doc)
-            all = set()
-            for (weight, text) in texts.items():
-                if text:
-                    words = normalize(text)
-                    all = all.union(words)
-                    self._col.insert({ 'updated': updated, 'words':words, 'weight':weight, 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
-            self._col.insert({ 'updated': updated, 'words':list(all), 'weight':'all', 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
-
-        def init(self, doc):
-            return classes[doc['doc_type']](doc)
-
-        def text_search(self, text, weight='all', doc_type='Expr', **args):
-            words = normalize(text)
-            cursor = self.search({'words': {'$all': words}, 'weight': weight, 'doc_type': doc_type}).sort([('updated', -1)])
-            return cursor
-
-        def search_page(self, text, doc_type=None, weight='all', **args):
-            words = normalize(text)
-            spec = {'words': {'$all': words}, 'weight': weight }
-            if doc_type: spec.update({'doc_type': doc_type})
-            return self.page(spec, **args)
 
 
 @Database.register
@@ -698,9 +666,6 @@ class User(HasSocial):
         # Facebook Disconnect
         self.facebook_disconnect()
 
-        # Search Index Cleanup
-        self.db.KeyWords.remove_entries(self)
-
         # Feed Cleanup
         for feed_item in self.db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
             feed_item.delete()
@@ -888,7 +853,6 @@ class Expr(HasSocial):
 
     def delete(self):
         self.owner.get_expr_count(force_update=True)
-        self.db.KeyWords.remove_entries(self)
         return super(Expr, self).delete()
 
     def increment_counter(self, counter):
