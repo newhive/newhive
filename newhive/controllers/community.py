@@ -32,7 +32,7 @@ class Community(Application, PagingMixin):
             ,'profile/listening/listeners': self.listeners
         }
 
-    def index(self, request, response):
+    def index(self, tdata, request, response, id=None):
         path = request.path_parts
 
         def default(*p):

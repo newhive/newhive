@@ -65,7 +65,7 @@ jinja_env.globals.update({
 ##############################################################################
 #                          newhive server setup                              #
 ##############################################################################
-db = newhive.state.Database(config, assets=hive_assets)
+db = newhive.state.Database(config)
 server_env = {
      'db': db
     ,'jinja_env': jinja_env
@@ -73,8 +73,7 @@ server_env = {
 }
 
 controllers = {
-      'api':         hivectrl.Api(**server_env)
-    , 'expression':  hivectrl.Expression(**server_env)
+      'expression':  hivectrl.Expression(**server_env)
     , 'feed':        hivectrl.Feed(**server_env)
     , 'file':        hivectrl.File(**server_env)
     , 'user':        hivectrl.User(**server_env)
@@ -130,7 +129,6 @@ actions = dict(
 site_pages = {
      ''                    : controllers['expression'].site_expression
     ,'about'               : controllers['expression'].site_expression
-    ,'api'                 : controllers['api'].index
     ,'home'                : controllers['community'].index
     ,'search'              : controllers['community'].index
     ,'tag'                 : controllers['community'].tag
