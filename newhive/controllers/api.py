@@ -1,15 +1,30 @@
 import json
 from werkzeug import Request, Response
 from collections import namedtuple
+from newhive.utils import dfilter
 from newhive.controllers import Application
+
 from newhive.controllers.shared import PagingMixin
 from newhive import auth, config, oauth, state
 from newhive.utils import abs_url
 
+class Controllers(object):
+    """ Convenience class for instantiating all da controllers at once. """
+    controllers = []
+
+    def __init__(self, server_env):
+        for k in self.__class__.controllers:
+            setattr(self, k.__name__.lower(), k(**server_env))
+
+    @classmethod
+    def register(this_class, that_class):
+        this_class.controllers.append(that_class)
+        return that_class
+
 # Maybe instead use this for more explicitness: TransactionData = namedtuple('RequestMeta' 'user ...')
 class TransactionData(object):
-    """ Put stuff in one of these that doesn't really go in either the request or response,
-    but is specific to a request / response """
+    """ One of these is associated with each request cycle to put stuff in
+    that doesn't really go in either the Request or Response objects """
     pass
 
 class Controller(object):
@@ -30,12 +45,17 @@ class Controller(object):
                 * Authenticate request, and if given credentials, set auth cookies
             returns (TransactionData, Response) tuple
                 """
+
         response = Response()
         tdata = TransactionData()
-        # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
-        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url }
         tdata.user = auth.authenticate_request(self.db, request, response)
+
+        # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
+        # the context is for passing to views to render a response.
+        # The f dictionary of form fields may be left alone to mirror the request, or validated and adjusted
+        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url}
         request.path_parts = request.path.split('/')
+        
         return (tdata, response)
     
     def render_template(self, tdata, response, template):
@@ -111,8 +131,14 @@ class Controller(object):
         })
 
 class ModelController(Controller):
-    model_name = None # str of newhive.state class name that a type of controller is most related to
-    model = None
+    """ Base class for all controllers tied to one of our DB collections """
+
+    # str of newhive.state class name that a type of controller is most
+    # related to. Set this in child class so instances get the appropriate
+    # model attribute when constructed.
+    model_name = None 
+
+    model = None # model object
 
     def __init__(self, **args):
         super(ModelController, self).__init__(**args)
@@ -124,25 +150,7 @@ class ModelController(Controller):
         if data is None: self.serve_404(request, response)
         return self.serve_json(response, data)
 
-# def link_args(response, args): response.context.update( args = args )
-# 
-# def paging_decorator(func):
-#     def query_args(request, tdata):
-#         args = request.args.copy().to_dict(flat=True)
-#         args = dfilter(args, ['sort', 'page', 'expr', 'order', 'limit'])
-#         args['viewer'] = tdata.user
-#         if args.has_key('order'): args['order'] = int(args['order'])
-#         if args.has_key('limit'): args['limit'] = min( 100, int(args['limit']) )
-#         return args
-#     def wrapped(self, tdata, request, response, args=None, **kwargs):
-#         paging_args = query_args(request, tdata)
-#         if args: paging_args.update(args)
-#         cards = func(self, tdata, request, response, paging_args, **kwargs)
-#         self.set_next_page( request, response, cards )
-#         cards = map( lambda o: self.item_prepare(o, viewer=tdata.user), cards )
-#         response.context.update( cards = cards)
-#     return wrapped
-
+@Controllers.register
 class Community(Controller,PagingMixin):
     def home_feed(self, tdata, request, response, id=None):
         def link_args(response, args): response.context.update( args = args )
@@ -151,6 +159,21 @@ class Community(Controller,PagingMixin):
         query = tdata.user.feed_network()
         return self.serve_loader_page('pages/community.html', tdata, request, response)
 
+    def index(self, tdata, request, response):
+        """ Generic handler for retrieving paginated lists of a collection """
+
+        args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
+        for k in ['limit', 'order']:
+            if k in args: args[k] = int(args[k])
+        # pass off actual querying of model to specific ModelController
+        items = self.page(tdata, **args)
+        return self.serve_json(response, items)
+
+    # this can be overridden in derived classes to add behavior that doesn't belong in the model
+    def page(self, tdata, **args):
+        return self.model.page({}, tdata.user, **args)
+
+@Controllers.register
 class Expr(ModelController):
     # Putting imports here for now because eventually Expr will get its own file
     import werkzeug.urls
@@ -183,11 +206,13 @@ class Expr(ModelController):
         return self.serve_json(response, screenshotData)
     
 
+@Controllers.register
 class User(ModelController):
     model_name = 'User'
 
-# convenience class for instantiating all da controllers at once
-class Controllers(object):
-    def __init__(self, server_env):
-        for k in [Community, Expr, User]:
-            setattr(self, k.__name__.lower(), k(**server_env))
+# maybe make this inherit from ModelController if based off a MongoDB
+# collection, otherwise if implemented with Elastic Search or similar, it
+# should stay like this.
+@Controllers.register
+class Search(Controller):
+    pass
