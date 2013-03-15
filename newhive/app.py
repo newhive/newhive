@@ -25,12 +25,16 @@ api = Api(server_env)
 
 # the endpoints are (Controller, method_str) tuples
 routes = Map([
+	Rule('/api/expr', endpoint=(api.expr, 'index')),
     Rule('/api/expr/<id>', endpoint=(api.expr, 'fetch')),
-    Rule('/api/user/<id>', endpoint=(api.user, 'fetch'))
+	Rule('/api/user', endpoint=(api.user, 'index')),
+    Rule('/api/user/<id>', endpoint=(api.user, 'fetch')),
+    Rule('/api/search', endpoint=(api.search, 'search')),
 ])
 
 @Request.application
 def handle(request):
+	# OK folks, let's make the routing logic 2 lines
 	(controller, handler), args = routes.bind_to_environ(request.environ).match()
 	return controller.dispatch(handler, request, **args)
 

@@ -143,17 +143,17 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None, filter=None):
-        page_is_id = is_mongo_key(page)
-        if page and not page_is_id:
-            page = float(page)
+    def paginate(self, spec, limit=40, at=None, sort='updated', order=-1, filter=None):
+        page_is_id = is_mongo_key(at)
+        if at and not page_is_id:
+            at = float(at)
 
         if type(spec) == dict:
             if page_is_id:
-                page_start = self.fetch(page)
-                page = page_start[sort] if page_start else None
+                page_start = self.fetch(at)
+                at = page_start[sort] if page_start else None
 
-            if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': page }
+            if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
             res = self.search(spec, sort=[(sort, order)])
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -166,10 +166,10 @@ class Collection(object):
 
         elif type(spec) == list:
             spec = uniq(spec)
-            assert( not page or page_is_id )
+            assert( not at or page_is_id )
 
             try:
-                start = spec.index(page) if page else -1
+                start = spec.index(at) if at else -1
                 end = start + limit * -order
                 if end > start:
                     if start >= len(spec): return Page([])
@@ -191,6 +191,11 @@ class Collection(object):
             res = Page(self.fetch(sub_spec))
             res.next = lget(sub_spec, -1)
             return res
+
+    # default implementation of pagination, intended to be overridden by
+    # specific model classes
+    def page(self, spec, viewer, sort='updated', **opts):
+        return self.paginate(spec, **opts)
 
     def count(self, spec={}): return self.search(spec).count()
 
@@ -244,7 +249,7 @@ class Entity(dict):
 
     def __init__(self, collection, doc):
         self.id = doc.get('id')
-        if self.id: del doc['id']
+        doc.pop('id', None) # Prevent id and _id attributes going into MongoDB
         dict.update(self, doc)
 
         self.collection = collection
@@ -759,10 +764,15 @@ class Expr(HasSocial):
             [(port, user, name)] = re.findall(config.server_name + r'/(:\d+)?(\w+)/(.*)$', url)
             return cls.named(user, name)
 
-        def page(self, spec, viewer=None, **opts):
-            if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-            es = super(Expr.Collection, self).page(spec, filter= viewer.can_view, **opts)
-            return es
+        def page(self, spec, viewer, sort='updated', **opts):
+            assert(sort in ['updated', 'random'])
+            rs = self.paginate(spec, filter=viewer.can_view, **opts)
+
+            # remove random static patterns from random index to make it really random
+            if sort == 'random':
+                for r in rs: r.update(random=random.random())
+
+            return rs
 
         def random(self):
             rand = random.random()

@@ -1,12 +1,14 @@
 import json
 from werkzeug import Request, Response
 from collections import namedtuple
+from newhive.utils import dfilter
 from newhive.controllers import Application
-from newhive.controllers.shared import PagingMixin
 from newhive import auth, config, oauth
 from newhive import state
 
 
+# Transitional class from old code to new code below
+from newhive.controllers.shared import PagingMixin
 class Api(Application, PagingMixin):
     def __init__(self, **args):
         super(Api, self).__init__(**args)
@@ -32,6 +34,19 @@ class Api(Application, PagingMixin):
             'error': 404
         })
 
+
+class Controllers(object):
+    """ Convenience class for instantiating all da controllers at once. """
+    controllers = []
+
+    def __init__(self, server_env):
+        for k in self.__class__.controllers:
+            setattr(self, k.__name__.lower(), k(**server_env))
+
+    @classmethod
+    def register(this_class, that_class):
+        this_class.controllers.append(that_class)
+        return that_class
 
 # Maybe instead use this for more explicitness: TransactionData = namedtuple('RequestMeta' 'user ...')
 class TransactionData(object):
@@ -84,11 +99,14 @@ class Controller(object):
         })
 
 class ModelController(Controller):
-    # str of newhive.state class name that a type of controller is most related to
-    # set this in child class so instances get the appropriate model attribute when constructed
+    """ Base class for all controllers tied to one of our DB collections """
+
+    # str of newhive.state class name that a type of controller is most
+    # related to. Set this in child class so instances get the appropriate
+    # model attribute when constructed.
     model_name = None 
 
-    model = None
+    model = None # model object
 
     def __init__(self, **args):
         super(ModelController, self).__init__(**args)
@@ -100,17 +118,31 @@ class ModelController(Controller):
         if data is None: self.serve_404(request, response)
         return self.serve_json(response, data)
 
-    def page(self, tdata, request, response):
-        pass
+    def index(self, tdata, request, response):
+        """ Generic handler for retrieving paginated lists of a collection """
 
+        args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
+        for k in ['limit', 'order']:
+            if k in args: args[k] = int(args[k])
+        # pass off actual querying of model to specific ModelController
+        items = self.page(tdata, **args)
+        return self.serve_json(response, items)
+
+    # this can be overridden in derived classes to add behavior that doesn't belong in the model
+    def page(self, tdata, **args):
+        return self.model.page({}, tdata.user, **args)
+
+@Controllers.register
 class Expr(ModelController):
     model_name = 'Expr'
 
+@Controllers.register
 class User(ModelController):
     model_name = 'User'
 
-# convenience class for instantiating all da controllers at once
-class Controllers(object):
-    def __init__(self, server_env):
-        for k in [Expr, User]:
-            setattr(self, k.__name__.lower(), k(**server_env))
+# maybe make this inherit from ModelController if based off a MongoDB
+# collection, otherwise if implemented with Elastic Search or similar, it
+# should stay like this.
+@Controllers.register
+class Search(Controller):
+    pass
