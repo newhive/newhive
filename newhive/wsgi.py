@@ -65,7 +65,7 @@ jinja_env.globals.update({
 ##############################################################################
 #                          newhive server setup                              #
 ##############################################################################
-db = newhive.state.Database(config, assets=hive_assets)
+db = newhive.state.Database(config)
 server_env = {
      'db': db
     ,'jinja_env': jinja_env
@@ -248,7 +248,6 @@ def handle(request): # HANDLER
         ,user_is_owner = request.is_owner
         ,listeners = owner.starrer_page()
     )
-
     if parts[0] == 'profile': return controllers['community'].index(request, response)
     if parts[0] == 'expressions': return app.redirect(response, owner.url)
     if config.debug_mode and request.path == 'robots.txt': return app.robots(request, response)

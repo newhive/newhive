@@ -21,6 +21,11 @@ body #content { top: 50px; }
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;
 }
+#feed {
+  margin-left:auto;
+  margin-right:auto;
+  width:500px;
+}
 #left_column {
   float: left; 
   width: $left_column_width;

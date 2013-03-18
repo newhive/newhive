@@ -459,7 +459,7 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_network(self, spec={}, limit=40, page=None, **args):
+    def feed_network(self, spec={}, limit=40, at=None, **args):
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
                 'class_name': {'$in': ['NewExpr', 'Broadcast']}
@@ -475,14 +475,14 @@ class User(HasSocial):
         # In some cases we have an expression but no feed item to page relative
         # to.  In this case, look up the most recent appropriate feed item with
         # that expression as entity
-        if is_mongo_key(page):
-            feed_start = list( self.feed_search({'entity': page, '$or': or_clause },
+        if is_mongo_key(at):
+            feed_start = list( self.feed_search({'entity': at, '$or': or_clause },
                     viewer=args['viewer'], limit=1) )
-            if len( feed_start ): page = feed_start[0]['created']
-            else: page = None
+            if len( feed_start ): at = feed_start[0]['created']
+            else: at = None
 
         # produces an iterable for all network feed items
-        res = self.feed_search({ '$or': or_clause }, auth='public', page=page, **args)
+        res = self.feed_search({ '$or': or_clause }, auth='public', at=at, **args)
         # groups feed items by ther expressions (entity attribute), and applies page limit
         results = Page(self.feed_group(res, limit, spec=spec))
         results.next = results[-1]['feed'][-1]['created'] if len(results) == limit else None
@@ -490,7 +490,7 @@ class User(HasSocial):
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-        res = self.db.Feed.page(spec, limit=0, sort='created', **args)
+        res = self.db.Feed.paginate(spec, limit=0, sort='created', **args)
         if auth: res = ifilter(lambda i: i.entity and i.entity.get('auth', auth) == auth, res)
         res = ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
         if limit: res = islice(res, limit)

@@ -303,3 +303,39 @@ class Expression(Community, PagingMixin):
                 new_tags = re.sub(tag, '', expr['tags'])
         expr.update(tags=new_tags, updated=False)
         return tag
+
+    def convert(self, request, response):
+        """
+        convert expression to an image (make a screenshot). depends on https://github.com/AdamN/python-webkit2png
+        """
+        eid = request.form.get('entity')
+        entity = self.db.Expr.fetch(eid)
+        if not entity: return self.serve_404(request, response)
+        
+        import werkzeug.urls
+        import subprocess
+        import uuid
+        from md5 import md5
+        import threading
+        import os
+        
+        def popen_with_callback(callback, args):
+            def run(callback, args):
+                subprocess.Popen(args).wait()
+                callback()
+                
+            threading.Thread(target=run, args=(callback, args)).start()
+                        
+        def process_callback():
+            with open(filename) as f:
+                file_res = self.db.File.create(dict(owner=request.requester.id, tmp_file=f, name='expr_screenshot', mime='image/png'))
+                entity.update(**{'screenshot' : {'file_id': file_res['_id']}})
+
+            os.remove(filename)
+            
+        link = werkzeug.urls.url_fix("http://%s:%d/%s/%s" % (config.server_name, config.plain_port, entity['owner_name'], entity['name']))
+        filename = "/tmp/%s.png" % md5(str(uuid.uuid4())).hexdigest()
+                
+        popen_with_callback(process_callback, ["webkit2png", link, "-o", filename]) #execute external command
+        
+        return {}    

@@ -118,7 +118,7 @@
     <div id='user_menu' class='menu feed_menu'>
       <a href='{{ user.url }}'><div class='menu_item default'>Expressions</div></a>
       <div class='thumbs'>
-        {% for expr in user.expr_page(limit=5) -%}
+        {% for expr in user.expr_page(limit=5, viewer=user) -%}
           <a href='{{ expr.url }}?user={{ user.name }}'><img src='{{ expr.thumb }}' class='thumb'></a>
         {%- endfor %}
       </div>

@@ -27,9 +27,11 @@ api = Api(server_env)
 routes = Map([
 	Rule('/api/expr', endpoint=(api.expr, 'index')),
     Rule('/api/expr/<id>', endpoint=(api.expr, 'fetch')),
+    Rule('/api/expr/thumb/<id>', endpoint=(api.expr, 'thumb')),
 	Rule('/api/user', endpoint=(api.user, 'index')),
     Rule('/api/user/<id>', endpoint=(api.user, 'fetch')),
     Rule('/api/search', endpoint=(api.search, 'search')),
+    Rule('/home/network', endpoint=(api.community, 'home_feed'))
 ])
 
 @Request.application
