@@ -152,11 +152,13 @@ class ModelController(Controller):
 
 @Controllers.register
 class Community(Controller,PagingMixin):
-    def home_feed(self, tdata, request, response, id=None):
+    def home_feed(self, tdata, request, response, username, id=None):
         def link_args(response, args): response.context.update( args = args )
         if (request.path_parts, 1): response.context['title'] = 'Network'
         link_args(response, {'q': '#Network'})
-        query = tdata.user.feed_network()
+        cards = tdata.user.feed_network()
+        cards = map( lambda o: self.item_prepare(o, viewer=tdata.user), cards )
+        response.context['cards'] = cards
         return self.serve_loader_page('pages/community.html', tdata, request, response)
 
     def index(self, tdata, request, response):

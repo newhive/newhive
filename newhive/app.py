@@ -31,7 +31,7 @@ routes = Map([
 	Rule('/api/user', endpoint=(api.user, 'index')),
     Rule('/api/user/<id>', endpoint=(api.user, 'fetch')),
     Rule('/api/search', endpoint=(api.search, 'search')),
-    Rule('/home/network', endpoint=(api.community, 'home_feed'))
+    Rule('/<string:username>/profile/network', endpoint=(api.community, 'home_feed'))
 ])
 
 @Request.application

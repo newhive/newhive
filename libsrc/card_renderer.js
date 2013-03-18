@@ -18,6 +18,7 @@ define(['text/mustache',
             return {
                 renderCards: function(CARDS_JSON) {
                     if (!CARDS_JSON.cards) CARDS_JSON = {cards: CARDS_JSON};
+                    console.log('CARDS_JSON: ', CARDS_JSON.cards);
                     CARDS_JSON['getImgAsset'] = function() {
                         return function(asset, render) {
                             var imgURL = hive_asset_paths[asset];
