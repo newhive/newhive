@@ -79,7 +79,8 @@ class Controller(object):
         # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
         # the context is for passing to views to render a response.
         # The f dictionary of form fields may be left alone to mirror the request, or validated and adjusted
-        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url }
+        response.context = { 'f' : dict(request.form.items()), 'q' : request.args,
+            'url' : request.url, 'user': tdata.user }
 
         return (tdata, response)
 
@@ -118,6 +119,7 @@ class ModelController(Controller):
         if data is None: self.serve_404(request, response)
         return self.serve_json(response, data)
 
+    # this should not be overridden, in order to present a consistent pagination API
     def index(self, tdata, request, response):
         """ Generic handler for retrieving paginated lists of a collection """
 
