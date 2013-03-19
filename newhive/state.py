@@ -736,12 +736,14 @@ class Expr(HasSocial):
     class Collection(Collection):
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
-        def cards(self,  username, name): return self.find({'owner_name': username, 'name': name},
-            fields={ 'apps': 0, 'background': 0, 'text_index': 0, 'file_id': 0, 'images': 0 })
+        def cards(self,  spec, **opts):
+            opts.setdefault('fields', { 'apps': 0, 'background': 0, 'text_index':
+                0, 'file_id': 0, 'images': 0 })
+            return self.search(spec, **opts)
 
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0 }
-            if meta: fields.update({ 'apps': 0, 'background': 0, 'file_id', 'images': 0 })
+            if meta: fields.update({ 'apps': 0, 'background': 0, 'file_id': 0, 'images': 0 })
             return super(Expr.Collection, self).fetch(key, keyname, fields=fields)
 
         def popular_tags(self):
