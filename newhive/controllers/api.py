@@ -154,9 +154,6 @@ class ModelController(Controller):
         if data is None: self.serve_404(request, response)
         return self.serve_json(response, data)
 
-<<<<<<< HEAD
-    # this should not be overridden, in order to present a consistent pagination API
-=======
 @Controllers.register
 class Community(Controller,PagingMixin):
     def home_feed(self, tdata, request, response, username, id=None):
@@ -168,7 +165,7 @@ class Community(Controller,PagingMixin):
         response.context['cards'] = cards
         return self.serve_loader_page('pages/community.html', tdata, request, response)
 
->>>>>>> v2-templates
+    # this should not be overridden, in order to present a consistent pagination API
     def index(self, tdata, request, response):
         """ Generic handler for retrieving paginated lists of a collection """
 
