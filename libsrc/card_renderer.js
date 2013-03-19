@@ -2,7 +2,8 @@ define(['text/mustache',
         'mustache!templates/card_master.html',
         'mustache!templates/expr_card.html',
         'mustache!templates/feed_card.html',
-        'mustache!templates/user_card.html'],
+        'mustache!templates/user_card.html',
+        'js!browser/zepto'],
     function(Mustache,masterCardTempl, exprCardTempl, feedCardTempl, userCardTempl) {
         var partials = {
             'expr_card': exprCardTempl,
