@@ -118,6 +118,9 @@ class Controller(object):
     def serve_html(self, response, html):
         return self.serve_data(response, 'text/html; charset=utf-8', html)
 
+    def serve_page(self, tdata, response, template):
+        return self.serve_html(response, self.render_template(tdata, response, template))
+
     def serve_json(self, response, val, as_text = False):
         """ as_text is used when content is received in an <iframe> by the client """
         return self.serve_data(response, 'text/plain' if as_text else 'application/json', json.dumps(val))
@@ -130,15 +133,6 @@ class Controller(object):
         return self.serve_json(response, {
             'error': 404
         })
-
-@Controllers.register
-class Community(Controller,PagingMixin):
-    def home_feed(self, tdata, request, response, id=None):
-        def link_args(response, args): response.context.update( args = args )
-        if (request.path_parts, 1): response.context['title'] = 'Network'
-        link_args(response, {'q': '#Network'})
-        query = tdata.user.feed_network()
-        return self.serve_loader_page('pages/community.html', tdata, request, response)
 
 class ModelController(Controller):
     """ Base class for all controllers tied to one of our DB collections """
@@ -174,6 +168,18 @@ class ModelController(Controller):
     # this can be overridden in derived classes to add behavior that doesn't belong in the model
     def page(self, tdata, **args):
         return self.model.page({}, tdata.user, **args)
+
+@Controllers.register
+class Community(Controller,PagingMixin):
+    def home_feed(self, tdata, request, response, id=None):
+        def link_args(response, args): response.context.update( args = args )
+        if (request.path_parts, 1): response.context['title'] = 'Network'
+        link_args(response, {'q': '#Network'})
+        query = tdata.user.feed_network()
+        return self.serve_loader_page('pages/community.html', tdata, request, response)
+
+    def profile(self, tdata, request, response, username=None):
+        return self.serve_page(tdata, response, 'pages/nav_stub.html')
 
 @Controllers.register
 class Expr(ModelController):
