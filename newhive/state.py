@@ -662,7 +662,8 @@ class User(HasSocial):
         dict.update(user, dict(
             url = self.url,
             thumb = self.get_thumb(70),
-            has_thumb = self.has_thumb
+            has_thumb = self.has_thumb,
+            logged_in = self.logged_in,
         ) )
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         return user
@@ -737,12 +738,12 @@ class Expr(HasSocial):
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
         def cards(self,  spec, **opts):
-            opts.setdefault('fields', { 'apps': 0, 'background': 0, 'text_index':
-                0, 'file_id': 0, 'images': 0 })
+            opts.setdefault('fields', { 'apps': 0, 'background': 0,
+                'text_index': 0, 'title_index': 0, 'file_id': 0, 'images': 0  })
             return self.search(spec, **opts)
 
         def fetch(self, key, keyname='_id', meta=False):
-            fields = { 'text_index': 0 }
+            fields = { 'text_index': 0, 'title_index': 0 }
             if meta: fields.update({ 'apps': 0, 'background': 0, 'file_id': 0, 'images': 0 })
             return super(Expr.Collection, self).fetch(key, keyname, fields=fields)
 
