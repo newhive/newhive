@@ -741,7 +741,7 @@ class Expr(HasSocial):
 
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0 }
-            if meta: fields.update({ 'apps': 0, 'background': 0, 'file_id', 'images': 0 })
+            if meta: fields.update({ 'apps': 0, 'background': 0, 'file_id': 0, 'images': 0 })
             return super(Expr.Collection, self).fetch(key, keyname, fields=fields)
 
         def popular_tags(self):
@@ -992,7 +992,27 @@ class Expr(HasSocial):
     public = property(lambda self: self.get('auth') == "public")
 
     def client_view(self, viewer=None):
-        return self
+        counts = dict([ ( k, v.get('count', 0) ) for
+            k, v in self.get('analytics', {}).iteritems() ])
+        counts['Views'] = self.views
+        counts['Comment'] = self.comment_count
+
+        # if expr.auth_required(viewer, password):
+        expr = {}
+        dict.update(expr, {
+            'id': self.id,
+            'thumb': self.get_thumb(),
+            'owner': self.owner.client_view(viewer=viewer),
+            'counts': counts,
+            'url': self.url,
+            'title': self.get('title')
+            # 'auth_required': auth_required
+        })
+
+        if viewer and viewer.is_admin:
+            dict.update(expr, { 'featured': self.is_featured })
+
+        return expr
 
     @property
     def tag_string(self):

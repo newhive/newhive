@@ -39,6 +39,44 @@ class Controller(object):
         (tdata, response) = self.pre_process(request)
         return getattr(self, handler)(tdata, request, response, **args)
 
+    # destructively prepare state.Expr for client consumption
+    def item_prepare(self, item, viewer=None, password=None):
+        if type( item ) == state.Expr:
+            expr = item
+        else: return item
+
+        counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
+            k, v in expr.get('analytics', {}).iteritems() ])
+        counts['Views'] = large_number(expr.views)
+        counts['Comment'] = large_number(expr.comment_count)
+
+        # check if auth is required so we can then strip password
+        auth_required = expr.auth_required()
+        if expr.auth_required(viewer, password):
+            for key in ['password', 'thumb', 'thumb_file_id']: expr.pop(key, None)
+            dict.update(expr, {
+                 'tags': ''
+                ,'background': {}
+                ,'apps': []
+                ,'title': '[Private]'
+                ,'tags_index': []
+            })
+
+        dict.update(expr, {
+            'id': expr.id,
+            'thumb': expr.get_thumb(),
+            'owner': expr.owner.client_view(viewer=viewer),
+            'counts': counts,
+            'url': expr.url,
+            'auth_required': auth_required,
+            'updated_friendly': friendly_date(expr['updated'])
+        })
+
+        if viewer and viewer.is_admin:
+            dict.update(expr, { 'featured': expr.is_featured })
+
+        return expr
+
     def pre_process(self, request):
         """ Do necessary stuffs for every request, specifically:
                 * Construct Response and TransactionData objects.
@@ -54,29 +92,18 @@ class Controller(object):
         # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
         # the context is for passing to views to render a response.
         # The f dictionary of form fields may be left alone to mirror the request, or validated and adjusted
-        response.context = { 'f' : dict(request.form.items()), 'q' : request.args,
-            'url' : request.url, 'user': tdata.user }
-
+        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url,
+                            'home_url': tdata.user.get_url(), 'user': tdata.user, 'server_url': abs_url(),
+                            'facebook_app_id': config.facebook_app_id, 'secure_server': abs_url(secure = True),
+                            'server_name': config.server_name, 'debug': config.debug_mode, 
+                            'content_domain': abs_url(domain = config.content_domain),
+                            'beta_tester': config.debug_mode or tdata.user.get('name') in config.beta_testers}
+        request.path_parts = request.path.split('/')
         return (tdata, response)
     
     def render_template(self, tdata, response, template):
         context = response.context
-        from newhive.controllers.shared import ui
-        context.update(
-             home_url = tdata.user.get_url()
-            ,user = tdata.user
-            ,client_user = tdata.user.client_view()
-            ,admin = tdata.user.is_admin
-            ,beta_tester = config.debug_mode or tdata.user.get('name') in config.beta_testers
-            ,server_url = abs_url()
-            ,secure_server = abs_url(secure = True)
-            ,server_name = config.server_name
-            ,content_domain = abs_url(domain = config.content_domain)
-            ,debug = config.debug_mode
-            ,ui = ui
-            ,template = template
-            ,facebook_app_id = config.facebook_app_id
-            )
+        context.update(template = template)
         if tdata.user.flagged('fb_connect_dialog'):# and not tdata.user.has_facebook:
             dia_opts = """{
                 open: function(){
@@ -154,21 +181,16 @@ class ModelController(Controller):
         if data is None: self.serve_404(request, response)
         return self.serve_json(response, data)
 
-<<<<<<< HEAD
-    # this should not be overridden, in order to present a consistent pagination API
-=======
+# this should not be overridden, in order to present a consistent pagination API
 @Controllers.register
-class Community(Controller,PagingMixin):
+class Community(Controller):
     def home_feed(self, tdata, request, response, username, id=None):
         def link_args(response, args): response.context.update( args = args )
-        if (request.path_parts, 1): response.context['title'] = 'Network'
-        link_args(response, {'q': '#Network'})
         cards = tdata.user.feed_network()
-        cards = map( lambda o: self.item_prepare(o, viewer=tdata.user), cards )
+        cards = map(lambda o: o.client_view(),cards)
         response.context['cards'] = cards
         return self.serve_loader_page('pages/community.html', tdata, request, response)
 
->>>>>>> v2-templates
     def index(self, tdata, request, response):
         """ Generic handler for retrieving paginated lists of a collection """
 
@@ -182,16 +204,7 @@ class Community(Controller,PagingMixin):
     # this can be overridden in derived classes to add behavior that doesn't belong in the model
     def page(self, tdata, **args):
         return self.model.page({}, tdata.user, **args)
-
-@Controllers.register
-class Community(Controller,PagingMixin):
-    def home_feed(self, tdata, request, response, id=None):
-        def link_args(response, args): response.context.update( args = args )
-        if (request.path_parts, 1): response.context['title'] = 'Network'
-        link_args(response, {'q': '#Network'})
-        query = tdata.user.feed_network()
-        return self.serve_loader_page('pages/community.html', tdata, request, response)
-
+        
     def profile(self, tdata, request, response, username=None):
         return self.serve_page(tdata, response, 'pages/nav_stub.html')
 
@@ -204,6 +217,8 @@ class Expr(ModelController):
     import subprocess
     import os
     model_name = 'Expr'
+    def fetch(self):
+        pass
     def thumb(self, tdata, request, response, id=None):
         """
         convert expression to an image (make a screenshot). depends on https://github.com/AdamN/python-webkit2png
