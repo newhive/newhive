@@ -181,7 +181,6 @@ class ModelController(Controller):
         if data is None: self.serve_404(request, response)
         return self.serve_json(response, data)
 
-# this should not be overridden, in order to present a consistent pagination API
 @Controllers.register
 class Community(Controller):
     def home_feed(self, tdata, request, response, username, id=None):

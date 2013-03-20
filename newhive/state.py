@@ -484,7 +484,7 @@ class User(HasSocial):
         # produces an iterable for all network feed items
         res = self.feed_search({ '$or': or_clause }, auth='public', at=at, **args)
         # groups feed items by ther expressions (entity attribute), and applies page limit
-        results = Page(self.feed_group(res, limit, spec=spec))
+        results = Page(self.feed_group(res, limit, spec=spec).cards())
         results.next = results[-1]['feed'][-1]['created'] if len(results) == limit else None
         return results
 
@@ -662,7 +662,8 @@ class User(HasSocial):
         dict.update(user, dict(
             url = self.url,
             thumb = self.get_thumb(70),
-            has_thumb = self.has_thumb
+            has_thumb = self.has_thumb,
+            logged_in = self.logged_in,
         ) )
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         return user
@@ -736,11 +737,13 @@ class Expr(HasSocial):
     class Collection(Collection):
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
-        def cards(self,  username, name): return self.find({'owner_name': username, 'name': name},
-            fields={ 'apps': 0, 'background': 0, 'text_index': 0, 'file_id': 0, 'images': 0 })
+        def cards(self,  spec, **opts):
+            opts.setdefault('fields', { 'apps': 0, 'background': 0,
+                'text_index': 0, 'title_index': 0, 'file_id': 0, 'images': 0  })
+            return self.search(spec, **opts)
 
         def fetch(self, key, keyname='_id', meta=False):
-            fields = { 'text_index': 0 }
+            fields = { 'text_index': 0, 'title_index': 0 }
             if meta: fields.update({ 'apps': 0, 'background': 0, 'file_id': 0, 'images': 0 })
             return super(Expr.Collection, self).fetch(key, keyname, fields=fields)
 
@@ -992,28 +995,29 @@ class Expr(HasSocial):
     public = property(lambda self: self.get('auth') == "public")
 
     def client_view(self, viewer=None):
-        counts = dict([ ( k, v.get('count', 0) ) for
-            k, v in self.get('analytics', {}).iteritems() ])
-        counts['Views'] = self.views
-        counts['Comment'] = self.comment_count
 
+        counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
+            k, v in self.get('analytics', {}).iteritems() ])
+        counts['Views'] = large_number(expr.views)
+        counts['Comment'] = large_number(expr.comment_count)
         # if expr.auth_required(viewer, password):
         expr = {}
         dict.update(expr, {
             'id': self.id,
-            'thumb': self.get_thumb(),
-            'owner': self.owner.client_view(viewer=viewer),
+            'thumb': expr.get_thumb(),
+            'owner': expr.owner.client_view(viewer=viewer),
             'counts': counts,
             'url': self.url,
-            'title': self.get('title')
-            # 'auth_required': auth_required
+            'auth_required': auth_required,
+            'title': self.title
         })
 
         if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': self.is_featured })
 
         return expr
-
+        # return self
+        
     @property
     def tag_string(self):
         return ' '.join(["#" + tag for tag in self.get('tags_index', [])])
