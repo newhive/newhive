@@ -10,7 +10,8 @@
       >{{ user.notification_count }}</div
     ></div
   {{/if}}
-  {{#unless s.user.logged_in}}
+
+  {{#unless user.logged_in}}
     ><div id='sign_up_btn' class='text_btn center text hoverable black_active'
       ><span class='text'>Sign up</span></div
     ><div id='login_btn' class='text_btn center hoverable black_active'>Log In</div

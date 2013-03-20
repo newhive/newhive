@@ -397,12 +397,7 @@ class User(HasSocial):
         return self
 
     @property
-    def notification_count(self):
-        count = self.get('notification_count')
-        if count == None:
-           count = len(self.feed)
-           self['notification_count'] = count
-        return count
+    def notification_count(self): return self.get('notification_count', 0)
     def notification_count_reset(self): self.update(notification_count=0)
     def notify(self, feed_item):
         self.increment({'notification_count':1})
@@ -661,9 +656,10 @@ class User(HasSocial):
             'name', 'tags', 'updated', 'created', 'feed'] ) )
         dict.update(user, dict(
             url = self.url,
-            thumb = self.get_thumb(70),
+            thumb_70 = self.get_thumb(70),
             has_thumb = self.has_thumb,
             logged_in = self.logged_in,
+            notification_count = self.notification_count,
         ) )
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         return user

@@ -1,9 +1,11 @@
-define(
-    ['browser/jquery', 'text/mustache', 'mustache!templates/nav.html'],
-    function($, Mustache, navTempl) {
-        nav = Mustache.compile(navTempl);
-        return function(server_state){
-            $('body').append(nav({}));
-        }
+define([
+    'browser/jquery', 'text/handlebars', 'templates/context', 'text!templates/nav.html'
+], function($, template, context, navTempl) {
+    var nav = template.compile(navTempl);
+
+    function render(server_state){
+        $('body').append(nav(context));
     }
-);
+
+    return { render: render };
+});
