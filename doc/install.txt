@@ -1,0 +1,11 @@
+Python library dependencies
+    werkzeug pymongo boto oauth2 pil paramiko cssutils lxml webassets
+    urllib3 apiclient httplib2 oauth2client pytz brownie boto jinja2
+    simplejson envoy
+    pandas brownie google-api-python-client # for analytics
+
+Application dependencies (Ubuntu packages)
+	mongodb
+	ruby-sass
+	ruby-compass
+

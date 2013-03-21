@@ -1,8 +1,6 @@
 # database_host   = '10.190.202.249'  # database-1
 database_host   = '10.99.10.179'
 database        = 'test'
-#database        = 'hive'
-dev_prefix      = 'dev-1'
 
 # dev-1 credentials
 aws_id          = 'AKIAJSU3W7EYEO4ZZCNA'

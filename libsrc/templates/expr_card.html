@@ -1,0 +1,14 @@
+<div class='expr card flat-item border_right border_bottom with_hide {{card_classes}}' draggable='false'>
+    <h3>{{title}}</h3>
+    <img src="{{thumb}}"/>
+    <div>
+        <div class="expr-owner">
+            <img class="owner-thumb" src="{{owner.thumb}}"/>  by <strong>{{owner.name}}</strong>
+        </div>
+        <div class="expr-stats">
+            {{#getImgAsset}}skin/1/views_sm.png{{/getImgAsset}} {{counts.Views}}
+            {{#getImgAsset}}skin/1/like_highlight.png{{/getImgAsset}} {{counts.Star}}
+            {{#getImgAsset}}skin/1/discussion_highlight.png{{/getImgAsset}} {{counts.Comment}}
+        </div>
+    </div>
+</div>

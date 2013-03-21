@@ -7,15 +7,15 @@ import pymongo
 from brownie.datastructures import OrderedSet
 
 
-def lget(L, i, *default):
-    try: return L[i]
+def lget(l, i, *default):
+    try: return l[i]
     except: return default[0] if default else None
-def lset(L, i, e, *default):
+def lset(l, i, e, *default):
     default = default[0] if default else [None]
-    if i < len(L): L[i] = e
-    else: L.extend(default * (i - len(L)) + [e])
-def index_of(L, f):
-    for i, e in enumerate(L):
+    if i < len(l): l[i] = e
+    else: l.extend(default * (i - len(l)) + [e])
+def index_of(l, f):
+    for i, e in enumerate(l):
         if f(e): return i
     return -1
 
@@ -27,6 +27,28 @@ def dfilter(d, keys):
         if k in d: r[k] = d[k]
     return r
 def dupdate(d1, d2): return dict(d1.items() + d2.items())
+
+def dcast(d, type_schemas, filter=True):
+    """ Accepts a dictionary d, and type_schemas -- a list of tuples in these forms:
+            (dictionary_key, type_to) :: (str, type)
+            (dictionary_key, type_to, required) :: (str, type, bool)
+        For each tuple in type_schemas, dcast coerces the dictionary_key in d to the type_to
+            If type_to is None, no coercion is performed
+            If required is True, an exception is thrown if dictionary_key is not in d
+            In the case of a 2 tuple, no exception is thrown
+        returns new dictionary only containing keys found in type_schemas if filter is True
+            otherwise return a copy of d with the keys found in type_schemas coerced
+        throws ValueError
+    """
+    out = {} if filter else dict(d)
+    for schema in type_schemas:
+        key = schema[0]
+        type_to = schema[1]
+        required = lget(schema, 2, False)
+
+        if key in d: out[key] = type_to(d[key]) if type_to else d[key]
+        elif required: raise ValueError('key %s missing in dict' % (key))
+    return out
 
 
 def datetime_to_id(d):
@@ -45,11 +67,6 @@ def datetime_to_int(dt):
 def datetime_to_str(dt):
     return str(datetime_to_int(dt))
 
-def date_to_epoch(*args): return int(time.mktime(datetime(*args).timetuple()))
-
-def epoch_to_string(epoch_time):
-    return time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(epoch_time))
-
 def junkstr(length):
     """Creates a random base 62 string"""
 
@@ -57,8 +74,8 @@ def junkstr(length):
     chrs = chrange('0', '9') + chrange('A', 'Z') + chrange('a', 'z')
     return ''.join([chrs[random.randrange(0, 62)] for _ in range(length)])
 
-def lget(L, i, *default):
-    try: return L[i]
+def lget(l, i, *default):
+    try: return l[i]
     except: return default[0] if default else None
 
 def raises(e): raise e
@@ -224,9 +241,9 @@ def serializable_filter(dictionary):
             for key, val in dictionary.iteritems()
             if type(val) in [bool, str, int, float, tuple, unicode]}
 
-def count(L):
+def count(l):
     c = {}
-    for v in L: c[v] = c.get(v, 0) + 1
+    for v in l: c[v] = c.get(v, 0) + 1
     return sorted([(c[v], v) for v in c])
 
 class URL(object):
@@ -276,55 +293,11 @@ def local_date(offset=0):
     dt = datetime.now(tz)
     return dt.date() + pandas.DateOffset(days=offset)
 
-def friendly_date(then):
-    """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
-    if type(then) in [int, float]:
-      then = time_u(then)
-
-    now = datetime.utcnow()
-    dt = now - then
-    if dt.seconds < 60:
-        return "just now"
-    months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    s = months[then.month] + ' ' + str(then.day)
-    if then.year != now.year: s += ' ' + str(then.year)
-    if dt.days < 7:
-        if not dt.days:
-            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
-            else: (t, u) = (dt.seconds / 3600, 'hr')
-        else: (t, u) = (dt.days, 'day')
-        s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
-    return s
-
 def dates_to_spec(start, end=None, offset=None):
     """Return a mongodb spec dictionary that will match ids of objects created
     between date and date + offset"""
     end = end or start + offset
     return {'$gt': datetime_to_int(start), '$lte': datetime_to_int(end)}
-
-def friendly_log_scale(start, end=None, significands = None):
-    """
-    >>> friendly_log_scale(10)
-    [0, 1, 2, 5, 10]
-
-    >>> friendly_log_scale(500,2000)
-    [500, 1000, 2000]
-    """
-
-    if not significands: significands = [1,2,5]
-
-    if not end: start, end = (0, start)
-    rv = [0] if start is 0 else []
-
-    power = 0
-    while True:
-        for i in significands:
-            val = i * 10 ** power
-            if val > end:
-                return rv
-            if val >= start:
-                rv.append(val)
-        power += 1
 
 def un_camelcase(s): return re.sub(r'([A-Z])', r' \1', s)
 

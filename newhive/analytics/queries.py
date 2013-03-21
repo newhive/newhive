@@ -39,7 +39,7 @@ from newhive.analytics import functions
 from functions import dataframe_to_record, record_to_dataframe
 from newhive.analytics.ga import GAQuery, QueryResponse
 import newhive.utils
-from newhive.utils import local_date, dates_to_spec, friendly_log_scale
+from newhive.utils import local_date, dates_to_spec
 #from pandas.datetools import Day
 Day = pandas.datetools.Day
 
@@ -389,6 +389,30 @@ class UserImpressions(Query):
         data = pandas.Series([x['value']['views'] for x in results_collection.find()])
         users, bins = numpy.histogram(data, friendly_log_scale(1, data.max() * 10, [1]))
         return pandas.DataFrame.from_items([('lower', bins[:-1]), ('upper', bins[1:]), ('users', users)])
+
+def friendly_log_scale(start, end=None, significands = None):
+    """
+    >>> friendly_log_scale(10)
+    [0, 1, 2, 5, 10]
+
+    >>> friendly_log_scale(500,2000)
+    [500, 1000, 2000]
+    """
+
+    if not significands: significands = [1,2,5]
+
+    if not end: start, end = (0, start)
+    rv = [0] if start is 0 else []
+
+    power = 0
+    while True:
+        for i in significands:
+            val = i * 10 ** power
+            if val > end:
+                return rv
+            if val >= start:
+                rv.append(val)
+        power += 1
 
 
 if __name__ == "__main__":

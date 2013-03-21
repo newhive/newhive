@@ -87,7 +87,7 @@
       {% endif %}
       {% if not editing %}
         ><div id='create_btn' class='center hoverable black_active'
-          ><a href='{{ create }}' onclick='return require_login("create")'
+          ><a href='/edit' onclick='return require_login("create")'
             ><div class='text'>Create</div
             ><div id='create_icon' class='icon'></div
           ></a></div
@@ -147,7 +147,7 @@
       <a href='{{ user.url }}activity'><div class='menu_item'>Activity</div></a>
       <div class='bar'></div>
       <div class='thumbs'>
-        {% for expr in user.expr_page(limit=5) -%}
+        {% for expr in user.expr_page(limit=5, viewer=user) -%}
           <a href='{{ expr.url }}?user={{ user.name }}'><img src='{{ expr.thumb }}' class='thumb'></a>
         {%- endfor %}
       </div>

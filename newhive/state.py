@@ -1,8 +1,7 @@
-import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
+import re, pymongo, bson.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
 import operator as op
 from os.path import join as joinpath
 from md5 import md5
-from pymongo.connection import DuplicateKeyError
 from datetime import datetime
 from lxml import html
 from wsgiref.handlers import format_date_time
@@ -34,9 +33,8 @@ class Database:
     def add_collection(self, col):
         pass
 
-    def __init__(self, config, assets=None, db_name=None):
+    def __init__(self, config):
         self.config = config
-        self.assets = assets
 
         # initialize s3 connection
         if config.aws_id:
@@ -44,7 +42,7 @@ class Database:
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
-        self.mdb = self.con[db_name or config.database]
+        self.mdb = self.con[config.database]
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
         for col in self.collections:
@@ -145,17 +143,17 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None, filter=None):
-        page_is_id = is_mongo_key(page)
-        if page and not page_is_id:
-            page = float(page)
+    def paginate(self, spec, limit=40, at=None, sort='updated', order=-1, filter=None):
+        page_is_id = is_mongo_key(at)
+        if at and not page_is_id:
+            at = float(at)
 
         if type(spec) == dict:
             if page_is_id:
-                page_start = self.fetch(page)
-                page = page_start[sort] if page_start else None
+                page_start = self.fetch(at)
+                at = page_start[sort] if page_start else None
 
-            if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': page }
+            if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
             res = self.search(spec, sort=[(sort, order)])
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -168,10 +166,10 @@ class Collection(object):
 
         elif type(spec) == list:
             spec = uniq(spec)
-            assert( not page or page_is_id )
+            assert( not at or page_is_id )
 
             try:
-                start = spec.index(page) if page else -1
+                start = spec.index(at) if at else -1
                 end = start + limit * -order
                 if end > start:
                     if start >= len(spec): return Page([])
@@ -193,6 +191,11 @@ class Collection(object):
             res = Page(self.fetch(sub_spec))
             res.next = lget(sub_spec, -1)
             return res
+
+    # default implementation of pagination, intended to be overridden by
+    # specific model classes
+    def page(self, spec, viewer, sort='updated', **opts):
+        return self.paginate(spec, **opts)
 
     def count(self, spec={}): return self.search(spec).count()
 
@@ -244,21 +247,25 @@ class Entity(dict):
     @property
     def type(self): return self.__class__.__name__
 
-    def __init__(self, col, doc):
+    def __init__(self, collection, doc):
+        self.id = doc.get('id')
+        doc.pop('id', None) # Prevent id and _id attributes going into MongoDB
         dict.update(self, doc)
-        self.collection = col
-        self._col = col._col
-        self.db = col.db
+
+        self.collection = collection
+        self._col = collection._col
+        self.db = collection.db
         self.mdb = self.db.mdb
-        self.setdefault('_id', str(pymongo.objectid.ObjectId()))
-        self['id'] = self.id
 
     @property
     def id(self):
         return self['_id']
+    @id.setter
+    def id(self, v):
+        self['_id'] = v
 
     def create(self):
-        self['_id'] = self.id
+        if not self.id: self.id = str(bson.objectid.ObjectId())
         self['created'] = now()
         self['updated'] = now()
         self._col.insert(self, safe=True)
@@ -318,42 +325,6 @@ class HasSocial(Entity):
     @cached
     def broadcast_count(self):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
-
-@Database.register
-class KeyWords(Entity):
-    cname = 'key_words'
-    indexes = [ ['doc_type', 'weight', 'words'], 'doc']
-
-    class Collection(Collection):
-        def remove_entries(self, doc):
-            self._col.remove({'doc' : doc.id })
-
-        def set_words(self, doc, texts, updated):
-            """ Takes a dictionary of { weight : text } pairs """
-
-    #        assert(type(doc) in classes.values())
-            self.remove_entries(doc)
-            all = set()
-            for (weight, text) in texts.items():
-                if text:
-                    words = normalize(text)
-                    all = all.union(words)
-                    self._col.insert({ 'updated': updated, 'words':words, 'weight':weight, 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
-            self._col.insert({ 'updated': updated, 'words':list(all), 'weight':'all', 'doc':doc.id, 'doc_type':doc.__class__.__name__ })
-
-        def init(self, doc):
-            return classes[doc['doc_type']](doc)
-
-        def text_search(self, text, weight='all', doc_type='Expr', **args):
-            words = normalize(text)
-            cursor = self.search({'words': {'$all': words}, 'weight': weight, 'doc_type': doc_type}).sort([('updated', -1)])
-            return cursor
-
-        def search_page(self, text, doc_type=None, weight='all', **args):
-            words = normalize(text)
-            spec = {'words': {'$all': words}, 'weight': weight }
-            if doc_type: spec.update({'doc_type': doc_type})
-            return self.page(spec, **args)
 
 
 @Database.register
@@ -426,12 +397,7 @@ class User(HasSocial):
         return self
 
     @property
-    def notification_count(self):
-        count = self.get('notification_count')
-        if count == None:
-           count = len(self.feed)
-           self['notification_count'] = count
-        return count
+    def notification_count(self): return self.get('notification_count', 0)
     def notification_count_reset(self): self.update(notification_count=0)
     def notify(self, feed_item):
         self.increment({'notification_count':1})
@@ -488,7 +454,7 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_network(self, spec={}, limit=40, page=None, **args):
+    def feed_network(self, spec={}, limit=40, at=None, **args):
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
                 'class_name': {'$in': ['NewExpr', 'Broadcast']}
@@ -504,14 +470,14 @@ class User(HasSocial):
         # In some cases we have an expression but no feed item to page relative
         # to.  In this case, look up the most recent appropriate feed item with
         # that expression as entity
-        if is_mongo_key(page):
-            feed_start = list( self.feed_search({'entity': page, '$or': or_clause },
+        if is_mongo_key(at):
+            feed_start = list( self.feed_search({'entity': at, '$or': or_clause },
                     viewer=args['viewer'], limit=1) )
-            if len( feed_start ): page = feed_start[0]['created']
-            else: page = None
+            if len( feed_start ): at = feed_start[0]['created']
+            else: at = None
 
         # produces an iterable for all network feed items
-        res = self.feed_search({ '$or': or_clause }, auth='public', page=page, **args)
+        res = self.feed_search({ '$or': or_clause }, auth='public', at=at, **args)
         # groups feed items by ther expressions (entity attribute), and applies page limit
         results = Page(self.feed_group(res, limit, spec=spec))
         results.next = results[-1]['feed'][-1]['created'] if len(results) == limit else None
@@ -519,7 +485,7 @@ class User(HasSocial):
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-        res = self.db.Feed.page(spec, limit=0, sort='created', **args)
+        res = self.db.Feed.paginate(spec, limit=0, sort='created', **args)
         if auth: res = ifilter(lambda i: i.entity and i.entity.get('auth', auth) == auth, res)
         res = ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
         if limit: res = islice(res, limit)
@@ -583,7 +549,7 @@ class User(HasSocial):
             if file:
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
-        return self.get('profile_thumb') or self.db.assets.url('skin/1/thumb_person_mask.png')
+        return self.get('profile_thumb')
     thumb = property(get_thumb)
 
     def get_files(self):
@@ -690,8 +656,10 @@ class User(HasSocial):
             'name', 'tags', 'updated', 'created', 'feed'] ) )
         dict.update(user, dict(
             url = self.url,
-            thumb = self.get_thumb(70),
-            has_thumb = self.has_thumb
+            thumb_70 = self.get_thumb(70),
+            has_thumb = self.has_thumb,
+            logged_in = self.logged_in,
+            notification_count = self.notification_count,
         ) )
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         return user
@@ -699,9 +667,6 @@ class User(HasSocial):
     def delete(self):
         # Facebook Disconnect
         self.facebook_disconnect()
-
-        # Search Index Cleanup
-        self.db.KeyWords.remove_entries(self)
 
         # Feed Cleanup
         for feed_item in self.db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
@@ -767,12 +732,16 @@ class Expr(HasSocial):
 
     class Collection(Collection):
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
-        def meta(self,  username, name): return self.find({'owner_name': username, 'name': name},
-            fields={ 'apps': 0, 'background': 0, 'images': 0 })
+
+        def cards(self,  spec, **opts):
+            opts.setdefault('fields', { 'apps': 0, 'background': 0,
+                'text_index': 0, 'title_index': 0, 'file_id': 0, 'images': 0  })
+            return self.search(spec, **opts)
 
         def fetch(self, key, keyname='_id', meta=False):
-            opts = dict(fields={ 'apps': 0, 'background': 0, 'images': 0 }) if meta else {}
-            return super(Expr.Collection, self).fetch(key, keyname, **opts)
+            fields = { 'text_index': 0, 'title_index': 0 }
+            if meta: fields.update({ 'apps': 0, 'background': 0, 'file_id': 0, 'images': 0 })
+            return super(Expr.Collection, self).fetch(key, keyname, fields=fields)
 
         def popular_tags(self):
             map_js = Code("function () {"
@@ -796,10 +765,15 @@ class Expr(HasSocial):
             [(port, user, name)] = re.findall(config.server_name + r'/(:\d+)?(\w+)/(.*)$', url)
             return cls.named(user, name)
 
-        def page(self, spec, viewer=None, **opts):
-            if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-            es = super(Expr.Collection, self).page(spec, filter= viewer.can_view, **opts)
-            return es
+        def page(self, spec, viewer, sort='updated', **opts):
+            assert(sort in ['updated', 'random'])
+            rs = self.paginate(spec, filter=viewer.can_view, **opts)
+
+            # remove random static patterns from random index to make it really random
+            if sort == 'random':
+                for r in rs: r.update(random=random.random())
+
+            return rs
 
         def random(self):
             rand = random.random()
@@ -890,7 +864,6 @@ class Expr(HasSocial):
 
     def delete(self):
         self.owner.get_expr_count(force_update=True)
-        self.db.KeyWords.remove_entries(self)
         return super(Expr, self).delete()
 
     def increment_counter(self, counter):
@@ -969,9 +942,7 @@ class Expr(HasSocial):
             if file:
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
-        thumb = self.get('thumb')
-        if not thumb: thumb = self.db.assets.url('skin/1/thumb_0.png')
-        return thumb + '?v=2'
+        return self.get('thumb')
     thumb = property(get_thumb)
 
     def set_tld(self, domain):

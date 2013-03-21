@@ -28,43 +28,6 @@ function Funcs(fn, filter) {
     return callback;
 }
 
-function urlValidate(value, method) {
-    method = typeof(method) != 'undefined' ? method : "loose";
-    var match;
-    switch(method)
-    {
-    case "loose":
-        match = /(https?:\/\/)?(([0-9a-z]+\.)+[0-9a-z]{2,}\/?[^ ]*)/i.exec(value);
-        if (match) {
-            if (match[1] === undefined) {match[1] = "http://"}
-            return match[1] + match[2];
-        } else {
-            return false;
-        }
-    case "medium":
-        return /(https?:\/\/)?[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?/i.exec(value);
-    case "tight":
-        return /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.exec(value);
-    }
-}
-
-function autoLink(string) {
-    var re = /(\s|^)(https?:\/\/)?(([0-9a-z-]+\.)+[0-9a-z-]{2,3}(:\d+)?(\/[-\w.~:\/#\[\]@!$&'()*+,;=?]*?)?)([;,.?!]?(\s|$))/ig;
-    // groups 1        2             34                       5      6                                   7
-    // 1: this ends up excluding existing links <a href="foo.bar">foo.bar</a>
-    // 2: optional http(s):// becomes capture group 2
-    // 3: The url after the http://
-    // 5: Optional path
-    // 7: Trailing punctuation to be excluded from URL. Note that the
-    //    path is non greedy, so this will fail to correctly match a valid but
-    //    uncommon case of a URL with a query string that ends in punctuation.
-    function linkify(m, m1, m2, m3, m4, m5, m6, m7) {
-        var href = ((m2 === '') ? 'http://' : m2) + m3; // prepend http:// if it's not already there
-        return m1 + $('<a>').attr('href', href).text(m2 + m3).outerHTML() + m7; 
-    }
-    return string.replace(re, linkify);
-}
-
 function logAction(action, data){
     if (!data) data=false;
     $.ajax({
@@ -242,9 +205,12 @@ function propsin(o, plist) {
 }
 // Combination of foldl and foldl1
 function reduce(f, list, left) {
-    var L = $.extend([], list), left;
-    if(left === undefined) left = L.shift();
-    while(right = L.shift()) left = f(left, right);
+    var i = 0;
+    if(left === undefined) {
+        left = L[0];
+        i = 1;
+    }
+    for(; i < list.length; i++){ left = f(left, L[i]) }
     return left;
 }
 function zip(list1, list2) {
@@ -258,7 +224,7 @@ op = {
     '*' : function(a, b) { return a * b },
     '/' : function(a, b) { return a / b },
     '%' : function(a, b) { return a % b }
-}
+};
 function bound(num, lower_bound, upper_bound) {
     if(num < lower_bound) return lower_bound;
     if(num > upper_bound) return upper_bound;
@@ -299,72 +265,6 @@ var urlParams = {};
     });
 })();
 
-/*** puts alt attribute of input fields in to value attribute, clears
- * it when focused.
- * Adds hover events for elements with class='hoverable'
- * ***/
-$(function () {
-  $(".hoverable").each(function() { hover_add(this) });
-
-  // Cause external links and forms to open in a new window
-  update_targets();
-
-  if (! Modernizr.touch) {
-      $(window).resize(function(){
-          place_apps();
-      });
-  }
-  place_apps();
-
-  dialog_actions = {
-      comments: function(){ $('#comment_btn').click(); }
-      , email_invites: function(){ $('#hive_menu .email_invites').click(); }
-  };
-  if (urlParams.loadDialog) {
-      action = dialog_actions[urlParams.loadDialog];
-      if (action) {
-          action();
-      } else {
-          loadDialog("?dialog=" + urlParams.loadDialog);
-      }
-  }
-
-  if( dialog_to_show ){ showDialog(dialog_to_show.name, dialog_to_show.opts); };
-  if (new_fb_connect) {
-      _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
-      showDialog('#dia_fb_connect_landing');
-  };
-
-  var dia_referral = $('#dia_referral');
-  dia_referral.find('input[type=submit]').click(function(){
-      asyncSubmit(dia_referral.find('form'), function(){
-          dia_referral.find('.btn_dialog_close').click();
-          showDialog('#dia_sent_invites_thanks');
-      });
-      return false;
-  });
-});
-$(window).load(function(){setTimeout(place_apps, 10)}); // position background
-
-function update_targets(){
-    $('a, form').each(link_target);
-}
-function link_target(i, a) {
-    // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
-    var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
-    var a = $(a), href = a.attr('href') || a.attr('action');
-
-    // Don't change target if it's already set
-    if (a.attr('target')) return;
-
-    if(href && href.indexOf('http') === 0 && !re.test(href)) {
-        a.attr('target', '_blank');
-    } else if (href && href.indexOf('http') === 0 && re.test(href)) {
-        a.attr('target', '_top');
-    }
-}
-
-
 function center(e, inside, opts) {
     if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
 
@@ -402,305 +302,6 @@ function img_fill(img) {
     center(e, e.parent(), { minimum : false });
     return e;
 }
-
-function asyncSubmit(form, callback, opts) {
-    var opts = $.extend({ dataType : 'text' }, opts);
-    var url = opts.url || $(form).attr('action') || server_url;
-    $.post(url, $(form).serialize(), callback, opts.dataType);
-    return false;
-}
-
-function asyncUpload(opts) {
-    var target, form, opts = $.extend({
-        json : true, file_name : 'file', multiple : false, action: '/'
-        , start : noop, success : noop, error: noop, input_click: true
-        , data : { action : opts.post_action || 'file_create' } 
-    }, opts);
-
-    var onload = function() {
-        var frame = target.get(0);
-        if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
-        var resp = $(frame.contentDocument.body).text();
-        if(opts.json) {
-            try{
-                resp = JSON.parse(resp);
-            } catch (e) {
-                // JSON parsing will fail if server returns a 500
-                // Suppress this and call the error callback
-                opts.error(resp);
-            }
-            if(!opts.multiple){ resp = resp[0]; }
-        }
-        opts.success(resp);
-        form.remove();
-    }
-
-    var tname = 'upload' + Math.random();
-    form = $('<form>').css({ position: 'absolute', left: -1000 }).addClass('async_upload')
-        .attr({ method: 'POST', target: tname, action: opts.action, enctype: 'multipart/form-data' });
-    target = $("<iframe style='position : absolute; left : -1000px'></iframe>")
-        .attr('name', tname).appendTo(form).load(onload);
-    var input = $("<input type='file'>").attr('name', opts.file_name)
-        .change(function() { opts.start(); form.submit() }).appendTo(form);
-    Hive.profile_upload_input = input;
-    if(opts.multiple) { input.attr('multiple', 'multiple'); }
-    for (p in opts.data) {
-        $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
-    }
-    form.appendTo(document.body);
-    // It's a mystery why this timout is needed to make the upload dialog appear on some machines
-    if (opts.input_click) setTimeout(function() { input.click(); }, 50);
-    return form;
-}
-
-function hovers_active(state){
-    hover_add.disabled = !state;
-    hover_menu.disabled = !state;
-}
-
-function hover_url(url) {
-    var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
-    var i = $("<img style='display:none'>").attr('src', h);
-    $(document.body).append(i);
-    return h;
-}
-function hover_add(o) {
-    if(o.src) {
-        o.src_d = o.src;
-        o.src_h = hover_url(o.src_d);
-        $(o).mouseenter(function() { o.src = o.src_h }).
-            mouseleave(function() { if(!o.busy) o.src = o.src_d });
-    }
-    $(o).mouseenter(function() {
-            if(hover_add.disabled) return;
-            $(this).addClass('active');
-        })
-        .mouseleave(function() { if(!this.busy) $(this).removeClass('active'); });
-}
-
-hover_menu = function(handle, drawer, options) {
-    var handle = $(handle), drawer = $(drawer), o = { handle : handle, drawer : drawer },
-        menu_items = drawer.find('.menu_item'), close_timer = false,
-        opts = $.extend({
-             open: noop
-            ,close: noop
-            ,open_menu: function(){ drawer.show() }
-            ,close_menu: function(){ drawer.hide() }
-            ,sticky: false
-
-            // auto_close should be deprecated, it's never set to true in our project @2012-08-12
-            ,auto_close: false
-
-            // init_close_delay is the amount of time after which the menu
-            // closes on its own if the user doesn't trigger open or close
-            // through any mouse action, assuming `opened` is set to true
-            ,init_close_delay: 0
-
-            ,hover_close: true
-            ,open_delay: 0
-            ,close_delay: 300
-            ,offset_y: 10
-            ,focus_persist: true
-            ,hover: true
-            ,open_condition: function(){ return true; }
-            ,close_condition: function(){ return true; }
-            ,auto_height: true
-            ,default_item: drawer.find('.menu_item.default')
-            ,layout: true
-            ,min_y: 0
-            ,group: hover_menu
-            ,animate_close: false
-            ,animate_open: false
-            ,opened: false
-        }, options)
-    ;
-    if(!handle.length) log("hover_menu has no handle");
-    if(!drawer.length) log("hover_menu has no drawer");
-    if(!opts.group) opts.group = { menus: [] };
-    drawer.addClass('menu drawer');
-
-    o.menus = [];
-    o.opened = opts.opened;
-    o.sticky = opts.sticky;
-
-    o.delayed_close = function() {
-        opts.default_item.removeClass('active');
-        if(opts.hover_close && ! close_timer) {
-            close_timer = setTimeout(o.close, opts.close_delay);
-        }
-        if(opts.group.delayed_close) opts.group.delayed_close();
-    };
-    o.cancel_close = function(e) {
-        if(close_timer) {
-            clearTimeout(close_timer);
-            close_timer = false;
-        }
-    };
-
-    // for debugging
-    o.opts = function(){ return opts };
-    o.drawer = function(){ return drawer };
-
-    o.close = function(force) {
-        if (!opts.close_condition()) return;
-        close_timer = false;
-        if(!o.opened) return;
-
-        if(force) $.map(o.menus, function(m){ m.close(force) });
-        else if(o.sticky || $.inArray(true, $.map(o.menus, function(m){ return m.opened })) > -1) return;
-
-        if(opts.animate_close){
-            if(!opts.animate_open){
-                opts.animate_open = {};
-                for(var p in opts.animate_close) opts.animate_open[p] = drawer.css(p);
-            }
-            drawer.animate(opts.animate_close, 100);
-        } else opts.close_menu();
-        o.arrow_div.remove();
-
-        o.opened = false;
-        opts.close();
-        handle.get(0).busy = false;
-        handle.removeClass('active');
-
-        return o;
-    }
-
-    o.open = function() {
-        if(hover_menu.disabled || ! opts.open_condition()) return;
-        handle.addClass('active');
-        opts.default_item.addClass('active');
-        o.cancel_close();
-        if(o.opened) return;
-
-        o.opened = true;
-        if( opts.group.current && (opts.group.current != o) ) opts.group.current.close(true);
-        opts.group.current = o;
-        handle.get(0).busy = true;
-
-        if(opts.animate_open) drawer.animate(opts.animate_open, 100);
-        else opts.open_menu();
-
-        var css = {};
-        if( opts.layout ){
-            var hp = handle.parent().is(drawer.parent()) ? handle.position() : handle.offset();
-
-            // calculate x value for drawer if it was centered on handle position
-            css.left = hp.left + handle.outerWidth() / 2 - drawer.outerWidth() / 2;
-            // pick actual x value depending on centered x, drawer width, and window width
-            if( css.left + drawer.outerWidth() > $(window).width() - 10 )
-                css.left = hp.left + handle.outerWidth() - drawer.outerWidth(); // $(window).width() - drawer.outerWidth() - 10;
-            if( css.left < 10 ) css.left = hp.left; // css.left = 10;
-
-            // calculate y depending on handle position, drawer height, and window height
-            var above = hp.top > $(window).height() / 2,
-                space = above ? hp.top - 20 : $(window).height() - hp.top - handle.outerHeight();
-            if( opts.auto_height && drawer.outerHeight() > space ) {
-                var scroller = drawer.find('.items');
-                scroller.css( 'max-height', space - ( drawer.outerHeight() - scroller.outerHeight() ) );
-            }
-            css.top = above ? hp.top - opts.offset_y - drawer.outerHeight() :
-                hp.top + handle.outerHeight() + opts.offset_y;
-
-            // place arrow above or below handle
-            o.arrow_div = $('<img>').attr('src', asset( 'skin/nav/' +
-                ( above ? 'down' : 'up' ) + '_arrow.png' ) ).addClass('menu')
-                .css({ top: above ? hp.top - opts.offset_y - 1 : hp.top + handle.outerHeight() + 1,
-                    left: hp.left + handle.outerWidth() / 2 - 6 })
-                .appendTo( document.body );
-        }
-
-        drawer.css(css);
-
-        opts.open();
-        return o;
-    }
-
-    opts.group.menus.push(o);
-
-    if(opts.hover) {
-        handle.mouseenter( function(){ setTimeout( o.open, opts.open_delay ) })
-            .mouseleave( o.delayed_close );
-        drawer.mouseenter(o.cancel_close).mouseleave(o.delayed_close);
-    }
-    handle.click(function(){
-        if(o.opened && opts.default_item) opts.default_item.click();
-        o.open();
-    });
-    if(opts.focus_persist){
-        drawer.find('input[type=text],input[type=password],textarea').on('click keydown', function(){
-            o.sticky = true;
-        }).on('blur', function(){
-            o.sticky = false;
-            o.delayed_close();
-        }).on('focus', o.cancel_close);
-        drawer.mousedown(function(){ setTimeout(o.cancel_close, 1) });
-    }
-
-    menu_items.each(function(i, d){
-        var e = $(d);
-        e.mouseover(function(){ e.addClass('active'); });
-        e.mouseout(function(){ e.removeClass('active'); });
-    });
-
-    if(opts.auto_close) drawer.click(o.close);
-    if(opts.opened && opts.init_close_delay){ o.delayed_close(opts.init_close_delay); }
-
-    return o;
-}
-hover_menu.menus = [];
-
-var minimize = function(what, to, opts) {
-    var o = $.extend({ 'to' : $(to).addClass('active'), 'what' : $(what), 'duration' : 700, 'complete' : noop }, opts);
-    if(o.what.data('minimizing')) return;
-    o.what.data('minimizing', true);
-    o.init_css = { 'top' : o.what.css('top'), 'left' : o.what.css('left'), 'width' : o.what.css('width') || '',
-        'height' : o.what.css('height') || '', 'opacity' : o.what.css('opacity') };
-    o.reset = function() {
-        o.what.hide();
-        o.what.css(o.init_css);
-        o.what.removeData('minimizing');
-        o.complete();
-    };
-    var pos = o.to.offset();
-    if(o.what.css('position') == 'fixed') { pos.left -= $(window).scrollLeft(); pos.top -= $(window).scrollTop() }
-    o.what.animate({ 'left' : pos.left, 'top' : pos.top, 'width' : o.to.width(), 'height' : o.to.height(), 'opacity' : 0 }
-        , {'duration' : o.duration, complete : o.reset  });
-    setTimeout(function() { o.to.removeClass('active'); }, o.duration * 1.5);
-    return o;
-}
-
-// from http://www.quirksmode.org/js/cookies.html#script
-function createCookie(name,value,expiry) {
-    var date;
-    if (expiry) {
-        if (typeof(days) == "number"){
-            date = new Date();
-            date.setTime(date.getTime()+(expiry*24*60*60*1000));
-        } else {
-            date = expiry;
-        }
-        var expires = "; expires="+date.toGMTString();
-    }
-    else var expires = "";
-    var cookie = name + "=" + escape(value) + expires + "; path=/; domain=" + server_url.split('/')[2] + ";";
-    document.cookie = cookie;
-}
-
-function readCookie(name) {
-    var pairs = document.cookie.split(';');
-    for(var i=0; i < pairs.length; i++) {
-        pair = pairs[i].trim().split('=');
-        if(pair[0] == name && pair.length > 1) return unescape(pair[1]);
-    }
-    return null;
-}
-
-function eraseCookie(name) {
-    createCookie(name,"",-1);
-}
-
-function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};
 
 var positionHacks = Funcs(noop);
 var place_apps = function() {
@@ -818,7 +419,7 @@ Hive.login_submit = function(form){
 };
 
 Hive.logout_submit = function(that){
-    var form = $('#logout_form');
+    var form = $(that).parents('form');
     form.find('[name=url]').val(window.location.href);
     _gaq.push(['_trackEvent', 'logout', 'complete']);
     // Delay ensures that event is tracked
@@ -840,9 +441,16 @@ function relogin(success){
     });
 };
 
-var log = (window.console && console.log) ? function(msg){
-        console.log( msg );
-    } : noop;
+function callback_log(message){
+    return function(){
+        console.log(message);
+    };
+};
+
+var log_stub = function(m){
+    window.m = m;
+    console.log(m);
+};
 
 // debugging function logs time between events, grouped by label
 function time_since_last(label, extra_log) {
@@ -869,117 +477,6 @@ function time_since_last(label, extra_log) {
 //        noop();
 //    }
 //});
-
-Hive.AB_Test = {
-    tests: [],
-    ga_string: function(){
-        var map_function = function(el){
-            if (el.active) return el.id + el.chosen_case_id;
-        };
-        return $.map(Hive.AB_Test.tests, map_function).join(',');
-    },
-    add_test: function(opts){
-        // Required options (oxymoron I know, but named arguments are easier to work with than positional)
-        //   id:
-        //     short name used for cookie name and google analytics variable.
-        //     conventionally 3 characters all caps, e.g. `NAV`
-        //   start_date:
-        //     javascript Date object
-        //   duration:
-        //     number of days to run test
-        //   cases:
-        //     mapping of test cases of the form {caseID: definition}. caseID can be any
-        //     short alphanumeric, but is conventionally an integer (this goes in
-        //     the cookie and GA variable). See "Case definition" below
-        //
-        // Optional options (haha)
-        //   name:
-        //     descriptive string describing the test
-        //   auto_weight:
-        //     if set to true each test case has an equal probability of being chosen
-        //   logged_in_case:
-        //     value matching the caseID mapping to the case that should be
-        //     used for logged in users
-        //   logged_out_only:
-        //     if set to true the test will only apply to logged out users.
-        //     cookie and GA variable will not be set for logged in users
-        //
-        // Case definition
-        //   Each case is defined as an object literal with the following attributes
-        //     config_override:
-        //       function to update config document, gets called after test case is chosen
-        //       e.g. function(){ Hive.config.frame.nav.hideable = true; }
-        //     weight:
-        //       weighted probability of this case being chose. optional if `auto_weight` is true
-        //       these probabilities get normalized, so can really be any number
-        //     name:
-        //       optional descriptive string describing this case
-
-        var o = $.extend({}, opts);
-        var cookie_name = "AB_" + o.id;
-        // Stop execution if the current time is not in the test time range
-        o.end_date = new Date(o.start_date.getTime() + o.duration * 24 * 3600 * 1000);
-        var now = Date.now();
-        if (o.start_date > now || o.end_date < now) return;
-
-        // Register the test with Hive.AB_Test, used to set GA variables
-        Hive.AB_Test.tests.push(o);
-
-        // this function ensures that the sum of weights of cases = 1
-        function normalize_weights(){
-            var total = 0;
-            $.each(o.cases, function(i, test_case){
-                total += o.auto_weight ? 1 : test_case.weight;
-            });
-            $.each(o.cases, function(i, test_case){
-                var weight = o.auto_weight ? 1 : test_case.weight;
-                test_case.weight = weight / total;
-            });
-        };
-
-        function pick_random_case(){
-            normalize_weights();
-            var rand = Math.random();
-            var current = 0;
-            var chosen_id;
-            $.each(o.cases, function(i, test_case){
-                if (typeof(chosen_id) != "undefined") return;
-                current = current + test_case.weight;
-                if (current > rand) {
-                    chosen_id = i;
-                }
-            });
-            return chosen_id;
-        };
-
-        function assign_group(id){
-            o.chosen_case = o.cases[id];
-            o.chosen_case_id = id;
-            createCookie(cookie_name, id, o.end_date)
-        };
-
-        if (opts.logged_out_only && logged_in){
-            o.active = false;
-            return o;
-        } else {
-            o.active = true;
-        }
-
-        // Use case specified in querystring (for debugging), else use case for
-        // logged in user if set, else case defined in cookie if set, else pick
-        // a random case. Can't just use || with assignment because case_id
-        // could be 0
-        var case_id = URI(window.location.href).query(true)[cookie_name];
-        if (!case_id && case_id !== 0 && logged_in) case_id = o.logged_in_case;
-        if (!case_id && case_id !== 0) case_id = readCookie(cookie_name);
-        if (!case_id && case_id !== 0) case_id = pick_random_case();
-        assign_group(case_id);
-
-        o.chosen_case.config_override();
-
-        return o;
-    }
-};
 
 Hive.is_fullscreen = function(){
     return document.height == window.screen.height && document.width == window.screen.width;

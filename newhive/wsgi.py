@@ -2,14 +2,13 @@
 # Copyright 2011, Abram Clark & A Reflection Of LLC
 # thenewhive.com WSGI server version 0.2
 
-from newhive.controllers.shared import *
 from newhive import controllers as hivectrl
+from newhive.controllers.shared import ( no_zero, large_number, querystring,
+    length_bucket, friendly_date, epoch_to_string )
 import os, re, mimetypes, math, time, crypt, urllib, base64
 import datetime
 from os.path  import join
 from werkzeug import Request, Response, exceptions, url_unquote
-from werkzeug.routing import Map, Rule
-from werkzeug.exceptions import HTTPException, NotFound
 from urlparse import urlparse
 import jinja2
 
@@ -66,7 +65,7 @@ jinja_env.globals.update({
 ##############################################################################
 #                          newhive server setup                              #
 ##############################################################################
-db = newhive.state.Database(config, assets=hive_assets)
+db = newhive.state.Database(config)
 server_env = {
      'db': db
     ,'jinja_env': jinja_env
@@ -249,7 +248,6 @@ def handle(request): # HANDLER
         ,user_is_owner = request.is_owner
         ,listeners = owner.starrer_page()
     )
-
     if parts[0] == 'profile': return controllers['community'].index(request, response)
     if parts[0] == 'expressions': return app.redirect(response, owner.url)
     if config.debug_mode and request.path == 'robots.txt': return app.robots(request, response)

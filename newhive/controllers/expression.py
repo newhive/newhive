@@ -3,64 +3,72 @@ from newhive.controllers.shared import *
 from newhive.controllers.community import Community
 from newhive import utils, mail
 # TODO: handle this in model layer somehow
-from pymongo.connection import DuplicateKeyError
+from pymongo.errors import DuplicateKeyError
 
 class Expression(Community, PagingMixin):
+    # def edit_frame(self, request, response):
+    #     if not request.requester.logged_in: return self.redirect(response, AbsUrl())
+    #     if not request.is_secure: return self.redirect(response, AbsUrl(request.path))
+    #     expr_id = lget(request.path_parts, 1)
+    #     if not expr_id:
+    #         expr = self.db.Expr.new(dfilter(request.args, ['domain', 'name', 'tags']))
+    #         expr['title'] = 'Untitled'
+    #         expr['auth'] = 'public'
+    #         self.db.ActionLog.create(request.requester, "new_expression_edit")
+    #     else:
+    #         expr = self.db.Expr.fetch(expr_id)
+    #         if not expr: return self.serve_404(request, response)
+    #         self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
+    #     if expr.auth_required(response.user): return self.serve_forbidden(request)
+
+    #     #show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
+    #     #if show_help: request.requester.increment({'flags.default-instructional': 1})
+
+    #     response.context.update({
+    #          'title'     : 'Editing: ' + expr.get('title')
+    #         ,'expr'      : expr
+    #         #,'show_help' : show_help
+    #         ,'editing'   : True
+    #     })
+    #     return self.serve_page(response, 'pages/edit_tmp.html')
+
+    def create(self, request, response):
+        # create draft expression,
+        # return new id and success
+        return {}
+
+    def save(self, request, response):
+        pass
+
+
     def edit_frame(self, request, response):
-        if not request.requester.logged_in: return self.redirect(response, AbsUrl())
-        if not request.is_secure: return self.redirect(response, AbsUrl(request.path))
         expr_id = lget(request.path_parts, 1)
         if not expr_id:
-            expr = self.db.Expr.new(dfilter(request.args, ['domain', 'name', 'tags']))
+            expr = dfilter(request.args, ['domain', 'name', 'tags'])
             expr['title'] = 'Untitled'
             expr['auth'] = 'public'
             self.db.ActionLog.create(request.requester, "new_expression_edit")
-        else:
-            expr = self.db.Expr.fetch(expr_id)
-            if not expr: return self.serve_404(request, response)
-            self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
+            expr_id = expr.id
+
+        expr = self.db.Expr.fetch(expr_id, meta=True)
+        if not (request.requester.logged_in or expr): return self.serve_404(request, response)
         if expr.auth_required(response.user): return self.serve_forbidden(request)
 
-        #show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
-        #if show_help: request.requester.increment({'flags.default-instructional': 1})
-
         response.context.update({
-             'title'     : 'Editing: ' + expr.get('title')
-            ,'expr'      : expr
-            #,'show_help' : show_help
-            ,'editing'   : True
+            'title'     : 'Editing: ' + expr.get('title'),
+            'edit_url'  : abs_url(secure=True, domain=config.content_domain) + 'edit/' + expr_id
         })
-        return self.serve_page(response, 'pages/edit_tmp.html')
+        return self.serve_page(response, 'pages/edit_frame.html')
 
-    #def edit_frame(self, request, response):
-    #    expr = self.db.Expr.fetch(lget(request.path_parts, 1), meta=True)
-    #    if not (request.requester.logged_in or expr): return self.serve_404(request, response)
-    #    if expr.auth_required(response.user): return self.serve_forbidden(request)
-
-    #    show_help = request.requester.get('flags', {}).get('default-instructional', 0) < 1
-    #    if show_help: request.requester.increment({'flags.default-instructional': 1})
-
-    #    response.context.update({
-    #         'title'     : 'Editing: ' + expr.get('title')
-    #        ,'expr'      : expr
-    #        ,'show_help' : show_help
-    #        ,'editing'   : True
-    #    })
-    #    return self.serve_page(response, 'pages/edit_frame.html')
-
-    #def edit(self, request, response):
-    #    expr_id = lget(request.path_parts, 1)
-    #    if not expr_id:
-    #        expr = dfilter(request.args, ['domain', 'name', 'tags'])
-    #        expr['title'] = 'Untitled'
-    #        expr['auth'] = 'public'
-    #        self.db.ActionLog.create(request.requester, "new_expression_edit")
-    #    else:
-    #        expr = self.db.Expr.fetch(expr_id)
-    #        if not expr: return self.serve_404(request, response)
-    #        self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
-    #    response.context.update({ 'expr': expr })
-    #    return self.serve_page(response, 'pages/edit.html')
+    def edit(self, request, response):
+        pass
+        # expr_id = lget(request.path_parts, 1)
+        # else:
+        #    expr = self.db.Expr.fetch(expr_id)
+        #    if not expr: return self.serve_404(request, response)
+        #    self.db.ActionLog.create(request.requester, "existing_expression_edit", data={'expr_id': expr.id})
+        # response.context.update({ 'expr': expr })
+        # return self.serve_page(response, 'pages/edit.html')
 
     # Controller for all navigation surrounding an expression
     # Must only output trusted HTML
@@ -295,3 +303,39 @@ class Expression(Community, PagingMixin):
                 new_tags = re.sub(tag, '', expr['tags'])
         expr.update(tags=new_tags, updated=False)
         return tag
+
+    def convert(self, request, response):
+        """
+        convert expression to an image (make a screenshot). depends on https://github.com/AdamN/python-webkit2png
+        """
+        eid = request.form.get('entity')
+        entity = self.db.Expr.fetch(eid)
+        if not entity: return self.serve_404(request, response)
+        
+        import werkzeug.urls
+        import subprocess
+        import uuid
+        from md5 import md5
+        import threading
+        import os
+        
+        def popen_with_callback(callback, args):
+            def run(callback, args):
+                subprocess.Popen(args).wait()
+                callback()
+                
+            threading.Thread(target=run, args=(callback, args)).start()
+                        
+        def process_callback():
+            with open(filename) as f:
+                file_res = self.db.File.create(dict(owner=request.requester.id, tmp_file=f, name='expr_screenshot', mime='image/png'))
+                entity.update(**{'screenshot' : {'file_id': file_res['_id']}})
+
+            os.remove(filename)
+            
+        link = werkzeug.urls.url_fix("http://%s:%d/%s/%s" % (config.server_name, config.plain_port, entity['owner_name'], entity['name']))
+        filename = "/tmp/%s.png" % md5(str(uuid.uuid4())).hexdigest()
+                
+        popen_with_callback(process_callback, ["webkit2png", link, "-o", filename]) #execute external command
+        
+        return {}    

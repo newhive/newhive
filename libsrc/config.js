@@ -109,5 +109,3 @@ Hive.config = {
 //});
 
 
-_gaq.push(['_setCustomVar', 4, 'AB_javascript', Hive.AB_Test.ga_string()]);
-_gaq.push(['_trackPageview']);

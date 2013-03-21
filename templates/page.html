@@ -1,0 +1,13 @@
+{% extends "minimal.html" %}
+
+{% block head %}
+  {{ super() }}
+  <title>{{ ('NewHive' if not title else title)|e }}</title>
+  <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
+  <script>
+curl(['server/session'], function(m){
+	m.user = {{ client_user|json }};
+	m.server_url = {{ server_url|json }};
+});
+  </script>
+{% endblock %}
