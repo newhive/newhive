@@ -1392,18 +1392,31 @@ class Tags(Entity):
             exprdb = db.Expr.search({})
             counts = getTagCnt(exprdb).most_common()
             for v in counts:
-                data = {
-                'tag': v[0],
-                'count': v[1]
-                }
+                data = {'tag': v[0],'count': v[1]}
                 print data
                 super(Tags.Collection, self).create(data)
+            return None
+        def update_tags(self):
+            exprdb = self.db.Expr.search({})
+            counts = getTagCnt(exprdb).most_common()
+            for v in counts: 
+                row = self.fetch(v[0],keyname='tag')
+                if row != None:
+                    row['count'] = v[1]
+                    self.entity.update(row)
+                else:
+                    data = {'tag': v[0],'count': v[1]}
+                    print data
+                    super(Tags.Collection, self).create(data)
             return None
         def delete(self):
             while self.count()>0:
                 row = self.search({})[0]
                 self.entity.delete(row)
             return None
+        def autocomplete(self, string):
+            res=self.search({'tag': {'$regex': '^'+string}}, sort=[('count',-1)])
+            return res
 ## utils
 
 def get_id(entity_or_id):
@@ -1426,20 +1439,11 @@ def lget(L, i, *default):
    try: return L[i]
    except KeyError: return default[0] if default else None
 
-def tagFormat(str): 
-    return str.lower().strip()
-
 def tagList(row):
-    return filter(None,map(tagFormat, lget(row,'tags','').replace(' ',',').replace('#',',').split(',')))
+    return normalize(lget(row,'tags')) if lget(row,'tags') else None
 
 def getTagCnt(data):
     tagCnt = Counter()
     for row in data:
         tagCnt.update(tagList(row))
     return tagCnt
-
-def autocompleteTags(counts,str):
-    dictnew = {k:counts[k] for k in counts.keys() if k.startswith(str)}
-    results_with_counts = Counter(dictnew).most_common() if len(dictnew) < 5 else Counter(dictnew).most_common(5)
-    results = [t[0] for t in results_with_counts]
-    return results
