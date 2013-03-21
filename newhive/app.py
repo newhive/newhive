@@ -59,6 +59,8 @@ routes = Map([
     Rule('/api/search', endpoint=(api.search, 'search')),
     Rule('/<username>/profile', endpoint=(api.community, 'profile')),
     Rule('/<string:username>/profile/network', endpoint=(api.community, 'home_feed')),
+    Rule('/api/<string:username>/profile/network',
+        endpoint=(api.community, 'home_feed'),defaults={'as_json':True}),
     Rule('/<string:username>/profile/expressions/public', endpoint=(api.community, 'expressions_public')),
     Rule('/api/<string:username>/profile/expressions/public',
         endpoint=(api.community, 'expressions_public'),defaults={'as_json':True})

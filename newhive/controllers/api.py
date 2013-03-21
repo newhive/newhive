@@ -125,10 +125,14 @@ class ModelController(Controller):
 
 @Controllers.register
 class Community(Controller):
-    def home_feed(self, tdata, request, response, username, id=None):
+    def home_feed(self, tdata, request, response, username, id=None, as_json=False):
         cards = tdata.user.feed_network()
         cards = map(lambda o: o.client_view(),cards)
         response.context['cards'] = cards
+        if as_json:
+            return self.serve_json(response, {'cards': cards})
+        else:
+            return self.serve_loader_page('pages/community.html', tdata, request, response)
         return self.serve_loader_page('pages/community.html', tdata, request, response)
         
     def expressions_public(self, tdata, request, response, username, id=None, as_json=False):
