@@ -39,44 +39,6 @@ class Controller(object):
         (tdata, response) = self.pre_process(request)
         return getattr(self, handler)(tdata, request, response, **args)
 
-    # destructively prepare state.Expr for client consumption
-    def item_prepare(self, item, viewer=None, password=None):
-        if type( item ) == state.Expr:
-            expr = item
-        else: return item
-
-        counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
-            k, v in expr.get('analytics', {}).iteritems() ])
-        counts['Views'] = large_number(expr.views)
-        counts['Comment'] = large_number(expr.comment_count)
-
-        # check if auth is required so we can then strip password
-        auth_required = expr.auth_required()
-        if expr.auth_required(viewer, password):
-            for key in ['password', 'thumb', 'thumb_file_id']: expr.pop(key, None)
-            dict.update(expr, {
-                 'tags': ''
-                ,'background': {}
-                ,'apps': []
-                ,'title': '[Private]'
-                ,'tags_index': []
-            })
-
-        dict.update(expr, {
-            'id': expr.id,
-            'thumb': expr.get_thumb(),
-            'owner': expr.owner.client_view(viewer=viewer),
-            'counts': counts,
-            'url': expr.url,
-            'auth_required': auth_required,
-            'updated_friendly': friendly_date(expr['updated'])
-        })
-
-        if viewer and viewer.is_admin:
-            dict.update(expr, { 'featured': expr.is_featured })
-
-        return expr
-
     def pre_process(self, request):
         """ Do necessary stuffs for every request, specifically:
                 * Construct Response and TransactionData objects.
@@ -115,26 +77,6 @@ class Controller(object):
             tdata.user.unflag('fb_connect_dialog')
         context.setdefault('icon', self.asset('skin/1/logo.png'))
         context.setdefault('dialog_to_show', False)
-        import newhive.colors
-        from newhive.controllers.shared import ( friendly_date, length_bucket, no_zero, large_number )
-        from newhive.extra_json import extra_json
-        # TODO: Get rid of dependence on wsgi
-        from newhive.wsgi import hive_assets
-        import urllib
-        self.jinja_env.filters.update({
-            'asset_url': self.asset
-            ,'json': extra_json
-            ,'large_number': large_number
-            ,'length_bucket': length_bucket
-            ,'mod': lambda x, y: x % y
-            ,'no_zero': no_zero
-            ,'time': friendly_date
-            ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
-        })
-        self.jinja_env.globals.update({
-             'colors': newhive.colors.colors
-            ,'asset_bundle': hive_assets.asset_bundle
-        })
         return self.jinja_env.get_template(template).render(context)
 
     def serve_data(self, response, mime, data):
@@ -184,11 +126,19 @@ class ModelController(Controller):
 @Controllers.register
 class Community(Controller):
     def home_feed(self, tdata, request, response, username, id=None):
-        def link_args(response, args): response.context.update( args = args )
         cards = tdata.user.feed_network()
         cards = map(lambda o: o.client_view(),cards)
         response.context['cards'] = cards
         return self.serve_loader_page('pages/community.html', tdata, request, response)
+        
+    def expressions_public(self, tdata, request, response, username, id=None, as_json=False):
+        cards = tdata.user.expr_page(auth='public',viewer=tdata.user)
+        cards = map(lambda o: o.client_view(),cards)
+        response.context['cards'] = cards
+        if as_json:
+            return self.serve_json(response, {'cards': cards})
+        else:
+            return self.serve_loader_page('pages/community.html', tdata, request, response)
 
     def index(self, tdata, request, response):
         """ Generic handler for retrieving paginated lists of a collection """

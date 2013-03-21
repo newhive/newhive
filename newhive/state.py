@@ -484,7 +484,7 @@ class User(HasSocial):
         # produces an iterable for all network feed items
         res = self.feed_search({ '$or': or_clause }, auth='public', at=at, **args)
         # groups feed items by ther expressions (entity attribute), and applies page limit
-        results = Page(self.feed_group(res, limit, spec=spec).cards())
+        results = Page(self.feed_group(res, limit, spec=spec))
         results.next = results[-1]['feed'][-1]['created'] if len(results) == limit else None
         return results
 
@@ -995,21 +995,19 @@ class Expr(HasSocial):
     public = property(lambda self: self.get('auth') == "public")
 
     def client_view(self, viewer=None):
-
-        counts = dict([ ( k, large_number( v.get('count', 0) ) ) for
+        counts = dict([ ( k, v.get('count', 0) ) for
             k, v in self.get('analytics', {}).iteritems() ])
-        counts['Views'] = large_number(expr.views)
-        counts['Comment'] = large_number(expr.comment_count)
+        counts['Views'] = self.views
+        counts['Comment'] = self.comment_count
         # if expr.auth_required(viewer, password):
         expr = {}
         dict.update(expr, {
             'id': self.id,
-            'thumb': expr.get_thumb(),
-            'owner': expr.owner.client_view(viewer=viewer),
+            'thumb': self.get_thumb(),
+            'owner': self.owner.client_view(viewer=viewer),
             'counts': counts,
             'url': self.url,
-            'auth_required': auth_required,
-            'title': self.title
+            'title': self.get('title')
         })
 
         if viewer and viewer.is_admin:

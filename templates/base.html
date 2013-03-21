@@ -25,7 +25,7 @@ curl({
     debug_mode = {{ debug|json }},
     dialog_to_show = {{ dialog_to_show|json }},
     new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
-    user = {{ client_user | json }}, owner = {{ client_owner | json }},
+    user = {{ user.client_view() | json }}, owner = {{ client_owner | json }},
     content_domain = {{ content_domain | json }},
     error = {{ error | json }}
 ;
@@ -83,7 +83,7 @@ _gaq.push(['_trackPageview']);
 
   </script>
 </head>
-<body class="{% block body_classes %}{{'logged_in' if user.logged_in else "logged_out"}}{{' admin' if admin}} {% endblock %}" >
+<body class="{% block body_classes %}{{'logged_in' if user.logged_in else "logged_out"}}{{' admin' if user.is_admin}} {% endblock %}" >
  {% block main %}{% endblock %}
  {% block footer_scripts %}{% endblock %}
 </body>

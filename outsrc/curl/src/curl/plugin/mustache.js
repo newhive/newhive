@@ -36,7 +36,6 @@ define(['text/mustache'], function(Mustache){
 		};
 		x.send(null);
 	}
-
 	return {
 		'load': function (resourceId, require, callback, config) {
 			window.req = require;

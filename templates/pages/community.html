@@ -2,7 +2,8 @@
 
 {% if 'home' %}
   {% block meta %}
-  <meta name="description" content="{{description + " - " if description}}{{ui.intro_paragraph}}" />
+  <meta name="description" content="{{description + " - " if description}}We believe that your life is a blank canvas + you decide what goes on it.
+NewHive is your radically simple, DIY self publishing tool." />
     <meta property="og:image" content='{{ 'skin/1/logo_medium.png'|asset_url }}' />
   {% endblock meta %}
 {% endif %}
@@ -38,11 +39,18 @@
     {% if owner %}var owner_id = {{ owner.id | json }};{% endif %}
   </script>
   <script>
-  curl(['card_renderer'], function(cardRenderer) {
+  curl(['card_renderer','browser/client_ui'], function(cardRenderer, clientUI) {
+      // Bootstrap community page with first set of cards.
       cardRenderer().renderCards({{ cards|json }});
+      clientUI().wrapLinks();
   });
   </script>
 {% endblock %}
+
+{% block left_column %}
+<div><a data-load-route="/api/profile/network" href="/{{ user.username }}/profile/network">network</a></div>
+<div><a data-load-route="/api/psawaya/profile/expressions/public" href="/{{ user.username }}/profile/expressions/public">my public expressions</a></div>
+{% endblock left_column %}
     
 {% block right_column %}
   {% if require_login and not user.logged_in %}

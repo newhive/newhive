@@ -19,19 +19,14 @@ define(['text/mustache',
             return {
                 renderCards: function(CARDS_JSON) {
                     if (!CARDS_JSON.cards) CARDS_JSON = {cards: CARDS_JSON};
-                    console.log('CARDS_JSON: ', CARDS_JSON.cards);
-                    CARDS_JSON['getImgAsset'] = function() {
+                    CARDS_JSON['getAssetURL'] = function() {
                         return function(asset, render) {
                             var imgURL = hive_asset_paths[asset];
-                            return '<img src="' + imgURL + '"/>';
+                            return imgURL;
                         } 
                     };
                     var renderedHTML = compiledMaster(CARDS_JSON);
-                    $('#feed .feed-content').append($(renderedHTML));
-                    // for (var cardIdx = 0; cardIdx < CARDS_JSON.length; cardIdx++) {
-                    //     
-                    //     
-                    // }
+                    $('#feed .feed-content').html($(renderedHTML));
                 }
             };
         }
