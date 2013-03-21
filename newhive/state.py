@@ -4,6 +4,7 @@ from os.path import join as joinpath
 from md5 import md5
 from datetime import datetime
 from lxml import html
+from collections import Counter
 from wsgiref.handlers import format_date_time
 from newhive import social_stats, config
 from itertools import ifilter, islice
@@ -1382,6 +1383,27 @@ class ErrorLog(Entity):
 class Temp(Entity):
     cname = 'temp'
 
+@Database.register
+class Tags(Entity):
+    indexes = [('tag', {'unique':True})]
+    cname = 'tags'
+    class Collection(Collection):
+        def create(self, db, data={}):
+            exprdb = db.Expr.search({})
+            counts = getTagCnt(exprdb).most_common()
+            for v in counts:
+                data = {
+                'tag': v[0],
+                'count': v[1]
+                }
+                print data
+                super(Tags.Collection, self).create(data)
+            return None
+        def delete(self):
+            while self.count()>0:
+                row = self.search({})[0]
+                self.entity.delete(row)
+            return None
 ## utils
 
 def get_id(entity_or_id):
@@ -1399,3 +1421,25 @@ def tags_by_frequency(query):
     counts = [[tags[t], t] for t in tags]
     counts.sort(reverse=True)
     return counts
+
+def lget(L, i, *default):
+   try: return L[i]
+   except KeyError: return default[0] if default else None
+
+def tagFormat(str): 
+    return str.lower().strip()
+
+def tagList(row):
+    return filter(None,map(tagFormat, lget(row,'tags','').replace(' ',',').replace('#',',').split(',')))
+
+def getTagCnt(data):
+    tagCnt = Counter()
+    for row in data:
+        tagCnt.update(tagList(row))
+    return tagCnt
+
+def autocompleteTags(counts,str):
+    dictnew = {k:counts[k] for k in counts.keys() if k.startswith(str)}
+    results_with_counts = Counter(dictnew).most_common() if len(dictnew) < 5 else Counter(dictnew).most_common(5)
+    results = [t[0] for t in results_with_counts]
+    return results
