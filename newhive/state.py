@@ -4,7 +4,6 @@ from os.path import join as joinpath
 from md5 import md5
 from datetime import datetime
 from lxml import html
-from collections import Counter
 from wsgiref.handlers import format_date_time
 from newhive import social_stats, config
 from itertools import ifilter, islice
@@ -1385,7 +1384,7 @@ class Temp(Entity):
 
 @Database.register
 class Tags(Entity):
-    indexes = [('tag', {'unique':True})]
+    indexes = [('tag', {'unique':True}), ('counts', -1)]
     cname = 'tags'
     class Collection(Collection):
         def create(self, db, data={}):
@@ -1402,8 +1401,11 @@ class Tags(Entity):
             for v in counts: 
                 row = self.fetch(v[0],keyname='tag')
                 if row != None:
-                    row['count'] = v[1]
-                    self.entity.update(row)
+                    if row['count'] != v[1]:
+                        print row
+                        row['count'] = v[1]
+                        self.entity.update(row)
+                        print row
                 else:
                     data = {'tag': v[0],'count': v[1]}
                     print data
@@ -1435,15 +1437,3 @@ def tags_by_frequency(query):
     counts.sort(reverse=True)
     return counts
 
-def lget(L, i, *default):
-   try: return L[i]
-   except KeyError: return default[0] if default else None
-
-def tagList(row):
-    return normalize(lget(row,'tags')) if lget(row,'tags') else None
-
-def getTagCnt(data):
-    tagCnt = Counter()
-    for row in data:
-        tagCnt.update(tagList(row))
-    return tagCnt

@@ -5,6 +5,7 @@ import urlparse
 import werkzeug.urls
 import pymongo
 from brownie.datastructures import OrderedSet
+from collections import Counter
 
 
 def lget(l, i, *default):
@@ -91,6 +92,15 @@ def dfilter(d, keys):
 def normalize(ws):
     return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
         re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
+
+def tagList(row):
+    return normalize(lget(row,'tags')) if lget(row,'tags') else None
+
+def getTagCnt(data):
+    tagCnt = Counter()
+    for row in data:
+        tagCnt.update(tagList(row))
+    return tagCnt
 
 def abs_url(path='', secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
