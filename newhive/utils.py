@@ -1,3 +1,4 @@
+from __future__ import division
 import time, random, re, base64, copy, pytz, pandas
 from datetime import datetime
 from newhive import config
@@ -6,7 +7,8 @@ import werkzeug.urls
 import pymongo
 from brownie.datastructures import OrderedSet
 from collections import Counter
-
+import numpy
+import operator
 
 def lget(l, i, *default):
     try: return l[i]
@@ -333,3 +335,21 @@ def analytics_email_number_format(number):
     whole, remainder, zeros, decimal = re.match(r, str(number)).groups()
     if not decimal: return whole
     return whole + "." + zeros + decimal[:2]
+
+def simTags(tags,db):
+    coOccur = Counter()
+    sim = {}
+    for tag in tags:
+        tagFreq = db.Tags.fetch(tag, keyname='tag')['count']
+        res=db.Expr.search({'tag': {'$regex': '^'+tag+'$'}})
+        for row in res:
+            coOccur.update(tagList(row))
+        for t in tags:
+            del coOccur[t]
+        for cotag in coOccur.keys():
+            cotagFreq = db.Tags.fetch(cotag, keyname='tag')['count']
+            sim[','.join([tag,cotag])] = coOccur[cotag]/numpy.sqrt(tagFreq*cotagFreq)
+    sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
+    results = [t[0][1] for t in sim_sorted]
+    results_nodup = OrderedDict.fromkeys(results)
+    return list(results_nodup)[:5]
