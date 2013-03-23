@@ -6,7 +6,7 @@ import urlparse
 import werkzeug.urls
 import pymongo
 from brownie.datastructures import OrderedSet
-from collections import Counter
+from collections import Counter, OrderedDict
 import numpy
 import operator
 
@@ -337,18 +337,20 @@ def analytics_email_number_format(number):
     return whole + "." + zeros + decimal[:2]
 
 def simTags(tags,db):
+    r = '[^a-zA-Z\d]'
     coOccur = Counter()
     sim = {}
     for tag in tags:
         tagFreq = db.Tags.fetch(tag, keyname='tag')['count']
-        res=db.Expr.search({'tag': {'$regex': '^'+tag+'$'}})
+        res=db.Expr.search({'tags': {'$regex': r+tag+r}})
         for row in res:
             coOccur.update(tagList(row))
         for t in tags:
             del coOccur[t]
         for cotag in coOccur.keys():
             cotagFreq = db.Tags.fetch(cotag, keyname='tag')['count']
-            sim[','.join([tag,cotag])] = coOccur[cotag]/numpy.sqrt(tagFreq*cotagFreq)
+            if coOccur[cotag] > 2:
+                sim[(tag,cotag)] = coOccur[cotag]/numpy.sqrt(tagFreq+cotagFreq)
     sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
     results = [t[0][1] for t in sim_sorted]
     results_nodup = OrderedDict.fromkeys(results)

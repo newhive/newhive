@@ -1404,7 +1404,7 @@ class Tags(Entity):
                     if row['count'] != v[1]:
                         print row
                         row['count'] = v[1]
-                        self.entity.update(row)
+                        self._col.update({'tag':v[0]},row)
                         print row
                 else:
                     data = {'tag': v[0],'count': v[1]}
