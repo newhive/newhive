@@ -1,0 +1,25 @@
+<script src='stringjay.js'></script>
+<script>
+var template_str, template, data;
+
+function render(){
+	template_str = document.getElementById('templ').value;
+	var data_el = document.getElementById('data');
+	var rendered_el = document.getElementById('rendered');
+
+	data = JSON.parse(data_el.value);
+	//template = Stringjay.compile(template_str);
+	rendered_el.value = JSON.stringify(Stringjay._parse(template_str));
+}
+</script>
+
+<style>
+html, body { width: 100%; }
+textarea { padding: 10px; }
+</style>
+
+<textarea id='templ' style='position:absolute; left:0; top:0; width:48%; height:45%'></textarea>
+<textarea id='data' style='position:absolute; left:0; top:50%; width:48%; height:45%'>{}</textarea>
+<textarea id='rendered' style='position:absolute; right:0; top:0; width:48%; height:99%'></textarea>
+
+<button onclick='render()' style='position:absolute; left:50%; top:0; width:50px; height:40px; margin-left:-25px'>render</button>

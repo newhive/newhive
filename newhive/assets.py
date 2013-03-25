@@ -189,43 +189,9 @@ class HiveAssets(Assets):
 
         opts = { }
 
-        self.assets_env.register('edit.js',
-            'filedrop.js', 'upload.js', 'editor.js', 'jplayer/skin.js', 'codemirror.js',
-            filters='yui_js',
-            output='../lib/edit.js'
-            )
-
-        self.assets_env.register('google_closure.js', 'google_closure.js',
-            filters = 'yui_js',
-            output = '../lib/google_closure.js'
-            )
-
         self.assets_env.register('curl.js', 'curl.js',
             filters = 'yui_js',
             output = '../lib/curl.js'
-            )
-
-        self.assets_env.register('vendor.js',
-            'jquery_misc.js', 'rotate.js', 'hover.js', 'drag.js',
-            'dragndrop.js', 'jplayer/jquery.jplayer.js', 'Modernizr.js',
-            'URI.js', 'history/history.js', 'history/history.html4.js',
-            'history/history.adapter.jquery.js', 'jquery.transition.js',
-            'jserrlog.js',
-            filters='yui_js',
-            output='../lib/vendor.js'
-            )
-
-        self.assets_env.register('app.js',
-            'colors.js', 'compiled.asset_paths.js', 'util.js',  'ui/util.js',
-            'config.js', 'nav.js', 'navigator.js',
-            filters='yui_js',
-            output='../lib/app.js'
-            )
-
-        self.assets_env.register('harmony_sketch.js',
-            'harmony_sketch.js',
-            filters='yui_js',
-            output='../lib/harmony_sketch.js'
             )
 
         self.assets_env.register('admin.js',
@@ -272,24 +238,17 @@ class HiveAssets(Assets):
             debug=False
             )
 
-        self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
-        self.assets_env.register('edit.css', edit_scss, filters='yui_css', output='../lib/edit.css')
         self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
         self.assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
         self.final_bundles = [
-            'app.css',
-            'edit.css',
             'minimal.css',
             'email.css',
-            'expression.js',
-            'edit.js',
-            'google_closure.js',
-            'app.js',
-            'harmony_sketch.js',
+            'admin.css',
             'admin.js',
-            'admin.css']
+            'expression.js',
+            ]
 
     def urls_with_expiry(self):
         urls = self.urls()
