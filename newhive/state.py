@@ -787,14 +787,6 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
-        def update_tag_index(self):             
-            exprdb = self.db.Expr.search({})
-            for row in exprdb:
-                exprid = row['_id']
-                res = self.fetch(exprid)
-                self._col.update({'tags_index':tagList(res)},res)
-            return None
-
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()
@@ -1421,9 +1413,10 @@ class Tags(Entity):
                     super(Tags.Collection, self).create(data)
             return None
         def delete(self):
-            while self.count()>0:
-                row = self.search({})[0]
-                self.entity.delete(row)
+            num = self.count()
+            rows = self.search({})
+            for i in range(num):
+                self.entity.delete(rows[0])
             return None
         def autocomplete(self, string):
             res=self.search({'tag': {'$regex': '^'+string}}, sort=[('count',-1)])

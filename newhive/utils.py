@@ -106,8 +106,10 @@ def normalize_tags(ws):
     ws_no_quotes = re.sub(r'"(.*?)"', '', ws, flags=re.UNICODE)
     if ',' in ws:
         l2 = re.split(r'[,#]', ws_no_quotes, flags=re.UNICODE)
+    elif '#' in ws:
+        l2 = re.split(r'[#]', ws_no_quotes, flags=re.UNICODE)
     else:
-        l2 = re.split(r'[#\s]', ws_no_quotes, flags=re.UNICODE)
+        l2 = re.split(r'[\s]', ws_no_quotes, flags=re.UNICODE)
     return list(set(filter(None,map(format_tags, l1+l2))))
 
 def tagList(row):
@@ -116,7 +118,7 @@ def tagList(row):
 def getTagCnt(data):
     tagCnt = Counter()
     for row in data:
-        tagCnt.update(tagList(row))
+        tagCnt.update(lget(row, 'tags_index'))
     return tagCnt
 
 def abs_url(path='', secure = False, domain = None, subdomain = None):
@@ -351,33 +353,26 @@ def analytics_email_number_format(number):
     if not decimal: return whole
     return whole + "." + zeros + decimal[:2]
 
+blacklist = ['lovemenaut', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'of', 'the', 'a', 'an', 'in', 'on', 'for', 'naut', 'is', 'and', 'to', 'from'] #disproportionately frequent tags that are not useful
+
 def simTags(tags,db):
-    r = '[^a-zA-Z\d]'
     coOccur = Counter()
     sim = {}
-    for tag in tags:
-        tagRow = db.Tags.fetch(tag, keyname='tag')
-        if tagRow != None:
-            tagFreq  = tagRow['count']
-            for row in db.Expr.search({}):
-                if tag in tagList(row):
-                    coOccur.update(tagList(row))
-            for t in tags:
-                del coOccur[t]
-            for cotag in coOccur.keys():
-                cotagFreq = db.Tags.fetch(cotag, keyname='tag')['count']
-                if coOccur[cotag] > 2:
-                    sim[(tag,cotag)] = coOccur[cotag]/numpy.sqrt(tagFreq+cotagFreq)
-            # res=db.Expr.search({'tags': {'$regex': r+tag+r}}) #switch to tag index, full text index from mongodb
-            # for row in res:
-            #     coOccur.update(tagList(row))
-            # for t in tags:
-            #     del coOccur[t]
-            # for cotag in coOccur.keys():
-            #     cotagFreq = db.Tags.fetch(cotag, keyname='tag')['count']
-            #     if coOccur[cotag] > 2:
-            #         sim[(tag,cotag)] = coOccur[cotag]/numpy.sqrt(tagFreq+cotagFreq)
+    print "searching for similar tags"
+    res = db.Expr.search( { 'tags_index': { '$in': tags } } )
+    for row in res: 
+        coOccur.update(row['tags_index'])
+    for t in set(tags+blacklist):
+        del coOccur[t]
+    print "calculating similarities"
+    for ct in coOccur.keys():
+        ctrow = db.Tags._col.find_one({'tag':ct})
+        if ctrow != None:
+            cotagFreq = ctrow['count']
+            if coOccur[ct]>2:
+                sim[ct] = coOccur[ct]/numpy.sqrt(cotagFreq)
+    print "sorting results"
     sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
-    results = [t[0][1] for t in sim_sorted]
+    results = [t[0] for t in sim_sorted]
     results_nodup = OrderedDict.fromkeys(results)
     return list(results_nodup)[:5]
