@@ -1,7 +1,7 @@
 import crypt, urllib, time
 from newhive.controllers.shared import *
 from newhive.controllers import Application
-from newhive.utils import normalize, junkstr
+from newhive.utils import normalize_tags, junkstr
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 from newhive import mail, auth
 
@@ -278,7 +278,7 @@ class User(Application):
         return self.edit(request, response)
 
     def tag_update(self, request, response):
-        tag = lget(normalize(request.form.get('value', '')), 0)
+        tag = lget(normalize_tags(request.form.get('value', '')), 0)
         if not tag: return False
         if request.form.get('action') == 'user_tag_add': request.requester.update_cmd({'$addToSet':{'tags':tag}})
         else: request.requester.update_cmd({'$pull':{'tags':tag}})

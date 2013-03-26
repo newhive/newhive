@@ -283,6 +283,7 @@ class Entity(dict):
         elif not d['updated']: del d['updated']
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d }, safe=True)
+
     def update_cmd(self, d, **opts): return self._col.update({ '_id' : self.id }, d, **opts)
 
     def increment(self, d):
@@ -786,6 +787,14 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
+        def update_tag_index(self):             
+            exprdb = self.db.Expr.search({})
+            for row in exprdb:
+                exprid = row['_id']
+                res = self.fetch(exprid)
+                self._col.update({'tags_index':tagList(res)},res)
+            return None
+
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
             shared_spec = spec.copy()
@@ -817,7 +826,7 @@ class Expr(HasSocial):
     def build_search(self, d):
         tags = d.get('tags')
         tag_list = []
-        if tags: tag_list = d['tags_index'] = normalize(tags)
+        if tags: tag_list = d['tags_index'] = normalize_tags(tags)
 
         d['title_index'] = normalize( self.get('title', '') )
 

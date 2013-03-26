@@ -95,8 +95,23 @@ def normalize(ws):
     return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
         re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
 
+def format_tags(s):
+    return re.sub(r'[_\W]','',s.lower(), flags = re.UNICODE)
+
+def normalize_tags(ws):
+    # 1. if 'tags' has comma:  separate out quoted strings, split on all commas and hash, replace space with nothing
+    # 2. if 'tags' does not have comma: separate out quoted strings, split on all spaces and hashes
+    # 3. afterward: convert to lowercase, remove hashes, replace - with nothing, replace _ with nothing. actually just remove non-alphanumeric stuff.
+    l1 = re.findall(r'"(.*?)"',ws,flags=re.UNICODE)
+    ws_no_quotes = re.sub(r'"(.*?)"', '', ws, flags=re.UNICODE)
+    if ',' in ws:
+        l2 = re.split(r'[,#]', ws_no_quotes, flags=re.UNICODE)
+    else:
+        l2 = re.split(r'[#\s]', ws_no_quotes, flags=re.UNICODE)
+    return list(set(filter(None,map(format_tags, l1+l2))))
+
 def tagList(row):
-    return normalize(lget(row,'tags')) if lget(row,'tags') else None
+    return normalize_tags(lget(row,'tags',''))
 
 def getTagCnt(data):
     tagCnt = Counter()
@@ -341,16 +356,27 @@ def simTags(tags,db):
     coOccur = Counter()
     sim = {}
     for tag in tags:
-        tagFreq = db.Tags.fetch(tag, keyname='tag')['count']
-        res=db.Expr.search({'tags': {'$regex': r+tag+r}})
-        for row in res:
-            coOccur.update(tagList(row))
-        for t in tags:
-            del coOccur[t]
-        for cotag in coOccur.keys():
-            cotagFreq = db.Tags.fetch(cotag, keyname='tag')['count']
-            if coOccur[cotag] > 2:
-                sim[(tag,cotag)] = coOccur[cotag]/numpy.sqrt(tagFreq+cotagFreq)
+        tagRow = db.Tags.fetch(tag, keyname='tag')
+        if tagRow != None:
+            tagFreq  = tagRow['count']
+            for row in db.Expr.search({}):
+                if tag in tagList(row):
+                    coOccur.update(tagList(row))
+            for t in tags:
+                del coOccur[t]
+            for cotag in coOccur.keys():
+                cotagFreq = db.Tags.fetch(cotag, keyname='tag')['count']
+                if coOccur[cotag] > 2:
+                    sim[(tag,cotag)] = coOccur[cotag]/numpy.sqrt(tagFreq+cotagFreq)
+            # res=db.Expr.search({'tags': {'$regex': r+tag+r}}) #switch to tag index, full text index from mongodb
+            # for row in res:
+            #     coOccur.update(tagList(row))
+            # for t in tags:
+            #     del coOccur[t]
+            # for cotag in coOccur.keys():
+            #     cotagFreq = db.Tags.fetch(cotag, keyname='tag')['count']
+            #     if coOccur[cotag] > 2:
+            #         sim[(tag,cotag)] = coOccur[cotag]/numpy.sqrt(tagFreq+cotagFreq)
     sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
     results = [t[0][1] for t in sim_sorted]
     results_nodup = OrderedDict.fromkeys(results)
