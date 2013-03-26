@@ -1,5 +1,5 @@
 # database_host   = '10.190.202.249'  # database-1
-database_host   = '10.99.10.179'
+#database_host   = '10.99.10.179'
 database        = 'test'
 #plain_port      = 1212
 #ssl_port        = 1213
