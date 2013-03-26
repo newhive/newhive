@@ -76,6 +76,7 @@ class Controller(object):
             ,ui = ui
             ,template = template
             ,facebook_app_id = config.facebook_app_id
+            ,config = config
             )
         if tdata.user.flagged('fb_connect_dialog'):# and not tdata.user.has_facebook:
             dia_opts = """{
@@ -227,6 +228,12 @@ class Expr(ModelController):
 @Controllers.register
 class User(ModelController):
     model_name = 'User'
+
+    def streamified_login(self, tdata, request, response):
+        return self.serve_page(tdata, response, 'pages/streamified_login.html')
+
+    def streamified_test(self, tdata, request, response):
+        return self.serve_page(tdata, response, 'pages/streamified_test.html')
 
 # maybe make this inherit from ModelController if based off a MongoDB
 # collection, otherwise if implemented with Elastic Search or similar, it

@@ -8,6 +8,9 @@
 curl(['server/session'], function(m){
 	m.user = {{ client_user|json }};
 	m.server_url = {{ server_url|json }};
+	m.secure_server = {{ secure_server|json }};
+	m.streamified_url = {{ config.streamified_url|json }};
+	m.streamified_client_id = {{ config.streamified_client_id|json }};
 });
   </script>
 {% endblock %}

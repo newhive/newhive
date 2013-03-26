@@ -32,7 +32,10 @@ routes = Map([
     Rule('/api/user/<id>', endpoint=(api.user, 'fetch')),
     Rule('/api/search', endpoint=(api.search, 'search')),
     Rule('/<username>/profile', endpoint=(api.community, 'profile')),
-    Rule('/<string:username>/profile/network', endpoint=(api.community, 'home_feed'))
+    Rule('/<string:username>/profile/network', endpoint=(api.community, 'home_feed')),
+    # put these in /app in /api
+    Rule('/streamified_test', endpoint=(api.user, 'streamified_test')),
+    Rule('/streamified_login', endpoint=(api.user, 'streamified_login')),
 ])
 
 @Request.application

@@ -1,0 +1,15 @@
+{% extends "page.html" %}
+
+{% block head %}
+  {{ super() }}
+  <script>
+curl(['server/config'], function(config){
+  postMessage(config.server_url, 'login_done');
+  // TODO: error checking
+  window.close();
+});
+</script>
+{% endblock %}
+
+{% block body %}
+{% endblock %}
