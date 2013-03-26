@@ -18,7 +18,21 @@ html, body { width: 100%; }
 textarea { padding: 10px; }
 </style>
 
-<textarea id='templ' style='position:absolute; left:0; top:0; width:48%; height:45%'></textarea>
+<textarea id='templ' style='position:absolute; left:0; top:0; width:48%; height:45%'>
+<h1>{owner.fullname}'s profile</h1>
+<h1>about:</h1>
+<p>{about|e}</p>
+{<if user.logged_in}
+  <div><a href='/msg/{owner.name}'>
+    send {owner.fullname} a message
+  </a></div>
+{>}
+{<for cards}
+  {|/templates/expr_card}
+  {../owner.fullname}
+{>}
+you can have your braces too :-{"}"}
+</textarea>
 <textarea id='data' style='position:absolute; left:0; top:50%; width:48%; height:45%'>{}</textarea>
 <textarea id='rendered' style='position:absolute; right:0; top:0; width:48%; height:99%'></textarea>
 

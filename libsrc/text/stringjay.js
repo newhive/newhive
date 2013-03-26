@@ -103,13 +103,12 @@
 		}
 
 		function expr(node){
-			var parsed, new_node = { line: line };
+			var parsed, new_node;
 			if(parsed = match(/^\s*\|/, false)){
 				new_node = func();
 				if(node) new_node.arguments.unshift(node);
 			}
-			else if(parsed = path(false)){
-				new_node.value = parsed.value;
+			else if(new_node = path(false)){
 				new_node.arguments = args();
 				new_node.type = new_node.arguments.length ? 'function' : 'path';
 			}
@@ -119,12 +118,12 @@
 			return deeper ? deeper : new_node;
 		}
 
-		function func(){ return {
-			type: 'function',
-			line: line,
-			value: path(true).value,
-			arguments: args()
-		} }
+		function func(){
+			var node = path(true);
+			node.type = 'function';
+			node.arguments = args();
+			return node;
+		}
 
 		function space(){ match(/^\s*/); }
 
@@ -136,13 +135,24 @@
 		}
 
 		function path(do_throw){
-			var parsed = match(/^\s*[\/\w!.]*/i, do_throw, 'path');
-			if(parsed) return {
+			var matched = match(/^\s*[\/\w!.]*/i, do_throw, 'path');
+			if(!matched) return false;
+			var  node = {
 				type: 'path',
 				line: line,
-				value: parsed
+				up_levels: 0
+			};
+			if(matched[0] == '/'){
+				node.absolute = true;
+				matched = matched.slice(1);
 			}
-			else return false;
+			var value = matched.split(/\//);
+			while(value[0] == '..'){
+				value.shift();
+				node.up_levels++;
+			}
+			node.value = value.concat(value.pop().split('.')); // optional foo.bar syntax
+			return node;
 		}
 
 		// parse JSON literal (string or number)
@@ -189,7 +199,7 @@
 	}
 
 	// compile_path :: Path String -> JS String
-	// takes a path string like "foo.bar" or "../../baz" or JavaScript literal
+	// takes a path string like "foo.bar" or "/../../baz" or JavaScript literal
 	// returns JS code string that evaluates to the value given a context in 'this'
 	function compile_path(str){
 	};
@@ -198,13 +208,13 @@
 	o.compile = function(template){
 		var ast = parse(template_str);
 		return compile(ast);
-	}
+	};
 
 	// Stringjay.compile_amd :: Template String -> JS AMD String
 	o.compile_amd = function(template){
 		var ast = parse(template_str);
 		return compile(ast);
-	}
+	};
 
 	function encode_to_html(str) {
 		var encodeHTMLRules = { "&": "&#38;", "<": "&#60;", ">": "&#62;", '"': '&#34;', "'": '&#39;', "/": '&#47;' },
@@ -212,21 +222,21 @@
 		return str.replace(matchHTML, function(m) {
 			return encodeHTMLRules[m] || m;
 		});
-	}
+	};
 
 	o.base_context['true'] = true;
 	o.base_context['false'] = false;
 	o.base_context['null'] = null;
 	o.base_context['if'] = function(block, condition){
 
-	}
+	};
 	// necessary without () grouping, because NOTing an argument isn't possible
 	o.base_context['unless'] = function(block, condition){
 
-	}
+	};
 	o.base_context['for'] = function(block, iteratee){
 
-	}
+	};
 
 	o.base_context.e = encode_to_html;
 })(window || global);
