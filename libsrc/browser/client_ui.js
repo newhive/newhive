@@ -53,7 +53,7 @@ define(['api_routes',
                    return false;
                 });
                 // TODO: Bind this event with jquery?
-                document.body.onpopstate = function(e) {
+                window.onpopstate = function(e) {
                     if (!e.state) return;
                     renderRoute(e.state);
                 };
