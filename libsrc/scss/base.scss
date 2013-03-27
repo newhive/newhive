@@ -21,18 +21,25 @@ body #content { top: 50px; }
 #left_column, #right_column, #header, #feed{ 
   @include pie-clearfix;
 }
-#feed {
-  margin-left:auto;
-  margin-right:auto;
-  width:500px;
-}
 #left_column {
   float: left; 
   width: $left_column_width;
   padding-left: $left_padding;
   padding-right: $right_padding;
 }
-#right_column { margin-left: $right_column_x; }
+#right_column { 
+    .center {
+      margin-left:auto;
+      margin-right:auto;
+      width:500px;
+    }
+    
+    .title div {
+        margin-left:-100px;
+    }
+    
+    margin-left: $right_column_x;
+}
 #header { position: relative; }
 
 // Resets

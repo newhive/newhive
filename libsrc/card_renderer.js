@@ -27,6 +27,8 @@ define(['text/mustache',
                     };
                     var renderedHTML = compiledMaster(CARDS_JSON);
                     $('#feed .feed-content').html($(renderedHTML));
+                    $('.main-title').html(CARDS_JSON.title[0]);
+                    $('.sub-title').html(CARDS_JSON.title[1]);
                 }
             };
         }

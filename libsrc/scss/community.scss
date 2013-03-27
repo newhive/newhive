@@ -1,5 +1,26 @@
 @import "common";
 
+.title {
+    margin-left:auto;
+    margin-right:auto;
+    
+    font-family:Helvetica,Arial;
+    font-weight:bold;
+    
+    .main-title {
+        font-size:24pt;
+    }
+    
+    .sub-title {
+        font-size:16pt;
+        color:gray;
+    }
+    .sep-slash {
+        font-size:24pt;
+    }   
+    
+}
+
 #homepage_header {
   z-index: 0;
 }
