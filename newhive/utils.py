@@ -353,7 +353,7 @@ def analytics_email_number_format(number):
     if not decimal: return whole
     return whole + "." + zeros + decimal[:2]
 
-blacklist = ['lovemenaut', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'of', 'the', 'a', 'an', 'in', 'on', 'for', 'naut', 'is', 'and', 'to', 'from'] #disproportionately frequent tags that are not useful
+blacklist = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'i', 'be', 'of', 'the', 'a', 'an', 'in', 'on', 'for', 'naut', 'is', 'and', 'to', 'from'] #disproportionately frequent tags that are not useful
 
 def simTags(tags,db):
     coOccur = Counter()

@@ -1385,7 +1385,7 @@ class Temp(Entity):
 
 @Database.register
 class Tags(Entity):
-    indexes = [('tag', {'unique':True}), ('counts', -1)]
+    indexes = [('tag', {'unique':True}), ('count', -1)]
     cname = 'tags'
     class Collection(Collection):
         def create(self, db, data={}):
