@@ -11,9 +11,9 @@ NewHive is your radically simple, DIY self publishing tool." />
 {% block head %}
   {{ super() }}
   <script>
-  curl(['card_renderer','browser/client_ui'], function(cardRenderer, clientUI) {
+  curl(['community_page_renderer','browser/client_ui'], function(communityPageRenderer, clientUI) {
       // Bootstrap community page with first set of cards.
-      cardRenderer().renderCards({{ page_data|json }});
+      communityPageRenderer().render({{ page_data|json }});
       clientUI().wrapLinks();
   });
   </script>

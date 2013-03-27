@@ -1,7 +1,7 @@
 define(['api_routes',
-        'card_renderer',
-        'js!browser/zepto'], function(_ApiRoutes, _cardRenderer) {
-    var cardRenderer = _cardRenderer();
+        'community_page_renderer',
+        'js!browser/zepto'], function(_ApiRoutes, _communityPageRenderer) {
+    var communityPageRenderer = _communityPageRenderer();
     var ApiRoutes = _ApiRoutes();
     function substituteVariables(inStr, routeVars) {
         for (var routeVar in routeVars)
@@ -15,7 +15,7 @@ define(['api_routes',
             url: routeObj.api.toString(),
             dataType: 'json',
             success: function(data) {
-                cardRenderer.renderCards(data);
+                communityPageRenderer.render(data);
                 callback();
             }
         });

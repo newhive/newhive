@@ -17,7 +17,7 @@ define(['text/mustache',
         // TODO: Separate this from jquery code
         return function() {
             return {
-                renderCards: function(CARDS_JSON) {
+                render: function(CARDS_JSON) {
                     if (!CARDS_JSON.cards) CARDS_JSON = {cards: CARDS_JSON};
                     CARDS_JSON['getAssetURL'] = function() {
                         return function(asset, render) {
