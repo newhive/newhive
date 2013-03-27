@@ -48,8 +48,8 @@ NewHive is your radically simple, DIY self publishing tool." />
 {% endblock %}
 
 {% block left_column %}
-<div><a data-load-route="/api/(username)/profile/network" data-username="{{ user.name }}" href="/{{ user.name }}/profile/network">network</a></div>
-<div><a data-load-route="/api/(username)/profile/expressions/public" data-username="{{ user.name }}" href="/{{ user.name }}/profile/expressions/public">my public expressions</a></div>
+<div><a data-load-route="/api/&lt;username&gt;/profile/network" data-username="{{ user.name }}" href="/{{ user.name }}/profile/network">network</a></div>
+<div><a data-load-route="/api/&lt;username&gt;/profile/expressions/public" data-username="{{ user.name }}" href="/{{ user.name }}/profile/expressions/public">my public expressions</a></div>
 {% endblock left_column %}
     
 {% block right_column %}

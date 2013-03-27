@@ -1,0 +1,14 @@
+{
+    "/api/<username>/profile/network": {
+        "title" : "Network Feed",
+        "pageRoute": "/<username>/profile/network",
+        "controller": "community",
+        "method": "home_feed"
+    },
+    "/api/<username>/profile/expressions/public": {
+        "title": "User Feed",
+        "pageRoute": "/<username>/profile/expressions/public",
+        "controller": "community",
+        "method": "expressions_public"
+    }
+}

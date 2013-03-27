@@ -9,6 +9,8 @@ from newhive.controllers.shared import ( no_zero, large_number, querystring,
 from newhive.assets import HiveAssets
 from newhive.controllers.api import Controllers as Api
 from newhive.extra_json import extra_json
+
+import json
 import urllib
 
 hive_assets = HiveAssets()
@@ -18,9 +20,26 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.join(confi
 jinja_env.trim_blocks = True
 jinja_env.globals.update(asset_bundle=hive_assets.asset_bundle)
 
-        
+    
 # import newhive.colors
 # from newhive.controllers.shared import ( friendly_date, length_bucket, no_zero, large_number )
+
+def get_api_endpoints(api):
+    routes = json.loads(open('newhive/api_routes.json','r').read())
+    rules = []
+    for api_route, route_obj in routes.items():
+        # Add page route
+        rules.append(Rule(
+            route_obj['pageRoute'],
+            endpoint=(getattr(api,route_obj['controller']),route_obj['method'])
+        ))
+        # And API route
+        rules.append(Rule(
+            api_route,
+            endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
+            defaults={'as_json':True}
+        ))
+    return rules
 
 import urllib
 jinja_env.filters.update({
@@ -50,21 +69,20 @@ jinja_env.globals.update({
 api = Api(server_env)
 
 # the endpoints are (Controller, method_str) tuples
-routes = Map([
+
+endpoints = [
     Rule('/api/expr', endpoint=(api.expr, 'index')),
     Rule('/api/expr/<id>', endpoint=(api.expr, 'fetch')),
     Rule('/api/expr/thumb/<id>', endpoint=(api.expr, 'thumb')),
     Rule('/api/user', endpoint=(api.user, 'index')),
     Rule('/api/user/<id>', endpoint=(api.user, 'fetch')),
     Rule('/api/search', endpoint=(api.search, 'search')),
-    Rule('/<username>/profile', endpoint=(api.community, 'profile')),
-    Rule('/<string:username>/profile/network', endpoint=(api.community, 'home_feed')),
-    Rule('/api/<string:username>/profile/network',
-        endpoint=(api.community, 'home_feed'),defaults={'as_json':True}),
-    Rule('/<string:username>/profile/expressions/public', endpoint=(api.community, 'expressions_public')),
-    Rule('/api/<string:username>/profile/expressions/public',
-        endpoint=(api.community, 'expressions_public'),defaults={'as_json':True})
-])
+    Rule('/<username>/profile', endpoint=(api.community, 'profile'))
+]
+
+endpoints.extend(get_api_endpoints(api))
+
+routes = Map(endpoints)
 
 @Request.application
 def handle(request):
