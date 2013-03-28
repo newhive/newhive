@@ -240,14 +240,12 @@ class HiveAssets(Assets):
 
         self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
-        self.assets_env.register('expression.js', 'expression.js', filters='yui_js', output='../lib/expression.js')
 
         self.final_bundles = [
             'minimal.css',
             'email.css',
             'admin.css',
             'admin.js',
-            'expression.js',
             ]
 
     def urls_with_expiry(self):

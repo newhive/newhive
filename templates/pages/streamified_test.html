@@ -5,7 +5,7 @@
   <script>
 curl(['server/session', 'browser/jquery'], function(s, $){
 	$('#share_btn').click(function(){
-		window.open(s.streamified_url + '/streams/networks/twitter/login?client_id=' +
+		window.open(s.streamified_url + 'streams/networks/twitter/login?client_id=' +
 			s.streamified_client_id + '&redirect_uri=' +
 			encodeURIComponent(s.secure_server + 'streamified_login'));
 	});

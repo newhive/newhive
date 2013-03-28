@@ -1,3 +1,6 @@
+// TODO: massive cleanup of everything in this file
+
+
 /*** puts alt attribute of input fields in to value attribute, clears
  * it when focused.
  * Adds hover events for elements with class='hoverable'
@@ -44,6 +47,15 @@ $(function () {
   });
 });
 $(window).load(function(){setTimeout(place_apps, 10)}); // position background
+    
+var urlParams = {};
+(function () {
+    var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
+    if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
+        var pair = v.split('=');
+        urlParams[d(pair[0])] = d(pair[1]);
+    });
+})();
 
 function update_targets(){
     $('a, form').each(link_target);
@@ -106,6 +118,3 @@ function autoLink(string) {
     }
     return string.replace(re, linkify);
 }
-
-
-function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}};

@@ -30,26 +30,33 @@
 //
 // (There should be a reasonable code example in the curl loader plugin)
 
-(function(global){
+// not bothering to support other module contexts for now
+// (function(global){
+// 	"use strict";
+
+// 	var o, stringjay = o = {
+// 		// ...
+
+// 	if (typeof module !== 'undefined' && module.exports) {
+// 		module.exports = o;
+// 	} else if (typeof define === 'function' && define.amd) {
+// 		define(['module'], function(m){ module = m; return o; });
+// 	} else {
+// 		// if module context not recognized, polute global namespace
+// 		global.stringjay = o;
+// 	}
+
+define(['util', 'module'], function(u, module){
 	"use strict";
 
-	var o, Stringjay = o = {
+	var o = {
 		version: '1.0.0',
 		base_context: {},
-		template_text: /^[^{]*/, // Must match empty string!
+		template_text: /^[^{]+/,
 		tag_open: /^{/,
 		tag_close: /^\s*}/,
 		strip_whitespace: false // not yet implemented
 	};
-
-	if (typeof module !== 'undefined' && module.exports) {
-		module.exports = o;
-	} else if (typeof define === 'function' && define.amd) {
-		define(function(){ return o; });
-	} else {
-		// in unrecognized module context, polute global namespace
-		global.Stringjay = o;
-	}
 
 	// parse :: String -> AST Object Array, throws ParseError String
 	// possible AST node type:
@@ -58,7 +65,7 @@
 	//     'path' -- string that references item in context
 	// (little complex, but straihgtforward)
 	function parse(template){
-		var ast = [], line = 0, character = 0 /* character not yet used */;
+		var line = 0, character = 0 /* character not yet used */;
 
 		return block();
 
@@ -66,18 +73,21 @@
 		function block(){
 			var ast = [], parsed;
 
-			while(parsed = match(o.template_text, true, 'template text')){
-				ast.push({
-					type: 'literal',
-					line: line,
-					value: parsed
-				});
-				var node;
-				if(template) node = tag();
-				if(node) ast.push(node);
-				else break;
+			while(parsed = template_text() || tag()){
+				ast.push(parsed);
+				if(!template) break; // end of template
 			}
 			return ast;
+		}
+
+		function template_text(){
+			var matched = match(o.template_text);
+			if(!matched) return false;
+			return {
+				type: 'literal',
+				line: line,
+				value: matched
+			};
 		}
 
 		// parse variable insertion, literal, or function (with potential nested block arg)
@@ -96,9 +106,10 @@
 				block_node = node;
 			}
 			else if(deeper = expr(node)) node = deeper;
+			else throw error('unexpected tag content');
 
 			match(o.tag_close, true, 'tag close');
-			if(block_node) node.arguments.unshift(block());
+			if(block_node) node.block = block();
 			return node;
 		}
 
@@ -134,24 +145,23 @@
 			return args;
 		}
 
+		// 'foo/..' not supported, because it's pointless. '..'s must be at beginning
 		function path(do_throw){
-			var matched = match(/^\s*[\/\w!.]*/i, do_throw, 'path');
+			var matched = match(/^\s*[\/\w!.]+/i, do_throw, 'path');
 			if(!matched) return false;
 			var  node = {
 				type: 'path',
 				line: line,
 				up_levels: 0
 			};
-			if(matched[0] == '/'){
-				node.absolute = true;
-				matched = matched.slice(1);
-			}
+			if(node.absolute = matched[0] == '/') matched = matched.slice(1);
 			var value = matched.split(/\//);
 			while(value[0] == '..'){
 				value.shift();
 				node.up_levels++;
 			}
-			node.value = value.concat(value.pop().split('.')); // optional foo.bar syntax
+			node.value = value.concat(value.pop().split('.')) // optional foo.bar syntax
+				.map(function(v){ return v.trim() });
 			return node;
 		}
 
@@ -168,6 +178,7 @@
 			else return false;
 			return {
 				type: 'literal',
+				json: true,
 				line: line,
 				value: JSON.parse(parsed)
 			}
@@ -177,10 +188,7 @@
 		function match(pattern, do_throw, pattern_name){
 			var m = template.match(pattern);
 			if(!m){
-				if(do_throw)
-					throw 'ParseError on line ' + line + ': ' + pattern_name +
-						', ' + String(pattern) + ', not found at ' +
-						JSON.stringify(template.match(/^.*(\n|$)/)[0]) + ' :-[';
+				if(do_throw) throw error(pattern_name + ', ' + String(pattern) + ', not found');
 				else return false;
 			}
 			// return empty or successfully eaten string
@@ -190,33 +198,82 @@
 			template = template.slice(i);
 			return eaten;
 		}
+
+		function error(msg){ return 'ParseError on line ' + line + ': ' + msg +
+			' at ' + JSON.stringify(template.match(/^.*(\n|$)/)[0]); }
 	}
-	o._parse = parse; // expose for debugging and/or curiosity
+	o._parse = parse; // for debugging / curiosity
 
-	// compile :: AST Object Array -> JS String
-	function compile(ast){
-		return "";
+	// compile :: AST Object -> JS String
+	// TODO: finish
+	function compile(node){
+		if(node.constructor == Array)
+			return node.map(compile).join('+');
+		else if(node.type == 'literal')
+			return JSON.stringify(node.value);
+		else if(node.type == 'path')
+			return compile_path();
+		else if(node.type == 'function')
+			return compile_path() + '(' +
+				node.arguments.map(JSON.stringify).join(',') + ')';
+
+		function compile_path(){
+			return 'r(' + [ node.value, node.absolute, node.up_levels ]
+				.map(JSON.stringify).join(',') + ')';
+		}
 	}
 
-	// compile_path :: Path String -> JS String
-	// takes a path string like "foo.bar" or "/../../baz" or JavaScript literal
-	// returns JS code string that evaluates to the value given a context in 'this'
-	function compile_path(str){
+	function render(context_0, node){
+		var context = [ u.copy(o.base_context, u.copy(context_0)) ];
+		return render_node(context, node);
+	}
+	o._render = render; // for debugging / curiosity
+
+	function render_node(context, node){
+		if(node.constructor == Array)
+			return node.map(function(n){ return render_node(context, n) })
+				.reduce(u.op['+'], '');
+		else if(node.type == 'literal')
+			return node.value;
+		else if(node.type == 'path')
+			return resolve(context, node.value, node.absolute, node.up_levels);
+		else if(node.type == 'function'){
+			var fn = resolve(context, node.value, node.absolute, node.up_levels),
+				args = [context];
+			if(!fn) return ''; // maybe eliminate this silent failure
+			if(node.block) args.push(function(context){
+				return render_node(context, node.block) });
+			args = args.concat( node.arguments.map(function(n){
+				return render_node(context, n) }) );
+			return fn.apply(null, args);
+		}
+		else throw 'Unrecognized node: ' + JSON.stringify(node);
+	}
+
+	o.template = function(template){
+		var ast = parse(template);
+		return function(data){ return render(data, ast); }
 	};
 
-	// Stringjay.compile :: Template String -> JS Function String
-	o.compile = function(template){
-		var ast = parse(template_str);
-		return compile(ast);
+	// TODO: finish
+	o.compile = function(){ return compile(o2.ast); };
+
+	// TODO: finish
+	o.compile_amd = function(){
+		return "define(['" + module.id + "'], function(sj){" + compile(o2.ast) + '});';
 	};
 
-	// Stringjay.compile_amd :: Template String -> JS AMD String
-	o.compile_amd = function(template){
-		var ast = parse(template_str);
-		return compile(ast);
-	};
+	function resolve(context, path, absolute, up_levels){
+		var value = absolute ? context[0] : context[context.length - 1 - up_levels];
+		for(var i = 0; i < path.length; i++) {
+			if(typeof value == 'undefined') return '';
+			else value = value[path[i]];
+		}
+		return value ? value : '';
+	}
+	o.resolve = resolve;
 
-	function encode_to_html(str) {
+	function encode_to_html(context, str) {
 		var encodeHTMLRules = { "&": "&#38;", "<": "&#60;", ">": "&#62;", '"': '&#34;', "'": '&#39;', "/": '&#47;' },
 			matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
 		return str.replace(matchHTML, function(m) {
@@ -227,29 +284,18 @@
 	o.base_context['true'] = true;
 	o.base_context['false'] = false;
 	o.base_context['null'] = null;
-	o.base_context['if'] = function(block, condition){
-
+	o.base_context['if'] = function(context, block, condition){
+		if(condition) return block(context);
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
-	o.base_context['unless'] = function(block, condition){
-
+	o.base_context['unless'] = function(context, block, condition){
+		if(!condition) return block(context);
 	};
-	o.base_context['for'] = function(block, iteratee){
-
+	o.base_context['for'] = function(context, block, iteratee){
+		return iteratee.map(function(v){ return block(context.concat(v)) })
+			.reduce(u.op['+'], '');
 	};
-
 	o.base_context.e = encode_to_html;
-})(window || global);
 
-// <h1>{owner.fullname}'s profile</h1>
-// <h1>about:</h1>
-// <p>{about|e}</p>
-// {<if user.logged_in}
-//   <div><a href='/msg/{owner.name}'>
-//     send {owner.fullname} a message
-//   </a></div>
-// {>}
-// {<for cards}
-//   {|/templates/expr_card}
-// {>}
-// you can have your braces too :-{"}"}
+	return o;
+});
