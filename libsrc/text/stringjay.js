@@ -161,7 +161,7 @@ define(['util', 'module'], function(u, module){
 				node.up_levels++;
 			}
 			node.value = value.concat(value.pop().split('.')) // optional foo.bar syntax
-				.map(function(v){ return v.trim() });
+				.map(function(v){ return v.trim() }).filter(function(v){ return v });
 			return node;
 		}
 
