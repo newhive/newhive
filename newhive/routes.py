@@ -15,9 +15,12 @@ class RoutesManager(object):
         # Add href attribute for fallback
         href = self.routes_obj[route_name]['pageRoute']
         # Substitute <variable> names in href URL
+        base_url = abs_url()
+        # Trim trailing slash from abs_url(), if present
+        if base_url[-1] == '/': base_url = base_url[:-1]
         for variable,replacement in kwargs.iteritems():
             href = href.replace('<%s>' % variable,replacement)
-        attributes.append(('href',abs_url() + href))
+        attributes.append(('href',base_url + href))
         # Add data-route-name attribute
         attributes.append(('data-route-name',route_name))
         attributes_str = ' '.join(map(lambda x: '%s="%s"' % x,attributes))
