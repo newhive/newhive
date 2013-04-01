@@ -27,7 +27,7 @@ jinja_env.globals.update(get_route_anchor_attrs=Routes.get_route_anchor_attrs)
 # from newhive.controllers.shared import ( friendly_date, length_bucket, no_zero, large_number )
 
 def get_api_endpoints(api):
-    routes = json.loads(open('newhive/api_routes.json','r').read())
+    routes = Routes.get_routes()
     rules = []
     for route_name, route_obj in routes.items():
         # Add page route
