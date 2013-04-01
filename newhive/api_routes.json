@@ -1,13 +1,15 @@
 {
-    "/api/<username>/profile/network": {
+    "network/popular": {
         "title" : "Network Feed",
         "pageRoute": "/<username>/profile/network",
+        "apiRoute": "/api/<username>/profile/network",
         "controller": "community",
         "method": "home_feed"
     },
-    "/api/<username>/profile/expressions/public": {
+    "user/expressions/public": {
         "title": "User Feed",
         "pageRoute": "/<username>/profile/expressions/public",
+        "apiRoute": "/api/<username>/profile/expressions/public",
         "controller": "community",
         "method": "expressions_public"
     }

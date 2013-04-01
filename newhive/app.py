@@ -27,7 +27,7 @@ jinja_env.globals.update(asset_bundle=hive_assets.asset_bundle)
 def get_api_endpoints(api):
     routes = json.loads(open('newhive/api_routes.json','r').read())
     rules = []
-    for api_route, route_obj in routes.items():
+    for route_name, route_obj in routes.items():
         # Add page route
         rules.append(Rule(
             route_obj['pageRoute'],
@@ -36,7 +36,7 @@ def get_api_endpoints(api):
         ))
         # And API route
         rules.append(Rule(
-            api_route,
+            route_obj['apiRoute'],
             endpoint=(getattr(api,route_obj['controller']),'community_page'),
             defaults={'method':route_obj['method'],'as_json':True}
         ))

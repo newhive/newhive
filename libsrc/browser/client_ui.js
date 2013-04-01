@@ -29,12 +29,12 @@ define(['api_routes',
         if (!callback) callback = function(){};
         fetchRouteData(routeObj, callback);
     }
-    function getFormattedRouteObj(apiRoute, routeFormatVars) {
-        var apiRouteObj = ApiRoutes[apiRoute];
+    function getFormattedRouteObj(routeName, routeFormatVars) {
+        var routeObj = ApiRoutes[routeName];
         return {
-            "api": substituteVariables(apiRoute, routeFormatVars),
-            "page": substituteVariables(apiRouteObj.pageRoute, routeFormatVars),
-            "title": apiRouteObj.title
+            "api": substituteVariables(routeObj.apiRoute, routeFormatVars),
+            "page": substituteVariables(routeObj.pageRoute, routeFormatVars),
+            "title": routeObj.title
         };
     }
     return function() {
@@ -42,12 +42,12 @@ define(['api_routes',
             wrapLinks: function() {
                 // If we don't support pushState, fall back on default link behavior.
                 if (!window.history && window.history.pushState) return;
-                $('body').on('click', '[data-load-route]', function(e) {
-                   var apiRoute = e.target.getAttribute('data-load-route');
+                $('body').on('click', '[data-route-name]', function(e) {
+                   var routeName = e.target.getAttribute('data-route-name');
                    var routeFormatVars = {
                        '<username>': e.target.getAttribute('data-username')
                    };
-                   var routeObj = getFormattedRouteObj(apiRoute, routeFormatVars);
+                   var routeObj = getFormattedRouteObj(routeName, routeFormatVars);
                    navToRoute(routeObj);
                    e.preventDefault();
                    return false;
