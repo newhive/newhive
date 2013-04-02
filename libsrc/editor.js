@@ -3131,3 +3131,21 @@ function print_stack(){
     //try { thiswillthrowanerror^2 }
     //catch(e) { console.log(e.stack) }
 }
+
+function array_delete(arr, e) {
+    for(var n = 0; n < arr.length; n++) {
+        if(arr[n] == e) {
+            arr.splice(n, 1);
+            return true;
+        }
+    }
+    return false;
+}
+function array_sum( a, b ){
+    if (a.length != b.length) { throw "Arrays must be equal length" };
+    rv = []
+    for (i=0; i< a.length; i++){
+        rv[i] = a[i] + b[i]
+    }
+    return rv
+}

@@ -1,16 +1,26 @@
-<script src='stringjay.js'></script>
+<script src='../curl.js'></script>
 <script>
-var template_str, template, data;
+// configure curl
+curl({
+    baseUrl: '/lib/libsrc',
+    pluginPath: 'curl/plugin'
+});
 
-function render(){
-	template_str = document.getElementById('templ').value;
-	var data_el = document.getElementById('data');
-	var rendered_el = document.getElementById('rendered');
+var template_str, template, data, ast;
 
-	data = JSON.parse(data_el.value);
-	//template = Stringjay.compile(template_str);
-	rendered_el.value = JSON.stringify(Stringjay._parse(template_str));
-}
+curl(['text/stringjay', 'browser/jquery'], function(sj, $){
+	function render(){
+		template_str = document.getElementById('templ').value;
+		var data_el = document.getElementById('data');
+		var rendered_el = document.getElementById('rendered');
+
+		data = JSON.parse(data_el.value);
+		ast = sj._parse(template_str);
+		rendered_el.innerHTML = sj._render(data, ast);
+	}
+
+	$('#render').click(render);
+});
 </script>
 
 <style>
@@ -18,8 +28,37 @@ html, body { width: 100%; }
 textarea { padding: 10px; }
 </style>
 
-<textarea id='templ' style='position:absolute; left:0; top:0; width:48%; height:45%'></textarea>
-<textarea id='data' style='position:absolute; left:0; top:50%; width:48%; height:45%'>{}</textarea>
-<textarea id='rendered' style='position:absolute; right:0; top:0; width:48%; height:99%'></textarea>
+<textarea id='templ' style='position:absolute; left:0; top:0; width:48%; height:45%'>
+<h1>{owner.fullname}'s profile</h1>
+<h1>about:</h1>
+<p>{about|e}</p>
+{<if user.logged_in}
+  <div><a href='/msg/{owner.name}'>
+    send {owner.fullname} a message
+  </a></div>
+{>}
+{<for cards}
+  <h1>{title}</h1>
+  <div>by {owner_name}</div>
+{>}
+<hr>
+you can have your braces too :-{"}"}
+</textarea>
 
-<button onclick='render()' style='position:absolute; left:50%; top:0; width:50px; height:40px; margin-left:-25px'>render</button>
+<textarea id='data' style='position:absolute; left:0; top:50%; width:48%; height:45%'>
+{
+	"owner": {"name": "abram", "fullname":"sir abram clark"},
+	"about": "a big <b>bold</b>html <i>string</i>",
+	"user": {"name":"jrh", "fullname":"Jay Random Hacker", "logged_in": true},
+	"cards": [
+		{"title":"goodness", "owner_name":"fooman"},
+		{"title":"badness", "owner_name":"barman"},
+		{"title":"foodness", "owner_name":"bazman"},
+		{"title":"meepness", "owner_name":"quxman"}
+	]
+}
+</textarea>
+
+<div id='rendered' style='position:absolute; right:0; top:0; width:48%; height:99%; border:1px'></div>
+
+<button id='render' style='position:absolute; left:50%; top:0; width:50px; height:40px; margin-left:-25px'>render</button>

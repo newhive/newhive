@@ -1,5 +1,7 @@
 define(['browser/jquery'], function($){
 
+function noop(){}
+
 var menu = function(handle, drawer, options) {
     var handle = $(handle), drawer = $(drawer), o = { handle : handle, drawer : drawer },
         menu_items = drawer.find('.menu_item'), close_timer = false,

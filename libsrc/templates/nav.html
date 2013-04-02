@@ -1,22 +1,22 @@
 <div id='nav'
-  ><a href='{{s.server_url}}'><div id='logo' class='hoverable icon center black_active'></div></a
+  ><a href='{s.server_url}'><div id='logo' class='hoverable icon center black_active'></div></a
 
-  {{#if s.user.logged_in}}
+  {<if s.user.logged_in}
     ><div id='user_btn' class='text_btn center hoverable black_active'
-      ><img class='user_thumb {{#unless s.user.has_thumb}}none {{/unless}}icon center'
-        src='{{!s.user.thumb}}'
-      ><div class='text_btn center text'>{{s.user.name}}</div
-    ><div class='count rounded {{#unless s.user.notification_count}}none{{/unless}}'
-      >{{ user.notification_count }}</div
+      ><img class='user_thumb {<unless s.user.has_thumb}none {>}icon center'
+        src='{s.user.thumb}'
+      ><div class='text_btn center text'>{s.user.name|e}</div
+    ><div class='count rounded {<unless s.user.notification_count}none{>}'
+      >{user.notification_count}</div
     ></div
-  {{/if}}
-  {{#unless s.user.logged_in}}
+  {>}
+  {<unless s.user.logged_in}
     ><div id='sign_up_btn' class='text_btn center text hoverable black_active'
       ><span class='text'>Sign up</span></div
     ><div id='login_btn' class='text_btn center hoverable black_active'>Log In</div
-  {{/unless}}
+  {>}
 
-  ><a id='create_btn' class='text_btn center hoverable black_active' href='{{ create }}'
+  ><a id='create_btn' class='text_btn center hoverable black_active' href='{s.secure_server}edit'
       onclick='return require_login("create")'
       ><div class='icon center'></div
       ><div class='text_btn center text'>Create</div
@@ -27,10 +27,19 @@
   ><form method='GET' action='/search' name='search_form'
     ><div class='center text'
       ><input type="text" id="search_box" placeholder="Search" name='q'
-      ><input type='image' src='{{#h.asset}}skin/nav/search_submit.png{{/h.asset}}'
+      ><input type='image' src='{asset "skin/nav/search_submit.png"}'
         class='hoverable submit' title='Submit search'
     ></div
   ></form
 
   ><div class='right'></div
 ></div>
+
+<div class='menu' id='hive_menu'>
+
+<div id='login_menu' class='menu'>
+  {#<a href="{{facebook_authentication_url}}" target="_top" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
+    <img src='{{ 'skin/1/fb_sign_in.png'|asset_url }}' style='margin: 2px 0 2px -4px;'>
+  </a>#}
+  {|templates/login_form.html}
+</div>
