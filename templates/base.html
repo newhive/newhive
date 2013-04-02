@@ -16,19 +16,6 @@ curl({
     baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
     pluginPath: 'curl/plugin'
 });
-
-// define('server.state', [], {
-
-// })
-    logged_in = {{ user.logged_in|json }}, server_name = '{{ server_name }}',
-    secure_server = '{{ secure_server }}', server_url = '{{ server_url }}',
-    debug_mode = {{ debug|json }},
-    dialog_to_show = {{ dialog_to_show|json }},
-    new_fb_connect = {{ new_fb_connect|json }}, fb_id = {{ user.facebook_id|json }}
-    user = {{ user.client_view() | json }}, owner = {{ client_owner | json }},
-    content_domain = {{ content_domain | json }},
-    error = {{ error | json }}
-;
  </script>
 
  <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
@@ -36,21 +23,6 @@ curl({
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
 
- {% if debug %}
-     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js'></script>
- {% else %}
-     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
- {% endif %}
-
- {# Site javascript, replace with Joose dependencies #}
- {% for item in asset_bundle('vendor.js') %}
-     <script src='{{ item }}'></script>
- {% endfor %}
- {% for item in asset_bundle('app.js') %}
-     <script src='{{ item }}'></script>
- {% endfor %}
-
- {% block head %}{% endblock %}
  <script>
 // Analytics setup
 ////////////////////
