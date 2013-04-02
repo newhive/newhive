@@ -2,7 +2,7 @@
 
 {% block head %}
   {{ super() }}
-  <script>curl(['ui/nav'], function(m){ m({}) });</script>
+  <script>curl(['ui/nav'], function(m){ m.render({}) });</script>
 {% endblock %}
 
 {% block body %}{% endblock %}

@@ -7,6 +7,8 @@
   <script>
 curl(['server/session'], function(m){
 	m.user = {{ client_user|json }};
+	m.server_url = {{ server_url|json }};
+	m.secure_server_url = {{ secure_server|json }};
 });
   </script>
 {% endblock %}

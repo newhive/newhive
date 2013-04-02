@@ -1,4 +1,4 @@
-(function(){
+define(['browser/jquery'], function($){
 
 var menu = function(handle, drawer, options) {
     var handle = $(handle), drawer = $(drawer), o = { handle : handle, drawer : drawer },
@@ -203,6 +203,6 @@ var menu = function(handle, drawer, options) {
 
 menu.menus = [];
 
-define(['browser/jquery'], function(){ return menu });
+return menu;
 
-})();
+});
