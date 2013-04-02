@@ -46,7 +46,9 @@
 // 		global.stringjay = o;
 // 	}
 
-define(['util', 'module'], function(u, module){
+define(['util', 'module', 'server/session', 'server/compiled.assets'],
+	function(u, module, session, assets)
+{
 	"use strict";
 
 	var o = {
@@ -92,7 +94,7 @@ define(['util', 'module'], function(u, module){
 
 		// parse variable insertion, literal, or function (with potential nested block arg)
 		function tag(){
-			var node = false, block_node = false, deeper;
+			var node = false, block_node = false, deeper, matched;
 
 			match(o.tag_open, true, 'tag open');
 			space();
@@ -105,6 +107,11 @@ define(['util', 'module'], function(u, module){
 				node = func();
 				block_node = node;
 			}
+			else if(match(/^#/)) return {
+				type: 'comment',
+				line: line,
+				value: match(/.*#}/, true, 'comment').slice(0, -2)
+			};
 			else if(deeper = expr(node)) node = deeper;
 			else throw error('unexpected tag content');
 
@@ -168,7 +175,7 @@ define(['util', 'module'], function(u, module){
 		// parse JSON literal (string or number)
 		function json(){
 			var parsed;
-			if(parsed = match(/^\s*-?[\d.E]+/i)); // match number
+			if(parsed = match(/^\s*-?[\d][\d.E]*/i)); // match number
 			else if(parsed = match(/^\s*"/)){ // match string
 				while(1){
 					parsed += match(/(\\.)|"/, true, 'string close');
@@ -176,12 +183,13 @@ define(['util', 'module'], function(u, module){
 				}	
 			}
 			else return false;
-			return {
+			try { return {
 				type: 'literal',
 				json: true,
 				line: line,
 				value: JSON.parse(parsed)
-			}
+			} }
+			catch(e){ throw error(e.message); }
 		}
 
 		// whenever called with do_throw = true, pattern_name should also be given
@@ -247,6 +255,7 @@ define(['util', 'module'], function(u, module){
 				return render_node(context, n) }) );
 			return fn.apply(null, args);
 		}
+		else if(node.type == 'comment') return '';
 		else throw 'Unrecognized node: ' + JSON.stringify(node);
 	}
 
@@ -285,17 +294,19 @@ define(['util', 'module'], function(u, module){
 	o.base_context['false'] = false;
 	o.base_context['null'] = null;
 	o.base_context['if'] = function(context, block, condition){
-		if(condition) return block(context);
+		return condition ? block(context) : '';
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
 	o.base_context['unless'] = function(context, block, condition){
-		if(!condition) return block(context);
+		return condition ? '' : block(context);
 	};
 	o.base_context['for'] = function(context, block, iteratee){
 		return iteratee.map(function(v){ return block(context.concat(v)) })
 			.reduce(u.op['+'], '');
 	};
 	o.base_context.e = encode_to_html;
+	o.base_context.asset = function(context, arg){ return assets[arg]; };
+	o.base_context.s = session;
 
 	return o;
 });

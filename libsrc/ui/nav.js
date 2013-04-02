@@ -1,19 +1,18 @@
 define([
-    'browser/jquery', 'text/handlebars', 'templates/context', 'text!templates/nav.html',
-    'text!templates/login_form.html'
-], function($, template, context, nav_templ, login_templ) {
-    var nav_render = template.compile(nav_templ);
-    var login_render = template.compile(login_templ);
-
+    'browser/jquery', 'server/session', 'ui/menu', 'sj!templates/nav.html', 'sj!templates/login_form.html'
+], function($, s, menu, nav_template, login_template) {
     function render(server_state){
-        $('body').append(nav_render(context));
+        $('body').append(nav_template());
+
+        if(!s.user.logged_in) menu('#login_btn', '#login_menu');
+
     }
 
     return { render: render };
 });
 
 // TODO: put these somewhere
-function(){
+(function(){
 
 	// works as handler or function modifier
 	function require_login(label, fn) {
@@ -107,4 +106,4 @@ function(){
 	    _gaq.push(['_trackEvent', 'share', service]);
 	};
 
-}
+});

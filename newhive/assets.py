@@ -239,10 +239,12 @@ class HiveAssets(Assets):
             )
 
         self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
+        self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
 
         self.final_bundles = [
             'minimal.css',
+            'app.css',
             'email.css',
             'admin.css',
             'admin.js',

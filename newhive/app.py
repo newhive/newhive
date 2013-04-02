@@ -33,7 +33,7 @@ routes = Map([
     Rule('/api/search', endpoint=(api.search, 'search')),
     Rule('/<username>/profile', endpoint=(api.community, 'profile')),
     Rule('/<string:username>/profile/network', endpoint=(api.community, 'home_feed')),
-    # put these in /app in /api
+    # put these in /app, /h, or whatever
     Rule('/streamified_test', endpoint=(api.user, 'streamified_test')),
     Rule('/streamified_login', endpoint=(api.user, 'streamified_login')),
 ])
