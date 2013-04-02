@@ -20,8 +20,12 @@ NewHive is your radically simple, DIY self publishing tool." />
 {% endblock %}
 
 {% block left_column %}
+
+{% if user.logged_in %}
 <div><a {{ get_route_anchor_attrs("network/popular", username=user.name) }} >network</a></div>
 <div><a {{ get_route_anchor_attrs("user/expressions/public", username=user.name) }}>my public expressions</a></div>
+{% endif %}
+
 {% endblock left_column %}
     
 {% block right_column %}
