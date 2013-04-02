@@ -47,26 +47,26 @@ NewHive is your radically simple, DIY self publishing tool." />
 {% block footer_scripts %}
   {{ super () }}
   <script>
-     paging_args = {{ args | json }};
-     var load_page = null;
-     var next_page = true;
-     var c = 0;
-     $(window).scroll(function() {
-         if(($(window).scrollTop() > $('#content').height() - $(window).height() * 2) && !load_page && next_page) {
-             var next = $('.next_page').attr('href');
-             if(!next) {
-                 //next_page = false;
-                 return;
-             }
-             load_page = $.get(next, {}, function(data) {
-                 console.log('loading');
-                 load_page = null;
-                 $('.next_page').remove();
-                 $('#feed').append(data);
-                 fix_borders('#feed .item');
-             });
-         }
-     });
+     // paging_args = {{ args | json }};
+     // var load_page = null;
+     // var next_page = true;
+     // var c = 0;
+     // $(window).scroll(function() {
+     //     if(($(window).scrollTop() > $('#content').height() - $(window).height() * 2) && !load_page && next_page) {
+     //         var next = $('.next_page').attr('href');
+     //         if(!next) {
+     //             //next_page = false;
+     //             return;
+     //         }
+     //         load_page = $.get(next, {}, function(data) {
+     //             console.log('loading');
+     //             load_page = null;
+     //             $('.next_page').remove();
+     //             $('#feed').append(data);
+     //             fix_borders('#feed .item');
+     //         });
+     //     }
+     // });
 
      function fb_listen_or_connect() {
          if(fb_logged_in) loadDialogPost('facebook_listen');
@@ -87,9 +87,5 @@ NewHive is your radically simple, DIY self publishing tool." />
          $('#upload_form').submit();
          $('#upload_target').load(function() { window.location = '{{ user.url }}' });
      }
-     $(function(){ 
-       fix_borders('#feed .item');
-       $(window).resize(function(){fix_borders('#feed .item');});
-     });
   </script>
 {% endblock %}

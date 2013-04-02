@@ -57,7 +57,7 @@ class Controller(object):
         # The f dictionary of form fields may be left alone to mirror the request, or validated and adjusted
         response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url,
                             'home_url': tdata.user.get_url(), 'user': tdata.user, 'server_url': abs_url(),
-                            'facebook_app_id': config.facebook_app_id, 'secure_server': abs_url(secure = True),
+                            'config': config, 'secure_server': abs_url(secure = True),
                             'server_name': config.server_name, 'debug': config.debug_mode, 
                             'content_domain': abs_url(domain = config.content_domain),
                             'beta_tester': config.debug_mode or tdata.user.get('name') in config.beta_testers}

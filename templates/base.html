@@ -23,35 +23,37 @@ curl({
    <link rel='stylesheet' type='text/css' href='{{ item }}'>
  {% endfor %}
 
+ {% block head %}{% endblock %}
+
  <script>
 // Analytics setup
 ////////////////////
 
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-22827299-2']);
-_gaq.push(['_setDomainName', 'none']);
-_gaq.push(['_setAllowLinker', true]);
-_gaq.push(['_setCampaignTrack', true]);
-_gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
-_gaq.push(['_setCustomVar', 2, 'join_date',
-    '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
-_gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
-{% for command in ga_commands %}
-    _gaq.push({{ command | json }});
-{% endfor %}
+// var _gaq = _gaq || [];
+// _gaq.push(['_setAccount', 'UA-22827299-2']);
+// _gaq.push(['_setDomainName', 'none']);
+// _gaq.push(['_setAllowLinker', true]);
+// _gaq.push(['_setCampaignTrack', true]);
+// _gaq.push(['_setCustomVar', 1, 'username', '{{ user['name'] }}', 1]);
+// _gaq.push(['_setCustomVar', 2, 'join_date',
+//     '{% if user.created %}{{ user.created | int}}{% endif %}', 1]);
+// _gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
+// {% for command in ga_commands %}
+//     _gaq.push({{ command | json }});
+// {% endfor %}
 
-_gaq.push(['_setCustomVar', 4, 'AB_javascript', Hive.AB_Test.ga_string()]);
-_gaq.push(['_trackPageview']);
+// _gaq.push(['_setCustomVar', 4, 'AB_javascript', Hive.AB_Test.ga_string()]);
+// _gaq.push(['_trackPageview']);
 
-{% if use_ga %}(function() {
-    var ga = document.createElement('script');
-    ga.type = 'text/javascript';
-    ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') 
-        + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(ga, s);
-})();{% endif %}
+// {% if use_ga %}(function() {
+//     var ga = document.createElement('script');
+//     ga.type = 'text/javascript';
+//     ga.async = true;
+//     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') 
+//         + '.google-analytics.com/ga.js';
+//     var s = document.getElementsByTagName('script')[0];
+//     s.parentNode.insertBefore(ga, s);
+// })();{% endif %}
 
   </script>
 </head>
