@@ -80,11 +80,13 @@ endpoints = [
     Rule('/api/user', endpoint=(api.user, 'index')),
     Rule('/api/user/<id>', endpoint=(api.user, 'fetch')),
     Rule('/api/search', endpoint=(api.search, 'search')),
-    Rule('/<username>/profile', endpoint=(api.community, 'profile'))
+    Rule('/<username>/profile', endpoint=(api.community, 'profile')),
+    # put these in /app, /h, or whatever
+    Rule('/streamified_test', endpoint=(api.user, 'streamified_test')),
+    Rule('/streamified_login', endpoint=(api.user, 'streamified_login')),
 ]
 
 endpoints.extend(get_api_endpoints(api))
-
 routes = Map(endpoints)
 
 @Request.application

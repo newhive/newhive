@@ -1,36 +1,45 @@
 <div id='nav'
-  ><a href='{{ server_url }}'><div id='logo' class='hoverable icon center black_active'></div></a
+  ><a href='{s.server_url}'><div id='logo' class='hoverable icon center black_active'></div></a
 
-  {{#user.logged_in}}
+  {<if s.user.logged_in}
     ><div id='user_btn' class='text_btn center hoverable black_active'
-      ><img class='user_thumb {{ 'none' if not user.has_thumb }} icon center'
-        src='{{ user.get_thumb(70) }}'
-      ><div class='text_btn center text'>{{ user.name | capitalize }}</div
-    ><div class='count rounded {{ ' none' if not user.notification_count }}'
-      >{{ user.notification_count }}</div
+      ><img class='user_thumb {<unless s.user.has_thumb}none {>}icon center'
+        src='{s.user.thumb}'
+      ><div class='text_btn center text'>{s.user.name|e}</div
+    ><div class='count rounded {<unless s.user.notification_count}none{>}'
+      >{user.notification_count}</div
     ></div
-  {{/user.logged_in}}
-  {{^user.logged_in}}
+  {>}
+  {<unless s.user.logged_in}
     ><div id='sign_up_btn' class='text_btn center text hoverable black_active'
       ><span class='text'>Sign up</span></div
     ><div id='login_btn' class='text_btn center hoverable black_active'>Log In</div
-  {{/user.logged_in}}
+  {>}
 
-  {% if not editing %}
-    ><a id='create_btn' class='text_btn center hoverable black_active' href='{{ create }}'
+  ><a id='create_btn' class='text_btn center hoverable black_active' href='{s.secure_server}edit'
       onclick='return require_login("create")'
       ><div class='icon center'></div
       ><div class='text_btn center text'>Create</div
-    ></a
-  {% endif %}
-    ><a href='/random' title="View Random Expression" class='random_link'
-      ><div class='random_btn icon center hoverable'></div></a
-><form method='GET' action='/search' name='search_form'
-      ><div class='center text'
-        ><input type="text" id="search_box" placeholder="Search" name='q' value='{{ q.q|e }}'
-        ><input type='image' src='{{ 'skin/nav/search_submit.png'|asset_url }}'
-          class='hoverable submit' title='Submit search'
-      ></div
-></form
-><div class='right'>{% block right_nav %}{% endblock %}</div
+  ></a
+
+  ><a href='/random' title="View Random Expression" class='random_link'
+    ><div class='random_btn icon center hoverable'></div></a
+  ><form method='GET' action='/search' name='search_form'
+    ><div class='center text'
+      ><input type="text" id="search_box" placeholder="Search" name='q'
+      ><input type='image' src='{asset "skin/nav/search_submit.png"}'
+        class='hoverable submit' title='Submit search'
+    ></div
+  ></form
+
+  ><div class='right'></div
 ></div>
+
+<div class='menu' id='hive_menu'>
+
+<div id='login_menu' class='menu'>
+  {#<a href="{{facebook_authentication_url}}" target="_top" onclick="_gaq.push(['_trackEvent', 'fb_connect', 'log_in_via_facebook']);">
+    <img src='{{ 'skin/1/fb_sign_in.png'|asset_url }}' style='margin: 2px 0 2px -4px;'>
+  </a>#}
+  {|templates/login_form.html}
+</div>

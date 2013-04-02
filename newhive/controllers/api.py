@@ -1,5 +1,6 @@
 import json
 from werkzeug import Request, Response
+import httplib2, urllib
 from collections import namedtuple
 from newhive.utils import dfilter
 from newhive.controllers import Application
@@ -66,17 +67,7 @@ class Controller(object):
     def render_template(self, tdata, response, template):
         context = response.context
         context.update(template = template)
-        if tdata.user.flagged('fb_connect_dialog'):# and not tdata.user.has_facebook:
-            dia_opts = """{
-                open: function(){
-                    $('#user_menu_handle').click();
-                    _gaq.push(['_trackEvent', 'fb_connect', 'open_connect_dialog', 'auto']);
-                }
-                , minimize_to: '#user_menu_handle'}"""
-            self.show_dialog(response, '#dia_facebook_connect', opts=dia_opts)
-            tdata.user.unflag('fb_connect_dialog')
         context.setdefault('icon', self.asset('skin/1/logo.png'))
-        context.setdefault('dialog_to_show', False)
         return self.jinja_env.get_template(template).render(context)
 
     def serve_data(self, response, mime, data):
@@ -191,7 +182,7 @@ class Expr(ModelController):
         entity = self.model.fetch(id)
         if not entity: return self.serve_404(request, response)
         if entity.get('screenshot'):
-            return self.serve_json(response, entity.get('screenshot'))            
+            return self.serve_json(response, entity.get('screenshot'))
         link = werkzeug.urls.url_fix("http://%s:%d/%s/%s" % (config.server_name, config.plain_port, entity['owner_name'], entity['name']))
         fileID = "/tmp/%s" % md5(str(uuid.uuid4())).hexdigest()
         filename = fileID + '-full.png'
@@ -209,6 +200,32 @@ class Expr(ModelController):
 @Controllers.register
 class User(ModelController):
     model_name = 'User'
+
+    def streamified_login(self, tdata, request, response):
+        streamified_username = request.args['usernames'].split(',')[0]
+
+        post = {
+            'code': request.args['code'],
+            'grant_type': 'authorization_code',
+            'redirect_uri': abs_url(secure=True) + 'streamified_login',
+            'scope': streamified_username,
+            'client_id': config.streamified_client_id,
+            'client_secret': config.streamified_client_secret,
+        }
+        headers = { 'content-type': 'application/x-www-form-urlencoded', }
+
+        body = urllib.urlencode(post)
+        print config.streamified_url + 'oauth/access_token', body
+        http = httplib2.Http(timeout=0.5, disable_ssl_certificate_validation=True)
+        resp, content = http.request(config.streamified_url + 'oauth/access_token',
+            method='POST', body=body, headers=headers)
+
+        print (resp, content)
+        
+        return self.serve_page(tdata, response, 'pages/streamified_login.html')
+
+    def streamified_test(self, tdata, request, response):
+        return self.serve_page(tdata, response, 'pages/streamified_test.html')
 
 # maybe make this inherit from ModelController if based off a MongoDB
 # collection, otherwise if implemented with Elastic Search or similar, it

@@ -47,11 +47,7 @@ if __name__ == '__main__':
             , use_reloader = True
             , use_debugger = config.debug_mode
             , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-            , static_files = {
-                 '/lib' : joinpath(config.src_home, 'lib')
-                ,'/images' : joinpath(config.src_home, 'libsrc/scss/images')
-                ,'/file' : config.media_path
-              }
+            , static_files = { '/lib' : joinpath(config.src_home, 'lib') }
             , ssl_context = ssl_context if ssl else None
             #, processes = 0
             )

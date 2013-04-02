@@ -140,8 +140,6 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
   color: #419DD6;
 }
 
-
-/* signup dialog */
 #dia_signup {
   width: auto;
   padding: 20px 35px;
@@ -154,82 +152,6 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 
   input[type=text] { width: 290px; }
   h3 { text-align: left; margin: 10px 0; }
-}
-
-/* Comments dialog */
-#dia_comments {
-  width: 505px;
-  padding: 20px;
-}
-
-#dia_comments .icon {
-  float: left;
-  margin: -10px 0 0 -10px;
-}
-#dia_comments .title.sub {
-  margin: 0;
-  font-size: 20px;
-  font-weight: normal;
-  font-family: $header_font;
-}
-#dia_comments .title {
-  margin: 0;
-  font-size: 26px;
-  font-weight: normal;
-  font-family: $header_font;
-}
-#dia_comments .title .comments_count {
-    font-weight: bold;
-    color: #F72E4D;
-}
-#dia_comments textarea {
-  width: 480px;
-  margin-top: 10px;
-}
-#dia_comments input[type=submit] {
-  float: right;
-  margin: 5px;
-}
-#dia_comments .header {
-  overflow: auto;
-  min-height: 45px;
-}
-#dia_comments #comments {
-  clear: both;
-  width: 520px;
-  overflow: auto;
-}
-
-#dia_comments .comment {
-  clear: both;
-  padding-top: 20px;
-}
-#dia_comments .comment_content {
-  width: 390px;
-  float: left;
-}
-#dia_comments .text {
-  min-height: 40px;
-  margin: 0 0 10px 0;
-  white-space: pre-wrap;
-}
-#dia_comments .author, #dia_comments .age {
-  font-size: 20px;
-  margin: 0;
-}
-#dia_comments .author {
-  color: blue;
-  float: left;
-}
-#dia_comments .age {
-  float: right;
-}
-#dia_comments .comment_thumb {
-  width: 70px;
-  height: 70px;
-  background-color: #aaa;
-  float: left;
-  margin-right: 10px;
 }
 
 #dia_password_recovery {

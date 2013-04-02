@@ -1,7 +1,8 @@
 define(['server/session', 'server/compiled.assets'], function(s, assets){
 	var helpers = {
-		asset: function(name){
-			return assets[name]
+		asset: function(fn){
+			console.log(fn());
+			return assets[fn()];
 		}
 	};
 
