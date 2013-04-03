@@ -3,8 +3,9 @@ define(['text/mustache',
         'mustache!templates/expr_card.html',
         'mustache!templates/feed_card.html',
         'mustache!templates/user_card.html',
+        'server/compiled.assets',
         'js!browser/zepto'],
-    function(Mustache,masterCardTempl, exprCardTempl, feedCardTempl, userCardTempl) {
+    function(Mustache,masterCardTempl, exprCardTempl, feedCardTempl, userCardTempl, assets) {
         var partials = {
             'expr_card': exprCardTempl,
             'feed_card': feedCardTempl,
@@ -21,7 +22,7 @@ define(['text/mustache',
                     if (!CARDS_JSON.cards) CARDS_JSON = {cards: CARDS_JSON};
                     CARDS_JSON['getAssetURL'] = function() {
                         return function(asset, render) {
-                            var imgURL = hive_asset_paths[asset];
+                            var imgURL = assets[asset];
                             return imgURL;
                         } 
                     };
