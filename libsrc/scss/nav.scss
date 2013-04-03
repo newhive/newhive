@@ -56,13 +56,6 @@
         background-image: asset_url('skin/nav/logo.png');
         &.active { background-image: asset_url('skin/nav/logo-hover.png'); }
     }
-    #sign_up_btn {
-        * {
-            padding: 0 6px;
-            background-color: $color_selected;
-        }
-        &:hover * { background: none; }
-    }
     #create_btn {
         .text { padding-left: 0px; }
         .icon { background-image: asset_url('skin/nav/create.png'); }
@@ -78,8 +71,14 @@
     #search_box {
         margin-left: 6px;
         width: 150px;
+        height: $nav_size - 18;
         border: solid 1px $color_grey_medium;
-        &:focus { border-color: $color_selected; }    
+        padding: 8px;
+        &:focus {
+            border-width: 4px;
+            padding: 5px;
+            border-color: $color_selected;
+        }
     }
     .submit {
         vertical-align: top;

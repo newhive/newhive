@@ -1,11 +1,12 @@
 define([
-    'browser/jquery', 'server/session', 'ui/menu', 'sj!templates/nav.html', 'sj!templates/login_form.html'
-], function($, s, menu, nav_template, login_template) {
+    'browser/jquery', 'server/session', 'ui/menu', 'ui/util',
+    'sj!templates/nav.html', 'sj!templates/login_form.html'
+], function($, s, menu, ui, nav_template, login_template) {
     function render(server_state){
         $('body').append(nav_template());
 
         if(!s.user.logged_in) menu('#login_btn', '#login_menu');
-
+        ui.add_hovers();
     }
 
     return { render: render };

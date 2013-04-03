@@ -9,6 +9,11 @@
     ><div class='count rounded {<unless s.user.notification_count}none{>}'
       >{user.notification_count}</div
     ></div
+    ><a id='create_btn' class='text_btn center hoverable black_active' href='{s.secure_server}edit'
+        onclick='return require_login("create")'
+        ><div class='text_btn center text'>New+</div
+        {#><div class='icon center'></div#}
+    ></a
   {>}
   {<unless s.user.logged_in}
     ><div id='sign_up_btn' class='text_btn center text hoverable black_active'
@@ -16,23 +21,15 @@
     ><div id='login_btn' class='text_btn center hoverable black_active'>Log In</div
   {>}
 
-  ><a id='create_btn' class='text_btn center hoverable black_active' href='{s.secure_server}edit'
-      onclick='return require_login("create")'
-      ><div class='icon center'></div
-      ><div class='text_btn center text'>Create</div
-  ></a
-
   ><a href='/random' title="View Random Expression" class='random_link'
     ><div class='random_btn icon center hoverable'></div></a
-  ><form method='GET' action='/search' name='search_form'
-    ><div class='center text'
-      ><input type="text" id="search_box" placeholder="Search" name='q'
-      ><input type='image' src='{asset "skin/nav/search_submit.png"}'
-        class='hoverable submit' title='Submit search'
-    ></div
-  ></form
 
-  ><div class='right'></div
+  ><div class='right'
+    ><form method='GET' action='/search' name='search_form'
+      ><input type="text" id="search_box" placeholder="Search" name='q'
+      ><input type='submit' value='+'
+    ></form
+  ></div
 ></div>
 
 <div class='menu' id='hive_menu'>
