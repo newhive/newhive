@@ -13,6 +13,7 @@ from bson.code import Code
 from crypt import crypt
 from oauth2client.client import OAuth2Credentials
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
+import pyes
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
@@ -1385,7 +1386,7 @@ class Temp(Entity):
 
 @Database.register
 class Tags(Entity):
-    indexes = [('tag', {'unique':True}), ('count', -1)]
+    indexes = [('tag', {'unique':True}), ('count', -1), [('count',-1),('tags',1)]]
     cname = 'tags'
     class Collection(Collection):
         def create(self, db, data={}):
@@ -1439,3 +1440,59 @@ def tags_by_frequency(query):
     counts.sort(reverse=True)
     return counts
 
+
+class ESDatabase: 
+    # elasticsearch-able database
+    def __init__(self, db, index='expr_index'): 
+        self.index = index
+        self.conn = pyes.ES('127.0.0.1:9200')
+        self.conn.indices.create_index_if_missing(index)
+        self.mapping = {
+        u'tags':{'type': u'string', 'boost':1.5, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
+        u'text':{'type': u'string', 'boost':1.3, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
+        u'text_index':{'type': u'string', 'boost':1.3, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
+        u'tags_index':{'type': u'string', 'boost':1.5, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
+        u'title':{'type': u'string', 'boost':1.5, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
+        u'updated':{'type': u'float', 'boost':1.0, 'store': 'yes'},
+        u'title_index':{'type': u'string', 'boost':1.5, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
+        u'views':{'type': u'integer', 'boost':1.0, 'store': 'yes'}
+        }
+
+        self.conn.indices.put_mapping("expr-type", {'properties':self.mapping}, [self.index])
+        counter = 0
+        exprs = db.Expr.search({})
+
+        while counter < 1000: #db.Expr.count():
+            data = {
+            'text': lget(exprs[counter], 'text', ''), 
+            'tags': lget(exprs[counter], 'tags', ''), 
+            'analytics': lget(exprs[counter], 'analytics', {}),
+            'name': lget(exprs[counter], 'name', ''),
+            'owner_name': lget(exprs[counter], 'owner_name', ''),
+            'owner': lget(exprs[counter], 'owner', ''),
+            'title': lget(exprs[counter], 'title', ''),
+            'created': lget(exprs[counter], 'created', 0),
+            'updated': lget(exprs[counter], 'updated', 0),
+            'views': lget(exprs[counter], 'views', 0),
+            'text_index': lget(exprs[counter], 'text_index', ''), 
+            'tags_index': lget(exprs[counter], 'tags_index', ''),
+            'title_index': lget(exprs[counter], 'title_index', '')
+            }
+            self.conn.index(data, self.index, 'expr-type', exprs[counter]['_id'], bulk=True)
+            counter += 1
+            print counter
+            if (counter % 400 == 0): self.conn.refresh()
+        self.conn.indices.refresh()
+
+    def delete(self):
+        self.conn.indices.delete_index(self.index)
+
+    def search_exact(self, query, order="updated"):
+        q = TextQuery('text_index', term)
+        results = conn.search(q, sort = order)
+        for r in results: print r
+
+    def search_fuzzy(self, query, order="updated"):
+        q = FuzzyLikeThisQuery(["tags", "text", "title"],query)
+        results = conn.search(q, sort = order)
+        for r in results: print r

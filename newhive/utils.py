@@ -376,3 +376,13 @@ def simTags(tags,db):
     results = [t[0] for t in sim_sorted]
     results_nodup = OrderedDict.fromkeys(results)
     return list(results_nodup)[:5]
+
+def simTagsFast(tags,db):
+    return db.Expr._col.aggregate([
+       { '$match' : { "$tags_index": { "$in": tags } } },
+       { '$unwind' : {"$tags_index"} },
+       { '$match' : { "$tags_index": { "$nin": tags } } },
+       { '$group' : { '_id': "$_id", 'numRelTags': { '$sum':1 } } },
+       { '$sort' : { 'numRelTags' : -1 } },
+       { '$limit' : 10 }
+    ])
