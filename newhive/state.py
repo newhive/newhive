@@ -1440,33 +1440,54 @@ def tags_by_frequency(query):
     counts.sort(reverse=True)
     return counts
 
+## tools for full text search 
+
 
 class ESDatabase: 
     # elasticsearch-able database
     def __init__(self, db, index='expr_index'): 
         self.index = index
         self.conn = pyes.ES('127.0.0.1:9200')
-        self.conn.indices.create_index_if_missing(index)
-        self.mapping = {
-        u'tags':{'type': u'string', 'boost':1.5, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
-        u'text':{'type': u'string', 'boost':1.3, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
-        u'text_index':{'type': u'string', 'boost':1.3, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
-        u'tags_index':{'type': u'string', 'boost':1.5, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
-        u'title':{'type': u'string', 'boost':1.5, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
-        u'updated':{'type': u'float', 'boost':1.0, 'store': 'yes'},
-        u'title_index':{'type': u'string', 'boost':1.5, 'index': 'analyzed', 'store': 'yes', 'term_vector': 'with_positions_offsets'},
-        u'views':{'type': u'integer', 'boost':1.0, 'store': 'yes'}
+        self.settings = {
+          "mappings" : {
+            "expr-type" : {
+              "properties" : {
+                "tags" : {"type" : "string", "boost":1.5, "index":"analyzed", "store": "yes", "term_vector": "with_positions_offsets", "analyzer" : "standard"},
+                "text":{"type": "string", "boost":1.3, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
+                "title":{"type": "string", "boost":1.5, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
+                "updated":{"type": "float", "boost":1.0, "store": "yes"},
+                "created":{"type": "float", "boost":1.0, "store": "yes"},
+                "views":{"type": "integer", "boost":1.0, "store": "yes"}, 
+                "broadcast":{"type": "integer", "boost":1.0, "store": "yes"},
+                "star":{"type": "integer", "boost":1.0, "store": "yes"},  
+              }
+            }
+          },
+          "settings" : {
+            "analysis" : {
+              "analyzer" : {
+                "default" : {"type" : "standard"},
+                "tag_analyzer" : {"tokenizer" : "whitespace", "filter" : ["standard", "stop", "tag_stemmer"]}
+              },
+              "filter" : {
+                "tag_stemmer" : {"type" : "stemmer", "language" : "English"}
+              }
+            }
+          }
         }
 
-        self.conn.indices.put_mapping("expr-type", {'properties':self.mapping}, [self.index])
+        self.conn.indices.create_index_if_missing(index, self.settings)
+
         counter = 0
         exprs = db.Expr.search({})
 
-        while counter < 1000: #db.Expr.count():
+        while counter < db.Expr.count():
+            processed_tags = ' '.join(normalize_tags(lget(exprs[counter], 'tags', '')))
             data = {
             'text': lget(exprs[counter], 'text', ''), 
-            'tags': lget(exprs[counter], 'tags', ''), 
-            'analytics': lget(exprs[counter], 'analytics', {}),
+            'tags': processed_tags, 
+            'star': lget(lget(lget(exprs[counter], 'analytics', {}), 'Star', {}), 'count', 0),
+            'broadcast': lget(lget(lget(exprs[counter], 'analytics', {}), 'Broadcast', {}), 'count', 0),
             'name': lget(exprs[counter], 'name', ''),
             'owner_name': lget(exprs[counter], 'owner_name', ''),
             'owner': lget(exprs[counter], 'owner', ''),
@@ -1474,22 +1495,17 @@ class ESDatabase:
             'created': lget(exprs[counter], 'created', 0),
             'updated': lget(exprs[counter], 'updated', 0),
             'views': lget(exprs[counter], 'views', 0),
-            'text_index': lget(exprs[counter], 'text_index', ''), 
-            'tags_index': lget(exprs[counter], 'tags_index', ''),
-            'title_index': lget(exprs[counter], 'title_index', '')
             }
-            self.conn.index(data, self.index, 'expr-type', exprs[counter]['_id'], bulk=True)
+            self.conn.index(data, self.index, 'expr-type', exprs[counter]['_id'])
             counter += 1
             print counter
-            if (counter % 400 == 0): self.conn.refresh()
         self.conn.indices.refresh()
 
     def delete(self):
         self.conn.indices.delete_index(self.index)
 
     def search_exact(self, query, order="updated"):
-        q = TextQuery('text_index', term)
-        results = conn.search(q, sort = order)
+        results = conn.search(query = query, fields = ['tags', 'text', 'title'], sort = order)
         for r in results: print r
 
     def search_fuzzy(self, query, order="updated"):
