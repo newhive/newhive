@@ -201,10 +201,14 @@ class Expr(ModelController):
 class User(ModelController):
     model_name = 'User'
 
-    def authenticate(self, tdata, request, response):
+    def login(self, tdata, request, response):
         user = auth.handle_login(self.db, request, response)
         if user: user = user.client_view()
         return self.serve_json(response, user)
+
+    def logout(self, tdata, request, response):
+        auth.handle_logout(self.db, tdata.user, request, response)
+        return self.serve_json(response, True)
 
     def streamified_login(self, tdata, request, response):
         streamified_username = request.args['usernames'].split(',')[0]

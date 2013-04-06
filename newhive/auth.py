@@ -33,7 +33,7 @@ def authenticate_request(db, request, response):
 
 def handle_login(db, request, response):
     """Reads username and password from POST data, creates session,
-       sets request.requester to state.User object, returns True if login succeeds"""
+       returns authenticated state.User on success, False on failure."""
 
     args = request.form
     if not request.is_secure: raise exceptions.BadRequest()
@@ -48,24 +48,6 @@ def handle_login(db, request, response):
 
     response.context['error'] = 'Invalid username or password'
     return False
-
-def facebook_login(db, request, response):
-    request.fbc = oauth.FacebookClient()
-    try:
-        fb_profile = request.requester.fb_client.me()
-        user = db.User.find_by_facebook(fb_profile.get('id'))
-    except FlowExchangeError as e:
-        logger.error("Flow exchange error during facebook login: %s", e)
-        user = None
-        response.context['error'] = ui.facebook_flow_exhange_error
-
-    if user:
-        session = new_session(db, user, request, response)
-        user.update(session = session.id)
-        user.logged_in = True
-        return user
-    else:
-        return request.requester
 
 def new_session(db, user, request, response):
     # login
@@ -90,10 +72,10 @@ def new_session(db, user, request, response):
     user.logged_in = True
     return session
 
-def handle_logout(db, request, response):
-    """Removes cookies, deletes session record, sets
-       request.requester.logged_in to False"""
-    session = db.Session.fetch(request.requester['session'])
+def handle_logout(db, user, request, response):
+    """Removes cookies, deletes session record."""
+
+    session = db.Session.fetch(user['session'])
 
     rm_cookie(response, 'plain_secret')
     rm_cookie(response, 'secure_secret', True)
@@ -104,12 +86,11 @@ def handle_logout(db, request, response):
         rm_cookie(response, 'identity')
         session.delete()
 
-    request.requester.logged_in = False
+    user.logged_in = False
 
-def password_change(request, response, force=False):
+def password_change(user, request, response, force=False):
     args = request.form
     new_password = args.get('password', False)
-    user = request.requester
     if not request.is_secure or not (user and new_password):
         raise exceptions.BadRequest()
     if not force:

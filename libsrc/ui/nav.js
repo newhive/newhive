@@ -7,6 +7,8 @@ define([
         lay.center($('.center'), $('#nav'));
 
         menu('#logo', '#logo_menu');
+        $('#logout_btn').click(logout);
+
         menu('#network_btn', '#network_menu');
         menu('#hive_btn', '#hive_menu');
 
@@ -24,6 +26,8 @@ define([
 
     function login(){
     	var f = $(this);
+	    f.find('[name=url]').val(window.location.href);
+
     	$.post(f.attr('action'), f.serialize(), function(user){
     		if(user){
 	    		s.user = user;
@@ -32,6 +36,12 @@ define([
 	    	else $('.login.error').removeClass('hide');
     	});
     	return false;
+    }
+    function logout(){
+    	$.post('/api/user/logout', '', function(){
+    		s.user.logged_in = false;
+    		render();
+    	});
     }
 
     return { render: render };
@@ -59,21 +69,6 @@ define([
 	    if(fn) return check;
 	    else return check();
 	}
-
-	Hive.login_submit = function(form){
-	    var form = $(form);
-	    var identifier = form.parent().attr('id') || form.parents('.dialog').attr('id');
-	    form.find('[name=url]').val(window.location.href);
-	    _gaq.push(['_trackEvent', 'login', identifier]);
-	};
-
-	Hive.logout_submit = function(that){
-	    var form = $(that).parents('form');
-	    form.find('[name=url]').val(window.location.href);
-	    _gaq.push(['_trackEvent', 'logout', 'complete']);
-	    // Delay ensures that event is tracked
-	    setTimeout(function(){ form.submit(); }, 800);
-	};
 
 	function relogin(success){
 	    var dia = $('#dia_relogin');

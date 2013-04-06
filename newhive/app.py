@@ -72,7 +72,8 @@ endpoints = [
     Rule('/api/expr/thumb/<id>', endpoint=(api.expr, 'thumb')),
     Rule('/api/user', endpoint=(api.user, 'index')),
     Rule('/api/user/<id>', endpoint=(api.user, 'fetch')),
-    Rule('/api/user/authenticate', endpoint=(api.user, 'authenticate')),
+    Rule('/api/user/login', endpoint=(api.user, 'login')),
+    Rule('/api/user/logout', endpoint=(api.user, 'logout')),
     Rule('/api/search', endpoint=(api.search, 'search')),
     Rule('/<username>/profile', endpoint=(api.community, 'profile')),
     # put these in /app, /h, or whatever

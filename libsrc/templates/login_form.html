@@ -1,4 +1,4 @@
-<form action='{s.secure_server}api/user/authenticate' method='POST' id='login_form'>
+<form action='{s.secure_server}api/user/login' method='POST' id='login_form'>
   <div class="field username">
       <input id='username' type='text' name='username' value='{s.user.name}' placeholder='Username or email'>
       <div class='spacer'></div>
@@ -12,4 +12,5 @@
     <a href="#" class='password_recovery'>Forgot<br>Password?</a>
     <input type='submit' class='submit button black' value='Enter'>
   </div>
+  <input type='hidden' name='url' value=''>
 </form>
