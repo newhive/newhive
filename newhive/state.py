@@ -1538,19 +1538,19 @@ class ESDatabase:
         clauses = []
 
         if len(search['text']) != 0:
-            clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text'])))
+            clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text']), analyzer = 'default'))
 
         if len(search['tags']) != 0:
-            clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags'])))
+            clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer = 'tag_analyzer'))
 
         if lget(search, 'user') != None:
             clauses.append(pyes.query.TermQuery('owner_name', search['user']))
 
         for p in search['phrases']:
-            clauses.append(pyes.query.TermQuery('_all', p))
+            clauses.append(pyes.query.TextQuery('_all', p, type = "phrase"))
 
         query = pyes.query.BoolQuery(should = clauses)
-        
+
         return query
 
     def search_text(self, string, index='expr_index', order="updated"):
