@@ -1443,8 +1443,9 @@ def tags_by_frequency(query):
 ## tools for full text search 
 
 
+
 class ESDatabase: 
-    # elasticsearch-able database
+    # elasticsearch-able database, just for full-text search (tags, text, title)
     def __init__(self, db, index='expr_index'): 
         self.index = index
         self.conn = pyes.ES('127.0.0.1:9200')
@@ -1466,11 +1467,8 @@ class ESDatabase:
           "settings" : {
             "analysis" : {
               "analyzer" : {
-                "default" : {"type" : "standard"},
-                "tag_analyzer" : {"tokenizer" : "whitespace", "filter" : ["standard", "stop", "tag_stemmer"]}
-              },
-              "filter" : {
-                "tag_stemmer" : {"type" : "stemmer", "language" : "English"}
+                "default" : {"tokenizer" : "standard", "filter" : ["standard", "lowercase", "stop", "kstem"]},
+                "tag_analyzer" : {"tokenizer" : "whitespace", "filter" : ["standard", "lowercase", "stop", "kstem"]}
               }
             }
           }
@@ -1500,15 +1498,76 @@ class ESDatabase:
             counter += 1
             print counter
         self.conn.indices.refresh()
+        return None
 
     def delete(self):
         self.conn.indices.delete_index(self.index)
+        return None
 
-    def search_exact(self, query, order="updated"):
-        results = conn.search(query = query, fields = ['tags', 'text', 'title'], sort = order)
-        for r in results: print r
+    def parse_query(self, q):
+        """ Parses search query into MongoDB spec
+            #tag, @user, text, #SpecialCategory
+        """
 
-    def search_fuzzy(self, query, order="updated"):
-        q = FuzzyLikeThisQuery(["tags", "text", "title"],query)
-        results = conn.search(q, sort = order)
+        # split into words with possible [@#] prefix, isolate phrases in quotes
+
+        search = { 'text': [], 'tags': [], 'phrases': [] }
+        q_quotes = re.findall(r'"(.*?)"',q,flags=re.UNICODE)
+        q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
+
+        search['phrases'].extend(q_quotes)
+
+        for pattern in re.findall(r'(\b|\W+)(\w+)', q_no_quotes):
+            prefix = re.sub( r'[^#@]', '', pattern[0] )
+            if prefix == '@': search['user'] = pattern[1].lower()
+            elif prefix == '#':
+                if pattern[1] == 'All': search['all'] = True
+                elif pattern[1] == 'Featured': search['featured'] = True
+                elif pattern[1] == 'Network': search['network'] = True
+                elif pattern[1] == 'Public': search['auth'] = 'public' 
+                elif pattern[1] == 'Private': search['auth'] = 'password'
+                elif pattern[1] == 'Activity': search['activity'] = True
+                elif pattern[1] == 'Listening': search['listening'] = True
+                elif pattern[1] == 'Listeners': search['listeners'] = True
+                else: search['tags'].append( pattern[1].lower() )
+            else: search['text'].append( pattern[1].lower() )
+
+        return search
+
+    def create_query(self, search):
+        clauses = []
+
+        if len(search['text']) != 0:
+            clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text'])))
+
+        if len(search['tags']) != 0:
+            clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags'])))
+
+        if lget(search, 'user') != None:
+            clauses.append(pyes.query.TermQuery('owner_name', search['user']))
+
+        for p in search['phrases']:
+            clauses.append(pyes.query.TermQuery('_all', p))
+
+        query = pyes.query.BoolQuery(should = clauses)
+        
+        return query
+
+    def search_text(self, string, index='expr_index', order="updated"):
+        s = self.parse_query(string)
+        query = self.create_query(s)
+        results = self.conn.search(query, indices = index, sort = order)
         for r in results: print r
+        return results
+
+    def search_fuzzy(self, string, index='expr_index', order="updated"):
+        q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
+        results = self.conn.search(q, indices = index, sort = order)
+        for r in results: print r
+        return results
+
+    def update(self, expr):
+        pass
+
+    def paginate(self, spec, limit=40, at=None, sort='updated', order=-1, filter=None):
+        pass
