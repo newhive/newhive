@@ -10,9 +10,8 @@ from newhive.assets import HiveAssets
 from newhive.controllers.api import Controllers as Api
 from newhive.extra_json import extra_json
 from newhive.routes import Routes
+import json, urllib
 
-import json
-import urllib
 
 hive_assets = HiveAssets()
 hive_assets.bundle()
@@ -21,10 +20,6 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.join(confi
 jinja_env.trim_blocks = True
 jinja_env.globals.update(asset_bundle=hive_assets.asset_bundle)
 jinja_env.globals.update(get_route_anchor_attrs=Routes.get_route_anchor_attrs)
-
-    
-# import newhive.colors
-# from newhive.controllers.shared import ( friendly_date, length_bucket, no_zero, large_number )
 
 def get_api_endpoints(api):
     routes = Routes.get_routes()
@@ -44,7 +39,6 @@ def get_api_endpoints(api):
         ))
     return rules
 
-import urllib
 jinja_env.filters.update({
      'asset_url': hive_assets.url
     ,'json': extra_json
@@ -72,13 +66,13 @@ jinja_env.globals.update({
 api = Api(server_env)
 
 # the endpoints are (Controller, method_str) tuples
-
 endpoints = [
     Rule('/api/expr', endpoint=(api.expr, 'index')),
     Rule('/api/expr/<id>', endpoint=(api.expr, 'fetch')),
     Rule('/api/expr/thumb/<id>', endpoint=(api.expr, 'thumb')),
     Rule('/api/user', endpoint=(api.user, 'index')),
     Rule('/api/user/<id>', endpoint=(api.user, 'fetch')),
+    Rule('/api/user/authenticate', endpoint=(api.user, 'authenticate')),
     Rule('/api/search', endpoint=(api.search, 'search')),
     Rule('/<username>/profile', endpoint=(api.community, 'profile')),
     # put these in /app, /h, or whatever

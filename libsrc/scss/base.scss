@@ -1,4 +1,3 @@
-// Imports
 @import "common";
 
 .centered { 
@@ -9,81 +8,51 @@ img.centered, div.centered {
     margin-left: auto;
     margin-right: auto;
 }
-.bright_headline { 
-    font-family: Museo, sans-serif; 
-    color: $color_active;
-    }
-
-// Page Layout
-iframe.expr { position: absolute; z-index: 0; left: 0; top: 0; width: 100%; height: 100%; }
-body #content { top: 50px; }
-#primary_content{ clear: both; }
-#left_column, #right_column, #header, #feed{ 
-  @include pie-clearfix;
-}
-#left_column {
-  float: left; 
-  width: $left_column_width;
-  padding-left: $left_padding;
-  padding-right: $right_padding;
-}
-#right_column { 
-    .center {
-      margin-left:auto;
-      margin-right:auto;
-      width:500px;
-    }
-    
-    .title div {
-        margin-left:-100px;
-    }
-    
-    margin-left: $right_column_x;
-}
-#header { position: relative; }
 
 // Resets
 iframe { border: none; }
+html, body { background-color: white; height: 100%; }
 
-// Misc (move to own files when this gets too long)
-
-.css_compilation_test{
-  color: black;
-}
-
-html, body { background-color : white; height : 100%; }
+// Site-wide form styling
 input[type=text], input[type=password], textarea {
-    border: 5px solid $color_unselected;
-    padding: 5px;
+    border: 1px solid black;
+    padding: 8px;
     outline: none;
+    font-family: Gotham;
+    font-size: 17px;
 }
-input[type=text]:focus, input[type=password]:focus, textarea:focus { border-color : $color_selected; }
+input[type=text]:focus, input[type=password]:focus, textarea:focus {
+    border: 4px solid $color_selected;
+    padding: 5px;
+}
 input[type=button], input[type=submit] { border : none; }
+
 .hide { display: none !important; }
 
 .border { border : 5px solid $color_unselected; padding : 5px; }
 .selected { border-color: $color_selected; }
 .medbold { font-weight : bold; font-size : 1.2em; }
-.btn { 
-  padding:5px 10px; 
-  font-weight : bold; 
-  font-size : 20px; 
-  display : inline-block; 
-  cursor : default;
-  white-space: nowrap;
-  &.inactive { background-color : $color_24; color: white;}
-  &.black:hover { 
-    color : $color_1; 
-    background-color : $color_32;
+.button { 
+    padding:5px 10px; 
+    font-weight : bold; 
+    font-size : 20px; 
+    display : inline-block; 
+    cursor : default;
+    white-space: nowrap;
     &.inactive { background-color : $color_24; color: white;}
-  }
+    &.black:hover { 
+        color : $color_1; 
+        background-color : $color_32;
+        &.inactive { background-color : $color_24; color: white;}
+    }
 }
 
 .rounded {
     @include border-radius(5px);
 }
 .black { background-color : black; color: white; }
-.error { color: $color_active; }
+.error_color { color: $color_active; }
+.info_color { color: $color_grass_green; }
 .inactive { color: $color_24; }
 #user { position : fixed; display : inline-block; }
 .spacer { height : 10px; clear : both; }
@@ -93,13 +62,6 @@ $placeholder_color: $color_light_charcoal;
 :-moz-placeholder { color: $placeholder_color; }
 :-ms-input-placeholder { color: $placeholder_color; }
 
-.form_validation_info.valid {
-  color: green;
-}
-
-.form_validation_info.invalid {
-  color: red;
-}
 #btn_help { color : #696E76; }
 #btn_help.active { color : white; }
 .color_active {

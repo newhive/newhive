@@ -1,12 +1,37 @@
 define([
-    'browser/jquery', 'server/session', 'ui/menu', 'ui/util',
+    'browser/jquery', 'browser/layout', 'server/session', 'ui/menu', 'ui/util',
     'sj!templates/nav.html', 'sj!templates/login_form.html'
-], function($, s, menu, ui, nav_template, login_template) {
-    function render(server_state){
-        $('body').append(nav_template());
+], function($, lay, s, menu, ui, nav_template, login_template) {
+    function render(){
+        $('#nav').empty().html(nav_template());
+        lay.center($('.center'), $('#nav'));
 
-        if(!s.user.logged_in) menu('#login_btn', '#login_menu');
+        menu('#logo', '#logo_menu');
+        menu('#network_btn', '#network_menu');
+        menu('#hive_btn', '#hive_menu');
+
+        $('#login_form').submit(login);
+        if(!s.user.logged_in){
+        	menu('#login_btn', '#login_menu', { open: function(){
+        		$('#username').focus() } });
+        }
+        else{
+        	menu('#user_btn', '#user_menu');
+        }
+
         ui.add_hovers();
+    }
+
+    function login(){
+    	var f = $(this);
+    	$.post(f.attr('action'), f.serialize(), function(user){
+    		if(user){
+	    		s.user = user;
+				render();	    		
+	    	}
+	    	else $('.login.error').removeClass('hide');
+    	});
+    	return false;
     }
 
     return { render: render };

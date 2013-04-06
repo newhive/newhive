@@ -56,7 +56,7 @@ class Controller(object):
         # the context is for passing to views to render a response.
         # The f dictionary of form fields may be left alone to mirror the request, or validated and adjusted
         response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url,
-                            'home_url': tdata.user.get_url(), 'user': tdata.user, 'server_url': abs_url(),
+                            'user': tdata.user, 'server_url': abs_url(),
                             'config': config, 'secure_server': abs_url(secure = True),
                             'server_name': config.server_name, 'debug': config.debug_mode, 
                             'content_domain': abs_url(domain = config.content_domain),
@@ -161,7 +161,7 @@ class Community(Controller):
         return self.model.page({}, tdata.user, **args)
         
     def profile(self, tdata, request, response, username=None):
-        return self.serve_page(tdata, response, 'pages/nav_stub.html')
+        return self.serve_page(tdata, response, 'pages/main.html')
 
 @Controllers.register
 class Expr(ModelController):
@@ -200,6 +200,11 @@ class Expr(ModelController):
 @Controllers.register
 class User(ModelController):
     model_name = 'User'
+
+    def authenticate(self, tdata, request, response):
+        user = auth.handle_login(self.db, request, response)
+        if user: user = user.client_view()
+        return self.serve_json(response, user)
 
     def streamified_login(self, tdata, request, response):
         streamified_username = request.args['usernames'].split(',')[0]

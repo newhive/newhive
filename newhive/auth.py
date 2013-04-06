@@ -44,7 +44,7 @@ def handle_login(db, request, response):
         if not user: user = db.User.find({'email': username})
         if user and user.cmp_password(secret):
             new_session(db, user, request, response)
-            return True
+            return user
 
     response.context['error'] = 'Invalid username or password'
     return False
@@ -88,7 +88,6 @@ def new_session(db, user, request, response):
     set_secret(session, False, response)
     set_cookie(response, 'identity', session.id, expires = expires)
     user.logged_in = True
-    request.requester = user
     return session
 
 def handle_logout(db, request, response):

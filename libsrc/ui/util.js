@@ -15,7 +15,9 @@ define(['browser/jquery'], function($){
         $(o).mouseenter(function() {
             if(main.hoverable.disabled) return;
             $(this).addClass('active');
-        }).mouseleave(function() { $(this).removeClass('active'); });
+        }).mouseleave(function() {
+            if(!$(this).data('busy')) $(this).removeClass('active');
+        });
 
         function hover_url(url) {
             var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');

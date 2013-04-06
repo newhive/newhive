@@ -23,14 +23,14 @@ var menu = function(handle, drawer, options) {
             ,hover_close: true
             ,open_delay: 100
             ,close_delay: 500
-            ,offset_y: 8
-            ,offset_x: 8
+            ,offset_y: 0
+            ,offset_x: 0
             ,focus_persist: true
             ,hover: true
             ,open_condition: function(){ return true; }
             ,close_condition: function(){ return true; }
             ,auto_height: true
-            ,default_item: drawer.find('.menu_item.default')
+            ,default_item: drawer.find('.menu_item').eq(0)
             ,layout: 'bottom'
             ,layout_x: 'auto'
             ,min_y: 0
@@ -86,7 +86,7 @@ var menu = function(handle, drawer, options) {
 
         o.opened = false;
         opts.close();
-        handle.get(0).busy = false;
+        handle.data('busy', false);
         handle.removeClass('active');
 
         return o;
@@ -102,7 +102,7 @@ var menu = function(handle, drawer, options) {
         o.opened = true;
         if( opts.group.current && (opts.group.current != o) ) opts.group.current.close(true);
         opts.group.current = o;
-        handle.get(0).busy = true;
+        handle.data('busy', true);
 
         if(opts.animate_open) drawer.animate(opts.animate_open, 100);
         else opts.open_menu();
@@ -173,8 +173,8 @@ var menu = function(handle, drawer, options) {
     opts.group.menus.push(o);
 
     if(opts.hover) {
-        handle.on('hover', null, { delay: opts.open_delay }, o.open)
-            .on('hoverend', o.delayed_close);
+        handle.on('mouseover', null, { delay: opts.open_delay }, o.open)
+            .on('mouseout', o.delayed_close);
         drawer.mouseover(o.cancel_close).mouseout(o.delayed_close);
     }
     handle.click(function(){

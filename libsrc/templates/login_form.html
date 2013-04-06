@@ -1,4 +1,4 @@
-<form action='{s.secure_server}/api/user/authenticate' method='POST' id='login_form'>
+<form action='{s.secure_server}api/user/authenticate' method='POST' id='login_form'>
   <div class="field username">
       <input id='username' type='text' name='username' value='{s.user.name}' placeholder='Username or email'>
       <div class='spacer'></div>
@@ -6,10 +6,10 @@
   <div class="field password">
       <input type='password' name='secret' placeholder='Password'><br>
   </div>
-  {<if error}<div id='login_error' class='error'>{error}</div>{>}
+  <div class='login error hide'>The username, email, or password is not correct</div>
   <div class='spacer'></div>
-  <div class='field login submit'>
-    <a href="#" class='password_recovery' onclick="showDialog('#dia_password_recovery'); return false;">Forgot Password?</a>
-    <input type='submit' class='btn black rounded submit' value='Enter'>
+  <div class='field login'>
+    <a href="#" class='password_recovery'>Forgot<br>Password?</a>
+    <input type='submit' class='submit button black' value='Enter'>
   </div>
 </form>

@@ -146,15 +146,13 @@ class HiveAssets(Assets):
 
         ## First assemble hive assets that scss and JavaScript need
 
-        # Assets with weird browser requirements need to be local (fonts and flash)
+        # Assets with weird browser requirements need to be local (flash)
         # first grab assets for JavaScript
         self.find('Jplayer.swf', local=True)
         self.find('skin')
         self.write_js('libsrc/server/compiled.assets.js')
 
-        # Fonts are NOT handled by hive assets for now
-        # fonts must have absolute SSL paths (css is served from s3)
-        self.find('fonts', local=True) # prevent fonts from being uploaded to s3
+        self.find('fonts')
         self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
         
         # Bundle routes JSON as a .js AMD module
