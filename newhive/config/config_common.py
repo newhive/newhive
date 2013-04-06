@@ -3,6 +3,7 @@ live_server     = False
 plain_port      = 80
 ssl_port        = 443
 server_name     = 'newhive.com'
+dev_prefix      = None
 database_host   = 'localhost'
 database_port   = 27017
 email_port      = 2525
