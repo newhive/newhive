@@ -1,11 +1,5 @@
-{{#cards}}
-    {{#fullname}}
-        {{> user_card}}
-    {{/fullname}}
-    {{#entity_class}}
-        {{> feed_card}}
-    {{/entity_class}}
-    {{#title}}
-        {{> expr_card}}
-    {{/title}}
-{{/cards}}
+{<for cards}
+    {<if title}{|templates/expr_card}{>}
+    {<if fullname}{|templates/user_card}{>}
+    {<if entity_class}{|templates/feed_card}{>}
+{>}
