@@ -42,7 +42,7 @@ class Database:
             self.s3_con = S3Connection(config.aws_id, config.aws_secret)
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
 
-        self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
+        self.con = pymongo.Connection(host='localhost', port=config.database_port)
         self.mdb = self.con[config.database]
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
@@ -52,6 +52,9 @@ class Database:
                 (key, opts) = index if type(index) == tuple and type(index[1]) == dict else (index, {})
                 key = map(lambda a: a if type(a) == tuple else (a, 1), [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
+
+        # initialize elasticsearch index
+        self.esdb = ESDatabase(self)
 
     def query(self, q, viewer=None, limit=40, expr_only=None, **args):
         args['viewer'] = viewer
@@ -64,15 +67,18 @@ class Database:
             del search['network']
 
         spec = {}
-        if search.get('text'): spec['text_index'] = { '$all': search['text'] }
-        if search.get('tags'): spec['tags_index'] = { '$all': search['tags'] }
-        if search.get('user'): spec['owner_name'] = search['user']
+        #if search.get('text'): spec['text_index'] = { '$all': search['text'] }
+        #if search.get('tags'): spec['tags_index'] = { '$all': search['tags'] }
+        #if search.get('user'): spec['owner_name'] = search['user']
         if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
 
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
+        elif any (k in search for k in ('tags', 'phrases', 'text', 'user')):
+            #use elasticsearch to search on these fields
+            results = self.esdb.search_text(search)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -91,9 +97,15 @@ class Database:
             #tag, @user, text, #SpecialCategory
         """
 
-        # split into words with possible [@#] prefix
-        search = { 'text': [], 'tags': [] }
-        for pattern in re.findall(r'(\b|\W+)(\w+)', q):
+        # split into words with possible [@#] prefix, isolate phrases in quotes
+
+        search = { 'text': [], 'tags': [], 'phrases': [] }
+        q_quotes = re.findall(r'"(.*?)"',q,flags=re.UNICODE)
+        q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
+
+        search['phrases'].extend(q_quotes)
+
+        for pattern in re.findall(r'(\b|\W+)(\w+)', q_no_quotes):
             prefix = re.sub( r'[^#@]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':
@@ -1449,6 +1461,7 @@ class ESDatabase:
     def __init__(self, db, index='expr_index'): 
         self.index = index
         self.conn = pyes.ES('127.0.0.1:9200')
+        self.db = db
         self.settings = {
           "mappings" : {
             "expr-type" : {
@@ -1490,34 +1503,7 @@ class ESDatabase:
         return None
 
     def parse_query(self, q):
-        """ Parses search query into MongoDB spec
-            #tag, @user, text, #SpecialCategory
-        """
-
-        # split into words with possible [@#] prefix, isolate phrases in quotes
-
-        search = { 'text': [], 'tags': [], 'phrases': [] }
-        q_quotes = re.findall(r'"(.*?)"',q,flags=re.UNICODE)
-        q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
-
-        search['phrases'].extend(q_quotes)
-
-        for pattern in re.findall(r'(\b|\W+)(\w+)', q_no_quotes):
-            prefix = re.sub( r'[^#@]', '', pattern[0] )
-            if prefix == '@': search['user'] = pattern[1].lower()
-            elif prefix == '#':
-                if pattern[1] == 'All': search['all'] = True
-                elif pattern[1] == 'Featured': search['featured'] = True
-                elif pattern[1] == 'Network': search['network'] = True
-                elif pattern[1] == 'Public': search['auth'] = 'public' 
-                elif pattern[1] == 'Private': search['auth'] = 'password'
-                elif pattern[1] == 'Activity': search['activity'] = True
-                elif pattern[1] == 'Listening': search['listening'] = True
-                elif pattern[1] == 'Listeners': search['listeners'] = True
-                else: search['tags'].append( pattern[1].lower() )
-            else: search['text'].append( pattern[1].lower() )
-
-        return search
+        return self.db.parse_query(q)
 
     def create_query(self, search):
         clauses = []
@@ -1528,7 +1514,7 @@ class ESDatabase:
         if len(search['tags']) != 0:
             clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer = 'tag_analyzer'))
 
-        if lget(search, 'user') != None:
+        if search.get('user'):
             clauses.append(pyes.query.TermQuery('owner_name', search['user']))
 
         for p in search['phrases']:
@@ -1538,9 +1524,9 @@ class ESDatabase:
 
         return query
 
-    def search_text(self, string, order="updated"):
-        s = self.parse_query(string)
-        query = self.create_query(s)
+    def search_text(self, search, order="updated"):
+        #s = self.parse_query(string)
+        query = self.create_query(search)
         results = self.conn.search(query, indices = self.index, sort = order)
         for r in results: print r
         return results
@@ -1571,4 +1557,5 @@ class ESDatabase:
         return None
 
     def paginate(self, spec, limit=40, at=None, sort='updated', order=-1, filter=None):
+        #todo: return expr collection
         pass
