@@ -39,7 +39,7 @@ def get_api_endpoints(api):
         rules.append(Rule(
             route_obj['apiRoute'],
             endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
-            defaults={'as_json':True}
+            defaults={'json':True}
         ))
     return rules
 

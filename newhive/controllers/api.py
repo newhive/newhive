@@ -117,13 +117,13 @@ class ModelController(Controller):
 from functools import partial
 @Controllers.register
 class Community(Controller):
-    def home_feed(self, tdata, request):
+    def home_feed(self, tdata, request, username):
         return {
             "cards": tdata.user.feed_network(),
             "title": ("The Hive", "Featured")
         }
 
-    def expressions_public(self, tdata, request):
+    def expressions_public(self, tdata, request, username):
         return {
             "cards": tdata.user.expr_page(
                         auth='public',
@@ -136,10 +136,11 @@ class Community(Controller):
         query = getattr(self, handler, None)
         if query is None:
             return self.serve_404()
-        page_data = query(tdata, request)
+        passable_keyword_args = dfilter(kwargs,['username'])
+        page_data = query(tdata, request, **passable_keyword_args)
         page_data['cards'] = [o.client_view() for o in page_data['cards']]
         page_data['title'] = page_data['title']
-        if kwargs.get('as_json'):
+        if kwargs.get('json'):
             return self.serve_json(response, page_data)
         else:
             response.context.update({
