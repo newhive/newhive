@@ -117,34 +117,35 @@ class ModelController(Controller):
 from functools import partial
 @Controllers.register
 class Community(Controller):
-    def community_page(self, tdata, request, response, username, method, id=None, as_json=False):
-        methods = {
-            "home_feed": {
-                "query": tdata.user.feed_network,
-                "title": ("The Hive", "Featured")
-            },
-            "expressions_public": {
-                "query": partial(tdata.user.expr_page,
-                            auth='public',
-                            viewer=tdata.user),
-                "title": ("My Expressions", "Public")
-            }
+    def home_feed(self, tdata, request):
+        return {
+            "cards": tdata.user.feed_network(),
+            "title": ("The Hive", "Featured")
         }
-        page = methods.get(method)
-        if page is None:
+
+    def expressions_public(self, tdata, request):
+        return {
+            "cards": tdata.user.expr_page(
+                        auth='public',
+                        viewer=tdata.user),
+            "title": ("My Expressions", "Public")
+        }
+
+    def dispatch(self, handler, request, **kwargs):
+        (tdata, response) = self.pre_process(request)
+        query = getattr(self, handler, None)
+        if query is None:
             return self.serve_404()
-        cards = page['query']()
-        cards = map(lambda o: o.client_view(),cards)
-        page_data = {}
-        page_data['cards'] = cards
-        page_data['title'] = page['title']
-        if as_json:
+        page_data = query(tdata, request)
+        page_data['cards'] = [o.client_view() for o in page_data['cards']]
+        page_data['title'] = page_data['title']
+        if kwargs.get('as_json'):
             return self.serve_json(response, page_data)
         else:
             response.context.update({
                 "page_data": page_data
             })
-            return self.serve_loader_page('pages/community.html', tdata, request, response)        
+            return self.serve_loader_page('pages/community.html', tdata, request, response)
 
     def index(self, tdata, request, response):
         """ Generic handler for retrieving paginated lists of a collection """
