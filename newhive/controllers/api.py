@@ -144,7 +144,7 @@ class Community(Controller):
             response.context.update({
                 "page_data": page_data
             })
-            return self.serve_loader_page('pages/community.html', tdata, request, response)        
+            return self.serve_loader_page('pages/main.html', tdata, request, response)        
 
     def index(self, tdata, request, response):
         """ Generic handler for retrieving paginated lists of a collection """

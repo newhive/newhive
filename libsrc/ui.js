@@ -1,7 +1,6 @@
 define(['api_routes',
-        'community_page_renderer',
-        'js!browser/zepto'], function(_ApiRoutes, _communityPageRenderer) {
-    var communityPageRenderer = _communityPageRenderer();
+        'ui/community',
+        'js!browser/zepto'], function(_ApiRoutes, community) {
     var ApiRoutes = _ApiRoutes();
     function substituteVariables(inStr, routeVars) {
         for (var routeVar in routeVars)
@@ -15,7 +14,7 @@ define(['api_routes',
             url: routeObj.api.toString(),
             dataType: 'json',
             success: function(data) {
-                communityPageRenderer.render(data);
+                community.render(data);
                 callback();
             }
         });
