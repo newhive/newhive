@@ -1479,24 +1479,9 @@ class ESDatabase:
         counter = 0
         exprs = db.Expr.search({})
 
-        while counter < db.Expr.count():
-            processed_tags = ' '.join(normalize_tags(lget(exprs[counter], 'tags', '')))
-            data = {
-            'text': lget(exprs[counter], 'text', ''), 
-            'tags': processed_tags, 
-            'star': lget(lget(lget(exprs[counter], 'analytics', {}), 'Star', {}), 'count', 0),
-            'broadcast': lget(lget(lget(exprs[counter], 'analytics', {}), 'Broadcast', {}), 'count', 0),
-            'name': lget(exprs[counter], 'name', ''),
-            'owner_name': lget(exprs[counter], 'owner_name', ''),
-            'owner': lget(exprs[counter], 'owner', ''),
-            'title': lget(exprs[counter], 'title', ''),
-            'created': lget(exprs[counter], 'created', 0),
-            'updated': lget(exprs[counter], 'updated', 0),
-            'views': lget(exprs[counter], 'views', 0),
-            }
-            self.conn.index(data, self.index, 'expr-type', exprs[counter]['_id'])
-            counter += 1
-            print counter
+        for i in range(1000):
+            print i
+            self.update(exprs[i], refresh=False)
         self.conn.indices.refresh()
         return None
 
@@ -1553,21 +1538,37 @@ class ESDatabase:
 
         return query
 
-    def search_text(self, string, index='expr_index', order="updated"):
+    def search_text(self, string, order="updated"):
         s = self.parse_query(string)
         query = self.create_query(s)
-        results = self.conn.search(query, indices = index, sort = order)
+        results = self.conn.search(query, indices = self.index, sort = order)
         for r in results: print r
         return results
 
-    def search_fuzzy(self, string, index='expr_index', order="updated"):
+    def search_fuzzy(self, string, order="updated"):
         q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
-        results = self.conn.search(q, indices = index, sort = order)
+        results = self.conn.search(q, indices = self.index, sort = order)
         for r in results: print r
         return results
 
-    def update(self, expr):
-        pass
+    def update(self, expr, refresh = True):
+        processed_tags = ' '.join(normalize_tags(lget(expr, 'tags', '')))
+        data = {
+        'text': lget(expr, 'text', ''), 
+        'tags': processed_tags, 
+        'star': lget(lget(lget(expr, 'analytics', {}), 'Star', {}), 'count', 0),
+        'broadcast': lget(lget(lget(expr, 'analytics', {}), 'Broadcast', {}), 'count', 0),
+        'name': lget(expr, 'name', ''),
+        'owner_name': lget(expr, 'owner_name', ''),
+        'owner': lget(expr, 'owner', ''),
+        'title': lget(expr, 'title', ''),
+        'created': lget(expr, 'created', 0),
+        'updated': lget(expr, 'updated', 0),
+        'views': lget(expr, 'views', 0),
+        }
+        self.conn.index(data, self.index, 'expr-type', expr['_id'])
+        if refresh==True: self.conn.indices.refresh()
+        return None
 
     def paginate(self, spec, limit=40, at=None, sort='updated', order=-1, filter=None):
         pass
