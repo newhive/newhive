@@ -117,17 +117,17 @@ class ModelController(Controller):
 from functools import partial
 @Controllers.register
 class Community(Controller):
-    def home_feed(self, tdata, request, username):
+    def home_feed(self, tdata, request, username, **paging_args):
         return {
-            "cards": tdata.user.feed_network(),
+            "cards": tdata.user.feed_network(**paging_args),
             "title": ("The Hive", "Featured")
         }
 
-    def expressions_public(self, tdata, request, username):
+    def expressions_public(self, tdata, request, username, **paging_args):
         return {
             "cards": tdata.user.expr_page(
                         auth='public',
-                        viewer=tdata.user),
+                        viewer=tdata.user, **paging_args),
             "title": ("My Expressions", "Public")
         }
 
@@ -136,8 +136,14 @@ class Community(Controller):
         query = getattr(self, handler, None)
         if query is None:
             return self.serve_404()
+        # Handle keyword args to be passed to the controller function
         passable_keyword_args = dfilter(kwargs,['username'])
-        page_data = query(tdata, request, **passable_keyword_args)
+        # Handle pagination
+        pagination_args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
+        for k in ['limit', 'order']:
+            if k in pagination_args: pagination_args[k] = int(pagination_args[k])
+        # Call controller function with query and pagination args
+        page_data = query(tdata, request, **(dict(passable_keyword_args.items() + pagination_args.items())))
         page_data['cards'] = [o.client_view() for o in page_data['cards']]
         page_data['title'] = page_data['title']
         if kwargs.get('json'):
@@ -148,20 +154,6 @@ class Community(Controller):
             })
             return self.serve_loader_page('pages/community.html', tdata, request, response)
 
-    def index(self, tdata, request, response):
-        """ Generic handler for retrieving paginated lists of a collection """
-
-        args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
-        for k in ['limit', 'order']:
-            if k in args: args[k] = int(args[k])
-        # pass off actual querying of model to specific ModelController
-        items = self.page(tdata, **args)
-        return self.serve_json(response, items)
-
-    # this can be overridden in derived classes to add behavior that doesn't belong in the model
-    def page(self, tdata, **args):
-        return self.model.page({}, tdata.user, **args)
-        
     def profile(self, tdata, request, response, username=None):
         return self.serve_page(tdata, response, 'pages/nav_stub.html')
 
