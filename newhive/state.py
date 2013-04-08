@@ -42,7 +42,7 @@ class Database:
             self.s3_con = S3Connection(config.aws_id, config.aws_secret)
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
 
-        self.con = pymongo.Connection(host='localhost', port=config.database_port)
+        self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
