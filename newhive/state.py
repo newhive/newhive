@@ -1506,21 +1506,23 @@ class ESDatabase:
         return self.db.parse_query(q)
 
     def create_query(self, search):
+        # if query contains @username, results must match @username and one or more of the search terms
+        # otherwise results match one or more of the search terms
+        # query stemming disabled for phrase search
+
         clauses = []
 
         if len(search['text']) != 0:
             clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text']), analyzer = 'default'))
-
         if len(search['tags']) != 0:
             clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer = 'tag_analyzer'))
-
-        if search.get('user'):
-            clauses.append(pyes.query.TermQuery('owner_name', search['user']))
-
         for p in search['phrases']:
-            clauses.append(pyes.query.TextQuery('_all', p, type = "phrase"))
-
-        query = pyes.query.BoolQuery(should = clauses)
+            clauses.append(pyes.query.TextQuery('_all', p, type = "phrase", analyzer = 'simple'))
+        if search.get('user'):
+            user_clause = pyes.query.TermQuery('owner_name', search['user'])
+            query = pyes.query.BoolQuery(must = user_clause, should = clauses)
+        else:
+            query = pyes.query.BoolQuery(should = clauses)
 
         return query
 
