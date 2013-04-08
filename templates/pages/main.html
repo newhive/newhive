@@ -1,0 +1,8 @@
+{% extends "page.html" %}
+
+{% block body %}
+  <div id='nav'></div>
+  <div id='content'></div>
+  <div id='exprs'></div>
+  <script>curl(['ui/nav'], function(m){ m.render({}) });</script>
+{% endblock %}

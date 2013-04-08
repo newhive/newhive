@@ -991,8 +991,27 @@ class Expr(HasSocial):
     public = property(lambda self: self.get('auth') == "public")
 
     def client_view(self, viewer=None):
-        return self
+        counts = dict([ ( k, v.get('count', 0) ) for
+            k, v in self.get('analytics', {}).iteritems() ])
+        counts['Views'] = self.views
+        counts['Comment'] = self.comment_count
+        # if expr.auth_required(viewer, password):
+        expr = {}
+        dict.update(expr, {
+            'id': self.id,
+            'thumb': self.get_thumb(),
+            'owner': self.owner.client_view(viewer=viewer),
+            'counts': counts,
+            'url': self.url,
+            'title': self.get('title')
+        })
 
+        if viewer and viewer.is_admin:
+            dict.update(expr, { 'featured': self.is_featured })
+
+        return expr
+        # return self
+        
     @property
     def tag_string(self):
         return ' '.join(["#" + tag for tag in self.get('tags_index', [])])

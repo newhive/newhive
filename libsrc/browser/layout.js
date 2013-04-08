@@ -1,3 +1,39 @@
+define(['browser/jquery'], function($){
+    var o = {};
+
+    o.center = function(e, inside, opts) {
+        if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
+
+        var w = typeof(inside) == 'undefined' ? $(window) : inside,
+            opts = $.extend({
+                absolute: false,
+                minimum: true,
+                h: true,
+                v: true 
+            }, opts),
+            pos = {}
+        ;
+
+        if(opts.h) pos.left = (w.width() - e.outerWidth()) / 2;
+        if(opts.v) pos.top = (w.height() - e.outerHeight()) / 2;
+
+        if(opts.minimum) {
+            if(opts.h) pos.left = Math.max(0, pos.left);
+            if(opts.v) pos.top = Math.max(0, pos.top);
+        }
+        if(opts.absolute) {
+            if(opts.h) pos.left += window.scrollX;
+            if(opts.v) pos.top += window.scrollY;
+        }
+
+        e.css(pos);
+    }
+
+    return o;
+});
+
+(function(){
+
 function img_fill(img) {
     var e = $(img), w = e.parent().width(), h = e.parent().height();
     if(!e.length) return;
@@ -41,34 +77,6 @@ var place_apps = function() {
     });
 }
 
-function center(e, inside, opts) {
-    if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
-
-    var w = typeof(inside) == 'undefined' ? $(window) : inside,
-        opts = $.extend({
-            absolute: false,
-            minimum: true,
-            h: true,
-            v: true 
-        }, opts),
-        pos = {}
-    ;
-
-    if(opts.h) pos.left = (w.width() - e.outerWidth()) / 2;
-    if(opts.v) pos.top = (w.height() - e.outerHeight()) / 2;
-
-    if(opts.minimum) {
-        if(opts.h) pos.left = Math.max(0, pos.left);
-        if(opts.v) pos.top = Math.max(0, pos.top);
-    }
-    if(opts.absolute) {
-        if(opts.h) pos.left += window.scrollX;
-        if(opts.v) pos.top += window.scrollY;
-    }
-
-    e.css(pos);
-}
-
 // TODO: fix this
 function is_fullscreen(){
     return document.height == window.screen.height && document.width == window.screen.width;
@@ -78,3 +86,5 @@ function is_fullscreen(){
 function new_window(b,c,d){
     var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}
 }
+
+});

@@ -254,10 +254,6 @@
     </div>
   {% endif %}
 
-  {% if not expr_frame %}
-    <script>Hive.Menus.init();</script>
-  {% endif %}
-  
   <div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>
   <div id='content'>
     {% block content %}
@@ -275,30 +271,4 @@
     {% endblock content %}
   </div>
 
-  <div id='dialogs'>
-    {% block dialogs %}
-    {% include 'dialogs/share.html' %}
-    {% include 'dialogs/embed.html' %}
-      {% if user.logged_in %}
-          {% include 'dialogs/referral.html' %}
-          {% include 'dialogs/facebook_connect.html' %}
-          {% include 'dialogs/sent_invites_thanks.html' %}
-          {% include 'dialogs/relogin.html' %}
-      {% else %}
-          {% include 'dialogs/sign_in_or_join.html' %}
-          {% include 'dialogs/signup.html' %}
-          {% include 'dialogs/password_recovery.html' %}
-          {% include 'dialogs/must_login.html' %}
-      {% endif %}
-
-      {% if dialog_to_show.name == '#dia_fb_account_duplicate' %}
-          {% include 'dialogs/fb_account_duplicate.html' %}
-      {% endif %}
-
-      {% if new_fb_connect %}
-          {% include 'dialogs/fb_connect_landing.html' %}
-      {% endif %}
-
-    {% endblock dialogs %}
-  </div>
 {% endblock main %}

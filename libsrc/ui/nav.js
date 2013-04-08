@@ -1,19 +1,54 @@
 define([
-    'browser/jquery', 'text/handlebars', 'templates/context', 'text!templates/nav.html',
-    'text!templates/login_form.html'
-], function($, template, context, nav_templ, login_templ) {
-    var nav_render = template.compile(nav_templ);
-    var login_render = template.compile(login_templ);
+    'browser/jquery', 'browser/layout', 'server/session', 'ui/menu', 'ui/util',
+    'sj!templates/nav.html', 'sj!templates/login_form.html'
+], function($, lay, s, menu, ui, nav_template, login_template) {
+    function render(){
+        $('#nav').empty().html(nav_template());
+        lay.center($('.center'), $('#nav'));
 
-    function render(server_state){
-        $('body').append(nav_render(context));
+        menu('#logo', '#logo_menu');
+        $('#logout_btn').click(logout);
+
+        menu('#network_btn', '#network_menu');
+        menu('#hive_btn', '#hive_menu');
+
+        $('#login_form').submit(login);
+        if(!s.user.logged_in){
+        	menu('#login_btn', '#login_menu', { open: function(){
+        		$('#username').focus() } });
+        }
+        else{
+        	menu('#user_btn', '#user_menu');
+        }
+
+        ui.add_hovers();
+    }
+
+    function login(){
+    	var f = $(this);
+	    f.find('[name=url]').val(window.location.href);
+
+    	$.post(f.attr('action'), f.serialize(), function(user){
+    		if(user){
+	    		s.user = user;
+				render();	    		
+	    	}
+	    	else $('.login.error').removeClass('hide');
+    	});
+    	return false;
+    }
+    function logout(){
+    	$.post('/api/user/logout', '', function(){
+    		s.user.logged_in = false;
+    		render();
+    	});
     }
 
     return { render: render };
 });
 
 // TODO: put these somewhere
-function(){
+(function(){
 
 	// works as handler or function modifier
 	function require_login(label, fn) {
@@ -34,21 +69,6 @@ function(){
 	    if(fn) return check;
 	    else return check();
 	}
-
-	Hive.login_submit = function(form){
-	    var form = $(form);
-	    var identifier = form.parent().attr('id') || form.parents('.dialog').attr('id');
-	    form.find('[name=url]').val(window.location.href);
-	    _gaq.push(['_trackEvent', 'login', identifier]);
-	};
-
-	Hive.logout_submit = function(that){
-	    var form = $(that).parents('form');
-	    form.find('[name=url]').val(window.location.href);
-	    _gaq.push(['_trackEvent', 'logout', 'complete']);
-	    // Delay ensures that event is tracked
-	    setTimeout(function(){ form.submit(); }, 800);
-	};
 
 	function relogin(success){
 	    var dia = $('#dia_relogin');
@@ -107,4 +127,4 @@ function(){
 	    _gaq.push(['_trackEvent', 'share', service]);
 	};
 
-}
+});

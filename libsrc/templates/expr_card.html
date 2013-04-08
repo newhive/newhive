@@ -6,9 +6,9 @@
             <img class="owner-thumb" src="{{owner.thumb}}"/>  by <strong>{{owner.name}}</strong>
         </div>
         <div class="expr-stats">
-            {{#getImgAsset}}skin/1/views_sm.png{{/getImgAsset}} {{counts.Views}}
-            {{#getImgAsset}}skin/1/like_highlight.png{{/getImgAsset}} {{counts.Star}}
-            {{#getImgAsset}}skin/1/discussion_highlight.png{{/getImgAsset}} {{counts.Comment}}
+            <img src="{{#getAssetURL}}skin/1/views_sm.png{{/getAssetURL}}"/> {{counts.Views}}
+            <img src="{{#getAssetURL}}skin/1/like_highlight.png{{/getAssetURL}}"/> {{counts.Star}}
+            <img src="{{#getAssetURL}}skin/1/discussion_highlight.png{{/getAssetURL}}"/> {{counts.Comment}}
         </div>
     </div>
 </div>

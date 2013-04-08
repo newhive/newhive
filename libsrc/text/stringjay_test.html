@@ -38,8 +38,10 @@ textarea { padding: 10px; }
   </a></div>
 {>}
 {<for cards}
-  {.}
+  <h1>{title}</h1>
+  <div>by {owner_name}</div>
 {>}
+<hr>
 you can have your braces too :-{"}"}
 </textarea>
 
@@ -48,7 +50,12 @@ you can have your braces too :-{"}"}
 	"owner": {"name": "sirforks", "fullname":"sir forksalot"},
 	"about": "a big <b>bold</b>html <i>string</i>",
 	"user": {"name":"jrh", "fullname":"Jay Random Hacker", "logged_in": true},
-	"cards": ["foo","bar","baz","aoeu"]
+	"cards": [
+		{"title":"goodness", "owner_name":"fooman"},
+		{"title":"badness", "owner_name":"barman"},
+		{"title":"foodness", "owner_name":"bazman"},
+		{"title":"meepness", "owner_name":"quxman"}
+	]
 }
 </textarea>
 

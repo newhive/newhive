@@ -181,7 +181,7 @@ var profile_thumb_choose = function(){
      </a>
    </div>
    {% endif %}
-   <div class="title"><h1>{{ ui.create_account_title if action == 'create' else "+ " ~ ui.update_account_title }}</h1></div>
+   <div class="title"><h1>{{ "Create your account" if action == 'create' else "+ " ~ "Settings" }}</h1></div>
    <p class="active" id="error">{{message |e}}</p>
  </div>
 
@@ -274,7 +274,7 @@ var profile_thumb_choose = function(){
        <p>You are already listening to {{listening_count}} facebook friend{{"s" if listening_count>1}}</p>
        {% endif %}
        {% if friends %}
-         <input type="checkbox" id='listen_to_friends'/><label for="listen_to_friends">{{ui.listen_to_all_friends | e}}</b></label>
+         <input type="checkbox" id='listen_to_friends'/><label for="listen_to_friends">Listen to all of my friends from Facebook that are on NewHive.</b></label>
          {% for friend in friends -%}
            <div class="friend">
              <img src="{{friend.fb_thumb}}"/>

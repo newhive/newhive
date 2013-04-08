@@ -1,32 +1,45 @@
 @import "common";
+@import "compass/css3/gradient";
 
 // nav takes 3 layers. For invisible nav handles, the navigation,
 // and their submenus, (4, 5, 6) respectively
 
 #nav {
     position: fixed;
-    bottom: 0px;
     width: 100%;
     height: $nav_size;
     background-color: white;
-    @include box-shadow(rgba(black, .3) 0px 0px 20px);
-    padding-right: 6px;
     z-index: $nav_layer + 1;
+    @include linear-gradient(color-stops(white, #DADADA), top);
 
-    .icon, .text_btn {
-        background-size: 100% 100%;
-        font-weight: bold;
+    * {
+        font-family: Gotham;
+        text-transform: uppercase;
     }
-    .text_btn {
-        padding: 0 6px;
+
+    .expr {
+        bottom: 0px;
     }
-    .center {
+    .site {
+        top: 0;
+    }
+
+    .item {
         display: inline-block;
         height: $nav_size;
-        line-height: $nav_size;
         vertical-align: top;
     }
+    .icon, .text_btn {
+        background-size: 100% 100%;
+    }
+    .text_btn {
+        padding: 0 12px;
+        line-height: 47px;
+        .icon { margin-left: -9px; }
+    }
     .icon {
+        display: inline-block;
+        vertical-align: top;
         height: $nav_size;
         width: $nav_size;
     }
@@ -41,7 +54,6 @@
         margin: 0 6px 0px -5px;
         font-size: 11px;
         &.zero { display: none; }
-        font-weight: bold;
     }
 
     .user_thumb {
@@ -52,20 +64,20 @@
     }
 
     #logo {
+        padding: 0 3px;
         width: $nav_size; height: $nav_size;
         background-image: asset_url('skin/nav/logo.png');
+        background-size: $nav_size $nav_size;
+        background-position: 3px 0;
+        background-repeat: no-repeat;
         &.active { background-image: asset_url('skin/nav/logo-hover.png'); }
-    }
-    #sign_up_btn {
-        * {
-            padding: 0 6px;
-            background-color: $color_selected;
-        }
-        &:hover * { background: none; }
     }
     #create_btn {
         .text { padding-left: 0px; }
-        .icon { background-image: asset_url('skin/nav/create.png'); }
+        .icon {
+            background-image: asset_url('skin/nav/create.png');
+            width: 22px;
+        }
         &.active .icon { background-image: asset_url('skin/nav/create-hover.png'); }
     }
     .random_btn {
@@ -76,13 +88,12 @@
         }
     }
     #search_box {
-        margin-left: 6px;
         width: 150px;
-        border: solid 1px $color_grey_medium;
-        &:focus { border-color: $color_selected; }    
+        height: $nav_size - 18;
     }
-    .submit {
-        vertical-align: top;
+    #plus {
+        background-image: asset_url('skin/nav/plus.png');
+        &.active { background-image: asset_url('skin/nav/plus-hover.png'); }
     }
 
     .right {
@@ -90,31 +101,23 @@
         right: 0;
         top: 0;
         height: $nav_size;
-        padding-right: 6px;
 
         #expr_btn {
             .icon { background-image: asset_url('skin/nav/views.png'); }
             &.active .icon { background-image: asset_url('skin/nav/views-hover.png'); }
             &.active { background-color: $color_selected; }
         }
-        .star {
-            .icon { background-image: asset_url('skin/nav/star.png'); }
+        .love {
+            .icon { background-image: asset_url('skin/nav/love.png'); }
             &.on { background-color: $color_bright_red; }
-            &.on .icon { background-image: asset_url('skin/nav/star_on.png'); }
+            &.on .icon { background-image: asset_url('skin/nav/love-on.png'); }
             &.active { background-color: $color_selected; }
-            &.active .icon { background-image: asset_url('skin/nav/star-hover.png'); }
-        }
-        .broadcast {
-            .icon { background-image: asset_url('skin/nav/broadcast.png'); }
-            &.on { background-color: $color_blue; }
-            &.on .icon { background-image: asset_url('skin/nav/broadcast_on.png'); }
-            &.active .icon { background-image: asset_url('skin/nav/broadcast-hover.png'); }
-            &.active { background-color: $color_selected; }
+            &.active .icon { background-image: asset_url('skin/nav/love-hover.png'); }
         }
         .comment {
             .icon { background-image: asset_url('skin/nav/comment.png'); }
             &.on { background-color: $color_blue; }
-            &.on .icon { background-image: asset_url('skin/nav/comment_on.png'); }
+            &.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
             &.active .icon { background-image: asset_url('skin/nav/comment-hover.png'); }
             &.active { background-color: $color_selected; }
         }
@@ -131,6 +134,27 @@
             background-image: asset_url('skin/nav/plus.png');
             &.active { background-image: asset_url('skin/nav/plus-hover.png'); }
         }
+    }
+
+    .center {
+        position: absolute;
+        top: 0;
+    }
+
+    .menu {
+        .menu_item {
+            border-color: $color_light_grey;
+            border-width: 1px 0 0 0;
+            border-style: solid;
+            padding: 12px 10px 8px 10px;
+            height: 20px;
+            .count {
+                float: right;
+                height: 20px;
+                width: 20px;
+            }
+        }
+        .menu_item:first-child { border: none; }
     }
 }
 
@@ -167,12 +191,6 @@ img.thumb { background-color: $color_grey_medium; }
 
 .none, .off .on, .on .off { display: none !important }
 
-.menu_handle {
-    position: fixed;
-    z-index: $nav_layer;
-}
-
-
 #call_to_action {
     float: left;
     cursor: pointer;
@@ -208,10 +226,11 @@ img.thumb { background-color: $color_grey_medium; }
     z-index: $nav_layer + 2;
     background-color: white;
     overflow: auto;
-    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
-    @include border-radius(5px);
-    padding: 5px;
+    @include box-shadow(rgba(black, 0.4) 2px 3px 5px);
+    border-width: 0 1px 0 0;
+    border-color: $color_light_grey;
     cursor: default;
+    min-width: 135px;
 
     .bar {
         background-color: $color_light_grey;
@@ -224,38 +243,23 @@ img.thumb { background-color: $color_grey_medium; }
 
     .menu_item {
         display: block;
-        padding: 5px 8px;
-        font-weight: bold;
         white-space: nowrap;
         &.active { background-color: $color_selected; }
-        .icon {
-            float: right;
-            margin-top: -5px;
-        }
+        padding: 5px 8px;
     }
 }
 
 #login_menu {
-    width: 190px; padding : 10px;
-    input[type=text], input[type=password] { width: 170px; }
+    width: 220px;
+    padding: 10px;
+    input[type=text], input[type=password] { width: 202px; }
     .password_recovery {
-        font-weight: normal;
         font-size: 12px;
         color: black;
         margin-right: 15px;
-        white-space: nowrap;
         float: left;
     }
     .submit { float: right; }
-}
-
-#hive_menu {
-    .menu_item {
-        border-color: $color_light_grey;
-        border-width: 1px 0 0 0;
-        border-style: solid;
-    }
-    .menu_item:first-child { border: none; }
 }
 
 #user_menu { width: 260px; }

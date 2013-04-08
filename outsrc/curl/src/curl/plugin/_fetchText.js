@@ -48,5 +48,4 @@ define([], function () {
 	}
 
 	return fetchText;
-
 });
