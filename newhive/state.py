@@ -1469,11 +1469,11 @@ class ESDatabase:
                 "tags" : {"type" : "string", "boost":1.7, "index":"analyzed", "store": "yes", "term_vector": "with_positions_offsets", "analyzer" : "standard"},
                 "text":{"type": "string", "boost":1.5, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
                 "title":{"type": "string", "boost":1.7, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
-                "updated":{"type": "float", "boost":1.3, "store": "yes"},
-                "created":{"type": "float", "boost":1.0, "store": "yes"},
-                "views":{"type": "integer", "boost":1.5, "store": "yes"}, 
-                "broadcast":{"type": "integer", "boost":1.3, "store": "yes"},
-                "star":{"type": "integer", "boost":1.3, "store": "yes"},  
+                "updated":{"type": "float", "store": "yes"},
+                "created":{"type": "float", "store": "yes"},
+                "views":{"type": "integer", "store": "yes"}, 
+                "broadcast":{"type": "integer", "store": "yes"},
+                "star":{"type": "integer", "store": "yes"},  
               }
             }
           },
@@ -1512,11 +1512,14 @@ class ESDatabase:
         clauses = []
 
         if len(search['text']) != 0:
-            clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text']), analyzer = 'default'))
+            clauses.append(pyes.query.TextQuery('text', ' '.join(search['text']), analyzer = 'default'))
+            clauses.append(pyes.query.TextQuery('tags', ' '.join(search['text']), analyzer = 'tag_analyzer'))
+            clauses.append(pyes.query.TextQuery('title', ' '.join(search['text']), analyzer = 'default', boost = 5))
         if len(search['tags']) != 0:
-            clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer = 'tag_analyzer'))
+            clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer = 'tag_analyzer', boost = 5))
         for p in search['phrases']:
-            clauses.append(pyes.query.TextQuery('_all', p, type = "phrase", analyzer = 'simple'))
+            clauses.append(pyes.query.TextQuery('text', p, type = "phrase", analyzer = 'simple', boost = 2))
+            clauses.append(pyes.query.TextQuery('title', p, type = "phrase", analyzer = 'simple', boost = 5))
         if search.get('user'):
             user_clause = pyes.query.TermQuery('owner_name', search['user'])
             query = pyes.query.BoolQuery(must = user_clause, should = clauses)
@@ -1561,5 +1564,5 @@ class ESDatabase:
         for r in res:
             result_id = r._meta.id
             expr_results.append(self.db.Expr.fetch(result_id))
-        expr_results.next = res[limit-1]._meta[sort] if len(expr_results) == limit else None
+       # expr_results.next = res[limit-1]._meta[sort] if len(expr_results) == limit else None
         return expr_results
