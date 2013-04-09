@@ -6,11 +6,12 @@
   <div class="field password">
       <input type='password' name='secret' placeholder='Password'><br>
   </div>
-  <div class='login error hide'>The username, email, or password is not correct</div>
+  <div class='login error {<unless s.error.login}hide{>}'>The username / email or password isn't matching</div>
   <div class='spacer'></div>
   <div class='field login'>
     <a href="#" class='password_recovery'>Forgot<br>Password?</a>
     <input type='submit' class='submit button black' value='Enter'>
   </div>
   <input type='hidden' name='url' value=''>
+  <input type='hidden' name='json' value=''>
 </form>

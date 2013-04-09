@@ -1,7 +1,7 @@
 define([
     'browser/jquery', 'browser/layout', 'server/session', 'ui/menu', 'ui/util',
     'sj!templates/nav.html', 'sj!templates/login_form.html'
-], function($, lay, s, menu, ui, nav_template, login_template) {
+], function($, lay, session, menu, ui, nav_template, login_template) {
     function render(){
         $('#nav').empty().html(nav_template());
         lay.center($('.center'), $('#nav'));
@@ -13,9 +13,10 @@ define([
         menu('#hive_btn', '#hive_menu');
 
         $('#login_form').submit(login);
-        if(!s.user.logged_in){
-        	menu('#login_btn', '#login_menu', { open: function(){
+        if(!session.user.logged_in){
+        	var m = menu('#login_btn', '#login_menu', { open: function(){
         		$('#username').focus() } });
+        	if(session.error.login) m.open();
         }
         else{
         	menu('#user_btn', '#user_menu');
@@ -26,20 +27,28 @@ define([
 
     function login(){
     	var f = $(this);
-	    f.find('[name=url]').val(window.location.href);
+    	var json_flag = f.find('[name=json]');
 
-    	$.post(f.attr('action'), f.serialize(), function(user){
-    		if(user){
-	    		s.user = user;
-				render();	    		
-	    	}
-	    	else $('.login.error').removeClass('hide');
-    	});
-    	return false;
+	    if(location.protocol == 'https:'){
+	    	$.post(f.attr('action'), f.serialize(), function(user){
+	    		if(user){
+		    		session.user = user;
+					render();
+		    	}
+		    	else $('.login.error').removeClass('hide');
+	    	});
+	    	return false;
+	    }
+    	// can't post between protocols, so pass credentials to site-wide auth
+	    else{
+	    	var here = window.location;
+	    	f.attr('action', session.secure_server + here.pathname.slice(1) + here.search);
+	    	f.off('submit'); // prevent loop
+	    }
     }
     function logout(){
     	$.post('/api/user/logout', '', function(){
-    		s.user.logged_in = false;
+    		session.user.logged_in = false;
     		render();
     	});
     }
