@@ -78,7 +78,7 @@ class Database:
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any (k in search for k in ('tags', 'phrases', 'text', 'user')):
             #use elasticsearch to search on these fields
-            results = self.esdb.paginate(search, limit=limit, start=0, es_order='updated:desc,views', es_filter=None, sort='updated')
+            results = self.esdb.paginate(search, limit=40, start=0, es_order='_score,views:desc', es_filter=None, sort='score')
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -1556,11 +1556,11 @@ class ESDatabase:
         if refresh==True: self.conn.indices.refresh()
         return None
 
-    def paginate(self, search, limit=40, start=0, es_order='updated:desc,views', es_filter=None, sort='updated'):
+    def paginate(self, search, limit=40, start=0, es_order='_score,views:desc', es_filter=None, sort='score'):
         res = self.search_text(search, es_order = es_order, es_filter = es_filter, start = start, limit = limit)
         expr_results = Page([])
         for r in res:
             result_id = r._meta.id
             expr_results.append(self.db.Expr.fetch(result_id))
-        expr_results.next = expr_results[-1][sort] if len(expr_results) == limit else None
+        expr_results.next = res[limit-1]._meta[sort] if len(expr_results) == limit else None
         return expr_results
