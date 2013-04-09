@@ -12,10 +12,8 @@
     z-index: $nav_layer + 1;
     @include linear-gradient(color-stops(white, #DADADA), top);
 
-    * {
-        font-family: Gotham;
-        text-transform: uppercase;
-    }
+    * { font-family: Gotham }
+    .item, input, .menu_item { text-transform: uppercase; }
 
     .expr {
         bottom: 0px;

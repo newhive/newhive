@@ -9,23 +9,15 @@ logger = logging.getLogger(__name__)
 
 def authenticate_request(db, request, response):
     """Read session id from 'identity' cookie, retrieve session record from db,
-       compare session secret with plain_secret or secure_secret, returns
-       state.User object."""
+       compare session secret with plain_secret or secure_secret.
+       If session not found and credentials given, creates session.
+       returns state.User object, False when there's no session,
+       or Exception on login failure."""
 
-    sessid = get_cookie(request, 'identity')
-    fail = db.User.new({})
-    if not sessid: return fail
-    session = db.Session.fetch(sessid)
-    if not session: return fail
+    session = db.Session.fetch(get_cookie(request, 'identity'))
+    if not session or not session.get('active'):
+        return handle_login(db, request, response)
     user = db.User.fetch(session['user'])
-    if not user:
-        rm_cookie(response, 'plain_secret')
-        rm_cookie(response, 'secure_secret', True)
-        rm_cookie(response, 'identity')
-        return fail
-
-    user.update(session = session.id)
-
     user.logged_in = False
     if cmp_secret(session, request, response):
         user.logged_in = True
@@ -36,17 +28,17 @@ def handle_login(db, request, response):
        returns authenticated state.User on success, False on failure."""
 
     args = request.form
-    if not request.is_secure: raise exceptions.BadRequest()
-    username = args.get('username', False).lower()
+    username = args.get('username', '').lower()
     secret = args.get('secret', False)
     if username and secret:
+        if not request.is_secure: raise exceptions.BadRequest()
         user = db.User.named(username)
         if not user: user = db.User.find({'email': username})
         if user and user.cmp_password(secret):
             new_session(db, user, request, response)
+            user.logged_in = True
             return user
-
-    response.context['error'] = 'Invalid username or password'
+        else: return Exception('Invalid credentials')
     return False
 
 def new_session(db, user, request, response):
@@ -59,7 +51,7 @@ def new_session(db, user, request, response):
     #    plain_secret = str
     #    secure_secret = str
 
-    expires = False if request.form.get('no_expires', False) else True
+    expires = request.form.get('expires', False)
     session = db.Session.create(dict(
          user = user.id
         ,active = True
@@ -70,6 +62,7 @@ def new_session(db, user, request, response):
     set_secret(session, False, response)
     set_cookie(response, 'identity', session.id, expires = expires)
     user.logged_in = True
+    user.update(session = session.id)
     return session
 
 def handle_logout(db, user, request, response):

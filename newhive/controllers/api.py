@@ -49,23 +49,27 @@ class Controller(object):
 
         response = Response()
         tdata = TransactionData()
-        tdata.user = auth.authenticate_request(self.db, request, response)
-        request.path_parts = request.path.split('/')
+        authed = auth.authenticate_request(self.db, request, response)
+        tdata.user = ( authed if type(authed) == self.db.User.entity
+            else self.db.User.new({}) )
 
         # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
         # the context is for passing to views to render a response.
         # The f dictionary of form fields may be left alone to mirror the request, or validated and adjusted
-        response.context = { 'f' : dict(request.form.items()), 'q' : request.args, 'url' : request.url,
-                            'user': tdata.user, 'server_url': abs_url(),
-                            'config': config, 'secure_server': abs_url(secure = True),
-                            'server_name': config.server_name, 'debug': config.debug_mode, 
-                            'content_domain': abs_url(domain = config.content_domain),
-                            'beta_tester': config.debug_mode or tdata.user.get('name') in config.beta_testers}
-        request.path_parts = request.path.split('/')
+        tdata.context = {
+            'f': dict(request.form.items()), 'q': request.args, 'url': request.url,
+            'user': tdata.user.client_view(), 'server_url': abs_url(), 'error': {},
+            'config': config, 'secure_server': abs_url(secure = True),
+            'server_name': config.server_name, 'debug': config.debug_mode, 
+            'content_domain': abs_url(domain = config.content_domain),
+            'beta_tester': config.debug_mode or tdata.user.get('name') in config.beta_testers
+        }
+        if isinstance(authed, Exception): tdata.context['error']['login'] = True
+
         return (tdata, response)
     
     def render_template(self, tdata, response, template):
-        context = response.context
+        context = tdata.context
         context.update(template = template)
         context.setdefault('icon', self.asset('skin/1/logo.png'))
         return self.jinja_env.get_template(template).render(context)
@@ -93,6 +97,12 @@ class Controller(object):
         return self.serve_json(response, {
             'error': 404
         })
+
+    def redirect(self, response, location, permanent=False):
+        response.location = str(location)
+        response.status_code = 301 if permanent else 303
+        return response
+
 
 class ModelController(Controller):
     """ Base class for all controllers tied to one of our DB collections """
@@ -141,7 +151,7 @@ class Community(Controller):
         if as_json:
             return self.serve_json(response, page_data)
         else:
-            response.context.update({
+            tdata.context.update({
                 "page_data": page_data
             })
             return self.serve_loader_page('pages/main.html', tdata, request, response)        
@@ -202,9 +212,10 @@ class User(ModelController):
     model_name = 'User'
 
     def login(self, tdata, request, response):
-        user = auth.handle_login(self.db, request, response)
-        if user: user = user.client_view()
-        return self.serve_json(response, user)
+        authed = auth.handle_login(self.db, request, response)
+        if type(authed) == self.db.User.entity: resp = authed.client_view()
+        else: resp = False
+        return self.serve_json(response, resp)
 
     def logout(self, tdata, request, response):
         auth.handle_logout(self.db, tdata.user, request, response)
