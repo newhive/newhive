@@ -114,7 +114,6 @@ class ModelController(Controller):
         if data is None: self.serve_404(request, response)
         return self.serve_json(response, data)
 
-from functools import partial
 @Controllers.register
 class Community(Controller):
     def home_feed(self, tdata, request, username, **paging_args):
@@ -143,7 +142,8 @@ class Community(Controller):
         for k in ['limit', 'order']:
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args
-        page_data = query(tdata, request, **(dict(passable_keyword_args.items() + pagination_args.items())))
+        merged_args = dict(passable_keyword_args.items() + pagination_args.items())
+        page_data = query(tdata, request, **merged_args)
         page_data['cards'] = [o.client_view() for o in page_data['cards']]
         page_data['title'] = page_data['title']
         if kwargs.get('json'):
