@@ -301,6 +301,7 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 		return condition ? '' : block(context);
 	};
 	o.base_context['for'] = function(context, block, iteratee){
+		if(!iteratee || iteratee.constructor != Array) return '';
 		return iteratee.map(function(v){ return block(context.concat(v)) })
 			.reduce(u.op['+'], '');
 	};
