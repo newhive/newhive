@@ -1531,7 +1531,7 @@ class ESDatabase:
         results = self.conn.search(query, indices = self.index, sort = es_order, filter = es_filter, start = start, size = limit)
         return results 
 
-    def search_fuzzy(self, string, order="updated"):
+    def search_fuzzy(self, string, order="_score"):
         q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
         results = self.conn.search(q, indices = self.index, sort = order)
         for r in results: print r
