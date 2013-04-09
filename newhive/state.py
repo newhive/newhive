@@ -78,7 +78,7 @@ class Database:
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any (k in search for k in ('tags', 'phrases', 'text', 'user')):
             #use elasticsearch to search on these fields
-            results = self.esdb.search_text(search)
+            results = self.esdb.paginate(search)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -1526,12 +1526,10 @@ class ESDatabase:
 
         return query
 
-    def search_text(self, search, order="updated"):
-        #s = self.parse_query(string)
+    def search_text(self, search, es_order, es_filter, start, limit):
         query = self.create_query(search)
-        results = self.conn.search(query, indices = self.index, sort = order)
-        for r in results: print r
-        return results
+        results = self.conn.search(query, indices = self.index, sort = es_order, filter = es_filter, start = start, size = limit)
+        return results 
 
     def search_fuzzy(self, string, order="updated"):
         q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
@@ -1558,6 +1556,10 @@ class ESDatabase:
         if refresh==True: self.conn.indices.refresh()
         return None
 
-    def paginate(self, spec, limit=40, at=None, sort='updated', order=-1, filter=None):
-        #todo: return expr collection
-        pass
+    def paginate(self, search, limit=40, start=0, es_order='updated:desc,views', es_filter=None):
+        res = self.search_text(search, es_order = es_order, es_filter = es_filter, start = start, limit = limit)
+        results_id = []
+        results = []
+        for r in res:
+            results_id.extend(r._meta.id)
+        return results_id
