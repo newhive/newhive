@@ -1561,8 +1561,9 @@ class ESDatabase:
     def paginate(self, search, limit=40, start=0, es_order='_score,views:desc', es_filter=None, sort='score'):
         res = self.search_text(search, es_order = es_order, es_filter = es_filter, start = start, limit = limit)
         expr_results = Page([])
+        if res._total >= limit:
+            expr_results.next = res[limit-1]._meta[sort]
         for r in res:
             result_id = r._meta.id
             expr_results.append(self.db.Expr.fetch(result_id))
-       # expr_results.next = res[limit-1]._meta[sort] if len(expr_results) == limit else None
         return expr_results
