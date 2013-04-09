@@ -1,10 +1,10 @@
 define([
     'browser/jquery', 'browser/layout', 'server/session', 'ui/menu', 'ui/util',
     'sj!templates/nav.html', 'sj!templates/login_form.html'
-], function($, lay, session, menu, ui, nav_template, login_template) {
+], function($, layout, session, menu, ui, nav_template, login_template) {
     function render(){
         $('#nav').empty().html(nav_template());
-        lay.center($('.center'), $('#nav'));
+        layout.center($('.center'), $('#nav'));
 
         menu('#logo', '#logo_menu');
         $('#logout_btn').click(logout);

@@ -5,8 +5,7 @@ from collections import namedtuple
 from newhive.utils import dfilter
 from newhive.controllers import Application
 
-from newhive.controllers.shared import PagingMixin
-from newhive import auth, config, oauth, state
+from newhive import auth, config, oauth, state, utils
 from newhive.utils import abs_url
 
 class Controllers(object):
@@ -22,10 +21,9 @@ class Controllers(object):
         this_class.controllers.append(that_class)
         return that_class
 
-# Maybe instead use this for more explicitness: TransactionData = namedtuple('RequestMeta' 'user ...')
-class TransactionData(object):
+class TransactionData(utils.FixedAttrs):
     """ One of these is associated with each request cycle to put stuff in
-    that doesn't really go in either the Request or Response objects """
+        (that Werkzeug's Request or Response objects don't already handle) """
     pass
 
 class Controller(object):
@@ -44,33 +42,34 @@ class Controller(object):
         """ Do necessary stuffs for every request, specifically:
                 * Construct Response and TransactionData objects.
                 * Authenticate request, and if given credentials, set auth cookies
-            returns (TransactionData, Response) tuple
-                """
+            returns (TransactionData, Response) tuple """
 
         response = Response()
-        tdata = TransactionData()
-        authed = auth.authenticate_request(self.db, request, response)
-        tdata.user = ( authed if type(authed) == self.db.User.entity
-            else self.db.User.new({}) )
+        anon = self.db.User.new({})
+        tdata = TransactionData(user=anon, context=dict(
+            user=anon, config=config, debug=config.debug_mode,
+            # Werkzeug provides form data as immutable dict, so it must be copied
+            # fields may be left alone to mirror the request, or validated and normalized
+            form=dict(request.form.items()),
+            query=request.args, url=request.url, error={},
+            server_name=config.server_name, 
+            server_url=abs_url(), secure_server=abs_url(secure = True),
+            content_domain=abs_url(domain = config.content_domain),
+        ) )
 
-        # werkzeug provides form data as immutable dict, so it must be copied to be properly mutilated
-        # the context is for passing to views to render a response.
-        # The f dictionary of form fields may be left alone to mirror the request, or validated and adjusted
-        tdata.context = {
-            'f': dict(request.form.items()), 'q': request.args, 'url': request.url,
-            'user': tdata.user.client_view(), 'server_url': abs_url(), 'error': {},
-            'config': config, 'secure_server': abs_url(secure = True),
-            'server_name': config.server_name, 'debug': config.debug_mode, 
-            'content_domain': abs_url(domain = config.content_domain),
-            'beta_tester': config.debug_mode or tdata.user.get('name') in config.beta_testers
-        }
-        if isinstance(authed, Exception): tdata.context['error']['login'] = True
+        authed = auth.authenticate_request(self.db, request, response)
+        if type(authed) == self.db.User.entity:
+            tdata.user = tdata.context['user'] = authed
+        elif isinstance(authed, Exception):
+            tdata.context['error']['login'] = True
+        tdata.context.update(beta_tester=
+            config.debug_mode or tdata.user.get('name') in config.beta_testers)
 
         return (tdata, response)
     
     def render_template(self, tdata, response, template):
         context = tdata.context
-        context.update(template = template)
+        context.update(template=template)
         context.setdefault('icon', self.asset('skin/1/logo.png'))
         return self.jinja_env.get_template(template).render(context)
 

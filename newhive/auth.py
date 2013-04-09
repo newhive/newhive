@@ -38,7 +38,8 @@ def handle_login(db, request, response):
             new_session(db, user, request, response)
             user.logged_in = True
             return user
-        else: return Exception('Invalid credentials')
+        else:
+            return Exception('Invalid credentials')
     return False
 
 def new_session(db, user, request, response):

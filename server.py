@@ -1,7 +1,8 @@
 #!/usr/bin/python
 """ This Werkzeug server is used only for development and debugging """
 import os, optparse, sys
-from os.path  import dirname, exists, join
+from os.path  import dirname, exists, join, isfile
+import OpenSSL.SSL as ssl
 import newhive.config as config
 from newhive.app import application
 from werkzeug.serving import run_simple, make_ssl_devcert
@@ -40,15 +41,12 @@ if __name__ == '__main__':
     config.interactive = True
     config.always_secure = options.secure or config.always_secure
 
-    #import OpenSSL.SSL as ssl
-    # pull SSL cert paths from config
-    #ssl_context = ssl.Context(ssl.SSLv23_METHOD)
-    #ssl_context.use_certificate_file(config.ssl_cert)
-    #ssl_context.use_privatekey_file(config.ssl_key)
-    #if config.ssl_ca:
-    #    ssl_context.use_certificate_chain_file(config.ssl_ca)
-    make_ssl_devcert(join(config.src_home, 'lib', 'tmp', 'ssl'), host='localhost', cn=None)
-    ssl_context = 'adhoc'
+    ssl_prefix = join(config.src_home, 'lib', 'tmp', 'ssl')
+    if not isfile(ssl_prefix + '.key'):
+        make_ssl_devcert(ssl_prefix, host='localhost', cn=None)
+    ssl_context = ssl.Context(ssl.SSLv23_METHOD)
+    ssl_context.use_certificate_file(ssl_prefix + '.crt')
+    ssl_context.use_privatekey_file(ssl_prefix + '.key')
 
     def run_hive(port, ssl=False):
         run_simple(

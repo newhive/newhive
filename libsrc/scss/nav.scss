@@ -1,5 +1,4 @@
 @import "common";
-@import "compass/css3/gradient";
 
 // nav takes 3 layers. For invisible nav handles, the navigation,
 // and their submenus, (4, 5, 6) respectively
@@ -10,7 +9,7 @@
     height: $nav_size;
     background-color: white;
     z-index: $nav_layer + 1;
-    @include linear-gradient(color-stops(white, #DADADA), top);
+    @include background-image(linear-gradient(top, white, #DADADA));
 
     * { font-family: Gotham }
     .item, input, .menu_item { text-transform: uppercase; }

@@ -323,3 +323,16 @@ def analytics_email_number_format(number):
     whole, remainder, zeros, decimal = re.match(r, str(number)).groups()
     if not decimal: return whole
     return whole + "." + zeros + decimal[:2]
+
+# TODO: make this a class generator like collections.namedtuple
+class FixedAttrs(object):
+    def __init__(self, *args, **kwargs):
+        for arg in args:
+            self.__dict__[arg] = None
+        for k, v in kwargs.items():
+            self.__dict__[k] = v
+ 
+    def __setattr__(self, k, v):
+        if not k in self.__dict__:
+            raise AttributeError(k)
+        self.__dict__[k] = v

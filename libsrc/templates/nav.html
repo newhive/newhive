@@ -22,8 +22,10 @@
   ><div class='random_btn icon hoverable'></div></a
 
 ><div class='center'
-  ><div id='network_btn' class='text_btn item hoverable black_active'>Network</div
-  ><div id='hive_btn' class='text_btn item hoverable black_active'>The Hive</div
+  ><div id='network_btn' class='text_btn item hoverable black_active
+    {<unless s.user.logged_in}hide{>}'>Network</div
+  ><div id='hive_btn' class='text_btn item hoverable black_active
+    {<unless s.user.logged_in}hide{>}'>The Hive</div
 ></div
 
 ><div class='right'

@@ -1,13 +1,13 @@
 /lib/*.js
 /lib/*.css
 /lib/tmp/*
-/libsrc/*.css
+/libsrc/scss/*.css
 compiled.*
 /libsrc/.webassets-cache
-/.sass-cache
+/libsrc/scss/config.rb
+/libsrc/scss/.sass-cache/*
 /newhive/config/config.py
 /newhive/config/GA_credentials.dat
 /newhive/config/aws.py
 *.pyc
 *.DS_Store
-log/

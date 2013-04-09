@@ -225,25 +225,25 @@ class HiveAssets(Assets):
             "scss/frame.scss", "scss/settings.scss", "scss/signup_flow.scss",
             "scss/chart.scss", "scss/jplayer.scss", "scss/navigator.scss",
             filters=scss_filter,
-            output='scss.css',
+            output='compiled.app.css',
             debug=False
             )
 
         edit_scss = webassets.Bundle('scss/edit.scss', 'scss/codemirror.css',
             filters=scss_filter,
-            output='edit.css',
+            output='compiled.edit.css',
             debug=False
             )
 
         minimal_scss = webassets.Bundle('scss/minimal.scss', 'scss/fonts.scss',
             filters=scss_filter,
-            output='minimal.css',
+            output='compiled.minimal.css',
             debug=False
             )
 
         email_scss = webassets.Bundle('scss/email.scss',
             filters=scss_filter,
-            output='email.css',
+            output='compiled.email.css',
             debug=False
             )
 

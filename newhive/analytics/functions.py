@@ -13,7 +13,7 @@ import pickle
 import datetime, pytz
 import pandas
 import numpy
-from vendor import gviz
+from outsrc import gviz
 from newhive.utils import un_camelcase
 
 def user_expression_summary(user, p=False):
