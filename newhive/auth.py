@@ -74,13 +74,15 @@ def handle_logout(db, user, request, response):
     rm_cookie(response, 'plain_secret')
     rm_cookie(response, 'secure_secret', True)
 
-    if session['remember']:
+    user.logged_in = False
+
+    if not session: return False # already logged out
+    if session.get('remember'):
         session.update(active = False)
     else:
         rm_cookie(response, 'identity')
         session.delete()
-
-    user.logged_in = False
+    return True # Everything logged out
 
 def password_change(user, request, response, force=False):
     args = request.form
