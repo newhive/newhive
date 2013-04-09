@@ -1466,14 +1466,14 @@ class ESDatabase:
           "mappings" : {
             "expr-type" : {
               "properties" : {
-                "tags" : {"type" : "string", "boost":1.5, "index":"analyzed", "store": "yes", "term_vector": "with_positions_offsets", "analyzer" : "standard"},
-                "text":{"type": "string", "boost":1.3, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
-                "title":{"type": "string", "boost":1.5, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
-                "updated":{"type": "float", "boost":1.0, "store": "yes"},
+                "tags" : {"type" : "string", "boost":1.7, "index":"analyzed", "store": "yes", "term_vector": "with_positions_offsets", "analyzer" : "standard"},
+                "text":{"type": "string", "boost":1.5, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
+                "title":{"type": "string", "boost":1.7, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
+                "updated":{"type": "float", "boost":1.3, "store": "yes"},
                 "created":{"type": "float", "boost":1.0, "store": "yes"},
-                "views":{"type": "integer", "boost":1.0, "store": "yes"}, 
-                "broadcast":{"type": "integer", "boost":1.0, "store": "yes"},
-                "star":{"type": "integer", "boost":1.0, "store": "yes"},  
+                "views":{"type": "integer", "boost":1.5, "store": "yes"}, 
+                "broadcast":{"type": "integer", "boost":1.3, "store": "yes"},
+                "star":{"type": "integer", "boost":1.3, "store": "yes"},  
               }
             }
           },
@@ -1489,7 +1489,6 @@ class ESDatabase:
 
         self.conn.indices.create_index_if_missing(index, self.settings)
 
-        counter = 0
         exprs = db.Expr.search({})
 
         for i in range(1000):
