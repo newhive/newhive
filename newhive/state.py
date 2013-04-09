@@ -1469,6 +1469,7 @@ class ESDatabase:
                 "tags" : {"type" : "string", "boost":1.7, "index":"analyzed", "store": "yes", "term_vector": "with_positions_offsets", "analyzer" : "standard"},
                 "text":{"type": "string", "boost":1.5, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
                 "title":{"type": "string", "boost":1.7, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
+                "name":{"type": "string", "boost":1.7, "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
                 "updated":{"type": "float", "store": "yes"},
                 "created":{"type": "float", "store": "yes"},
                 "views":{"type": "integer", "store": "yes"}, 
@@ -1515,6 +1516,7 @@ class ESDatabase:
             clauses.append(pyes.query.TextQuery('text', ' '.join(search['text']), analyzer = 'default'))
             clauses.append(pyes.query.TextQuery('tags', ' '.join(search['text']), analyzer = 'tag_analyzer'))
             clauses.append(pyes.query.TextQuery('title', ' '.join(search['text']), analyzer = 'default', boost = 5))
+            clauses.append(pyes.query.TextQuery('name', ' '.join(search['text']), analyzer = 'default', boost = 5))
         if len(search['tags']) != 0:
             clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer = 'tag_analyzer', boost = 5))
         for p in search['phrases']:
