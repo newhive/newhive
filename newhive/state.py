@@ -1527,8 +1527,10 @@ class ESDatabase:
             query = pyes.query.BoolQuery(must = user_clause, should = clauses)
         else:
             query = pyes.query.BoolQuery(should = clauses)
+        
+        custom_query = pyes.query.CustomScoreQuery(query, script="_score * (doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value)")
 
-        return query
+        return custom_query
 
     def search_text(self, search, es_order, es_filter, start, limit):
         query = self.create_query(search)
