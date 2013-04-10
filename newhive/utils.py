@@ -355,6 +355,8 @@ def analytics_email_number_format(number):
 
 blacklist = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'i', 'be', 'of', 'the', 'a', 'an', 'in', 'on', 'for', 'naut', 'is', 'and', 'to', 'from'] #disproportionately frequent tags that are not useful
 
+bad_tags = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'naut'] # blacklist minus stopwords 
+
 def simTags(tags,db):
     coOccur = Counter()
     sim = {}
@@ -377,12 +379,11 @@ def simTags(tags,db):
     results_nodup = OrderedDict.fromkeys(results)
     return list(results_nodup)[:5]
 
-def simTagsFast(tags,db):
-    return db.Expr._col.aggregate([
-       { '$match' : { "$tags_index": { "$in": tags } } },
-       { '$unwind' : {"$tags_index"} },
-       { '$match' : { "$tags_index": { "$nin": tags } } },
-       { '$group' : { '_id': "$_id", 'numRelTags': { '$sum':1 } } },
-       { '$sort' : { 'numRelTags' : -1 } },
-       { '$limit' : 10 }
-    ])
+import pyes
+
+def find_similar_tags(tag, tags_all, db):
+    query = pyes.query.TermQuery('tags', tag).search()
+    query.facet.add_term_facet(field='tags', name='tags', size=10, order="count", exclude=tags_all)
+    print query
+    results = db.esdb.conn.search(query, indices = db.esdb.index)
+    return results.facets
