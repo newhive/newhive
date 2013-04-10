@@ -1489,13 +1489,24 @@ class ESDatabase:
         }
 
         self.conn.indices.create_index_if_missing(index, self.settings)
-
         exprs = db.Expr.search({})
 
-        for i in range(1000):
-            print i
-            self.update(exprs[i], refresh=False)
+        if not index in self.conn.indices.get_indices():
+            print "Indexing all expressions from scratch, might take a while"
+            counter = 0
+            for expr in exprs:
+                self.update(expr, refresh=False)
+                counter += 1
+                print counter
+        elif (self.conn.indices.get_indices()[index]['num_docs'] < db.Expr.count()):
+            counter = 0
+            for expr in exprs:
+                self.update(expr,refresh=False)
+                counter += 1
+                print counter
+
         self.conn.indices.refresh()
+
         return None
 
     def delete(self):
@@ -1509,6 +1520,8 @@ class ESDatabase:
         # if query contains @username, results must match @username and one or more of the search terms
         # otherwise results match one or more of the search terms
         # query stemming disabled for phrase search
+
+        # TODO: parse OR as boolean OR
 
         clauses = []
 
@@ -1568,6 +1581,7 @@ class ESDatabase:
         if res._total >= limit:
             expr_results.next = res[limit-1]._meta[sort]
         for r in res:
+            # TODO: map to ids and pass as single result to mongo
             result_id = r._meta.id
-            expr_results.append(self.db.Expr.fetch(result_id))
+            expr_results.append(self.db.Expr.fetch(result_id)) 
         return expr_results
