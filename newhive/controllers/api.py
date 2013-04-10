@@ -240,28 +240,6 @@ class Expr(ModelController):
                 , expr_script = expr_obj.get('script')
                 , expr_style = expr_obj.get('style'))
         return self.serve_page(tdata, response, 'pages/expr.html')
-    def thumb(self, tdata, request, response, id=None):
-        """
-        convert expression to an image (make a screenshot). depends on https://github.com/AdamN/python-webkit2png
-        """
-        eid = request.form.get('entity')
-        entity = self.model.fetch(id)
-        if not entity: return self.serve_404(request, response)
-        if entity.get('screenshot'):
-            return self.serve_json(response, entity.get('screenshot'))
-        link = werkzeug.urls.url_fix("http://%s:%d/%s/%s" % (config.server_name, config.plain_port, entity['owner_name'], entity['name']))
-        fileID = "/tmp/%s" % md5(str(uuid.uuid4())).hexdigest()
-        filename = fileID + '-full.png'
-        subprocess.Popen(["webkit2png", link, "-F", "-o", fileID]).wait()
-        with open(filename) as f:
-            # TODO: Find out what's up with owner=request.requester.id,
-            file_res = self.db.File.create(dict(owner=' ',tmp_file=f, name='expr_screenshot', mime='image/png'))
-            screenshotData = {'screenshot' : {'file_id': file_res['_id']}}
-            entity.update(**screenshotData)
-
-        os.remove(filename)
-        
-        return self.serve_json(response, screenshotData)
     
 @Controllers.register
 class User(ModelController):
