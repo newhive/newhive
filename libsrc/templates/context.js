@@ -1,10 +1,12 @@
-define(['server/session', 'server/compiled.assets'], function(s, assets){
+define([
+    'server/context', 'server/compiled.assets', 'browser/js'
+], function(context, assets, util){
 	var helpers = {
-		asset: function(fn){
-			console.log(fn());
-			return assets[fn()];
+		asset: function(context, name){
+			return assets[name];
 		}
 	};
 
-	return { s: s, h: helpers };
+    util.copy(helpers, context);
+    return context;
 });

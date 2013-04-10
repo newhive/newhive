@@ -30,6 +30,7 @@ define(['text/stringjay'], function(sj){
 		'load': function (resourceId, require, callback, config) {
             fetchText('/lib/libsrc/' + resourceId, function(text){
 				var t = sj.template(text);
+				t.template_name = resourceId;
 				set_reference(sj.base_context, resourceId, t);
 				callback(t);
             });

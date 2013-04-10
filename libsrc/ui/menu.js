@@ -40,8 +40,10 @@ var menu = function(handle, drawer, options) {
             ,opened: false
         }, options)
     ;
-    if(!handle.length) throw("menu has no handle");
-    if(!drawer.length) throw("menu has no drawer");
+    if(!handle.length)
+        throw("menu has no handle");
+    if(!drawer.length)
+        throw("menu has no drawer");
     if(!opts.group) opts.group = { menus: [] };
 
     o.menus = [];

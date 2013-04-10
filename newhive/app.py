@@ -28,14 +28,13 @@ def get_api_endpoints(api):
         # Add page route
         rules.append(Rule(
             route_obj['pageRoute'],
-            endpoint=(getattr(api,route_obj['controller']),'community_page'),
-            defaults={'method': route_obj['method']}
+            endpoint=(getattr(api,route_obj['controller']),route_obj['method'])
         ))
         # And API route
         rules.append(Rule(
             route_obj['apiRoute'],
-            endpoint=(getattr(api,route_obj['controller']),'community_page'),
-            defaults={'method':route_obj['method'],'as_json':True}
+            endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
+            defaults={'json':True}
         ))
     return rules
 

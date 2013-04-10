@@ -1,0 +1,1 @@
+../../../outsrc/curl/src/curl/plugin/domReady.js

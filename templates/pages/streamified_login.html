@@ -4,8 +4,9 @@
   {{ super() }}
   <script>
 curl(['server/config'], function(config){
+  // TODO: error checking, actually post data back to parent window?
+  // Or maybe have parent make another request
   postMessage(config.server_url, 'login_done');
-  // TODO: error checking
   window.close();
 });
 </script>

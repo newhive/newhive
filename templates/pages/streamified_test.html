@@ -3,11 +3,11 @@
 {% block head %}
   {{ super() }}
   <script>
-curl(['server/session', 'browser/jquery'], function(s, $){
+curl(['server/context', 'browser/jquery'], function(context, $){
 	$('#share_btn').click(function(){
-		window.open(s.streamified_url + 'streams/networks/twitter/login?client_id=' +
-			s.streamified_client_id + '&redirect_uri=' +
-			encodeURIComponent(s.secure_server + 'streamified_login'));
+		window.open(context.config.streamified_url + 'streams/networks/twitter/login?client_id=' +
+			context.config.streamified_client_id + '&redirect_uri=' +
+			encodeURIComponent(context.secure_server + 'streamified_login'));
 	});
 });
 </script>

@@ -123,31 +123,39 @@ class ModelController(Controller):
         if data is None: self.serve_404(request, response)
         return self.serve_json(response, data)
 
-from functools import partial
 @Controllers.register
 class Community(Controller):
-    def community_page(self, tdata, request, response, username, method, id=None, as_json=False):
-        methods = {
-            "home_feed": {
-                "query": tdata.user.feed_network,
-                "title": ("The Hive", "Featured")
-            },
-            "expressions_public": {
-                "query": partial(tdata.user.expr_page,
-                            auth='public',
-                            viewer=tdata.user),
-                "title": ("My Expressions", "Public")
-            }
+    def home_feed(self, tdata, request, username, **paging_args):
+        return {
+            "cards": tdata.user.feed_network(**paging_args),
+            "title": ("The Hive", "Featured")
         }
-        page = methods.get(method)
-        if page is None:
+
+    def expressions_public(self, tdata, request, username, **paging_args):
+        return {
+            "cards": tdata.user.expr_page(
+                        auth='public',
+                        viewer=tdata.user, **paging_args),
+            "title": ("My Expressions", "Public")
+        }
+
+    def dispatch(self, handler, request, **kwargs):
+        (tdata, response) = self.pre_process(request)
+        query = getattr(self, handler, None)
+        if query is None:
             return self.serve_404()
-        cards = page['query']()
-        cards = map(lambda o: o.client_view(),cards)
-        page_data = {}
-        page_data['cards'] = cards
-        page_data['title'] = page['title']
-        if as_json:
+        # Handle keyword args to be passed to the controller function
+        passable_keyword_args = dfilter(kwargs,['username'])
+        # Handle pagination
+        pagination_args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
+        for k in ['limit', 'order']:
+            if k in pagination_args: pagination_args[k] = int(pagination_args[k])
+        # Call controller function with query and pagination args
+        merged_args = dict(passable_keyword_args.items() + pagination_args.items())
+        page_data = query(tdata, request, **merged_args)
+        page_data['cards'] = [o.client_view() for o in page_data['cards']]
+        page_data['title'] = page_data['title']
+        if kwargs.get('json'):
             return self.serve_json(response, page_data)
         else:
             tdata.context.update({
@@ -155,20 +163,6 @@ class Community(Controller):
             })
             return self.serve_loader_page('pages/main.html', tdata, request, response)        
 
-    def index(self, tdata, request, response):
-        """ Generic handler for retrieving paginated lists of a collection """
-
-        args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
-        for k in ['limit', 'order']:
-            if k in args: args[k] = int(args[k])
-        # pass off actual querying of model to specific ModelController
-        items = self.page(tdata, **args)
-        return self.serve_json(response, items)
-
-    # this can be overridden in derived classes to add behavior that doesn't belong in the model
-    def page(self, tdata, **args):
-        return self.model.page({}, tdata.user, **args)
-        
     def profile(self, tdata, request, response, username=None):
         return self.serve_page(tdata, response, 'pages/main.html')
 

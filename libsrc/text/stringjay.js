@@ -46,14 +46,17 @@
 // 		global.stringjay = o;
 // 	}
 
-define(['util', 'module', 'server/session', 'server/compiled.assets'],
-	function(u, module, session, assets)
+// TODO: make templates/context dependency part of sj! loader module
+// create base_context setter method in here. Same for server/compiled.assets.
+// That should make stringjay independent of NewHive
+define(['browser/js', 'module', 'templates/context', 'server/compiled.assets'],
+	function(util, module, base_context, assets)
 {
 	"use strict";
 
 	var o = {
 		version: '1.0.0',
-		base_context: {},
+		base_context: base_context,
 		template_text: /^[^{]+/,
 		tag_open: /^{/,
 		tag_close: /^\s*}/,
@@ -67,7 +70,8 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 	//     'path' -- string that references item in context
 	// (little complex, but straihgtforward)
 	function parse(template){
-		var line = 0, character = 0 /* character not yet used */;
+		// Why are line numbers 1-based?
+		var line = 1, character = 1; // character not yet used
 
 		return block();
 
@@ -113,7 +117,7 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 				value: match(/.*#}/, true, 'comment').slice(0, -2)
 			};
 			else if(deeper = expr(node)) node = deeper;
-			else throw error('unexpected tag content');
+			else throw parse_error('unexpected tag content');
 
 			match(o.tag_close, true, 'tag close');
 			if(block_node) node.block = block();
@@ -152,7 +156,7 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 			return args;
 		}
 
-		// 'foo/..' not supported, because it's pointless. '..'s must be at beginning
+		// 'foo/..' not supported, because it's pointless ('..'s must be at beginning)
 		function path(do_throw){
 			var matched = match(/^\s*[\/\w!.]+/i, do_throw, 'path');
 			if(!matched) return false;
@@ -167,8 +171,9 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 				value.shift();
 				node.up_levels++;
 			}
-			node.value = value.concat(value.pop().split('.')) // optional foo.bar syntax
-				.map(function(v){ return v.trim() }).filter(function(v){ return v });
+			node.value = value.concat(value.pop().split('.')). // optional foo.bar syntax
+				map(function(v){ return v.trim() }).
+				filter(function(v){ return v });
 			return node;
 		}
 
@@ -189,14 +194,15 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 				line: line,
 				value: JSON.parse(parsed)
 			} }
-			catch(e){ throw error(e.message); }
+			catch(e){ throw parse_error(e.message); }
 		}
 
 		// whenever called with do_throw = true, pattern_name should also be given
 		function match(pattern, do_throw, pattern_name){
 			var m = template.match(pattern);
 			if(!m){
-				if(do_throw) throw error(pattern_name + ', ' + String(pattern) + ', not found');
+				if(do_throw) throw parse_error(pattern_name + ', ' +
+					String(pattern) + ', not found');
 				else return false;
 			}
 			// return empty or successfully eaten string
@@ -207,7 +213,7 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 			return eaten;
 		}
 
-		function error(msg){ return 'ParseError on line ' + line + ': ' + msg +
+		function parse_error(msg){ return 'Parse error on line ' + line + ': ' + msg +
 			' at ' + JSON.stringify(template.match(/^.*(\n|$)/)[0]); }
 	}
 	o._parse = parse; // for debugging / curiosity
@@ -231,8 +237,8 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 		}
 	}
 
-	function render(context_0, node){
-		var context = [ u.copy(o.base_context, u.copy(context_0)) ];
+	function render(data, node){
+		var context = [ o.base_context, data ];
 		return render_node(context, node);
 	}
 	o._render = render; // for debugging / curiosity
@@ -240,7 +246,7 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 	function render_node(context, node){
 		if(node.constructor == Array)
 			return node.map(function(n){ return render_node(context, n) })
-				.reduce(u.op['+'], '');
+				.reduce(util.op['+'], '');
 		else if(node.type == 'literal')
 			return node.value;
 		else if(node.type == 'path')
@@ -248,7 +254,8 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 		else if(node.type == 'function'){
 			var fn = resolve(context, node.value, node.absolute, node.up_levels),
 				args = [context];
-			if(!fn) return ''; // maybe eliminate this silent failure
+			if(typeof fn != 'function')
+				throw render_error('Not a function: ' + path_to_string(node));
 			if(node.block) args.push(function(context){
 				return render_node(context, node.block) });
 			args = args.concat( node.arguments.map(function(n){
@@ -256,12 +263,21 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 			return fn.apply(null, args);
 		}
 		else if(node.type == 'comment') return '';
-		else throw 'Unrecognized node: ' + JSON.stringify(node);
+		else throw render_error('unrecognized node: ' + JSON.stringify(node));
+
+		function render_error(msg){ return 'Render error on line ' +
+			node.line + ': ' + msg; }
 	}
 
-	o.template = function(template){
-		var ast = parse(template);
-		return function(data){ return render(data, ast); }
+	o.template = function(template_src){
+		var ast = parse(template_src);
+		function template(data){
+			if(!data) data = {};
+			data.template = template;
+			return render(data, ast);
+		}
+		template.ast = ast;
+		return template;
 	};
 
 	// TODO: finish
@@ -273,14 +289,27 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 	};
 
 	function resolve(context, path, absolute, up_levels){
-		var value = absolute ? context[0] : context[context.length - 1 - up_levels];
-		for(var i = 0; i < path.length; i++) {
+		var level = absolute ? 0 : context.length - 1 - up_levels, value;
+		// traverse to parent scope, looking for first path part
+		if(path[0])
+			while(level >= 0 && typeof value == 'undefined')
+				value = context[level--][path[0]]; 
+		// descend into data with the rest of path parts
+		for(var i = 1; i < path.length; i++){
 			if(typeof value == 'undefined') return '';
-			else value = value[path[i]];
+			value = value[path[i]];
 		}
 		return value ? value : '';
 	}
 	o.resolve = resolve;
+
+	function path_to_string(path){
+		return ( // careful with semicolon insertion
+			( path.absolute ? '/' :
+				(new Array(path.up_levels + 1)).join('../') ) +
+			path.value.join('/')
+		);
+	}
 
 	function encode_to_html(context, str) {
 		var encodeHTMLRules = { "&": "&#38;", "<": "&#60;", ">": "&#62;", '"': '&#34;', "'": '&#39;', "/": '&#47;' },
@@ -303,11 +332,12 @@ define(['util', 'module', 'server/session', 'server/compiled.assets'],
 	o.base_context['for'] = function(context, block, iteratee){
 		if(!iteratee || iteratee.constructor != Array) return '';
 		return iteratee.map(function(v){ return block(context.concat(v)) })
-			.reduce(u.op['+'], '');
+			.reduce(util.op['+'], '');
 	};
 	o.base_context.e = encode_to_html;
-	o.base_context.asset = function(context, arg){ return assets[arg]; };
-	o.base_context.s = session;
+	o.base_context.json = function(context, data){
+		return JSON.stringify(data);
+	}
 
 	return o;
 });

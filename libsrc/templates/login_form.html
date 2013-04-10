@@ -1,12 +1,12 @@
-<form action='{s.secure_server}api/user/login' method='POST' id='login_form'>
+<form action='{secure_server}api/user/login' method='POST' id='login_form'>
   <div class="field username">
-      <input id='username' type='text' name='username' value='{s.user.name}' placeholder='Username or email'>
+      <input id='username' type='text' name='username' value='{user.name}' placeholder='Username or email'>
       <div class='spacer'></div>
   </div>
   <div class="field password">
       <input type='password' name='secret' placeholder='Password'><br>
   </div>
-  <div class='login error {<unless s.error.login}hide{>}'>This username / email or password isn't matching :-/</div>
+  <div class='login error {<unless error.login}hide{>}'>This username / email or password isn't matching :-/</div>
   <div class='spacer'></div>
   <div class='field login'>
     <a href="#" class='password_recovery'>Forgot<br>Password?</a>
