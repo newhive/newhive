@@ -62,6 +62,11 @@ email_password  = False
 facebook_app_id = ''
 facebook_client_secret = ''
 
+streamified_client_id = 'pjzkv2y4twdsutl3n0mkv1yajv1y5y3e'
+streamified_client_secret = ''
+streamified_networks = ['twitter']
+streamified_url = 'https://streamified.me/api/'
+
 signup_group    = 2
 
 debug_mode      = False
