@@ -1534,12 +1534,12 @@ class ESDatabase:
 
     def search_text(self, search, es_order, es_filter, start, limit):
         query = self.create_query(search)
-        results = self.conn.search(query, indices = self.index, sort = es_order, filter = es_filter, start = start, size = limit)
+        results = self.conn.search(query, indices = self.index, doc_types = "expr-type", sort = es_order, filter = es_filter, start = start, size = limit)
         return results 
 
     def search_fuzzy(self, string, order="_score"):
         q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
-        results = self.conn.search(q, indices = self.index, sort = order)
+        results = self.conn.search(q, indices = self.index, doc_types = "expr-type", sort = order)
         for r in results: print r
         return results
 
