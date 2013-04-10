@@ -4,7 +4,13 @@
   <script>
     Hive = { user: {{ user.client_view() | json }}, expr: {{ expr | json }} };
   </script>
-  <script src='{{ asset_bundle('expression.js')[0] }}'></script>
+  <script>
+  curl([
+      'ui/expression'],
+      function(expression) {
+          expression.initExpression();
+      });
+  </script>
   {% if expr_style %}
     <style>
       {{ expr_style }}

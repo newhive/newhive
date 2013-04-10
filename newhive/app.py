@@ -83,10 +83,12 @@ endpoints = [
     # put these in /app, /h, or whatever
     Rule('/streamified_test', endpoint=(api.user, 'streamified_test')),
     Rule('/streamified_login', endpoint=(api.user, 'streamified_login')),
+    Rule('/<user>/<expr>', endpoint=(api.expr, 'fetch')),
+    Rule('/<expr_id>', endpoint=(api.expr, 'fetch_naked'))
 ]
 
 endpoints.extend(get_api_endpoints(api))
-routes = Map(endpoints)
+routes = Map(endpoints) #, host_matching=True
 
 @Request.application
 def handle(request):

@@ -7,14 +7,15 @@
     font-family:Helvetica,Arial;
     font-weight:bold;
     
+    border-bottom: 3px solid #000;
+    padding-bottom: 5px;
+    
     .main-title {
         font-size:24pt;
+        text-transform:uppercase;
+        
     }
     
-    .sub-title {
-        font-size:16pt;
-        color:gray;
-    }
     .sep-slash {
         font-size:24pt;
     }   

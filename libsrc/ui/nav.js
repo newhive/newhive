@@ -4,7 +4,7 @@ define([
     function render(server_state){
         $('body').append(nav_template());
 
-        if(!s.user.logged_in) menu('#login_btn', '#login_menu');
+        if(!s.user || !s.user.logged_in) menu('#login_btn', '#login_menu');
 
     }
 
