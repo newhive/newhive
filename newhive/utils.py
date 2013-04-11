@@ -11,17 +11,18 @@ import numpy
 import operator
 import pyes
 
-def lget(l, i, *default):
-    try: return l[i]
-    except: return default[0] if default else None
+
 def lset(l, i, e, *default):
     default = default[0] if default else [None]
     if i < len(l): l[i] = e
     else: l.extend(default * (i - len(l)) + [e])
+
+
 def index_of(l, f):
     for i, e in enumerate(l):
         if f(e): return i
     return -1
+
 
 def dfilter(d, keys):
     """ Accepts dictionary and list of keys, returns a new dictionary
@@ -30,7 +31,9 @@ def dfilter(d, keys):
     for k in keys:
         if k in d: r[k] = d[k]
     return r
+
 def dupdate(d1, d2): return dict(d1.items() + d2.items())
+
 
 def dcast(d, type_schemas, filter=True):
     """ Accepts a dictionary d, and type_schemas -- a list of tuples in these forms:
@@ -58,31 +61,41 @@ def dcast(d, type_schemas, filter=True):
 def datetime_to_id(d):
     return str(pymongo.objectid.ObjectId.from_datetime(d))
 
+
 def now(): return time.time()
+
 
 def time_s(t):
     return int(t.strftime('%s')) if (type(t) == datetime) else t
 
+
 def time_u(t): return datetime.utcfromtimestamp(t)
+
 
 def datetime_to_int(dt):
     return int(time.mktime(dt.timetuple()))
 
+
 def datetime_to_str(dt):
     return str(datetime_to_int(dt))
 
+
 def junkstr(length):
     """Creates a random base 62 string"""
+
 
     def chrange(c1, c2): return [chr(i) for i in range(ord(c1), ord(c2)+1)]
     chrs = chrange('0', '9') + chrange('A', 'Z') + chrange('a', 'z')
     return ''.join([chrs[random.randrange(0, 62)] for _ in range(length)])
 
+
 def lget(l, i, *default):
     try: return l[i]
     except: return default[0] if default else None
 
+
 def raises(e): raise e
+
 
 def dfilter(d, keys):
     """ Accepts dictionary and list of keys, returns a new dictionary
@@ -92,12 +105,15 @@ def dfilter(d, keys):
         if k in d: r[k] = d[k]
     return r
 
+
 def normalize(ws):
     return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
         re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
 
+
 def format_tags(s):
     return re.sub(r'[_\W]','',s.lower(), flags = re.UNICODE)
+
 
 def normalize_tags(ws):
     # 1. if 'tags' has comma:  separate out quoted strings, split on all commas and hash, replace space with nothing
@@ -113,8 +129,10 @@ def normalize_tags(ws):
         l2 = re.split(r'[\s]', ws_no_quotes, flags=re.UNICODE)
     return list(set(filter(None,map(format_tags, l1+l2))))
 
+
 def tagList(row):
-    return normalize_tags(lget(row,'tags',''))
+    return normalize_tags(lget(row, 'tags', ''))
+
 
 def getTagCnt(data):
     tagCnt = Counter()
@@ -122,7 +140,8 @@ def getTagCnt(data):
         tagCnt.update(lget(row, 'tags_index'))
     return tagCnt
 
-def abs_url(path='', secure = False, domain = None, subdomain = None):
+
+def abs_url(path='', secure=False, domain=None, subdomain=None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
 
     ssl = secure or config.always_secure
@@ -140,6 +159,7 @@ def abs_url(path='', secure = False, domain = None, subdomain = None):
         re.sub('^/', '', path)
     )
 
+
 def uniq(seq, idfun=None):
     # order preserving 
     if idfun is None: 
@@ -156,6 +176,7 @@ def uniq(seq, idfun=None):
         result.append(item) 
     return result
 
+
 def b64decode(s, add_padding=True, url_safe=True):
     if add_padding:
         s1 = s + "=" * ((4 - len(s) % 4) % 4)
@@ -165,6 +186,7 @@ def b64decode(s, add_padding=True, url_safe=True):
         return base64.urlsafe_b64decode(s1)
     else:
         return base64.b64decode(s1)
+
 
 class memoized(object):
    """Decorator that caches a function's return value each time it is called.
@@ -192,6 +214,7 @@ class memoized(object):
       """Support instance methods."""
       return functools.partial(self.__call__, obj)
 
+
 def cached(fn):
     def inner(self):
         prop = '_cache_' + fn.__name__
@@ -200,10 +223,12 @@ def cached(fn):
         return getattr(self, prop)
     return inner
 
+
 def bound(num, lower_bound, upper_bound):
     if num < lower_bound: return lower_bound
     if num > upper_bound: return upper_bound
     return num
+
 
 # Wrapper class from http://code.activestate.com/recipes/577555-object-wrapper-class/
 class Wrapper(object):
@@ -231,13 +256,16 @@ class Wrapper(object):
         # proxy to the wrapped object
         return getattr(self._wrapped_obj, attr)
 
+
 class Request(Wrapper):
     is_secure = property(lambda self:
         self._wrapped_obj.is_secure or config.always_secure or
             self.headers.get('X-Forwarded-Proto') == 'https')
 
+
 def exception_test(*args, **kwargs):
     raise Exception('dummy exception')
+
 
 def timer(func):
     t0 = now()
@@ -245,6 +273,7 @@ def timer(func):
     t1 = now()
     print t1 - t0
     return r
+
 
 def key_map(original, transformation, filter=False):
     output = copy.copy(original)
@@ -256,8 +285,10 @@ def key_map(original, transformation, filter=False):
     else:
         return output
 
+
 def is_mongo_key(string):
     return isinstance(string, basestring) and re.match('[0-9a-f]{24}', string)
+
 
 def set_trace(interactive=False):
     if interactive or config.interactive:
@@ -266,15 +297,18 @@ def set_trace(interactive=False):
     else:
         return lambda: None
 
+
 def serializable_filter(dictionary):
     return {key.replace('.', '-'): val
             for key, val in dictionary.iteritems()
             if type(val) in [bool, str, int, float, tuple, unicode]}
 
+
 def count(l):
     c = {}
     for v in l: c[v] = c.get(v, 0) + 1
     return sorted([(c[v], v) for v in c])
+
 
 class URL(object):
     def __init__(self, string):
@@ -290,11 +324,13 @@ class URL(object):
         return urlparse.ParseResult(self.scheme, self.netloc, self.path, self.params, query, self.fragment).geturl()
     __str__ = get_url
 
+
 class AbsUrl(URL):
     def __init__(self, path='', user='', page='', secure=True):
         if user and not path:
             path = user + '/' + page
         super(AbsUrl, self).__init__(abs_url(secure=secure) + path)
+
 
 def modify_query(url, d):
     url_obj = isinstance(url, URL)
@@ -307,6 +343,7 @@ def modify_query(url, d):
     else:
         return url.get_url()
 
+
 def set_cookie(response, name, data, secure = False, expires = True):
     expiration = None if expires else datetime(2100, 1, 1)
     max_age = 0 if expires else None
@@ -318,10 +355,12 @@ def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name, secure = False): response.delete_cookie(name,
     domain = None if secure else '.' + config.server_name)
 
+
 def local_date(offset=0):
     tz = pytz.timezone('US/Pacific')
     dt = datetime.now(tz)
     return dt.date() + pandas.DateOffset(days=offset)
+
 
 def dates_to_spec(start, end=None, offset=None):
     """Return a mongodb spec dictionary that will match ids of objects created
@@ -329,13 +368,17 @@ def dates_to_spec(start, end=None, offset=None):
     end = end or start + offset
     return {'$gt': datetime_to_int(start), '$lte': datetime_to_int(end)}
 
+
 def un_camelcase(s): return re.sub(r'([A-Z])', r' \1', s)
 
+
 def camelcase(s): return " ".join(s.split('_')).title().replace(' ', '')
+
 
 def percent_change(ratio, precision=0):
     s = "down" if ratio < 0 else "up"
     return ("{} {:." + str(precision) + "f}%").format(s, abs(ratio) * 100)
+
 
 def analytics_email_number_format(number):
     """
@@ -354,25 +397,28 @@ def analytics_email_number_format(number):
     if not decimal: return whole
     return whole + "." + zeros + decimal[:2]
 
-blacklist = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'i', 'be', 'of', 'the', 'a', 'an', 'in', 'on', 'for', 'naut', 'is', 'and', 'to', 'from'] #disproportionately frequent tags that are not useful
+blacklist = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm',
+             'bethgirdler', 'i', 'be', 'of', 'the', 'a', 'an', 'in', 'on',
+             'for', 'naut', 'is', 'and', 'to', 'from']
 
-bad_tags = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'naut'] # blacklist minus stopwords 
+bad_tags = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'naut'] # blacklist minus stopwords
 
-def simTags(tags,db):
+
+def simTags(tags, db):
     coOccur = Counter()
     sim = {}
     print "searching for similar tags"
-    res = db.Expr.search( { 'tags_index': { '$in': tags } } )
-    for row in res: 
+    res = db.Expr.search({'tags_index': {'$in': tags}})
+    for row in res:
         coOccur.update(row['tags_index'])
     for t in set(tags+blacklist):
         del coOccur[t]
     print "calculating similarities"
     for ct in coOccur.keys():
-        ctrow = db.Tags._col.find_one({'tag':ct})
-        if ctrow != None:
+        ctrow = db.Tags._col.find_one({'tag': ct})
+        if ctrow is not None:
             cotagFreq = ctrow['count']
-            if coOccur[ct]>2:
+            if coOccur[ct] > 2:
                 sim[ct] = coOccur[ct]/numpy.sqrt(cotagFreq)
     print "sorting results"
     sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
@@ -388,15 +434,15 @@ def find_similar_tags(tags, db):
 
         query = pyes.query.TermQuery('tags', tag).search()
 
-        ts = pyes.facets.TermFacet(field='tags', name='tags', size=50, order="count", exclude= exclude)
+        ts = pyes.facets.TermFacet(field='tags', name='tags', size=50, order="count", exclude=exclude)
 
         query.facet.facets.append(ts)
 
-        res = db.esdb.conn.search(query, indices = db.esdb.index, doc_types = "expr-type")
+        res = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
 
         for row in res.facets.tags.terms:
             q = pyes.query.TermQuery('tags', row['term'])
-            freq = db.esdb.conn.search(q, indices = db.esdb.index, doc_types = "expr-type").total
+            freq = db.esdb.conn.search(q, indices=db.esdb.index, doc_types="expr-type").total
             if row['count'] > 2:
                 sim[row['term']] = row['count']/numpy.sqrt(freq)
 
