@@ -1003,7 +1003,8 @@ class Expr(HasSocial):
             'owner': self.owner.client_view(viewer=viewer),
             'counts': counts,
             'url': self.url,
-            'title': self.get('title')
+            'title': self.get('title'),
+            'snapshot': self.get('snapshot')
         })
 
         if viewer and viewer.is_admin:

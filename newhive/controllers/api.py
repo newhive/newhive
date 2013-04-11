@@ -125,7 +125,7 @@ class Community(Controller):
     def home_feed(self, tdata, request, username, **paging_args):
         return {
             "cards": tdata.user.feed_network(**paging_args),
-            "title": ("The Hive", "Featured")
+            "title": ("The Hive", "Featured Expressions")
         }
 
     def expressions_public(self, tdata, request, username, **paging_args):
@@ -149,7 +149,8 @@ class Community(Controller):
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args
         page_data = query(tdata, request, **(dict(passable_keyword_args.items() + pagination_args.items())))
-        page_data['cards'] = [o.client_view() for o in page_data['cards']]
+        # FIXME: For now, we're filtering out exprs that don't have snapshot images
+        page_data['cards'] = [o.client_view() for o in page_data['cards'] if o.get('snapshot')]
         page_data['title'] = page_data['title']
         if kwargs.get('json'):
             return self.serve_json(response, page_data)
@@ -253,7 +254,7 @@ class User(ModelController):
             'grant_type': 'authorization_code',
             'redirect_uri': abs_url(secure=True) + 'streamified_login',
             'scope': streamified_username,
-            'client_id': config.streamified_client_id,
+            'streamified_client_id': config.streamified_client_id,
             'client_secret': config.streamified_client_secret,
         }
         headers = { 'content-type': 'application/x-www-form-urlencoded', }

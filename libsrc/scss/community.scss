@@ -4,22 +4,37 @@
     margin-left:auto;
     margin-right:auto;
     
+    margin-bottom:20px;
+    
     font-family:Helvetica,Arial;
     font-weight:bold;
     
-    border-bottom: 3px solid #000;
     padding-bottom: 5px;
     
     .main-title {
         font-size:24pt;
         text-transform:uppercase;
         
+        border-bottom:3px solid #000;
+        padding-bottom:10px;
     }
     
     .sep-slash {
         font-size:24pt;
-    }   
+    }
+}
+
+.expr-title {
+    position:relative;
+    top:60px;
     
+    font-weight:300;
+    font-size:18pt;
+    font-family:"Museo",serif;
+    margin-left:0px;
+    padding:5px;
+    background-color:rgba(255,255,255,0.9);
+    opacity:0.8;
 }
 
 #homepage_header {
