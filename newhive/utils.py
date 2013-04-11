@@ -131,13 +131,14 @@ def normalize_tags(ws):
 
 
 def tagList(row):
-    return normalize_tags(lget(row, 'tags', ''))
+    return normalize_tags(row.get('tags', ''))
 
 
 def getTagCnt(data):
     tagCnt = Counter()
     for row in data:
-        tagCnt.update(lget(row, 'tags_index'))
+        tags = row.get('tags', '')
+        tagCnt.update(normalize_tags(tags))
     return tagCnt
 
 
