@@ -1602,19 +1602,19 @@ class ESDatabase:
         return results
 
     def update(self, expr, refresh=True):
-        processed_tags = ' '.join(normalize_tags(lget(expr, 'tags', '')))
+        processed_tags = ' '.join(normalize_tags(expr.get('tags', '')))
         data = {
-        'text': lget(expr, 'text', ''),
+        'text': expr.get('text', ''),
         'tags': processed_tags,
-        'star': lget(lget(lget(expr, 'analytics', {}), 'Star', {}), 'count', 0),
-        'broadcast': lget(lget(lget(expr, 'analytics', {}), 'Broadcast', {}), 'count', 0),
-        'name': lget(expr, 'name', ''),
-        'owner_name': lget(expr, 'owner_name', ''),
-        'owner': lget(expr, 'owner', ''),
-        'title': lget(expr, 'title', ''),
-        'created': lget(expr, 'created', 0),
-        'updated': lget(expr, 'updated', 0),
-        'views': lget(expr, 'views', 0),
+        'star': expr.get('analytics', {}).get('Star', {}).get('count', 0),
+        'broadcast': expr.get('analytics', {}).get('Broadcast', {}).get('count', 0),
+        'name': expr.get('name', ''),
+        'owner_name': expr.get('owner_name', ''),
+        'owner': expr.get('owner', ''),
+        'title': expr.get('title', ''),
+        'created': expr.get('created', 0),
+        'updated': expr.get('updated', 0),
+        'views': expr.get('views', 0)
         }
         self.conn.index(data, self.index, 'expr-type', expr['_id'])
         if refresh is True:
