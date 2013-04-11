@@ -9,6 +9,7 @@ from brownie.datastructures import OrderedSet
 from collections import Counter, OrderedDict
 import numpy
 import operator
+import pyes
 
 def lget(l, i, *default):
     try: return l[i]
@@ -379,11 +380,25 @@ def simTags(tags,db):
     results_nodup = OrderedDict.fromkeys(results)
     return list(results_nodup)[:5]
 
-import pyes
 
 def find_similar_tags(tag, tags_all, db):
     query = pyes.query.TermQuery('tags', tag).search()
-    query.facet.add_term_facet(field='tags', name='tags', size=10, order="count", exclude=tags_all)
-    print query
-    results = db.esdb.conn.search(query, indices = db.esdb.index)
-    return results.facets
+
+    ts = pyes.facets.TermFacet(field='tags', name='tags', size=20, order="count", exclude=tags_all)
+
+    query.facet.facets.append(ts)
+
+    res = db.esdb.conn.search(query, indices = db.esdb.index, doc_types = "expr-type")
+
+    sim = {}
+
+    for row in res.facets.tags.terms:
+        q = pyes.query.TermQuery('tags', row['term'])
+        freq = db.esdb.conn.search(q, indices = db.esdb.index, doc_types = "expr-type").total
+        sim[row['term']] = row['count']/numpy.sqrt(freq)
+
+    print "sorting results"
+    sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
+    results = [t[0] for t in sim_sorted]
+    results_nodup = OrderedDict.fromkeys(results)
+    return list(results_nodup)[:5]
