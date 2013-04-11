@@ -77,9 +77,9 @@ class Database:
             results = viewer.feed_network(spec=spec, **args)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
-        elif any (k in search for k in ('tags', 'phrases', 'text', 'user')):
+        elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
             #use elasticsearch to search on these fields
-            results = self.esdb.paginate(search, limit=40, start=0, es_order='_score,views:desc', es_filter=None, sort='score')
+            results = self.esdb.paginate(search, limit=limit, start=0, es_order='_score,views:desc', es_filter=None, sort='score')
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
