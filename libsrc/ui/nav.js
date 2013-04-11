@@ -1,7 +1,9 @@
 define([
-    'browser/jquery', 'browser/layout', 'server/context', 'ui/menu', 'ui/util',
-    'sj!templates/nav.html', 'sj!templates/login_form.html'
-], function($, layout, context, menu, ui, nav_template, login_template) {
+    'browser/jquery', 'browser/layout', 'server/context', 'ui/community',
+    'ui/menu', 'ui/util', 'sj!templates/nav.html', 'sj!templates/login_form.html'
+], function(
+	$, layout, context, community, menu, ui, nav_template, login_template
+) {
     function render(){
         $('#nav').empty().html(nav_template());
         layout.center($('.center'), $('#nav'));
@@ -34,6 +36,7 @@ define([
 	    		if(user){
 		    		context.user = user;
 					render();
+					community.render();
 		    	}
 		    	else $('.login.error').removeClass('hide');
 	    	});
@@ -50,6 +53,7 @@ define([
     	$.post('/api/user/logout', '', function(){
     		context.user.logged_in = false;
     		render();
+    		community.render();
     	});
     }
 

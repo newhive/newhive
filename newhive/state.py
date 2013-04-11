@@ -402,13 +402,6 @@ class User(HasSocial):
     def notify(self, feed_item):
         self.increment({'notification_count':1})
 
-    def expr_page(self, auth=None, tag=None, viewer=None, **args):
-        spec = {'owner': self.id}
-        if auth: spec.update({'auth': auth})
-        if tag: spec.update({'tags_index': tag})
-        if (not viewer) or (get_id(viewer) != self.id): spec.update({'auth': 'public'})
-        return self.db.Expr.page(spec, viewer=viewer, **args)
-
     @property
     @cached
     def my_stars(self):
@@ -765,11 +758,19 @@ class Expr(HasSocial):
             [(port, user, name)] = re.findall(config.server_name + r'/(:\d+)?(\w+)/(.*)$', url)
             return cls.named(user, name)
 
-        def page(self, spec, viewer, sort='updated', **opts):
-            assert(sort in ['updated', 'random'])
-            rs = self.paginate(spec, filter=viewer.can_view, **opts)
+        def page(self, spec, viewer, tag=None, sort='updated', **args):
+            spec = dfilter(args, ['owner_name', 'auth'])
+            spec.setdefault('auth', 'public')
+            if tag: spec.update(tags_index=tag)
 
-            # remove random static patterns from random index to make it really random
+            assert(sort in ['updated', 'random'])
+            paging_args = dfilter(args, ['limit', 'at', 'sort', 'order'])
+            paging_args.update(sort=sort) # normalize tag input?
+
+            rs = self.paginate(spec, filter=viewer.can_view, **paging_args)
+
+            # remove random static patterns from random index
+            # to make it _really_ random
             if sort == 'random':
                 for r in rs: r.update(random=random.random())
 

@@ -36,7 +36,7 @@ class Controller(object):
 
     def dispatch(self, handler, request, **args):
         (tdata, response) = self.pre_process(request)
-        return getattr(self, handler)(tdata, request, response, **args)
+        return getattr(self, handler, None)(tdata, request, response, **args)
 
     def pre_process(self, request):
         """ Do necessary stuffs for every request, specifically:
@@ -50,8 +50,8 @@ class Controller(object):
             user=anon, config=config, debug=config.debug_mode,
             # Werkzeug provides form data as immutable dict, so it must be copied
             # fields may be left alone to mirror the request, or validated and normalized
-            form=dict(request.form.items()),
-            query=request.args, url=request.url, error={},
+            form=dict(request.form.items()), error={},
+            query=request.args, url=request.url,
             server_name=config.server_name, 
             server_url=abs_url(), secure_server=abs_url(secure = True),
             content_domain=abs_url(domain = config.content_domain),
@@ -125,10 +125,18 @@ class ModelController(Controller):
 
 @Controllers.register
 class Community(Controller):
-    def home_feed(self, tdata, request, username, **paging_args):
+    def network_trending(self, tdata, request, username, **paging_args):
+        return {
+            'cards': tdata.user.feed_network(**paging_args),
+            'title': "Network - Trending",
+            'heading': ("The Hive", "Trending"),
+        }
+
+    def network_recent(self, tdata, request, username, **paging_args):
         return {
             "cards": tdata.user.feed_network(**paging_args),
-            "title": ("The Hive", "Featured")
+            "title": 'Network - Recent',
+            "heading": ("Network", "Recent")
         }
 
     def expressions_public(self, tdata, request, username, **paging_args):
@@ -136,14 +144,22 @@ class Community(Controller):
             "cards": tdata.user.expr_page(
                         auth='public',
                         viewer=tdata.user, **paging_args),
-            "title": ("My Expressions", "Public")
+            'title': 'Expression by ' + tdata['name'],
+            "heading": (tdata.user['fullname'], '')
+        }
+    def expressions_private(self, tdata, request, username, **paging_args):
+        return {
+            "cards": tdata.user.expr_page(
+                        auth='public',
+                        viewer=tdata.user, **paging_args),
+            'title': 'Your Private Expressions',
+            "heading": (tdata.user['fullname'], 'Private')
         }
 
     def dispatch(self, handler, request, **kwargs):
         (tdata, response) = self.pre_process(request)
         query = getattr(self, handler, None)
-        if query is None:
-            return self.serve_404()
+        if query is None: return self.serve_404()
         # Handle keyword args to be passed to the controller function
         passable_keyword_args = dfilter(kwargs,['username'])
         # Handle pagination
@@ -159,7 +175,8 @@ class Community(Controller):
             return self.serve_json(response, page_data)
         else:
             tdata.context.update({
-                "page_data": page_data
+                "page_data": page_data,
+                'title': page_data['title'],
             })
             return self.serve_loader_page('pages/main.html', tdata, request, response)        
 
