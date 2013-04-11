@@ -749,7 +749,8 @@ class Expr(HasSocial):
 
     class Collection(Collection):
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
-        def meta(self,  username, name): return self.find({'owner_name': username, 'name': name},
+        def meta(self,  username, name): 
+            return self.find({'owner_name': username, 'name': name},
             fields={ 'apps': 0, 'background': 0, 'images': 0 })
 
         def fetch(self, key, keyname='_id', meta=False):
