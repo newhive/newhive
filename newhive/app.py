@@ -83,7 +83,7 @@ endpoints = [
 ]
 
 endpoints.extend(get_api_endpoints(api))
-routes = Map(endpoints) #, host_matching=True
+routes = Map(endpoints, strict_slashes=False) #, host_matching=True
 
 @Request.application
 def handle(request):
