@@ -1556,29 +1556,40 @@ class ESDatabase:
         return self.db.parse_query(q)
 
     def create_query(self, search):
-        # if query contains @username, results must match @username and one or more of the search terms
-        # otherwise results match one or more of the search terms
+        # results match ALL of the search terms
         # query stemming disabled for phrase search
 
         # TODO: parse OR as boolean OR
 
         clauses = []
 
+        text_clauses = []
+
+        phrase_clauses = []
+
         if len(search['text']) != 0:
-            clauses.append(pyes.query.TextQuery('text', ' '.join(search['text']), analyzer='default', boost=1))
-            clauses.append(pyes.query.TextQuery('tags', ' '.join(search['text']), analyzer='tag_analyzer', boost=2))
-            clauses.append(pyes.query.TextQuery('title', ' '.join(search['text']), analyzer='default', boost=5))
-            clauses.append(pyes.query.TextQuery('name', ' '.join(search['text']), analyzer='default', boost=5))
+            text_clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text']), analyzer='default', boost=2, operator="and"))
         if len(search['tags']) != 0:
-            clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer='tag_analyzer', boost=5))
+            text_clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer='tag_analyzer', boost=5, operator="and"))
+
+        if len(text_clauses) != 0:
+            q1 = pyes.query.BoolQuery(must=text_clauses, boost=1)
+            clauses.append(q1)
+
         for p in search['phrases']:
-            clauses.append(pyes.query.TextQuery('text', p, type="phrase", analyzer='simple', boost=5))
-            clauses.append(pyes.query.TextQuery('title', p, type="phrase", analyzer='simple', boost=7))
+            phrase_clauses.append(pyes.query.TextQuery('text', p, type="phrase", analyzer='simple', boost=5))
+            phrase_clauses.append(pyes.query.TextQuery('title', p, type="phrase", analyzer='simple', boost=7))
+
+        if len(phrase_clauses) != 0:
+            q2 = pyes.query.BoolQuery(should=phrase_clauses, boost=2)
+            clauses.append(q2)
+
         if search.get('user'):
-            user_clause = pyes.query.TermQuery('owner_name', search['user'])
-            query = pyes.query.BoolQuery(must=user_clause, should=clauses)
-        else:
-            query = pyes.query.BoolQuery(should=clauses)
+            q3 = pyes.query.TermQuery('owner_name', search['user'], boost=3)
+            clauses.append(q3)
+
+        query = pyes.query.BoolQuery(must=clauses)
+
         custom_query = pyes.query.CustomScoreQuery(query, script="_score * (doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value)")
 
         return custom_query
