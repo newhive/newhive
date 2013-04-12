@@ -11,10 +11,15 @@ NewHive is your radically simple, DIY self publishing tool." />
 {% block head %}
   {{ super () }}
   <script>
-  curl(['community_page_renderer','browser/client_ui'], function(communityPageRenderer, clientUI) {
-      // Bootstrap community page with first set of cards.
-      communityPageRenderer().render({{ page_data|json }});
-      clientUI().wrapLinks();
+  curl([
+      'ui/nav',
+      'community_page_renderer',
+      'browser/client_ui'],
+      function(nav, communityPageRenderer, clientUI) {
+          nav.render();
+          // Bootstrap community page with first set of cards.
+          communityPageRenderer().render({{ page_data|json }});
+          clientUI().wrapLinks();
   });
   </script>
 {% endblock head %}
@@ -34,9 +39,9 @@ NewHive is your radically simple, DIY self publishing tool." />
   {% else %}
   <div class="title center">
       <div>
-          <span class="main-title"></span> <span class="sep-slash">/</span>
+          <!-- <span class="main-title" id="title-section"></span> <span class="sep-slash">:</span> -->
+          <span class="main-title" id="title-page"></span>
       </div>
-      <div class="sub-title"></div>
   </div>
     <div id="feed" class="center">
       <div class="feed-content" style='position:relative'>{{ content }}</div>
