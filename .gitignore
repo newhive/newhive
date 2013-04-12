@@ -6,6 +6,7 @@ compiled.*
 /libsrc/.webassets-cache
 /libsrc/scss/config.rb
 /libsrc/scss/.sass-cache/*
+/libsrc/*.css
 /newhive/config/config.py
 /newhive/config/GA_credentials.dat
 /newhive/config/aws.py
