@@ -434,10 +434,12 @@ def find_similar_tags(tags, db):
     results_nodup = OrderedDict.fromkeys(results)
     return list(results_nodup)[:5]
 
-def autocomplete(s, db, field='tags'):
+
+def autocomplete(pre, db, field='tags'):
+    s = re.sub(r'[\s_\-"]', '', pre, flags=re.UNICODE)
     query = pyes.query.MatchAllQuery().search()
-    ts = pyes.facets.TermFacet(field=field, name='tags', size=5, order="count", 
-                               exclude=blacklist, regex=s+'.*', 
+    ts = pyes.facets.TermFacet(field=field, name='tags', size=5, order="count",
+                               exclude=blacklist, regex=s+'.*',
                                regex_flags=["DOTALL", "CASE_INSENSITIVE"])
     query.facet.facets.append(ts)
     res = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
