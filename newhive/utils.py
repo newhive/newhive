@@ -412,21 +412,21 @@ bad_tags = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgird
 def find_similar_tags(tags, db):
     exclude = tags + bad_tags
     sim = {}
+    clauses = []
+
     for tag in tags:
+        clauses.append(pyes.query.TermQuery('tags', tag))
 
-        query = pyes.query.TermQuery('tags', tag).search()
+    query = pyes.query.BoolQuery(should=clauses).search()
+    ts = pyes.facets.TermFacet(field='tags', name='tags', size=100, order="count", exclude=exclude)
+    query.facet.facets.append(ts)
+    res = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
 
-        ts = pyes.facets.TermFacet(field='tags', name='tags', size=50, order="count", exclude=exclude)
-
-        query.facet.facets.append(ts)
-
-        res = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
-
-        for row in res.facets.tags.terms:
-            q = pyes.query.TermQuery('tags', row['term'])
-            freq = db.esdb.conn.search(q, indices=db.esdb.index, doc_types="expr-type").total
-            if row['count'] > 2:
-                sim[row['term']] = row['count']/numpy.sqrt(freq)
+    for row in res.facets.tags.terms:
+        q = pyes.query.TermQuery('tags', row['term'])
+        freq = db.esdb.conn.search(q, indices=db.esdb.index, doc_types="expr-type").total
+        if row['count'] > 2:
+            sim[row['term']] = row['count']/numpy.sqrt(freq)
 
     print "sorting results"
     sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
