@@ -27,6 +27,7 @@
 .expr-title {
     position:absolute;
     
+    width:500px;
     font-weight:300;
     font-size:30pt;
     font-family:"Museo",serif;
@@ -167,20 +168,32 @@ body.profile #left_tabs .tab_label {
   &.tag_15 { background-color: $color_tag_15; }
 }
 
-#feed .prompt {
-  display: inline-block;
-  width: 260px;
-  height: 260px;
-  position: relative;
-  margin: 5px;
-  div {
-    position: absolute; left: 20px; top: 141px;
-    width: 230px;
-    font-weight: bold;
-  }
-  img { position: absolute; left: 0px; top: 0px; }
-  &.link { cursor: pointer; }
+#feed {
+    margin-left:auto;
+    margin-right:auto;
+    width:600px;
+    
+    .expr-snapshot {
+        width:500px;
+        height:300px;
+    }
+    
+    .prompt {
+      display: inline-block;
+      width: 260px;
+      height: 260px;
+      position: relative;
+      margin: 5px;
+      div {
+        position: absolute; left: 20px; top: 141px;
+        width: 230px;
+        font-weight: bold;
+      }
+      img { position: absolute; left: 0px; top: 0px; }
+      &.link { cursor: pointer; }
+    }
 }
+
 #prompt_interests {
   background-image: asset_url('skin/1/prompt_interests.png');
   &.active { background-image: asset_url('skin/1/prompt_interests-hover.png'); }
