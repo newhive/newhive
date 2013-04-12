@@ -1,4 +1,4 @@
-define(['js!browser/zepto'], function($) {
+define(['browser/jquery'], function($) {
 
     function img_fill(img) {
         var e = $(img), w = e.parent().width(), h = e.parent().height();
@@ -83,6 +83,6 @@ define(['js!browser/zepto'], function($) {
     
     return {
         'place_apps': place_apps,
-        
+        'center': center        
     }
 });

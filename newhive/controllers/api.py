@@ -145,7 +145,6 @@ class Community(Controller):
         }
 
     def expressions_public(self, tdata, request, username, **paging_args):
-        spec = dcast(request.args, [('owner', str), ('auth', bool)], filter=True)
         return {
             'page_data': {
                 "cards": tdata.user.expr_page(
