@@ -57,7 +57,8 @@ class Database:
         # initialize elasticsearch index
         self.esdb = ESDatabase(self)
 
-    def query(self, q, viewer=None, limit=40, expr_only=None, **args):
+    def query(self, q, viewer=None, limit=40, expr_only=None, fuzzy=False,
+              es_order='_score,views:desc', **args):
         args['viewer'] = viewer
         args['limit'] = limit
         search = self.parse_query(q)
@@ -68,9 +69,7 @@ class Database:
             del search['network']
 
         spec = {}
-        #if search.get('text'): spec['text_index'] = { '$all': search['text'] }
-        #if search.get('tags'): spec['tags_index'] = { '$all': search['tags'] }
-        #if search.get('user'): spec['owner_name'] = search['user']
+
         if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
 
         if search.get('network'):
@@ -78,8 +77,10 @@ class Database:
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            #use elasticsearch to search on these fields
-            results = self.esdb.paginate(search, limit=limit, start=0, es_order='_score,views:desc', es_filter=None, sort='score')
+            results = self.esdb.paginate(search, limit=limit, start=0,
+                                         es_order=es_order,
+                                         es_filter=None, fuzzy=fuzzy,
+                                         sort='score')
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -1610,11 +1611,13 @@ class ESDatabase:
                                    size=limit)
         return results
 
-    def search_fuzzy(self, string, order="_score"):
+    def search_fuzzy(self, search, es_order, es_filter, start, limit):
+        # typo-tolerant searches. only works for text/tags, not usernames.
+        string = ' '.join(search['text'] + search['phrases'] + search['tags'])
         q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
         results = self.conn.search(q, indices=self.index,
-                                   doc_types="expr-type", sort=order)
-        for r in results: print r
+                                   doc_types="expr-type", sort=es_order,
+                                   filter=es_filter, start=start, size=limit)
         return results
 
     def update(self, expr, refresh=True):
@@ -1638,14 +1641,19 @@ class ESDatabase:
         return None
 
     def paginate(self, search, limit=40, start=0, es_order='_score,views:desc',
-                 es_filter=None, sort='score'):
-        res = self.search_text(search, es_order=es_order, es_filter=es_filter,
-                               start=start, limit=limit)
+                 es_filter=None, sort='score', fuzzy=False):
+        if fuzzy:
+            res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
+                                    start=start, limit=limit)
+        else:
+            res = self.search_text(search, es_order=es_order, es_filter=es_filter,
+                                   start=start, limit=limit)
         expr_results = Page([])
         result_ids = []
         if res._total >= limit:
             expr_results.next = res[limit-1]._meta[sort]
         for r in res:
+            print r
             result_ids.append(r._meta.id)
         expr_results = list(self.db.Expr.search({'_id': {'$in': result_ids}}))
         return expr_results
