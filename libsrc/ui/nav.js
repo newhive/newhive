@@ -9,7 +9,10 @@ define([
         layout.center($('.center'), $('#nav'));
 
         menu('#logo', '#logo_menu');
+
         $('#logout_btn').click(logout);
+		// user SHOULD always exist, in fact, login_btn will always exist after minor refactor
+        if(!context.user.logged_in) menu('#login_btn', '#login_menu');
 
         menu('#network_btn', '#network_menu');
         menu('#hive_btn', '#hive_menu');

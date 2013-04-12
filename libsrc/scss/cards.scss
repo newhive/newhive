@@ -7,9 +7,13 @@
         font-size:20pt;
     }
     .expr-owner {
-        float:left;
+        position:relative;
+        display:inline;
+        
     }
     .expr-stats {
+        position:relative;
+        display:inline;
         float:right;
     }
     &.item { 
@@ -28,12 +32,15 @@
     }
     &.flat-item {
         position: relative; 
-        padding: 13px 13px 5px 13px; 
-        height: 300px;
+        padding: 13px 13px 13px 13px;
+        
         width: 450px;
         background-image: asset_url('skin/1/feed_item.png'); 
+        margin-top:10px;
+        margin-bottom:10px;
         &.border_bottom {
-            border-bottom: 1px solid $color_light_grey;
+            border-bottom: 2px solid $color_light_grey;
+            width:100%;
         }
         & img.owner-thumb {
             width:30px;
