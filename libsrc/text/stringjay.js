@@ -237,12 +237,6 @@ define(['browser/js', 'module', 'templates/context'],
 		}
 	}
 
-	function render(data, node){
-		var context = [ o.base_context, data ];
-		return render_node(context, node);
-	}
-	o._render = render; // for debugging / curiosity
-
 	function render_node(context, node){
 		if(node.constructor == Array)
 			return node.map(function(n){ return render_node(context, n) })
@@ -274,9 +268,13 @@ define(['browser/js', 'module', 'templates/context'],
 		function template(data){
 			if(!data) data = {};
 			data.template = template;
-			return render(data, ast);
+			var context = [ o.base_context, data ];
+			return render_node(context, ast);
 		}
 		template.ast = ast;
+		template.template_apply = function(stack){
+			return render_node(stack, ast);
+		};
 		return template;
 	};
 
@@ -331,8 +329,9 @@ define(['browser/js', 'module', 'templates/context'],
 	};
 	o.base_context['for'] = function(context, block, iteratee){
 		if(!iteratee || iteratee.constructor != Array) return '';
-		return iteratee.map(function(v){ return block(context.concat(v)) })
-			.reduce(util.op['+'], '');
+		return iteratee.map(function(v){
+			return block(context.concat(v))
+		}).reduce(util.op['+'], '');
 	};
 	o.base_context.e = encode_to_html;
 	o.base_context.json = function(context, data){

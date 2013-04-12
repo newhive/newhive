@@ -31,7 +31,7 @@ define(['text/stringjay'], function(sj){
             fetchText('/lib/libsrc/' + resourceId, function(text){
 				var t = sj.template(text);
 				t.template_name = resourceId;
-				set_reference(sj.base_context, resourceId, t);
+				set_reference(sj.base_context, resourceId, t.template_apply);
 				callback(t);
             });
 		}
