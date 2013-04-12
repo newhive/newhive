@@ -1434,6 +1434,8 @@ class Temp(Entity):
 
 @Database.register
 class Tags(Entity):
+    # class for tag analytics. This is obsolete once elasticsearch is running.
+
     indexes = [('tag', {'unique': True}), ('count', -1), [('count', -1), ('tags', 1)]]
     cname = 'tags'
 
@@ -1472,8 +1474,11 @@ class Tags(Entity):
             return None
 
         def autocomplete(self, string):
+            # should probably use the autocomplete in newhive/utils instead
             res = self.search({'tag': {'$regex': '^' + string}}, sort=[('count', -1)])
             return res
+
+
 ## utils
 
 

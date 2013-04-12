@@ -398,34 +398,15 @@ def analytics_email_number_format(number):
     if not decimal: return whole
     return whole + "." + zeros + decimal[:2]
 
+
+### utils for tag suggestion and autocomplete ###
+
+
 blacklist = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm',
              'bethgirdler', 'i', 'be', 'of', 'the', 'a', 'an', 'in', 'on',
              'for', 'naut', 'is', 'and', 'to', 'from']
 
-bad_tags = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'naut'] # blacklist minus stopwords
-
-
-def simTags(tags, db):
-    coOccur = Counter()
-    sim = {}
-    print "searching for similar tags"
-    res = db.Expr.search({'tags_index': {'$in': tags}})
-    for row in res:
-        coOccur.update(row['tags_index'])
-    for t in set(tags+blacklist):
-        del coOccur[t]
-    print "calculating similarities"
-    for ct in coOccur.keys():
-        ctrow = db.Tags._col.find_one({'tag': ct})
-        if ctrow is not None:
-            cotagFreq = ctrow['count']
-            if coOccur[ct] > 2:
-                sim[ct] = coOccur[ct]/numpy.sqrt(cotagFreq)
-    print "sorting results"
-    sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
-    results = [t[0] for t in sim_sorted]
-    results_nodup = OrderedDict.fromkeys(results)
-    return list(results_nodup)[:5]
+bad_tags = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'naut']  # blacklist minus stopwords
 
 
 def find_similar_tags(tags, db):
@@ -452,3 +433,12 @@ def find_similar_tags(tags, db):
     results = [t[0] for t in sim_sorted]
     results_nodup = OrderedDict.fromkeys(results)
     return list(results_nodup)[:5]
+
+def autocomplete(s, db, field='tags'):
+    query = pyes.query.MatchAllQuery().search()
+    ts = pyes.facets.TermFacet(field=field, name='tags', size=5, order="count", 
+                               exclude=blacklist, regex=s+'.*', 
+                               regex_flags=["DOTALL", "CASE_INSENSITIVE"])
+    query.facet.facets.append(ts)
+    res = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
+    return res.facets.tags.terms
