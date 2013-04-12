@@ -14,9 +14,9 @@ curl(['server/context', 'browser/js'], function(context, util){
         error: {{ error|json }},
         server_url: {{ server_url|json }}, secure_server: {{ secure_server|json }},
         config: {{ config.client_view()|json }}, /* streamified_url, streamified_client_id */
-        page_data: {{ page_data|json }}
     };
     util.copy(server_data, context);
+    util.copy({{ context|json }}, context);
 });
   </script>
 {% endblock %}

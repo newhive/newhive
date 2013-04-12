@@ -27,12 +27,12 @@ def get_api_endpoints(api):
     for route_name, route_obj in routes.items():
         # Add page route
         rules.append(Rule(
-            route_obj['pageRoute'],
+            route_obj['page_route'],
             endpoint=(getattr(api,route_obj['controller']),route_obj['method'])
         ))
         # And API route
         rules.append(Rule(
-            route_obj['apiRoute'],
+            route_obj['api_route'],
             endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
             defaults={'json':True}
         ))
@@ -85,8 +85,10 @@ routes = Map(endpoints)
 
 @Request.application
 def handle(request):
-    # OK folks, let's make the routing logic 2 lines
-    (controller, handler), args = routes.bind_to_environ(request.environ).match()
+    try: (controller, handler), args = routes.bind_to_environ(
+        request.environ).match()
+    except(exceptions.NotFound):
+        api.controller.serve_404(request, Response(), json=False)
     return controller.dispatch(handler, request, **args)
 
 application = handle

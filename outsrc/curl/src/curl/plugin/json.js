@@ -34,7 +34,10 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 
 			function evalSource (source) {
 				try {
-					loaded(globalEval('(' + source + ')'));
+					var return_container = {},
+						result = globalEval('(' + source + ')',
+							return_container, 'value');
+					loaded(return_container.value);
 				}
 				catch (ex) {
 					errback(ex);
@@ -53,5 +56,5 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 
 });
 }(
-	function (source) {/*jshint evil:true*/ eval(source); }
+	function (source, obj, prop) {/*jshint evil:true*/ obj[prop] = eval(source); }
 ));

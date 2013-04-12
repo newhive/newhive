@@ -26,6 +26,7 @@ class TransactionData(utils.FixedAttrs):
         (that Werkzeug's Request or Response objects don't already handle) """
     pass
 
+@Controllers.register
 class Controller(object):
     def __init__(self, db=None, jinja_env=None, assets=None, config=None):
         self.config = config
@@ -91,7 +92,7 @@ class Controller(object):
     def serve_loader_page(self, template, tdata, request, response):
         return self.serve_html(response, self.render_template(tdata, response, template))
 
-    def serve_404(self, request, response):
+    def serve_404(self, request, response, json=True):
         response.status_code = 404
         return self.serve_json(response, {
             'error': 404
@@ -127,33 +128,42 @@ class ModelController(Controller):
 class Community(Controller):
     def network_trending(self, tdata, request, username, **paging_args):
         return {
-            'cards': tdata.user.feed_network(**paging_args),
+            'page_data': {
+                'cards': tdata.user.feed_network(**paging_args),
+                'heading': ("The Hive", "Trending"),
+            },
             'title': "Network - Trending",
-            'heading': ("The Hive", "Trending"),
         }
 
     def network_recent(self, tdata, request, username, **paging_args):
         return {
-            "cards": tdata.user.feed_network(**paging_args),
+            'page_data': {
+                "cards": tdata.user.feed_network(**paging_args),
+                "heading": ("Network", "Recent")
+            },
             "title": 'Network - Recent',
-            "heading": ("Network", "Recent")
         }
 
     def expressions_public(self, tdata, request, username, **paging_args):
+        spec = dcast(request.args, [('owner', str), ('auth', bool)], filter=True)
         return {
-            "cards": tdata.user.expr_page(
-                        auth='public',
-                        viewer=tdata.user, **paging_args),
+            'page_data': {
+                "cards": tdata.user.expr_page(
+                    auth='public',
+                    viewer=tdata.user, **paging_args),
+                "heading": (tdata.user['fullname'], '')
+            },
             'title': 'Expression by ' + tdata['name'],
-            "heading": (tdata.user['fullname'], '')
         }
     def expressions_private(self, tdata, request, username, **paging_args):
         return {
-            "cards": tdata.user.expr_page(
-                        auth='public',
-                        viewer=tdata.user, **paging_args),
+            'page_data': { 
+                "cards": tdata.user.expr_page(
+                    auth='private',
+                    viewer=tdata.user, **paging_args),
+                "heading": (tdata.user['fullname'], 'Private'),
+            },
             'title': 'Your Private Expressions',
-            "heading": (tdata.user['fullname'], 'Private')
         }
 
     def dispatch(self, handler, request, **kwargs):
@@ -168,16 +178,15 @@ class Community(Controller):
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args
         merged_args = dict(passable_keyword_args.items() + pagination_args.items())
-        page_data = query(tdata, request, **merged_args)
-        page_data['cards'] = [o.client_view() for o in page_data['cards']]
-        page_data['title'] = page_data['title']
+
+        context = query(tdata, request, **merged_args)
+        cards = context['page_data']['cards']
+        context['page_data']['cards'] = [o.client_view() for o in cards]
+        
         if kwargs.get('json'):
-            return self.serve_json(response, page_data)
+            return self.serve_json(response, context)
         else:
-            tdata.context.update({
-                "page_data": page_data,
-                'title': page_data['title'],
-            })
+            tdata.context.update(context=context)
             return self.serve_loader_page('pages/main.html', tdata, request, response)        
 
     def profile(self, tdata, request, response, username=None):

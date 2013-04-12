@@ -4,7 +4,7 @@ import json
 from newhive.utils import abs_url
 
 class RoutesManager(object):
-    def __init__(self, routes_path='newhive/api_routes.json'):
+    def __init__(self, routes_path='newhive/routes.json'):
         self.routes_obj = json.loads(open(routes_path,'r').read())
     def get_routes(self):
         return deepcopy(self.routes_obj)
@@ -13,7 +13,7 @@ class RoutesManager(object):
         # Format {"key": "val"} to data-key="val"
         attributes = map(lambda x: ('data-'+x[0],x[1]),kwargs.iteritems())
         # Add href attribute for fallback
-        href = self.routes_obj[route_name]['pageRoute']
+        href = self.routes_obj[route_name]['page_route']
         # Substitute <variable> names in href URL
         base_url = abs_url()
         # Trim trailing slash from abs_url(), if present

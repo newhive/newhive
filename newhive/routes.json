@@ -1,28 +1,28 @@
 {
     "network/trending": {
-        "pageRoute": "/<username>/profile/network",
-        "apiRoute": "/api/<username>/profile/network",
+        "page_route": "/<username>/profile/network",
+        "api_route": "/api/<username>/profile/network",
         "controller": "community",
         "method": "network_trending",
         "client_method": "expr_detail"
     },
     "network/recent": {
-        "pageRoute": "/<username>/profile/network",
-        "apiRoute": "/api/<username>/profile/network",
+        "page_route": "/<username>/profile/network",
+        "api_route": "/api/<username>/profile/network",
         "controller": "community",
         "method": "network_recent",
         "client_method": "columns"
     },
     "expressions/public": {
-        "pageRoute": "/<username>/profile/expressions/public",
-        "apiRoute": "/api/<username>/profile/expressions/public",
+        "page_route": "/<username>/profile/expressions/public",
+        "api_route": "/api/<username>/profile/expressions/public",
         "controller": "community",
         "method": "expressions_public",
         "client_method": "profile"
     },
     "expressions/private": {
-        "pageRoute": "/<username>/profile/expressions/public",
-        "apiRoute": "/api/<username>/profile/expressions/public",
+        "page_route": "/<username>/profile/expressions/public",
+        "api_route": "/api/<username>/profile/expressions/public",
         "controller": "community",
         "method": "expressions_private",
         "client_method": "profile"

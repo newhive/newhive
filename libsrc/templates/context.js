@@ -1,5 +1,5 @@
 define([
-    'server/context', 'server/compiled.assets', 'browser/js'
+    'server/context', 'json!server/compiled.assets.json', 'browser/js'
 ], function(context, assets, util){
 	var helpers = {
 		asset: function(context, name){

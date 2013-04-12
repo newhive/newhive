@@ -8,17 +8,18 @@ from newhive.app import application
 from werkzeug.serving import run_simple, make_ssl_devcert
 
 
-def wsgi_no_cache(app):
-    def new_app(environ, start_response):
-        def new_start_response(status, headers, **args):    
-            headers.append(('Cache-Control', 'no-cache, no-store, must-revalidate'))
-            return start_response(status, headers, **args)
-        return app(environ, new_start_response)
-    return new_app
+# caution, broken in some obscure way
+#def wsgi_no_cache(app):
+#    def new_app(environ, start_response):
+#        def new_start_response(status, headers, **args):    
+#            headers.append(('Cache-Control', 'no-cache, no-store, must-revalidate'))
+#            return start_response(status, headers, **args)
+#        return app(environ, new_start_response)
+#    return new_app
 
 # undfortunately this doesn't work for static files
 # (need to subclass the server for that), so use your own cache killing solution!
-if config.debug_mode: application = wsgi_no_cache(application)
+#if config.debug_mode: application = wsgi_no_cache(application)
 
 # run_simple is not so simple
 # also, SSL is broken in pip version of werkzeug. Use github version
