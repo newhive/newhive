@@ -138,7 +138,7 @@ class Community(Controller):
         return {
             'page_data': {
                 'cards': tdata.user.feed_network(**paging_args),
-                'heading': ("The Hive", "Trending"),
+                'header': ("The Hive", "Trending"),
             },
             'title': "Network - Trending",
         }
@@ -147,7 +147,7 @@ class Community(Controller):
         return {
             'page_data': {
                 "cards": tdata.user.feed_network(**paging_args),
-                "heading": ("Network", "Recent")
+                "header": ("Network", "Recent")
             },
             "title": 'Network - Recent',
         }
@@ -168,7 +168,6 @@ class Community(Controller):
                 "cards": tdata.user.expr_page(
                     auth='private',
                     viewer=tdata.user, **paging_args),
-                "heading": (tdata.user['fullname'], 'Private'),
             },
             'title': 'Your Private Expressions',
         }
