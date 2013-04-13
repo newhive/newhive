@@ -191,7 +191,6 @@ class Community(Controller):
         context = query(tdata, request, **merged_args)
         cards = context['page_data']['cards']
         context['page_data']['cards'] = [o.client_view() for o in cards]
-        
         if kwargs.get('json'):
             return self.serve_json(response, context)
         else:

@@ -71,7 +71,7 @@
 </div>
 
 <div id='network_menu' class='menu drawer'>
-  <div class='menu_item'>Trending</div>
+  <a { get_route_anchor_attrs "network/trending", {"username": "context.user.name" } }> <div class='menu_item'>Trending</div></a>
   <div class='menu_item'>Recent</div>
 </div>
 
