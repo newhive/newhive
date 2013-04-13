@@ -10,10 +10,7 @@ NewHive is your radically simple, DIY self publishing tool." />
 
 {% block body %}
   <div id='nav'></div>
-  <div id='feed'>
-    <div class="title center"></div>
-    <div class="feed-content" style='position:relative'>{{ content }}</div>
-  </div>
+  <div id='feed'>{% block feed_content %}{% endblock %}</div>
   <div id='exprs'></div>
   <script>
 curl([

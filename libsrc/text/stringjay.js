@@ -187,6 +187,9 @@ define(['browser/js', 'module', 'templates/context'],
 					if(parsed.charAt(parsed.length-1) == '"') break;
 				}	
 			}
+			// implement by iteratively passing more shit to JSON.parse
+			// else if(parsed = match( // match list literal
+			// else if(parsed = match( // match object literal
 			else return false;
 			try { return {
 				type: 'literal',
