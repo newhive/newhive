@@ -1,6 +1,8 @@
-{<if page_data.user_header}
-{|templates/user_header.html}
+{<if page_data.header}
+    <div class='header'>{ page_data.header.0 }
+      {<if page_data.header.1} : {>}{ page_data.header.1 }</div>
 {>}
+
 {<for page_data.cards}
     {<if title}{|templates/expr_card.html}{>}
     {<if fullname}{|templates/user_card.html}{>}

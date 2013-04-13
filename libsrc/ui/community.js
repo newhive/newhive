@@ -9,6 +9,6 @@ define([
     // TODO: Separate out browser/jquery code
     return { render: function(){
         var x = $('#feed .feed-content');
-        $('#feed .feed-content').html(card_template(context));
+        $('#feed').html(card_template(context));
     } };
 });

@@ -92,11 +92,19 @@ class Controller(object):
     def serve_loader_page(self, template, tdata, request, response):
         return self.serve_html(response, self.render_template(tdata, response, template))
 
-    def serve_404(self, request, response, json=True):
+    def serve_404(self, tdata, request, response, json=True):
         response.status_code = 404
-        return self.serve_json(response, {
-            'error': 404
-        })
+        if json: return self.serve_json(response, {'error': 404 })
+        else: return self.serve_page(tdata, response, 'pages/notfound.html')
+
+    def serve_500(self, request, response, exception=None, json=True):
+        if config.debug_mode: raise exception
+
+        response.status_code = 404
+        if json: return self.serve_json(response, {'error': 500 })
+        else:
+            tdata = TransactionData(user=self.db.User.new({}), context={})
+            return self.serve_page(tdata, response, 'pages/broken.html')
 
     def redirect(self, response, location, permanent=False):
         response.location = str(location)
@@ -121,51 +129,30 @@ class ModelController(Controller):
     def fetch(self, tdata, request, response, id=None):
         """ Fetch a record from any newhive.state model """
         data = self.model.fetch(id)
-        if data is None: self.serve_404(request, response)
+        if data is None: self.serve_404(tdata, request, response)
         return self.serve_json(response, data)
 
 @Controllers.register
 class Community(Controller):
-    def network_trending(self, tdata, request, username, **paging_args):
+    def network_trending(self, tdata, request, username=None, **paging_args):
         return {
             'page_data': {
                 'cards': tdata.user.feed_network(**paging_args),
-                'heading': ("The Hive", "Trending"),
+                'header': ("The Hive", "Trending"),
             },
             'title': "Network - Trending",
         }
 
-    def network_recent(self, tdata, request, username, **paging_args):
+    def network_recent(self, tdata, request, username=None, **paging_args):
         return {
             'page_data': {
                 "cards": tdata.user.feed_network(**paging_args),
-                "heading": ("Network", "Recent")
+                "header": ("Network", "Recent")
             },
             "title": 'Network - Recent',
         }
 
-    def expressions_public(self, tdata, request, username, **paging_args):
-        return {
-            'page_data': {
-                "cards": tdata.user.expr_page(
-                    auth='public',
-                    viewer=tdata.user, **paging_args),
-                "heading": (tdata.user['fullname'], '')
-            },
-            'title': 'Expression by ' + tdata['name'],
-        }
-    def expressions_private(self, tdata, request, username, **paging_args):
-        return {
-            'page_data': { 
-                "cards": tdata.user.expr_page(
-                    auth='private',
-                    viewer=tdata.user, **paging_args),
-                "heading": (tdata.user['fullname'], 'Private'),
-            },
-            'title': 'Your Private Expressions',
-        }
-        
-    def profile(self, tdata, request, username=None, **args):
+    def expressions_public(self, tdata, request, username=None, **args):
         owner = self.db.User.fetch(username, 'name')
         if not owner: return None
         spec = {'owner_name': username}
@@ -174,13 +161,24 @@ class Community(Controller):
             'page_data': { "cards": cards, },
             'title': 'Your Private Expressions',
         }
-
+    def expressions_private(self, tdata, request, username=None, **paging_args):
+        return {}
+        return {
+            'page_data': { 
+                "cards": tdata.user.expr_page(
+                    auth='private',
+                    viewer=tdata.user, **paging_args),
+            },
+            'title': 'Your Private Expressions',
+        }
+        
     def dispatch(self, handler, request, **kwargs):
         (tdata, response) = self.pre_process(request)
         query = getattr(self, handler, None)
-        if query is None: return self.serve_404()
+        if query is None:
+            return self.serve_404(tdata, request, response, json=kwargs.get('json'))
         # Handle keyword args to be passed to the controller function
-        passable_keyword_args = dfilter(kwargs,['username'])
+        passable_keyword_args = dfilter(kwargs, ['username'])
         # Handle pagination
         pagination_args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
         for k in ['limit', 'order']:
@@ -189,6 +187,8 @@ class Community(Controller):
         merged_args = dict(passable_keyword_args.items() + pagination_args.items())
 
         context = query(tdata, request, **merged_args)
+        if not context:
+            return self.serve_404(tdata, request, response, json=kwargs.get('json'))
         cards = context['page_data']['cards']
         context['page_data']['cards'] = [o.client_view() for o in cards]
         if kwargs.get('json'):
@@ -214,7 +214,7 @@ class Expr(ModelController):
         """
         eid = request.form.get('entity')
         entity = self.model.fetch(id)
-        if not entity: return self.serve_404(request, response)
+        if not entity: return self.serve_404(tdata, request, response)
         if entity.get('screenshot'):
             return self.serve_json(response, entity.get('screenshot'))
         link = werkzeug.urls.url_fix("http://%s:%d/%s/%s" % (config.server_name, config.plain_port, entity['owner_name'], entity['name']))
