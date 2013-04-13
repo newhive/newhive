@@ -758,14 +758,16 @@ class Expr(HasSocial):
             [(port, user, name)] = re.findall(config.server_name + r'/(:\d+)?(\w+)/(.*)$', url)
             return cls.named(user, name)
 
-        def page(self, spec, viewer, tag=None, sort='updated', **args):
-            spec = dfilter(args, ['owner_name', 'auth'])
-            spec.setdefault('auth', 'public')
-            if tag: spec.update(tags_index=tag)
+        def page(self, spec, viewer, auth='public', tag=None, sort='updated', **args):
+            if tag: spec.update(tags_index=tag) # normalize tag input?
 
             assert(sort in ['updated', 'random'])
             paging_args = dfilter(args, ['limit', 'at', 'sort', 'order'])
-            paging_args.update(sort=sort) # normalize tag input?
+            paging_args.update(sort=sort)
+
+            spec.update(auth=auth)
+            if auth == 'public':
+                spec.update(password={'$exists': False})
 
             rs = self.paginate(spec, filter=viewer.can_view, **paging_args)
 

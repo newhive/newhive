@@ -165,18 +165,15 @@ class Community(Controller):
             'title': 'Your Private Expressions',
         }
         
-    def profile(self, tdata, request, response, username=None):
-        if username is None:
-            pass
-            # user_obj = tdata.user
-        else:
-            user_obj = db.User.fetch(username, 'name')
-            if not(user_obj):
-                return self.serve_404()
-        cards =  tdata.user.expr_page(
-                    auth='public',
-                    viewer=tdata.user, **paging_args),
-        return self.serve_page(tdata, response, 'pages/main.html')
+    def profile(self, tdata, request, username=None, **args):
+        owner = self.db.User.fetch(username, 'name')
+        if not owner: return None
+        spec = {'owner_name': username}
+        cards = self.db.Expr.page(spec, tdata.user, **args)
+        return {
+            'page_data': { "cards": cards, },
+            'title': 'Your Private Expressions',
+        }
 
     def dispatch(self, handler, request, **kwargs):
         (tdata, response) = self.pre_process(request)
