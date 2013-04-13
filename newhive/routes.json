@@ -1,14 +1,14 @@
 {
     "network/trending": {
-        "page_route": "/<username>/profile/network",
-        "api_route": "/api/<username>/profile/network",
+        "page_route": "/<username>/profile/network/trending",
+        "api_route": "/api/<username>/profile/network/trending",
         "controller": "community",
         "method": "network_trending",
         "client_method": "expr_detail"
     },
     "network/recent": {
-        "page_route": "/<username>/profile/network",
-        "api_route": "/api/<username>/profile/network",
+        "page_route": "/<username>/profile/network/recent",
+        "api_route": "/api/<username>/profile/network/recent",
         "controller": "community",
         "method": "network_recent",
         "client_method": "columns"

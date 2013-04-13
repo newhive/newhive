@@ -35,10 +35,10 @@ define([
         // If we don't support pushState, fall back on default link behavior.
         if (!window.history && window.history.pushState) return;
         $('body').on('click', '[data-route-name]', function(e) {
-           var routeName = e.target.getAttribute('data-route-name');
+           var routeName = $(e.target).closest('[data-route-name]').attr('data-route-name');
            var routeFormatVars = {
-               '<username>': e.target.getAttribute('data-username')
-           };
+               '<username>': $(e.target).closest('[data-username]').attr('data-username')
+           };           
            var routeObj = getFormattedRouteObj(routeName, routeFormatVars);
            navToRoute(routeObj);
            e.preventDefault();
