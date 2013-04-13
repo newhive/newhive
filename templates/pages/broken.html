@@ -1,0 +1,21 @@
+{% extends "pages/main.html" %}
+
+{% block head %}
+ <style>
+.toolbtn { margin-left : 20px }
+#meta { position : absolute; right : 20px; top : 27px; }
+#exp_owner { background-color : {{ colors['selected'] }}; margin : 5px 0 5px; padding : 1px 5px; display : inline-block; }
+#bg { background-color: {{ colors[34] }} }
+ </style>
+{% endblock %}
+
+{% block feed_content %}
+ <div
+ class='happ' style='left:322.246859px; top:110.125647px;
+ width:354.005168px; height:333.333333px; ; z-index : 1;'><img
+ src='{{ 'skin/1/floating_island.png'|asset_url }}'></div>
+ <div class='happ' style='left:356px; top:61.493411px;
+  width:270.863836px; height:30.014641px; font-size : 1.44120864659em;
+  z-index : 0; text-align : center' data-scale='1.44120864659'><span style="font-family:
+  League Gothic;">SOMETHING IS ALL BROKEN. SORRY.</span></div>
+{% endblock %}

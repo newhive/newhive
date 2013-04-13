@@ -94,8 +94,9 @@ routes = Map(endpoints, strict_slashes=False) #, host_matching=True
 def handle(request):
     try: (controller, handler), args = routes.bind_to_environ(
         request.environ).match()
-    except(exceptions.NotFound):
-        api.controller.serve_404(request, Response(), json=False)
+    except exceptions.NotFound as e:
+        return api.controller.serve_500(request, Response(),
+            exception=e, json=False)
     return controller.dispatch(handler, request, **args)
 
 application = handle
