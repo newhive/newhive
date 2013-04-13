@@ -164,6 +164,19 @@ class Community(Controller):
             },
             'title': 'Your Private Expressions',
         }
+        
+    def profile(self, tdata, request, response, username=None):
+        if username is None:
+            pass
+            # user_obj = tdata.user
+        else:
+            user_obj = db.User.fetch(username, 'name')
+            if not(user_obj):
+                return self.serve_404()
+        cards =  tdata.user.expr_page(
+                    auth='public',
+                    viewer=tdata.user, **paging_args),
+        return self.serve_page(tdata, response, 'pages/main.html')
 
     def dispatch(self, handler, request, **kwargs):
         (tdata, response) = self.pre_process(request)
@@ -187,9 +200,6 @@ class Community(Controller):
         else:
             tdata.context.update(context=context)
             return self.serve_loader_page('pages/main.html', tdata, request, response)        
-
-    def profile(self, tdata, request, response, username=None):
-        return self.serve_page(tdata, response, 'pages/main.html')
 
 @Controllers.register
 class Expr(ModelController):

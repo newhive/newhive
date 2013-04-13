@@ -26,5 +26,12 @@
         "controller": "community",
         "method": "expressions_private",
         "client_method": "profile"
+    },
+    "user/profile": {
+        "page_route": "/<username>/profile",
+        "api_route": "/api/<username>/profile",
+        "controller": "community",
+        "method": "profile",
+        "client_method": "profile"
     }
 }

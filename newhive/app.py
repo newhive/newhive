@@ -74,15 +74,20 @@ endpoints = [
     Rule('/api/user/login', endpoint=(api.user, 'login')),
     Rule('/api/user/logout', endpoint=(api.user, 'logout')),
     Rule('/api/search', endpoint=(api.search, 'search')),
-    Rule('/<username>/profile', endpoint=(api.community, 'profile')),
     # put these in /app, /h, or whatever
     Rule('/streamified_test', endpoint=(api.user, 'streamified_test')),
-    Rule('/streamified_login', endpoint=(api.user, 'streamified_login')),
-    Rule('/<user>/<expr>', endpoint=(api.expr, 'fetch')),
-    Rule('/<expr_id>', endpoint=(api.expr, 'fetch_naked'))
+    Rule('/streamified_login', endpoint=(api.user, 'streamified_login'))
 ]
 
 endpoints.extend(get_api_endpoints(api))
+
+# Add these catch-all routes last
+endpoints.extend([
+        Rule('/<user>', endpoint=(api.expr, 'fetch')),
+        Rule('/<user>/<expr>', endpoint=(api.expr, 'fetch')),
+        Rule('/<expr_id>', endpoint=(api.expr, 'fetch_naked'))
+])
+
 routes = Map(endpoints, strict_slashes=False) #, host_matching=True
 
 @Request.application
