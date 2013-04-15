@@ -1511,7 +1511,7 @@ class ESDatabase:
           "mappings": {
             "expr-type": {
               "properties": {
-                "tags": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets", "analyzer": "standard"},
+                "tags": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets", "analyzer": "tag_analyzer"},
                 "text": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
                 "title": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
                 "name": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
