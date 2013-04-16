@@ -15,16 +15,16 @@
     },
     "expressions_public": {
         "page_route": "/<username>/profile",
-        "api_route": "/api/expr?owner_name=<username>",
+        "api_route": "/api/exprs?owner_name=<username>",
         "controller": "community",
         "method": "expressions_public",
         "client_method": "profile"
     },
     "expressions_private": {
         "page_route": "/<username>/profile/private",
-        "api_route": "/api/expr?owner_name=<username>&auth=private",
+        "api_route": "/api/exprs?owner_name=<username>&auth=private",
         "controller": "community",
         "method": "expressions_private",
-        "client_method": "profile"
+        "client_method": "profile_private"
     }
 }

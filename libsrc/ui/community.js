@@ -8,7 +8,6 @@ define([
 ], function($, context, card_template) {
     // TODO: Separate out browser/jquery code
     return { render: function(){
-        var x = $('#feed .feed-content');
         $('#feed').html(card_template(context));
     } };
 });

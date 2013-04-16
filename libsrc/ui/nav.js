@@ -6,7 +6,6 @@ define([
 ) {
     function render(){
         $('#nav').empty().html(nav_template());
-        layout.center($('.center'), $('#nav'));
 
         menu('#logo', '#logo_menu');
 
@@ -28,6 +27,13 @@ define([
         }
 
         ui.add_hovers();
+
+        setTimeout(nav_layout, 100);
+        $(window).resize(nav_layout);
+    }
+
+    function nav_layout(){
+    	layout.center($('.center'), $('#nav'));
     }
 
     function login(){

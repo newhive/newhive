@@ -2,7 +2,7 @@
 
 {% block head %}
   {{ super() }}
-  <title>{{ ('NewHive' if not title else title)|e }}</title>
+  <title>{{ ('NewHive' if not context.title else title)|e }}</title>
   <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
   {% for item in asset_bundle('app.css') %}
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
@@ -16,6 +16,7 @@ curl(['server/context', 'browser/js'], function(context, util){
         config: {{ config.client_view()|json }}, /* streamified_url, streamified_client_id */
     };
     util.copy(server_data, context);
+    console.log('set server_data');
     util.copy({{ context|json }}, context);
 });
   </script>

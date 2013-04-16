@@ -152,33 +152,42 @@ class Community(Controller):
             "title": 'Network - Recent',
         }
 
-    def expressions_public(self, tdata, request, username=None, **args):
-        owner = self.db.User.fetch(username, 'name')
+    def expressions_public(self, tdata, request, owner_name=None, **args):
+        owner = self.db.User.fetch(owner_name, 'name')
         if not owner: return None
-        spec = {'owner_name': username}
+        spec = {'owner_name': owner_name}
+        cards = self.db.Expr.page(spec, tdata.user, **args)
+        return {
+            'page_data': { "cards": cards, },
+            'title': 'Expressions by ' + owner['name'],
+        }
+    def expressions_private(self, tdata, request, owner_name=None, **args):
+        owner = self.db.User.fetch(owner_name, 'name')
+        if not owner: return None
+        spec = {'owner_name': owner_name, 'auth': 'private'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
         return {
             'page_data': { "cards": cards, },
             'title': 'Your Private Expressions',
         }
-    def expressions_private(self, tdata, request, username=None, **paging_args):
+
+    def user_home(self, tdata, request, owner_name=None, **args):
+        # show home expression or redirect to home 
         return {}
-        return {
-            'page_data': { 
-                "cards": tdata.user.expr_page(
-                    auth='private',
-                    viewer=tdata.user, **paging_args),
-            },
-            'title': 'Your Private Expressions',
-        }
-        
+
+    def expr(self, tdata, request, owner_name=None, **args):
+        return {}
+
+    def serve_expr():
+        return {}
+
     def dispatch(self, handler, request, **kwargs):
         (tdata, response) = self.pre_process(request)
         query = getattr(self, handler, None)
         if query is None:
             return self.serve_404(tdata, request, response, json=kwargs.get('json'))
         # Handle keyword args to be passed to the controller function
-        passable_keyword_args = dfilter(kwargs, ['username'])
+        passable_keyword_args = dfilter(kwargs, ['owner_name'])
         # Handle pagination
         pagination_args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
         for k in ['limit', 'order']:
@@ -206,8 +215,7 @@ class Expr(ModelController):
     import subprocess
     import os
     model_name = 'Expr'
-    def fetch(self):
-        pass
+
     def thumb(self, tdata, request, response, id=None):
         """
         convert expression to an image (make a screenshot). depends on https://github.com/AdamN/python-webkit2png

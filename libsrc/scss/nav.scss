@@ -11,7 +11,10 @@
     z-index: $nav_layer + 1;
     @include background-image(linear-gradient(top, white, #DADADA));
 
-    * { font-family: Gotham }
+    * {
+        font-family: Gibson Semibold;
+        font-size: 16px;
+    }
     .item, input, .menu_item { text-transform: uppercase; }
 
     .expr {
@@ -140,11 +143,11 @@
 
     .menu {
         .menu_item {
+            height: 10px;
+            padding: 15px 9px 20px 9px;
             border-color: $color_light_grey;
             border-width: 1px 0 0 0;
             border-style: solid;
-            padding: 12px 10px 8px 10px;
-            height: 20px;
             .count {
                 float: right;
                 height: 20px;
@@ -242,7 +245,6 @@ img.thumb { background-color: $color_grey_medium; }
         display: block;
         white-space: nowrap;
         &.active { background-color: $color_selected; }
-        padding: 5px 8px;
     }
 }
 
@@ -277,7 +279,7 @@ img.thumb { background-color: $color_grey_medium; }
 
 #share_menu {
     width: 200px;
-    padding-top:10px;
+    padding-top: 10px;
 
     .like_button {
         text-align: center;

@@ -43,8 +43,10 @@
 </div>
 
 <div id='user_menu' class='menu drawer'>
-  <div class='menu_item'>Expressions<div class='count'></div></div>
-  <div class='menu_item'>Private<div class='count'></div></div>
+  <a { get_route_anchor_attrs "expressions_public" "username" }><div
+    class='menu_item'>Expressions<div class='count'></div></div></a>
+  <a { get_route_anchor_attrs "expressions_private" "username" }><div
+    class='menu_item'>Private<div class='count'></div></div></a>
   <div class='menu_item'>Activity<div class='count'></div></div>
   <div class='menu_item'>Following</div>
   <div class='menu_item'>Followers</div>

@@ -19,6 +19,7 @@
 @include ff('arvo/Arvo-BoldItalic', 'Arvo', 'ArvoBoldItalic', 700, italic);
 @include ff('banda_regular/Banda_regular', 'Banda', 'BandaRegular');
 @include ff('Bebas/BEBAS', 'Bebas', 'BebasRegular');
+@include ff('bebas_neue/bebasneue', 'Bebas Neue', 'BebasNeue');
 @include ff('Bitstream-Vera-Sans/Vera-Bold-Italic', 'Bitstream', 'BitstreamVeraSansBoldOblique', 700, italic);
 @include ff('Bitstream-Vera-Sans/Vera-Bold', 'Bitstream', 'BitstreamVeraSansBold', 700);
 @include ff('Bitstream-Vera-Sans/Vera-Italic', 'Bitstream', 'BitstreamVeraSansOblique', 400, italic);
@@ -52,9 +53,8 @@
 @include ff('Folks-Light/Folks-Heavy', 'Folks', 'FolksHeavyRegular', 900);
 @include ff('Folks-Light/Folks-Light', 'Folks', 'FolksLightRegular', 100);
 @include ff('Folks-Light/Folks-Normal', 'Folks', 'FolksRegular', 400);
-@include ff('Gotham/Gotham-Bold', 'Gotham', 'Gotham', 900);
-@include ff('Gotham/Gotham-Medium', 'Gotham', 'Gotham', 400);
-@include ff('Gotham/Gotham-Light', 'Gotham', 'Gotham', 100);
+@include ff('gibson/gibson/gibson', 'Gibson', 'Gibson', 400);
+@include ff('gibson/gibson-semibold/gibson-semibold', 'Gibson Semibold', 'Gibson', 600);
 @include ff('josefin-slab/JosefinSlab-BoldItalic', 'Josefin Slab', 'JosefinSlabBoldItalic', 700, italic);
 @include ff('josefin-slab/JosefinSlab-Bold', 'Josefin Slab', 'JosefinSlabBold', 700);
 @include ff('josefin-slab/JosefinSlab-Italic', 'Josefin Slab', 'JosefinSlabItalic', 400, italic);

@@ -1,0 +1,43 @@
+/* Template Design */
+body { background-color:#EFEFEF;padding:20px 0;margin:0;font-size: 11px;font-family:Helvetica, Arial, sans-serif; }
+#wrapper { width:880px;margin:0 auto; background-color:#ffffff;border:1px;border-style:solid;border-color:#e5e5e5;-moz-border-radius:10px;-webkit-border-radius:10px;-moz-box-shadow:#c8c8c8 0 5px 8px;-webkit-box-shadow:#c8c8c8 0 5px 8px;box-shadow:#c8c8c8 0 5px 8px;overflow:hidden;}
+#wrapper .inner { padding:0px 30px 30px 30px; }
+#content { margin-bottom:10px;border-top:1px solid #EEE; width: 820px;line-height: 1.5}
+#footer { text-align:center;width:100%;font-size:11px;margin:10px 0;padding: 20px 0px;}
+a:link, a:visited { color:#000;font-weight:bold;text-decoration:none; }
+a:hover, a:active, a:focus { color:#008BD1;}
+h1 { padding:28px 0 10px;font-size: 32px;line-height:32px;margin:0px;font-weight: normal;font-style: normal;}
+h2 { padding:20px 0;font-size: 14px;line-height: 16px;font-weight: normal;font-style: normal;}
+dt { width:80px;float:left;clear:both }
+dd { padding:0;margin:0 0 10px; float:left; }
+.line { border-top:1px solid #EEE;margin: 20px 0px;padding: 0px;line-height: 1px;}
+.clear { clear: both;}
+
+/* WebFont Example */ 
+#textBlock {margin-bottom: 20px;}
+#textBlock .textBlockCrop {height:200px;overflow:hidden;}
+#textBlock .textBlockFade {margin-top:-50px}
+#textLine {width:830px; overflow: hidden;}
+#textLine .size {border-bottom:1px solid #EEE;margin-bottom: 30px;padding: 5px 0 30px 0;}
+#content .textBlockA {width:400px;overflow:hidden;float:left;padding: 10px 0;}
+#content .textBlockB {width:400px;margin-left:20px;overflow:hidden;float:left;padding: 10px 0;}
+#content .s64{font-size: 64px;}
+#content .s32{font-size: 32px;}
+#content .s24{font-size: 24px;}
+#content .s22{font-size: 22px;}
+#content .s18{font-size: 18px;}
+#content .s16{font-size: 16px;}
+#content .s12{font-size: 12px;}
+#content .s11{font-size: 11px;}
+#content .size {font-size: 9px;font-family: Helvetica, Arial, Sans-Serif;font-weight: normal;}
+#content .glyphs {margin-top:30px;}
+#content .glyphBlockA{width:320px;overflow:hidden;float:left;padding:40px; background-color: #f6f6f6;-moz-border-radius: 5px; -webkit-border-radius: 5px;}
+#content .glyphBlockB{width:320px;margin-left:20px;overflow:hidden;float:left;padding:40px;background-color: black;color:white;-moz-border-radius: 5px; -webkit-border-radius: 5px;}
+#metaData{font-size: 11px;padding: 30px;font-family: Helvetica, Arial, Sans-Serif;font-weight: normal;border:1px solid #EEE;background: #f6f6f6;}
+#help{font-size: 11px;font-family:Helvetica, Arial, sans-serif;padding:80px; background-color: #f6f6f6;line-height:1.8;margin-top:30px;-moz-border-radius: 5px; -webkit-border-radius: 5px;}
+#help h2 { padding:0;font-size: 14px;line-height: 16px;font-weight: bold;font-style: normal;}
+#help .helpBlock {margin-bottom: 20px;}
+#help .number {-moz-border-radius: 5px; -webkit-border-radius: 5px;background-color: black;color: white;float: left;padding: 5px 15px;font-size: 14px;font-weight:bold;margin: 0 15px 15px 0;
+}
+#help .codeSample {padding: 20px 15px;color:black;background-color: white;-moz-border-radius: 5px; -webkit-border-radius: 5px;margin: 15px 0 0 0;text-align: center;font-family: monospace;font-size: 10px;border:1px solid #EEE;
+}

@@ -206,8 +206,8 @@ class HiveAssets(Assets):
         # file), the webassets cache must be cleared
         scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
-        app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss", "scss/nav.scss",
-            "scss/dialogs.scss", "scss/community.scss", "scss/cards.scss",
+        app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss",
+            "scss/nav.scss", "scss/dialogs.scss", "scss/community.scss",
             "scss/frame.scss", "scss/settings.scss", "scss/signup_flow.scss",
             "scss/chart.scss", "scss/jplayer.scss", "scss/navigator.scss",
             filters=scss_filter,
