@@ -1540,13 +1540,13 @@ class ESDatabase:
             print "Indexing all expressions from scratch, might take a while"
             counter = 0
             for expr in exprs:
-                self.update(expr, refresh=False)
+                self.update(expr, es_type='expr-type', refresh=False)
                 counter += 1
                 print counter
         elif (self.conn.indices.get_indices()[index]['num_docs'] < db.Expr.count()):
             counter = 0
             for expr in exprs:
-                self.update(expr, refresh=False)
+                self.update(expr, es_type='expr-type', refresh=False)
                 counter += 1
                 print counter
 
@@ -1620,22 +1620,31 @@ class ESDatabase:
                                    filter=es_filter, start=start, size=limit)
         return results
 
-    def update(self, expr, refresh=True):
-        processed_tags = ' '.join(normalize_tags(expr.get('tags', '')))
-        data = {
-        'text': expr.get('text', ''),
-        'tags': processed_tags,
-        'star': expr.get('analytics', {}).get('Star', {}).get('count', 0),
-        'broadcast': expr.get('analytics', {}).get('Broadcast', {}).get('count', 0),
-        'name': expr.get('name', ''),
-        'owner_name': expr.get('owner_name', ''),
-        'owner': expr.get('owner', ''),
-        'title': expr.get('title', ''),
-        'created': expr.get('created', 0),
-        'updated': expr.get('updated', 0),
-        'views': expr.get('views', 0)
-        }
-        self.conn.index(data, self.index, 'expr-type', expr['_id'])
+    def update(self, entry, es_type, refresh=True):
+        if es_type == 'expr-type':
+            expr = entry
+            processed_tags = ' '.join(normalize_tags(expr.get('tags', '')))
+            data = {
+            'text': expr.get('text', ''),
+            'tags': processed_tags,
+            'star': expr.get('analytics', {}).get('Star', {}).get('count', 0),
+            'broadcast': expr.get('analytics', {}).get('Broadcast', {}).get('count', 0),
+            'name': expr.get('name', ''),
+            'owner_name': expr.get('owner_name', ''),
+            'owner': expr.get('owner', ''),
+            'title': expr.get('title', ''),
+            'created': expr.get('created', 0),
+            'updated': expr.get('updated', 0),
+            'views': expr.get('views', 0)
+            }
+        elif es_type == 'feed-type':
+            data = entry
+        elif es_type == 'user-type':
+            data = {'fullname': entry.get('fullname', ''), 'tags': entry.get('tags', [])}
+        else:
+            data = {}
+            print "type not supported!"
+        self.conn.index(data, self.index, es_type, entry['_id'])
         if refresh is True:
             self.conn.indices.refresh()
         return None
@@ -1707,15 +1716,14 @@ class ESDatabase:
         print "indexing feed-type"
 
         for f in feed:
-            self.conn.index(f, self.index, 'feed-type', f['_id'])
+            self.update(f, es_type='feed-type', refresh=False)
 
         self.conn.indices.refresh()
 
         print "indexing user-type"
 
         for u in users:
-            data = {'fullname': u.get('fullname', ''), 'tags': u.get('tags', [])}
-            self.conn.index(data, self.index, 'user-type', u['_id'])
+            self.update(u, es_type='user-type', refresh=False)
 
         self.conn.indices.refresh()
 
