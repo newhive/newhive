@@ -480,3 +480,31 @@ def others_liked(expr, db):
     other_exprs = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
 
     return other_exprs.facets.entity.terms
+
+
+def get_user_tag_likes(user, db):
+
+    # get statistics on what tags a user likes (broadcasts, stars)
+
+    this_user = user['_id']
+
+    f1 = pyes.filters.TermFilter('initiator', this_user)
+    f2 = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])
+    f = pyes.filters.BoolFilter(must=[f1, f2])
+    q = pyes.query.MatchAllQuery()
+    fq = pyes.query.FilteredQuery(q, f)
+
+    user_activity = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type")
+    exprs_liked = []
+
+    for r in user_activity:
+        exprs_liked.append(r['entity'])
+
+    f = pyes.filters.IdsFilter(exprs_liked)
+    query = pyes.query.FilteredQuery(q, f).search()
+    ts = pyes.facets.TermFacet(field='tags', name='tags', order="count", size=5)
+    query.facet.facets.append(ts)  # sort by number of likes
+    other_tags = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
+
+    return other_tags.facets.tags.terms
+
