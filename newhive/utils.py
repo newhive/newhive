@@ -444,3 +444,39 @@ def autocomplete(pre, db, field='tags'):
     query.facet.facets.append(ts)
     res = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
     return res.facets.tags.terms
+
+
+def others_liked(expr, db):
+
+    # recommend expressions: "users who liked this also liked ___"
+
+    # get the set of all feed items that are broadcasts/stars of this expr
+
+    this_expr = expr['_id']
+    f1 = pyes.filters.TermFilter('entity', this_expr)
+    f2 = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])
+    f = pyes.filters.BoolFilter(must=[f1, f2])
+    q = pyes.query.MatchAllQuery()
+    fq = pyes.query.FilteredQuery(q, f)
+    expr_activity = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type")
+
+    # find users who also liked this expression
+
+    related_users = []
+
+    for r in expr_activity:
+        related_users.append(r['initiator'])
+
+    related_users = list(set(related_users))
+
+    # find expressions that users who liked this expression also liked
+
+    f1 = pyes.filters.TermsFilter('initiator', related_users)
+    f3 = pyes.filters.TermFilter('entity_class', 'expr')
+    f = pyes.filters.BoolFilter(must=[f1, f2, f3])
+    query = pyes.query.FilteredQuery(q, f).search()
+    ts = pyes.facets.TermFacet(field='entity', name='entity', order="count", exclude=[this_expr], size=5)
+    query.facet.facets.append(ts)  # sort by number of likes
+    other_exprs = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
+
+    return other_exprs.facets.entity.terms

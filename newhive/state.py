@@ -1657,3 +1657,66 @@ class ESDatabase:
             result_ids.append(r._meta.id)
         expr_results = list(self.db.Expr.search({'_id': {'$in': result_ids}}))
         return expr_results
+
+    def add_related_types(self):
+
+        # Originally esdb was just used for full-text search over expressions.
+        # However, we might want to do sorting and analytics based on
+        # information in related collections (feed, user). Since elasticsearch
+        # doesn't have joins, we have to index the mongo feed and user
+        # collections in expr_index.
+
+        feed_mapping = {"class_name": {"type": "string",
+                                       "index": "not_analyzed",
+                                       "store": "yes",
+                        "updated": {"type": "float",
+                                    "store": "yes"},
+                        "created": {"type": "float",
+                                    "store": "yes"},
+                        "entity": {"type": "string",
+                                   "index": "not_analyzed",
+                                   "store": "yes"},
+                        "entity_class": {"type": "string",
+                                         "index": "not_analyzed",
+                                         "store": "yes"},
+                        "initiator": {"type": "string",
+                                      "index": "not_analyzed",
+                                      "store": "yes"},
+                        "initiator_name": {"type": "string",
+                                           "index": "not_analyzed",
+                                           "store": "yes"}}}
+
+        user_mapping = {"tags": {"type": "string",
+                                 "index": "analyzed",
+                                 "store": "yes",
+                                 "term_vector": "with_positions_offsets"},
+                        "fullname": {"type": "string",
+                                     "index": "not_analyzed",
+                                     "store": "yes"}}
+
+        self.conn.put_mapping(doc_type='feed-type', mapping={'properties': feed_mapping},
+                            indices=self.index)
+
+        self.conn.put_mapping(doc_type='user-type', mapping={'properties': user_mapping},
+                            indices=self.index)
+
+        feed = self.db.Feed.search({})
+
+        users = self.db.User.search({})
+
+        print "indexing feed-type"
+
+        for f in feed:
+            self.conn.index(f, self.index, 'feed-type', f['_id'])
+
+        self.conn.indices.refresh()
+
+        print "indexing user-type"
+
+        for u in users:
+            data = {'fullname': u.get('fullname', ''), 'tags': u.get('tags', [])}
+            self.conn.index(data, self.index, 'user-type', u['_id'])
+
+        self.conn.indices.refresh()
+
+        return None
