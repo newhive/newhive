@@ -460,26 +460,33 @@ def others_liked(expr, db):
     fq = pyes.query.FilteredQuery(q, f)
     expr_activity = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type")
 
-    # find users who also liked this expression
+    if expr_activity.total > 0:
 
-    related_users = []
+        # find users who also liked this expression
 
-    for r in expr_activity:
-        related_users.append(r['initiator'])
+        related_users = []
 
-    related_users = list(set(related_users))
+        for r in expr_activity:
+            related_users.append(r['initiator'])
 
-    # find expressions that users who liked this expression also liked
+        related_users = list(set(related_users))
 
-    f1 = pyes.filters.TermsFilter('initiator', related_users)
-    f3 = pyes.filters.TermFilter('entity_class', 'expr')
-    f = pyes.filters.BoolFilter(must=[f1, f2, f3])
-    query = pyes.query.FilteredQuery(q, f).search()
-    ts = pyes.facets.TermFacet(field='entity', name='entity', order="count", exclude=[this_expr], size=5)
-    query.facet.facets.append(ts)  # sort by number of likes
-    other_exprs = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
+        # find expressions that users who liked this expression also liked
 
-    return other_exprs.facets.entity.terms
+        f1 = pyes.filters.TermsFilter('initiator', related_users)
+        f3 = pyes.filters.TermFilter('entity_class', 'expr')
+        f = pyes.filters.BoolFilter(must=[f1, f2, f3])
+        query = pyes.query.FilteredQuery(q, f).search()
+        ts = pyes.facets.TermFacet(field='entity', name='entity', order="count", exclude=[this_expr], size=5)
+        query.facet.facets.append(ts)  # sort by number of likes
+        other_exprs = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
+
+        res = other_exprs.facets.entity.terms
+
+    else:
+        res = None
+
+    return res
 
 
 def get_user_tag_likes(user, db):
@@ -495,16 +502,18 @@ def get_user_tag_likes(user, db):
     fq = pyes.query.FilteredQuery(q, f)
 
     user_activity = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type")
-    exprs_liked = []
 
-    for r in user_activity:
-        exprs_liked.append(r['entity'])
+    if user_activity.total > 0:
+        exprs_liked = []
+        for r in user_activity:
+            exprs_liked.append(r['entity'])
+        f = pyes.filters.IdsFilter(exprs_liked)
+        query = pyes.query.FilteredQuery(q, f).search()
+        ts = pyes.facets.TermFacet(field='tags', name='tags', order="count", size=5)
+        query.facet.facets.append(ts)  # sort by number of likes
+        other_tags = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
+        res = other_tags.facets.tags.terms
+    else:
+        res = None
 
-    f = pyes.filters.IdsFilter(exprs_liked)
-    query = pyes.query.FilteredQuery(q, f).search()
-    ts = pyes.facets.TermFacet(field='tags', name='tags', order="count", size=5)
-    query.facet.facets.append(ts)  # sort by number of likes
-    other_tags = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
-
-    return other_tags.facets.tags.terms
-
+    return res
