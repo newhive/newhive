@@ -517,3 +517,34 @@ def get_user_tag_likes(user, db):
         res = None
 
     return res
+
+
+def get_tag_user_likes(tag, db):
+
+    # get statistics on which users like a tag the most (broadcasts, stars)
+
+    # get id's of expressions with this tag
+
+    f = pyes.filters.TermFilter('tags', tag)
+    q = pyes.query.MatchAllQuery()
+    fq = pyes.query.FilteredQuery(q, f)
+
+    tagged_exprs = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="expr-type")
+
+    if tagged_exprs.total > 0:
+        exprs = []
+        for r in tagged_exprs:
+            exprs.append(r._meta.id)
+        # then find all "likes" for expressions with this tag in the feed
+        f1 = pyes.filters.TermsFilter('entity', exprs)
+        f2 = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])
+        f = pyes.filters.BoolFilter(must=[f1, f2])
+        query = pyes.query.FilteredQuery(q, f).search()
+        ts = pyes.facets.TermFacet(field='initiator_name', name='initiator_name', order="count", size=5)
+        query.facet.facets.append(ts)  # sort by number of likes
+        people_liked = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
+        res = people_liked.facets.initiator_name.terms
+    else:
+        res = None
+
+    return res
