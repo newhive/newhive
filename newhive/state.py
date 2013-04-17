@@ -1640,7 +1640,7 @@ class ESDatabase:
         elif es_type == 'feed-type':
             data = entry
         elif es_type == 'user-type':
-            data = {'fullname': entry.get('fullname', ''), 'tags': entry.get('tags', [])}
+            data = {'fullname': entry.get('fullname', ''), 'name': entry.get('name', ''), 'tags': entry.get('tags', [])}
         else:
             data = {}
             print "type not supported!"
@@ -1701,7 +1701,10 @@ class ESDatabase:
                                  "term_vector": "with_positions_offsets"},
                         "fullname": {"type": "string",
                                      "index": "not_analyzed",
-                                     "store": "yes"}}
+                                     "store": "yes"},
+                        "name": {"type": "string",
+                                 "index": "not_analyzed",
+                                 "store": "yes"}}
 
         self.conn.put_mapping(doc_type='feed-type', mapping={'properties': feed_mapping},
                             indices=self.index)
