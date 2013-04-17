@@ -442,11 +442,7 @@ def find_similar_tags(tags, db):
             freq = db.esdb.conn.search(q, indices=db.esdb.index, doc_types="expr-type").total
             sim[row['term']] = row['count']/numpy.sqrt(freq)
 
-    print "sorting results"
-    sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
-    results = [t[0] for t in sim_sorted]
-    results_nodup = OrderedDict.fromkeys(results)
-    return list(results_nodup)[:5]
+    return convert_dict_to_sorted_list(sim)
 
 
 def others_liked(expr, db):
@@ -581,14 +577,16 @@ def find_similar_users(user, db):
                 fq = pyes.query.FilteredQuery(match_all_query, f)
                 freq = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type").total
                 sim[row['term']] = row['count']/numpy.sqrt(freq)
-
-        print "sorting results"
-        sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
-        results = [t[0] for t in sim_sorted]
-        results_nodup = OrderedDict.fromkeys(results)
-        res_norm = list(results_nodup)[:5]
+        res_norm = convert_dict_to_sorted_list(sim)
 
     else:
         res_norm = []
 
     return res_norm
+
+
+def convert_dict_to_sorted_list(d, size=5):
+    d_sorted = sorted(d.iteritems(), key=operator.itemgetter(1), reverse=True)
+    results = [t[0] for t in d_sorted]
+    results_nodup = OrderedDict.fromkeys(results)
+    return list(results_nodup)[:size]
