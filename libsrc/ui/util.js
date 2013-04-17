@@ -36,9 +36,12 @@ define([
         if (!window.history && window.history.pushState) return;
         $('body').on('click', '[data-route-name]', function(e) {
             var anchor = $(e.target).closest('[data-route-name]'),
+                route_name = anchor.attr('data-route-name'),
+                route_obj = ApiRoutes[route_name],
                 page_state = {
                     page: anchor.attr('href'),
-                    api: anchor.attr('data-api-path')
+                    api: anchor.attr('data-api-path'),
+                    method: route_obj.client_method
                 }
             ;
             e.preventDefault();
@@ -59,7 +62,7 @@ define([
                 url: page_state.api.toString(),
                 dataType: 'json',
                 success: function(data) {
-                    community.render(data);
+                    community[page_state.method](data);
                     callback();
                 }
             };
