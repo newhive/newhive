@@ -484,7 +484,7 @@ def others_liked(expr, db):
         res = other_exprs.facets.entity.terms
 
     else:
-        res = None
+        res = []
 
     return res
 
@@ -514,7 +514,7 @@ def get_user_tag_likes(user, db):
         other_tags = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
         res = other_tags.facets.tags.terms
     else:
-        res = None
+        res = []
 
     return res
 
@@ -545,6 +545,6 @@ def get_tag_user_likes(tag, db):
         people_liked = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
         res = people_liked.facets.initiator_name.terms
     else:
-        res = None
+        res = []
 
     return res
