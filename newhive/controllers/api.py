@@ -153,7 +153,7 @@ class Community(Controller):
         }
 
     def expressions_public(self, tdata, request, owner_name=None, **args):
-        owner = self.db.User.fetch(owner_name, 'name')
+        owner = self.db.User.named(owner_name)
         if not owner: return None
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, tdata.user, **args)
@@ -162,7 +162,7 @@ class Community(Controller):
             'title': 'Expressions by ' + owner['name'],
         }
     def expressions_private(self, tdata, request, owner_name=None, **args):
-        owner = self.db.User.fetch(owner_name, 'name')
+        owner = self.db.User.named(owner_name)
         if not owner: return None
         spec = {'owner_name': owner_name, 'auth': 'private'}
         cards = self.db.Expr.page(spec, tdata.user, **args)

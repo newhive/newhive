@@ -35,56 +35,47 @@ define([
         // If we don't support pushState, fall back on default link behavior.
         if (!window.history && window.history.pushState) return;
         $('body').on('click', '[data-route-name]', function(e) {
-           var routeName = $(e.target).closest('[data-route-name]').attr('data-route-name');
-           var routeFormatVars = {
-               '<username>': $(e.target).closest('[data-username]').attr('data-username')
-           };           
-           var routeObj = getFormattedRouteObj(routeName, routeFormatVars);
-           navToRoute(routeObj);
-           e.preventDefault();
-           return false;
+            var anchor = $(e.target).closest('[data-route-name]'),
+                page_state = {
+                    page: anchor.attr('href'),
+                    api: anchor.attr('data-api-path')
+                }
+            ;
+            e.preventDefault();
+            navToRoute(page_state);
+            return false;
         });
+
         // TODO: Bind this event with jquery?
         window.onpopstate = function(e) {
             if (!e.state) return;
             renderRoute(e.state);
         };
 
-        function substituteVariables(inStr, routeVars) {
-            for (var routeVar in routeVars)
-                inStr = inStr.replace(routeVar, routeVars[routeVar]);
-            return inStr;
-        }
-        function fetchRouteData(routeObj, callback) {
+        function fetchRouteData(page_state, callback) {
             var callback = callback || function(){};
-            $.ajax({
+            api_call = {
                 method: 'get',
-                url: routeObj.api.toString(),
+                url: page_state.api.toString(),
                 dataType: 'json',
                 success: function(data) {
                     community.render(data);
                     callback();
                 }
-            });
-        }
-        function navToRoute(routeObj) {
-            renderRoute(routeObj, function() {
-                history.pushState(routeObj,null,routeObj.page);
-            });
-        }
-        function renderRoute(routeObj, callback) {
-            if (!callback) callback = function(){};
-            fetchRouteData(routeObj, callback);
-        }
-        function getFormattedRouteObj(routeName, routeFormatVars) {
-            var routeObj = ApiRoutes[routeName];
-            return {
-                "api": substituteVariables(routeObj.api_route, routeFormatVars),
-                "page": substituteVariables(routeObj.page_route, routeFormatVars),
-                "title": routeObj.title
             };
+            $.ajax(api_call);
         }
 
+        function navToRoute(page_state) {
+            renderRoute(page_state, function() {
+                history.pushState(page_state, null, page_state.page);
+            });
+        }
+
+        function renderRoute(page_state, callback) {
+            if (!callback) callback = function(){};
+            fetchRouteData(page_state, callback);
+        }
     };
 
     return main;
