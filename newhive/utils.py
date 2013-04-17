@@ -548,3 +548,53 @@ def get_tag_user_likes(tag, db):
         res = []
 
     return res
+
+
+def find_similar_users(user, db):
+
+    # find users who liked expressions that this_user likes
+
+    this_user = user['_id']
+
+    f1 = pyes.filters.TermFilter('initiator', this_user)
+    f2 = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])
+    f = pyes.filters.BoolFilter(must=[f1, f2])
+    q = pyes.query.MatchAllQuery()
+    fq = pyes.query.FilteredQuery(q, f)
+
+    user_activity = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type")
+
+    if user_activity.total > 0:
+        exprs_liked = []
+        for r in user_activity:
+            exprs_liked.append(r['entity'])
+        f1 = pyes.filters.TermsFilter('entity', exprs_liked)
+        f2 = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])
+        f = pyes.filters.BoolFilter(must=[f1, f2])
+        query = pyes.query.FilteredQuery(q, f).search()
+        ts = pyes.facets.TermFacet(field='initiator_name', name='initiator_name', order="count", size=50, exclude=[user["name"]])
+        query.facet.facets.append(ts)  # sort by number of likes
+        other_users = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
+        res = other_users.facets.initiator_name.terms
+
+        sim = {}
+
+        for row in res:
+            if row['count'] > 1:
+                #  normalize number of common likes by number of total likes that a user has given out
+                f1 = pyes.filters.TermFilter('initiator_name', row['term'])
+                f = pyes.filters.BoolFilter(must=[f1, f2])
+                fq = pyes.query.FilteredQuery(q, f)
+                freq = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type").total
+                sim[row['term']] = row['count']/numpy.sqrt(freq)
+
+        print "sorting results"
+        sim_sorted = sorted(sim.iteritems(), key=operator.itemgetter(1), reverse=True)
+        results = [t[0] for t in sim_sorted]
+        results_nodup = OrderedDict.fromkeys(results)
+        res_norm = list(results_nodup)[:5]
+
+    else:
+        res_norm = []
+
+    return res_norm
