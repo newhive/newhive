@@ -62,7 +62,7 @@ define([
                 url: page_state.api.toString(),
                 dataType: 'json',
                 success: function(data) {
-                    controller[page_state.method].render(data);
+                    controller[page_state.method](data);
                     callback();
                 }
             };

@@ -2,6 +2,7 @@ from werkzeug.routing import Map, Rule
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
 import os.path
+from newhive.utils import dfilter
 from newhive import state, config
 from newhive.colors import colors
 from newhive.controllers.shared import ( no_zero, large_number, querystring,
@@ -28,7 +29,9 @@ def get_api_endpoints(api):
         # Add page route
         rules.append(Rule(
             route_obj['page_route'],
-            endpoint=(getattr(api,route_obj['controller']),route_obj['method']), host=config.server_name
+            endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
+            host=config.server_name,
+            defaults=dfilter(route_obj, ['client_method'])
         ))
         # And API route
         rules.append(Rule(
@@ -80,12 +83,12 @@ endpoints.extend(get_api_endpoints(api))
 
 # Add these catch-all routes last
 endpoints.extend([
-    Rule('/<owner_name>', endpoint=(api.community, 'user_home'), host=config.server_name),
+    Rule('/<owner_name>', endpoint=(api.community, 'user_home')), #, host=config.server_name),
     Rule('/<owner_name>/<expr_name>', endpoint=(api.community, 'expr')),
     Rule('/<expr_id>', endpoint=(api.expr, 'fetch_naked'))
 ])
 
-routes = Map(endpoints, strict_slashes=False, host_matching=True)
+routes = Map(endpoints, strict_slashes=False) #, host_matching=True)
 
 @Request.application
 def handle(request):

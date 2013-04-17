@@ -17,7 +17,7 @@ curl([
     'ui/controller', 'ui/util', 'ui/nav', 'server/context'
 ], function(controller, ui_util, nav, context) {
     // Bootstrap community page with first set of cards.
-    controller.render(context);
+    controller.dispatch({{ client_method|json }}, context);
     ui_util.wrapLinks();
     nav.render();
 });

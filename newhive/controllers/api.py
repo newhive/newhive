@@ -186,11 +186,11 @@ class Community(Controller):
             'title' :''
         }
 
-    def dispatch(self, handler, request, **kwargs):
+    def dispatch(self, handler, request, json=False, client_method=None, **kwargs):
         (tdata, response) = self.pre_process(request)
         query = getattr(self, handler, None)
         if query is None:
-            return self.serve_404(tdata, request, response, json=kwargs.get('json'))
+            return self.serve_404(tdata, request, response, json=json)
         # Handle keyword args to be passed to the controller function
         passable_keyword_args = dfilter(kwargs, ['owner_name', 'expr_name'])
         # Handle pagination
@@ -202,14 +202,14 @@ class Community(Controller):
 
         context = query(tdata, request, **merged_args)
         if not context:
-            return self.serve_404(tdata, request, response, json=kwargs.get('json'))
+            return self.serve_404(tdata, request, response, json=json)
         if context['page_data'].get('cards'):
             cards = context['page_data']['cards']
             context['page_data']['cards'] = [o.client_view() for o in cards]
-        if kwargs.get('json'):
+        if json:
             return self.serve_json(response, context)
         else:
-            tdata.context.update(context=context)
+            tdata.context.update(context=context, client_method=client_method)
             return self.serve_loader_page('pages/main.html', tdata, request, response)        
 
 @Controllers.register
