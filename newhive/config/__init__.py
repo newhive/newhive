@@ -6,4 +6,5 @@ def client_view():
 	return dict(
 	   	streamified_url=streamified_url,
         streamified_client_id=streamified_client_id,
+        content_domain=content_domain,
 	)

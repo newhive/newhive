@@ -14,10 +14,10 @@ NewHive is your radically simple, DIY self publishing tool." />
   <div id='exprs'></div>
   <script>
 curl([
-	'ui/community', 'ui/util', 'ui/nav'
-], function(community, ui_util, nav) {
+	'ui/controller', 'ui/util', 'ui/nav'
+], function(controller, ui_util, nav) {
 	// Bootstrap community page with first set of cards.
-	community.render();
+	controller.render();
 	ui_util.wrapLinks();
 	nav.render();
 });

@@ -1002,6 +1002,7 @@ class Expr(HasSocial):
         expr = {}
         dict.update(expr, {
             'id': self.id,
+            'name': self.get('name'),
             'thumb': self.get_thumb(),
             'owner': self.owner.client_view(viewer=viewer),
             'counts': counts,

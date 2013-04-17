@@ -1,8 +1,8 @@
 define([
     'browser/jquery',
     'json!ui/routes.json',
-    'ui/community'
-], function($, ApiRoutes, community){
+    'ui/controller'
+], function($, ApiRoutes, controller){
     var main = {};
 
     main.add_hovers = function(){
@@ -62,7 +62,7 @@ define([
                 url: routeObj.api.toString(),
                 dataType: 'json',
                 success: function(data) {
-                    community.render(data);
+                    controller.render(data);
                     callback();
                 }
             });

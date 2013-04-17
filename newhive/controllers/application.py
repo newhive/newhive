@@ -97,7 +97,6 @@ class Application(object):
             ,server_url = abs_url()
             ,secure_server = abs_url(secure = True)
             ,server_name = config.server_name
-            ,content_domain = abs_url(domain = config.content_domain)
             ,debug = config.debug_mode
             ,ui = ui
             ,template = template

@@ -56,6 +56,8 @@ class Controller(object):
             server_name=config.server_name, 
             server_url=abs_url(), secure_server=abs_url(secure = True),
             content_domain=abs_url(domain = config.content_domain),
+            content_server_url=abs_url(domain=config.content_domain),
+            secure_content_server_url=abs_url(domain=config.content_domain,secure=True)
         ) )
 
         authed = auth.authenticate_request(self.db, request, response)
@@ -175,11 +177,14 @@ class Community(Controller):
         # show home expression or redirect to home 
         return {}
 
-    def expr(self, tdata, request, owner_name=None, **args):
-        return {}
-
-    def serve_expr():
-        return {}
+    def expr(self, tdata, request, owner_name=None, expr_name=None, **args):
+        expr_obj = self.db.Expr.named(owner_name, expr_name)
+        return {
+            'page_data': {
+                'expr_id': expr_obj['_id']
+            },
+            'title' :''
+        }
 
     def dispatch(self, handler, request, **kwargs):
         (tdata, response) = self.pre_process(request)
@@ -187,7 +192,7 @@ class Community(Controller):
         if query is None:
             return self.serve_404(tdata, request, response, json=kwargs.get('json'))
         # Handle keyword args to be passed to the controller function
-        passable_keyword_args = dfilter(kwargs, ['owner_name'])
+        passable_keyword_args = dfilter(kwargs, ['owner_name', 'expr_name'])
         # Handle pagination
         pagination_args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
         for k in ['limit', 'order']:
@@ -198,8 +203,9 @@ class Community(Controller):
         context = query(tdata, request, **merged_args)
         if not context:
             return self.serve_404(tdata, request, response, json=kwargs.get('json'))
-        cards = context['page_data']['cards']
-        context['page_data']['cards'] = [o.client_view() for o in cards]
+        if context['page_data'].get('cards'):
+            cards = context['page_data']['cards']
+            context['page_data']['cards'] = [o.client_view() for o in cards]
         if kwargs.get('json'):
             return self.serve_json(response, context)
         else:
@@ -215,29 +221,23 @@ class Expr(ModelController):
     import subprocess
     import os
     model_name = 'Expr'
-
-    def thumb(self, tdata, request, response, id=None):
-        """
-        convert expression to an image (make a screenshot). depends on https://github.com/AdamN/python-webkit2png
-        """
-        eid = request.form.get('entity')
-        entity = self.model.fetch(id)
-        if not entity: return self.serve_404(tdata, request, response)
-        if entity.get('screenshot'):
-            return self.serve_json(response, entity.get('screenshot'))
-        link = werkzeug.urls.url_fix("http://%s:%d/%s/%s" % (config.server_name, config.plain_port, entity['owner_name'], entity['name']))
-        fileID = "/tmp/%s" % md5(str(uuid.uuid4())).hexdigest()
-        filename = fileID + '-full.png'
-        subprocess.Popen(["webkit2png", link, "-F", "-o", fileID]).wait()
-        with open(filename) as f:
-            # TODO: Find out what's up with owner=request.requester.id,
-            file_res = self.db.File.create(dict(owner=' ',tmp_file=f, name='expr_screenshot', mime='image/png'))
-            screenshotData = {'screenshot' : {'file_id': file_res['_id']}}
-            entity.update(**screenshotData)
-
-        os.remove(filename)
-        
-        return self.serve_json(response, screenshotData)
+    def fetch(self, tdata, request, response, user, expr):
+        expr_obj = self.db.Expr.named(user,expr)
+        return self.serve_json(response,expr_obj)
+    def fetch_naked(self, tdata, request, response, expr_id):
+        print "host_url: ", request.host_url
+        # Request must come from content_domain, as this serves untrusted content
+        # TODO: get routing to take care of this
+        if request.host.split(':')[0] != config.content_domain:
+            return self.redirect('/')
+        expr_obj = self.db.Expr.fetch(expr_id)
+        response.context.update(
+                html = self.expr_to_html(expr_obj)
+                , expr = expr_obj
+                , use_ga = False
+                , expr_script = expr_obj.get('script')
+                , expr_style = expr_obj.get('style'))
+        return self.serve_page(tdata, response, 'pages/expr.html')
     
 @Controllers.register
 class User(ModelController):

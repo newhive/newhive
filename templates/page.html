@@ -13,6 +13,8 @@ curl(['server/context', 'browser/js'], function(context, util){
         user: {{ user.client_view()|json }}, /* config? debug? */
         error: {{ error|json }},
         server_url: {{ server_url|json }}, secure_server: {{ secure_server|json }},
+        content_server_url: {{ content_server_url|json }},
+        secure_content_server_url: {{ secure_content_server_url|json }},
         config: {{ config.client_view()|json }}, /* streamified_url, streamified_client_id */
     };
     util.copy(server_data, context);
