@@ -423,9 +423,9 @@ def find_similar_tags(tags, db):
     res = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
 
     for row in res.facets.tags.terms:
-        q = pyes.query.TermQuery('tags', row['term'])
-        freq = db.esdb.conn.search(q, indices=db.esdb.index, doc_types="expr-type").total
         if row['count'] > 2:
+            q = pyes.query.TermQuery('tags', row['term'])
+            freq = db.esdb.conn.search(q, indices=db.esdb.index, doc_types="expr-type").total
             sim[row['term']] = row['count']/numpy.sqrt(freq)
 
     print "sorting results"
