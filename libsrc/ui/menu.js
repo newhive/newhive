@@ -11,15 +11,6 @@ var menu = function(handle, drawer, options) {
             ,open_menu: function(){ drawer.show() }
             ,close_menu: function(){ drawer.hide() }
             ,sticky: false
-
-            // auto_close should be deprecated, it's never set to true in our project @2012-08-12
-            ,auto_close: false
-
-            // auto_close_delay is the amount of time after which the menu
-            // closes on its own if the user doesn't trigger open or close
-            // through any mouse action, assuming `opened` is set to true
-            ,auto_close_delay: 0
-
             ,hover_close: true
             ,open_delay: 100
             ,close_delay: 500
@@ -51,7 +42,7 @@ var menu = function(handle, drawer, options) {
     o.sticky = opts.sticky;
 
     o.delayed_close = function(close_delay) {
-            if(typeof(close_delay) != 'number') close_delay = false;
+        if(typeof(close_delay) != 'number') close_delay = false;
         opts.default_item.removeClass('active');
         if(opts.hover_close && ! close_timer) {
             close_timer = setTimeout(o.close, close_delay || opts.close_delay);
@@ -71,11 +62,12 @@ var menu = function(handle, drawer, options) {
 
     o.close = function(force) {
         if (!opts.close_condition()) return;
-        close_timer = false;
+        o.cancel_close();
         if(!o.opened) return;
 
         if(force) $.map(o.menus, function(m){ m.close(force) });
-        else if(o.sticky || $.inArray(true, $.map(o.menus, function(m){ return m.opened })) > -1) return;
+        else if(o.sticky || $.inArray(true, $.map(o.menus,
+            function(m){ return m.opened })) > -1) return;
 
         if(opts.animate_close){
             if(!opts.animate_open){
@@ -83,8 +75,8 @@ var menu = function(handle, drawer, options) {
                 for(var p in opts.animate_close) opts.animate_open[p] = drawer.css(p);
             }
             drawer.animate(opts.animate_close, 100);
-        } else opts.close_menu();
-        if(o.shield) o.shield.remove();
+        }
+        else opts.close_menu();
 
         o.opened = false;
         opts.close();
@@ -102,7 +94,8 @@ var menu = function(handle, drawer, options) {
         if(o.opened) return;
 
         o.opened = true;
-        if( opts.group.current && (opts.group.current != o) ) opts.group.current.close(true);
+        if( opts.group.current && (opts.group.current != o) )
+            opts.group.current.close(true);
         opts.group.current = o;
         handle.data('busy', true);
 
@@ -135,29 +128,6 @@ var menu = function(handle, drawer, options) {
                      drawer.outerHeight() / 2);
                 css_opts.left = hp.left - opts.offset_x - drawer.outerWidth();
             }
-
-            // shield element prevents hovering over gap between handle and menu from closing the menu
-            o.shield = $();
-            //if(opts.offset_y) o.shield.add($('<div>').css({
-            //    'position': 'absolute',
-            //    'left': hp.left,
-            //    'top': hp.top + handle.outerHeight(),
-            //    'width': handle.outerWidth(),
-            //    'height': opts.offset_y,
-            //    'background-color': 'orange'
-            //});
-            //if(opts.offset_x) o.shield.add($('<div>').css({
-            //    'position': 'absolute',
-            //    'left': hp.left - opts.offset_x,
-            //    'top': hp.top,
-            //    'width': opts.offset_x,
-            //    'height': handle.outerHeight(),
-            //    'background-color': 'orange'
-            //});
-            o.shield.insertBefore(handle)
-                .mouseover(o.cancel_close)
-                .mouseout(o.delayed_close)
-            ;
         }
 
         if(opts.auto_height && css_opts.top + drawer.outerHeight() > $(window).height()) {
@@ -198,9 +168,6 @@ var menu = function(handle, drawer, options) {
         e.mouseover(function(){ e.addClass('active'); });
         e.mouseout(function(){ e.removeClass('active'); });
     });
-
-    if(opts.auto_close) drawer.click(o.close);
-    if(opts.opened && opts.auto_close_delay){ o.delayed_close(opts.auto_close_delay); }
 
     return o;
 }

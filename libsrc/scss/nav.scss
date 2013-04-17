@@ -33,6 +33,7 @@
         background-size: 100% 100%;
     }
     .text_btn {
+        cursor: pointer;
         padding: 0 12px;
         line-height: 47px;
         .icon { margin-left: -9px; }
@@ -47,7 +48,6 @@
         background-color: black;
         color: white;
     }
-    .hoverable { cursor: pointer; }
 
     .count {
         padding: 1px 4px;
@@ -87,16 +87,8 @@
             background-color: black;
         }
     }
-    #search_box {
-        width: 150px;
-        height: $nav_size - 18;
-    }
-    #plus {
-        background-image: asset_url('skin/nav/plus.png');
-        &.active { background-image: asset_url('skin/nav/plus-hover.png'); }
-    }
 
-    .right {
+    .center {
         position: absolute;
         right: 0;
         top: 0;
@@ -136,9 +128,18 @@
         }
     }
 
-    .center {
+    .right {
         position: absolute;
-        top: 0;
+        right: 0; top: 0;
+
+        #search_box {
+            width: 150px;
+            height: $nav_size - 18;
+        }
+        #plus {
+            background-image: asset_url('skin/nav/plus.png');
+            &.active { background-image: asset_url('skin/nav/plus-hover.png'); }
+        }
     }
 
     .menu {

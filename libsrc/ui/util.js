@@ -13,13 +13,13 @@ define([
         if(o.src) {
             o.src_d = o.src;
             o.src_h = hover_url(o.src_d);
-            $(o).mouseenter(function() { o.src = o.src_h }).
-                mouseleave(function() { o.src = o.src_d });
+            $(o).mouseover(function() { o.src = o.src_h }).
+                mouseout(function() { o.src = o.src_d });
         }
-        $(o).mouseenter(function() {
+        $(o).mouseover(function() {
             if(main.hoverable.disabled) return;
             $(this).addClass('active');
-        }).mouseleave(function() {
+        }).mouseout(function() {
             if(!$(this).data('busy')) $(this).removeClass('active');
         });
 
