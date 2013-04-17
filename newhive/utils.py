@@ -460,7 +460,7 @@ def others_liked(expr, db):
     fq = pyes.query.FilteredQuery(q, f)
     expr_activity = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type")
 
-    if expr_activity.total > 0:
+    if expr_activity.total > 1:
 
         # find users who also liked this expression
 
@@ -503,7 +503,7 @@ def get_user_tag_likes(user, db):
 
     user_activity = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type")
 
-    if user_activity.total > 0:
+    if user_activity.total > 1:
         exprs_liked = []
         for r in user_activity:
             exprs_liked.append(r['entity'])
