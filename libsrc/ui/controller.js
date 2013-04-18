@@ -10,7 +10,8 @@ define([
     return { render: function(){
         if (context.page_data.expr_id) {
             var $contentFrame = $('<iframe>');
-            alert(context.page_data.expr_id);
+            $contentFrame.css('width','100%');
+            $contentFrame.css('height','100%');
             $contentFrame.attr('src', context.content_server_url + context.page_data.expr_id);
             $(document.body).append($contentFrame);
         }

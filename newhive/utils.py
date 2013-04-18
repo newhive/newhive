@@ -91,6 +91,14 @@ def dfilter(d, keys):
 def normalize(ws):
     return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
         re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
+        
+def url_host(on_main_domain = True, port = None, secure = False):
+    domain = config.server_name if on_main_domain else config.content_domain
+    ssl = secure or config.always_secure
+    if not port:
+        port = config.ssl_port if ssl else config.plain_port
+    port = '' if port == 80 or port == 443 else ':' + str(port)
+    return domain if port == '' else domain + port
 
 def abs_url(path='', secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
@@ -106,8 +114,8 @@ def abs_url(path='', secure = False, domain = None, subdomain = None):
     return (
         proto + '://' +
         (subdomain + '.' if subdomain else '') +
-        domain + port + '/' +
-        re.sub('^/', '', path)
+        domain + port + 
+        '/' + re.sub('^/', '', path)
     )
 
 def uniq(seq, idfun=None):
