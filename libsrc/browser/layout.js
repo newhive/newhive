@@ -27,11 +27,11 @@ define(['browser/jquery'], function($) {
                          ['border-top-left-radius', 'border-top-right-radius',
                              'border-bottom-right-radius', 'border-bottom-left-radius']
                      );
-                map(function(p) { c[p] = parseFloat(app_div.style[p]) }, props);
+                props.map(function(p) { c[p] = parseFloat(app_div.style[p]) });
                 var scale = parseFloat(e.attr('data-scale'));
                 if(scale) c['font-size'] = scale;
                 e.data('css', c);
-                var a; if(a = e.attr('data-angle')) e.rotate(parseFloat(a));
+                var a; if(a = e.attr('data-angle') && e.rotate) e.rotate(parseFloat(a));
                 e.css('opacity', this.style.opacity);
             }
             var c = $.extend({}, e.data('css'));

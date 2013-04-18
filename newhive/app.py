@@ -1,4 +1,4 @@
-from werkzeug.routing import Map, Rule
+from werkzeug.routing import Map, Rule, RequestRedirect
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
 import os.path
@@ -35,29 +35,21 @@ def get_api_endpoints(api):
     rules = []
     for route_name, route_obj in routes.items():
         # Add page routes (for HTTP and HTTPS)
-        rules.append(Rule(
-            route_obj['page_route'],
-            endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
-            host=url_host(secure=False)
-        ))
-        rules.append(Rule(
-            route_obj['page_route'],
-            endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
-            host=url_host(secure=True)
-        ))
-        # And API route
-        rules.append(Rule(
-            route_obj['api_route'],
-            endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
-            defaults={'json':True},
-            host=url_host(secure=False)
-        ))
-        rules.append(Rule(
-            route_obj['api_route'],
-            endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
-            defaults={'json':True},
-            host=url_host(secure=True)
-        ))
+        for secure in (False, True):
+            rules.append(Rule(
+                route_obj['page_route'],
+                endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
+                defaults={'route_name': route_name},
+                host=url_host(secure=secure)
+            ))
+        # And API routes
+        for secure in (False, True):
+            rules.append(Rule(
+                route_obj['api_route'],
+                endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
+                defaults={'json':True, 'route_name': route_name},
+                host=url_host(secure=secure)
+            ))
     return rules
 
 jinja_env.filters.update({
@@ -109,7 +101,6 @@ rules.extend(get_api_endpoints(api))
 # Add these catch-all routes last
 catchall_rules_tuples = [
     ('/<owner_name>', (api.community, 'user_home')),
-    ('/<owner_name>/<expr_name>', (api.community, 'expr')),
     ('/<expr_id>', (api.expr, 'fetch_naked'))
 ]
 
@@ -123,9 +114,12 @@ def handle(request):
     try: (controller, handler), args = routes.bind_to_environ(
         request.environ).match()
     except exceptions.NotFound as e:
+        print "Serving 500!"
         return api.controller.serve_500(request, Response(),
             exception=e, json=False)
-    print (controller, handler), args
+    except RequestRedirect as e:
+        print "old_url: ", request.url
+        print "new_url: ", e.new_url
     return controller.dispatch(handler, request, **args)
 
 application = handle

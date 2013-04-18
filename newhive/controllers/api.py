@@ -6,7 +6,7 @@ from newhive.utils import dfilter
 from newhive.controllers import Application
 
 from newhive import auth, config, oauth, state, utils
-from newhive.utils import abs_url
+from newhive.utils import abs_url, url_host
 
 class Controllers(object):
     """ Convenience class for instantiating all da controllers at once. """
@@ -47,12 +47,14 @@ class Controller(object):
 
         response = Response()
         anon = self.db.User.new({})
+        print "request: ", request.is_secure
         tdata = TransactionData(user=anon, context=dict(
             user=anon, config=config, debug=config.debug_mode,
             # Werkzeug provides form data as immutable dict, so it must be copied
             # fields may be left alone to mirror the request, or validated and normalized
             form=dict(request.form.items()), error={},
             query=request.args, url=request.url,
+            link_url=abs_url(secure=request.is_secure),
             server_name=config.server_name, 
             server_url=abs_url(), secure_server=abs_url(secure = True),
             content_domain=abs_url(domain = config.content_domain),
@@ -178,6 +180,7 @@ class Community(Controller):
         return {}
 
     def expr(self, tdata, request, owner_name=None, expr_name=None, **args):
+        print "in expr!"
         expr_obj = self.db.Expr.named(owner_name, expr_name)
         return {
             'page_data': {
@@ -199,7 +202,7 @@ class Community(Controller):
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args
         merged_args = dict(passable_keyword_args.items() + pagination_args.items())
-
+        tdata.context.update({'route_info': kwargs})
         context = query(tdata, request, **merged_args)
         if not context:
             return self.serve_404(tdata, request, response, json=kwargs.get('json'))

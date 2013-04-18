@@ -26,5 +26,12 @@
         "controller": "community",
         "method": "expressions_private",
         "client_method": "profile_private"
+    },
+    "view_expr": {
+        "page_route": "/<owner_name>/<expr_name>",
+        "api_route": "/api/expr/<owner_name>/<expr_name>",
+        "controller": "community",
+        "method": "expr",
+        "client_method": "load_expr"
     }
 }

@@ -13,13 +13,14 @@ NewHive is your radically simple, DIY self publishing tool." />
   <div id='feed_container'><div id='feed'></div></div>
   <div id='exprs'></div>
   <script>
-curl([
-	'ui/controller', 'ui/util', 'ui/nav'
-], function(controller, ui_util, nav) {
-	// Bootstrap community page with first set of cards.
-	controller.render();
-	ui_util.wrapLinks();
-	nav.render();
-});
+    curl([
+    	'ui/controller', 'ui/util', 'ui/nav'
+    ], function(controller, ui_util, nav) {
+    	// Bootstrap community page with first set of cards.
+    	controller.render();
+        ui_util.wrapLinks();
+    	ui_util.registerState({{ route_info|json }});
+    	nav.render();
+    });
   </script>
 {% endblock %}

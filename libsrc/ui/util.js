@@ -31,13 +31,36 @@ define([
         }
     };
 
+    function substituteVariables(inStr, routeVars) {
+        for (var routeVar in routeVars)
+            inStr = inStr.replace(routeVar, routeVars[routeVar]);
+        return inStr;
+    }
+
+    function getFormattedRouteObj(routeName, routeFormatVars) {
+        var routeObj = ApiRoutes[routeName];
+        return {
+            "api": substituteVariables(routeObj.api_route, routeFormatVars),
+            "page": substituteVariables(routeObj.page_route, routeFormatVars),
+            "title": routeObj.title
+        };
+    }
+    
+    main.registerState = function(route_info) {
+        if (!window.history && window.history.pushState) return;
+        var routeObj = ApiRoutes[route_info.route_name];
+        history.pushState(getFormattedRouteObj(route_info.route_name, route_info),null,routeObj.page);
+    }
+    
     main.wrapLinks = function() {
         // If we don't support pushState, fall back on default link behavior.
         if (!window.history && window.history.pushState) return;
         $('body').on('click', '[data-route-name]', function(e) {
            var routeName = $(e.target).closest('[data-route-name]').attr('data-route-name');
            var routeFormatVars = {
-               '<username>': $(e.target).closest('[data-username]').attr('data-username')
+               '<username>': $(e.target).closest('[data-username]').attr('data-username'),
+                '<expr_name>': $(e.target).closest('[data-expr_name]').attr('data-expr_name'),
+                '<owner_name>': $(e.target).closest('[data-owner_name]').attr('data-owner_name')
            };           
            var routeObj = getFormattedRouteObj(routeName, routeFormatVars);
            navToRoute(routeObj);
@@ -50,11 +73,6 @@ define([
             renderRoute(e.state);
         };
 
-        function substituteVariables(inStr, routeVars) {
-            for (var routeVar in routeVars)
-                inStr = inStr.replace(routeVar, routeVars[routeVar]);
-            return inStr;
-        }
         function fetchRouteData(routeObj, callback) {
             var callback = callback || function(){};
             $.ajax({
@@ -62,7 +80,7 @@ define([
                 url: routeObj.api.toString(),
                 dataType: 'json',
                 success: function(data) {
-                    controller.render(data);
+                    controller.render(data.page_data);
                     callback();
                 }
             });
@@ -75,14 +93,6 @@ define([
         function renderRoute(routeObj, callback) {
             if (!callback) callback = function(){};
             fetchRouteData(routeObj, callback);
-        }
-        function getFormattedRouteObj(routeName, routeFormatVars) {
-            var routeObj = ApiRoutes[routeName];
-            return {
-                "api": substituteVariables(routeObj.api_route, routeFormatVars),
-                "page": substituteVariables(routeObj.page_route, routeFormatVars),
-                "title": routeObj.title
-            };
         }
 
     };

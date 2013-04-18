@@ -65,8 +65,20 @@ define([
     		controller.render();
     	});
     }
+    
+    function set_inverted(invert){
+        if (invert) {
+            $('#nav').css('bottom',0);
+        }
+        else {
+            $('#nav').css('bottom','');
+        }
+    }
 
-    return { render: render };
+    return { 
+        render: render,
+        set_inverted: set_inverted
+    };
 });
 
 // TODO: put these somewhere
