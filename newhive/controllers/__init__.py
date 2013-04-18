@@ -1,8 +1,9 @@
-from newhive.controllers import community, expr, file, search, user
+from newhive.controllers import base, community, expr, file, search, user
 
 class Controllers(object):
     """ Convenience class for instantiating all da controllers at once. """
-    controllers = [community.Community, expr.Expr, file.File, search.Search, user.User]
+    controllers = [base.Controller, community.Community, expr.Expr, file.File,
+        search.Search, user.User]
 
     def __init__(self, server_env):
         for k in self.__class__.controllers:
