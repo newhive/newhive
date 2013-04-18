@@ -2,7 +2,7 @@ import json
 from werkzeug import Request, Response
 from collections import namedtuple
 from newhive.utils import dfilter
-from newhive import auth, config, oauth, state, utils
+from newhive import auth, config, utils
 from newhive.utils import abs_url
 
 class TransactionData(utils.FixedAttrs):

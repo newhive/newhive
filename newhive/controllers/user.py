@@ -1,4 +1,5 @@
 import httplib2, urllib
+from newhive import auth, config
 from newhive.controllers.base import ModelController
 
 class User(ModelController):
