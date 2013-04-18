@@ -31,7 +31,7 @@ def handle_login(db, request, response):
     username = args.get('username', '').lower()
     secret = args.get('secret', False)
     if username and secret:
-        if not request.is_secure: raise exceptions.BadRequest()
+        # if not request.is_secure: raise exceptions.BadRequest()
         user = db.User.named(username)
         if not user: user = db.User.find({'email': username})
         if user and user.cmp_password(secret):
