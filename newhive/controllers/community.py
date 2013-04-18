@@ -26,7 +26,7 @@ class Community(Controller):
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, tdata.user, **args)
         return {
-            'page_data': { "cards": cards, },
+            'page_data': { 'cards': cards, 'profile': owner.client_view() },
             'title': 'Expressions by ' + owner['name'],
         }
     def expressions_private(self, tdata, request, owner_name=None, **args):
@@ -35,7 +35,7 @@ class Community(Controller):
         spec = {'owner_name': owner_name, 'auth': 'private'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
         return {
-            'page_data': { "cards": cards, },
+            'page_data': { 'cards': cards, 'profile': owner.client_view() },
             'title': 'Your Private Expressions',
         }
 
@@ -52,7 +52,7 @@ class Community(Controller):
             'title' :''
         }
 
-    def dispatch(self, handler, request, json=False, client_method=None, **kwargs):
+    def dispatch(self, handler, request, json=False, **kwargs):
         (tdata, response) = self.pre_process(request)
         query = getattr(self, handler, None)
         if query is None:
@@ -75,5 +75,5 @@ class Community(Controller):
         if json:
             return self.serve_json(response, context)
         else:
-            tdata.context.update(context=context, client_method=client_method)
+            tdata.context.update(context=context, route_args=kwargs)
             return self.serve_loader_page('pages/main.html', tdata, request, response)        

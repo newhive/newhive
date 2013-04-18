@@ -9,15 +9,37 @@ define([
     var o = {};
     // TODO: Separate out browser/jquery code
 
-    function render(data){
-        if (data.page_data.expr_id) {
-            var $contentFrame = $('<iframe>');
-            alert(data.page_data.expr_id);
-            $contentFrame.attr('src', context.content_server_url + data.page_data.expr_id);
+    function render(page_data_in){
+        var page_data = page_data_in || context.page_data;
+        if (page_data.expr_id) {
+            clear();
+            var $contentFrame = $('<iframe class="expr">');
+            $contentFrame.css('width','100%');
+            $contentFrame.css('height','100%');
+            $contentFrame.attr('src', context.content_server_url + page_data.expr_id);
             $(document.body).append($contentFrame);
+            invert_nav(true);
         }
         else {
-            $('#feed').html(card_template(data));            
+            clear();
+            $('#feed').html(card_template(page_data));
+            invert_nav(false);
+        }
+    }
+
+    function clear() {
+        // Clean up feed
+        $('#feed').html('');
+        // Clean up expressions displayed
+        $('iframe.expr').remove();
+    }
+    
+    function invert_nav(inverted) {
+        if (inverted) {
+            $('#nav').css('bottom','0');
+        }
+        else {
+            $('#nav').css('bottom','');
         }
     }
 

@@ -1,18 +1,24 @@
-<div class='expr card flat-item border_right border_bottom with_hide {card_classes}' draggable='false'>
-    <a href="//:/{owner.name}/{name}">
-        <div>
-            <div class="title">{title}</div>
-            <img class="snapshot" src="{ snapshot }"/>
-        </div>
-    </a>
+<div class='expr card flat-item border_right border_bottom with_hide
+  {card_classes}' draggable='false'
+>
+  <a { get_route_anchor_attrs "view_expr"
+    "expr_name" name  "owner_name" owner.name }
+  >
     <div>
-        <div class="owner"><img class="thumb"
-            src="{owner.thumb_70}"/> by <span class='username'>{owner.name}</span>
-        </div>
-        <div class="stats">
-            <img src='{asset "skin/nav/views.png"}'/> {counts.Views}
-            <img src='{asset "skin/nav/love.png"}'/> {counts.Star}
-            <img src='{asset "skin/nav/comment.png"}'/> {counts.Comment}
-        </div>
+      <div class="title">{title}</div>
+        <img src="https://dev-1-s0-newhive.s3.amazonaws.com/expr_snapshot_{ id }_big"
+          class="snapshot">
+      </div>
+  </a>
+  <div>
+    <div class="owner">
+      <img class="thumb" src="{owner.thumb_70}"/>
+      by <span class='username'>{owner.name}</span>
     </div>
+    <div class="stats">
+      <img src='{asset "skin/nav/views.png"}'/> {counts.Views}
+      <img src='{asset "skin/nav/love.png"}'/> {counts.Star}
+      <img src='{asset "skin/nav/comment.png"}'/> {counts.Comment}
+    </div>
+  </div>
 </div>

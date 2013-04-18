@@ -650,6 +650,7 @@ class User(HasSocial):
         dict.update(user, dict(
             url = self.url,
             thumb_70 = self.get_thumb(70),
+            thumb_190 = self.get_thumb(190),
             has_thumb = self.has_thumb,
             logged_in = self.logged_in,
             notification_count = self.notification_count,

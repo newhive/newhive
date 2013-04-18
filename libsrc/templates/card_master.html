@@ -1,7 +1,19 @@
-{<if page_data.header}
-    <div class='header_box'><span class='header'>{ page_data.header.0 }
-      {<if page_data.header.1} : {>}{ page_data.header.1 }</span></div>
-{>}
+<div class='header_box'>
+  {<if page_data.profile}
+    <div class='profile'>
+      <img src='{ page_data.profile.thumb_190 }'>
+      <div class='info'>
+        <div>{ page_data.profile.fullname }</div>
+        <div>{ page_data.profile.about }</div>
+      </div>
+    </div>
+  {>}
+
+  {<if page_data.header}
+    <span class='header'>{ page_data.header.0 }
+      {<if page_data.header.1} : {>}{ page_data.header.1 }</span>
+  {>}
+</div>
 
 {<for page_data.cards}
     {<if title}{|templates/expr_card.html}{>}

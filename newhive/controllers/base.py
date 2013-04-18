@@ -38,6 +38,7 @@ class Controller(object):
             query=request.args, url=request.url,
             server_name=config.server_name, 
             server_url=abs_url(), secure_server=abs_url(secure = True),
+            link_url=abs_url(secure=request.is_secure),
             content_domain=abs_url(domain = config.content_domain),
             content_server_url=abs_url(domain=config.content_domain),
             secure_content_server_url=abs_url(domain=config.content_domain,secure=True)

@@ -1,5 +1,5 @@
-define(['js!browser/zepto',
-        'layout'], function($, layout) {
+define(['browser/layout',
+        'browser/jquery'], function(layout, $) {
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
@@ -102,7 +102,8 @@ define(['js!browser/zepto',
     
     return {
         'initExpression': function() {
-            $(Hive.Page.init);         
+            $(Hive.Page.init);
+            layout.place_apps();
         }
     };
 });
