@@ -1642,8 +1642,7 @@ class ESDatabase:
         elif es_type == 'user-type':
             data = {'fullname': entry.get('fullname', ''), 'name': entry.get('name', ''), 'tags': entry.get('tags', [])}
         else:
-            data = {}
-            print "type not supported!"
+            raise Exception(es_type + " is not defined in this index!")
         self.conn.index(data, self.index, es_type, entry['_id'])
         if refresh is True:
             self.conn.indices.refresh()
