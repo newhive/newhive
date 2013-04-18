@@ -5,14 +5,13 @@ import os.path
 from newhive.utils import dfilter
 from newhive import state, config
 from newhive.colors import colors
-from newhive.controllers.shared import ( no_zero, large_number, querystring,
-    length_bucket, friendly_date, epoch_to_string )
+# from newhive.controllers.shared import ( no_zero, large_number, querystring,
+#     length_bucket, friendly_date, epoch_to_string )
 from newhive.assets import HiveAssets
-from newhive.controllers.api import Controllers as Api
+from newhive.controllers import Controllers
 from newhive.extra_json import extra_json
 from newhive.routes import Routes
 import json, urllib
-
 
 hive_assets = HiveAssets()
 hive_assets.bundle()
@@ -44,11 +43,11 @@ def get_api_endpoints(api):
 jinja_env.filters.update({
      'asset_url': hive_assets.url
     ,'json': extra_json
-    ,'large_number': large_number
-    ,'length_bucket': length_bucket
-    ,'mod': lambda x, y: x % y
-    ,'no_zero': no_zero
-    ,'time': friendly_date
+    # ,'large_number': large_number
+    # ,'length_bucket': length_bucket
+    # ,'mod': lambda x, y: x % y
+    # ,'no_zero': no_zero
+    # ,'time': friendly_date
     ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
 })
 
@@ -65,7 +64,7 @@ jinja_env.globals.update({
     ,'asset_bundle': hive_assets.asset_bundle
 })
 
-api = Api(server_env)
+api = Controllers(server_env)
 
 # the endpoints are (Controller, method_str) tuples
 endpoints = [

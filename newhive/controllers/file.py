@@ -1,18 +1,15 @@
-from newhive.controllers.shared import *
-from newhive.controllers import Application
 import urllib, urlparse, itertools
 from werkzeug.http import parse_options_header
+from newhive.controllers.base import ModelController, auth_required
 
-import logging
-logger = logging.getLogger(__name__)
+class File(ModelController):
+    model_name = 'File'
 
-class File(Application):
-
-    def create(self, request, response):
+    @auth_required
+    def create(self, tdata, request, response, **args):
         """ Saves a file uploaded from the expression editor, responds
         with a Hive.App JSON object.
         """
-
         url = request.form.get('url')
         if request.form.get('remote') and url:
             try:
@@ -86,8 +83,9 @@ class File(Application):
         #file_record, data = self._upload(file, local_file, owner)
         track = hsaudiotag.auto.File(local_file)
         data = dict()
-        for attr in ["artist", "album", "title", "year", "genre", "track", "comment", "duration", "bitrate", "size"]:
-            data[attr] = getattr(track, attr)
+        for attr in ["artist", "album", "title", "year", "genre", "track",
+            "comment", "duration", "bitrate", "size"]:
+                data[attr] = getattr(track, attr)
         return {'type_specific': data}
 
     def _handle_image(self, file, local_file, file_record, mime):

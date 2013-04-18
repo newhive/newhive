@@ -1,10 +1,15 @@
-from application   import Application
-from expression    import Expression
-from feed          import Feed
-from user          import User
-from file          import File
-from mail          import Mail
-from cron          import Cron
-from community     import Community
-from analytics     import Analytics
-from admin         import Admin
+from newhive.controllers import community, expr, file, search, user
+
+class Controllers(object):
+    """ Convenience class for instantiating all da controllers at once. """
+    controllers = [community.Community, expr.Expr, file.File, search.Search, user.User]
+
+    def __init__(self, server_env):
+        for k in self.__class__.controllers:
+            setattr(self, k.__name__.lower(), k(**server_env))
+
+    @classmethod
+    def register(this_class, that_class):
+        this_class.controllers.append(that_class)
+        return that_class
+
