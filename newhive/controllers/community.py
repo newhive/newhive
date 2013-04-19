@@ -23,7 +23,7 @@ class Community(Controller):
     def expressions_public(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
-        spec = {'owner_name': owner_name}
+        spec = {'owner_name': owner_name, 'auth': 'public'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
         return {
             'page_data': { 'cards': cards, 'profile': owner.client_view() },
@@ -44,12 +44,12 @@ class Community(Controller):
         return {}
 
     def expr(self, tdata, request, owner_name=None, expr_name=None, **args):
-        expr_obj = self.db.Expr.named(owner_name, expr_name)
+        expr = self.db.Expr.named(owner_name, expr_name)
         return {
             'page_data': {
-                'expr_id': expr_obj['_id']
+                'expr_id': expr.id
             },
-            'title' :''
+            'title': expr['title'],
         }
 
     def dispatch(self, handler, request, json=False, **kwargs):
