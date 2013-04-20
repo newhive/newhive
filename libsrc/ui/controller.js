@@ -9,8 +9,8 @@ define([
     var o = {};
     // TODO: Separate out browser/jquery code
 
-    function render(page_data_in){
-        var page_data = page_data_in || context.page_data;
+    function render(data_in){
+        var page_data = data_in.page_data || context.page_data;
         if (page_data.expr_id) {
             clear();
             var $contentFrame = $('<iframe class="expr">');
@@ -60,6 +60,10 @@ define([
     };
 
     o.profile_private = function(data){
+        render(data);
+    };
+
+    o.view_expr = function(data){
         render(data);
     };
 

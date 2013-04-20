@@ -43,8 +43,11 @@ class Community(Controller):
         # show home expression or redirect to home 
         return {}
 
-    def expr(self, tdata, request, owner_name=None, expr_name=None, **args):
-        expr = self.db.Expr.named(owner_name, expr_name)
+    def expr(self, tdata, request, id=None, owner_name=None, expr_name=None):
+        print id, owner_name, expr_name
+        expr = ( self.db.Expr.fetch(id) if id else
+            self.db.Expr.named(owner_name, expr_name) )
+        if not expr: return None
         return {
             'page_data': {
                 'expr_id': expr.id
@@ -58,7 +61,7 @@ class Community(Controller):
         if query is None:
             return self.serve_404(tdata, request, response, json=json)
         # Handle keyword args to be passed to the controller function
-        passable_keyword_args = dfilter(kwargs, ['owner_name', 'expr_name'])
+        passable_keyword_args = dfilter(kwargs, ['owner_name', 'expr_name', 'id'])
         # Handle pagination
         pagination_args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
         for k in ['limit', 'order']:

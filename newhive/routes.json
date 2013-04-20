@@ -29,9 +29,9 @@
     },
     "view_expr": {
         "page_route": "/<owner_name>/<expr_name>",
-        "api_route": "/api/expr/<expr_id>",
+        "api_route": "/api/expr/<id>",
         "controller": "community",
         "method": "expr",
-        "client_method": "load_expr"
+        "client_method": "view_expr"
     }
 }

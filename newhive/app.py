@@ -81,8 +81,6 @@ api = Controllers(server_env)
 # rules tuples are (routing_str, endpoint)
 # the endpoints are (Controller, method_str) tuples
 rules_tuples = [
-    ('/api/expr', (api.expr, 'index')),
-    ('/api/expr/<id>', (api.expr, 'fetch')),
     ('/api/expr/thumb/<id>', (api.expr, 'thumb')),
     ('/api/user/login', (api.user, 'login')),
     ('/api/user/logout', (api.user, 'logout')),
@@ -118,9 +116,9 @@ def handle(request):
         return api.controller.serve_500(request, Response(),
             exception=e, json=False)
     except RequestRedirect as e:
-        print "old_url: ", request.url
-        print "new_url: ", e.new_url
+        # what's going on here anyway?
         raise Exception('redirect not implemented: from: ' + request.url + ', to: ' + e.new_url)
+    print (controller, handler), args
     return controller.dispatch(handler, request, **args)
 
 application = handle
