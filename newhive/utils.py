@@ -462,6 +462,7 @@ def others_liked(expr, db):
         # find users who also liked this expression
 
         related_users = []
+        res = []
 
         for r in expr_activity:
             related_users.append(r['initiator'])
@@ -478,7 +479,14 @@ def others_liked(expr, db):
         query.facet.facets.append(ts)  # sort by number of likes
         other_exprs = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
 
-        res = other_exprs.facets.entity.terms
+        res_id = [t['term'] for t in other_exprs.facets.entity.terms]
+
+        fid = pyes.filters.IdsFilter(res_id)
+        qid = pyes.query.FilteredQuery(match_all_query, fid)
+        res_expr = db.esdb.conn.search(qid, indices=db.esdb.index, doc_types="expr-type")
+
+        for r in res_expr:
+            res.append(dfilter(r, ['name', 'owner_name']))
 
     else:
         res = []
