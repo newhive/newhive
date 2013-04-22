@@ -1656,15 +1656,24 @@ class ESDatabase:
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
                                    start=start, limit=limit)
-        expr_results = Page([])
-        result_ids = []
+        expr_results = self.esdb_paginate(res, es_type='expr-type')
         if res._total >= limit:
             expr_results.next = res[limit-1]._meta[sort]
+        return expr_results
+
+    def esdb_paginate(self, res, es_type):
+        # convert elasticsearch resultsets to result lists
+        result_ids = []
         for r in res:
             print r
             result_ids.append(r._meta.id)
-        expr_results = list(self.db.Expr.search({'_id': {'$in': result_ids}}))
-        return expr_results
+        if es_type == 'expr-type':
+            results = list(self.db.Expr.search({'_id': {'$in': result_ids}}))
+        elif es_type == 'feed-type':
+            results = list(self.db.Feed.search({'_id': {'$in': result_ids}}))
+        elif es_type == 'user-type':
+            results = list(self.db.User.search({'_id': {'$in': result_ids}}))
+        return Page(results)
 
     def add_related_types(self):
 
