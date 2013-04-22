@@ -585,8 +585,28 @@ def find_similar_users(user, db):
     return res_norm
 
 
+def get_expr_rating_score(expr, downvotes):
+    confidence = 0.95
+    stars = expr.get('analytics', {}).get('Star', {}).get('count', 0)
+    broadcasts = expr.get('analytics', {}).get('Broadcast', {}).get('count', 0)
+    upvotes = stars + broadcasts
+    return ci_lower_bound(upvotes, upvotes + downvotes, confidence)
+
+
 def convert_dict_to_sorted_list(d, size=5):
     d_sorted = sorted(d.iteritems(), key=operator.itemgetter(1), reverse=True)
     results = [t[0] for t in d_sorted]
     results_nodup = OrderedDict.fromkeys(results)
     return list(results_nodup)[:size]
+
+
+from scipy.stats import norm
+
+
+def ci_lower_bound(pos, n, confidence):
+    if n == 0:
+        return 0
+    z = norm.ppf(1-(1-confidence)/2)
+    phat = 1.0*pos/n
+    w = phat + z*z/(2*n) - z*numpy.sqrt((phat*(1-phat)+z*z/(4*n))/n)/(1+z*z/n)
+    return w
