@@ -411,6 +411,7 @@ match_all_query = pyes.query.MatchAllQuery()
 
 likes_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])  # assuming 'broadcast' and 'star' == 'likes'
 
+feed_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star', 'Comment'])
 
 def autocomplete(pre, db, field='tags'):
     s = re.sub(r'[\s_\-"]', '', pre, flags=re.UNICODE)
