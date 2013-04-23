@@ -45,7 +45,7 @@ define([
 
     o.dispatch = function(method, data){
         return o[method](data);
-    }
+    };
 
     o.expr_detail = function(data){
         render(data);
