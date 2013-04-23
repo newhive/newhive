@@ -495,9 +495,17 @@ class User(HasSocial):
         return res
 
     def feed_page_trending(self, limit=40, **opts):
-        f_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr', 'Broadcast', 'Star', 'Comment', 'UpdatedExpr'])
-        f_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
-        f = pyes.filters.BoolFilter(must=[f_initiator, f_class_name])
+
+        f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr', 'Broadcast', 'Star'])
+        f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
+        f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
+
+        f_expr_class_name = pyes.filters.TermsFilter('class_name', ['UpdatedExpr', 'Comment'])
+        f_expr_entity = pyes.filters.TermsFilter('entity', self.starred_expr_ids)
+        f_expr_initiator = pyes.filters.TermFilter('initiator', self.id)
+        f_expr = pyes.filters.BoolFilter(must=[f_expr_class_name, f_expr_entity], must_not=[f_expr_initiator])
+
+        f = pyes.filters.BoolFilter(should=[f_user, f_expr])
         fq = pyes.query.FilteredQuery(match_all_query, f)
 
         res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
