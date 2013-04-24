@@ -1,22 +1,16 @@
-<div class='header_box'>
-  {<if page_data.profile}
-    <div class='profile'>
-      <img src='{ page_data.profile.thumb_190 }'>
-      <div class='info'>
-        <div>{ page_data.profile.fullname }</div>
-        <div>{ page_data.profile.about }</div>
-      </div>
-    </div>
-  {>}
-
+{<with profile.profile_header}{.}{>}
+<div id='header_box'>
   {<if page_data.header}
     <span class='header'>{ page_data.header.0 }
       {<if page_data.header.1} : {>}{ page_data.header.1 }</span>
   {>}
+  {<if page_data.profile}{<with page_data.profile}
+  {>}{>}
 </div>
-
-{<for page_data.cards}
-    {<if title}{|templates/expr_card.html}{>}
-    {<if fullname}{|templates/user_card.html}{>}
-    {<if entity_class}{|templates/feed_card.html}{>}
-{>}
+<div id='feed'>
+  {<for cards}
+      {<if title}{|templates/expr_card.html}{>}
+      {<if fullname}{|templates/user_card.html}{>}
+      {<if entity_class}{|templates/feed_card.html}{>}
+  {>}
+</div>

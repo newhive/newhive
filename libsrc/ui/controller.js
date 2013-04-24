@@ -2,10 +2,11 @@ define([
     'browser/jquery',
     'server/context',
     'sj!templates/card_master.html',
+    'sj!templates/profile_header.html',
     'sj!templates/expr_card.html',
     'sj!templates/feed_card.html',
     'sj!templates/user_card.html',
-], function($, context, card_template) {
+], function($, context, card_template, profile_template) {
     var o = {};
     // TODO: Separate out browser/jquery code
 
@@ -22,14 +23,14 @@ define([
         }
         else {
             clear();
-            $('#feed').html(card_template(page_data));
+            $('#site').html(card_template(page_data));
             invert_nav(false);
         }
     }
 
     function clear() {
         // Clean up feed
-        $('#feed').html('');
+        $('#site').html('');
         // Clean up expressions displayed
         $('iframe.expr').remove();
     }
@@ -60,6 +61,7 @@ define([
     };
 
     o.profile_private = function(data){
+        data.profile.private = true;
         render(data);
     };
 

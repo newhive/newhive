@@ -25,8 +25,10 @@ class Community(Controller):
         if not owner: return None
         spec = {'owner_name': owner_name, 'auth': 'public'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
+        profile = owner.client_view()
+        profile['profile_header'] = 'http://localhost:1212/lib/tmp/fractal_header.jpg'
         return {
-            'page_data': { 'cards': cards, 'profile': owner.client_view() },
+            'page_data': { 'cards': cards, 'profile': profile },
             'title': 'Expressions by ' + owner['name'],
         }
     def expressions_private(self, tdata, request, owner_name=None, **args):
