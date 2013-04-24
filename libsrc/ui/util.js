@@ -42,6 +42,7 @@ define([
         return {
             "api": substituteVariables(routeObj.api_route, routeFormatVars),
             "page": substituteVariables(routeObj.page_route, routeFormatVars),
+            "method": routeObj.client_method
         };
     }
     

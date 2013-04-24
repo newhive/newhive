@@ -7,39 +7,74 @@ define([
     'sj!templates/user_card.html',
 ], function($, context, card_template) {
     var o = {};
-    // TODO: Separate out browser/jquery code
+    const ANIM_DURATION = context.ANIM_DURATION || 700;
 
     function render(data_in){
         var page_data = data_in.page_data || context.page_data;
         if (page_data.expr_id) {
-            clear();
-            var $contentFrame = $('<iframe class="expr">');
-            $contentFrame.css('width','100%');
-            $contentFrame.css('height','100%');
-            $contentFrame.attr('src', context.content_server_url + page_data.expr_id);
-            $(document.body).append($contentFrame);
+            show_feed(false);
+            var $contentFrame = $('#expr_' + page_data.expr_id);
+            if ($contentFrame.length == 0) {
+                // Create new content frame
+                $contentFrame = $('<iframe class="expr expr-visible">');
+                $contentFrame.attr('src', context.content_server_url + page_data.expr_id);
+                $contentFrame.attr('id','expr_' + page_data.expr_id);
+                $('#exprs').append($contentFrame);
+            }
+            else {
+                $contentFrame.addClass('expr-visible');
+                $contentFrame.removeClass('expr-hidden');
+            }
+            $contentFrame.css('top',-$contentFrame.height() + 'px');
+            $contentFrame.animate({
+                top: "0"
+            },{
+                duration: ANIM_DURATION
+            });
             invert_nav(true);
         }
         else {
-            clear();
+            var $contentFrame = $('.expr-visible');
+            show_feed(true);
+            if ($contentFrame.length == 1) {
+                $contentFrame.animate({
+                    top: -$('.expr-visible').height()
+                },{
+                    duration: ANIM_DURATION,
+                    complete: function() {
+                        $contentFrame.addClass('expr-hidden');
+                        $contentFrame.removeClass('expr-visible');
+                    }
+                });
+            } 
             $('#feed').html(card_template(page_data));
             invert_nav(false);
         }
     }
 
-    function clear() {
-        // Clean up feed
-        $('#feed').html('');
-        // Clean up expressions displayed
-        $('iframe.expr').remove();
+    function show_feed(_show) {
+        if (_show) {
+            $('#feed').css('display','block');
+        }
+        else {
+            $('#feed').css('display','none');            
+        }
     }
     
     function invert_nav(inverted) {
         if (inverted) {
-            $('#nav').css('bottom','0');
+            $('#nav').animate({
+                'top': ($(document.body).height() - $('#nav').height())
+            }, {
+                duration: ANIM_DURATION
+            });
         }
         else {
-            $('#nav').css('bottom','');
+            $('#nav').animate({
+                'top': '0'
+            }, {
+                duration: ANIM_DURATION
+            });
         }
     }
 
