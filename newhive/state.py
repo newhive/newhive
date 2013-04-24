@@ -1673,7 +1673,15 @@ class ESDatabase:
             'views': expr.get('views', 0)
             }
         elif es_type == 'feed-type':
-            data = entry
+            data = {
+            'class_name': entry.get('class_name', ''),
+            'updated': entry.get('updated', 0),
+            'created': entry.get('created', 0),
+            'entity': entry.get('entity', ''),
+            'entity_class': entry.get('entity_class', ''),
+            'initiator': entry.get('initiator', ''),
+            'initiator_name': entry.get('initiator_name', '')
+            }
         elif es_type == 'user-type':
             data = {'fullname': entry.get('fullname', ''), 'name': entry.get('name', ''), 'tags': entry.get('tags', [])}
         else:
@@ -1720,7 +1728,7 @@ class ESDatabase:
 
         feed_mapping = {"class_name": {"type": "string",
                                        "index": "not_analyzed",
-                                       "store": "yes",
+                                       "store": "yes"},
                         "updated": {"type": "float",
                                     "store": "yes"},
                         "created": {"type": "float",
@@ -1736,7 +1744,7 @@ class ESDatabase:
                                       "store": "yes"},
                         "initiator_name": {"type": "string",
                                            "index": "not_analyzed",
-                                           "store": "yes"}}}
+                                           "store": "yes"}}
 
         user_mapping = {"tags": {"type": "string",
                                  "index": "analyzed",
