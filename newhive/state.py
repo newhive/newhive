@@ -510,7 +510,7 @@ class User(HasSocial):
 
         res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
                                             doc_types="feed-type",
-                                            sort="updated:desc", size=(5*limit))
+                                            sort="updated:desc", size=(4*limit))
 
         expr_ids = []
 
@@ -520,7 +520,7 @@ class User(HasSocial):
         fid = pyes.filters.IdsFilter(expr_ids)
         query = pyes.query.FilteredQuery(match_all_query, fid)
 
-        custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value)")
+        custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value) * exp(doc['created'].value - (time()/1000))")
 
         res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                        doc_types="expr-type",
