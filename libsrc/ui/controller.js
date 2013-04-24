@@ -2,11 +2,10 @@ define([
     'browser/jquery',
     'server/context',
     'sj!templates/card_master.html',
-    'sj!templates/profile_header.html',
     'sj!templates/expr_card.html',
     'sj!templates/feed_card.html',
-    'sj!templates/user_card.html',
-], function($, context, card_template, profile_template) {
+    'sj!templates/user_card.html'
+], function($, context, card_template) {
     var o = {};
     const ANIM_DURATION = context.ANIM_DURATION || 700;
 
@@ -48,18 +47,19 @@ define([
                     }
                 });
             } 
-            $('#feed').html(card_template(page_data));
+            $('#site').html(card_template(page_data));
             invert_nav(false);
         }
     }
 
     function show_feed(_show) {
         if (_show) {
-            $('#feed').css('display','block');
+            $('#site').css('display','block');
         }
         else {
-            $('#feed').css('display','none');            
+            $('#site').css('display','none');            
         }
+    }
     
     function invert_nav(inverted) {
         if (inverted) {
