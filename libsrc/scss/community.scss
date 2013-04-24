@@ -14,7 +14,8 @@
     display:none;
 }
 
-#feed_container {
+
+#site {
     position: absolute;
     left: 0; top: $nav_size;
     width: 100%;
@@ -26,11 +27,19 @@
             font-family: Bebas Neue;
             border-bottom: 4px solid black;
             padding: 0 2px 6px 2px;
+            text-align: center;
         }
         .profile {
             font-family: Museo;
+            img {
+                padding: 10px;
+                vertical-align: top;
+            }
+            background-color: white;
+            .info {
+                display: inline-block;
+            }
         }
-        text-align: center;
     }
 
     #feed {

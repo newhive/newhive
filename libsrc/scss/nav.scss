@@ -162,6 +162,15 @@
 @media print { #nav { display: none; } }
 
 
+.pagethrough {
+  position: fixed;
+  display: none;
+  @include opacity(0.8);
+  z-index: 2;
+}
+#page_prev img { left: 0; bottom: 50%; }
+#page_next img { right: 0; bottom: 50%; }
+
 .page_btn {
     position: absolute;
     width: 44px;

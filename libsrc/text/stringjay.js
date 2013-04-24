@@ -294,7 +294,8 @@ define(['browser/js', 'module', 'templates/context'],
 		// traverse to parent scope, looking for first path part
 		if(path[0])
 			while(level >= 0 && typeof value == 'undefined')
-				value = context[level--][path[0]]; 
+				value = context[level--][path[0]];
+		else return context[level];
 		// descend into data with the rest of path parts
 		for(var i = 1; i < path.length; i++){
 			if(typeof value == 'undefined') return '';
@@ -335,6 +336,9 @@ define(['browser/js', 'module', 'templates/context'],
 		return iteratee.map(function(v){
 			return block(context.concat(v))
 		}).reduce(util.op['+'], '');
+	};
+	o.base_context['with'] = function(context, block, what){
+		return block(context.concat(what));
 	};
 	o.base_context.e = encode_to_html;
 	o.base_context.json = function(context, data){

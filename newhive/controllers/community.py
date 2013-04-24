@@ -25,8 +25,10 @@ class Community(Controller):
         if not owner: return None
         spec = {'owner_name': owner_name, 'auth': 'public'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
+        profile = owner.client_view()
+        profile['profile_header'] = 'http://localhost:1212/lib/tmp/fractal_header.jpg'
         return {
-            'page_data': { 'cards': cards, 'profile': owner.client_view() },
+            'page_data': { 'cards': cards, 'profile': profile },
             'title': 'Expressions by ' + owner['name'],
         }
     def expressions_private(self, tdata, request, owner_name=None, **args):
@@ -61,13 +63,13 @@ class Community(Controller):
         if query is None:
             return self.serve_404(tdata, request, response, json=json)
         # Handle keyword args to be passed to the controller function
-        passable_keyword_args = dfilter(kwargs, ['owner_name', 'expr_name', 'id'])
+        # passable_keyword_args = dfilter(kwargs, ['owner_name', 'expr_name', 'id'])
         # Handle pagination
         pagination_args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
         for k in ['limit', 'order']:
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args
-        merged_args = dict(passable_keyword_args.items() + pagination_args.items())
+        merged_args = dict(kwargs.items() + pagination_args.items())
 
         context = query(tdata, request, **merged_args)
         if not context:
@@ -79,4 +81,4 @@ class Community(Controller):
             return self.serve_json(response, context)
         else:
             tdata.context.update(context=context, route_args=kwargs)
-            return self.serve_loader_page('pages/main.html', tdata, request, response)        
+            return self.serve_loader_page('pages/main.html', tdata, request, response)

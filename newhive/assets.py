@@ -196,28 +196,25 @@ class HiveAssets(Assets):
             output='../lib/admin.js'
             )
 
-        self.assets_env.register('admin.css',
-            'jquery-ui/jquery-ui-1.8.16.custom.css',
-            output='../lib/admin.css'
-            )
-
         # Note: IMPORTANT any time a file that is imported into other scss
         # files is changed (i.e. common.scss is imported into almost every
         # file), the webassets cache must be cleared
         scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
+
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss",
             "scss/nav.scss", "scss/dialogs.scss", "scss/community.scss",
-            "scss/frame.scss", "scss/settings.scss", "scss/signup_flow.scss",
-            "scss/chart.scss", "scss/jplayer.scss", "scss/navigator.scss",
+            "scss/settings.scss", "scss/signup_flow.scss",
+            "scss/jplayer.scss",
             filters=scss_filter,
             output='compiled.app.css',
             debug=False
             )
+        self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
 
         edit_scss = webassets.Bundle('scss/edit.scss', 'scss/codemirror.css',
             filters=scss_filter,
-            output='compiled.edit.css',
+            output='compiled.admin.css',
             debug=False
             )
 
@@ -226,16 +223,24 @@ class HiveAssets(Assets):
             output='compiled.minimal.css',
             debug=False
             )
+        self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
 
         email_scss = webassets.Bundle('scss/email.scss',
             filters=scss_filter,
             output='compiled.email.css',
             debug=False
             )
-
-        self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
-        self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
+
+        admin_scss = webassets.Bundle("scss/chart.scss",
+            filters=scss_filter,
+            output='compiled.admin.css',
+            debug=False
+            )
+        self.assets_env.register('admin.css',
+            admin_scss, 'jquery-ui/jquery-ui-1.8.16.custom.css',
+            output='../lib/admin.css'
+            )
 
         self.final_bundles = [
             'minimal.css',
