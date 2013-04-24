@@ -16,7 +16,9 @@ NewHive is your radically simple, DIY self publishing tool." />
 curl([
     'json!ui/routes.json', 'ui/controller', 'ui/util', 'ui/nav', 'server/context'
 ], function(routes, controller, ui_util, nav, context) {
-    // Bootstrap community page with first set of cards.
+    // reduce to single function call to ui/controller
+    
+    // Bootstrap community page with first set of cards.`
     var route = routes[{{ route_args.route_name|json }}];
     controller.dispatch(route.client_method, context);
     ui_util.wrapLinks();
