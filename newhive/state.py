@@ -494,7 +494,7 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_page_trending(self, limit=40, **opts):
+    def feed_page_esdb(self, limit=40, trending=False, **opts):
 
         f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr', 'Broadcast', 'Star'])
         f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
@@ -508,9 +508,14 @@ class User(HasSocial):
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
         fq = pyes.query.FilteredQuery(match_all_query, f)
 
+        if trending is True:
+            total_limit = 5*limit
+        else:
+            total_limit = limit
+
         res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
                                             doc_types="feed-type",
-                                            sort="updated:desc", size=(4*limit))
+                                            sort="created:desc", size=total_limit)
 
         expr_ids = []
 
@@ -520,11 +525,15 @@ class User(HasSocial):
         fid = pyes.filters.IdsFilter(expr_ids)
         query = pyes.query.FilteredQuery(match_all_query, fid)
 
-        custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value) * exp(doc['created'].value - (time()/1000))")
-
-        res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
-                                       doc_types="expr-type",
-                                       sort="_score,views:desc", size=limit)
+        if trending is True:
+            custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value) * exp(doc['created'].value - (time()/1000))")
+            res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
+                                           doc_types="expr-type",
+                                           sort="_score,views:desc", size=limit)
+        else:
+            res = self.db.esdb.conn.search(query, indices=self.db.esdb.index,
+                                           doc_types="expr-type",
+                                           sort="created:desc", size=limit)
 
         items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
         return items
