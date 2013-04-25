@@ -14,6 +14,7 @@ from crypt import crypt
 from oauth2client.client import OAuth2Credentials
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 import pyes
+from collections import defaultdict
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
@@ -1715,10 +1716,7 @@ class ESDatabase:
 
     def esdb_paginate(self, res, es_type):
         # convert elasticsearch resultsets to result lists
-        result_ids = []
-        for r in res:
-            print r
-            result_ids.append(r._meta.id)
+        result_ids = [r._meta.id for r in res]
         if es_type == 'expr-type':
             results = list(self.db.Expr.search({'_id': {'$in': result_ids}}))
         elif es_type == 'feed-type':
