@@ -58,7 +58,7 @@ class Database:
         # initialize elasticsearch index
         self.esdb = ESDatabase(self)
 
-    def query(self, q, viewer=None, limit=40, expr_only=None, fuzzy=False,
+    def query(self, q, viewer=None, start=0, limit=40, expr_only=None, fuzzy=False,
               es_order='_score,views:desc', **args):
         args['viewer'] = viewer
         args['limit'] = limit
@@ -78,7 +78,7 @@ class Database:
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            results = self.esdb.paginate(search, limit=limit, start=0,
+            results = self.esdb.paginate(search, limit=limit, start=start,
                                          es_order=es_order,
                                          es_filter=None, fuzzy=fuzzy,
                                          sort='score')
