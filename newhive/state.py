@@ -496,7 +496,6 @@ class User(HasSocial):
         return res
 
     def feed_page_esdb(self, limit=40, trending=False, **opts):
-
         f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr', 'Broadcast', 'Star'])
         f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
         f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
@@ -509,35 +508,34 @@ class User(HasSocial):
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
         fq = pyes.query.FilteredQuery(match_all_query, f)
 
-        if trending is True:
-            total_limit = 5*limit
-        else:
-            total_limit = limit
+        total_limit = 20*limit  # since there may be many feed items for the same expression
 
         res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
                                             doc_types="feed-type",
-                                            sort="created:desc", size=total_limit)
+                                            sort="created:desc")
 
-        expr_ids = []
+        feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
 
-        for r in res_feed:
-            expr_ids.append(r['entity'])
+        for r in res_feed[:total_limit]:
+            feed_with_expr[r['entity']].append(r._meta.id)
+
+        expr_ids = feed_with_expr.keys()
 
         fid = pyes.filters.IdsFilter(expr_ids)
         query = pyes.query.FilteredQuery(match_all_query, fid)
 
         if trending is True:
-            custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value) * exp(doc['created'].value - (time()/1000))")
+            custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/360000)")
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type",
-                                           sort="_score,views:desc", size=limit)
+                                           sort="_score,created:desc", size=limit)
         else:
             res = self.db.esdb.conn.search(query, indices=self.db.esdb.index,
                                            doc_types="expr-type",
                                            sort="created:desc", size=limit)
 
         items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
-        return items
+        return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
         user_action = {
