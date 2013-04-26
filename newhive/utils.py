@@ -473,7 +473,7 @@ def others_liked(expr, db):
         # find expressions that users who liked this expression also liked
 
         f1 = pyes.filters.TermsFilter('initiator', related_users)
-        f2 = pyes.filters.TermFilter('entity_class', 'expr')
+        f2 = pyes.filters.TermFilter('entity_class', 'Expr')
         f = pyes.filters.BoolFilter(must=[f1, f2, likes_filter])
         query = pyes.query.FilteredQuery(match_all_query, f).search()
         ts = pyes.facets.TermFacet(field='entity', name='entity', order="count", exclude=[this_expr], size=5)
