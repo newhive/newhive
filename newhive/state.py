@@ -528,7 +528,7 @@ class User(HasSocial):
         query = pyes.query.FilteredQuery(match_all_query, fid)
 
         if trending is True:
-            custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/360000)")
+            custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/360000)")
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type",
                                            sort="_score,created:desc", size=limit)
@@ -1642,7 +1642,7 @@ class ESDatabase:
 
         query = pyes.query.BoolQuery(must=clauses)
 
-        custom_query = pyes.query.CustomScoreQuery(query, script="_score * (doc['views'].value + 10*doc['star'].value + 10*doc['broadcast'].value)")
+        custom_query = pyes.query.CustomScoreQuery(query, script="_score * (doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value)")
 
         return custom_query
 

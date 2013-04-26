@@ -594,14 +594,6 @@ def find_similar_users(user, db):
     return res_norm
 
 
-def get_expr_rating_score(expr, downvotes):
-    confidence = 0.95
-    stars = expr.get('analytics', {}).get('Star', {}).get('count', 0)
-    broadcasts = expr.get('analytics', {}).get('Broadcast', {}).get('count', 0)
-    upvotes = stars + broadcasts
-    return ci_lower_bound(upvotes, upvotes + downvotes, confidence)
-
-
 def convert_dict_to_sorted_list(d, size=5):
     d_sorted = sorted(d.iteritems(), key=operator.itemgetter(1), reverse=True)
     results = [t[0] for t in d_sorted]
@@ -609,7 +601,17 @@ def convert_dict_to_sorted_list(d, size=5):
     return list(results_nodup)[:size]
 
 
+##### utils for testing ranking/trending algorithms #####
+
 from scipy.stats import norm
+
+
+def get_expr_rating_score(expr, downvotes):
+    confidence = 0.95
+    stars = expr.get('analytics', {}).get('Star', {}).get('count', 0)
+    broadcasts = expr.get('analytics', {}).get('Broadcast', {}).get('count', 0)
+    upvotes = stars + 5*broadcasts
+    return ci_lower_bound(upvotes, upvotes + downvotes, confidence)
 
 
 def ci_lower_bound(pos, n, confidence):
