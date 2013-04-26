@@ -1717,12 +1717,15 @@ class ESDatabase:
     def esdb_paginate(self, res, es_type):
         # convert elasticsearch resultsets to result lists
         result_ids = [r._meta.id for r in res]
+        results = []
         if es_type == 'expr-type':
-            results = list(self.db.Expr.search({'_id': {'$in': result_ids}}))
+            col = self.db.Expr
         elif es_type == 'feed-type':
-            results = list(self.db.Feed.search({'_id': {'$in': result_ids}}))
+            col = self.db.Feed
         elif es_type == 'user-type':
-            results = list(self.db.User.search({'_id': {'$in': result_ids}}))
+            col = self.db.User
+        for r in result_ids:
+            results.append(col.fetch(r))
         return Page(results)
 
     def add_related_types(self):
