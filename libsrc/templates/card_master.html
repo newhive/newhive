@@ -1,8 +1,24 @@
 {<if header}
-  <div id='header'>
+  <div id='header' class='header'>
     <span class='heading'>{ header.0 }
       {<if header.1} : {>}{ header.1 }</span>
   </div>
+{>}
+{<if profile}
+  {<with profile}
+    <div id='user_header' class='header'>
+      {<if profile_header}
+        <div style='background-image:url("{profile_header}")' class='background'/>
+      {>}
+      <div class='profile'>
+        <img src='{thumb_190}' class='thumb'>
+        <div class='info'>
+          <div class='name'>{fullname}</div>
+          <div>meep blurby blurb goes here aoeus thaoesu thaoesu thaoesu thaoesu hasoeuthaosetuasoeth</div>
+        </div>
+      </div>
+    </div>
+  {>}
 {>}
 <div id='feed'>
   {<for cards}

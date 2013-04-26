@@ -32,7 +32,6 @@ define([
         },
 	};
 
-
     util.copy(helpers, context);
     return context;
 });
