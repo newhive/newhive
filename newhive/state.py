@@ -64,10 +64,11 @@ class Database:
         args['limit'] = limit
         search = self.parse_query(q)
 
-        # substitute featured with network when not logged in
-        if not viewer and search.get('network'):
+        # substitute network with featured when not logged in
+        if not viewer and (search.get('network') or search.get('network_trending')):
             search['featured'] = True
             del search['network']
+            del search['network_trending']
 
         spec = {}
 
@@ -75,6 +76,8 @@ class Database:
 
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
+        if search.get('network_trending'):
+            results, grouped_feed = viewer.feed_page_esdb(trending=True)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
