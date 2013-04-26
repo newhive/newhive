@@ -621,3 +621,19 @@ def ci_lower_bound(pos, n, confidence):
     phat = 1.0*pos/n
     w = phat + z*z/(2*n) - z*numpy.sqrt((phat*(1-phat)+z*z/(4*n))/n)/(1+z*z/n)
     return w
+
+
+def test_scripts(db, owner_name = None):
+    if owner_name:
+        q = pyes.query.TermQuery('owner_name', owner_name)
+    else:
+        q = match_all_query
+    custom_query = pyes.query.CustomScoreQuery(q, script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)")
+    res1 = db.esdb.conn.search(custom_query, indices=db.esdb.index, doc_types="expr-type", sort="_score,created:desc")
+    custom_query = pyes.query.CustomScoreQuery(q, script="doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value + doc['created'].value/300")
+    res2 = db.esdb.conn.search(custom_query, indices=db.esdb.index, doc_types="expr-type", sort="_score,created:desc")
+    for i in range(10):
+        print i
+        print dfilter(res1[i], ['name', 'created', 'star', 'broadcast', 'views'])
+        print dfilter(res2[i], ['name', 'created', 'star', 'broadcast', 'views'])
+    return res1, res2
