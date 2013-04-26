@@ -1,7 +1,12 @@
-<div class="user-header">
-    <div>
-        <img class="profile-thumb" src="{{page_data.user_header.profile_thumb}}"/>
+<div id='header_box'>
+  {<if profile_header}
+    <div style='background-image:url("{profile_header}")' class='background'/>
+  {>}
+  <div class='profile'>
+    <img src='{thumb_190}' class='thumb'>
+    <div class='info'>
+      <div class='name'>{fullname}</div>
+      <div>meep blurby blurb goes here aoeus thaoesu thaoesu thaoesu thaoesu hasoeuthaosetuasoeth</div>
     </div>
-    <div>
-    </div>
+  </div>
 </div>

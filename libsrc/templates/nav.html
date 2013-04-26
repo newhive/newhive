@@ -25,8 +25,18 @@
   ><div id='network_btn' class='text_btn item black_active
     {<unless user.logged_in}hide{>}'>Network</div
   ><div id='hive_btn' class='text_btn item black_active
-    {<unless user.logged_in}hide{>}'>The Hive</div
-></div
+    {<unless user.logged_in}hide{>}'>The Hive</div>
+
+  <div id='network_menu' class='menu drawer'>
+    <a { get_route_anchor_attrs "network_trending" }><div class='menu_item'>Trending</div></a>
+    <a { get_route_anchor_attrs "network_recent" }><div class='menu_item'>Recent</div></a>
+  </div>
+
+  <div id='hive_menu' class='menu drawer'>
+    <a { get_route_anchor_attrs "expressions_public"  "owner_name" user.name }><div class='menu_item'>Featured</div></a>
+    <a { get_route_anchor_attrs "expressions_public"  "owner_name" user.name }><div class='menu_item'>Recent</div></a>
+  </div>
+</div
 
 ><div class='right'
   ><form method='GET' action='/search' name='search_form'
@@ -70,14 +80,4 @@
     <div class='menu_item'>Feedback</div>
     <div id='logout_btn' class='menu_item'>Logout</div>
   {>}
-</div>
-
-<div id='network_menu' class='menu drawer'>
-  <a { get_route_anchor_attrs "network_trending" }><div class='menu_item'>Trending</div></a>
-  <a { get_route_anchor_attrs "network_recent" }><div class='menu_item'>Recent</div></a>
-</div>
-
-<div id='hive_menu' class='menu drawer'>
-  <a { get_route_anchor_attrs "expressions_public"  "owner_name" user.name }><div class='menu_item'>Featured</div></a>
-  <a { get_route_anchor_attrs "expressions_public"  "owner_name" user.name }><div class='menu_item'>Recent</div></a>
 </div>

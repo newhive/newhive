@@ -2,10 +2,11 @@ define([
     'browser/jquery',
     'server/context',
     'sj!templates/card_master.html',
+    'sj!templates/user_header.html',
     'sj!templates/expr_card.html',
     'sj!templates/feed_card.html',
     'sj!templates/user_card.html'
-], function($, context, card_template) {
+], function($, context, card_template, user_header_template) {
     var o = {};
     const ANIM_DURATION = context.ANIM_DURATION || 700;
 
@@ -47,7 +48,7 @@ define([
                     }
                 });
             } 
-            $('#site').html(card_template(page_data));
+            $('#site').append(card_template(page_data));
             invert_nav(false);
         }
     }
@@ -84,6 +85,7 @@ define([
 
     o.expr_detail = function(data){
         render(data);
+        expr_column();
     };
 
     o.columns = function(data){
@@ -91,17 +93,30 @@ define([
     };
 
     o.profile = function(data){
+        $('#site').append(user_header_template(data.page_data.profile));
         render(data);
+        expr_column();
     };
 
     o.profile_private = function(data){
         data.profile.private = true;
+        $('#site').append(user_header_template(data.page_data.profile));
         render(data);
     };
 
     o.view_expr = function(data){
         render(data);
     };
+
+    function expr_column(){
+        // fix background spacing on line breaks
+        $('.card .words').each(function(){
+            var e = $(this);
+            if(e.hasClass('spaced')) return;
+            e.html(e.html().replace(/ |$/g, '&nbsp; '));
+            e.addClass('spaced');
+        });
+    }
 
     return o;
 });
