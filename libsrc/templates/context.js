@@ -1,9 +1,10 @@
 define([
     'server/context',
     'json!server/compiled.assets.json',
-    'browser/js',
-    'json!ui/routes.json'
-], function(context, assets, util, ApiRoutes){
+    'json!ui/routes.json',
+    'ui/routing',
+    'browser/js'
+], function(context, assets, ApiRoutes, routing, js_util){
 	var helpers = {
 		asset: function(context, name){
 			return assets[name];
@@ -17,10 +18,9 @@ define([
             var attributes = [ ['data-route-name', route_name] ],
                 href = ApiRoutes[route_name]['page_route'],
                 api = ApiRoutes[route_name]['api_route'];
-            for(var p in route_args){
-                href = href.replace('<' + p + '>', route_args[p]);
-                api = api.replace('<' + p + '>', route_args[p]);
-            }
+            
+            api = routing.substituteVariables(api, route_args, true);
+            href = routing.substituteVariables(href, route_args, true);
             //if(base_url.slice(-1) == '/') base_url = base_url.slice(0, -1);
             attributes.push(['href', href]);
             attributes.push(['data-api-path', api]);
@@ -33,6 +33,6 @@ define([
 	};
 
 
-    util.copy(helpers, context);
+    js_util.copy(helpers, context);
     return context;
 });

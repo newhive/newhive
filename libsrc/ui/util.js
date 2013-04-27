@@ -1,8 +1,9 @@
 define([
     'browser/jquery',
     'json!ui/routes.json',
-    'ui/controller'
-], function($, ApiRoutes, controller){
+    'ui/controller',
+    'ui/routing'
+], function($, ApiRoutes, controller, routing){
     var main = {};
 
     main.add_hovers = function(){
@@ -31,26 +32,13 @@ define([
         }
     };
 
-    function substituteVariables(inStr, routeVars) {
-        for (var routeVar in routeVars)
-            inStr = inStr.replace(routeVar, routeVars[routeVar]);
-        return inStr;
-    }
-
     function getFormattedRouteObj(routeName, routeFormatVars) {
         var routeObj = ApiRoutes[routeName];
         return {
-            "api": substituteVariables(routeObj.api_route, routeFormatVars),
-            "page": substituteVariables(routeObj.page_route, routeFormatVars),
+            "api": routing.substituteVariables(routeObj.api_route, routeFormatVars),
+            "page": routing.substituteVariables(routeObj.page_route, routeFormatVars),
             "method": routeObj.client_method
         };
-    }
-    
-    main.registerState = function(route_info) {
-        if (!window.history && window.history.pushState) return;
-        var routeObj = ApiRoutes[route_info.route_name];
-        history.pushState(getFormattedRouteObj(
-            route_info.route_name, route_info), null, routeObj.page);
     }
     
     main.wrapLinks = function() {
