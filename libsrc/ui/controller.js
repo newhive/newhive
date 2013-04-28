@@ -9,47 +9,71 @@ define([
     var o = {};
     const ANIM_DURATION = context.ANIM_DURATION || 700;
 
-    function render(data_in){
-        var page_data = data_in.page_data || context.page_data;
-        if (page_data.expr_id) {
-            show_feed(false);
-            var $contentFrame = $('#expr_' + page_data.expr_id);
-            if ($contentFrame.length == 0) {
-                // Create new content frame
-                $contentFrame = $('<iframe class="expr expr-visible">');
-                $contentFrame.attr('src', context.content_server_url + page_data.expr_id);
-                $contentFrame.attr('id','expr_' + page_data.expr_id);
-                $('#exprs').append($contentFrame);
-            }
-            else {
-                $contentFrame.addClass('expr-visible');
-                $contentFrame.removeClass('expr-hidden');
-            }
-            $contentFrame.css('top',-$contentFrame.height() + 'px');
-            $contentFrame.animate({
-                top: "0"
-            },{
-                duration: ANIM_DURATION
-            });
-            invert_nav(true);
+    o.dispatch = function(method, data){
+        var data = data.page_data || context.page_data;
+        return o[method](data);
+    };
+
+    o.expr_detail = function(data){
+        render_site(data);
+        expr_column();
+    };
+
+    o.columns = function(data){
+        render_site(data);
+    };
+
+    o.profile = function(data){
+        render_site(data);
+        expr_column();
+    };
+
+    o.profile_private = function(data){
+        data.page_data.profile.sub_heading = 'Private';
+        render_site(data);
+        expr_column();
+    };
+    
+    o.view_expr = function(page_data){
+        show_feed(false);
+        var $contentFrame = $('#expr_' + page_data.expr_id);
+        if ($contentFrame.length == 0) {
+            // Create new content frame
+            $contentFrame = $('<iframe class="expr expr-visible">');
+            $contentFrame.attr('src', context.content_server_url + page_data.expr_id);
+            $contentFrame.attr('id','expr_' + page_data.expr_id);
+            $('#exprs').append($contentFrame);
         }
         else {
-            var $contentFrame = $('.expr-visible');
-            show_feed(true);
-            if ($contentFrame.length == 1) {
-                $contentFrame.animate({
-                    top: -$('.expr-visible').height()
-                },{
-                    duration: ANIM_DURATION,
-                    complete: function() {
-                        $contentFrame.addClass('expr-hidden');
-                        $contentFrame.removeClass('expr-visible');
-                    }
-                });
-            } 
-            $('#site').html(card_template(page_data));
-            invert_nav(false);
+            $contentFrame.addClass('expr-visible');
+            $contentFrame.removeClass('expr-hidden');
         }
+        $contentFrame.css('top',-$contentFrame.height() + 'px');
+        $contentFrame.animate({
+            top: "0"
+        },{
+            duration: ANIM_DURATION
+        });
+        invert_nav(true);
+    };
+
+    function render_site(page_data){
+        var $contentFrame = $('.expr-visible');
+        show_feed(true);
+        if ($contentFrame.length == 1) {
+            $contentFrame.animate({
+                top: -$('.expr-visible').height()
+            },{
+                duration: ANIM_DURATION,
+                complete: function() {
+                    $contentFrame.addClass('expr-hidden');
+                    $contentFrame.removeClass('expr-visible');
+                }
+            });
+        } 
+        $('#site').empty().append(card_template(page_data));
+        // replace_or_append(card_template(page_data), '#feed', '#site');
+        invert_nav(false);
     }
 
     function show_feed(_show) {
@@ -60,7 +84,7 @@ define([
             $('#site').css('display','none');            
         }
     }
-    
+
     function invert_nav(inverted) {
         if (inverted) {
             $('#nav').animate({
@@ -78,30 +102,23 @@ define([
         }
     }
 
-    o.dispatch = function(method, data){
-        return o[method](data);
-    };
+    function expr_column(){
+        // TODO: put actual rendering code here?
 
-    o.expr_detail = function(data){
-        render(data);
-    };
+        // fix background spacing on line breaks
+        $('.card .words').each(function(){
+            var e = $(this);
+            if(e.hasClass('spaced')) return;
+            e.html(e.html().replace(/ |$/g, '&nbsp; '));
+            e.addClass('spaced');
+        });
+    }
 
-    o.columns = function(data){
-        render(data);
-    };
-
-    o.profile = function(data){
-        render(data);
-    };
-
-    o.profile_private = function(data){
-        data.profile.private = true;
-        render(data);
-    };
-
-    o.view_expr = function(data){
-        render(data);
-    };
+    // function replace_or_append(e, replace, append){
+    //     var replace = $(replace);
+    //     if(replace.length) replace.replaceWith(e);
+    //     else $(append).append(e);
+    // }
 
     return o;
 });

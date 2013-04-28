@@ -33,7 +33,7 @@ define([
     }
 
     function nav_layout(){
-    	layout.center($('.center'), $('#nav'));
+    	layout.center($('#nav .center'), $('#nav'));
     }
 
     function login(){

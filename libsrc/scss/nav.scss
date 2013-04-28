@@ -90,7 +90,7 @@
 
     .center {
         position: absolute;
-        right: 0;
+        left: 50%;
         top: 0;
         height: $nav_size;
 
@@ -163,10 +163,10 @@
 
 
 .pagethrough {
-  position: fixed;
-  display: none;
-  @include opacity(0.8);
-  z-index: 2;
+    position: fixed;
+    display: none;
+    @include opacity(0.8);
+    z-index: 2;
 }
 #page_prev img { left: 0; bottom: 50%; }
 #page_next img { right: 0; bottom: 50%; }
