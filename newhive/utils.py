@@ -95,6 +95,9 @@ def normalize(ws):
 def url_host(on_main_domain = True, port = None, secure = False):
     domain = config.server_name if on_main_domain else config.content_domain
     ssl = secure or config.always_secure
+    if domain.find('.' + config.server_name) > -1:
+        (subdomain, domain) = domain.split('.', 1)
+    if config.dev_prefix: domain = config.dev_prefix + '.' + domain
     if not port:
         port = config.ssl_port if ssl else config.plain_port
     port = '' if port == 80 or port == 443 else ':' + str(port)
