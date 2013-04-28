@@ -105,7 +105,7 @@ catchall_rules_tuples = [
 for rule in catchall_rules_tuples:
     rules.extend(make_routing_rules(rule[0], endpoint=rule[1], on_main_domain=(rule[0] != '/<expr_id>')))
 
-routes = Map(rules, strict_slashes=False, host_matching=True)
+routes = Map(rules, strict_slashes=False, host_matching=True, redirect_defaults=False)
 
 @Request.application
 def handle(request):
