@@ -282,7 +282,7 @@ class Expression(Community, PagingMixin):
         return self.redirect(response, request.requester.url)
 
     def tag_update(self, request, response):
-        tag = lget(normalize(request.form.get('value', '')), 0)
+        tag = lget(normalize_tags(request.form.get('value', '')), 0)
         id = request.form.get('expr_id')
         expr = self.db.Expr.fetch(id)
         if request.requester.id != expr.owner.id and not tag == "starred": return False
