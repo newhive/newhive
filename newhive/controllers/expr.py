@@ -1,3 +1,4 @@
+import cgi
 import werkzeug.urls
 import uuid
 from md5 import md5
@@ -16,7 +17,7 @@ class Expr(ModelController):
     def fetch_naked(self, tdata, request, response, expr_id):
         # Request must come from content_domain, as this serves untrusted content
         # TODO: get routing to take care of this
-        if request.host != utils.url_host(on_main_domain=False):
+        if request.host != utils.url_host(on_main_domain=False,secure=request.is_secure):
             return self.redirect('/')
         expr_obj = self.db.Expr.fetch(expr_id)
         tdata.context.update(
@@ -64,7 +65,8 @@ class Expr(ModelController):
                 more_css = ';'.join([p + ':' + str(c[p]) for p in c])
                 html = ''
             elif type == 'hive.html':
-                html = ""
+                encoded_content = cgi.escape(app.get('content',''), quote=True)
+                html = '<div class="happ happ-content" data-content="%s"></div>' % encoded_content
             else:
                 html = content
             data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''

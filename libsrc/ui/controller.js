@@ -36,12 +36,18 @@ define([
     
     o.view_expr = function(page_data){
         show_feed(false);
-        var $contentFrame = $('#expr_' + page_data.expr_id);
+        display_expr(page_data.expr_id);
+        invert_nav(true);
+    };
+    
+    function display_expr(expr_id) {
+        var $contentFrame = $('#expr_' + expr_id);
         if ($contentFrame.length == 0) {
             // Create new content frame
+            var contentFrameURL = (context.is_secure ? context.secure_content_server_url : content_server_url) + expr_id;
             $contentFrame = $('<iframe class="expr expr-visible">');
-            $contentFrame.attr('src', context.content_server_url + page_data.expr_id);
-            $contentFrame.attr('id','expr_' + page_data.expr_id);
+            $contentFrame.attr('src',  contentFrameURL);
+            $contentFrame.attr('id','expr_' + expr_id);
             $('#exprs').append($contentFrame);
         }
         else {
@@ -54,12 +60,10 @@ define([
         },{
             duration: ANIM_DURATION
         });
-        invert_nav(true);
-    };
-
-    function render_site(page_data){
+    }
+    
+    function hide_exprs() {
         var $contentFrame = $('.expr-visible');
-        show_feed(true);
         if ($contentFrame.length == 1) {
             $contentFrame.animate({
                 top: -$('.expr-visible').height()
@@ -70,7 +74,12 @@ define([
                     $contentFrame.removeClass('expr-visible');
                 }
             });
-        } 
+        }
+    }
+
+    function render_site(page_data){
+        show_feed(true);
+        hide_exprs();
         $('#site').empty().append(card_template(page_data));
         // replace_or_append(card_template(page_data), '#feed', '#site');
         invert_nav(false);
