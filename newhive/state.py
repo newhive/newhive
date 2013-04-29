@@ -1498,53 +1498,6 @@ class Temp(Entity):
     cname = 'temp'
 
 
-@Database.register
-class Tags(Entity):
-    # class for tag analytics. This is obsolete once elasticsearch is running.
-
-    indexes = [('tag', {'unique': True}), ('count', -1), [('count', -1), ('tags', 1)]]
-    cname = 'tags'
-
-    class Collection(Collection):
-        def create(self, db, data={}):
-            exprdb = db.Expr.search({})
-            counts = getTagCnt(exprdb).most_common()
-            for v in counts:
-                data = {'tag': v[0], 'count': v[1]}
-                print data
-                super(Tags.Collection, self).create(data)
-            return None
-
-        def update_tags(self):
-            exprdb = self.db.Expr.search({})
-            counts = getTagCnt(exprdb).most_common()
-            for v in counts:
-                row = self.fetch(v[0], keyname='tag')
-                if row is not None:
-                    if row['count'] != v[1]:
-                        print row
-                        row['count'] = v[1]
-                        self._col.update({'tag': v[0]}, row)
-                        print row
-                else:
-                    data = {'tag': v[0], 'count': v[1]}
-                    print data
-                    super(Tags.Collection, self).create(data)
-            return None
-
-        def delete(self):
-            num = self.count()
-            rows = self.search({})
-            for i in range(num):
-                self.entity.delete(rows[0])
-            return None
-
-        def autocomplete(self, string):
-            # should probably use the autocomplete in newhive/utils instead
-            res = self.search({'tag': {'$regex': '^' + string}}, sort=[('count', -1)])
-            return res
-
-
 ## utils
 
 
