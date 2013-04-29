@@ -1598,25 +1598,16 @@ class ESDatabase:
           }
         }
 
-        exprs = db.Expr.search({})
-
         if not index in self.conn.indices.get_indices():
             self.conn.indices.create_index(index, self.settings)
-            print "Indexing all expressions"
-            counter = 0
+            print "Indexing expr/feed/users from scratch, might take a while"
+            exprs = db.Expr.search({})
             for expr in exprs:
                 self.update(expr, es_type='expr-type', refresh=False)
-                counter += 1
-                print counter
             self.add_related_types()
-        elif (self.conn.indices.get_indices()[index]['num_docs'] < sum([db.Expr.count(), db.Feed.count(), db.User.count()])):
-            counter = 0
-            for expr in exprs:
-                self.update(expr, es_type='expr-type', refresh=False)
-                counter += 1
-                print counter
+            self.conn.indices.refresh()
 
-        self.conn.indices.refresh()
+        self.sync_with_mongo()
 
         return None
 
@@ -1721,6 +1712,24 @@ class ESDatabase:
         if refresh is True:
             self.conn.indices.refresh()
         return None
+
+    def sync_with_mongo(self, refresh=False):
+        """make sure elasticsearch db reflects current mongodb state"""
+        updated = self.conn.search(match_all_query, indices=self.index, sort="updated:desc")
+        last_updated = updated[0]['updated']
+        exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
+        feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
+        users = self.db.User.search({'updated': {'$gte': last_updated}})
+        print exprs.count(), 'expressions to update'
+        for expr in exprs:
+            self.update(expr, 'expr-type', refresh=False)
+        print feed.count(), 'feed items to update'
+        for f in feed:
+            self.update(f, 'feed-type', refresh=False)
+        print users.count(), 'users to update'
+        for user in users:
+            self.update(user, 'user-type', refresh=False)
+        self.conn.indices.refresh()
 
     def paginate(self, search, limit=40, start=0, es_order='_score,views:desc',
                  es_filter=None, sort='score', fuzzy=False):
