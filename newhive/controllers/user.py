@@ -40,4 +40,3 @@ class User(ModelController):
 
     def streamified_test(self, tdata, request, response):
         return self.serve_page(tdata, response, 'pages/streamified_test.html')
-

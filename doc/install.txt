@@ -1,11 +1,19 @@
 Python library dependencies
     werkzeug pymongo boto oauth2 oauth2client pil paramiko cssutils
     lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson
-    envoy
+    envoy scipy
     pandas brownie google-api-python-client # for analytics
+
+    pyes -- https://github.com/aparo/pyes
+
+Python library dependency dependencies (Ubuntu packages)
+    gfortran
+    libblas-dev
+    liblapack-dev
 
 Application dependencies (Ubuntu packages)
 	mongodb
+    elastic search -- http://www.elasticsearch.org/download/
 	ruby-sass
 	ruby-compass
 
