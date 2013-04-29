@@ -430,17 +430,8 @@ class User(HasSocial):
         return self
 
     @property
-<<<<<<< HEAD
-    def notification_count(self):
-        count = self.get('notification_count')
-        if count is None:
-            count = len(self.feed)
-            self['notification_count'] = count
-        return count
-
-=======
     def notification_count(self): return self.get('notification_count', 0)
->>>>>>> remotes/origin/v2-community
+
     def notification_count_reset(self): self.update(notification_count=0)
 
     def notify(self, feed_item):
@@ -1607,17 +1598,18 @@ class ESDatabase:
           }
         }
 
-        self.conn.indices.create_index_if_missing(index, self.settings)
         exprs = db.Expr.search({})
 
         if not index in self.conn.indices.get_indices():
-            print "Indexing all expressions from scratch, might take a while"
+            self.conn.indices.create_index(index, self.settings)
+            print "Indexing all expressions"
             counter = 0
             for expr in exprs:
                 self.update(expr, es_type='expr-type', refresh=False)
                 counter += 1
                 print counter
-        elif (self.conn.indices.get_indices()[index]['num_docs'] < db.Expr.count()):
+            self.add_related_types()
+        elif (self.conn.indices.get_indices()[index]['num_docs'] < sum([db.Expr.count(), db.Feed.count(), db.User.count()])):
             counter = 0
             for expr in exprs:
                 self.update(expr, es_type='expr-type', refresh=False)
