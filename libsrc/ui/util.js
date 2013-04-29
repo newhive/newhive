@@ -32,15 +32,6 @@ define([
         }
     };
 
-    function getFormattedRouteObj(routeName, routeFormatVars) {
-        var routeObj = ApiRoutes[routeName];
-        return {
-            "api": routing.substituteVariables(routeObj.api_route, routeFormatVars),
-            "page": routing.substituteVariables(routeObj.page_route, routeFormatVars),
-            "method": routeObj.client_method
-        };
-    }
-    
     main.wrapLinks = function() {
         // If we don't support pushState, fall back on default link behavior.
         if (!window.history && window.history.pushState) return;
