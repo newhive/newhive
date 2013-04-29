@@ -532,7 +532,7 @@ class User(HasSocial):
                                            doc_types="expr-type",
                                            sort="created:desc", size=limit)
 
-        items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
+        items = self.db.esdb.esdb_paginate(res, es_type='expr-type', limit=40)
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
@@ -1730,14 +1730,14 @@ class ESDatabase:
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
                                    start=start, limit=limit)
-        expr_results = self.esdb_paginate(res, es_type='expr-type')
+        expr_results = self.esdb_paginate(res, es_type='expr-type', start=start, limit=limit)
         if res._total >= limit:
             expr_results.next = res[limit-1]._meta[sort]
         return expr_results
 
-    def esdb_paginate(self, res, es_type):
+    def esdb_paginate(self, res, es_type, start=0, limit=40):
         # convert elasticsearch resultsets to result lists
-        result_ids = [r._meta.id for r in res]
+        result_ids = [r._meta.id for r in res[start:(start+limit)]]
         results = []
         if es_type == 'expr-type':
             col = self.db.Expr
