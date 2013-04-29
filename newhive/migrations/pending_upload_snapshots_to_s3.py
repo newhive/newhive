@@ -37,11 +37,25 @@ def init_xvfb():
     xvfb = Popen(["Xvfb", ":99", "-screen", "scrn" ,"1024x768x24"])
     return xvfb
         
+def proccess_snapshots_file():
+    lines = open('/tmp/snapshots','r').read().split("\n")
+    import re
+    def get_id(line_str):
+        ret = re.search('s3://dev-1-s0-newhive/expr_snapshot_([0-9a-f]+)_big',line_str)
+        if ret is None:
+            return None
+        if ret:
+            return ret.group(1)
+    ids = [get_id(line) for line in lines if get_id(line)]
+    return ids
 
-def start_snapshots():
+def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
     asset_bucket = s3_con.create_bucket(config.asset_bucket)
+    
     xvfb = init_xvfb()
+    
+    existing_snapshots = proccess_snapshots_file() if proc_tmp_snapshots else []
     
     def get_exprs():
         expressions_to_snapshot = db.Expr.search({
@@ -53,12 +67,19 @@ def start_snapshots():
             ]
         },limit=100)
         return expressions_to_snapshot
-        
+    
     while True:
         exprs = get_exprs()
         if len(exprs) == 0: break
         print exprs
         for expr in exprs:
+            if expr.get('_id') in existing_snapshots:
+                print "%s already snapshotted!" % expr.get('_id')
+            else:
+                print "not yet snapshotted %s!" % expr.get('_id')
+            break
+            
+            
             print "snapshotting %s" % expr.get('_id')
             take_snapshot(expr.get('_id'))
             s3_url = upload_snapshot_to_s3(expr.get('_id'),asset_bucket)    
@@ -67,7 +88,7 @@ def start_snapshots():
             }
             expr.save()
     
-    print "need to get %s exprs" % len(expressions_to_snapshot)
+    # print "need to get %s exprs" % len(expressions_to_snapshot)
     
 def take_snapshot(expr_id,dimensions=(715,430)):
     expr_obj = db.Expr.fetch(expr_id)
