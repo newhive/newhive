@@ -3,7 +3,7 @@ import uuid
 from md5 import md5
 import subprocess
 import os
-from newhive import config
+from newhive import config, utils
 from newhive.controllers.base import ModelController
 
 class Expr(ModelController):
@@ -14,10 +14,9 @@ class Expr(ModelController):
         return self.serve_json(response,expr_obj)
 
     def fetch_naked(self, tdata, request, response, expr_id):
-        print "host_url: ", request.host_url
         # Request must come from content_domain, as this serves untrusted content
         # TODO: get routing to take care of this
-        if request.host.split(':')[0] != config.content_domain:
+        if request.host != utils.url_host(on_main_domain=False):
             return self.redirect('/')
         expr_obj = self.db.Expr.fetch(expr_id)
         tdata.context.update(
