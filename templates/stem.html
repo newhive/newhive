@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block body_classes %}{{ super() }} main {% endblock body_classes %}
+
+{% block head %}
+{% endblock %}
+  
+{% block main %}
+
+{% block body %}
+{% endblock body %}
+
+<div id="fb-root" style="position: fixed; top: 0; left: 0;"></div>
+<div id='content'>
+{% block content %}
+  <div id="header">
+    {% block header %}{% endblock %}
+  </div>
+  <div id="primary_content">
+    <div id="left_column">
+      {% block left_column %}{% endblock %}
+    </div>
+    <div id="right_column">
+      {% block right_column %}{% endblock %}
+    </div>
+  </div>
+{% endblock content %}
+</div>
+
+{% endblock main %}

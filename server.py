@@ -1,13 +1,26 @@
 #!/usr/bin/python
 """ This Werkzeug server is used only for development and debugging """
 import os, optparse, sys
-from os.path  import dirname, exists, join as joinpath
+from os.path  import dirname, exists, join
 import newhive.config as config
 from newhive.app import application
+from werkzeug.serving import run_simple, make_ssl_devcert
 
+
+def wsgi_no_cache(app):
+    def new_app(environ, start_response):
+        def new_start_response(status, headers, **args):    
+            headers.append(('Cache-Control', 'no-cache, no-store, must-revalidate'))
+            return start_response(status, headers, **args)
+        return app(environ, new_start_response)
+    return new_app
+
+# undfortunately this doesn't work for static files
+# (need to subclass the server for that), so use your own cache killing solution!
+if config.debug_mode: application = wsgi_no_cache(application)
 
 # run_simple is not so simple
-# also, SSL is broken
+# also, SSL is broken in pip version of werkzeug. Use github version
 if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option("-p", "--port", action="store", type="int", dest="port")
@@ -27,16 +40,14 @@ if __name__ == '__main__':
     config.interactive = True
     config.always_secure = options.secure or config.always_secure
 
-
-    from werkzeug import run_simple
     #import OpenSSL.SSL as ssl
-
     # pull SSL cert paths from config
     #ssl_context = ssl.Context(ssl.SSLv23_METHOD)
     #ssl_context.use_certificate_file(config.ssl_cert)
     #ssl_context.use_privatekey_file(config.ssl_key)
     #if config.ssl_ca:
     #    ssl_context.use_certificate_chain_file(config.ssl_ca)
+    make_ssl_devcert(join(config.src_home, 'lib', 'tmp', 'ssl'), host='localhost', cn=None)
     ssl_context = 'adhoc'
 
     def run_hive(port, ssl=False):
@@ -47,11 +58,7 @@ if __name__ == '__main__':
             , use_reloader = True
             , use_debugger = config.debug_mode
             , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
-            , static_files = {
-                 '/lib' : joinpath(config.src_home, 'lib')
-                ,'/images' : joinpath(config.src_home, 'libsrc/scss/images')
-                ,'/file' : config.media_path
-              }
+            , static_files = { '/lib' : join(config.src_home, 'lib') }
             , ssl_context = ssl_context if ssl else None
             #, processes = 0
             )

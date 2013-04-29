@@ -1,0 +1,28 @@
+{% extends "page.html" %}
+
+{% if 'home' %}
+  {% block meta %}
+  <meta name="description" content="{{description + " - " if description}}We believe that your life is a blank canvas + you decide what goes on it.
+NewHive is your radically simple, DIY self publishing tool." />
+    <meta property="og:image" content='{{ 'skin/1/logo_medium.png'|asset_url }}' />
+  {% endblock meta %}
+{% endif %}
+
+{% block body %}
+  <div id='nav'></div>
+  <div id='feed'>
+    <div class="title center"></div>
+    <div class="feed-content" style='position:relative'>{{ content }}</div>
+  </div>
+  <div id='exprs'></div>
+  <script>
+curl([
+	'ui/community', 'ui', 'ui/nav'
+], function(community, ui, nav) {
+	// Bootstrap community page with first set of cards.
+	community.render({{ page_data|json }});
+	ui().wrapLinks();
+	nav.render();
+});
+  </script>
+{% endblock %}

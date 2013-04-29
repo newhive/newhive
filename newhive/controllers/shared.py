@@ -2,7 +2,6 @@ import os, re, json, time, mimetypes, math
 from functools import partial
 from datetime import datetime
 from newhive import config, colors, auth, state
-import newhive.ui_strings.en as ui
 from newhive.utils import *
 import urllib
 

@@ -430,6 +430,7 @@ class User(HasSocial):
         return self
 
     @property
+<<<<<<< HEAD
     def notification_count(self):
         count = self.get('notification_count')
         if count is None:
@@ -437,6 +438,9 @@ class User(HasSocial):
             self['notification_count'] = count
         return count
 
+=======
+    def notification_count(self): return self.get('notification_count', 0)
+>>>>>>> remotes/origin/v2-community
     def notification_count_reset(self): self.update(notification_count=0)
 
     def notify(self, feed_item):
@@ -744,8 +748,10 @@ class User(HasSocial):
             'name', 'tags', 'updated', 'created', 'feed'] ) )
         dict.update(user, dict(
             url = self.url,
-            thumb = self.get_thumb(70),
-            has_thumb = self.has_thumb
+            thumb_70 = self.get_thumb(70),
+            has_thumb = self.has_thumb,
+            logged_in = self.logged_in,
+            notification_count = self.notification_count,
         ) )
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         return user
@@ -818,13 +824,16 @@ class Expr(HasSocial):
 
     class Collection(Collection):
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
-        def meta(self,  username, name):
-            return self.find({'owner_name': username, 'name': name},
-            fields={ 'apps': 0, 'background': 0, 'images': 0 })
+
+        def cards(self,  spec, **opts):
+            opts.setdefault('fields', { 'apps': 0, 'background': 0,
+                'text_index': 0, 'title_index': 0, 'file_id': 0, 'images': 0  })
+            return self.search(spec, **opts)
 
         def fetch(self, key, keyname='_id', meta=False):
-            opts = dict(fields={ 'apps': 0, 'background': 0, 'images': 0 }) if meta else {}
-            return super(Expr.Collection, self).fetch(key, keyname, **opts)
+            fields = { 'text_index': 0, 'title_index': 0 }
+            if meta: fields.update({ 'apps': 0, 'background': 0, 'file_id': 0, 'images': 0 })
+            return super(Expr.Collection, self).fetch(key, keyname, fields=fields)
 
         def popular_tags(self):
             map_js = Code("function () {"
@@ -1073,8 +1082,27 @@ class Expr(HasSocial):
     public = property(lambda self: self.get('auth') == "public")
 
     def client_view(self, viewer=None):
-        return self
+        counts = dict([ ( k, v.get('count', 0) ) for
+            k, v in self.get('analytics', {}).iteritems() ])
+        counts['Views'] = self.views
+        counts['Comment'] = self.comment_count
+        # if expr.auth_required(viewer, password):
+        expr = {}
+        dict.update(expr, {
+            'id': self.id,
+            'thumb': self.get_thumb(),
+            'owner': self.owner.client_view(viewer=viewer),
+            'counts': counts,
+            'url': self.url,
+            'title': self.get('title')
+        })
 
+        if viewer and viewer.is_admin:
+            dict.update(expr, { 'featured': self.is_featured })
+
+        return expr
+        # return self
+        
     @property
     def tag_string(self):
         return ' '.join(["#" + tag for tag in self.get('tags_index', [])])

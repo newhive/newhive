@@ -1,0 +1,19 @@
+{% extends "page.html" %}
+
+{% block head %}
+  {{ super() }}
+  <script>
+curl(['server/session', 'browser/jquery'], function(s, $){
+	$('#share_btn').click(function(){
+		window.open(s.streamified_url + 'streams/networks/twitter/login?client_id=' +
+			s.streamified_client_id + '&redirect_uri=' +
+			encodeURIComponent(s.secure_server + 'streamified_login'));
+	});
+});
+</script>
+{% endblock %}
+
+{% block body %}
+<button id='share_btn'>share</button>
+<textarea type='text' id='message'></textarea>
+{% endblock %}

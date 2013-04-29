@@ -1,0 +1,79 @@
+<div id='logo' class='hoverable icon black_active'></div
+
+{<if s.user.logged_in}
+  ><div id='user_btn' class='text_btn item hoverable black_active'
+    >{s.user.name|e}</div
+  ><div class='count rounded {<unless s.user.notification_count}none{>}'
+    >{user.notification_count}</div
+  ></div
+  ><a id='create_btn' class='text_btn item hoverable black_active' href='{s.secure_server}edit'
+      onclick='return require_login("create")'
+      ><div class='text_btn item text'>New</div
+      ><div class='icon'></div
+  ></a
+{>}
+{<unless s.user.logged_in}
+  ><div id='sign_up_btn' class='text_btn item text hoverable black_active'
+    ><span class='text'>Sign up</span></div
+  ><div id='login_btn' class='text_btn item hoverable black_active'>Log In</div
+{>}
+
+><a href='/random' title="View Random Expression" class='random_link'
+  ><div class='random_btn icon hoverable'></div></a
+
+><div class='center'
+  ><div id='network_btn' class='text_btn item hoverable black_active'>Network</div
+  ><div id='hive_btn' class='text_btn item hoverable black_active'>The Hive</div
+></div
+
+><div class='right'
+  ><form method='GET' action='/search' name='search_form'
+    ><input type="text" id="search_box" placeholder="Search" name='q'
+    ><input id='plus' class='hoverable black_active icon' type='submit' value=''
+  ></form
+></div>
+
+<div id='login_menu' class='menu drawer'>
+  {#<a href="{facebook_authentication_url}" target="_top"
+    <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 2px 0 2px -4px;'>
+  </a>#}
+  {|templates/login_form.html}
+</div>
+
+<div id='user_menu' class='menu drawer'>
+  <div class='menu_item'>Expressions<div class='count'></div></div>
+  <div class='menu_item'>Private<div class='count'></div></div>
+  <div class='menu_item'>Activity<div class='count'></div></div>
+  <div class='menu_item'>Following</div>
+  <div class='menu_item'>Followers</div>
+  <div class='menu_item'>Loves</div>
+  <div class='menu_item'>Comments</div>
+</div>
+
+<div id='logo_menu' class='menu drawer'>
+  {< if s.user.logged_in}
+    <div class='menu_item'>Network</div>
+  {>}
+  <div class='menu_item'>The Hive</div>
+  {< if s.user.logged_in}
+    <div class='menu_item'>Email Invites</div>
+    <div class='menu_item'>Invite FB Friends</div>
+    <div class='menu_item'>Find FB Friends</div>
+    <div class='menu_item'>Settings</div>
+  {>}
+  <div class='menu_item'>About NewHive</div>
+  <div class='menu_item'>Feedback</div>
+  {< if s.user.logged_in}
+    <div id='logout_btn' class='menu_item'>Logout</div>
+  {>}
+</div>
+
+<div id='network_menu' class='menu drawer'>
+  <div class='menu_item'>Trending</div>
+  <div class='menu_item'>Recent</div>
+</div>
+
+<div id='hive_menu' class='menu drawer'>
+  <div class='menu_item'>Featured</div>
+  <div class='menu_item'>Recent</div>
+</div>

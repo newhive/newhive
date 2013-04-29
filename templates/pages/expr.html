@@ -2,7 +2,7 @@
 
 {% block head %}
   <script>
-    Hive = { user: {{ client_user | json }}, expr: {{ expr | json }} };
+    Hive = { user: {{ user.client_view() | json }}, expr: {{ expr | json }} };
   </script>
   <script src='{{ asset_bundle('expression.js')[0] }}'></script>
   {% if expr_style %}
