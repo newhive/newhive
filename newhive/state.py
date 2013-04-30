@@ -514,25 +514,31 @@ class User(HasSocial):
 
         feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
 
-        for r in res_feed[:total_limit]:
-            feed_with_expr[r['entity']].append(r._meta.id)
-
-        expr_ids = feed_with_expr.keys()
-
-        fid = pyes.filters.IdsFilter(expr_ids)
-        query = pyes.query.FilteredQuery(match_all_query, fid)
-
         if trending is True:
+
+            for r in res_feed[:total_limit]:
+                feed_with_expr[r['entity']].append(r._meta.id)
+
+            expr_ids = feed_with_expr.keys()
+
+            fid = pyes.filters.IdsFilter(expr_ids)
+            query = pyes.query.FilteredQuery(match_all_query, fid)
+
             custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)")
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type",
                                            sort="_score,created:desc", size=limit)
+            items = self.db.esdb.esdb_paginate(res, es_type='expr-type', limit=40)
         else:
-            res = self.db.esdb.conn.search(query, indices=self.db.esdb.index,
-                                           doc_types="expr-type",
-                                           sort="created:desc", size=limit)
-
-        items = self.db.esdb.esdb_paginate(res, es_type='expr-type', limit=40)
+            items = Page()
+            for r in res_feed:
+                feed_with_expr[r['entity']].append(r._meta.id)
+                if len(feed_with_expr[r['entity']]) == 1:
+                    expr = self.db.Expr.fetch(r['entity'])
+                    items.append(expr)
+                if len(items) == limit:
+                    break
+            items = filter(lambda i: i is not None, items)
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
