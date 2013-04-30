@@ -1548,7 +1548,8 @@ class ESDatabase:
                         "fullname": {"type": "string",
                                      "index": "not_analyzed"},
                         "name": {"type": "string",
-                                 "index": "not_analyzed"}}
+                                 "index": "not_analyzed"},
+                        "updated": {"type": "float"}}
         expr_mapping = {"tags": {"type": "string", "index": "analyzed", "analyzer": "tag_analyzer"},
                         "text": {"type": "string", "index": "analyzed"},
                         "title": {"type": "string", "index": "analyzed"},
@@ -1682,7 +1683,12 @@ class ESDatabase:
             'initiator_name': entry.get('initiator_name', '')
             }
         elif es_type == 'user-type':
-            data = {'fullname': entry.get('fullname', ''), 'name': entry.get('name', ''), 'tags': entry.get('tags', [])}
+            data = {
+            'fullname': entry.get('fullname', ''),
+            'name': entry.get('name', ''),
+            'tags': entry.get('tags', []),
+            'updated': entry.get('updated', 0)
+            }
         else:
             raise Exception(es_type + " is not defined in this index!")
         self.conn.index(data, self.index, es_type, entry['_id'])
@@ -1694,17 +1700,21 @@ class ESDatabase:
         """make sure elasticsearch db reflects current mongodb state"""
         updated = self.conn.search(match_all_query, indices=self.index, sort="updated:desc")
         last_updated = updated[0]['updated']
+        print 'last updated:', last_updated
         exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
         feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
         users = self.db.User.search({'updated': {'$gte': last_updated}})
         print exprs.count(), 'expressions to update'
         for expr in exprs:
+            print expr['updated']
             self.update(expr, 'expr-type', refresh=False)
         print feed.count(), 'feed items to update'
         for f in feed:
+            print f['updated']
             self.update(f, 'feed-type', refresh=False)
         print users.count(), 'users to update'
         for user in users:
+            print user['updated']
             self.update(user, 'user-type', refresh=False)
         self.conn.indices.refresh()
 
