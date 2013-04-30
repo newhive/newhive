@@ -7,6 +7,7 @@ define([
     'sj!templates/user_card.html'
 ], function($, context, card_template) {
     var o = {};
+    var contentFrameURLBase = context.is_secure ? context.secure_content_server_url : context.content_server_url;
     const ANIM_DURATION = context.ANIM_DURATION || 700;
 
     o.dispatch = function(method, data){
@@ -44,7 +45,7 @@ define([
         var $contentFrame = $('#expr_' + expr_id);
         if ($contentFrame.length == 0) {
             // Create new content frame
-            var contentFrameURL = (context.is_secure ? context.secure_content_server_url : content_server_url) + expr_id;
+            var contentFrameURL = contentFrameURLBase + expr_id;
             $contentFrame = $('<iframe class="expr expr-visible">');
             $contentFrame.attr('src',  contentFrameURL);
             $contentFrame.attr('id','expr_' + expr_id);
@@ -53,6 +54,9 @@ define([
         else {
             $contentFrame.addClass('expr-visible');
             $contentFrame.removeClass('expr-hidden');
+            $contentFrame.get(0).contentWindow.postMessage({
+                action: 'show'
+            }, contentFrameURLBase);
         }
         $contentFrame.css('top',-$contentFrame.height() + 'px');
         $contentFrame.animate({
@@ -72,6 +76,9 @@ define([
                 complete: function() {
                     $contentFrame.addClass('expr-hidden');
                     $contentFrame.removeClass('expr-visible');
+                    $contentFrame.get(0).contentWindow.postMessage({
+                        action: 'hide'
+                    }, contentFrameURLBase);
                 }
             });
         }

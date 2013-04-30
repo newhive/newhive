@@ -66,7 +66,7 @@ class Expr(ModelController):
                 html = ''
             elif type == 'hive.html':
                 encoded_content = cgi.escape(app.get('content',''), quote=True)
-                html = '<div class="happ happ-content" data-content="%s"></div>' % encoded_content
+                html = '%s' % (app.get('content',''))
             else:
                 html = content
             data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
