@@ -1525,27 +1525,45 @@ class ESDatabase:
         self.index = index
         self.conn = pyes.ES('127.0.0.1:9200')
         self.db = db
+        feed_mapping = {"class_name": {"type": "string",
+                                       "index": "not_analyzed"},
+                        "updated": {"type": "float"},
+                        "created": {"type": "float"},
+                        "entity": {"type": "string",
+                                   "index": "not_analyzed"},
+                        "entity_class": {"type": "string",
+                                         "index": "not_analyzed"},
+                        "initiator": {"type": "string",
+                                      "index": "not_analyzed"},
+                        "initiator_name": {"type": "string",
+                                           "index": "not_analyzed"}}
+        user_mapping = {"tags": {"type": "string",
+                                 "index": "analyzed"},
+                        "fullname": {"type": "string",
+                                     "index": "not_analyzed"},
+                        "name": {"type": "string",
+                                 "index": "not_analyzed"}}
+        expr_mapping = {"tags": {"type": "string", "index": "analyzed", "analyzer": "tag_analyzer"},
+                        "text": {"type": "string", "index": "analyzed"},
+                        "title": {"type": "string", "index": "analyzed"},
+                        "name": {"type": "string", "index": "analyzed"},
+                        "updated": {"type": "float"},
+                        "created": {"type": "float"},
+                        "views": {"type": "integer"},
+                        "broadcast": {"type": "integer"},
+                        "star": {"type": "integer"}}
+
         self.settings = {
           "mappings": {
-            "expr-type": {
-              "properties": {
-                "tags": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets", "analyzer": "tag_analyzer"},
-                "text": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
-                "title": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
-                "name": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
-                "updated": {"type": "float", "store": "yes"},
-                "created": {"type": "float", "store": "yes"},
-                "views": {"type": "integer", "store": "yes"},
-                "broadcast": {"type": "integer", "store": "yes"},
-                "star": {"type": "integer", "store": "yes"},
-              }
-            }
+            "expr-type": {"properties": expr_mapping},
+            "feed-type": {"properties": feed_mapping},
+            "user-type": {"properties": user_mapping}
           },
-          "settings" : {
-            "analysis" : {
-              "analyzer" : {
-                "default" : {"tokenizer" : "standard", "filter" : ["standard", "lowercase", "stop", "kstem"]},
-                "tag_analyzer" : {"tokenizer" : "whitespace", "filter" : ["standard", "lowercase", "stop", "kstem"]}
+          "settings": {
+            "analysis": {
+              "analyzer": {
+                "default": {"tokenizer" : "standard", "filter" : ["standard", "lowercase", "stop", "kstem"]},
+                "tag_analyzer": {"tokenizer" : "whitespace", "filter" : ["standard", "lowercase", "stop", "kstem"]}
               }
             }
           }
@@ -1718,43 +1736,6 @@ class ESDatabase:
         # information in related collections (feed, user). Since elasticsearch
         # doesn't have joins, we have to index the mongo feed and user
         # collections in expr_index.
-
-        feed_mapping = {"class_name": {"type": "string",
-                                       "index": "not_analyzed",
-                                       "store": "yes"},
-                        "updated": {"type": "float",
-                                    "store": "yes"},
-                        "created": {"type": "float",
-                                    "store": "yes"},
-                        "entity": {"type": "string",
-                                   "index": "not_analyzed",
-                                   "store": "yes"},
-                        "entity_class": {"type": "string",
-                                         "index": "not_analyzed",
-                                         "store": "yes"},
-                        "initiator": {"type": "string",
-                                      "index": "not_analyzed",
-                                      "store": "yes"},
-                        "initiator_name": {"type": "string",
-                                           "index": "not_analyzed",
-                                           "store": "yes"}}
-
-        user_mapping = {"tags": {"type": "string",
-                                 "index": "analyzed",
-                                 "store": "yes",
-                                 "term_vector": "with_positions_offsets"},
-                        "fullname": {"type": "string",
-                                     "index": "not_analyzed",
-                                     "store": "yes"},
-                        "name": {"type": "string",
-                                 "index": "not_analyzed",
-                                 "store": "yes"}}
-
-        self.conn.put_mapping(doc_type='feed-type', mapping={'properties': feed_mapping},
-                            indices=self.index)
-
-        self.conn.put_mapping(doc_type='user-type', mapping={'properties': user_mapping},
-                            indices=self.index)
 
         feed = self.db.Feed.search({})
 
