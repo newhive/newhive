@@ -81,7 +81,7 @@ class Database:
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            results = self.esdb.paginate(search, limit=limit, start=start,
+            results = self.esdb.paginate(search, limit=limit, at=start,
                                          es_order=es_order,
                                          es_filter=None, fuzzy=fuzzy,
                                          sort='score')
@@ -493,7 +493,7 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_page_esdb(self, limit=40, trending=False, **opts):
+    def feed_page_esdb(self, at=0, limit=40, trending=False, **opts):
         f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr', 'Broadcast', 'Star'])
         f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
         f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
@@ -528,7 +528,7 @@ class User(HasSocial):
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type",
                                            sort="_score,created:desc", size=limit)
-            items = self.db.esdb.esdb_paginate(res, es_type='expr-type', limit=40)
+            items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
         else:
             items = Page()
             for r in res_feed:
@@ -1708,22 +1708,22 @@ class ESDatabase:
             self.update(user, 'user-type', refresh=False)
         self.conn.indices.refresh()
 
-    def paginate(self, search, limit=40, start=0, es_order='_score,views:desc',
+    def paginate(self, search, limit=40, at=0, es_order='_score,views:desc',
                  es_filter=None, sort='score', fuzzy=False):
         if fuzzy:
             res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
-                                    start=start, limit=limit)
+                                    start=at, limit=limit)
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
-                                   start=start, limit=limit)
-        expr_results = self.esdb_paginate(res, es_type='expr-type', start=start, limit=limit)
-        if res._total >= limit:
-            expr_results.next = res[limit-1]._meta[sort]
+                                   start=at, limit=limit)
+        expr_results = self.esdb_paginate(res, es_type='expr-type')
+        if (res._total - at) > limit:
+            expr_results.next = at+limit
         return expr_results
 
-    def esdb_paginate(self, res, es_type, start=0, limit=40):
+    def esdb_paginate(self, res, es_type):
         # convert elasticsearch resultsets to result lists
-        result_ids = [r._meta.id for r in res[start:(start+limit)]]
+        result_ids = [r._meta.id for r in res]
         results = []
         if es_type == 'expr-type':
             col = self.db.Expr
