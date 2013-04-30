@@ -45,7 +45,13 @@
             .info {
                 font-family: Gibson;
                 margin: 20px;
-                .name { font-size: 50px; }
+                .name {
+                    font-size: 50px;
+                    img {
+                        vertical-align: middle;
+                        margin: 0 10px 4px 10px;
+                    }
+                }
                 display: inline-block;
                 width: 500px; height: 222px;
             }
@@ -56,6 +62,10 @@
             height: 300px;
             width: 100%;
         }
+
+        #edit_btn, #mail_btn { width: 44px; height: 44px; }
+        #edit_btn { background-image: asset_url('skin/nav/edit.png'); }
+        #mail_btn { background-image: asset_url('skin/nav/edit.png'); }
     }
 
     #feed {

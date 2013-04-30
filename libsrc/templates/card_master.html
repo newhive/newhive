@@ -15,7 +15,11 @@
       <div class='profile'>
         <img src='{thumb_190}' class='thumb'>
         <div class='info'>
-          <div class='name'>{fullname}</div>
+          <div class='name'>
+            {fullname}
+            {<if user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='edit_btn'></a>{>}
+            {<unless user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='mail_btn'></a>{>}
+          </div>
           <div>meep blurby blurb goes here aoeus thaoesu thaoesu thaoesu thaoesu hasoeuthaosetuasoeth</div>
         </div>
       </div>
