@@ -74,6 +74,8 @@ class Database:
 
         if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
 
+        # todo: put auth specs into elasticsearch searches
+
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
         if search.get('network_trending'):
@@ -506,7 +508,10 @@ class User(HasSocial):
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
         fq = pyes.query.FilteredQuery(match_all_query, f)
 
-        total_limit = 20*limit  # since there may be many feed items for the same expression
+        total_limit = 20*limit  
+        # since there may be many feed items for the same expression
+        # note that with the current pagination, the maximum number of
+        # retrievable feed items is total_limit
 
         res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
                                             doc_types="feed-type",
@@ -526,19 +531,24 @@ class User(HasSocial):
 
             custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)")
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
-                                           doc_types="expr-type",
+                                           doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
             items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
+            if len(items) == limit:
+                items.next = at+limit
         else:
             items = Page()
-            for r in res_feed:
+            new_at = at
+            for r in res_feed[at:]:
+                new_at += 1
                 feed_with_expr[r['entity']].append(r._meta.id)
                 if len(feed_with_expr[r['entity']]) == 1:
                     expr = self.db.Expr.fetch(r['entity'])
-                    items.append(expr)
+                    if expr is not None:
+                        items.append(expr)
                 if len(items) == limit:
+                    items.next = new_at
                     break
-            items = filter(lambda i: i is not None, items)
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
