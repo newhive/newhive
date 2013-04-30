@@ -41,7 +41,8 @@ class Controller(object):
             link_url=abs_url(secure=request.is_secure),
             content_domain=abs_url(domain = config.content_domain),
             content_server_url=abs_url(domain=config.content_domain),
-            secure_content_server_url=abs_url(domain=config.content_domain,secure=True)
+            secure_content_server_url=abs_url(domain=config.content_domain,secure=True),
+            is_secure=request.is_secure
         ) )
 
         authed = auth.authenticate_request(self.db, request, response)
