@@ -59,7 +59,7 @@ class Database:
         self.esdb = ESDatabase(self)
 
     def query(self, q, viewer=None, start=0, limit=40, expr_only=None, fuzzy=False,
-              es_order='_score,views:desc', **args):
+              es_order='_score,updated:desc', **args):
         args['viewer'] = viewer
         args['limit'] = limit
         search = self.parse_query(q)
@@ -1728,7 +1728,7 @@ class ESDatabase:
             self.update(user, 'user-type', refresh=False)
         self.conn.indices.refresh()
 
-    def paginate(self, search, limit=40, at=0, es_order='_score,views:desc',
+    def paginate(self, search, limit=40, at=0, es_order='_score,updated:desc',
                  es_filter=None, sort='score', fuzzy=False):
         if fuzzy:
             res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
