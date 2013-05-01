@@ -33,6 +33,7 @@ def make_routing_rules(url_pattern, endpoint, on_main_domain = True, with_ssl=Tr
 def get_api_endpoints(api):
     routes = Routes.get_routes()
     rules = []
+
     for route_name, route_obj in routes.items():
         # Add page routes (for HTTP and HTTPS)
         for secure in (False, True):
@@ -42,7 +43,9 @@ def get_api_endpoints(api):
                 defaults={'route_name': route_name},
                 host=url_host(secure=secure)
             ))
-        # And API routes
+
+        # And API routes (optional)
+        if not route_obj.get('api_route'): continue
         for secure in (False, True):
             rules.append(Rule(
                 route_obj['api_route'],
@@ -50,6 +53,7 @@ def get_api_endpoints(api):
                 defaults={'json':True, 'route_name': route_name},
                 host=url_host(secure=secure)
             ))
+
     return rules
 
 jinja_env.filters.update({

@@ -17,7 +17,6 @@ define([
             route_info.route_name, route_info), null, routeObj.page);
     }
     o.substituteVariables = function(inStr, routeVars) {
-        var old = inStr;
         for (var routeVar in routeVars) {
             var needle = '<'+routeVar+'>';
             inStr = inStr.replace(needle, routeVars[routeVar]);   

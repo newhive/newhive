@@ -14,7 +14,7 @@ NewHive is your radically simple, DIY self publishing tool." />
   <div id='exprs'></div>
   <script>
 curl(['ui/controller'], function(controller){
-    controller.init_page({{ route_args|json }});
+    controller.init({{ route_args|json }});
 });
   </script>
 {% endblock %}

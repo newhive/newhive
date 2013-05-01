@@ -17,8 +17,9 @@
         <div class='info'>
           <div class='name'>
             {fullname}
-            {<if user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='edit_btn'></a>{>}
-            {<unless user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='mail_btn'></a>{>}
+            {# TODO: make this dependent on how many icons there are instead of who viewer is #}
+            {<unless user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='mail_btn'/></a>{>}
+            {<if user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='edit_btn'/></a>{>}
           </div>
           <div>meep blurby blurb goes here aoeus thaoesu thaoesu thaoesu thaoesu hasoeuthaosetuasoeth</div>
         </div>

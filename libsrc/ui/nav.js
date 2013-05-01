@@ -5,10 +5,7 @@ define([
 ], function(
 	$, lay, context, menu, ui, nav_template
 ) {
-	var refresh_page;
-
-    function render(refresh){
-    	refresh_page = refresh;
+    function render(){
         $('#nav').empty().html(nav_template());
 
         menu('#logo', '#logo_menu');
@@ -49,7 +46,7 @@ define([
 	    		if(user){
 		    		context.user = user;
 					render();
-					refresh_page();
+		    		require(['ui/controller'], function(ctrl){ ctrl.refresh() });
 		    	}
 		    	else $('.login.error').removeClass('hide');
 	    	});
@@ -66,7 +63,7 @@ define([
     	$.post('/api/user/logout', '', function(){
     		context.user.logged_in = false;
     		render();
-    		refresh_page();
+    		require(['ui/controller'], function(ctrl){ ctrl.refresh() });
     	});
     }
     

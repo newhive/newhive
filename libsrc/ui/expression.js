@@ -1,5 +1,6 @@
 define(['browser/layout',
-        'browser/jquery'], function(layout, $) {
+        'browser/jquery',
+        'server/context'], function(layout, $, context) {
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
@@ -75,26 +76,35 @@ define(['browser/layout',
 
             if( ! o.initialized ){
                 o.initialized = true;
-                o.init_content();
+                // o.init_content();
             }
 
+            // $.each(Hive.expr.apps, function(i, app){
+            //     if (app.type == "hive.html") {
+            //         var element = $('#app' + (app.id || app.z));
+            //         if (!element.html()){
+            //             element.html(app.content);
+            //         }
+            //     }
+            // });
+            
+            $('.hive_html').each(function(i, div) {
+                var $div = $(div);
+                if ($div.html() != '') return;
+                $div.html($div.attr('data-content'));
+            });
+            
             layout.place_apps();
 
-            $.each(Hive.expr.apps, function(i, app){
-                if (app.type == "hive.html") {
-                    var element = $('#app' + (app.id || app.z));
-                    if (!element.html()){
-                        element.html(app.content);
-                    }
-                }
-            });
-
-            update_targets();
+            // update_targets();
             o.layout_parent();
         };
-
         o.hide = function(){
-            $('.happ.hive_html').html('');
+            $('.hive_html').each(function(i, div) {
+                var $div = $(div);
+                $div.attr('data-content',$div.html());
+                $div.html('');
+            });
         };
 
         return o;
@@ -103,7 +113,8 @@ define(['browser/layout',
     return {
         'initExpression': function() {
             $(Hive.Page.init);
-            layout.place_apps();
+            Hive.Page.show();
+            // layout.place_apps();
         }
     };
 });

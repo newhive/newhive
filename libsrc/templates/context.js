@@ -18,13 +18,11 @@ define([
             var attributes = [ ['data-route-name', route_name] ],
                 href = ApiRoutes[route_name]['page_route'],
                 api = ApiRoutes[route_name]['api_route'];
+            attributes.push(['href',
+                routing.substituteVariables(href, route_args, true)]);
+            if(api) attributes.push(['data-api-path',
+                routing.substituteVariables(api, route_args, true)]);
             
-            api = routing.substituteVariables(api, route_args, true);
-            href = routing.substituteVariables(href, route_args, true);
-            //if(base_url.slice(-1) == '/') base_url = base_url.slice(0, -1);
-            attributes.push(['href', href]);
-            attributes.push(['data-api-path', api]);
-
             var attributes_str = attributes.map(function(attribute_pair) {
                 return attribute_pair[0] + '="' + attribute_pair[1] + '"';
             }).join(' ');

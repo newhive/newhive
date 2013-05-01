@@ -29,6 +29,8 @@
     },
     "profile_edit": {
         "page_route": "/<owner_name>/profile/edit",
+        "controller": "community",
+        "method": "empty",
         "client_method": "profile_edit"
     },
     "view_expr": {
@@ -36,6 +38,6 @@
         "api_route": "/api/expr/<id>",
         "controller": "community",
         "method": "expr",
-        "client_method": "view_expr"
+        "client_method": "expr"
     }
 }

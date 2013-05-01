@@ -57,6 +57,9 @@ class Community(Controller):
             'title': expr['title'],
         }
 
+    def empty(self, tdata, request):
+        return { 'page_data': {} }
+
     def dispatch(self, handler, request, json=False, **kwargs):
         (tdata, response) = self.pre_process(request)
         query = getattr(self, handler, None)
