@@ -65,11 +65,12 @@ class Database:
         search = self.parse_query(q)
 
         # substitute network with featured when not logged in
-        if not viewer and (search.get('network') or search.get('network_trending')):
+        if not viewer and search.get('network'):
             search['featured'] = True
             del search['network']
+        if not viewer and search.get('network_trending'):
+            search['featured'] = True
             del search['network_trending']
-
         spec = {}
 
         if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
@@ -78,7 +79,7 @@ class Database:
 
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
-        if search.get('network_trending'):
+        elif search.get('network_trending'):
             results, grouped_feed = viewer.feed_page_esdb(trending=True)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
@@ -120,6 +121,7 @@ class Database:
                 if pattern[1] == 'All': search['all'] = True
                 elif pattern[1] == 'Featured': search['featured'] = True
                 elif pattern[1] == 'Network': search['network'] = True
+                elif pattern[1] == 'Network_trending': search['network_trending'] = True
                 elif pattern[1] == 'Public': search['auth'] = 'public' 
                 elif pattern[1] == 'Private': search['auth'] = 'password'
                 elif pattern[1] == 'Activity': search['activity'] = True
@@ -127,6 +129,10 @@ class Database:
                 elif pattern[1] == 'Listeners': search['listeners'] = True
                 else: search['tags'].append( pattern[1].lower() )
             else: search['text'].append( pattern[1].lower() )
+
+        for k in ['text', 'tags', 'phrases']:
+            if len(search[k]) == 0:
+                del search[k]
 
         return search
 
@@ -1618,16 +1624,16 @@ class ESDatabase:
 
         phrase_clauses = []
 
-        if len(search['text']) != 0:
+        if search.get('text'):
             text_clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text']), analyzer='default', boost=2, operator="and"))
-        if len(search['tags']) != 0:
+        if search.get('tags'):
             text_clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer='tag_analyzer', boost=5, operator="and"))
 
         if len(text_clauses) != 0:
             q1 = pyes.query.BoolQuery(must=text_clauses, boost=1)
             clauses.append(q1)
 
-        for p in search['phrases']:
+        for p in search.get('phrases',[]):
             phrase_clauses.append(pyes.query.TextQuery('text', p, type="phrase", analyzer='simple', boost=5))
             phrase_clauses.append(pyes.query.TextQuery('title', p, type="phrase", analyzer='simple', boost=7))
 
@@ -1658,7 +1664,7 @@ class ESDatabase:
 
     def search_fuzzy(self, search, es_order, es_filter, start, limit):
         # typo-tolerant searches. only works for text/tags, not usernames.
-        string = ' '.join(search['text'] + search['phrases'] + search['tags'])
+        string = ' '.join(search.get('text',[]) + search.get('phrases',[]) + search.get('tags',[]))
         q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
         results = self.conn.search(q, indices=self.index,
                                    doc_types="expr-type", sort=es_order,
@@ -1737,8 +1743,9 @@ class ESDatabase:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
                                    start=at, limit=limit)
         expr_results = self.esdb_paginate(res, es_type='expr-type')
-        if (res._total - at) > limit:
-            expr_results.next = at+limit
+        if res._total:
+            if (res._total - at) > limit:
+                expr_results.next = at+limit
         return expr_results
 
     def esdb_paginate(self, res, es_type):
