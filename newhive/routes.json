@@ -27,6 +27,10 @@
         "method": "expressions_private",
         "client_method": "profile_private"
     },
+    "profile_edit": {
+        "page_route": "/<owner_name>/profile/edit",
+        "client_method": "profile_edit"
+    },
     "view_expr": {
         "page_route": "/<owner_name>/<expr_name>",
         "api_route": "/api/expr/<id>",

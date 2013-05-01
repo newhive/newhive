@@ -13,22 +13,8 @@ NewHive is your radically simple, DIY self publishing tool." />
   <div id='site'></div>
   <div id='exprs'></div>
   <script>
-curl([
-    'json!ui/routes.json',
-    'ui/controller',
-    'ui/util',
-    'ui/routing',
-    'ui/nav',
-    'server/context'
-], function(routes, controller, ui_util, ui_routing, nav, context) {
-    // reduce to single function call to ui/controller.dispatch
-    
-    // Bootstrap community page with first set of cards.
-    var route = routes[{{ route_args.route_name|json }}];
-    controller.dispatch(route.client_method, context);
-    ui_util.wrapLinks();
-    ui_routing.registerState({{ route_args|json }});
-    nav.render();
+curl(['ui/controller'], function(controller){
+    controller.init_page({{ route_args|json }});
 });
   </script>
 {% endblock %}

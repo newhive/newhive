@@ -1,0 +1,21 @@
+<div id='header' class='split'>
+</div>
+{<with profile}
+  <div id='user_header' class='header'>
+    {<if profile_bg}
+      <label for='file'
+        style='background-image:url("{profile_bg}")'
+        class='background'/>
+    {>}
+    <div class='profile'>
+      <img src='{thumb_190}' class='thumb'>
+      <div class='info'>
+        <div class='name'>{fullname}</div>
+        <div>meep blurby blurb goes here aoeus thaoesu thaoesu thaoesu thaoesu hasoeuthaosetuasoeth</div>
+      </div>
+    </div>
+    <form id='profile_edit' class='hide'>
+      <input type='file' name='file' id='file'>
+    </form>
+  </div>
+{>}

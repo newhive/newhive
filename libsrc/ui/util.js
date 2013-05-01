@@ -1,9 +1,6 @@
 define([
     'browser/jquery',
-    'json!ui/routes.json',
-    'ui/controller',
-    'ui/routing'
-], function($, ApiRoutes, controller, routing){
+], function($){
     var main = {};
 
     main.add_hovers = function(){
@@ -32,61 +29,60 @@ define([
         }
     };
 
-    main.wrapLinks = function() {
-        // If we don't support pushState, fall back on default link behavior.
-        if (!window.history && window.history.pushState) return;
-        $('body').on('click', '[data-route-name]', function(e) {
-            var anchor = $(e.target).closest('[data-route-name]'),
-                route_name = anchor.attr('data-route-name'),
-                route_obj = ApiRoutes[route_name],
-                page_state = {
-                    page: anchor.attr('href'),
-                    api: anchor.attr('data-api-path'),
-                    method: route_obj.client_method
-                }
-            ;
-            e.preventDefault();
-            navToRoute(page_state);
-            return false;
-        });
-
-        // TODO: Bind this event with jquery?
-        window.onpopstate = function(e) {
-            if (!e.state) return;
-            renderRoute(e.state);
-        };
-
-        function fetchRouteData(page_state, callback) {
-            var callback = callback || function(){};
-            api_call = {
-                method: 'get',
-                url: page_state.api.toString(),
-                dataType: 'json',
-                success: function(data) {
-                    controller.dispatch(page_state.method, data);
-                    callback();
-                }
-            };
-            $.ajax(api_call);
-        }
-
-        function navToRoute(page_state) {
-            renderRoute(page_state, function() {
-                history.pushState(page_state, null, page_state.page);
-            });
-        }
-
-        function renderRoute(page_state, callback) {
-            if (!callback) callback = function(){};
-            fetchRouteData(page_state, callback);
-        }
-    };
-
     return main;
 });
 
 // TODO: massive cleanup of all below
 (function(){
+    function asyncUpload(opts) {
+        var target, form, opts = $.extend({
+            json : true, file_name : 'file', multiple : false, action: '/'
+            , start : noop, success : noop, error: noop, input_click: true
+            , data : { action : opts.post_action || 'file_create' } 
+        }, opts);
+
+        var onload = function() {
+            var frame = target.get(0);
+            if(!frame.contentDocument || !frame.contentDocument.body.innerHTML) return;
+            var resp = $(frame.contentDocument.body).text();
+            if(opts.json) {
+                try{
+                    resp = JSON.parse(resp);
+                } catch (e) {
+                    // JSON parsing will fail if server returns a 500
+                    // Suppress this and call the error callback
+                    opts.error(resp);
+                }
+                if(!opts.multiple){ resp = resp[0]; }
+            }
+            opts.success(resp);
+            form.remove();
+        }
+
+        var tname = 'upload' + Math.random();
+        form = $('<form>').css({ position: 'absolute', left: -1000 }).addClass('async_upload')
+            .attr({ method: 'POST', target: tname, action: opts.action, enctype: 'multipart/form-data' });
+        target = $("<iframe style='position : absolute; left : -1000px'></iframe>")
+            .attr('name', tname).appendTo(form).load(onload);
+        var input = $("<input type='file'>").attr('name', opts.file_name)
+            .change(function() { opts.start(); form.submit() }).appendTo(form);
+        Hive.profile_upload_input = input;
+        if(opts.multiple) { input.attr('multiple', 'multiple'); }
+        for (p in opts.data) {
+            $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
+        }
+        form.appendTo(document.body);
+        // It's a mystery why this timout is needed to make the upload dialog appear on some machines
+        if (opts.input_click) setTimeout(function() { input.click(); }, 50);
+        return form;
+    }
+
+    function asyncSubmit(form, callback, opts) {
+        var opts = $.extend({ dataType : 'text' }, opts);
+        var url = opts.url || $(form).attr('action') || server_url;
+        $.post(url, $(form).serialize(), callback, opts.dataType);
+        return false;
+    }
 
     /*** puts alt attribute of input fields in to value attribute, clears
      * it when focused.

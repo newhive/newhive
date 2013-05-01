@@ -1,10 +1,14 @@
 define([
-    'browser/jquery', 'browser/layout', 'server/context', 'ui/controller',
-    'ui/menu', 'ui/util', 'sj!templates/nav.html', 'sj!templates/login_form.html'
+    'browser/jquery', 'browser/layout', 'server/context',
+    'ui/menu', 'ui/util', 'sj!templates/nav.html',
+    'sj!templates/login_form.html'
 ], function(
-	$, layout, context, controller, menu, ui, nav_template, login_template
+	$, lay, context, menu, ui, nav_template
 ) {
-    function render(){
+	var refresh_page;
+
+    function render(refresh){
+    	refresh_page = refresh;
         $('#nav').empty().html(nav_template());
 
         menu('#logo', '#logo_menu');
@@ -28,12 +32,12 @@ define([
 
         ui.add_hovers();
 
-        setTimeout(nav_layout, 100);
-        $(window).resize(nav_layout);
+        setTimeout(layout, 100);
+        $(window).resize(layout);
     }
 
-    function nav_layout(){
-    	layout.center($('#nav .center'), $('#nav'));
+    function layout(){
+    	lay.center($('#nav .center'), $('#nav'));
     }
 
     function login(){
@@ -45,7 +49,7 @@ define([
 	    		if(user){
 		    		context.user = user;
 					render();
-					controller.render();
+					refresh_page();
 		    	}
 		    	else $('.login.error').removeClass('hide');
 	    	});
@@ -62,7 +66,7 @@ define([
     	$.post('/api/user/logout', '', function(){
     		context.user.logged_in = false;
     		render();
-    		controller.render();
+    		refresh_page();
     	});
     }
     
@@ -77,6 +81,7 @@ define([
 
     return { 
         render: render,
+        layout: layout,
         set_inverted: set_inverted
     };
 });

@@ -1,10 +1,10 @@
 <form action='{#secure_server#}/api/user/login' method='POST' id='login_form'>
   <div class="field username">
-      <input id='username' type='text' name='username' value='{user.name}' placeholder='Username or email'>
+      <input id='username' type='text' name='username' value='{user.name}' placeholder='username or email'>
       <div class='spacer'></div>
   </div>
   <div class="field password">
-      <input type='password' name='secret' placeholder='Password'><br>
+      <input type='password' name='secret' placeholder='password'><br>
   </div>
   <div class='login error {<unless error.login}hide{>}'>This username / email or password isn't matching :-/</div>
   <div class='spacer'></div>

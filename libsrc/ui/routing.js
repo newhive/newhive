@@ -7,7 +7,7 @@ define([
         return {
             "api": o.substituteVariables(routeObj.api_route, routeFormatVars, true),
             "page": o.substituteVariables(routeObj.page_route, routeFormatVars, true),
-            "method": routeObj.client_method
+            "route_name": routeName
         };
     }
     o.registerState = function(route_info) {

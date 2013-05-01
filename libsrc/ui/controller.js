@@ -1,18 +1,35 @@
 define([
     'browser/jquery',
+    'ui/routing',
+    'ui/page',
+    'ui/nav',
     'server/context',
+    'json!ui/routes.json',
     'sj!templates/card_master.html',
+    'sj!templates/profile_edit.html',
     'sj!templates/expr_card.html',
     'sj!templates/feed_card.html',
     'sj!templates/user_card.html'
-], function($, context, card_template) {
-    var o = {};
+], function($, routing, page, nav, context, routes, card_template, profile_edit_template) {
+    var o = {}, page_data, current_route;
     const ANIM_DURATION = context.ANIM_DURATION || 700;
 
-    o.dispatch = function(method, data){
-        var data = data.page_data || context.page_data;
-        return o[method](data);
+    o.init_page = function(route_args){
+        o.dispatch(route_args.route_name, context);
+        wrapLinks();
+        routing.registerState(route_args);
+        nav.render(o.refreh);
+        $(window).resize(o.layout);
+        o.layout();
     };
+
+    o.dispatch = function(route_name, data){
+        var route = routes[route_name];
+        current_route = route_name;
+        page_data = data;
+        return o[route.client_method](data.page_data);
+    };
+    o.refresh = function(){ o.dispatch(current_route, page_data) };
 
     o.expr_detail = function(data){
         render_site(data);
@@ -28,106 +45,60 @@ define([
         expr_column();
     };
 
+    o.profile_edit = function(data){
+         
+    };
+
     o.profile_private = function(data){
         data.page_data.profile.sub_heading = 'Private';
         render_site(data);
         expr_column();
     };
     
-    o.view_expr = function(page_data){
-        show_feed(false);
-        display_expr(page_data.expr_id);
-        invert_nav(true);
-    };
-    
-    function display_expr(expr_id) {
-        var $contentFrame = $('#expr_' + expr_id);
-        if ($contentFrame.length == 0) {
-            // Create new content frame
-            var contentFrameURL = (context.is_secure ? context.secure_content_server_url : content_server_url) + expr_id;
-            $contentFrame = $('<iframe class="expr expr-visible">');
-            $contentFrame.attr('src',  contentFrameURL);
-            $contentFrame.attr('id','expr_' + expr_id);
-            $('#exprs').append($contentFrame);
-        }
-        else {
-            $contentFrame.addClass('expr-visible');
-            $contentFrame.removeClass('expr-hidden');
-        }
-        $contentFrame.css('top',-$contentFrame.height() + 'px');
-        $contentFrame.animate({
-            top: "0"
-        },{
-            duration: ANIM_DURATION
-        });
-    }
-    
-    function hide_exprs() {
-        var $contentFrame = $('.expr-visible');
-        if ($contentFrame.length == 1) {
-            $contentFrame.animate({
-                top: -$('.expr-visible').height()
-            },{
-                duration: ANIM_DURATION,
-                complete: function() {
-                    $contentFrame.addClass('expr-hidden');
-                    $contentFrame.removeClass('expr-visible');
+    function wrapLinks() {
+        // If we don't support pushState, fall back on default link behavior.
+        if (!window.history && window.history.pushState) return;
+        $('body').on('click', '[data-route-name]', function(e) {
+            var anchor = $(e.target).closest('[data-route-name]'),
+                route_name = anchor.attr('data-route-name'),
+                route_obj = routes[route_name],
+                page_state = {
+                    page: anchor.attr('href'),
+                    api: anchor.attr('data-api-path'),
+                    route_name: route_name
                 }
-            });
-        }
-    }
-
-    function render_site(page_data){
-        show_feed(true);
-        hide_exprs();
-        $('#site').empty().append(card_template(page_data));
-        // replace_or_append(card_template(page_data), '#feed', '#site');
-        invert_nav(false);
-    }
-
-    function show_feed(_show) {
-        if (_show) {
-            $('#site').css('display','block');
-        }
-        else {
-            $('#site').css('display','none');            
-        }
-    }
-
-    function invert_nav(inverted) {
-        if (inverted) {
-            $('#nav').animate({
-                'top': ($(document.body).height() - $('#nav').height())
-            }, {
-                duration: ANIM_DURATION
-            });
-        }
-        else {
-            $('#nav').animate({
-                'top': '0'
-            }, {
-                duration: ANIM_DURATION
-            });
-        }
-    }
-
-    function expr_column(){
-        // TODO: put actual rendering code here?
-
-        // fix background spacing on line breaks
-        $('.card .words').each(function(){
-            var e = $(this);
-            if(e.hasClass('spaced')) return;
-            e.html(e.html().replace(/ |$/g, '&nbsp; '));
-            e.addClass('spaced');
+            ;
+            e.preventDefault();
+            navToRoute(page_state);
+            return false;
         });
-    }
 
-    // function replace_or_append(e, replace, append){
-    //     var replace = $(replace);
-    //     if(replace.length) replace.replaceWith(e);
-    //     else $(append).append(e);
-    // }
+        // TODO: Bind this event with jquery?
+        window.onpopstate = function(e) {
+            if (!e.state) return;
+            fetchRouteData(e.state);
+        };
+
+        function fetchRouteData(page_state, callback) {
+            var callback = callback || function(){};
+            api_call = {
+                method: 'get',
+                url: page_state.api.toString(),
+                dataType: 'json',
+                success: function(data) {
+                    o.dispatch(page_state.route_name, data);
+                    callback();
+                }
+            };
+            $.ajax(api_call);
+        }
+
+        function navToRoute(page_state) {
+            fetchRouteData(page_state, function() {
+                history.pushState(page_state, null, page_state.page);
+            });
+        }
+    };
 
     return o;
 });
