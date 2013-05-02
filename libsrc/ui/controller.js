@@ -1,10 +1,11 @@
 define([
     'browser/jquery',
     'ui/page',
+    'ui/nav',
     'server/context',
     'json!ui/routes.json',
     'ui/routing'
-], function($, page, context, routes, routing) {
+], function($, page, nav, context, routes, routing) {
     var o = {}, data, route;
 
     o.init = function(route_args){
@@ -12,6 +13,7 @@ define([
         routing.registerState(route_args);
         page.init(routes[route_args.route_name].client_method);
         o.dispatch(route_args.route_name, context);
+        nav.render(route_args.route_name == 'view_expr');
     };
     o.dispatch = function(route_name, data){
         route = routes[route_name];
@@ -60,6 +62,7 @@ define([
         function navToRoute(page_state) {
             fetchRouteData(page_state, function() {
                 history.pushState(page_state, null, page_state.page);
+                nav.render(page_state.route_name == 'view_expr');
             });
         }
     };
