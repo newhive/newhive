@@ -54,7 +54,7 @@ define([
     	var f = $(this);
     	var json_flag = f.find('[name=json]');
 
-	    // if(location.protocol == 'https:'){
+	    if(location.protocol == 'https:'){
 	    	$.post(f.attr('action'), f.serialize(), function(user){
 	    		if(user){
 		    		context.user = user;
@@ -64,13 +64,13 @@ define([
 		    	else $('.login.error').removeClass('hide');
 	    	});
 	    	return false;
-	    // }
-    	// // can't post between protocols, so pass credentials to site-wide auth
-	    // else{
-	    // 	var here = window.location;
-	    // 	f.attr('action', context.secure_server + here.pathname.slice(1) + here.search);
-	    // 	f.off('submit'); // prevent loop
-	    // }
+	    }
+    	// can't post between protocols, so pass credentials to site-wide auth
+	    else{
+	    	var here = window.location;
+	    	f.attr('action', context.secure_server + here.pathname.slice(1) + here.search);
+	    	f.off('submit'); // prevent loop
+	    }
     }
     function logout(){
     	$.post('/api/user/logout', '', function(){

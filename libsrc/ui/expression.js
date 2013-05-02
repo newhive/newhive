@@ -1,6 +1,7 @@
 define(['browser/layout',
         'browser/jquery',
-        'server/context'], function(layout, $, context) {
+        'server/context',
+        'ui/util'], function(layout, $, context, util) {
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
@@ -96,7 +97,7 @@ define(['browser/layout',
             
             layout.place_apps();
 
-            // update_targets();
+            util.update_targets();
             o.layout_parent();
         };
         o.hide = function(){
