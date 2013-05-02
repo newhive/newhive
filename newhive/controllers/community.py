@@ -3,18 +3,21 @@ from newhive.controllers.base import Controller
 
 class Community(Controller):
     def network_trending(self, tdata, request, username=None, **paging_args):
+        print "username = %s" % username
+        user = self.db.User.named(username)
         return {
             'page_data': {
-                'cards': tdata.user.feed_network(**paging_args),
+                'cards': user.feed_network(**paging_args),
                 'header': ("The Hive", "Trending"),
             },
             'title': "Network - Trending",
         }
 
     def network_recent(self, tdata, request, username=None, **paging_args):
+        user = self.db.User.named(username)
         return {
             'page_data': {
-                "cards": tdata.user.feed_network(**paging_args),
+                "cards": user.feed_network(**paging_args),
                 "header": ("Network", "Recent")
             },
             "title": 'Network - Recent',
@@ -70,7 +73,7 @@ class Community(Controller):
         for k in ['limit', 'order']:
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args
-        passable_keyword_args = dfilter(kwargs, ['owner_name', 'expr_name', 'id'])
+        passable_keyword_args = dfilter(kwargs, ['username', 'owner_name', 'expr_name', 'id'])
         merged_args = dict(passable_keyword_args.items() + pagination_args.items())
 
         context = query(tdata, request, **merged_args)

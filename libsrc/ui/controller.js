@@ -42,7 +42,7 @@ define([
         // TODO: Bind this event with jquery?
         window.onpopstate = function(e) {
             if (!e.state) return;
-            fetchRouteData(e.state);
+            navToRoute(e.state);
         };
 
         function fetchRouteData(page_state, callback) {
