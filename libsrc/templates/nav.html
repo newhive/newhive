@@ -22,10 +22,29 @@
   ><div class='random_btn icon hoverable'></div></a
 
 ><div class='center'
-  ><div id='network_btn' class='text_btn item black_active
+  >{< if nav_view}<div id='network_btn' class='text_btn item black_active
     {<unless user.logged_in}hide{>}'>Network</div
   ><div id='hive_btn' class='text_btn item black_active
-    {<unless user.logged_in}hide{>}'>The Hive</div>
+    {<unless user.logged_in}hide{>}'>The Hive</div>{>}
+    {< if expr_view}
+    <div class='text_btn item black_active {<unless user.logged_in}hide{>}'>
+        <img src='{asset "skin/nav/love.png"}'/>
+    </div>
+    <div class='text_btn item black_active {<unless user.logged_in}hide{>}'>
+        <img src='{asset "skin/nav/republish.png"}'/>
+    </div>
+    <div class='text_btn item black_active {<unless user.logged_in}hide{>}'
+        ><img src='{asset "skin/nav/comment.png"}'/>
+    </div>
+    <div class="text_btn item black_active">
+        <img src='{asset "skin/nav/facebook.png"}'/>
+    </div>
+    <div class="text_btn item black_active">
+        <img src='{asset "skin/nav/twitter.png"}'/>
+    </div>
+    <div class="text_btn item black_active">
+        <img src='{asset "skin/nav/share.png"}'/>
+    </div>{>}
 
   <div id='network_menu' class='menu drawer'>
     <a { get_route_anchor_attrs "network_trending" }><div class='menu_item'>Trending</div></a>

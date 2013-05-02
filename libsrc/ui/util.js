@@ -28,6 +28,25 @@ define([
             return h;
         }
     };
+    
+    main.update_targets = function(){
+        function link_target(i, a) {
+            // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
+            var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
+            var a = $(a), href = a.attr('href') || a.attr('action');
+
+            // Don't change target if it's already set
+            if (a.attr('target')) return;
+
+            if(href && href.indexOf('http') === 0 && !re.test(href)) {
+                a.attr('target', '_blank');
+            } else if (href && href.indexOf('http') === 0 && re.test(href)) {
+                a.attr('target', '_top');
+            }
+        }        
+        $('a, form').each(link_target);
+    }
+    
 
     return main;
 });
@@ -88,47 +107,47 @@ define([
      * it when focused.
      * Adds hover events for elements with class='hoverable'
      * ***/
-    $(function () {
-
-        // Cause external links and forms to open in a new window
-        update_targets();
-
-        if (! Modernizr.touch) {
-            $(window).resize(function(){
-                place_apps();
-            });
-        }
-        place_apps();
-
-        dialog_actions = {
-            comments: function(){ $('#comment_btn').click(); }
-            , email_invites: function(){ $('#hive_menu .email_invites').click(); }
-        };
-        if (urlParams.loadDialog) {
-            action = dialog_actions[urlParams.loadDialog];
-            if (action) {
-                action();
-            } else {
-                loadDialog("?dialog=" + urlParams.loadDialog);
-            }
-        }
-
-        if( dialog_to_show ){ showDialog(dialog_to_show.name, dialog_to_show.opts); };
-        if (new_fb_connect) {
-            _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
-            showDialog('#dia_fb_connect_landing');
-        };
-
-        var dia_referral = $('#dia_referral');
-        dia_referral.find('input[type=submit]').click(function(){
-            asyncSubmit(dia_referral.find('form'), function(){
-                dia_referral.find('.btn_dialog_close').click();
-                showDialog('#dia_sent_invites_thanks');
-            });
-            return false;
-        });
-    });
-    $(window).load(function(){setTimeout(place_apps, 10)}); // position background
+    // $(function () {
+    // 
+    //     // Cause external links and forms to open in a new window
+    //     update_targets();
+    // 
+    //     if (! Modernizr.touch) {
+    //         $(window).resize(function(){
+    //             place_apps();
+    //         });
+    //     }
+    //     place_apps();
+    // 
+    //     dialog_actions = {
+    //         comments: function(){ $('#comment_btn').click(); }
+    //         , email_invites: function(){ $('#hive_menu .email_invites').click(); }
+    //     };
+    //     if (urlParams.loadDialog) {
+    //         action = dialog_actions[urlParams.loadDialog];
+    //         if (action) {
+    //             action();
+    //         } else {
+    //             loadDialog("?dialog=" + urlParams.loadDialog);
+    //         }
+    //     }
+    // 
+    //     if( dialog_to_show ){ showDialog(dialog_to_show.name, dialog_to_show.opts); };
+    //     if (new_fb_connect) {
+    //         _gaq.push(['_trackEvent', 'fb_connect', 'connected']);
+    //         showDialog('#dia_fb_connect_landing');
+    //     };
+    // 
+    //     var dia_referral = $('#dia_referral');
+    //     dia_referral.find('input[type=submit]').click(function(){
+    //         asyncSubmit(dia_referral.find('form'), function(){
+    //             dia_referral.find('.btn_dialog_close').click();
+    //             showDialog('#dia_sent_invites_thanks');
+    //         });
+    //         return false;
+    //     });
+    // });
+    // $(window).load(function(){setTimeout(place_apps, 10)}); // position background
         
     var urlParams = {};
     (function () {
@@ -138,25 +157,6 @@ define([
             urlParams[d(pair[0])] = d(pair[1]);
         });
     })();
-
-    function update_targets(){
-        $('a, form').each(link_target);
-    }
-    function link_target(i, a) {
-        // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
-        var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
-        var a = $(a), href = a.attr('href') || a.attr('action');
-
-        // Don't change target if it's already set
-        if (a.attr('target')) return;
-
-        if(href && href.indexOf('http') === 0 && !re.test(href)) {
-            a.attr('target', '_blank');
-        } else if (href && href.indexOf('http') === 0 && re.test(href)) {
-            a.attr('target', '_top');
-        }
-    }
-
 
     function hovers_active(state){
         hover_add.disabled = !state;

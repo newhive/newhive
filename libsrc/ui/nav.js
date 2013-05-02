@@ -5,17 +5,30 @@ define([
 ], function(
 	$, lay, context, menu, ui, nav_template
 ) {
-    function render(){
-        $('#nav').empty().html(nav_template());
-
+    // Is the nav currently in expr mode?
+    var nav_expr_mode = false;
+    // Has the nav been rendered for the first time?
+    var rendered = false;
+    function render(expr_view){
+        if (rendered && nav_expr_mode == Boolean(expr_view)) return;
+        rendered = true;
+        nav_expr_mode = Boolean(expr_view);
+        
+        $('#nav').empty().html(nav_template({
+            'expr_view': Boolean(expr_view),
+            'nav_view': !Boolean(expr_view)
+        }));
+        
         menu('#logo', '#logo_menu');
 
         $('#logout_btn').click(logout);
 		// user SHOULD always exist, in fact, login_btn will always exist after minor refactor
         if(!context.user.logged_in) menu('#login_btn', '#login_menu');
 
-        menu('#network_btn', '#network_menu');
-        menu('#hive_btn', '#hive_menu');
+        if (!expr_view) {
+            menu('#network_btn', '#network_menu');
+            menu('#hive_btn', '#hive_menu');   
+        }
 
         $('#login_form').submit(login);
         if(!context.user.logged_in){
