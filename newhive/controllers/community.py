@@ -3,6 +3,7 @@ from newhive.controllers.base import Controller
 
 class Community(Controller):
     def network_trending(self, tdata, request, username=None, **paging_args):
+        print "username = %s" % username
         user = self.db.User.named(username)
         return {
             'page_data': {
