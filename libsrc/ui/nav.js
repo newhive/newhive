@@ -1,22 +1,16 @@
 define([
     'browser/jquery', 'browser/layout', 'server/context',
-    'ui/menu', 'ui/util', 'sj!templates/nav.html',
+    'ui/menu', 'ui/util', 'require', 'sj!templates/nav.html',
     'sj!templates/login_form.html'
 ], function(
-	$, lay, context, menu, ui, nav_template
+	$, lay, context, menu, ui, require, nav_template
 ) {
     // Is the nav currently in expr mode?
     var nav_expr_mode = false;
-    // Has the nav been rendered for the first time?
-    var rendered = false;
-    function render(expr_view){
-        if (rendered && nav_expr_mode == Boolean(expr_view)) return;
-        rendered = true;
-        nav_expr_mode = Boolean(expr_view);
-        
+    function render(){        
         $('#nav').empty().html(nav_template({
-            'expr_view': Boolean(expr_view),
-            'nav_view': !Boolean(expr_view)
+            'expr_view': nav_expr_mode,
+            'nav_view': !nav_expr_mode
         }));
         
         menu('#logo', '#logo_menu');
@@ -25,7 +19,7 @@ define([
 		// user SHOULD always exist, in fact, login_btn will always exist after minor refactor
         if(!context.user.logged_in) menu('#login_btn', '#login_menu');
 
-        if (!expr_view) {
+        if (!nav_expr_mode) {
             menu('#network_btn', '#network_menu');
             menu('#hive_btn', '#hive_menu');   
         }
@@ -63,7 +57,7 @@ define([
 		    	}
 		    	else $('.login.error').removeClass('hide');
 	    	});
-	    	return false;
+            return false;
 	    }
     	// can't post between protocols, so pass credentials to site-wide auth
 	    else{
@@ -76,7 +70,7 @@ define([
     	$.post('/api/user/logout', '', function(){
     		context.user.logged_in = false;
     		render();
-    		require(['ui/controller'], function(ctrl){ ctrl.refresh() });
+    		require(['ui/controller'], function(ctrl){ ctrl.refresh(); });
     	});
     }
     
@@ -88,11 +82,21 @@ define([
             $('#nav').css('bottom','');
         }
     }
+    
+    // If true, the navbar is in expression view mode.
+    // Calls render if the new mode is different.
+    function set_expr_view(_expr_view) {
+        if (Boolean(_expr_view) != nav_expr_mode) {
+            render();
+        }
+        nav_expr_mode = Boolean(_expr_view);
+    }
 
     return { 
         render: render,
         layout: layout,
-        set_inverted: set_inverted
+        set_inverted: set_inverted,
+        set_expr_view: set_expr_view
     };
 });
 
@@ -175,5 +179,4 @@ define([
 	    logAction('share', data);
 	    _gaq.push(['_trackEvent', 'share', service]);
 	};
-
 });

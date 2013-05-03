@@ -13,14 +13,14 @@ define([
         routing.registerState(route_args);
         page.init(routes[route_args.route_name].client_method);
         o.dispatch(route_args.route_name, context);
-        nav.render(route_args.route_name == 'view_expr');
+        nav.set_expr_view(page_state.route_name == 'view_expr');
     };
-    o.dispatch = function(route_name, data){
+    o.dispatch = function(route_name, _data){
         route = routes[route_name];
-        data = data;
+        data = _data;
         page.render(route.client_method, data);
     };
-    o.refresh = function(){ o.dispatch(route, data) };
+    o.refresh = function(){ o.dispatch(route.method, data) };
     
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
@@ -51,8 +51,9 @@ define([
                 method: 'get',
                 url: page_state.api.toString(),
                 dataType: 'json',
-                success: function(data) {
-                    o.dispatch(page_state.route_name, data);
+                success: function(_data) {
+                    o.dispatch(page_state.route_name, _data);
+                    // Cache the returned data for later refreshing
                     callback();
                 }
             };
@@ -62,7 +63,7 @@ define([
         function navToRoute(page_state) {
             fetchRouteData(page_state, function() {
                 history.pushState(page_state, null, page_state.page);
-                nav.render(page_state.route_name == 'view_expr');
+                nav.set_expr_view(page_state.route_name == 'view_expr');
             });
         }
     };
