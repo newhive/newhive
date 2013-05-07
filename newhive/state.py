@@ -344,16 +344,6 @@ class Entity(dict):
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
 
-    def get_snapshot(self, size="big"):
-        def take_snapshot():
-            Snapshots().take_snapshots(self.get('_id'))
-        if not self.get('snapshot') or self.get('updated') > self.get('snapshot'):
-            return take_snapshot()
-        filename = '_'.join(expr_id,self.get('snapshot'),size)
-        s3_url = "https://%s.s3.amazonaws.com/%s" % (config.asset_bucket,filename)
-        return s3_url
-
-
 # Common code between User and Expr
 class HasSocial(Entity):
     @property
@@ -1134,6 +1124,15 @@ class Expr(HasSocial):
     @property
     def tag_string(self):
         return ' '.join(["#" + tag for tag in self.get('tags_index', [])])
+    
+    def get_snapshot(self, size="big"):
+        def take_snapshot():
+            Snapshots().take_snapshots(self.get('_id'))
+        if not self.get('snapshot') or self.get('updated') > self.get('snapshot'):
+            return take_snapshot()
+        filename = '_'.join(expr_id,self.get('snapshot'),size)
+        s3_url = "https://%s.s3.amazonaws.com/%s" % (config.asset_bucket,filename)
+        return s3_url
 
 
 def generate_thumb(file, size):
