@@ -16,6 +16,7 @@ from oauth2client.client import OAuth2Credentials
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 import pyes
 from collections import defaultdict
+from snapshots import Snapshots
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
@@ -342,6 +343,15 @@ class Entity(dict):
             return False
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
+
+    def get_snapshot(self, size="big"):
+        def take_snapshot():
+            Snapshots().take_snapshots(self.get('_id'))
+        if not self.get('snapshot') or self.get('updated') > self.get('snapshot'):
+            return take_snapshot()
+        filename = '_'.join(expr_id,self.get('snapshot'),size)
+        s3_url = "https://%s.s3.amazonaws.com/%s" % (config.asset_bucket,filename)
+        return s3_url
 
 
 # Common code between User and Expr
