@@ -35,8 +35,6 @@ def test_snapshot():
 def xvfb_running():
     sp = Popen(['xdpyinfo','-display',':99'])
     return sp.returncode == 0
-        
-['xdpyinfo', '-display', ':0', '>/dev/null 2>&1','&&', 'echo', '"In use"', '||', 'echo', '"Free"']
 
 
 def init_xvfb():
