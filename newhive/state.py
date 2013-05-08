@@ -897,6 +897,23 @@ class Expr(HasSocial):
         def featured(self, limit):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
+            
+    def take_snapshots(self):
+        snapshotter = Snapshots()
+        snapshot_time = datetime.now().strftime("%s")
+        filename_base = '_'.join((self.get('_id'),snapshot_time))
+        snapshotter.take_snapshot(self.get('_id'),dimensions=(715,430),out_filename=filename_base + '_big.png')
+        snapshotter.take_snapshot(self.get('_id'),dimensions=(390,235),out_filename=filename_base + '_small.png')
+        self['snapshot_time'] = snapshot_time
+        self.save()
+
+    @property
+    def snapshot(self, size="big"):
+        if not self.get('snapshot_time') or self.get('updated') > self.get('snapshot'):
+            self.take_snapshots()
+        filename = '_'.join((self.get('_id'),self.get('snapshot_time'),size))
+        s3_url = "https://%s.s3.amazonaws.com/%s" % (config.asset_bucket,filename)
+        return s3_url
 
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
@@ -1124,16 +1141,6 @@ class Expr(HasSocial):
     @property
     def tag_string(self):
         return ' '.join(["#" + tag for tag in self.get('tags_index', [])])
-    
-    def get_snapshot(self, size="big"):
-        def take_snapshot():
-            Snapshots().take_snapshots(self.get('_id'))
-        if not self.get('snapshot') or self.get('updated') > self.get('snapshot'):
-            return take_snapshot()
-        filename = '_'.join(expr_id,self.get('snapshot'),size)
-        s3_url = "https://%s.s3.amazonaws.com/%s" % (config.asset_bucket,filename)
-        return s3_url
-
 
 def generate_thumb(file, size):
     # resize and crop image to size tuple, preserving aspect ratio, save over original
