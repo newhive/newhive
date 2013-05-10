@@ -11,7 +11,7 @@
         "api_route": "/api/feed/<username>/network_recent",
         "controller": "community",
         "method": "network_recent",
-        "client_method": "columns"
+        "client_method": "grid"
     },
     "expressions_public": {
         "page_route": "/<owner_name>/profile",

@@ -7,21 +7,25 @@ define([
     'sj!templates/expr_card.html',
     'sj!templates/feed_card.html',
     'sj!templates/user_card.html'
-], function($, nav, context, card_template, profile_edit_template) {
+], function($, nav, context, master_template, profile_edit_template, card_template) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
-        context.secure_content_server_url : context.content_server_url;
-    const ANIM_DURATION = 700;
+        context.secure_content_server_url : context.content_server_url,
+        layout;
+    const ANIM_DURATION = 700, GRID_WIDTH = 410;
 
-    o.init = function(method){
+    o.init = function(){
         nav.render(context.page_data);
-        o.render(method, context);
         $(window).resize(layout);
         layout();
     };
     o.render = function(method, data){
-        expr_page = method == 'expr';
+        expr_page = (method == 'expr');
         if(!expr_page) hide_exprs();
-        return o[method](data.page_data);
+        var page_data = data.page_data;
+        page_data['layout_' + method] = true;
+        layout = page_data.layout = method;
+        if(o[method]) o[method](page_data);
+        else render_site(page_data);
     };
 
     // route.client_method definitions
@@ -29,9 +33,24 @@ define([
         render_site(data);
         expr_column();
     };
-    o.columns = function(data){
-        render_site(data);
-    };
+
+    // o.grid = function(data){
+    //     add_cards = function(cards){
+    //         out = '';
+    //         for(var i = 0; i < cards.length;){
+    //             out += '<tr>';
+    //             for(var j = 0; j < 3; j++){
+    //                 out += '<td>' + card_template(cards[i]) + '</td>';
+    //                 i++;
+    //             }
+    //             out += '</tr>';
+    //         }
+    //         return out;
+    //     };
+    //     data.grid = true;
+    //     render_site(data);
+    // };
+
     o.profile = function(data){
         render_site(data);
         expr_column();
@@ -44,6 +63,7 @@ define([
         render_site(data);
         expr_column();
     };
+
     o.expr = function(page_data){
         display_expr(page_data.expr_id);
     };
@@ -95,11 +115,13 @@ define([
     }
 
     function render_site(page_data){
-        $('#site').empty().append(card_template(page_data));
+        $('#site').empty().append(master_template(page_data));
     }
 
     function layout(){
         $('#site, #exprs').css('height', $(window).height() - 44);
+        if(layout == 'grid') $('#feed').css('width',
+            Math.floor($(window).width() / GRID_WIDTH) * GRID_WIDTH);
     }
 
     function expr_column(){
@@ -113,6 +135,10 @@ define([
             e.addClass('spaced');
         });
     }
+
+    o.add_to_feed = function(data){
+        $('#feed').append(show_cards(data));
+    };
 
     // function replace_or_append(e, replace, append){
     //     var replace = $(replace);

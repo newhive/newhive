@@ -1,4 +1,14 @@
-<div class='expr card {card_classes}' draggable='false'>
+{<if layout_grid}
+  <div class='title'>{title}</div>
+  <div class='tags hide'>{<for tag_index}{.}{>}</div>
+  <img src="https://dev-1-s0-newhive.s3.amazonaws.com/expr_snapshot_{ id }_small"
+    class="snapshot">
+  <div class='info'>
+    <img class="thumb" src='{owner.thumb_70}'/>
+    <span>by <span class='username'>{owner.name}</span></span>
+  </div>
+{>}
+{<if layout_profile}
   <a { get_route_anchor_attrs "view_expr"
     "id" id  "expr_name" name  "owner_name" owner.name }
   >
@@ -17,4 +27,4 @@
       {<if counts.Comment}<img src='{asset "skin/nav/comment.png"}'/> {counts.Comment}{>}
     </div>
   </div>
-</div>
+{>}

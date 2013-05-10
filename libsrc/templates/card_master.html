@@ -1,7 +1,7 @@
 {<if header}
   <div id='header' class='header'>
     <span class='heading'>{ header.0 }
-      {<if header.1} : {>}{ header.1 }</span>
+      {<if header.1} : { header.1 }{>}</span>
   </div>
 {>}
 {<if profile}
@@ -21,7 +21,7 @@
             {<unless user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='mail_btn'/></a>{>}
             {<if user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='edit_btn'/></a>{>}
           </div>
-          <div>meep blurby blurb goes here aoeus thaoesu thaoesu thaoesu thaoesu hasoeuthaosetuasoeth</div>
+          <div>{about_text}</div>
         </div>
       </div>
       <form id='profile_edit' class='hide'>
@@ -30,10 +30,10 @@
     </div>
   {>}
 {>}
-<div id='feed'>
+<div id='feed' class='{layout}'>
   {<for cards}
-      {<if title}{|templates/expr_card.html}{>}
-      {<if fullname}{|templates/user_card.html}{>}
-      {<if entity_class}{|templates/feed_card.html}{>}
+    <div class='expr card' draggable='false'>
+      {|templates/expr_card.html}
+    </div>
   {>}
 </div>
