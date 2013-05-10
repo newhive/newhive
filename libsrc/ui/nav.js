@@ -7,7 +7,7 @@ define([
 ) {
     // Is the nav currently in expr mode?
     var nav_expr_mode = false;
-    function render(){        
+    function render(){
         $('#nav').empty().html(nav_template({
             'expr_view': nav_expr_mode,
             'nav_view': !nav_expr_mode
@@ -87,9 +87,9 @@ define([
     // Calls render if the new mode is different.
     function set_expr_view(_expr_view) {
         if (Boolean(_expr_view) != nav_expr_mode) {
+            nav_expr_mode = Boolean(_expr_view);
             render();
         }
-        nav_expr_mode = Boolean(_expr_view);
     }
 
     return { 

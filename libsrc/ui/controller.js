@@ -12,10 +12,11 @@ define([
         wrapLinks();
         routing.registerState(route_args);
         page.init();
+        nav.set_expr_view(route_args.route_name == 'view_expr');
         o.dispatch(route_args.route_name, context);
-        nav.set_expr_view(page_state.route_name == 'view_expr');
     };
     o.dispatch = function(route_name, _data){
+        nav.set_expr_view(route_name == 'view_expr');
         route = routes[route_name];
         data = _data;
         page.render(route.client_method, data);
@@ -63,7 +64,6 @@ define([
         function navToRoute(page_state) {
             fetchRouteData(page_state, function() {
                 history.pushState(page_state, null, page_state.page);
-                nav.set_expr_view(page_state.route_name == 'view_expr');
             });
         }
     };

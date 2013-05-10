@@ -31,8 +31,14 @@ def test_snapshot():
         upload_snapshot_to_s3(url.split('/')[-1],asset_bucket)
         
     xvfb.terminate()
-        
     
+def xvfb_running():
+    sp = Popen(['xdpyinfo','-display',':99'])
+    return sp.returncode == 0
+        
+['xdpyinfo', '-display', ':0', '>/dev/null 2>&1','&&', 'echo', '"In use"', '||', 'echo', '"Free"']
+
+
 def init_xvfb():
     xvfb = Popen(["Xvfb", ":99", "-screen", "scrn" ,"1024x768x24"])
     return xvfb
