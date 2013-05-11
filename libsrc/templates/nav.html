@@ -76,11 +76,17 @@
     class='menu_item'>Expressions<div class='count'></div></div></a>
   <a { get_route_anchor_attrs "expressions_private" "owner_name" user.name }><div
     class='menu_item'>Private<div class='count'></div></div></a>
-  <div class='menu_item'>Activity<div class='count'></div></div>
-  <div class='menu_item'>Following</div>
-  <div class='menu_item'>Followers</div>
-  <div class='menu_item'>Loves</div>
-  <div class='menu_item'>Comments</div>
+    <!-- TODO: implement me -->
+  <a { get_route_anchor_attrs "expressions_public" "owner_name" user.name }><div
+    class='menu_item'>Activity<div class='count'></div></div></a>
+  <a { get_route_anchor_attrs "expressions_public" "owner_name" user.name }><div
+    class='menu_item'>Following<div class='count'></div></div></a>
+  <a { get_route_anchor_attrs "expressions_public" "owner_name" user.name }><div
+    class='menu_item'>Followers<div class='count'></div></div></a>
+  <a { get_route_anchor_attrs "expressions_loves" "owner_name" user.name }><div
+    class='menu_item'>Loves<div class='count'></div></div></a>
+  <a { get_route_anchor_attrs "expressions_public" "owner_name" user.name }><div
+    class='menu_item'>Comments<div class='count'></div></div></a>
 </div>
 
 <div id='logo_menu' class='menu drawer'>
