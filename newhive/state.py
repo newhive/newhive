@@ -1,3 +1,4 @@
+import newhive
 import re, pymongo, bson.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
 import operator as op
 from os.path import join as joinpath
@@ -5,7 +6,7 @@ from md5 import md5
 from datetime import datetime
 from lxml import html
 from wsgiref.handlers import format_date_time
-from newhive import social_stats, config
+from newhive import social_stats
 from itertools import ifilter, islice
 import PIL.Image as Img
 from PIL import ImageOps
@@ -36,8 +37,8 @@ class Database:
     def add_collection(self, col):
         pass
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, config=None):
+        config = self.config = config if config else newhive.config
 
         # initialize s3 connection
         if config.aws_id:
@@ -67,8 +68,8 @@ class Database:
         # substitute network with featured when not logged in
         if not viewer and (search.get('network') or search.get('network_trending')):
             search['featured'] = True
-            del search['network']
-            del search['network_trending']
+            search.pop('network', 0)
+            search.pop('network_trending', 0)
 
         spec = {}
 
@@ -134,6 +135,7 @@ class Collection(object):
         self.db = db
         self._col = db.mdb[entity.cname]
         self.entity = entity
+        self.config = db.config
 
     def fetch_empty(self, key, keyname='_id'): return self.find_empty({ keyname : key })
 
@@ -397,7 +399,7 @@ class User(HasSocial):
 
         @property
         def site_user(self):
-            return self.named(config.site_user)
+            return self.named(self.config.site_user)
 
     def __init__(self, *a, **b):
         super(User, self).__init__(*a, **b)
@@ -412,13 +414,13 @@ class User(HasSocial):
 
     def create(self):
         self['name'] = self['name'].lower()
-        self['signup_group'] = config.signup_group
+        self['signup_group'] = self.config.signup_group
         assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, 'Invalid username'
         self.set_password(self['password'])
         self['fullname'] = self.get('fullname', self['name'])
         self['referrals'] = 0
         self['flags'] = {}
-        self['email_subscriptions'] = config.default_email_subscriptions
+        self['email_subscriptions'] = self.config.default_email_subscriptions
         assert self.has_key('referrer')
         self.build_search(self)
         super(User, self).create()
@@ -533,6 +535,7 @@ class User(HasSocial):
                                            sort="created:desc", size=limit)
 
         items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
+        1/0
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
@@ -601,7 +604,7 @@ class User(HasSocial):
 
     def give_invites(self, count):
         self.increment({'referrals':count})
-        self.db.InviteNote.create(self.db.User.named(config.site_user), self, data={'count':count})
+        self.db.InviteNote.create(self.db.User.named(self.config.site_user), self, data={'count':count})
 
     def cmp_password(self, v):
         if not isinstance(v, (str, unicode)): return False
@@ -787,7 +790,7 @@ class User(HasSocial):
 
     @property
     def is_admin(self):
-        return self.get('name') in config.admins
+        return self.get('name') in self.config.admins
 
 
 @Database.register
@@ -796,7 +799,7 @@ class Session(Entity):
 
 
 def media_path(user, name=None):
-    p = joinpath(config.media_path, user['name'])
+    p = joinpath(self.config.media_path, user['name'])
     return joinpath(p, name) if name else p
 
 @Database.register
@@ -846,7 +849,7 @@ class Expr(HasSocial):
 
         def with_url(cls, url):
             """ Convenience utility function not used in production, retrieve Expr from full URL """
-            [(port, user, name)] = re.findall(config.server_name + r'/(:\d+)?(\w+)/(.*)$', url)
+            [(port, user, name)] = re.findall(self.config.server_name + r'/(:\d+)?(\w+)/(.*)$', url)
             return cls.named(user, name)
 
         def page(self, spec, viewer, auth='public', tag=None, sort='updated', **args):
@@ -856,9 +859,10 @@ class Expr(HasSocial):
             paging_args = dfilter(args, ['limit', 'at', 'sort', 'order'])
             paging_args.update(sort=sort)
 
-            spec.update(auth=auth)
-            if auth == 'public':
-                spec.update(password={'$exists': False})
+            if type(spec) == dict:
+                spec.update(auth=auth)
+                if auth == 'public':
+                    spec.update(password={'$exists': False})
 
             rs = self.paginate(spec, filter=viewer.can_view, **paging_args)
 
@@ -1202,7 +1206,7 @@ class File(Entity):
     def store(self, file, id, name):
         file.seek(0)
 
-        if config.aws_id:
+        if self.config.aws_id:
             self['protocol'] = 's3'
             self.setdefault('s3_bucket', random.choice(self.db.s3_buckets).name)
             b = self.db.s3_con.get_bucket(self['s3_bucket'])
