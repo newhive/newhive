@@ -87,7 +87,7 @@ class Database:
             results = self.esdb.paginate(search, limit=limit, at=start,
                                          es_order=es_order,
                                          es_filter=None, fuzzy=fuzzy,
-                                         sort='score')
+                                         sort='score', viewer=viewer)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -539,7 +539,7 @@ class User(HasSocial):
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
-            items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
+            items = self.db.esdb.esdb_paginate(res, es_type='expr-type', viewer=self)
             if len(items) == limit:
                 items.next = at+limit
         else:
@@ -550,7 +550,7 @@ class User(HasSocial):
                 feed_with_expr[r['entity']].append(r._meta.id)
                 if len(feed_with_expr[r['entity']]) == 1:
                     expr = self.db.Expr.fetch(r['entity'])
-                    if expr is not None:
+                    if expr is not None and self.can_view(expr):
                         items.append(expr)
                 if len(items) == limit:
                     items.next = new_at
@@ -1738,20 +1738,20 @@ class ESDatabase:
         self.conn.indices.refresh()
 
     def paginate(self, search, limit=40, at=0, es_order='_score,updated:desc',
-                 es_filter=None, sort='score', fuzzy=False):
+                 es_filter=None, sort='score', fuzzy=False, viewer=None):
         if fuzzy:
             res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
                                     start=at, limit=limit)
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
                                    start=at, limit=limit)
-        expr_results = self.esdb_paginate(res, es_type='expr-type')
+        expr_results = self.esdb_paginate(res, es_type='expr-type', viewer=viewer)
         if res._total:
             if (res._total - at) > limit:
                 expr_results.next = at+limit
         return expr_results
 
-    def esdb_paginate(self, res, es_type):
+    def esdb_paginate(self, res, es_type, viewer=None):
         # convert elasticsearch resultsets to result lists
         result_ids = [r._meta.id for r in res]
         results = []
@@ -1763,7 +1763,11 @@ class ESDatabase:
             col = self.db.User
         for r in result_ids:
             results.append(col.fetch(r))
-        return Page(results)
+        if viewer:
+            f = viewer.can_view
+        else:
+            f = lambda x: x.get('auth', 'public') == 'public'
+        return Page(filter(f, results))
 
     def add_related_types(self):
 
