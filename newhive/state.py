@@ -872,7 +872,10 @@ class Expr(HasSocial):
 
         def page(self, spec, viewer, sort='updated', **opts):
             assert(sort in ['updated', 'random'])
-            rs = self.paginate(spec, filter=viewer.can_view, **opts)
+            if viewer is None:
+                rs = self.paginate(spec, filter=(lambda x: x.get('auth', 'public') == 'public'), **opts)
+            else:
+                rs = self.paginate(spec, filter=viewer.can_view, **opts)
 
             # remove random static patterns from random index to make it really random
             if sort == 'random':
