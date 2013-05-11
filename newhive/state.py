@@ -76,6 +76,9 @@ class Database:
         if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
 
         # todo: put auth specs into elasticsearch searches
+        # todo: make sure that elasticsearch pagination resultsets are of the correct
+        #       size after filtering out exprs that are not viewable
+        # todo: return grouped_feed items with expressions in network trending
 
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
