@@ -59,8 +59,8 @@ class Database:
         # initialize elasticsearch index
         self.esdb = ESDatabase(self)
 
-    def query(self, q, viewer=None, start=0, limit=40, expr_only=None, fuzzy=False,
-              es_order='_score,views:desc', **args):
+    def query(self, q, viewer=None, at=0, limit=40, expr_only=None, fuzzy=False,
+              es_order='_score,updated:desc', **args):
         args['viewer'] = viewer
         args['limit'] = limit
         search = self.parse_query(q)
@@ -75,14 +75,16 @@ class Database:
 
         if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
 
+        # todo: put auth specs into elasticsearch searches
+
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
-        if search.get('network_trending'):
+        elif search.get('network_trending'):
             results, grouped_feed = viewer.feed_page_esdb(trending=True)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            results = self.esdb.paginate(search, limit=limit, start=start,
+            results = self.esdb.paginate(search, limit=limit, at=at,
                                          es_order=es_order,
                                          es_filter=None, fuzzy=fuzzy,
                                          sort='score')
@@ -119,6 +121,7 @@ class Database:
                 if pattern[1] == 'All': search['all'] = True
                 elif pattern[1] == 'Featured': search['featured'] = True
                 elif pattern[1] == 'Network': search['network'] = True
+                elif pattern[1] == 'Network_trending': search['network_trending'] = True
                 elif pattern[1] == 'Public': search['auth'] = 'public' 
                 elif pattern[1] == 'Private': search['auth'] = 'password'
                 elif pattern[1] == 'Activity': search['activity'] = True
@@ -126,6 +129,10 @@ class Database:
                 elif pattern[1] == 'Listeners': search['listeners'] = True
                 else: search['tags'].append( pattern[1].lower() )
             else: search['text'].append( pattern[1].lower() )
+
+        for k in ['text', 'tags', 'phrases']:
+            if len(search[k]) == 0:
+                del search[k]
 
         return search
 
@@ -434,13 +441,6 @@ class User(HasSocial):
     @property
     def notification_count(self): return self.get('notification_count', 0)
 
-    # def notification_count(self):
-    #     count = self.get('notification_count')
-    #     if count is None:
-    #         count = len(self.feed)
-    #         self['notification_count'] = count
-    #     return count
-
     def notification_count_reset(self): self.update(notification_count=0)
 
     def notify(self, feed_item):
@@ -495,7 +495,7 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_page_esdb(self, limit=40, trending=False, **opts):
+    def feed_page_esdb(self, at=0, limit=40, trending=False, **opts):
         f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr', 'Broadcast', 'Star'])
         f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
         f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
@@ -508,7 +508,10 @@ class User(HasSocial):
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
         fq = pyes.query.FilteredQuery(match_all_query, f)
 
-        total_limit = 20*limit  # since there may be many feed items for the same expression
+        total_limit = 20*limit  
+        # since there may be many feed items for the same expression
+        # note that with the current pagination, the maximum number of
+        # retrievable feed items is total_limit
 
         res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
                                             doc_types="feed-type",
@@ -516,26 +519,36 @@ class User(HasSocial):
 
         feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
 
-        for r in res_feed[:total_limit]:
-            feed_with_expr[r['entity']].append(r._meta.id)
-
-        expr_ids = feed_with_expr.keys()
-
-        fid = pyes.filters.IdsFilter(expr_ids)
-        query = pyes.query.FilteredQuery(match_all_query, fid)
-
         if trending is True:
+
+            for r in res_feed[:total_limit]:
+                feed_with_expr[r['entity']].append(r._meta.id)
+
+            expr_ids = feed_with_expr.keys()
+
+            fid = pyes.filters.IdsFilter(expr_ids)
+            query = pyes.query.FilteredQuery(match_all_query, fid)
+
             custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)")
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
-                                           doc_types="expr-type",
+                                           doc_types="expr-type", at=at,
                                            sort="_score,created:desc", size=limit)
+            items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
+            if len(items) == limit:
+                items.next = at+limit
         else:
-            res = self.db.esdb.conn.search(query, indices=self.db.esdb.index,
-                                           doc_types="expr-type",
-                                           sort="created:desc", size=limit)
-
-        items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
-        1/0
+            items = Page()
+            new_at = at
+            for r in res_feed[at:]:
+                new_at += 1
+                feed_with_expr[r['entity']].append(r._meta.id)
+                if len(feed_with_expr[r['entity']]) == 1:
+                    expr = self.db.Expr.fetch(r['entity'])
+                    if expr is not None:
+                        items.append(expr)
+                if len(items) == limit:
+                    items.next = new_at
+                    break
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
@@ -1515,53 +1528,6 @@ class Temp(Entity):
     cname = 'temp'
 
 
-@Database.register
-class Tags(Entity):
-    # class for tag analytics. This is obsolete once elasticsearch is running.
-
-    indexes = [('tag', {'unique': True}), ('count', -1), [('count', -1), ('tags', 1)]]
-    cname = 'tags'
-
-    class Collection(Collection):
-        def create(self, db, data={}):
-            exprdb = db.Expr.search({})
-            counts = getTagCnt(exprdb).most_common()
-            for v in counts:
-                data = {'tag': v[0], 'count': v[1]}
-                print data
-                super(Tags.Collection, self).create(data)
-            return None
-
-        def update_tags(self):
-            exprdb = self.db.Expr.search({})
-            counts = getTagCnt(exprdb).most_common()
-            for v in counts:
-                row = self.fetch(v[0], keyname='tag')
-                if row is not None:
-                    if row['count'] != v[1]:
-                        print row
-                        row['count'] = v[1]
-                        self._col.update({'tag': v[0]}, row)
-                        print row
-                else:
-                    data = {'tag': v[0], 'count': v[1]}
-                    print data
-                    super(Tags.Collection, self).create(data)
-            return None
-
-        def delete(self):
-            num = self.count()
-            rows = self.search({})
-            for i in range(num):
-                self.entity.delete(rows[0])
-            return None
-
-        def autocomplete(self, string):
-            # should probably use the autocomplete in newhive/utils instead
-            res = self.search({'tag': {'$regex': '^' + string}}, sort=[('count', -1)])
-            return res
-
-
 ## utils
 
 
@@ -1589,50 +1555,61 @@ class ESDatabase:
         self.index = index
         self.conn = pyes.ES('127.0.0.1:9200')
         self.db = db
+        feed_mapping = {"class_name": {"type": "string",
+                                       "index": "not_analyzed"},
+                        "updated": {"type": "float"},
+                        "created": {"type": "float"},
+                        "entity": {"type": "string",
+                                   "index": "not_analyzed"},
+                        "entity_class": {"type": "string",
+                                         "index": "not_analyzed"},
+                        "initiator": {"type": "string",
+                                      "index": "not_analyzed"},
+                        "initiator_name": {"type": "string",
+                                           "index": "not_analyzed"}}
+        user_mapping = {"tags": {"type": "string",
+                                 "index": "analyzed"},
+                        "fullname": {"type": "string",
+                                     "index": "not_analyzed"},
+                        "name": {"type": "string",
+                                 "index": "not_analyzed"},
+                        "updated": {"type": "float"}}
+        expr_mapping = {"tags": {"type": "string", "index": "analyzed", "analyzer": "tag_analyzer"},
+                        "text": {"type": "string", "index": "analyzed"},
+                        "title": {"type": "string", "index": "analyzed"},
+                        "name": {"type": "string", "index": "analyzed"},
+                        "updated": {"type": "float"},
+                        "created": {"type": "float"},
+                        "views": {"type": "integer"},
+                        "broadcast": {"type": "integer"},
+                        "star": {"type": "integer"}}
+
         self.settings = {
           "mappings": {
-            "expr-type": {
-              "properties": {
-                "tags": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets", "analyzer": "tag_analyzer"},
-                "text": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
-                "title": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
-                "name": {"type": "string", "index": "analyzed", "store": "yes", "term_vector": "with_positions_offsets"},
-                "updated": {"type": "float", "store": "yes"},
-                "created": {"type": "float", "store": "yes"},
-                "views": {"type": "integer", "store": "yes"},
-                "broadcast": {"type": "integer", "store": "yes"},
-                "star": {"type": "integer", "store": "yes"},
-              }
-            }
+            "expr-type": {"properties": expr_mapping},
+            "feed-type": {"properties": feed_mapping},
+            "user-type": {"properties": user_mapping}
           },
-          "settings" : {
-            "analysis" : {
-              "analyzer" : {
-                "default" : {"tokenizer" : "standard", "filter" : ["standard", "lowercase", "stop", "kstem"]},
-                "tag_analyzer" : {"tokenizer" : "whitespace", "filter" : ["standard", "lowercase", "stop", "kstem"]}
+          "settings": {
+            "analysis": {
+              "analyzer": {
+                "default": {"tokenizer" : "standard", "filter" : ["standard", "lowercase", "stop", "kstem"]},
+                "tag_analyzer": {"tokenizer" : "whitespace", "filter" : ["standard", "lowercase", "stop", "kstem"]}
               }
             }
           }
         }
 
-        self.conn.indices.create_index_if_missing(index, self.settings)
-        exprs = db.Expr.search({})
-
         if not index in self.conn.indices.get_indices():
-            print "Indexing all expressions from scratch, might take a while"
-            counter = 0
+            self.conn.indices.create_index(index, self.settings)
+            print "Indexing expr/feed/users from scratch, might take a while"
+            exprs = db.Expr.search({})
             for expr in exprs:
                 self.update(expr, es_type='expr-type', refresh=False)
-                counter += 1
-                print counter
-        elif (self.conn.indices.get_indices()[index]['num_docs'] < db.Expr.count()):
-            counter = 0
-            for expr in exprs:
-                self.update(expr, es_type='expr-type', refresh=False)
-                counter += 1
-                print counter
+            self.add_related_types()
+            self.conn.indices.refresh()
 
-        self.conn.indices.refresh()
+        self.sync_with_mongo()
 
         return None
 
@@ -1655,16 +1632,16 @@ class ESDatabase:
 
         phrase_clauses = []
 
-        if len(search['text']) != 0:
+        if search.get('text'):
             text_clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text']), analyzer='default', boost=2, operator="and"))
-        if len(search['tags']) != 0:
+        if search.get('tags'):
             text_clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer='tag_analyzer', boost=5, operator="and"))
 
         if len(text_clauses) != 0:
             q1 = pyes.query.BoolQuery(must=text_clauses, boost=1)
             clauses.append(q1)
 
-        for p in search['phrases']:
+        for p in search.get('phrases',[]):
             phrase_clauses.append(pyes.query.TextQuery('text', p, type="phrase", analyzer='simple', boost=5))
             phrase_clauses.append(pyes.query.TextQuery('title', p, type="phrase", analyzer='simple', boost=7))
 
@@ -1682,24 +1659,24 @@ class ESDatabase:
 
         return custom_query
 
-    def search_text(self, search, es_order, es_filter, start, limit):
+    def search_text(self, search, es_order, es_filter, at, limit):
         query = self.create_query(search)
         results = self.conn.search(query,
                                    indices=self.index,
                                    doc_types="expr-type",
                                    sort=es_order,
                                    filter=es_filter,
-                                   start=start,
+                                   at=at,
                                    size=limit)
         return results
 
-    def search_fuzzy(self, search, es_order, es_filter, start, limit):
+    def search_fuzzy(self, search, es_order, es_filter, at, limit):
         # typo-tolerant searches. only works for text/tags, not usernames.
-        string = ' '.join(search['text'] + search['phrases'] + search['tags'])
+        string = ' '.join(search.get('text',[]) + search.get('phrases',[]) + search.get('tags',[]))
         q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
         results = self.conn.search(q, indices=self.index,
                                    doc_types="expr-type", sort=es_order,
-                                   filter=es_filter, start=start, size=limit)
+                                   filter=es_filter, at=at, size=limit)
         return results
 
     def update(self, entry, es_type, refresh=True):
@@ -1730,7 +1707,12 @@ class ESDatabase:
             'initiator_name': entry.get('initiator_name', '')
             }
         elif es_type == 'user-type':
-            data = {'fullname': entry.get('fullname', ''), 'name': entry.get('name', ''), 'tags': entry.get('tags', [])}
+            data = {
+            'fullname': entry.get('fullname', ''),
+            'name': entry.get('name', ''),
+            'tags': entry.get('tags', []),
+            'updated': entry.get('updated', 0)
+            }
         else:
             raise Exception(es_type + " is not defined in this index!")
         self.conn.index(data, self.index, es_type, entry['_id'])
@@ -1738,17 +1720,40 @@ class ESDatabase:
             self.conn.indices.refresh()
         return None
 
-    def paginate(self, search, limit=40, start=0, es_order='_score,views:desc',
+    def sync_with_mongo(self, refresh=False):
+        """make sure elasticsearch db reflects current mongodb state"""
+        updated = self.conn.search(match_all_query, indices=self.index, sort="updated:desc")
+        last_updated = updated[0]['updated']
+        print 'last updated:', last_updated
+        exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
+        feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
+        users = self.db.User.search({'updated': {'$gte': last_updated}})
+        print exprs.count(), 'expressions to update'
+        for expr in exprs:
+            print expr['updated']
+            self.update(expr, 'expr-type', refresh=False)
+        print feed.count(), 'feed items to update'
+        for f in feed:
+            print f['updated']
+            self.update(f, 'feed-type', refresh=False)
+        print users.count(), 'users to update'
+        for user in users:
+            print user['updated']
+            self.update(user, 'user-type', refresh=False)
+        self.conn.indices.refresh()
+
+    def paginate(self, search, limit=40, at=0, es_order='_score,updated:desc',
                  es_filter=None, sort='score', fuzzy=False):
         if fuzzy:
             res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
-                                    start=start, limit=limit)
+                                    at=at, limit=limit)
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
-                                   start=start, limit=limit)
+                                   at=at, limit=limit)
         expr_results = self.esdb_paginate(res, es_type='expr-type')
-        if res._total >= limit:
-            expr_results.next = res[limit-1]._meta[sort]
+        if res._total:
+            if (res._total - at) > limit:
+                expr_results.next = at+limit
         return expr_results
 
     def esdb_paginate(self, res, es_type):
@@ -1772,43 +1777,6 @@ class ESDatabase:
         # information in related collections (feed, user). Since elasticsearch
         # doesn't have joins, we have to index the mongo feed and user
         # collections in expr_index.
-
-        feed_mapping = {"class_name": {"type": "string",
-                                       "index": "not_analyzed",
-                                       "store": "yes"},
-                        "updated": {"type": "float",
-                                    "store": "yes"},
-                        "created": {"type": "float",
-                                    "store": "yes"},
-                        "entity": {"type": "string",
-                                   "index": "not_analyzed",
-                                   "store": "yes"},
-                        "entity_class": {"type": "string",
-                                         "index": "not_analyzed",
-                                         "store": "yes"},
-                        "initiator": {"type": "string",
-                                      "index": "not_analyzed",
-                                      "store": "yes"},
-                        "initiator_name": {"type": "string",
-                                           "index": "not_analyzed",
-                                           "store": "yes"}}
-
-        user_mapping = {"tags": {"type": "string",
-                                 "index": "analyzed",
-                                 "store": "yes",
-                                 "term_vector": "with_positions_offsets"},
-                        "fullname": {"type": "string",
-                                     "index": "not_analyzed",
-                                     "store": "yes"},
-                        "name": {"type": "string",
-                                 "index": "not_analyzed",
-                                 "store": "yes"}}
-
-        self.conn.put_mapping(doc_type='feed-type', mapping={'properties': feed_mapping},
-                            indices=self.index)
-
-        self.conn.put_mapping(doc_type='user-type', mapping={'properties': user_mapping},
-                            indices=self.index)
 
         feed = self.db.Feed.search({})
 

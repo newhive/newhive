@@ -510,8 +510,8 @@ def others_liked(expr, db):
         qid = pyes.query.FilteredQuery(match_all_query, fid)
         res_expr = db.esdb.conn.search(qid, indices=db.esdb.index, doc_types="expr-type")
 
-        for r in res_expr:
-            res.append(dfilter(r, ['name', 'owner_name']))
+        for r in db.esdb.esdb_paginate(res_expr, es_type='expr-type'):
+            res.append(dfilter(r, ['_id', 'name', 'owner_name']))
 
     else:
         res = []
