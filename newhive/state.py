@@ -16,7 +16,9 @@ from oauth2client.client import OAuth2Credentials
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 import pyes
 from collections import defaultdict
+from snapshots import Snapshots
 
+from s3 import S3Interface
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
@@ -47,6 +49,7 @@ class Database:
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
+        self.s3 = S3Interface()
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
         for col in self.collections:
@@ -342,7 +345,6 @@ class Entity(dict):
             return False
 
     def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
-
 
 # Common code between User and Expr
 class HasSocial(Entity):
@@ -897,6 +899,26 @@ class Expr(HasSocial):
         def featured(self, limit):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
+            
+    def take_snapshots(self):
+        snapshotter = Snapshots()
+        snapshot_time = datetime.now().strftime("%s")
+        filename_base = '_'.join((self.get('_id'),snapshot_time))
+        snapshotter.take_snapshot(self.get('_id'),dimensions=(715,430),out_filename=filename_base + '_big.png')
+        self.db.s3.upload_file(filename_base + '_big.png',mimetype='image/png')
+        snapshotter.take_snapshot(self.get('_id'),dimensions=(390,235),out_filename=filename_base + '_small.png')
+        self.db.s3.upload_file(filename_base + '_small.png',mimetype='image/png')
+        self['snapshot_time'] = snapshot_time
+        self.save()
+
+    @property
+    def snapshot(self, size="big"):
+        # Take new snapshot if necessary
+        if not self.get('snapshot_time') or self.get('updated') > self.get('snapshot'):
+            self.take_snapshots()
+        filename = '_'.join((self.get('_id'),self.get('snapshot_time'),size))
+        s3_url = "https://%s.s3.amazonaws.com/%s" % (config.asset_bucket,filename)
+        return s3_url
 
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
@@ -1124,7 +1146,6 @@ class Expr(HasSocial):
     @property
     def tag_string(self):
         return ' '.join(["#" + tag for tag in self.get('tags_index', [])])
-
 
 def generate_thumb(file, size):
     # resize and crop image to size tuple, preserving aspect ratio, save over original
