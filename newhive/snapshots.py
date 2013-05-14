@@ -14,7 +14,7 @@ class Snapshots(object):
     def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768)):
         url = 'http://' + utils.url_host(on_main_domain=False,secure=False) + '/' + str(expr_id)
         if platform == 'linux' or platform == 'linux2':
-            envoy.run('webkit2png --feature=javascript --display=:99 --geometry=%s %s --output=%s' % (dimensions[0],dimensions[1],url))
+            envoy.run('webkit2png --feature=javascript --display=:99 --geometry=%s %s --output=%s' % (dimensions[0],dimensions[1],out_filename,url))
         elif platform == 'darwin':
             # Mac support is super hacky and unreliable. Mostly just meant for local debugging.
             # Built to use this webkit2png: https://github.com/paulhammond/webkit2png/blob/master/webkit2png
