@@ -276,6 +276,7 @@ class Cursor(object):
 # helper class for a "page" (a list of entities)
 class Page(list):
     next = None
+    total = 0
 
 
 class Entity(dict):
@@ -1771,6 +1772,7 @@ class ESDatabase:
         else:
             f = lambda x: x.get('auth', 'public') == 'public'
         results = Page(filter(f, results))
+        results.total = res.total
         results.next = new_at
         return results
 
