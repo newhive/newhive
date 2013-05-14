@@ -517,7 +517,7 @@ class User(HasSocial):
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
         fq = pyes.query.FilteredQuery(match_all_query, f)
 
-        total_limit = 20*limit  
+        total_limit = 20*limit
         # since there may be many feed items for the same expression
         # note that with the current pagination, the maximum number of
         # retrievable feed items is total_limit
@@ -542,9 +542,8 @@ class User(HasSocial):
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
-            items = self.db.esdb.esdb_paginate(res, es_type='expr-type', viewer=self)
-            if len(items) == limit:
-                items.next = at+limit
+            items = self.db.esdb.esdb_paginate(res, es_type='expr-type', 
+                                               at=at, limit=limit, viewer=self)
         else:
             items = Page()
             new_at = at
@@ -556,8 +555,10 @@ class User(HasSocial):
                     if expr is not None and self.can_view(expr):
                         items.append(expr)
                 if len(items) == limit:
-                    items.next = new_at
+                    items.next = min(new_at, res_feed.total)
                     break
+            if items.next is None:
+                items.next = res_feed.total
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
@@ -1748,14 +1749,13 @@ class ESDatabase:
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
                                    start=at, limit=limit)
-        expr_results = self.esdb_paginate(res, es_type='expr-type', viewer=viewer)
-        if res._total:
-            if (res._total - at) > limit:
-                expr_results.next = at+limit
+        expr_results = self.esdb_paginate(res, es_type='expr-type', viewer=viewer,
+                                          at=at, limit=limit)
         return expr_results
 
-    def esdb_paginate(self, res, es_type, viewer=None):
+    def esdb_paginate(self, res, es_type, at, limit, viewer=None):
         # convert elasticsearch resultsets to result lists
+        new_at = min(res.total, at+limit)
         result_ids = [r._meta.id for r in res]
         results = []
         if es_type == 'expr-type':
@@ -1770,7 +1770,9 @@ class ESDatabase:
             f = viewer.can_view
         else:
             f = lambda x: x.get('auth', 'public') == 'public'
-        return Page(filter(f, results))
+        results = Page(filter(f, results))
+        results.next = new_at
+        return results
 
     def add_related_types(self):
 
