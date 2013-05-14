@@ -7,6 +7,17 @@
     <img class="thumb" src='{owner.thumb_70}'/>
     <span>by <span class='username'>{owner.name}</span></span>
   </div>
+  {<for feed}
+    <div>
+      {<if class_name "Comment"}comment{>}
+      {<if class_name "Comment"}
+        {<if entity_class "Expr"}love{>}
+      {>}
+      {<if class_name "Broadcast"}republish{>}
+      {<if class_name "NewExpr"}created{>}
+      {<if class_name "UpdatedExpr"}updated{>}
+    </div>
+  {>}
 {>}
 {<if layout_profile}
   <a { get_route_anchor_attrs "view_expr"

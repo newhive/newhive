@@ -328,7 +328,8 @@ define(['browser/js', 'module', 'templates/context'],
 	o.base_context['true'] = true;
 	o.base_context['false'] = false;
 	o.base_context['null'] = null;
-	o.base_context['if'] = function(context, block, condition){
+	o.base_context['if'] = function(context, block, condition, equals){
+		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? block(context) : '';
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible

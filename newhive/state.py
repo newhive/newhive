@@ -59,7 +59,7 @@ class Database:
         # initialize elasticsearch index
         self.esdb = ESDatabase(self)
 
-    def query(self, q, viewer=None, at=0, limit=40, expr_only=None, fuzzy=False,
+    def query(self, q, viewer=None, start=0, limit=40, expr_only=None, fuzzy=False,
               es_order='_score,updated:desc', **args):
         args['viewer'] = viewer
         args['limit'] = limit
@@ -84,7 +84,7 @@ class Database:
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            results = self.esdb.paginate(search, limit=limit, at=at,
+            results = self.esdb.paginate(search, limit=limit, at=start,
                                          es_order=es_order,
                                          es_filter=None, fuzzy=fuzzy,
                                          sort='score')
@@ -531,7 +531,7 @@ class User(HasSocial):
 
             custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)")
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
-                                           doc_types="expr-type", at=at,
+                                           doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
             items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
             if len(items) == limit:
@@ -1106,16 +1106,13 @@ class Expr(HasSocial):
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
         # if expr.auth_required(viewer, password):
-        expr = {}
+        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed'])
         dict.update(expr, {
             'id': self.id,
-            'name': self.get('name'),
             'thumb': self.get_thumb(),
             'owner': self.owner.client_view(viewer=viewer),
             'counts': counts,
             'url': self.url,
-            'title': self.get('title'),
-            'snapshot': self.get('snapshot')
         })
 
         if viewer and viewer.is_admin:
@@ -1659,24 +1656,24 @@ class ESDatabase:
 
         return custom_query
 
-    def search_text(self, search, es_order, es_filter, at, limit):
+    def search_text(self, search, es_order, es_filter, start, limit):
         query = self.create_query(search)
         results = self.conn.search(query,
                                    indices=self.index,
                                    doc_types="expr-type",
                                    sort=es_order,
                                    filter=es_filter,
-                                   at=at,
+                                   start=start,
                                    size=limit)
         return results
 
-    def search_fuzzy(self, search, es_order, es_filter, at, limit):
+    def search_fuzzy(self, search, es_order, es_filter, start, limit):
         # typo-tolerant searches. only works for text/tags, not usernames.
         string = ' '.join(search.get('text',[]) + search.get('phrases',[]) + search.get('tags',[]))
         q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
         results = self.conn.search(q, indices=self.index,
                                    doc_types="expr-type", sort=es_order,
-                                   filter=es_filter, at=at, size=limit)
+                                   filter=es_filter, start=start, size=limit)
         return results
 
     def update(self, entry, es_type, refresh=True):
@@ -1746,10 +1743,10 @@ class ESDatabase:
                  es_filter=None, sort='score', fuzzy=False):
         if fuzzy:
             res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
-                                    at=at, limit=limit)
+                                    start=at, limit=limit)
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
-                                   at=at, limit=limit)
+                                   start=at, limit=limit)
         expr_results = self.esdb_paginate(res, es_type='expr-type')
         if res._total:
             if (res._total - at) > limit:
