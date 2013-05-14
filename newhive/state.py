@@ -897,10 +897,10 @@ class Expr(HasSocial):
     @property
     def snapshot(self, size="big"):
         # Take new snapshot if necessary
-        if not self.get('snapshot_time') or self.get('updated') > self.get('snapshot'):
+        if not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time'):
             self.take_snapshots()
         filename = '_'.join((self.get('_id'),self.get('snapshot_time'),size))
-        s3_url = "https://%s.s3.amazonaws.com/%s" % (config.asset_bucket,filename)
+        s3_url = "https://%s.s3.amazonaws.com/%s.png" % (config.asset_bucket,filename)
         return s3_url
 
     def related_next(self, spec={}, **kwargs):
