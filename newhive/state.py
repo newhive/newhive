@@ -88,8 +88,7 @@ class Database:
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
             results = self.esdb.paginate(search, limit=limit, at=start,
-                                         es_order=es_order,
-                                         es_filter=None, fuzzy=fuzzy,
+                                         es_order=es_order, fuzzy=fuzzy,
                                          sort='score', viewer=viewer)
         else:
             sort = 'updated'
@@ -486,10 +485,10 @@ class User(HasSocial):
 
     def can_view_filter(self):
         """Creates an elasticsearch filter corresponding to can_view"""
-        f1 = pub_filter
-        f2 = pyes.filters.TermFilter('owner', self.id)
-        f3 = pyes.filters.IdsFilter(self.starred_expr_ids)
-        return pyes.filters.BoolFilter(should=[f1, f2, f3])
+        f = [pub_filter, pyes.filters.TermFilter('owner', self.id)]
+        if len(self.starred_expr_ids)>0:
+            f.append(pyes.filters.IdsFilter(self.starred_expr_ids))
+        return pyes.filters.BoolFilter(should=f)
 
     def feed_profile(self, spec={}, limit=40, **args):
         def query_feed(q):
@@ -537,23 +536,22 @@ class User(HasSocial):
         feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
 
         if trending is True:
-
             for r in res_feed[:total_limit]:
                 feed_with_expr[r['entity']].append(r._meta.id)
-
             expr_ids = feed_with_expr.keys()
 
-            fid = pyes.filters.IdsFilter(expr_ids)
-            query = pyes.query.FilteredQuery(match_all_query, fid)
-
-            custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)")
+            qid = pyes.query.IdsQuery(expr_ids)
+            f = self.can_view_filter()
+            query = pyes.query.FilteredQuery(qid, f)
+            custom_query = pyes.query.CustomScoreQuery(query,
+                                                       script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)")
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
-            items = self.db.esdb.esdb_paginate(res, es_type='expr-type', 
-                                               at=at, limit=limit, viewer=self)
+            items = self.db.esdb.esdb_paginate(res, es_type='expr-type',
+                                               at=at, limit=limit)
         else:
-            items = Page()
+            items = Page([])
             new_at = at
             for r in res_feed[at:]:
                 new_at += 1
@@ -1671,11 +1669,11 @@ class ESDatabase:
 
     def search_text(self, search, es_order, es_filter, start, limit):
         query = self.create_query(search)
-        results = self.conn.search(query,
+        filtered_query = pyes.query.FilteredQuery(query, es_filter)
+        results = self.conn.search(filtered_query,
                                    indices=self.index,
                                    doc_types="expr-type",
                                    sort=es_order,
-                                   filter=es_filter,
                                    start=start,
                                    size=limit)
         return results
@@ -1683,10 +1681,14 @@ class ESDatabase:
     def search_fuzzy(self, search, es_order, es_filter, start, limit):
         # typo-tolerant searches. only works for text/tags, not usernames.
         string = ' '.join(search.get('text',[]) + search.get('phrases',[]) + search.get('tags',[]))
-        q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
-        results = self.conn.search(q, indices=self.index,
-                                   doc_types="expr-type", sort=es_order,
-                                   filter=es_filter, start=start, size=limit)
+        query = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
+        filtered_query = pyes.query.FilteredQuery(query, es_filter)
+        results = self.conn.search(filtered_query,
+                                   indices=self.index,
+                                   doc_types="expr-type",
+                                   sort=es_order,
+                                   start=start,
+                                   size=limit)
         return results
 
     def update(self, entry, es_type, refresh=True):
@@ -1754,22 +1756,25 @@ class ESDatabase:
         self.conn.indices.refresh()
 
     def paginate(self, search, limit=40, at=0, es_order='_score,updated:desc',
-                 es_filter=None, sort='score', fuzzy=False, viewer=None):
+                 sort='score', fuzzy=False, viewer=None):
+        if viewer:
+            es_filter = viewer.can_view_filter()
+        else:
+            es_filter = pub_filter
         if fuzzy:
             res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
                                     start=at, limit=limit)
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
                                    start=at, limit=limit)
-        expr_results = self.esdb_paginate(res, es_type='expr-type', viewer=viewer,
-                                          at=at, limit=limit)
+        expr_results = self.esdb_paginate(res, es_type='expr-type', at=at, limit=limit)
         return expr_results
 
-    def esdb_paginate(self, res, es_type, at, limit, viewer=None):
+    def esdb_paginate(self, res, es_type, at, limit):
         # convert elasticsearch resultsets to result lists
         new_at = min(res.total, at+limit)
         result_ids = [r._meta.id for r in res]
-        results = []
+        results = Page([])
         if es_type == 'expr-type':
             col = self.db.Expr
         elif es_type == 'feed-type':
@@ -1778,11 +1783,6 @@ class ESDatabase:
             col = self.db.User
         for r in result_ids:
             results.append(col.fetch(r))
-        if viewer:
-            f = viewer.can_view
-        else:
-            f = lambda x: x.get('auth', 'public') == 'public'
-        results = Page(filter(f, results))
         results.total = res.total
         results.next = new_at
         return results
