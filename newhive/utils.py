@@ -413,6 +413,8 @@ likes_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])  # 
 
 feed_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star', 'Comment'])
 
+pub_filter = pyes.filters.TermFilter('auth', 'public')
+
 def autocomplete(pre, db, field='tags'):
     s = re.sub(r'[\s_\-"]', '', pre, flags=re.UNICODE)
     query = match_all_query.search()

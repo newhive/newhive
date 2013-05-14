@@ -484,6 +484,13 @@ class User(HasSocial):
                          (self.id == expr['owner']) or
                          (expr.id in self.starred_expr_ids))
 
+    def can_view_filter(self):
+        """Creates an elasticsearch filter corresponding to can_view"""
+        f1 = pub_filter
+        f2 = pyes.filters.TermFilter('owner', self.id)
+        f3 = pyes.filters.IdsFilter(self.starred_expr_ids)
+        return pyes.filters.BoolFilter(should=[f1, f2, f3])
+
     def feed_profile(self, spec={}, limit=40, **args):
         def query_feed(q):
             q.update(spec)
