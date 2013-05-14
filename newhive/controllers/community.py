@@ -17,7 +17,7 @@ class Community(Controller):
         user = self.db.User.named(username)
         return {
             'page_data': {
-                "cards": user.feed_network(**paging_args),
+                "cards": user.feed_network({}, **paging_args),
                 "header": ("Network", "Recent")
             },
             "title": 'Network - Recent',
