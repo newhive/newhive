@@ -544,7 +544,7 @@ class User(HasSocial):
             f = self.can_view_filter()
             query = pyes.query.FilteredQuery(qid, f)
             custom_query = pyes.query.CustomScoreQuery(query,
-                                                       script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)")
+                                                       script=popularity_time_score)
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
@@ -1663,7 +1663,7 @@ class ESDatabase:
 
         query = pyes.query.BoolQuery(must=clauses)
 
-        custom_query = pyes.query.CustomScoreQuery(query, script="_score * (doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value)")
+        custom_query = pyes.query.CustomScoreQuery(query, script=popularity_score)
 
         return custom_query
 

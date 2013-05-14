@@ -607,6 +607,9 @@ def convert_dict_to_sorted_list(d, size=5):
 
 from scipy.stats import norm
 
+popularity_score = "_score * (doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value)"
+popularity_time_score = "(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)"
+
 
 def get_expr_rating_score(expr, downvotes):
     confidence = 0.95
