@@ -45,7 +45,8 @@ class Database:
         # initialize s3 connection
         if config.aws_id:
             self.s3_con = S3Connection(config.aws_id, config.aws_secret)
-            self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
+            self.s3_buckets = { k: self.s3_con.create_bucket(v)
+                for k, v in config.s3_buckets.items() }
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
@@ -902,22 +903,29 @@ class Expr(HasSocial):
             
     def take_snapshots(self):
         snapshotter = Snapshots()
-        snapshot_time = datetime.now().strftime("%s")
-        filename_base = '_'.join((self.get('_id'),snapshot_time))
-        snapshotter.take_snapshot(self.get('_id'),dimensions=(715,430),out_filename=filename_base + '_big.png')
-        self.db.s3.upload_file(filename_base + '_big.png',mimetype='image/png')
-        snapshotter.take_snapshot(self.get('_id'),dimensions=(390,235),out_filename=filename_base + '_small.png')
-        self.db.s3.upload_file(filename_base + '_small.png',mimetype='image/png')
+        snapshot_time = now()
+        filename_base = '_'.join([self.get('_id'), snapshot_time])
+
+        name = filename_base + '_715.png'
+        snapshotter.take_snapshot(self.get('_id'), dimensions=(715, 430),
+            out_filename=name)
+        self.db.s3.upload_file(name, mimetype='image/png')
+
+        name = filename_base + '_390.png'
+        snapshotter.take_snapshot(self.get('_id'), dimensions=(390, 235),
+            out_filename=name)
+        self.db.s3.upload_file(name, mimetype='image/png')
+
         self['snapshot_time'] = snapshot_time
         self.save()
 
     @property
-    def snapshot(self, size="big"):
+    def snapshot(self, size='715'):
         # Take new snapshot if necessary
         if not self.get('snapshot_time') or self.get('updated') > self.get('snapshot'):
             self.take_snapshots()
-        filename = '_'.join((self.get('_id'),self.get('snapshot_time'),size))
-        s3_url = "https://%s.s3.amazonaws.com/%s" % (config.asset_bucket,filename)
+        filename = '_'.join([self.get('_id'), self.get('snapshot_time'), size])
+        s3_url = 'https://%s.s3.amazonaws.com/%s' % (config.s3_buckets['thumb'], filename)
         return s3_url
 
     def related_next(self, spec={}, **kwargs):
