@@ -1,3 +1,7 @@
+/* 
+ * class page
+   What is my purpose??
+ */
 define([
     'browser/jquery',
     'ui/nav',
@@ -11,6 +15,8 @@ define([
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
         layout;
+    // TODO: Is GRID_WIDTH constant across all grid rendering cases?  Maybe pass as data,
+    // or pass back from rendering function which can figure it out.
     const ANIM_DURATION = 700, GRID_WIDTH = 410;
 
     o.init = function(){

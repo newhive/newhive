@@ -31,9 +31,21 @@
   {>}
 {>}
 <div id='feed' class='{layout}'>
+  <div class="tag_list">
+    {<for tags "tagnum"}
+      <div class="div_{tagnum}">{.}</div>
+    {>}
+  </div>
   {<for cards}
-    <div class='expr card' draggable='false'>
-      {|templates/expr_card.html}
-    </div>
+    {<if card_type "user"}
+      <div class='user card' draggable='false'>
+        {|templates/user_card.html}
+      </div>
+    {>}
+    {<if card_type "expr"}
+      <div class='expr card' draggable='false'>
+        {|templates/expr_card.html}
+      </div>
+    {>}
   {>}
 </div>

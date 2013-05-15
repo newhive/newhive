@@ -28,12 +28,26 @@
         "client_method": "profile_private"
     },
 
+    "expressions_activity": {
+        "page_route": "/<owner_name>/profile/activity",
+        "api_route": "/api/feed/expressions/activity/<owner_name>",
+        "controller": "community",
+        "method": "expressions_loves",
+        "client_method": "grid"
+    },
+    "expressions_following": {
+        "page_route": "/<owner_name>/profile/following",
+        "api_route": "/api/feed/expressions/following/<owner_name>",
+        "controller": "community",
+        "method": "expressions_following",
+        "client_method": "grid"
+    },
     "expressions_loves": {
         "page_route": "/<owner_name>/profile/loves",
         "api_route": "/api/feed/expressions/loves/<owner_name>",
         "controller": "community",
         "method": "expressions_loves",
-        "client_method": "profile"
+        "client_method": "grid"
     },
     "profile_edit": {
         "page_route": "/<owner_name>/profile/edit",
