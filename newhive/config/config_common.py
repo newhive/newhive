@@ -16,8 +16,11 @@ ssl_ca          = False
 
 aws_id          = False
 aws_secret      = False
-s3_buckets      = []
-asset_bucket    = None
+s3_buckets = {
+    'media': None,
+    'system': None,
+    'assets': None,
+}
 
 admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack', 'fred']
 test_emails     = ['abram@thenewhive.com', 'andrew@thenewhive.com',

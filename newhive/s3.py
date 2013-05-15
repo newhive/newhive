@@ -13,7 +13,6 @@ class S3Interface(object):
     def upload_file(self, filename, remote_filename=None, mimetype=None):
         # Set remote name to local filename if not provided
         remote_filename = remote_filename or filename
-        s3_url = "https://%s.s3.amazonaws.com/%s" % (config.asset_bucket,remote_filename)
         k = S3Key(self.asset_bucket)
         k.name = remote_filename
         name_escaped = urllib.quote_plus(remote_filename.encode('utf8'))
@@ -25,4 +24,4 @@ class S3Interface(object):
             s3_headers['Content-Type'] = mimetype
         k.set_contents_from_filename(filename)
         k.make_public()
-        return s3_url
+        return k.generate_url(0, query_auth=False)
