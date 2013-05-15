@@ -1211,7 +1211,7 @@ class File(Entity):
         except:
             print 'failed to generate thumb for file: ' + self.id
             return False # thumb generation is non-critical so we eat exception
-        self.store(thumb, self.id + '_' + name, 'thumb_' + name)
+        self.store(thumb, 'thumb', self.id + '_' + name, self['name'] + '_' + name)
 
         self.setdefault('thumbs', {})
         version = self['thumbs'][name] = self['thumbs'].get(name, 0) + 1
@@ -1236,12 +1236,12 @@ class File(Entity):
     @property
     def thumb_keys(self): return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
 
-    def store(self, file, bucket, id, name):
+    def store(self, file, bucket, path, name):
         file.seek(0)
 
         if self.config.aws_id:
             self['protocol'] = 's3'
-            self.setdefault('s3_bucket', config.s3_buckets[bucket])
+            return self.db.s3.upload_file(file, bucket, self.id, self['name'], self['mime'])
         else:
             self['protocol'] = 'file'
             owner = self.db.User.fetch(self['owner'])
@@ -1282,7 +1282,7 @@ class File(Entity):
                 self._file.close()
                 self._file = newfile
 
-        self['url'] = self.store(self._file, self.id, self['name'])
+        self['url'] = self.store(self._file, 'media', self.id, self['name'])
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         self.set_thumbs()
@@ -1294,7 +1294,7 @@ class File(Entity):
         self.pop('s3_bucket', None)
         self.pop('fs_path', None)
         if not file: file = self.file
-        self['url'] = self.store(file, self.id, self.get('name', 'untitled'))
+        self['url'] = self.store(file, 'media', self.id, self.get('name', 'untitled'))
         self.set_thumbs()
         if self._file: self._file.close()
         self.save()
