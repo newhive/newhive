@@ -1,19 +1,50 @@
-Python library dependencies
-    werkzeug pymongo boto oauth2 oauth2client pil paramiko cssutils
-    lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson
-    envoy scipy
-    pandas brownie google-api-python-client # for analytics
+Do whatever sections apply.
 
-    pyes -- https://github.com/aparo/pyes
+LINUX
+  install from USB
+  sudo apt-get gnome-desktop-environment
+
+ Git
+  ## first, set up account on github (and get permissions from Abram)
+  sudo apt-get install git
+    git config --global user.name "xxx"
+    git config --global user.email "xxx@gmail.com"
+    git config --global credential.helper cache
+    git config --global credential.helper 'cache --timeout=3600'
+    # git clone https://github.com/hivedev/newhive.git
+    git clone -b v2-community https://github.com/hivedev/newhive.git
 
 Python library dependency dependencies (Ubuntu packages)
-    gfortran
-    libblas-dev
-    liblapack-dev
+    sudo apt-get install python-pip gfortran libblas-dev liblapack-dev python-dev g++
+
+Python library dependencies
+    sudo pip install ez_setup
+    sudo pip install werkzeug pymongo boto oauth2 oauth2client pil paramiko cssutils
+    sudo pip install lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson
+    sudo pip install envoy scipy
+    sudo pip install pandas brownie google-api-python-client # for analytics
+
+    pyes -- https://github.com/aparo/pyes
+        werkzeug --- ??? what repo
 
 Application dependencies (Ubuntu packages)
-	mongodb
+	sudo apt-get install mongodb ruby-sass ruby-compass
+    # these are on abram's machine.  scp
     elastic search -- http://www.elasticsearch.org/download/
-	ruby-sass
-	ruby-compass
+        sudo dpkg -i elasticsearch-0.20.5.deb
+        # might need fix dependencies: 
+        sudo apt-get -f install 
+
+Get the db
+    scp dev-1.newhive.com:/tmp/2013* .
+    tar -xvf 2013*
+    mongorestore --drop -d test --dir tmp/hive
+
+Get the server config
+    scp dev-1.newhive.com:newhive/newhive/config/config.py newhive/newhive/config
+    edit the config for your favorite port
+
+Run the server
+    <from an enlistment>
+    ./server.py
 
