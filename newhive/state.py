@@ -42,12 +42,6 @@ class Database:
     def __init__(self, config=None):
         config = self.config = config if config else newhive.config
 
-        # initialize s3 connection
-        if config.aws_id:
-            self.s3_con = S3Connection(config.aws_id, config.aws_secret)
-            self.s3_buckets = { k: self.s3_con.create_bucket(v)
-                for k, v in config.s3_buckets.items() }
-
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
         self.s3 = S3Interface()
@@ -907,12 +901,12 @@ class Expr(HasSocial):
         filename_base = '_'.join([self.get('_id'), snapshot_time])
 
         name = filename_base + '_715.png'
-        snapshotter.take_snapshot(self.get('_id'), dimensions=(715, 430),
+        snapshotter.take_snapshot(self.id, dimensions=(715, 430),
             out_filename=name)
         self.db.s3.upload_file(name, mimetype='image/png')
 
         name = filename_base + '_390.png'
-        snapshotter.take_snapshot(self.get('_id'), dimensions=(390, 235),
+        snapshotter.take_snapshot(self.id, dimensions=(390, 235),
             out_filename=name)
         self.db.s3.upload_file(name, mimetype='image/png')
 
@@ -1242,23 +1236,12 @@ class File(Entity):
     @property
     def thumb_keys(self): return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
 
-    def store(self, file, id, name):
+    def store(self, file, bucket, id, name):
         file.seek(0)
 
         if self.config.aws_id:
             self['protocol'] = 's3'
-            self.setdefault('s3_bucket', random.choice(self.db.s3_buckets).name)
-            b = self.db.s3_con.get_bucket(self['s3_bucket'])
-            k = S3Key(b)
-            k.name = id
-            name_escaped = urllib.quote_plus(name.encode('utf8'))
-            k.set_contents_from_file(file, headers = {
-                'Content-Disposition': 'inline; filename=' + name_escaped,
-                'Content-Type' : self['mime'],
-                'Cache-Control': 'max-age=' + str(86400 * 3650)
-            })
-            k.make_public()
-            return k.generate_url(86400 * 3600, query_auth=False)
+            self.setdefault('s3_bucket', config.s3_buckets[bucket])
         else:
             self['protocol'] = 'file'
             owner = self.db.User.fetch(self['owner'])
