@@ -44,6 +44,21 @@ class Community(Controller):
             'title': 'Your Private Expressions',
         }
 
+    def expressions_loves(self, tdata, request, owner_name=None, **args):
+        owner = self.db.User.named(owner_name)
+        if not owner: return None
+        # Get the feeds starred by owner_name...
+        spec = {'initiator_name': owner_name, 'entity_class':'Expr' }
+        # ...and grab its expressions.
+        cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
+            self.db.Star.page(spec, tdata.user, **args)))
+        profile = owner.client_view()
+        profile['profile_bg'] = owner.get('profile_bg')
+        return {
+            'page_data': { 'cards': cards, 'profile': profile },
+            'title': 'Loves by ' + owner['name'],
+        }
+
     def user_home(self, tdata, request, owner_name=None, **args):
         # show home expression or redirect to home 
         return {}

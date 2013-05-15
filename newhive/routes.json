@@ -27,6 +27,14 @@
         "method": "expressions_private",
         "client_method": "profile_private"
     },
+
+    "expressions_loves": {
+        "page_route": "/<owner_name>/profile/loves",
+        "api_route": "/api/feed/expressions/loves/<owner_name>",
+        "controller": "community",
+        "method": "expressions_loves",
+        "client_method": "profile"
+    },
     "profile_edit": {
         "page_route": "/<owner_name>/profile/edit",
         "controller": "community",
