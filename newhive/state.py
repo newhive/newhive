@@ -7,7 +7,7 @@ from datetime import datetime
 from lxml import html
 from wsgiref.handlers import format_date_time
 from newhive import social_stats
-from itertools import ifilter, islice
+from itertools import ifilter, islice, imap
 import PIL.Image as Img
 from PIL import ImageOps
 from bson.code import Code
@@ -94,7 +94,7 @@ class Database:
                 results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
 
                 # redo pagination property after merging possible user results with expr results
-                results = Page(results)
+                results = results
                 results.next = results[-1][sort] if len(results) == limit else None
 
         return results
@@ -189,7 +189,7 @@ class Collection(object):
                 if filter:
                     res = ifilter(filter, res)
                 res = islice(res, limit)
-                res = Page(list(res))
+                res = list(res)
                 res.next = res[-1][sort] if len(res) == limit else None
             return res
 
@@ -201,10 +201,10 @@ class Collection(object):
                 start = spec.index(at) if at else -1
                 end = start + limit * -order
                 if end > start:
-                    if start >= len(spec): return Page([])
+                    if start >= len(spec): return []
                     sub_spec = spec[start+1:end+1]
                 else:
-                    if start <= 0: return Page([])
+                    if start <= 0: return []
                     if end - 1 < 0:
                         sub_spec = spec[start-1::-1]
                     else:
@@ -215,9 +215,9 @@ class Collection(object):
                     end = limit
                     sub_spec = spec[0: end]
                 else:
-                    return Page([])
+                    return []
 
-            res = Page(self.fetch(sub_spec))
+            res = self.fetch(sub_spec)
             res.next = lget(sub_spec, -1)
             return res
 
@@ -267,11 +267,6 @@ class Cursor(object):
     def next(self): return self.collection.new(self._cur.next())
 
     def __iter__(self): return self
-
-
-# helper class for a "page" (a list of entities)
-class Page(list):
-    next = None
 
 
 class Entity(dict):
@@ -479,7 +474,7 @@ class User(HasSocial):
         activity.sort(cmp=lambda x, y: cmp(x['created'], y['created']), reverse=True)
         for i, v in enumerate(activity):
             if v == lget(activity, i + 1): del activity[i]
-        page = Page(activity[0:limit])
+        page = activity[0:limit]
         page.next = page[-1]['created'] if len(page) == limit else None
         return page
 
@@ -534,7 +529,7 @@ class User(HasSocial):
             if len(items) == limit:
                 items.next = at+limit
         else:
-            items = Page()
+            items = []
             new_at = at
             for r in res_feed[at:]:
                 new_at += 1
@@ -573,8 +568,7 @@ class User(HasSocial):
         # produces an iterable for all network feed items
         res = self.feed_search({ '$or': or_clause }, auth='public', at=at, **args)
         # groups feed items by ther expressions (entity attribute), and applies page limit
-        results = Page(self.feed_group(res, limit, spec=spec))
-        results.next = results[-1]['feed'][-1]['created'] if len(results) == limit else None
+        results = self.feed_group(res, limit, spec=spec)
         return results
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
@@ -582,6 +576,7 @@ class User(HasSocial):
         res = self.db.Feed.paginate(spec, limit=0, sort='created', **args)
         if auth: res = ifilter(lambda i: i.entity and i.entity.get('auth', auth) == auth, res)
         res = ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
+        res = imap(lambda r: r.setdefault('initiator_thumb_70', r.initiator.get_thumb(70)), res)
         if limit: res = islice(res, limit)
         return res
 
@@ -1777,7 +1772,7 @@ class ESDatabase:
             col = self.db.User
         for r in result_ids:
             results.append(col.fetch(r))
-        return Page(results)
+        return results
 
     def add_related_types(self):
 
