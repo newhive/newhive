@@ -95,7 +95,6 @@ class Database:
 
                 # redo pagination property after merging possible user results with expr results
                 results = results
-                results.next = results[-1][sort] if len(results) == limit else None
 
         return results
 
@@ -146,13 +145,7 @@ class Collection(object):
 
     def fetch(self, key, keyname='_id', **opts):
         if type(key) == list:
-            items = {}
-            res = []
-            for e in self.search({'_id': {'$in': key }}):
-                items[e.id] = e
-            for i in key:
-                if items.has_key(i): res.append(items[i])
-            return res
+            return self.search({'_id': {'$in': key }})
         else:
             return self.find({ keyname : key }, **opts)
 
@@ -166,7 +159,18 @@ class Collection(object):
         return self.new(r)
 
     def search(self, spec, **opts):
+        if type(spec) == list:
+            items = {}
+            res = []
+            for e in self.search({'_id': {'$in': key }}): items[e.id] = e
+            for i in key:
+                if items.has_key(i): res.append(items[i])
+            return res
         return Cursor(self, self._col.find(spec=spec, **opts))
+
+    # Should be overridden to ommit fields not used in list views
+    def cards(self,  spec, **opts):
+        return self.search(spec, **opts)
 
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('_id', -1)]})
@@ -183,14 +187,13 @@ class Collection(object):
                 at = page_start[sort] if page_start else None
 
             if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
-            res = self.search(spec, sort=[(sort, order)])
+            res = self.cards(spec, sort=[(sort, order)])
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
                 if filter:
                     res = ifilter(filter, res)
                 res = islice(res, limit)
                 res = list(res)
-                res.next = res[-1][sort] if len(res) == limit else None
             return res
 
         elif type(spec) == list:
@@ -217,8 +220,7 @@ class Collection(object):
                 else:
                     return []
 
-            res = self.fetch(sub_spec)
-            res.next = lget(sub_spec, -1)
+            res = self.cards(sub_spec)
             return res
 
     # default implementation of pagination, intended to be overridden by
@@ -475,7 +477,6 @@ class User(HasSocial):
         for i, v in enumerate(activity):
             if v == lget(activity, i + 1): del activity[i]
         page = activity[0:limit]
-        page.next = page[-1]['created'] if len(page) == limit else None
         return page
 
     def feed_profile_entities(self, **args):
@@ -526,8 +527,6 @@ class User(HasSocial):
                                            doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
             items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
-            if len(items) == limit:
-                items.next = at+limit
         else:
             items = []
             new_at = at
@@ -538,9 +537,7 @@ class User(HasSocial):
                     expr = self.db.Expr.fetch(r['entity'])
                     if expr is not None:
                         items.append(expr)
-                if len(items) == limit:
-                    items.next = new_at
-                    break
+                if len(items) == limit: break
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
@@ -576,7 +573,6 @@ class User(HasSocial):
         res = self.db.Feed.paginate(spec, limit=0, sort='created', **args)
         if auth: res = ifilter(lambda i: i.entity and i.entity.get('auth', auth) == auth, res)
         res = ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
-        res = imap(lambda r: r.setdefault('initiator_thumb_70', r.initiator.get_thumb(70)), res)
         if limit: res = islice(res, limit)
         return res
 
@@ -766,6 +762,7 @@ class User(HasSocial):
                 expressions = self['analytics']['expressions']['count'], # Why expressions->count?  nothing else is in there.
                 ))
         exprs = self.get_top_expressions(3)
+        exprs = self.cards()
 
         dict.update(user, dict(
             url = self.url,
@@ -1787,11 +1784,7 @@ class ESDatabase:
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
                                    start=at, limit=limit)
-        expr_results = self.esdb_paginate(res, es_type='expr-type')
-        if res._total:
-            if (res._total - at) > limit:
-                expr_results.next = at+limit
-        return expr_results
+        return self.esdb_paginate(res, es_type='expr-type')
 
     def esdb_paginate(self, res, es_type):
         # convert elasticsearch resultsets to result lists
