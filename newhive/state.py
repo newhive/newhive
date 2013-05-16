@@ -124,7 +124,7 @@ class Database:
                 elif pattern[1] == 'Featured': search['featured'] = True
                 elif pattern[1] == 'Network': search['network'] = True
                 elif pattern[1] == 'Network_trending': search['network_trending'] = True
-                elif pattern[1] == 'Public': search['auth'] = 'public' 
+                elif pattern[1] == 'Public': search['auth'] = 'public'
                 elif pattern[1] == 'Private': search['auth'] = 'password'
                 elif pattern[1] == 'Activity': search['activity'] = True
                 elif pattern[1] == 'Listening': search['listening'] = True
@@ -401,7 +401,7 @@ class User(HasSocial):
         def named(self, name): return self.find({'name' : name})
 
         def find_by_facebook(self, id):
-            return self.find({'facebook.id': id, 'facebook.disconnected': {'$exists': False}}) 
+            return self.find({'facebook.id': id, 'facebook.disconnected': {'$exists': False}})
 
         def get_root(self): return self.named('root')
         root_user = property(get_root)
@@ -1128,7 +1128,7 @@ class Expr(HasSocial):
 
         return expr
         # return self
-        
+
     @property
     def tag_string(self):
         return ' '.join(["#" + tag for tag in self.get('tags_index', [])])
@@ -1737,7 +1737,8 @@ class ESDatabase:
         """make sure elasticsearch db reflects current mongodb state"""
         updated = self.conn.search(match_all_query, indices=self.index, sort="updated:desc")
         last_updated = updated[0]['updated']
-        print 'last updated:', last_updated
+        time_diff = time.time() - last_updated
+        print 'time since last update:', time_diff
         exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
         feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
         users = self.db.User.search({'updated': {'$gte': last_updated}})
@@ -1814,3 +1815,9 @@ class ESDatabase:
         self.conn.indices.refresh()
 
         return None
+
+    def get_total(self, es_type):
+        """show the total number of items of each type"""
+        entries = self.conn.search(match_all_query,
+                indices=self.index, doc_types=es_type)
+        return entries.total
