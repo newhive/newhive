@@ -62,6 +62,7 @@ define(['browser/js', 'module', 'templates/context'],
 		tag_close: /^\s*}/,
 		strip_whitespace: false // not yet implemented
 	};
+	var suffix = new Array('', 'K', 'M', 'G');
 
 	// parse :: String -> AST Object Array, throws ParseError String
 	// possible AST node type:
@@ -371,6 +372,15 @@ define(['browser/js', 'module', 'templates/context'],
 		return JSON.stringify(data);
 	};
 	o.base_context.mod = function(context, x, y){ return x % y };
+	o.base_context.thousands = function(context, n){ 
+		for (var i = 0; Math.abs(n) >= 1000 && i < suffix.length - 1; ++i) {
+			if (Math.abs(n) < 10000)
+				n = Math.round(n/100)/10;
+			else
+				n = Math.round(n/1000);
+		}
+		return n + suffix[i];
+	};
 
 	return o;
 });

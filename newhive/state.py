@@ -40,7 +40,7 @@ class Database:
         pass
 
     def __init__(self, config=None):
-        config = self.config = config if config else newhive.config
+        config = self.config = (config if config else newhive.config)
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
@@ -734,10 +734,12 @@ class User(HasSocial):
         return self.db.Expr.search(spec)
     expressions = property(get_expressions)
 
+    # TODO: cache db query
     def get_top_expressions(self, count=6):
         return self.get_expressions(auth='public').sort([('views', -1)]).limit(count)
     top_expressions = property(get_top_expressions)
 
+    # TODO: cache db query
     def get_recent_expressions(self, count=6):
         return self.get_expressions(auth='public').sort([('updated', -1)]).limit(count)
     recent_expressions = property(get_recent_expressions)
@@ -745,8 +747,29 @@ class User(HasSocial):
     def client_view(self, viewer=None):
         user = self.db.User.new( dfilter( self, ['_id', 'fullname', 'profile_thumb', 'thumb_file_id',
             'name', 'tags', 'updated', 'created', 'feed'] ) )
+        # TODO: make sure this field is updated wherever views changes elsewhere
+        # TODO: figure out best thing to do for empty user
+        # TODO: make new class for analytics.  
+        #   Add tests to verify info survives new views, add/delete loves, users
+        if self.has_key('analytics'):
+            #if not self['analytics'].has_key('views_by'):
+            self['analytics']['views_by'] = (
+                sum([r['views'] for r in self.db.Expr.search({'owner':self['_id']})]))
+            #if not self['analytics'].has_key('loves_by'):
+            self['analytics']['loves_by'] = (
+                self.db.Feed.search({'entity_owner':self['_id'], 
+                    'class_name':'Star', 'entity_class': 'Expr'}).count())
+            user.update()
+            dict.update(user, dict(
+                views_by = self['analytics']['views_by'],
+                loves_by = self['analytics']['loves_by'],
+                expressions = self['analytics']['expressions']['count'], # Why expressions->count?  nothing else is in there.
+                ))
+        exprs = self.get_top_expressions(3)
+
         dict.update(user, dict(
             url = self.url,
+            mini_expressions = map(lambda e:e.mini_view(), exprs),
             thumb_70 = self.get_thumb(70),
             thumb_190 = self.get_thumb(190),
             has_thumb = self.has_thumb,
@@ -1000,6 +1023,11 @@ class Expr(HasSocial):
 
     @property
     def views(self): return self.get('views', 0)
+
+    def mini_view(self): 
+        mini = dfilter( self, ['thumb', 'name', 'owner_name'] )
+        mini['id'] = self['_id']
+        return mini
 
     def qualified_url(self):
         return "http://" + self['domain'] + "/" + self['name']
@@ -1444,11 +1472,16 @@ class Star(Feed):
     def action_name(self):
         return 'loves' if self['entity_class'] == 'Expr' else 'listening'
 
+    # TODO: update analytics
     def create(self):
         if self['entity_class'] == 'User' and self.entity.owner.id == self['initiator']:
             raise "Excuse me, you mustn't listen to yourself. It is confusing."
         if self['initiator'] in self.entity.starrer_ids: return True
         return super(Star, self).create()
+
+    # TODO: update analytics
+    def delete(self):
+        return super(Star, self).delete()
 
 
 @Database.register

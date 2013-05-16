@@ -9,6 +9,7 @@ class Community(Controller):
             'page_data': {
                 'cards': user.feed_network(**paging_args),
                 'header': ("The Hive", "Trending"),
+                'card_type': 'expr',
             },
             'title': "Network - Trending",
         }
@@ -18,11 +19,13 @@ class Community(Controller):
         return {
             'page_data': {
                 "cards": user.feed_network({}, **paging_args),
-                "header": ("Network", "Recent")
+                "header": ("Network", "Recent"),
+                'card_type': 'expr',
             },
             "title": 'Network - Recent',
         }
 
+    # TODO: fix/test these functions for looking at other (nonowner) pages
     def expressions_public(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
@@ -31,7 +34,7 @@ class Community(Controller):
         profile = owner.client_view()
         profile['profile_bg'] = owner.get('profile_bg')
         return {
-            'page_data': { 'cards': cards, 'profile': profile },
+            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
             'title': 'Expressions by ' + owner['name'],
         }
     def expressions_private(self, tdata, request, owner_name=None, **args):
@@ -40,7 +43,7 @@ class Community(Controller):
         spec = {'owner_name': owner_name, 'auth': 'private'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
         return {
-            'page_data': { 'cards': cards, 'profile': owner.client_view() },
+            'page_data': { 'cards': cards, 'profile': owner.client_view(), 'card_type':'expr' },
             'title': 'Your Private Expressions',
         }
 
@@ -55,8 +58,44 @@ class Community(Controller):
         profile = owner.client_view()
         profile['profile_bg'] = owner.get('profile_bg')
         return {
-            'page_data': { 'cards': cards, 'profile': profile },
+            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
             'title': 'Loves by ' + owner['name'],
+            'about_text': 'Loves',
+        }
+
+    # WIP: waiting on Abram's network: recent commit
+    def expressions_activity(self, tdata, request, owner_name=None, **args):
+        owner = self.db.User.named(owner_name)
+        if not owner: return None
+        # Get the feeds starred by owner_name...
+        spec = {'initiator_name': owner_name }
+        # ...and grab its expressions.
+        activity = self.db.Feed.search(spec, **args)
+        print "hi! {}".format(len(activity))
+        profile = owner.client_view()
+        profile['profile_bg'] = owner.get('profile_bg')
+        return {
+            'page_data': { 'cards': activity, 'profile': profile, 'card_type':'expr' },
+            'title': 'Loves by ' + owner['name'],
+            'about_text': 'Loves',
+        }
+
+    def expressions_following(self, tdata, request, owner_name=None, **args):
+        owner = self.db.User.named(owner_name)
+        if not owner: return None
+        # Get the users starred by owner_name...
+        spec = {'initiator_name': owner_name, 'entity_class':'User' }
+        # ...and grab its users.
+        users = self.db.User.fetch(map(lambda en:en['entity'], 
+            self.db.Star.page(spec, tdata.user, **args)))
+        profile = owner.client_view()
+        profile['profile_bg'] = owner.get('profile_bg')
+        # TODO: allow tag following, ?concat to personal tags
+        tags = owner['tags'] if owner.has_key('tags') else []
+        return {
+            'page_data': { 'tags': tags, 'cards': users, 'profile': profile, 'card_type':'user' },
+            'title': owner['name'] + ' Following',
+            'about_text': 'Following',
         }
 
     def user_home(self, tdata, request, owner_name=None, **args):
@@ -64,7 +103,7 @@ class Community(Controller):
         return {}
 
     def expr(self, tdata, request, id=None, owner_name=None, expr_name=None):
-        print id, owner_name, expr_name
+        print "EXPR", id, owner_name, expr_name
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
