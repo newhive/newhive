@@ -98,6 +98,19 @@ class Community(Controller):
             'about_text': 'Following',
         }
 
+    # TODO: extract commonality from these methods.
+    def expressions_followers(self, tdata, request, owner_name=None, **args):
+        owner = self.db.User.named(owner_name)
+        if not owner: return None
+        users = owner.starrer_page(**args)
+        profile = owner.client_view()
+        profile['profile_bg'] = owner.get('profile_bg')
+        return {
+            'page_data': { 'cards': users, 'profile': profile, 'card_type':'user' },
+            'title': owner['name'] + ': Followers',
+            'about_text': 'Followers',
+        }
+
     def user_home(self, tdata, request, owner_name=None, **args):
         # show home expression or redirect to home 
         return {}
