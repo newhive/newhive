@@ -7,7 +7,7 @@ from datetime import datetime
 from lxml import html
 from wsgiref.handlers import format_date_time
 from newhive import social_stats
-from itertools import ifilter, islice
+from itertools import ifilter, islice, imap
 import PIL.Image as Img
 from PIL import ImageOps
 from bson.code import Code
@@ -94,8 +94,7 @@ class Database:
                 results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
 
                 # redo pagination property after merging possible user results with expr results
-                results = Page(results)
-                results.next = results[-1][sort] if len(results) == limit else None
+                results = results
 
         return results
 
@@ -146,13 +145,7 @@ class Collection(object):
 
     def fetch(self, key, keyname='_id', **opts):
         if type(key) == list:
-            items = {}
-            res = []
-            for e in self.search({'_id': {'$in': key }}):
-                items[e.id] = e
-            for i in key:
-                if items.has_key(i): res.append(items[i])
-            return res
+            return self.search({'_id': {'$in': key }})
         else:
             return self.find({ keyname : key }, **opts)
 
@@ -166,7 +159,19 @@ class Collection(object):
         return self.new(r)
 
     def search(self, spec, **opts):
+        if type(spec) == list:
+            items = {}
+            res = []
+            for e in self.search({'_id': {'$in': key }}):
+                items[e.id] = e
+            for i in key:
+                if items.has_key(i): res.append(items[i])
+            return res
         return Cursor(self, self._col.find(spec=spec, **opts))
+
+    # Should be overridden to ommit fields not used in list views
+    def cards(self,  spec, **opts):
+        return self.search(spec, **opts)
 
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('_id', -1)]})
@@ -183,14 +188,13 @@ class Collection(object):
                 at = page_start[sort] if page_start else None
 
             if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
-            res = self.search(spec, sort=[(sort, order)])
+            res = self.cards(spec, sort=[(sort, order)])
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
                 if filter:
                     res = ifilter(filter, res)
                 res = islice(res, limit)
-                res = Page(list(res))
-                res.next = res[-1][sort] if len(res) == limit else None
+                res = list(res)
             return res
 
         elif type(spec) == list:
@@ -201,10 +205,10 @@ class Collection(object):
                 start = spec.index(at) if at else -1
                 end = start + limit * -order
                 if end > start:
-                    if start >= len(spec): return Page([])
+                    if start >= len(spec): return []
                     sub_spec = spec[start+1:end+1]
                 else:
-                    if start <= 0: return Page([])
+                    if start <= 0: return []
                     if end - 1 < 0:
                         sub_spec = spec[start-1::-1]
                     else:
@@ -215,10 +219,9 @@ class Collection(object):
                     end = limit
                     sub_spec = spec[0: end]
                 else:
-                    return Page([])
+                    return []
 
-            res = Page(self.fetch(sub_spec))
-            res.next = lget(sub_spec, -1)
+            res = self.cards(sub_spec)
             return res
 
     # default implementation of pagination, intended to be overridden by
@@ -268,11 +271,6 @@ class Cursor(object):
     def next(self): return self.collection.new(self._cur.next())
 
     def __iter__(self): return self
-
-
-# helper class for a "page" (a list of entities)
-class Page(list):
-    next = None
 
 
 class Entity(dict):
@@ -480,8 +478,7 @@ class User(HasSocial):
         activity.sort(cmp=lambda x, y: cmp(x['created'], y['created']), reverse=True)
         for i, v in enumerate(activity):
             if v == lget(activity, i + 1): del activity[i]
-        page = Page(activity[0:limit])
-        page.next = page[-1]['created'] if len(page) == limit else None
+        page = activity[0:limit]
         return page
 
     def feed_profile_entities(self, **args):
@@ -532,10 +529,8 @@ class User(HasSocial):
                                            doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
             items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
-            if len(items) == limit:
-                items.next = at+limit
         else:
-            items = Page()
+            items = []
             new_at = at
             for r in res_feed[at:]:
                 new_at += 1
@@ -544,9 +539,7 @@ class User(HasSocial):
                     expr = self.db.Expr.fetch(r['entity'])
                     if expr is not None:
                         items.append(expr)
-                if len(items) == limit:
-                    items.next = new_at
-                    break
+                if len(items) == limit: break
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
@@ -574,8 +567,7 @@ class User(HasSocial):
         # produces an iterable for all network feed items
         res = self.feed_search({ '$or': or_clause }, auth='public', at=at, **args)
         # groups feed items by ther expressions (entity attribute), and applies page limit
-        results = Page(self.feed_group(res, limit, spec=spec))
-        results.next = results[-1]['feed'][-1]['created'] if len(results) == limit else None
+        results = self.feed_group(res, limit, spec=spec)
         return results
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
@@ -771,7 +763,8 @@ class User(HasSocial):
                 loves_by = self['analytics']['loves_by'],
                 expressions = self['analytics']['expressions']['count'], # Why expressions->count?  nothing else is in there.
                 ))
-        exprs = self.get_top_expressions(3)
+        #exprs = self.get_top_expressions(3)
+        exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
 
         dict.update(user, dict(
             url = self.url,
@@ -1793,11 +1786,7 @@ class ESDatabase:
         else:
             res = self.search_text(search, es_order=es_order, es_filter=es_filter,
                                    start=at, limit=limit)
-        expr_results = self.esdb_paginate(res, es_type='expr-type')
-        if res._total:
-            if (res._total - at) > limit:
-                expr_results.next = at+limit
-        return expr_results
+        return self.esdb_paginate(res, es_type='expr-type')
 
     def esdb_paginate(self, res, es_type):
         # convert elasticsearch resultsets to result lists
@@ -1811,7 +1800,7 @@ class ESDatabase:
             col = self.db.User
         for r in result_ids:
             results.append(col.fetch(r))
-        return Page(results)
+        return results
 
     def add_related_types(self):
 
