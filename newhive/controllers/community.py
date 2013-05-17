@@ -123,7 +123,7 @@ class Community(Controller):
         if query is None:
             return self.serve_404(tdata, request, response, json=json)
         # Handle pagination
-        pagination_args = dfilter(request.args, ['at', 'limit', 'sort', 'order'])
+        pagination_args = dfilter(request.args, ['at', 'by', 'limit', 'sort', 'order'])
         for k in ['limit', 'order']:
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args

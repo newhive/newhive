@@ -162,7 +162,8 @@ class Collection(object):
         if type(spec) == list:
             items = {}
             res = []
-            for e in self.search({'_id': {'$in': key }}): items[e.id] = e
+            for e in self.search({'_id': {'$in': key }}):
+                items[e.id] = e
             for i in key:
                 if items.has_key(i): res.append(items[i])
             return res
@@ -761,8 +762,8 @@ class User(HasSocial):
                 loves_by = self['analytics']['loves_by'],
                 expressions = self['analytics']['expressions']['count'], # Why expressions->count?  nothing else is in there.
                 ))
-        exprs = self.get_top_expressions(3)
-        exprs = self.cards()
+        #exprs = self.get_top_expressions(3)
+        exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
 
         dict.update(user, dict(
             url = self.url,
