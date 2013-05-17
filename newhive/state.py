@@ -226,7 +226,8 @@ class Collection(object):
 
     # default implementation of pagination, intended to be overridden by
     # specific model classes
-    def page(self, spec, viewer, sort='updated', **opts):
+    # TODO: fix privacy for viewer
+    def page(self, spec, viewer=None, sort='updated', **opts):
         return self.paginate(spec, **opts)
 
     def count(self, spec={}): return self.search(spec).count()

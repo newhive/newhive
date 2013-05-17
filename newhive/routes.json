@@ -42,6 +42,13 @@
         "method": "expressions_following",
         "client_method": "grid"
     },
+    "expressions_followers": {
+        "page_route": "/<owner_name>/profile/followers",
+        "api_route": "/api/feed/expressions/followers/<owner_name>",
+        "controller": "community",
+        "method": "expressions_followers",
+        "client_method": "grid"
+    },
     "expressions_loves": {
         "page_route": "/<owner_name>/profile/loves",
         "api_route": "/api/feed/expressions/loves/<owner_name>",
