@@ -9,6 +9,14 @@ def mongo_total(col):
     """return total size of a mongo collection"""
     return col.search({}).count()
 
+def mongo_last(col):
+    return col.search({}).sort([('updated', -1)])
+
+def esdb_last(es_type):
+    updated = db.esdb.conn.search(match_all_query, indices=db.esdb.index,
+                               doc_types=es_type, sort="updated:desc")
+    return updated
+
 
 class ExprTest(unittest.TestCase):
     """test cases for searching / syncing mongo with elasticsearch"""
@@ -27,7 +35,7 @@ class ExprTest(unittest.TestCase):
         self.docs = []
         self.size = len(docs)
         for d in docs:
-            self.docs.append(TestExpr(docs=docs))
+            self.docs.append(TestExpr(doc=d))
 
     def test_add_to_mongo(self):
         """add these docs to mongo without indexing in es"""
@@ -36,41 +44,47 @@ class ExprTest(unittest.TestCase):
             d.add_to_mongo(yan)
         count_after = mongo_total(db.Expr)
         self.assertEqual(count_before + self.size, count_after)
+        print mongo_last(db.Expr)
 
     def test_sync_add(self):
         count_before = db.esdb.get_total('expr-type')
         db.esdb.sync_with_mongo()
         count_after = db.esdb.get_total('expr-type')
         self.assertEqual(count_before + self.size, count_after)
+        print esdb_last('expr-type')
 
     def test_sync_delete(self):
         count_before = db.esdb.get_total('expr-type')
         dids = [d['_id'] for d in self.docs]
-        db.esdb.delete_by_ids(dids, es_type='expr-type')
+        db.esdb.delete_by_ids(dids)
         count_after = db.esdb.get_total('expr-type')
         self.assertEqual(count_before - self.size, count_after)
+        print esdb_last('expr-type')
 
     def test_remove_docs(self):
         for d in self.docs:
             did = d['_id']
             d.delete_from_mongo()
             self.assertIsNone(db.Expr.fetch(did))
+        print mongo_last(db.Expr)
 
     def runTest(self):
         self.test_add_to_mongo()
+        self.test_sync_add()
+        self.test_sync_delete()
         self.test_remove_docs()
 
 class TestExpr(dict):
     """class for temporary test expressions"""
     def __init__(self, auth='public', views=0,
-                 stars=0, broadcasts=0, docs={}):
+                 stars=0, broadcasts=0, doc={}):
         super(TestExpr, self).__init__()
         self['auth'] = auth
         self['views'] = views
         self['analytics'] = {'Star': {'count': stars},
                              'Broadcast': {'count': broadcasts}}
         self.expr = None
-        self.update(docs)
+        self.update(doc)
     def add_tags(self, tags):
         self.update({'tags': tags})
     def add_text(self, text):

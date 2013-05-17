@@ -1625,10 +1625,10 @@ class ESDatabase:
         self.conn.indices.delete_index(self.index)
         return None
 
-    def delete_by_ids(self, ids, es_type):
+    def delete_by_ids(self, ids):
         query = pyes.query.IdsQuery(ids)
         self.conn.delete_by_query(query=query, indices=self.index,
-                                  doc_types=es_type)
+                                  doc_types=None)
 
     def parse_query(self, q):
         return self.db.parse_query(q)
@@ -1738,7 +1738,7 @@ class ESDatabase:
             self.conn.indices.refresh()
         return None
 
-    def sync_with_mongo(self, refresh=False):
+    def sync_with_mongo(self):
         """make sure elasticsearch db reflects current mongodb state"""
         updated = self.conn.search(match_all_query, indices=self.index, sort="updated:desc")
         last_updated = updated[0]['updated']
@@ -1749,7 +1749,7 @@ class ESDatabase:
         users = self.db.User.search({'updated': {'$gte': last_updated}})
         print exprs.count(), 'expressions to update'
         for expr in exprs:
-            print expr #['updated']
+            print expr['updated']
             self.update(expr, 'expr-type', refresh=False)
         print feed.count(), 'feed items to update'
         for f in feed:
@@ -1759,6 +1759,31 @@ class ESDatabase:
         for user in users:
             print user['updated']
             self.update(user, 'user-type', refresh=False)
+        self.conn.indices.refresh()
+
+    def purge_deleted(self, time_diff=0):
+        """remove entries from elasticsearch that have been deleted in mongo"""
+        #  time diff is the time in seconds to look back
+        last_updated = time.time() - time_diff
+        exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
+        feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
+        users = self.db.User.search({'updated': {'$gte': last_updated}})
+        valid_ids = []
+        purge_ids = []
+        for e in exprs:
+            valid_ids.append(e['_id'])
+        for u in users: 
+            valid_ids.append(u['_id'])
+        for f in feed:
+            valid_ids.append(f['_id'])
+        q = pyes.query.RangeQuery(qrange=pyes.utils.ESRange('updated',
+                                  from_value=last_updated))
+        res = self.conn.search(q, indices=self.index)
+        for r in res:
+            if r._meta.id not in valid_ids:
+                purge_ids.append(r._meta.id)
+        print 'deleting: ', purge_ids
+        self.delete_by_ids(purge_ids)
         self.conn.indices.refresh()
 
     def paginate(self, search, limit=40, at=0, es_order='_score,updated:desc',
