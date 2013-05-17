@@ -3,9 +3,9 @@
 {<if user.logged_in}
   ><div id='user_btn' class='text_btn item hoverable black_active'
     >{user.name|e}</div
-  ><div class='count rounded {<unless user.notification_count}none{>}'
+  >{#<div class='count rounded {<unless user.notification_count}none{>}'
     >{user.notification_count}</div
-  ></div
+  >#}</div
   ><a id='create_btn' class='text_btn item hoverable black_active' href='{secure_server}edit'
       onclick='return require_login("create")'
       ><div class='text_btn item text'>New</div

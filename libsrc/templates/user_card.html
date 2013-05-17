@@ -1,25 +1,20 @@
+{# User Card
+ # Default view is: user thumb | <counts: expr, views, loves> | <mini_expression popout list>
+#}
 <div class='user_thumb'>
   <a href="{url}"><img src="{thumb_190}" width="222" height="222"></a>
   <div class='info'>
     <div class='username'>{name}</div>
-    <!-- TODO these div's should have their own template -->
-    <div style="display:inline-block;width:74px">
-      <!-- TODO fix img -->
-      <span class='counts_icon'><img src='{asset "skin/nav/exprs.png"}'></span>
-      <span class='counts'>{thousands expressions}</span>
-    </div><div style="display:inline-block;width:74px">
-      <span class='counts_icon'><img src='{asset "skin/nav/views.png"}'></span>
-      <span class='counts'>{thousands views_by}</span>
-    </div><div style="display:inline-block;width:74px">
-      <span class='counts_icon'><img src='{asset "skin/nav/loves.png"}'></span>
-      <span class='counts'>{thousands loves_by}</span>
-    </div>
+    {<with . "icon" "skin/nav/expr.png" "count" expressions}
+      {|templates/icon_count.html}
+    {>}{<with . "icon" "skin/nav/views.png" "count" views_by}
+      {|templates/icon_count.html}
+    {>}{<with . "icon" "skin/nav/love.png" "count" loves_by}
+      {|templates/icon_count.html}
+    {>}
     <div class='expr_preview_bar'>
       {<for mini_expressions}
-      	<div class='mini_expression' style="display:inline-block">
-    	  <a { get_route_anchor_attrs "view_expr"
-    	    "id" id  "expr_name" name  "owner_name" owner_name } >
-      	    <img src="{thumb}" width="71" height="44"></a></div>
+        {|templates/expr_card_mini.html}
       {>}
     </div>
   </div>

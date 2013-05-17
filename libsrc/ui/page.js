@@ -1,6 +1,7 @@
 /* 
  * class page
-   What is my purpose??
+   Top-level entry point for client view rendering.
+   Delegates actual rendering to the templates.
  */
 define([
     'browser/jquery',
@@ -8,9 +9,13 @@ define([
     'server/context',
     'sj!templates/card_master.html',
     'sj!templates/profile_edit.html',
-    'sj!templates/expr_card.html',
+    'sj!templates/expr_card_large.html',
+    'sj!templates/expr_card_feed.html',
+    'sj!templates/expr_card_mini.html',
     'sj!templates/feed_card.html',
-    'sj!templates/user_card.html'
+    'sj!templates/user_card.html',
+    'sj!templates/profile_card.html',
+    'sj!templates/icon_count.html',
 ], function($, nav, context, master_template, profile_edit_template, card_template) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,

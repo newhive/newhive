@@ -1,0 +1,25 @@
+{# Profile card
+  User thumb, name, view/love counts
+#}
+<div id='user_header' class='header'>
+  {<if profile_bg}
+    <label for='file'
+      style='background-image:url("{profile_bg}")'
+      class='background'/>
+  {>}
+  <div class='profile'>
+    <img src='{thumb_190}' class='thumb'>
+    <div class='info'>
+      <div class='name'>
+        {fullname}
+        {# TODO: make this dependent on how many icons there are instead of who viewer is #}
+        {<unless user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='mail_btn'/></a>{>}
+        {<if user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='edit_btn'/></a>{>}
+      </div>
+      <div>{about_text}</div>
+    </div>
+  </div>
+  <form id='profile_edit' class='hide'>
+    <input type='file' name='file' id='file'>
+  </form>
+</div>
