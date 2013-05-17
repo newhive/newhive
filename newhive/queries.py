@@ -32,6 +32,7 @@ class ExprTest(unittest.TestCase):
                  'views': 100,
                  'tags': '#unittest #popculture #sarcasm',
                  'title': 'irrelevant'}]
+        self.new_ids = []
         self.docs = []
         self.size = len(docs)
         for d in docs:
@@ -42,31 +43,37 @@ class ExprTest(unittest.TestCase):
         count_before = mongo_total(db.Expr)
         for d in self.docs:
             d.add_to_mongo(yan)
+            self.new_ids.append(d.expr['_id'])
         count_after = mongo_total(db.Expr)
         self.assertEqual(count_before + self.size, count_after)
-        print mongo_last(db.Expr)
+        print count_before
+        print count_after
 
     def test_sync_add(self):
         count_before = db.esdb.get_total('expr-type')
         db.esdb.sync_with_mongo()
         count_after = db.esdb.get_total('expr-type')
         self.assertEqual(count_before + self.size, count_after)
-        print esdb_last('expr-type')
+        print count_before
+        print count_after
 
     def test_sync_delete(self):
         count_before = db.esdb.get_total('expr-type')
-        dids = [d['_id'] for d in self.docs]
-        db.esdb.delete_by_ids(dids)
+        db.esdb.delete_by_ids(self.new_ids)
         count_after = db.esdb.get_total('expr-type')
         self.assertEqual(count_before - self.size, count_after)
-        print esdb_last('expr-type')
+        print count_before
+        print count_after
 
     def test_remove_docs(self):
+        count_before = mongo_total(db.Expr)
         for d in self.docs:
-            did = d['_id']
+            did = d.expr['_id']
             d.delete_from_mongo()
             self.assertIsNone(db.Expr.fetch(did))
-        print mongo_last(db.Expr)
+        count_after = mongo_total(db.Expr)
+        print count_before
+        print count_after
 
     def runTest(self):
         self.test_add_to_mongo()
@@ -104,4 +111,3 @@ class TestExpr(dict):
     def delete_from_mongo(self):
         self.expr.delete()
         self.expr = None
-
