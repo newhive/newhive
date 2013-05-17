@@ -17,9 +17,14 @@ def esdb_last(es_type):
                                doc_types=es_type, sort="updated:desc")
     return updated
 
+def efilter(expr):
+    """print useful parts of an expression"""
+    keys = ['tags', 'text', 'title', 'name', 'auth', 'owner_name',
+            'updated', 'created', 'analytics', 'views']
+    return dfilter(expr, keys)
 
 class ExprTest(unittest.TestCase):
-    """test cases for searching / syncing mongo with elasticsearch"""
+    """test cases for syncing mongo with elasticsearch"""
     def setUp(self):
         """create some docs to search for"""
         docs = [{'text': 'i hate atlas shrugged',
@@ -78,8 +83,83 @@ class ExprTest(unittest.TestCase):
     def runTest(self):
         self.test_add_to_mongo()
         self.test_sync_add()
-        self.test_sync_delete()
         self.test_remove_docs()
+        self.test_sync_delete()
+
+class QueryTest(ExprTest):
+    """test some queries already"""
+    def setUp(self):
+        super(QueryTest, self).setUp()
+        self.null_query = '"a ridiculous string"'
+        super(QueryTest, self).test_add_to_mongo()
+        super(QueryTest, self).test_sync_add()
+
+    def tearDown(self):
+        super(QueryTest, self).test_remove_docs()
+        super(QueryTest, self).test_sync_delete()
+
+    def test_null_search(self, query):
+        """a search that should return no results"""
+        r = db.query(query)
+        self.assertTrue(len(r)==0)
+
+    def test_text_search(self, query, fuzzy=False):
+        """a text search that should return results"""
+        r = db.query(query, fuzzy=fuzzy)
+        self.assertTrue(len(r) > 0)
+        print efilter(r)
+
+    def test_fuzzy_search(self, query):
+        """make sure fuzzy searches return more results"""
+        r1 = db.query(query, fuzzy=False)
+        r2 = db.query(query, fuzzy=True)
+        self.assertTrue(r1.total < r2.total)
+
+    def test_featured_search(self, query):
+        """show featured when no user is logged in"""
+        r1 = db.query('#Network_trending')
+        r2 = db.query('#Featured')
+        self.assertEqual(r1, r2)
+
+    def test_network_search(self, user):
+        """this should just go to the old method of network recent"""
+        r = db.query('#Network', viewer=user)
+        self.assertTrue(len(r) > 0)
+        print efilter(r)
+
+    def test_trending_search(self, user):
+        """this should call elasticsearch"""
+        r = db.query('#Network_trending', viewer=user)
+        self.assertTrue(r.total > 0)
+        print efilter(r)
+
+    def test_auth_search(self, user):
+        """only works for a user who has private exprs"""
+        r1 = db.query('@'+user['name'])
+        r2 = db.query('@'+user['name'], viewer=user)
+        self.assertTrue(r1.total < r2.total)
+
+    def runTest(self):
+        self.test_null_search(self.null_query)
+        self.test_text_search('#unittest')
+        self.test_text_search('#unittest books')
+        self.test_text_search('#food')
+        self.test_fuzzy_search('lovely')
+        self.test_featured_search()
+        self.test_auth_search(yan)
+        self.test_network_search(yan)
+        self.test_trending_search(yan)
+
+
+class PaginationTest(QueryTest):
+    """test some pagination only for elasticsearch queries"""
+    def test_search_single_page(self):
+        pass
+    def test_search_multi_page(self):
+    def test_feed_single_page(self, user):
+        pass
+    def test_feed_multi_page(self, user):
+        pass
 
 class TestExpr(dict):
     """class for temporary test expressions"""
@@ -111,3 +191,6 @@ class TestExpr(dict):
     def delete_from_mongo(self):
         self.expr.delete()
         self.expr = None
+
+if __name__=='__main__':
+    unittest.main()
