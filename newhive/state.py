@@ -1621,9 +1621,14 @@ class ESDatabase:
 
         return None
 
-    def delete(self):
+    def delete_index(self):
         self.conn.indices.delete_index(self.index)
         return None
+
+    def delete_by_ids(self, ids, es_type):
+        query = pyes.query.IdsQuery(ids)
+        self.conn.delete_by_query(query=query, indices=self.index,
+                                  doc_types=es_type)
 
     def parse_query(self, q):
         return self.db.parse_query(q)
@@ -1744,7 +1749,7 @@ class ESDatabase:
         users = self.db.User.search({'updated': {'$gte': last_updated}})
         print exprs.count(), 'expressions to update'
         for expr in exprs:
-            print expr['updated']
+            print expr #['updated']
             self.update(expr, 'expr-type', refresh=False)
         print feed.count(), 'feed items to update'
         for f in feed:

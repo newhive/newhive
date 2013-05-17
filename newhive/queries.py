@@ -17,15 +17,17 @@ class ExprTest(unittest.TestCase):
         docs = [{'text': 'i hate atlas shrugged',
                  'title': 'a long rant',
                  'views': 20,
-                 'tags': '#unittest, #books'},
+                 'tags': '#unittest, #books',
+                 'name': 'bookrant'},
                 {'text': 'i ate the bones',
                  'title': 'my favorite KFC commercial',
                  'views': 100,
-                 'tags': '#unittest #popculture #sarcasm'}]
+                 'tags': '#unittest #popculture #sarcasm',
+                 'title': 'irrelevant'}]
         self.docs = []
         self.size = len(docs)
         for d in docs:
-            self.docs.append(TestExpr(d))
+            self.docs.append(TestExpr(docs=docs))
 
     def test_add_to_mongo(self):
         """add these docs to mongo without indexing in es"""
@@ -42,9 +44,13 @@ class ExprTest(unittest.TestCase):
         self.assertEqual(count_before + self.size, count_after)
 
     def test_sync_delete(self):
-        pass
+        count_before = db.esdb.get_total('expr-type')
+        dids = [d['_id'] for d in self.docs]
+        db.esdb.delete_by_ids(dids, es_type='expr-type')
+        count_after = db.esdb.get_total('expr-type')
+        self.assertEqual(count_before - self.size, count_after)
 
-    def remove_docs(self):
+    def test_remove_docs(self):
         for d in self.docs:
             did = d['_id']
             d.delete_from_mongo()
@@ -52,20 +58,19 @@ class ExprTest(unittest.TestCase):
 
     def runTest(self):
         self.test_add_to_mongo()
-        self.remove_docs()
+        self.test_remove_docs()
 
 class TestExpr(dict):
     """class for temporary test expressions"""
-    def __init__(self, name, auth='public', views=0,
-                 stars=0, broadcasts=0, **kwargs):
+    def __init__(self, auth='public', views=0,
+                 stars=0, broadcasts=0, docs={}):
         super(TestExpr, self).__init__()
-        self['name'] = name
         self['auth'] = auth
         self['views'] = views
         self['analytics'] = {'Star': {'count': stars},
                              'Broadcast': {'count': broadcasts}}
         self.expr = None
-        self.update(**kwargs)
+        self.update(docs)
     def add_tags(self, tags):
         self.update({'tags': tags})
     def add_text(self, text):
@@ -80,6 +85,8 @@ class TestExpr(dict):
         self['analytics']['Broadcast']['count'] += broadcasts
     def add_to_mongo(self, user):
         self.expr = user.expr_create(self)
+    def update_mongo():
+        self.expr.update(self)
     def delete_from_mongo(self):
         self.expr.delete()
         self.expr = None
