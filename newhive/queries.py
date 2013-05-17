@@ -5,6 +5,7 @@ import unittest
 db = state.Database(config)
 yan = db.User.fetch('yan', keyname='name')
 
+
 def mongo_total(col):
     """return total size of a mongo collection"""
     return col.search({}).count()
@@ -22,6 +23,7 @@ def efilter(expr):
     keys = ['tags', 'text', 'title', 'name', 'auth', 'owner_name',
             'updated', 'created', 'analytics', 'views']
     return dfilter(expr, keys)
+
 
 class ExprTest(unittest.TestCase):
     """test cases for syncing mongo with elasticsearch"""
@@ -86,6 +88,7 @@ class ExprTest(unittest.TestCase):
         self.test_remove_docs()
         self.test_sync_delete()
 
+
 class QueryTest(ExprTest):
     """test some queries already"""
     def setUp(self):
@@ -101,7 +104,7 @@ class QueryTest(ExprTest):
     def test_null_search(self, query):
         """a search that should return no results"""
         r = db.query(query)
-        self.assertTrue(len(r)==0)
+        self.assertTrue(len(r) == 0)
 
     def test_text_search(self, query, fuzzy=False):
         """a text search that should return results"""
@@ -153,13 +156,35 @@ class QueryTest(ExprTest):
 
 class PaginationTest(QueryTest):
     """test some pagination only for elasticsearch queries"""
-    def test_search_single_page(self):
-        pass
-    def test_search_multi_page(self):
-    def test_feed_single_page(self, user):
-        pass
+    def test_search_multi_page(self, query, viewer=None):
+        p1 = db.query(query, limit=15, viewer=viewer)
+        assert p1.total > 30
+        assert len(p1) == 15
+        p2 = db.query(query, limit=15, start=p1.next, viewer=viewer)
+        p12 = db.query(query, limit=30, viewer=viewer)
+        self.assertEqual(p12, p1 + p2)
+
+    def test_search_single_page(self, query):
+        p1 = db.query(query, limit=100)
+        assert p1.total < 100
+        self.assertEqual(p1.next, p1.total)
+
+    def test_search_last_page(self, query):
+        p1 = db.query(query)
+        assert p1.total > 0
+        p2 = db.query(query, start=p1.total)
+        self.assertEqual(p2, [])
+        
     def test_feed_multi_page(self, user):
-        pass
+        query = '#Network_trending'
+        self.test_search_multi_page(query, viewer=user)
+
+    def runTest(self):
+        self.test_search_single_page("#food")
+        self.test_search_multi_page('art')
+        self.test_search_last_page('art')
+        self.test_feed_multi_page(yan)
+
 
 class TestExpr(dict):
     """class for temporary test expressions"""
@@ -192,5 +217,5 @@ class TestExpr(dict):
         self.expr.delete()
         self.expr = None
 
-if __name__=='__main__':
+if __name__ == '__main__':
     unittest.main()
