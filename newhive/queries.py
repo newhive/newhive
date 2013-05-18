@@ -3,8 +3,6 @@ from newhive.utils import *
 import unittest
 
 db = state.Database(config)
-yan = db.User.fetch('yan', keyname='name')
-
 
 def mongo_total(col):
     """return total size of a mongo collection"""
@@ -18,11 +16,11 @@ def esdb_last(es_type):
                                doc_types=es_type, sort="updated:desc")
     return updated
 
-def efilter(expr):
+def efilter(exprs):
     """print useful parts of an expression"""
     keys = ['tags', 'text', 'title', 'name', 'auth', 'owner_name',
             'updated', 'created', 'analytics', 'views']
-    return dfilter(expr, keys)
+    return [dfilter(expr, keys) for expr in exprs]
 
 
 class ExprTest(unittest.TestCase):
@@ -42,6 +40,7 @@ class ExprTest(unittest.TestCase):
         self.new_ids = []
         self.docs = []
         self.size = len(docs)
+        self.user = db.User.fetch('yan', keyname='name')
         for d in docs:
             self.docs.append(TestExpr(doc=d))
 
@@ -49,7 +48,7 @@ class ExprTest(unittest.TestCase):
         """add these docs to mongo without indexing in es"""
         count_before = mongo_total(db.Expr)
         for d in self.docs:
-            d.add_to_mongo(yan)
+            d.add_to_mongo(self.user)
             self.new_ids.append(d.expr['_id'])
         count_after = mongo_total(db.Expr)
         self.assertEqual(count_before + self.size, count_after)
@@ -118,7 +117,7 @@ class QueryTest(ExprTest):
         r2 = db.query(query, fuzzy=True)
         self.assertTrue(r1.total < r2.total)
 
-    def test_featured_search(self, query):
+    def test_featured_search(self):
         """show featured when no user is logged in"""
         r1 = db.query('#Network_trending')
         r2 = db.query('#Featured')
@@ -149,6 +148,8 @@ class QueryTest(ExprTest):
         self.test_text_search('#food')
         self.test_fuzzy_search('lovely')
         self.test_featured_search()
+        yan = db.User.fetch('yan', keyname='name')
+        print yan
         self.test_auth_search(yan)
         self.test_network_search(yan)
         self.test_trending_search(yan)
