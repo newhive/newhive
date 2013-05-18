@@ -4,7 +4,7 @@
         "api_route": "/api/feed/<username>/network_trending",
         "controller": "community",
         "method": "network_trending",
-        "client_method": "expr_detail"
+        "client_method": "grid"
     },
     "network_recent": {
         "page_route": "/<username>/profile/network/recent",

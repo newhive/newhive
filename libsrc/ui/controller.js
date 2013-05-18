@@ -1,12 +1,13 @@
 define([
     'browser/jquery',
+    'browser/js',
     'ui/page',
     'ui/nav',
     'server/context',
     'json!ui/routes.json',
     'ui/routing'
-], function($, page, nav, context, routes, routing) {
-    var o = {}, data, route;
+], function($, util, page, nav, context, routes, routing) {
+    var o = {}, route;
 
     o.init = function(route_args){
         wrapLinks();
@@ -15,10 +16,10 @@ define([
         nav.set_expr_view(route_args.route_name == 'view_expr');
         o.dispatch(route_args.route_name, context);
     };
-    o.dispatch = function(route_name, _data){
+    o.dispatch = function(route_name, data){
         nav.set_expr_view(route_name == 'view_expr');
         route = routes[route_name];
-        data = _data;
+        util.copy(data, context);
         page.render(route.client_method, data);
     };
     o.refresh = function(){ o.dispatch(route.method, data) };

@@ -122,8 +122,8 @@ class Database:
                 elif pattern[1] == 'Public': search['auth'] = 'public' 
                 elif pattern[1] == 'Private': search['auth'] = 'password'
                 elif pattern[1] == 'Activity': search['activity'] = True
-                elif pattern[1] == 'Listening': search['listening'] = True
-                elif pattern[1] == 'Listeners': search['listeners'] = True
+                elif pattern[1] == 'Followers': search['followers'] = True
+                elif pattern[1] == 'Following': search['following'] = True
                 else: search['tags'].append( pattern[1].lower() )
             else: search['text'].append( pattern[1].lower() )
 
@@ -145,7 +145,7 @@ class Collection(object):
 
     def fetch(self, key, keyname='_id', **opts):
         if type(key) == list:
-            return self.search({'_id': {'$in': key }})
+            return list(self.search({'_id': {'$in': key }}))
         else:
             return self.find({ keyname : key }, **opts)
 
@@ -162,9 +162,9 @@ class Collection(object):
         if type(spec) == list:
             items = {}
             res = []
-            for e in self.search({'_id': {'$in': key }}):
+            for e in self.search({'_id': {'$in': spec }}):
                 items[e.id] = e
-            for i in key:
+            for i in spec:
                 if items.has_key(i): res.append(items[i])
             return res
         return Cursor(self, self._col.find(spec=spec, **opts))
@@ -1014,6 +1014,7 @@ class Expr(HasSocial):
 
     def delete(self):
         self.owner.get_expr_count(force_update=True)
+        for r in db.Feed.search({'entity': self.id}): r.delete()
         return super(Expr, self).delete()
 
     def increment_counter(self, counter):
