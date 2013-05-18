@@ -63,6 +63,23 @@ class Community(Controller):
             'about_text': 'Loves',
         }
 
+    def expressions_comments(self, tdata, request, owner_name=None, **args):
+        owner = self.db.User.named(owner_name)
+        if not owner: return None
+        # Get the feeds starred by owner_name...
+        spec = { '$or': [{'initiator_name': owner_name}, {'entity_owner': owner.id}],
+                'entity_class':'Expr' }
+        # ...and grab its expressions.
+        cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
+            self.db.Comment.page(spec, tdata.user, **args)))
+        profile = owner.client_view()
+        profile['profile_bg'] = owner.get('profile_bg')
+        return {
+            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
+            'title': 'Comments by ' + owner['name'],
+            'about_text': 'Comments',
+        }
+
     # WIP: waiting on Abram's network: recent commit
     def expressions_activity(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
