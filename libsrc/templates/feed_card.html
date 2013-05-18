@@ -1,3 +1,12 @@
-<div>
-    I'm a feed card!
+{# Feed card
+  Switches based on activity type
+#}
+<div class='feed_item'>
+  {<if class_name "Comment"}comment{>}
+  {<if class_name "Comment"}
+    {<if entity_class "Expr"}love{>}
+  {>}
+  {<if class_name "Broadcast"}republish{>}
+  {<if class_name "NewExpr"}created{>}
+  {<if class_name "UpdatedExpr"}updated{>}
 </div>

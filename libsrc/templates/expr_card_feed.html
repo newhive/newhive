@@ -1,0 +1,17 @@
+{# Expression (feed)
+  Tiling-sized expression view, with activity feed
+  param{suppress_feed}: disable activity
+#}
+<div class='title'>{title}</div>
+<div class='tags hide'>{<for tag_index}{.}{>}</div>
+<a { get_route_anchor_attrs "view_expr"
+    "id" id  "expr_name" name  "owner_name" owner.name }
+  ><img src="https://dev-1-s0-newhive.s3.amazonaws.com/expr_snapshot_{ id }_small"
+    class="snapshot"></a>
+<div class='info'>
+  <img class="thumb" src='{owner.thumb_70}'/>
+  <span>by <span class='username'>{owner.name}</span></span>
+</div>
+{<unless suppress_feed}{<for feed}
+  {|templates/feed_card.html}
+{>}{>}

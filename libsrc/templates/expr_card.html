@@ -1,43 +1,6 @@
 {<if layout_grid}
-  <div class='title'>{title}</div>
-  <div class='tags hide'>{<for tag_index}{.}{>}</div>
-  <a { get_route_anchor_attrs "view_expr"
-      "id" id  "expr_name" name  "owner_name" owner.name }
-    ><img src="https://dev-1-s0-newhive.s3.amazonaws.com/expr_snapshot_{ id }_small"
-      class="snapshot"></a>
-  <div class='info'>
-    <img class="thumb" src='{owner.thumb_70}'/>
-    <span>by <span class='username'>{owner.name}</span></span>
-  </div>
-  {<for feed}
-    <div class='feed_item'>
-      {<if class_name "Comment"}comment{>}
-      {<if class_name "Comment"}
-        {<if entity_class "Expr"}love{>}
-      {>}
-      {<if class_name "Broadcast"}republish{>}
-      {<if class_name "NewExpr"}created{>}
-      {<if class_name "UpdatedExpr"}updated{>}
-    </div>
-  {>}
+  {|templates/expr_feed.html}
 {>}
 {<if layout_profile}
-  <a { get_route_anchor_attrs "view_expr"
-    "id" id  "expr_name" name  "owner_name" owner.name }
-  >
-    <div class="title"><span class='words'>{title}</span></div>
-    <img src="https://dev-1-s0-newhive.s3.amazonaws.com/expr_snapshot_{ id }_big"
-      class="snapshot">
-  </a>
-  <div class='info'>
-    <div class="owner">
-      <img class="thumb" src="{owner.thumb_70}"/>
-      <span>by <span class='username'>{owner.name}</span></span>
-    </div>
-    <div class="stats">
-      <img src='{asset "skin/nav/views.png"}'/> {counts.Views}
-      {<if counts.Star}<img src='{asset "skin/nav/love.png"}'/> {counts.Star}{>}
-      {<if counts.Comment}<img src='{asset "skin/nav/comment.png"}'/> {counts.Comment}{>}
-    </div>
-  </div>
+  {|templates/expr_large.html}
 {>}

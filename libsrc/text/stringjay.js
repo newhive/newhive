@@ -364,8 +364,15 @@ define(['browser/js', 'module', 'templates/context'],
 			return (i % modulous == selector) ? block(context.concat(v)) : '';
 		}).reduce(util.op['+'], '');
 	};
+	// With pushes a new, top context with "what" as its contents.
+	// Takes optional varargs key-value pairs which are also pushed onto context.
 	o.base_context['with'] = function(context, block, what){
-		return block(context.concat(what));
+		var new_context = what;
+		// All arguments after what are name value pairs
+		for(var i = 3; i < arguments.length; i += 2){
+			new_context[arguments[i]] = arguments[i + 1];
+		}
+		return block(context.concat(new_context));
 	};
 	o.base_context.e = encode_to_html;
 	o.base_context.json = function(context, data){
