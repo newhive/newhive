@@ -19,7 +19,7 @@ define([
 ], function($, nav, context, master_template, profile_edit_template, card_template) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
-        layout, grid_width = 410;
+        layout, grid_width;
     // TODO: Is grid_width constant across all grid rendering cases?  Maybe pass as data,
     // or pass back from rendering function which can figure it out.
     const ANIM_DURATION = 700;
@@ -37,6 +37,8 @@ define([
         // TODO: find a better place for these constants
         if (page_data['feed_layout'] == 'mini') {
             grid_width = 232 + 20; // padding = 10 + 10
+        } else {
+            grid_width = 410;
         }
         layout = page_data.layout = method;
         if(o[method]) o[method](page_data);
