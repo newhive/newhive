@@ -106,6 +106,16 @@ class QueryTest(ExprTest):
         super(QueryTest, self).test_remove_docs()
         super(QueryTest, self).test_sync_delete()
 
+    def test_adding_entries(self):
+        """confirms that new entries in elasticsearch get indexed"""
+        self.tearDown()
+        r = db.query('#unittest')
+        self.assertTrue(len(r) == 0)
+        super(QueryTest, self).test_add_to_mongo()
+        super(QueryTest, self).test_sync_add()
+        r = db.query('#unittest')
+        self.assertTrue(len(r) == 2)
+
     def test_null_search(self, query):
         """a search that should return no results"""
         r = db.query(query)
