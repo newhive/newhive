@@ -19,10 +19,10 @@ define([
 ], function($, nav, context, master_template, profile_edit_template, card_template) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
-        layout;
-    // TODO: Is GRID_WIDTH constant across all grid rendering cases?  Maybe pass as data,
+        layout, grid_width = 410;
+    // TODO: Is grid_width constant across all grid rendering cases?  Maybe pass as data,
     // or pass back from rendering function which can figure it out.
-    const ANIM_DURATION = 700, GRID_WIDTH = 410;
+    const ANIM_DURATION = 700;
 
     o.init = function(){
         nav.render(context.page_data);
@@ -34,6 +34,10 @@ define([
         if(!expr_page) hide_exprs();
         var page_data = data.page_data;
         page_data['layout_' + method] = true;
+        // TODO: find a better place for these constants
+        if (page_data['feed_layout'] == 'mini') {
+            grid_width = 222;
+        }
         layout = page_data.layout = method;
         if(o[method]) o[method](page_data);
         else render_site(page_data);
@@ -132,7 +136,7 @@ define([
     function layout(){
         $('#site, #exprs').css('height', $(window).height() - 44);
         if(layout == 'grid') $('#feed').css('width',
-            Math.floor($(window).width() / GRID_WIDTH) * GRID_WIDTH);
+            Math.floor($(window).width() / grid_width) * grid_width);
     }
 
     function expr_column(){

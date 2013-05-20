@@ -58,7 +58,8 @@ class Community(Controller):
         profile = owner.client_view()
         profile['profile_bg'] = owner.get('profile_bg')
         return {
-            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
+            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
+                'feed_layout':'mini' },
             'title': 'Loves by ' + owner['name'],
             'about_text': 'Loves',
         }
@@ -75,7 +76,8 @@ class Community(Controller):
         profile = owner.client_view()
         profile['profile_bg'] = owner.get('profile_bg')
         return {
-            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
+            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
+                'feed_layout':'mini' },
             'title': 'Comments by ' + owner['name'],
             'about_text': 'Comments',
         }
@@ -92,7 +94,7 @@ class Community(Controller):
         profile = owner.client_view()
         profile['profile_bg'] = owner.get('profile_bg')
         return {
-            'page_data': { 'cards': activity, 'profile': profile, 'card_type':'expr' },
+            'page_data': { 'cards': activity, 'profile': profile, 'card_type':'expr', },
             'title': 'Loves by ' + owner['name'],
             'about_text': 'Loves',
         }
@@ -110,7 +112,8 @@ class Community(Controller):
         # TODO: allow tag following, ?concat to personal tags
         tags = owner['tags'] if owner.has_key('tags') else []
         return {
-            'page_data': { 'tags': tags, 'cards': users, 'profile': profile, 'card_type':'user' },
+            'page_data': { 'tags': tags, 'cards': users, 'profile': profile, 'card_type':'user',
+                'feed_layout':'mini' },
             'title': owner['name'] + ' Following',
             'about_text': 'Following',
         }
