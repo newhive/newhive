@@ -168,6 +168,7 @@ class QueryTest(ExprTest):
         self.test_auth_search(yan)
         self.test_network_search(yan)
         self.test_trending_search(yan)
+        self.test_adding_entries()
 
 
 class PaginationTest(QueryTest):
