@@ -64,10 +64,10 @@ class Database:
         search = self.parse_query(q)
 
         # substitute network with featured when not logged in
-        if not viewer and (search.get('network') or search.get('network_trending')):
+        if not viewer and (search.get('network') or search.get('trending')):
             search['featured'] = True
             search.pop('network', 0)
-            search.pop('network_trending', 0)
+            search.pop('trending', 0)
 
         spec = {}
 
@@ -77,7 +77,7 @@ class Database:
 
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
-        elif search.get('network_trending'):
+        elif search.get('trending'):
             results, grouped_feed = viewer.feed_page_esdb(trending=True)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
@@ -118,7 +118,7 @@ class Database:
                 if pattern[1] == 'All': search['all'] = True
                 elif pattern[1] == 'Featured': search['featured'] = True
                 elif pattern[1] == 'Network': search['network'] = True
-                elif pattern[1] == 'Network_trending': search['network_trending'] = True
+                elif pattern[1] == 'Trending': search['trending'] = True
                 elif pattern[1] == 'Public': search['auth'] = 'public' 
                 elif pattern[1] == 'Private': search['auth'] = 'password'
                 elif pattern[1] == 'Activity': search['activity'] = True
@@ -446,7 +446,7 @@ class User(HasSocial):
     @cached
     def my_stars(self):
         """ Feed records indicating what expressions a user likes and who they're listening to """
-        return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
+        return list(self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)]))
 
     @property
     @cached
@@ -454,7 +454,8 @@ class User(HasSocial):
         return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
 
     @property
-    def starred_expr_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
+    def starred_expr_ids(self):
+        return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
 
     def starred_user_page(self, **args): return self.collection.page(self.starred_user_ids, **args)
 
