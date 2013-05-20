@@ -36,7 +36,7 @@ define([
         page_data['layout_' + method] = true;
         // TODO: find a better place for these constants
         if (page_data['feed_layout'] == 'mini') {
-            grid_width = 222;
+            grid_width = 232 + 20; // padding = 10 + 10
         }
         layout = page_data.layout = method;
         if(o[method]) o[method](page_data);
@@ -136,7 +136,7 @@ define([
     function layout(){
         $('#site, #exprs').css('height', $(window).height() - 44);
         if(layout == 'grid') $('#feed').css('width',
-            Math.floor($(window).width() / grid_width) * grid_width);
+            Math.min(3, Math.floor($(window).width() / grid_width)) * grid_width);
     }
 
     function expr_column(){
