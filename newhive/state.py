@@ -81,7 +81,8 @@ class Database:
         # todo: return grouped_feed items with expressions in network trending
 
         if search.get('network'):
-            results = viewer.feed_network(spec=spec, **args)
+           # results = viewer.feed_network(spec=spec, **args)
+            results, grouped_feed = viewer.feed_page_esdb(trending=False, at=start, limit=limit)
         elif search.get('network_trending'):
             results, grouped_feed = viewer.feed_page_esdb(trending=True, at=start, limit=limit)
         elif search.get('featured'):
@@ -487,7 +488,8 @@ class User(HasSocial):
         """Creates an elasticsearch filter corresponding to can_view"""
         f = [pub_filter, pyes.filters.TermFilter('owner', self.id)]
         if len(self.starred_expr_ids)>0:
-            f.append(pyes.filters.IdsFilter(self.starred_expr_ids))
+            #f.append(pyes.filters.IdsFilter(self.starred_expr_ids))
+            pass  # until bug is fixed
         return pyes.filters.BoolFilter(should=f)
 
     def feed_profile(self, spec={}, limit=40, **args):
@@ -1772,7 +1774,7 @@ class ESDatabase:
         purge_ids = []
         for e in exprs:
             valid_ids.append(e['_id'])
-        for u in users: 
+        for u in users:
             valid_ids.append(u['_id'])
         for f in feed:
             valid_ids.append(f['_id'])

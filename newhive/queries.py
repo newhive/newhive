@@ -16,6 +16,12 @@ def esdb_last(es_type):
                                doc_types=es_type, sort="updated:desc")
     return updated
 
+def clear_recent(t):
+    for i in range(2):
+        ml = mongo_last(db.Expr)
+        ml[0].delete()
+        db.esdb.purge_deleted(t)
+
 def efilter(exprs):
     """print useful parts of an expression"""
     keys = ['tags', 'text', 'title', 'name', 'auth', 'owner_name',
@@ -149,13 +155,10 @@ class QueryTest(ExprTest):
         self.test_fuzzy_search('lovely')
         self.test_featured_search()
         yan = db.User.fetch('yan', keyname='name')
-        try: self.test_auth_search(yan) # hacking around a bug in starred_expr_ids
-        except: pass
+        self.test_network_search(yan)
+        print 'network search passed'
         self.test_auth_search(yan)
         print 'auth search passed'
-        yan = db.User.fetch('yan', keyname='name') # for some reason, need to do this again or test fails
-        self.test_network_search(yan)
-        print 'network test passed'
         self.test_trending_search(yan)
 
 
@@ -189,8 +192,6 @@ class PaginationTest(QueryTest):
         self.test_search_multi_page('art')
         self.test_search_last_page('art')
         yan = db.User.fetch('yan', keyname='name')
-        try: self.test_feed_multi_page(yan)
-        except: pass
         self.test_feed_multi_page(yan)
 
 
@@ -235,5 +236,9 @@ def single_test(testname):
     finally: t.tearDown()
 
 if __name__ == '__main__':
-    for t in [ExprTest, QueryTest, PaginationTest]:
-        single_test(t)
+    #for t in [ExprTest, QueryTest, PaginationTest]:
+    #    single_test(t)
+    t = QueryTest()
+    t.setUp()
+    t.runTest()
+    t.tearDown()
