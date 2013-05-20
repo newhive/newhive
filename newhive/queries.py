@@ -236,4 +236,3 @@ def single_test(testname):
 if __name__ == '__main__':
     for t in [ExprTest, QueryTest, PaginationTest]:
         single_test(t)
-    #unittest.main()

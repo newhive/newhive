@@ -81,7 +81,8 @@ class Database:
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
         elif search.get('trending'):
-            results, grouped_feed = viewer.feed_page_esdb(trending=True)
+            results, grouped_feed = viewer.feed_page_esdb(trending=True, at=start,
+                                                          limit=limit)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
