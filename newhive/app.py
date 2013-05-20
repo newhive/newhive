@@ -12,7 +12,7 @@ from newhive.controllers import Controllers
 from newhive.extra_json import extra_json
 from newhive.routes import Routes
 import json, urllib
-from utils import url_host
+from newhive.utils import url_host
 
 hive_assets = HiveAssets()
 hive_assets.bundle()
