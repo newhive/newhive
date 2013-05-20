@@ -65,14 +65,12 @@ class Database:
         search = self.parse_query(q)
 
         # substitute network with featured when not logged in
-        if not viewer and search.get('network'):
+        if not viewer and (search.get('network') or search.get('trending')):
             search['featured'] = True
-            del search['network']
-        if not viewer and search.get('network_trending'):
-            search['featured'] = True
-            del search['network_trending']
-        spec = {}
+            search.pop('network', 0)
+            search.pop('trending', 0)
 
+        spec = {}
         if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
 
         # todo: put auth specs into elasticsearch searches
@@ -81,10 +79,9 @@ class Database:
         # todo: return grouped_feed items with expressions in network trending
 
         if search.get('network'):
-           # results = viewer.feed_network(spec=spec, **args)
-            results, grouped_feed = viewer.feed_page_esdb(trending=False, at=start, limit=limit)
-        elif search.get('network_trending'):
-            results, grouped_feed = viewer.feed_page_esdb(trending=True, at=start, limit=limit)
+            results = viewer.feed_network(spec=spec, **args)
+        elif search.get('trending'):
+            results, grouped_feed = viewer.feed_page_esdb(trending=True)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
@@ -124,7 +121,7 @@ class Database:
                 if pattern[1] == 'All': search['all'] = True
                 elif pattern[1] == 'Featured': search['featured'] = True
                 elif pattern[1] == 'Network': search['network'] = True
-                elif pattern[1] == 'Network_trending': search['network_trending'] = True
+                elif pattern[1] == 'Trending': search['trending'] = True
                 elif pattern[1] == 'Public': search['auth'] = 'public'
                 elif pattern[1] == 'Private': search['auth'] = 'password'
                 elif pattern[1] == 'Activity': search['activity'] = True
@@ -460,7 +457,7 @@ class User(HasSocial):
     @cached
     def my_stars(self):
         """ Feed records indicating what expressions a user likes and who they're listening to """
-        return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
+        return list(self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)]))
 
     @property
     @cached
@@ -468,7 +465,8 @@ class User(HasSocial):
         return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
 
     @property
-    def starred_expr_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
+    def starred_expr_ids(self):
+        return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
 
     def starred_user_page(self, **args): return self.collection.page(self.starred_user_ids, **args)
 
@@ -488,8 +486,7 @@ class User(HasSocial):
         """Creates an elasticsearch filter corresponding to can_view"""
         f = [pub_filter, pyes.filters.TermFilter('owner', self.id)]
         if len(self.starred_expr_ids)>0:
-            #f.append(pyes.filters.IdsFilter(self.starred_expr_ids))
-            pass  # until bug is fixed
+            f.append(pyes.filters.IdsFilter(self.starred_expr_ids))
         return pyes.filters.BoolFilter(should=f)
 
     def feed_profile(self, spec={}, limit=40, **args):

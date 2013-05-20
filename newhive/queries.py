@@ -115,7 +115,7 @@ class QueryTest(ExprTest):
         """a text search that should return results"""
         r = db.query(query, fuzzy=fuzzy)
         self.assertTrue(len(r) > 0)
-        print efilter(r)
+       # print efilter(r)
 
     def test_fuzzy_search(self, query):
         """make sure fuzzy searches return more results"""
@@ -125,7 +125,7 @@ class QueryTest(ExprTest):
 
     def test_featured_search(self):
         """show featured when no user is logged in"""
-        r1 = db.query('#Network_trending')
+        r1 = db.query('#Trending')
         r2 = db.query('#Featured')
         self.assertEqual(r1, r2)
 
@@ -133,13 +133,13 @@ class QueryTest(ExprTest):
         """this should just go to the old method of network recent"""
         r = db.query('#Network', viewer=user)
         self.assertTrue(len(r) > 0)
-        print efilter(r)
+       # print efilter(r)
 
     def test_trending_search(self, user):
         """this should call elasticsearch"""
-        r = db.query('#Network_trending', viewer=user)
+        r = db.query('#Trending', viewer=user)
         self.assertTrue(r.total > 0)
-        print efilter(r)
+       # print efilter(r)
 
     def test_auth_search(self, user):
         """only works for a user who has private exprs"""
@@ -155,10 +155,8 @@ class QueryTest(ExprTest):
         self.test_fuzzy_search('lovely')
         self.test_featured_search()
         yan = db.User.fetch('yan', keyname='name')
-        self.test_network_search(yan)
-        print 'network search passed'
         self.test_auth_search(yan)
-        print 'auth search passed'
+        self.test_network_search(yan)
         self.test_trending_search(yan)
 
 
@@ -184,7 +182,7 @@ class PaginationTest(QueryTest):
         self.assertEqual(p2, [])
 
     def test_feed_multi_page(self, user):
-        query = '#Network_trending'
+        query = '#Trending'
         self.test_search_multi_page(query, viewer=user)
 
     def runTest(self):
@@ -236,9 +234,6 @@ def single_test(testname):
     finally: t.tearDown()
 
 if __name__ == '__main__':
-    #for t in [ExprTest, QueryTest, PaginationTest]:
-    #    single_test(t)
-    t = QueryTest()
-    t.setUp()
-    t.runTest()
-    t.tearDown()
+    for t in [ExprTest, QueryTest, PaginationTest]:
+        single_test(t)
+    #unittest.main()
