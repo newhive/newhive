@@ -79,7 +79,8 @@ class Database:
         # todo: return grouped_feed items with expressions in network trending
 
         if search.get('network'):
-            results = viewer.feed_network(spec=spec, **args)
+            results, grouped_feed = viewer.feed_page_esdb(trending=False, at=start,
+                                                          limit=limit)
         elif search.get('trending'):
             results, grouped_feed = viewer.feed_page_esdb(trending=True, at=start,
                                                           limit=limit)
