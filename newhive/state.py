@@ -70,22 +70,25 @@ class Database:
             search.pop('trending', 0)
 
         spec = {}
-
-        if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
+        if search.get('auth'): spec['auth'] = (
+            'public' if search['auth'] == 'public' else 'password')
 
         # todo: put auth specs into elasticsearch searches
+        # todo: make sure that elasticsearch pagination resultsets are of the correct
+        #       size after filtering out exprs that are not viewable
+        # todo: return grouped_feed items with expressions in network trending
 
         if search.get('network'):
             results = viewer.feed_network(spec=spec, **args)
         elif search.get('trending'):
-            results, grouped_feed = viewer.feed_page_esdb(trending=True)
+            results, grouped_feed = viewer.feed_page_esdb(
+                trending=True, at=start, limit=limit)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
             results = self.esdb.paginate(search, limit=limit, at=start,
-                                         es_order=es_order,
-                                         es_filter=None, fuzzy=fuzzy,
-                                         sort='score')
+                                         es_order=es_order, fuzzy=fuzzy,
+                                         sort='score', viewer=viewer)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -119,7 +122,7 @@ class Database:
                 elif pattern[1] == 'Featured': search['featured'] = True
                 elif pattern[1] == 'Network': search['network'] = True
                 elif pattern[1] == 'Trending': search['trending'] = True
-                elif pattern[1] == 'Public': search['auth'] = 'public' 
+                elif pattern[1] == 'Public': search['auth'] = 'public'
                 elif pattern[1] == 'Private': search['auth'] = 'password'
                 elif pattern[1] == 'Activity': search['activity'] = True
                 elif pattern[1] == 'Followers': search['followers'] = True
@@ -395,7 +398,7 @@ class User(HasSocial):
         def named(self, name): return self.find({'name' : name})
 
         def find_by_facebook(self, id):
-            return self.find({'facebook.id': id, 'facebook.disconnected': {'$exists': False}}) 
+            return self.find({'facebook.id': id, 'facebook.disconnected': {'$exists': False}})
 
         def get_root(self): return self.named('root')
         root_user = property(get_root)
@@ -471,6 +474,13 @@ class User(HasSocial):
                          (self.id == expr['owner']) or
                          (expr.id in self.starred_expr_ids))
 
+    def can_view_filter(self):
+        """Creates an elasticsearch filter corresponding to can_view"""
+        f = [pub_filter, pyes.filters.TermFilter('owner', self.id)]
+        if len(self.starred_expr_ids)>0:
+            f.append(pyes.filters.IdsFilter(self.starred_expr_ids))
+        return pyes.filters.BoolFilter(should=f)
+
     def feed_profile(self, spec={}, limit=40, **args):
         def query_feed(q):
             q.update(spec)
@@ -504,7 +514,7 @@ class User(HasSocial):
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
         fq = pyes.query.FilteredQuery(match_all_query, f)
 
-        total_limit = 20*limit  
+        total_limit = 20*limit
         # since there may be many feed items for the same expression
         # note that with the current pagination, the maximum number of
         # retrievable feed items is total_limit
@@ -516,20 +526,20 @@ class User(HasSocial):
         feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
 
         if trending is True:
-
             for r in res_feed[:total_limit]:
                 feed_with_expr[r['entity']].append(r._meta.id)
-
             expr_ids = feed_with_expr.keys()
 
-            fid = pyes.filters.IdsFilter(expr_ids)
-            query = pyes.query.FilteredQuery(match_all_query, fid)
-
-            custom_query = pyes.query.CustomScoreQuery(query, script="(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)")
+            qid = pyes.query.IdsQuery(expr_ids)
+            f = self.can_view_filter()
+            query = pyes.query.FilteredQuery(qid, f)
+            custom_query = pyes.query.CustomScoreQuery(query,
+                                                       script=popularity_time_score)
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
-            items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
+            items = self.db.esdb.esdb_paginate(res, es_type='expr-type',
+                at=at, limit=limit)
         else:
             items = []
             new_at = at
@@ -538,7 +548,7 @@ class User(HasSocial):
                 feed_with_expr[r['entity']].append(r._meta.id)
                 if len(feed_with_expr[r['entity']]) == 1:
                     expr = self.db.Expr.fetch(r['entity'])
-                    if expr is not None:
+                    if expr is not None and self.can_view(expr):
                         items.append(expr)
                 if len(items) == limit: break
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
@@ -888,16 +898,14 @@ class Expr(HasSocial):
         def page(self, spec, viewer, auth='public', tag=None, sort='updated', **args):
             if tag: spec.update(tags_index=tag) # normalize tag input?
 
-            assert(sort in ['updated', 'random'])
-            paging_args = dfilter(args, ['limit', 'at', 'sort', 'order'])
-            paging_args.update(sort=sort)
-
             if type(spec) == dict:
                 spec.update(auth=auth)
                 if auth == 'public':
                     spec.update(password={'$exists': False})
 
-            rs = self.paginate(spec, filter=viewer.can_view, **paging_args)
+            assert(sort in ['updated', 'random'])
+            args.update(sort=sort)
+            rs = self.paginate(spec, filter=viewer.can_view, **args)
 
             # remove random static patterns from random index
             # to make it _really_ random
@@ -1173,7 +1181,7 @@ class Expr(HasSocial):
 
         return expr
         # return self
-        
+
     @property
     def tag_string(self):
         return ' '.join(["#" + tag for tag in self.get('tags_index', [])])
@@ -1621,6 +1629,9 @@ class ESDatabase:
                         "text": {"type": "string", "index": "analyzed"},
                         "title": {"type": "string", "index": "analyzed"},
                         "name": {"type": "string", "index": "analyzed"},
+                        "auth": {"type": "string", "index": "not_analyzed"},
+                        "owner": {"type": "string", "index": "not_analyzed"},
+                        "owner_name": {"type": "string", "index": "not_analyzed"},
                         "updated": {"type": "float"},
                         "created": {"type": "float"},
                         "views": {"type": "integer"},
@@ -1656,9 +1667,14 @@ class ESDatabase:
 
         return None
 
-    def delete(self):
+    def delete_index(self):
         self.conn.indices.delete_index(self.index)
         return None
+
+    def delete_by_ids(self, ids):
+        query = pyes.query.IdsQuery(ids)
+        self.conn.delete_by_query(query=query, indices=self.index,
+                                  doc_types=None)
 
     def parse_query(self, q):
         return self.db.parse_query(q)
@@ -1698,17 +1714,17 @@ class ESDatabase:
 
         query = pyes.query.BoolQuery(must=clauses)
 
-        custom_query = pyes.query.CustomScoreQuery(query, script="_score * (doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value)")
+        custom_query = pyes.query.CustomScoreQuery(query, script=popularity_score)
 
         return custom_query
 
     def search_text(self, search, es_order, es_filter, start, limit):
         query = self.create_query(search)
-        results = self.conn.search(query,
+        filtered_query = pyes.query.FilteredQuery(query, es_filter)
+        results = self.conn.search(filtered_query,
                                    indices=self.index,
                                    doc_types="expr-type",
                                    sort=es_order,
-                                   filter=es_filter,
                                    start=start,
                                    size=limit)
         return results
@@ -1716,10 +1732,14 @@ class ESDatabase:
     def search_fuzzy(self, search, es_order, es_filter, start, limit):
         # typo-tolerant searches. only works for text/tags, not usernames.
         string = ' '.join(search.get('text',[]) + search.get('phrases',[]) + search.get('tags',[]))
-        q = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
-        results = self.conn.search(q, indices=self.index,
-                                   doc_types="expr-type", sort=es_order,
-                                   filter=es_filter, start=start, size=limit)
+        query = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
+        filtered_query = pyes.query.FilteredQuery(query, es_filter)
+        results = self.conn.search(filtered_query,
+                                   indices=self.index,
+                                   doc_types="expr-type",
+                                   sort=es_order,
+                                   start=start,
+                                   size=limit)
         return results
 
     def update(self, entry, es_type, refresh=True):
@@ -1733,6 +1753,7 @@ class ESDatabase:
             'broadcast': expr.get('analytics', {}).get('Broadcast', {}).get('count', 0),
             'name': expr.get('name', ''),
             'owner_name': expr.get('owner_name', ''),
+            'auth': expr.get('auth', 'public'),
             'owner': expr.get('owner', ''),
             'title': expr.get('title', ''),
             'created': expr.get('created', 0),
@@ -1763,11 +1784,12 @@ class ESDatabase:
             self.conn.indices.refresh()
         return None
 
-    def sync_with_mongo(self, refresh=False):
+    def sync_with_mongo(self):
         """make sure elasticsearch db reflects current mongodb state"""
         updated = self.conn.search(match_all_query, indices=self.index, sort="updated:desc")
         last_updated = updated[0]['updated']
-        print 'last updated:', last_updated
+        time_diff = time.time() - last_updated
+        print 'time since last update:', time_diff
         exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
         feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
         users = self.db.User.search({'updated': {'$gte': last_updated}})
@@ -1785,8 +1807,37 @@ class ESDatabase:
             self.update(user, 'user-type', refresh=False)
         self.conn.indices.refresh()
 
+    def purge_deleted(self, time_diff=0):
+        """remove entries from elasticsearch that have been deleted in mongo"""
+        #  time diff is the time in seconds to look back
+        last_updated = time.time() - time_diff
+        exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
+        feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
+        users = self.db.User.search({'updated': {'$gte': last_updated}})
+        valid_ids = []
+        purge_ids = []
+        for e in exprs:
+            valid_ids.append(e['_id'])
+        for u in users:
+            valid_ids.append(u['_id'])
+        for f in feed:
+            valid_ids.append(f['_id'])
+        q = pyes.query.RangeQuery(qrange=pyes.utils.ESRange('updated',
+                                  from_value=last_updated))
+        res = self.conn.search(q, indices=self.index)
+        for r in res:
+            if r._meta.id not in valid_ids:
+                purge_ids.append(r._meta.id)
+        print 'deleting: ', purge_ids
+        self.delete_by_ids(purge_ids)
+        self.conn.indices.refresh()
+
     def paginate(self, search, limit=40, at=0, es_order='_score,updated:desc',
-                 es_filter=None, sort='score', fuzzy=False):
+                 sort='score', fuzzy=False, viewer=None):
+        if viewer:
+            es_filter = viewer.can_view_filter()
+        else:
+            es_filter = pub_filter
         if fuzzy:
             res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
                                     start=at, limit=limit)
@@ -1795,10 +1846,11 @@ class ESDatabase:
                                    start=at, limit=limit)
         return self.esdb_paginate(res, es_type='expr-type')
 
-    def esdb_paginate(self, res, es_type):
+    def esdb_paginate(self, res, es_type, at, limit):
         # convert elasticsearch resultsets to result lists
+        new_at = min(res.total, at+limit)
         result_ids = [r._meta.id for r in res]
-        results = []
+        results = Page([])
         if es_type == 'expr-type':
             col = self.db.Expr
         elif es_type == 'feed-type':
@@ -1836,3 +1888,9 @@ class ESDatabase:
         self.conn.indices.refresh()
 
         return None
+
+    def get_total(self, es_type):
+        """show the total number of items of each type"""
+        entries = self.conn.search(match_all_query,
+                indices=self.index, doc_types=es_type)
+        return entries.total
