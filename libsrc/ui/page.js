@@ -42,7 +42,7 @@ define([
     // route.client_method definitions
     o.expr_detail = function(data){
         render_site(data);
-        expr_column();
+        // expr_column(); // TODO: is this necessary?
     };
 
     // o.grid = function(data){

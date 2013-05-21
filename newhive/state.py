@@ -543,6 +543,7 @@ class User(HasSocial):
                 if len(items) == limit: break
         return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
+    # TODO: move this into ESDB for searching within your network
     def feed_network(self, spec={}, limit=40, at=None, **args):
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
@@ -570,6 +571,10 @@ class User(HasSocial):
         # groups feed items by ther expressions (entity attribute), and applies page limit
         results = self.feed_group(res, limit, spec=spec)
         return results
+
+    # wrapper around db.query('#Trending') to add recent feed items
+    def feed_trending(self, **paging_args):
+        self.db.query('#Trending') 
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
