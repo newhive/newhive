@@ -79,11 +79,11 @@ class Database:
         # todo: return grouped_feed items with expressions in network trending
 
         if search.get('network'):
-            results, grouped_feed = viewer.feed_page_esdb(trending=False, at=start,
-                                                          limit=limit)
+            results = viewer.feed_page_esdb(trending=False, at=start,
+                                            limit=limit)['expr']
         elif search.get('trending'):
-            results, grouped_feed = viewer.feed_page_esdb(trending=True, at=start,
-                                                          limit=limit)
+            results = viewer.feed_page_esdb(trending=True, at=start,
+                                            limit=limit)['expr']
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
@@ -535,12 +535,13 @@ class User(HasSocial):
                                             sort="created:desc")
 
         feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
+        user_with_expr = defaultdict(list)  # '' user items ''
 
         if trending is True:
             for r in res_feed[:total_limit]:
                 feed_with_expr[r['entity']].append(r._meta.id)
+                user_with_expr[r['entity']].append(r['initiator'])
             expr_ids = feed_with_expr.keys()
-
             qid = pyes.query.IdsQuery(expr_ids)
             f = self.can_view_filter()
             query = pyes.query.FilteredQuery(qid, f)
@@ -557,6 +558,7 @@ class User(HasSocial):
             for r in res_feed[at:]:
                 new_at += 1
                 feed_with_expr[r['entity']].append(r._meta.id)
+                user_with_expr[r['entity']].append(r['initiator'])
                 if len(feed_with_expr[r['entity']]) == 1:
                     expr = self.db.Expr.fetch(r['entity'])
                     if expr is not None and self.can_view(expr):
@@ -566,7 +568,11 @@ class User(HasSocial):
                     break
             if items.next is None:
                 items.next = res_feed.total
-        return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
+        results = [{'expr': i,
+                    'feed': feed_with_expr[i['_id']],
+                    'user': user_with_expr[i['_id']]}
+                   for i in items]
+        return results
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
         user_action = {
