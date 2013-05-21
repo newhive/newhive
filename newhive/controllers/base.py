@@ -96,7 +96,7 @@ class Controller(object):
         if json: return self.serve_json(response, {'error': 500 })
         else:
             tdata = TransactionData(user=self.db.User.new({}), context={})
-            return self.serve_page(tdata, response, 'pages/broken.html')
+            return self.serve_page(tdata, response, 'pages/exception.html')
 
     def redirect(self, response, location, permanent=False):
         response.location = str(location)

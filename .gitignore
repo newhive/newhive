@@ -12,3 +12,4 @@ compiled.*
 /newhive/config/aws.py
 *.pyc
 *.DS_Store
+/newhive/.ropeproject
