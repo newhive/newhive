@@ -2,6 +2,9 @@ from newhive.utils import dfilter
 from newhive.controllers.base import Controller
 
 class Community(Controller):
+    def search(self, tdata, request, **paging_args):
+        return {}
+        
     def network_trending(self, tdata, request, username=None, **paging_args):
         print "username = %s" % username
         user = self.db.User.named(username)
