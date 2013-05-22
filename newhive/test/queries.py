@@ -140,9 +140,15 @@ class QueryTest(ExprTest):
         self.assertEqual(r1, r2)
 
     def test_network_search(self, user):
-        """this should just go to the old method of network recent"""
-        r = db.query('#Network', viewer=user)
-        self.assertTrue(len(r) > 0)
+        """test network recent"""
+        r1 = db.query('#Network', viewer=user)
+        self.assertTrue(len(r1) > 0)
+        r2 = user.feed_network()
+        print [r['name'] for r in r1]
+        print [r['name'] for r in r2]
+        self.assertEqual([r['_id'] for r in r1],  [r['_id'] for r in r2])
+        print "exprs worked"
+        self.assertEqual(r1['feed'], [r['_id'] for r in r2['feed']])
        # print efilter(r)
 
     def test_trending_search(self, user):
@@ -245,5 +251,8 @@ def single_test(testname):
     finally: t.tearDown()
 
 if __name__ == '__main__':
-    for t in [ExprTest, QueryTest, PaginationTest]:
-        single_test(t)
+   # for t in [ExprTest, QueryTest, PaginationTest]:
+   #     single_test(t)
+    yan = db.User.fetch('yan', keyname='name')
+    t = QueryTest()
+    t.test_network_search(yan)

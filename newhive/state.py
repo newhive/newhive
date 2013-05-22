@@ -79,11 +79,13 @@ class Database:
         # todo: return grouped_feed items with expressions in network trending
 
         if search.get('network'):
-            results = viewer.feed_page_esdb(trending=False, at=start,
-                                            limit=limit)['expr']
+            results =  viewer.feed_page_esdb(trending=False,
+                                             at=start,
+                                             limit=limit)
         elif search.get('trending'):
-            results = viewer.feed_page_esdb(trending=True, at=start,
-                                            limit=limit)['expr']
+            results =  viewer.feed_page_esdb(trending=True,
+                                             at=start,
+                                             limit=limit)
         elif search.get('featured'):
             results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
@@ -556,6 +558,7 @@ class User(HasSocial):
             items = Page([])
             new_at = at
             for r in res_feed[at:]:
+                print r['created']
                 new_at += 1
                 feed_with_expr[r['entity']].append(r._meta.id)
                 user_with_expr[r['entity']].append(r['initiator'])
@@ -568,11 +571,10 @@ class User(HasSocial):
                     break
             if items.next is None:
                 items.next = res_feed.total
-        results = [{'expr': i,
-                    'feed': feed_with_expr[i['_id']],
-                    'user': user_with_expr[i['_id']]}
-                   for i in items]
-        return results
+        for i in items:
+            i['feed'] = feed_with_expr[i['_id']]
+            i['feed_users'] = user_with_expr[i['_id']]
+        return items
 
     def feed_network(self, spec={}, limit=40, at=None, **args):
         user_action = {
@@ -1569,8 +1571,8 @@ class ESDatabase:
         self.db = db
         feed_mapping = {"class_name": {"type": "string",
                                        "index": "not_analyzed"},
-                        "updated": {"type": "float"},
-                        "created": {"type": "float"},
+                        "updated": {"type": "double"},
+                        "created": {"type": "double"},
                         "entity": {"type": "string",
                                    "index": "not_analyzed"},
                         "entity_class": {"type": "string",
@@ -1585,7 +1587,7 @@ class ESDatabase:
                                      "index": "not_analyzed"},
                         "name": {"type": "string",
                                  "index": "not_analyzed"},
-                        "updated": {"type": "float"}}
+                        "updated": {"type": "double"}}
         expr_mapping = {"tags": {"type": "string", "index": "analyzed", "analyzer": "tag_analyzer"},
                         "text": {"type": "string", "index": "analyzed"},
                         "title": {"type": "string", "index": "analyzed"},
@@ -1593,8 +1595,8 @@ class ESDatabase:
                         "auth": {"type": "string", "index": "not_analyzed"},
                         "owner": {"type": "string", "index": "not_analyzed"},
                         "owner_name": {"type": "string", "index": "not_analyzed"},
-                        "updated": {"type": "float"},
-                        "created": {"type": "float"},
+                        "updated": {"type": "double"},
+                        "created": {"type": "double"},
                         "views": {"type": "integer"},
                         "broadcast": {"type": "integer"},
                         "star": {"type": "integer"}}
