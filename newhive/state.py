@@ -515,7 +515,11 @@ class User(HasSocial):
         return res
 
     def feed_page_esdb(self, at=0, limit=40, trending=False, **opts):
-        f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr', 'Broadcast', 'Star'])
+
+        f_view = self.can_view_filter()
+
+        f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr',
+            'Broadcast', 'Star', 'UpdatedExpr', 'NewExpr'])
         f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
         f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
 
@@ -523,6 +527,12 @@ class User(HasSocial):
         f_expr_entity = pyes.filters.TermsFilter('entity', self.starred_expr_ids)
         f_expr_initiator = pyes.filters.TermFilter('initiator', self.id)
         f_expr = pyes.filters.BoolFilter(must=[f_expr_class_name, f_expr_entity], must_not=[f_expr_initiator])
+
+        f = pyes.filters.BoolFilter(should=[f_user, f_expr])
+
+        if self.get('tags') is not None:
+            q_tags = pyes.query.TermsQuery('tags', self.get('tags'))
+            q_tags = pyes.query.FilteredQuery(q_tags, f_view)
 
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
         fq = pyes.query.FilteredQuery(match_all_query, f)
@@ -534,7 +544,7 @@ class User(HasSocial):
 
         res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
                                             doc_types="feed-type",
-                                            sort="created:desc")
+                                            sort="created:desc", size=total_limit)
 
         feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
         user_with_expr = defaultdict(list)  # '' user items ''
@@ -545,8 +555,9 @@ class User(HasSocial):
                 user_with_expr[r['entity']].append(r['initiator'])
             expr_ids = feed_with_expr.keys()
             qid = pyes.query.IdsQuery(expr_ids)
-            f = self.can_view_filter()
-            query = pyes.query.FilteredQuery(qid, f)
+            query = pyes.query.FilteredQuery(qid, f_view)
+            if self.get('tags') is not None:
+                query = pyes.query.BoolQuery(should=[query, q_tags])
             custom_query = pyes.query.CustomScoreQuery(query,
                                                        script=popularity_time_score)
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
