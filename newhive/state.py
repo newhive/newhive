@@ -562,7 +562,7 @@ class User(HasSocial):
                 new_at += 1
                 feed_with_expr[r['entity']].append(r._meta.id)
                 user_with_expr[r['entity']].append(r['initiator'])
-                if len(feed_with_expr[r['entity']]) == 1:
+                if r['entity'] not in [i['_id'] for i in items]:
                     expr = self.db.Expr.fetch(r['entity'])
                     if expr is not None and self.can_view(expr):
                         items.append(expr)
@@ -579,7 +579,7 @@ class User(HasSocial):
     def feed_network(self, spec={}, limit=40, at=None, **args):
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
-                'class_name': {'$in': ['NewExpr', 'Broadcast']}
+                'class_name': {'$in': ['NewExpr', 'Broadcast', 'Star']}
                 }
         own_broadcast = { 'initiator': self.id, 'class_name': 'Broadcast' }
         expression_action = {

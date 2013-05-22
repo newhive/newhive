@@ -146,7 +146,7 @@ class QueryTest(ExprTest):
         r2 = user.feed_network()
         print [r['name'] for r in r1]
         print [r['name'] for r in r2]
-        self.assertEqual([r['_id'] for r in r1],  [r['_id'] for r in r2])
+        self.assertEqual(set([r['_id'] for r in r1]), set([r['_id'] for r in r2]))
         print "exprs worked"
         self.assertEqual(r1['feed'], [r['_id'] for r in r2['feed']])
        # print efilter(r)
