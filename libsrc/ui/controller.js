@@ -12,14 +12,14 @@ define([
     o.init = function(route_args){
         wrapLinks();
         routing.registerState(route_args);
-        page.init();
+        page.init(o);
         nav.set_expr_view(route_args.route_name == 'view_expr');
         o.dispatch(route_args.route_name, context);
     };
     o.dispatch = function(route_name, data){
         nav.set_expr_view(route_name == 'view_expr');
         route = routes[route_name];
-        util.copy(data, context);
+        util.copy(data, context, true);
         page.render(route.client_method, data);
     };
     o.refresh = function(){ o.dispatch(route.method, data) };
@@ -37,37 +37,37 @@ define([
                     route_name: route_name
                 };
             e.preventDefault();
-            navToRoute(page_state);
+            o.open_route(page_state);
             return false;
         });
 
         // TODO: Bind this event with jquery?
         window.onpopstate = function(e) {
             if (!e.state) return;
-            navToRoute(e.state);
+            o.open_route(e.state);
         };
-
-        function fetchRouteData(page_state, callback) {
-            var callback = callback || function(){};
-            api_call = {
-                method: 'get',
-                url: page_state.api.toString(),
-                dataType: 'json',
-                success: function(_data) {
-                    o.dispatch(page_state.route_name, _data);
-                    // Cache the returned data for later refreshing
-                    callback();
-                }
-            };
-            $.ajax(api_call);
-        }
-
-        function navToRoute(page_state) {
-            fetchRouteData(page_state, function() {
-                history.pushState(page_state, null, page_state.page);
-            });
-        }
     };
+
+    function fetch_route_data(page_state, callback) {
+        var callback = callback || function(){};
+        api_call = {
+            method: 'get',
+            url: page_state.api.toString(),
+            dataType: 'json',
+            success: function(_data) {
+                o.dispatch(page_state.route_name, _data);
+                // Cache the returned data for later refreshing
+                callback();
+            }
+        };
+        $.ajax(api_call);
+    }
+
+    o.open_route = function (page_state) {
+        fetch_route_data(page_state, function() {
+            history.pushState(page_state, null, page_state.page);
+        });
+    }
 
     return o;
 });

@@ -10,7 +10,7 @@ var o = {};
 o.copy = function(from, to, deep){
     if (from == null || typeof from != "object") return from;
     to = to || new from.constructor();
-    for(var p in from) to[p] = deep ? copy(from[p]) : from[p];
+    for(var p in from) to[p] = deep ? o.copy(from[p], to[p], deep) : from[p];
     return to;
 };
 

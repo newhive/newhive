@@ -83,6 +83,6 @@ define(['browser/jquery'], function($) {
     
     return {
         'place_apps': place_apps,
-        'center': center        
+        'center': center
     }
 });

@@ -172,13 +172,13 @@
 #page_next img { right: 0; bottom: 50%; }
 
 .page_btn {
-    position: absolute;
-    width: 44px;
-    height: 44px;
-    z-index: $nav_layer + 1;
+    display: none;
+    position: fixed;
+    width: 55px;
+    height: 55px;
+    z-index: $nav_layer + 9;
     background-color: white;
     background-repeat: no-repeat;
-    @include border-radius(22px);
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
 
     &:hover { background-color: black; }
@@ -193,7 +193,7 @@
     background-image: asset_url('skin/nav/page_next.png');
     &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
     background-position: 14px 11px;
-    right: 10px;
+    right: 20px;
 }
 
 
