@@ -528,8 +528,6 @@ class User(HasSocial):
         f_expr_initiator = pyes.filters.TermFilter('initiator', self.id)
         f_expr = pyes.filters.BoolFilter(must=[f_expr_class_name, f_expr_entity], must_not=[f_expr_initiator])
 
-        f = pyes.filters.BoolFilter(should=[f_user, f_expr])
-
         if self.get('tags') is not None:
             q_tags = pyes.query.TermsQuery('tags', self.get('tags'))
             q_tags = pyes.query.FilteredQuery(q_tags, f_view)
@@ -576,10 +574,18 @@ class User(HasSocial):
                 if r['entity'] not in [i['_id'] for i in items]:
                     expr = self.db.Expr.fetch(r['entity'])
                     if expr is not None and self.can_view(expr):
+                        expr['feed_latest'] = r['created']
                         items.append(expr)
                 if len(items) == limit:
                     items.next = min(new_at, res_feed.total)
                     break
+                if self.get('tags') is not None:
+                    fl = [e['feed_latest'] for e in items]
+                    query = pyes.query.RangeQuery(qrange=pyes.utils.ESRange('updated',
+                                from_value=min(fl), to_value=max(fl)))
+                    query = pyes.query.BoolQuery(must=[query, q_tags])
+                    res = self.db.esdb.conn.search(query, indices=self.db.esdb.index,
+                                                   doc_types='expr-type', size=limit)
             if items.next is None:
                 items.next = res_feed.total
         for i in items:
