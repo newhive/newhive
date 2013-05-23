@@ -1,7 +1,9 @@
 {# 
 	Display icon, count (Loves 3.1K) 
 #}
-<div style="display:inline-block;width:74px" class="stats">
-  <span class='counts_icon'><img src='{asset icon}'></span>
-   <span class='counts'>{thousands count}</span>
+<div class="stats counts_icon">
+  <div class='icon {icon_class}'>
+  	{<if icon}<img src='{asset icon}'>{>}
+  </div>
+  {<if count}<span class='counts'>{thousands count}</span>{>}
 </div>

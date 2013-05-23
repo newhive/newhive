@@ -13,6 +13,52 @@
 }
 
 #site {
+    #user_header {
+        .profile {
+            margin: 180px auto 50px auto;
+            width: 800px;
+        }
+    }
+}
+
+#user_header {
+    .profile {
+        width: 800px;
+        position: relative; z-index: 1;
+        background-color: white;
+
+        .thumb {
+            width: 222px; height: 222px;
+            vertical-align: top;
+            margin: 10px;
+        }
+        .info {
+            font-family: Gibson;
+            margin: 20px;
+            .name {
+                font-size: 50px;
+                img {
+                    vertical-align: middle;
+                    margin: 0 10px 4px 10px;
+                }
+            }
+            display: inline-block;
+            width: 500px; height: 222px;
+        }
+    }
+    .background {
+        z-index: 0;
+        position: absolute; top: 0; left: 0;
+        height: 300px;
+        width: 100%;
+    }
+
+    #edit_btn, #mail_btn { width: 44px; height: 44px; }
+    #edit_btn { background-image: asset_url('skin/nav/edit.png'); }
+    #mail_btn { background-image: asset_url('skin/nav/edit.png'); }
+}
+
+#site {
     position: absolute;
     z-index: 0;
     left: 0; bottom: 0;
@@ -29,43 +75,6 @@
         }
     }
 
-    #user_header {
-        .profile {
-            margin: 180px auto 50px auto;
-            width: 800px;
-            position: relative; z-index: 1;
-            background-color: white;
-
-            .thumb {
-                width: 222px; height: 222px;
-                vertical-align: top;
-                margin: 10px;
-            }
-            .info {
-                font-family: Gibson;
-                margin: 20px;
-                .name {
-                    font-size: 50px;
-                    img {
-                        vertical-align: middle;
-                        margin: 0 10px 4px 10px;
-                    }
-                }
-                display: inline-block;
-                width: 500px; height: 222px;
-            }
-        }
-        .background {
-            z-index: 0;
-            position: absolute; top: 0; left: 0;
-            height: 300px;
-            width: 100%;
-        }
-
-        #edit_btn, #mail_btn { width: 44px; height: 44px; }
-        #edit_btn { background-image: asset_url('skin/nav/edit.png'); }
-        #mail_btn { background-image: asset_url('skin/nav/edit.png'); }
-    }
 
     #feed {
         margin: 0 auto 0 auto;
@@ -165,4 +174,55 @@
     &.tag_13 { background-color: $color_tag_13; }
     &.tag_14 { background-color: $color_tag_14; }
     &.tag_15 { background-color: $color_tag_15; }
+}
+
+.counts_icon {
+    display:inline-block;
+    width:74px;
+
+    .icon {
+        display:inline-block;
+        width:36px;
+        height:48px;
+    }
+
+    .love {
+        &.icon { background-image: asset_url('skin/nav/love.png'); }
+        &.on { background-color: $color_bright_red; }
+        &.on .icon { background-image: asset_url('skin/nav/love-on.png'); }
+        &:hover { background-color: $color_selected; }
+        &.hover { background-image: asset_url('skin/nav/love-hover.png'); }
+    }
+    .comment {
+        &.icon { background-image: asset_url('skin/nav/comment.png'); }
+        &.on { background-color: $color_blue; }
+        &.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
+        &.active .icon { background-image: asset_url('skin/nav/comment-hover.png'); }
+        &.active { background-color: $color_selected; }
+    }
+    .republish {
+        &.icon { background-image: asset_url('skin/nav/republish.png'); }
+        &.on { background-color: $color_blue; }
+        &.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
+        &.active .icon { background-image: asset_url('skin/nav/comment-hover.png'); }
+        &.active { background-color: $color_selected; }
+    }
+    .facebook {
+        &.icon { background-image: asset_url('skin/nav/facebook.png'); }
+        &.on { background-color: $color_blue; }
+        &.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
+        &.active .icon { background-image: asset_url('skin/nav/comment-hover.png'); }
+        &.active { background-color: $color_selected; }
+    }
+    .tweet {
+        &.icon { background-image: asset_url('skin/nav/twitter.png'); }
+        &.on { background-color: $color_blue; }
+        &.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
+        &.active .icon { background-image: asset_url('skin/nav/comment-hover.png'); }
+        &.active { background-color: $color_selected; }
+    }
+    .share {
+        background-image: asset_url('skin/nav/share.png');
+        &.active { background-image: asset_url('skin/nav/share-hover.png'); }
+    }
 }

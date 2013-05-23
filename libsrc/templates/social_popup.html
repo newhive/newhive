@@ -1,0 +1,44 @@
+{#<div class="overlay" id="social_popup">#}
+{<with expr}
+  {#{<with . "expr_view" false "nav_view" true }
+    <div id='social_nav' class='nav_class'>
+      {|templates/nav.html}
+  </div>{>}#}
+  <div id="popup_content">
+    {# user profile #}
+    <div>{<with profile}
+      {|templates/profile_card.html}
+    </div>{>}
+    {# expression title #}
+    <div>{expr.title}</div>
+    {# tags #}
+    {# stats icon counts 
+    	love	republish	facebook	tweet	export
+    	counts: Object
+    Broadcast: 1
+    Comment: 3
+    NewExpr: 1
+    Star: 12
+    UpdatedExpr: 1
+    Views: 261
+    #}
+    <div class="stats_bar">
+    {<with . "icon_class" "love" "count" counts.Star}
+      {|templates/icon_count.html}
+    {>}{<with . "icon_class" "republish"}
+      {|templates/icon_count.html}
+    {>}{<with . "icon_class" "facebook"}
+      {|templates/icon_count.html}
+    {>}{<with . "icon_class" "tweet"}
+      {|templates/icon_count.html}
+    {>}{<with . "icon_class" "share"}
+      {|templates/icon_count.html}
+    {>}
+  
+    </div>
+    {# activity feed #}
+    <div>activity TBD</div>
+    {# discussion input #}
+    <div>discussion TBD</div>
+  </div>
+{>}

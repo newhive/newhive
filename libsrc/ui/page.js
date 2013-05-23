@@ -9,6 +9,8 @@ define([
     'server/context',
     'browser/layout',
     'sj!templates/card_master.html',
+    'sj!templates/social_popup.html',
+    'sj!templates/overlay.html',
     'sj!templates/profile_edit.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
@@ -17,8 +19,8 @@ define([
     'sj!templates/user_card.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
-], function($, nav, context, browser_layout, master_template, 
-    profile_edit_template, card_template) {
+], function($, nav, context, browser_layout, master_template,
+    social_popup_template, overlay_template) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
         layout_method, grid_width, controller, 
@@ -28,9 +30,14 @@ define([
     o.init = function(controller){
         o.anim_direction = 0;
         o.controller = controller;
-        nav.render(o);
+        nav.render();
+        $('#overlays').empty().html(overlay_template());
         $(window).resize(layout);
         window.addEventListener('message', o.handle_message, false);
+        $("#page_prev").click(o.page_prev);
+        $("#page_next").click(o.page_next);
+        $("#social_plus").click(o.social_toggle);
+
         layout();
     };
     o.render = function(method, data){
@@ -50,6 +57,15 @@ define([
         layout();
     };
 
+    o.social_toggle = function() {
+        popup = $('#social_popup');
+        // TODO: animate
+        if (popup.css('display') == 'none') {
+            popup.show();
+        } else {
+            popup.hide();
+        }
+    };
     o.page_prev = function() { o.navigate_page(-1); }
     o.page_next = function() { o.navigate_page(1); }
     o.navigate_page = function (offset){
@@ -128,12 +144,19 @@ define([
     };
 
     // Animate the new visible expression, bring it to top of z-index.
+    // TODO: animate nav bar
     o.expr = function(page_data){
+        $('#overlays #social_popup').empty().append(
+            social_popup_template(context.page_data));
+        $("#nav").prependTo("#social_popup");
+        $("#social_popup #plus").click(o.social_toggle);
+
         // display_expr(page_data.expr_id);
         var expr_id = page_data.expr_id;
         var expr_curr = $('.expr-visible');
         expr_curr.removeClass('expr-visible');
         $('#exprs').show();
+        $('#social_plus').show();
 
         var contentFrame = $('#expr_' + expr_id);
         if (contentFrame.length == 0) {
@@ -149,9 +172,9 @@ define([
             contentFrame.get(0).contentWindow.
                 postMessage({action: 'show'}, '*');
         }
+        contentFrame.show();
         if (o.anim_direction == 0 || expr_curr.length != 1) {
             contentFrame.css({
-                'display': "block",
                 'left': 0,
                 'top': -contentFrame.height() + 'px',
                 'z-index': 1 }
@@ -163,7 +186,6 @@ define([
         } else {
             // 
             contentFrame.css({
-                'display': "block",
                 'top': 0,
                 'left': o.anim_direction * contentFrame.width(),
                 'z-index': 1 }
@@ -184,7 +206,7 @@ define([
     }
     
     function hide_other_exprs() {
-        $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').css({display:"none"});
+        $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').hide();
     }
 
     function hide_exprs() {
@@ -200,14 +222,18 @@ define([
                     contentFrame.removeClass('expr-visible');
                     contentFrame.get(0).contentWindow.
                         postMessage({action: 'hide'}, '*');
-                    $('#exprs').hide();
+                    hide_expr_complete();
                 }
             });
         } else {
-            $('#exprs').hide();
-            $("#page_next").css({'display':'none'});
-            $("#page_prev").css({'display':'none'});
+            hide_expr_complete();
         }
+    }
+
+    function hide_expr_complete() {
+        $('#exprs').hide();
+        $('.overlay').hide();
+        $('#nav').prependTo("body");
     }
 
     function render_site(page_data){
@@ -215,7 +241,8 @@ define([
     }
 
     function layout(){
-        $('#site, #exprs').css('height', $(window).height() - 44);
+        $('#exprs').css('height', $(window).height());
+        $('#site').css('height', $(window).height() - 44);
         browser_layout.center($('#page_prev'), undefined, {'h': false});
         browser_layout.center($('#page_next'), undefined, {'h': false});
         if(layout_method == 'grid') $('#feed').css('width',

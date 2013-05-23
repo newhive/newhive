@@ -367,7 +367,7 @@ define(['browser/js', 'module', 'templates/context'],
 	// With pushes a new, top context with "what" as its contents.
 	// Takes optional varargs key-value pairs which are also pushed onto context.
 	o.base_context['with'] = function(context, block, what){
-		var new_context = what;
+		var new_context = $.extend({}, what);
 		// All arguments after what are name value pairs
 		for(var i = 3; i < arguments.length; i += 2){
 			new_context[arguments[i]] = arguments[i + 1];
