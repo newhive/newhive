@@ -33,7 +33,6 @@ define([
         expr_page = (method == 'expr');
         if(!expr_page) hide_exprs();
         var page_data = data.page_data;
-        page_data['layout_' + method] = true;
         layout = page_data.layout = method;
         if(o[method]) o[method](page_data);
         else render_site(page_data);

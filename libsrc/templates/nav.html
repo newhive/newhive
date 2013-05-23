@@ -47,8 +47,8 @@
     </div>{>}
 
   <div id='network_menu' class='menu drawer'>
-    <a { get_route_anchor_attrs "network_trending" }><div class='menu_item'>Trending</div></a>
-    <a { get_route_anchor_attrs "network_recent" }><div class='menu_item'>Recent</div></a>
+    <a { get_route_anchor_attrs "trending" }><div class='menu_item'>Trending</div></a>
+    <a { get_route_anchor_attrs "network" }><div class='menu_item'>Recent</div></a>
   </div>
 
   <div id='hive_menu' class='menu drawer'>
@@ -77,23 +77,15 @@
   <a { get_route_anchor_attrs "expressions_private" "owner_name" user.name }><div
     class='menu_item'>Private<div class='count'></div></div></a>
     <!-- TODO: implement me -->
-  <a { get_route_anchor_attrs "expressions_activity" "owner_name" user.name }><div
-    class='menu_item'>Activity<div class='count'></div></div></a>
-  <a { get_route_anchor_attrs "expressions_following" "owner_name" user.name }><div
+  <a { get_route_anchor_attrs "following" "owner_name" user.name }><div
     class='menu_item'>Following<div class='count'></div></div></a>
-  <a { get_route_anchor_attrs "expressions_followers" "owner_name" user.name }><div
+  <a { get_route_anchor_attrs "followers" "owner_name" user.name }><div
     class='menu_item'>Followers<div class='count'></div></div></a>
-  <a { get_route_anchor_attrs "expressions_loves" "owner_name" user.name }><div
+  <a { get_route_anchor_attrs "loves" "owner_name" user.name }><div
     class='menu_item'>Loves<div class='count'></div></div></a>
-  <a { get_route_anchor_attrs "expressions_public" "owner_name" user.name }><div
-    class='menu_item'>Comments<div class='count'></div></div></a>
 </div>
 
 <div id='logo_menu' class='menu drawer'>
-  {< if user.logged_in}
-    <div class='menu_item'>Network</div>
-  {>}
-  <div class='menu_item'>The Hive</div>
   {< if user.logged_in}
     <div class='menu_item'>Email Invites</div>
     <div class='menu_item'>Invite FB Friends</div>

@@ -5,23 +5,23 @@ class Community(Controller):
     def search(self, tdata, request, **paging_args):
         return self.db.query(request.args.get('q'), **paging_args)
 
-    def network_trending(self, tdata, request, username=None, **paging_args):
+    def trending(self, tdata, request, username=None, **paging_args):
         print "username = %s" % username
         user = self.db.User.named(username)
         return {
             'page_data': {
-                "cards": user.feed_page_esdb(trending=True, **paging_args),
+                "cards": user.feed_page_esdb(feed='trending', **paging_args),
                 'header': ("The Hive", "Trending"),
                 'card_type': 'expr',
             },
             'title': "Network - Trending",
         }
 
-    def network_recent(self, tdata, request, username=None, **paging_args):
+    def network(self, tdata, request, username=None, **paging_args):
         user = self.db.User.named(username)
         return {
             'page_data': {
-                "cards": user.feed_page_esdb(**paging_args),
+                "cards": user.feed_page_esdb(feed='network', **paging_args),
                 "header": ("Network", "Recent"),
                 'card_type': 'expr',
             },
@@ -50,7 +50,7 @@ class Community(Controller):
             'title': 'Your Private Expressions',
         }
 
-    def expressions_loves(self, tdata, request, owner_name=None, **args):
+    def loves(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the feeds starred by owner_name...
@@ -67,7 +67,7 @@ class Community(Controller):
         }
 
     # WIP: waiting on Abram's network: recent commit
-    def expressions_activity(self, tdata, request, owner_name=None, **args):
+    def activity(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the feeds starred by owner_name...
@@ -83,7 +83,7 @@ class Community(Controller):
             'about_text': 'Loves',
         }
 
-    def expressions_following(self, tdata, request, owner_name=None, **args):
+    def following(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the users starred by owner_name...
@@ -102,7 +102,7 @@ class Community(Controller):
         }
 
     # TODO: extract commonality from these methods.
-    def expressions_followers(self, tdata, request, owner_name=None, **args):
+    def followers(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         users = owner.starrer_page(**args)

@@ -63,11 +63,6 @@ class Database:
         args['limit'] = limit
         search = self.parse_query(q)
 
-        # substitute network with featured when not logged in
-        feed = search.get('feed')
-        if not viewer and (feed == 'network' or feed == 'trending'):
-            feed = 'featured'
-
         spec = {}
         if search.get('auth'): spec['auth'] = (
             'public' if search['auth'] == 'public' else 'password')
@@ -76,7 +71,7 @@ class Database:
         # todo: make sure that elasticsearch pagination resultsets are of the correct
         #       size after filtering out exprs that are not viewable
         # todo: return grouped_feed items with expressions in network trending
-        # todo: handle all these queries with esdb for intersecting queries
+        # todo: handle all queries with esdb for compound queries like '#Loves #food'
 
         if feed:
             if feed == 'featured':
@@ -543,7 +538,7 @@ class User(HasSocial):
                     if expr is not None and self.can_view(expr):
                         items.append(expr)
                 if len(items) == limit: break
-        return items, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
+        return items #, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
 
     # TODO: move this into ESDB for searching within your network
     def feed_network(self, spec={}, limit=40, at=None, **args):
