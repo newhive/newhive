@@ -57,17 +57,16 @@ class Database:
         # initialize elasticsearch index
         self.esdb = ESDatabase(self)
 
-    def query(self, q, viewer=None, start=0, limit=40, expr_only=None, fuzzy=False,
+    def query(self, q, viewer=None, expr_only=None, fuzzy=False,
               es_order='_score,updated:desc', **args):
         args['viewer'] = viewer
         args['limit'] = limit
         search = self.parse_query(q)
 
         # substitute network with featured when not logged in
-        if not viewer and (search.get('network') or search.get('trending')):
-            search['featured'] = True
-            search.pop('network', 0)
-            search.pop('trending', 0)
+        feed = search.get('feed')
+        if not viewer and (feed == 'network' or feed == 'trending'):
+            feed = 'featured'
 
         spec = {}
         if search.get('auth'): spec['auth'] = (
@@ -77,27 +76,22 @@ class Database:
         # todo: make sure that elasticsearch pagination resultsets are of the correct
         #       size after filtering out exprs that are not viewable
         # todo: return grouped_feed items with expressions in network trending
+        # todo: handle all these queries with esdb for intersecting queries
 
-        if search.get('network'):
-            results = viewer.feed_network(spec=spec, **args)
-        elif search.get('trending'):
-            results, grouped_feed = viewer.feed_page_esdb(
-                trending=True, at=start, limit=limit)
-        elif search.get('featured'):
-            results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
+        if feed:
+            if feed == 'featured':
+                results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
+            else:
+                results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            results = self.esdb.paginate(search, limit=limit, at=start,
-                                         es_order=es_order, fuzzy=fuzzy,
-                                         sort='score', viewer=viewer)
+            results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
+                                         sort='score', viewer=viewer, **args)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
             if not expr_only:
                 results = results + self.User.page(spec, **args)
                 results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
-
-                # redo pagination property after merging possible user results with expr results
-                results = results
 
         return results
 
@@ -108,7 +102,7 @@ class Database:
 
         # split into words with possible [@#] prefix, isolate phrases in quotes
 
-        search = {'text': [], 'tags': [], 'phrases': []}
+        search = {'text': [], 'tags': [], 'phrases': [], 'feed': False }
         q_quotes = re.findall(r'"(.*?)"', q, flags=re.UNICODE)
         q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
 
@@ -118,15 +112,13 @@ class Database:
             prefix = re.sub( r'[^#@]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':
-                if pattern[1] == 'All': search['all'] = True
-                elif pattern[1] == 'Featured': search['featured'] = True
-                elif pattern[1] == 'Network': search['network'] = True
-                elif pattern[1] == 'Trending': search['trending'] = True
-                elif pattern[1] == 'Public': search['auth'] = 'public'
+                if pattern[1] == 'Public': search['auth'] = 'public'
                 elif pattern[1] == 'Private': search['auth'] = 'password'
-                elif pattern[1] == 'Activity': search['activity'] = True
-                elif pattern[1] == 'Followers': search['followers'] = True
-                elif pattern[1] == 'Following': search['following'] = True
+                elif pattern[1] in [
+                    'Featured', 'Recent', 'Network', 'Trending',
+                    'Activity', 'Followers', 'Following', 'Loves',
+                ]:
+                    search['feed'] = pattern[1].lower()
                 else: search['tags'].append( pattern[1].lower() )
             else: search['text'].append( pattern[1].lower() )
 
@@ -501,7 +493,7 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_page_esdb(self, at=0, limit=40, trending=False, **opts):
+    def feed_page_esdb(self, at=0, limit=40, feed=False, **opts):
         f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr', 'Broadcast', 'Star'])
         f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
         f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
@@ -525,7 +517,7 @@ class User(HasSocial):
 
         feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
 
-        if trending is True:
+        if feed == 'trending':
             for r in res_feed[:total_limit]:
                 feed_with_expr[r['entity']].append(r._meta.id)
             expr_ids = feed_with_expr.keys()
@@ -1850,7 +1842,7 @@ class ESDatabase:
         # convert elasticsearch resultsets to result lists
         new_at = min(res.total, at+limit)
         result_ids = [r._meta.id for r in res]
-        results = Page([])
+        results = []
         if es_type == 'expr-type':
             col = self.db.Expr
         elif es_type == 'feed-type':

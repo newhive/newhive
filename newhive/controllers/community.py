@@ -3,14 +3,14 @@ from newhive.controllers.base import Controller
 
 class Community(Controller):
     def search(self, tdata, request, **paging_args):
-        return {}
-        
+        return self.db.query(request.args.get('q'), **paging_args)
+
     def network_trending(self, tdata, request, username=None, **paging_args):
         print "username = %s" % username
         user = self.db.User.named(username)
         return {
             'page_data': {
-                'cards': user.feed_network(**paging_args),
+                "cards": user.feed_page_esdb(trending=True, **paging_args),
                 'header': ("The Hive", "Trending"),
                 'card_type': 'expr',
             },
@@ -21,7 +21,7 @@ class Community(Controller):
         user = self.db.User.named(username)
         return {
             'page_data': {
-                "cards": user.feed_network({}, **paging_args),
+                "cards": user.feed_page_esdb(**paging_args),
                 "header": ("Network", "Recent"),
                 'card_type': 'expr',
             },
