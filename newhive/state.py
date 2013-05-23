@@ -60,7 +60,6 @@ class Database:
     def query(self, q, viewer=None, expr_only=None, fuzzy=False,
               es_order='_score,updated:desc', **args):
         args['viewer'] = viewer
-        args['limit'] = limit
         search = self.parse_query(q)
 
         spec = {}
@@ -73,6 +72,7 @@ class Database:
         # todo: return grouped_feed items with expressions in network trending
         # todo: handle all queries with esdb for compound queries like '#Loves #food'
 
+        feed = search.get('feed')
         if feed:
             if feed == 'featured':
                 results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
