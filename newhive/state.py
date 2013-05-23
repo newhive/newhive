@@ -1649,12 +1649,14 @@ class ESDatabase:
 
     def delete_index(self):
         self.conn.indices.delete_index(self.index)
+        self.conn.indices.refresh()
         return None
 
     def delete_by_ids(self, ids):
         query = pyes.query.IdsQuery(ids)
         self.conn.delete_by_query(query=query, indices=self.index,
                                   doc_types=None)
+        self.conn.indices.refresh()
 
     def parse_query(self, q):
         return self.db.parse_query(q)
