@@ -14,9 +14,11 @@
     * {
         font-family: Gibson;
         font-size: 16px;
+    }
+    .item, .menu_item {
+        text-transform: uppercase;
         font-weight: bold;
     }
-    .item, .menu_item { text-transform: uppercase; }
 
     .expr {
         bottom: 0px;
@@ -156,7 +158,7 @@
                 width: 20px;
             }
         }
-        .menu_item:first-child { border: none; }
+        :first-child .menu_item { border: none; }
     }
 }
 
@@ -201,30 +203,6 @@
 img.thumb { background-color: $color_grey_medium; }
 
 .none, .off .on, .on .off { display: none !important }
-
-#call_to_action {
-    float: left;
-    cursor: pointer;
-    font-family: Bebas, sans-serif;
-    font-size: 26px;
-    padding: 4px 8px 6px 6px;
-    margin-left: 7px;
-    background: $color_selected;
-    &:hover {
-        color: white;
-        background: black;
-    }
-}
-
-#social_icons {
-    margin: 0 5px;
-    img {
-        margin-right: 5px;
-        vertical-align: middle;
-        width: 20px;
-        height: 20px;
-    }
-}
 
 .menu {
     display: none;
@@ -272,7 +250,95 @@ img.thumb { background-color: $color_grey_medium; }
     .submit { float: right; }
 }
 
-#user_menu { width: 260px; }
+.user_menu {
+    width: 400px;
+
+    .feed_item {
+        display: inline-block;
+        width: 100%;
+        padding: 10px;
+        clear: both;
+        border-top: 1px solid #d1d1d1;
+
+        &:hover, &.active {
+            background-color: $color_selected;
+        }
+
+        .thumb {
+            width: 30px;
+            vertical-align: top;
+            float: left;
+            margin-right: 7px;
+        }
+        .content {
+            float: left;
+            width: 350px;
+        }
+        .action_icon {
+            height: 25px;
+            margin: -7px 0 -7px 0;
+        }
+        .title { font-style: italic; }
+        .text {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-height: 40px;
+            color: $color_grey_medium;
+        }
+    }
+}
+
+/*
+.feed_item {
+    width: auto;
+    height: auto;
+    clear: both;
+    overflow: hidden;
+    font-weight: normal;
+    cursor: pointer;
+    margin: 0px;
+    padding: 2px;
+    position: relative;
+    border-top: 1px solid $color_light_grey;
+    &:first-child { border-top: none; }
+    &:hover, &.active {
+        background-color: $color_selected;
+        img { background-color: $color_selected; }
+    }
+    img {
+        margin: 4px 7px 4px 4px;
+        width: 50px;
+        height: 50px;
+        float: left;
+    }
+    .feed_text {
+        margin-left: 5px;
+        font-size: 13px;
+        a, .title {
+            font-weight: bold;
+        }
+    }
+    .byline {
+        position: absolute;
+        right: 6px;
+        bottom: 4px;
+        overflow: hidden;
+        font-size: 12px;
+    }
+    .comment_text {
+        white-space: nowrap;
+        margin-top: 5px;
+        height: 33px;
+    }
+    p {
+        margin: 0;
+    }
+    .timestamp {
+        float: right;
+        color: $color_grey_medium;
+    }
+}
+*/
 
 #owner_menu {
     width: 260px;
@@ -397,65 +463,6 @@ img.thumb { background-color: $color_grey_medium; }
     }
     input { float: right; }
 }
-
-.feed_item {
-    &:hover, &.active {
-        background-color: $color_selected;
-        img { background-color: $color_selected; }
-    }
-}
-
-/*
-.feed_item {
-    width: auto;
-    height: auto;
-    clear: both;
-    overflow: hidden;
-    font-weight: normal;
-    cursor: pointer;
-    margin: 0px;
-    padding: 2px;
-    position: relative;
-    border-top: 1px solid $color_light_grey;
-    &:first-child { border-top: none; }
-    &:hover, &.active {
-        background-color: $color_selected;
-        img { background-color: $color_selected; }
-    }
-    img {
-        margin: 4px 7px 4px 4px;
-        width: 50px;
-        height: 50px;
-        float: left;
-    }
-    .feed_text {
-        margin-left: 5px;
-        font-size: 13px;
-        a, .title {
-            font-weight: bold;
-        }
-    }
-    .byline {
-        position: absolute;
-        right: 6px;
-        bottom: 4px;
-        overflow: hidden;
-        font-size: 12px;
-    }
-    .comment_text {
-        white-space: nowrap;
-        margin-top: 5px;
-        height: 33px;
-    }
-    p {
-        margin: 0;
-    }
-    .timestamp {
-        float: right;
-        color: $color_grey_medium;
-    }
-}
-*/
 
 #dia_password {
     padding: 20px;

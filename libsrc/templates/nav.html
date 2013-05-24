@@ -71,7 +71,7 @@
   {|templates/login_form.html}
 </div>
 
-<div id='user_menu' class='menu drawer'>
+<div id='user_menu' class='menu drawer user_menu'>
   <a { get_route_anchor_attrs "expressions_public"  "owner_name" user.name }><div
     class='menu_item'>Expressions<div class='count'></div></div></a>
   <a { get_route_anchor_attrs "expressions_private" "owner_name" user.name }><div
