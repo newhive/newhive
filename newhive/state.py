@@ -1119,10 +1119,14 @@ class Expr(HasSocial):
             'owner': self.owner.client_view(viewer=viewer),
             'counts': counts,
             'url': self.url,
-            'title': self.get('title'),
-            'snapshot': self.get('snapshot')
+            'title': self.get('title')
         })
-
+        # Until the migration happens, let's just put a placeholder image in the snapshot field
+        # instead of starting the generation of snapshots inside of client_view.
+        if self.get('snapshot_time'):
+            expr['snapshot'] = self.snapshot
+        else:
+            expr['snapshot'] = 'snapshot_placeholder.png'
         if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': self.is_featured })
 
