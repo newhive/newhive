@@ -12,8 +12,9 @@
     @include background-image(linear-gradient(top, white, #DADADA));
 
     * {
-        font-family: Gibson Semibold;
+        font-family: Gibson;
         font-size: 16px;
+        font-weight: bold;
     }
     .item, .menu_item { text-transform: uppercase; }
 
@@ -397,7 +398,14 @@ img.thumb { background-color: $color_grey_medium; }
     input { float: right; }
 }
 
+.feed_item {
+    &:hover, &.active {
+        background-color: $color_selected;
+        img { background-color: $color_selected; }
+    }
+}
 
+/*
 .feed_item {
     width: auto;
     height: auto;
@@ -447,6 +455,7 @@ img.thumb { background-color: $color_grey_medium; }
         color: $color_grey_medium;
     }
 }
+*/
 
 #dia_password {
     padding: 20px;

@@ -34,7 +34,7 @@ class Community(Controller):
         if not owner: return None
         spec = {'owner_name': owner_name, 'auth': 'public'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
             'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
@@ -46,7 +46,7 @@ class Community(Controller):
         spec = {'owner_name': owner_name, 'auth': 'private'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
         return {
-            'page_data': { 'cards': cards, 'profile': owner.client_view(), 'card_type':'expr' },
+            'page_data': { 'cards': cards, 'profile': owner.client_view(activity=True), 'card_type':'expr' },
             'title': 'Your Private Expressions',
         }
 
@@ -58,7 +58,7 @@ class Community(Controller):
         # ...and grab its expressions.
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
             'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
@@ -75,7 +75,7 @@ class Community(Controller):
         # ...and grab its expressions.
         activity = self.db.Feed.search(spec, **args)
         print "hi! {}".format(len(activity))
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
             'page_data': { 'cards': activity, 'profile': profile, 'card_type':'expr' },
@@ -91,7 +91,7 @@ class Community(Controller):
         # ...and grab its users.
         users = self.db.User.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         # TODO: allow tag following, ?concat to personal tags
         tags = owner['tags'] if owner.has_key('tags') else []
@@ -106,7 +106,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         users = owner.starrer_page(**args)
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
             'page_data': { 'cards': users, 'profile': profile, 'card_type':'user' },
