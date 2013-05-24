@@ -334,7 +334,8 @@ define(['browser/js', 'module', 'templates/context'],
 		return condition ? block(context) : '';
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
-	o.base_context['unless'] = function(context, block, condition){
+	o.base_context['unless'] = function(context, block, condition, equals){
+		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? '' : block(context);
 	};
 	o.base_context['for'] = function(context, block, iteratee, var_name){

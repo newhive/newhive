@@ -44,7 +44,6 @@ define([
         expr_page = (method == 'expr');
         if(!expr_page) hide_exprs();
         var page_data = data.page_data;
-        page_data['layout_' + method] = true;
         // TODO: find a better place for these constants
         if (page_data['feed_layout'] == 'mini'){
             grid_width = 232 + 20; // padding = 10 + 10

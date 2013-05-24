@@ -1,12 +1,101 @@
 {# Feed card
   Switches based on activity type
 #}
-<div class='feed_item'>
-  {<if class_name "Comment"}comment{>}
-  {<if class_name "Comment"}
-    {<if entity_class "Expr"}love{>}
+<a
+  {<if entity_class "Expr"}
+    { get_route_anchor_attrs "view_expr" "id" entity  "expr_name" entity_name
+      "owner_name" entity_owner_name }
   {>}
-  {<if class_name "Broadcast"}republish{>}
-  {<if class_name "NewExpr"}created{>}
-  {<if class_name "UpdatedExpr"}updated{>}
-</div>
+  {<if entity_class "User"}
+    { get_route_anchor_attrs "expressions_public"  "owner_name" user.name }
+  {>}
+>  
+<div class='feed_item'>
+  <img src='{initiator_thumb_70}' class='thumb'>
+  <div class='content'>
+    {<if initiator user.id}You{>}
+    {<unless initiator user.id}{initiator_name}{>}
+    {<if class_name "Star"}
+      {<if entity_class "Expr"}<img src='{asset "skin/nav/love.png"}' class='action_icon'>
+        <span class='title'>{entity_title}</span>{>}
+      {<if entity_class "User"}follow {entity_name}{>}
+    {>}
+    {<if class_name "Comment"}
+      <img src='{asset "skin/nav/comment.png"}' class='action_icon'> on
+      <span class='title'>{entity_title}</span><br>
+      <div class='text'>{text}</div>
+    {>}
+    {<if class_name "Broadcast"}
+      <img src='{asset "skin/nav/republish.png"}' class='action_icon'>
+      <span class='title'>{entity_title}</span>
+    {>}
+  </div>
+</div></a>
+
+{#
+{% if feed.class_name == 'InviteNote' %}
+    <img src='{{ 'skin/1/logo_190x190.png'|asset_url }}'>
+    <div class='feed_text'>You have been given <br/>{{ feed.count }} invites!</div>
+    <div class="byline">
+      <a class="name" href="{{ feed.initiator.url }}">{{ feed.initiator_name }}</a><span class="timestamp">{{ feed.created | time }}</span>
+    </div>
+  </div>
+{% elif feed.class_name == 'FriendJoined' %}
+  <a href='{{ feed.initiator.url }}'><div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}} border_right border_bottom">
+    {{ person_thumb(feed.initiator.get_thumb(70), "Thumbnail for " + feed.initiator.name) }}
+    <div class='feed_text'>Your friend {{feed.initiator.name}}<br/>joined NewHive</div>
+    <div class="byline"><span class="timestamp">{{ feed.created | time }}</span></div>
+  </div></a>
+{% else %}
+  {% if feed.entity == user %}
+    {% set entity_url = feed.initiator.url %}
+  {% else %}
+    {% set entity_url = feed.entity.url + ("?loadDialog=comments" if feed.class_name == "Comment" else "") %}
+  {% endif %}
+  <div class="feed_item feed item hoverable {{feed.entity_class}} {{feed.class_name}} border_right border_bottom" onclick='window.location="{{ entity_url }}"'>
+    {% if feed.entity == user %}
+      {{ person_thumb(feed.initiator.get_thumb(70), feed.initiator.fullname) }}
+    {% else %}
+      <img src='{{ feed.entity.get_thumb(70) }}'>
+    {% endif %}
+    <div class="feed_text">
+      <p>
+        <a href="{{feed.initiator.url}}" class='initiator name {{"you" if feed['initiator'] == user.id}}'>
+          {{ "You" if feed['initiator'] == user.id else feed.initiator_name}}
+        </a>
+        {{ "commented on" if feed.class_name == "Comment" }} 
+        {% if feed.class_name == "Star" %}
+          {% if feed.entity_class == "User" %}
+            {{ "are" if feed['initiator'] == user.id else "is" }} listening to
+          {% else %}
+            love{{ 's' if feed['initiator'] != user.id }}
+          {% endif %}
+        {% endif %}
+        {{ "created a new expression" if feed.class_name == "NewExpr" }} 
+        {{ "updated" if feed.class_name == "UpdatedExpr" }} 
+        {{ "broadcast" if feed.class_name == 'Broadcast' }}
+      </p>
+
+      {% if feed.entity_class == "Expr" %}
+        <p class="title title{{feed.entity.title | e | length_bucket}}">{{ feed.entity.title | e}}</p>
+      {% else %}
+        {% set listening = True if feed.class_name == "Star" and feed.entity_class == "User" %}
+        <p class="title{{(feed.entity.name ~ ("" if listening else "'s profile")) | length_bucket }}">
+          {% if listening %}
+            {{ "you" if feed.entity.id == user.id else feed.entity.name }}
+          {% else %}
+            {{ "your" if feed.entity.id == user.id else feed.entity.name + "'s" }} profile
+          {% endif %}
+        </p>
+      {% endif %}
+
+      {% if feed.class_name == 'Comment' %}
+       <p class='comment_text'>
+         "{{ feed.text | e | truncate(30) }}{{'...' if feed.text | length <= 30}}"
+       </p>
+      {% endif %}
+    </div>
+    <div class="byline"><span class="timestamp">{{ feed.created | time }}</span></div>
+  </div>
+{% endif %}
+#}

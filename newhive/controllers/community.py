@@ -2,23 +2,26 @@ from newhive.utils import dfilter
 from newhive.controllers.base import Controller
 
 class Community(Controller):
-    def network_trending(self, tdata, request, username=None, **paging_args):
+    def search(self, tdata, request, **paging_args):
+        return self.db.query(request.args.get('q'), **paging_args)
+
+    def trending(self, tdata, request, username=None, **paging_args):
         print "username = %s" % username
         user = self.db.User.named(username)
         return {
             'page_data': {
-                'cards': user.feed_network(**paging_args),
+                "cards": user.feed_page_esdb(feed='trending', **paging_args),
                 'header': ("The Hive", "Trending"),
                 'card_type': 'expr',
             },
             'title': "Network - Trending",
         }
 
-    def network_recent(self, tdata, request, username=None, **paging_args):
+    def network(self, tdata, request, username=None, **paging_args):
         user = self.db.User.named(username)
         return {
             'page_data': {
-                "cards": user.feed_network({}, **paging_args),
+                "cards": user.feed_page_esdb(feed='network', **paging_args),
                 "header": ("Network", "Recent"),
                 'card_type': 'expr',
             },
@@ -31,7 +34,7 @@ class Community(Controller):
         if not owner: return None
         spec = {'owner_name': owner_name, 'auth': 'public'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
             'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
@@ -43,11 +46,11 @@ class Community(Controller):
         spec = {'owner_name': owner_name, 'auth': 'private'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
         return {
-            'page_data': { 'cards': cards, 'profile': owner.client_view(), 'card_type':'expr' },
+            'page_data': { 'cards': cards, 'profile': owner.client_view(activity=True), 'card_type':'expr' },
             'title': 'Your Private Expressions',
         }
 
-    def expressions_loves(self, tdata, request, owner_name=None, **args):
+    def loves(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the feeds starred by owner_name...
@@ -55,7 +58,7 @@ class Community(Controller):
         # ...and grab its expressions.
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
             'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
@@ -83,7 +86,7 @@ class Community(Controller):
         }
 
     # WIP: waiting on Abram's network: recent commit
-    def expressions_activity(self, tdata, request, owner_name=None, **args):
+    def activity(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the feeds starred by owner_name...
@@ -91,7 +94,7 @@ class Community(Controller):
         # ...and grab its expressions.
         activity = self.db.Feed.search(spec, **args)
         print "hi! {}".format(len(activity))
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
             'page_data': { 'cards': activity, 'profile': profile, 'card_type':'expr', },
@@ -99,7 +102,7 @@ class Community(Controller):
             'about_text': 'Loves',
         }
 
-    def expressions_following(self, tdata, request, owner_name=None, **args):
+    def following(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the users starred by owner_name...
@@ -107,7 +110,7 @@ class Community(Controller):
         # ...and grab its users.
         users = self.db.User.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         # TODO: allow tag following, ?concat to personal tags
         tags = owner['tags'] if owner.has_key('tags') else []
@@ -119,11 +122,11 @@ class Community(Controller):
         }
 
     # TODO: extract commonality from these methods.
-    def expressions_followers(self, tdata, request, owner_name=None, **args):
+    def followers(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         users = owner.starrer_page(**args)
-        profile = owner.client_view()
+        profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
             'page_data': { 'cards': users, 'profile': profile, 'card_type':'user' },
