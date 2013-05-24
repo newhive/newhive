@@ -1,17 +1,18 @@
 define([
-    'browser/jquery', 'browser/layout', 'server/context',
-    'ui/menu', 'ui/util', 'require', 'sj!templates/nav.html',
-    'sj!templates/login_form.html'
+    'browser/jquery', 
+    'browser/layout', 
+    'server/context',
+    'ui/menu', 
+    'ui/util', 
+    'require', 
+    'sj!templates/nav.html',
+    'sj!templates/login_form.html', 
 ], function(
 	$, lay, context, menu, ui, require, nav_template
 ) {
     // Is the nav currently in expr mode?
     var nav_expr_mode = false;
-    var ui_page;
-    function render(_ui_page){
-    	if (_ui_page != undefined) {
-    		ui_page = _ui_page;
-    	}
+    function render(){
         $('#nav').empty().html(nav_template({
             'expr_view': nav_expr_mode,
             'nav_view': !nav_expr_mode
@@ -39,10 +40,6 @@ define([
         }
 
         ui.add_hovers();
-        if (ui_page != undefined) {
- 	        $("#page_prev").click(ui_page.page_prev);
-    	    $("#page_next").click(ui_page.page_next);
-		}
         setTimeout(layout, 100);
         $(window).resize(layout);
     }

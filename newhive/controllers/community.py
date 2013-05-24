@@ -140,9 +140,15 @@ class Community(Controller):
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
+        # owner = self.db.User.named(owner_name)
+        expr_owner = expr.get_owner()
+        profile = expr_owner.client_view()
+        profile['profile_bg'] = expr_owner.get('profile_bg')
         return {
             'page_data': {
-                'expr_id': expr.id
+                'profile': profile,
+                'expr': expr.client_view(),
+                'expr_id': expr.id,
             },
             'title': expr['title'],
         }

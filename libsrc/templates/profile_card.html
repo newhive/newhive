@@ -13,7 +13,7 @@
       <div class='name'>
         {fullname}
         {# TODO: make this dependent on how many icons there are instead of who viewer is #}
-        {<unless user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='mail_btn'/></a>{>}
+        {<unless user_is_owner}{#<a {get_route_anchor_attrs "profile_edit"} ><div id='mail_btn'/></a>{>}#}
         {<if user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='edit_btn'/></a>{>}
       </div>
       <div>{about_text}</div>
