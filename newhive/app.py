@@ -90,7 +90,8 @@ rules_tuples = [
     ('/api/user/logout', (api.user, 'logout')),
     ('/api/search', (api.search, 'search')),
     ('/home/streamified_test', (api.user, 'streamified_test')),
-    ('/home/streamified_login', (api.user, 'streamified_login'))
+    ('/home/streamified_login', (api.user, 'streamified_login')),
+    ('/api/comment/create', (api.user, 'comment_create')),
 ]
 
 rules = []

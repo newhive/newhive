@@ -1,3 +1,4 @@
+#DEPRECATED
 from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive import utils, mail
@@ -45,6 +46,7 @@ class Feed(Application):
         if text.strip() == '': return False
 
         comment = self.db.Comment.create(user, expr, {'text': text})
+        # TODO: mail settings
         if user.id != expr.owner.id:
             mail.Feed(db=self.db, jinja_env=self.jinja_env).send(comment)
         comment['initiator_thumb'] = user.get_thumb(70)

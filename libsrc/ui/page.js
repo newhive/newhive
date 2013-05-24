@@ -57,6 +57,24 @@ define([
         layout();
     };
 
+    // TODO: require login
+    o.post_comment = function () {
+        btn = $('#comment_form .submit'); 
+        if(btn.hasClass('inactive')) return;
+
+        // items = $('#comment_menu .items');
+        var text = $('#comment_form textarea').val();
+        if(text.trim() == '') return false;
+        btn.addClass('inactive');
+        // $.post('/api/comment/create', { entity: context.page_data.expr_id, text: text }, function(data) {
+        //     btn.removeClass('inactive');
+        //     if(!data) { o.server_error(); return; }
+        //     //TODO o.comment_card(data).appendTo(items);
+        //     // items.scrollTop(items.get(0).scrollHeight);
+        //     // o.btn_state('#comment_btn', true);
+        //     $('#comment_form textarea').val('');
+        // }, 'json');
+    }
     o.social_toggle = function() {
         popup = $('#social_popup');
         // TODO: animate
@@ -146,10 +164,12 @@ define([
     // Animate the new visible expression, bring it to top of z-index.
     // TODO: animate nav bar
     o.expr = function(page_data){
+        // TODO: should the HTML render on page load? Or delayed?
         $('#overlays #social_popup').empty().append(
             social_popup_template(context.page_data));
         $("#nav").prependTo("#social_popup");
         $("#social_popup #plus").click(o.social_toggle);
+        $('#comment_form').submit(o.post_comment);
 
         // display_expr(page_data.expr_id);
         var expr_id = page_data.expr_id;
