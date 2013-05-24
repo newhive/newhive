@@ -39,6 +39,16 @@
     {# activity feed #}
     <div>activity TBD</div>
     {# discussion input #}
-    <div>discussion TBD</div>
+    <div id="discussions">
+      <div><div class="text">Discussion</div>
+      {<with . "icon_class" "comment"}
+        {|templates/icon_count.html}
+      {>}</div>
+      <form id='comment_form' action='/api/comment/create' method='POST'>
+      <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
+      <input type='submit' value='Enter' class='submit btn black rounded'>
+      <input type='hidden' name='action' value='comment'>
+      <input type='hidden' name='entity' value='{id}'>
+    </form></div>
   </div>
 {>}
