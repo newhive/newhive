@@ -225,6 +225,10 @@ class Collection(object):
     # self.new can be overridden to return custom object types
     def new(self, d): return self.entity(self, d)
 
+    def esdb_new(self, r):
+        r['id'] = r.get_id()
+        return self.entity(self, r)
+
     def create(self, d):
         new_entity = self.new(d)
         return new_entity.create()
@@ -476,7 +480,7 @@ class User(HasSocial):
         q4 = pyes.query.TermsQuery('entity', commented_exprs)
         q5 =pyes.query.BoolQuery(must = [q4, q1])
         q = pyes.query.BoolQuery(should = [q2, q3, q5])  # boolean OR query
-        return map(self.db.Feed.new, self.db.esdb.conn.search(
+        return map(self.db.Feed.esdb_new, self.db.esdb.conn.search(
             q, indices=self.db.esdb.index, doc_types='feed-type',
             size=limit, start=at, sort='created:desc'))
 
@@ -1764,7 +1768,9 @@ class ESDatabase:
                 'views': expr.get('views', 0)
             }
         elif es_type == 'feed-type':
-            data = entry
+            data = dfilter(entry, ['class_name', 'created', 'entity',
+                'entity_class', 'entity_owner', 'initiator', 'initiator_name',
+                'text'])
         elif es_type == 'user-type':
             data = {
                 'fullname': entry.get('fullname', ''),

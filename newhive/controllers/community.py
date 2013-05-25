@@ -5,8 +5,17 @@ class Community(Controller):
     def search(self, tdata, request, **paging_args):
         return self.db.query(request.args.get('q'), **paging_args)
 
+    def home(self, tdata, request, username=None, **paging_args):
+        return {
+            'page_data': {
+                "cards": self.db.query('#Featured', viewer=tdata.user),
+                'header': ("Featured Expressions", "Trending"),
+                'card_type': 'expr',
+            },
+            'title': "NewHive - Featured",
+        }
+
     def trending(self, tdata, request, username=None, **paging_args):
-        print "username = %s" % username
         user = self.db.User.named(username)
         return {
             'page_data': {
