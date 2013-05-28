@@ -8,6 +8,7 @@ define([
     'ui/nav',
     'server/context',
     'sj!templates/card_master.html',
+    'sj!templates/home.html',
     'sj!templates/profile_edit.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
@@ -16,7 +17,9 @@ define([
     'sj!templates/user_card.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
-], function($, nav, context, master_template, profile_edit_template, card_template) {
+], function($, nav, context, master_template, home_template,
+    profile_edit_template, card_template
+) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
         layout;
@@ -33,7 +36,6 @@ define([
         expr_page = (method == 'expr');
         if(!expr_page) hide_exprs();
         var page_data = data.page_data;
-        page_data['layout_' + method] = true;
         layout = page_data.layout = method;
         if(o[method]) o[method](page_data);
         else render_site(page_data);
@@ -42,7 +44,7 @@ define([
     // route.client_method definitions
     o.expr_detail = function(data){
         render_site(data);
-        expr_column();
+        // expr_column(); // TODO: is this necessary?
     };
 
     // o.grid = function(data){
@@ -61,6 +63,10 @@ define([
     //     data.grid = true;
     //     render_site(data);
     // };
+
+    o.home = function(data){
+        $('#site').empty().append(home_template(data.page_data));
+    };
 
     o.profile = function(data){
         render_site(data);

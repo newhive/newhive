@@ -23,10 +23,10 @@
     {>}
     {<if card_type "expr"}
       <div class='expr card' draggable='false'>
-        {<if layout_grid}
+        {<if layout "grid"}
           {|templates/expr_card_feed.html}
         {>}
-        {<if layout_profile}
+        {<if layout "profile"}
           {|templates/expr_card_large.html}
         {>}
       </div>
