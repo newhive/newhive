@@ -9,6 +9,7 @@ define([
     'server/context',
     'browser/layout',
     'sj!templates/card_master.html',
+    'sj!templates/home.html',
     'sj!templates/social_popup.html',
     'sj!templates/overlay.html',
     'sj!templates/profile_edit.html',
@@ -19,8 +20,10 @@ define([
     'sj!templates/user_card.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
-], function($, nav, context, browser_layout, master_template,
-    social_popup_template, overlay_template) {
+], function(
+    $, nav, context, browser_layout, master_template,
+    home_template,social_popup_template, overlay_template
+) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
         layout_method, grid_width, controller, 
@@ -146,6 +149,10 @@ define([
     //     data.grid = true;
     //     render_site(data);
     // };
+
+    o.home = function(data){
+        $('#site').empty().append(home_template(data.page_data));
+    };
 
     o.profile = function(data){
         render_site(data);

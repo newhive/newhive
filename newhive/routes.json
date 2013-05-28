@@ -1,56 +1,63 @@
 {
+    "home": {
+        "page_route": "/",
+        "api_route": "/api/feed/featured",
+        "controller": "community",
+        "method": "home",
+        "client_method": "home"
+    },
     "trending": {
         "page_route": "/<username>/profile/trending",
-        "api_route": "/api/feed/<username>/trending",
+        "api_route": "/api/feed/trending/<username>",
         "controller": "community",
         "method": "trending",
         "client_method": "profile"
     },
     "network": {
         "page_route": "/<username>/profile/network",
-        "api_route": "/api/feed/<username>/network",
+        "api_route": "/api/feed/network/<username>",
         "controller": "community",
         "method": "network",
         "client_method": "grid"
     },
     "expressions_public": {
         "page_route": "/<owner_name>/profile",
-        "api_route": "/api/feed/<owner_name>/expressions",
+        "api_route": "/api/feed/expressions/<owner_name>",
         "controller": "community",
         "method": "expressions_public",
         "client_method": "profile"
     },
     "expressions_private": {
         "page_route": "/<owner_name>/profile/private",
-        "api_route": "/api/feed/<owner_name>/private",
+        "api_route": "/api/feed/private/<owner_name>",
         "controller": "community",
         "method": "expressions_private",
         "client_method": "profile_private"
     },
     "activity": {
         "page_route": "/<owner_name>/profile/activity",
-        "api_route": "/api/feed/<owner_name>/activity",
+        "api_route": "/api/feed/activity/<owner_name>",
         "controller": "community",
         "method": "loves",
         "client_method": "grid"
     },
     "following": {
         "page_route": "/<owner_name>/profile/following",
-        "api_route": "/api/feed/<owner_name>/following",
+        "api_route": "/api/feed/following/<owner_name>",
         "controller": "community",
         "method": "following",
         "client_method": "grid"
     },
     "followers": {
         "page_route": "/<owner_name>/profile/followers",
-        "api_route": "/api/feed/<owner_name>/followers",
+        "api_route": "/api/feed/followers/<owner_name>",
         "controller": "community",
         "method": "followers",
         "client_method": "grid"
     },
     "loves": {
         "page_route": "/<owner_name>/profile/loves",
-        "api_route": "/api/feed/<owner_name>/loves",
+        "api_route": "/api/feed/loves/<owner_name>",
         "controller": "community",
         "method": "loves",
         "client_method": "grid"
