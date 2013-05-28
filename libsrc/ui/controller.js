@@ -22,7 +22,7 @@ define([
         util.copy(data, context, true);
         page.render(route.client_method, data);
     };
-    o.refresh = function(){ o.dispatch(route.method, data) };
+    o.refresh = function(){ o.dispatch(route.method, context) };
     
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
