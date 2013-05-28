@@ -437,6 +437,8 @@ likes_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])  # 
 
 feed_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star', 'Comment'])
 
+pub_filter = pyes.filters.TermFilter('auth', 'public')
+
 def autocomplete(pre, db, field='tags'):
     s = re.sub(r'[\s_\-"]', '', pre, flags=re.UNICODE)
     query = match_all_query.search()
@@ -510,8 +512,8 @@ def others_liked(expr, db):
         qid = pyes.query.FilteredQuery(match_all_query, fid)
         res_expr = db.esdb.conn.search(qid, indices=db.esdb.index, doc_types="expr-type")
 
-        for r in res_expr:
-            res.append(dfilter(r, ['name', 'owner_name']))
+        for r in db.esdb.esdb_paginate(res_expr, es_type='expr-type'):
+            res.append(dfilter(r, ['_id', 'name', 'owner_name']))
 
     else:
         res = []
@@ -628,6 +630,9 @@ def convert_dict_to_sorted_list(d, size=5):
 ##### utils for testing ranking/trending algorithms #####
 
 from scipy.stats import norm
+
+popularity_score = "_score * (doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value)"
+popularity_time_score = "(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)"
 
 
 def get_expr_rating_score(expr, downvotes):

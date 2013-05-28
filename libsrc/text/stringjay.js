@@ -62,6 +62,7 @@ define(['browser/js', 'module', 'templates/context'],
 		tag_close: /^\s*}/,
 		strip_whitespace: false // not yet implemented
 	};
+	var suffix = new Array('', 'K', 'M', 'G');
 
 	// parse :: String -> AST Object Array, throws ParseError String
 	// possible AST node type:
@@ -158,9 +159,10 @@ define(['browser/js', 'module', 'templates/context'],
 
 		// 'foo/..' not supported, because it's pointless ('..'s must be at beginning)
 		function path(do_throw){
-			var matched = match(/^\s*[\/\w!.]+/i, do_throw, 'path');
-			if(!matched) return false;
-			var  node = {
+			// paths must not match JS literals
+			var matched = match(/^\s*[\/.]*([a-z][\/\w.]*)?/i, do_throw, 'path');
+			if(!matched.trim()) return false;
+			var node = {
 				type: 'path',
 				line: line,
 				up_levels: 0
@@ -262,8 +264,11 @@ define(['browser/js', 'module', 'templates/context'],
 		else if(node.type == 'comment') return '';
 		else throw render_error('unrecognized node: ' + JSON.stringify(node));
 
-		function render_error(msg){ return 'Render error on line ' +
-			node.line + ': ' + msg; }
+		function render_error(msg){ return 'Render error in template ' +
+			// turns out getting the template name is pretty hard
+			// this doesn't work with template_apply (templates called within templates)
+			//context[1].template.template_name + ', line ' + node.line + ': ' + msg; }
+			'line ' + node.line + ': ' + msg; }
 	}
 
 	o.template = function(template_src){
@@ -301,7 +306,7 @@ define(['browser/js', 'module', 'templates/context'],
 			if(typeof value == 'undefined') return '';
 			value = value[path[i]];
 		}
-		return value ? value : '';
+		return typeof value == 'undefined' ? '' : value;
 	}
 	o.resolve = resolve;
 
@@ -324,26 +329,66 @@ define(['browser/js', 'module', 'templates/context'],
 	o.base_context['true'] = true;
 	o.base_context['false'] = false;
 	o.base_context['null'] = null;
-	o.base_context['if'] = function(context, block, condition){
+	o.base_context['if'] = function(context, block, condition, equals){
+		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? block(context) : '';
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
-	o.base_context['unless'] = function(context, block, condition){
+	o.base_context['unless'] = function(context, block, condition, equals){
+		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? '' : block(context);
 	};
-	o.base_context['for'] = function(context, block, iteratee){
+	o.base_context['for'] = function(context, block, iteratee, var_name){
 		if(!iteratee || iteratee.constructor != Array) return '';
-		return iteratee.map(function(v){
-			return block(context.concat(v))
+		return iteratee.map(function(v, i){
+			if(var_name) v[var_name] = i;
+			return block(context.concat(v));
 		}).reduce(util.op['+'], '');
 	};
+	o.base_context['range'] = function(context, block, var_name, start, stop, step){
+		if(typeof stop == 'undefined'){
+			stop = start;
+			start = 0;
+		}
+		if(typeof step == 'undefined') step = 1;
+		var out = '';
+		for(var i = start; i < stop; i += step){
+			var loop_context = {};
+			loop_context[var_name] = i;
+			out += block(context.concat(loop_context));
+		}
+		return out;
+	};
+	o.base_context['sparsefor'] = function(context, block, iteratee, modulous, selector){
+		if(!iteratee || iteratee.constructor != Array) return '';
+		return iteratee.map(function(v, i){
+			return (i % modulous == selector) ? block(context.concat(v)) : '';
+		}).reduce(util.op['+'], '');
+	};
+	// With pushes a new, top context with "what" as its contents.
+	// Takes optional varargs key-value pairs which are also pushed onto context.
 	o.base_context['with'] = function(context, block, what){
-		return block(context.concat(what));
+		var new_context = $.extend({}, what);
+		// All arguments after what are name value pairs
+		for(var i = 3; i < arguments.length; i += 2){
+			new_context[arguments[i]] = arguments[i + 1];
+		}
+		return block(context.concat(new_context));
 	};
 	o.base_context.e = encode_to_html;
 	o.base_context.json = function(context, data){
 		return JSON.stringify(data);
-	}
+	};
+	o.base_context.mod = function(context, x, y){ return x % y };
+	o.base_context.thousands = function(context, n){ 
+		for (var i = 0; Math.abs(n) >= 1000 && i < suffix.length - 1; ++i) {
+			if (Math.abs(n) < 10000)
+				n = Math.round(n/100)/10;
+			else
+				n = Math.round(n/1000);
+		}
+		return n + suffix[i];
+	};
 
 	return o;
 });

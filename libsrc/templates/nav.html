@@ -3,10 +3,9 @@
 {<if user.logged_in}
   ><div id='user_btn' class='text_btn item hoverable black_active'
     >{user.name|e}</div
-  ><div class='count rounded {<unless user.notification_count}none{>}'
+  >{#<div class='count rounded {<unless user.notification_count}none{>}'
     >{user.notification_count}</div
-  ></div
-  ><a id='create_btn' class='text_btn item hoverable black_active' href='{secure_server}edit'
+  >#}<a id='create_btn' class='text_btn item hoverable black_active' href='{secure_server}edit'
       onclick='return require_login("create")'
       ><div class='text_btn item text'>New</div
       ><div class='icon'></div
@@ -27,28 +26,11 @@
   ><div id='hive_btn' class='text_btn item black_active
     {<unless user.logged_in}hide{>}'>The Hive</div>{>}
     {< if expr_view}
-    <div class='text_btn item black_active {<unless user.logged_in}hide{>}'>
-        <img src='{asset "skin/nav/love.png"}'/>
-    </div>
-    <div class='text_btn item black_active {<unless user.logged_in}hide{>}'>
-        <img src='{asset "skin/nav/republish.png"}'/>
-    </div>
-    <div class='text_btn item black_active {<unless user.logged_in}hide{>}'
-        ><img src='{asset "skin/nav/comment.png"}'/>
-    </div>
-    <div class="text_btn item black_active">
-        <img src='{asset "skin/nav/facebook.png"}'/>
-    </div>
-    <div class="text_btn item black_active">
-        <img src='{asset "skin/nav/twitter.png"}'/>
-    </div>
-    <div class="text_btn item black_active">
-        <img src='{asset "skin/nav/share.png"}'/>
-    </div>{>}
+    {>}
 
   <div id='network_menu' class='menu drawer'>
-    <a { get_route_anchor_attrs "network_trending" }><div class='menu_item'>Trending</div></a>
-    <a { get_route_anchor_attrs "network_recent" }><div class='menu_item'>Recent</div></a>
+    <a { get_route_anchor_attrs "trending" }><div class='menu_item'>Trending</div></a>
+    <a { get_route_anchor_attrs "network" }><div class='menu_item'>Recent</div></a>
   </div>
 
   <div id='hive_menu' class='menu drawer'>
@@ -71,31 +53,34 @@
   {|templates/login_form.html}
 </div>
 
-<div id='user_menu' class='menu drawer'>
+<div id='user_menu' class='menu drawer user_menu'>
   <a { get_route_anchor_attrs "expressions_public"  "owner_name" user.name }><div
     class='menu_item'>Expressions<div class='count'></div></div></a>
   <a { get_route_anchor_attrs "expressions_private" "owner_name" user.name }><div
     class='menu_item'>Private<div class='count'></div></div></a>
-  <div class='menu_item'>Activity<div class='count'></div></div>
-  <div class='menu_item'>Following</div>
-  <div class='menu_item'>Followers</div>
-  <div class='menu_item'>Loves</div>
-  <div class='menu_item'>Comments</div>
+    <!-- TODO: implement me -->
+  <a { get_route_anchor_attrs "following" "owner_name" user.name }><div
+    class='menu_item'>Following<div class='count'></div></div></a>
+  <a { get_route_anchor_attrs "followers" "owner_name" user.name }><div
+    class='menu_item'>Followers<div class='count'></div></div></a>
+  <a { get_route_anchor_attrs "loves" "owner_name" user.name }><div
+    class='menu_item'>Loves<div class='count'></div></div></a>
+  <div class='activity'>
+    {<for user.activity}
+      {|templates/feed_card.html}
+    {>}
+  </div>
 </div>
 
 <div id='logo_menu' class='menu drawer'>
-  {< if user.logged_in}
-    <div class='menu_item'>Network</div>
-  {>}
-  <div class='menu_item'>The Hive</div>
-  {< if user.logged_in}
+  {<if user.logged_in}
     <div class='menu_item'>Email Invites</div>
     <div class='menu_item'>Invite FB Friends</div>
     <div class='menu_item'>Find FB Friends</div>
     <div class='menu_item'>Settings</div>
   {>}
   <div class='menu_item'>About NewHive</div>
-  {< if user.logged_in}
+  {<if user.logged_in}
     <div class='menu_item'>Feedback</div>
     <div id='logout_btn' class='menu_item'>Logout</div>
   {>}

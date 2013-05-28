@@ -1,39 +1,35 @@
 {<if header}
   <div id='header' class='header'>
     <span class='heading'>{ header.0 }
-      {<if header.1} : {>}{ header.1 }</span>
+      {<if header.1} : { header.1 }{>}</span>
   </div>
 {>}
 {<if profile}
   {<with profile}
-    <div id='user_header' class='header'>
-      {<if profile_bg}
-        <label for='file'
-          style='background-image:url("{profile_bg}")'
-          class='background'/>
-      {>}
-      <div class='profile'>
-        <img src='{thumb_190}' class='thumb'>
-        <div class='info'>
-          <div class='name'>
-            {fullname}
-            {# TODO: make this dependent on how many icons there are instead of who viewer is #}
-            {<unless user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='mail_btn'/></a>{>}
-            {<if user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='edit_btn'/></a>{>}
-          </div>
-          <div>meep blurby blurb goes here aoeus thaoesu thaoesu thaoesu thaoesu hasoeuthaosetuasoeth</div>
-        </div>
-      </div>
-      <form id='profile_edit' class='hide'>
-        <input type='file' name='file' id='file'>
-      </form>
-    </div>
+    {|templates/profile_card.html}
   {>}
 {>}
-<div id='feed'>
+<div id='feed' class='{layout}'>
+  <div class="tag_list">
+    {<for tags "tagnum"}
+      <div class="div_{tagnum}">{.}</div>
+    {>}
+  </div>
   {<for cards}
-      {<if title}{|templates/expr_card.html}{>}
-      {<if fullname}{|templates/user_card.html}{>}
-      {<if entity_class}{|templates/feed_card.html}{>}
+    {<if card_type "user"}
+      <div class='user card' draggable='false'>
+        {|templates/user_card.html}
+      </div>
+    {>}
+    {<if card_type "expr"}
+      <div class='expr card' draggable='false'>
+        {<if layout "grid"}
+          {|templates/expr_card_feed.html}
+        {>}
+        {<if layout "profile"}
+          {|templates/expr_card_large.html}
+        {>}
+      </div>
+    {>}
   {>}
 </div>

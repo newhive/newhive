@@ -1,0 +1,16 @@
+Life of a query
+
+Server
+	DB
+	Routing
+	Rendering
+
+Client
+	Templates
+	CSS
+
+Debugging
+
+Testing
+
+Style

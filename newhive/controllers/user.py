@@ -15,6 +15,27 @@ class User(ModelController):
         auth.handle_logout(self.db, tdata.user, request, response)
         return self.serve_json(response, True)
 
+    # TODO: implement, hook in app.py
+    def comment_edit(self, tdata, request, response):
+        return self.serve_json(response, False)
+    def comment_delete(self, tdata, request, response):
+        return self.serve_json(response, False)
+
+    def comment_create(self, tdata, request, response):
+        # Feed.comment(request, response)
+        resp = False
+        user = tdata.user
+        expr = self.db.Expr.fetch(request.form.get('entity'))
+        if not expr: return self.serve_404(tdata, request, response)
+        text = request.form.get('text')
+        if text.strip() == '': return False
+
+        comment = self.db.Comment.create(user, expr, {'text': text})
+        # TODO: mail settings
+        # if user.id != expr.owner.id:
+        #     mail.Feed(db=self.db, jinja_env=self.jinja_env).send(comment)
+        return self.serve_json(response, resp)
+
     def streamified_login(self, tdata, request, response):
         streamified_username = request.args['usernames'].split(',')[0]
 

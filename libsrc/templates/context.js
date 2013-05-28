@@ -28,6 +28,13 @@ define([
             }).join(' ');
             return attributes_str;
         },
+        feed_action: function(scope, r){
+            if(r.class_name == 'Star' && r.entity_class == 'Expr') return 'loves';
+            if(r.class_name == 'Star' && r.entity_class == 'User') return 'follows';
+            if(r.class_name == 'Comment') return 'comments';
+            if(r.class_name == 'FriendJoined') return 'joined';
+            if(r.class_name == 'Broadcast') return 'republishes';
+        }
 	};
 
     js_util.copy(helpers, context);

@@ -1,20 +1,6 @@
-<div class='expr card {card_classes}' draggable='false'>
-  <a { get_route_anchor_attrs "view_expr"
-    "id" id  "expr_name" name  "owner_name" owner.name }
-  >
-    <div class="title"><span class='words'>{title}</span></div>
-    <img src="{snapshot}"
-      class="snapshot">
-  </a>
-  <div class='info'>
-    <div class="owner">
-      <img class="thumb" src="{owner.thumb_70}"/>
-      <span>by <span class='username'>{owner.name}</span></span>
-    </div>
-    <div class="stats">
-      <img src='{asset "skin/nav/views.png"}'/> {counts.Views}
-      {<if counts.Star}<img src='{asset "skin/nav/love.png"}'/> {counts.Star}{>}
-      {<if counts.Comment}<img src='{asset "skin/nav/comment.png"}'/> {counts.Comment}{>}
-    </div>
-  </div>
-</div>
+{<if layout_grid}
+  {|templates/expr_feed.html}
+{>}
+{<if layout_profile}
+  {|templates/expr_large.html}
+{>}

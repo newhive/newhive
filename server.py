@@ -7,7 +7,6 @@ import newhive.config as config
 from newhive.app import application
 from werkzeug.serving import run_simple, make_ssl_devcert
 
-
 # caution, broken in some obscure way
 #def wsgi_no_cache(app):
 #    def new_app(environ, start_response):

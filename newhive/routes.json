@@ -1,31 +1,73 @@
 {
-    "network_trending": {
-        "page_route": "/<username>/profile/network/trending",
-        "api_route": "/api/feed/<username>/network_trending",
+    "home": {
+        "page_route": "/",
+        "api_route": "/api/feed/featured",
         "controller": "community",
-        "method": "network_trending",
-        "client_method": "expr_detail"
+        "method": "home",
+        "client_method": "home"
     },
-    "network_recent": {
-        "page_route": "/<username>/profile/network/recent",
-        "api_route": "/api/feed/<username>/network_recent",
+    "trending": {
+        "page_route": "/<username>/profile/trending",
+        "api_route": "/api/feed/trending/<username>",
         "controller": "community",
-        "method": "network_recent",
-        "client_method": "columns"
+        "method": "trending",
+        "client_method": "profile"
+    },
+    "network": {
+        "page_route": "/<username>/profile/network",
+        "api_route": "/api/feed/network/<username>",
+        "controller": "community",
+        "method": "network",
+        "client_method": "grid"
     },
     "expressions_public": {
         "page_route": "/<owner_name>/profile",
-        "api_route": "/api/feed/expressions/public/<owner_name>",
+        "api_route": "/api/feed/expressions/<owner_name>",
         "controller": "community",
         "method": "expressions_public",
         "client_method": "profile"
     },
     "expressions_private": {
         "page_route": "/<owner_name>/profile/private",
-        "api_route": "/api/feed/expressions/private/<owner_name>",
+        "api_route": "/api/feed/private/<owner_name>",
         "controller": "community",
         "method": "expressions_private",
         "client_method": "profile_private"
+    },
+    "activity": {
+        "page_route": "/<owner_name>/profile/activity",
+        "api_route": "/api/feed/activity/<owner_name>",
+        "controller": "community",
+        "method": "loves",
+        "client_method": "grid"
+    },
+    "following": {
+        "page_route": "/<owner_name>/profile/following",
+        "api_route": "/api/feed/following/<owner_name>",
+        "controller": "community",
+        "method": "following",
+        "client_method": "grid"
+    },
+    "followers": {
+        "page_route": "/<owner_name>/profile/followers",
+        "api_route": "/api/feed/followers/<owner_name>",
+        "controller": "community",
+        "method": "followers",
+        "client_method": "grid"
+    },
+    "loves": {
+        "page_route": "/<owner_name>/profile/loves",
+        "api_route": "/api/feed/loves/<owner_name>",
+        "controller": "community",
+        "method": "loves",
+        "client_method": "grid"
+    },
+    "expressions_comments": {
+        "page_route": "/<owner_name>/profile/comments",
+        "api_route": "/api/feed/expressions/comments/<owner_name>",
+        "controller": "community",
+        "method": "expressions_comments",
+        "client_method": "grid"
     },
     "profile_edit": {
         "page_route": "/<owner_name>/profile/edit",

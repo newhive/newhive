@@ -1,3 +1,8 @@
+/* Expression
+  Defines the behavior of the expression frame.
+  Expression interacts with its parent frame, the main site,
+    via postMessage.
+*/
 define(['browser/layout',
         'browser/jquery',
         'server/context',
@@ -49,6 +54,7 @@ define(['browser/layout',
             if (currentURL.indexOf(SNAPSHOT_PARAM, currentURL.length - SNAPSHOT_PARAM.length) !== -1) {
                 Hive.Page.snapshot_mode();
             }
+            $(document).mousemove(o.check_hover);
             $(window).resize(o.layout_parent)
                  .click(function(){ o.send_top('focus'); });
         };
@@ -85,6 +91,22 @@ define(['browser/layout',
                 // Youtube's 0.jpg is the full-size image preview.
                 $(el).closest('.hive_html').html('<img src="http://img.youtube.com/vi/' + videoMatch[1] + '/0.jpg"/>') 
             });
+        }
+
+        o.margin = function () {
+            return $(window).width() / 4;
+        }
+        o.check_hover = function (e) {
+            if (e.clientX < o.margin()) {
+                o.send_top("show_prev"); //$('#page_prev').show();
+            } else {
+                o.send_top("hide_prev"); // $('#page_prev').hide();
+            }
+            if (e.clientX > $(window).width() - o.margin()) {
+                o.send_top("show_next"); //$('#page_next').show();
+            } else {
+                o.send_top("hide_next"); // $('#page_next').hide();
+            }
         }
 
         o.init_content = function(){

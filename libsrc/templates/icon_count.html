@@ -1,0 +1,9 @@
+{# 
+	Display icon, count (Loves 3.1K) 
+#}
+<div class="stats counts_icon">
+  <div class='icon {icon_class}'>
+  	{<if icon}<img src='{asset icon}'>{>}
+  </div>
+  {<if count}<span class='counts'>{thousands count}</span>{>}
+</div>
