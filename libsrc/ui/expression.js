@@ -45,53 +45,10 @@ define(['browser/layout',
                 }
                 if ( m.data.action == "hide" ) o.hide();
             }, false);
-
-            // If SNAPSHOT_PARAM is tacked onto the end of the URL, go into "snapshot mode,"
-            // which basically means replace youtube and vimeo iframes with static images of the
-            // same size.
-            var SNAPSHOT_PARAM = '?snapshot';
-            var currentURL = window.location.toString();
-            if (currentURL.indexOf(SNAPSHOT_PARAM, currentURL.length - SNAPSHOT_PARAM.length) !== -1) {
-                Hive.Page.snapshot_mode();
-            }
             $(document).mousemove(o.check_hover);
             $(window).resize(o.layout_parent)
                  .click(function(){ o.send_top('focus'); });
         };
-        
-        o.snapshot_mode = function() {
-            function getURLDomain(url) {
-                var temp = document.createElement('a');
-                temp.href = url;
-                return temp.host;
-            }
-            // Look for Vimeo embed iframes
-            $('.hive_html iframe').map(function(idx, el) {
-                if (getURLDomain(el.src) != 'player.vimeo.com') return;
-                var videoMatch = el.src.match(/player\.vimeo\.com\/video\/([0-9]+)/);
-                if (videoMatch.length == 1) {
-                    console.log("Can't replace vimeo video at ", el.src, " with snapshot placeholder image!");
-                    return;
-                }
-                var videoID = videoMatch[1];
-                var vimeoAPIURL = 'http://vimeo.com/api/v2/video/' + videoID + '.json?callback=?';
-                $.getJSON(vimeoAPIURL, {format: "json"}, function(data) {
-                    if (data[0]['thumbnail_large'] !== undefined) {
-                        // Substitute image for video
-                        $(el).parent().html('<img src="' + data[0]['thumbnail_large'] + '"/>');
-                    }
-                });
-            });
-            // Look for youtube embeds
-            $('.hive_html object param[name=movie]').map(function(idx, el) {
-                var videoURL = el.value;
-                if (getURLDomain(videoURL) !== 'www.youtube.com') return;
-                var videoMatch = videoURL.match(/youtube\.com\/v\/([a-zA-Z\-0-9]+)[\?\/$]/);
-                // Find containing .hive_html element, substitute image for video.
-                // Youtube's 0.jpg is the full-size image preview.
-                $(el).closest('.hive_html').html('<img src="http://img.youtube.com/vi/' + videoMatch[1] + '/0.jpg"/>') 
-            });
-        }
 
         o.margin = function () {
             return $(window).width() / 4;
