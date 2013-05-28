@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 import cgi
 import werkzeug.urls
 import uuid
@@ -19,16 +20,21 @@ class Expr(ModelController):
         # TODO: get routing to take care of this
         if request.host != utils.url_host(on_main_domain=False,secure=request.is_secure):
             return self.redirect('/')
+        snapshot_mode = request.url.endswith('?snapshot')
         expr_obj = self.db.Expr.fetch(expr_id)
         tdata.context.update(
-                html = self.expr_to_html(expr_obj)
+                html = self.expr_to_html(expr_obj,snapshot_mode=snapshot_mode)
                 , expr = expr_obj
                 , use_ga = False
                 , expr_script = expr_obj.get('script')
                 , expr_style = expr_obj.get('style'))
         return self.serve_page(tdata, response, 'pages/expr.html')
+        
+    def update(self):
+        # TODO: Call this method when an expression gets updated
+        self.db.ActionLog.create(request.requester, "update_snapshot", data={'expr_id': self.id})
     
-    def expr_to_html(self, exp):
+    def expr_to_html(self, exp, snapshot_mode=False):
         """Converts JSON object representing an expression to HTML"""
         if not exp: return ''
 
@@ -65,8 +71,28 @@ class Expr(ModelController):
                 more_css = ';'.join([p + ':' + str(c[p]) for p in c])
                 html = ''
             elif type == 'hive.html':
-                encoded_content = cgi.escape(app.get('content',''), quote=True)
-                html = '%s' % (app.get('content',''))
+                if snapshot_mode:
+                    def get_embed_img_html(url):
+                        ret_html = ''
+                        oembed = utils.get_embedly_oembed(url)
+                        if oembed and oembed.get('thumbnail_url'):
+                            ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
+                        return ret_html
+                    html = ''
+                    # Turn embeds in hive.html blocks to static images
+                    hivehtml = BeautifulSoup(app.get('content',''))
+                    for iframe in hivehtml.find_all('iframe'):
+                        html += get_embed_img_html(iframe.get('src'))
+                    # Youtube embeds are <object>, and not <iframe>. We handle this
+                    # special case here.
+                    for object_tags in hivehtml.find_all('object'):
+                        param_tags = object_tags.find_all('param')
+                        for param in param_tags:
+                            if param.get('name') == 'movie':
+                                html += get_embed_img_html(param.get('value'))
+                else:
+                    encoded_content = cgi.escape(app.get('content',''), quote=True)
+                    html = '%s' % (app.get('content',''))
             else:
                 html = content
             data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''

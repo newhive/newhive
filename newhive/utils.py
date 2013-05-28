@@ -10,6 +10,8 @@ from collections import Counter, OrderedDict
 import numpy
 import operator
 import pyes
+import json
+import urllib,urllib2
 
 
 def lset(l, i, e, *default):
@@ -422,6 +424,13 @@ class FixedAttrs(object):
             raise AttributeError(k)
         self.__dict__[k] = v
 
+
+def get_embedly_oembed(url):
+    request_url = 'https://api.embed.ly/1/oembed?key=%s&url=%s' % (config.embedly_key,urllib.quote_plus(url))
+    res = urllib2.urlopen(request_url)
+    if res.getcode() != 200:
+        return None
+    return json.loads(res.read())
 
 ### utils for autocomplete and content recommendation ###
 
