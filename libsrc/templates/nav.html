@@ -5,8 +5,7 @@
     >{user.name|e}</div
   >{#<div class='count rounded {<unless user.notification_count}none{>}'
     >{user.notification_count}</div
-  >#}</div
-  ><a id='create_btn' class='text_btn item hoverable black_active' href='{secure_server}edit'
+  >#}<a id='create_btn' class='text_btn item hoverable black_active' href='{secure_server}edit'
       onclick='return require_login("create")'
       ><div class='text_btn item text'>New</div
       ><div class='icon'></div
@@ -27,24 +26,7 @@
   ><div id='hive_btn' class='text_btn item black_active
     {<unless user.logged_in}hide{>}'>The Hive</div>{>}
     {< if expr_view}
-    <div class='text_btn item black_active {<unless user.logged_in}hide{>}'>
-        <img src='{asset "skin/nav/love.png"}'/>
-    </div>
-    <div class='text_btn item black_active {<unless user.logged_in}hide{>}'>
-        <img src='{asset "skin/nav/republish.png"}'/>
-    </div>
-    <div class='text_btn item black_active {<unless user.logged_in}hide{>}'
-        ><img src='{asset "skin/nav/comment.png"}'/>
-    </div>
-    <div class="text_btn item black_active">
-        <img src='{asset "skin/nav/facebook.png"}'/>
-    </div>
-    <div class="text_btn item black_active">
-        <img src='{asset "skin/nav/twitter.png"}'/>
-    </div>
-    <div class="text_btn item black_active">
-        <img src='{asset "skin/nav/share.png"}'/>
-    </div>{>}
+    {>}
 
   <div id='network_menu' class='menu drawer'>
     <a { get_route_anchor_attrs "trending" }><div class='menu_item'>Trending</div></a>

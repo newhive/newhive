@@ -70,7 +70,8 @@ class Community(Controller):
         profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
-            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
+            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
+                'feed_layout':'mini' },
             'title': 'Loves by ' + owner['name'],
             'about_text': 'Loves',
         }
@@ -87,7 +88,8 @@ class Community(Controller):
         profile = owner.client_view()
         profile['profile_bg'] = owner.get('profile_bg')
         return {
-            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
+            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
+                'feed_layout':'mini' },
             'title': 'Comments by ' + owner['name'],
             'about_text': 'Comments',
         }
@@ -104,7 +106,7 @@ class Community(Controller):
         profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
-            'page_data': { 'cards': activity, 'profile': profile, 'card_type':'expr' },
+            'page_data': { 'cards': activity, 'profile': profile, 'card_type':'expr', },
             'title': 'Loves by ' + owner['name'],
             'about_text': 'Loves',
         }
@@ -122,7 +124,8 @@ class Community(Controller):
         # TODO: allow tag following, ?concat to personal tags
         tags = owner['tags'] if owner.has_key('tags') else []
         return {
-            'page_data': { 'tags': tags, 'cards': users, 'profile': profile, 'card_type':'user' },
+            'page_data': { 'tags': tags, 'cards': users, 'profile': profile, 'card_type':'user',
+                'feed_layout':'mini' },
             'title': owner['name'] + ' Following',
             'about_text': 'Following',
         }
@@ -149,9 +152,15 @@ class Community(Controller):
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
+        # owner = self.db.User.named(owner_name)
+        expr_owner = expr.get_owner()
+        profile = expr_owner.client_view()
+        profile['profile_bg'] = expr_owner.get('profile_bg')
         return {
             'page_data': {
-                'expr_id': expr.id
+                'profile': profile,
+                'expr': expr.client_view(),
+                'expr_id': expr.id,
             },
             'title': expr['title'],
         }

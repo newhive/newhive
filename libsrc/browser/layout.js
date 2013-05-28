@@ -46,7 +46,7 @@ define(['browser/jquery'], function($) {
     function center(e, inside, opts) {
         if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
 
-        var w = typeof(inside) == 'undefined' ? $(window) : inside,
+        var w = (typeof(inside) == 'undefined' ? $(window) : inside),
             opts = $.extend({
                 absolute: false,
                 minimum: true,
@@ -83,6 +83,6 @@ define(['browser/jquery'], function($) {
     
     return {
         'place_apps': place_apps,
-        'center': center        
+        'center': center
     }
 });

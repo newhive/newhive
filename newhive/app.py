@@ -12,7 +12,7 @@ from newhive.controllers import Controllers
 from newhive.extra_json import extra_json
 from newhive.routes import Routes
 import json, urllib
-from utils import url_host
+from newhive.utils import url_host
 
 hive_assets = HiveAssets()
 hive_assets.bundle()
@@ -90,7 +90,8 @@ rules_tuples = [
     ('/api/user/logout', (api.user, 'logout')),
     ('/api/search', (api.search, 'search')),
     ('/home/streamified_test', (api.user, 'streamified_test')),
-    ('/home/streamified_login', (api.user, 'streamified_login'))
+    ('/home/streamified_login', (api.user, 'streamified_login')),
+    ('/api/comment/create', (api.user, 'comment_create')),
 ]
 
 rules = []

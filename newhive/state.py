@@ -780,6 +780,7 @@ class User(HasSocial):
         dict.update(user, dict(
             id = self.id,
             url = self.url,
+            user_is_owner = bool(viewer and viewer['_id'] == self['_id']),
             mini_expressions = map(lambda e:e.mini_view(), exprs),
             thumb_70 = self.get_thumb(70),
             thumb_190 = self.get_thumb(190),
