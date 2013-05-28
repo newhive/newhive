@@ -46,21 +46,21 @@
         "api_route": "/api/feed/following/<owner_name>",
         "controller": "community",
         "method": "following",
-        "client_method": "grid"
+        "client_method": "mini"
     },
     "followers": {
         "page_route": "/<owner_name>/profile/followers",
         "api_route": "/api/feed/followers/<owner_name>",
         "controller": "community",
         "method": "followers",
-        "client_method": "grid"
+        "client_method": "mini"
     },
     "loves": {
         "page_route": "/<owner_name>/profile/loves",
         "api_route": "/api/feed/loves/<owner_name>",
         "controller": "community",
         "method": "loves",
-        "client_method": "grid"
+        "client_method": "mini"
     },
     "expressions_comments": {
         "page_route": "/<owner_name>/profile/comments",

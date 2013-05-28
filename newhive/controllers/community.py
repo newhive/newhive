@@ -9,7 +9,7 @@ class Community(Controller):
         return {
             'page_data': {
                 "cards": self.db.query('#Featured', viewer=tdata.user),
-                'header': ("Featured Expressions", "Trending"),
+                'header': ("Featured Expressions",),
                 'card_type': 'expr',
             },
             'title': "NewHive - Featured",
@@ -70,29 +70,28 @@ class Community(Controller):
         profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         return {
-            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
-                'feed_layout':'mini' },
+            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr' },
             'title': 'Loves by ' + owner['name'],
             'about_text': 'Loves',
         }
 
-    def expressions_comments(self, tdata, request, owner_name=None, **args):
-        owner = self.db.User.named(owner_name)
-        if not owner: return None
-        # Get the feeds starred by owner_name...
-        spec = { '$or': [{'initiator_name': owner_name}, {'entity_owner': owner.id}],
-                'entity_class':'Expr' }
-        # ...and grab its expressions.
-        cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
-            self.db.Comment.page(spec, tdata.user, **args)))
-        profile = owner.client_view()
-        profile['profile_bg'] = owner.get('profile_bg')
-        return {
-            'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
-                'feed_layout':'mini' },
-            'title': 'Comments by ' + owner['name'],
-            'about_text': 'Comments',
-        }
+    # def expressions_comments(self, tdata, request, owner_name=None, **args):
+    #     owner = self.db.User.named(owner_name)
+    #     if not owner: return None
+    #     # Get the feeds starred by owner_name...
+    #     spec = { '$or': [{'initiator_name': owner_name}, {'entity_owner': owner.id}],
+    #             'entity_class':'Expr' }
+    #     # ...and grab its expressions.
+    #     cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
+    #         self.db.Comment.page(spec, tdata.user, **args)))
+    #     profile = owner.client_view()
+    #     profile['profile_bg'] = owner.get('profile_bg')
+    #     return {
+    #         'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
+    #             'feed_layout':'mini' },
+    #         'title': 'Comments by ' + owner['name'],
+    #         'about_text': 'Comments',
+    #     }
 
     # WIP: waiting on Abram's network: recent commit
     def activity(self, tdata, request, owner_name=None, **args):
@@ -124,8 +123,7 @@ class Community(Controller):
         # TODO: allow tag following, ?concat to personal tags
         tags = owner['tags'] if owner.has_key('tags') else []
         return {
-            'page_data': { 'tags': tags, 'cards': users, 'profile': profile, 'card_type':'user',
-                'feed_layout':'mini' },
+            'page_data': { 'tags': tags, 'cards': users, 'profile': profile, 'card_type':'user' },
             'title': owner['name'] + ' Following',
             'about_text': 'Following',
         }

@@ -375,6 +375,9 @@ define(['browser/js', 'module', 'templates/context'],
 		}
 		return block(context.concat(new_context));
 	};
+	o.base_context['debug'] = function(context, arg){
+		throw('Template break: ' + arg);
+	};
 	o.base_context.e = encode_to_html;
 	o.base_context.json = function(context, data){
 		return JSON.stringify(data);
