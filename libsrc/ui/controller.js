@@ -23,6 +23,12 @@ define([
         page.render(route.client_method, data);
     };
     o.refresh = function(){ o.dispatch(route.method, context) };
+
+    o.open_route = function (page_state) {
+        fetch_route_data(page_state, function() {
+            history.pushState(page_state, null, page_state.page);
+        });
+    };
     
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
@@ -36,6 +42,13 @@ define([
                     api: anchor.attr('data-api-path'),
                     route_name: route_name
                 };
+            e.preventDefault();
+            o.open_route(page_state);
+            return false;
+        });
+
+        $('form[data-route-name]').on('submit', function(e){
+            // TODO: make this shit work
             e.preventDefault();
             o.open_route(page_state);
             return false;
@@ -61,12 +74,6 @@ define([
             }
         };
         $.ajax(api_call);
-    }
-
-    o.open_route = function (page_state) {
-        fetch_route_data(page_state, function() {
-            history.pushState(page_state, null, page_state.page);
-        });
     }
 
     return o;
