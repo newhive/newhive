@@ -6,6 +6,14 @@
         "method": "home",
         "client_method": "home"
     },
+
+    "signup": {
+        "page_route": "/home/signup",
+        "api_route": "/api/user/create",
+        "controller": "community",
+        "method": "forms_signup",
+        "client_method": "forms"
+    },
     "trending": {
         "page_route": "/<username>/profile/trending",
         "api_route": "/api/feed/trending/<username>",
