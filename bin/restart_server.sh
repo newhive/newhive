@@ -1,7 +1,13 @@
 #! /bin/bash
+# Pull down latest v2-community,
 # Restart the newhive web server
-# This file usually runs under crontab as root.
+# Run under crontab as newduke
 
-sudo service apache2 restart
+# Pull latest
+cd /var/www/newhive
+git pull v2-community
+# set permissions
+sudo chmod g+rwX -R .
+# restart server
 sudo hive-server-deploy
 
