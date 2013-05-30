@@ -199,6 +199,7 @@ img.thumb { background-color: $color_grey_medium; }
         display: inline-block;
         width: 100%;
         padding: 10px;
+        margin: -3px; /* wtf? */
         clear: both;
         border-top: 1px solid #d1d1d1;
 

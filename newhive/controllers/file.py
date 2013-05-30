@@ -1,6 +1,6 @@
 import urllib, urlparse, itertools
 from werkzeug.http import parse_options_header
-from newhive.controllers.base import ModelController, auth_required
+from newhive.controllers.controller import ModelController, auth_required
 
 class File(ModelController):
     model_name = 'File'

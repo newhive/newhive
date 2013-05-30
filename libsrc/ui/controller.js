@@ -10,11 +10,11 @@ define([
     var o = {}, route;
 
     o.init = function(route_args){
-        wrapLinks();
         routing.registerState(route_args);
         page.init(o);
         nav.set_expr_view(route_args.route_name == 'view_expr');
         o.dispatch(route_args.route_name, context);
+        wrapLinks();
     };
     o.dispatch = function(route_name, data){
         nav.set_expr_view(route_name == 'view_expr');
@@ -22,13 +22,19 @@ define([
         util.copy(data, context, true);
         page.render(route.client_method, data);
     };
-    o.refresh = function(){ o.dispatch(route.method, data) };
+    o.refresh = function(){ o.dispatch(route.method, context) };
+
+    o.open_route = function (page_state) {
+        fetch_route_data(page_state, function() {
+            history.pushState(page_state, null, page_state.page);
+        });
+    };
     
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
         if (!window.history && window.history.pushState) return;
-        $('body').on('click', '[data-route-name]', function(e) {
-            var anchor = $(e.target).closest('[data-route-name]'),
+        $('body').on('click', 'a[data-route-name]', function(e) {
+            var anchor = $(e.target).closest('a[data-route-name]'),
                 route_name = anchor.attr('data-route-name'),
                 route_obj = routes[route_name],
                 page_state = {
@@ -39,6 +45,14 @@ define([
             e.preventDefault();
             o.open_route(page_state);
             return false;
+        });
+
+        $('form[data-route-name]').on('submit', function(e){
+            // TODO: make this shit work...
+            // as in actually submit form data to route
+
+            // e.preventDefault();
+            // return false;
         });
 
         // TODO: Bind this event with jquery?
@@ -61,12 +75,6 @@ define([
             }
         };
         $.ajax(api_call);
-    }
-
-    o.open_route = function (page_state) {
-        fetch_route_data(page_state, function() {
-            history.pushState(page_state, null, page_state.page);
-        });
     }
 
     return o;

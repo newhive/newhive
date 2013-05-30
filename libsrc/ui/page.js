@@ -47,16 +47,16 @@ define([
         expr_page = (method == 'expr');
         if(!expr_page) hide_exprs();
         var page_data = data.page_data;
-        page_data['layout_' + method] = true;
+        layout_method = page_data.layout = method;
+        if(o[method]) o[method](page_data);
+        else render_site(page_data);
+
         // TODO: find a better place for these constants
         if (page_data['feed_layout'] == 'mini'){
             grid_width = 232 + 20; // padding = 10 + 10
         } else {
             grid_width = 410;
         }
-        layout_method = page_data.layout = method;
-        if(o[method]) o[method](page_data);
-        else render_site(page_data);
         layout();
     };
 
@@ -151,23 +151,6 @@ define([
     //     render_site(data);
     // };
 
-    o.home = function(data){
-        $('#site').empty().append(home_template(data.page_data));
-    };
-
-    o.profile = function(data){
-        render_site(data);
-        expr_column();
-    };
-    o.profile_edit = function(data){
-         
-    };
-    o.profile_private = function(data){
-        data.page_data.profile.sub_heading = 'Private';
-        render_site(data);
-        expr_column();
-    };
-
     // Animate the new visible expression, bring it to top of z-index.
     // TODO: animate nav bar
     o.expr = function(page_data){
@@ -227,10 +210,34 @@ define([
             }, {
                 duration: ANIM_DURATION,
                 complete: hide_other_exprs,
-                queue: false })                    
+                queue: false })
         }
         $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
     }
+
+    o.home = function(page_data){
+        page_data.layout = 'profile';
+        $('#site').empty().append(home_template(page_data));
+        // TODO: create handlers for contact UI
+    };
+
+    o.profile = function(data){
+        render_site(data);
+        expr_column();
+    };
+    o.profile_edit = function(data){
+
+    };
+    o.profile_private = function(data){
+        data.page_data.profile.sub_heading = 'Private';
+        render_site(data);
+        expr_column();
+    };
+
+    o.mini = function(page_data){
+        page_data.layout = 'mini';
+        o.render_site(page_data);
+    };
     
     function hide_other_exprs() {
         $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').hide();

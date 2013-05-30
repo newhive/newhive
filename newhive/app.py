@@ -12,7 +12,7 @@ from newhive.controllers import Controllers
 from newhive.extra_json import extra_json
 from newhive.routes import Routes
 import json, urllib
-from newhive.utils import url_host
+from newhive.utils import url_host, log_error
 
 hive_assets = HiveAssets()
 hive_assets.bundle()
@@ -36,23 +36,26 @@ def get_api_endpoints(api):
 
     for route_name, route_obj in routes.items():
         # Add page routes (for HTTP and HTTPS)
-        for secure in (False, True):
-            rules.append(Rule(
-                route_obj['page_route'],
-                endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
-                defaults={'route_name': route_name},
-                host=url_host(secure=secure)
-            ))
+        if route_obj.get('page_route'):
+            for secure in (False, True):
+                rules.append(Rule(
+                    route_obj['page_route'],
+                    endpoint=(getattr(api,route_obj['controller']),
+                        route_obj['method']),
+                    defaults={'route_name': route_name},
+                    host=url_host(secure=secure)
+                ))
 
-        # And API routes (optional)
-        if not route_obj.get('api_route'): continue
-        for secure in (False, True):
-            rules.append(Rule(
-                route_obj['api_route'],
-                endpoint=(getattr(api,route_obj['controller']),route_obj['method']),
-                defaults={'json':True, 'route_name': route_name},
-                host=url_host(secure=secure)
-            ))
+        # And API routes
+        if route_obj.get('api_route'):
+            for secure in (False, True):
+                rules.append(Rule(
+                    route_obj['api_route'],
+                    endpoint=(getattr(api,route_obj['controller']),
+                        route_obj['method']),
+                    defaults={'json':True, 'route_name': route_name},
+                    host=url_host(secure=secure)
+                ))
 
     return rules
 
@@ -88,7 +91,7 @@ rules_tuples = [
     ('/api/expr/thumb/<id>', (api.expr, 'thumb')),
     ('/api/user/login', (api.user, 'login')),
     ('/api/user/logout', (api.user, 'logout')),
-    ('/api/search', (api.search, 'search')),
+    ('/api/search', (api.community, 'search')),
     ('/home/streamified_test', (api.user, 'streamified_test')),
     ('/home/streamified_login', (api.user, 'streamified_login')),
     ('/api/comment/create', (api.user, 'comment_create')),
@@ -124,6 +127,11 @@ def handle(request):
         # what's going on here anyway?
         raise Exception('redirect not implemented: from: ' + request.url + ', to: ' + e.new_url)
     print (controller, handler), args
-    return controller.dispatch(handler, request, **args)
+    try:
+        return controller.dispatch(handler, request, **args)
+    except Exception as e:
+        log_error(request, db)
+        api.controller.serve_500(request, Response(), exception=e, json=False)
+
 
 application = handle

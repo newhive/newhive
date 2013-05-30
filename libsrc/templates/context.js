@@ -9,7 +9,7 @@ define([
 		asset: function(context, name){
 			return assets[name];
 		},
-        get_route_anchor_attrs: function(scope, route_name) {
+        anchor_attrs: function(scope, route_name) {
             var route_args = { username: context.user.name };
             // All arguments after route_name are name value pairs
             for(var i = 2; i < arguments.length; i += 2)

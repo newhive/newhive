@@ -49,7 +49,7 @@
 // TODO: make templates/context dependency part of sj! loader module
 // create base_context setter method in here.
 // That should make stringjay independent of NewHive
-define(['browser/js', 'module', 'templates/context'],
+define(['browser/js', 'module', 'server/context'],
 	function(util, module, base_context)
 {
 	"use strict";
@@ -374,6 +374,9 @@ define(['browser/js', 'module', 'templates/context'],
 			new_context[arguments[i]] = arguments[i + 1];
 		}
 		return block(context.concat(new_context));
+	};
+	o.base_context['debug'] = function(context, arg){
+		throw('Template break: ' + arg);
 	};
 	o.base_context.e = encode_to_html;
 	o.base_context.json = function(context, data){

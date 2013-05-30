@@ -1,6 +1,8 @@
 import httplib2, urllib
 from newhive import auth, config
-from newhive.controllers.base import ModelController
+from newhive.controllers.controller import ModelController
+from newhive.mail import send_mail
+from newhive.utils import log_error
 
 class User(ModelController):
     model_name = 'User'
@@ -61,3 +63,40 @@ class User(ModelController):
 
     def streamified_test(self, tdata, request, response):
         return self.serve_page(tdata, response, 'pages/streamified_test.html')
+
+    def request_invite(self, tdata, request, response, **args):
+        form = {
+            'name': request.form.get('name')
+            ,'email': request.form.get('email').lower()
+            ,'referral': request.form.get('referral')
+            ,'message': request.form.get('message')
+            ,'url': request.form.get('forward')
+            }
+        if (
+            not (form.get('email') and form.get('message')) or
+            request.form.get('fuckoff') # value in invisible field means spam
+        ):
+            return self.serve_json(response, False)
+
+        contact = self.db.Contact.create(form)
+
+        # sending email is non-essential
+        try:
+            heads = {
+                 'To' : 'info@thenewhive.com'
+                ,'From' : 'www-data@' + config.server_name
+                ,'Subject' : '[home page contact form]'
+                ,'Reply-to' : form['email']
+                }
+            body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
+            try: send_mail(heads, body)
+            except Exception as e:
+                logger
+            sendgrid_args = {'contact_id': contact.id, 'url': form['url']}
+
+            mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
+            mailer.send(form.get('email'), form.get('name'), sendgrid_args)
+        except:
+            log_error(request, self.db, critical=False)
+
+        return self.serve_json(response, True)

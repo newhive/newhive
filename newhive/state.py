@@ -473,6 +473,7 @@ class User(HasSocial):
         return pyes.filters.BoolFilter(should=f)
 
     def activity(self, limit=20, at=0):
+        if not self.id: return []
         commented_exprs = [r['entity'] for r in self.db.Comment.search({'initiator': self.id})]
         q1 = pyes.query.TermQuery('class_name', 'Comment')
         q2 = pyes.query.TermQuery('initiator', self.id)
