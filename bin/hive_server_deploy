@@ -1,6 +1,5 @@
 #! /bin/sh
 # intended to be called from git post-receive hook
 
-chown -R www-data:dev .
 bin/build_assets.py
-apache2ctl graceful
+sudo apache2ctl graceful

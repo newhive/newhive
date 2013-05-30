@@ -5,9 +5,10 @@
 
 # Pull latest
 cd /var/www/newhive
-git pull v2-community
-# set permissions
+sudo chown www-data:dev -R .
+sudo chmod g+rwX -R .
+git pull origin v2-community
+sudo chown www-data:dev -R .
 sudo chmod g+rwX -R .
 # restart server
-sudo hive-server-deploy
-
+hive_server_deploy

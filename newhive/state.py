@@ -948,7 +948,7 @@ class Expr(HasSocial):
     @property
     def snapshot(self, size='715'):
         # Take new snapshot if necessary
-        if not self.get('snapshot_time') or self.get('updated') > self.get('snapshot'):
+        if not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time'):
             self.take_snapshots()
         filename = '_'.join([self.get('_id'), self.get('snapshot_time'), size])
         s3_url = 'https://%s.s3.amazonaws.com/%s' % (config.s3_buckets['thumb'], filename)
@@ -1175,8 +1175,14 @@ class Expr(HasSocial):
             'owner': self.owner.client_view(viewer=viewer),
             'counts': counts,
             'url': self.url,
+            'title': self.get('title')
         })
-
+        # Until the migration happens, let's just put a placeholder image in the snapshot field
+        # instead of starting the generation of snapshots inside of client_view.
+        if self.get('snapshot_time'):
+            expr['snapshot'] = self.snapshot
+        else:
+            expr['snapshot'] = 'snapshot_placeholder.png'
         if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': self.is_featured })
 

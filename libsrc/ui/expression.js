@@ -45,7 +45,6 @@ define(['browser/layout',
                 }
                 if ( m.data.action == "hide" ) o.hide();
             }, false);
-
             $(document).mousemove(o.check_hover);
             $(window).resize(o.layout_parent)
                  .click(function(){ o.send_top('focus'); });
