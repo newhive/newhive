@@ -20,7 +20,7 @@ class Expr(ModelController):
         # TODO: get routing to take care of this
         if request.host != utils.url_host(on_main_domain=False,secure=request.is_secure):
             return self.redirect('/')
-        snapshot_mode = request.url.endswith('?snapshot')
+        snapshot_mode = request.args.get('snapshot') is not None
         expr_obj = self.db.Expr.fetch(expr_id)
         tdata.context.update(
                 html = self.expr_to_html(expr_obj,snapshot_mode=snapshot_mode)
@@ -74,6 +74,7 @@ class Expr(ModelController):
                 if snapshot_mode:
                     def get_embed_img_html(url):
                         ret_html = ''
+                        print "getting embed for ", url
                         oembed = utils.get_embedly_oembed(url)
                         if oembed and oembed.get('thumbnail_url'):
                             ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
