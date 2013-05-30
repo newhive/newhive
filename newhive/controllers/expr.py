@@ -5,7 +5,7 @@ from md5 import md5
 import subprocess
 import os
 from newhive import config, utils
-from newhive.controllers.base import ModelController
+from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
     model_name = 'Expr'

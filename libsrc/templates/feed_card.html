@@ -3,11 +3,11 @@
 #}
 <a
   {<if entity_class "Expr"}
-    { get_route_anchor_attrs "view_expr" "id" entity  "expr_name" entity_name
+    { anchor_attrs "view_expr" "id" entity  "expr_name" entity_name
       "owner_name" entity_owner_name }
   {>}
   {<if entity_class "User"}
-    { get_route_anchor_attrs "expressions_public"  "owner_name" user.name }
+    { anchor_attrs "expressions_public"  "owner_name" user.name }
   {>}
 >  
 <div class='feed_item'>

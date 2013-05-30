@@ -81,5 +81,11 @@
         "controller": "community",
         "method": "expr",
         "client_method": "expr"
+    },
+
+    "request_invite": {
+        "api_route": "/api/user/invite",
+        "controller": "user",
+        "method": "request_invite"
     }
 }

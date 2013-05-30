@@ -1,5 +1,5 @@
 from newhive.utils import dfilter
-from newhive.controllers.base import Controller
+from newhive.controllers.controller import Controller
 
 class Community(Controller):
     def search(self, tdata, request, **paging_args):

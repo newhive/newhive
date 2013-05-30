@@ -92,7 +92,7 @@ class Controller(object):
     def serve_500(self, request, response, exception=None, json=True):
         if config.debug_mode: raise exception
 
-        response.status_code = 404
+        response.status_code = 500
         if json: return self.serve_json(response, {'error': 500 })
         else:
             tdata = TransactionData(user=self.db.User.new({}), context={})

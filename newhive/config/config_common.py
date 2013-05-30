@@ -22,38 +22,30 @@ s3_buckets = {
     'assets': None,
 }
 
-admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack', 'fred']
-test_emails     = ['abram@thenewhive.com', 'andrew@thenewhive.com',
-                   'cara@thenewhive.com', 'zach@thenewhive.com', 'duffy@thenewhive.com',
-                   'info@thenewhive.com', 'duffy.tilleman@gmail.com', 'duffy@lumana.org',
-                   'straussss@gmail.com', 'quuxman@gmail.com', 'bugs@newhive.com',
-                   'bugs+feedback@newhive.com'
-                  ]
-
+admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
-# Note, could define milestones programmatically, but this is more readable:
 milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
               20000, 50000, 100000, 200000, 500000, 1000000, 10000000]
 
-beta_testers    = [
-                   'darkluna'
-                  , 'philco'
-                  , 'lolo'
-                  , 'roseanna'
-                  , 'anniesarah'
-                  , 'graham'
-                  , 'coo'
-                  , 'ashley'
-                  , 'ece'
-                  , 'sammie'
-                  , 'kaz'
-                  , 'v908'
-                  , 'test'
-                  ]
-beta_testers = admins + beta_testers
+beta_testers = admins + [
+    'andrew'
+    'darkluna'
+    'philco'
+    'lolo'
+    'roseanna'
+    'anniesarah'
+    'graham'
+    'coo'
+    'ashley'
+    'ece'
+    'sammie'
+    'kaz'
+    'v908'
+    'test'
+]
 
-site_user       = 'thenewhive'
+site_user = 'newhive'
 admins.append(site_user)
 
 content_domain = 'tnh.me'
@@ -79,9 +71,7 @@ always_secure   = False
 
 interactive = False
 
-auto_invite = False
-
 initial_invite_count = 5
 
 from os.path import dirname, join, normpath
-src_home        = normpath(join(dirname(__file__), "../.."))
+src_home = normpath(join(dirname(__file__), "../.."))
