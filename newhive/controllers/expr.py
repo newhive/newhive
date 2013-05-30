@@ -74,7 +74,6 @@ class Expr(ModelController):
                 if snapshot_mode:
                     def get_embed_img_html(url):
                         ret_html = ''
-                        print "getting embed for ", url
                         oembed = utils.get_embedly_oembed(url)
                         if oembed and oembed.get('thumbnail_url'):
                             ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
