@@ -218,7 +218,16 @@ define([
     o.home = function(page_data){
         page_data.layout = 'profile';
         $('#site').empty().append(home_template(page_data));
-        // TODO: create handlers for contact UI
+        $('#invite_form').on('response', function(data){
+            if(data){ // success
+                $('#request_invite').hide();
+                $('#request_sent').show();
+                // TODO: set cookie
+            }
+            else { // failure
+                $('#request_invite .error').show();
+            }
+        });
     };
 
     o.profile = function(data){

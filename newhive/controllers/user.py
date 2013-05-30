@@ -97,6 +97,6 @@ class User(ModelController):
             mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
             mailer.send(form.get('email'), form.get('name'), sendgrid_args)
         except:
-            log_error(request, self.db, critical=False)
+            log_error(request, self.db)
 
         return self.serve_json(response, True)

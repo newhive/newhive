@@ -12,7 +12,7 @@ from newhive.controllers import Controllers
 from newhive.extra_json import extra_json
 from newhive.routes import Routes
 import json, urllib
-from newhive.utils import url_host, log_error
+from newhive.utils import url_host
 
 hive_assets = HiveAssets()
 hive_assets.bundle()
@@ -130,8 +130,6 @@ def handle(request):
     try:
         return controller.dispatch(handler, request, **args)
     except Exception as e:
-        log_error(request, db)
         api.controller.serve_500(request, Response(), exception=e, json=False)
-
 
 application = handle

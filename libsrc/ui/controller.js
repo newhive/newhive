@@ -47,12 +47,14 @@ define([
             return false;
         });
 
-        $('form[data-route-name]').on('submit', function(e){
-            // TODO: make this shit work...
-            // as in actually submit form data to route
-
-            // e.preventDefault();
-            // return false;
+        $('form[data-route-name]').each(function(el){
+            el.on('submit', function(e){
+                $.post(e.attr('target'), $(el).serialize(), function(data){
+                    el.trigger('response', data);
+                }, 'json');
+                e.preventDefault();
+                return false;
+            });
         });
 
         // TODO: Bind this event with jquery?

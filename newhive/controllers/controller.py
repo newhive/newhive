@@ -92,6 +92,8 @@ class Controller(object):
     def serve_500(self, request, response, exception=None, json=True):
         if config.debug_mode: raise exception
 
+        log_error(request, self.db, critical=True)
+
         response.status_code = 500
         if json: return self.serve_json(response, {'error': 500 })
         else:
