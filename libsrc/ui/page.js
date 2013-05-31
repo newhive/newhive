@@ -226,7 +226,7 @@ define([
         $('#email').on('change', function(){
             $('#optional').removeClass('hide');
         });
-        $('#invite_form').on('response', function(data){
+        $('#invite_form').on('response', function(e, data){
             if(data){ // success
                 $('#request_invite').hide();
                 $('#request_sent').removeClass('hide');
