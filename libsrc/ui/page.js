@@ -27,7 +27,7 @@ define([
 ) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
-        grid_width = 410, controller, 
+        grid_width, controller, 
         anim_direction; // 0 = up, +/-1 = right/left
     const ANIM_DURATION = 700;
 
@@ -55,24 +55,6 @@ define([
         layout();
     };
 
-    // TODO: require login
-    o.post_comment = function () {
-        btn = $('#comment_form .submit'); 
-        if(btn.hasClass('inactive')) return;
-
-        // items = $('#comment_menu .items');
-        var text = $('#comment_form textarea').val();
-        if(text.trim() == '') return false;
-        btn.addClass('inactive');
-        // $.post('/api/comment/create', { entity: context.page_data.expr_id, text: text }, function(data) {
-        //     btn.removeClass('inactive');
-        //     if(!data) { o.server_error(); return; }
-        //     //TODO o.comment_card(data).appendTo(items);
-        //     // items.scrollTop(items.get(0).scrollHeight);
-        //     // o.btn_state('#comment_btn', true);
-        //     $('#comment_form textarea').val('');
-        // }, 'json');
-    }
     o.social_toggle = function() {
         popup = $('#social_overlay');
         // TODO: animate
@@ -123,38 +105,30 @@ define([
     };
 
     // route.client_method definitions
-    o.expr_detail = function(data){
-        render_site(data);
+    o.expr_detail = function(page_data){
+        render_site(page_data);
         // expr_column(); // TODO: is this necessary?
     };
 
-    // o.grid = function(data){
-    //     add_cards = function(cards){
-    //         out = '';
-    //         for(var i = 0; i < cards.length;){
-    //             out += '<tr>';
-    //             for(var j = 0; j < 3; j++){
-    //                 out += '<td>' + card_template(cards[i]) + '</td>';
-    //                 i++;
-    //             }
-    //             out += '</tr>';
-    //         }
-    //         return out;
-    //     };
-    //     data.grid = true;
-    //     render_site(data);
-    // };
+    o.grid = function(page_data){
+        grid_width = 410;
+        render_site(page_data);
+    }
 
-    o.forms = function(data){
+    o.forms = function(page_data){
         switch(data.form) {
         case "create_account":
             new_account.init(o);
             new_account.render();
             break;
         default:
-            $('#site').empty().append(home_template(data));
+            $('#site').empty().append(home_template(page_data));
         }
     };
+
+    o.comment_response = function (e, json) {
+        $('#comment_form textarea').val('');
+    }
 
     // Animate the new visible expression, bring it to top of z-index.
     // TODO: animate nav bar
@@ -164,7 +138,7 @@ define([
             social_overlay_template(context.page_data));
         $("#nav").prependTo("#social_overlay");
         $("#social_overlay #plus").click(o.social_toggle);
-        $('#comment_form').submit(o.post_comment);
+        $('#comment_form').on('response', o.comment_response);
 
         // display_expr(page_data.expr_id);
         var expr_id = page_data.expr_id;
@@ -227,7 +201,7 @@ define([
             $('#optional').removeClass('hide');
         });
         $('#invite_form').on('response', function(e, data){
-            if(data){ // success
+            if(page_data){ // success
                 $('#request_invite').hide();
                 $('#request_sent').removeClass('hide');
                 // TODO: set cookie
@@ -319,8 +293,8 @@ define([
         });
     }
 
-    o.add_to_feed = function(data){
-        $('#feed').append(show_cards(data));
+    o.add_to_feed = function(page_data){
+        $('#feed').append(show_cards(page_data));
     };
 
     // function replace_or_append(e, replace, append){

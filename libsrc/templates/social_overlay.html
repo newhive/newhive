@@ -46,7 +46,7 @@
       {<with . "icon_class" "comment"}
         {|templates/icon_count.html}
       {>}</div>
-      <form id='comment_form' action='/api/comment/create' method='POST'>
+      <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
       <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
       <input type='submit' value='Enter' class='submit btn black rounded'>
       <input type='hidden' name='action' value='comment'>

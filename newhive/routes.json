@@ -95,5 +95,11 @@
         "api_route": "/api/user/invite",
         "controller": "user",
         "method": "request_invite"
+    },
+    "comment_create": {
+        "api_route": "/api/comment/create",
+        "controller": "user",
+        "method": "comment_create"
     }
+
 }
