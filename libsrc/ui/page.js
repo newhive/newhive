@@ -223,14 +223,17 @@ define([
     o.home = function(page_data){
         page_data.layout = 'profile';
         $('#site').empty().append(home_template(page_data));
+        $('#email').on('change', function(){
+            $('#optional').removeClass('hide');
+        });
         $('#invite_form').on('response', function(data){
             if(data){ // success
                 $('#request_invite').hide();
-                $('#request_sent').show();
+                $('#request_sent').removeClass('hide');
                 // TODO: set cookie
             }
             else { // failure
-                $('#request_invite .error').show();
+                $('#request_invite .error').removeClass('hide');
             }
         });
         // TODO: create handlers for contact UI

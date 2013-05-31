@@ -47,9 +47,10 @@ define([
             return false;
         });
 
-        $('form[data-route-name]').each(function(el){
+        $('form[data-route-name]').each(function(i, el){
+            el = $(el);
             el.on('submit', function(e){
-                $.post(e.attr('target'), $(el).serialize(), function(data){
+                $.post(el.attr('action'), el.serialize(), function(data){
                     el.trigger('response', data);
                 }, 'json');
                 e.preventDefault();
