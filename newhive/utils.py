@@ -696,9 +696,9 @@ def test_scripts(db, owner_name = None):
         print dfilter(res2[i], ['name', 'created', 'star', 'broadcast', 'views'])
     return res1, res2
 
-def log_error(request, db, message=False, critical=False):
+def log_error(request, db, message=None, traceback=None, critical=False):
     from werkzeug.debug.tbtools import get_current_traceback
-    traceback = get_current_traceback(skip=0, show_hidden_frames=False
+    traceback = traceback or get_current_traceback(skip=0, show_hidden_frames=False
             , ignore_system_exceptions=True)
     def privacy_filter(dictionary):
         for key in ['password', 'secret', 'old_password']:

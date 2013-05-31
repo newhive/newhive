@@ -6,6 +6,13 @@
         "method": "home",
         "client_method": "home"
     },
+    "recent": {
+        "page_route": "/home/recent",
+        "api_route": "/api/feed/recent",
+        "controller": "community",
+        "method": "recent",
+        "client_method": "grid"
+    },
 
     "signup": {
         "page_route": "/home/signup",

@@ -77,6 +77,8 @@ class Database:
         if feed:
             if feed == 'featured':
                 results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
+            if feed == 'recent':
+                results = self.Expr.page({}, **args)
             else:
                 results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):

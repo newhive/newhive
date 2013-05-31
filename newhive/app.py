@@ -1,3 +1,4 @@
+import sys
 from werkzeug.routing import Map, Rule, RequestRedirect
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
@@ -129,7 +130,9 @@ def handle(request):
     print (controller, handler), args
     try:
         return controller.dispatch(handler, request, **args)
-    except Exception as e:
-        api.controller.serve_500(request, Response(), exception=e, json=False)
+    except:
+        (blah, exception, traceback) = sys.exc_info()
+        api.controller.serve_500(request, Response(), exception=exception,
+            traceback=traceback, json=False)
 
 application = handle

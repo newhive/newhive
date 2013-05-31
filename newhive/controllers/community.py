@@ -15,6 +15,16 @@ class Community(Controller):
             'title': "NewHive - Featured",
         }
 
+    def recent(self, tdata, request, username=None, **paging_args):
+        return {
+            'page_data': {
+                "cards": self.db.query('#Recent', viewer=tdata.user),
+                'header': ("Recent Expressions",),
+                'card_type': 'expr',
+            },
+            'title': "NewHive - Featured",
+        }
+
     def forms_signup(self, tdata, request, username=None, **paging_args):
         return {
             'page_data': {
