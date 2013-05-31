@@ -27,7 +27,7 @@ define([
 ) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
-        layout_method, grid_width, controller, 
+        grid_width = 410, controller, 
         anim_direction; // 0 = up, +/-1 = right/left
     const ANIM_DURATION = 700;
 
@@ -48,16 +48,10 @@ define([
         expr_page = (method == 'expr');
         if(!expr_page) hide_exprs();
         var page_data = data.page_data;
-        layout_method = page_data.layout = method;
+        page_data.layout = method;
         if(o[method]) o[method](page_data);
         else render_site(page_data);
 
-        // TODO: find a better place for these constants
-        if (page_data['feed_layout'] == 'mini'){
-            grid_width = 232 + 20; // padding = 10 + 10
-        } else {
-            grid_width = 410;
-        }
         layout();
     };
 
@@ -108,7 +102,6 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 page_data.expr_id = page_data.cards[found].id;
-                // o.render(layout_method, context);
                 var page_state = {api:"/api/expr/" + page_data.expr_id, 
                     route_name:"view_expr",
                     page:"/" + page_data.cards[found].owner.name +
@@ -243,22 +236,28 @@ define([
         // TODO: create handlers for contact UI
     };
 
-    o.profile = function(data){
-        render_site(data);
+    o.profile = function(page_data){
+        render_site(page_data);
         expr_column();
     };
-    o.profile_edit = function(data){
+    o.profile_edit = function(page_data){
 
     };
-    o.profile_private = function(data){
-        data.page_data.profile.sub_heading = 'Private';
-        render_site(data);
+    o.profile_private = function(page_data){
+        page_data.profile.subheading = 'Private';
+        render_site(page_data);
         expr_column();
+    };
+
+    o.loves = function(page_data){
+        page_data.profile.subheading = 'Loves';
+        render_site(page_data);
     };
 
     o.mini = function(page_data){
-        page_data.layout = 'mini';
-        o.render_site(page_data);
+        page_data.layout = 'grid';
+        grid_width = 232 + 20; // padding = 10 + 10
+        render_site(page_data);
     };
     
     function hide_other_exprs() {
@@ -301,7 +300,7 @@ define([
         $('#site').css('height', $(window).height() - 44);
         browser_layout.center($('#page_prev'), undefined, {'h': false});
         browser_layout.center($('#page_next'), undefined, {'h': false});
-        if(layout_method == 'grid') $('#feed').css('width',
+        if(context.page_data.layout == 'grid') $('#feed').css('width',
             Math.min(3, Math.floor($(window).width() / grid_width)) * grid_width);
     }
 
