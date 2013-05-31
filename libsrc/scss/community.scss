@@ -150,8 +150,13 @@
     }
 }
 
+.tag_list {
+    text-align: center;
+}
+
 .tag_label {
-    float: right;
+    display: inline-block;
+    /* float: right;*/
     clear: both;
     color: white;
     padding: 0 8px;

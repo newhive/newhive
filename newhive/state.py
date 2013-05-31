@@ -1175,6 +1175,7 @@ class Expr(HasSocial):
         # if expr.auth_required(viewer, password):
         expr = dfilter(self, ['name', 'title', 'snapshot', 'feed'])
         dict.update(expr, {
+            'tags': self.get('tags_index'),
             'id': self.id,
             'thumb': self.get_thumb(),
             'owner': self.owner.client_view(viewer=viewer),

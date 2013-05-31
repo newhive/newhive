@@ -341,6 +341,9 @@ define(['browser/js', 'module', 'server/context'],
 	o.base_context['for'] = function(context, block, iteratee, var_name){
 		if(!iteratee || iteratee.constructor != Array) return '';
 		return iteratee.map(function(v, i){
+			if(typeof(v) != "object") {
+				v = {item: v};
+			}
 			if(var_name) v[var_name] = i;
 			return block(context.concat(v));
 		}).reduce(util.op['+'], '');

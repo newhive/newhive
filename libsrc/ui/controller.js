@@ -20,7 +20,7 @@ define([
         nav.set_expr_view(route_name == 'view_expr');
         route = routes[route_name];
         util.copy(data, context, true);
-        page.render(route.client_method, data);
+        page.render(route.client_method, context);
     };
     o.refresh = function(){ o.dispatch(route.method, context) };
 
