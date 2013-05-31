@@ -1477,6 +1477,13 @@ class Feed(Entity):
             r['entity_title'] = self.entity.get('title')
             r['entity_owner_name'] = self.entity.owner['name']
         r['entity_url'] = self.entity.url
+
+        # set sane name for feed action
+        r['action'] = self['class_name']
+        if self['class_name'] == 'Star':
+            if self['entity_class'] == 'Expr': r['action'] = 'Love'
+            else: r['action'] = 'Follow'
+
         return r
 
 

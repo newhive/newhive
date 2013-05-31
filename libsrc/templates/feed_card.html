@@ -13,22 +13,41 @@
 <div class='feed_item'>
   <img src='{initiator_thumb_70}' class='thumb'>
   <div class='content'>
+    <span class='username'>
+      {<if initiator user.id}You{>}
+      {<unless initiator user.id}{initiator_name}{>}
+    </span>
+    :
+    <span class='entity_title'>{entity_title}{entity_name}</span>
+    {<if action "Love"}
+      <img src='{asset "skin/nav/love.png"}' class='action_icon'>
+    {>}
+    {<if action "Follow"}<span class='action_text'>follow</span>{>}
+    {<if action "Comment"}
+      <img src='{asset "skin/nav/comment.png"}' class='action_icon'><br>
+      <div class='text'>{text}</div>
+    {>}
+    {<if action "Broadcast"}
+      <img src='{asset "skin/nav/republish.png"}' class='action_icon'>
+    {>}
+    {#
     {<if initiator user.id}You{>}
     {<unless initiator user.id}{initiator_name}{>}
-    {<if class_name "Star"}
-      {<if entity_class "Expr"}<img src='{asset "skin/nav/love.png"}' class='action_icon'>
-        <span class='title'>{entity_title}</span>{>}
-      {<if entity_class "User"}follow {entity_name}{>}
+    {<if action "Love"}
+      <img src='{asset "skin/nav/love.png"}' class='action_icon'>
+      <span class='title'>{entity_title}</span>
     {>}
-    {<if class_name "Comment"}
+    {<if action "Follow"}follow {entity_name}{>}
+    {<if action "Comment"}
       <img src='{asset "skin/nav/comment.png"}' class='action_icon'> on
       <span class='title'>{entity_title}</span><br>
       <div class='text'>{text}</div>
     {>}
-    {<if class_name "Broadcast"}
+    {<if action "Broadcast"}
       <img src='{asset "skin/nav/republish.png"}' class='action_icon'>
       <span class='title'>{entity_title}</span>
     {>}
+    #}
   </div>
 </div></a>
 

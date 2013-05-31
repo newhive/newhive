@@ -218,8 +218,9 @@ img.thumb { background-color: $color_grey_medium; }
             width: 350px;
         }
         .action_icon {
-            height: 25px;
+            height: 30px;
             margin: -7px 0 -7px 0;
+            float: right;
         }
         .title { font-style: italic; }
         .text {
