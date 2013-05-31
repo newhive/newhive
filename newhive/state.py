@@ -1467,6 +1467,9 @@ class Feed(Entity):
 
     def client_view(self):
         r = self.collection.new(self)
+        # TODO: no good way to assert on broken db
+        if self.initiator == None:
+            return r
         r['initiator_thumb_70'] = self.initiator.get_thumb(70)
         if self['entity_class'] == 'User':
             r['entity_thumb_70'] = self.entity.get_thumb(70)
