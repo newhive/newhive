@@ -11,7 +11,7 @@ define([
     'browser/layout',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
-    'sj!templates/social_popup.html',
+    'sj!templates/social_overlay.html',
     'sj!templates/overlay.html',
     'sj!templates/profile_edit.html',
     'sj!templates/expr_card_large.html',
@@ -23,7 +23,7 @@ define([
     'sj!templates/icon_count.html',
 ], function(
     $, nav, new_account, context, browser_layout, master_template,
-    home_template,social_popup_template, overlay_template
+    home_template,social_overlay_template, overlay_template
 ) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
@@ -74,7 +74,7 @@ define([
         // }, 'json');
     }
     o.social_toggle = function() {
-        popup = $('#social_popup');
+        popup = $('#social_overlay');
         // TODO: animate
         if (popup.css('display') == 'none') {
             popup.show();
@@ -160,10 +160,10 @@ define([
     // TODO: animate nav bar
     o.expr = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
-        $('#overlays #social_popup').empty().append(
-            social_popup_template(context.page_data));
-        $("#nav").prependTo("#social_popup");
-        $("#social_popup #plus").click(o.social_toggle);
+        $('#overlays #social_overlay').empty().append(
+            social_overlay_template(context.page_data));
+        $("#nav").prependTo("#social_overlay");
+        $("#social_overlay #plus").click(o.social_toggle);
         $('#comment_form').submit(o.post_comment);
 
         // display_expr(page_data.expr_id);
