@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 import cgi
 import werkzeug.urls
 import uuid
@@ -80,16 +80,16 @@ class Expr(ModelController):
                         return ret_html
                     html = ''
                     # Turn embeds in hive.html blocks to static images
-                    hivehtml = BeautifulSoup(app.get('content',''))
-                    for iframe in hivehtml.find_all('iframe'):
-                        html += get_embed_img_html(iframe.get('src'))
+                    #hivehtml = BeautifulSoup(app.get('content',''))
+                    #for iframe in hivehtml.find_all('iframe'):
+                    #    html += get_embed_img_html(iframe.get('src'))
                     # Youtube embeds are <object>, and not <iframe>. We handle this
                     # special case here.
-                    for object_tags in hivehtml.find_all('object'):
-                        param_tags = object_tags.find_all('param')
-                        for param in param_tags:
-                            if param.get('name') == 'movie':
-                                html += get_embed_img_html(param.get('value'))
+                    # for object_tags in hivehtml.find_all('object'):
+                    #     param_tags = object_tags.find_all('param')
+                    #     for param in param_tags:
+                    #         if param.get('name') == 'movie':
+                    #             html += get_embed_img_html(param.get('value'))
                 else:
                     encoded_content = cgi.escape(app.get('content',''), quote=True)
                     html = '%s' % (app.get('content',''))

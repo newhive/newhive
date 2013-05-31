@@ -74,7 +74,7 @@ class User(ModelController):
             }
         if (
             not (form.get('email') and form.get('message')) or
-            request.form.get('fuckoff') # value in invisible field means spam
+            request.form.get('phone') # value in invisible field means spam
         ):
             return self.serve_json(response, False)
 

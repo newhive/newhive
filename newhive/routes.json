@@ -68,7 +68,7 @@
         "api_route": "/api/feed/loves/<owner_name>",
         "controller": "community",
         "method": "loves",
-        "client_method": "mini"
+        "client_method": "grid"
     },
     "expressions_comments": {
         "page_route": "/<owner_name>/profile/comments",
