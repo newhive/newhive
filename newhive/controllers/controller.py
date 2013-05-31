@@ -91,10 +91,11 @@ class Controller(object):
         response.status_code = 403
         return self.serve_text(response, 'Sorry, not going to do that. Perhaps you are not logged in, or not using https?')
 
-    def serve_500(self, request, response, exception=None, json=True):
-        if config.debug_mode: raise exception
+    def serve_500(self, request, response, exception=None, traceback=None, json=True):
+        if config.debug_mode:
+            raise exception, None, traceback
 
-        log_error(request, self.db, critical=True)
+        log_error(request, self.db, traceback=traceback, critical=True)
 
         response.status_code = 500
         if json: return self.serve_json(response, {'error': 500 })

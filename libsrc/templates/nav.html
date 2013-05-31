@@ -1,4 +1,4 @@
-<a href='/'><div id='logo' class='hoverable icon black_active'></div></a
+<a {anchor_attrs "home"}><div id='logo' class='hoverable icon black_active'></div></a
 
 {<if user.logged_in}
   ><div id='user_btn' class='text_btn item hoverable black_active'
@@ -35,8 +35,8 @@
   </div>
 
   <div id='hive_menu' class='menu drawer'>
-    <a { anchor_attrs "expressions_public"  "owner_name" user.name }><div class='menu_item'>Featured</div></a>
-    <a { anchor_attrs "expressions_public"  "owner_name" user.name }><div class='menu_item'>Recent</div></a>
+    <a { anchor_attrs "home"}><div class='menu_item'>Featured</div></a>
+    <a { anchor_attrs "recent"}><div class='menu_item'>Recent</div></a>
   </div>
 </div
 

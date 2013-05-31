@@ -6,6 +6,7 @@ class Community(Controller):
         return self.db.query(request.args.get('q'), **paging_args)
 
     def home(self, tdata, request, username=None, **paging_args):
+        1/0
         return {
             'page_data': {
                 "cards": self.db.query('#Featured', viewer=tdata.user),
