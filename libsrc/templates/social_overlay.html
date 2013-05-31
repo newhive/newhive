@@ -37,7 +37,9 @@
   
     </div>
     {# activity feed #}
-    <div>activity TBD</div>
+    <div class=activity>{<for expr.activity}
+      {|templates/feed_card.html}
+      {>}</div>
     {# discussion input #}
     <div id="discussions">
       <div><div class="text">Discussion</div>

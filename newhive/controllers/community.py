@@ -165,7 +165,7 @@ class Community(Controller):
         return {
             'page_data': {
                 'profile': profile,
-                'expr': expr.client_view(),
+                'expr': expr.client_view(activity=10),
                 'expr_id': expr.id,
             },
             'title': expr['title'],
