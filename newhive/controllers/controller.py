@@ -18,6 +18,8 @@ class Controller(object):
         self.assets = assets
         self.asset = self.assets.url
 
+    # Dispatch calls into controller methods of the form:
+    # def method(self, tdata, request, response, **args):
     def dispatch(self, handler, request, **args):
         (tdata, response) = self.pre_process(request)
         return getattr(self, handler, None)(tdata, request, response, **args)

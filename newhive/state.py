@@ -23,6 +23,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
 from newhive.utils import *
+from newhive.routes import reserved_words
 
 import logging
 logger = logging.getLogger(__name__)
@@ -223,14 +224,14 @@ class Collection(object):
     def count(self, spec={}): return self.search(spec).count()
 
     # self.new can be overridden to return custom object types
-    def new(self, d): return self.entity(self, d)
+    def new(self, doc): return self.entity(self, doc)
 
     def esdb_new(self, r):
         r['id'] = r.get_id()
         return self.entity(self, r)
 
-    def create(self, d):
-        new_entity = self.new(d)
+    def create(self, doc):
+        new_entity = self.new(doc)
         return new_entity.create()
 
     def map_reduce(self, *a, **b): return self._col.map_reduce(*a, **b)
@@ -411,15 +412,17 @@ class User(HasSocial):
 
     def create(self):
         self['name'] = self['name'].lower()
-        self['signup_group'] = self.config.signup_group
+        # self['signup_group'] = self.collection.config.signup_group
         assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, 'Invalid username'
+        assert not (self['name'] in reserved_words) 
         self.set_password(self['password'])
         self['fullname'] = self.get('fullname', self['name'])
         self['referrals'] = 0
         self['flags'] = {}
-        self['email_subscriptions'] = self.config.default_email_subscriptions
+        # self['email_subscriptions'] = self.collection.config.default_email_subscriptions
         assert self.has_key('referrer')
         self.build_search(self)
+        self.get_expr_count(force_update=True)
         super(User, self).create()
         return self
 
@@ -619,7 +622,7 @@ class User(HasSocial):
 
     def give_invites(self, count):
         self.increment({'referrals':count})
-        self.db.InviteNote.create(self.db.User.named(self.config.site_user), self, data={'count':count})
+        self.db.InviteNote.create(self.db.User.named(self.collection.config.site_user), self, data={'count':count})
 
     def cmp_password(self, v):
         if not isinstance(v, (str, unicode)): return False
@@ -773,7 +776,7 @@ class User(HasSocial):
             dict.update(user, dict(
                 views_by = self['analytics']['views_by'],
                 loves_by = self['analytics']['loves_by'],
-                expressions = self['analytics']['expressions']['count'], # Why expressions->count?  nothing else is in there.
+                expressions = self.get_expr_count(), # Why expressions->count?  nothing else is in there.
                 ))
         #exprs = self.get_top_expressions(3)
         exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
@@ -834,7 +837,7 @@ class User(HasSocial):
 
     @property
     def is_admin(self):
-        return self.get('name') in self.config.admins
+        return self.get('name') in self.collection.config.admins
 
 
 @Database.register

@@ -18,6 +18,8 @@ def authenticate_request(db, request, response):
     if not session or not session.get('active'):
         return handle_login(db, request, response)
     user = db.User.fetch(session['user'])
+    if not user:
+        return handle_login(db, request, response)
     user.logged_in = False
     if cmp_secret(session, request, response):
         user.logged_in = True

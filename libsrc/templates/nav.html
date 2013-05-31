@@ -12,9 +12,10 @@
   ></a
 {>}
 {<unless user.logged_in}
+  ><a { anchor_attrs "signup" }
   ><div id='sign_up_btn' class='text_btn item text hoverable black_active'
     ><span class='text'>Sign up</span></div
-  ><div id='login_btn' class='text_btn item hoverable black_active'>Log In</div
+    ></a><div id='login_btn' class='text_btn item hoverable black_active'>Log In</div
 {>}
 
 ><a href='/random' title="View Random Expression" class='random_link'

@@ -6,6 +6,7 @@
 define([
     'browser/jquery',
     'ui/nav',
+    'ui/new_account',
     'server/context',
     'browser/layout',
     'sj!templates/card_master.html',
@@ -21,7 +22,7 @@ define([
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
 ], function(
-    $, nav, context, browser_layout, master_template,
+    $, nav, new_account, context, browser_layout, master_template,
     home_template,social_popup_template, overlay_template
 ) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
@@ -151,6 +152,17 @@ define([
     //     render_site(data);
     // };
 
+    o.forms = function(data){
+        switch(data.form) {
+        case "create_account":
+            new_account.init(o);
+            new_account.render();
+            break;
+        default:
+            $('#site').empty().append(home_template(data));
+        }
+    };
+
     // Animate the new visible expression, bring it to top of z-index.
     // TODO: animate nav bar
     o.expr = function(page_data){
@@ -228,6 +240,7 @@ define([
                 $('#request_invite .error').show();
             }
         });
+        // TODO: create handlers for contact UI
     };
 
     o.profile = function(data){
