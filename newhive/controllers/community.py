@@ -70,8 +70,8 @@ class Community(Controller):
     def expressions_private(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
-        spec = {'owner_name': owner_name, 'auth': 'private'}
-        cards = self.db.Expr.page(spec, tdata.user, **args)
+        spec = {'owner_name': owner_name}
+        cards = self.db.Expr.page(spec, tdata.user, auth='password', **args)
         return {
             'page_data': { 'cards': cards, 'profile': owner.client_view(activity=True), 'card_type':'expr' },
             'title': 'Your Private Expressions',
