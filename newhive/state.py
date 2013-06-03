@@ -75,12 +75,24 @@ class Database:
 
         feed = search.get('feed')
         if feed:
-            if feed == 'featured':
+            # if feed == 'featured':
+            #     results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
+            # if feed == 'recent':
+            #     results = self.Expr.page({}, **args)
+            # else:
+            #     results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
+
+            if search.get('network'):
+                results =  viewer.feed_page_esdb(trending=False,
+                                                 at=start,
+                                                 limit=limit)
+            elif search.get('trending'):
+                results =  viewer.feed_page_esdb(trending=True,
+                                                 at=start,
+                                                 limit=limit)
+            elif search.get('featured'):
                 results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
-            if feed == 'recent':
-                results = self.Expr.page({}, **args)
-            else:
-                results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
+
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
             results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
                                          sort='score', viewer=viewer, **args)
@@ -505,8 +517,12 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_page_esdb(self, at=0, limit=40, feed=False, **opts):
-        f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr', 'Broadcast', 'Star'])
+    def feed_page_esdb(self, at=0, limit=40, feed=False, trending=False, **opts):
+
+        f_view = self.can_view_filter()
+
+        f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr',
+            'Broadcast', 'Star', 'UpdatedExpr', 'NewExpr'])
         f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
         f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
 
@@ -514,6 +530,10 @@ class User(HasSocial):
         f_expr_entity = pyes.filters.TermsFilter('entity', self.starred_expr_ids)
         f_expr_initiator = pyes.filters.TermFilter('initiator', self.id)
         f_expr = pyes.filters.BoolFilter(must=[f_expr_class_name, f_expr_entity], must_not=[f_expr_initiator])
+
+        if self.get('tags') is not None:
+            q_tags = pyes.query.TermsQuery('tags', self.get('tags'))
+            q_tags = pyes.query.FilteredQuery(q_tags, f_view)
 
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
         fq = pyes.query.FilteredQuery(match_all_query, f)
@@ -525,18 +545,20 @@ class User(HasSocial):
 
         res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
                                             doc_types="feed-type",
-                                            sort="created:desc")
+                                            sort="created:desc", size=total_limit)
 
         feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
+        user_with_expr = defaultdict(list)  # '' user items ''
 
         if feed == 'trending':
             for r in res_feed[:total_limit]:
                 feed_with_expr[r['entity']].append(r._meta.id)
+                user_with_expr[r['entity']].append(r['initiator'])
             expr_ids = feed_with_expr.keys()
-
             qid = pyes.query.IdsQuery(expr_ids)
-            f = self.can_view_filter()
-            query = pyes.query.FilteredQuery(qid, f)
+            query = pyes.query.FilteredQuery(qid, f_view)
+            if self.get('tags') is not None:
+                query = pyes.query.BoolQuery(should=[query, q_tags])
             custom_query = pyes.query.CustomScoreQuery(query,
                                                        script=popularity_time_score)
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
@@ -546,19 +568,37 @@ class User(HasSocial):
         else:
             items = []
             for r in res_feed[at:]:
+                # print r['created']
+                new_at += 1
                 feed_with_expr[r['entity']].append(r._meta.id)
-                if len(feed_with_expr[r['entity']]) == 1:
+                user_with_expr[r['entity']].append(r['initiator'])
+                if r['entity'] not in [i['_id'] for i in items]:
                     expr = self.db.Expr.fetch(r['entity'])
                     if expr is not None and self.can_view(expr):
+                        expr['feed_latest'] = r['created']
                         items.append(expr)
-                if len(items) == limit: break
-        return items #, {i: feed_with_expr[i] for i in [ii['_id'] for ii in items]}
+                if len(items) == limit:
+                    items.next = min(new_at, res_feed.total)
+                    break
+                if self.get('tags') is not None:
+                    fl = [e['feed_latest'] for e in items]
+                    query = pyes.query.RangeQuery(qrange=pyes.utils.ESRange('updated',
+                                from_value=min(fl), to_value=max(fl)))
+                    query = pyes.query.BoolQuery(must=[query, q_tags])
+                    res = self.db.esdb.conn.search(query, indices=self.db.esdb.index,
+                                                   doc_types='expr-type', size=limit)
+            if items.next is None:
+                items.next = res_feed.total
+        for i in items:
+            i['feed'] = feed_with_expr[i['_id']]
+            i['feed_users'] = user_with_expr[i['_id']]
+        return items
 
     # TODO: move this into ESDB for searching within your network
     def feed_network(self, spec={}, limit=40, at=None, **args):
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
-                'class_name': {'$in': ['NewExpr', 'Broadcast']}
+                'class_name': {'$in': ['NewExpr', 'Broadcast', 'Star']}
                 }
         own_broadcast = { 'initiator': self.id, 'class_name': 'Broadcast' }
         expression_action = {
@@ -1639,10 +1679,11 @@ class ESDatabase:
         self.index = index
         self.conn = pyes.ES('127.0.0.1:9200')
         self.db = db
+<<<<<<< HEAD
         feed_mapping = {
             "class_name": {"type": "string", "index": "not_analyzed"},
-            "updated": {"type": "float"},
-            "created": {"type": "float"},
+            "updated": {"type": "double"},
+            "created": {"type": "double"},
             "entity": {"type": "string", "index": "not_analyzed"},
             "entity_class": {"type": "string", "index": "not_analyzed"},
             "initiator": {"type": "string", "index": "not_analyzed"},
@@ -1656,7 +1697,7 @@ class ESDatabase:
             "index": "not_analyzed"},
             "name": {"type": "string",
             "index": "not_analyzed"},
-            "updated": {"type": "float"}
+            "updated": {"type": "double"}
         }
         expr_mapping = {
             "tags": {"type": "string", "index": "analyzed", "analyzer": "tag_analyzer"},
@@ -1666,8 +1707,8 @@ class ESDatabase:
             "auth": {"type": "string", "index": "not_analyzed"},
             "owner": {"type": "string", "index": "not_analyzed"},
             "owner_name": {"type": "string", "index": "not_analyzed"},
-            "updated": {"type": "float"},
-            "created": {"type": "float"},
+            "updated": {"type": "double"},
+            "created": {"type": "double"},
             "views": {"type": "integer"},
             "broadcast": {"type": "integer"},
             "star": {"type": "integer"}
@@ -1704,12 +1745,14 @@ class ESDatabase:
 
     def delete_index(self):
         self.conn.indices.delete_index(self.index)
+        self.conn.indices.refresh()
         return None
 
     def delete_by_ids(self, ids):
         query = pyes.query.IdsQuery(ids)
         self.conn.delete_by_query(query=query, indices=self.index,
                                   doc_types=None)
+        self.conn.indices.refresh()
 
     def parse_query(self, q):
         return self.db.parse_query(q)
