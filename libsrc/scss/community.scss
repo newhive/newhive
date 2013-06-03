@@ -205,4 +205,18 @@
             width: 90%;
         }
     }
+    .left_pane {
+        display: inline-block;
+        width: 400px;
+        margin-right: 60px;
+    }
+
+    .right_pane {
+        vertical-align: top;
+        display: inline-block;
+    }
+
+    .footer {
+        margin-top: 30px;
+    }
 }

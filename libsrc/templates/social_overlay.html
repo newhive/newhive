@@ -5,56 +5,52 @@
       {|templates/nav.html}
   </div>{>}#}
   <div id="popup_content">
-    {# user profile #}
-    <div>{<with profile}
-      {|templates/profile_card.html}
-    </div>{>}
-    {# expression title #}
-    <div>{expr.title}</div>
-    {# tags #}
-    <div class="tag_list">
-      {<for tags "tagnum"}
-        <div class="tag_label tag_{tagnum}">#{item}</div>
-      {>}</div>
-    {# stats icon counts 
-    	love	republish	facebook	tweet	export
-    	counts: Object
-    Broadcast: 1
-    Comment: 3
-    NewExpr: 1
-    Star: 12
-    UpdatedExpr: 1
-    Views: 261
-    #}
-    <div class="stats_bar">
-    {<with . "icon_class" "love" "count" counts.Star}
-      {|templates/icon_count.html}
-    {>}{<with . "icon_class" "republish"}
-      {|templates/icon_count.html}
-    {>}{<with . "icon_class" "facebook"}
-      {|templates/icon_count.html}
-    {>}{<with . "icon_class" "tweet"}
-      {|templates/icon_count.html}
-    {>}{<with . "icon_class" "share"}
-      {|templates/icon_count.html}
-    {>}
-  
-    </div>
-    {# activity feed #}
-    <div class=activity>{<for expr.activity}
-      {|templates/feed_card.html}
-      {>}</div>
-    {# discussion input #}
-    <div id="discussions">
-      <div><div class="text">Discussion</div>
-      {<with . "icon_class" "comment"}
+    <div class="left_pane">
+      {# expression title #}
+      <div>{expr.title}</div>
+      {# tags #}
+      <div class="tag_list">
+        {<for tags "tagnum"}
+          <div class="tag_label tag_{tagnum}">#{item}</div>
+        {>}</div>
+      <div class="stats_bar">
+      {<with . "icon_class" "love" "count" counts.Star}
         {|templates/icon_count.html}
+      {>}{<with . "icon_class" "republish"}
+        {|templates/icon_count.html}
+      {>}{<with . "icon_class" "facebook"}
+        {|templates/icon_count.html}
+      {>}{<with . "icon_class" "tweet"}
+        {|templates/icon_count.html}
+      {>}{<with . "icon_class" "share"}
+        {|templates/icon_count.html}
+      {>}
+      </div>
+   
+      {# activity feed #}
+      <div class=activity>{<for expr.activity}
+        {|templates/feed_card.html}
+        {>}
+      </div>
+    </div>
+    <div class="right_pane">
+      {# user profile #}
+      <div>{<with profile}
+        {|templates/profile_card.html}
       {>}</div>
-      <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
-      <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
-      <input type='submit' value='Enter' class='submit btn black rounded'>
-      <input type='hidden' name='action' value='comment'>
-      <input type='hidden' name='entity' value='{id}'>
-    </form></div>
+      {# discussion input #}
+      <div id="discussions">
+        <div><div class="text">Discussion</div>
+        {<with . "icon_class" "comment"}
+          {|templates/icon_count.html}
+        {>}</div>
+        <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
+          <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
+          <input type='submit' value='Enter' class='submit btn black rounded'>
+          <input type='hidden' name='action' value='comment'>
+          <input type='hidden' name='entity' value='{id}'>
+        </form>
+      </div>  
+    </div>
   </div>
 {>}
