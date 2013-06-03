@@ -1679,7 +1679,6 @@ class ESDatabase:
         self.index = index
         self.conn = pyes.ES('127.0.0.1:9200')
         self.db = db
-<<<<<<< HEAD
         feed_mapping = {
             "class_name": {"type": "string", "index": "not_analyzed"},
             "updated": {"type": "double"},
