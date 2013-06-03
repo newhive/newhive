@@ -1167,7 +1167,7 @@ class Expr(HasSocial):
 
     public = property(lambda self: self.get('auth') == "public")
 
-    def client_view(self, viewer=None):
+    def client_view(self, viewer=None, activity=0):
         counts = dict([ ( k, v.get('count', 0) ) for
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
@@ -1175,6 +1175,7 @@ class Expr(HasSocial):
         # if expr.auth_required(viewer, password):
         expr = dfilter(self, ['name', 'title', 'snapshot', 'feed'])
         dict.update(expr, {
+            'tags': self.get('tags_index'),
             'id': self.id,
             'thumb': self.get_thumb(),
             'owner': self.owner.client_view(viewer=viewer),
@@ -1191,8 +1192,11 @@ class Expr(HasSocial):
         if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': self.is_featured })
 
+        if activity > 0:
+            dict.update( expr, activity =
+                map(lambda r: r.client_view(), 
+                    self.db.Feed.search({'entity':self.id})) [0:activity] )
         return expr
-        # return self
 
     @property
     def tag_string(self):
@@ -1469,6 +1473,11 @@ class Feed(Entity):
 
     def client_view(self):
         r = self.collection.new(self)
+        # TODO: no good way to assert on broken db
+        if self.initiator == None:
+            return r
+        if self.entity == None:
+            return r
         r['initiator_thumb_70'] = self.initiator.get_thumb(70)
         if self['entity_class'] == 'User':
             r['entity_thumb_70'] = self.entity.get_thumb(70)

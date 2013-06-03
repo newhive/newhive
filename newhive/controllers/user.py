@@ -23,7 +23,7 @@ class User(ModelController):
     def comment_delete(self, tdata, request, response):
         return self.serve_json(response, False)
 
-    def comment_create(self, tdata, request, response):
+    def comment_create(self, tdata, request, response, **args):
         # Feed.comment(request, response)
         resp = False
         user = tdata.user

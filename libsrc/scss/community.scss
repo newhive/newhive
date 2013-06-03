@@ -150,8 +150,13 @@
     }
 }
 
+.tag_list {
+    text-align: center;
+}
+
 .tag_label {
-    float: right;
+    display: inline-block;
+    /* float: right;*/
     clear: both;
     color: white;
     padding: 0 8px;
@@ -177,7 +182,7 @@
     &.tag_15 { background-color: $color_tag_15; }
 }
 
-#social_popup {
+#social_overlay {
     left: 0px;
     bottom: 0px;
     width: 100%;
@@ -199,5 +204,19 @@
         textarea {
             width: 90%;
         }
+    }
+    .left_pane {
+        display: inline-block;
+        width: 400px;
+        margin-right: 60px;
+    }
+
+    .right_pane {
+        vertical-align: top;
+        display: inline-block;
+    }
+
+    .footer {
+        margin-top: 30px;
     }
 }
