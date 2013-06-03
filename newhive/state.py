@@ -92,6 +92,8 @@ class Database:
                                                  limit=limit)
             elif search.get('featured'):
                 results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
+            else:
+                results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
 
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
             results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
@@ -281,6 +283,10 @@ class Cursor(object):
 
     def __iter__(self): return self
 
+# helper class for a "page" (a list of entities)
+class Page(list):
+    next = None
+    total = 0
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
@@ -550,7 +556,7 @@ class User(HasSocial):
         feed_with_expr = defaultdict(list)  # lists of which feed items go with each expr
         user_with_expr = defaultdict(list)  # '' user items ''
 
-        if feed == 'trending':
+        if feed == 'trending' or trending is True:
             for r in res_feed[:total_limit]:
                 feed_with_expr[r['entity']].append(r._meta.id)
                 user_with_expr[r['entity']].append(r['initiator'])
@@ -566,7 +572,8 @@ class User(HasSocial):
                                            sort="_score,created:desc", size=limit)
             items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
         else:
-            items = []
+            items = Page([])
+            new_at = at
             for r in res_feed[at:]:
                 # print r['created']
                 new_at += 1

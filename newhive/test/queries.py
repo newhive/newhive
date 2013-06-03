@@ -251,8 +251,9 @@ def single_test(testname):
     finally: t.tearDown()
 
 if __name__ == '__main__':
-   # for t in [ExprTest, QueryTest, PaginationTest]:
-   #     single_test(t)
+    print "hi!"
+    for t in [ExprTest, QueryTest, PaginationTest]:
+       single_test(t)
     yan = db.User.fetch('yan', keyname='name')
     t = QueryTest()
     t.test_network_search(yan)
