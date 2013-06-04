@@ -139,7 +139,7 @@ class Community(Controller):
         profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         # TODO: allow tag following, ?concat to personal tags
-        tags = owner['following_tags'] if owner.has_key('following_tags') else []
+        tags = owner['tags_following'] if owner.has_key('tags_following') else []
         return {
             'page_data': { 'tags': tags, 'cards': users, 'profile': profile, 'card_type':'user' },
             'title': owner['name'] + ' Following',
