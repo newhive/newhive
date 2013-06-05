@@ -56,13 +56,6 @@
         "method": "expressions_private",
         "client_method": "profile_private"
     },
-    "activity": {
-        "page_route": "/<owner_name>/profile/activity",
-        "api_route": "/api/feed/activity/<owner_name>",
-        "controller": "community",
-        "method": "loves",
-        "client_method": "grid"
-    },
     "following": {
         "page_route": "/<owner_name>/profile/following",
         "api_route": "/api/feed/following/<owner_name>",

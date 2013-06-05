@@ -111,23 +111,6 @@ class Community(Controller):
     #         'about_text': 'Comments',
     #     }
 
-    # WIP: waiting on Abram's network: recent commit
-    def activity(self, tdata, request, owner_name=None, **args):
-        owner = self.db.User.named(owner_name)
-        if not owner: return None
-        # Get the feeds starred by owner_name...
-        spec = {'initiator_name': owner_name }
-        # ...and grab its expressions.
-        activity = self.db.Feed.search(spec, **args)
-        print "hi! {}".format(len(activity))
-        profile = owner.client_view(activity=True)
-        profile['profile_bg'] = owner.get('profile_bg')
-        return {
-            'page_data': { 'cards': activity, 'profile': profile, 'card_type':'expr', },
-            'title': 'Loves by ' + owner['name'],
-            'about_text': 'Loves',
-        }
-
     def following(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
@@ -139,7 +122,7 @@ class Community(Controller):
         profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
         # TODO: allow tag following, ?concat to personal tags
-        tags = owner['tags_following'] if owner.has_key('tags_following') else []
+        tags = owner.get('tags_following', [])
         return {
             'page_data': { 'tags': tags, 'cards': users, 'profile': profile, 'card_type':'user' },
             'title': owner['name'] + ' Following',
