@@ -9,6 +9,7 @@ define([
     'ui/new_account',
     'server/context',
     'browser/layout',
+    'ui/util',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
     'sj!templates/social_overlay.html',
@@ -22,8 +23,8 @@ define([
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
 ], function(
-    $, nav, new_account, context, browser_layout, master_template,
-    home_template,social_overlay_template, overlay_template
+    $, nav, new_account, context, browser_layout, ui_util, master_template,
+    home_template, social_overlay_template, overlay_template, profile_edit_template
 ) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
@@ -218,7 +219,23 @@ define([
         expr_column();
     };
     o.profile_edit = function(page_data){
-
+        ui_util.uploader('profile_thumb_form',
+            function(url){
+                $('#profile_thumb').attr('src', url)
+            },
+            function(data){
+                console.log(data);
+            }
+        );
+        ui_util.uploader('profile_bg_form',
+            function(url){
+                $('#profile_bg').css('background-image', url)
+            },
+            function(data){
+                console.log(data);
+            }
+        );
+        $('#site').empty().append(profile_edit_template(page_data));
     };
     o.profile_private = function(page_data){
         page_data.profile.subheading = 'Private';

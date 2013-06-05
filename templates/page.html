@@ -2,7 +2,7 @@
 
 {% block head %}
   {{ super() }}
-  <title>{{ ('NewHive' if not context.title else title)|e }}</title>
+  <title>{{ ('NewHive' if not page_data.title else page_data.title)|e }}</title>
   <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
   {% for item in asset_bundle('app.css') %}
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
@@ -10,7 +10,7 @@
   <script>
 curl(['server/context', 'browser/js'], function(context, util){
     var server_data = {
-        user: {{ user.client_view(activity=True)|json }}, /* config? debug? */
+        user: {{ user.client_view(activity=True)|json }},
         error: {{ error|json }},
         link_url: "{{ link_url }}",
         server_url: {{ server_url|json }}, secure_server: {{ secure_server|json }},
@@ -20,8 +20,8 @@ curl(['server/context', 'browser/js'], function(context, util){
         config: {{ config.client_view()|json }}, /* streamified_url, streamified_client_id */
     };
     util.copy(server_data, context);
-    console.log('set server_data');
-    util.copy({{ context|json }}, context);
+    context.page_data = {{ page_data|json }};
+    if(context.page_data.owner.id == context.user.id) context.page_data.user_is_owner = true;
 });
   </script>
 {% endblock %}

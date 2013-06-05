@@ -54,9 +54,13 @@
         width: 100%;
     }
 
-    #edit_btn, #mail_btn { width: 44px; height: 44px; }
+    .info .icon {
+        width: 44px; height: 44px;
+        display: inline-block;
+        vertical-align: middle;
+    }
     #edit_btn { background-image: asset_url('skin/nav/edit.png'); }
-    #mail_btn { background-image: asset_url('skin/nav/edit.png'); }
+    #mail_btn { background-image: asset_url('skin/nav/mail.png'); }
 }
 
 #site {

@@ -77,7 +77,7 @@ class Database:
         if feed:
             if feed == 'featured':
                 results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
-            if feed == 'recent':
+            elif feed == 'recent':
                 results = self.Expr.page({}, **args)
             else:
                 results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
@@ -163,7 +163,7 @@ class Collection(object):
         return Cursor(self, self._col.find(spec=spec, **opts))
 
     # Should be overridden to ommit fields not used in list views
-    def cards(self,  spec, **opts):
+    def cards(self, spec, **opts):
         return self.search(spec, **opts)
 
     def last(self, spec={}, **opts):
@@ -624,7 +624,7 @@ class User(HasSocial):
 
     def give_invites(self, count):
         self.increment({'referrals':count})
-        self.db.InviteNote.create(self.db.User.named(self.collection.config.site_user), self, data={'count':count})
+        self.db.InviteNote.create(self.db.User.named(self.db.config.site_user), self, data={'count':count})
 
     def cmp_password(self, v):
         if not isinstance(v, (str, unicode)): return False
@@ -786,7 +786,7 @@ class User(HasSocial):
         dict.update(user, dict(
             id = self.id,
             url = self.url,
-            user_is_owner = bool(viewer and viewer['_id'] == self['_id']),
+            #user_is_owner = bool(viewer and viewer['_id'] == self['_id']),
             mini_expressions = map(lambda e:e.mini_view(), exprs),
             thumb_70 = self.get_thumb(70),
             thumb_190 = self.get_thumb(190),
@@ -839,7 +839,7 @@ class User(HasSocial):
 
     @property
     def is_admin(self):
-        return self.get('name') in self.collection.config.admins
+        return self.get('name') in self.db.config.admins
 
 
 @Database.register
@@ -848,7 +848,7 @@ class Session(Entity):
 
 
 def media_path(user, name=None):
-    p = joinpath(self.config.media_path, user['name'])
+    p = joinpath(config.media_path, user['name'])
     return joinpath(p, name) if name else p
 
 @Database.register
@@ -956,7 +956,7 @@ class Expr(HasSocial):
         if not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time'):
             self.take_snapshots()
         filename = '_'.join([self.get('_id'), self.get('snapshot_time'), size])
-        s3_url = 'https://%s.s3.amazonaws.com/%s' % (config.s3_buckets['thumb'], filename)
+        s3_url = 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
         return s3_url
 
     def related_next(self, spec={}, **kwargs):
@@ -1292,7 +1292,7 @@ class File(Entity):
     def store(self, file, bucket, path, name):
         file.seek(0)
 
-        if self.config.aws_id:
+        if self.db.config.aws_id:
             self['protocol'] = 's3'
             return self.db.s3.upload_file(file, bucket, self.id, self['name'], self['mime'])
         else:
@@ -1338,8 +1338,8 @@ class File(Entity):
         self['url'] = self.store(self._file, 'media', self.id, self['name'])
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
-        self.set_thumbs()
         super(File, self).create()
+        self.set_thumbs()
         return self
 
     # download file from source and reupload
