@@ -181,6 +181,41 @@ class Community(Controller):
             'title': expr['title'],
         }
 
+    def search(self, tdata, request, id=None, owner_name=None, expr_name=None):
+        if not request.args.has_key('q'): return None
+        # terms = request.args['q'].split()
+        # specs = []
+        # tag_count = 0
+        # owner_count = 0
+        # text_count = 0
+        # for term in terms:
+        #     c = term[0]
+        #     if c == '#':
+        #         tag_count += 1
+        #         spec = {'tags_index': term[1:]}
+        #     elif c == '@':
+        #         owner_count += 1
+        #         spec = {'initiator_name': term[1:]}
+        #     else:
+        #         text_count += 1
+        #         spec = {'text_index': term}
+        #     specs.append(spec)
+
+        # page_data = {}
+        # # NOTE: owner_count > 1 should be impossible
+        # if owner_count == 1
+        #     profile = expr_owner.client_view()
+        #     profile['profile_bg'] = expr_owner.get('profile_bg')
+        #     page_data.update('profile': profile)
+        
+        return {
+            'page_data': {
+                "cards": self.db.query(request.args['q'], viewer=tdata.user),
+                "card_type": "expr",
+            },
+            'title': 'Search',
+        }
+
     def empty(self, tdata, request):
         return { 'page_data': {} }
 

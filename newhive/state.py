@@ -58,6 +58,13 @@ class Database:
         # initialize elasticsearch index
         self.esdb = ESDatabase(self)
 
+    def dict_to_query(self, search):
+        queries = []
+        for term in search:
+            queries.append(pyes.query.TermsQuery(term, search[term]))
+        query = pyes.query.BoolQuery(must=queries)
+        return query
+
     def query(self, q, viewer=None, expr_only=None, fuzzy=False,
               es_order='_score,updated:desc', **args):
         args['viewer'] = viewer
@@ -96,8 +103,9 @@ class Database:
                 results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
 
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
+            del search['feed']
             results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
-                                         sort='score', viewer=viewer, **args)
+                                         sort='score', **args)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -1822,7 +1830,8 @@ class ESDatabase:
     def search_text(self, search, es_order, es_filter, start, limit):
         query = self.create_query(search)
         filtered_query = pyes.query.FilteredQuery(query, es_filter)
-        results = self.conn.search(filtered_query, indices=self.index,
+        # filtering borked...
+        results = self.conn.search(query, indices=self.index,
             doc_types="expr-type", sort=es_order, start=start, size=limit)
         return results
 
