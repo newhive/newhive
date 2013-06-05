@@ -28,6 +28,13 @@
         "method": "trending",
         "client_method": "profile"
     },
+    "search": {
+        "page_route": "/search",
+        "api_route": "/api/search",
+        "controller": "community",
+        "method": "search",
+        "client_method": "grid"
+    },
     "network": {
         "page_route": "/<username>/profile/network",
         "api_route": "/api/feed/network/<username>",
