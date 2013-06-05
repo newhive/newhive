@@ -116,7 +116,7 @@ define([
     }
 
     o.forms = function(page_data){
-        switch(data.form) {
+        switch(page_data.form) {
         case "create_account":
             new_account.init(o);
             new_account.render();
