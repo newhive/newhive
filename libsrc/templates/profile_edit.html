@@ -1,14 +1,16 @@
 <div id='header' class='split'>
 </div>
-{<with profile}
+{<with owner}
   <div id='user_header' class='header'>
     {<if profile_bg}
-      <label for='file'
+      <label for='profile_bg_form_files'
         style='background-image:url("{profile_bg}")'
-        class='background'/>
+        class='background' id='profile_bg'/>
     {>}
     <div class='profile'>
-      <img src='{thumb_190}' class='thumb'>
+      <label for='profile_thumb_form_files'>
+        <img src='{thumb_190}' class='thumb' id='profile_thumb'>
+      </label>
       <div class='info'>
         <div class='name'>{fullname}</div>
         <div>meep blurby blurb goes here aoeus thaoesu thaoesu thaoesu thaoesu hasoeuthaosetuasoeth</div>

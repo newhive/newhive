@@ -1,4 +1,4 @@
-/** @license MIT License (c) copyright B Cavalier & J Hann */
+/** @license MIT License (c) copyright 2010-2013 B Cavalier & J Hann */
 
 /**
  * curl (cujo resource loader)
@@ -13,7 +13,7 @@
 (function (global) {
 //"use strict"; don't restore this until the config routine is refactored
 	var
-		version = '0.7.3',
+		version = '0.7.4',
 		curlName = 'curl',
 		defineName = 'define',
 		runModuleAttr = 'data-curl-run',
@@ -241,7 +241,7 @@
 			return result;
 		}
 	}
-	
+
 	core = {
 
 		/**
@@ -1134,7 +1134,7 @@
 			}
 			return cfg;
 		},
-		
+
 		nextTurn: function (task) {
 			setTimeout(task, 0);
 		}
@@ -1160,7 +1160,7 @@
 
 	function _config (cfg, callback, errback) {
 		var pPromise, mPromise, main, devmain, fallback;
-		
+
 		if (cfg) {
 			core.setApi(cfg);
 			userCfg = core.config(cfg);
@@ -1195,7 +1195,7 @@
 
 		ctx = core.createContext(userCfg, undef, [].concat(ids), isPreload);
 
-		this['then'] = then = function (resolved, rejected) {
+		this['then'] = this.then = then = function (resolved, rejected) {
 			when(ctx,
 				// return the dependencies as arguments, not an array
 				function (deps) {
@@ -1295,7 +1295,7 @@
 	prevDefine = global[defineName];
 
 	// only run config if there is something to config (perf saver?)
-	if (isType(prevCurl, 'Object') || userCfg.main) {
+	if (prevCurl && isType(prevCurl, 'Object') || userCfg.main) {
 		// remove global curl object
 		global[curlName] = undef; // can't use delete in IE 6-8
 		// configure curl

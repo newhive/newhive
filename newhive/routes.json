@@ -84,12 +84,6 @@
         "method": "expressions_comments",
         "client_method": "grid"
     },
-    "profile_edit": {
-        "page_route": "/<owner_name>/profile/edit",
-        "controller": "community",
-        "method": "empty",
-        "client_method": "profile_edit"
-    },
     "view_expr": {
         "page_route": "/<owner_name>/<expr_name>",
         "api_route": "/api/expr/<id>",
@@ -107,6 +101,11 @@
         "api_route": "/api/comment/create",
         "controller": "user",
         "method": "comment_create"
-    }
+    },
 
+    "file_create": {
+        "api_route": "/api/file/create",
+        "controller": "file",
+        "method": "create"
+    }
 }
