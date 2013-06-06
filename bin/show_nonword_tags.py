@@ -1,7 +1,12 @@
-from newhive import state, config
+import sys, os, re
 from collections import Counter
+
+parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_path)
+from newhive import state, config
+from newhive.utils import format_tags
  
-w = open('/usr/share/dict/words').read().splitlines()
+words = open('/usr/share/dict/words').read().splitlines()
 words = map(lambda x: x.lower().replace("'",""), words)
 
 db = state.Database(config)
