@@ -1961,7 +1961,7 @@ class ESDatabase:
             col = self.db.Feed
         elif es_type == 'user-type':
             col = self.db.User
-        return col.fetch(result_ids), res.total
+        return col.fetch(result_ids)
 
     def add_related_types(self):
 

@@ -165,12 +165,19 @@ class QueryTest(ExprTest):
 
     def runTest(self):
         self.test_null_search(self.null_query)
+        print 'null search ok'
         self.test_text_search('#unittest')
+        print 'unittest ok'
         self.test_text_search('#unittest books')
+        print 'unittest books ok'
         self.test_text_search('#food')
+        print 'food search ok'
         self.test_fuzzy_search('lovely')
+        print 'fuzzy search ok'
         self.test_featured_search()
+        print 'featured test ok'
         yan = db.User.fetch('yan', keyname='name')
+        print 'user fetched'
         self.test_auth_search(yan)
         self.test_network_search(yan)
         self.test_trending_search(yan)
