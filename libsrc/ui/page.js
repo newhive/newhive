@@ -128,13 +128,17 @@ define([
 
     o.comment_response = function (e, json) {
         $('#comment_form textarea').val('');
+        // TODO: retrieve response from server with comment,
+        // add to comments.
     }
 
     // Animate the new visible expression, bring it to top of z-index.
     // TODO: animate nav bar
     o.expr = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
-        $('#overlays #social_overlay').empty().append(
+        $("#nav").prependTo("body");
+        // TODO: shouldn't empty #nav
+        $('#social_overlay').empty().append(
             social_overlay_template(context.page_data));
         $("#nav").prependTo("#social_overlay");
         $("#social_overlay #plus").click(o.social_toggle);
