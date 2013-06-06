@@ -251,6 +251,6 @@ def single_test(testname):
     finally: t.tearDown()
 
 if __name__ == '__main__':
-    print "hi!"
+    # Need to fix pagination test as well.
     for t in [ExprTest, QueryTest]:
        single_test(t)
