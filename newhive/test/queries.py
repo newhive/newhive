@@ -131,7 +131,7 @@ class QueryTest(ExprTest):
         """make sure fuzzy searches return more results"""
         r1 = db.query(query, fuzzy=False)
         r2 = db.query(query, fuzzy=True)
-        self.assertTrue(r1.total < r2.total)
+        self.assertTrue(len(r1) < len(r2))
 
     def test_featured_search(self):
         """show featured when no user is logged in"""
@@ -154,14 +154,14 @@ class QueryTest(ExprTest):
     def test_trending_search(self, user):
         """this should call elasticsearch"""
         r = db.query('#Trending', viewer=user)
-        self.assertTrue(r.total > 0)
+        self.assertTrue(len(r) > 0)
        # print efilter(r)
 
     def test_auth_search(self, user):
         """only works for a user who has private exprs"""
         r1 = db.query('@'+user['name'])
         r2 = db.query('@'+user['name'], viewer=user)
-        self.assertTrue(r1.total < r2.total)
+        self.assertTrue(len(r1) < len(r2))
 
     def runTest(self):
         self.test_null_search(self.null_query)
@@ -252,8 +252,5 @@ def single_test(testname):
 
 if __name__ == '__main__':
     print "hi!"
-    for t in [ExprTest, QueryTest, PaginationTest]:
+    for t in [ExprTest, QueryTest]:
        single_test(t)
-    yan = db.User.fetch('yan', keyname='name')
-    t = QueryTest()
-    t.test_network_search(yan)
