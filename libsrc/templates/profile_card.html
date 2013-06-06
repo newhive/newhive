@@ -12,10 +12,13 @@
     <div class='info'>
       <div class='name'>
         {fullname}
-        {# TODO: make this dependent on how many icons there are instead of who viewer is #}
-        {<unless user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='mail_btn'/></a>{>}
-        {<if user_is_owner}<a {get_route_anchor_attrs "profile_edit"} ><div id='edit_btn'/></a>{>}
+        {<if user_is_owner}
+          <a {anchor_attrs "profile_edit" "owner_name" name}>
+            <div class='icon' id='edit_btn'/></a>
+        {>}
+        <a><div class='icon' id='mail_btn'/></a>
       </div>
+      <div class='subheading'>{subheading}</div>
       <div>{about_text}</div>
     </div>
   </div>

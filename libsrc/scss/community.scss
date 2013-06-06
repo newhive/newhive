@@ -2,14 +2,65 @@
 
 #exprs {
     position:absolute; left: 0; bottom: 0;
+    overflow:hidden;
     z-index: 1;
-    width:100%; height:95%;
+    width:100%; height:100%;
 
     .expr {
         width:100%; height:100%; position:absolute; left: 0; top:0;
         &.expr-visible { display:block; }
         &.expr-hidden { display:none; }
     }
+}
+
+#site {
+    #user_header {
+        .profile {
+            margin: 180px auto 50px auto;
+            width: 800px;
+        }
+    }
+}
+
+#user_header {
+    .profile {
+        width: 800px;
+        position: relative; z-index: 1;
+        background-color: white;
+
+        .thumb {
+            width: 222px; height: 222px;
+            vertical-align: top;
+            margin: 10px;
+        }
+        .info {
+            font-family: Gibson;
+            margin: 20px;
+            .name {
+                font-size: 50px;
+                img {
+                    vertical-align: middle;
+                    margin: 0 10px 4px 10px;
+                }
+            }
+            display: inline-block;
+            width: 500px; height: 222px;
+        }
+    }
+    .background {
+        z-index: 0;
+        position: absolute; top: 0; left: 0;
+        height: 300px;
+        width: 100%;
+    }
+
+    .info .icon {
+        width: 44px; height: 44px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    #edit_btn { background-image: asset_url('skin/nav/edit.png'); }
+    #mail_btn { background-image: asset_url('skin/nav/mail.png'); }
 }
 
 #site {
@@ -29,43 +80,6 @@
         }
     }
 
-    #user_header {
-        .profile {
-            margin: 180px auto 50px auto;
-            width: 800px;
-            position: relative; z-index: 1;
-            background-color: white;
-
-            .thumb {
-                width: 222px; height: 222px;
-                vertical-align: top;
-                margin: 10px;
-            }
-            .info {
-                font-family: Gibson;
-                margin: 20px;
-                .name {
-                    font-size: 50px;
-                    img {
-                        vertical-align: middle;
-                        margin: 0 10px 4px 10px;
-                    }
-                }
-                display: inline-block;
-                width: 500px; height: 222px;
-            }
-        }
-        .background {
-            z-index: 0;
-            position: absolute; top: 0; left: 0;
-            height: 300px;
-            width: 100%;
-        }
-
-        #edit_btn, #mail_btn { width: 44px; height: 44px; }
-        #edit_btn { background-image: asset_url('skin/nav/edit.png'); }
-        #mail_btn { background-image: asset_url('skin/nav/edit.png'); }
-    }
 
     #feed {
         margin: 0 auto 0 auto;
@@ -135,14 +149,18 @@
 
         .card {
             float: left;
-            width: 410px;
-            height: 375px;
+            padding: 10px;
         }
     }
 }
 
+.tag_list {
+    text-align: center;
+}
+
 .tag_label {
-    float: right;
+    display: inline-block;
+    /* float: right;*/
     clear: both;
     color: white;
     padding: 0 8px;
@@ -166,4 +184,43 @@
     &.tag_13 { background-color: $color_tag_13; }
     &.tag_14 { background-color: $color_tag_14; }
     &.tag_15 { background-color: $color_tag_15; }
+}
+
+#social_overlay {
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    height: 350px;
+    &:hover { background-color: white; }
+
+    #popup_content {
+        position:absolute;
+        top: 44px;
+        width: 100%;
+        height: 306px;
+        overflow: auto;
+    }
+    #discussions {
+        .counts_icon {
+            position:absolute;
+            right:0px;
+        }
+        textarea {
+            width: 90%;
+        }
+    }
+    .left_pane {
+        display: inline-block;
+        width: 400px;
+        margin-right: 60px;
+    }
+
+    .right_pane {
+        vertical-align: top;
+        display: inline-block;
+    }
+
+    .footer {
+        margin-top: 30px;
+    }
 }

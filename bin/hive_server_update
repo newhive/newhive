@@ -1,0 +1,14 @@
+#! /bin/bash
+# Pull down latest v2-community,
+# Restart the newhive web server
+# Run under crontab as newduke
+
+# Pull latest
+cd /var/www/newhive
+sudo chown www-data:dev -R .
+sudo chmod g+rwX -R .
+git pull origin v2-community
+sudo chown www-data:dev -R .
+sudo chmod g+rwX -R .
+# restart server
+hive_server_deploy

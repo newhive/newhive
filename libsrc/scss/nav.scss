@@ -3,7 +3,7 @@
 // nav takes 3 layers. For invisible nav handles, the navigation,
 // and their submenus, (4, 5, 6) respectively
 
-#nav {
+.nav_class {
     position: fixed;
     width: 100%;
     height: $nav_size;
@@ -12,10 +12,13 @@
     @include background-image(linear-gradient(top, white, #DADADA));
 
     * {
-        font-family: Gibson Semibold;
+        font-family: Gibson;
         font-size: 16px;
     }
-    .item, .menu_item { text-transform: uppercase; }
+    .item, .menu_item {
+        text-transform: uppercase;
+        font-weight: bold;
+    }
 
     .expr {
         bottom: 0px;
@@ -99,29 +102,6 @@
             &.active .icon { background-image: asset_url('skin/nav/views-hover.png'); }
             &.active { background-color: $color_selected; }
         }
-        .love {
-            .icon { background-image: asset_url('skin/nav/love.png'); }
-            &.on { background-color: $color_bright_red; }
-            &.on .icon { background-image: asset_url('skin/nav/love-on.png'); }
-            &.active { background-color: $color_selected; }
-            &.active .icon { background-image: asset_url('skin/nav/love-hover.png'); }
-        }
-        .comment {
-            .icon { background-image: asset_url('skin/nav/comment.png'); }
-            &.on { background-color: $color_blue; }
-            &.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
-            &.active .icon { background-image: asset_url('skin/nav/comment-hover.png'); }
-            &.active { background-color: $color_selected; }
-        }
-        .share {
-            background-image: asset_url('skin/nav/share.png');
-            &.active { background-image: asset_url('skin/nav/share-hover.png'); }
-        }
-        .edit {
-            .icon { background-image: asset_url('skin/nav/edit.png'); }
-            &.active .icon { background-image: asset_url('skin/nav/edit-hover.png'); }
-            &.active { background-color: black; }
-        }
         .plus {
             background-image: asset_url('skin/nav/plus.png');
             &.active { background-image: asset_url('skin/nav/plus-hover.png'); }
@@ -155,75 +135,16 @@
                 width: 20px;
             }
         }
-        .menu_item:first-child { border: none; }
+        :first-child .menu_item { border: none; }
     }
 }
 
 @media print { #nav { display: none; } }
 
 
-.pagethrough {
-    position: fixed;
-    display: none;
-    @include opacity(0.8);
-    z-index: 2;
-}
-#page_prev img { left: 0; bottom: 50%; }
-#page_next img { right: 0; bottom: 50%; }
-
-.page_btn {
-    position: absolute;
-    width: 44px;
-    height: 44px;
-    z-index: $nav_layer + 1;
-    background-color: white;
-    background-repeat: no-repeat;
-    @include border-radius(22px);
-    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
-
-    &:hover { background-color: black; }
-}
-#page_prev {
-    background-image: asset_url('skin/nav/page_prev.png');
-    &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
-    background-position: 8px 11px;
-    left: 10px;
-}
-#page_next {
-    background-image: asset_url('skin/nav/page_next.png');
-    &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
-    background-position: 14px 11px;
-    right: 10px;
-}
-
-
 img.thumb { background-color: $color_grey_medium; }
 
 .none, .off .on, .on .off { display: none !important }
-
-#call_to_action {
-    float: left;
-    cursor: pointer;
-    font-family: Bebas, sans-serif;
-    font-size: 26px;
-    padding: 4px 8px 6px 6px;
-    margin-left: 7px;
-    background: $color_selected;
-    &:hover {
-        color: white;
-        background: black;
-    }
-}
-
-#social_icons {
-    margin: 0 5px;
-    img {
-        margin-right: 5px;
-        vertical-align: middle;
-        width: 20px;
-        height: 20px;
-    }
-}
 
 .menu {
     display: none;
@@ -271,7 +192,98 @@ img.thumb { background-color: $color_grey_medium; }
     .submit { float: right; }
 }
 
-#user_menu { width: 260px; }
+.user_menu {
+    width: 400px;
+}
+.activity {
+    .feed_item {
+        display: inline-block;
+        width: 100%;
+        padding: 10px;
+        margin: -3px; /* wtf? */
+        clear: both;
+        border-top: 1px solid #d1d1d1;
+
+        &:hover, &.active {
+            background-color: $color_selected;
+        }
+
+        .thumb {
+            width: 30px;
+            vertical-align: top;
+            float: left;
+            margin-right: 7px;
+        }
+        .content {
+            float: left;
+            width: 350px;
+        }
+        .action_icon {
+            height: 30px;
+            margin: -7px 0 -7px 0;
+            float: right;
+        }
+        .title { font-style: italic; }
+        .text {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-height: 40px;
+            color: $color_grey_medium;
+        }
+    }
+}
+
+/*
+.feed_item {
+    width: auto;
+    height: auto;
+    clear: both;
+    overflow: hidden;
+    font-weight: normal;
+    cursor: pointer;
+    margin: 0px;
+    padding: 2px;
+    position: relative;
+    border-top: 1px solid $color_light_grey;
+    &:first-child { border-top: none; }
+    &:hover, &.active {
+        background-color: $color_selected;
+        img { background-color: $color_selected; }
+    }
+    img {
+        margin: 4px 7px 4px 4px;
+        width: 50px;
+        height: 50px;
+        float: left;
+    }
+    .feed_text {
+        margin-left: 5px;
+        font-size: 13px;
+        a, .title {
+            font-weight: bold;
+        }
+    }
+    .byline {
+        position: absolute;
+        right: 6px;
+        bottom: 4px;
+        overflow: hidden;
+        font-size: 12px;
+    }
+    .comment_text {
+        white-space: nowrap;
+        margin-top: 5px;
+        height: 33px;
+    }
+    p {
+        margin: 0;
+    }
+    .timestamp {
+        float: right;
+        color: $color_grey_medium;
+    }
+}
+*/
 
 #owner_menu {
     width: 260px;
@@ -397,61 +409,60 @@ img.thumb { background-color: $color_grey_medium; }
     input { float: right; }
 }
 
-
-.feed_item {
-    width: auto;
-    height: auto;
-    clear: both;
-    overflow: hidden;
-    font-weight: normal;
-    cursor: pointer;
-    margin: 0px;
-    padding: 2px;
-    position: relative;
-    border-top: 1px solid $color_light_grey;
-    &:first-child { border-top: none; }
-    &:hover, &.active {
-        background-color: $color_selected;
-        img { background-color: $color_selected; }
-    }
-    img {
-        margin: 4px 7px 4px 4px;
-        width: 50px;
-        height: 50px;
-        float: left;
-    }
-    .feed_text {
-        margin-left: 5px;
-        font-size: 13px;
-        a, .title {
-            font-weight: bold;
-        }
-    }
-    .byline {
-        position: absolute;
-        right: 6px;
-        bottom: 4px;
-        overflow: hidden;
-        font-size: 12px;
-    }
-    .comment_text {
-        white-space: nowrap;
-        margin-top: 5px;
-        height: 33px;
-    }
-    p {
-        margin: 0;
-    }
-    .timestamp {
-        float: right;
-        color: $color_grey_medium;
-    }
-}
-
 #dia_password {
     padding: 20px;
     .error {
         color: $color_active;
         display: none;
     }
+}
+
+// overlay css.  belongs in new file?
+.pagethrough {
+    position: fixed;
+    display: none;
+    @include opacity(0.8);
+    z-index: 2;
+}
+#page_prev img { left: 0; bottom: 50%; }
+#page_next img { right: 0; bottom: 50%; }
+#social_plus {
+    width: 55px;
+    height: 55px;
+    right: 20px;
+    bottom: 10px;    
+
+    background-image: asset_url('skin/nav/plus.png');
+    &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+    background-position: 8px 11px;
+    display: none;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    width: 55px;
+    height: 55px;
+    z-index: $nav_layer;
+    background-color: white;
+    background-repeat: no-repeat;
+    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+
+    &:hover { background-color: black; }
+}
+.page_btn {
+    width: 55px;
+    height: 55px;
+}
+#page_prev {
+    background-image: asset_url('skin/nav/page_prev.png');
+    &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
+    background-position: 8px 11px;
+    left: 10px;
+}
+#page_next {
+    background-image: asset_url('skin/nav/page_next.png');
+    &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
+    background-position: 14px 11px;
+    right: 20px;
 }

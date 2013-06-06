@@ -9,7 +9,7 @@ define([
 		asset: function(context, name){
 			return assets[name];
 		},
-        get_route_anchor_attrs: function(scope, route_name) {
+        anchor_attrs: function(scope, route_name) {
             var route_args = { username: context.user.name };
             // All arguments after route_name are name value pairs
             for(var i = 2; i < arguments.length; i += 2)
@@ -28,6 +28,13 @@ define([
             }).join(' ');
             return attributes_str;
         },
+        feed_action: function(scope, r){
+            if(r.class_name == 'Star' && r.entity_class == 'Expr') return 'loves';
+            if(r.class_name == 'Star' && r.entity_class == 'User') return 'follows';
+            if(r.class_name == 'Comment') return 'comments';
+            if(r.class_name == 'FriendJoined') return 'joined';
+            if(r.class_name == 'Broadcast') return 'republishes';
+        }
 	};
 
     js_util.copy(helpers, context);

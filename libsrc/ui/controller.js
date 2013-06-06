@@ -10,25 +10,33 @@ define([
     var o = {}, route;
 
     o.init = function(route_args){
-        wrapLinks();
         routing.registerState(route_args);
-        page.init();
+        page.init(o);
         nav.set_expr_view(route_args.route_name == 'view_expr');
-        o.dispatch(route_args.route_name, context);
+        o.dispatch(route_args.route_name, context.page_data);
+        wrapLinks();
     };
     o.dispatch = function(route_name, data){
         nav.set_expr_view(route_name == 'view_expr');
         route = routes[route_name];
-        util.copy(data, context);
-        page.render(route.client_method, data);
+        var cards = data.cards;
+        context.page_data = data;
+        if(!data.cards) context.page_data.cards = cards;
+        page.render(route.client_method, context);
     };
-    o.refresh = function(){ o.dispatch(route.method, data) };
+    o.refresh = function(){ o.dispatch(route.method, context) };
+
+    o.open_route = function (page_state) {
+        fetch_route_data(page_state, function() {
+            history.pushState(page_state, null, page_state.page);
+        });
+    };
     
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
         if (!window.history && window.history.pushState) return;
-        $('body').on('click', '[data-route-name]', function(e) {
-            var anchor = $(e.target).closest('[data-route-name]'),
+        $('body').on('click', 'a[data-route-name]', function(e) {
+            var anchor = $(e.target).closest('a[data-route-name]'),
                 route_name = anchor.attr('data-route-name'),
                 route_obj = routes[route_name],
                 page_state = {
@@ -37,37 +45,45 @@ define([
                     route_name: route_name
                 };
             e.preventDefault();
-            navToRoute(page_state);
+            o.open_route(page_state);
+            return false;
+        });
+
+        $('form[data-route-name]').on('submit', function(e){
+            var el = $(e.target);
+            $.post(el.attr('action'), el.serialize(), function(data){
+                el.trigger('response', data);
+            }, 'json');
+            e.preventDefault();
             return false;
         });
 
         // TODO: Bind this event with jquery?
         window.onpopstate = function(e) {
             if (!e.state) return;
-            navToRoute(e.state);
+            o.open_route(e.state);
         };
+    };
 
-        function fetchRouteData(page_state, callback) {
-            var callback = callback || function(){};
+    function fetch_route_data(page_state, callback) {
+        var callback = callback || function(){};
+
+        if(page_state.api){
             api_call = {
                 method: 'get',
                 url: page_state.api.toString(),
                 dataType: 'json',
-                success: function(_data) {
-                    o.dispatch(page_state.route_name, _data);
-                    // Cache the returned data for later refreshing
-                    callback();
-                }
+                success: success
             };
             $.ajax(api_call);
         }
+        else success(context.page_data);
 
-        function navToRoute(page_state) {
-            fetchRouteData(page_state, function() {
-                history.pushState(page_state, null, page_state.page);
-            });
+        function success(data){
+            o.dispatch(page_state.route_name, data);
+            callback();
         }
-    };
+    }
 
     return o;
 });

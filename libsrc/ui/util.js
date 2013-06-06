@@ -1,6 +1,7 @@
 define([
     'browser/jquery',
-], function($){
+    'sj!templates/upload_form.html'
+], function($, upload_template){
     var main = {};
 
     main.add_hovers = function(){
@@ -27,6 +28,22 @@ define([
             $(document.body).append(i);
             return h;
         }
+    };
+
+    main.uploader = function(name, with_client_url, with_remote_file){
+        var form = $(upload_template({id: name})),
+            file_api = FileList && Blob,
+            input = form.find('[name=files]');
+        // TODO: support multiple files
+        input.on('change', function(){
+            if(file_api)
+                with_client_url(URL.createObjectURL(input.get(0).files[0]));
+            form.submit();
+        }).on('response', function(e, data){
+            if(!file_api) with_client_url(data.url);
+            with_remote_file(data);
+        });
+        $('body').append(form);
     };
     
     main.update_targets = function(){

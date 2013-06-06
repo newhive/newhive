@@ -1,6 +1,6 @@
-import urllib, urlparse, itertools
+import urllib, urlparse, itertools, mimetypes, os
 from werkzeug.http import parse_options_header
-from newhive.controllers.base import ModelController, auth_required
+from newhive.controllers.controller import ModelController, auth_required
 
 class File(ModelController):
     model_name = 'File'
@@ -11,7 +11,7 @@ class File(ModelController):
         with a Hive.App JSON object.
         """
         url = request.form.get('url')
-        if request.form.get('remote') and url:
+        if url:
             try:
                 file = urllib.urlopen(url)
             except:
@@ -20,10 +20,13 @@ class File(ModelController):
                 return {'error': 'remote url download failed with status %s' % (file.getcode())}
             mime = file.headers.getheader('Content-Type')
             filename = lget([i[1] for i in [i.split('=') for i in file.headers.get('content-disposition', '').split(';')] if i[0].strip() == 'filename'], 0)
-            file.filename = filename + mimetypes.guess_extension(mime) if filename else os.path.basename(urlparse.urlsplit(url).path)
+            if filename:
+                file.filename = filename + mimetypes.guess_extension(mime)
+            else:
+                file.filename = os.path.basename(urlparse.urlsplit(url).path)
             files = [file]
         else:
-            request.max_content_length = 100000000
+            request.max_content_length = 100000000 # max size 100MB
             files = itertools.chain.from_iterable(request.files.iterlistvalues())
 
         rv = []
@@ -41,15 +44,15 @@ class File(ModelController):
             # If that doesn't exist either alert the client that the type is
             # unsupported
             supported_mimes = {
-                    'audio/mpeg': self._handle_audio
-                    , 'audio/mp4': self._handle_audio
-                    , 'image/gif': self._handle_image
-                    , 'image/jpeg': self._handle_image
-                    , 'image/png': self._handle_image
-                    , 'application': self._handle_link
-                    , 'text/html': self._handle_frame
-                    , 'text': self._handle_link
-                    }
+                'audio/mpeg': self._handle_audio,
+                'audio/mp4': self._handle_audio,
+                'image/gif': self._handle_image,
+                'image/jpeg': self._handle_image,
+                'image/png': self._handle_image,
+                'application': self._handle_link,
+                'text/html': self._handle_frame,
+                'text': self._handle_link,
+            }
 
             handler = supported_mimes.get(mime)
             if not handler: handler = supported_mimes.get(type, self._handle_unsupported)
@@ -57,7 +60,7 @@ class File(ModelController):
             with os.tmpfile() as local_file:
                 local_file.write(file.read())
 
-                file_data = {'owner': request.requester.id,
+                file_data = {'owner': tdata.user.id,
                     'tmp_file': local_file, 'name': file.filename, 'mime': mime}
                 if url: file_data['source_url'] = url
                 file_record = self.db.File.create(file_data)
@@ -66,8 +69,7 @@ class File(ModelController):
                 data.update({'mime': mime, 'name': file.filename, 'file_id': file_record.id,
                     'url': file_record.get('url')})
                 rv.append(data)
-
-        return rv
+        return self.serve_json(response, rv)
 
     def delete(self, request, response):
         res = self.db.File.fetch(request.form.get('id'))

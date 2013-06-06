@@ -1,0 +1,41 @@
+{# Create account page
+#}
+
+<div id="create_account">
+{<if user.logged_in}
+  <p>Error: already logged in.</p>
+{>}
+
+{<unless user.logged_in}
+  <img id="logo" src='{asset "skin/site/logo_text.png"}'>
+  <form id='create_form' action='{secure_server}api/user/create' method='POST'>
+  	<div class="center">
+	  <div id="left_pane">
+	  	<h2>Create my account:</h2>
+	  	<div class="upper"><span>newhive.com/</span><span id="username_label">username</span></div>
+	  	<div><input type="text" name="username" placeholder="USERNAME"></div>
+	  	<div><input type="text" name="full_name" placeholder="FULL NAME (OPTIONAL)"></div>
+	  	<div><input type="password" name="password" placeholder="PASSWORD"></div>
+	  	<div><input type="text" name="email" placeholder="EMAIL"></div>
+	  </div>
+	  <div id="right_pane">
+	  	<div class="facebook" id="facebook_signup">
+	  	  <button type="button"><span class="icon"></span>TODO: Sign up with Facebook</button></div>
+	  	<h2>Terms:</h2>
+	  	<ol><li>You own your information.</li>
+	  	  <li>Don't be mean or obscene.</li>
+	  	  <li>Encourage expression.</li>
+	  	</ol>
+	  	<button type="button" class="gray_btn upper">TODO: Read full terms</button>
+	  </div>
+	</div>
+    <div id="footer">
+      <div class="upper"><input type="checkbox" name="agree" value="agree" id="agree">
+      	<label for="agree">Agree to terms of service</label></div>
+      <div><button type="submit" class="submit teal_btn">
+      	Create my account<span id="go_btn"></span></button></div>
+    </div>
+  </form>
+{>}
+
+</div>

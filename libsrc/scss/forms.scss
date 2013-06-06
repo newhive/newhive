@@ -1,0 +1,36 @@
+@import "common";
+
+#create_account {
+	.upper { text-transform: uppercase; }
+	margin: 30px auto;
+	width: 700px;
+
+	#logo {
+		margin: auto;
+		width: 400px;
+		display: block;
+	}
+	span#username_label {
+		color: red;
+	}
+	#left_pane {
+		display: inline-block;
+		width: 300px;
+		margin-right: 60px;
+
+		input {
+			width: 100%;
+		}
+	}
+
+	#right_pane {
+		display: inline-block;
+		.facebook {
+			background-color: blue;
+		}
+	}
+
+	#footer {
+		margin-top: 30px;
+	}
+}

@@ -1,11 +1,4 @@
 import crypt, urllib, time, json, re, pymongo, random
-import newhive.state
-from newhive.state import abs_url
-from newhive.utils import AbsUrl
-from newhive import config, utils
-import newhive.ui_strings.en as ui
-from newhive.analytics import analytics
-from newhive.manage.ec2 import public_hostname
 from cStringIO import StringIO
 from smtplib import SMTP
 from email.mime.multipart import MIMEMultipart
@@ -18,10 +11,17 @@ from werkzeug import url_unquote
 import cssutils
 from lxml import etree
 import lxml.html
-
 import logging
-logger = logging.getLogger(__name__)
 
+import newhive.state
+from newhive.state import abs_url
+from newhive.utils import AbsUrl
+from newhive import config, utils
+import newhive.ui_strings.en as ui
+from newhive.analytics import analytics
+from newhive.manage.ec2 import public_hostname
+
+logger = logging.getLogger(__name__)
 send_real_email = True
 css_debug = False
 
@@ -114,8 +114,11 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp
     if config.debug_mode:
         with open(config.src_home + '/log/last_email.txt', 'w') as f: f.write(encoded_msg)
 
+    if not config.live_server:
+        test_emails = [r['email'] for r in db.User.fetch(config.beta_testers)]
+
     # Send mail, but if we're in debug mode only send to admins
-    if send_real_email and (config.live_server or msg['To'] in config.test_emails):
+    if send_real_email and (config.live_server or msg['To'] in test_emails):
         t0 = time.time()
         sent = smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
         logger.debug('SMTP sendmail time %d ms', (time.time() - t0) * 1000)

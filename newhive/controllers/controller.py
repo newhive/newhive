@@ -18,6 +18,8 @@ class Controller(object):
         self.assets = assets
         self.asset = self.assets.url
 
+    # Dispatch calls into controller methods of the form:
+    # def method(self, tdata, request, response, **args):
     def dispatch(self, handler, request, **args):
         (tdata, response) = self.pre_process(request)
         return getattr(self, handler, None)(tdata, request, response, **args)
@@ -89,10 +91,13 @@ class Controller(object):
         response.status_code = 403
         return self.serve_text(response, 'Sorry, not going to do that. Perhaps you are not logged in, or not using https?')
 
-    def serve_500(self, request, response, exception=None, json=True):
-        if config.debug_mode: raise exception
+    def serve_500(self, request, response, exception=None, traceback=None, json=True):
+        if config.debug_mode:
+            raise exception, None, traceback
 
-        response.status_code = 404
+        log_error(request, self.db, traceback=traceback, critical=True)
+
+        response.status_code = 500
         if json: return self.serve_json(response, {'error': 500 })
         else:
             tdata = TransactionData(user=self.db.User.new({}), context={})

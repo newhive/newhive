@@ -1,0 +1,37 @@
+{<unless user.logged_in}
+  <img src='{asset "skin/site/logo_text.png"}'>
+  
+  NewHive is your blank canvas.
+  It’s freedom of expression on the web.
+  
+  <div id='request_invite'>
+    <div class='hide error'>
+      Sorry, there was a problem sending your request.
+      Please fill out the fields below,
+      and email us if you're having trouble.
+    </div>
+    Request a beta invite:<br>
+    <form {form_attrs "request_invite"} method='post' id='invite_form'>
+      <input type='text' name='email' placeholder='Email address' id='email'><br>
+      <input type='text' name='message' placeholder='How do you express yourself?' id='message'><br>
+      <input type='text' name='phone' style='display:none'>
+      <div id='optional' class='hide'>
+        <div>Optional</div>
+        <input type='text' name='name' placeholder='Your name'><br>
+        <input type='text' name='referral' placeholder='How did you hear about us?'>
+      </div>
+      <input type='submit' value='SUBMIT'>
+    </form>
+  </div>
+  <div id='request_sent' class='hide'>
+    Thank you for signing up!
+    You will hear from us soon. :)
+  </div>
+  
+  <iframe
+    src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0"
+    width="640px" height="360px" frameborder="0" webkitAllowFullScreen allowFullScreen
+  ></iframe>
+{>}
+
+{|/templates/card_master.html}

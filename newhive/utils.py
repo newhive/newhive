@@ -1,7 +1,6 @@
 from __future__ import division
 import time, random, re, base64, copy, pytz, pandas
 from datetime import datetime
-from newhive import config
 import urlparse
 import werkzeug.urls
 import pymongo
@@ -10,7 +9,11 @@ from collections import Counter, OrderedDict
 import numpy
 import operator
 import pyes
+import json
+import urllib,urllib2
 
+import newhive
+from newhive import config
 
 def lset(l, i, e, *default):
     default = default[0] if default else [None]
@@ -79,6 +82,25 @@ def datetime_to_int(dt):
 def datetime_to_str(dt):
     return str(datetime_to_int(dt))
 
+def friendly_date(then):
+    """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
+    if type(then) in [int, float]:
+      then = time_u(then)
+
+    now = datetime.utcnow()
+    dt = now - then
+    if dt.seconds < 60:
+        return "just now"
+    months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    s = months[then.month] + ' ' + str(then.day)
+    if then.year != now.year: s += ' ' + str(then.year)
+    if dt.days < 7:
+        if not dt.days:
+            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
+            else: (t, u) = (dt.seconds / 3600, 'hr')
+        else: (t, u) = (dt.days, 'day')
+        s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
+    return s
 
 def junkstr(length):
     """Creates a random base 62 string"""
@@ -423,6 +445,13 @@ class FixedAttrs(object):
         self.__dict__[k] = v
 
 
+def get_embedly_oembed(url):
+    request_url = 'https://api.embed.ly/1/oembed?key=%s&url=%s' % (config.embedly_key,urllib.quote_plus(url))
+    res = urllib2.urlopen(request_url)
+    if res.getcode() != 200:
+        return None
+    return json.loads(res.read())
+
 ### utils for autocomplete and content recommendation ###
 
 blacklist = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm',
@@ -666,3 +695,34 @@ def test_scripts(db, owner_name = None):
         print dfilter(res1[i], ['name', 'created', 'star', 'broadcast', 'views'])
         print dfilter(res2[i], ['name', 'created', 'star', 'broadcast', 'views'])
     return res1, res2
+
+def log_error(request, db, message=None, traceback=None, critical=False):
+    from werkzeug.debug.tbtools import get_current_traceback
+    traceback = traceback or get_current_traceback(skip=0, show_hidden_frames=False
+            , ignore_system_exceptions=True)
+    def privacy_filter(dictionary):
+        for key in ['password', 'secret', 'old_password']:
+            if dictionary.has_key(key): dictionary.update({key: "******"})
+        return dictionary
+    log_entry = {
+        'type': 'python',
+        'critical': critical,
+        'exception': message or traceback.exception,
+        'environ': serializable_filter(request.environ),
+        'form': privacy_filter(serializable_filter(request.form)),
+        'url': request.url,
+        'stack_frames': [{
+            'filename': x.filename,
+            'lineno': x.lineno,
+            'function_name': x.function_name,
+            'current_line': x.current_line.strip()
+        } for x in traceback.frames],
+        'code_revision': newhive.manage.git.current_revision,
+        'dev_prefix': config.dev_prefix,
+    }
+    request = request.environ.get('hive.request')
+    if request and hasattr(request, 'requester'):
+        log_entry.update({'requester': {'id': request.requester.id
+                                        , 'name': request.requester.get('name')}})
+
+    db.ErrorLog.create(log_entry)

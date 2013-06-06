@@ -1,0 +1,21 @@
+Life of a query
+
+Server
+	Apache
+	DB
+		Mongo
+		Elastic
+	Routing
+	Rendering
+
+Client
+	Templates
+		Custom templatizer, stringjay.js
+		!! other templatizer
+	CSS
+
+Debugging
+
+Testing
+
+Style

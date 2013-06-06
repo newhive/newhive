@@ -1,7 +1,12 @@
 define([
-    'browser/jquery', 'browser/layout', 'server/context',
-    'ui/menu', 'ui/util', 'require', 'sj!templates/nav.html',
-    'sj!templates/login_form.html'
+    'browser/jquery', 
+    'browser/layout', 
+    'server/context',
+    'ui/menu', 
+    'ui/util', 
+    'require', 
+    'sj!templates/nav.html',
+    'sj!templates/login_form.html', 
 ], function(
 	$, lay, context, menu, ui, require, nav_template
 ) {
@@ -35,7 +40,6 @@ define([
         }
 
         ui.add_hovers();
-
         setTimeout(layout, 100);
         $(window).resize(layout);
     }

@@ -49,7 +49,7 @@
 // TODO: make templates/context dependency part of sj! loader module
 // create base_context setter method in here.
 // That should make stringjay independent of NewHive
-define(['browser/js', 'module', 'templates/context'],
+define(['browser/js', 'module', 'server/context'],
 	function(util, module, base_context)
 {
 	"use strict";
@@ -334,12 +334,16 @@ define(['browser/js', 'module', 'templates/context'],
 		return condition ? block(context) : '';
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
-	o.base_context['unless'] = function(context, block, condition){
+	o.base_context['unless'] = function(context, block, condition, equals){
+		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? '' : block(context);
 	};
 	o.base_context['for'] = function(context, block, iteratee, var_name){
 		if(!iteratee || iteratee.constructor != Array) return '';
 		return iteratee.map(function(v, i){
+			if(typeof(v) != "object") {
+				v = {item: v};
+			}
 			if(var_name) v[var_name] = i;
 			return block(context.concat(v));
 		}).reduce(util.op['+'], '');
@@ -367,12 +371,15 @@ define(['browser/js', 'module', 'templates/context'],
 	// With pushes a new, top context with "what" as its contents.
 	// Takes optional varargs key-value pairs which are also pushed onto context.
 	o.base_context['with'] = function(context, block, what){
-		var new_context = what;
+		var new_context = $.extend({}, what);
 		// All arguments after what are name value pairs
 		for(var i = 3; i < arguments.length; i += 2){
 			new_context[arguments[i]] = arguments[i + 1];
 		}
 		return block(context.concat(new_context));
+	};
+	o.base_context['debug'] = function(context, arg){
+		throw('Template break: ' + arg);
 	};
 	o.base_context.e = encode_to_html;
 	o.base_context.json = function(context, data){
