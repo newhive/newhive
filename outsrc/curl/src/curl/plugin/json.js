@@ -1,4 +1,4 @@
-/** MIT License (c) copyright B Cavalier & J Hann */
+/** MIT License (c) copyright 2010-2013 B Cavalier & J Hann */
 
 /**
  * curl json! plugin
@@ -21,27 +21,20 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 
 			errback = loaded['error'] || error;
 
+			// create a json evaluator function
 			if (config.strictJSONParse) {
 				if (!hasJsonParse) error(new Error(missingJsonMsg));
-				evaluator = parseSource;
+				evaluator = guard(parseSource, loaded, errback);
 			}
 			else {
-				evaluator = evalSource;
+				evaluator = guard(evalSource, loaded, errback);
 			}
 
 			// get the text, then eval it
 			fetchText(require['toUrl'](absId), evaluator, errback);
 
 			function evalSource (source) {
-				try {
-					var return_container = {},
-						result = globalEval('(' + source + ')',
-							return_container, 'value');
-					loaded(return_container.value);
-				}
-				catch (ex) {
-					errback(ex);
-				}
+				loaded(globalEval('(' + source + ')'));
 			}
 
 			function parseSource (source) {
@@ -54,7 +47,22 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 
 	};
 
+	function error (ex) {
+		throw ex;
+	}
+
+	function guard (evaluator, success, fail) {
+		return function (source) {
+			try {
+				success(evaluator(source));
+			}
+			catch (ex) {
+				fail(ex);
+			}
+		}
+	}
+
 });
 }(
-	function (source, obj, prop) {/*jshint evil:true*/ obj[prop] = eval(source); }
+	function () {/*jshint evil:true*/ return (1,eval)(arguments[0]); }
 ));

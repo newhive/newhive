@@ -11,15 +11,19 @@ define([
 
     o.init = function(route_args){
         routing.registerState(route_args);
-        page.init(o);
         nav.set_expr_view(route_args.route_name == 'view_expr');
-        o.dispatch(route_args.route_name, context);
+        page.init(o);
+        o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
     };
     o.dispatch = function(route_name, data){
+        if(data.owner && (data.owner.id == context.user.id))
+            data.user_is_owner = true;
         nav.set_expr_view(route_name == 'view_expr');
         route = routes[route_name];
-        util.copy(data, context, true);
+        var cards = data.cards;
+        context.page_data = data;
+        if(!data.cards) context.page_data.cards = cards;
         page.render(route.client_method, context);
     };
     o.refresh = function(){ o.dispatch(route.method, context) };
@@ -47,15 +51,13 @@ define([
             return false;
         });
 
-        $('form[data-route-name]').each(function(i, el){
-            el = $(el);
-            el.on('submit', function(e){
-                $.post(el.attr('action'), el.serialize(), function(data){
-                    el.trigger('response', data);
-                }, 'json');
-                e.preventDefault();
-                return false;
-            });
+        $('form').on('submit', function(e){
+            var el = $(e.target);
+            $.post(el.attr('action'), el.serialize(), function(data){
+                el.trigger('response', data);
+            }, 'json');
+            e.preventDefault();
+            return false;
         });
 
         // TODO: Bind this event with jquery?
@@ -67,17 +69,22 @@ define([
 
     function fetch_route_data(page_state, callback) {
         var callback = callback || function(){};
-        api_call = {
-            method: 'get',
-            url: page_state.api.toString(),
-            dataType: 'json',
-            success: function(_data) {
-                o.dispatch(page_state.route_name, _data);
-                // Cache the returned data for later refreshing
-                callback();
-            }
-        };
-        $.ajax(api_call);
+
+        if(page_state.api){
+            api_call = {
+                method: 'get',
+                url: page_state.api.toString(),
+                dataType: 'json',
+                success: success
+            };
+            $.ajax(api_call);
+        }
+        else success(context.page_data);
+
+        function success(data){
+            o.dispatch(page_state.route_name, data);
+            callback();
+        }
     }
 
     return o;
