@@ -11,8 +11,8 @@ define([
 
     o.init = function(route_args){
         routing.registerState(route_args);
-        page.init(o);
         nav.set_expr_view(route_args.route_name == 'view_expr');
+        page.init(o);
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
     };

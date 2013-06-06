@@ -21,12 +21,13 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 
 			errback = loaded['error'] || error;
 
+			// create a json evaluator function
 			if (config.strictJSONParse) {
 				if (!hasJsonParse) error(new Error(missingJsonMsg));
-				evaluator = parseSource;
+				evaluator = guard(parseSource, loaded, errback);
 			}
 			else {
-				evaluator = evalSource;
+				evaluator = guard(evalSource, loaded, errback);
 			}
 
 			// get the text, then eval it
@@ -37,7 +38,7 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 			}
 
 			function parseSource (source) {
-				loaded(JSON.parse(source));
+				return JSON.parse(source);
 			}
 
 		},
@@ -45,6 +46,22 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 		'cramPlugin': '../cram/json'
 
 	};
+
+	function error (ex) {
+		throw ex;
+	}
+
+	function guard (evaluator, success, fail) {
+		return function (source) {
+			try {
+				success(evaluator(source));
+			}
+			catch (ex) {
+				fail(ex);
+			}
+		}
+	}
+
 });
 }(
 	function () {/*jshint evil:true*/ return (1,eval)(arguments[0]); }
