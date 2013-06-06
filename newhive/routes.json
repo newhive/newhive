@@ -58,8 +58,9 @@
     },
     "profile_edit": {
         "page_route": "/<owner_name>/profile/edit",
+        "api_route": "/api/feed/expressions/<owner_name>",
         "controller": "community",
-        "method": "empty",
+        "method": "expressions_public",
         "client_method": "profile_edit"
     },
     "activity": {

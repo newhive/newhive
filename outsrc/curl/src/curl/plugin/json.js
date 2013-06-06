@@ -1,4 +1,4 @@
-/** MIT License (c) copyright B Cavalier & J Hann */
+/** MIT License (c) copyright 2010-2013 B Cavalier & J Hann */
 
 /**
  * curl json! plugin
@@ -33,19 +33,11 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 			fetchText(require['toUrl'](absId), evaluator, errback);
 
 			function evalSource (source) {
-				try {
-					var return_container = {},
-						result = globalEval('(' + source + ')',
-							return_container, 'value');
-					loaded(return_container.value);
-				}
-				catch (ex) {
-					errback(ex);
-				}
+				loaded(globalEval('(' + source + ')'));
 			}
 
 			function parseSource (source) {
-				return JSON.parse(source);
+				loaded(JSON.parse(source));
 			}
 
 		},
@@ -53,8 +45,7 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 		'cramPlugin': '../cram/json'
 
 	};
-
 });
 }(
-	function (source, obj, prop) {/*jshint evil:true*/ obj[prop] = eval(source); }
+	function () {/*jshint evil:true*/ return (1,eval)(arguments[0]); }
 ));

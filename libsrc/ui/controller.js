@@ -17,6 +17,8 @@ define([
         wrapLinks();
     };
     o.dispatch = function(route_name, data){
+        if(data.owner && (data.owner.id == context.user.id))
+            data.user_is_owner = true;
         nav.set_expr_view(route_name == 'view_expr');
         route = routes[route_name];
         var cards = data.cards;
@@ -49,7 +51,7 @@ define([
             return false;
         });
 
-        $('form[data-route-name]').on('submit', function(e){
+        $('form').on('submit', function(e){
             var el = $(e.target);
             $.post(el.attr('action'), el.serialize(), function(data){
                 el.trigger('response', data);

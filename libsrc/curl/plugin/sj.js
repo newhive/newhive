@@ -1,20 +1,4 @@
-define(['text/stringjay'], function(sj){
-	function xhr(){ return new XMLHttpRequest(); };
-    
-	function fetchText(url, callback, errback){
-		var x = xhr();
-		x.open('GET', url, true);
-		x.onreadystatechange = function (e) {
-			if (x.readyState === 4) {
-				if (x.status < 400) callback(x.responseText);
-				else {
-					errback(new Error('fetchText() failed. status: ' + x.statusText));
-				}
-			}
-		};
-		x.send(null);
-	}
-
+define(['text/stringjay', './_fetchText'], function(sj, fetchText){
 	function set_reference(obj, name, val){
 		var path = name.replace(/\//g, '.').split('.'), prop_name, prop;
 		while(prop_name = path.shift()){

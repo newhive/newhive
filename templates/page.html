@@ -9,7 +9,6 @@
   {% endfor %}
   <script>
 curl(['server/context', 'browser/js'], function(context, util){
-    throw 'blah';
     var server_data = {
         user: {{ user.client_view(activity=True)|json }},
         error: {{ error|json }},
@@ -22,9 +21,6 @@ curl(['server/context', 'browser/js'], function(context, util){
     };
     util.copy(server_data, context);
     context.page_data = {{ page_data|json }};
-    if(context.page_data.owner &&
-        (context.page_data.owner.id == context.user.id)
-    ) context.page_data.user_is_owner = true;
 });
   </script>
 {% endblock %}
