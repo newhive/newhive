@@ -22,6 +22,7 @@ define([
     'sj!templates/user_card.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
+    'sj!templates/tag_card.html',
 ], function(
     $, nav, new_account, context, browser_layout, ui_util, master_template,
     home_template, social_overlay_template, overlay_template, profile_edit_template
@@ -42,6 +43,7 @@ define([
         $("#page_prev").click(o.page_prev);
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
+        $("#nav #plus").click(o.social_toggle);
 
         layout();
     };
@@ -137,12 +139,14 @@ define([
     // TODO: animate nav bar
     o.expr = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
-        $("#nav").prependTo("body");
+        // $("#nav").prependTo("body");
         // TODO: shouldn't empty #nav
-        $('#social_overlay').empty().append(
+        $("#popup_content").remove()
+        $('#social_overlay').append(
             social_overlay_template(context.page_data));
         $("#nav").prependTo("#social_overlay");
-        $("#social_overlay #plus").click(o.social_toggle);
+        $("#nav #plus").unbind('click');
+        $("#nav #plus").click(o.social_toggle);
         $('#comment_form').on('response', o.comment_response);
 
         // display_expr(page_data.expr_id);

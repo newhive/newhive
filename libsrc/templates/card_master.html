@@ -12,9 +12,8 @@
 <div id='feed' class='{layout}'>
   <div class="tag_list">
     {<for tags "tagnum"}
-      <div class="tag_label tag_{tagnum}">#{item}</div>
-    {>}
-  </div>
+      {|templates/tag_card.html}
+    {>}</div>
   {<for cards}
     {<if card_type "user"}
       <div class='user card' draggable='false'>

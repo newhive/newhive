@@ -171,10 +171,8 @@ class Community(Controller):
         #     page_data.update('profile': profile)
         
         return {
-            'page_data': {
-                "cards": self.db.query(request.args['q'], viewer=tdata.user),
-                "card_type": "expr",
-            },
+            "cards": self.db.query(request.args['q'], viewer=tdata.user),
+            "card_type": "expr",
             'title': 'Search',
         }
 
