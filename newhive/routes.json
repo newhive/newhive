@@ -56,7 +56,14 @@
         "method": "expressions_private",
         "client_method": "profile_private"
     },
-    "following": {
+    "profile_edit": {
+        "page_route": "/<owner_name>/profile/edit",
+        "api_route": "/api/feed/expressions/<owner_name>",
+        "controller": "community",
+        "method": "expressions_public",
+        "client_method": "profile_edit"
+    },
+   "following": {
         "page_route": "/<owner_name>/profile/following",
         "api_route": "/api/feed/following/<owner_name>",
         "controller": "community",
