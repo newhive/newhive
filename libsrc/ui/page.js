@@ -15,6 +15,7 @@ define([
     'sj!templates/social_overlay.html',
     'sj!templates/overlay.html',
     'sj!templates/profile_edit.html',
+    'sj!templates/upload_form.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
@@ -219,7 +220,9 @@ define([
         expr_column();
     };
     o.profile_edit = function(page_data){
-        ui_util.uploader('profile_thumb_form',
+        $('#site').empty().append(profile_edit_template(page_data));
+        
+        ui_util.uploader('#profile_thumb_form',
             function(url){
                 $('#profile_thumb').attr('src', url)
             },
@@ -227,7 +230,7 @@ define([
                 console.log(data);
             }
         );
-        ui_util.uploader('profile_bg_form',
+        ui_util.uploader('#profile_bg_form',
             function(url){
                 $('#profile_bg').css('background-image', url)
             },
@@ -235,7 +238,6 @@ define([
                 console.log(data);
             }
         );
-        $('#site').empty().append(profile_edit_template(page_data));
     };
     o.profile_private = function(page_data){
         page_data.profile.subheading = 'Private';

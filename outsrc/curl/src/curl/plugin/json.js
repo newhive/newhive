@@ -34,7 +34,7 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 			fetchText(require['toUrl'](absId), evaluator, errback);
 
 			function evalSource (source) {
-				loaded(globalEval('(' + source + ')'));
+				return globalEval('(' + source + ')');
 			}
 
 			function parseSource (source) {
@@ -53,12 +53,14 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 
 	function guard (evaluator, success, fail) {
 		return function (source) {
-			try {
-				success(evaluator(source));
-			}
-			catch (ex) {
-				fail(ex);
-			}
+			success(evaluator(source));
+			// Eats exceptions in success call back for some reason
+			// try {
+			// 	success(evaluator(source));
+			// }
+			// catch (ex) {
+			// 	fail(ex);
+			// }
 		}
 	}
 

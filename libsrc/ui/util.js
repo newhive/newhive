@@ -1,7 +1,6 @@
 define([
-    'browser/jquery',
-    'sj!templates/upload_form.html'
-], function($, upload_template){
+    'browser/jquery'
+], function($){
     var main = {};
 
     main.add_hovers = function(){
@@ -30,20 +29,29 @@ define([
         }
     };
 
-    main.uploader = function(name, with_client_url, with_remote_file){
-        var form = $(upload_template({id: name})),
+    main.uploader = function(form, with_client_url, with_data){
+        var form = $(form),
             file_api = FileList && Blob,
             input = form.find('[name=files]');
+
         // TODO: support multiple files
+        // TODO: handle erros from file uploads
+
         input.on('change', function(){
             if(file_api)
                 with_client_url(URL.createObjectURL(input.get(0).files[0]));
             form.submit();
-        }).on('response', function(e, data){
-            if(!file_api) with_client_url(data.url);
-            with_remote_file(data);
         });
-        $('body').append(form);
+
+        form.on('submit', function(e){
+            var el = $(e.target);
+            $.post(el.attr('action'), el.serialize(), function(data){
+                if(!file_api) with_client_url(data.url);
+                with_data(data);
+            }, 'json');
+            e.preventDefault();
+            return false;
+        });
     };
     
     main.update_targets = function(){

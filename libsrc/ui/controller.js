@@ -51,15 +51,6 @@ define([
             return false;
         });
 
-        $('form').on('submit', function(e){
-            var el = $(e.target);
-            $.post(el.attr('action'), el.serialize(), function(data){
-                el.trigger('response', data);
-            }, 'json');
-            e.preventDefault();
-            return false;
-        });
-
         // TODO: Bind this event with jquery?
         window.onpopstate = function(e) {
             if (!e.state) return;
