@@ -1,0 +1,15 @@
+<div id="tag_bar">
+  <div id="tag_name">
+    {<for tags_search "tagnum"}
+      #{item}{>}</div>
+  <div class="float_right"> 
+  	{# button or <a>? #}
+    <form { form_attrs "tag_follow" } id='follow_tag_form' method='POST'>
+      <input type="hidden" name="tag" value="{tags_search.0}">
+      <input type="hidden" name="action" value="toggle">
+      <input type="submit" class="teal_btn upper" value=
+    	"{<contains viewer.tags_following tags_search.0}Unfollow{>}{
+    	<contains viewer.tags_following tags_search.0 "not"}Follow{>} collection"></form>
+    <form { form_attrs "tag_follow" } id='new_expr_form' method='POST'><input type="submit" class="teal_btn upper" value="Add to Collection">
+    </form>
+  </div></div>

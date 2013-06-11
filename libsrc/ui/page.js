@@ -15,6 +15,7 @@ define([
     'sj!templates/social_overlay.html',
     'sj!templates/overlay.html',
     'sj!templates/profile_edit.html',
+    'sj!templates/tags_page.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
@@ -25,7 +26,8 @@ define([
     'sj!templates/tag_card.html',
 ], function(
     $, nav, new_account, context, browser_layout, ui_util, master_template,
-    home_template, social_overlay_template, overlay_template, profile_edit_template
+    home_template, social_overlay_template, overlay_template, profile_edit_template,
+    tags_page_template
 ) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
@@ -54,7 +56,10 @@ define([
         page_data.layout = method;
         if(o[method]) o[method](page_data);
         else render_site(page_data);
-
+        if (page_data.page == "tag_search") {
+            o.render_tag_page()
+        }
+ 
         layout();
     };
 
@@ -129,10 +134,22 @@ define([
         }
     };
 
-    o.comment_response = function (e, json) {
+    o.comment_response = function (e, json){
         $('#comment_form textarea').val('');
         // TODO: retrieve response from server with comment,
         // add to comments.
+    }
+
+    o.render_tag_page = function(){
+        $('#tag_bar').remove();
+        $('#site').prepend(tags_page_template(context.page_data));
+        $('#follow_tag_form').on('response', o.tag_response);
+    }
+
+    o.tag_response = function (e, json){
+        // console.log(json)
+        context.page_data.viewer.tags_following = json.tags;
+        o.render_tag_page();
     }
 
     // Animate the new visible expression, bring it to top of z-index.

@@ -67,6 +67,10 @@ class Database:
 
     def query(self, q, viewer=None, expr_only=None, fuzzy=False,
               es_order='_score,updated:desc', **args):
+        return self._query(q, viewer, expr_only, fuzzy, es_order, **args)['result']
+
+    def _query(self, q, viewer=None, expr_only=None, fuzzy=False,
+              es_order='_score,updated:desc', **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
 
@@ -113,7 +117,7 @@ class Database:
                 results = results + self.User.page(spec, **args)
                 results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
 
-        return results
+        return {'result': results, 'search': search}
 
     def parse_query(self, q):
         """ Parses search query into MongoDB spec
@@ -548,9 +552,8 @@ class User(HasSocial):
         f_expr_initiator = pyes.filters.TermFilter('initiator', self.id)
         f_expr = pyes.filters.BoolFilter(must=[f_expr_class_name, f_expr_entity], must_not=[f_expr_initiator])
 
-        # should be tags_following
-        if self.get('tags') is not None:
-            q_tags = pyes.query.TermsQuery('tags', self.get('tags'))
+        if self.get('tags_following') is not None:
+            q_tags = pyes.query.TermsQuery('tags', self.get('tags_following'))
             # q_tags = pyes.query.FilteredQuery(q_tags, f_view)
 
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
@@ -576,10 +579,10 @@ class User(HasSocial):
         expr_ids = feed_with_expr.keys()
         qid = pyes.query.IdsQuery(expr_ids)
         query = qid
+        # BUGBUG: why is filtering broken?
         # query = pyes.query.FilteredQuery(qid, f_view)
         # would also be nice to be able to filter by read/unread.
-        if self.get('tags') is not None:
-            # query = q_tags
+        if self.get('tags_following') is not None:
             query = pyes.query.BoolQuery(should=[query, q_tags])
         custom_query = pyes.query.CustomScoreQuery(query,
                                                    script=popularity_time_score)

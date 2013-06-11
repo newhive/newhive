@@ -9,11 +9,16 @@
     {|templates/profile_card.html}
   {>}
 {>}
-<div id='feed' class='{layout}'>
+{<if page "tag_search"}
+  {|templates/tags_page.html} 
+{>}
+{<unless page "tag_search"}
   <div class="tag_list">
     {<for tags "tagnum"}
       {|templates/tag_card.html}
     {>}</div>
+{>}
+<div id='feed' class='{layout}'>
   {<for cards}
     {<if card_type "user"}
       <div class='user card' draggable='false'>

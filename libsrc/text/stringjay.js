@@ -69,7 +69,7 @@ define(['browser/js', 'module', 'server/context'],
 	//     'literal' -- JS string or number
 	//     'function' (possibly with block)
 	//     'path' -- string that references item in context
-	// (little complex, but straihgtforward)
+	// (little complex, but straightforward)
 	function parse(template){
 		// Why are line numbers 1-based?
 		var line = 1, character = 1; // character not yet used
@@ -332,6 +332,11 @@ define(['browser/js', 'module', 'server/context'],
 	o.base_context['if'] = function(context, block, condition, equals){
 		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? block(context) : '';
+	};
+	o.base_context['contains'] = function(context, block, list, item){
+		var contains = list.lastIndexOf(item) >= 0
+		if (arguments.length > 4) contains = ! contains
+		return contains ? block(context) : '';
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
 	o.base_context['unless'] = function(context, block, condition, equals){

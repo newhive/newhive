@@ -17,7 +17,8 @@ define([
             href = api_routes[route_name]['page_route'] + query_args,
             api = api_routes[route_name]['api_route'] + query_args;
         if (is_form) {
-
+           if(api) attributes.push(['action',
+                routing.substituteVariables(api, route_args, true)]);
         } else {
             if(href) attributes.push(['href',
                 routing.substituteVariables(href, route_args, true)]);
@@ -59,16 +60,8 @@ define([
     o.form_attrs = function(scope, route_name){
         var route_args = o.route_args(arguments);
 
-        if(!api_routes[route_name]) throw('Route "' + route_name + '" not found');
-        var attributes = [ ['data-route-name', route_name] ],
-            api = api_routes[route_name]['api_route'];
-        if(api) attributes.push(['action',
-            routing.substituteVariables(api, route_args, true)]);
-
-        return attributes.map(function(attribute_pair) {
-            return attribute_pair[0] + '="' + attribute_pair[1] + '"';
-        }).join(' ');
-    };
+        return o.attrs(route_name, route_args, "", true);
+   };
 
     return o;
 });

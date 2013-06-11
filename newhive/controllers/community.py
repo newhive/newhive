@@ -106,7 +106,6 @@ class Community(Controller):
             self.db.Star.page(spec, tdata.user, **args)))
         profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
-        # TODO: allow tag following, ?concat to personal tags
         tags = owner.get('tags_following', [])
         return {
             'tags': tags, 'cards': users, 'owner': profile, 'card_type':'user',
@@ -169,12 +168,19 @@ class Community(Controller):
         #     profile = expr_owner.client_view()
         #     profile['profile_bg'] = expr_owner.get('profile_bg')
         #     page_data.update('profile': profile)
-        
-        return {
-            "cards": self.db.query(request.args['q'], viewer=tdata.user),
+        query = self.db._query(request.args['q'], viewer=tdata.user)
+        data = {
+            "cards": query['result'],
             "card_type": "expr",
             'title': 'Search',
         }
+        search = query['search']
+        tags = search.get('tags', [])
+        if (len(search) == 1 and len(tags) == 1):
+            profile = tdata.user #.client_view(activity=False)
+            profile = dfilter(profile, ['tags_following'])
+            data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
+        return data
 
     def empty(self, tdata, request, **args):
         return { 'page_data': {} }
