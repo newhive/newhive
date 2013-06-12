@@ -36,6 +36,7 @@ define([
 
         // TODO: support multiple files
         // TODO: handle erros from file uploads
+        // TODO: make file uploads actually work
 
         input.on('change', function(){
             if(file_api)
@@ -44,11 +45,36 @@ define([
         });
 
         form.on('submit', function(e){
+            // TODO: port <iframe> hack from old code...
+            // will fail on older browsers.
+            var form_data = new FormData(e.target);
             var el = $(e.target);
-            $.post(el.attr('action'), el.serialize(), function(data){
-                if(!file_api) with_client_url(data.url);
-                with_data(data);
-            }, 'json');
+
+            $.ajax({
+                url: el.attr('action'),
+                type: 'POST',
+                // xhr: function() {  // custom xhr
+                //     var myXhr = $.ajaxSettings.xhr();
+                //     if(myXhr.upload) myXhr.upload.addEventListener(
+                //         'progress', on_progress, false);
+                //     return myXhr;
+                // },
+                //Ajax events
+                // beforeSend: beforeSendHandler,
+                success: function(data){
+                    if(!file_api) with_client_url(data.url);
+                    with_data(data);
+                },
+                error: function(){ alert("Sorry :'(") },
+                // Form data
+                data: form_data,
+
+                //Options to tell JQuery not to process data or worry about content-type
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+
             e.preventDefault();
             return false;
         });

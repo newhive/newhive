@@ -42,7 +42,9 @@ define([
             route_args[arguments[i]] = arguments[i + 1];
 
         if(!api_routes[route_name]) throw('Route "' + route_name + '" not found');
-        var attributes = [ ['data-route-name', route_name] ],
+        var attributes =
+            [['data-route-name', route_name],
+                ['enctype', 'multipart/form-data']],
             api = api_routes[route_name]['api_route'];
         if(api) attributes.push(['action',
             routing.substituteVariables(api, route_args, true)]);
