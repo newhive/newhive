@@ -264,19 +264,21 @@ define(['browser/js', 'module', 'server/context'],
 			 || node.value[0] == "contains");
 	}
 
-	function render_function(context, node, simple) {
+	function render_function(context, node) {
 		var fn = resolve(context, node.value, node.absolute, node.up_levels),
 			args = [context];
 		if(typeof fn != 'function')
 			throw render_error('Not a function: ' + path_to_string(node));
-		if(node.block) {
-			if (simple) args.push(function(context) {return 'true'} );
-			else args.push(function(context){
+		if(node.block)
+			args.push(function(context){
 				return render_node(context, node.block) });
-		}
 		args = args.concat( node.arguments.map(function(n){
 			return render_node(context, n) }) );
-		return fn.apply(null, args);
+		var result = fn.apply(null, args);
+		// Save the result of the function call. Actually just save whether there 
+		// WAS a result ('true') or not ('')
+		node.result = (result == '') ? '' : 'true';
+		return result;
 	}
 
 	function render_node(context, node){
@@ -370,9 +372,7 @@ define(['browser/js', 'module', 'server/context'],
 				break;
 			}
 		}
-		if (if_node) {
-			if (render_function(context, if_node, true) == '') return block(context);
-		}
+		if (if_node && if_node.result == '') return block(context);
 		// else warn("No matching if");
 		return '';
 	};
