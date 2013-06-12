@@ -292,13 +292,11 @@ define(['browser/js', 'module', 'server/context'],
 			return render_function(context, node, false);
 		else if(node.type == 'comment') return '';
 		else throw render_error('unrecognized node: ' + JSON.stringify(node));
-
-		function render_error(msg){ return 'Render error in template ' +
-			// turns out getting the template name is pretty hard
-			// this doesn't work with template_apply (templates called within templates)
-			//context[1].template.template_name + ', line ' + node.line + ': ' + msg; }
-			'line ' + node.line + ': ' + msg; }
+		function render_error(msg){ o.render_error(msg, context, node); }
 	}
+
+	o.render_error = function(msg, context, node){ return 'Render error in template ' +
+		context[1].template.template_name + ', line ' + node.line + ': ' + msg; }
 
 	o.template = function(template_src){
 		var ast = parse(template_src);
@@ -429,7 +427,7 @@ define(['browser/js', 'module', 'server/context'],
 		return block(context.concat(new_context));
 	};
 	o.base_context['debug'] = function(context, arg){
-		throw('Template break: ' + arg);
+		throw o.render_error('debug break', context, get_template(context).render_node);
 	};
 	o.base_context.e = encode_to_html;
 	o.base_context.json = function(context, data){
