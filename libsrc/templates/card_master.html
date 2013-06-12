@@ -9,9 +9,10 @@
     {|templates/profile_card.html}
   {>}
 {>}
-{<if page "tag_search"}
+{#{<if page "tag_search"}
   {|templates/tags_page.html} 
 {>}
+#}
 {<unless page "tag_search"}
   <div class="tag_list">
     {<for tags "tagnum"}

@@ -9,7 +9,7 @@
       <input type="hidden" name="action" value="toggle">
       <input type="submit" class="teal_btn upper" value=
     	"{<contains viewer.tags_following tags_search.0}Unfollow{>}{
-    	<contains viewer.tags_following tags_search.0 "not"}Follow{>} collection"></form>
+    	<else}Follow{>} collection"></form>
     <form { form_attrs "tag_follow" } id='new_expr_form' method='POST'><input type="submit" class="teal_btn upper" value="Add to Collection">
     </form>
   </div></div>
