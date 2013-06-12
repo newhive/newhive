@@ -15,7 +15,7 @@ define([
     'sj!templates/social_overlay.html',
     'sj!templates/overlay.html',
     'sj!templates/profile_edit.html',
-    'sj!templates/upload_form.html',
+    'sj!templates/tags_page.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
@@ -23,9 +23,11 @@ define([
     'sj!templates/user_card.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
+    'sj!templates/tag_card.html',
 ], function(
     $, nav, new_account, context, browser_layout, ui_util, master_template,
-    home_template, social_overlay_template, overlay_template, profile_edit_template
+    home_template, social_overlay_template, overlay_template, profile_edit_template,
+    tags_page_template
 ) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
@@ -43,6 +45,7 @@ define([
         $("#page_prev").click(o.page_prev);
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
+        $("#nav #plus").click(o.social_toggle);
 
         layout();
     };
@@ -53,17 +56,25 @@ define([
         page_data.layout = method;
         if(o[method]) o[method](page_data);
         else render_site(page_data);
-
+        if (page_data.page == "tag_search") {
+            o.render_tag_page();
+        }
+ 
         layout();
     };
 
     o.social_toggle = function() {
         popup = $('#social_overlay');
         // TODO: animate
-        if (popup.css('display') == 'none') {
-            popup.show();
+        if (expr_page) {
+            if (popup.css('display') == 'none') {
+                popup.show();
+            } else {
+                popup.hide();
+            }
         } else {
-            popup.hide();
+            // TODO: show tags popup
+
         }
     };
     o.page_prev = function() { o.navigate_page(-1); }
@@ -118,7 +129,7 @@ define([
     }
 
     o.forms = function(page_data){
-        switch(data.form) {
+        switch(page_data.form) {
         case "create_account":
             new_account.init(o);
             new_account.render();
@@ -128,18 +139,36 @@ define([
         }
     };
 
-    o.comment_response = function (e, json) {
+    o.comment_response = function (e, json){
         $('#comment_form textarea').val('');
+        // TODO: retrieve response from server with comment,
+        // add to comments.
+    }
+
+    o.render_tag_page = function(){
+        $('#tag_bar').remove();
+        $('#site').prepend(tags_page_template(context.page_data));
+        $('#follow_tag_form').on('response', o.tag_response);
+    }
+
+    o.tag_response = function (e, json){
+        // console.log(json)
+        context.page_data.viewer.tags_following = json.tags;
+        o.render_tag_page();
     }
 
     // Animate the new visible expression, bring it to top of z-index.
     // TODO: animate nav bar
     o.expr = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
-        $('#overlays #social_overlay').empty().append(
+        // $("#nav").prependTo("body");
+        // TODO: shouldn't empty #nav
+        $("#popup_content").remove()
+        $('#social_overlay').append(
             social_overlay_template(context.page_data));
         $("#nav").prependTo("#social_overlay");
-        $("#social_overlay #plus").click(o.social_toggle);
+        $("#nav #plus").unbind('click');
+        $("#nav #plus").click(o.social_toggle);
         $('#comment_form').on('response', o.comment_response);
 
         // display_expr(page_data.expr_id);

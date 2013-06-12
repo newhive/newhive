@@ -11,7 +11,7 @@
       {# tags #}
       <div class="tag_list">
         {<for tags "tagnum"}
-          <div class="tag_label tag_{tagnum}">#{item}</div>
+          {|templates/tag_card.html}
         {>}</div>
       <div class="stats_bar">
       {<with . "icon_class" "love" "count" counts.Star}

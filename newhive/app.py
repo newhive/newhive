@@ -13,7 +13,7 @@ from newhive.controllers import Controllers
 from newhive.extra_json import extra_json
 from newhive.routes import Routes
 import json, urllib
-from newhive.utils import url_host
+from newhive.utils import url_host, now
 
 hive_assets = HiveAssets()
 hive_assets.bundle()
@@ -57,7 +57,6 @@ def get_api_endpoints(api):
                     defaults={'json':True, 'route_name': route_name},
                     host=url_host(secure=secure)
                 ))
-
     return rules
 
 jinja_env.filters.update({
@@ -92,7 +91,6 @@ rules_tuples = [
     ('/api/expr/thumb/<id>', (api.expr, 'thumb')),
     ('/api/user/login', (api.user, 'login')),
     ('/api/user/logout', (api.user, 'logout')),
-    ('/api/search', (api.community, 'search')),
     ('/home/streamified_test', (api.user, 'streamified_test')),
     ('/home/streamified_login', (api.user, 'streamified_login')),
     ('/api/user/create', (api.user, 'create')),
@@ -118,6 +116,7 @@ routes = Map(rules, strict_slashes=False, host_matching=True, redirect_defaults=
 
 @Request.application
 def handle(request):
+    time_start = now()
     try: (controller, handler), args = routes.bind_to_environ(
         request.environ).match()
     except exceptions.NotFound as e:
@@ -129,10 +128,13 @@ def handle(request):
         raise Exception('redirect not implemented: from: ' + request.url + ', to: ' + e.new_url)
     print (controller, handler), args
     try:
-        return controller.dispatch(handler, request, **args)
+        result = controller.dispatch(handler, request, **args)
     except:
         (blah, exception, traceback) = sys.exc_info()
-        api.controller.serve_500(request, Response(), exception=exception,
+        result = api.controller.serve_500(request, Response(), exception=exception,
             traceback=traceback, json=False)
+    print request
+    print "took %s (seconds)" % (now() - time_start)
+    return result
 
 application = handle

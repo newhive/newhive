@@ -96,22 +96,6 @@ class Community(Controller):
     #         'about_text': 'Comments',
     #     }
 
-    # WIP: waiting on Abram's network: recent commit
-    def activity(self, tdata, request, owner_name=None, **args):
-        owner = self.db.User.named(owner_name)
-        if not owner: return None
-        # Get the feeds starred by owner_name...
-        spec = {'initiator_name': owner_name }
-        # ...and grab its expressions.
-        activity = self.db.Feed.search(spec, **args)
-        print "hi! {}".format(len(activity))
-        profile = owner.client_view(activity=True)
-        profile['profile_bg'] = owner.get('profile_bg')
-        return {
-            'cards': activity, 'owner': profile, 'card_type':'expr',
-            'title': 'Loves by ' + owner['name'], 'about_text': 'Loves',
-        }
-
     def following(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
@@ -122,8 +106,7 @@ class Community(Controller):
             self.db.Star.page(spec, tdata.user, **args)))
         profile = owner.client_view(activity=True)
         profile['profile_bg'] = owner.get('profile_bg')
-        # TODO: allow tag following, ?concat to personal tags
-        tags = owner['tags_following'] if owner.has_key('tags_following') else []
+        tags = owner.get('tags_following', [])
         return {
             'tags': tags, 'cards': users, 'owner': profile, 'card_type':'user',
             'title': owner['name'] + ' Following', 'about_text': 'Following',
@@ -185,14 +168,19 @@ class Community(Controller):
         #     profile = expr_owner.client_view()
         #     profile['profile_bg'] = expr_owner.get('profile_bg')
         #     page_data.update('profile': profile)
-        
-        return {
-            'page_data': {
-                "cards": self.db.query(request.args['q'], viewer=tdata.user),
-                "card_type": "expr",
-            },
+        query = self.db._query(request.args['q'], viewer=tdata.user)
+        data = {
+            "cards": query['result'],
+            "card_type": "expr",
             'title': 'Search',
         }
+        search = query['search']
+        tags = search.get('tags', [])
+        if (len(search) == 1 and len(tags) == 1):
+            profile = tdata.user #.client_view(activity=False)
+            profile = dfilter(profile, ['tags_following'])
+            data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
+        return data
 
     def empty(self, tdata, request, **args):
         return { 'page_data': {} }

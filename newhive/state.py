@@ -45,7 +45,7 @@ class Database:
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
-        self.s3 = S3Interface()
+        #self.s3 = S3Interface()
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
         for col in self.collections:
@@ -66,6 +66,10 @@ class Database:
         return query
 
     def query(self, q, viewer=None, expr_only=None, fuzzy=False,
+              es_order='_score,updated:desc', **args):
+        return self._query(q, viewer, expr_only, fuzzy, es_order, **args)['result']
+
+    def _query(self, q, viewer=None, expr_only=None, fuzzy=False,
               es_order='_score,updated:desc', **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
@@ -113,7 +117,7 @@ class Database:
                 results = results + self.User.page(spec, **args)
                 results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
 
-        return results
+        return {'result': results, 'search': search}
 
     def parse_query(self, q):
         """ Parses search query into MongoDB spec
@@ -442,7 +446,7 @@ class User(HasSocial):
         self['name'] = self['name'].lower()
         # self['signup_group'] = self.collection.config.signup_group
         assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, 'Invalid username'
-        assert not (self['name'] in reserved_words) 
+        assert not (self['name'] in reserved_words)
         self.set_password(self['password'])
         self['fullname'] = self.get('fullname', self['name'])
         self['referrals'] = 0
@@ -548,9 +552,8 @@ class User(HasSocial):
         f_expr_initiator = pyes.filters.TermFilter('initiator', self.id)
         f_expr = pyes.filters.BoolFilter(must=[f_expr_class_name, f_expr_entity], must_not=[f_expr_initiator])
 
-        # should be tags_following
-        if self.get('tags') is not None:
-            q_tags = pyes.query.TermsQuery('tags', self.get('tags'))
+        if self.get('tags_following') is not None:
+            q_tags = pyes.query.TermsQuery('tags', self.get('tags_following'))
             # q_tags = pyes.query.FilteredQuery(q_tags, f_view)
 
         f = pyes.filters.BoolFilter(should=[f_user, f_expr])
@@ -576,10 +579,10 @@ class User(HasSocial):
         expr_ids = feed_with_expr.keys()
         qid = pyes.query.IdsQuery(expr_ids)
         query = qid
+        # BUGBUG: why is filtering broken?
         # query = pyes.query.FilteredQuery(qid, f_view)
         # would also be nice to be able to filter by read/unread.
-        if self.get('tags') is not None:
-            # query = q_tags
+        if self.get('tags_following') is not None:
             query = pyes.query.BoolQuery(should=[query, q_tags])
         custom_query = pyes.query.CustomScoreQuery(query,
                                                    script=popularity_time_score)
@@ -596,7 +599,7 @@ class User(HasSocial):
         #     items = Page([])
         #     new_at = at
         #     # res_feed is all relevant feed actions, sorted by created: desc.
-        #     # i think it's too late to add tags.  
+        #     # i think it's too late to add tags.
         #     for r in res_feed[at:]:
         #         # print r['created']
         #         new_at += 1
@@ -657,7 +660,7 @@ class User(HasSocial):
 
     # wrapper around db.query('#Trending') to add recent feed items
     def feed_trending(self, **paging_args):
-        self.db.query('#Trending') 
+        self.db.query('#Trending')
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
@@ -836,7 +839,7 @@ class User(HasSocial):
             'name', 'tags', 'updated', 'created', 'feed'] ) )
         # TODO: make sure this field is updated wherever views changes elsewhere
         # TODO: figure out best thing to do for empty user
-        # TODO: make new class for analytics.  
+        # TODO: make new class for analytics.
         #   Add tests to verify info survives new views, add/delete loves, users
         if self.has_key('analytics'):
             #if not self['analytics'].has_key('views_by'):
@@ -844,7 +847,7 @@ class User(HasSocial):
                 sum([r['views'] for r in self.db.Expr.search({'owner':self['_id']})]))
             #if not self['analytics'].has_key('loves_by'):
             self['analytics']['loves_by'] = (
-                self.db.Feed.search({'entity_owner':self['_id'], 
+                self.db.Feed.search({'entity_owner':self['_id'],
                     'class_name':'Star', 'entity_class': 'Expr'}).count())
             user.update()
             dict.update(user, dict(
@@ -1003,7 +1006,7 @@ class Expr(HasSocial):
         def featured(self, limit):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
-            
+
     def take_snapshots(self):
         snapshotter = Snapshots()
         snapshot_time = now()
@@ -1106,7 +1109,7 @@ class Expr(HasSocial):
 
     def delete(self):
         self.owner.get_expr_count(force_update=True)
-        for r in db.Feed.search({'entity': self.id}): r.delete()
+        for r in self.db.Feed.search({'entity': self.id}): r.delete()
         return super(Expr, self).delete()
 
     def increment_counter(self, counter):
@@ -1116,7 +1119,7 @@ class Expr(HasSocial):
     @property
     def views(self): return self.get('views', 0)
 
-    def mini_view(self): 
+    def mini_view(self):
         mini = dfilter( self, ['thumb', 'name', 'owner_name'] )
         mini['id'] = self['_id']
         return mini
@@ -1266,7 +1269,7 @@ class Expr(HasSocial):
 
         if activity > 0:
             dict.update( expr, activity =
-                map(lambda r: r.client_view(), 
+                map(lambda r: r.client_view(),
                     self.db.Feed.search({'entity':self.id})) [0:activity] )
         return expr
 

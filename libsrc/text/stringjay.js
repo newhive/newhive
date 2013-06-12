@@ -69,21 +69,27 @@ define(['browser/js', 'module', 'server/context'],
 	//     'literal' -- JS string or number
 	//     'function' (possibly with block)
 	//     'path' -- string that references item in context
-	// (little complex, but straihgtforward)
+	// (little complex, but straightforward)
 	function parse(template){
 		// Why are line numbers 1-based?
 		var line = 1, character = 1; // character not yet used
 
-		return block();
+		return block(null);
 
 		// parse bare template string and push it into ast
-		function block(){
+		function block(parent){
 			var ast = [], parsed;
+			var prev_node = null, next_node = null
 
-			while(parsed = template_text() || tag()){
+			while(parsed = ( template_text() || tag() )) {
 				ast.push(parsed);
+				parsed.parent = parent;
+				if (prev_node) prev_node.next_node = parsed;
+				parsed.prev_node = prev_node;
+				prev_node = parsed;
 				if(!template) break; // end of template
 			}
+			if (parsed) parsed.next_node = null
 			return ast;
 		}
 
@@ -106,22 +112,23 @@ define(['browser/js', 'module', 'server/context'],
 			if(match(/^>/)){
 				match(o.tag_close, true, 'tag close');
 				return false;
-			}
-			else if(match(/^</)){
+			} else if(match(/^</)){
 				// start block tag
 				node = func();
 				block_node = node;
-			}
-			else if(match(/^#/)) return {
+			} else if(match(/^#/)) return {
 				type: 'comment',
 				line: line,
 				value: match(/.*#}/, true, 'comment').slice(0, -2)
 			};
-			else if(deeper = expr(node)) node = deeper;
-			else throw parse_error('unexpected tag content');
+			else if(deeper = expr(node)) {
+				deeper.parent = node;
+				deeper.next_node = deeper.prev_node = null;
+				node = deeper;
+			} else throw parse_error('unexpected tag content');
 
 			match(o.tag_close, true, 'tag close');
-			if(block_node) node.block = block();
+			if(block_node) node.block = block(node);
 			return node;
 		}
 
@@ -138,7 +145,12 @@ define(['browser/js', 'module', 'server/context'],
 			else if(new_node = json());
 			else return false;
 			var deeper = expr(new_node);
-			return deeper ? deeper : new_node;
+			if (deeper = expr(node)) {
+				deeper.parent = new_node;
+				deeper.next_node = deeper.prev_node = null;
+				new_node = deeper;
+			}
+			return new_node;
 		}
 
 		function func(){
@@ -242,7 +254,33 @@ define(['browser/js', 'module', 'server/context'],
 		}
 	}
 
+	function get_template(context) {
+		return context[1].template;
+	}
+	function is_if_node(node) {
+		if (node.type != "function" || node.value.length != 1)
+			return false;
+		return (node.value[0] == "if" || node.value[0] == "unless"
+			 || node.value[0] == "contains");
+	}
+
+	function render_function(context, node, simple) {
+		var fn = resolve(context, node.value, node.absolute, node.up_levels),
+			args = [context];
+		if(typeof fn != 'function')
+			throw render_error('Not a function: ' + path_to_string(node));
+		if(node.block) {
+			if (simple) args.push(function(context) {return 'true'} );
+			else args.push(function(context){
+				return render_node(context, node.block) });
+		}
+		args = args.concat( node.arguments.map(function(n){
+			return render_node(context, n) }) );
+		return fn.apply(null, args);
+	}
+
 	function render_node(context, node){
+		get_template(context).render_node = node;
 		if(node.constructor == Array)
 			return node.map(function(n){ return render_node(context, n) })
 				.reduce(util.op['+'], '');
@@ -250,17 +288,8 @@ define(['browser/js', 'module', 'server/context'],
 			return node.value;
 		else if(node.type == 'path')
 			return resolve(context, node.value, node.absolute, node.up_levels);
-		else if(node.type == 'function'){
-			var fn = resolve(context, node.value, node.absolute, node.up_levels),
-				args = [context];
-			if(typeof fn != 'function')
-				throw render_error('Not a function: ' + path_to_string(node));
-			if(node.block) args.push(function(context){
-				return render_node(context, node.block) });
-			args = args.concat( node.arguments.map(function(n){
-				return render_node(context, n) }) );
-			return fn.apply(null, args);
-		}
+		else if(node.type == 'function')
+			return render_function(context, node, false);
 		else if(node.type == 'comment') return '';
 		else throw render_error('unrecognized node: ' + JSON.stringify(node));
 
@@ -280,8 +309,9 @@ define(['browser/js', 'module', 'server/context'],
 			return render_node(context, ast);
 		}
 		template.ast = ast;
-		template.template_apply = function(stack){
-			return render_node(stack, ast);
+		template.render_node = ast;
+		template.template_apply = function(context){
+			return render_node(context, ast);
 		};
 		return template;
 	};
@@ -332,6 +362,26 @@ define(['browser/js', 'module', 'server/context'],
 	o.base_context['if'] = function(context, block, condition, equals){
 		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? block(context) : '';
+	};
+	o.base_context['else'] = function(context, block){
+		var if_node = null
+		var node = get_template(context).render_node;
+		while (node = node.prev_node) {
+			if (is_if_node(node)) {
+				if_node = node;
+				break;
+			}
+		}
+		if (if_node) {
+			if (render_function(context, if_node, true) == '') return block(context);
+		}
+		// else warn("No matching if");
+		return '';
+	};
+	o.base_context['contains'] = function(context, block, list, item){
+		var contains = list.lastIndexOf(item) >= 0
+		if (arguments.length > 4) contains = ! contains
+		return contains ? block(context) : '';
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
 	o.base_context['unless'] = function(context, block, condition, equals){

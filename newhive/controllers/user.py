@@ -24,7 +24,6 @@ class User(ModelController):
         return self.serve_json(response, False)
 
     def comment_create(self, tdata, request, response, **args):
-        # Feed.comment(request, response)
         resp = False
         user = tdata.user
         expr = self.db.Expr.fetch(request.form.get('entity'))
@@ -36,6 +35,26 @@ class User(ModelController):
         # TODO: mail settings
         # if user.id != expr.owner.id:
         #     mail.Feed(db=self.db, jinja_env=self.jinja_env).send(comment)
+        return self.serve_json(response, resp)
+
+    def tag_follow(self, tdata, request, response, **args):
+        resp = {}
+        user = tdata.user
+        tag = request.form.get('tag')
+        action = request.form.get('action', 'set')
+
+        following = user.get('tags_following', [])
+        print tag + " " + action + " " + ', '.join(following)
+        if (following.count(tag) > 0):
+            if (action in ["toggle", "unset"] ):
+                following.remove(tag)
+        else: 
+            if (action in ["toggle", "set"] ):
+                following.append(tag)
+                following.sort()
+        user.update(tags_following=following)
+        resp['tags'] = following
+
         return self.serve_json(response, resp)
 
     def streamified_login(self, tdata, request, response):
@@ -101,48 +120,48 @@ class User(ModelController):
 
         return self.serve_json(response, True)
 
-    def newxxxxxxxxxx(self, request, response):
-        if request.requester.logged_in: return self.redirect(response, request.requester.url)
-        referral = self._check_referral(request)[0]
-        if response.context.has_key('dialog_to_show'):
-            response.context.pop('dialog_to_show')
-        if (not referral or referral.get('used')): return self._bad_referral(tdata, request, response)
-        response.context['action'] = 'create'
-        redirect_url = URL(request.url)
-        redirect_url.query.clear()
-        response.context['facebook_connect_url'] = FacebookClient().authorize_url(redirect_url)
+    # def newxxxxxxxxxx(self, request, response):
+    #     if request.requester.logged_in: return self.redirect(response, request.requester.url)
+    #     referral = self._check_referral(request)[0]
+    #     if response.context.has_key('dialog_to_show'):
+    #         response.context.pop('dialog_to_show')
+    #     if (not referral or referral.get('used')): return self._bad_referral(tdata, request, response)
+    #     response.context['action'] = 'create'
+    #     redirect_url = URL(request.url)
+    #     redirect_url.query.clear()
+    #     response.context['facebook_connect_url'] = FacebookClient().authorize_url(redirect_url)
 
-        if request.args.has_key('code'):
-            credentials = request.requester.fb_client.credentials
-            credential_store = self.db.Temp.create( json.loads(credentials.to_json()) )
-            fb_profile = request.requester.fb_client.me()
-            profile_picture_url = 'https://graph.facebook.com/' + fb_profile.get('id') + '/picture?type=large&return_ssl_resources=1'
-            try:
-                #TODO: switch all uses of urllib to urllib2
-                profile_picture = urllib.urlopen(profile_picture_url)
-                with os.tmpfile() as tmp_file:
-                    tmp_file.write(profile_picture.read())
-                    profile_picture = self.db.File.create({
-                        'owner': None
-                        , 'name': 'profile_picture_for_' + fb_profile.get('name').replace(' ', '_')
-                        , 'tmp_file': tmp_file
-                        , 'mime': profile_picture.headers.type})
-            except IOError as e:
-                # log_error(request, db, message="Error downloading fb profile picture '%s': %s" % (profile_picture_url, e))
-                profile_picture = None
-            response.context['f'] = dfilter(fb_profile, ['email'])
-            response.context['f']['fullname'] = fb_profile['name']
-            response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(fb_profile.get('gender'))
-            response.context['f']['facebook'] = fb_profile
-            response.context['f']['credential_id'] = credential_store.id
-            if profile_picture:
-                response.context['f']['thumb'] = profile_picture.get_thumb(190,190)
-                response.context['f']['thumb_file_id'] = profile_picture.id
-            response.context['friends'] = request.requester.facebook_friends
-        else:
-            response.context['f']['email'] = referral.get('to', '')
+    #     if request.args.has_key('code'):
+    #         credentials = request.requester.fb_client.credentials
+    #         credential_store = self.db.Temp.create( json.loads(credentials.to_json()) )
+    #         fb_profile = request.requester.fb_client.me()
+    #         profile_picture_url = 'https://graph.facebook.com/' + fb_profile.get('id') + '/picture?type=large&return_ssl_resources=1'
+    #         try:
+    #             #TODO: switch all uses of urllib to urllib2
+    #             profile_picture = urllib.urlopen(profile_picture_url)
+    #             with os.tmpfile() as tmp_file:
+    #                 tmp_file.write(profile_picture.read())
+    #                 profile_picture = self.db.File.create({
+    #                     'owner': None
+    #                     , 'name': 'profile_picture_for_' + fb_profile.get('name').replace(' ', '_')
+    #                     , 'tmp_file': tmp_file
+    #                     , 'mime': profile_picture.headers.type})
+    #         except IOError as e:
+    #             # log_error(request, db, message="Error downloading fb profile picture '%s': %s" % (profile_picture_url, e))
+    #             profile_picture = None
+    #         response.context['f'] = dfilter(fb_profile, ['email'])
+    #         response.context['f']['fullname'] = fb_profile['name']
+    #         response.context['f']['gender'] = {'male': 'M', 'female': 'F'}.get(fb_profile.get('gender'))
+    #         response.context['f']['facebook'] = fb_profile
+    #         response.context['f']['credential_id'] = credential_store.id
+    #         if profile_picture:
+    #             response.context['f']['thumb'] = profile_picture.get_thumb(190,190)
+    #             response.context['f']['thumb_file_id'] = profile_picture.id
+    #         response.context['friends'] = request.requester.facebook_friends
+    #     else:
+    #         response.context['f']['email'] = referral.get('to', '')
 
-        return self.serve_page(tdata, response, 'pages/signup.html')
+    #     return self.serve_page(tdata, response, 'pages/signup.html')
 
     def create(self, tdata, request, response):
         """ Checks if the referral code matches one found in database.
