@@ -57,7 +57,7 @@ define([
         if(o[method]) o[method](page_data);
         else render_site(page_data);
         if (page_data.page == "tag_search") {
-            o.render_tag_page()
+            o.render_tag_page();
         }
  
         layout();
@@ -66,10 +66,15 @@ define([
     o.social_toggle = function() {
         popup = $('#social_overlay');
         // TODO: animate
-        if (popup.css('display') == 'none') {
-            popup.show();
+        if (expr_page) {
+            if (popup.css('display') == 'none') {
+                popup.show();
+            } else {
+                popup.hide();
+            }
         } else {
-            popup.hide();
+            // TODO: show tags popup
+
         }
     };
     o.page_prev = function() { o.navigate_page(-1); }
