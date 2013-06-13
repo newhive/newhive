@@ -268,7 +268,7 @@ define(['browser/js', 'module', 'server/context'],
 		var fn = resolve(context, node.value, node.absolute, node.up_levels),
 			args = [context];
 		if(typeof fn != 'function')
-			throw render_error('Not a function: ' + path_to_string(node));
+			render_error('Not a function: ' + path_to_string(node));
 		if(node.block) {
 			if (simple) args.push(function(context) {return 'true'} );
 			else args.push(function(context){
@@ -293,11 +293,10 @@ define(['browser/js', 'module', 'server/context'],
 		else if(node.type == 'comment') return '';
 		else throw render_error('unrecognized node: ' + JSON.stringify(node));
 
-		function render_error(msg){ return 'Render error in template ' +
-			// turns out getting the template name is pretty hard
-			// this doesn't work with template_apply (templates called within templates)
-			//context[1].template.template_name + ', line ' + node.line + ': ' + msg; }
-			'line ' + node.line + ': ' + msg; }
+		function render_error(msg){
+			throw 'Error in template ' + context[1].template.template_name +
+				', line ' + node.line + ': ' + msg;
+		}
 	}
 
 	o.template = function(template_src){
@@ -306,7 +305,8 @@ define(['browser/js', 'module', 'server/context'],
 			if(!data) data = {};
 			data.template = template;
 			var context = [ o.base_context, data ];
-			return render_node(context, ast);
+			return resolve(context, ['after_render'], false, 0)(
+				render_node(context, ast) );
 		}
 		template.ast = ast;
 		template.render_node = ast;
@@ -356,6 +356,7 @@ define(['browser/js', 'module', 'server/context'],
 		});
 	};
 
+	o.base_context['after_render'] = function(a){ return a };
 	o.base_context['true'] = true;
 	o.base_context['false'] = false;
 	o.base_context['null'] = null;

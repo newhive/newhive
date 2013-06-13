@@ -3,83 +3,34 @@ define([
 ], function($){
     var main = {};
 
-    main.add_hovers = function(){
-        $(".hoverable").each(function() { main.hoverable(this) });
-    };
+    main.add_hovers = function(elements){
+        elements.find('.hoverable').each(function() { hoverable(this) });
     
-    main.hoverable = function(o){
-        if(o.src) {
-            o.src_d = o.src;
-            o.src_h = hover_url(o.src_d);
-            $(o).mouseover(function() { o.src = o.src_h }).
-                mouseout(function() { o.src = o.src_d });
-        }
-        $(o).mouseover(function() {
-            if(main.hoverable.disabled) return;
-            $(this).addClass('active');
-        }).mouseout(function() {
-            if(!$(this).data('busy')) $(this).removeClass('active');
-        });
-
-        function hover_url(url) {
-            var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
-            var i = $("<img style='display:none'>").attr('src', h);
-            $(document.body).append(i);
-            return h;
-        }
-    };
-
-    main.uploader = function(form, with_client_url, with_data){
-        var form = $(form),
-            file_api = FileList && Blob,
-            input = form.find('[name=files]');
-
-        // TODO: support multiple files
-        // TODO: handle erros from file uploads
-        // TODO: make file uploads actually work
-
-        input.on('change', function(){
-            if(file_api)
-                with_client_url(URL.createObjectURL(input.get(0).files[0]));
-            form.submit();
-        });
-
-        form.on('submit', function(e){
-            // TODO: port <iframe> hack from old code...
-            // will fail on older browsers.
-            var form_data = new FormData(e.target);
-            var el = $(e.target);
-
-            $.ajax({
-                url: el.attr('action'),
-                type: 'POST',
-                // xhr: function() {  // custom xhr
-                //     var myXhr = $.ajaxSettings.xhr();
-                //     if(myXhr.upload) myXhr.upload.addEventListener(
-                //         'progress', on_progress, false);
-                //     return myXhr;
-                // },
-                //Ajax events
-                // beforeSend: beforeSendHandler,
-                success: function(data){
-                    if(!file_api) with_client_url(data.url);
-                    with_data(data);
-                },
-                error: function(){ alert("Sorry :'(") },
-                // Form data
-                data: form_data,
-
-                //Options to tell JQuery not to process data or worry about content-type
-                cache: false,
-                contentType: false,
-                processData: false
+        function hoverable(o){
+            if(o.src) {
+                o.src_d = o.src;
+                o.src_h = hover_url(o.src_d);
+                $(o).mouseover(function() { o.src = o.src_h }).
+                    mouseout(function() { o.src = o.src_d });
+            }
+            $(o).mouseover(function() {
+                if(main.hoverable.disabled) return;
+                $(this).addClass('active');
+            }).mouseout(function() {
+                if(!$(this).data('busy')) $(this).removeClass('active');
             });
 
-            e.preventDefault();
-            return false;
-        });
+            function hover_url(url) {
+                var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
+                var i = $("<img style='display:none'>").attr('src', h);
+                $(document.body).append(i);
+                return h;
+            }
+        };
     };
-    
+
+    // All links in content frame need to target either
+    // the top frame (on site) or a new window (off site)
     main.update_targets = function(){
         // function link_target(i, a) {
         //     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
