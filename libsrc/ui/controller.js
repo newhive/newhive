@@ -6,7 +6,7 @@ define([
     'server/context',
     'json!ui/routes.json',
     'ui/routing'
-], function($, util, page, nav, context, routes, routing) {
+], function($, util, page, nav, context, routes, routing, templating) {
     var o = {}, route;
 
     o.init = function(route_args){

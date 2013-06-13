@@ -23,7 +23,7 @@ define([
     'sj!templates/user_card.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
-    'sj!templates/tag_card.html',
+    'sj!templates/tag_card.html'
 ], function(
     $, nav, new_account, context, browser_layout, ui_util, master_template,
     home_template, social_overlay_template, overlay_template, profile_edit_template,
@@ -251,22 +251,16 @@ define([
     o.profile_edit = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
         
-        ui_util.uploader('#profile_thumb_form',
-            function(url){
-                $('#profile_thumb').attr('src', url)
-            },
-            function(data){
-                console.log(data);
-            }
-        );
-        ui_util.uploader('#profile_bg_form',
-            function(url){
-                $('#profile_bg').css('background-image', url)
-            },
-            function(data){
-                console.log(data);
-            }
-        );
+        $('#profile_thumb_input').on('with_files', function(e, url) {
+            $('#profile_thumb').attr('src', url);
+        }).on('response', function(e, data){
+            console.log(data);
+        });
+        $('#profile_bg_input').on('with_files', function(e, url) {
+            $('#profile_bg').css('background-image', url)
+        }).on('response', function(e, data){
+            console.log(data);
+        });
     };
     o.profile_private = function(page_data){
         page_data.profile.subheading = 'Private';

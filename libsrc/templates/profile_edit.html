@@ -21,5 +21,7 @@
     </form>
   </div>
 {>}
-{<with . "id" "profile_thumb"}{|templates/upload_form.html}{>}
-{<with . "id" "profile_bg"}{|templates/upload_form.html}{>}
+<form {form_attrs "file_create"} method='POST' id='profile_form' class='hide'>
+  <input type='file' name='files' id='profile_bg_input'>
+  <input type='file' name='files' id='profile_thumb_input'>
+</form>

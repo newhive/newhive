@@ -3,8 +3,11 @@ define([
     'json!server/compiled.assets.json',
     'json!ui/routes.json',
     'ui/routing',
-    'browser/js'
-], function(assets, api_routes, routing, js_util){
+    'browser/js',
+    'text/stringjay',
+    'ui/menu',
+    'ui/util'
+], function(assets, api_routes, routing, js_util, templating, menu, ui_util){
     var o = {};
 
     o.asset = function(context, name){
@@ -63,71 +66,83 @@ define([
         return o.attrs(route_name, route_args, "", true);
     };
 
-    o.menu = function(scope, block, id, handle_id){
-        var tag_open = "<div id='" + id + "' class='menu drawer' data-menu-handle='" + handle_id +"'>";
-        // TODO: deal with menu options 
-        return tag_open + block(scope) + '</div>';
-    };
-
     // takes rendered string from template, parses into DOM,
     // and adds appropriate handlers for us
-    function add_handlers(text){
+    // stringjay filters the output of all top-level templates through this
+    o.after_render = function(text){
         var elements = $(text);
         
+        elements.find('form').each(function(i, e){ uploader(e) });
 
-        function uploader(form, with_client_url, with_data){
-            var form = $(form),
-                file_api = FileList && Blob,
-                input = form.find('[type=file]');
+        elements.find('[data-menu-handle]').each(function(i, e){
+            var m = menu($(e).attr('data-menu-handle'), drawer);
+        });
 
-            // TODO: support multiple files
-            // TODO: handle erros from file uploads
-            // TODO: make file uploads actually work
+        ui.add_hovers(elements);
 
-            inputs.each(function(i, e){
-                $(e).on('change', function(){
-                    if(file_api)
-                        with_client_url(URL.createObjectURL(e.files[0]));
-                    form.submit();
-                });
+        return elements;
+    };
 
-                form.on('submit', function(e){
-                    // TODO: port <iframe> hack from old code...
-                    // will fail on older browsers.
-                    var form_data = new FormData(e.target);
-                    var el = $(e.target);
+    function uploader(form){
+        var form = $(form),
+            file_api = FileList && Blob,
+            inputs = form.find('[type=file]');
 
-                    $.ajax({
-                        url: el.attr('action'),
-                        type: 'POST',
-                        // xhr: function() {  // custom xhr
-                        //     var myXhr = $.ajaxSettings.xhr();
-                        //     if(myXhr.upload) myXhr.upload.addEventListener(
-                        //         'progress', on_progress, false);
-                        //     return myXhr;
-                        // },
-                        //Ajax events
-                        // beforeSend: beforeSendHandler,
-                        success: function(data){
-                            if(!file_api) with_client_url(data.url);
-                            with_data(data);
-                        },
-                        error: function(){ alert("Sorry :'(") },
-                        // Form data
-                        data: form_data,
+        // TODO: support multiple files
+        // TODO: handle erros from file uploads
+        // TODO: make file uploads actually work
 
-                        //Options to tell JQuery not to process data or
-                        // worry about content-type
-                        cache: false,
-                        contentType: false,
-                        processData: false
-                    });
+        inputs.each(function(i, e){
+            var input = $(e);
+            input.on('change', function(){
+                if(file_api){
+                    var urls = e.files.map(function(f){
+                        return URL.createObjectURL(f) });
+                    input.trigger('with_files', urls);
+                }
 
-                    e.preventDefault();
-                    return false;
+                // TODO: port <iframe> hack from old code...
+                // will fail on older browsers.
+                var form_data = new FormData(e.target);
+                var el = $(e.target);
+
+                $.ajax({
+                    url: el.attr('action'),
+                    type: 'POST',
+                    // xhr: function() {  // custom xhr
+                    //     var myXhr = $.ajaxSettings.xhr();
+                    //     if(myXhr.upload) myXhr.upload.addEventListener(
+                    //         'progress', on_progress, false);
+                    //     return myXhr;
+                    // },
+                    //Ajax events
+                    // beforeSend: beforeSendHandler,
+                    success: function(data){
+                        if(!file_api) input.trigger('with_files', data.url);
+                        input.trigger('response', data);
+                    },
+                    error: function(){ alert("Sorry :'(") },
+                    // Form data
+                    data: form_data,
+
+                    //Options to tell JQuery not to process data or
+                    // worry about content-type
+                    cache: false,
+                    contentType: false,
+                    processData: false
                 });
             });
-        };
+        });
+
+        // make form submission of non-file inputs asynchronous too
+        form.on('submit', function(e){
+            var el = $(e.target);
+            $.post(el.attr('action'), el.serialize(), function(data){
+                el.trigger('response', data);
+            }, 'json');
+            e.preventDefault();
+            return false;
+        });
     }
 
     return o;
