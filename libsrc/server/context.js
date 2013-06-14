@@ -4,9 +4,10 @@ define([
     'json!ui/routes.json',
     'ui/routing',
     'browser/js',
+    'text/stringjay',
     'ui/menu',
     'ui/util'
-], function(assets, api_routes, routing, js_util, menu, ui_util){
+], function(assets, api_routes, routing, js_util, templating, menu, ui_util){
     var o = {};
 
     o.asset = function(context, name){
@@ -71,15 +72,13 @@ define([
     o.after_render = function(text){
         var elements = $(text);
         
-        findAll(elements, 'form').each(function(i, e){ uploader(e) });
+        elements.find('form').each(function(i, e){ uploader(e) });
 
-        findAll(elements, '.menu.drawer').each(function(i, e){
-            var handle = $(e).attr('data-menu-handle');
-            if(handle) menu(findAll(elements, handle), e);
+        elements.find('[data-menu-handle]').each(function(i, e){
+            var m = menu($(e).attr('data-menu-handle'), drawer);
         });
 
-        findAll(elements, '.hoverable').each(function(){
-            ui_util.hoverable(this) });
+        ui.add_hovers(elements);
 
         return elements;
     };
@@ -97,23 +96,18 @@ define([
             var input = $(e);
             input.on('change', function(){
                 if(file_api){
-                    var urls = [];
-                    // FileList is not a list at all, has no map
-                    for(var i = 0; i < e.files.length; i++)
-                        urls.push(URL.createObjectURL(e.files.item(i)));
-                    input.trigger('with_files', [urls]);
+                    var urls = e.files.map(function(f){
+                        return URL.createObjectURL(f) });
+                    input.trigger('with_files', urls);
                 }
 
                 // TODO: port <iframe> hack from old code...
                 // will fail on older browsers.
-                var form_data = new FormData();
-                for(var i = 0; i < e.files.length; i++){
-                    var f = e.files.item(i);
-                    form_data.append('files', f.slice(0, f.size), f.name);
-                }
+                var form_data = new FormData(e.target);
+                var el = $(e.target);
 
                 $.ajax({
-                    url: form.attr('action'),
+                    url: el.attr('action'),
                     type: 'POST',
                     // xhr: function() {  // custom xhr
                     //     var myXhr = $.ajaxSettings.xhr();
@@ -124,7 +118,7 @@ define([
                     //Ajax events
                     // beforeSend: beforeSendHandler,
                     success: function(data){
-                        if(!file_api) input.trigger('with_files', data.urls);
+                        if(!file_api) input.trigger('with_files', data.url);
                         input.trigger('response', data);
                     },
                     error: function(){ alert("Sorry :'(") },
@@ -142,16 +136,13 @@ define([
 
         // make form submission of non-file inputs asynchronous too
         form.on('submit', function(e){
-            $.post(form.attr('action'), form.serialize(), function(data){
-                form.trigger('response', data);
+            var el = $(e.target);
+            $.post(el.attr('action'), el.serialize(), function(data){
+                el.trigger('response', data);
             }, 'json');
             e.preventDefault();
             return false;
         });
-    }
-
-    function findAll(elements, selector){
-        return elements.filter(selector).add(elements.find(selector));
     }
 
     return o;

@@ -18,6 +18,8 @@ define([
             'nav_view': !nav_expr_mode
         }));
         
+        menu('#logo', '#logo_menu');
+
         $('#logout_btn').click(logout);
 		// user SHOULD always exist, in fact, login_btn will always exist after minor refactor
         if(!context.user.logged_in) menu('#login_btn', '#login_menu');
@@ -33,7 +35,11 @@ define([
         		$('#username').focus() } });
         	if(context.error.login) m.open();
         }
+        else{
+        	menu('#user_btn', '#user_menu');
+        }
 
+        ui.add_hovers();
         setTimeout(layout, 100);
         $(window).resize(layout);
     }

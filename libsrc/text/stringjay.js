@@ -356,16 +356,15 @@ define(['browser/js', 'module', 'server/context'],
 		});
 	};
 
-	var default_base = {};
-	default_base.after_render = function(a){ return a };
-	default_base['true'] = true;
-	default_base['false'] = false;
-	default_base['null'] = null;
-	default_base['if'] = function(context, block, condition, equals){
+	o.base_context['after_render'] = function(a){ return a };
+	o.base_context['true'] = true;
+	o.base_context['false'] = false;
+	o.base_context['null'] = null;
+	o.base_context['if'] = function(context, block, condition, equals){
 		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? block(context) : '';
 	};
-	default_base['else'] = function(context, block){
+	o.base_context['else'] = function(context, block){
 		var if_node = null
 		var node = get_template(context).render_node;
 		while (node = node.prev_node) {
@@ -380,17 +379,17 @@ define(['browser/js', 'module', 'server/context'],
 		// else warn("No matching if");
 		return '';
 	};
-	default_base['contains'] = function(context, block, list, item){
+	o.base_context['contains'] = function(context, block, list, item){
 		var contains = list.lastIndexOf(item) >= 0
 		if (arguments.length > 4) contains = ! contains
 		return contains ? block(context) : '';
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
-	default_base['unless'] = function(context, block, condition, equals){
+	o.base_context['unless'] = function(context, block, condition, equals){
 		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? '' : block(context);
 	};
-	default_base['for'] = function(context, block, iteratee, var_name){
+	o.base_context['for'] = function(context, block, iteratee, var_name){
 		if(!iteratee || iteratee.constructor != Array) return '';
 		return iteratee.map(function(v, i){
 			if(typeof(v) != "object") {
@@ -400,7 +399,7 @@ define(['browser/js', 'module', 'server/context'],
 			return block(context.concat(v));
 		}).reduce(util.op['+'], '');
 	};
-	default_base['range'] = function(context, block, var_name, start, stop, step){
+	o.base_context['range'] = function(context, block, var_name, start, stop, step){
 		if(typeof stop == 'undefined'){
 			stop = start;
 			start = 0;
@@ -414,7 +413,7 @@ define(['browser/js', 'module', 'server/context'],
 		}
 		return out;
 	};
-	default_base['sparsefor'] = function(context, block, iteratee, modulous, selector){
+	o.base_context['sparsefor'] = function(context, block, iteratee, modulous, selector){
 		if(!iteratee || iteratee.constructor != Array) return '';
 		return iteratee.map(function(v, i){
 			return (i % modulous == selector) ? block(context.concat(v)) : '';
@@ -422,7 +421,7 @@ define(['browser/js', 'module', 'server/context'],
 	};
 	// With pushes a new, top context with "what" as its contents.
 	// Takes optional varargs key-value pairs which are also pushed onto context.
-	default_base['with'] = function(context, block, what){
+	o.base_context['with'] = function(context, block, what){
 		var new_context = $.extend({}, what);
 		// All arguments after what are name value pairs
 		for(var i = 3; i < arguments.length; i += 2){
@@ -430,15 +429,15 @@ define(['browser/js', 'module', 'server/context'],
 		}
 		return block(context.concat(new_context));
 	};
-	default_base['debug'] = function(context, arg){
+	o.base_context['debug'] = function(context, arg){
 		throw('Template break: ' + arg);
 	};
-	default_base.e = encode_to_html;
-	default_base.json = function(context, data){
+	o.base_context.e = encode_to_html;
+	o.base_context.json = function(context, data){
 		return JSON.stringify(data);
 	};
-	default_base.mod = function(context, x, y){ return x % y };
-	default_base.thousands = function(context, n){ 
+	o.base_context.mod = function(context, x, y){ return x % y };
+	o.base_context.thousands = function(context, n){ 
 		for (var i = 0; Math.abs(n) >= 1000 && i < suffix.length - 1; ++i) {
 			if (Math.abs(n) < 10000)
 				n = Math.round(n/100)/10;
@@ -447,7 +446,6 @@ define(['browser/js', 'module', 'server/context'],
 		}
 		return n + suffix[i];
 	};
-	o.base_context = util.copy(o.base_context, default_base);
 
 	return o;
 });
