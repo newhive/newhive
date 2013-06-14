@@ -251,13 +251,13 @@ define([
     o.profile_edit = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
         
-        $('#profile_thumb_input').on('with_files', function(e, url) {
-            $('#profile_thumb').attr('src', url);
+        $('#profile_thumb_input').on('with_files', function(e, urls) {
+            $('#profile_thumb').attr('src', urls[0]);
         }).on('response', function(e, data){
             console.log(data);
         });
-        $('#profile_bg_input').on('with_files', function(e, url) {
-            $('#profile_bg').css('background-image', url)
+        $('#profile_bg_input').on('with_files', function(e, urls) {
+            $('#profile_bg').css('background-image', urls[0])
         }).on('response', function(e, data){
             console.log(data);
         });

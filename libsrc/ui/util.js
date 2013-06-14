@@ -1,37 +1,33 @@
 define([
     'browser/jquery'
 ], function($){
-    var main = {};
+    var o = {};
 
-    main.add_hovers = function(elements){
-        elements.find('.hoverable').each(function() { hoverable(this) });
-    
-        function hoverable(o){
-            if(o.src) {
-                o.src_d = o.src;
-                o.src_h = hover_url(o.src_d);
-                $(o).mouseover(function() { o.src = o.src_h }).
-                    mouseout(function() { o.src = o.src_d });
-            }
-            $(o).mouseover(function() {
-                if(main.hoverable.disabled) return;
-                $(this).addClass('active');
-            }).mouseout(function() {
-                if(!$(this).data('busy')) $(this).removeClass('active');
-            });
+    o.hoverable = function(e){
+        if(e.src) {
+            e.src_d = e.src;
+            e.src_h = hover_url(e.src_d);
+            $(e).mouseover(function() { e.src = e.src_h }).
+                mouseout(function() { e.src = e.src_d });
+        }
+        $(e).mouseover(function() {
+            if(o.hoverable.disabled) return;
+            $(this).addClass('active');
+        }).mouseout(function() {
+            if(!$(this).data('busy')) $(this).removeClass('active');
+        });
 
-            function hover_url(url) {
-                var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
-                var i = $("<img style='display:none'>").attr('src', h);
-                $(document.body).append(i);
-                return h;
-            }
-        };
+        function hover_url(url) {
+            var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
+            var i = $("<img style='display:none'>").attr('src', h);
+            $(document.body).append(i);
+            return h;
+        }
     };
 
     // All links in content frame need to target either
     // the top frame (on site) or a new window (off site)
-    main.update_targets = function(){
+    o.update_targets = function(){
         // function link_target(i, a) {
         //     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
         //     var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
@@ -52,7 +48,7 @@ define([
     }
     
 
-    return main;
+    return o;
 });
 
 // TODO: massive cleanup of all below
