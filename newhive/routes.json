@@ -114,6 +114,11 @@
         "controller": "user",
         "method": "tag_follow"
     },
+    "expr_share": {
+        "api_route": "/api/community/expr_share",
+        "controller": "user",
+        "method": "expr_share"
+    },
 
     "file_create": {
         "api_route": "/api/file/create",

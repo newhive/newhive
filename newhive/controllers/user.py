@@ -57,6 +57,39 @@ class User(ModelController):
 
         return self.serve_json(response, resp)
 
+    def expr_share(self, tdata, request, response, **args):
+        resp = {}
+        user = tdata.user
+        expr_user = self.db.User.named(request.form.get('expr_user'))
+        emails = request.form.get('emails').split()
+        message = request.form.get('message')
+        copy = request.form.get('copy') != None
+        if copy: emails.append(user['email'])
+
+        # send email
+
+        try:
+            for email in emails:
+                heads = {
+                     'To' : email
+                    ,'From' : 'www-data@' + config.server_name
+                    ,'Subject' : user['name'] + ' shared an expression with you.'
+                    }
+                body = message
+                print body
+                try: send_mail(heads, body)
+                except Exception as e:
+                    logger # TODO WTF
+                sendgrid_args = {'contact_id': contact.id, 'url': form['url']}
+
+                mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
+                mailer.send(form.get('email'), form.get('name'), sendgrid_args)
+        except:
+            log_error(request, self.db)
+
+        # resp should simply be fail/no fail
+        return self.serve_json(response, resp)
+
     def streamified_login(self, tdata, request, response):
         streamified_username = request.args['usernames'].split(',')[0]
 

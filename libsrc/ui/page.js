@@ -24,6 +24,8 @@ define([
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
     'sj!templates/tag_card.html',
+    'sj!templates/dialog_embed.html',
+    'sj!templates/dialog_share.html',
 ], function(
     $, nav, new_account, context, browser_layout, ui_util, master_template,
     home_template, social_overlay_template, overlay_template, profile_edit_template,
@@ -166,6 +168,14 @@ define([
         $("#popup_content").remove()
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
+        if (1) { // bugbug. debugging short windows sucks.
+            $('#social_overlay').css('height','650px');
+            $('#social_overlay #popup_content').css('height','606px');
+        }
+        var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
+        $('#dia_embed textarea').val("<iframe src='" + embed_url + 
+            "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
+            " frameborder='0' vspace='0' hspace='0'></iframe>");
         $("#nav").prependTo("#social_overlay");
         $("#nav #plus").unbind('click');
         $("#nav #plus").click(o.social_toggle);

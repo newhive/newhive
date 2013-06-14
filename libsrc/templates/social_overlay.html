@@ -1,9 +1,14 @@
 {#<div class="overlay" id="social_overlay">#}
 {<with expr}
-  {#{<with . "expr_view" false "nav_view" true }
+  {#
+    We were including the nav bar here, but now the nav
+    bar <div> is migrated to the correct location in page.js
+  {<with . "expr_view" false "nav_view" true }
     <div id='social_nav' class='nav_class'>
       {|templates/nav.html}
-  </div>{>}#}
+  </div>{>}
+
+  #}
   <div id="popup_content">
     <div class="left_pane">
       {# expression title #}
@@ -25,6 +30,18 @@
       {>}{<with . "icon_class" "share"}
         {|templates/icon_count.html}
       {>}
+      <form { form_attrs "tag_follow" } id='save_jpg_form' method='POST'>
+        <input type="hidden" name="action" value="toggle">
+        <input type="submit" class="teal_btn upper" value="Save as JPG">
+      </form>
+      {|templates/dialog_embed.html}
+      {|templates/dialog_share.html}
+      <form { form_attrs "tag_follow" } id='embed_form' method='POST'>
+        <input type="submit" class="teal_btn upper" value="Embed"
+      </form>
+      <form { form_attrs "tag_follow" } id='share_form' method='POST'>
+        <input type="submit" class="teal_btn upper" value="Share Expression"
+      </form>
       </div>
    
       {# activity feed #}
