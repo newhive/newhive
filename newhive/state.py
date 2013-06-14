@@ -45,7 +45,7 @@ class Database:
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
-        #self.s3 = S3Interface()
+        self.s3 = S3Interface()
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
         for col in self.collections:

@@ -134,7 +134,7 @@ def handle(request):
         result = api.controller.serve_500(request, Response(), exception=exception,
             traceback=traceback, json=False)
     print request
-    print "took %s (seconds)" % (now() - time_start)
+    print "time %s ms" % (1000.*(now() - time_start))
     return result
 
 application = handle
