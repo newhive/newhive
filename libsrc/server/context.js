@@ -69,7 +69,7 @@ define([
     // and adds appropriate handlers for us
     // stringjay filters the output of all top-level templates through this
     o.after_render = function(text){
-        var elements = $(text);
+        var elements = $(text.trim());
         
         findAll(elements, 'form').each(function(i, e){ uploader(e) });
 
