@@ -21,7 +21,7 @@ define([
             data.user_is_owner = true;
         nav.set_expr_view(route_name == 'view_expr');
         route = routes[route_name];
-        var cards = data.cards;
+        var cards = context.page_data.cards;
         context.page_data = data;
         if(!data.cards) context.page_data.cards = cards;
         page.render(route.client_method, context);
