@@ -168,7 +168,7 @@ define([
         $("#popup_content").remove()
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
-        if (1) { // bugbug. debugging short windows sucks.
+        if (0) { // bugbug. debugging short windows sucks.
             $('#social_overlay').css('height','650px');
             $('#social_overlay #popup_content').css('height','606px');
         }
