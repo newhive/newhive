@@ -28,12 +28,6 @@ define([
     };
     o.refresh = function(){ o.dispatch(route.method, context) };
 
-    o.open_route = function (page_state) {
-        fetch_route_data(page_state, function() {
-            history.pushState(page_state, null, page_state.page);
-        });
-    };
-    
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
         if (!window.history && window.history.pushState) return;
@@ -47,26 +41,23 @@ define([
                     route_name: route_name
                 };
             e.preventDefault();
-            o.open_route(page_state);
-            return false;
-        });
-
-        $('form').on('submit', function(e){
-            var el = $(e.target);
-            $.post(el.attr('action'), el.serialize(), function(data){
-                el.trigger('response', data);
-            }, 'json');
-            e.preventDefault();
+            routing.open_route(page_state);
             return false;
         });
 
         // TODO: Bind this event with jquery?
         window.onpopstate = function(e) {
             if (!e.state) return;
-            o.open_route(e.state);
+            routing.open_route(e.state);
         };
     };
 
+    o.open_route = function (page_state) {
+        fetch_route_data(page_state, function() {
+            history.pushState(page_state, null, page_state.page);
+        });
+    };
+    
     function fetch_route_data(page_state, callback) {
         var callback = callback || function(){};
 

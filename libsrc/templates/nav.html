@@ -54,7 +54,7 @@
   {|templates/login_form.html}
 </div>
 
-<div id='user_menu' class='menu drawer user_menu'>
+<div id='user_menu' class='menu drawer user_menu' data-menu-handle='#user_btn'>
   <a { anchor_attrs "expressions_public"  "owner_name" user.name }><div
     class='menu_item'>Expressions<div class='count'></div></div></a>
   <a { anchor_attrs "expressions_private" "owner_name" user.name }><div
@@ -72,7 +72,7 @@
   </div>
 </div>
 
-<div id='logo_menu' class='menu drawer'>
+<div id='logo_menu' class='menu drawer' data-menu-handle='#logo'>
   {<if user.logged_in}
     <div class='menu_item'>Email Invites</div>
     <div class='menu_item'>Invite FB Friends</div>

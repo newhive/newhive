@@ -115,7 +115,7 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp
         with open(config.src_home + '/log/last_email.txt', 'w') as f: f.write(encoded_msg)
 
     if not config.live_server:
-        test_emails = [r['email'] for r in db.User.fetch(config.beta_testers)]
+        test_emails = [r['email'] for r in db.User.fetch(config.admins)]
 
     # Send mail, but if we're in debug mode only send to admins
     if send_real_email and (config.live_server or msg['To'] in test_emails):

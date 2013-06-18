@@ -3,8 +3,10 @@ define([
     'json!server/compiled.assets.json',
     'json!ui/routes.json',
     'ui/routing',
-    'browser/js'
-], function(assets, api_routes, routing, js_util){
+    'browser/js',
+    'ui/menu',
+    'ui/util'
+], function(assets, api_routes, routing, js_util, menu, ui_util){
     var o = {};
 
     o.asset = function(context, name){
@@ -28,7 +30,7 @@ define([
         return attributes.map(function(attribute_pair) {
             return attribute_pair[0] + '="' + attribute_pair[1] + '"';
         }).join(' ');
-    }
+    };
 
     o.route_args = function(arguments){
         var route_args = { username: o.user.name };
@@ -37,7 +39,7 @@ define([
             route_args[arguments[i]] = arguments[i + 1];
 
         return route_args;        
-    }
+    };
 
     o.search_attrs = function(scope){
         var route_args = { username: o.user.name };
@@ -47,7 +49,7 @@ define([
             query_args += arguments[i] + arguments[i + 1];
 
         return o.attrs("search", route_args, "?q=" + encodeURIComponent(query_args));
-    }
+    };
 
     // takes route_name, and association argument list.
     // Returns attribute string.
@@ -61,7 +63,106 @@ define([
         var route_args = o.route_args(arguments);
 
         return o.attrs(route_name, route_args, "", true);
-   };
+    };
+
+    // takes rendered string from template, parses into DOM,
+    // and adds appropriate handlers for us
+    // stringjay filters the output of all top-level templates through this
+    o.after_render = function(text){
+        var elements = $(text.trim());
+        
+        find_all(elements, 'form').each(function(i, e){ uploader(e) });
+
+        find_all(elements, '.menu.drawer').each(function(i, e){
+            var handle = $(e).attr('data-menu-handle');
+            if(handle) menu(find_all(elements, handle), e);
+        });
+
+        find_all(elements, '.hoverable').each(function(){
+            ui_util.hoverable(this) });
+
+        return elements;
+    };
+
+    function uploader(form){
+        var form = $(form),
+            file_api = FileList && Blob,
+            inputs = form.find('[type=file]');
+
+        // TODO-test: test support for multiple files
+        // TODO-polish: handle erros from file uploads
+
+        inputs.each(function(i, e){
+            var input = $(e);
+            input.on('change', function(){
+                upload_files(e.files); });
+
+            // set up file drag & drop events
+            // TODO-polish: make work
+            var input_id = input.attr('id'),
+                label = $('label[for=' + input_id + ']');
+            label.on('drop', function(e){
+                upload_files(e.dataTransfer.files) });
+
+            function upload_files(files){
+                if(file_api){
+                    var urls = [];
+                    // FileList is not a list at all, has no map :'(
+                    for(var i = 0; i < files.length; i++)
+                        urls.push(URL.createObjectURL(files.item(i)));
+                    input.trigger('with_files', [urls]);
+                }
+
+                // TODO-compat: port <iframe> hack from old code...
+                // so this will work on older browsers.
+                var form_data = new FormData();
+                for(var i = 0; i < files.length; i++){
+                    var f = files.item(i);
+                    form_data.append('files', f.slice(0, f.size), f.name);
+                }
+
+                // TODO-polish: add busy indicator while uploading
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    // xhr: function() {  // custom xhr
+                    //     var myXhr = $.ajaxSettings.xhr();
+                    //     if(myXhr.upload) myXhr.upload.addEventListener(
+                    //         'progress', on_progress, false);
+                    //     return myXhr;
+                    // },
+                    //Ajax events
+                    // beforeSend: beforeSendHandler,
+                    success: function(data){
+                        if(!file_api) input.trigger('with_files', data.urls);
+                        input.trigger('response', data);
+                    },
+                    error: function(){ alert("Sorry :'(") },
+                    // Form data
+                    data: form_data,
+
+                    //Options to tell JQuery not to process data or
+                    // worry about content-type
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+            };
+        });
+
+        // make form submission of non-file inputs asynchronous too
+        form.on('submit', function(e){
+            $.post(form.attr('action'), form.serialize(), function(data){
+                form.trigger('response', data);
+            }, 'json');
+            e.preventDefault();
+            return false;
+        });
+    }
+
+    function find_all(elements, selector){
+        return elements.filter(selector).add(elements.find(selector));
+    }
 
     return o;
 });

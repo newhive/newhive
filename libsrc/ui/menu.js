@@ -40,6 +40,7 @@ var menu = function(handle, drawer, options) {
     o.menus = [];
     o.opened = opts.opened;
     o.sticky = opts.sticky;
+    drawer.data('menu', o);
 
     o.delayed_close = function(close_delay) {
         if(typeof(close_delay) != 'number') close_delay = false;

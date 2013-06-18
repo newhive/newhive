@@ -1,3 +1,5 @@
+from newhive import mail
+from newhive.ui_strings import en as ui_str
 from newhive.utils import dfilter
 from newhive.controllers.controller import Controller
 
@@ -47,7 +49,6 @@ class Community(Controller):
         spec = {'owner_name': owner_name, 'auth': 'public'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
         profile = owner.client_view(activity=True)
-        profile['profile_bg'] = owner.get('profile_bg')
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Expressions by ' + owner['name'],
@@ -61,6 +62,33 @@ class Community(Controller):
             'cards': cards, 'owner': owner.client_view(activity=True), 'card_type':'expr',
             'title': 'Your Private Expressions',
         }
+    def user_update(self, tdata, request, owner_name=None, **args):
+        owner = tdata.user
+        if request.form.get('user_update'):
+            if not owner.cmp_password(request.form.get('password')):
+                return { 'error': 'Password given does not match existing password' };
+            new_pass = request.form.get('new_password')
+            if new_pass: owner.set_password(new_pass)
+            owner.update(
+                fullname=request.form.get('fullname'),
+                profile_about=request.form.get('profile_about'),
+                email=request.form.get('email'),
+                password=owner.get('password')
+            )
+
+        subscribed = tdata.user.get('email_subscriptions', [])
+        email_lists = map(lambda email_list: {
+            'id': 'email_' + email_list.name,
+            'subscribed': email_list.name in subscribed,
+            'description': ui_str.email_subscription_ui[email_list.name],
+            'name': email_list.name
+        }, mail.MetaMailer.unsubscribable('user'))
+
+        return {
+            'owner': tdata.user.client_view(),
+            'title': 'Edit your profile',
+            'email_lists': email_lists,
+        }
 
     def loves(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
@@ -71,7 +99,6 @@ class Community(Controller):
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
         profile = owner.client_view(activity=True)
-        profile['profile_bg'] = owner.get('profile_bg')
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Loves by ' + owner['name'],
@@ -88,7 +115,6 @@ class Community(Controller):
     #     cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
     #         self.db.Comment.page(spec, tdata.user, **args)))
     #     profile = owner.client_view()
-    #     profile['profile_bg'] = owner.get('profile_bg')
     #     return {
     #         'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
     #             'feed_layout':'mini' },
@@ -105,7 +131,6 @@ class Community(Controller):
         users = self.db.User.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
         profile = owner.client_view(activity=True)
-        profile['profile_bg'] = owner.get('profile_bg')
         tags = owner.get('tags_following', [])
         return {
             'tags': tags, 'cards': users, 'owner': profile, 'card_type':'user',
@@ -118,7 +143,6 @@ class Community(Controller):
         if not owner: return None
         users = owner.starrer_page(**args)
         profile = owner.client_view(activity=True)
-        profile['profile_bg'] = owner.get('profile_bg')
         return {
             'cards': users, 'owner': profile, 'card_type':'user',
             'title': owner['name'] + ': Followers', 'about_text': 'Followers',
@@ -136,7 +160,6 @@ class Community(Controller):
         # owner = self.db.User.named(owner_name)
         expr_owner = expr.get_owner()
         profile = expr_owner.client_view()
-        profile['profile_bg'] = expr_owner.get('profile_bg')
         return {
             'owner': profile, 'expr': expr.client_view(activity=10),
             'expr_id': expr.id, 'title': expr['title'],
@@ -166,7 +189,6 @@ class Community(Controller):
         # # NOTE: owner_count > 1 should be impossible
         # if owner_count == 1
         #     profile = expr_owner.client_view()
-        #     profile['profile_bg'] = expr_owner.get('profile_bg')
         #     page_data.update('profile': profile)
         query = self.db._query(request.args['q'], viewer=tdata.user)
         data = {

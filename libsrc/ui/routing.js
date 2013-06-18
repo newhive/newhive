@@ -2,6 +2,7 @@ define([
     'json!ui/routes.json',
 ], function(ApiRoutes){
     var o = {};
+
     o.page_state = function(routeName, routeFormatVars) {
         var routeObj = ApiRoutes[routeName];
         return {
@@ -19,9 +20,10 @@ define([
     o.substituteVariables = function(inStr, routeVars) {
         for (var routeVar in routeVars) {
             var needle = '<'+routeVar+'>';
-            inStr = inStr.replace(needle, routeVars[routeVar]);   
+            inStr = inStr.replace(needle, routeVars[routeVar]);
         }
         return inStr;
     }
-   return o; 
+
+    return o;
 });

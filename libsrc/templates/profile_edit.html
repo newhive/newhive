@@ -1,23 +1,63 @@
-<div id='header' class='split'>
-</div>
 {<with owner}
-  <div id='user_header' class='header'>
-    {<if profile_bg}
-      <label for='profile_bg_form_files'
-        style='background-image:url("{profile_bg}")'
-        class='background' id='profile_bg'/>
-    {>}
-    <div class='profile'>
-      <label for='profile_thumb_form_files'>
-        <img src='{thumb_190}' class='thumb' id='profile_thumb'>
-      </label>
-      <div class='info'>
-        <div class='name'>{fullname}</div>
-        <div>meep blurby blurb goes here aoeus thaoesu thaoesu thaoesu thaoesu hasoeuthaosetuasoeth</div>
+  <form id='user_update_form' {form_attrs "user_update" "owner_name" user.name} method='POST'>
+
+    <div id='user_header' class='header'>
+      {<if profile_bg}
+        <label for='profile_bg_input'
+          style='background-image:url("{profile_bg}")'
+          class='background' id='profile_bg'/>
+      {>}
+      <div class='profile'>
+        <label for='profile_thumb_input'>
+          <img src='{thumb_190}' class='thumb' id='profile_thumb'>
+        </label>
+        <div class='info'>
+          <textarea class='name' rows='1' name='fullname'>{fullname}</textarea>
+          <textarea class='about' rows='3' name='profile_about'>{profile_about}{<unless profile_about
+            }Put in a sentance or two about yourself.{>}</textarea>
+        </div>
       </div>
     </div>
-    <form id='profile_edit' class='hide'>
-      <input type='file' name='file' id='file'>
-    </form>
-  </div>
+
+    <div>Email address</div>
+    <input type='text' name='email' value='{email}'>
+    <div>Current password</div>
+    <input type='password' name='password'>
+    <div>New password</div>
+    <input type='password' name='new_password'>
+    <br>
+    <input type='submit' name='user_update' value='Save profile'>
+
+    <input type='hidden' value='' name='profile_thumb'>
+    <input type='hidden' value='' name='profile_bg'>
+    <input type='hidden' name='user_update' value='true'>
+  </form>
+
+  <form {form_attrs "file_create"} method='POST' id='profile_form' class='hide'>
+    <input type='file' id='profile_bg_input'>
+    <input type='file' id='profile_thumb_input'>
+  </form>
+
 {>}
+
+<hr>
+<h1>Email settings:</h1>
+{<for email_lists}
+  <div class='checkbox'>
+  <input id='{id}' type='checkbox' name='{id}' {<if subscribed}checked{>}>
+  <label for='{id}'>{description}</label>
+  </div>
+
+   {#
+   {% for column in email_types | slice(2) %}
+   {% for type in column %}
+   <div class="column">
+   </div>
+   {% endfor %}
+   {% endfor %}
+   #}
+{>}
+
+<hr>
+<h1>Account settings:</h1>
+<input type='submit' value='DEACTIVITAE ACCOUNT'>

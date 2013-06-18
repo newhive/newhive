@@ -1,22 +1,17 @@
 define([
-    'browser/jquery',
-    'sj!templates/upload_form.html'
-], function($, upload_template){
-    var main = {};
+    'browser/jquery'
+], function($){
+    var o = {};
 
-    main.add_hovers = function(){
-        $(".hoverable").each(function() { main.hoverable(this) });
-    };
-    
-    main.hoverable = function(o){
-        if(o.src) {
-            o.src_d = o.src;
-            o.src_h = hover_url(o.src_d);
-            $(o).mouseover(function() { o.src = o.src_h }).
-                mouseout(function() { o.src = o.src_d });
+    o.hoverable = function(e){
+        if(e.src) {
+            e.src_d = e.src;
+            e.src_h = hover_url(e.src_d);
+            $(e).mouseover(function() { e.src = e.src_h }).
+                mouseout(function() { e.src = e.src_d });
         }
-        $(o).mouseover(function() {
-            if(main.hoverable.disabled) return;
+        $(e).mouseover(function() {
+            if(o.hoverable.disabled) return;
             $(this).addClass('active');
         }).mouseout(function() {
             if(!$(this).data('busy')) $(this).removeClass('active');
@@ -30,23 +25,9 @@ define([
         }
     };
 
-    main.uploader = function(name, with_client_url, with_remote_file){
-        var form = $(upload_template({id: name})),
-            file_api = FileList && Blob,
-            input = form.find('[name=files]');
-        // TODO: support multiple files
-        input.on('change', function(){
-            if(file_api)
-                with_client_url(URL.createObjectURL(input.get(0).files[0]));
-            form.submit();
-        }).on('response', function(e, data){
-            if(!file_api) with_client_url(data.url);
-            with_remote_file(data);
-        });
-        $('body').append(form);
-    };
-    
-    main.update_targets = function(){
+    // All links in content frame need to target either
+    // the top frame (on site) or a new window (off site)
+    o.update_targets = function(){
         // function link_target(i, a) {
         //     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
         //     var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
@@ -67,7 +48,7 @@ define([
     }
     
 
-    return main;
+    return o;
 });
 
 // TODO: massive cleanup of all below
