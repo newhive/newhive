@@ -54,23 +54,25 @@
   {|templates/login_form.html}
 </div>
 
-<div id='user_menu' class='menu drawer user_menu' data-menu-handle='#user_btn'>
-  <a { anchor_attrs "expressions_public"  "owner_name" user.name }><div
-    class='menu_item'>Expressions<div class='count'></div></div></a>
-  <a { anchor_attrs "expressions_private" "owner_name" user.name }><div
-    class='menu_item'>Private<div class='count'></div></div></a>
-  <a { anchor_attrs "following" "owner_name" user.name }><div
-    class='menu_item'>Following<div class='count'></div></div></a>
-  <a { anchor_attrs "followers" "owner_name" user.name }><div
-    class='menu_item'>Followers<div class='count'></div></div></a>
-  <a { anchor_attrs "loves" "owner_name" user.name }><div
-    class='menu_item'>Loves<div class='count'></div></div></a>
-  <div class='activity'>
-    {<for user.activity}
-      {|templates/feed_card.html}
-    {>}
+{<if user.logged_in}
+  <div id='user_menu' class='menu drawer user_menu' data-menu-handle='#user_btn'>
+    <a { anchor_attrs "expressions_public"  "owner_name" user.name }><div
+      class='menu_item'>Expressions<div class='count'></div></div></a>
+    <a { anchor_attrs "expressions_private" "owner_name" user.name }><div
+      class='menu_item'>Private<div class='count'></div></div></a>
+    <a { anchor_attrs "following" "owner_name" user.name }><div
+      class='menu_item'>Following<div class='count'></div></div></a>
+    <a { anchor_attrs "followers" "owner_name" user.name }><div
+      class='menu_item'>Followers<div class='count'></div></div></a>
+    <a { anchor_attrs "loves" "owner_name" user.name }><div
+      class='menu_item'>Loves<div class='count'></div></div></a>
+    <div class='activity'>
+      {<for user.activity}
+        {|templates/feed_card.html}
+      {>}
+    </div>
   </div>
-</div>
+{>}
 
 <div id='logo_menu' class='menu drawer' data-menu-handle='#logo'>
   {<if user.logged_in}

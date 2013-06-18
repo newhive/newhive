@@ -71,7 +71,8 @@ define([
     o.after_render = function(text){
         var elements = $(text.trim());
         
-        find_all(elements, 'form').each(function(i, e){ uploader(e) });
+        find_all(elements, 'form[data-route-name]').each(
+            function(i, e){ form_handler(e) });
 
         find_all(elements, '.menu.drawer').each(function(i, e){
             var handle = $(e).attr('data-menu-handle');
@@ -84,7 +85,7 @@ define([
         return elements;
     };
 
-    function uploader(form){
+    function form_handler(form){
         var form = $(form),
             file_api = FileList && Blob,
             inputs = form.find('[type=file]');

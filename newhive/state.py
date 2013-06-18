@@ -86,26 +86,18 @@ class Database:
 
         feed = search.get('feed')
         if feed:
-            # if feed == 'featured':
-            #     results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
-            # if feed == 'recent':
-            #     results = self.Expr.page({}, **args)
-            # else:
-            #     results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
-
-            if search.get('network'):
+            if feed == 'network':
                 results =  viewer.feed_page_esdb(
                     trending=False, at=start, limit=limit)
-            elif search.get('trending'):
+            elif feed == 'trending':
                 results =  viewer.feed_page_esdb(
                     trending=True, at=start, limit=limit)
-            elif search.get('featured'):
+            elif feed == 'featured':
                 results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
             elif feed == 'recent':
                 results = self.Expr.page({}, **args)
             else:
                 results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
-
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
             del search['feed']
             results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,

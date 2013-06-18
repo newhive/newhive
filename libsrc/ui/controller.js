@@ -41,14 +41,14 @@ define([
                     route_name: route_name
                 };
             e.preventDefault();
-            routing.open_route(page_state);
+            o.open_route(page_state);
             return false;
         });
 
         // TODO: Bind this event with jquery?
         window.onpopstate = function(e) {
             if (!e.state) return;
-            routing.open_route(e.state);
+            o.open_route(e.state);
         };
     };
 
