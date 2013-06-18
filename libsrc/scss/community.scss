@@ -45,6 +45,14 @@
             }
             display: inline-block;
             width: 500px; height: 222px;
+
+            /* for editing view */
+            textarea {
+                font-family: Gibson;
+                padding: 0;
+                width: 480px;
+                border: none;
+            }
         }
     }
     .background {

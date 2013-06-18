@@ -6,7 +6,7 @@ define([
     'server/context',
     'json!ui/routes.json',
     'ui/routing'
-], function($, util, page, nav, context, routes, routing, templating) {
+], function($, util, page, nav, context, routes, routing) {
     var o = {}, route;
 
     o.init = function(route_args){
@@ -28,12 +28,6 @@ define([
     };
     o.refresh = function(){ o.dispatch(route.method, context) };
 
-    o.open_route = function (page_state) {
-        fetch_route_data(page_state, function() {
-            history.pushState(page_state, null, page_state.page);
-        });
-    };
-    
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
         if (!window.history && window.history.pushState) return;
@@ -47,17 +41,23 @@ define([
                     route_name: route_name
                 };
             e.preventDefault();
-            o.open_route(page_state);
+            routing.open_route(page_state);
             return false;
         });
 
         // TODO: Bind this event with jquery?
         window.onpopstate = function(e) {
             if (!e.state) return;
-            o.open_route(e.state);
+            routing.open_route(e.state);
         };
     };
 
+    o.open_route = function (page_state) {
+        fetch_route_data(page_state, function() {
+            history.pushState(page_state, null, page_state.page);
+        });
+    };
+    
     function fetch_route_data(page_state, callback) {
         var callback = callback || function(){};
 

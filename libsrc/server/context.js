@@ -71,14 +71,14 @@ define([
     o.after_render = function(text){
         var elements = $(text.trim());
         
-        findAll(elements, 'form').each(function(i, e){ uploader(e) });
+        find_all(elements, 'form').each(function(i, e){ uploader(e) });
 
-        findAll(elements, '.menu.drawer').each(function(i, e){
+        find_all(elements, '.menu.drawer').each(function(i, e){
             var handle = $(e).attr('data-menu-handle');
-            if(handle) menu(findAll(elements, handle), e);
+            if(handle) menu(find_all(elements, handle), e);
         });
 
-        findAll(elements, '.hoverable').each(function(){
+        find_all(elements, '.hoverable').each(function(){
             ui_util.hoverable(this) });
 
         return elements;
@@ -89,29 +89,39 @@ define([
             file_api = FileList && Blob,
             inputs = form.find('[type=file]');
 
-        // TODO: support multiple files
-        // TODO: handle erros from file uploads
-        // TODO: make file uploads actually work
+        // TODO-test: test support for multiple files
+        // TODO-polish: handle erros from file uploads
 
         inputs.each(function(i, e){
             var input = $(e);
             input.on('change', function(){
+                upload_files(e.files); });
+
+            // set up file drag & drop events
+            // TODO-polish: make work
+            var input_id = input.attr('id'),
+                label = $('label[for=' + input_id + ']');
+            label.on('drop', function(e){
+                upload_files(e.dataTransfer.files) });
+
+            function upload_files(files){
                 if(file_api){
                     var urls = [];
-                    // FileList is not a list at all, has no map
-                    for(var i = 0; i < e.files.length; i++)
-                        urls.push(URL.createObjectURL(e.files.item(i)));
+                    // FileList is not a list at all, has no map :'(
+                    for(var i = 0; i < files.length; i++)
+                        urls.push(URL.createObjectURL(files.item(i)));
                     input.trigger('with_files', [urls]);
                 }
 
-                // TODO: port <iframe> hack from old code...
-                // will fail on older browsers.
+                // TODO-compat: port <iframe> hack from old code...
+                // so this will work on older browsers.
                 var form_data = new FormData();
-                for(var i = 0; i < e.files.length; i++){
-                    var f = e.files.item(i);
+                for(var i = 0; i < files.length; i++){
+                    var f = files.item(i);
                     form_data.append('files', f.slice(0, f.size), f.name);
                 }
 
+                // TODO-polish: add busy indicator while uploading
                 $.ajax({
                     url: form.attr('action'),
                     type: 'POST',
@@ -137,7 +147,7 @@ define([
                     contentType: false,
                     processData: false
                 });
-            });
+            };
         });
 
         // make form submission of non-file inputs asynchronous too
@@ -150,7 +160,7 @@ define([
         });
     }
 
-    function findAll(elements, selector){
+    function find_all(elements, selector){
         return elements.filter(selector).add(elements.find(selector));
     }
 

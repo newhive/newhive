@@ -835,8 +835,10 @@ class User(HasSocial):
     recent_expressions = property(get_recent_expressions)
 
     def client_view(self, viewer=None, activity=False):
-        user = self.db.User.new( dfilter( self, ['fullname', 'profile_thumb', 'thumb_file_id',
-            'name', 'tags', 'updated', 'created', 'feed'] ) )
+        user = self.db.User.new( dfilter( self, [
+            'fullname', 'name', 'email', 'profile_about', 'profile_thumb',
+            'profile_bg', 'thumb_file_id', 'tags', 'updated', 'created', 'feed'
+        ] ) )
         # TODO: make sure this field is updated wherever views changes elsewhere
         # TODO: figure out best thing to do for empty user
         # TODO: make new class for analytics.

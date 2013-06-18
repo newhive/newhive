@@ -10,6 +10,7 @@ define([
     'server/context',
     'browser/layout',
     'ui/util',
+    'ui/routing',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
     'sj!templates/social_overlay.html',
@@ -25,9 +26,9 @@ define([
     'sj!templates/icon_count.html',
     'sj!templates/tag_card.html'
 ], function(
-    $, nav, new_account, context, browser_layout, ui_util, master_template,
-    home_template, social_overlay_template, overlay_template, profile_edit_template,
-    tags_page_template
+    $, nav, new_account, context, browser_layout, ui_util, routing,
+    master_template, home_template, social_overlay_template, overlay_template,
+    profile_edit_template, tags_page_template
 ) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
@@ -97,10 +98,11 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 page_data.expr_id = page_data.cards[found].id;
-                var page_state = {api:"/api/expr/" + page_data.expr_id, 
-                    route_name:"view_expr",
-                    page:"/" + page_data.cards[found].owner.name +
-                        "/" + page_data.cards[found].name};
+                var page_state = routing.page_state('view_expr', {
+                    id: page_data.expr_id,
+                    owner_name: page_data.cards[found].owner.name,
+                    expr_name: page_data.cards[found].name
+                });
                 o.controller.open_route(page_state);
             }
         }
@@ -260,6 +262,15 @@ define([
             $('#profile_bg').css('background-image', urls[0])
         }).on('response', function(e, data){
             console.log(data);
+        });
+
+        $('#user_update_form').on('response', function(e, data){
+            if(data.error) alert(data.error);
+            else{
+                var page_state = routing.page_state(
+                    'expressions_public', {owner_name: 'abram' });
+                o.controller.open_route(page_state);
+            }
         });
     };
     o.profile_private = function(page_data){
