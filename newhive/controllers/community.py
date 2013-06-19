@@ -64,17 +64,36 @@ class Community(Controller):
         }
     def user_update(self, tdata, request, owner_name=None, **args):
         owner = tdata.user
+
+        # If user update form submitted, update user
         if request.form.get('user_update'):
-            if not owner.cmp_password(request.form.get('password')):
+            if ( ( request.form.get('email') != owner['email'] ) or
+                request.form.get('new_password')
+            ) and ( not owner.cmp_password(request.form.get('password')) ):
                 return { 'error': 'Password given does not match existing password' };
-            new_pass = request.form.get('new_password')
-            if new_pass: owner.set_password(new_pass)
-            owner.update(
+
+            update = dict(
                 fullname=request.form.get('fullname'),
                 profile_about=request.form.get('profile_about'),
                 email=request.form.get('email'),
-                password=owner.get('password')
             )
+            new_pass = request.form.get('new_password')
+            if new_pass: update['password'] = owner.password(new_pass)
+
+            file_r = self.db.File.fetch(request.form.get('profile_bg'))
+            if file_r:
+                update['profile_bg_id'] = file_r.id
+                update['profile_bg'] = file_r['url']
+            file_r = self.db.File.fetch(request.form.get('profile_thumb'))
+            if file_r:
+                update['thumb_file_id'] = file_r.id
+                update['profile_thumb'] = file_r['url']
+
+            # TODO: update email lists
+
+            owner.update(**update)
+
+        # TODO: implement account deletion
 
         subscribed = tdata.user.get('email_subscriptions', [])
         email_lists = map(lambda email_list: {

@@ -101,7 +101,7 @@ class Database:
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
             del search['feed']
             results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
-                                         sort='score', **args)
+               sort='score', **args)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -439,10 +439,12 @@ class User(HasSocial):
         # self['signup_group'] = self.collection.config.signup_group
         assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, 'Invalid username'
         assert not (self['name'] in reserved_words)
-        self.set_password(self['password'])
-        self['fullname'] = self.get('fullname', self['name'])
-        self['referrals'] = 0
-        self['flags'] = {}
+        dict.update(self,
+            password = mk_password(self['password']),
+            fullname = self.get('fullname', self['name']),
+            referrals = 0,
+            flags = {},
+        )
         # self['email_subscriptions'] = self.collection.config.default_email_subscriptions
         assert self.has_key('referrer')
         self.build_search(self)
@@ -697,13 +699,8 @@ class User(HasSocial):
         if not isinstance(v, (str, unicode)): return False
         return crypt(v.encode('UTF8'), self['password']) == self['password']
 
-    def set_password(self, v):
-        salt = "$6$" + junkstr(8)
-        self['password'] = crypt(v.encode('UTF8'), salt)
-
     def update_password(self, v):
-        self.set_password(v)
-        self.update(password=self['password'])
+        self.update(password=mk_password(v))
 
     def get_url(self, path='profile/', relative=False, secure=False):
         base = '/' if relative else abs_url(secure=secure)
@@ -1149,22 +1146,16 @@ class Expr(HasSocial):
             return 0
 
     def cmp_password(self, v):
-        password = self.get('password', '')
-        if password == '': return True
-        if not isinstance(v, (str, unicode)): v = ''
-        return password == v
-        # This implementation doesn't work for non-ascii text, we need to look
-        # into this before enabling hashed expression passwords
-        #if password == v: return True
-        #return crypt(v.encode('UTF8'), password) == password
-
-    def set_password(self, v):
-        salt = "$6$" + junkstr(8)
-        self['password'] = crypt(v.encode('UTF8'), salt)
+        password = self.get('password')
+        if not password: return True
+        if not isinstance(v, (str, unicode)): return False
+        # TODO: Test this with non-ascii text
+        if password == v: return True
+        return (crypt(v.encode('UTF8'), password) == password)
 
     def update_password(self, v):
-        self.set_password(v)
-        upd = { 'password': self['password'], 'auth': 'password' if v else 'public' }
+        upd = dict(password = mk_password(v),
+            auth = 'password' if v else 'public')
         self.update(**upd)
 
     def auth_required(self, user=None, password=None):
@@ -1690,6 +1681,9 @@ class Temp(Entity):
 
 ## utils
 
+def mk_password(v):
+    salt = "$6$" + junkstr(8)
+    return crypt(v.encode('UTF8'), salt)
 
 def get_id(entity_or_id):
     return entity_or_id if type(entity_or_id) == str else entity_or_id.id

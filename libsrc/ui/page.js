@@ -260,19 +260,13 @@ define([
         render_site(page_data);
         expr_column();
     };
-    o.profile_edit = function(page_data){
+    o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
         
-        $('#profile_thumb_input').on('with_files', function(e, urls) {
-            $('#profile_thumb').attr('src', urls[0]);
-        }).on('response', function(e, data){
-            console.log(data);
-        });
-        $('#profile_bg_input').on('with_files', function(e, urls) {
-            $('#profile_bg').css('background-image', urls[0])
-        }).on('response', function(e, data){
-            console.log(data);
-        });
+        $('#profile_thumb_input').on('response',
+            on_file_upload('#profile_thumb', '#thumb_id_input'));
+        $('#profile_bg_input').on('response',
+            on_file_upload('#profile_bg', '#bg_id_input'));
 
         $('#user_update_form').on('response', function(e, data){
             if(data.error) alert(data.error);
@@ -282,6 +276,20 @@ define([
                 o.controller.open_route(page_state);
             }
         });
+
+        $('#email_input, #new_password_input').on('change', function(){
+            $('#password_field').removeClass('hide');
+        });
+
+        function on_file_upload(img, input){ return function(e, data){
+            if(data.error)
+                alert('Sorry, I did not understand that file as an image.' +
+                'Please try a jpg, png, or if you absolutely must, gif.');
+            var el = $(img);
+            if(el.attr('src')) el.attr('src', data[0].url);
+            else el.css('background-image', 'url("' + data[0].url + '")');
+            $(input).val(data[0].file_id);
+        }}
     };
     o.profile_private = function(page_data){
         page_data.profile.subheading = 'Private';

@@ -19,7 +19,8 @@ define([
             href = api_routes[route_name]['page_route'] + query_args,
             api = api_routes[route_name]['api_route'] + query_args;
         if (is_form) {
-           if(api) attributes.push(['action',
+            attributes.push(['enctype', 'multipart/form-data']);
+            if(api) attributes.push(['action',
                 routing.substituteVariables(api, route_args, true)]);
         } else {
             if(href) attributes.push(['href',
@@ -135,8 +136,8 @@ define([
                     //Ajax events
                     // beforeSend: beforeSendHandler,
                     success: function(data){
-                        if(!file_api) input.trigger('with_files', data.urls);
-                        input.trigger('response', data);
+                        if(!file_api) input.trigger('with_files', [data]);
+                        input.trigger('response', [data]);
                     },
                     error: function(){ alert("Sorry :'(") },
                     // Form data
@@ -154,7 +155,7 @@ define([
         // make form submission of non-file inputs asynchronous too
         form.on('submit', function(e){
             $.post(form.attr('action'), form.serialize(), function(data){
-                form.trigger('response', data);
+                form.trigger('response', [data]);
             }, 'json');
             e.preventDefault();
             return false;

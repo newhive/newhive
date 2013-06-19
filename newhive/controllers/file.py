@@ -31,31 +31,32 @@ class File(ModelController):
 
         rv = []
         for file in files:
+            if not file.filename: continue # ignore empty file inputs
+
             if hasattr(file, 'headers') and hasattr(file.headers, 'getheader'):
                 mime = parse_options_header(file.headers.getheader('Content-Type'))[0]
             else:
                 mime = mimetypes.guess_type(file.filename)[0]
 
             if not mime: mime = 'application/octet-stream'
-            type, subtype = mime.split('/')
+            mime, subtype = mime.split('/')
 
             # Supported mime types.  First try to find exact match to full mime
             # type (e.g. text/html), then default to generic type (e.g. text).
-            # If that doesn't exist either alert the client that the type is
-            # unsupported
+            # If that doesn't exist either, treat as binary to link to
             supported_mimes = {
                 'audio/mpeg': self._handle_audio,
                 'audio/mp4': self._handle_audio,
                 'image/gif': self._handle_image,
                 'image/jpeg': self._handle_image,
                 'image/png': self._handle_image,
-                'application': self._handle_link,
                 'text/html': self._handle_frame,
+                'application': self._handle_link,
                 'text': self._handle_link,
             }
 
             handler = supported_mimes.get(mime)
-            if not handler: handler = supported_mimes.get(type, self._handle_unsupported)
+            if not handler: handler = supported_mimes.get(mime, self._handle_link)
 
             with os.tmpfile() as local_file:
                 local_file.write(file.read())
@@ -104,6 +105,7 @@ class File(ModelController):
     def _handle_link(self, file, local_file, file_record, mime):
         return  {}
 
+    # not sure what the point of this is
     def _handle_unsupported(self, file, local_file, file_record, mime):
         data = {'error': 'file type not supported'}
         if hasattr(file, 'url'): data['url'] = file.url

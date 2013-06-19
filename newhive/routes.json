@@ -61,7 +61,7 @@
         "api_route": "/api/user/update/<owner_name>",
         "controller": "community",
         "method": "user_update",
-        "client_method": "profile_edit"
+        "client_method": "user_update"
     },
    "following": {
         "page_route": "/<owner_name>/profile/following",
