@@ -446,7 +446,8 @@ class FixedAttrs(object):
 
 
 def get_embedly_oembed(url):
-    request_url = 'https://api.embed.ly/1/oembed?key=%s&url=%s' % (config.embedly_key,urllib.quote_plus(url))
+    request_url = ( 'https://api.embed.ly/1/oembed?key=%s&url=%s' 
+        % (config.embedly_key,urllib.quote_plus(url.strip("/"))) )
     res = urllib2.urlopen(request_url)
     if res.getcode() != 200:
         return None

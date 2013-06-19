@@ -71,6 +71,7 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp
         j = json.dumps(data)
         return re.compile('(["\]}])([,:])(["\[{])').sub('\1\2 \3', j)
 
+    print "send_real_email: " + send_real_email
     # smtp connection setup and timings
     t0 = time.time()
     if not smtp:
@@ -93,6 +94,7 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp
         if filters:     smtpapi.update({'filters': filters})
         msg['X-SMTPAPI'] = to_json(smtpapi)
 
+    print "send_real_email: " + send_real_email
     # Message body assembly
     if type(body) == dict:
         if body.has_key('plain'):
@@ -105,6 +107,7 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp
         part1 = MIMEText(body.encode('utf-8'), 'plain')
         msg.attach(part1)
 
+    print "send_real_email: " + send_real_email
     # Unicode support is super wonky.  see
     # http://radix.twistedmatrix.com/2010/07/how-to-send-good-unicode-email-with.html
     io = StringIO()
@@ -118,6 +121,7 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp
         test_emails = [r['email'] for r in db.User.fetch(config.beta_testers)]
 
     # Send mail, but if we're in debug mode only send to admins
+    print "send_real_email: " + send_real_email
     if send_real_email and (config.live_server or msg['To'] in test_emails):
         t0 = time.time()
         sent = smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)

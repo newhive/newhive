@@ -4,7 +4,7 @@ LINUX
   install from USB
   sudo apt-get gnome-desktop-environment
 
- Git
+Git
   ## first, set up account on github (and get permissions from Abram)
   sudo apt-get install git
     git config --global user.name "xxx"
@@ -21,14 +21,14 @@ Python library dependencies
     sudo pip install ez_setup
     sudo pip install werkzeug pymongo boto oauth2 oauth2client pil paramiko cssutils
     sudo pip install lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson
-    sudo pip install envoy scipy
+    sudo pip install envoy scipy webkit2png
     sudo pip install pandas brownie google-api-python-client # for analytics
 
     pyes -- https://github.com/aparo/pyes
         werkzeug --- ??? what repo
 
 Application dependencies (Ubuntu packages)
-	sudo apt-get install mongodb ruby-sass ruby-compass
+	sudo apt-get install mongodb ruby-sass ruby-compass cutycapt
     # these are on abram's machine.  scp
     elastic search -- http://www.elasticsearch.org/download/
         sudo dpkg -i elasticsearch-0.20.5.deb
