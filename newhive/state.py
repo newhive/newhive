@@ -22,6 +22,9 @@ from s3 import S3Interface
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
+import Queue
+import threading
+
 from newhive.utils import *
 from newhive.routes import reserved_words
 
@@ -1007,30 +1010,53 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
+    def save(self, updated=True):
+        def threaded_snapshot(q, expr):
+            expr.take_snapshots()
+
+        # When an expression is updated, update its snapshots (in separate thread)
+        if updated:
+            q = Queue.Queue()
+
+            t = threading.Thread(target=threaded_snapshot, args = (q,self))
+            t.daemon = True
+            t.start()
+        return super(Expr, self).save(updated)
+
     def take_snapshots(self):
+        old_time = self.get('snapshot_time', False)
+
         snapshotter = Snapshots()
         snapshot_time = now()
-        filename_base = '_'.join([self.get('_id'), snapshot_time])
+        filename_base = '_'.join([self.get('_id'), str(snapshot_time)])
+        dimension_list = [(715, 430), (390, 235)]
 
-        name = filename_base + '_715.png'
-        snapshotter.take_snapshot(self.id, dimensions=(715, 430),
-            out_filename=name)
-        self.db.s3.upload_file(name, mimetype='image/png')
+        for dimensions in dimension_list:
+            name = filename_base + '_%s.png'%dimensions[0]
+            local = '/tmp/snap_%s.png'%dimensions[0]
+            snapshotter.take_snapshot(self.id, dimensions=dimensions,
+                out_filename=local)
+            url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
 
-        name = filename_base + '_390.png'
-        snapshotter.take_snapshot(self.id, dimensions=(390, 235),
-            out_filename=name)
-        self.db.s3.upload_file(name, mimetype='image/png')
+        # Delete old snapshot
+        if old_time:
+            filename_base = '_'.join([self.get('_id'), str(old_time)])
+            for dimensions in dimension_list:
+                name = filename_base + '_%s.png'%dimensions[0]
+                self.db.s3.delete_file('thumb', name)
 
+        # self['snapshot'] = url[:-7]
         self['snapshot_time'] = snapshot_time
-        self.save()
+        self.save(False)
 
-    @property
-    def snapshot(self, size='715'):
-        # Take new snapshot if necessary
-        if not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time'):
+    # @property
+    def snapshot(self, size='715', update=True):
+        # Take new snapshot if necessary and requested
+        if update and (not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time')):
             self.take_snapshots()
-        filename = '_'.join([self.get('_id'), self.get('snapshot_time'), size])
+        if not self.get('snapshot_time'):
+            return 'placeholder.png'
+        filename = '_'.join([self.get('_id'), str(self.get('snapshot_time')), size])
         s3_url = 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
         return s3_url
 
@@ -1261,7 +1287,7 @@ class Expr(HasSocial):
         # Until the migration happens, let's just put a placeholder image in the snapshot field
         # instead of starting the generation of snapshots inside of client_view.
         if self.get('snapshot_time'):
-            expr['snapshot'] = self.snapshot
+            expr['snapshot'] = self.snapshot(size='', update=False)
         else:
             expr['snapshot'] = 'snapshot_placeholder.png'
         if viewer and viewer.is_admin:

@@ -13,7 +13,14 @@ class S3Interface(object):
             self.buckets = { k: self.con.create_bucket(v)
                 for k, v in config.s3_buckets.items() }
 
+    def delete_file(self, bucket, path):
+        k = S3Key(self.buckets[bucket])
+        k.name = path
+        k.delete()
+
     def upload_file(self, file, bucket, path, name=None, mimetype=None):
+        if type(file)==str or type(file)==unicode:
+            file = open(file, 'r')
         k = S3Key(self.buckets[bucket])
         k.name = path
         name_escaped = urllib.quote_plus(name.encode('utf8')) if name else path
@@ -25,3 +32,4 @@ class S3Interface(object):
         k.set_contents_from_file(file, headers=s3_headers)
         k.make_public()
         return k.generate_url(0, query_auth=False)
+

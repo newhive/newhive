@@ -26,7 +26,7 @@ import time
 
 urls = ["http://tnh.me/50f60b796d902242fd02a754",
 "http://tnh.me/50f737d36d902248910accfe"]
-exprs = ["50f60b796d902242fd02a754",
+expr_ids = ["50f60b796d902242fd02a754",
 "50f737d36d902248910accfe"]
 snapshots = Snapshots()
 
@@ -34,15 +34,18 @@ def sss():
     snapshots.take_snapshot("50f60b796d902242fd02a754", "snap_out.png")
 
 def test_snapshot():
-    s3_con = S3Connection(config.aws_id, config.aws_secret)
-    asset_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
+    # s3_con = S3Connection(config.aws_id, config.aws_secret)
+    # asset_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
     # xvfb = init_xvfb()
     # for url in urls:
     #     gen_thumb(url)
     #     upload_snapshot_to_s3(url.split('/')[-1],asset_bucket)
-    for expr in exprs:
-        take_snapshot(expr)
-        print upload_snapshot_to_s3(expr,asset_bucket)
+    for expr_id in expr_ids:
+        expr = db.Expr.fetch(expr_id)
+        print "snapshotting %s" % expr_id
+        expr.take_snapshots()
+        # take_snapshot(expr)
+        # print upload_snapshot_to_s3(expr,asset_bucket)
         
     # xvfb.terminate()
     
@@ -60,7 +63,7 @@ def start_snapshots(proc_tmp_snapshots=False):
         expressions_to_snapshot = db.Expr.search({
             "$and": [
                 {"auth": "public"},
-                {"snapshot": {
+                {"snapshot_time": {
                     "$exists": False
                 }}
             ]
@@ -79,8 +82,9 @@ def start_snapshots(proc_tmp_snapshots=False):
             
             expr_id = expr.get('_id')
             print "snapshotting %s" % expr_id
-            take_snapshot(expr_id)
-            s3_url = upload_snapshot_to_s3(expr_id, asset_bucket)    
+            expr.take_snapshots()
+            # take_snapshot(expr_id)
+            # s3_url = upload_snapshot_to_s3(expr_id, asset_bucket)    
     
     # print "need to get %s exprs" % len(expressions_to_snapshot)
     
