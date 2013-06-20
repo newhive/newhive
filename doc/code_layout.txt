@@ -1,9 +1,22 @@
 Life of a query
-
+	Client
+		WrapLinks
+		POST
+	Server
+		routing
+		processing
+			db manipulations
+			json result
+			bare template delivery
+	Client
+		Unpack template, insert data
 Server
 	Apache
+		alias pylog='sudo tail -f /var/log/apache2/error.log'
 	DB
 		Mongo
+			alias mongolock='sudo rm /var/lib/mongodb/mongod.lock'
+			alias mongorestart='sudo service mongodb restart'
 		Elastic
 	Routing
 	Rendering

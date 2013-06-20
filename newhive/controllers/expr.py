@@ -15,6 +15,10 @@ class Expr(ModelController):
         expr_obj = self.db.Expr.fetch(id)
         return self.serve_json(response,expr_obj)
 
+    def snapshot(self, tdata, request, response, expr_id, **args):
+        expr_obj = self.db.Expr.fetch(expr_id)
+        return self.redirect(response, expr_obj.snapshot()+".png")
+
     def fetch_naked(self, tdata, request, response, expr_id):
         # Request must come from content_domain, as this serves untrusted content
         # TODO: get routing to take care of this

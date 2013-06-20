@@ -1,7 +1,6 @@
 import httplib2, urllib
-from newhive import auth, config
+from newhive import auth, config, mail
 from newhive.controllers.controller import ModelController
-from newhive.mail import send_mail
 from newhive.utils import log_error, dfilter, lget
 
 class User(ModelController):
@@ -60,34 +59,22 @@ class User(ModelController):
     def expr_share(self, tdata, request, response, **args):
         resp = {}
         user = tdata.user
-        expr_user = self.db.User.named(request.form.get('expr_user'))
-        emails = request.form.get('emails').split()
-        message = request.form.get('message')
-        copy = request.form.get('copy') != None
-        if copy: emails.append(user['email'])
+        expr = self.db.Expr.fetch(request.form.get('expr_id'))
+        recipient_address = request.form.get('emails')
+        if not request.form.get('message') or not recipient_address: return False
 
-        # send email
+        recipient = self.db.User.fetch(recipient_address, keyname='email')
+        recipient = recipient or {'email': recipient_address}
 
-        try:
-            for email in emails:
-                heads = {
-                     'To' : email
-                    ,'From' : 'www-data@' + config.server_name
-                    ,'Subject' : user['name'] + ' shared an expression with you.'
-                    }
-                body = message
-                print body
-                try: send_mail(heads, body)
-                except Exception as e:
-                    logger # TODO WTF
-                sendgrid_args = {'contact_id': contact.id, 'url': form['url']}
+        expr.increment({'analytics.email.count': 1})
 
-                mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
-                mailer.send(form.get('email'), form.get('name'), sendgrid_args)
-        except:
-            log_error(request, self.db)
+        log_data = {'service': 'email', 'to': recipient_address, 'expr_id': expr.id}
+        # bugbug
+        # self.db.ActionLog.create(request.requester, 'share', data=log_data)
 
-        # resp should simply be fail/no fail
+        mailer = mail.ShareExpr(self.jinja_env, db=self.db)
+        mailer.send(expr, user, recipient, request.form.get('message'), request.form.get('send_copy'))
+
         return self.serve_json(response, resp)
 
     def streamified_login(self, tdata, request, response):
