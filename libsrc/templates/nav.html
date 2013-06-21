@@ -12,10 +12,9 @@
   ></a
 {>}
 {<unless user.logged_in}
-  ><a { anchor_attrs "signup" }
   ><div id='sign_up_btn' class='text_btn item text hoverable black_active'
     ><span class='text'>Sign up</span></div
-    ></a><div id='login_btn' class='text_btn item hoverable black_active'>Log In</div
+  ><div id='login_btn' class='text_btn item hoverable black_active'>Log In</div
 {>}
 
 ><a href='/random' title="View Random Expression" class='random_link'
@@ -87,3 +86,21 @@
     <div id='logout_btn' class='menu_item'>Logout</div>
   {>}
 </div>
+
+{<unless user.logged_in}<div id='dia_login_or_join' class='dialog hide'>
+  <div class="column left">
+    <img class='centered' src='{"skin/1/facebook_flat_lg.png"|asset_url}'>
+    <h3>
+      <span class="line1">Have an account?</span><br/>
+      <span class="line2">Please log in.</span>
+    </h3>
+    {|templates/login_form.html}
+  </div>
+  <div class="column right">
+    <h3>
+      <span class="line1">Don't have an account yet?</span><br/>
+      <span class="line2">Please request an invite.</span>
+    </h3>
+    {|templates/request_invite_form.html}
+  </div>
+</div>{>}

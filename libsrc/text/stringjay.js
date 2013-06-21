@@ -268,7 +268,8 @@ define(['browser/js', 'module', 'server/context'],
 		var fn = resolve(context, node.value, node.absolute, node.up_levels),
 			args = [context];
 		if(typeof fn != 'function')
-			throw render_error('Not a function: ' + path_to_string(node));
+			throw o.render_error('Not a function: ' + path_to_string(node),
+				context, node);
 		if(node.block)
 			args.push(function(context){
 				return render_node(context, node.block) });
@@ -293,8 +294,8 @@ define(['browser/js', 'module', 'server/context'],
 		else if(node.type == 'function')
 			return render_function(context, node, false);
 		else if(node.type == 'comment') return '';
-		else throw render_error('unrecognized node: ' + JSON.stringify(node));
-		function render_error(msg){ o.render_error(msg, context, node); }
+		else throw o.render_error('unrecognized node: ' + JSON.stringify(node),
+			context, node);
 	}
 
 	o.render_error = function(msg, context, node){
@@ -430,8 +431,8 @@ define(['browser/js', 'module', 'server/context'],
 		}
 		return block(context.concat(new_context));
 	};
-	default_base['debug'] = function(context, arg){
-		throw o.render_error('debug break', context,
+	default_base['debug'] = function(context, do_break){
+		if(do_break) throw o.render_error('debug break', context,
 			get_template(context).render_node);
 	};
 	default_base.e = encode_to_html;

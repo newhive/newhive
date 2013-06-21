@@ -59,16 +59,7 @@ def get_api_endpoints(api):
                 ))
     return rules
 
-jinja_env.filters.update({
-     'asset_url': hive_assets.url
-    ,'json': extra_json
-    # ,'large_number': large_number
-    # ,'length_bucket': length_bucket
-    # ,'mod': lambda x, y: x % y
-    # ,'no_zero': no_zero
-    # ,'time': friendly_date
-    ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
-})
+jinja_env.filters.update({ 'asset_url': hive_assets.url, 'json': extra_json })
 
 db = state.Database(config)
 server_env = {

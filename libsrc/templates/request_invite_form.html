@@ -1,0 +1,23 @@
+<div class='request_invite'>
+  <div class='hide error'>
+    Sorry, there was a problem sending your request.
+    Please fill out the fields below,
+    and email us if you're having trouble.
+  </div>
+  Request a beta invite:<br>
+  <form {form_attrs "request_invite"} method='post' class='invite_form'>
+    <input type='text' name='email' placeholder='Email address'><br>
+    <input type='text' name='message' placeholder='How do you express yourself?' id='message'><br>
+    <input type='text' name='phone' class='hide'>
+    <div class='optional{<if compact} hide{>}'>
+      <div>Optional</div>
+      <input type='text' name='name' placeholder='Your name'><br>
+      <input type='text' name='referral' placeholder='How did you hear about us?'>
+    </div>
+    <input type='submit' value='SUBMIT'>
+  </form>
+</div>
+<div class='hide request_sent'>
+  Thank you for signing up!
+  You will hear from us soon. :)
+</div>

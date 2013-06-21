@@ -3,12 +3,13 @@ define([
     'browser/layout', 
     'server/context',
     'ui/menu', 
+    'ui/dialog',
     'ui/util', 
     'require', 
     'sj!templates/nav.html',
     'sj!templates/login_form.html', 
 ], function(
-	$, lay, context, menu, ui, require, nav_template
+	$, lay, context, menu, dialog, ui, require, nav_template
 ) {
     // Is the nav currently in expr mode?
     var nav_expr_mode = false;
@@ -19,7 +20,6 @@ define([
         }));
         
         $('#logout_btn').click(logout);
-		// user SHOULD always exist, in fact, login_btn will always exist after minor refactor
         if(!context.user.logged_in) menu('#login_btn', '#login_menu');
 
         if (!nav_expr_mode) {
@@ -32,6 +32,29 @@ define([
         	var m = menu('#login_btn', '#login_menu', { open: function(){
         		$('#username').focus() } });
         	if(context.error.login) m.open();
+
+        	var d = dialog.create('#dia_login_or_join');
+        	$('#sign_up_btn').click(d.open);
+
+        	// request invite form handlers. This form also appears on home page,
+        	// so this applies to both, and must be done after the top level render
+        	context.after_render.add('.invite_form [name=email]', function(e){
+		        e.on('change', function(){
+		            $('.invite_form .optional').removeClass('hide');
+		        });
+		    });
+        	context.after_render.add('.invite_form', function(e){
+		        e.on('response', function(e, data){
+		            if(data){ // success
+		                $('.request_invite').hide();
+		                $('.request_sent').removeClass('hide');
+		                // TODO: set cookie so request_sent can be shown later
+		            }
+		            else { // failure
+		                $('#request_invite .error').removeClass('hide');
+		            }
+		        });
+		    });
         }
 
         setTimeout(layout, 100);

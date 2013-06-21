@@ -27,6 +27,7 @@ define([
     'sj!templates/tag_card.html',
     'sj!templates/dialog_embed.html',
     'sj!templates/dialog_share.html',
+    'sj!templates/request_invite_form.html'
 ], function(
     $, nav, new_account, context, browser_layout, ui_util, routing,
     master_template, home_template, social_overlay_template, overlay_template,
@@ -240,20 +241,6 @@ define([
     o.home = function(page_data){
         page_data.layout = 'profile';
         $('#site').empty().append(home_template(page_data));
-        $('#email').on('change', function(){
-            $('#optional').removeClass('hide');
-        });
-        $('#invite_form').on('response', function(e, data){
-            if(page_data){ // success
-                $('#request_invite').hide();
-                $('#request_sent').removeClass('hide');
-                // TODO: set cookie
-            }
-            else { // failure
-                $('#request_invite .error').removeClass('hide');
-            }
-        });
-        // TODO: create handlers for contact UI
     };
 
     o.profile = function(page_data){
@@ -272,7 +259,7 @@ define([
             if(data.error) alert(data.error);
             else{
                 var page_state = routing.page_state(
-                    'expressions_public', {owner_name: 'abram' });
+                    'expressions_public', {owner_name: context.user.name });
                 o.controller.open_route(page_state);
             }
         });

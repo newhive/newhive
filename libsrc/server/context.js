@@ -6,7 +6,7 @@ define([
     'browser/js',
     'ui/menu',
     'ui/util'
-], function(assets, api_routes, routing, js_util, menu, ui_util){
+], function(assets, api_routes, routing, js, menu, ui_util){
     var o = {};
 
     o.asset = function(context, name){
@@ -69,21 +69,28 @@ define([
     // takes rendered string from template, parses into DOM,
     // and adds appropriate handlers for us
     // stringjay filters the output of all top-level templates through this
+    o._after_render_handlers = {};
     o.after_render = function(text){
         var elements = $(text.trim());
         
+        // Common site-wide handlers
         find_all(elements, 'form[data-route-name]').each(
             function(i, e){ form_handler(e) });
-
         find_all(elements, '.menu.drawer').each(function(i, e){
             var handle = $(e).attr('data-menu-handle');
             if(handle) menu(find_all(elements, handle), e);
         });
-
         find_all(elements, '.hoverable').each(function(){
             ui_util.hoverable(this) });
 
+        js.each(o._after_render_handlers, function(selector, handler){
+            find_all(elements, selector).each(function(i,e){ handler($(e)) });
+        });
+
         return elements;
+    };
+    o.after_render.add = function(selector, handler){
+        o._after_render_handlers[selector] = handler;
     };
 
     function form_handler(form){

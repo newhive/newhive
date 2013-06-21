@@ -153,6 +153,46 @@ class User(ModelController):
 
         return self.serve_json(response, True)
 
+    # TODO: hook up & debug
+    def user_referral(self, request, response):
+        user = request.requester
+        mailer = mail.UserReferral(db=self.db, jinja_env=self.jinja_env)
+        for i in range(0,4):
+            name = request.form.get('name_' + str(i))
+            to_email = request.form.get('to_' + str(i))
+            if user['referrals'] <= 0 or not to_email or len(to_email) == 0: break
+            referral = user.new_referral({'name': name, 'to': to_email})
+            mailer.send(referral, user)
+
+        return self.redirect(response, request.form.get('forward'))
+
+    # TODO: hook up & debug
+    def mail_feedback(self, request, response):
+        if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')
+        feedback_address = 'bugs+feedback@' + config.server_name 
+        user_email = request.requester.get('email', '')
+        heads = {
+             'To' : feedback_address
+            ,'From' : user_email
+            ,'Subject' : 'Feedback from ' + request.requester.get('name') + ' - ' + request.requester.get('fullname', '')
+            ,'Reply-to' : ', '.join([ feedback_address, user_email ])
+            }
+        url = url_unquote(request.args.get('url', ''))
+        body = (
+            request.form.get('message')
+            + "\n\n----------------------------------------\n\n"
+            + url + "\n"
+            + 'User-Agent: ' + request.headers.get('User-Agent', '') + "\n"
+            + 'From: ' + request.requester.get('email', '') +' - '+ request.requester.url
+            + "\n\n"
+            )
+        print send_mail(heads, body)
+        if request.form.get('send_copy'):
+            heads.update( To = user_email, From = feedback_address )
+            print heads
+            send_mail( heads, body, category = 'mail_feedback' )
+        response.context['success'] = True
+
     # def newxxxxxxxxxx(self, request, response):
     #     if request.requester.logged_in: return self.redirect(response, request.requester.url)
     #     referral = self._check_referral(request)[0]
@@ -210,7 +250,7 @@ class User(ModelController):
         referral = self._check_referral(request)[0]
         if (not referral): return self._bad_referral(tdata, request, response)
         # BUGBUG
-        # if (not referral or referral.get('used')): return self._bad_referral(tdata, request, response)
+        # if (not referral or referral.get('used')): return self._bad_referral(tdatakkkk, request, response)
         referrer = self.db.User.named(referral['name'])
         assert referrer, 'Referring user not found'
 

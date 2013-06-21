@@ -100,5 +100,9 @@ o.Funcs = function(fn, filter) {
     return callback;
 }
 
+o.each = function(o, f){
+    for(p in o) f(p, o[p]);
+};
+
 return o;
 });
