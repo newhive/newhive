@@ -1,0 +1,15 @@
+PIL==1.1.7
+Trac==0.11.7
+Werkzeug==0.8.3
+boto==1.9b
+hsaudiotag==1.1.1
+httplib2==0.7.2
+oauth2==1.5.211
+pandas==0.7.1
+pyScss==1.0.8
+pymongo==1.10.1
+webassets==0.6
+google-api-python-client
+Brownie==0.5.1
+Jinja2==2.5.5
+yuicompressor
