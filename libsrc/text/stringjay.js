@@ -172,7 +172,7 @@ define(['browser/js', 'module', 'server/context'],
 		// 'foo/..' not supported, because it's pointless ('..'s must be at beginning)
 		function path(do_throw){
 			// paths must not match JS literals
-			var matched = match(/^\s*[\/.]*([a-z][\/\w.]*)?/i, do_throw, 'path');
+			var matched = match(/^\s*[\/.]*([_a-z][\/\w.]*)?/i, do_throw, 'path');
 			if(!matched.trim()) return false;
 			var node = {
 				type: 'path',
@@ -218,8 +218,10 @@ define(['browser/js', 'module', 'server/context'],
 		function match(pattern, do_throw, pattern_name){
 			var m = template.match(pattern);
 			if(!m){
-				if(do_throw) throw parse_error(pattern_name + ', ' +
+				if(do_throw) {
+					throw parse_error(pattern_name + ', ' +
 					String(pattern) + ', not found');
+				}
 				else return false;
 			}
 			// return empty or successfully eaten string

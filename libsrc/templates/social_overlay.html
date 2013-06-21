@@ -30,17 +30,17 @@
       {>}{<with . "icon_class" "share"}
         {|templates/icon_count.html}
       {>}
+      {|templates/dialog_embed.html}
+      {|templates/dialog_share.html}
       <form { form_attrs "tag_follow" } id='save_jpg_form' method='POST'>
         <input type="hidden" name="action" value="toggle">
         <input type="submit" class="teal_btn upper" value="Save as JPG">
       </form>
-      {|templates/dialog_embed.html}
-      {|templates/dialog_share.html}
       <form { form_attrs "tag_follow" } id='embed_form' method='POST'>
-        <input type="submit" class="teal_btn upper" value="Embed"
+        <input type="submit" class="teal_btn upper" value="Embed">
       </form>
       <form { form_attrs "tag_follow" } id='share_form' method='POST'>
-        <input type="submit" class="teal_btn upper" value="Share Expression"
+        <input type="submit" class="teal_btn upper" value="Share Expression">
       </form>
       </div>
    
@@ -57,10 +57,11 @@
       {>}</div>
       {# discussion input #}
       <div id="discussions">
-        <div><div class="text">Discussion</div>
-        {<with . "icon_class" "comment"}
-          {|templates/icon_count.html}
-        {>}</div>
+        <div>
+          <div class="text">Discussion</div>
+          {<with . "icon_class" "comment"}
+            {|templates/icon_count.html}
+          {>}</div>
         <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
           <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
           <input type='submit' value='Enter' class='submit btn black rounded'>

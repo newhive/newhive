@@ -109,6 +109,12 @@
         "controller": "user",
         "method": "comment_create"
     },
+    "comment_edit": {
+        "api_route": "/api/comment/edit",
+        "controller": "user",
+        "method": "comment_edit"
+    },
+
     "tag_follow": {
         "api_route": "/api/community/follow",
         "controller": "user",
