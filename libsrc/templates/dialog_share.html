@@ -1,5 +1,5 @@
 {# Dialog for Expression Share #}
-<div id="dia_share" class="dialog">
+<div id="dia_share" class="dialog2">
   <h1>Share</h1>
   <h2>Expression link:</h2>
   <label class="dark">newhive.com/{owner.name}/{expr.title}</label>
@@ -9,9 +9,10 @@
     <input type="text" name="emails">
     <h2>Message:</h2>
     <textarea name="message"></textarea>
-    <input type="checkbox" name="copy">
+    <input type="checkbox" name="send_copy">
     <label>Send me a copy</label>
     <input type="hidden" name="expr_user" value="{owner.name}">
+    <input type="hidden" name="expr_id" value="{expr.id}">
     <button type="submit">Send</button>
   </form>
 </div>

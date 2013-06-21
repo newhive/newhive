@@ -21,6 +21,8 @@ import newhive.ui_strings.en as ui
 from newhive.analytics import analytics
 from newhive.manage.ec2 import public_hostname
 
+import bson.objectid
+
 logger = logging.getLogger(__name__)
 send_real_email = True
 css_debug = False
@@ -66,7 +68,7 @@ class EmailHtml(object):
     def tounicode(self):
         return etree.tounicode(self.html, method="xml", pretty_print=True)
 
-def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp=None):
+def _send_mail(headers, body, db, category=None, filters=None, unique_args=None, smtp=None):
     def to_json(data):
         j = json.dumps(data)
         return re.compile('(["\]}])([,:])(["\[{])').sub('\1\2 \3', j)
@@ -118,7 +120,7 @@ def send_mail(headers, body, category=None, filters=None, unique_args=None, smtp
         test_emails = [r['email'] for r in db.User.fetch(config.admins)]
 
     # Send mail, but if we're in debug mode only send to admins
-    if send_real_email and (config.live_server or msg['To'] in test_emails):
+    if send_real_email: #and (config.live_server or msg['To'] in test_emails):
         t0 = time.time()
         sent = smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
         logger.debug('SMTP sendmail time %d ms', (time.time() - t0) * 1000)
@@ -154,6 +156,12 @@ class Mailer(object):
     def __init__(self, jinja_env=None, db=None, smtp=None):
         self.db = db
         self.jinja_env = jinja_env
+        # Note, these functions are taken from newhive/old/wsgi.py:56:
+        jinja_env.filters.update( {
+            'html_breaks': lambda s: re.sub('\n', '<br/>', unicode(s))
+            ,'modify_query': utils.modify_query
+            ,'clean_url': lambda s: re.match('https?://([^?]*)', s).groups()[0]
+            })
         t0 = time.time()
         if smtp:
             self.smtp = smtp
@@ -182,7 +190,7 @@ class Mailer(object):
             html.tag_links({'email_id': context.get('email_id')})
             if self.inline_css and not css_debug:
                 dir = '/libsrc/' if config.debug_mode else '/lib/'
-                html.inline_css(config.src_home + dir + "email.css")
+                html.inline_css(config.src_home + dir + "compiled.email.css")
             body['html'] = html.tounicode()
         except TemplateNotFound as e:
             if e.message != self.template + '.html': raise e
@@ -204,7 +212,7 @@ class Mailer(object):
         if not filters: filters = {}
         if not context: context = {}
 
-        email_id = str(pymongo.objectid.ObjectId())
+        email_id = str(bson.objectid.ObjectId())
 
         record = {'_id': email_id, 'email': self.recipient.get('email'), 'category': self.name }
         if type(self.recipient) == newhive.state.User:
@@ -252,24 +260,24 @@ class Mailer(object):
             ))
 
         # write e-mail to file for debugging
-        path = '/www_tmp/' + email_id + utils.junkstr(4) + '.html'
-        with open(config.src_home + path, 'w') as f:
-            f.write('<div><pre>')
-            for key, val in heads.items():
-                s = u"{:<20}{}\n".format(key + u":", val)
-                f.write(s.encode('utf-8'))
-            f.write('</pre></div>')
-            if body.has_key('html'):
-                f.write(body['html'].encode('utf-8'))
-            else:
-                f.write('<pre style="font-family: sans-serif;">')
-                f.write(body['plain'].encode('utf-8'))
-                f.write('</pre>')
-        logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
-        record.update(debug_url= 'https://' + public_hostname + path)
+        # path = '/www_tmp/' + email_id + utils.junkstr(4) + '.html'
+        # with open(config.src_home + path, 'w') as f:
+        #     f.write('<div><pre>')
+        #     for key, val in heads.items():
+        #         s = u"{:<20}{}\n".format(key + u":", val)
+        #         f.write(s.encode('utf-8'))
+        #     f.write('</pre></div>')
+        #     if body.has_key('html'):
+        #         f.write(body['html'].encode('utf-8'))
+        #     else:
+        #         f.write('<pre style="font-family: sans-serif;">')
+        #         f.write(body['plain'].encode('utf-8'))
+        #         f.write('</pre>')
+        # logger.debug('temporary e-mail path: ' + abs_url(secure=True) + path)
+        # record.update(debug_url= 'https://' + public_hostname + path)
 
         if subscribed:
-            send_mail(heads, body, filters=filters, category=self.name, smtp=self.smtp, **kwargs)
+            _send_mail(heads, body, self.db, filters=filters, category=self.name, smtp=self.smtp, **kwargs)
 
         self.db.MailLog.create(record)
 
@@ -341,8 +349,9 @@ class ExprAction(Mailer):
             , 'featured_exprs': featured
             , 'featured_type': featured_type
             })
-        icon = self.db.assets.url('skin/1/email/' + self.name + '.png', return_debug=False)
-        if icon: context.update(icon=icon)
+        #bugbug: db.assets missing.
+        # icon = self.db.assets.url('skin/1/email/' + self.name + '.png', return_debug=False)
+        # if icon: context.update(icon=icon)
 
         sendgrid_args = {
             'initiator': self.initiator and self.initiator.get('name')
