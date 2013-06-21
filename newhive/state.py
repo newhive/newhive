@@ -22,9 +22,6 @@ from s3 import S3Interface
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 
-import Queue
-import threading
-
 from newhive.utils import *
 from newhive.routes import reserved_words
 
@@ -364,6 +361,25 @@ class Entity(dict):
 
 # Common code between User and Expr
 class HasSocial(Entity):
+    # social things happen to have passwords
+    def create(self):
+        if self.has_key('password'):
+            self['password'] = mk_password(self['password'])
+        super(HasSocial, self).create()
+        return self
+    def update(self, **d):
+        if d.has_key('password'):
+            d['password'] = mk_password(d['password'])
+        super(HasSocial, self).update(**d)
+        return self
+    def cmp_password(self, v):
+        password = self.get('password')
+        if not password: return True
+        if not isinstance(v, (str, unicode)): return False
+        # TODO: Test this with non-ascii text
+        if password == v: return True
+        return (crypt(v.encode('UTF8'), password) == password)
+
     @property
     @cached
     def starrer_ids(self):
@@ -443,7 +459,6 @@ class User(HasSocial):
         assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, 'Invalid username'
         assert not (self['name'] in reserved_words)
         dict.update(self,
-            password = mk_password(self['password']),
             fullname = self.get('fullname', self['name']),
             referrals = 0,
             flags = {},
@@ -701,9 +716,6 @@ class User(HasSocial):
     def cmp_password(self, v):
         if not isinstance(v, (str, unicode)): return False
         return crypt(v.encode('UTF8'), self['password']) == self['password']
-
-    def update_password(self, v):
-        self.update(password=mk_password(v))
 
     def get_url(self, path='profile/', relative=False, secure=False):
         base = '/' if relative else abs_url(secure=secure)
@@ -1170,26 +1182,6 @@ class Expr(HasSocial):
 
         else:
             return 0
-
-    def cmp_password(self, v):
-        password = self.get('password')
-        if not password: return True
-        if not isinstance(v, (str, unicode)): return False
-        # TODO: Test this with non-ascii text
-        if password == v: return True
-        return (crypt(v.encode('UTF8'), password) == password)
-
-    def update_password(self, v):
-        upd = dict(password = mk_password(v),
-            auth = 'password' if v else 'public')
-        self.update(**upd)
-
-    def auth_required(self, user=None, password=None):
-        if (self.get('auth') == 'password'):
-            if self.cmp_password(password): return False
-            if user and user.id == self.get('owner'): return False
-            return True
-        return False
 
     def get_url(self, relative=False, secure=False):
         base = '/' if relative else abs_url(secure=secure)

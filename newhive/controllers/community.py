@@ -76,9 +76,8 @@ class Community(Controller):
                 fullname=request.form.get('fullname'),
                 profile_about=request.form.get('profile_about'),
                 email=request.form.get('email'),
+                password=request.form.get('new_password')
             )
-            new_pass = request.form.get('new_password')
-            if new_pass: update['password'] = owner.password(new_pass)
 
             file_r = self.db.File.fetch(request.form.get('profile_bg'))
             if file_r:
