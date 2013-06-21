@@ -17,8 +17,18 @@ class User(ModelController):
         return self.serve_json(response, True)
 
     # TODO: implement, hook in app.py
-    def comment_edit(self, tdata, request, response):
-        return self.serve_json(response, False)
+    def comment_edit(self, tdata, request, response, **args):
+        resp = { 'field': 'value'}
+        text = request.form.get('text')
+        deletion = request.form.get('deletion')
+        comment_id = request.form.get('id')
+        comment = self.db.Comment.fetch(comment_id)
+        if deletion == "delete":
+            comment.delete()
+        else:
+            comment['text'] = text
+            comment.save()
+        return self.serve_json(response, resp)
     def comment_delete(self, tdata, request, response):
         return self.serve_json(response, False)
 

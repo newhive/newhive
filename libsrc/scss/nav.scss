@@ -196,6 +196,10 @@ img.thumb { background-color: $color_grey_medium; }
     width: 400px;
 }
 .activity {
+    .inplace_edit {
+        display: none;
+        width: 95%;
+    }
     .feed_item {
         display: inline-block;
         width: 100%;

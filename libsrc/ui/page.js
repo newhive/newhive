@@ -43,16 +43,21 @@ define([
         o.anim_direction = 0;
         o.controller = controller;
         nav.render();
-        $('#overlays').empty().html(overlay_template());
+        o.render_overlays();
         $(window).resize(layout);
         window.addEventListener('message', o.handle_message, false);
+
+        layout();
+    };
+
+    o.render_overlays = function(){
+        $('#overlays').empty().html(overlay_template());
         $("#page_prev").click(o.page_prev);
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
         $("#nav #plus").click(o.social_toggle);
+    }
 
-        layout();
-    };
     o.render = function(method, data){
         expr_page = (method == 'expr');
         if(!expr_page) hide_exprs();
@@ -65,9 +70,54 @@ define([
         }
  
         layout();
+
+        o.attach_handlers();
     };
 
-    o.social_toggle = function() {
+    o.attach_handlers = function(){
+        $(".feed_item").each(function(i, el) {
+            edit_button = $(el).find('button[name=edit]');
+            delete_button = $(el).find('button[name=delete]');
+            if (edit_button.length == 1) {
+                edit_button.unbind('click');
+                edit_button.click(function(event) {
+                    o.edit_comment($(el));
+                });
+            }
+            $(el).find('form').on('response', function() {
+                o.edit_comment_response($(el)); 
+            });
+        })
+    }
+    o.edit_comment = function(feed_item){
+        edit_button = feed_item.find('button[name=edit]');
+        delete_button = feed_item.find('button[name=delete]');
+        text_el = feed_item.find('div.text');
+        text = text_el.html();
+        if (text_el.is(":hidden")) {
+            // Return to uneditable state
+            text_el.show();
+            feed_item.find('textarea').hide();
+            edit_button.html("Edit");
+            delete_button.html("Delete");
+            feed_item.find('[name=deletion]').attr('value','delete');
+        } else {
+            // Settings -> editable state
+            text_el.hide();
+            feed_item.find('textarea').show().html(text);
+            edit_button.html("Cancel");
+            delete_button.html("Ok");
+            feed_item.find('[name=deletion]').attr('value','edit');
+        }
+    }
+    o.edit_comment_response = function(feed_item){
+        // TODO: rerender activity feed (only) 
+        // with new data received from server
+        text_el = feed_item.find('div.text');
+        if (text_el.is(":hidden"))
+            o.edit_comment(feed_item);
+    }
+    o.social_toggle = function(){
         popup = $('#social_overlay');
         // TODO: animate
         if (expr_page) {
