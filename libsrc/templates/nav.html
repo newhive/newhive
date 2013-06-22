@@ -65,11 +65,9 @@
       class='menu_item'>Followers<div class='count'></div></div></a>
     <a { anchor_attrs "loves" "owner_name" user.name }><div
       class='menu_item'>Loves<div class='count'></div></div></a>
-    <div class='activity'>
-      {<for user.activity}
-        {|templates/feed_card.html}
-      {>}
-    </div>
+    <div class='activity'>{<with . "activity" user.activity}
+      {|templates/activity.html}
+    {>}</div>
   </div>
 {>}
 

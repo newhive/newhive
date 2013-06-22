@@ -838,7 +838,7 @@ class User(HasSocial):
         return self.get_expressions(auth='public').sort([('updated', -1)]).limit(count)
     recent_expressions = property(get_recent_expressions)
 
-    def client_view(self, viewer=None, activity=False):
+    def client_view(self, viewer=None, activity=0):
         user = self.db.User.new( dfilter( self, [
             'fullname', 'name', 'email', 'profile_about', 'profile_thumb',
             'profile_bg', 'thumb_file_id', 'tags', 'updated', 'created', 'feed'
@@ -876,9 +876,9 @@ class User(HasSocial):
             notification_count = self.notification_count,
         ) )
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
-        if activity:
+        if activity > 0:
             dict.update( user, activity =
-                map(lambda r: r.client_view(), self.activity()) )
+                map(lambda r: r.client_view(), self.activity()[0:activity]) )
         return user
 
     def delete(self):
