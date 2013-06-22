@@ -10,7 +10,7 @@
   <script>
 curl(['server/context', 'browser/js'], function(context, util){
     var server_data = {
-        user: {{ user.client_view(activity=True)|json }},
+        user: {{ user.client_view(activity=20)|json }},
         error: {{ error|json }},
         link_url: "{{ link_url }}",
         server_url: {{ server_url|json }}, secure_server: {{ secure_server|json }},
