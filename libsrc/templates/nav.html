@@ -46,15 +46,8 @@
   ></form
 ></div>
 
-<div id='login_menu' class='menu drawer'>
-  {#<a href="{facebook_authentication_url}" target="_top"
-    <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 2px 0 2px -4px;'>
-  </a>#}
-  {|templates/login_form.html}
-</div>
-
 {<if user.logged_in}
-  <div id='user_menu' class='menu drawer user_menu' data-menu-handle='#user_btn'>
+  <div id='user_menu' class='menu drawer user_menu' data-handle='#user_btn'>
     <a { anchor_attrs "expressions_public"  "owner_name" user.name }><div
       class='menu_item'>Expressions<div class='count'></div></div></a>
     <a { anchor_attrs "expressions_private" "owner_name" user.name }><div
@@ -71,9 +64,17 @@
       {>}
     </div>
   </div>
+{>}{<else}
+  <div id='login_menu' class='menu drawer' data-handle='#login_btn'>
+    {#<a href="{facebook_authentication_url}" target="_top"
+      <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 2px 0 2px -4px;'>
+    </a>#}
+    {|templates/login_form.html}
+  </div>
 {>}
 
-<div id='logo_menu' class='menu drawer' data-menu-handle='#logo'>
+
+<div id='logo_menu' class='menu drawer' data-handle='#logo'>
   {<if user.logged_in}
     <div class='menu_item'>Email Invites</div>
     <div class='menu_item'>Invite FB Friends</div>
@@ -87,7 +88,7 @@
   {>}
 </div>
 
-{<unless user.logged_in}<div id='dia_login_or_join' class='dialog hide'>
+{<unless user.logged_in}<div id='dia_login_or_join' class='dialog hide' data-handle='#sign_up_btn'>
   <div class="column left">
     <img class='centered' src='{"skin/1/facebook_flat_lg.png"|asset_url}'>
     <h3>

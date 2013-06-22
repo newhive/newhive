@@ -5,8 +5,9 @@ define([
     'ui/routing',
     'browser/js',
     'ui/menu',
+    'ui/dialog',
     'ui/util'
-], function(assets, api_routes, routing, js, menu, ui_util){
+], function(assets, api_routes, routing, js, menu, dialog, ui_util){
     var o = {};
 
     o.asset = function(context, name){
@@ -76,9 +77,16 @@ define([
         // Common site-wide handlers
         find_all(elements, 'form[data-route-name]').each(
             function(i, e){ form_handler(e) });
-        find_all(elements, '.menu.drawer').each(function(i, e){
-            var handle = $(e).attr('data-menu-handle');
-            if(handle) menu(find_all(elements, handle), e);
+        find_all(elements, '.menu.drawer[data-handle]').each(function(i, e){
+            var handle = find_all(elements, $(e).attr('data-handle'));
+            if(!handle) throw 'missing handle';
+            menu(handle, e);
+        });
+        find_all(elements, '.dialog[data-handle]').each(function(i, e){
+            var handle = find_all(elements, $(e).attr('data-handle'));
+            if(!handle) throw 'missing handle';
+            var d = dialog.create(e);
+            handle.click(d.open);
         });
         find_all(elements, '.hoverable').each(function(){
             ui_util.hoverable(this) });

@@ -3,13 +3,12 @@ define([
     'browser/layout', 
     'server/context',
     'ui/menu', 
-    'ui/dialog',
     'ui/util', 
     'require', 
     'sj!templates/nav.html',
     'sj!templates/login_form.html', 
 ], function(
-	$, lay, context, menu, dialog, ui, require, nav_template
+	$, lay, context, menu, ui, require, nav_template
 ) {
     // Is the nav currently in expr mode?
     var nav_expr_mode = false;
@@ -19,12 +18,9 @@ define([
             'nav_view': !nav_expr_mode
         }));
         
-        $('#logout_btn').click(logout);
-        if(!context.user.logged_in) menu('#login_btn', '#login_menu');
-
-        if (!nav_expr_mode) {
+        if (!nav_expr_mode){
             menu('#network_btn', '#network_menu');
-            menu('#hive_btn', '#hive_menu');   
+            menu('#hive_btn', '#hive_menu');
         }
 
         $('#login_form').submit(login);
@@ -32,9 +28,6 @@ define([
         	var m = menu('#login_btn', '#login_menu', { open: function(){
         		$('#username').focus() } });
         	if(context.error.login) m.open();
-
-        	var d = dialog.create('#dia_login_or_join');
-        	$('#sign_up_btn').click(d.open);
 
         	// request invite form handlers. This form also appears on home page,
         	// so this applies to both, and must be done after the top level render
@@ -55,7 +48,10 @@ define([
 		            }
 		        });
 		    });
-        }
+        } else {
+	        $('#logout_btn').click(logout);
+	    }
+
 
         setTimeout(layout, 100);
         $(window).resize(layout);
