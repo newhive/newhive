@@ -45,10 +45,9 @@
       </div>
    
       {# activity feed #}
-      <div class=activity>{<for expr.activity}
-        {|templates/feed_card.html}
-        {>}
-      </div>
+      <div class='activity'>{<with . "activity" expr.activity}
+        {|templates/activity.html}
+      {>}</div>
     </div>
     <div class="right_pane">
       {# user profile #}

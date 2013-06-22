@@ -17,6 +17,7 @@ define([
     'sj!templates/overlay.html',
     'sj!templates/profile_edit.html',
     'sj!templates/tags_page.html',
+    'sj!templates/activity.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
@@ -31,7 +32,7 @@ define([
 ], function(
     $, nav, new_account, context, browser_layout, ui_util, routing,
     master_template, home_template, social_overlay_template, overlay_template,
-    profile_edit_template, tags_page_template
+    profile_edit_template, tags_page_template, activity_template
 ) {
     var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
         context.secure_content_server_url : context.content_server_url,
@@ -84,8 +85,8 @@ define([
                     o.edit_comment($(el));
                 });
             }
-            $(el).find('form').on('response', function() {
-                o.edit_comment_response($(el)); 
+            $(el).find('form').on('response', function(event, data) {
+                o.edit_comment_response($(el), data); 
             });
         })
     }
@@ -110,12 +111,22 @@ define([
             feed_item.find('[name=deletion]').attr('value','edit');
         }
     }
-    o.edit_comment_response = function(feed_item){
-        // TODO: rerender activity feed (only) 
+    o.edit_comment_response = function(feed_item, json){
+        // rerender activity feed (only in social overlay and nav menu)
         // with new data received from server
-        text_el = feed_item.find('div.text');
-        if (text_el.is(":hidden"))
-            o.edit_comment(feed_item);
+        if (json.activity != undefined) {
+            context.activity = json.activity;
+            context.page_data.expr.activity = json.activity;
+            $('#popup_content .activity').empty().html(activity_template(context));
+        }
+        if (json.user != undefined) {
+            // template_data = context;
+            context.activity = json.user.activity;
+            context.user.activity = json.user.activity;
+            $('#nav .activity').empty().html(activity_template(context));
+        }
+        delete context.activity;
+        o.attach_handlers();
     }
     o.social_toggle = function(){
         popup = $('#social_overlay');
@@ -196,6 +207,7 @@ define([
 
     o.comment_response = function (e, json){
         $('#comment_form textarea').val('');
+        o.edit_comment_response([], json);
         // TODO: retrieve response from server with comment,
         // add to comments.
     }
@@ -221,7 +233,7 @@ define([
         $("#popup_content").remove()
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
-        if (0) { // bugbug. debugging short windows sucks.
+        if (1) { // bugdebug. debugging short windows sucks.
             $('#social_overlay').css('height','650px');
             $('#social_overlay #popup_content').css('height','606px');
         }

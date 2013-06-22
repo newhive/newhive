@@ -16,24 +16,37 @@ class User(ModelController):
         auth.handle_logout(self.db, tdata.user, request, response)
         return self.serve_json(response, True)
 
-    # TODO: implement, hook in app.py
+    # edit or delete comment
     def comment_edit(self, tdata, request, response, **args):
-        resp = { 'field': 'value'}
+        resp = {}
+        user = tdata.user
         text = request.form.get('text')
         deletion = request.form.get('deletion')
         comment_id = request.form.get('id')
         comment = self.db.Comment.fetch(comment_id)
+        # delete or update comment
         if deletion == "delete":
             comment.delete()
         else:
             comment['text'] = text
             comment.save()
+
+        # refetch activity and sent to client
+        expr = self.db.Expr.fetch(comment.get('entity'))
+        resp.update( self.get_expr_activity(expr, user) )
         return self.serve_json(response, resp)
-    def comment_delete(self, tdata, request, response):
-        return self.serve_json(response, False)
+
+    def get_expr_activity(self, expr, user):
+        resp = {}
+        expr_view = expr.client_view(activity=10)
+        resp.update( {'activity': expr_view.get('activity', [])} )
+        if True: # So far, it's always our user, so no need to test: user.id == comment.entity_owner:
+            user_view = user.client_view(activity=20)
+            resp.update( {'user': {'activity': user_view.get('activity', [])}} )
+        return resp
 
     def comment_create(self, tdata, request, response, **args):
-        resp = False
+        resp = {}
         user = tdata.user
         expr = self.db.Expr.fetch(request.form.get('entity'))
         if not expr: return self.serve_404(tdata, request, response)
@@ -44,6 +57,7 @@ class User(ModelController):
         # TODO: mail settings
         # if user.id != expr.owner.id:
         #     mail.Feed(db=self.db, jinja_env=self.jinja_env).send(comment)
+        resp.update( self.get_expr_activity(expr, user) )
         return self.serve_json(response, resp)
 
     def tag_follow(self, tdata, request, response, **args):
