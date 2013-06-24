@@ -13,3 +13,4 @@ compiled.*
 *.pyc
 *.DS_Store
 /newhive/.ropeproject
+/log/*.txt
