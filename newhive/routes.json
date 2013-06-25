@@ -98,6 +98,12 @@
         "method": "expr",
         "client_method": "expr"
     },
+    "expr_snapshot": {
+        "page_route": "/api/expr/snapshot/<expr_id>",
+        "api_route": "/api/expr/snapshot/<expr_id>",
+        "controller": "expr",
+        "method": "snapshot"
+    },
 
     "request_invite": {
         "api_route": "/api/user/invite",
@@ -124,11 +130,6 @@
         "api_route": "/api/community/expr_share",
         "controller": "user",
         "method": "expr_share"
-    },
-    "expr_snapshot": {
-        "api_route": "/api/expr/snapshot/<expr_id>",
-        "controller": "expr",
-        "method": "snapshot"
     },
 
     "file_create": {

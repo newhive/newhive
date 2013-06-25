@@ -234,8 +234,8 @@ define([
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
         if (1) { // bugdebug. debugging short windows sucks.
-            $('#social_overlay').css('height','650px');
-            $('#social_overlay #popup_content').css('height','606px');
+            $('#social_overlay').css('height','550px');
+            $('#social_overlay #popup_content').css('height','506px');
         }
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
         $('#dia_embed textarea').val("<iframe src='" + embed_url + 

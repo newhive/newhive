@@ -12,36 +12,36 @@
   <div id="popup_content">
     <div class="left_pane">
       {# expression title #}
-      <div>{expr.title}</div>
+      <div class="title">{expr.title}</div>
       {# tags #}
       <div class="tag_list">
         {<for tags "tagnum"}
           {|templates/tag_card.html}
         {>}</div>
       <div class="stats_bar">
-      {<with . "icon_class" "love" "count" counts.Star}
-        {|templates/icon_count.html}
-      {>}{<with . "icon_class" "republish"}
-        {|templates/icon_count.html}
-      {>}{<with . "icon_class" "facebook"}
-        {|templates/icon_count.html}
-      {>}{<with . "icon_class" "tweet"}
-        {|templates/icon_count.html}
-      {>}{<with . "icon_class" "share"}
-        {|templates/icon_count.html}
-      {>}
-      {|templates/dialog_embed.html}
-      {|templates/dialog_share.html}
-      <form { form_attrs "tag_follow" } id='save_jpg_form' method='POST'>
-        <input type="hidden" name="action" value="toggle">
-        <input type="submit" class="teal_btn upper" value="Save as JPG">
-      </form>
-      <form { form_attrs "tag_follow" } id='embed_form' method='POST'>
-        <input type="submit" class="teal_btn upper" value="Embed">
-      </form>
-      <form { form_attrs "tag_follow" } id='share_form' method='POST'>
-        <input type="submit" class="teal_btn upper" value="Share Expression">
-      </form>
+        {<with . "icon_class" "love" "count" counts.Star}
+          {|templates/icon_count.html}
+        {>}{<with . "icon_class" "republish"}
+          {|templates/icon_count.html}
+        {>}{<with . "icon_class" "facebook"}
+          {|templates/icon_count.html}
+        {>}{<with . "icon_class" "tweet"}
+          {|templates/icon_count.html}
+        {>}{<with . "attr_id" "social_share_icon" "icon_class" "share"}
+          {|templates/icon_count.html}
+        {>}
+        <div id="share_menu" class="menu drawer" data-handle='#social_share_icon'>
+          <div class='menu_item black_active'>
+            <a {href_attrs "expr_snapshot" "expr_id" id} id='save_jpg_btn'>Save as JPG
+              {# TODO: this saves as png, need to process into jpg #}
+            </a></div>
+          <div id='embed_form_btn' class='text_btn menu_item item text hoverable black_active'
+              ><span class='text'>Embed</span></div>
+          <div id='share_form_btn' class='text_btn menu_item item text hoverable black_active'
+              ><span class='text'>Share Expression</span></div>
+        </div>
+        {|templates/dialog_embed.html}
+        {|templates/dialog_share.html}
       </div>
    
       {# activity feed #}
