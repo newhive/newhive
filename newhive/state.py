@@ -1034,7 +1034,8 @@ class Expr(HasSocial):
     def snapshot_name(self, size):
         if not self.get('snapshot_time'):
             return 'snapshot_placeholder.png'
-        return '_'.join([self.id, str(self.get('snapshot_time')), size])
+        filename = '_'.join([self.id, str(self.get('snapshot_time')), size])
+        return 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
 
     def take_snapshots(self):
         old_time = self.get('snapshot_time', False)
@@ -1067,9 +1068,7 @@ class Expr(HasSocial):
         # Take new snapshot if necessary and requested
         if update and (not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time')):
             self.take_snapshots()
-        filename = self.snapshot_name(size)
-        s3_url = 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
-        return s3_url
+        return self.snapshot_name(size)
 
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
