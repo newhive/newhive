@@ -67,7 +67,7 @@ class User(ModelController):
         action = request.form.get('action', 'set')
 
         following = user.get('tags_following', [])
-        print tag + " " + action + " " + ', '.join(following)
+        # print tag + " " + action + " " + ', '.join(following)
         if (following.count(tag) > 0):
             if (action in ["toggle", "unset"] ):
                 following.remove(tag)

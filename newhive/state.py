@@ -1016,17 +1016,20 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
-    def save(self, updated=True):
-        def threaded_snapshot(q, expr):
+    def threaded_snapshot(self):
+        def threaded_snapshot_q(q, expr):
             expr.take_snapshots()
 
+        q = Queue.Queue()
+
+        t = threading.Thread(target=threaded_snapshot_q, args = (q,self))
+        t.daemon = True
+        t.start()
+
+    def save(self, updated=True):
         # When an expression is updated, update its snapshots (in separate thread)
         if updated:
-            q = Queue.Queue()
-
-            t = threading.Thread(target=threaded_snapshot, args = (q,self))
-            t.daemon = True
-            t.start()
+            self.threaded_snapshot();
         return super(Expr, self).save(updated)
 
     # size is "big" or "small".
@@ -1037,6 +1040,8 @@ class Expr(HasSocial):
         filename = '_'.join([self.id, str(self.get('snapshot_time')), size])
         return 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
 
+    # Note: this takes snapshots in the current thread.
+    # For threaded snapshots, use threaded_snapshot()
     def take_snapshots(self):
         old_time = self.get('snapshot_time', False)
 
