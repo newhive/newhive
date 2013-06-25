@@ -103,32 +103,37 @@ var menu = function(handle, drawer, options) {
         if(opts.animate_open) drawer.animate(opts.animate_open, 100);
         else opts.open_menu();
 
+        if(opts.layout) o.layout();
+
+        opts.open();
+        return o;
+    };
+
+    o.layout = function(){
         var css_opts = {};
-        if(opts.layout){
-            // pick top of menu based on if menu would go past bottom of
-            // window if below handle, or above top of window if above the handle
-            var hp = handle.parent().is(drawer.parent()) ? handle.position() : handle.offset();
+        // pick top of menu based on if menu would go past bottom of
+        // window if below handle, or above top of window if above the handle
+        var hp = handle.parent().is(drawer.parent()) ? handle.position() : handle.offset();
 
-            if( opts.layout == 'bottom' ){
-                var oy = handle.outerHeight() + opts.offset_y;
-                css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
-                    && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
-                    hp.top - drawer.outerHeight() - opts.offset_y : hp.top + oy;
+        if( opts.layout == 'bottom' ){
+            var oy = handle.outerHeight() + opts.offset_y;
+            css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
+                && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
+                hp.top - drawer.outerHeight() - opts.offset_y : hp.top + oy;
 
-                var layout_x = opts.layout_x;
-                if( layout_x == 'auto' ) {
-                    var drawer_right = handle.offset().left + drawer.outerWidth();
-                    var window_right = $(window).width() + window.scrollX;
-                    layout_x = (drawer_right > window_right) ? 'right' : 'left';
-                }
-                css_opts.left = ( layout_x == 'right' ?
-                    hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
+            var layout_x = opts.layout_x;
+            if( layout_x == 'auto' ) {
+                var drawer_right = handle.offset().left + drawer.outerWidth();
+                var window_right = $(window).width() + window.scrollX;
+                layout_x = (drawer_right > window_right) ? 'right' : 'left';
             }
-            else if( opts.layout == 'center_y' ){
-                css_opts.top = Math.max(opts.min_y, hp.top + handle.outerHeight() / 2 -
-                     drawer.outerHeight() / 2);
-                css_opts.left = hp.left - opts.offset_x - drawer.outerWidth();
-            }
+            css_opts.left = ( layout_x == 'right' ?
+                hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
+        }
+        else if( opts.layout == 'center_y' ){
+            css_opts.top = Math.max(opts.min_y, hp.top + handle.outerHeight() / 2 -
+                 drawer.outerHeight() / 2);
+            css_opts.left = hp.left - opts.offset_x - drawer.outerWidth();
         }
 
         if(opts.auto_height && css_opts.top + drawer.outerHeight() > $(window).height()) {
@@ -138,10 +143,7 @@ var menu = function(handle, drawer, options) {
         }
 
         drawer.css(css_opts);
-
-        opts.open();
-        return o;
-    }
+    };
 
     opts.group.menus.push(o);
 

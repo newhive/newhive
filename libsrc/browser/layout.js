@@ -1,21 +1,12 @@
 define(['browser/jquery'], function($) {
+    var o = {};
 
-    function img_fill(img) {
-        var e = $(img), w = e.parent().width(), h = e.parent().height();
-        if(!e.length) return;
-        e.css('position', 'absolute');
-        if(e.width() / e.height() > w / h) e.width('').height(h);
-        else e.width(w).height('');
-        center(e, e.parent(), { minimum : false });
-        return e;
-    }
-
-    var place_apps = function() {
+    o.place_apps = function() {
         var win_width = $(window).width();
         $('.happfill').each(function(i, div) {
             var e = $(div);
             //e.width(e.parent().width()).height(e.parent().height());
-            img_fill(e.find('img'))
+            o.img_fill(e.find('img'))
         });
         if (Hive.expr && Hive.expr.fixed_width) return;
         $('.happ').each(function(i, app_div) {
@@ -41,9 +32,11 @@ define(['browser/jquery'], function($) {
             }
             e.css(c);
         });
-    }
+    };
 
-    function center(e, inside, opts) {
+    // TODO: generalize into layout function that can size to parent,
+    // as well as center to any side or corner
+    o.center = function(e, inside, opts){
         if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
 
         var w = (typeof(inside) == 'undefined' ? $(window) : inside),
@@ -69,20 +62,32 @@ define(['browser/jquery'], function($) {
         }
 
         e.css(pos);
+    };
+
+    // fill <img> to parent
+    o.img_fill = function(img){
+        var e = $(img);
+        if(!e.length) return;
+        var w = e.parent().width(), h = e.parent().height(), load = function(){
+            e.css('position', 'absolute');
+            if(e.width() / e.height() > w / h) e.width('').height(h);
+            else e.width(w).height('');
+            o.center(e, e.parent(), { minimum : false });
+        };
+        if(!e.width()) e.load(load);
+        else load();
+        return e;
     }
 
     // TODO: fix this
-    function is_fullscreen(){
+    var is_fullscreen = function(){
         return document.height == window.screen.height && document.width == window.screen.width;
-    }
+    };
 
     // TODO: unminify this (wtf?)
-    function new_window(b,c,d){
+    var new_window = function(b,c,d){
         var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}
-    }
+    };
     
-    return {
-        'place_apps': place_apps,
-        'center': center
-    }
+    return o;
 });

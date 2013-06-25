@@ -2,10 +2,7 @@
   User thumb, name, view/love counts
 #}
 <div id='user_header' class='header'>
-  {<if profile_bg}
-    <div style='background-image:url("{profile_bg}")'
-      class='background'></div>
-  {>}
+  {<if profile_bg}<div class='background'><img src='{profile_bg}'></div>{>}
   <div class='profile'>
     <img src='{thumb_190}' class='thumb'>
     <div class='info'>
