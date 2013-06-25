@@ -308,9 +308,11 @@ define([
     o.profile = function(page_data){
         render_site(page_data);
         expr_column();
+        browser_layout.img_fill('#profile_bg');
     };
     o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
+        browser_layout.img_fill('#profile_bg');
         
         $('#profile_thumb_input').on('response',
             on_file_upload('#profile_thumb', '#thumb_id_input'));
@@ -340,8 +342,7 @@ define([
                 alert('Sorry, I did not understand that file as an image.' +
                 'Please try a jpg, png, or if you absolutely must, gif.');
             var el = $(img);
-            if(el.attr('src')) el.attr('src', data[0].url);
-            else el.css('background-image', 'url("' + data[0].url + '")');
+            el.attr('src', data[0].url);
             $(input).val(data[0].file_id);
         }}
     };
