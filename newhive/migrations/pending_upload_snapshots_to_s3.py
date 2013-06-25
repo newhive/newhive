@@ -35,25 +35,25 @@ def sss():
 
 def test_snapshot():
     # s3_con = S3Connection(config.aws_id, config.aws_secret)
-    # asset_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
+    # thumb_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
     # xvfb = init_xvfb()
     # for url in urls:
     #     gen_thumb(url)
-    #     upload_snapshot_to_s3(url.split('/')[-1],asset_bucket)
+    #     upload_snapshot_to_s3(url.split('/')[-1],thumb_bucket)
     for expr_id in expr_ids:
         expr = db.Expr.fetch(expr_id)
         print "snapshotting %s" % expr_id
         expr.take_snapshots()
         # take_snapshot(expr)
-        # print upload_snapshot_to_s3(expr,asset_bucket)
+        # print upload_snapshot_to_s3(expr,thumb_bucket)
         
     # xvfb.terminate()
     
        
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
-    # asset_bucket = config.s3_buckets['thumb']
-    asset_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
+    # thumb_bucket = config.s3_buckets['thumb']
+    thumb_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
  
     # xvfb = init_xvfb()
     
@@ -84,7 +84,7 @@ def start_snapshots(proc_tmp_snapshots=False):
             print "snapshotting %s" % expr_id
             expr.take_snapshots()
             # take_snapshot(expr_id)
-            # s3_url = upload_snapshot_to_s3(expr_id, asset_bucket)    
+            # s3_url = upload_snapshot_to_s3(expr_id, thumb_bucket)    
     
     # print "need to get %s exprs" % len(expressions_to_snapshot)
     
@@ -95,25 +95,28 @@ def take_snapshot(expr_id):
     # setup_x_server(dimensions)
     # gen_thumb('http://tnh.me/' + str(expr_obj['_id']),dimensions)
     
-def upload_snapshot_to_s3(expr_id,asset_bucket):
-    def upload_image(local,remote):
-        k = S3Key(asset_bucket)
-        k.name = remote
-        k.set_contents_from_filename(local)
-        k.make_public()
-        print "uploaded ",remote
-    remote = Snapshots.remote_uri(expr_id)
-    s3_url = Snapshots.s3_url(expr_id)
-    upload_image('temp_small.png',remote + '_small')
-    upload_image('temp_big.png',remote + '_big')
-    expr_obj = db.Expr.fetch(expr_id)
-    expr_obj['snapshot'] = {
-        "timestamp": time.time()
-        # ,"url": s3_url
-    }
-    # Save the expression, but don't update its "updated" time.
-    expr_obj.save(updated=False)
-    return s3_url
+# def upload_snapshot_to_s3(expr_id,thumb_bucket):
+#     # def upload_image(local,remote):
+#     #     k = S3Key(thumb_bucket)
+#     #     k.name = remote
+#     #     k.set_contents_from_filename(local)
+#     #     k.make_public()
+#     #     print "uploaded ",remote
+#     expr_obj = db.Expr.fetch(expr_id)
+#     expr.take_snapshots()
+#     return expr.snapshot("big")
+#     s3_url = Snapshots.s3_url(expr_id)
+
+#     # remote = Snapshots.remote_uri(expr_id)
+#     # upload_image('temp_small.png',remote + '_small')
+#     # upload_image('temp_big.png',remote + '_big')
+#     # expr_obj['snapshot'] = {
+#     #     "timestamp": time.time()
+#     #     # ,"url": s3_url
+#     # }
+#     # # Save the expression, but don't update its "updated" time.
+#     # expr_obj.save(updated=False)
+#     return s3_url
     
 # def gen_thumb(url,dimensions=(500,300)):
 #     from sys import platform

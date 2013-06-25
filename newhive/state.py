@@ -1029,26 +1029,33 @@ class Expr(HasSocial):
             t.start()
         return super(Expr, self).save(updated)
 
+    # size is "big" or "small".
+    # will return 'snapshot_placeholder.png' if no available snapshot
+    def snapshot_name(self, size):
+        if not self.get('snapshot_time'):
+            return 'snapshot_placeholder.png'
+        return '_'.join([self.id, str(self.get('snapshot_time')), size])
+
     def take_snapshots(self):
         old_time = self.get('snapshot_time', False)
 
         snapshotter = Snapshots()
         snapshot_time = now()
         filename_base = '_'.join([self.get('_id'), str(snapshot_time)])
-        dimension_list = [(715, 430), (390, 235)]
+        dimension_list = [(715, 430, "big"), (390, 235, "small")]
 
-        for dimensions in dimension_list:
-            name = filename_base + '_%s.png'%dimensions[0]
-            local = '/tmp/snap_%s.png'%dimensions[0]
-            snapshotter.take_snapshot(self.id, dimensions=dimensions,
+        for w, h, name_suffix in dimension_list:
+            name = filename_base + '_%s.png'%name_suffix
+            local = '/tmp/snap_%s.png'%name_suffix
+            snapshotter.take_snapshot(self.id, dimensions=(w,h),
                 out_filename=local)
             url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
 
         # Delete old snapshot
         if old_time:
             filename_base = '_'.join([self.get('_id'), str(old_time)])
-            for dimensions in dimension_list:
-                name = filename_base + '_%s.png'%dimensions[0]
+            for w, h, name_suffix in dimension_list:
+                name = filename_base + '_%s.png'%name_suffix
                 self.db.s3.delete_file('thumb', name)
 
         # self['snapshot'] = url[:-7]
@@ -1056,13 +1063,11 @@ class Expr(HasSocial):
         self.save(False)
 
     # @property
-    def snapshot(self, size='715', update=True):
+    def snapshot(self, size='big', update=True):
         # Take new snapshot if necessary and requested
         if update and (not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time')):
             self.take_snapshots()
-        if not self.get('snapshot_time'):
-            return 'placeholder.png'
-        filename = '_'.join([self.get('_id'), str(self.get('snapshot_time')), size])
+        filename = self.snapshot_name(size)
         s3_url = 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
         return s3_url
 
@@ -1266,10 +1271,7 @@ class Expr(HasSocial):
         })
         # Until the migration happens, let's just put a placeholder image in the snapshot field
         # instead of starting the generation of snapshots inside of client_view.
-        if self.get('snapshot_time'):
-            expr['snapshot'] = self.snapshot(size='', update=False)
-        else:
-            expr['snapshot'] = 'snapshot_placeholder.png'
+        expr['snapshot'] = self.snapshot("", update=False)
         if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': self.is_featured })
 
