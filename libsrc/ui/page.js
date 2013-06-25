@@ -330,6 +330,11 @@ define([
             $('#password_field').removeClass('hide');
         });
 
+        // on_file_upload returns a handler for server response from a
+        //   file form submission
+        // data from server is list of dicts representing files just uploaded
+        // img src is updated based on data
+        // input (hidden) value is set to URL from data
         function on_file_upload(img, input){ return function(e, data){
             if(data.error)
                 alert('Sorry, I did not understand that file as an image.' +
