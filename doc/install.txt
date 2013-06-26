@@ -27,6 +27,18 @@ Python library dependencies
     pyes -- https://github.com/aparo/pyes
         werkzeug --- ??? what repo
 
+JavaScript dependencies
+    node:
+        wget http://nodejs.org/dist/v0.10.12/node-v0.10.12.tar.gz
+        tar zxf node-v0.10.12.tar.gz
+        cd node-v0.10.12
+        chmod -R o+rX .
+        make
+        sudo make install
+    cram:
+        sudo npm install -g bower
+        sudo npm install -g cram
+
 Application dependencies (Ubuntu packages)
 	sudo apt-get install mongodb ruby-sass ruby-compass cutycapt
     # these are on abram's machine.  scp
