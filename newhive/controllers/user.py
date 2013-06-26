@@ -6,6 +6,10 @@ from newhive.utils import log_error, dfilter, lget
 class User(ModelController):
     model_name = 'User'
 
+    def bugbug(self, tdata, request, response, **args):
+        1/0
+        return self.serve_json(response, resp)
+
     def login(self, tdata, request, response):
         authed = auth.handle_login(self.db, request, response)
         if type(authed) == self.db.User.entity: resp = authed.client_view()
