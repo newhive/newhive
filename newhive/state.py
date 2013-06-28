@@ -24,6 +24,7 @@ from boto.s3.key import Key as S3Key
 
 import Queue
 import threading
+from subprocess import call
 
 from newhive.utils import *
 from newhive.routes import reserved_words
@@ -1065,10 +1066,13 @@ class Expr(HasSocial):
 
         for w, h, size in dimension_list:
             name = self.snapshot_name_base(size, str(snapshot_time))
-            local = '/tmp/snap_%s.png'%size
+            # This would be cleaner with file pipes instead of filesystem.
+            local = '/tmp/' + name
             snapshotter.take_snapshot(self.id, dimensions=(w,h),
                 out_filename=local)
             url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
+            # need to delete local
+            call(["rm", local])
 
         # Delete old snapshot
         if old_time:
