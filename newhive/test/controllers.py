@@ -9,9 +9,12 @@
 import copy
 import unittest
 from werkzeug.test import Client
-from newhive import config, utils
-from newhive.wsgi import application, hive_assets, Response, db, jinja_env
+from newhive import config, utils, app
+# from newhive.wsgi import application, hive_assets, Response, db, jinja_env
 from bs4 import BeautifulSoup #html parser
+
+# db = app.db
+# jinja_env = 
 
 class Test(unittest.TestCase):
     """Base newhive test case.  Has handy methods for performing a request on
@@ -196,3 +199,4 @@ class ExpressionTest(Test):
         response = self.open(data=data)
         print response.status
         self.assertStatus(response, 303)
+

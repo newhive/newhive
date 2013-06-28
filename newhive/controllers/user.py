@@ -58,9 +58,9 @@ class User(ModelController):
         if text.strip() == '': return False
 
         comment = self.db.Comment.create(user, expr, {'text': text})
-        # TODO: mail settings
-        # if user.id != expr.owner.id:
-        #     mail.Feed(db=self.db, jinja_env=self.jinja_env).send(comment)
+        # mail settings
+        if user.id != expr.owner.id:
+            mail.Feed(db=self.db, jinja_env=self.jinja_env).send(comment)
         resp.update( self.get_expr_activity(expr, user) )
         return self.serve_json(response, resp)
 

@@ -14,3 +14,4 @@ compiled.*
 *.DS_Store
 /newhive/.ropeproject
 /log/*.txt
+newhive.log

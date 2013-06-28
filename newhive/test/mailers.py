@@ -1,10 +1,21 @@
 import unittest, random
 import newhive.test
-from newhive.wsgi import db, jinja_env
+# from newhive.wsgi import db, jinja_env
+# from newhive import app      
 from newhive.utils import abs_url, now
-from newhive import mail, config
+from newhive import mail, config, state, app
+
+import jinja2
+import os.path
+from newhive.assets import HiveAssets
+
+hive_assets = app.hive_assets
+jinja_env = app.jinja_env
+db = app.db
+
 mail.send_real_email = False
 mail.css_debug = True
+
 
 class MailerTest(unittest.TestCase):
     def setUp(self):
@@ -149,7 +160,7 @@ class SiteReferralReminder(MailerTest):
         spec = {
                 'user_created': {'$exists': False}
                 , 'reuse': {'$exists': False}
-                , 'user': db.User.site_user.id
+                , 'user': db.User.root_user.id
                 }
         offset = random.randint(1,100)
         ref = db.Referral.search(spec, sort=[('created', -1)], offset=offset, limit=1)[0]
@@ -163,3 +174,6 @@ class UserInvitesReminder(MailerTest):
     def test_user_invites_reminder(self):
         user = self.get_user()
         self.mailer.send(user)
+
+if __name__ == '__main__':
+    unittest.main()
