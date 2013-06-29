@@ -1,0 +1,18 @@
+<html>
+<head>
+  <script>
+curl({
+    baseUrl: '.',
+    pluginPath: 'curl/plugin',
+    paths: {
+        curl: 'curl'
+    }
+});
+
+curl(['ui/controller'], function(controller){
+    controller.init({"route_name": "home"});
+});
+  </script>
+</head>
+<body></body>
+</html>

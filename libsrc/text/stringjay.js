@@ -304,7 +304,7 @@ define(['browser/js', 'module', 'server/context'],
 		return 'Render error in template ' + context[1].template.template_name +
 			', line ' + node.line + ': ' + msg; }
 
-	o.template = function(template_src){
+	o.template = function(template_src, name){
 		var ast = parse(template_src);
 		function template(data){
 			if(!data) data = {};
@@ -318,8 +318,24 @@ define(['browser/js', 'module', 'server/context'],
 		template.template_apply = function(context){
 			return render_node(context, ast);
 		};
+		template.template_name = name;
+
+		// add template_apply to context for rendering from within a template
+		set_reference(o.base_context, name, template.template_apply);
+
 		return template;
 	};
+
+	function set_reference(obj, name, val){
+		var path = name.replace(/\//g, '.').split('.'), prop_name, prop;
+		while(prop_name = path.shift()){
+			prop = obj[prop_name];
+			if(!path.length) obj[prop_name] = val;
+			else if(typeof(prop) != 'object') prop = obj[prop_name] = {};
+			obj = prop;
+		}
+		obj = val;
+	}
 
 	// TODO: finish
 	o.compile = function(){ return compile(o2.ast); };
