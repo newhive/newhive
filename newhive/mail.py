@@ -567,7 +567,7 @@ class SiteReferral(Mailer):
     def send(self, email, name=False, force_resend=False):
         self.recipient = {'email': email, 'name': name}
 
-        user = self.db.User.root_user
+        user = self.db.User.site_user
         referral = user.new_referral({'name': name, 'to': email})
 
         context = {

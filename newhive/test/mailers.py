@@ -160,7 +160,7 @@ class SiteReferralReminder(MailerTest):
         spec = {
                 'user_created': {'$exists': False}
                 , 'reuse': {'$exists': False}
-                , 'user': db.User.root_user.id
+                , 'user': db.User.site_user.id
                 }
         offset = random.randint(1,100)
         ref = db.Referral.search(spec, sort=[('created', -1)], offset=offset, limit=1)[0]
