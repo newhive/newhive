@@ -1016,46 +1016,64 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
-    def save(self, updated=True):
-        def threaded_snapshot(q, expr):
+    def threaded_snapshot(self):
+        def threaded_snapshot_q(q, expr):
             expr.take_snapshots()
 
+        q = Queue.Queue()
+
+        t = threading.Thread(target=threaded_snapshot_q, args = (q,self))
+        t.daemon = True
+        t.start()
+
+    def save(self, updated=True):
         # When an expression is updated, update its snapshots (in separate thread)
         if updated:
-            q = Queue.Queue()
-
-            t = threading.Thread(target=threaded_snapshot, args = (q,self))
-            t.daemon = True
-            t.start()
+            self.threaded_snapshot();
         return super(Expr, self).save(updated)
+
+    def entropy(self, force_update = False):
+        if force_update or (not self.get('entropy')):
+            self['entropy'] = junkstr(8)
+        return self['entropy']
+
+    def snapshot_name_base(self, size, time):
+        return '_'.join([self.id, time, self.entropy(), size]) + ".png"
 
     # size is "big" or "small".
     # will return 'snapshot_placeholder.png' if no available snapshot
     def snapshot_name(self, size):
         if not self.get('snapshot_time'):
             return 'snapshot_placeholder.png'
-        return '_'.join([self.id, str(self.get('snapshot_time')), size])
+        filename = self.snapshot_name_base(size, str(self.get('snapshot_time')))
+        return 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
 
+    def snapshot_name_prefix(self):
+        if not self.get('snapshot_time'):
+            return 'snapshot_placeholder.png'
+        # Chop off the ".png" extension, don't include "big" or "small".
+        return self.snapshot_name('')[:-4]
+
+    # Note: this takes snapshots in the current thread.
+    # For threaded snapshots, use threaded_snapshot()
     def take_snapshots(self):
         old_time = self.get('snapshot_time', False)
 
         snapshotter = Snapshots()
         snapshot_time = now()
-        filename_base = '_'.join([self.get('_id'), str(snapshot_time)])
         dimension_list = [(715, 430, "big"), (390, 235, "small")]
 
-        for w, h, name_suffix in dimension_list:
-            name = filename_base + '_%s.png'%name_suffix
-            local = '/tmp/snap_%s.png'%name_suffix
+        for w, h, size in dimension_list:
+            name = self.snapshot_name_base(size, str(snapshot_time))
+            local = '/tmp/snap_%s.png'%size
             snapshotter.take_snapshot(self.id, dimensions=(w,h),
                 out_filename=local)
             url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
 
         # Delete old snapshot
         if old_time:
-            filename_base = '_'.join([self.get('_id'), str(old_time)])
-            for w, h, name_suffix in dimension_list:
-                name = filename_base + '_%s.png'%name_suffix
+            for w, h, size in dimension_list:
+                name = self.snapshot_name_base(size, str(old_time))
                 self.db.s3.delete_file('thumb', name)
 
         # self['snapshot'] = url[:-7]
@@ -1067,9 +1085,7 @@ class Expr(HasSocial):
         # Take new snapshot if necessary and requested
         if update and (not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time')):
             self.take_snapshots()
-        filename = self.snapshot_name(size)
-        s3_url = 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
-        return s3_url
+        return self.snapshot_name(size)
 
     def related_next(self, spec={}, **kwargs):
         if type(spec) == dict:
@@ -1271,7 +1287,7 @@ class Expr(HasSocial):
         })
         # Until the migration happens, let's just put a placeholder image in the snapshot field
         # instead of starting the generation of snapshots inside of client_view.
-        expr['snapshot'] = self.snapshot("", update=False)
+        expr['snapshot'] = self.snapshot_name_prefix()
         if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': self.is_featured })
 
@@ -1284,6 +1300,11 @@ class Expr(HasSocial):
     @property
     def tag_string(self):
         return ' '.join(["#" + tag for tag in self.get('tags_index', [])])
+
+    @property
+    def private(self):
+        return self['auth'] != 'public'
+
 
 def generate_thumb(file, size):
     # resize and crop image to size tuple, preserving aspect ratio, save over original

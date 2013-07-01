@@ -17,7 +17,11 @@ class Expr(ModelController):
 
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
-        return self.redirect(response, expr_obj.snapshot()+".png")
+        if expr_obj.private and tdata.user.id != expr_obj.owner.id:
+            return self.serve_json(response,expr_obj)
+
+        # expr_obj.take_snapshots()
+        return self.redirect(response, expr_obj.snapshot('big', False)+".png")
 
     def fetch_naked(self, tdata, request, response, expr_id):
         # Request must come from content_domain, as this serves untrusted content

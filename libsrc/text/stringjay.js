@@ -436,7 +436,8 @@ define(['browser/js', 'module', 'server/context'],
 	default_base['debug'] = function(context, do_break){
 		if(do_break) throw o.render_error('debug break', context,
 			get_template(context).render_node);
-		return '';
+		// possibly add rendering context in invisible div
+		return '<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};
 	default_base.e = encode_to_html;
 	default_base.json = function(context, data){

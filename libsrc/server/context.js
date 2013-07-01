@@ -14,11 +14,15 @@ define([
         return assets[name];
     };
 
-    o.attrs = function(route_name, route_args, query_args, is_form){
+    o.attrs = function(route_name, route_args, query_args, is_form, suppress){
+        if (!suppress) suppress = [];
         if(!api_routes[route_name]) throw('Route "' + route_name + '" not found');
-        var attributes = [ ['data-route-name', route_name] ],
-            href = api_routes[route_name]['page_route'] + query_args,
-            api = api_routes[route_name]['api_route'] + query_args;
+        var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
+                [ ['data-route-name', route_name] ],
+            href = suppress.indexOf('href') >= 0 ? null : 
+                api_routes[route_name]['page_route'] + query_args,
+            api = suppress.indexOf('api') >= 0 ? null : 
+                api_routes[route_name]['api_route'] + query_args;
         if (is_form) {
             attributes.push(['enctype', 'multipart/form-data']);
             if(api) attributes.push(['action',
@@ -58,6 +62,13 @@ define([
     o.anchor_attrs = function(scope, route_name){
         var route_args = o.route_args(arguments);
         return o.attrs(route_name, route_args, "", false);
+    };
+
+    // takes route_name, and association argument list.
+    // Returns attribute string.
+    o.href_attrs = function(scope, route_name){
+        var route_args = o.route_args(arguments);
+        return o.attrs(route_name, route_args, "", false, ['api', 'attributes']);
     };
 
     // does the same as function above but for <form>s instead of <a>s
