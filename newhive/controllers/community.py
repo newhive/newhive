@@ -1,6 +1,6 @@
 from newhive import mail
 from newhive.ui_strings import en as ui_str
-from newhive.utils import dfilter
+from newhive.utils import dfilter, now
 from newhive.controllers.controller import Controller
 
 class Community(Controller):
@@ -75,9 +75,10 @@ class Community(Controller):
             update = dict(
                 fullname=request.form.get('fullname'),
                 profile_about=request.form.get('profile_about'),
-                email=request.form.get('email'),
-                password=request.form.get('new_password')
-            )
+                email=request.form.get('email'))
+
+            if request.form.get('new_password'):
+                update.update({'password': request.form.get('new_password')})
 
             file_r = self.db.File.fetch(request.form.get('profile_bg'))
             if file_r:
@@ -88,7 +89,12 @@ class Community(Controller):
                 update['thumb_file_id'] = file_r.id
                 update['profile_thumb'] = file_r['url']
 
-            # TODO: update email lists
+            if update['email'] and update['email'] != owner.get('email'):
+                request_date = now()
+                # owner.update(email_confirmation_request_date=request_date)
+                mail.EmailConfirmation(db=self.db, jinja_env=self.jinja_env).send(
+                    owner, update['email'], request_date)
+                # message = message + ui.email_change_success_message + " "
 
             owner.update(**update)
 

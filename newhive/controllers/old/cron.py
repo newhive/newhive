@@ -1,6 +1,6 @@
 from itertools import chain
 from newhive.controllers.shared import *
-from newhive.controllers import Application
+from newhive.controllers import Controller
 from newhive.utils import now
 from newhive.analytics.analytics import user_expression_summary
 import newhive.analytics.queries
@@ -8,7 +8,7 @@ import newhive.mail
 from newhive import config
 
 
-class Cron(Application):
+class Cron(Controller):
     key = 'VaUcZjzozgiV'
 
     def cron(self, request, response):

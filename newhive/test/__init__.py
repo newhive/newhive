@@ -1,7 +1,8 @@
 # diable stderr logging
 import logging
 logger = logging.getLogger('newhive')
-logger.info("diabling stderr logging from here on out for tests, see newhive.log")
+logging.basicConfig(filename='newhive.log', filemode='w', level=logging.DEBUG)
+logger.info("disabling stderr logging from here on out for tests, see newhive.log")
 for handler in logger.handlers:
     if handler.name == 'stderr': logger.removeHandler(handler)
 

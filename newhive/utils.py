@@ -20,6 +20,16 @@ def lset(l, i, e, *default):
     if i < len(l): l[i] = e
     else: l.extend(default * (i - len(l)) + [e])
 
+def large_number(number):
+    if type(number) != int: return number
+    if number < 10000: return '{:,}'.format(number)
+    elif 10000 <= number < 1000000:
+        return str(int(number/1000)) + "K"
+    elif 1000000 <= number < 10000000:
+        return str(math.floor(number/100000)/10) + "M"
+    elif 10000000 <= number:
+        return "{:,}".format(int(number/1000000)) + "M"
+
 
 def index_of(l, f):
     for i, e in enumerate(l):

@@ -17,6 +17,8 @@ import newhive.state
 from newhive.state import abs_url
 from newhive.utils import AbsUrl
 from newhive import config, utils
+# from app import hive_assets
+import app
 import newhive.ui_strings.en as ui
 from newhive.analytics import analytics
 from newhive.manage.ec2 import public_hostname
@@ -156,11 +158,17 @@ class Mailer(object):
     def __init__(self, jinja_env=None, db=None, smtp=None):
         self.db = db
         self.jinja_env = jinja_env
+        self.assets = app.hive_assets
+        self.asset = self.assets.url
         # Note, these functions are taken from newhive/old/wsgi.py:56:
         jinja_env.filters.update( {
-            'html_breaks': lambda s: re.sub('\n', '<br/>', unicode(s))
-            ,'modify_query': utils.modify_query
+            'asset_url': app.hive_assets.url
             ,'clean_url': lambda s: re.match('https?://([^?]*)', s).groups()[0]
+            ,'html_breaks': lambda s: re.sub('\n', '<br/>', unicode(s))
+            ,'large_number': utils.large_number
+            ,'modify_query': utils.modify_query
+            ,'number': lambda n: '{:,}'.format(n)       # adds ',' thousands separator
+            ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
             })
         t0 = time.time()
         if smtp:
@@ -437,7 +445,7 @@ class Welcome(Mailer):
         context = {
             'recipient': user
             , 'create_link' : abs_url(secure=True) + "edit"
-            , 'create_icon': self.db.assets.url('skin/1/create.png')
+            , 'create_icon': self.asset('skin/1/create.png')
             , 'featured_exprs': self.db.Expr.featured(6)
             }
         self.send_mail(context)
@@ -559,7 +567,7 @@ class SiteReferral(Mailer):
     def send(self, email, name=False, force_resend=False):
         self.recipient = {'email': email, 'name': name}
 
-        user = self.db.User.named(config.site_user)
+        user = self.db.User.site_user
         referral = user.new_referral({'name': name, 'to': email})
 
         context = {

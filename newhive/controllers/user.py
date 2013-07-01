@@ -58,9 +58,9 @@ class User(ModelController):
         if text.strip() == '': return False
 
         comment = self.db.Comment.create(user, expr, {'text': text})
-        # TODO: mail settings
-        # if user.id != expr.owner.id:
-        #     mail.Feed(db=self.db, jinja_env=self.jinja_env).send(comment)
+        # mail settings
+        if user.id != expr.owner.id:
+            mail.Feed(db=self.db, jinja_env=self.jinja_env).send(comment)
         resp.update( self.get_expr_activity(expr, user) )
         return self.serve_json(response, resp)
 
@@ -101,7 +101,8 @@ class User(ModelController):
         # self.db.ActionLog.create(request.requester, 'share', data=log_data)
 
         mailer = mail.ShareExpr(self.jinja_env, db=self.db)
-        mailer.send(expr, user, recipient, request.form.get('message'), request.form.get('send_copy'))
+        mailer.send(expr, user, recipient, request.form.get('message'), 
+            request.form.get('send_copy'))
 
         return self.serve_json(response, resp)
 
@@ -139,8 +140,7 @@ class User(ModelController):
             ,'message': request.form.get('message')
             ,'url': request.form.get('forward')
             }
-        if (
-            not (form.get('email') and form.get('message')) or
+        if (not (form.get('email') and form.get('message')) or
             request.form.get('phone') # value in invisible field means spam
         ):
             return self.serve_json(response, False)
@@ -149,16 +149,6 @@ class User(ModelController):
 
         # sending email is non-essential
         try:
-            heads = {
-                 'To' : 'info@thenewhive.com'
-                ,'From' : 'www-data@' + config.server_name
-                ,'Subject' : '[home page contact form]'
-                ,'Reply-to' : form['email']
-                }
-            body = "Email: %(email)s\n\nName: %(name)s\n\nHow did you hear about us?\n%(referral)s\n\nHow do you express yourself?\n%(message)s" % form
-            try: send_mail(heads, body)
-            except Exception as e:
-                logger
             sendgrid_args = {'contact_id': contact.id, 'url': form['url']}
 
             mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
