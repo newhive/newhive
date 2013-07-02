@@ -40,7 +40,7 @@ define([
         for(var i = 2; i < arguments.length; i += 2)
             route_args[arguments[i]] = arguments[i + 1];
 
-        return route_args;        
+        return route_args;
     };
 
     o.search_attrs = function(scope){

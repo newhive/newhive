@@ -49,19 +49,18 @@
 // TODO: make templates/context dependency part of sj! loader module
 // create base_context setter method in here.
 // That should make stringjay independent of NewHive
-define(['browser/js', 'module', 'server/context'],
-	function(util, module, base_context)
+define(['browser/js', 'module'],
+	function(util, module)
 {
 	"use strict";
 
 	var o = {
 		version: '1.0.0',
-		base_context: base_context,
 		template_text: /^[^{]+/,
 		tag_open: /^{/,
 		tag_close: /^\s*}/,
 		strip_whitespace: false // not yet implemented
-	};
+	}, default_base = {};
 	var suffix = new Array('', 'K', 'M', 'G');
 
 	// parse :: String -> AST Object Array, throws ParseError String
@@ -304,24 +303,25 @@ define(['browser/js', 'module', 'server/context'],
 		return 'Render error in template ' + context[1].template.template_name +
 			', line ' + node.line + ': ' + msg; }
 
-	o.template = function(template_src, name){
-		var ast = parse(template_src);
+	o.template = function(template_src, name, base_context){
+		var ast = parse(template_src),
+			context = util.copy(base_context, default_base);
 		function template(data){
 			if(!data) data = {};
 			data.template = template;
-			var context = [ o.base_context, data ];
-			return resolve(context, ['after_render'], false, 0)(
-				render_node(context, ast) );
+			var stack = [ context, data ];
+			return resolve(stack, ['after_render'], false, 0)(
+				render_node(stack, ast) );
 		}
 		template.ast = ast;
 		template.render_node = ast;
-		template.template_apply = function(context){
-			return render_node(context, ast);
+		template.template_apply = function(stack){
+			return render_node(stack, ast);
 		};
 		template.template_name = name;
 
 		// add template_apply to context for rendering from within a template
-		set_reference(o.base_context, name, template.template_apply);
+		set_reference(base_context, name, template.template_apply);
 
 		return template;
 	};
@@ -341,9 +341,9 @@ define(['browser/js', 'module', 'server/context'],
 	o.compile = function(){ return compile(o2.ast); };
 
 	// TODO: finish
-	o.compile_amd = function(){
-		return "define(['" + module.id + "'], function(sj){" + compile(o2.ast) + '});';
-	};
+	// o.compile_amd = function(){
+	// 	return "define(['" + module.id + "'], function(sj){" + compile(o2.ast) + '});';
+	// };
 
 	function resolve(context, path, absolute, up_levels){
 		var level = absolute ? 0 : context.length - 1 - up_levels, value;
@@ -377,7 +377,6 @@ define(['browser/js', 'module', 'server/context'],
 		});
 	};
 
-	var default_base = {};
 	default_base.after_render = function(a){ return a };
 	default_base['true'] = true;
 	default_base['false'] = false;
@@ -468,7 +467,6 @@ define(['browser/js', 'module', 'server/context'],
 		}
 		return n + suffix[i];
 	};
-	o.base_context = util.copy(o.base_context, default_base);
 
 	return o;
 });
