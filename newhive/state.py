@@ -738,7 +738,11 @@ class User(HasSocial):
             if file:
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
-        return self.get('profile_thumb')
+        if self.get('profile_thumb'):
+            return self.get('profile_thumb')
+        # bugbug: Need correct asset.
+        # perhaps get this image from a prototypical user
+        return '/lib/skin/nav/comment.png'
     thumb = property(get_thumb)
 
     def get_files(self):
