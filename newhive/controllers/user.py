@@ -164,7 +164,34 @@ class User(ModelController):
 
         return self.serve_json(response, True)
 
-    # TODO: hook up & debug
+    # TODO-hookup & test
+    def password_recovery_1(self, request, response):
+        email = request.form.get('email')
+        user = self.db.User.find({'email': email})
+        if user:
+            key = junkstr(16)
+            recovery_link = abs_url(secure=True) + 'password_recovery?key=' + key + '&user=' + user.id
+            mail.TemporaryPassword(jinja_env=self.jinja_env, db=self.db).send(user, recovery_link)
+            user.update(password_recovery = key)
+            return self.serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
+        else:
+            return self.serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
+    def password_recovery_2(self, request, response):
+        message = ''
+        key = request.args.get('key')
+        user_id = request.args.get('user')
+        user = self.db.User.fetch(user_id)
+        if user.get('password_recovery') != key: return self._password_recovery_failure(request, response)
+        request.requester = user
+        auth.password_change(request, response, force=True)
+        auth.new_session(self.db, user, request, response)
+        user.update_cmd({'$unset': {'password_recovery': 1}})
+        return self.redirect(response, abs_url())
+    def _password_recovery_failure(self, request, response):
+        response.context['msg'] = ui.invalid_password_recovery_link
+        return self.serve_page(response, 'pages/error.html')
+
+    # TODO-hookup & test
     def user_referral(self, request, response):
         user = request.requester
         mailer = mail.UserReferral(db=self.db, jinja_env=self.jinja_env)
@@ -177,7 +204,7 @@ class User(ModelController):
 
         return self.redirect(response, request.form.get('forward'))
 
-    # TODO: hook up & debug
+    # TODO-hookup & test
     def mail_feedback(self, request, response):
         if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')
         feedback_address = 'bugs+feedback@' + config.server_name 
@@ -203,6 +230,46 @@ class User(ModelController):
             print heads
             send_mail( heads, body, category = 'mail_feedback' )
         response.context['success'] = True
+
+    # TODO-hookup & test
+    def unsubscribe_form(self, request, response):
+        email = self.db.MailLog.fetch(request.args.get('email_id'))
+        response.context['email'] = email.get('email')
+        response.context['initiator'] = self.db.User.fetch(email.get('initiator'))
+        return self.serve_page(response, 'pages/unsubscribe.html')
+
+    # TODO-hookup & test
+    def unsubscribe(self, request, response):
+        email = self.db.MailLog.fetch(request.args.get('email_id'))
+        email_addr = email['email']
+        unsub = self.db.Unsubscribes.fetch_empty(email_addr, keyname='email')
+        type = request.form.get('unsubscribe')
+        if type == 'user':
+            unsub.update_cmd({'$set': {'email': email_addr}, '$push': {'users': request.form.get('user')}}, upsert=True)
+        elif type == 'all':
+            unsub.update_cmd({'$set': {'all': True, 'email': email_addr}}, upsert=True)
+        email.update(unsubscribe=type, unsubscribe_date=now())
+        response_dict = {'type': type, 'name': request.form.get('username')}
+        return self.serve_json(response, response_dict)
+
+    # TODO-hookup & test
+    def name_check(self, request, response):
+        user_available = False if self.db.User.named(request.args.get('name')) else True
+        return self.serve_json(response, user_available)
+
+    # TODO-hookup & test
+    def confirm_email(self, request, response):
+        user = self.db.User.fetch(request.args.get('user'))
+        email = request.args.get('email')
+        if not user:
+            response.context.update({'err': 'user record does not exist'})
+        if not request.args.get('secret') == crypt.crypt(email, "$6$" + str(int(user.get('email_confirmation_request_date')))):
+            response.context.update({'err': 'secret does not match email'})
+        else:
+            user.flag('confirmed_email')
+            user.update(email=email)
+            response.context.update({'user': user, 'email': email})
+        return self.serve_page(response, "pages/email_confirmation.html")
 
     # def newxxxxxxxxxx(self, request, response):
     #     if request.requester.logged_in: return self.redirect(response, request.requester.url)

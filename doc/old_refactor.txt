@@ -1,0 +1,29 @@
+User account behavior
+    check username availability
+        newhive.controllers.user.name_check
+
+    password recovery
+        newhive.controllers.user.password_recovery_1
+        newhive.controllers.user.password_recovery_2
+        ui (link in login form)
+
+    email invite
+        newhive.controllers.user.user_referral
+        ui (dialog from hive menu)
+
+    send feedback
+        newhive.controllers.user.mail_feedback
+        ui (dialog from hive menu)
+
+    unsubscribe for non-users
+        newhive.controllers.user.unsubscribe_form
+        newhive.controllers.user.unsubscribe
+
+    email verification after change
+
+    Facebook integration
+        invite FB friend
+            create account from FB user
+        find and listen to friends
+
+        old misc. FB code in newhive/controllers/old/user
