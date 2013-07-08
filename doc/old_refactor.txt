@@ -21,9 +21,45 @@ User account behavior
 
     email verification after change
 
-    Facebook integration
-        invite FB friend
-            create account from FB user
-        find and listen to friends
+social functions back and front-end for
+    republish
+    love
 
-        old misc. FB code in newhive/controllers/old/user
+dialogs
+    email invites
+    expression password
+    must login to do that dialog
+    sent_invites_thanks
+    editor_browsers
+
+periodic tasks (newhive.controllers.old.cron):
+    email_star_broadcast
+    email_milestone
+
+admin
+    contact_log
+    error_log
+    add_to_featured
+    update_featured
+
+-- NON CRITICAL --
+
+everything in analytics
+
+periodic tasks (newhive.controllers.old.cron):
+    site_referral_reminder
+    user_invites_reminder
+    analytics
+
+Facebook integration
+    invite FB friend
+        create account from FB user
+    find and listen to friends
+
+    old misc. FB code in newhive/controllers/old/user
+
+    dialogs
+        facebook_connect.html
+        fb_account_duplicate.html
+        facebook_listen.html
+        fb_connect_landing.html
