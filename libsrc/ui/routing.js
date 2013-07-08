@@ -1,5 +1,5 @@
 define([
-    'json!ui/routes.json',
+    'json!ui/routes.json'
 ], function(ApiRoutes){
     var o = {};
 
