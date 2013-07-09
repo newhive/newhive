@@ -3,11 +3,11 @@ define([
 ], function(ApiRoutes){
     var o = {};
 
-    o.page_state = function(routeName, routeFormatVars) {
+    o.page_state = function(routeName, route_args) {
         var routeObj = ApiRoutes[routeName];
         return {
-            "api": o.substituteVariables(routeObj.api_route, routeFormatVars, true),
-            "page": o.substituteVariables(routeObj.page_route, routeFormatVars, true),
+            "api": o.substituteVariables(routeObj.api_route, route_args, true),
+            "page": o.substituteVariables(routeObj.page_route, route_args, true),
             "route_name": routeName
         };
     }
