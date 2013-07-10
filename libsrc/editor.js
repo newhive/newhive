@@ -1,7 +1,14 @@
 /* Copyright 2010, A Reflection Of Inc */
 // thenewhive.com client-side expression editor version 0.1
+define([
+    'browser/jquery', 
+    'ui/menu', 
+], function(
+    $,
+    menu
+) {
 
-if(!Hive) Hive = {};
+var Hive = {};
 
 // gives an array function for moving an element around
 Hive.has_shuffle = function(arr) {
@@ -9,7 +16,7 @@ Hive.has_shuffle = function(arr) {
         var e = arr.splice(from, 1)[0];
         arr.splice(to, 0, e);
     };
-}
+};
 
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
@@ -398,7 +405,7 @@ Hive.Controls = function(app, multiselect) {
     o.addButton = function(ctrls) { $.map(ctrls.clone(false), o.appendButton); };
     o.addControls = function(ctrls) { $.map(ctrls.clone(false).children(), o.appendControl); };
     o.hover_menu = function(h, d, opts) {
-        return hover_menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
+        return menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
     o.div = $("<div style='position: absolute; z-index: 3; width: 0; height: 0' class='controls'>");
     $('#controls').append(o.div);
@@ -3149,3 +3156,7 @@ function array_sum( a, b ){
     }
     return rv
 }
+
+return Hive;
+
+});

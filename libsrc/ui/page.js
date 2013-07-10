@@ -11,6 +11,7 @@ define([
     'browser/layout',
     'ui/util',
     'ui/routing',
+    'ui/page/pages',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
     'sj!templates/social_overlay.html',
@@ -30,42 +31,56 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/request_invite_form.html'
 ], function(
-    $, nav, new_account, context, browser_layout, ui_util, routing,
-    master_template, home_template, social_overlay_template, overlay_template,
-    profile_edit_template, tags_page_template, activity_template
-) {
-    var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
-        context.secure_content_server_url : context.content_server_url,
-        grid_width, controller, 
+    $,
+    nav,
+    new_account,
+    context,
+    browser_layout,
+    ui_util,
+    routing,
+    pages,
+    master_template,
+    home_template,
+    social_overlay_template,
+    overlay_template,
+    profile_edit_template,
+    tags_page_template,
+    activity_template
+){
+    var o = {}, expr_page = false, grid_width, controller,
         anim_direction; // 0 = up, +/-1 = right/left
-    const ANIM_DURATION = 700;
+    const anim_duration = 700;
 
     o.init = function(controller){
         o.anim_direction = 0;
         o.controller = controller;
         nav.render();
-        o.render_overlays();
-        $(window).resize(layout);
+        o.render_overlays(); // TODO: move into ./page/expr
+        $(window).resize(layout); // TODO: move into dependent pages
         window.addEventListener('message', o.handle_message, false);
 
         layout();
     };
 
+    // TODO: move to expr
     o.render_overlays = function(){
         $('#overlays').empty().html(overlay_template());
         $("#page_prev").click(o.page_prev);
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
         $("#nav #plus").click(o.social_toggle);
-    }
+    };
 
     o.render = function(method, data){
         expr_page = (method == 'expr');
         if(!expr_page) hide_exprs();
         var page_data = data.page_data;
         page_data.layout = method;
-        if(o[method]) o[method](page_data);
+        if(pages[method]) pages[method].render(page_data);
+        else if(o[method]) o[method](page_data);
         else render_site(page_data);
+
+        // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
             o.render_tag_page();
         }
@@ -75,6 +90,8 @@ define([
         o.attach_handlers();
     };
 
+    // TODO: move to expr
+    ///////////////////////////////////
     o.attach_handlers = function(){
         $(".feed_item").each(function(i, el) {
             edit_button = $(el).find('button[name=edit]');
@@ -224,85 +241,6 @@ define([
         o.render_tag_page();
     }
 
-    // Animate the new visible expression, bring it to top of z-index.
-    // TODO: animate nav bar
-    o.expr = function(page_data){
-        // TODO: should the HTML render on page load? Or delayed?
-        // $("#nav").prependTo("body");
-        // TODO: shouldn't empty #nav
-        $("#popup_content").remove()
-        $('#social_overlay').append(
-            social_overlay_template(context.page_data));
-        if (0) { // bugdebug. debugging short windows sucks.
-            $('#social_overlay').css('height','550px');
-            $('#social_overlay #popup_content').css('height','506px');
-        }
-        var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
-        $('#dia_embed textarea').val("<iframe src='" + embed_url + 
-            "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
-            " frameborder='0' vspace='0' hspace='0'></iframe>");
-        $("#nav").hide();
-        // $("#nav").prependTo("#social_overlay");
-        $("#social_close").unbind('click');
-        $("#social_close").click(o.social_toggle);
-        // $("#nav #plus").unbind('click');
-        // $("#nav #plus").click(o.social_toggle);
-        $('#comment_form').on('response', o.comment_response);
-
-        // display_expr(page_data.expr_id);
-        var expr_id = page_data.expr_id;
-        var expr_curr = $('.expr-visible');
-        expr_curr.removeClass('expr-visible');
-        $('#exprs').show();
-        $('#social_plus').show();
-
-        var contentFrame = $('#expr_' + expr_id);
-        if (contentFrame.length == 0) {
-            // Create new content frame
-            var contentFrameURL = contentFrameURLBase + expr_id;
-            contentFrame = $('<iframe class="expr expr-visible">');
-            contentFrame.attr('src', contentFrameURL);
-            contentFrame.attr('id','expr_' + expr_id);
-            $('#exprs').append(contentFrame);
-        }
-        else {
-            contentFrame.addClass('expr-visible').removeClass('expr-hidden');
-            contentFrame.get(0).contentWindow.
-                postMessage({action: 'show'}, '*');
-        }
-        contentFrame.show();
-        if (o.anim_direction == 0 || expr_curr.length != 1) {
-            contentFrame.css({
-                'left': 0,
-                'top': -contentFrame.height() + 'px',
-                'z-index': 1 }
-            ).animate({
-                top: "0"
-            }, {
-                duration: ANIM_DURATION,
-                complete: hide_other_exprs });
-        } else {
-            // 
-            contentFrame.css({
-                'top': 0,
-                'left': o.anim_direction * contentFrame.width(),
-                'z-index': 1 }
-            ).animate({
-                left: "0"
-            }, {
-                duration: ANIM_DURATION,
-                complete: hide_other_exprs,
-                queue: false })
-            expr_curr.animate({
-                'left': -o.anim_direction * contentFrame.width(),
-            }, {
-                duration: ANIM_DURATION,
-                complete: hide_other_exprs,
-                queue: false })
-        }
-        $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
-    }
-
     o.home = function(page_data){
         page_data.layout = 'profile';
         $('#site').empty().append(home_template(page_data));
@@ -367,10 +305,7 @@ define([
         render_site(page_data);
     };
     
-    function hide_other_exprs() {
-        $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').hide();
-    }
-
+    // TODO: move to expr
     function hide_exprs() {
         var contentFrame = $('.expr-visible');
 
@@ -378,7 +313,7 @@ define([
             contentFrame.animate({
                 top: $(window).height() + 'px'
             },{
-                duration: ANIM_DURATION,
+                duration: anim_duration,
                 complete: function() {
                     contentFrame.addClass('expr-hidden');
                     contentFrame.removeClass('expr-visible');
@@ -392,6 +327,7 @@ define([
         }
     }
 
+    // TODO: move to expr
     function hide_expr_complete() {
         $('#exprs').hide();
         $('.overlay').hide();

@@ -26,12 +26,12 @@ define([
         if (is_form) {
             attributes.push(['enctype', 'multipart/form-data']);
             if(api) attributes.push(['action',
-                routing.substituteVariables(api, route_args, true)]);
+                routing.substitute_variables(api, route_args, true)]);
         } else {
             if(href) attributes.push(['href',
-                routing.substituteVariables(href, route_args, true)]);
+                routing.substitute_variables(href, route_args, true)]);
             if(api) attributes.push(['data-api-path',
-                routing.substituteVariables(api, route_args, true)]);
+                routing.substitute_variables(api, route_args, true)]);
         }
         return attributes.map(function(attribute_pair) {
             return attribute_pair[0] + '="' + attribute_pair[1] + '"';
