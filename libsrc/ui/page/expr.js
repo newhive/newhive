@@ -66,7 +66,7 @@ define([
             ).animate({
                 top: "0"
             }, {
-                duration: ANIM_DURATION,
+                duration: anim_duration,
                 complete: hide_other_exprs });
         } else {
             // 
@@ -77,13 +77,13 @@ define([
             ).animate({
                 left: "0"
             }, {
-                duration: ANIM_DURATION,
+                duration: anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
             expr_curr.animate({
                 'left': -o.anim_direction * contentFrame.width(),
             }, {
-                duration: ANIM_DURATION,
+                duration: anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
         }
