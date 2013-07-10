@@ -11,8 +11,18 @@
   #}
   <div id="popup_content">
     <div class="left_pane">
+      {# home button #}
+      <a { anchor_attrs "home" }>
+        {<with . "icon_class" "logo"}{|templates/icon_count.html}{>}
+      </a>
       {# expression title #}
-      <div class="title">{expr.title}</div>
+      <div class="title text">{expr.title}</div>
+      {# user profile #}
+      {<with owner "brief" true}
+        {|templates/profile_card.html}
+      {>}
+    </div>
+    <div class="right_pane">
       {# tags #}
       <div class="tag_list">
         {<for tags "tagnum"}
@@ -23,11 +33,16 @@
           {|templates/icon_count.html}
         {>}{<with . "icon_class" "republish"}
           {|templates/icon_count.html}
-        {>}{<with . "icon_class" "facebook"}
+        {#{>}{<with . "icon_class" "facebook"}
           {|templates/icon_count.html}
         {>}{<with . "icon_class" "tweet"}
           {|templates/icon_count.html}
+          #}
+        {>}{<with . "attr_id" "comment_icon" "icon_class" "comment"}
+          {|templates/icon_count.html}
         {>}{<with . "attr_id" "social_share_icon" "icon_class" "share"}
+          {|templates/icon_count.html}
+        {>}{<with . "attr_id" "social_close" "icon_class" "plus-minus"}
           {|templates/icon_count.html}
         {>}
         <div id="share_menu" class="menu drawer" data-handle='#social_share_icon'>
@@ -40,34 +55,27 @@
           <div id='share_form_btn' class='text_btn menu_item item text hoverable black_active'
               ><span class='text'>Share Expression</span></div>
         </div>
+        {# belongs in its own file? #}
+        <div id="dia_comments" class="dialog" data-handle='#comment_icon'>
+          {# activity feed #}
+          <div class="title text">Discussion</div>
+          <div class='activity'>{<with null "activity" expr.activity}
+            {|templates/activity.html}
+          {>}</div>
+          {# discussion input #}
+          <div id="discussions">
+           <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
+              <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
+              <input type='submit' value='Enter' class='submit btn black rounded'>
+              <input type='hidden' name='action' value='comment'>
+              <input type='hidden' name='entity' value='{id}'>
+            </form>
+          </div>  
+        </div>
         {|templates/dialog_embed.html}
         {|templates/dialog_share.html}
       </div>
    
-      {# activity feed #}
-      <div class='activity'>{<with . "activity" expr.activity}
-        {|templates/activity.html}
-      {>}</div>
-    </div>
-    <div class="right_pane">
-      {# user profile #}
-      <div>{<with owner}
-        {|templates/profile_card.html}
-      {>}</div>
-      {# discussion input #}
-      <div id="discussions">
-        <div>
-          <div class="text">Discussion</div>
-          {<with . "icon_class" "comment"}
-            {|templates/icon_count.html}
-          {>}</div>
-        <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
-          <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
-          <input type='submit' value='Enter' class='submit btn black rounded'>
-          <input type='hidden' name='action' value='comment'>
-          <input type='hidden' name='entity' value='{id}'>
-        </form>
-      </div>  
     </div>
   </div>
 {>}

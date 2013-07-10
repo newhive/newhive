@@ -117,7 +117,7 @@ define([
         if (json.activity != undefined) {
             context.activity = json.activity;
             context.page_data.expr.activity = json.activity;
-            $('#popup_content .activity').empty().html(activity_template(context));
+            $('#dia_comments .activity').empty().html(activity_template(context));
         }
         if (json.user != undefined) {
             // template_data = context;
@@ -233,7 +233,7 @@ define([
         $("#popup_content").remove()
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
-        if (1) { // bugdebug. debugging short windows sucks.
+        if (0) { // bugdebug. debugging short windows sucks.
             $('#social_overlay').css('height','550px');
             $('#social_overlay #popup_content').css('height','506px');
         }
@@ -241,9 +241,12 @@ define([
         $('#dia_embed textarea').val("<iframe src='" + embed_url + 
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
             " frameborder='0' vspace='0' hspace='0'></iframe>");
-        $("#nav").prependTo("#social_overlay");
-        $("#nav #plus").unbind('click');
-        $("#nav #plus").click(o.social_toggle);
+        $("#nav").hide();
+        // $("#nav").prependTo("#social_overlay");
+        $("#social_close").unbind('click');
+        $("#social_close").click(o.social_toggle);
+        // $("#nav #plus").unbind('click');
+        // $("#nav #plus").click(o.social_toggle);
         $('#comment_form').on('response', o.comment_response);
 
         // display_expr(page_data.expr_id);
@@ -392,7 +395,8 @@ define([
     function hide_expr_complete() {
         $('#exprs').hide();
         $('.overlay').hide();
-        $('#nav').prependTo("body");
+        // $('#nav').prependTo("body");
+        $("#nav").show();
     }
 
     function render_site(page_data){

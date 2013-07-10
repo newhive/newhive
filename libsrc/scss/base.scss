@@ -13,6 +13,9 @@ img.centered, div.centered {
 .text {
     display:inline-block;
 }
+.title {
+    font-size: 46px;
+}
 
 // Icons
 .counts_icon {
@@ -30,6 +33,22 @@ img.centered, div.centered {
         height:48px;
     }
 
+    .icon.logo {
+        width:45px;
+        &.icon { background-image: asset_url('skin/nav/logo.png'); }
+        &.on { background-color: $color_bright_red; }
+        &.on .icon { background-image: asset_url('skin/nav/logo-hover.png'); }
+        &:hover { background-color: $color_selected; }
+        &.hover { background-image: asset_url('skin/nav/logo-hover.png'); }
+    }
+    // need minus asset
+    .plus-minus {
+        &.icon { background-image: asset_url('skin/nav/plus.png'); }
+        &.on { background-color: $color_bright_red; }
+        //&.on .icon { background-image: asset_url('skin/nav/plus-on.png'); }
+        &:hover { background-color: $color_selected; }
+        &.hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+    }
     .love {
         &.icon { background-image: asset_url('skin/nav/love.png'); }
         &.on { background-color: $color_bright_red; }
