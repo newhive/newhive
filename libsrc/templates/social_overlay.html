@@ -11,10 +11,10 @@
   #}
   <div id="popup_content">
     <div class="left_pane">
-      {# home button #}
-      <a { anchor_attrs "home" }>
-        {<with . "icon_class" "logo"}{|templates/icon_count.html}{>}
-      </a>
+      {# views, metadata #}
+      {<with . "icon_class" "views" "count" counts.Views}
+          {|templates/icon_count.html}
+        {>}
       {# expression title #}
       <div class="title text">{expr.title}</div>
       {# user profile #}
@@ -42,7 +42,12 @@
           {|templates/icon_count.html}
         {>}{<with . "attr_id" "social_share_icon" "icon_class" "share"}
           {|templates/icon_count.html}
-        {>}{<with . "attr_id" "social_close" "icon_class" "plus-minus"}
+        {>}
+        {# home button #}
+        <a { anchor_attrs "home" }>
+          {<with . "icon_class" "logo"}{|templates/icon_count.html}{>}
+        </a>
+        {<with . "attr_id" "social_close" "icon_class" "plus-minus"}
           {|templates/icon_count.html}
         {>}
         <div id="share_menu" class="menu drawer" data-handle='#social_share_icon'>

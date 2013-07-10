@@ -33,6 +33,13 @@ img.centered, div.centered {
         height:48px;
     }
 
+    .icon.views {
+        &.icon { background-image: asset_url('skin/nav/views.png'); }
+        &.on { background-color: $color_bright_red; }
+        &.on .icon { background-image: asset_url('skin/nav/views-hover.png'); }
+        &:hover { background-color: $color_selected; }
+        &.hover { background-image: asset_url('skin/nav/views-hover.png'); }
+    }
     .icon.logo {
         width:45px;
         &.icon { background-image: asset_url('skin/nav/logo.png'); }
