@@ -62,6 +62,7 @@ define([
         layout();
     };
 
+    // TODO: move to expr
     o.render_overlays = function(){
         $('#overlays').empty().html(overlay_template());
         $("#page_prev").click(o.page_prev);
@@ -89,6 +90,8 @@ define([
         o.attach_handlers();
     };
 
+    // TODO: move to expr
+    ///////////////////////////////////
     o.attach_handlers = function(){
         $(".feed_item").each(function(i, el) {
             edit_button = $(el).find('button[name=edit]');
@@ -302,6 +305,7 @@ define([
         render_site(page_data);
     };
     
+    // TODO: move to expr
     function hide_exprs() {
         var contentFrame = $('.expr-visible');
 
@@ -323,6 +327,7 @@ define([
         }
     }
 
+    // TODO: move to expr
     function hide_expr_complete() {
         $('#exprs').hide();
         $('.overlay').hide();
