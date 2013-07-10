@@ -7,7 +7,9 @@
  */
 
 (function (globalEval) {
-define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
+define(/*=='curl/plugin/json',==*/ ['./_fetchText', '../cram/json'],
+	function (fetchText, json_src)
+{
 
 	var hasJsonParse, missingJsonMsg;
 
@@ -43,8 +45,8 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 
 		},
 
-		'cramPlugin': '../cram/json'
-
+		// 'cramPlugin': '../cram/json'
+		compile: json_src.compile,
 	};
 
 	function error (ex) {
