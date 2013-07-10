@@ -17,8 +17,7 @@ import newhive.state
 from newhive.state import abs_url
 from newhive.utils import AbsUrl
 from newhive import config, utils
-# from app import hive_assets
-import app
+from newhive.server_session import db, server_env, jinja_env, hive_assets
 import newhive.ui_strings.en as ui
 from newhive.analytics import analytics
 from newhive.manage.ec2 import public_hostname
@@ -158,11 +157,11 @@ class Mailer(object):
     def __init__(self, jinja_env=None, db=None, smtp=None):
         self.db = db
         self.jinja_env = jinja_env
-        self.assets = app.hive_assets
+        self.assets = hive_assets
         self.asset = self.assets.url
         # Note, these functions are taken from newhive/old/wsgi.py:56:
         jinja_env.filters.update( {
-            'asset_url': app.hive_assets.url
+            'asset_url': hive_assets.url
             ,'clean_url': lambda s: re.match('https?://([^?]*)', s).groups()[0]
             ,'html_breaks': lambda s: re.sub('\n', '<br/>', unicode(s))
             ,'large_number': utils.large_number
