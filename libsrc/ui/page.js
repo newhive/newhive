@@ -11,6 +11,7 @@ define([
     'browser/layout',
     'ui/util',
     'ui/routing',
+    'ui/page/pages',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
     'sj!templates/social_overlay.html',
@@ -30,22 +31,32 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/request_invite_form.html'
 ], function(
-    $, nav, new_account, context, browser_layout, ui_util, routing,
-    master_template, home_template, social_overlay_template, overlay_template,
-    profile_edit_template, tags_page_template, activity_template
-) {
-    var o = {}, expr_page = false, contentFrameURLBase = context.is_secure ?
-        context.secure_content_server_url : context.content_server_url,
-        grid_width, controller, 
+    $,
+    nav,
+    new_account,
+    context,
+    browser_layout,
+    ui_util,
+    routing,
+    pages,
+    master_template,
+    home_template,
+    social_overlay_template,
+    overlay_template,
+    profile_edit_template,
+    tags_page_template,
+    activity_template
+){
+    var o = {}, expr_page = false, grid_width, controller,
         anim_direction; // 0 = up, +/-1 = right/left
-    const ANIM_DURATION = 700;
+    const anim_duration = 700;
 
     o.init = function(controller){
         o.anim_direction = 0;
         o.controller = controller;
         nav.render();
-        o.render_overlays();
-        $(window).resize(layout);
+        o.render_overlays(); // TODO: move into ./page/expr
+        $(window).resize(layout); // TODO: move into dependent pages
         window.addEventListener('message', o.handle_message, false);
 
         layout();
@@ -57,15 +68,18 @@ define([
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
         $("#nav #plus").click(o.social_toggle);
-    }
+    };
 
     o.render = function(method, data){
         expr_page = (method == 'expr');
         if(!expr_page) hide_exprs();
         var page_data = data.page_data;
         page_data.layout = method;
-        if(o[method]) o[method](page_data);
+        if(pages[method]) pages[method].render(page_data);
+        else if(o[method]) o[method](page_data);
         else render_site(page_data);
+
+        // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
             o.render_tag_page();
         }
@@ -288,10 +302,6 @@ define([
         render_site(page_data);
     };
     
-    function hide_other_exprs() {
-        $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').hide();
-    }
-
     function hide_exprs() {
         var contentFrame = $('.expr-visible');
 
@@ -299,7 +309,7 @@ define([
             contentFrame.animate({
                 top: $(window).height() + 'px'
             },{
-                duration: ANIM_DURATION,
+                duration: anim_duration,
                 complete: function() {
                     contentFrame.addClass('expr-hidden');
                     contentFrame.removeClass('expr-visible');

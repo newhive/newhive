@@ -1,39 +1,19 @@
 define([
     'browser/jquery',
-    'ui/nav',
-    'ui/new_account',
     'server/context',
-    'browser/layout',
-    'ui/util',
-    'ui/routing',
-    'sj!templates/card_master.html',
-    'sj!templates/home.html',
     'sj!templates/social_overlay.html',
-    'sj!templates/overlay.html',
-    'sj!templates/profile_edit.html',
-    'sj!templates/tags_page.html',
-    'sj!templates/activity.html',
-    'sj!templates/expr_card_large.html',
-    'sj!templates/expr_card_feed.html',
-    'sj!templates/expr_card_mini.html',
-    'sj!templates/feed_card.html',
-    'sj!templates/user_card.html',
-    'sj!templates/profile_card.html',
-    'sj!templates/icon_count.html',
-    'sj!templates/tag_card.html',
-    'sj!templates/dialog_embed.html',
-    'sj!templates/dialog_share.html',
-    'sj!templates/request_invite_form.html'
 ], function(
-    $, nav, new_account, context, browser_layout, ui_util, routing,
-    master_template, home_template, social_overlay_template, overlay_template,
-    profile_edit_template, tags_page_template, activity_template
+    $,
+    context,
+    social_overlay_template
 ) {
-    var o = {};
+    var o = {}, contentFrameURLBase = context.is_secure ?
+            context.secure_content_server_url : context.content_server_url;
+    const anim_duration = 700;
 
     // Animate the new visible expression, bring it to top of z-index.
     // TODO: animate nav bar
-    o.expr = function(page_data){
+    o.render = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
         // $("#nav").prependTo("body");
         // TODO: shouldn't empty #nav
@@ -83,7 +63,7 @@ define([
             ).animate({
                 top: "0"
             }, {
-                duration: ANIM_DURATION,
+                duration: anim_duration,
                 complete: hide_other_exprs });
         } else {
             // 
@@ -94,16 +74,22 @@ define([
             ).animate({
                 left: "0"
             }, {
-                duration: ANIM_DURATION,
+                duration: anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
             expr_curr.animate({
                 'left': -o.anim_direction * contentFrame.width(),
             }, {
-                duration: ANIM_DURATION,
+                duration: anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
         }
         $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
     };
+
+    function hide_other_exprs() {
+        $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').hide();
+    }
+
+    return o;
 });
