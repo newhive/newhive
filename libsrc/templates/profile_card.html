@@ -2,6 +2,13 @@
   User thumb, name, view/love counts
 #}
 <div id='user_header' class='header'>
+  {<if brief}
+    <div class="owner">
+      <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_70}' class='thumb'></a>
+      <span>by <span class='username'>{owner.name}</span></span>
+      <a><div class='icon' id='mail_btn'/></div></a>
+    </div>
+  {>}{<else}
   {<if profile_bg}<div class='background'><img src='{profile_bg}'></div>{>}
   <div class='profile'>
     <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_190}' class='thumb'></a>
@@ -10,9 +17,9 @@
         {fullname}
         {<if user_is_owner}
           <a {anchor_attrs "user_update" "owner_name" name}>
-            <div class='icon' id='edit_btn'/></a>
+            <div class='icon' id='edit_btn'/></div></a>
         {>}
-        <a><div class='icon' id='mail_btn'/></a>
+        <a><div class='icon' id='mail_btn'/></div></a>
       </div>
       <div class='subheading'>{subheading}</div>
       <div>{profile_about}</div>
