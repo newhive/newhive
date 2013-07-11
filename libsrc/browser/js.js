@@ -101,7 +101,7 @@ o.Funcs = function(fn, filter) {
 }
 
 o.each = function(o, f){
-    for(p in o) f(p, o[p]);
+    for(p in o) f(o[p], p);
 };
 
 return o;

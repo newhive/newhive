@@ -14,11 +14,11 @@ define([
         routing.register_state(route_args);
         nav.set_expr_view(route_args.route_name == 'view_expr');
         page.init(o);
-        o.dispatch(route_args.route_name, context.page_data);
-        wrapLinks();
         util.each(pages, function(m){
             if(m.init) m.init();
         });
+        o.dispatch(route_args.route_name, context.page_data);
+        wrapLinks();
     };
     o.dispatch = function(route_name, data){
         context.route_name = route_name;

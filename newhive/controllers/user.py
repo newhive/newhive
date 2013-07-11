@@ -44,6 +44,7 @@ class User(ModelController):
         resp = {}
         expr_view = expr.client_view(activity=10)
         resp.update( {'activity': expr_view.get('activity', [])} )
+        resp.update( {'comments': expr.comment_feed()} )
         if True: # So far, it's always our user, so no need to test: user.id == comment.entity_owner:
             user_view = user.client_view(activity=20)
             resp.update( {'user': {'activity': user_view.get('activity', [])}} )
