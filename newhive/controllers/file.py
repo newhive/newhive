@@ -1,3 +1,4 @@
+import hsaudiotag.auto
 import urllib, urlparse, itertools, mimetypes, os
 from werkzeug.http import parse_options_header
 from newhive.controllers.controller import ModelController, auth_required
@@ -82,7 +83,6 @@ class File(ModelController):
         return (file_record, {'name': file.filename, 'file_id': res.id, 'url': res.get('url')})
 
     def _handle_audio(self, file, local_file, file_record, mime):
-        import hsaudiotag.auto
         #file_record, data = self._upload(file, local_file, owner)
         track = hsaudiotag.auto.File(local_file)
         data = dict()

@@ -1383,11 +1383,6 @@ class File(Entity):
         url = "%s_%s?v=%s" % (self['url'], name, version)
         return {'url': url, 'file': thumb}
 
-    def set_thumbs(self):
-        if self.media_type != self.IMAGE: return
-        thumb190 = self.set_thumb(190,190)
-        if thumb190: self.set_thumb(70,70, file=thumb190['file'])
-
     def get_thumb(self, w, h):
         name = str(w) + 'x' + str(h)
         version = self.get('thumbs', {}).get(name)
@@ -1423,35 +1418,34 @@ class File(Entity):
         del self['tmp_file']
         self['owner']
 
-        # Image optimization
-        if self.media_type == self.IMAGE:
-            self._file.seek(0)
-            imo = Img.open(self._file)
-            #except:
-            #    res.delete()
-            #    return False
-            updated = False
-            if imo.size[0] > 1600 or imo.size[1] > 1000:
-                ratio = float(imo.size[0]) / imo.size[1]
-                new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
-                imo = imo.resize(new_size, resample=Img.ANTIALIAS)
-                updated = True
-            opts = {}
-            mime = self['mime']
-            if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
-            if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
-            if mime == 'image/gif' and updated: opts.update(format = 'GIF')
-            if opts:
-                newfile = os.tmpfile()
-                imo.save(newfile, **opts)
-                self._file.close()
-                self._file = newfile
+        # # Image optimization
+        # if self.media_type == self.IMAGE:
+        #     self._file.seek(0)
+        #     imo = Img.open(self._file)
+        #     #except:
+        #     #    res.delete()
+        #     #    return False
+        #     updated = False
+        #     if imo.size[0] > 1600 or imo.size[1] > 1000:
+        #         ratio = float(imo.size[0]) / imo.size[1]
+        #         new_size = (1600, int(1600 / ratio)) if ratio > 1.6 else (int(1000 * ratio), 1000)
+        #         imo = imo.resize(new_size, resample=Img.ANTIALIAS)
+        #         updated = True
+        #     opts = {}
+        #     mime = self['mime']
+        #     if mime == 'image/jpeg': opts.update(quality = 70, format = 'JPEG')
+        #     if mime == 'image/png': opts.update(optimize = True, format = 'PNG')
+        #     if mime == 'image/gif' and updated: opts.update(format = 'GIF')
+        #     if opts:
+        #         newfile = os.tmpfile()
+        #         imo.save(newfile, **opts)
+        #         self._file.close()
+        #         self._file = newfile
 
         self['url'] = self.store(self._file, 'media', self.id, self['name'])
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         super(File, self).create()
-        self.set_thumbs()
         return self
 
     # download file from source and reupload
@@ -1460,7 +1454,6 @@ class File(Entity):
         self.pop('fs_path', None)
         if not file: file = self.file
         self['url'] = self.store(file, 'media', self.id, self.get('name', 'untitled'))
-        self.set_thumbs()
         if self._file: self._file.close()
         self.save()
 

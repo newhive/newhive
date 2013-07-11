@@ -63,6 +63,8 @@ class Community(Controller):
             'title': 'Your Private Expressions',
         }
     def user_update(self, tdata, request, owner_name=None, **args):
+        """ Doubles as post handler and settings page api route
+            for profile edit """
         owner = tdata.user
 
         # If user update form submitted, update user

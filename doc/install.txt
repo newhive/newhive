@@ -19,7 +19,7 @@ Python library dependency dependencies (Ubuntu packages)
 
 Python library dependencies
     sudo pip install ez_setup
-    sudo pip install werkzeug pymongo boto oauth2 oauth2client pil paramiko cssutils
+    sudo pip install werkzeug pymongo boto oauth2 oauth2client pil paramiko cssutils hsaudiotag
     sudo pip install lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson
     sudo pip install envoy scipy webkit2png
     sudo pip install pandas brownie google-api-python-client # for analytics
