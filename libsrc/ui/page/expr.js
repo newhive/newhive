@@ -3,12 +3,14 @@ define([
     'server/context',
     'browser/layout',
     'sj!templates/overlay.html',
+    'sj!templates/activity.html',
     'sj!templates/social_overlay.html'
 ], function(
     $,
     context,
     browser_layout,
     overlay_template,
+    activity_template,
     social_overlay_template
 ) {
     var o = {}, contentFrameURLBase = context.is_secure ?
@@ -198,7 +200,7 @@ define([
     o.edit_comment_response = function(feed_item, json){
         // rerender activity feed (only in social overlay and nav menu)
         // with new data received from server
-        if (json.activity != undefined) {
+        if (json.comments != undefined) {
             context.activity = json.comments;
             context.page_data.expr.activity = json.activity;
             context.page_data.expr.comments = json.comments;
