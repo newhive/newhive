@@ -178,6 +178,9 @@ img.thumb { background-color: $color_grey_medium; }
         &.active { background-color: $color_selected; }
     }
 }
+.menu.drawer.icon_set {
+    max-width: 440px;  // 55px * 8
+}
 
 #login_menu {
     width: 220px;

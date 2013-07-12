@@ -30,32 +30,29 @@ define([
         browser_layout.center($('#page_next'), undefined, {'h': false});
     };
 
-    // Animate the new visible expression, bring it to top of z-index.
-    // TODO: animate nav bar
-    // TODO: break apart into smaller functions.
     o.render = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
         // $("#nav").prependTo("body");
         // TODO: shouldn't empty #nav
-        $("#popup_content").remove()
+        $("#nav").hide();
+        $("#popup_content").remove();
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
-        if (0) { // bugdebug. debugging short windows sucks.
-            $('#social_overlay').css('height','550px');
-            $('#social_overlay #popup_content').css('height','506px');
-        }
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
         $('#dia_embed textarea').val("<iframe src='" + embed_url + 
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
             " frameborder='0' vspace='0' hspace='0'></iframe>");
-        $("#nav").hide();
-        // $("#nav").prependTo("#social_overlay");
-        $("#social_close").unbind('click');
-        $("#social_close").click(o.social_toggle);
-        // $("#nav #plus").unbind('click');
-        // $("#nav #plus").click(o.social_toggle);
-        $('#comment_form').on('response', o.comment_response);
 
+        // Set toggle state for love, broadcast
+        o.action_set_state($("#love_icon"), o.action_get_state("loves"));
+        o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
+
+        animate_expr();
+    };
+
+    // Animate the new visible expression, bring it to top of z-index.
+    function animate_expr (){
+        page_data = context.page_data;
         // display_expr(page_data.expr_id);
         var expr_id = page_data.expr_id;
         var expr_curr = $('.expr-visible');
@@ -152,6 +149,10 @@ define([
     };
 
     o.attach_handlers = function(){
+        $("#social_close").unbind('click');
+        $("#social_close").click(o.social_toggle);
+        $('#comment_form').on('response', o.comment_response);
+
         $(".feed_item").each(function(i, el) {
             edit_button = $(el).find('button[name=edit]');
             delete_button = $(el).find('button[name=delete]');
@@ -164,8 +165,70 @@ define([
             $(el).find('form').on('response', function(event, data) {
                 o.edit_comment_response($(el), data); 
             });
-        })
+        });
+
+        $("#love_icon").unbind('click').click(function (event) {
+            o.user_operation(event, $(this), "loves"); });
+        $("#broadcast_icon").click(function (event) {
+            o.user_operation(event, $(this), "broadcast"); });
     };
+
+    o.user_operation = function(e, el, btn) {
+        el_drawer = $("[data-handle=#" + el.prop("id") + "]");
+        el_form = el.parent();
+        el_counts = el.find($(".counts"));
+
+        // Toggle the state on the server
+        own_item = o.action_get_state(btn);
+        el_form.find("input[name=state]").val(! own_item);
+        el_form.submit();
+
+        // Now toggle it on the client without waiting for server response.
+        items = (btn == "loves") ? context.page_data.expr.loves
+            : context.page_data.expr.broadcast;
+        if (own_item) {
+            items = items.filter(function(el) {
+                return el.initiator_name != context.user.name; } );
+        } else {
+            items = items.concat(o.fake_item(btn));
+        }
+        if (btn == "loves") context.page_data.expr.loves = items
+            else context.page_data.expr.broadcast = items;
+        context.activity = items;
+        context.icon_only = true;
+        el_drawer.empty().html(activity_template(context));
+        delete context.activity;
+        delete context.icon_only;
+        el_counts.html(parseInt(el_counts.html()) + ((! own_item) ? 1 : -1));
+        o.action_set_state(el, ! own_item);
+    };
+
+    o.action_get_state = function(btn) {
+        items = (btn == "loves") ? context.page_data.expr.loves
+            : context.page_data.expr.broadcast;
+        own_item = items.filter(function(el) {
+            return el.initiator_name == context.user.name; } );
+        return (own_item.length > 0);        
+    };
+    o.action_set_state = function(el, state) {
+        if (state) {
+            el.addClass("on");
+            el.find(".icon").addClass("on");
+        } else {
+            el.removeClass("on");
+            el.find(".icon").removeClass("on");
+        }
+    };
+
+    o.fake_item = function(btn) {
+        var item = {};
+        item.action = (btn == "loves") ? "Love" : "Broadcast";
+        item.class_name = (btn == "loves") ? "Star" : "Broadcast";
+        item.initiator_name = context.user.name;
+        item.initiator_thumb_70 = context.user.thumb_70;
+        return item;
+    }
+
     o.social_toggle = function(){
         popup = $('#social_overlay');
         // TODO: animate
