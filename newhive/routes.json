@@ -120,6 +120,16 @@
         "controller": "user",
         "method": "comment_edit"
     },
+    "star_unstar": {
+        "api_route": "/api/user/star_unstar",
+        "controller": "user",
+        "method": "star_unstar"
+    },
+    "broadcast": {
+        "api_route": "/api/user/broadcast",
+        "controller": "user",
+        "method": "broadcast"
+    },
 
     "tag_follow": {
         "api_route": "/api/community/follow",

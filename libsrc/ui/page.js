@@ -83,6 +83,16 @@ define([
     o.attach_handlers = function(){
         if(context.page && context.page.attach_handlers)
             context.page.attach_handlers();
+
+        // global keypress handler
+        $("body").keydown(function(e) {
+          if(e.keyCode == 27) { // escape
+            // If a dialog is up, kill it.
+            $('#dialog_shield').click();
+          } else {
+            // alert('keyCode: ' + e.keyCode);
+          }
+        });
     }
 
     // route.client_method definitions
