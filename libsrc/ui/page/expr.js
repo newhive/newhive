@@ -190,15 +190,14 @@ define([
             items = items.filter(function(el) {
                 return el.initiator_name != context.user.name; } );
         } else {
-            items = items.concat(o.fake_item(btn));
+            items = [o.fake_item(btn)].concat(items);
         }
         if (btn == "loves") context.page_data.expr.loves = items
             else context.page_data.expr.broadcast = items;
-        context.activity = items;
-        context.icon_only = true;
-        el_drawer.empty().html(activity_template(context));
-        delete context.activity;
-        delete context.icon_only;
+        top_context = {};
+        top_context.activity = items;
+        top_context.icon_only = true;
+        el_drawer.empty().html(activity_template(top_context));
         el_counts.html(parseInt(el_counts.html()) + ((! own_item) ? 1 : -1));
         o.action_set_state(el, ! own_item);
     };
@@ -221,13 +220,14 @@ define([
     };
 
     o.fake_item = function(btn) {
-        var item = {};
-        item.action = (btn == "loves") ? "Love" : "Broadcast";
-        item.class_name = (btn == "loves") ? "Star" : "Broadcast";
-        item.initiator_name = context.user.name;
-        item.initiator_thumb_70 = context.user.thumb_70;
-        return item;
-    }
+        return {
+            entity_class: "Expr",
+            action:  (btn == "loves") ? "Love" : "Broadcast",
+            class_name:  (btn == "loves") ? "Star" : "Broadcast",
+            initiator_name:  context.user.name,
+            initiator_thumb_70:  context.user.thumb_70
+        };
+    };
 
     o.social_toggle = function(){
         popup = $('#social_overlay');
