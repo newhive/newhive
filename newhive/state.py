@@ -995,8 +995,6 @@ class Expr(HasSocial):
 
             if type(spec) == dict:
                 spec.update(auth=auth)
-                if auth == 'public':
-                    spec.update(password={'$exists': False})
 
             assert(sort in ['updated', 'random'])
             args.update(sort=sort)
@@ -1341,9 +1339,13 @@ class File(Entity):
 
     IMAGE, UNKNOWN = range(2)
 
+    def __init__(self, *a, **b):
+        super(File, self).__init__(*a, **b)
+        self._file = self.get('tmp_file')
+
     def __del__(self):
-        if hasattr(self, "_file") and type(self._file) == file and (not self._file.closed):
-            self._file.close()
+        if (type(self._file) == file
+            and (not self._file.closed)): self._file.close()
 
     @property
     def file(self):
@@ -1413,8 +1415,6 @@ class File(Entity):
         """ Uploads file to s3 if config.aws_id is defined, otherwise
         saves in config.media_path
         """
-
-        self._file = self['tmp_file']
         del self['tmp_file']
         self['owner']
 

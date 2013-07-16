@@ -119,68 +119,66 @@ define([
 
         // TODO-test: test support for multiple files
         // TODO-polish: handle erros from file uploads
+        // TODO-compat: port <iframe> hack from old code for older browsers
 
         inputs.each(function(i, e){
             var input = $(e);
-            input.on('change', function(){
-                upload_files(e.files); });
+            input.on('change', function(){ form.submit() });
 
-            // set up file drag & drop events
-            // TODO-polish: make work
             var input_id = input.attr('id'),
                 label = $('label[for=' + input_id + ']');
             label.on('drop', function(e){
                 upload_files(e.dataTransfer.files) });
 
             function upload_files(files){
-                if(file_api){
-                    var urls = [];
-                    // FileList is not a list at all, has no map :'(
-                    for(var i = 0; i < files.length; i++)
-                        urls.push(URL.createObjectURL(files.item(i)));
-                    input.trigger('with_files', [urls]);
-                }
+                console.log(files);
+                // if(file_api){
+                //     var urls = [];
+                //     // FileList is not a list at all, has no map :'(
+                //     for(var i = 0; i < files.length; i++)
+                //         urls.push(URL.createObjectURL(files.item(i)));
+                //     input.trigger('with_files', [urls]);
+                // }
 
-                // TODO-compat: port <iframe> hack from old code...
-                // so this will work on older browsers.
-                var form_data = new FormData();
-                for(var i = 0; i < files.length; i++){
-                    var f = files.item(i);
-                    form_data.append('files', f.slice(0, f.size), f.name);
-                }
+                // var form_data = new FormData();
+                // for(var i = 0; i < files.length; i++){
+                //     var f = files.item(i);
+                //     form_data.append('files', f.slice(0, f.size), f.name);
+                // }
 
-                // TODO-polish: add busy indicator while uploading
-                $.ajax({
-                    url: form.attr('action'),
-                    type: 'POST',
-                    // xhr: function() {  // custom xhr
-                    //     var myXhr = $.ajaxSettings.xhr();
-                    //     if(myXhr.upload) myXhr.upload.addEventListener(
-                    //         'progress', on_progress, false);
-                    //     return myXhr;
-                    // },
-                    //Ajax events
-                    // beforeSend: beforeSendHandler,
-                    success: function(data){
-                        if(!file_api) input.trigger('with_files', [data]);
-                        input.trigger('response', [data]);
-                    },
-                    error: function(){ alert("Sorry :'(") },
-                    // Form data
-                    data: form_data,
+                // // TODO-polish: add busy indicator while uploading
+                // $.ajax({
+                //     url: form.attr('action'),
+                //     type: 'POST',
+                //     // xhr: function() {  // custom xhr
+                //     //     var myXhr = $.ajaxSettings.xhr();
+                //     //     if(myXhr.upload) myXhr.upload.addEventListener(
+                //     //         'progress', on_progress, false);
+                //     //     return myXhr;
+                //     // },
+                //     //Ajax events
+                //     // beforeSend: beforeSendHandler,
+                //     success: function(data){
+                //         if(!file_api) input.trigger('with_files', [data]);
+                //         input.trigger('response', [data]);
+                //     },
+                //     error: function(){ alert("Sorry :'(") },
+                //     // Form data
+                //     data: form_data,
 
-                    //Options to tell JQuery not to process data or
-                    // worry about content-type
-                    cache: false,
-                    contentType: false,
-                    processData: false
-                });
+                //     // Options to tell JQuery not to process data or
+                //     // worry about content-type
+                //     cache: false,
+                //     contentType: false,
+                //     processData: false
+                // });
             };
         });
 
         // make form submission of non-file inputs asynchronous too
         form.on('submit', function(e){
-            $.post(form.attr('action'), form.serialize(), function(data){
+            var form_data = new FormData(form[0]);
+            $.post(form.attr('action'), form_data, function(data){
                 form.trigger('response', [data]);
             }, 'json');
             e.preventDefault();

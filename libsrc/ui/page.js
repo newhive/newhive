@@ -284,7 +284,7 @@ define([
                 'Please try a jpg, png, or if you absolutely must, gif.');
             var el = $(img);
             el.attr('src', data[0].url);
-            $(input).val(data[0].file_id);
+            $(input).val(data[0].id);
         }}
     };
     o.profile_private = function(page_data){
