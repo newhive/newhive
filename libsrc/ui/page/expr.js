@@ -20,6 +20,7 @@ define([
     o.init = function(){
         o.render_overlays();
         window.addEventListener('message', o.handle_message, false);        
+        $('#exprs').hide();
     };
     o.exit = function(){
         hide_exprs();
