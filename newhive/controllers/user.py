@@ -44,6 +44,7 @@ class User(ModelController):
         resp = {}
         expr_view = expr.client_view(activity=10)
         resp.update( {'activity': expr_view.get('activity', [])} )
+        resp.update( {'comments': expr.comment_feed()} )
         if True: # So far, it's always our user, so no need to test: user.id == comment.entity_owner:
             user_view = user.client_view(activity=20)
             resp.update( {'user': {'activity': user_view.get('activity', [])}} )
@@ -52,7 +53,9 @@ class User(ModelController):
     def comment_create(self, tdata, request, response, **args):
         resp = {}
         user = tdata.user
-        expr = self.db.Expr.fetch(request.form.get('entity'))
+        eid = request.form.get('entity')
+        
+        expr = self.db.Expr.fetch(eid)
         if not expr: return self.serve_404(tdata, request, response)
         text = request.form.get('text')
         if text.strip() == '': return False
@@ -82,6 +85,46 @@ class User(ModelController):
         user.update(tags_following=following)
         resp['tags'] = following
 
+        return self.serve_json(response, resp)
+
+    def star_unstar(self, tdata, request, response, **args):
+        """Star/listen or unstar/unlisten an expression or profile
+        """
+        resp = {}
+        user = tdata.user
+        state = request.form.get('state') == 'false'
+        eid = request.form.get('entity')
+
+        entity = self.db.Expr.fetch(eid)
+        if not entity: entity = self.db.User.fetch(eid)
+        if not entity: return self.serve_404(request, response)
+
+        s = self.db.Star.find({'initiator': user.id, 'entity': entity.id})
+        if state:
+            if s: s.delete()
+        else:
+            if not s: s = self.db.Star.create(user, entity)
+
+        print entity['name'], state
+        resp.update({'state': state})
+        return self.serve_json(response, resp)
+
+    def broadcast(self, tdata, request, response, **args):
+        resp = {}
+        user = tdata.user
+        state = request.form.get('state') == 'false'
+        eid = request.form.get('entity')
+
+        entity = self.db.Expr.fetch(eid)
+        if not entity: return self.serve_404(request, response)
+
+        s = self.db.Broadcast.find({ 'initiator': user.id, 'entity': entity.id })
+        if state:
+           if s: res = s.delete()
+        else:
+           if not s: s = self.db.Broadcast.create(user, entity)
+
+        resp.update({'state': state})
         return self.serve_json(response, resp)
 
     def expr_share(self, tdata, request, response, **args):

@@ -3,7 +3,7 @@
   {#
     We were including the nav bar here, but now the nav
     bar <div> is migrated to the correct location in page.js
-  {<with . "expr_view" false "nav_view" true }
+  {<with null "expr_view" false "nav_view" true }
     <div id='social_nav' class='nav_class'>
       {|templates/nav.html}
   </div>{>}
@@ -11,10 +11,10 @@
   #}
   <div id="popup_content">
     <div class="left_pane">
-      {# home button #}
-      <a { anchor_attrs "home" }>
-        {<with . "icon_class" "logo"}{|templates/icon_count.html}{>}
-      </a>
+      {# views, metadata #}
+      {<with null "icon_class" "views" "count" counts.Views}
+          {|templates/icon_count.html}
+        {>}
       {# expression title #}
       <div class="title text">{expr.title}</div>
       {# user profile #}
@@ -29,22 +29,57 @@
           {|templates/tag_card.html}
         {>}</div>
       <div class="stats_bar">
-        {<with . "icon_class" "love" "count" counts.Star}
+        <form {form_attrs "star_unstar"} method='post'>
+          <input type="hidden" name="entity" value="{id}">
+          <input type="hidden" name="state" value="true">
+          {<with null "attr_id" "love_icon" "icon_class" "love" "count" counts.Star}
+            {|templates/icon_count.html}
+          {>}
+          {# Loves menu drawer #}
+          <div id="loves_menu" class="menu drawer icon_set" data-handle='#love_icon' >
+            {<with null "activity" expr.loves "icon_only" true}
+              {|templates/activity.html}
+            {>}
+          </div>
+        </form>
+        <form {form_attrs "broadcast"} method='post'>
+          <input type="hidden" name="entity" value="{id}">
+          <input type="hidden" name="state" value="true">
+          {<with null "attr_id" "broadcast_icon" "icon_class" "republish"}
+            {|templates/icon_count.html}
+          {>}
+          {# Broadcast menu drawer #}
+          <div id="broadcast_menu" class="menu drawer icon_set" data-handle='#broadcast_icon' >
+            {<with null "activity" expr.broadcast "icon_only" true}
+              {|templates/activity.html}
+            {>}
+          </div>
+        </form>
+        {# {>}{<with null "icon_class" "facebook"}
           {|templates/icon_count.html}
-        {>}{<with . "icon_class" "republish"}
-          {|templates/icon_count.html}
-        {#{>}{<with . "icon_class" "facebook"}
-          {|templates/icon_count.html}
-        {>}{<with . "icon_class" "tweet"}
+        {>}{<with null "icon_class" "tweet"}
           {|templates/icon_count.html}
           #}
-        {>}{<with . "attr_id" "comment_icon" "icon_class" "comment"}
+        {<with null "attr_id" "comment_icon" "icon_class" "comment"}
           {|templates/icon_count.html}
-        {>}{<with . "attr_id" "social_share_icon" "icon_class" "share"}
-          {|templates/icon_count.html}
-        {>}{<with . "attr_id" "social_close" "icon_class" "plus-minus"}
+        {>}{<with null "attr_id" "social_share_icon" "icon_class" "share"}
           {|templates/icon_count.html}
         {>}
+        {# home button #}
+        <a { anchor_attrs "home" }>
+          {<with null "icon_class" "logo"}{|templates/icon_count.html}{>}
+        </a>
+        {<with null "attr_id" "social_close" "icon_class" "plus-minus"}
+          {|templates/icon_count.html}
+        {>}
+
+        {# Comments menu drawer #}
+        <div id="comments_menu" class="menu drawer icon_set" data-handle='#comment_icon' >
+          {<with null "activity" expr.comments "icon_only" true}
+            {|templates/activity.html}
+          {>}
+        </div>
+        {# Share menu drawer #}
         <div id="share_menu" class="menu drawer" data-handle='#social_share_icon'>
           <div class='menu_item black_active'>
             <a {href_attrs "expr_snapshot" "expr_id" id} id='save_jpg_btn'>Save as JPG
@@ -59,7 +94,7 @@
         <div id="dia_comments" class="dialog" data-handle='#comment_icon'>
           {# activity feed #}
           <div class="title text">Discussion</div>
-          <div class='activity'>{<with null "activity" expr.activity}
+          <div class='activity'>{<with null "activity" expr.comments}
             {|templates/activity.html}
           {>}</div>
           {# discussion input #}

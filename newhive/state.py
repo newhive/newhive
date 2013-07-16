@@ -1298,10 +1298,30 @@ class Expr(HasSocial):
             dict.update(expr, { 'featured': self.is_featured })
 
         if activity > 0:
-            dict.update( expr, activity =
-                map(lambda r: r.client_view(),
-                    self.db.Feed.search({'entity':self.id})) [0:activity] )
+            # bugbug: we will want to limit the initial download to client (and paginate)
+            # bugbug: we should only send the client the data it needs, namely, the icons
+            dict.update( expr, comments = self.comment_feed() )
+            dict.update( expr, loves = self.loves_feed() )
+            dict.update( expr, broadcast = self.broadcast_feed() )
+            dict.update( expr, activity = self.activity_feed(None, activity) )
+            # dict.update( expr, activity =
+            #     map(lambda r: r.client_view(),
+            #         self.db.Feed.search({'entity':self.id})) [0:activity] )
         return expr
+
+    def loves_feed(self, count=-1, at=0):
+        return self.activity_feed('Star', count, at)
+    def broadcast_feed(self, count=-1, at=0):
+        return self.activity_feed('Broadcast', count, at)
+    def comment_feed(self, count=-1, at=0):
+        return self.activity_feed('Comment', count, at)
+    def activity_feed(self, feed_type=None, count=-1, at=0):
+        search = {'entity':self.id}
+        if feed_type:
+            search.update({'class_name':feed_type})
+        end = None if (count == -1) else at + count
+        return map(lambda r: r.client_view(),
+            self.db.Feed.search(search)) [at:end]
 
     @property
     def tag_string(self):

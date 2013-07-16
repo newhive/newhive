@@ -12,4 +12,8 @@ sudo chown www-data:dev -R .
 sudo chmod g+rwX -R .
 git pull
 # restart server
-hive_server_deploy
+bin/hive_server_deploy
+
+echo updated at
+date
+echo

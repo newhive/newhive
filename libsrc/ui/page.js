@@ -14,8 +14,6 @@ define([
     'ui/page/pages',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
-    'sj!templates/social_overlay.html',
-    'sj!templates/overlay.html',
     'sj!templates/profile_edit.html',
     'sj!templates/tags_page.html',
     'sj!templates/activity.html',
@@ -41,8 +39,6 @@ define([
     pages,
     master_template,
     home_template,
-    social_overlay_template,
-    overlay_template,
     profile_edit_template,
     tags_page_template,
     activity_template
@@ -55,28 +51,23 @@ define([
         o.anim_direction = 0;
         o.controller = controller;
         nav.render();
-        o.render_overlays(); // TODO: move into ./page/expr
-        $(window).resize(layout); // TODO: move into dependent pages
-        window.addEventListener('message', o.handle_message, false);
+        $(window).resize(resize);
 
-        layout();
-    };
-
-    // TODO: move to expr
-    o.render_overlays = function(){
-        $('#overlays').empty().html(overlay_template());
-        $("#page_prev").click(o.page_prev);
-        $("#page_next").click(o.page_next);
-        $("#social_plus").click(o.social_toggle);
-        $("#nav #plus").click(o.social_toggle);
+        resize();
     };
 
     o.render = function(method, data){
+        if (context.page) {
+            if (context.page.exit) context.page.exit();
+            delete context.page;
+        }
         expr_page = (method == 'expr');
-        if(!expr_page) hide_exprs();
         var page_data = data.page_data;
         page_data.layout = method;
-        if(pages[method]) pages[method].render(page_data);
+        if(pages[method]) {
+            pages[method].render(page_data);
+            context.page = pages[method];
+        }
         else if(o[method]) o[method](page_data);
         else render_site(page_data);
 
@@ -85,120 +76,24 @@ define([
             o.render_tag_page();
         }
  
-        layout();
+        resize();
 
         o.attach_handlers();
     };
-
-    // TODO: move to expr
-    ///////////////////////////////////
     o.attach_handlers = function(){
-        $(".feed_item").each(function(i, el) {
-            edit_button = $(el).find('button[name=edit]');
-            delete_button = $(el).find('button[name=delete]');
-            if (edit_button.length == 1) {
-                edit_button.unbind('click');
-                edit_button.click(function(event) {
-                    o.edit_comment($(el));
-                });
-            }
-            $(el).find('form').on('response', function(event, data) {
-                o.edit_comment_response($(el), data); 
-            });
-        })
-    }
-    o.edit_comment = function(feed_item){
-        edit_button = feed_item.find('button[name=edit]');
-        delete_button = feed_item.find('button[name=delete]');
-        text_el = feed_item.find('div.text');
-        text = text_el.html();
-        if (text_el.is(":hidden")) {
-            // Return to uneditable state
-            text_el.show();
-            feed_item.find('textarea').hide();
-            edit_button.html("Edit");
-            delete_button.html("Delete");
-            feed_item.find('[name=deletion]').attr('value','delete');
-        } else {
-            // Settings -> editable state
-            text_el.hide();
-            feed_item.find('textarea').show().html(text);
-            edit_button.html("Cancel");
-            delete_button.html("Ok");
-            feed_item.find('[name=deletion]').attr('value','edit');
-        }
-    }
-    o.edit_comment_response = function(feed_item, json){
-        // rerender activity feed (only in social overlay and nav menu)
-        // with new data received from server
-        if (json.activity != undefined) {
-            context.activity = json.activity;
-            context.page_data.expr.activity = json.activity;
-            $('#dia_comments .activity').empty().html(activity_template(context));
-        }
-        if (json.user != undefined) {
-            // template_data = context;
-            context.activity = json.user.activity;
-            context.user.activity = json.user.activity;
-            $('#nav .activity').empty().html(activity_template(context));
-        }
-        delete context.activity;
-        o.attach_handlers();
-    }
-    o.social_toggle = function(){
-        popup = $('#social_overlay');
-        // TODO: animate
-        if (expr_page) {
-            if (popup.css('display') == 'none') {
-                popup.show();
-            } else {
-                popup.hide();
-            }
-        } else {
-            // TODO: show tags popup
+        if(context.page && context.page.attach_handlers)
+            context.page.attach_handlers();
 
-        }
-    };
-    o.page_prev = function() { o.navigate_page(-1); }
-    o.page_next = function() { o.navigate_page(1); }
-    o.navigate_page = function (offset){
-        o.anim_direction = offset / Math.abs(offset);
-        var page_data = context.page_data;
-        if (page_data.cards != undefined) {
-            var len = page_data.cards.length
-            var found = -1;
-            // TODO: add the current card to context.
-            for (var i = 0; i < len; ++i){
-                if (page_data.cards[i].id == page_data.expr_id) {
-                    found = i;
-                    break;
-                }
-            }
-            // TODO: do we need error handling?
-            if (found >= 0) {
-                // TODO: need to asynch fetch more expressions and concat to cards.
-                found = (found + len + offset) % len;
-                page_data.expr_id = page_data.cards[found].id;
-                var page_state = routing.page_state('view_expr', {
-                    id: page_data.expr_id,
-                    owner_name: page_data.cards[found].owner.name,
-                    expr_name: page_data.cards[found].name
-                });
-                o.controller.open_route(page_state);
-            }
-        }
+        // global keypress handler
+        $("body").keydown(function(e) {
+          if(e.keyCode == 27) { // escape
+            // If a dialog is up, kill it.
+            $('#dialog_shield').click();
+          } else {
+            // alert('keyCode: ' + e.keyCode);
+          }
+        });
     }
-    // Handles messages from PostMessage (from other frames)
-    o.handle_message = function(m){
-        if ( m.data == "show_prev" || m.data == "show_next") {
-            var div = (m.data == "show_prev" ? $("#page_prev") : $("#page_next"));
-            div.show();
-        }
-        if ( m.data == "hide_prev" || m.data == "hide_next") {
-            var div = (m.data == "hide_prev" ? $("#page_prev") : $("#page_next"));
-            div.hide();
-        }
-    };
 
     // route.client_method definitions
     o.expr_detail = function(page_data){
@@ -222,13 +117,6 @@ define([
         }
     };
 
-    o.comment_response = function (e, json){
-        $('#comment_form textarea').val('');
-        o.edit_comment_response([], json);
-        // TODO: retrieve response from server with comment,
-        // add to comments.
-    }
-
     o.render_tag_page = function(){
         $('#tag_bar').remove();
         $('#site').prepend(tags_page_template(context.page_data));
@@ -251,6 +139,8 @@ define([
         expr_column();
         browser_layout.img_fill('#profile_bg');
     };
+
+    // js for profile edit. TODO: add to separate module
     o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
         browser_layout.img_fill('#profile_bg');
@@ -305,47 +195,17 @@ define([
         render_site(page_data);
     };
     
-    // TODO: move to expr
-    function hide_exprs() {
-        var contentFrame = $('.expr-visible');
-
-        if(contentFrame.length){
-            contentFrame.animate({
-                top: $(window).height() + 'px'
-            },{
-                duration: anim_duration,
-                complete: function() {
-                    contentFrame.addClass('expr-hidden');
-                    contentFrame.removeClass('expr-visible');
-                    contentFrame.get(0).contentWindow.
-                        postMessage({action: 'hide'}, '*');
-                    hide_expr_complete();
-                }
-            });
-        } else {
-            hide_expr_complete();
-        }
-    }
-
-    // TODO: move to expr
-    function hide_expr_complete() {
-        $('#exprs').hide();
-        $('.overlay').hide();
-        // $('#nav').prependTo("body");
-        $("#nav").show();
-    }
-
     function render_site(page_data){
         $('#site').empty().append(master_template(page_data));
     }
 
-    function layout(){
+    function resize(){
         $('#exprs').css('height', $(window).height());
         $('#site').css('height', $(window).height() - 44);
-        browser_layout.center($('#page_prev'), undefined, {'h': false});
-        browser_layout.center($('#page_next'), undefined, {'h': false});
         if(context.page_data.layout == 'grid') $('#feed').css('width',
             Math.min(3, Math.floor($(window).width() / grid_width)) * grid_width);
+        if (context.page && context.page.resize)
+            context.page.resize();
     }
 
     function expr_column(){
