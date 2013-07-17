@@ -9,7 +9,6 @@ class File(ModelController):
 
     @auth_required
     def create(self, tdata, request, response, **args):
-        print 'dimensions: ', request.form.get('dimensions')
         """ Saves a file uploaded from the expression editor, responds
         with a Hive.App JSON object.
         """
@@ -35,7 +34,6 @@ class File(ModelController):
         rv = []
         for file in files:
             if not file.filename: continue # ignore empty file inputs
-            print 'file: ', file.filename
 
             if hasattr(file, 'headers') and hasattr(file.headers, 'getheader'):
                 mime = parse_options_header(file.headers.getheader('Content-Type'))[0]
@@ -43,7 +41,7 @@ class File(ModelController):
                 mime = mimetypes.guess_type(file.filename)[0]
 
             if not mime: mime = 'application/octet-stream'
-            mime, subtype = mime.split('/')
+            # media, subtype = mime.split('/')
 
             # Supported mime types.  First try to find exact match to full mime
             # type (e.g. text/html), then default to generic type (e.g. text).
@@ -55,6 +53,7 @@ class File(ModelController):
                 'image/jpeg': _handle_image,
                 'image/png': _handle_image,
                 'text/html': _handle_html,
+                'application/javascript': _handle_js,
                 'application': _handle_link,
                 'text': _handle_link,
             }
@@ -62,29 +61,21 @@ class File(ModelController):
             handler = supported_mimes.get(mime)
             if not handler: handler = supported_mimes.get(mime, _handle_link)
 
+            print 'mime is ' + mime
             with os.tmpfile() as local_file:
-                print local_file
                 local_file.write(file.read())
 
                 file_data = {'owner': tdata.user.id,
                     'tmp_file': local_file, 'name': file.filename, 'mime': mime}
                 if url: file_data['source_url'] = url
-                file_record = self.db.File.new(file_data)
-                print file_record.file
-                dict.update(file_record, handler(file_record, request.form))
-                file_record.create()
-                rv.append(file_record)
+                file_record = self.db.File.create(file_data)
+                file_record.update(**handler(file_record, request.form))
+                rv.append(file_record.client_view())
         return self.serve_json(response, rv)
 
     def resize(self, request, response, **args):
         file_record = self.db.File.fetch(request.form.get('id'))
-        return self._resize(file_record, request.form)
-    def _resize(self, file_record, args):
-        dims = args.get('dimensions')
-        if not dims: return
-        (w, h) = json.loads(dims)
-        file_record.set_thumb(w, h)
-        return file_record
+        return _resize(file_record, request.form)
 
     def delete(self, request, response):
         res = self.db.File.fetch(request.form.get('id'))
@@ -101,14 +92,17 @@ def _handle_audio(file_record, args):
     for attr in ["artist", "album", "title", "year", "genre", "track",
         "comment", "duration", "bitrate"]:
             data[attr] = getattr(track, attr)
-    return {'meta': data}
+    return {'meta': data, 'type': 'audio'}
 
 def _handle_image(file_record, args):
     _resize(file_record, args)
-    return {}
+    return {'type': 'image'}
 
 def _handle_html(file_record, args):
-    return {}
+    return {'type': 'html'}
+
+def _handle_js(file_record, args):
+    return {'type': 'js'}
 
 def _handle_link(file_record, args):
     return  {}
@@ -119,3 +113,13 @@ def _handle_unsupported(file_record, args):
     if hasattr(file, 'url'): data['url'] = file.url
     data['filename'] = file.filename
     return data
+
+def _resize(file_record, args):
+    dims = args.get('dimensions')
+    print '_resize'
+    if not dims: return
+    (w, h) = json.loads(dims)
+    print 'resizing...'
+    file_record.set_thumb(w, h)
+    print file_record
+    return file_record

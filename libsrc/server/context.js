@@ -87,7 +87,7 @@ define([
         
         // Common site-wide handlers
         find_all(elements, 'form[data-route-name]').each(
-            function(i, e){ form_handler(e) });
+            function(i, e){ form_handler(e, elements) });
         find_all(elements, '.menu.drawer[data-handle]').each(function(i, e){
             var handle = find_all(elements, $(e).attr('data-handle'));
             if(!handle) throw 'missing handle';
@@ -102,7 +102,7 @@ define([
         find_all(elements, '.hoverable').each(function(){
             ui_util.hoverable(this) });
 
-        js.each(o._after_render_handlers, function(handler, selector){
+        js.each(o._after_render_handlers, function(selector, handler){
             find_all(elements, selector).each(function(i,e){ handler($(e)) });
         });
 
@@ -112,7 +112,7 @@ define([
         o._after_render_handlers[selector] = handler;
     };
 
-    function form_handler(form){
+    function form_handler(form, all){
         var form = $(form),
             file_api = FileList && Blob,
             inputs = form.find('[type=file]');
@@ -123,67 +123,76 @@ define([
 
         inputs.each(function(i, e){
             var input = $(e);
-            input.on('change', function(){ form.submit() });
+            input.on('change', function(){ submit(); });
 
             var input_id = input.attr('id'),
-                label = $('label[for=' + input_id + ']');
+                label = find_all(all, 'label[for=' + input_id + ']');
+            label.on('dragenter dragover', function(){ return false; })
             label.on('drop', function(e){
-                upload_files(e.dataTransfer.files) });
-
-            function upload_files(files){
-                console.log(files);
-                // if(file_api){
-                //     var urls = [];
-                //     // FileList is not a list at all, has no map :'(
-                //     for(var i = 0; i < files.length; i++)
-                //         urls.push(URL.createObjectURL(files.item(i)));
-                //     input.trigger('with_files', [urls]);
-                // }
-
-                // var form_data = new FormData();
-                // for(var i = 0; i < files.length; i++){
-                //     var f = files.item(i);
-                //     form_data.append('files', f.slice(0, f.size), f.name);
-                // }
-
-                // // TODO-polish: add busy indicator while uploading
-                // $.ajax({
-                //     url: form.attr('action'),
-                //     type: 'POST',
-                //     // xhr: function() {  // custom xhr
-                //     //     var myXhr = $.ajaxSettings.xhr();
-                //     //     if(myXhr.upload) myXhr.upload.addEventListener(
-                //     //         'progress', on_progress, false);
-                //     //     return myXhr;
-                //     // },
-                //     //Ajax events
-                //     // beforeSend: beforeSendHandler,
-                //     success: function(data){
-                //         if(!file_api) input.trigger('with_files', [data]);
-                //         input.trigger('response', [data]);
-                //     },
-                //     error: function(){ alert("Sorry :'(") },
-                //     // Form data
-                //     data: form_data,
-
-                //     // Options to tell JQuery not to process data or
-                //     // worry about content-type
-                //     cache: false,
-                //     contentType: false,
-                //     processData: false
-                // });
-            };
+                var dt = e.originalEvent.dataTransfer;
+                if(!dt || !dt.files || !dt.files.length) return;
+                with_files(dt.files);
+                submit(dt.files);
+                return false;
+            });
         });
 
         // make form submission of non-file inputs asynchronous too
         form.on('submit', function(e){
-            var form_data = new FormData(form[0]);
-            $.post(form.attr('action'), form_data, function(data){
-                form.trigger('response', [data]);
-            }, 'json');
-            e.preventDefault();
+            submit();
             return false;
         });
+
+        var with_files = function(files){
+            if(!file_api) return;
+            var urls = [];
+            // FileList is not a list at all, has no map :'(
+            for(var i = 0; i < files.length; i++)
+                urls.push(URL.createObjectURL(files.item(i)));
+            form.trigger('with_files', [urls]);
+        };
+
+        var submit = function(files){
+            var form_data = new FormData(form[0]);
+            if(files){
+                for(var i = 0; i < files.length; i++){
+                    var f = files.item(i);
+                    form_data.append('files', f.slice(0, f.size), f.name);
+                }
+            }
+
+            // doesn't seem to work with FormData
+            // $.post(form.attr('action'), form_data, function(data){
+            //     form.trigger('response', [data]);
+            // }, 'json');
+
+            // TODO-polish: add busy indicator while uploading
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                // xhr: function() {  // custom xhr
+                //     var myXhr = $.ajaxSettings.xhr();
+                //     if(myXhr.upload) myXhr.upload.addEventListener(
+                //         'progress', on_progress, false);
+                //     return myXhr;
+                // },
+                //Ajax events
+                // beforeSend: beforeSendHandler,
+                success: function(data){
+                    // if(!file_api) input.trigger('with_files', [data]);
+                    form.trigger('response', [data]);
+                },
+                error: function(){ alert("Sorry :'(") },
+                // Form data
+                data: form_data,
+
+                // Options to tell JQuery not to process data or
+                // worry about content-type
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+        };
     }
 
     function find_all(elements, selector){

@@ -145,9 +145,9 @@ define([
         $('#site').empty().append(profile_edit_template(page_data));
         browser_layout.img_fill('#profile_bg');
         
-        $('#profile_thumb_input').on('response',
+        $('#thumb_form').on('response',
             on_file_upload('#profile_thumb', '#thumb_id_input'));
-        $('#profile_bg_input').on('response',
+        $('#bg_form').on('response',
             on_file_upload('#profile_bg', '#bg_id_input'));
 
         $('#user_update_form').on('response', function(e, data){

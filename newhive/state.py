@@ -1398,32 +1398,37 @@ class File(Entity):
         except:
             print 'failed to generate thumb for file: ' + self.id
             return False # thumb generation is non-critical so we eat exception
-        self.store(thumb, 'thumb', self.id + '_' + name, self['name'] + '_' + name)
+        url = self.store(thumb, 'thumb', self._thumb_name(w, h),
+            self['name'] + '_' + name)
 
-        self.setdefault('thumbs', {})
-        version = self['thumbs'][name] = self['thumbs'].get(name, 0) + 1
-        url = "%s_%s?v=%s" % (self['url'], name, version)
-        return {'url': url, 'file': thumb}
+        thumbs = self.get('thumbs', {})
+        thumbs[name] = True
+        self.update(thumbs=thumbs)
+        return url
+
+    def _thumb_name(self, w, h):
+        return self.id + '_' + str(w) + 'x' + str(h)
 
     def get_thumb(self, w, h):
         name = str(w) + 'x' + str(h)
-        version = self.get('thumbs', {}).get(name)
-        if version == None: return False
-        return "%s_%s%s" % (self['url'].split('?')[0], name, '?v=' + str(version))
+        if not self.get('thumbs', {}).get(name): return False
+        return self.db.s3.url('thumb', self._thumb_name(w, h))
 
     def get_default_thumb(self):
         return self.get_thumb(190,190)
     default_thumb = property(get_default_thumb)
 
     @property
-    def thumb_keys(self): return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
+    def thumb_keys(self):
+        return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
 
     def store(self, file, bucket, path, name):
         file.seek(0)
 
         if self.db.config.aws_id:
             self['protocol'] = 's3'
-            return self.db.s3.upload_file(file, bucket, self.id, self['name'], self['mime'])
+            return self.db.s3.upload_file(file, bucket, self.id,
+                self['name'], self['mime'])
         else:
             self['protocol'] = 'file'
             owner = self.db.User.fetch(self['owner'])
@@ -1487,6 +1492,10 @@ class File(Entity):
                 except:
                     print 'can not delete missing file: ' + self['fs_path']
 
+    def client_view(self, viewer=None, activity=0):
+        r = dfilter(self, ['name', 'mime', 'owner', 'url', 'thumbs'])
+        dict.update(r, id=self.id)
+        return r
 
 @Database.register
 class ActionLog(Entity):

@@ -34,10 +34,10 @@
     <input type='hidden' name='user_update' value='true'>
   </form>
 
-  <form {form_attrs "file_create"} method='POST' class='hide'>
+  <form {form_attrs "file_create"} method='POST' class='hide' id='bg_form'>
     <input type='file' id='profile_bg_input' name='files1' accept='image/*'>
   </form>
-  <form {form_attrs "file_create"} method='POST' class='hide'>
+  <form {form_attrs "file_create"} method='POST' class='hide' id='thumb_form'>
     <input type='file' id='profile_thumb_input' name='files2' accept='image/*'>
     <input type='hidden' name='dimensions' value='[222,222]'>
   </form>
@@ -45,7 +45,7 @@
 
 <hr>
 <h1>Email settings:</h1>
-<form id='user_update_form' {form_attrs "user_update" "owner_name" user.name} method='POST'>
+<form {form_attrs "user_update" "owner_name" user.name} method='POST'>
   {<for email_lists}
     <div class='checkbox'>
       <input id='{id}' type='checkbox' name='{id}' {<if subscribed}checked{>}>
@@ -67,6 +67,6 @@
 
 <hr>
 <h1>Account settings:</h1>
-<form id='user_update_form' {form_attrs "user_update" "owner_name" user.name} method='POST'>
+<form {form_attrs "user_update" "owner_name" user.name} method='POST'>
   <input type='submit' value='DEACTIVITAE ACCOUNT'>
 </form>

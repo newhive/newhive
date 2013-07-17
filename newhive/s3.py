@@ -18,6 +18,10 @@ class S3Interface(object):
         k.name = path
         k.delete()
 
+    def url(self, bucket='media', key=''):
+        return ('https://' + self.buckets[bucket].name
+            + '.s3.amazonaws.com/' + key)
+
     def upload_file(self, file, bucket, path, name=None, mimetype=None):
         if type(file)==str or type(file)==unicode:
             file = open(file, 'r')
