@@ -3,6 +3,18 @@ define([
 ], function($){
     var o = {};
 
+    // Can extend jquery functions with custom behavior.
+    o.extend_jquery = function() {
+        (function($){
+            var jqShow = $.fn.show;
+            $.fn.show = function( name, elem, value, pass ) {
+                elem.removeClass("hide");
+                return jqShow(elem, name, value, pass);
+            };
+        }(jQuery));
+    };
+    // o.extend_jquery();
+
     o.hoverable = function(e){
         if(e.src) {
             e.src_d = e.src;
@@ -47,7 +59,6 @@ define([
         // $('a, form').each(link_target);
     }
     
-
     return o;
 });
 

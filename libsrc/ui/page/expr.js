@@ -2,6 +2,7 @@ define([
     'browser/jquery',
     'server/context',
     'browser/layout',
+    'ui/routing',
     'sj!templates/overlay.html',
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html'
@@ -9,15 +10,18 @@ define([
     $,
     context,
     browser_layout,
+    routing,
     overlay_template,
     activity_template,
     social_overlay_template
 ) {
     var o = {}, contentFrameURLBase = context.is_secure ?
-            context.secure_content_server_url : context.content_server_url;
+            context.secure_content_server_url : context.content_server_url,
+            controller;
     const anim_duration = 700;
 
-    o.init = function(){
+    o.init = function(controller){
+        o.controller = controller;
         o.render_overlays();
         window.addEventListener('message', o.handle_message, false);        
         $('#exprs').hide();
