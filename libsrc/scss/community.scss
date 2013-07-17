@@ -63,6 +63,8 @@
         position: absolute; top: 0; left: 0;
         height: 300px;
         width: 100%;
+        overflow: hidden;
+        img { width: 100%; }
     }
 
     .info .icon {

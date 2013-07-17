@@ -8,7 +8,7 @@
       </label>
       <div class='profile'>
         <label for='profile_thumb_input' class='thumb'>
-          <img src='{thumb_190}' id='profile_thumb'>
+          <img src='{thumb_big}' id='profile_thumb'>
         </label>
         <div class='info'>
           <textarea class='name' rows='1' name='fullname'>{fullname}</textarea>
@@ -39,7 +39,7 @@
   </form>
   <form {form_attrs "file_create"} method='POST' class='hide' id='thumb_form'>
     <input type='file' id='profile_thumb_input' name='files2' accept='image/*'>
-    <input type='hidden' name='dimensions' value='[222,222]'>
+    <input type='hidden' name='thumb' value='true'>
   </form>
 {>}
 

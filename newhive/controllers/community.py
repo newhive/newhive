@@ -88,8 +88,9 @@ class Community(Controller):
                 update['profile_bg'] = file_r['url']
             file_r = self.db.File.fetch(request.form.get('profile_thumb'))
             if file_r:
-                update['thumb_file_id'] = file_r.id
-                update['profile_thumb'] = file_r['url']
+                thumb = file_r.set_thumb(222, 222)
+                file_r.set_thumb(70, 70, file=thumb)
+                update['thumb_id'] = file_r.id
 
             if update['email'] and update['email'] != owner.get('email'):
                 request_date = now()

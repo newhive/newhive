@@ -137,13 +137,11 @@ define([
     o.profile = function(page_data){
         render_site(page_data);
         expr_column();
-        browser_layout.img_fill('#profile_bg');
     };
 
     // js for profile edit. TODO: add to separate module
     o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
-        browser_layout.img_fill('#profile_bg');
         
         $('#thumb_form').on('response',
             on_file_upload('#profile_thumb', '#thumb_id_input'));
@@ -172,8 +170,8 @@ define([
             if(data.error)
                 alert('Sorry, I did not understand that file as an image.' +
                 'Please try a jpg, png, or if you absolutely must, gif.');
-            var el = $(img);
-            el.attr('src', data[0].url);
+            var el = $(img), thumb = data[0].thumb_big;
+            el.attr('src', thumb ? thumb : data[0].url);
             $(input).val(data[0].id);
         }}
     };
