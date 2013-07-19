@@ -16,6 +16,7 @@ Git
 
 Python library dependency dependencies (Ubuntu packages)
     sudo apt-get install python-pip gfortran libblas-dev liblapack-dev python-dev g++
+    sudo apt-get install build-essential python-dev
 
 Python library dependencies
     sudo pip install ez_setup
