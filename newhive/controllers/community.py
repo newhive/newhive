@@ -159,6 +159,7 @@ class Community(Controller):
         profile = owner.client_view(activity=True)
         tags = owner.get('tags_following', [])
         return {
+            'special': {'mini_expressions': 3},
             'tags': tags, 'cards': users, 'owner': profile, 'card_type':'user',
             'title': owner['name'] + ' Following', 'about_text': 'Following',
         }
@@ -170,6 +171,7 @@ class Community(Controller):
         users = owner.starrer_page(**args)
         profile = owner.client_view(activity=True)
         return {
+            'special': {'mini_expressions': 3},
             'cards': users, 'owner': profile, 'card_type':'user',
             'title': owner['name'] + ': Followers', 'about_text': 'Followers',
         }
@@ -250,7 +252,10 @@ class Community(Controller):
         if not page_data:
             return self.serve_404(tdata, request, response, json=json)
         if page_data.get('cards'):
-            page_data['cards'] = [o.client_view() for o in page_data['cards']]
+            special = page_data.get('special', {})
+            if page_data.get('special'):
+                del page_data['special']
+            page_data['cards'] = [o.client_view(special=special) for o in page_data['cards']]
         if json:
             return self.serve_json(response, page_data)
         else:

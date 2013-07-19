@@ -15,7 +15,7 @@ define([
         nav.set_expr_view(route_args.route_name == 'view_expr');
         page.init(o);
         util.each(pages, function(m){
-            if(m.init) m.init();
+            if(m.init) m.init(o);
         });
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
