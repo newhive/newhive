@@ -74,17 +74,14 @@ class File(ModelController):
         return self.serve_json(response, rv)
 
     def resize(self, request, response, **args):
-        file_record = self.db.File.fetch(request.form.get('id'))
-        return _resize(file_record, request.form)
+        # file_record = self.db.File.fetch(request.form.get('id'))
+        # return _resize(file_record, request.form)
+        pass
 
     def delete(self, request, response):
         res = self.db.File.fetch(request.form.get('id'))
         if res: res.delete()
         return True
-
-    # "private" functions
-    def _upload(self, file, local_file, owner):
-        return (file_record, {'name': file.filename, 'file_id': res.id, 'url': res.get('url')})
 
 def _handle_audio(file_record, args):
     track = hsaudiotag.auto.File(file_record.file)
@@ -92,17 +89,19 @@ def _handle_audio(file_record, args):
     for attr in ["artist", "album", "title", "year", "genre", "track",
         "comment", "duration", "bitrate"]:
             data[attr] = getattr(track, attr)
-    return {'meta': data, 'type': 'audio'}
+    return {'meta': data}
 
 def _handle_image(file_record, args):
-    _resize(file_record, args)
-    return {'type': 'image'}
+    if args.get('thumb'):
+        thumb_file = file_record.set_thumb(222, 222)
+        file_record.set_thumb(70, 70, file=thumb_file)
+    return {}
 
 def _handle_html(file_record, args):
-    return {'type': 'html'}
+    return {}
 
 def _handle_js(file_record, args):
-    return {'type': 'js'}
+    return {}
 
 def _handle_link(file_record, args):
     return  {}
@@ -113,13 +112,3 @@ def _handle_unsupported(file_record, args):
     if hasattr(file, 'url'): data['url'] = file.url
     data['filename'] = file.filename
     return data
-
-def _resize(file_record, args):
-    dims = args.get('dimensions')
-    print '_resize'
-    if not dims: return
-    (w, h) = json.loads(dims)
-    print 'resizing...'
-    file_record.set_thumb(w, h)
-    print file_record
-    return file_record

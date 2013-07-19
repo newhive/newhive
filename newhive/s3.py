@@ -25,6 +25,7 @@ class S3Interface(object):
     def upload_file(self, file, bucket, path, name=None, mimetype=None):
         if type(file)==str or type(file)==unicode:
             file = open(file, 'r')
+        else: file.seek(0)
         k = S3Key(self.buckets[bucket])
         k.name = path
         name_escaped = urllib.quote_plus(name.encode('utf8')) if name else path

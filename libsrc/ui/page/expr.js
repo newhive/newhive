@@ -229,7 +229,7 @@ define([
             action:  (btn == "loves") ? "Love" : "Broadcast",
             class_name:  (btn == "loves") ? "Star" : "Broadcast",
             initiator_name:  context.user.name,
-            initiator_thumb_70:  context.user.thumb_70
+            initiator_thumb_small:  context.user.thumb_small
         };
     };
 

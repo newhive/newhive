@@ -733,17 +733,15 @@ class User(HasSocial):
         url = self.get('profile_thumb')
         return True if ( (id and id != '') or (url and url != '') ) else False
 
-    def get_thumb(self, size=190):
-        if self.get('thumb_file_id'):
-            file = self.db.File.fetch(self['thumb_file_id'])
-            if file:
-                thumb = file.get_thumb(size,size)
-                if thumb: return thumb
-        if self.get('profile_thumb'):
-            return self.get('profile_thumb')
-        # bugbug: Need correct asset.
-        # perhaps get this image from a prototypical user
-        return '/lib/skin/nav/comment.png'
+    def get_thumb(self, size=222):
+        thumb = False
+        thumb_file = self.db.File.fetch(self.get('thumb_id'))
+        if thumb_file: thumb = thumb_file.get_thumb(size, size)
+        if not thumb:
+            # bugbug: Need correct asset.
+            # perhaps get this image from a prototypical user
+            return '/lib/skin/nav/comment.png'
+        return thumb
     thumb = property(get_thumb)
 
     def get_files(self):
@@ -879,8 +877,9 @@ class User(HasSocial):
             id = self.id,
             url = self.url,
             #user_is_owner = bool(viewer and viewer['_id'] == self['_id']),
-            thumb_70 = self.get_thumb(70),
-            thumb_190 = self.get_thumb(190),
+            mini_expressions = map(lambda e:e.mini_view(), exprs),
+            thumb_small = self.get_thumb(70),
+            thumb_big = self.get_thumb(222),
             has_thumb = self.has_thumb,
             logged_in = self.logged_in,
             notification_count = self.notification_count,
@@ -1369,6 +1368,7 @@ class File(Entity):
     def __init__(self, *a, **b):
         super(File, self).__init__(*a, **b)
         self._file = self.get('tmp_file')
+        if self.has_key('tmp_file'): del self['tmp_file']
 
     def __del__(self):
         if (type(self._file) == file
@@ -1394,24 +1394,25 @@ class File(Entity):
 
     @property
     def media_type(self):
-        if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']: return self.IMAGE
+        if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
+            return self.IMAGE
         return self.UNKNOWN
 
     def set_thumb(self, w, h, file=False):
         name = str(w) + 'x' + str(h)
         if not file: file = self.file
 
-        try: thumb = generate_thumb(file, (w,h))
+        try: thumb_file = generate_thumb(file, (w,h))
         except:
             print 'failed to generate thumb for file: ' + self.id
             return False # thumb generation is non-critical so we eat exception
-        url = self.store(thumb, 'thumb', self._thumb_name(w, h),
-            self['name'] + '_' + name)
+        url = self.db.s3.upload_file(thumb_file, 'thumb', self._thumb_name(w, h),
+            self['name'] + '_' + name, 'image/jpeg')
 
         thumbs = self.get('thumbs', {})
         thumbs[name] = True
         self.update(thumbs=thumbs)
-        return url
+        return thumb_file
 
     def _thumb_name(self, w, h):
         return self.id + '_' + str(w) + 'x' + str(h)
@@ -1429,12 +1430,11 @@ class File(Entity):
     def thumb_keys(self):
         return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
 
-    def store(self, file, bucket, path, name):
-        file.seek(0)
-
+    def store(self):
         if self.db.config.aws_id:
             self['protocol'] = 's3'
-            return self.db.s3.upload_file(file, bucket, self.id,
+            self['s3_bucket'] = self.db.s3.buckets['media'].name
+            return self.db.s3.upload_file(self._file, 'media', self.id,
                 self['name'], self['mime'])
         else:
             self['protocol'] = 'file'
@@ -1447,7 +1447,6 @@ class File(Entity):
         """ Uploads file to s3 if config.aws_id is defined, otherwise
         saves in config.media_path
         """
-        del self['tmp_file']
         self['owner']
 
         # # Image optimization
@@ -1474,7 +1473,7 @@ class File(Entity):
         #         self._file.close()
         #         self._file = newfile
 
-        self['url'] = self.store(self._file, 'media', self.id, self['name'])
+        self['url'] = self.store()
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         super(File, self).create()
@@ -1485,7 +1484,7 @@ class File(Entity):
         self.pop('s3_bucket', None)
         self.pop('fs_path', None)
         if not file: file = self.file
-        self['url'] = self.store(file, 'media', self.id, self.get('name', 'untitled'))
+        self['url'] = self.store()
         if self._file: self._file.close()
         self.save()
 
@@ -1501,7 +1500,8 @@ class File(Entity):
 
     def client_view(self, viewer=None, activity=0):
         r = dfilter(self, ['name', 'mime', 'owner', 'url', 'thumbs'])
-        dict.update(r, id=self.id)
+        dict.update(r, id=self.id, thumb_big=self.get_thumb(222,222),
+            thumb_small=self.get_thumb(70,70))
         return r
 
 @Database.register
@@ -1619,9 +1619,9 @@ class Feed(Entity):
             return r
         if self.entity == None:
             return r
-        r['initiator_thumb_70'] = self.initiator.get_thumb(70)
+        r['initiator_thumb_small'] = self.initiator.get_thumb(70)
         if self['entity_class'] == 'User':
-            r['entity_thumb_70'] = self.entity.get_thumb(70)
+            r['entity_thumb_small'] = self.entity.get_thumb(70)
             r['entity_name'] = self.entity['name']
         elif self['entity_class'] == 'Expr':
             r['entity_title'] = self.entity.get('title')
