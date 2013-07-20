@@ -58,27 +58,33 @@ define([
 
     o.render = function(method, data){
         new_page = pages[method];
-        if (context.page) {
-            if (context.page != new_page) {
-                if (context.page.exit) context.page.exit();
-                delete context.page;
-            }
-        }
         expr_page = (method == 'expr');
         var page_data = data.page_data;
         page_data.layout = method;
-        if(pages[method]) {
-            pages[method].render(page_data);
+        if (new_page) {
+            if (context.page != new_page) {
+                if (context.page && context.page.exit) 
+                    context.page.exit();
+                // TODO: should enter be re-entrant?
+                // for profile, what if user logs in? should rerender.
+                if (new_page.enter) new_page.enter();
+            }
             context.page = new_page;
+        } else if (context.page) {
+            delete context.page;
         }
-        else if(o[method]) o[method](page_data);
-        else render_site(page_data);
+        if (new_page && new_page.render) 
+            pages[method].render(page_data);
+        else if(o[method])
+            o[method](page_data);
+        else
+            render_site(page_data);
 
         // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
             o.render_tag_page();
         }
- 
+
         resize();
 
         o.attach_handlers();
