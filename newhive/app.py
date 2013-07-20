@@ -13,6 +13,13 @@ import json, urllib
 from newhive.utils import url_host, now
 from newhive.server_session import db, server_env, jinja_env
 
+# For stats
+import yappi
+import cProfile
+import pstats
+import io
+from newhive.profiling import don, functools, doflags
+
 def make_routing_rules(url_pattern, endpoint, on_main_domain = True, with_ssl=True, without_ssl=True):
     rules = []
     if with_ssl:
@@ -79,15 +86,6 @@ for rule in catchall_rules_tuples:
     rules.extend(make_routing_rules(rule[0], endpoint=rule[1], on_main_domain=(rule[0] != '/<expr_id>')))
 
 routes = Map(rules, strict_slashes=False, host_matching=True, redirect_defaults=False)
-
-#TODO: remove non-working bits, move this to top
-import statprof
-import yappi
-import cProfile
-import pstats
-import io
-from newhive.profiling import don, functools, doflags
-from newhive import profiling
 
 @Request.application
 def handle(request):
