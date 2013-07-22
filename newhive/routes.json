@@ -98,6 +98,13 @@
         "method": "expr",
         "client_method": "expr"
     },
+    "edit_expr": {
+        "page_route": "/<owner_name>/<expr_name>/edit",
+        "api_route": "/api/expr/<id>",
+        "controller": "expr",
+        "method": "fetch",
+        "client_method": "edit_expr"
+    },
     "expr_snapshot": {
         "page_route": "/api/expr/snapshot/<expr_id>",
         "api_route": "/api/expr/snapshot/<expr_id>",

@@ -102,7 +102,7 @@ define([
         find_all(elements, '.hoverable').each(function(){
             ui_util.hoverable(this) });
 
-        js.each(o._after_render_handlers, function(selector, handler){
+        js.each(o._after_render_handlers, function(handler, selector){
             find_all(elements, selector).each(function(i,e){ handler($(e)) });
         });
 
