@@ -877,7 +877,6 @@ class User(HasSocial):
             id = self.id,
             url = self.url,
             #user_is_owner = bool(viewer and viewer['_id'] == self['_id']),
-            mini_expressions = map(lambda e:e.mini_view(), exprs),
             thumb_small = self.get_thumb(70),
             thumb_big = self.get_thumb(222),
             has_thumb = self.has_thumb,
