@@ -93,7 +93,7 @@
     },
     "view_expr": {
         "page_route": "/<owner_name>/<expr_name>",
-        "api_route": "/api/expr/<id>",
+        "api_route": "/api/expr/view/<id>",
         "controller": "community",
         "method": "expr",
         "client_method": "expr"
