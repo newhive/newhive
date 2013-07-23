@@ -1572,6 +1572,10 @@ class Feed(Entity):
         super(Feed, self).create()
 
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
+        if (self.entity_class == 'Expr' and self.class_name == 'Star' and
+            self.entity_owner['analytics'].get('loves_by')):
+                self.entity_owner.increment({'analytics.loves_by': 1})
+
         if self.entity.owner.id != self['initiator']: self.entity.owner.notify(self)
 
         return self
@@ -1580,6 +1584,9 @@ class Feed(Entity):
         class_name = type(self).__name__
         if self.entity:
             self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': -1}})
+            if (self.entity_class == 'Expr' and self.class_name == 'Star' and
+                self.entity_owner['analytics'].get('loves_by')):
+                    self.entity_owner.increment({'analytics.loves_by': -1})
         super(Feed, self).delete()
 
     @property
