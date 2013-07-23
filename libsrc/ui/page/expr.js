@@ -187,12 +187,12 @@ define([
         el.animate({
             // opacity: 0.25 },{
             'background-position-x': dir + "20px" }, {
-            duration: 150,
+            duration: 120,
             easing: 'swing',
             complete: function() {
                 el.animate({
-                    'background-position-x': position }, {
-                    duration: 150,
+                    'background-position-x': dir + "4px" }, {
+                    duration: 120,
                     easing: 'swing'
                 });
             }
