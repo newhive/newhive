@@ -175,6 +175,28 @@ define([
             o.user_operation(event, $(this), "loves"); });
         $("#broadcast_icon").click(function (event) {
             o.user_operation(event, $(this), "broadcast"); });
+
+        $('.page_btn').on('mouseenter', function(event){
+            o.page_animate($(this));
+        });
+    };
+
+    o.page_animate = function (el) {
+        dir = (el.prop("id") == "page_next") ? "" : "-";
+        position = el.css("background-position-x");
+        el.animate({
+            // opacity: 0.25 },{
+            'background-position-x': dir + "20px" }, {
+            duration: 150,
+            easing: 'swing',
+            complete: function() {
+                el.animate({
+                    'background-position-x': position }, {
+                    duration: 150,
+                    easing: 'swing'
+                });
+            }
+        });
     };
 
     o.user_operation = function(e, el, btn) {
