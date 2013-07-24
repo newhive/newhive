@@ -183,7 +183,7 @@ define([
 
     var hide_expr_complete = function() {
         $('#exprs').hide();
-        $('.overlay').hide();
+        $('.social.overlay').hide();
         // $('#nav').prependTo("body");
         $("#nav").show();
     };
@@ -379,6 +379,7 @@ define([
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
+        // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined) {
             $(".page_btn").hide();
             return;

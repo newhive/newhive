@@ -6,8 +6,6 @@
 .overlay {
     display: none;
     position: fixed;
-    //width: 55px;
-    //height: 55px;
     z-index: $nav_layer;
     background-color: white;
     background-repeat: no-repeat;
@@ -18,15 +16,6 @@
     }
 }
 
-/*.pagethrough {
-    position: fixed;
-    display: none;
-    @include opacity(0.8);
-    z-index: 2;
-}
-#page_prev img { left: 0; bottom: 50%; }
-#page_next img { right: 0; bottom: 50%; }
-*/
 .page_btn {
     width: 55px;
     height: 55px;
@@ -59,13 +48,9 @@
 
 #signup_create {
     &:hover { 
-        background-color: black;
-        color: white;
+        background-color: white;
     }
    
-    // fixme
-    display:block;
-
     right: 20px;
     bottom: 20px;
     @include border-radius(11px);
@@ -73,6 +58,10 @@
     &:first-child {
     }
     span {
+        &:hover { 
+            background-color: black;
+            color: white;
+        }
         text-transform: uppercase;
         padding: 0px 10px 0px 10px;
     }

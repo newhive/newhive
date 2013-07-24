@@ -1,9 +1,11 @@
 
 define([
     'browser/jquery',
+    'ui/dialog',
     'server/context'
 ], function(
     $,
+    dialog,
     context
 ) {
     var o = {},
@@ -11,9 +13,17 @@ define([
 
     o.init = function(controller){
         o.controller = controller;
-    }
+    };
+
+    o.attach_handlers = function(){
+        var d = dialog.create($("#dia_login_or_join"));
+        $(".overlay .signup_btn").click(d.open);
+        d = dialog.create($("#login_menu"));
+        $(".overlay .login_btn").click(d.open);
+    };
 
     o.enter = function (){
+        o.exit();
         $("#signup_create").show();
         if (context.user.logged_in) {
             $("#signup_create .create").removeClass("hide");

@@ -2,13 +2,14 @@ define([
     'browser/jquery', 
     'browser/layout', 
     'server/context',
+    'ui/dialog', 
     'ui/menu', 
     'ui/util', 
     'require', 
     'sj!templates/nav.html',
     'sj!templates/login_form.html', 
 ], function(
-	$, lay, context, menu, ui, require, nav_template
+	$, lay, context, dialog, menu, ui, require, nav_template
 ) {
     // Is the nav currently in expr mode?
     var nav_expr_mode = false;
@@ -25,9 +26,11 @@ define([
 
         $('#login_form').submit(login);
         if(!context.user.logged_in){
-        	var m = menu('#login_btn', '#login_menu', { open: function(){
-        		$('#username').focus() } });
-        	if(context.error.login) m.open();
+			var d = dialog.create('#login_menu',  
+				{ open: function(){ $("#login_menu input[name=username]").focus(); } });
+            $('#login_btn').click(d.open);
+
+        	if(context.error.login) d.open();
 
         	// request invite form handlers. This form also appears on home page,
         	// so this applies to both, and must be done after the top level render
