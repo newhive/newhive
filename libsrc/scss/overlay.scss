@@ -44,17 +44,28 @@
     right: 20px;
 }
 
-#social_plus {
-    @include border-radius(11px);
-    width: 55px;
-    height: 55px;
+.overlay.social_btn {
+    display: none;
     right: 20px;
     bottom: 20px;
 
-    background-image: asset_url('skin/nav/plus.png');
-    &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
-    background-position: 6px 5px;
-    display: none;
+    * {
+        display: inline-block;
+        @include border-radius(11px);
+        width: 55px; height: 55px;
+    }
+
+    #edit_btn {
+        background-image: asset_url('skin/nav/edit.png');
+        &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
+        background-position: 6px 5px;
+    }
+
+    #social_plus {
+        background-image: asset_url('skin/nav/plus.png');
+        &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+        background-position: 6px 5px;
+    }
 }
 
 #signup_create {

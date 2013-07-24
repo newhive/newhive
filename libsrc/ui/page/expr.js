@@ -62,7 +62,7 @@ define([
         var expr_curr = $('.expr-visible');
         expr_curr.removeClass('expr-visible');
         $('#exprs').show();
-        $('#social_plus').show();
+        $('.overlay.social_btn').show();
 
         var contentFrame = $('#expr_' + expr_id);
         if (contentFrame.length == 0) {
@@ -112,7 +112,7 @@ define([
     };
 
     o.render_overlays = function(){
-        $('#overlays').empty().html(overlay_template());
+        $('#overlays').empty().html(overlay_template(context.page_data));
         $("#page_prev").click(o.page_prev);
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
@@ -149,7 +149,6 @@ define([
         $('#exprs').hide();
         $('.overlay').hide();
         // $('#nav').prependTo("body");
-        $("#nav").show();
     };
 
     o.attach_handlers = function(){

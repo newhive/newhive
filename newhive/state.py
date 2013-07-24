@@ -876,7 +876,6 @@ class User(HasSocial):
         dict.update(user, dict(
             id = self.id,
             url = self.url,
-            #user_is_owner = bool(viewer and viewer['_id'] == self['_id']),
             thumb_small = self.get_thumb(70),
             thumb_big = self.get_thumb(222),
             has_thumb = self.has_thumb,

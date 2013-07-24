@@ -36,8 +36,8 @@ define([
             $('<link>').attr({rel: 'stylesheet', href: url})
                 .addClass('edit').appendTo('head');
         });
+        $('#site').empty().append(edit_template(page_data)).show();
         $('#nav').hide();
-        $('#site').empty().append(edit_template(context.page_data)).show();
     };
 
     o.attach_handlers = function(){
