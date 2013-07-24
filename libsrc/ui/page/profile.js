@@ -25,6 +25,7 @@ define([
     o.enter = function (){
         o.exit();
         $("#signup_create").show();
+        $(".panel.profile").show();
         if (context.user.logged_in) {
             $("#signup_create .create").removeClass("hide");
         } else {
@@ -33,6 +34,7 @@ define([
     };
     o.exit = function(){
         $("#signup_create").hide();
+        $(".panel.profile").hide();
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
     };

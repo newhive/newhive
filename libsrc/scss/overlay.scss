@@ -2,6 +2,15 @@
 
 @import "common";
 
+.panel.profile {
+    display: none;
+    //display: block;
+    position: fixed;
+    z-index: $nav_layer;
+    background-color: transparent;
+    right: 20px;
+    bottom: 20px;
+}
 
 .overlay {
     display: none;
@@ -13,6 +22,18 @@
 
     &:hover { 
         background-color: black;
+    }
+    &.logo {
+        display: inline-block;
+        height: 46px;
+        width: 46px;
+        position: static;    
+    }
+    &.profile {
+        display: inline-block;
+        position: static;    
+        margin-top: -31px;
+        vertical-align: middle;
     }
 }
 
