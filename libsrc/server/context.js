@@ -83,7 +83,9 @@ define([
     // stringjay filters the output of all top-level templates through this
     o._after_render_handlers = {};
     o.after_render = function(text){
-        var elements = $(text.trim());
+        var dom = $('<div>');
+        dom[0].innerHTML = text;
+        var elements = dom.contents();
         
         // Common site-wide handlers
         find_all(elements, 'form[data-route-name]').each(
@@ -182,7 +184,11 @@ define([
                     // if(!file_api) input.trigger('with_files', [data]);
                     form.trigger('response', [data]);
                 },
-                error: function(){ alert("Sorry :'(") },
+                error: function(data){
+                    // TODO: open new window with debugger
+                    alert("Server error post request: " + form.attr('action')
+                        + '\n(remove form handlers to see error)');
+                },
                 // Form data
                 data: form_data,
 

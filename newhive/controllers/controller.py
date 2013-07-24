@@ -129,6 +129,34 @@ class ModelController(Controller):
         if data is None: self.serve_404(tdata, request, response)
         return self.serve_json(response, data)
 
+class UIController(Controller):
+    def dispatch(self, handler, request, json=False, **kwargs):
+        (tdata, response) = self.pre_process(request)
+        query = getattr(self, handler, None)
+        if query is None:
+            return self.serve_404(tdata, request, response, json=json)
+        # Handle pagination
+        pagination_args = dfilter(request.args, ['at', 'by', 'limit', 'sort', 'order'])
+        for k in ['limit', 'order']:
+            if k in pagination_args: pagination_args[k] = int(pagination_args[k])
+        # Call controller function with query and pagination args
+        passable_keyword_args = dfilter(kwargs, ['username', 'owner_name', 'expr_name', 'id'])
+        merged_args = dict(passable_keyword_args.items() + pagination_args.items())
+
+        page_data = query(tdata, request, **merged_args)
+        if not page_data:
+            return self.serve_404(tdata, request, response, json=json)
+        if page_data.get('cards'):
+            special = page_data.get('special', {})
+            if page_data.get('special'):
+                del page_data['special']
+            page_data['cards'] = [o.client_view(special=special) for o in page_data['cards']]
+        if json:
+            return self.serve_json(response, page_data)
+        else:
+            tdata.context.update(page_data=page_data, route_args=kwargs)
+            return self.serve_loader_page('pages/main.html', tdata, request, response)
+
 def auth_required(controller_method):
     def decorated(self, tdata, *args, **kwargs):
         if not tdata.user.logged_in:

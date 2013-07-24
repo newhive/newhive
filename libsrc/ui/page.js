@@ -104,12 +104,6 @@ define([
         });
     }
 
-    // route.client_method definitions
-    o.expr_detail = function(page_data){
-        render_site(page_data);
-        // expr_column(); // TODO: is this necessary?
-    };
-
     o.grid = function(page_data){
         grid_width = 410;
         render_site(page_data);
