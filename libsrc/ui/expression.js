@@ -45,7 +45,8 @@ define(['browser/layout',
                 }
                 if ( m.data.action == "hide" ) o.hide();
             }, false);
-            $(document).mousemove(o.check_hover);
+            $(document).mousemove(check_hover);
+            $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
             $(window).resize(o.layout_parent)
                  .click(function(){ o.send_top('focus'); });
         };
@@ -53,7 +54,11 @@ define(['browser/layout',
         o.margin = function () {
             return $(window).width() / 4;
         }
-        o.check_hover = function (e) {
+        var clear_hover = function (e) {
+            o.send_top("hide_prev"); // $('#page_prev').hide();
+            o.send_top("hide_next"); // $('#page_next').hide();
+        }
+        var check_hover = function (e) {
             if (e.clientX < o.margin()) {
                 o.send_top("show_prev"); //$('#page_prev').show();
             } else {

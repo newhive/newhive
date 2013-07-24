@@ -27,7 +27,11 @@
       <div class="tag_list">
         {<for tags "tagnum"}
           {|templates/tag_card.html}
-        {>}</div>
+        {>}
+        <div id="tag_more" class="tag_label tag_0 hide">...</div>
+        <div id="tags_menu" class="menu drawer icon_set" data-handle='#tag_more' >
+        </div>        
+      </div>
       <div class="stats_bar">
         <form {form_attrs "star_unstar"} method='post'>
           <input type="hidden" name="entity" value="{id}">

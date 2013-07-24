@@ -3,6 +3,7 @@ define([
     'server/context',
     'browser/layout',
     'ui/routing',
+    'ui/menu',
     'sj!templates/overlay.html',
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html'
@@ -11,6 +12,7 @@ define([
     context,
     browser_layout,
     routing,
+    menu,
     overlay_template,
     activity_template,
     social_overlay_template
@@ -42,6 +44,7 @@ define([
         $("#popup_content").remove();
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
+
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
         $('#dia_embed textarea').val("<iframe src='" + embed_url + 
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
@@ -52,6 +55,38 @@ define([
         o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
 
         animate_expr();
+    };
+
+    // Check to see if tags overflows its bounds.
+    // If so, create "..." tag with associated menu.
+    var fixup_tags_list = function () {
+        tags = $(".tag_list a");
+        if (tags.length) {
+            top_y = tags.eq(0).position().top;
+            client_height = $(".tag_list").height();
+            var i = 1, shifting = 0;
+            drawer = $("#tags_menu");
+            for (; i < tags.length - 1; i++) {
+                if (shifting) {
+                    tags.eq(i).css("display","block").appendTo(drawer);
+                } else if (tags.eq(i).position().top - top_y > client_height) {
+                    shifting = i;
+                    i -= 3; // take into account for loop ++ 
+                    // and go to last item which didn't wrap
+                    // and one more just for good measure.
+                }
+            }
+            if (shifting) {
+                $("#tag_more").removeClass("hide");
+                // // create a cloned tag with text "..."
+                // tag_more = tags.eq(0).find(".tag_label").clone();
+                // // and append its label (without the <a>) back to the list.
+                // tag_more.html("...").prop("id", "tag_more").appendTo($(".tag_list"));
+                // // or include the <a> ?
+                // // tag_more.appendTo($(".tag_list"));
+                // menu(tag_more, drawer);
+            }
+        }
     };
 
     // Animate the new visible expression, bring it to top of z-index.
@@ -122,6 +157,7 @@ define([
 
     var hide_other_exprs = function() {
         $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').hide();
+        fixup_tags_list();
     };
 
     var hide_exprs = function() {
@@ -184,15 +220,15 @@ define([
     o.page_animate = function (el) {
         dir = (el.prop("id") == "page_next") ? "" : "-";
         position = el.css("background-position-x");
-        el.animate({
+        el.stop().animate({
             // opacity: 0.25 },{
-            'background-position-x': dir + "20px" }, {
-            duration: 120,
+            'background-position-x': dir + "26px" }, {
+            duration: 150,
             easing: 'swing',
             complete: function() {
                 el.animate({
                     'background-position-x': dir + "4px" }, {
-                    duration: 120,
+                    duration: 150,
                     easing: 'swing'
                 });
             }
@@ -260,6 +296,7 @@ define([
         // TODO: animate
         if (popup.css('display') == 'none') {
             popup.show();
+            fixup_tags_list();
         } else {
             popup.hide();
         }
@@ -311,9 +348,9 @@ define([
         // add to comments.
     };
 
-    o.page_prev = function() { o.navigate_page(-1); };
-    o.page_next = function() { o.navigate_page(1); };
-    o.navigate_page = function (offset){
+    o.page_prev = function() { navigate_page(-1); };
+    o.page_next = function() { navigate_page(1); };
+    var navigate_page = function (offset){
         o.anim_direction = offset / Math.abs(offset);
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
@@ -342,6 +379,10 @@ define([
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
+        if (context.page_data.cards == undefined) {
+            $(".page_btn").hide();
+            return;
+        }
         if ( m.data == "show_prev" || m.data == "show_next") {
             var div = (m.data == "show_prev" ? $("#page_prev") : $("#page_next"));
             div.show();
