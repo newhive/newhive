@@ -112,6 +112,12 @@
         display: inline-block;
         width: 50%;
         margin-right: 60px;
+        .title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 79%;
+            white-space: nowrap;
+        }
     }
 
     .right_pane {
@@ -132,7 +138,10 @@
     }
 
     .tag_list {
-        padding: 20px;
+        padding: 0 0 20px 0;
+        text-align: center;
+        height: 40px;
+        overflow: hidden;
     }
 }
 

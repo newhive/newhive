@@ -186,6 +186,9 @@ class Community(Controller):
         if not expr: return None
         # owner = self.db.User.named(owner_name)
         expr_owner = expr.get_owner()
+        if expr_owner and expr_owner['analytics'].get('views_by'):
+            expr_owner.increment({'analytics.views_by': 1})
+        
         profile = expr_owner.client_view()
         return {
             'owner': profile, 'expr': expr.client_view(activity=10),

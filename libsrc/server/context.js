@@ -10,11 +10,16 @@ define([
 ], function(assets, api_routes, routing, js, menu, dialog, ui_util){
     var o = {};
 
+    // vcenter creates a valigned block (with tables)
+    o.vcenter = function(context, block){
+        return "<table class = 'vcenter'><tr><td>" + block(context) + "</td></tr></table>";
+    };
+
     o.asset = function(context, name){
         return assets[name];
     };
 
-    o.attrs = function(route_name, route_args, query_args, is_form, suppress){
+    var attrs = function(route_name, route_args, query_args, is_form, suppress){
         if (!suppress) suppress = [];
         if(!api_routes[route_name]) throw('Route "' + route_name + '" not found');
         var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
@@ -54,28 +59,28 @@ define([
         for(var i = 1; i < arguments.length; i += 2)
             query_args += arguments[i] + arguments[i + 1];
 
-        return o.attrs("search", route_args, "?q=" + encodeURIComponent(query_args));
+        return attrs("search", route_args, "?q=" + encodeURIComponent(query_args));
     };
 
     // takes route_name, and association argument list.
     // Returns attribute string.
     o.anchor_attrs = function(scope, route_name){
         var route_args = o.route_args(arguments);
-        return o.attrs(route_name, route_args, "", false);
+        return attrs(route_name, route_args, "", false);
     };
 
     // takes route_name, and association argument list.
     // Returns attribute string.
     o.href_attrs = function(scope, route_name){
         var route_args = o.route_args(arguments);
-        return o.attrs(route_name, route_args, "", false, ['api', 'attributes']);
+        return attrs(route_name, route_args, "", false, ['api', 'attributes']);
     };
 
     // does the same as function above but for <form>s instead of <a>s
     o.form_attrs = function(scope, route_name){
         var route_args = o.route_args(arguments);
 
-        return o.attrs(route_name, route_args, "", true);
+        return attrs(route_name, route_args, "", true);
     };
 
     // takes rendered string from template, parses into DOM,

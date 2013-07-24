@@ -61,14 +61,14 @@ define([
         expr_page = (method == 'expr');
         var page_data = data.page_data;
         page_data.layout = method;
+        if (context.page != new_page) {
+            if (context.page && context.page.exit) 
+                context.page.exit();
+        }
         if (new_page) {
-            if (context.page != new_page) {
-                if (context.page && context.page.exit) 
-                    context.page.exit();
-                // TODO: should enter be re-entrant?
-                // for profile, what if user logs in? should rerender.
-                if (new_page.enter) new_page.enter();
-            }
+            // TODO: should enter be re-entrant?
+            // for profile, what if user logs in? should rerender.
+            if (new_page.enter) new_page.enter();
             context.page = new_page;
         } else if (context.page) {
             delete context.page;
