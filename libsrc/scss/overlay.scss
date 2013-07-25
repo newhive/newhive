@@ -54,17 +54,30 @@
     right: 20px;
 }
 
-#social_plus {
-    @include border-radius(11px);
-    width: 55px;
-    height: 55px;
-    right: 20px;
-    bottom: 20px;
-
+.social_btn {
     background-image: asset_url('skin/nav/plus.png');
     &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
     background-position: 6px 5px;
     display: none;
+
+    &.overlay {
+        @include border-radius(11px);
+        width: 55px;
+        height: 55px;
+        right: 20px;
+        bottom: 20px;
+    }
+    &.logged_out {
+        @include border-radius(0 11px 11px 0);
+        display: inline-block;
+        position: static;
+        height: 42px;
+        width: 48px;
+        background-color: white;
+        &:hover { background-color: black; }
+        background-position: 3px -1px;
+    }
+
 }
 
 #signup_create {

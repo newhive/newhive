@@ -4,6 +4,7 @@ define([
     'browser/layout',
     'ui/routing',
     'ui/menu',
+    'ui/dialog',
     'sj!templates/overlay.html',
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html'
@@ -13,6 +14,7 @@ define([
     browser_layout,
     routing,
     menu,
+    dialog,
     overlay_template,
     activity_template,
     social_overlay_template
@@ -29,6 +31,12 @@ define([
     };
     o.exit = function(){
         hide_exprs();
+        if (!context.user.logged_in) {
+            $("#signup_create").hide();
+            $(".panel.profile").hide();
+            $(".logged_out.social_btn").addClass("hide");
+            $("#signup_create .signup").addClass("hide");
+        }
     };
 
     o.resize = function(){
@@ -55,6 +63,15 @@ define([
         o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
 
         animate_expr();
+
+        // o.exit();
+        if (!context.user.logged_in) {
+            $("#signup_create").show();
+            $(".panel.profile").show();
+            $(".logged_out.social_btn").removeClass("hide");
+            $("#signup_create .signup").removeClass("hide");
+            $('#social_plus').hide();
+        }
     };
 
     // Check to see if tags overflows its bounds.
@@ -191,6 +208,10 @@ define([
     o.attach_handlers = function(){
         $("#social_close").unbind('click');
         $("#social_close").click(o.social_toggle);
+        
+        $(".logged_out.social_btn").unbind('click');
+        $(".logged_out.social_btn").click(o.social_toggle);
+
         $('#comment_form').on('response', o.comment_response);
 
         $(".feed_item").each(function(i, el) {
@@ -215,6 +236,13 @@ define([
         $('.page_btn').on('mouseenter', function(event){
             o.page_animate($(this));
         });
+
+        try {
+            var d = dialog.create($("#dia_login_or_join"));
+            $(".overlay .signup_btn").unbind('click').click(d.open);
+            d = dialog.create($("#login_menu"));
+            $(".overlay .login_btn").unbind('click').click(d.open);
+        } catch(err) {;}
     };
 
     o.page_animate = function (el) {
