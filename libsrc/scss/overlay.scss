@@ -120,6 +120,11 @@
         //height: 306px;
         //overflow: auto;
     }
+    #views_menu {
+        .text.item {
+            margin-top: 6px;
+        }
+    }
     .left_pane {
         display: inline-block;
         width: 50%;

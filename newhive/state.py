@@ -1286,7 +1286,7 @@ class Expr(HasSocial):
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
         # if expr.auth_required(viewer, password):
-        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed'])
+        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed', 'created', 'updated'])
         dict.update(expr, {
             'tags': self.get('tags_index'),
             'id': self.id,
