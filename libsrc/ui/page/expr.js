@@ -34,9 +34,9 @@ define([
         if (!context.user.logged_in) {
             $("#signup_create").hide();
             $(".panel.profile").hide();
-            $(".logged_out.social_btn").addClass("hide");
             $("#signup_create .signup").addClass("hide");
         }
+        $(".logged_out.social_btn").addClass("hide");
     };
 
     o.resize = function(){
