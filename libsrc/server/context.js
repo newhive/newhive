@@ -126,16 +126,22 @@ define([
 
         // TODO-test: test support for multiple files
         // TODO-polish: handle erros from file uploads
-        // TODO-compat: port <iframe> hack from old code for older browsers
+        // TODO-compat: port <iframe> hack from old code and finish
+        //     support for browsers without file API (file_api boolean)
 
         inputs.each(function(i, e){
             var input = $(e);
-            input.on('change', function(){ submit(); });
+            input.on('change', function(){
+                with_files(i.files);
+                submit();
+            });
 
             var input_id = input.attr('id'),
-                label = find_all(all, 'label[for=' + input_id + ']');
-            label.on('dragenter dragover', function(){ return false; })
-            label.on('drop', function(e){
+                drop_areas = find_all(all, 'label[for=' + input_id + ']'),
+                drop_selector = input.attr('data-drop-area');
+            drop_areas = drop_areas.add(drop_selector).add(find_all(all, drop_selector));
+            drop_areas.on('dragenter dragover', function(){ return false; })
+            drop_areas.on('drop', function(e){
                 var dt = e.originalEvent.dataTransfer;
                 if(!dt || !dt.files || !dt.files.length) return;
                 with_files(dt.files);
@@ -186,7 +192,8 @@ define([
                 //Ajax events
                 // beforeSend: beforeSendHandler,
                 success: function(data){
-                    // if(!file_api) input.trigger('with_files', [data]);
+                    // if(!file_api) input.trigger('with_files',
+                        // [ data.map(function(f){ return f.url }) ]);
                     form.trigger('response', [data]);
                 },
                 error: function(data){

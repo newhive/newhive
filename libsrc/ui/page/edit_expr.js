@@ -1,15 +1,13 @@
 define([
     'browser/jquery',
     'server/context',
-    'ui/menu',
-    'browser/layout',
+    'ui/editor',
     'json!server/compiled.bundles.json',
     'sj!templates/edit.html'
 ], function(
     $,
     context,
-    menu,
-    browser_layout,
+    editor,
     bundles, 
     edit_template
 ) {
@@ -38,6 +36,7 @@ define([
         });
         $('#site').empty().append(edit_template(page_data)).show();
         $('#nav').hide();
+        editor.init(page_data.expr);
     };
 
     o.attach_handlers = function(){
