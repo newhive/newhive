@@ -71,14 +71,7 @@ var menu = function(handle, drawer, options) {
         else if(o.sticky || $.inArray(true, $.map(o.menus,
             function(m){ return m.opened })) > -1) return;
 
-        if(opts.animate_close){
-            if(!opts.animate_open){
-                opts.animate_open = {};
-                for(var p in opts.animate_close) opts.animate_open[p] = drawer.css(p);
-            }
-            drawer.animate(opts.animate_close, 100);
-        }
-        else opts.close_menu();
+        o.do_close();
 
         o.opened = false;
         opts.close();
@@ -87,6 +80,21 @@ var menu = function(handle, drawer, options) {
 
         return o;
     }
+
+    o.do_open = function() {
+        if(opts.animate_open) drawer.animate(opts.animate_open, 100);
+        else opts.open_menu();
+    };
+    o.do_close = function() {
+        if(opts.animate_close){
+            if(!opts.animate_open){
+                opts.animate_open = {};
+                for(var p in opts.animate_close) opts.animate_open[p] = drawer.css(p);
+            }
+            drawer.animate(opts.animate_close, 100);
+        }
+        else opts.close_menu();
+    };
 
     o.open = function() {
         if(menu.disabled || ! opts.open_condition()) return;
@@ -101,8 +109,12 @@ var menu = function(handle, drawer, options) {
         opts.group.current = o;
         handle.data('busy', true);
 
-        if(opts.animate_open) drawer.animate(opts.animate_open, 100);
-        else opts.open_menu();
+        if(drawer.children().length == 0) {
+            o.children_empty = true;
+        } else {
+            o.children_empty = false;
+            o.do_open();
+        }
 
         if(opts.layout) o.layout();
 
@@ -111,6 +123,14 @@ var menu = function(handle, drawer, options) {
     };
 
     o.layout = function(){
+        // if drawer emptiness changed, display or hide it here.
+        var children_empty = (drawer.children().length == 0);
+        if (children_empty != o.children_empty) {
+            o.children_empty = children_empty;
+            if (children_empty) o.do_close(); 
+            else o.do_open();
+        }
+
         var css_opts = {};
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle

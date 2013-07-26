@@ -4,6 +4,7 @@ define([
     'browser/layout',
     'ui/routing',
     'ui/menu',
+    'ui/dialog',
     'sj!templates/overlay.html',
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html'
@@ -13,6 +14,7 @@ define([
     browser_layout,
     routing,
     menu,
+    dialog,
     overlay_template,
     activity_template,
     social_overlay_template
@@ -29,7 +31,18 @@ define([
     };
     o.exit = function(){
         hide_exprs();
+        hide_panel();
     };
+    
+    hide_panel = function(){
+        $("#signup_create").hide();
+        $(".panel.profile").hide();
+        $("#signup_create .signup").addClass("hide");
+        $("#signup_create .create").addClass("hide");
+        $(".panel .logged_out.social_btn").addClass("hide");
+        $(".panel .edit_btn").hide();
+        $(".panel .logo.overlay").hide();
+    }
 
     o.resize = function(){
         browser_layout.center($('#page_prev'), undefined, {'h': false});
@@ -40,6 +53,8 @@ define([
         // TODO: should the HTML render on page load? Or delayed?
         // $("#nav").prependTo("body");
         // TODO: shouldn't empty #nav
+        o.expr = context.page_data.expr;
+
         $("#nav").hide();
         $("#popup_content").remove();
         $('#social_overlay').append(
@@ -55,6 +70,17 @@ define([
         o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
 
         animate_expr();
+
+        hide_panel();
+        $(".panel.profile").show();
+        $(".logged_out.social_btn").removeClass("hide");
+        if (!context.user.logged_in) {
+            $("#signup_create").show();
+            $("#signup_create .signup").removeClass("hide");
+            $('#social_plus').hide();
+        } else if (context.user.id == o.expr.owner.id) {
+            $('.panel .edit_btn').show();
+        }
     };
 
     // Check to see if tags overflows its bounds.
@@ -183,13 +209,17 @@ define([
 
     var hide_expr_complete = function() {
         $('#exprs').hide();
-        $('.overlay').hide();
+        $('.social.overlay').hide();
         // $('#nav').prependTo("body");
     };
 
     o.attach_handlers = function(){
         $("#social_close").unbind('click');
         $("#social_close").click(o.social_toggle);
+        
+        $(".logged_out.social_btn").unbind('click');
+        $(".logged_out.social_btn").click(o.social_toggle);
+
         $('#comment_form').on('response', o.comment_response);
 
         $(".feed_item").each(function(i, el) {
@@ -214,6 +244,13 @@ define([
         $('.page_btn').on('mouseenter', function(event){
             o.page_animate($(this));
         });
+
+        try {
+            var d = dialog.create($("#dia_login_or_join"));
+            $(".overlay .signup_btn").unbind('click').click(d.open);
+            d = dialog.create($("#login_menu"));
+            $(".overlay .login_btn").unbind('click').click(d.open);
+        } catch(err) {;}
     };
 
     o.page_animate = function (el) {
@@ -259,6 +296,7 @@ define([
         top_context.activity = items;
         top_context.icon_only = true;
         el_drawer.empty().html(activity_template(top_context));
+        el_drawer.data('menu').layout();
         el_counts.html(parseInt(el_counts.html()) + ((! own_item) ? 1 : -1));
         o.action_set_state(el, ! own_item);
     };
@@ -378,6 +416,7 @@ define([
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
+        // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined) {
             $(".page_btn").hide();
             return;

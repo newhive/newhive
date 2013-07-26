@@ -12,11 +12,36 @@ define([
 
     // vcenter creates a valigned block (with tables)
     o.vcenter = function(context, block){
-        return "<table class = 'vcenter'><tr><td>" + block(context) + "</td></tr></table>";
+        return "<table class='vcenter'><tr><td>" + block(context) + "</td></tr></table>";
     };
 
     o.asset = function(context, name){
         return assets[name];
+    };
+
+    o.recency_time = function(context, time) {
+        var now = Date.now();
+        var ago = now/1000 - time;
+        if (ago < 2*60) {
+            return 'moments ago';
+        } else if (ago < 60*60) {
+            return (ago/60).toFixed(0) + ' minutes ago';
+        } else if (ago < 1.5*60*60) {
+            return 'about an hour ago';
+        } else if (ago < 24*60*60) {
+            return (ago/3600).toFixed(0) + ' hours ago';
+        } else  if (ago < 7*24*60*60) {
+            return (ago/3600/24).toFixed(0) + ' days ago';
+        } else {
+            var d = new Date(time*1000);
+            var d_parts = d.toString().split(" ");
+            var now_parts = (new Date(now)).toString().split(" ");
+            var display = d_parts[1] + " " + d_parts[2];
+            // include year if it is different from today's year.
+            if (d_parts[3] != now_parts[3])
+                display += " " + d_parts[3];
+            return display;
+        }
     };
 
     var attrs = function(route_name, route_args, query_args, is_form, suppress){
