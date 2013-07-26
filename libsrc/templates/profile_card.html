@@ -9,7 +9,7 @@
       <a {anchor_attrs "expressions_public" "owner_name" name}>
         <img style='height:70px;' src='{thumb_small}' class='thumb'></a>
       <span>by <span class='username'>{owner.name}</span></span>
-      <a><div class='icon' id='mail_btn'/></a>
+      <a><div class='icon' id='mail_btn'></div></a>
     </div>
   {>}{<else}
   {<if profile_bg}<div class='background'><img src='{profile_bg}'></div>{>}
@@ -20,9 +20,9 @@
         {fullname}
         {<if user_is_owner}
           <a {anchor_attrs "user_update" "owner_name" name}>
-            <div class='icon' id='edit_btn'/></a>
+            <div class='icon' id='edit_btn'></div></a>
         {>}
-        <a><div class='icon' id='mail_btn'/></a>
+        <a><div class='icon' id='mail_btn'></div></a>
       </div>
       <div class='subheading'>{subheading}</div>
       <div>{profile_about}</div>

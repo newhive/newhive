@@ -195,6 +195,12 @@ class Community(Controller):
             'expr_id': expr.id, 'title': expr['title'],
         }
 
+    def edit_expr(self, tdata, request, id=None, owner_name=None, expr_name=None):
+        expr = ( self.db.Expr.fetch(id) if id else
+            self.db.Expr.named(owner_name, expr_name) )
+        if not expr: return None
+        return { 'expr': expr }
+
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None):
         if not request.args.has_key('q'): return None
         # terms = request.args['q'].split()

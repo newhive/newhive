@@ -31,13 +31,18 @@ define([
     };
     o.exit = function(){
         hide_exprs();
-        if (!context.user.logged_in) {
-            $("#signup_create").hide();
-            $(".panel.profile").hide();
-            $("#signup_create .signup").addClass("hide");
-        }
-        $(".logged_out.social_btn").addClass("hide");
+        hide_panel();
     };
+    
+    hide_panel = function(){
+        $("#signup_create").hide();
+        $(".panel.profile").hide();
+        $("#signup_create .signup").addClass("hide");
+        $("#signup_create .create").addClass("hide");
+        $(".panel .logged_out.social_btn").addClass("hide");
+        $(".panel .edit_btn").hide();
+        $(".panel .logo.overlay").hide();
+    }
 
     o.resize = function(){
         browser_layout.center($('#page_prev'), undefined, {'h': false});
@@ -48,6 +53,8 @@ define([
         // TODO: should the HTML render on page load? Or delayed?
         // $("#nav").prependTo("body");
         // TODO: shouldn't empty #nav
+        o.expr = context.page_data.expr;
+
         $("#nav").hide();
         $("#popup_content").remove();
         $('#social_overlay').append(
@@ -64,13 +71,15 @@ define([
 
         animate_expr();
 
-        // o.exit();
+        hide_panel();
+        $(".panel.profile").show();
+        $(".logged_out.social_btn").removeClass("hide");
         if (!context.user.logged_in) {
             $("#signup_create").show();
-            $(".panel.profile").show();
-            $(".logged_out.social_btn").removeClass("hide");
             $("#signup_create .signup").removeClass("hide");
             $('#social_plus').hide();
+        } else if (context.user.id == o.expr.owner.id) {
+            $('.panel .edit_btn').show();
         }
     };
 
@@ -114,7 +123,7 @@ define([
         var expr_curr = $('.expr-visible');
         expr_curr.removeClass('expr-visible');
         $('#exprs').show();
-        $('#social_plus').show();
+        $('.overlay.social_btn').show();
 
         var contentFrame = $('#expr_' + expr_id);
         if (contentFrame.length == 0) {
@@ -164,7 +173,7 @@ define([
     };
 
     o.render_overlays = function(){
-        $('#overlays').empty().html(overlay_template());
+        $('#overlays').empty().html(overlay_template(context.page_data));
         $("#page_prev").click(o.page_prev);
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
@@ -202,7 +211,6 @@ define([
         $('#exprs').hide();
         $('.social.overlay').hide();
         // $('#nav').prependTo("body");
-        $("#nav").show();
     };
 
     o.attach_handlers = function(){

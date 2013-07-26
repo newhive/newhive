@@ -2,6 +2,23 @@
 
 @import "common";
 
+.page_btn {
+    width: 55px;
+    height: 55px;
+}
+#page_prev {
+    background-image: asset_url('skin/nav/page_prev.png');
+    &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
+    background-position: -4px 0px;
+    left: 14px;
+}
+#page_next {
+    background-image: asset_url('skin/nav/page_next.png');
+    &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
+    background-position: 4px 0px;
+    right: 20px;
+}
+
 .panel.profile {
     display: none;
     //display: block;
@@ -10,6 +27,36 @@
     background-color: transparent;
     right: 20px;
     bottom: 20px;
+
+    .overlay {
+        display: inline-block;
+        position: static;    
+        margin-top: -31px;
+        vertical-align: middle;
+    }
+
+    #edit_btn {
+        background-image: asset_url('skin/nav/edit.png');
+        &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
+        background-position: 6px 5px;
+    }
+
+    .social_btn {
+        background-image: asset_url('skin/nav/plus.png');
+        &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+        background-position: 6px 5px;
+
+        &.logged_out {
+            @include border-radius(0 11px 11px 0);
+            display: inline-block;
+            position: static;
+            height: 42px;
+            width: 48px;
+            background-color: white;
+            &:hover { background-color: black; }
+            background-position: 3px -1px;
+        }
+    }
 }
 
 .overlay {
@@ -29,57 +76,47 @@
         width: 46px;
         position: static;    
     }
-    &.profile {
-        display: inline-block;
-        position: static;    
-        margin-top: -31px;
-        vertical-align: middle;
-    }
 }
 
-.page_btn {
-    width: 55px;
-    height: 55px;
-}
-#page_prev {
-    background-image: asset_url('skin/nav/page_prev.png');
-    &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
-    background-position: -4px 0px;
-    left: 14px;
-}
-#page_next {
-    background-image: asset_url('skin/nav/page_next.png');
-    &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
-    background-position: 4px 0px;
-    right: 20px;
-}
-
-.social_btn {
-    background-image: asset_url('skin/nav/plus.png');
-    &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
-    background-position: 6px 5px;
+.overlay.social_btn {
     display: none;
+    right: 20px;
+    bottom: 20px;
 
-    &.overlay {
-        @include border-radius(11px);
-        width: 55px;
-        height: 55px;
-        right: 20px;
-        bottom: 20px;
-    }
-    &.logged_out {
-        @include border-radius(0 11px 11px 0);
+    * {
         display: inline-block;
-        position: static;
-        height: 42px;
-        width: 48px;
-        background-color: white;
-        &:hover { background-color: black; }
-        background-position: 3px -1px;
+        @include border-radius(11px);
+        width: 55px; height: 55px;
     }
 
 }
-
+/*
+.social_btn {
+     background-image: asset_url('skin/nav/plus.png');
+     &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+     background-position: 6px 5px;
+     display: none;
++
++    &.overlay {
++        @include border-radius(11px);
++        width: 55px;
++        height: 55px;
++        right: 20px;
++        bottom: 20px;
++    }
++    &.logged_out {
++        @include border-radius(0 11px 11px 0);
++        display: inline-block;
++        position: static;
++        height: 42px;
++        width: 48px;
++        background-color: white;
++        &:hover { background-color: black; }
++        background-position: 3px -1px;
++    }
++
+ }
+ */
 #signup_create {
     &:hover { 
         background-color: white;

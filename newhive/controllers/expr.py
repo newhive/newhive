@@ -11,10 +11,6 @@ from newhive.controllers.controller import ModelController
 class Expr(ModelController):
     model_name = 'Expr'
 
-    def fetch(self, tdata, request, response, id):
-        expr_obj = self.db.Expr.fetch(id)
-        return self.serve_json(response,expr_obj)
-
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
         if expr_obj.private and tdata.user.id != expr_obj.owner.id:
@@ -38,10 +34,6 @@ class Expr(ModelController):
                 , expr_style = expr_obj.get('style'))
         return self.serve_page(tdata, response, 'pages/expr.html')
         
-    def update(self):
-        # TODO: Call this method when an expression gets updated
-        self.db.ActionLog.create(request.requester, "update_snapshot", data={'expr_id': self.id})
-    
     def expr_to_html(self, exp, snapshot_mode=False):
         """Converts JSON object representing an expression to HTML"""
         if not exp: return ''
