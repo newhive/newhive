@@ -2,31 +2,6 @@
 
 @import "common";
 
-
-.overlay {
-    display: none;
-    position: fixed;
-    //width: 55px;
-    //height: 55px;
-    z-index: $nav_layer;
-    background-color: white;
-    background-repeat: no-repeat;
-    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
-
-    &:hover { 
-        background-color: black;
-    }
-}
-
-/*.pagethrough {
-    position: fixed;
-    display: none;
-    @include opacity(0.8);
-    z-index: 2;
-}
-#page_prev img { left: 0; bottom: 50%; }
-#page_next img { right: 0; bottom: 50%; }
-*/
 .page_btn {
     width: 55px;
     height: 55px;
@@ -44,6 +19,67 @@
     right: 20px;
 }
 
+
+.panel.profile {
+    display: none;
+    //display: block;
+    position: fixed;
+    z-index: $nav_layer;
+    background-color: transparent;
+    right: 20px;
+    bottom: 20px;
+
+    .overlay {
+        display: inline-block;
+        position: static;    
+        margin-top: -31px;
+        vertical-align: middle;
+    }
+
+    .edit_icon {
+        height: 42px; width: 48px;
+        background-image: asset_url('skin/nav/edit.png');
+        &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
+        background-position: 6px 5px;
+    }
+
+    .social_btn {
+        background-image: asset_url('skin/nav/plus.png');
+        &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+        background-position: 6px 5px;
+
+        &.logged_out {
+            @include border-radius(0 11px 11px 0);
+            display: inline-block;
+            position: static;
+            height: 42px;
+            width: 48px;
+            background-color: white;
+            &:hover { background-color: black; }
+            background-position: 3px -1px;
+        }
+    }
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    z-index: $nav_layer;
+    background-color: white;
+    background-repeat: no-repeat;
+    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+
+    &:hover { 
+        background-color: black;
+    }
+    &.logo {
+        display: inline-block;
+        height: 46px;
+        width: 46px;
+        position: static;    
+    }
+}
+
 .overlay.social_btn {
     display: none;
     right: 20px;
@@ -55,28 +91,39 @@
         width: 55px; height: 55px;
     }
 
-    #edit_btn {
-        background-image: asset_url('skin/nav/edit.png');
-        &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
-        background-position: 6px 5px;
-    }
-
-    #social_plus {
-        background-image: asset_url('skin/nav/plus.png');
-        &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
-        background-position: 6px 5px;
-    }
 }
-
+/*
+.social_btn {
+     background-image: asset_url('skin/nav/plus.png');
+     &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+     background-position: 6px 5px;
+     display: none;
++
++    &.overlay {
++        @include border-radius(11px);
++        width: 55px;
++        height: 55px;
++        right: 20px;
++        bottom: 20px;
++    }
++    &.logged_out {
++        @include border-radius(0 11px 11px 0);
++        display: inline-block;
++        position: static;
++        height: 42px;
++        width: 48px;
++        background-color: white;
++        &:hover { background-color: black; }
++        background-position: 3px -1px;
++    }
++
+ }
+ */
 #signup_create {
     &:hover { 
-        background-color: black;
-        color: white;
+        background-color: white;
     }
    
-    // fixme
-    display:block;
-
     right: 20px;
     bottom: 20px;
     @include border-radius(11px);
@@ -84,6 +131,10 @@
     &:first-child {
     }
     span {
+        &:hover { 
+            background-color: black;
+            color: white;
+        }
         text-transform: uppercase;
         padding: 0px 10px 0px 10px;
     }
@@ -107,6 +158,11 @@
         margin: 15px;
         //height: 306px;
         //overflow: auto;
+    }
+    #views_menu {
+        .text.item {
+            margin-top: 6px;
+        }
     }
     .left_pane {
         display: inline-block;

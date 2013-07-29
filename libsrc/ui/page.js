@@ -66,9 +66,6 @@ define([
                 context.page.exit();
         }
         if (new_page) {
-            // TODO: should enter be re-entrant?
-            // for profile, what if user logs in? should rerender.
-            if (new_page.enter) new_page.enter();
             context.page = new_page;
         } else if (context.page) {
             delete context.page;
@@ -85,6 +82,7 @@ define([
             o.render_tag_page();
         }
 
+        if (new_page && new_page.enter) new_page.enter();
         resize();
 
         o.attach_handlers();
