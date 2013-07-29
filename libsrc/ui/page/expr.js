@@ -8,7 +8,7 @@ define([
     'sj!templates/overlay.html',
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
-    'sj!templates/social_panel.html'
+    'sj!templates/edit_btn.html'
 ], function(
     $,
     context,
@@ -19,7 +19,7 @@ define([
     overlay_template,
     activity_template,
     social_overlay_template,
-    social_panel_template
+    edit_btn_template
 ) {
     var o = {}, contentFrameURLBase = context.is_secure ?
             context.secure_content_server_url : context.content_server_url,
@@ -74,9 +74,6 @@ define([
         animate_expr();
 
         hide_panel();
-
-        $('.social.panel').remove();
-        $('#overlays').append(social_panel_template(page_data));
         $(".panel.profile").show();
         $(".logged_out.social_btn").removeClass("hide");
         if (!context.user.logged_in) {
@@ -84,7 +81,7 @@ define([
             $("#signup_create .signup").removeclass("hide");
             $('#social_plus').hide();
         } else if (context.user.id == o.expr.owner.id) {
-            $('.panel .edit_btn').show();
+            $('.panel .edit_btn').replaceWith(edit_btn_template(page_data).show());
         }
     };
 

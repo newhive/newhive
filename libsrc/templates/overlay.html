@@ -1,3 +1,20 @@
 <div class='social overlay page_btn' id='page_prev'></div>
 <div class='social overlay page_btn' id='page_next'></div>
+<div class='social panel profile'>
+    {# hive logo #}
+    <a class='hide logo overlay counts_icon' {anchor_attrs "home"}
+        ><div id='logo' class='hoverable icon logo black_active'></div></a>
+    {# edit expression #}
+    {|/templates/edit_btn.html}
+    {# create or signup/login #}
+    <div class='profile overlay' id='signup_create'>
+        <div class='signup hide'>
+            <span class="signup_btn" >Sign up</span>
+            <span class='login_btn left_border'>Log in</span>
+        </div>
+        <div class='create hide'><span>Create</span></div>
+    </div>
+    {# + button to open overlay #}
+    <div class='hide overlay logged_out social_btn'></div>
+</div>
 <div class='social overlay' id='social_overlay'></div>
