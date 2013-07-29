@@ -329,66 +329,66 @@ Hive.Controls = function(app, multiselect) {
     };
 
     o.append_link_picker = function(d, opts) {
-        opts = $.extend({ open: noop, close: noop }, opts);
-        var e = $("<div class='control drawer link'>");
-        var cancel_btn = $("<img>").addClass('hoverable')
-            .attr('src', asset('skin/1/delete_sm.png'))
-            .attr('title', 'Clear link')
-            .css('margin', '12px 0 0 5px');
-        var input = $('<input type="text">');
+        // opts = $.extend({ open: noop, close: noop }, opts);
+        // var e = $("<div class='control drawer link'>");
+        // var cancel_btn = $("<img>").addClass('hoverable')
+        //     .attr('src', asset('skin/1/delete_sm.png'))
+        //     .attr('title', 'Clear link')
+        //     .css('margin', '12px 0 0 5px');
+        // var input = $('<input type="text">');
 
-        d.append(e);
-        Hive.input_frame(input, e);
-        e.append(cancel_btn);
+        // d.append(e);
+        // Hive.input_frame(input, e);
+        // e.append(cancel_btn);
 
-        // set_link is called when input is blurred
-        var set_link = function(){
-            var v = input.val();
-            // TODO: improve URL guessing
-            if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
-            o.app.link(v);
-        };
+        // // set_link is called when input is blurred
+        // var set_link = function(){
+        //     var v = input.val();
+        //     // TODO: improve URL guessing
+        //     if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
+        //     o.app.link(v);
+        // };
 
-        // Don't have to worry about duplicating handlers because all elements
-        // were just created from scratch
-        input.on('blur', set_link);
+        // // Don't have to worry about duplicating handlers because all elements
+        // // were just created from scratch
+        // input.on('blur', set_link);
 
-        var m = o.hover_menu(d.find('.button.link'), e, {
-             open : function() {
-                 var link = o.app.link();
-                 opts.open();
-                 input.focus();
-                 input.val(link);
-             }
-            ,click_persist : input
-            ,close : function() {
-                // No need for explicit call to set_link here because it is
-                // handled on blur, and blur is always triggered by one of the
-                // clauses below
-                if (opts.field_to_focus) {
-                    opts.field_to_focus.focus();
-                }
-                input.blur();
-                opts.close();
-            }
-            ,auto_close : false
-        });
+        // var m = o.hover_menu(d.find('.button.link'), e, {
+        //      open : function() {
+        //          var link = o.app.link();
+        //          opts.open();
+        //          input.focus();
+        //          input.val(link);
+        //      }
+        //     ,click_persist : input
+        //     ,close : function() {
+        //         // No need for explicit call to set_link here because it is
+        //         // handled on blur, and blur is always triggered by one of the
+        //         // clauses below
+        //         if (opts.field_to_focus) {
+        //             opts.field_to_focus.focus();
+        //         }
+        //         input.blur();
+        //         opts.close();
+        //     }
+        //     ,auto_close : false
+        // });
 
-        // timeout needed to get around firefox bug
-        var close_on_delay = function(){
-            setTimeout(function(){m.close(true)}, 0);
-        };
-        e.find('img').click(function() {
-            input.focus();
-            input.val('');
-            close_on_delay();
-        });
-        input.keypress(function(e) {
-            if(e.keyCode == 13) {
-                close_on_delay();
-            }
-        });
-        return m;
+        // // timeout needed to get around firefox bug
+        // var close_on_delay = function(){
+        //     setTimeout(function(){m.close(true)}, 0);
+        // };
+        // e.find('img').click(function() {
+        //     input.focus();
+        //     input.val('');
+        //     close_on_delay();
+        // });
+        // input.keypress(function(e) {
+        //     if(e.keyCode == 13) {
+        //         close_on_delay();
+        //     }
+        // });
+        // return m;
     };
 
     o.appendControl = function(c) { 
@@ -883,7 +883,7 @@ Hive.App.Text = function(o) {
         o.align_menu = o.hover_menu(d.find('.button.align'), d.find('.drawer.align'));
 
         o.close_menus = function() {
-            o.link_menu.close();
+            // o.link_menu.close();
             o.color_menu.close();
         }
 
@@ -2000,7 +2000,10 @@ Hive.Selection = function(){
         // Previously unfocused elements that should be focused
         $.each(apps, function(i, el){ o.app_select(el, multi); });
         // Previously focused elements that should be unfocused
-        o.each(function(i, el){ if(!inArray(apps, el)) o.app_unselect(el, multi) });
+        o.each(function(i, el){
+            if($.inArray(apps, el) == -1)
+                o.app_unselect(el, multi);
+        });
 
         o.elements = $.merge([], apps);
 
@@ -2541,55 +2544,55 @@ Hive.init = function() {
 
     ////////////////////////////////////////////////////////////////////////////////
     // Labs features
-    if ($('#labs, #menu_labs').length == 2) {
-        hover_menu($('#labs'), $('#menu_labs'), { layout: 'center_y', min_y: 77 });
-    }
-    var set_make_fixed_text = function(){
-        var text = Hive.Exp.fixed_width ? "Make Auto-Scaling" : "Make Fixed-Width";
-        $('#make_fixed').text(text);
-    };
-    set_make_fixed_text();
-    $('#make_fixed').click(function(e) {
-        if (Hive.Exp.fixed_width){
-            Hive.make_fixed(false);
-        } else {
-            Hive.make_fixed(1000);
-        }
-        set_make_fixed_text();
-    });
-    $('#edit_script').click(function() {
-        showDialog('#dia_edit_script', {
-            fade: false,
-            close: function() {
-                var script = $('#expr_script_input').val();
-                Hive.Exp.script = script;
-            }
-            //open: function(){ history_point = Hive.History.saver(
-            //    function(){ return $.extend(true, {}, Hive.Exp.background) },
-            //    Hive.bg_set, 'change background'
-            //) },
-            //close: function(){ history_point.save() }
-        });
-    });
-    $('#edit_style').click(function() {
-        showDialog('#dia_edit_style', {
-            fade: false,
-            //open: function(){ history_point = Hive.History.saver(
-            //    function(){ return $.extend(true, {}, Hive.Exp.background) },
-            //    Hive.bg_set, 'change background'
-            //) },
-            close: function(){
-                var style = $('#expr_style_input').val();
-                Hive.Exp.style = style;
-                $('#expr_style').html( style );
-                //history_point.save()
-            }
-        });
-    });
-    $('#raw_html').click(function(){
-        var app = {type: 'hive.raw_html', content: '<div></div>'};
-        Hive.new_app(app);
-    });
+    // if ($('#labs, #menu_labs').length == 2) {
+    //     hover_menu($('#labs'), $('#menu_labs'), { layout: 'center_y', min_y: 77 });
+    // }
+    // var set_make_fixed_text = function(){
+    //     var text = Hive.Exp.fixed_width ? "Make Auto-Scaling" : "Make Fixed-Width";
+    //     $('#make_fixed').text(text);
+    // };
+    // set_make_fixed_text();
+    // $('#make_fixed').click(function(e) {
+    //     if (Hive.Exp.fixed_width){
+    //         Hive.make_fixed(false);
+    //     } else {
+    //         Hive.make_fixed(1000);
+    //     }
+    //     set_make_fixed_text();
+    // });
+    // $('#edit_script').click(function() {
+    //     showDialog('#dia_edit_script', {
+    //         fade: false,
+    //         close: function() {
+    //             var script = $('#expr_script_input').val();
+    //             Hive.Exp.script = script;
+    //         }
+    //         //open: function(){ history_point = Hive.History.saver(
+    //         //    function(){ return $.extend(true, {}, Hive.Exp.background) },
+    //         //    Hive.bg_set, 'change background'
+    //         //) },
+    //         //close: function(){ history_point.save() }
+    //     });
+    // });
+    // $('#edit_style').click(function() {
+    //     showDialog('#dia_edit_style', {
+    //         fade: false,
+    //         //open: function(){ history_point = Hive.History.saver(
+    //         //    function(){ return $.extend(true, {}, Hive.Exp.background) },
+    //         //    Hive.bg_set, 'change background'
+    //         //) },
+    //         close: function(){
+    //             var style = $('#expr_style_input').val();
+    //             Hive.Exp.style = style;
+    //             $('#expr_style').html( style );
+    //             //history_point.save()
+    //         }
+    //     });
+    // });
+    // $('#raw_html').click(function(){
+    //     var app = {type: 'hive.raw_html', content: '<div></div>'};
+    //     Hive.new_app(app);
+    // });
     // End labs
     ////////////////////////////////////////////////////////////////////////////////
     

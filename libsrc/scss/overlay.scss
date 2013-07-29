@@ -36,7 +36,8 @@
         vertical-align: middle;
     }
 
-    #edit_btn {
+    .edit_icon {
+        height: 42px; width: 48px;
         background-image: asset_url('skin/nav/edit.png');
         &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
         background-position: 6px 5px;
