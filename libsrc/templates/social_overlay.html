@@ -111,8 +111,11 @@
           {# discussion input #}
           <div id="discussions">
            <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
-              <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
-              <input type='submit' value='Enter' class='submit btn black rounded'>
+              <textarea name='text' placeholder=
+                {<if user.logged_in}'Type comment here...'
+                {>}{<else}'Log in to comment...' disabled
+                {>} rows='4'></textarea>
+              {<if user.logged_in}<input type='submit' value='Enter' class='submit btn black rounded'>{>}
               <input type='hidden' name='action' value='comment'>
               <input type='hidden' name='entity' value='{id}'>
             </form>
