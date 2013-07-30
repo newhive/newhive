@@ -59,6 +59,9 @@ define([
         $("#popup_content").remove();
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
+        $("#dia_comments").data("dialog").opts.open = function(){
+            $("#dia_comments textarea").focus();
+        }
 
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
         $('#dia_embed textarea').val("<iframe src='" + embed_url + 
@@ -178,7 +181,7 @@ define([
         $("#page_prev").click(o.page_prev);
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
-        $("#nav #plus").click(o.social_toggle);
+        // $("#nav #plus").click(o.social_toggle);
     };
 
 

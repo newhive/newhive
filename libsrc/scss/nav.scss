@@ -199,6 +199,9 @@ img.thumb { background-color: $color_grey_medium; }
 .user_menu {
     width: 400px;
 }
+
+// This definition applies to all feed items, not just nav
+// TODO: move elsewhere
 .activity {
     .inplace_edit {
         display: none;
