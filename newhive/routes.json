@@ -112,6 +112,12 @@
         "method": "snapshot"
     },
 
+    "expr_save": {
+        "api_route": "/api/expr/save",
+        "controller": "expr",
+        "method": "save"
+    },
+
     "request_invite": {
         "api_route": "/api/user/invite",
         "controller": "user",

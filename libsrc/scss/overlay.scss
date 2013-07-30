@@ -19,7 +19,6 @@
     right: 20px;
 }
 
-
 .panel.profile {
     display: none;
     //display: block;
@@ -40,7 +39,6 @@
         height: 42px; width: 48px;
         background-image: asset_url('skin/nav/edit.png');
         &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
-        background-position: 6px 5px;
     }
 
     .social_btn {

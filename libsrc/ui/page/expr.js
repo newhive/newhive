@@ -2,7 +2,6 @@ define([
     'browser/jquery',
     'server/context',
     'browser/layout',
-    'ui/routing',
     'ui/menu',
     'ui/dialog',
     'sj!templates/overlay.html',
@@ -13,7 +12,6 @@ define([
     $,
     context,
     browser_layout,
-    routing,
     menu,
     dialog,
     overlay_template,
@@ -407,12 +405,11 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 page_data.expr_id = page_data.cards[found].id;
-                var page_state = routing.page_state('view_expr', {
+                o.controller.open('view_expr', {
                     id: page_data.expr_id,
                     owner_name: page_data.cards[found].owner.name,
                     expr_name: page_data.cards[found].name
                 });
-                o.controller.open_route(page_state);
             }
         }
     };

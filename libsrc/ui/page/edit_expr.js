@@ -1,15 +1,13 @@
 define([
     'browser/jquery',
     'server/context',
-    'ui/menu',
-    'browser/layout',
+    'ui/editor',
     'json!server/compiled.bundles.json',
     'sj!templates/edit.html'
 ], function(
     $,
     context,
-    menu,
-    browser_layout,
+    editor,
     bundles, 
     edit_template
 ) {
@@ -20,6 +18,7 @@ define([
         // o.controller = controller;
         // o.render_overlays();
         // window.addEventListener('message', o.handle_message, false);        
+        o.controller = controller;
     };
     o.exit = function(){
         // hide_exprs();
@@ -38,9 +37,19 @@ define([
         });
         $('#site').empty().append(edit_template(page_data)).show();
         $('#nav').hide();
+        editor.init(page_data.expr, o);
     };
 
     o.attach_handlers = function(){
+    };
+
+    o.view_expr = function(){
+        var expr = context.page_data.expr;
+        o.controller.open('view_expr', {
+            id: expr.id,
+            owner_name: expr.owner_name,
+            expr_name: expr.name
+        });
     };
 
     return o;

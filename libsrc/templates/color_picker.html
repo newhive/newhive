@@ -1,0 +1,10 @@
+<div class="color_picker">
+  <div class="palette">
+    {<for colors}
+      <div class="color_select" val="{.}" style="background-color: {.}"></div>
+    {>}
+  </div>
+  <img class="hue_bar" src='{asset "skin/edit/saturated.png"}'>
+  <div class="shades"><img src='{asset "skin/edit/greys.png"}'></div>
+  <input type='text' size='6' class='color_input'>
+</div>

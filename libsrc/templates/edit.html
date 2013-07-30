@@ -13,7 +13,7 @@
   </div
 ></div>
 
-<div id='menu_save' class='menu top'>
+<div id='menu_save' class='menu drawer top'>
   <div class='medbold'>Title</div>
   <textarea id='title'>{expr.title}</textarea>
   <div class='spacer'></div>
@@ -41,7 +41,7 @@
     <input type='password' id='password' value=''>
   </div>
 </div>
-<div id='menu_privacy' class='menu medbold' style='width : 125px;'>
+<div id='menu_privacy' class='menu drawer medbold' style='width : 125px;'>
   <div val='password' class='menu_item'>Private</div>
   <div val='public' class='menu_item'>Public</div>
 </div>
@@ -55,13 +55,13 @@
  ><div id='insert_file'  class='icon hoverable'></div
 ></div> 
 
-<div id='menu_text' class='menu medbold'>
+<div id='menu_text' class='menu drawer medbold'>
  <div id='text_default' class='menu_item'>Normal</div>
  <div id='text_header' class='menu_item'>Header</div>
  <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
 </div>
 
-<div id='menu_image' class='menu medbold'>
+<div id='menu_image' class='menu drawer medbold'>
  <div id='image_upload' class='menu_item'>Upload image</div>
  <div id='image_background' class='menu_item'>Background</div>
  <div id='image_from_url' class='menu_item'>Image URL</div>
@@ -76,15 +76,11 @@
  <div id='image_search' class='menu_item'>Google images</div>-->
 </div>
 
-<div id='menu_audio' class='menu medbold'>
+<div id='menu_audio' class='menu drawer medbold'>
  <div id='audio_upload' class='menu_item'>Upload MP3</div>
 </div>
 
-<div id='menu_file' class='menu medbold'>
- <div class='menu_item menu_hover'>Upload file to link</div>
-</div>
-
-<div id='menu_embed' class='menu'>
+<div id='menu_embed' class='menu drawer'>
  <span class='medbold'>Embed</span><br>
  <div class='spacer'></div>
  <div class='description'>{# TODO: ui.embed_code_description #}</div>
@@ -92,9 +88,13 @@
  <div style='text-align : center'><input id='embed_done' type='submit' class='btn black rounded embed_button' value='Enter'></div>
 </div>
 
-<div id='menu_shape' class='menu medbold'>
+<div id='menu_shape' class='menu drawer medbold'>
  <div id='shape_rectangle' class='menu_item'>Rectangle</div>
  <div id='shape_sketch' class='menu_item'>Sketch</div>
+</div>
+
+<div id='menu_file' class='menu drawer medbold'>
+ <div class='menu_item menu_hover'>Upload file to link</div>
 </div>
 
 <img id='loading' src='{asset "skin/edit/loading.gif"}'>
@@ -290,3 +290,10 @@ blah blah
 
 <div id='controls'></div>
 <div id='happs'></div>
+
+<form {form_attrs "file_create"} id='media_upload'>
+</form>
+
+<form {form_attrs "expr_save"} id='expr_save' method='POST'>
+  <input type='hidden' name='expr' class='expr'>
+</form>

@@ -31,7 +31,9 @@ define([
         if(!data.cards) context.page_data.cards = cards;
         page.render(route.client_method, context);
     };
-    o.refresh = function(){ o.dispatch(route.method, context) };
+    o.refresh = function(){
+        o.dispatch(route.method, context);
+    };
 
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
@@ -57,10 +59,13 @@ define([
         };
     };
 
-    o.open_route = function (page_state) {
+    o.open_route = function(page_state) {
         fetch_route_data(page_state, function() {
             history.pushState(page_state, null, page_state.page);
         });
+    };
+    o.open = function(route_name, route_args){
+        o.open_route(routing.page_state(route_name, route_args));
     };
     
     function fetch_route_data(page_state, callback) {
