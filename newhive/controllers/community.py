@@ -199,6 +199,7 @@ class Community(Controller):
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
+        expr['id'] = expr.id
         return { 'expr': expr }
 
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None):

@@ -243,6 +243,7 @@ class HiveAssets(Assets):
             output='../lib/edit.css'
         )
 
+        # CSS for expressions, and also site pages
         minimal_scss = webassets.Bundle(
             'scss/minimal.scss',
             'scss/fonts.scss',

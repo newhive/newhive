@@ -4,6 +4,7 @@ define([
     'browser/jquery', 
     'ui/menu', 
     'ui/codemirror',
+    'ui/dialog',
     'browser/js',
     'server/context',
     'ui/colors',
@@ -14,6 +15,7 @@ define([
     $,
     Menu,
     CodeMirror,
+    dialog,
     util,
     context,
     colors,
@@ -22,6 +24,10 @@ define([
 
 var Hive = {}, debug_mode = context.config.debug_mode, asset = context.asset,
     hover_menu = Menu, noop = function(){}, Funcs = util.Funcs;
+
+var showDialog = function(jq, opts){
+    return dialog.create(jq, opts);
+};
 
 // gives an array function for moving an element around
 Hive.has_shuffle = function(arr) {
@@ -41,7 +47,7 @@ Hive.Apps.init = function(initial_state, load) {
     
     o.state = function() {
         return $.map(o.all(), function(app) { return app.state(); });
-    }
+    };
     
     var stack = [], restack = function() {
         for(var i = 0; i < stack.length; i++)
@@ -2390,8 +2396,10 @@ Hive.new_file = function(files, opts) {
     return false;
 }
 
-Hive.init = function(exp) {
+Hive.init = function(exp, page){
     Hive.Exp = exp;
+    Hive.edit_page = page;
+
     //setInterval(Hive.set_draft, 5000);
     if(!debug_mode){
         window.onbeforeunload = function(){
@@ -2611,15 +2619,6 @@ Hive.init = function(exp) {
         }
     };
 
-    var setThumb = function(app){
-        // Set thumb_id property for the server to find the appropriate file object
-        // if a default thumb a pseudo file_id, id<10 is chosen. 
-        // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
-        Hive.Exp.thumb_file_id = app.file_id;
-        $('#current_thumb').attr('src',
-            app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
-    };
-
     var save_menu = hover_menu($('#btn_save'), $('#menu_save'),
         { auto_height : false, auto_close : false,
             open: pickDefaultThumb, click_persist : '#menu_save' });
@@ -2636,23 +2635,32 @@ Hive.init = function(exp) {
         Hive.Exp.overwrite = true;
         Hive.save();
     });
-    var dia_thumbnail;
-    $('#btn_thumbnail').click(function() {
-        dia_thumbnail = showDialog('#dia_thumbnail');
-        var user_thumbs = $.map(Hive.Exp.images, function(app){
-           if (typeof(app.file_id) != "undefined") { // Non S3 images can't be used for thumbs
-               var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
-               var e = $("<div class='thumb'>").append(img).get(0);
-               return e;
-           };
-        });
-        $('#expr_images').empty().append(user_thumbs);
-        $('#dia_thumbnail .thumb img').click(function() {
-            setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
-            dia_thumbnail.close();
-            return false;
-        });
-    });
+
+    // var setThumb = function(app){
+    //     // Set thumb_id property for the server to find the appropriate file object
+    //     // if a default thumb a pseudo file_id, id<10 is chosen. 
+    //     // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
+    //     Hive.Exp.thumb_file_id = app.file_id;
+    //     $('#current_thumb').attr('src',
+    //         app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
+    // };
+    // var dia_thumbnail;
+    // $('#btn_thumbnail').click(function() {
+    //     dia_thumbnail = showDialog('#dia_thumbnail');
+    //     var user_thumbs = $.map(Hive.Exp.images, function(app){
+    //        if (typeof(app.file_id) != "undefined") { // Non S3 images can't be used for thumbs
+    //            var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
+    //            var e = $("<div class='thumb'>").append(img).get(0);
+    //            return e;
+    //        };
+    //     });
+    //     $('#expr_images').empty().append(user_thumbs);
+    //     $('#dia_thumbnail .thumb img').click(function() {
+    //         setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
+    //         dia_thumbnail.close();
+    //         return false;
+    //     });
+    // });
     
     // Automatically update url unless it's an already saved
     // expression or the user has modified the url manually
@@ -2787,12 +2795,12 @@ Hive.drag_end = noop; // function(){ hovers_active(true) };
 Hive.save = function() {
     var expr = Hive.state();
 
-    if(expr.name.match(/^expressions/)) {
-        alert('The url "/expressions" is reserved for your profile page.');
+    if(expr.name.match(/^profile/)) {
+        alert('The name "profile" is reserved.');
         return false;
     }
 
-    var on_response = function(ret) {
+    var on_response = function(ev, ret){
         Hive.upload_finish();
         if(typeof(ret) != 'object')
             alert("Sorry, something is broken :(. Please send us feedback");
@@ -2801,28 +2809,20 @@ Hive.save = function() {
             showDialog('#dia_overwrite');
             $('#save_submit').removeClass('disabled');
         }
-        else if(ret.location) {
-            //Hive.del_draft();
-            window.location = ret.location;
+        else if(ret.location){
+            Hive.edit_page.view_expr();
         }
-    }
-
-    var on_error = function(ret) {
+    }, on_error = function(ev, ret){
         Hive.upload_finish();
         if (ret.status == 403){
             relogin(function(){ $('#btn_save').click(); });
         }
         $('#save_submit').removeClass('disabled');
-    }
+    };
 
-    Hive.upload_start();
-    $.ajax({
-        type : "POST",
-        dataType : 'json',
-        data : { action : 'expr_save', exp : JSON.stringify(Hive.state()) },
-        success : on_response,
-        error: on_error
-    });
+    $('#expr_save .expr').val(JSON.stringify(Hive.state()));
+    $('#expr_save').bind('response', on_response)
+        .bind('error', on_error).submit();
 };
 Hive.get_draft = function() {
     return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }

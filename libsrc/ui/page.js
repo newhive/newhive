@@ -10,7 +10,6 @@ define([
     'server/context',
     'browser/layout',
     'ui/util',
-    'ui/routing',
     'ui/page/pages',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
@@ -35,7 +34,6 @@ define([
     context,
     browser_layout,
     ui_util,
-    routing,
     pages,
     master_template,
     home_template,
@@ -152,9 +150,8 @@ define([
         $('#user_update_form').on('response', function(e, data){
             if(data.error) alert(data.error);
             else{
-                var page_state = routing.page_state(
-                    'expressions_public', {owner_name: context.user.name });
-                o.controller.open_route(page_state);
+                o.controller.open('expressions_public',
+                    {owner_name: context.user.name });
             }
         });
 

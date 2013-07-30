@@ -44,7 +44,7 @@ define([
         }
     };
 
-    var attrs = function(route_name, route_args, query_args, is_form, suppress){
+    var attrs = function(route_name, args, query_args, is_form, suppress){
         if (!suppress) suppress = [];
         if(!api_routes[route_name]) throw('Route "' + route_name + '" not found');
         var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
@@ -56,56 +56,54 @@ define([
         if (is_form) {
             attributes.push(['enctype', 'multipart/form-data']);
             if(api) attributes.push(['action',
-                routing.substitute_variables(api, route_args, true)]);
+                routing.substitute_variables(api, args, true)]);
         } else {
             if(href) attributes.push(['href',
-                routing.substitute_variables(href, route_args, true)]);
+                routing.substitute_variables(href, args, true)]);
             if(api) attributes.push(['data-api-path',
-                routing.substitute_variables(api, route_args, true)]);
+                routing.substitute_variables(api, args, true)]);
         }
         return attributes.map(function(attribute_pair) {
             return attribute_pair[0] + '="' + attribute_pair[1] + '"';
         }).join(' ');
-    };
-
-    o.route_args = function(arguments){
-        var route_args = { username: o.user.name };
+    }, get_route_args = function(arguments){
+        var args = { username: o.user.name };
         // All arguments after route_name are name value pairs
         for(var i = 2; i < arguments.length; i += 2)
-            route_args[arguments[i]] = arguments[i + 1];
+            args[arguments[i]] = arguments[i + 1];
 
-        return route_args;
+        return args;
     };
 
     o.search_attrs = function(scope){
-        var route_args = { username: o.user.name };
+        var args = { username: o.user.name };
         var query_args = ""
         // All arguments after route_name are prefix value pairs
         for(var i = 1; i < arguments.length; i += 2)
             query_args += arguments[i] + arguments[i + 1];
 
-        return attrs("search", route_args, "?q=" + encodeURIComponent(query_args));
+        return attrs("search", args, "?q=" + encodeURIComponent(query_args));
     };
 
     // takes route_name, and association argument list.
     // Returns attribute string.
     o.anchor_attrs = function(scope, route_name){
-        var route_args = o.route_args(arguments);
-        return attrs(route_name, route_args, "", false);
+        var args = get_route_args(arguments);
+        return attrs(route_name, args, "", false);
     };
 
     // takes route_name, and association argument list.
     // Returns attribute string.
     o.href_attrs = function(scope, route_name){
-        var route_args = o.route_args(arguments);
-        return attrs(route_name, route_args, "", false, ['api', 'attributes']);
+        var args = get_route_args(arguments);
+        return attrs(route_name, args, "", false, ['api', 'attributes']);
     };
 
     // does the same as function above but for <form>s instead of <a>s
     o.form_attrs = function(scope, route_name){
-        var route_args = o.route_args(arguments);
+        var args = get_route_args(arguments);
 
-        return attrs(route_name, route_args, "", true);
+        return attrs(route_name, args, "", true);
     };
 
     // takes rendered string from template, parses into DOM,
@@ -223,8 +221,9 @@ define([
                 },
                 error: function(data){
                     // TODO: open new window with debugger
-                    alert("Server error post request: " + form.attr('action')
+                    console.error("Server error post request: " + form.attr('action')
                         + '\n(remove form handlers to see error)');
+                    form.trigger('error', [data]);
                 },
                 // Form data
                 data: form_data,
