@@ -2,6 +2,24 @@
 
 .upper { text-transform: uppercase; }
 
+.rightalign {
+    position: absolute;
+    right: 0px;
+}
+.rightify {
+    text-align: right;
+}
+.textarea_padder {
+    padding-right: 18px;
+}
+.show_hover {
+    display:none;
+}
+.hoverable:hover .show_hover {
+    display:block;
+}
+
+
 // vertical centering
 table.vcenter {
    height:100%;
@@ -30,14 +48,18 @@ img.centered, div.centered {
     display:inline-block;
 }
 .title {
-    font-size: 46px;
+    font-size: 42px;
 }
 
 // Icons
 .counts_icon {
     display:inline-block;
     width:74px;
-    border-radius: 15px;
+    border-radius: 12px;
+
+    &.narrow {
+        width:50px;
+    }
 
     span {
         position:absolute;
@@ -86,15 +108,28 @@ img.centered, div.centered {
         &.hover { background-image: asset_url('skin/nav/love-hover.png'); }
     }
 
+    &.comment.on {
+        color: $color_white;
+        background-color: $color_blue;
+        .icon { background-image: asset_url('skin/nav/comment-on.png'); }
+    }
     .comment {
         &.icon { background-image: asset_url('skin/nav/comment.png'); }
-        &.on { background-color: $color_blue; }
-        &.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
+        //&.on { background-color: $color_blue; }
+        //&.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
         &.active .icon { background-image: asset_url('skin/nav/comment-hover.png'); }
         //&.active { background-color: $color_selected; }
     }
+    &.comment.discussions {
+        position: absolute;
+        right: 8px;
+    }
+
     &.republish.on {
-        background-color: $color_blue;
+        color: $color_white;
+        // background-color: $color_blue;
+        // !!TODO where is the gradient asset for bg color?
+        @include background-image(linear-gradient(to bottom, rgba(193,113,93,1) 0%,rgba(237,249,97,1) 44%,rgba(45,146,155,1) 100%)); /* W3C */
     }
     .republish {
         &.icon { background-image: asset_url('skin/nav/republish.png'); }
@@ -128,6 +163,10 @@ img.centered, div.centered {
     }
     &.on:hover {
         background-color: $color_selected;
+        background-image: none;
+    }
+    &.nohover:hover {
+        background-color: transparent; 
     }
 }
 

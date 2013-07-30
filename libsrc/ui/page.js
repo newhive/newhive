@@ -74,6 +74,8 @@ define([
             o[method](page_data);
         else
             render_site(page_data);
+        if (context.route_name == "home")
+            $("#nav").show();
 
         // TODO: move to ./page/community
         if (page_data.page == "tag_search") {

@@ -56,7 +56,8 @@ class User(ModelController):
         eid = request.form.get('entity')
         
         expr = self.db.Expr.fetch(eid)
-        if not expr: return self.serve_404(tdata, request, response)
+        if not expr or user['_id'] == None: 
+            return self.serve_404(tdata, request, response)
         text = request.form.get('text')
         if text.strip() == '': return False
 
