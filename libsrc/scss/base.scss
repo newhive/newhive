@@ -131,6 +131,7 @@ img.centered, div.centered {
         // !!TODO where is the gradient asset for bg color?
         @include background-image(linear-gradient(to bottom, rgba(193,113,93,1) 0%,rgba(237,249,97,1) 44%,rgba(45,146,155,1) 100%)); /* W3C */
     }
+    &.republish .counts {margin-left: 3px;}
     .republish {
         &.icon { background-image: asset_url('skin/nav/republish.png'); }
         //&.on { background-color: $color_blue; }
