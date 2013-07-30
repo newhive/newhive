@@ -65,9 +65,10 @@ define([
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
             " frameborder='0' vspace='0' hspace='0'></iframe>");
 
-        // Set toggle state for love, broadcast
+        // Set toggle state for love, broadcast, comment
         o.action_set_state($("#love_icon"), o.action_get_state("loves"));
         o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
+        o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
 
         animate_expr();
 
@@ -220,7 +221,7 @@ define([
         $(".logged_out.social_btn").unbind('click');
         $(".logged_out.social_btn").click(o.social_toggle);
 
-        $('#comment_form').on('response', o.comment_response);
+        $('#comment_form').unbind('response').on('response', o.comment_response);
 
         $(".feed_item").each(function(i, el) {
             edit_button = $(el).find('button[name=edit]');
@@ -277,33 +278,39 @@ define([
         el_counts = el.find($(".counts"));
 
         // Toggle the state on the server
-        own_item = o.action_get_state(btn);
-        el_form.find("input[name=state]").val(! own_item);
+        own_item = ! o.action_get_state(btn);
+        el_form.find("input[name=state]").val(own_item);
         el_form.submit();
 
         // Now toggle it on the client without waiting for server response.
-        items = (btn == "loves") ? context.page_data.expr.loves
-            : context.page_data.expr.broadcast;
-        if (own_item) {
+        items = get_items(btn);
+        if (! own_item) {
             items = items.filter(function(el) {
                 return el.initiator_name != context.user.name; } );
         } else {
             items = [o.fake_item(btn)].concat(items);
         }
-        if (btn == "loves") context.page_data.expr.loves = items
-            else context.page_data.expr.broadcast = items;
+        if (btn == "loves") 
+            o.expr.loves = items;
+        else
+            o.expr.broadcast = items;
         top_context = {};
         top_context.activity = items;
         top_context.icon_only = true;
         el_drawer.empty().html(activity_template(top_context));
         el_drawer.data('menu').layout();
-        el_counts.html(parseInt(el_counts.html()) + ((! own_item) ? 1 : -1));
-        o.action_set_state(el, ! own_item);
+        el_counts.html(parseInt(el_counts.html()) + ((own_item) ? 1 : -1));
+        o.action_set_state(el, own_item);
     };
 
-    o.action_get_state = function(btn) {
-        items = (btn == "loves") ? context.page_data.expr.loves
-            : context.page_data.expr.broadcast;
+    var get_items = function(btn){
+        d = { "loves": o.expr.loves,
+              "comment": o.expr.comments,
+              "broadcast": o.expr.broadcast  };
+        return d[btn];
+    };
+    o.action_get_state = function(btn){
+        items = get_items(btn);
         own_item = items.filter(function(el) {
             return el.initiator_name == context.user.name; } );
         return (own_item.length > 0);        
@@ -364,25 +371,26 @@ define([
         // rerender activity feed (only in social overlay and nav menu)
         // with new data received from server
         if (json.comments != undefined) {
-            context.activity = json.comments;
+            top_context = {};
+            top_context.activity = json.comments;
             context.page_data.expr.activity = json.activity;
             context.page_data.expr.comments = json.comments;
-            $('#dia_comments .activity').empty().html(activity_template(context));
+            $('#dia_comments .activity').empty().html(activity_template(top_context));
+            // update count and highlight state
+            $(".counts_icon.comment").find(".counts").html(json.comments.length);
+            o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
         }
         if (json.user != undefined) {
-            // template_data = context;
-            context.activity = json.user.activity;
+            top_context = {};
+            top_context.activity = json.user.activity;
             context.user.activity = json.user.activity;
-            $('#nav .activity').empty().html(activity_template(context));
+            $('#nav .activity').empty().html(activity_template(top_context));
         }
-        delete context.activity;
         o.attach_handlers();
     };
     o.comment_response = function (e, json){
         $('#comment_form textarea').val('');
         o.edit_comment_response([], json);
-        // TODO: retrieve response from server with comment,
-        // add to comments.
     };
 
     o.page_prev = function() { navigate_page(-1); };

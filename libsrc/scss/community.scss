@@ -76,6 +76,20 @@
     #mail_btn { background-image: asset_url('skin/nav/mail.png'); }
 }
 
+// moved out of #feed because it applies to social overlay
+.owner {
+    font-family: Gibson;
+    .username {
+        font-family: Gibson Semibold;
+        text-transform: uppercase;
+    }
+   .thumb {
+       width:50px;
+       height:50px;
+       vertical-align: middle;
+   }
+}
+
 #site {
     position: absolute;
     z-index: 0;
@@ -131,19 +145,6 @@
             .info {
                 position: relative;
                 padding: 10px 0;
-
-                .owner {
-                    font-family: Gibson;
-                    .username {
-                        font-family: Gibson Semibold;
-                        text-transform: uppercase;
-                    }
-                   .thumb {
-                       width:50px;
-                       height:50px;
-                       vertical-align: middle;
-                   }
-                }
 
                 .stats {
                     position: absolute;

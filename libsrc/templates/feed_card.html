@@ -16,7 +16,7 @@
   {>}
 {>}
 > 
-<div class='feed_item' {<if icon_only}style='display:inline-block'{>} >
+<div class='feed_item hoverable' {<if icon_only}style='display:inline-block'{>} >
   {# bugbug: style belongs elsewhere, namely icon from server should
   be correct height #}
   {<if icon_only}
@@ -24,49 +24,57 @@
   {>}{<else}
     <img style='height:30px;' src='{initiator_thumb_small}' class='thumb'>
     <div class='content'>
-      <span class='username'>
-        {<if initiator user.id}You{>}
-        {<else}{initiator_name}{>}
-      </span>
-      :
-      <span class='title2'>{entity_title}{entity_name}</span>
+      {<unless mode "discussion"}
+        <span class='username'>
+          {<if initiator user.id}You{>}
+          {<else}{initiator_name}{>}
+        </span>
+        :
+        <span class='title2'>{entity_title}{entity_name}</span>
+      {>}
       {<if action "Love"}
         <img src='{asset "skin/nav/love.png"}' class='action_icon'>
       {>}
       {<if action "Follow"}<span class='action_text'>follow</span>{>}
       {<if action "Comment"}
-        <img src='{asset "skin/nav/comment.png"}' class='action_icon'><br>
+        {<unless mode "discussion"}
+          <img src='{asset "skin/nav/comment.png"}' class='action_icon'><br>
+        {>}
         <div class='text'>{text}</div>
         {<if initiator user.id}
-          <form {form_attrs "comment_edit"} method='post' id='comment_edit'>
+          <form class="comment_edit" {form_attrs "comment_edit"} method='post'>
             <textarea name="text" class="inplace_edit"></textarea>
             <input type="hidden" name="deletion" value="delete">
             <input type="hidden" name="id" value="{_id}">
-            <button name="edit" type=button>Edit</button>
-            <button name="delete" type="submit">Delete</button>
+            <div class="show_hover">
+              <button name="edit" type=button>Edit</button>
+              <button name="delete" type="submit">Delete</button>
+            </div>
           </form>
         {>}
+        {# timestamp. should add to other types? #}
+        <div class="timestamp rightalign">{recency_time updated}</div>
       {>}
       {<if action "Broadcast"}
         <img src='{asset "skin/nav/republish.png"}' class='action_icon'>
       {>}
       {#
-      {<if initiator user.id}You{>}
-      {<unless initiator user.id}{initiator_name}{>}
-      {<if action "Love"}
-        <img src='{asset "skin/nav/love.png"}' class='action_icon'>
-        <span class='title'>{entity_title}</span>
-      {>}
-      {<if action "Follow"}follow {entity_name}{>}
-      {<if action "Comment"}
-        <img src='{asset "skin/nav/comment.png"}' class='action_icon'> on
-        <span class='title'>{entity_title}</span><br>
-        <div class='text'>{text}</div>
-      {>}
-      {<if action "Broadcast"}
-        <img src='{asset "skin/nav/republish.png"}' class='action_icon'>
-        <span class='title'>{entity_title}</span>
-      {>}
+          {<if initiator user.id}You{>}
+          {<unless initiator user.id}{initiator_name}{>}
+          {<if action "Love"}
+            <img src='{asset "skin/nav/love.png"}' class='action_icon'>
+            <span class='title'>{entity_title}</span>
+          {>}
+          {<if action "Follow"}follow {entity_name}{>}
+          {<if action "Comment"}
+            <img src='{asset "skin/nav/comment.png"}' class='action_icon'> on
+            <span class='title'>{entity_title}</span><br>
+            <div class='text'>{text}</div>
+          {>}
+          {<if action "Broadcast"}
+            <img src='{asset "skin/nav/republish.png"}' class='action_icon'>
+            <span class='title'>{entity_title}</span>
+          {>}
       #}
     </div>
   {>} {# unless icon_only #}

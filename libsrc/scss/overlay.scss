@@ -183,8 +183,9 @@
         border-left: 1px solid #d1d1d1;
     }
     .stats_bar {
-        position: absolute;
-        right: 0;
+        position: fixed;
+        right: 14px;
+        bottom: 10px;
     }
 
     .footer {
@@ -204,15 +205,32 @@
         max-height: 450px;
         overflow-y: auto;
         overflow-x: hidden;
+        .feed_item {
+            position: relative;
+
+            .show_hover {
+                position: absolute;
+                right: 20px;
+                top: 5px;
+            }
+            .timestamp {
+                right: 24px;
+                bottom: 0px;
+                max-width: 114px;
+                overflow: hidden;
+                white-space: nowrap;
+            }
+            .text {
+                max-height: none;
+            }
+        }
     }
     #discussions {
-        margin-right: 20px;
-        .counts_icon {
-            position:absolute;
-            right:0px;
-        }
         textarea {
             width: 100%;
         }
+    }
+    .submit {
+        padding: 7px;
     }
 }
