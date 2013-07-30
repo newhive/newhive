@@ -282,6 +282,8 @@ Hive.App = function(init_state, opts) {
     });
 
     // initialize
+    Hive.Selection();
+
     o.div = $('<div class="ehapp">');
     o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
     o.div.click(function(e) { return Hive.Selection.app_click(o, e) });
@@ -734,16 +736,10 @@ Hive.App.Text = function(o) {
 
     var content = o.init_state.content;
     o.content = function(content) {
-        return 'testS'
         if(typeof(content) != 'undefined') {
-            // avoid 0-height content element in FF
-            //if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
-            //else o.rte.setHtml(false, content);
-            o.rte.setTextContent(content);
+            o.codemirror.setValue(content);
         } else {
-            // remove any remaining selection-saving carets
-            //o.rte.content_element.find('span[id^="goog_"]').remove();
-            return o.rte.getCleanContents();
+            return o.codemirror.getValue();
         }
     }
 
@@ -790,10 +786,10 @@ Hive.App.Text = function(o) {
     });
 
     o.link = function(v) {
-        if(typeof(v) == 'undefined') return o.rte.get_link();
+        // if(typeof(v) == 'undefined') return o.rte.get_link();
         //if(!v) o.rte.edit('unlink');
         //else o.rte.make_link(v);
-        o.rte.make_link(v);
+        // o.rte.make_link(v);
     };
 
     o.calcWidth = function() {
@@ -830,13 +826,13 @@ Hive.App.Text = function(o) {
     };
     o.resize_end = function(){ history_point.save() };
     
-    var _load = o.load;
-    o.load = function() {
-        o.scale_set(o.scale());
-        o.content(content);
-        _load();
-        o.refresh_size();
-    };
+    // var _load = o.load;
+    // o.load = function() {
+    //     // o.scale_set(o.scale());
+    //     // o.content(content);
+    //     // _load();
+    //     // o.refresh_size();
+    // };
 
     o.history_saver = function(){
         var exec_cmd = function(cmd){ return function(){
@@ -930,7 +926,7 @@ Hive.App.Text = function(o) {
     o.content_element = $('<div></div>');
     o.content_element.attr('id', Hive.random_str()).addClass('text_content_element');
     o.div.append(o.content_element);
-    o.codemirror = CodeMirror(o.content_element.get(0), {value: o.content()});
+    o.codemirror = CodeMirror(o.content_element.get(0), {value: o.init_state.content});
     o.codemirror.setSize("100%", "100%");
 
     //o.rte = new Hive.goog_rte(o.content_element, o);
@@ -938,7 +934,7 @@ Hive.App.Text = function(o) {
     //        goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
     //        o.history_saver);
     //Sgoog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
-    o.shield();
+    // o.shield();
 
     o.ranges = new Object();
 
@@ -1215,331 +1211,6 @@ Hive.App.Text = function(o) {
     return o;
 }
 Hive.registerApp(Hive.App.Text, 'hive.text');
-/*
-
-Hive.goog_rte = function(content_element, app){
-    var that = this;
-    var id = content_element.attr('id');
-    this.content_element = content_element;
-    this.app = app;
-
-    goog.editor.SeamlessField.call(this, id);
-
-    this.make_uneditable = function() {
-        // Firefox tries to style the entire content_element, which google
-        // clobbers with makeUneditable.  This solution works, but results
-        // in multiple nested empty divs in some cases. TODO: improve
-        that.content_element.css('opacity', ''); //Opacity isn't supported for text anyway yet
-        var style = that.content_element.attr('style');
-        if (style != '') {
-            var inner_wrapper = $('<div></div>');
-            inner_wrapper.attr('style', style);
-            that.content_element.wrapInner(inner_wrapper[0]);
-        }
-        that.makeUneditable();
-    };
-
-    function rangeIntersectsNode(range, node) {
-        var nodeRange = node.ownerDocument.createRange();
-        try {
-          nodeRange.selectNode(node);
-        }
-        catch (e) {
-          nodeRange.selectNodeContents(node);
-        }
-
-        return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
-               range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
-    }
-
-    this.select = function(range) {
-        var s = window.getSelection();
-        if(!s) return;
-        s.removeAllRanges();
-        if(range)
-        s.addRange(range);
-        return s;
-    }
-
-    this.get_range = function() {
-        var s = window.getSelection();
-        if(s.rangeCount) return window.getSelection().getRangeAt(0).cloneRange();
-        else return null;
-    }
-
-    // Finds link element the cursor is on, selects it after saving
-    // any existing selection, returns its href
-    this.get_link = function() {
-        // If the color menu is still open the selection needs to be restored.
-        // TODO: make this work right :)
-        if (saved_range) that.restore_selection();
-
-        that.range = that.get_range();
-        var r = that.range.cloneRange(); // save existing selection
-
-        // Look for link in parents
-        var node = r.startContainer;
-        while(node.parentNode) {
-            node = node.parentNode;
-            if (node == that.content_element) return;
-            if($(node).is('a')) {
-                r.selectNode(node);   
-                that.select(r);
-                return $(node).attr('href');
-            }
-        }
-
-        // Look for the first link that intersects r
-        var find_intersecting = function(r) {
-            var link = false;
-            $(document).find('a').each(function() {
-                if(!link && rangeIntersectsNode(r, this)) link = this;
-            });
-            if(link) {
-                r.selectNode(link);
-                that.select(r);
-                return $(link).attr('href');
-            };
-            return '';
-        }
-        var link = find_intersecting(r);
-        if(link) return link;
-
-        // If there's still no link, select current word
-        if(!r.toString()) {
-            // select current word
-            // r.expand('word') // works in IE and Chrome
-            var s = that.select(r);
-            // If the cursor is not at the beginning of a word...
-            if(!r.startContainer.data || !/\W|^$/.test(
-                r.startContainer.data.charAt(r.startOffset - 1))
-            ) s.modify('move','backward','word');
-            s.modify('extend','forward','word');
-        }
-
-        // It's possible to grab a previously missed link with the above code 
-        var link = find_intersecting(that.get_range());
-        return link;
-    }
-
-    this.make_link = function(href) {
-        // TODO: don't use browser API directly
-        if (href === ''){
-            document.execCommand('unlink', false);
-        } else {
-            document.execCommand('createlink', false, href);
-        }
-    };
-
-    var saved_range;
-    this.save_selection = function(){
-        var range = this.getRange();
-        saved_range = range.saveUsingCarets();
-    };
-
-    this.restore_selection = function(){
-        if (!saved_range || saved_range.isDisposed()) return false;
-        saved_range.restore();
-        saved_range = false;
-        return true;
-    };
-
-    // Wrap a node around selecte text, even if selection spans multiple block elements
-    var current_selection;
-    this.wrap_selection = function(wrapper){
-        if (current_selection) return;
-        wrapper = wrapper || '<span class="hive_selection"></span>';
-        var range, node, nodes;
-
-        // Turn wrapper into DOM object
-        if (typeof(wrapper) == "string") wrapper = $(wrapper)[0];
-
-        // Get selection
-        range = that.getRange();
-        if (!range) return;
-
-        if (range.getStartNode() === range.getEndNode()) {
-            // Return if selection is empty
-            if (range.getStartOffset() === range.getEndOffset()) return;
-
-            // Check if selection is already a link
-            var node = $(range.getStartNode());
-            if (node.parent().is('a')) nodes = node.parent();
-        }
-
-        that.save_selection();
-        range.select(); // For some reason on FF save_selection unselects the range
-        if (!nodes){
-            // Create temporary anchor nodes using execcommand
-            document.execCommand('createLink', false, 'temporary_link');
-
-            // Replace temporary nodes with desired wrapper, saving reference in
-            // closure for use by unwrap_selection
-            nodes = $(range.getContainer()).find('a[href=temporary_link]');
-        }
-        current_selection = nodes.wrapInner(wrapper)
-        current_selection = current_selection.children()
-        current_selection = current_selection.unwrap();
-
-        // Remove browser selection
-        window.getSelection().removeAllRanges();
-        return current_selection;
-    };
-    this.unwrap_selection = function(){
-        if (! current_selection) return;
-        current_selection.each(function(i,el){ $(el).replaceWith($(el).html()); });
-        that.restore_selection();
-        current_selection = false;
-    };
-    this.unwrap_all_selections = function(){
-        var selection =  that.content_element.find('.hive_selection');
-        if (selection.length) {
-            current_selection = selection;
-            that.unwrap_selection();
-        }
-    };
-
-    this.undo_redo = new goog.editor.plugins.UndoRedo();
-    this.basic_text = new goog.editor.plugins.BasicTextFormatter();
-    this.registerPlugin(this.undo_redo);
-    this.registerPlugin(this.basic_text);
-    this.registerPlugin(new goog.editor.plugins.RemoveFormatting());
-
-    var previous_range = {};
-    this.content_element.on('paste', function(){
-        setTimeout(function(){
-            that.strip_sizes();
-
-            // Unformat all text, google RTE doesn't have selectAll so we use browser
-            document.execCommand('selectAll');
-            that.execCommand('+removeFormat');
-        }, 0);
-
-        // Paste unformatting code
-        //    var current_range = that.getRange();
-        //    var pasted_range = goog.dom.Range.createFromNodes(
-        //        previous_range.before.getStartNode(), 
-        //        previous_range.before.getStartOffset(), 
-        //        current_range.getStartNode(), 
-        //        current_range.getStartOffset()
-        //        );
-        //    pasted_range.select();
-        //    that.execCommand('+removeFormat');
-
-        //    // Place cursor at end of pasted range
-        //    var range = that.getRange();
-        //    previous_range.before = goog.dom.Range.createFromNodes(
-        //        range.getEndNode(), 
-        //        range.getEndOffset(), 
-        //        range.getEndNode(), 
-        //        range.getEndOffset()
-        //        );
-        //    previous_range.before.select();
-        //}, 0);
-    });
-
-    var range_change_callback = function(type){
-        return function(){
-            var range = that.getRange();
-            $.each(type, function(i, name){
-                previous_range[name] = range;
-            });
-        }
-    };
-
-    this.exec_command = function(cmd, val){
-        that.execCommand(cmd, val);
-        that.strip_sizes();
-    };
-
-    this.strip_sizes = function(){
-        that.content_element.find('*').css('font-size', '');
-        //    .css('width', '').css('height', '')
-        //    .attr('width', '').attr('height', '');
-    };
-
-
-    goog.events.listen(this, goog.editor.Field.EventType.DELAYEDCHANGE, range_change_callback(['delayed']));
-    goog.events.listen(this, goog.editor.Field.EventType.BEFORECHANGE, range_change_callback(['before']));
-    goog.events.listen(this, goog.editor.Field.EventType.SELECTIONCHANGE, range_change_callback(['delayed', 'before']));
-    //goog.events.listen(this, goog.editor.Field.EventType.FOCUS, range_change_callback(['before']));
-
-    var saved_cursor;
-    this.save_cursor = function(){
-        saved_cursor = previous_range.delayed.saveUsingCarets();
-    };
-    this.restore_cursor = function(){
-        if (saved_cursor){
-            that.focus();
-            saved_cursor.restore();
-            return true;
-        } else {
-            that.focusAndPlaceCursorAtStart();
-            return false;
-        };
-    };
-    //goog.events.listen(this, goog.editor.Field.EventType.LOAD, this.restore_cursor);
-
-    // Text wrapping hack: insert explicit line breaks where text is
-    // soft-wrapped before saving, remove them on loading
-    this.add_breaks = function(){
-        var text_content = that.content_element;
-
-        // Get text nodes: .find gets all non-textNode elements, contents gets
-        // all child nodes (inc textNodes) and the not() part removes all
-        // non-textNodes. Technique by Nathan MacInnes, nathan@macinn.es from
-        // http://stackoverflow.com/questions/4671713/#7431801
-         var textNodes = text_content.find('*').add(text_content).contents()
-            .not(text_content.find('*'));
-
-        // Split each textNode into individual textNodes, one for each word
-        textNodes.each(function (index, lastNode) {
-            var startOfWord = /\W\b/,
-                result;
-            while (startOfWord.exec(lastNode.nodeValue) !== null) {
-                result = startOfWord.exec(lastNode.nodeValue);
-                // startOfWord matches the character before the start of a
-                // word, so need to add 1.
-                lastNode = lastNode.splitText(result.index + 1);
-            }
-        });
-        // end contributed code
-
-        var textNodes = text_content.find('*').add(text_content).contents()
-            .not(text_content.find('*'));
-
-        textNodes.wrap('<span class="wordmark">');
-
-        // iterate over wordmarks, add <br>s where line breaks occur
-        var y = 0;
-        text_content.find('.wordmark').each(function(i, e) {
-            var ely = $(e).offset().top;
-            if($(e).text().length && ely > y) {
-                var br = $('<br class="softbr">');
-                $(e).before(br);
-                if(ely != $(e).offset().top){
-                    br.remove(); // if element moves, oops, remove <br>
-                }
-            }
-            y = ely;
-        });
-
-        // unwrap all words
-        text_content.find('.wordmark').each(function(i, e) {
-            $(e).replaceWith($(e).text());
-        });
-
-        var html = text_content.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
-        return html;
-    }
-    this.remove_breaks = function() {
-        that.content_element.find('.softbr').remove();
-        var wrapper = that.content_element.find('.viewstyle');
-        if(wrapper.length) that.content_element.html(wrapper.html());
-    }
-}
-goog.editor.Field.DELAYED_CHANGE_FREQUENCY = 100;
-goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);*/
 
 Hive.App.has_rotate = function(o) {
     var angle = o.init_state.angle ? o.init_state.angle : 0;
@@ -2022,7 +1693,7 @@ Hive.Selection = function(){
         $.each(apps, function(i, el){ o.app_select(el, multi); });
         // Previously focused elements that should be unfocused
         o.each(function(i, el){
-            if($.inArray(apps, el) == -1)
+            if($.inArray(el, apps) == -1)
                 o.app_unselect(el, multi);
         });
 
@@ -2044,7 +1715,9 @@ Hive.Selection = function(){
     o.select = function(app_or_apps){
         return o.update($.isArray(app_or_apps) ? app_or_apps : [app_or_apps]);
     };
-    o.selected = function(app){ return $.inArray(o.elements, app); };
+    o.selected = function(app){
+        return $.inArray(app, o.elements) != -1;
+    };
 
     o.divs = function(){
         return $.map(o.elements, function(a){ return a.div[0] });
@@ -2240,7 +1913,6 @@ Hive.Selection = function(){
 
     return o;
 };
-Hive.Selection();
 
 Hive.History = [];
 Hive.History.init = function(){
