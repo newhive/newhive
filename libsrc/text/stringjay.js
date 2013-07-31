@@ -144,7 +144,7 @@ define(['browser/js', 'module'],
 			else if(new_node = json());
 			else return false;
 			var deeper = expr(new_node);
-			if (deeper = expr(node)) {
+			if(deeper){
 				deeper.parent = new_node;
 				deeper.next_node = deeper.prev_node = null;
 				new_node = deeper;
@@ -448,9 +448,11 @@ define(['browser/js', 'module'],
 		}
 		return block(context.concat(new_context));
 	};
-	default_base['debug'] = function(context, do_break){
-		if(do_break) throw o.render_error('debug break', context,
-			get_template(context).render_node);
+	default_base['debug'] = function(context, do_debugger){
+		if(typeof do_debugger == "undefined") do_debugger = true;
+		if(do_debugger) debugger;
+            //throw o.render_error('debug break', context,
+		  	//    get_template(context).render_node);
 		// possibly add rendering context in invisible div
 		return '<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};

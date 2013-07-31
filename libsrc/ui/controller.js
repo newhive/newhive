@@ -15,10 +15,12 @@ define([
         nav.set_expr_view(route_args.route_name == 'view_expr');
         page.init(o);
         util.each(pages, function(m){
-            if(m.init) m.init();
+            if(m.init) m.init(o);
         });
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
+
+        curl.expose('server/context', 'c'); // useful for debugging
     };
     o.dispatch = function(route_name, data){
         context.route_name = route_name;
@@ -31,7 +33,9 @@ define([
         if(!data.cards) context.page_data.cards = cards;
         page.render(route.client_method, context);
     };
-    o.refresh = function(){ o.dispatch(route.method, context) };
+    o.refresh = function(){
+        o.dispatch(route.method, context);
+    };
 
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
@@ -57,10 +61,13 @@ define([
         };
     };
 
-    o.open_route = function (page_state) {
+    o.open_route = function(page_state) {
         fetch_route_data(page_state, function() {
             history.pushState(page_state, null, page_state.page);
         });
+    };
+    o.open = function(route_name, route_args){
+        o.open_route(routing.page_state(route_name, route_args));
     };
     
     function fetch_route_data(page_state, callback) {

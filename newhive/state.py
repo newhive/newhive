@@ -29,6 +29,8 @@ from subprocess import call
 from newhive.utils import *
 from newhive.routes import reserved_words
 
+from newhive.profiling import g_flags
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -148,7 +150,6 @@ class Database:
 
         return search
 
-
 class Collection(object):
     def __init__(self, db, entity):
         self.db = db
@@ -260,7 +261,6 @@ class Collection(object):
 
     def map_reduce(self, *a, **b): return self._col.map_reduce(*a, **b)
 
-
 class Cursor(object):
     def __init__(self, collection, cursor):
         self.collection = collection
@@ -287,7 +287,8 @@ class Cursor(object):
 
     def __getitem__(self, index): return self.collection.new(self._cur.__getitem__(index))
 
-    def next(self): return self.collection.new(self._cur.next())
+    def next(self): 
+        return self.collection.new(self._cur.next())
 
     def __iter__(self): return self
 
@@ -845,43 +846,48 @@ class User(HasSocial):
         return self.get_expressions(auth='public').sort([('updated', -1)]).limit(count)
     recent_expressions = property(get_recent_expressions)
 
-    def client_view(self, viewer=None, activity=0):
+    def client_view(self, viewer=None, special={}, activity=0):
         user = self.db.User.new( dfilter( self, [
             'fullname', 'name', 'email', 'profile_about', 'profile_thumb',
             'profile_bg', 'thumb_file_id', 'tags', 'updated', 'created', 'feed'
         ] ) )
+        ###########################################################
         # TODO: make sure this field is updated wherever views changes elsewhere
         # TODO: figure out best thing to do for empty user
         # TODO: make new class for analytics.
         #   Add tests to verify info survives new views, add/delete loves, users
         if self.has_key('analytics'):
-            #if not self['analytics'].has_key('views_by'):
-            self['analytics']['views_by'] = (
-                sum([r['views'] for r in self.db.Expr.search({'owner':self['_id']})]))
-            #if not self['analytics'].has_key('loves_by'):
-            self['analytics']['loves_by'] = (
-                self.db.Feed.search({'entity_owner':self['_id'],
-                    'class_name':'Star', 'entity_class': 'Expr'}).count())
-            user.update()
+            updates = {}
+            if not self['analytics'].has_key('views_by'):
+                updates.update({'views_by': 
+                    sum([r['views'] for r in self.db.Expr.search({'owner':self['_id']})])})
+            if not self['analytics'].has_key('loves_by'):
+                updates.update({'loves_by':
+                    self.db.Feed.search({'entity_owner':self['_id'],
+                        'class_name':'Star', 'entity_class': 'Expr'}).count()})
+            if len(updates) > 0:
+                self['analytics'].update(updates)
+                self.update_cmd(self)
             dict.update(user, dict(
                 views_by = self['analytics']['views_by'],
                 loves_by = self['analytics']['loves_by'],
                 expressions = self.get_expr_count(), # Why expressions->count?  nothing else is in there.
                 ))
-        #exprs = self.get_top_expressions(3)
-        exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
 
         dict.update(user, dict(
             id = self.id,
             url = self.url,
-            #user_is_owner = bool(viewer and viewer['_id'] == self['_id']),
-            mini_expressions = map(lambda e:e.mini_view(), exprs),
             thumb_small = self.get_thumb(70),
             thumb_big = self.get_thumb(222),
             has_thumb = self.has_thumb,
             logged_in = self.logged_in,
             notification_count = self.notification_count,
         ) )
+        if special.has_key("mini_expressions") and g_flags['mini_expressions']:
+            # exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
+            exprs = self.get_top_expressions(g_flags['mini_expressions'])
+            dict.update(user, dict(
+                mini_expressions = map(lambda e:e.mini_view(), exprs)))
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         if activity > 0:
             dict.update( user, activity =
@@ -1216,7 +1222,7 @@ class Expr(HasSocial):
 
     def get_thumb(self, size=190):
         if self.get('thumb_file_id'):
-            file =  self.db.File.fetch(self['thumb_file_id'])
+            file = self.db.File.fetch(self['thumb_file_id'])
             if file:
                 thumb = file.get_thumb(size,size)
                 if thumb: return thumb
@@ -1268,13 +1274,13 @@ class Expr(HasSocial):
 
     public = property(lambda self: self.get('auth') == "public")
 
-    def client_view(self, viewer=None, activity=0):
+    def client_view(self, viewer=None, special={}, activity=0):
         counts = dict([ ( k, v.get('count', 0) ) for
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
         # if expr.auth_required(viewer, password):
-        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed'])
+        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed', 'created', 'updated'])
         dict.update(expr, {
             'tags': self.get('tags_index'),
             'id': self.id,
@@ -1387,8 +1393,10 @@ class File(Entity):
 
     def set_thumb(self, w, h, file=False):
         name = str(w) + 'x' + str(h)
-        if not file: file = self.file
+        thumbs = self.get('thumbs', {})
+        if thumbs.get(name): return False
 
+        if not file: file = self.file
         try: thumb_file = generate_thumb(file, (w,h))
         except:
             print 'failed to generate thumb for file: ' + self.id
@@ -1396,7 +1404,6 @@ class File(Entity):
         url = self.db.s3.upload_file(thumb_file, 'thumb', self._thumb_name(w, h),
             self['name'] + '_' + name, 'image/jpeg')
 
-        thumbs = self.get('thumbs', {})
         thumbs[name] = True
         self.update(thumbs=thumbs)
         return thumb_file
@@ -1560,6 +1567,10 @@ class Feed(Entity):
         super(Feed, self).create()
 
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
+        if (self["entity_class"] == 'Expr' and self["class_name"] == 'Star' and
+            self.entity.owner['analytics'].get('loves_by')):
+                self.entity.owner.increment({'analytics.loves_by': 1})
+
         if self.entity.owner.id != self['initiator']: self.entity.owner.notify(self)
 
         return self
@@ -1568,8 +1579,12 @@ class Feed(Entity):
         class_name = type(self).__name__
         if self.entity:
             self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': -1}})
+            if (self["entity_class"] == 'Expr' and self["class_name"] == 'Star' and
+                self.entity.owner['analytics'].get('loves_by')):
+                    self.entity.owner.increment({'analytics.loves_by': -1})
         super(Feed, self).delete()
 
+    # TODO: replace all properties which have db queries with methods.
     @property
     def entity(self):
         if not self._entity:

@@ -2,42 +2,71 @@ define([
     'browser/jquery',
     'server/context',
     'browser/layout',
+    'ui/menu',
+    'ui/dialog',
     'sj!templates/overlay.html',
     'sj!templates/activity.html',
-    'sj!templates/social_overlay.html'
+    'sj!templates/social_overlay.html',
+    'sj!templates/social_panel.html'
 ], function(
     $,
     context,
     browser_layout,
+    menu,
+    dialog,
     overlay_template,
     activity_template,
-    social_overlay_template
+    social_overlay_template,
+    social_panel_template
 ) {
     var o = {}, contentFrameURLBase = context.is_secure ?
-            context.secure_content_server_url : context.content_server_url;
+            context.secure_content_server_url : context.content_server_url,
+            controller;
     const anim_duration = 700;
 
-    o.init = function(){
+    o.init = function(controller){
+        o.controller = controller;
         o.render_overlays();
-        window.addEventListener('message', o.handle_message, false);        
+        window.addEventListener('message', o.handle_message, false);
     };
     o.exit = function(){
         hide_exprs();
+        hide_panel();
+        $('#site').show();
     };
+    
+    hide_panel = function(){
+        $("#signup_create").hide();
+        $(".panel.profile").hide();
+        $("#signup_create .signup").addClass("hide");
+        $("#signup_create .create").addClass("hide");
+        $(".panel .logged_out.social_btn").addClass("hide");
+        $(".panel .edit_btn").hide();
+        $(".panel .logo.overlay").hide();
+    }
 
     o.resize = function(){
         browser_layout.center($('#page_prev'), undefined, {'h': false});
         browser_layout.center($('#page_next'), undefined, {'h': false});
     };
 
+    o.get_expr = function(id){
+        return $('#expr_' + id);
+    };
+
     o.render = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
         // $("#nav").prependTo("body");
         // TODO: shouldn't empty #nav
+        o.expr = context.page_data.expr;
+
+        $('title').text(o.expr.title);
         $("#nav").hide();
+        $('#site').hide();
         $("#popup_content").remove();
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
+
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
         $('#dia_embed textarea').val("<iframe src='" + embed_url + 
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
@@ -48,6 +77,52 @@ define([
         o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
 
         animate_expr();
+
+        hide_panel();
+
+        $('.social.panel').remove();
+        $('#overlays').append(social_panel_template(page_data));
+        $(".panel.profile").show();
+        $(".logged_out.social_btn").removeClass("hide");
+        if (!context.user.logged_in) {
+            $("#signup_create").show();
+            $("#signup_create .signup").removeclass("hide");
+            $('#social_plus').hide();
+        } else if (context.user.id == o.expr.owner.id) {
+            $('.panel .edit_btn').show();
+        }
+    };
+
+    // Check to see if tags overflows its bounds.
+    // If so, create "..." tag with associated menu.
+    var fixup_tags_list = function () {
+        tags = $(".tag_list a");
+        if (tags.length) {
+            top_y = tags.eq(0).position().top;
+            client_height = $(".tag_list").height();
+            var i = 1, shifting = 0;
+            drawer = $("#tags_menu");
+            for (; i < tags.length - 1; i++) {
+                if (shifting) {
+                    tags.eq(i).css("display","block").appendTo(drawer);
+                } else if (tags.eq(i).position().top - top_y > client_height) {
+                    shifting = i;
+                    i -= 3; // take into account for loop ++ 
+                    // and go to last item which didn't wrap
+                    // and one more just for good measure.
+                }
+            }
+            if (shifting) {
+                $("#tag_more").removeClass("hide");
+                // // create a cloned tag with text "..."
+                // tag_more = tags.eq(0).find(".tag_label").clone();
+                // // and append its label (without the <a>) back to the list.
+                // tag_more.html("...").prop("id", "tag_more").appendTo($(".tag_list"));
+                // // or include the <a> ?
+                // // tag_more.appendTo($(".tag_list"));
+                // menu(tag_more, drawer);
+            }
+        }
     };
 
     // Animate the new visible expression, bring it to top of z-index.
@@ -58,9 +133,9 @@ define([
         var expr_curr = $('.expr-visible');
         expr_curr.removeClass('expr-visible');
         $('#exprs').show();
-        $('#social_plus').show();
+        $('.overlay.social_btn').show();
 
-        var contentFrame = $('#expr_' + expr_id);
+        var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
             // Create new content frame
             var contentFrameURL = contentFrameURLBase + expr_id;
@@ -118,6 +193,7 @@ define([
 
     var hide_other_exprs = function() {
         $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').hide();
+        fixup_tags_list();
     };
 
     var hide_exprs = function() {
@@ -143,14 +219,17 @@ define([
 
     var hide_expr_complete = function() {
         $('#exprs').hide();
-        $('.overlay').hide();
+        $('.social.overlay').hide();
         // $('#nav').prependTo("body");
-        $("#nav").show();
     };
 
     o.attach_handlers = function(){
         $("#social_close").unbind('click');
         $("#social_close").click(o.social_toggle);
+        
+        $(".logged_out.social_btn").unbind('click');
+        $(".logged_out.social_btn").click(o.social_toggle);
+
         $('#comment_form').on('response', o.comment_response);
 
         $(".feed_item").each(function(i, el) {
@@ -171,6 +250,35 @@ define([
             o.user_operation(event, $(this), "loves"); });
         $("#broadcast_icon").click(function (event) {
             o.user_operation(event, $(this), "broadcast"); });
+
+        $('.page_btn').on('mouseenter', function(event){
+            o.page_animate($(this));
+        });
+
+        try {
+            var d = dialog.create($("#dia_login_or_join"));
+            $(".overlay .signup_btn").unbind('click').click(d.open);
+            d = dialog.create($("#login_menu"));
+            $(".overlay .login_btn").unbind('click').click(d.open);
+        } catch(err) {;}
+    };
+
+    o.page_animate = function (el) {
+        dir = (el.prop("id") == "page_next") ? "" : "-";
+        position = el.css("background-position-x");
+        el.stop().animate({
+            // opacity: 0.25 },{
+            'background-position-x': dir + "26px" }, {
+            duration: 150,
+            easing: 'swing',
+            complete: function() {
+                el.animate({
+                    'background-position-x': dir + "4px" }, {
+                    duration: 150,
+                    easing: 'swing'
+                });
+            }
+        });
     };
 
     o.user_operation = function(e, el, btn) {
@@ -198,6 +306,7 @@ define([
         top_context.activity = items;
         top_context.icon_only = true;
         el_drawer.empty().html(activity_template(top_context));
+        el_drawer.data('menu').layout();
         el_counts.html(parseInt(el_counts.html()) + ((! own_item) ? 1 : -1));
         o.action_set_state(el, ! own_item);
     };
@@ -234,6 +343,7 @@ define([
         // TODO: animate
         if (popup.css('display') == 'none') {
             popup.show();
+            fixup_tags_list();
         } else {
             popup.hide();
         }
@@ -285,9 +395,9 @@ define([
         // add to comments.
     };
 
-    o.page_prev = function() { o.navigate_page(-1); };
-    o.page_next = function() { o.navigate_page(1); };
-    o.navigate_page = function (offset){
+    o.page_prev = function() { navigate_page(-1); };
+    o.page_next = function() { navigate_page(1); };
+    var navigate_page = function (offset){
         o.anim_direction = offset / Math.abs(offset);
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
@@ -305,17 +415,21 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 page_data.expr_id = page_data.cards[found].id;
-                var page_state = routing.page_state('view_expr', {
+                o.controller.open('view_expr', {
                     id: page_data.expr_id,
                     owner_name: page_data.cards[found].owner.name,
                     expr_name: page_data.cards[found].name
                 });
-                o.controller.open_route(page_state);
             }
         }
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
+        // don't render the page buttons if there is nothing to page through!
+        if (context.page_data.cards == undefined) {
+            $(".page_btn").hide();
+            return;
+        }
         if ( m.data == "show_prev" || m.data == "show_next") {
             var div = (m.data == "show_prev" ? $("#page_prev") : $("#page_next"));
             div.show();

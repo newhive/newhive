@@ -1,19 +1,80 @@
-from bs4 import BeautifulSoup
-import cgi
-import werkzeug.urls
-import uuid
-from md5 import md5
-import subprocess
-import os
-from newhive import config, utils
+import os, json, cgi
+from pymongo.errors import DuplicateKeyError
+from newhive import utils
+from newhive.utils import dfilter
 from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
     model_name = 'Expr'
 
-    def fetch(self, tdata, request, response, id):
-        expr_obj = self.db.Expr.fetch(id)
-        return self.serve_json(response,expr_obj)
+    def save(self, tdata, request, response, **args):
+        """ Parses JSON object from POST variable 'exp' and stores it in database.
+            If the name (url) does not match record in database, create a new record."""
+
+        try: expr = self.db.Expr.new(json.loads(request.form.get('expr', '0')))
+        except: expr = False
+        if not expr: raise ValueError('Missing or malformed expr')
+
+        res = self.db.Expr.fetch(expr.id)
+        allowed_attributes = ['name', 'domain', 'title', 'apps', 'dimensions',
+            'auth', 'password', 'tags', 'background', 'thumb', 'images']
+        # TODO: fixed expressions, styles, and scripts, need to be done right
+        # if tdata.user.is_admin:
+        #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
+        upd = dfilter(expr, allowed_attributes)
+        upd['name'] = upd['name'].lower().strip('/ ')
+
+        # deal with inline base64 encoded images from Sketch app
+        for app in upd['apps']:
+            if app['type'] != 'hive.sketch': continue
+            data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
+            f = os.tmpfile()
+            f.write(data)
+            file_res = self.db.File.create(dict(
+                owner=tdata.user.id,
+                tmp_file=f,
+                name='sketch',
+                mime='image/png'
+            ))
+            f.close()
+            app.update({
+                 'type' : 'hive.image'
+                ,'content' : file_res['url']
+                ,'file_id' : file_res.id
+            })
+
+        if not res or upd['name'] != res['name'] or upd['domain'] != res['domain']:
+            try:
+              new_expression = True
+              res = tdata.user.expr_create(upd)
+              self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id})
+              tdata.user.flag('expr_new')
+              if tdata.user.get('flags').get('add_invites_on_save'):
+                  tdata.user.unflag('add_invites_on_save')
+                  tdata.user.give_invites(5)
+            except DuplicateKeyError:
+                if expr.get('overwrite'):
+                    self.db.Expr.named(tdata.user['name'], upd['name']).delete()
+                    res = tdata.user.expr_create(upd)
+                    self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+                else:
+                    return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
+                    self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+        else:
+            if not res['owner'] == tdata.user.id:
+                raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+            res.update(**upd)
+            new_expression = False
+
+            self.db.UpdatedExpr.create(res.owner, res)
+            self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+
+        return self.serve_json(response, dict(
+            new = new_expression,
+            error = False,
+            id = res.id,
+            location = res.url + "?user=" + res['owner_name']
+        ) )
 
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
@@ -38,10 +99,6 @@ class Expr(ModelController):
                 , expr_style = expr_obj.get('style'))
         return self.serve_page(tdata, response, 'pages/expr.html')
         
-    def update(self):
-        # TODO: Call this method when an expression gets updated
-        self.db.ActionLog.create(request.requester, "update_snapshot", data={'expr_id': self.id})
-    
     def expr_to_html(self, exp, snapshot_mode=False):
         """Converts JSON object representing an expression to HTML"""
         if not exp: return ''

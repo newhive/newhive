@@ -10,7 +10,6 @@ define([
     'server/context',
     'browser/layout',
     'ui/util',
-    'ui/routing',
     'ui/page/pages',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
@@ -35,7 +34,6 @@ define([
     context,
     browser_layout,
     ui_util,
-    routing,
     pages,
     master_template,
     home_template,
@@ -57,25 +55,32 @@ define([
     };
 
     o.render = function(method, data){
-        if (context.page) {
-            if (context.page.exit) context.page.exit();
-            delete context.page;
-        }
+        new_page = pages[method];
         expr_page = (method == 'expr');
         var page_data = data.page_data;
         page_data.layout = method;
-        if(pages[method]) {
-            pages[method].render(page_data);
-            context.page = pages[method];
+        if (context.page != new_page) {
+            if (context.page && context.page.exit) 
+                context.page.exit();
         }
-        else if(o[method]) o[method](page_data);
-        else render_site(page_data);
+        if (new_page) {
+            context.page = new_page;
+        } else if (context.page) {
+            delete context.page;
+        }
+        if (new_page && new_page.render) 
+            pages[method].render(page_data);
+        else if(o[method])
+            o[method](page_data);
+        else
+            render_site(page_data);
 
         // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
             o.render_tag_page();
         }
- 
+
+        if (new_page && new_page.enter) new_page.enter();
         resize();
 
         o.attach_handlers();
@@ -94,12 +99,6 @@ define([
           }
         });
     }
-
-    // route.client_method definitions
-    o.expr_detail = function(page_data){
-        render_site(page_data);
-        // expr_column(); // TODO: is this necessary?
-    };
 
     o.grid = function(page_data){
         grid_width = 410;
@@ -151,9 +150,8 @@ define([
         $('#user_update_form').on('response', function(e, data){
             if(data.error) alert(data.error);
             else{
-                var page_state = routing.page_state(
-                    'expressions_public', {owner_name: context.user.name });
-                o.controller.open_route(page_state);
+                o.controller.open('expressions_public',
+                    {owner_name: context.user.name });
             }
         });
 
@@ -198,8 +196,9 @@ define([
     }
 
     function resize(){
-        $('#exprs').css('height', $(window).height());
-        $('#site').css('height', $(window).height() - 44);
+        // these lines were causing #site and #exprs to not fill the window
+        // $('#exprs').css('height', $(window).height());
+        // $('#site').css('height', $(window).height() - 44);
         if(context.page_data.layout == 'grid') $('#feed').css('width',
             Math.min(3, Math.floor($(window).width() / grid_width)) * grid_width);
         if (context.page && context.page.resize)

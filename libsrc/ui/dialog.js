@@ -4,59 +4,67 @@ define([
 ], function($, layout, dialog_template){
     var oo = { dialogs: [] };
 
-    oo.create = function(element, opts){
-        var o = $.extend({
+    oo.create = function(element, options){
+        var opts = $.extend({
             dialog: $(element),
             opened: false,
             open: function(){},
             close: function(){},
             mandatory: false,
-            layout: function(){ layout.center(o.dialog, $(window)) },
+            layout: function(){ layout.center(opts.dialog, $(window)) },
             fade: true
-        }, opts);
+        }, options);
+        if(!opts.dialog.length) throw "dialog element " + element + " not found";
+
+        var preexisting = opts.dialog.data('dialog');
+        if (preexisting) {
+            $.extend(preexisting.opts, options);
+            return preexisting;
+        }
+        var o = $.extend({
+            opts: opts
+        }, o);
+        opts.dialog.data('dialog', o);
         oo.dialogs.push(o);
-        if(!o.dialog.length) throw "dialog element " + element + " not found";
-        if(o.dialog.data('dialog')) return o.dialog.data('dialog');
-        o.dialog.data('dialog', o);
 
         // construct element
-        // if(!o.opts.mandatory){
-        //     var manual_close = function(){ o.close(true); };
-        //     if( o.opts.close_btn && ! dialog.find('.btn_dialog_close').length )
+        // if(!opts.opts.mandatory){
+        //     var manual_close = function(){ opts.close(true); };
+        //     if( opts.opts.close_btn && ! dialog.find('.btn_dialog_close').length )
         //         $('<div class="btn_dialog_close">').prependTo(dialog).click(manual_close);
-        //     o.shield.click(manual_close);
-        //     if(o.opts.click_close) dialog.click(manual_close);
+        //     opts.shield.click(manual_close);
+        //     if(opts.opts.click_close) dialog.click(manual_close);
         // }
 
         o.open = function(){
-            if(o.opened) return;
-            o.opened = true;
+            if(opts.opened) return;
+            opts.opened = true;
 
-            o.shield = $("<div id='dialog_shield'>");
-            if(o.fade) o.shield.addClass('fade');
-            o.shield.appendTo(document.body).click(o.close);
+            opts.shield = $("<div id='dialog_shield'>");
+            if(opts.fade) opts.shield.addClass('fade');
+            opts.shield.appendTo(document.body).click(o.close);
 
-            o.dialog.detach().appendTo(document.body).removeClass('hide').show();
-            $(window).resize(o.layout);
-            o.layout();
+            opts.dialog.detach().appendTo(document.body).removeClass('hide').show();
+            $(window).resize(opts.layout);
+            opts.layout();
 
-            o.open();
+            opts.open();
         };
 
         o.close = function() {
-            if(!o.opened) return;
-            o.opened = false;
-            o.shield.remove();
-            $(window).off('resize', o.layout);
-            o.dialog.hide();
-            o.close();
+            if(!opts.opened) return;
+            opts.opened = false;
+            opts.shield.remove();
+            $(window).off('resize', opts.layout);
+            opts.dialog.hide();
+            opts.close();
         }
 
         return o;
     };    
 
     // TODO: make functional
-    // o.expr_dialog(id, opts){
+    // opts.expr_dialog(id, opts){
     //     $.extend(opts, { absolute: true, layout : function(e) {
     //         var w = e.parent().width(), h = e.parent().height(), a = parseFloat(e.attr('data-aspect'));
     //         if(e.width() / e.height() < w / h) e.width(h * .8 * a).height(h * .8);

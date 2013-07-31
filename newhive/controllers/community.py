@@ -88,8 +88,6 @@ class Community(Controller):
                 update['profile_bg'] = file_r['url']
             file_r = self.db.File.fetch(request.form.get('profile_thumb'))
             if file_r:
-                thumb = file_r.set_thumb(222, 222)
-                file_r.set_thumb(70, 70, file=thumb)
                 update['thumb_id'] = file_r.id
 
             if update['email'] and update['email'] != owner.get('email'):
@@ -160,6 +158,7 @@ class Community(Controller):
         profile = owner.client_view(activity=True)
         tags = owner.get('tags_following', [])
         return {
+            'special': {'mini_expressions': 3},
             'tags': tags, 'cards': users, 'owner': profile, 'card_type':'user',
             'title': owner['name'] + ' Following', 'about_text': 'Following',
         }
@@ -171,6 +170,7 @@ class Community(Controller):
         users = owner.starrer_page(**args)
         profile = owner.client_view(activity=True)
         return {
+            'special': {'mini_expressions': 3},
             'cards': users, 'owner': profile, 'card_type':'user',
             'title': owner['name'] + ': Followers', 'about_text': 'Followers',
         }
@@ -186,11 +186,21 @@ class Community(Controller):
         if not expr: return None
         # owner = self.db.User.named(owner_name)
         expr_owner = expr.get_owner()
+        if expr_owner and expr_owner['analytics'].get('views_by'):
+            expr_owner.increment({'analytics.views_by': 1})
+        
         profile = expr_owner.client_view()
         return {
             'owner': profile, 'expr': expr.client_view(activity=10),
             'expr_id': expr.id, 'title': expr['title'],
         }
+
+    def edit_expr(self, tdata, request, id=None, owner_name=None, expr_name=None):
+        expr = ( self.db.Expr.fetch(id) if id else
+            self.db.Expr.named(owner_name, expr_name) )
+        if not expr: return None
+        expr['id'] = expr.id
+        return { 'expr': expr }
 
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None):
         if not request.args.has_key('q'): return None
@@ -251,7 +261,10 @@ class Community(Controller):
         if not page_data:
             return self.serve_404(tdata, request, response, json=json)
         if page_data.get('cards'):
-            page_data['cards'] = [o.client_view() for o in page_data['cards']]
+            special = page_data.get('special', {})
+            if page_data.get('special'):
+                del page_data['special']
+            page_data['cards'] = [o.client_view(special=special) for o in page_data['cards']]
         if json:
             return self.serve_json(response, page_data)
         else:

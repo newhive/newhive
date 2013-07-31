@@ -1,0 +1,218 @@
+// overlay css
+
+@import "common";
+
+.page_btn {
+    width: 55px;
+    height: 55px;
+}
+#page_prev {
+    background-image: asset_url('skin/nav/page_prev.png');
+    &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
+    background-position: -4px 0px;
+    left: 14px;
+}
+#page_next {
+    background-image: asset_url('skin/nav/page_next.png');
+    &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
+    background-position: 4px 0px;
+    right: 20px;
+}
+
+.panel.profile {
+    display: none;
+    //display: block;
+    position: fixed;
+    z-index: $nav_layer;
+    background-color: transparent;
+    right: 20px;
+    bottom: 20px;
+
+    .overlay {
+        display: inline-block;
+        position: static;    
+        margin-top: -31px;
+        vertical-align: middle;
+    }
+
+    .edit_icon {
+        height: 42px; width: 48px;
+        background-image: asset_url('skin/nav/edit.png');
+        &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
+    }
+
+    .social_btn {
+        background-image: asset_url('skin/nav/plus.png');
+        &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+        background-position: 6px 5px;
+
+        &.logged_out {
+            @include border-radius(0 11px 11px 0);
+            display: inline-block;
+            position: static;
+            height: 42px;
+            width: 48px;
+            background-color: white;
+            &:hover { background-color: black; }
+            background-position: 3px -1px;
+        }
+    }
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    z-index: $nav_layer;
+    background-color: white;
+    background-repeat: no-repeat;
+    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+
+    &:hover { 
+        background-color: black;
+    }
+    &.logo {
+        display: inline-block;
+        height: 46px;
+        width: 46px;
+        position: static;    
+    }
+}
+
+.overlay.social_btn {
+    display: none;
+    right: 20px;
+    bottom: 20px;
+
+    * {
+        display: inline-block;
+        @include border-radius(11px);
+        width: 55px; height: 55px;
+    }
+
+}
+/*
+.social_btn {
+     background-image: asset_url('skin/nav/plus.png');
+     &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+     background-position: 6px 5px;
+     display: none;
++
++    &.overlay {
++        @include border-radius(11px);
++        width: 55px;
++        height: 55px;
++        right: 20px;
++        bottom: 20px;
++    }
++    &.logged_out {
++        @include border-radius(0 11px 11px 0);
++        display: inline-block;
++        position: static;
++        height: 42px;
++        width: 48px;
++        background-color: white;
++        &:hover { background-color: black; }
++        background-position: 3px -1px;
++    }
++
+ }
+ */
+#signup_create {
+    &:hover { 
+        background-color: white;
+    }
+   
+    right: 20px;
+    bottom: 20px;
+    @include border-radius(11px);
+    padding: 10px 0px 10px 0px;
+    &:first-child {
+    }
+    span {
+        &:hover { 
+            background-color: black;
+            color: white;
+        }
+        text-transform: uppercase;
+        padding: 0px 10px 0px 10px;
+    }
+    .left_border {
+        border-left: 1px solid red;
+    }
+}
+
+#social_overlay {
+    @include border-radius(25px 25px 0px 0px);
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    height: 150px;
+    &:hover { background-color: white; }
+
+    #popup_content {
+        //position:absolute;
+        //top: 44px;
+        width: 100%;
+        margin: 15px;
+        //height: 306px;
+        //overflow: auto;
+    }
+    #views_menu {
+        .text.item {
+            margin-top: 6px;
+        }
+    }
+    .left_pane {
+        display: inline-block;
+        width: 50%;
+        margin-right: 60px;
+        .title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 79%;
+            white-space: nowrap;
+        }
+    }
+
+    .right_pane {
+        display: inline-block;
+        width: 50%;
+        position: absolute;
+        right: 0;
+        vertical-align: top;
+        border-left: 1px solid #d1d1d1;
+    }
+    .stats_bar {
+        position: absolute;
+        right: 0;
+    }
+
+    .footer {
+        margin-top: 30px;
+    }
+
+    .tag_list {
+        padding: 0 0 20px 0;
+        text-align: center;
+        height: 40px;
+        overflow: hidden;
+    }
+}
+
+#dia_comments {
+    .activity {
+        max-height: 450px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    #discussions {
+        margin-right: 20px;
+        .counts_icon {
+            position:absolute;
+            right:0px;
+        }
+        textarea {
+            width: 100%;
+        }
+    }
+}

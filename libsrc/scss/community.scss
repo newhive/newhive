@@ -14,18 +14,11 @@
     }
 }
 
-#site {
-    #user_header {
-        .profile {
-            margin: 180px auto 50px auto;
-            width: 800px;
-        }
-    }
-}
-
 #user_header {
     .profile {
+        margin: 180px auto 50px auto;
         width: 800px;
+        margin: 180px auto 50px auto;
         position: relative; z-index: 1;
         background-color: white;
 
@@ -79,9 +72,8 @@
 #site {
     position: absolute;
     z-index: 0;
-    left: 0; bottom: 0;
-    width: 100%; height: 95%;
-    overflow: auto;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
     
     #header {
         margin: 60px 0;
@@ -93,6 +85,8 @@
         }
     }
 
+    #user_header {
+    }
 
     #feed {
         margin: 0 auto 0 auto;
@@ -167,10 +161,6 @@
     }
 }
 
-.tag_list {
-    text-align: center;
-}
-
 .tag_label {
     display: inline-block;
     /* float: right;*/
@@ -179,7 +169,10 @@
     padding: 0 8px;
     margin: 5px 0;
     font-size: 16px;
-    &:hover { color: white; padding-left: 30px; }
+    &:hover { 
+        color: white; 
+        //padding-left: 30px; 
+    }
 
     &.tag_0 { background-color: $color_tag_0; }
     &.tag_1 { background-color: $color_tag_1; }
@@ -199,64 +192,3 @@
     &.tag_15 { background-color: $color_tag_15; }
 }
 
-#social_overlay {
-    @include border-radius(25px 25px 0px 0px);
-    left: 0px;
-    bottom: 0px;
-    width: 100%;
-    height: 150px;
-    &:hover { background-color: white; }
-
-    #popup_content {
-        //position:absolute;
-        //top: 44px;
-        width: 100%;
-        margin: 15px;
-        //height: 306px;
-        //overflow: auto;
-    }
-    .left_pane {
-        display: inline-block;
-        width: 50%;
-        margin-right: 60px;
-    }
-
-    .right_pane {
-        display: inline-block;
-        width: 50%;
-        position: absolute;
-        right: 0;
-        vertical-align: top;
-        border-left: 1px solid #d1d1d1;
-    }
-    .stats_bar {
-        position: absolute;
-        right: 0;
-    }
-
-    .footer {
-        margin-top: 30px;
-    }
-
-    .tag_list {
-        padding: 20px;
-    }
-}
-
-#dia_comments {
-    .activity {
-        max-height: 450px;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-    #discussions {
-        margin-right: 20px;
-        .counts_icon {
-            position:absolute;
-            right:0px;
-        }
-        textarea {
-            width: 100%;
-        }
-    }
-}

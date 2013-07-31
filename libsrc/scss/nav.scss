@@ -154,6 +154,7 @@ img.thumb { background-color: $color_grey_medium; }
 
 .menu.drawer {
     display: none;
+    padding: 4px 8px 2px 8px;
     z-index: $nav_layer + 2;
     background-color: white;
     overflow: auto;
@@ -161,7 +162,7 @@ img.thumb { background-color: $color_grey_medium; }
     border-width: 0 1px 0 0;
     border-color: $color_light_grey;
     cursor: default;
-    min-width: 135px;
+    //min-width: 135px;
 
     .bar {
         background-color: $color_light_grey;
@@ -177,9 +178,9 @@ img.thumb { background-color: $color_grey_medium; }
         white-space: nowrap;
         &.active { background-color: $color_selected; }
     }
-}
-.menu.drawer.icon_set {
-    max-width: 440px;  // 55px * 8
+    &.icon_set {
+        max-width: 440px;  // 55px * 8
+    }
 }
 
 #login_menu {
@@ -424,52 +425,3 @@ img.thumb { background-color: $color_grey_medium; }
     }
 }
 
-// overlay css.  belongs in new file?
-.pagethrough {
-    position: fixed;
-    display: none;
-    @include opacity(0.8);
-    z-index: 2;
-}
-#page_prev img { left: 0; bottom: 50%; }
-#page_next img { right: 0; bottom: 50%; }
-#social_plus {
-    width: 55px;
-    height: 55px;
-    right: 20px;
-    bottom: 10px;    
-
-    background-image: asset_url('skin/nav/plus.png');
-    &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
-    background-position: 8px 11px;
-    display: none;
-}
-
-.overlay {
-    display: none;
-    position: fixed;
-    width: 55px;
-    height: 55px;
-    z-index: $nav_layer;
-    background-color: white;
-    background-repeat: no-repeat;
-    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
-
-    &:hover { background-color: black; }
-}
-.page_btn {
-    width: 55px;
-    height: 55px;
-}
-#page_prev {
-    background-image: asset_url('skin/nav/page_prev.png');
-    &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
-    background-position: 8px 11px;
-    left: 10px;
-}
-#page_next {
-    background-image: asset_url('skin/nav/page_next.png');
-    &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
-    background-position: 14px 11px;
-    right: 20px;
-}

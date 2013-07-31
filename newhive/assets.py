@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 class Assets(object):
     def __init__(self, asset_path, default_local=False):
         self.assets = {}
+        self.bundles = {}
         self.base_path = normpath(join(config.src_home, asset_path))
         self.strip = len(self.base_path) + 1
 
@@ -84,6 +85,9 @@ class Assets(object):
         elif return_debug:
             return '/not_found:' + name
 
+    def bundle_urls(self, name):
+        return self.bundles.get(name)
+
     def write_ruby(self, write_path):
         with open(join(config.src_home, write_path), 'w') as f:
             f.write(
@@ -101,7 +105,11 @@ class Assets(object):
         urls = dict([(name, self.url(name)) for name in self.assets])
         urls[''] = self.base_url
         with open(join(config.src_home, write_path), 'w') as f:
-            f.write(json.dumps(urls)) 
+            f.write(json.dumps(urls))
+
+    def write_js_bundles(self, write_path):
+        with open(join(config.src_home, write_path), 'w') as f:
+            f.write(json.dumps(self.bundles))
     
     def audit(self, limit=None):
         assets = sorted(self.assets.items())
@@ -146,18 +154,18 @@ class HiveAssets(Assets):
         
         self.webassets_bundle()
 
+        print('Beginning asset build')
+        t0 = time.time()
         if force or not config.debug_mode:
             self.assets_env.auto_build = False
             cmd = webassets.script.CommandLineEnvironment(self.assets_env, logger)
-
-            print("Forcing rebuild of webassets"); t0 = time.time()
+            print("Forcing rebuild of webassets")
             cmd.build()
-            # actually get webassets to build bundles (webassets is very lazy)
-            for b in self.final_bundles: self.assets_env[b].urls()
-            print("Assets build complete in %s seconds", time.time() - t0)
-        else:
-            # actually get webassets to build bundles (webassets is very lazy)
-            for b in self.final_bundles: self.assets_env[b].urls()
+        # actually get webassets to build bundles (webassets is very lazy)
+        for b in self.final_bundles:
+            self.bundles[b] = self.assets_env[b].urls()
+        self.write_js_bundles('libsrc/server/compiled.bundles.json')
+        print("Assets build complete in %s seconds", time.time() - t0)
 
         ## now grab the rest of 'em after compiling our webassets shit
         self.find('')
@@ -187,68 +195,101 @@ class HiveAssets(Assets):
         self.assets_env.register('curl.js', 'curl.js',
             filters = 'yui_js',
             output = '../lib/curl.js'
-            )
+        )
 
         self.assets_env.register('admin.js',
             'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js',
             'raphael/g.line.js', 'jquery.tablesorter.min.js',
             'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js',
             output='../lib/admin.js'
-            )
+        )
 
         # Note: IMPORTANT any time a file that is imported into other scss
         # files is changed (i.e. common.scss is imported into almost every
         # file), the webassets cache must be cleared
-        scss_filter = webassets.filter.get_filter('scss', use_compass=True, debug_info=False,
-            libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')])
+        scss_filter = webassets.filter.get_filter(
+            'scss',
+            use_compass=True,
+            debug_info=False,
+            libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')]
+        )
 
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss",
             "scss/nav.scss", "scss/dialogs.scss", "scss/community.scss",
             "scss/settings.scss", "scss/signup_flow.scss",
-            "scss/jplayer.scss", "scss/forms.scss",
+            "scss/jplayer.scss", "scss/forms.scss", "scss/overlay.scss",
             filters=scss_filter,
             output='compiled.app.css',
             debug=False
-            )
-        self.assets_env.register('app.css', app_scss, filters='yui_css', output='../lib/app.css')
+        )
+        self.assets_env.register(
+            'app.css',
+            app_scss,
+            filters='yui_css',
+            output='../lib/app.css'
+        )
 
-        edit_scss = webassets.Bundle('scss/edit.scss', 'scss/codemirror.css',
+        edit_scss = webassets.Bundle(
+            'scss/edit.scss',
+            'scss/codemirror.css',
             filters=scss_filter,
-            output='compiled.admin.css',
+            output='compiled.edit.css',
             debug=False
-            )
+        )
+        self.assets_env.register(
+            'edit.css',
+            edit_scss,
+            filters='yui_css',
+            output='../lib/edit.css'
+        )
 
-        minimal_scss = webassets.Bundle('scss/minimal.scss', 'scss/fonts.scss',
+        self.assets_env.register('google_closure.js', 'google_closure.js',
+            filters = 'yui_js',
+            output = '../lib/google_closure.js'
+        )
+
+        # CSS for expressions, and also site pages
+        minimal_scss = webassets.Bundle(
+            'scss/minimal.scss',
+            'scss/fonts.scss',
             filters=scss_filter,
             output='compiled.minimal.css',
             debug=False
-            )
-        self.assets_env.register('minimal.css', minimal_scss, filters='yui_css', output='../lib/minimal.css')
+        )
+        self.assets_env.register('minimal.css',
+            minimal_scss,
+            filters='yui_css',
+            output='../lib/minimal.css'
+        )
 
-        email_scss = webassets.Bundle('scss/email.scss',
+        email_scss = webassets.Bundle(
+            'scss/email.scss',
             filters=scss_filter,
             output='compiled.email.css',
             debug=False
-            )
+        )
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
 
         admin_scss = webassets.Bundle("scss/chart.scss",
             filters=scss_filter,
             output='compiled.admin.css',
             debug=False
-            )
-        self.assets_env.register('admin.css',
+        )
+        self.assets_env.register(
+            'admin.css',
             admin_scss, 'jquery-ui/jquery-ui-1.8.16.custom.css',
             output='../lib/admin.css'
-            )
+        )
 
         self.final_bundles = [
             'minimal.css',
             'app.css',
+            'edit.css',
+            'google_closure.js',
             'email.css',
             'admin.css',
             'admin.js',
-            ]
+        ]
 
     def urls_with_expiry(self):
         urls = self.urls()

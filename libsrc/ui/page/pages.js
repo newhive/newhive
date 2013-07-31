@@ -1,7 +1,15 @@
 define([
-    './expr'
+    './expr',
+    './edit_expr',
+    './profile'
 ], function(
-    expr
-){ return {
-    expr: expr
-} });
+    expr,
+    edit_expr,
+    profile
+){ 
+	return {
+    	expr: expr,
+        edit_expr: edit_expr,
+    	profile: profile
+	}
+});

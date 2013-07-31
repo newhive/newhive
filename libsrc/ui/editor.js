@@ -3,12 +3,34 @@
 define([
     'browser/jquery', 
     'ui/menu', 
+    'ui/codemirror',
+    'ui/dialog',
+    'browser/js',
+    'server/context',
+    'ui/colors',
+    'sj!templates/color_picker.html',
+    'js!browser/jquery/event/drag.js',
+    'js!browser/jquery/rotate.js',
+    'js!google_closure.js'
 ], function(
     $,
-    menu
-) {
+    Menu,
+    CodeMirror,
+    dialog,
+    util,
+    context,
+    colors,
+    color_picker_template
+){
 
-var Hive = {};
+var Hive = {}, debug_mode = context.config.debug_mode,
+    hover_menu = Menu, noop = function(){}, Funcs = util.Funcs
+    asset = function(name){ return context.asset({}, name) };
+Hive.asset = asset;
+
+var showDialog = function(jq, opts){
+    return dialog.create(jq, opts);
+};
 
 // gives an array function for moving an element around
 Hive.has_shuffle = function(arr) {
@@ -21,14 +43,12 @@ Hive.has_shuffle = function(arr) {
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
 // editing functions.
-Hive.Apps = [];
-Hive.Apps.init = function(initial_state, load) {
-    var o = Hive.Apps;
-    if(! load) load = noop;
-    
+Hive.Apps = (function(){
+    var o = [];
+
     o.state = function() {
         return $.map(o.all(), function(app) { return app.state(); });
-    }
+    };
     
     var stack = [], restack = function() {
         for(var i = 0; i < stack.length; i++)
@@ -39,6 +59,7 @@ Hive.Apps.init = function(initial_state, load) {
         stack.move_element(from, to);
         restack();
     };
+    o._stack = stack;
     
     o.add = function(app) {
         var i = o.length;
@@ -62,14 +83,23 @@ Hive.Apps.init = function(initial_state, load) {
     };
     o.all = function(){ return $.grep(o, function(e){ return ! e.deleted; }); };
     
-    if(! initial_state) initial_state = [ ];
-    var load_count = initial_state.length;
-    var load_counter = function(){
-        load_count--;
-        if( ! load_count ) load();
+    o.init = function(initial_state, load){
+        stack.splice(0);
+        o.splice(0);
+
+        if(!load) load = noop;
+        
+        if(!initial_state) initial_state = [];
+        var load_count = initial_state.length;
+        var load_counter = function(){
+            load_count--;
+            if(!load_count) load();
+        };
+        $.map(initial_state, function(e){ Hive.App(e, { load: load_counter }) } );
     };
-    $.map(initial_state, function(e){ Hive.App(e, { load: load_counter }) } );
-};
+
+    return o;
+})();
 
 Hive.env = function(){
     scale = Hive.Exp.fixed_width ? 1 : $(window).width() / 1000;
@@ -263,6 +293,8 @@ Hive.App = function(init_state, opts) {
     });
 
     // initialize
+    Hive.Selection();
+
     o.div = $('<div class="ehapp">');
     o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
     o.div.click(function(e) { return Hive.Selection.app_click(o, e) });
@@ -329,66 +361,66 @@ Hive.Controls = function(app, multiselect) {
     };
 
     o.append_link_picker = function(d, opts) {
-        opts = $.extend({ open: noop, close: noop }, opts);
-        var e = $("<div class='control drawer link'>");
-        var cancel_btn = $("<img>").addClass('hoverable')
-            .attr('src', asset('skin/1/delete_sm.png'))
-            .attr('title', 'Clear link')
-            .css('margin', '12px 0 0 5px');
-        var input = $('<input type="text">');
+        // opts = $.extend({ open: noop, close: noop }, opts);
+        // var e = $("<div class='control drawer link'>");
+        // var cancel_btn = $("<img>").addClass('hoverable')
+        //     .attr('src', asset('skin/edit/delete_sm.png'))
+        //     .attr('title', 'Clear link')
+        //     .css('margin', '12px 0 0 5px');
+        // var input = $('<input type="text">');
 
-        d.append(e);
-        Hive.input_frame(input, e);
-        e.append(cancel_btn);
+        // d.append(e);
+        // Hive.input_frame(input, e);
+        // e.append(cancel_btn);
 
-        // set_link is called when input is blurred
-        var set_link = function(){
-            var v = input.val();
-            // TODO: improve URL guessing
-            if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
-            o.app.link(v);
-        };
+        // // set_link is called when input is blurred
+        // var set_link = function(){
+        //     var v = input.val();
+        //     // TODO: improve URL guessing
+        //     if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
+        //     o.app.link(v);
+        // };
 
-        // Don't have to worry about duplicating handlers because all elements
-        // were just created from scratch
-        input.on('blur', set_link);
+        // // Don't have to worry about duplicating handlers because all elements
+        // // were just created from scratch
+        // input.on('blur', set_link);
 
-        var m = o.hover_menu(d.find('.button.link'), e, {
-             open : function() {
-                 var link = o.app.link();
-                 opts.open();
-                 input.focus();
-                 input.val(link);
-             }
-            ,click_persist : input
-            ,close : function() {
-                // No need for explicit call to set_link here because it is
-                // handled on blur, and blur is always triggered by one of the
-                // clauses below
-                if (opts.field_to_focus) {
-                    opts.field_to_focus.focus();
-                }
-                input.blur();
-                opts.close();
-            }
-            ,auto_close : false
-        });
+        // var m = o.hover_menu(d.find('.button.link'), e, {
+        //      open : function() {
+        //          var link = o.app.link();
+        //          opts.open();
+        //          input.focus();
+        //          input.val(link);
+        //      }
+        //     ,click_persist : input
+        //     ,close : function() {
+        //         // No need for explicit call to set_link here because it is
+        //         // handled on blur, and blur is always triggered by one of the
+        //         // clauses below
+        //         if (opts.field_to_focus) {
+        //             opts.field_to_focus.focus();
+        //         }
+        //         input.blur();
+        //         opts.close();
+        //     }
+        //     ,auto_close : false
+        // });
 
-        // timeout needed to get around firefox bug
-        var close_on_delay = function(){
-            setTimeout(function(){m.close(true)}, 0);
-        };
-        e.find('img').click(function() {
-            input.focus();
-            input.val('');
-            close_on_delay();
-        });
-        input.keypress(function(e) {
-            if(e.keyCode == 13) {
-                close_on_delay();
-            }
-        });
-        return m;
+        // // timeout needed to get around firefox bug
+        // var close_on_delay = function(){
+        //     setTimeout(function(){m.close(true)}, 0);
+        // };
+        // e.find('img').click(function() {
+        //     input.focus();
+        //     input.val('');
+        //     close_on_delay();
+        // });
+        // input.keypress(function(e) {
+        //     if(e.keyCode == 13) {
+        //         close_on_delay();
+        //     }
+        // });
+        // return m;
     };
 
     o.appendControl = function(c) { 
@@ -405,7 +437,7 @@ Hive.Controls = function(app, multiselect) {
     o.addButton = function(ctrls) { $.map(ctrls.clone(false), o.appendButton); };
     o.addControls = function(ctrls) { $.map(ctrls.clone(false).children(), o.appendControl); };
     o.hover_menu = function(h, d, opts) {
-        return menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
+        return Menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
     o.div = $("<div style='position: absolute; z-index: 3; width: 0; height: 0' class='controls'>");
     $('#controls').append(o.div);
@@ -450,7 +482,8 @@ Hive.Controls = function(app, multiselect) {
         $.map(o.app.make_controls, function(f){ f(o) });
 
         o.c.buttons = d.find('.buttons');
-        d.find('.hoverable').each(function() { hover_add(this) });
+        // TODO: use templates to add controls?
+        // d.find('.hoverable').each(function() { hover_add(this) });
     }
 
     // disable hover handlers while dragging
@@ -706,7 +739,6 @@ Hive.App.Script = function(o){
 Hive.registerApp(Hive.App.Script, 'hive.script');
 
 var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
-
 Hive.App.Text = function(o) {
     Hive.App.has_resize(o);
     Hive.App.has_resize_h(o);
@@ -714,14 +746,13 @@ Hive.App.Text = function(o) {
 
     var content = o.init_state.content;
     o.content = function(content) {
-        return 'testS'
         if(typeof(content) != 'undefined') {
             // avoid 0-height content element in FF
-            //if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
-            //else o.rte.setHtml(false, content);
+            if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
+            else o.rte.setHtml(false, content);
         } else {
             // remove any remaining selection-saving carets
-            //o.rte.content_element.find('span[id^="goog_"]').remove();
+            o.rte.content_element.find('span[id^="goog_"]').remove();
             return o.rte.getCleanContents();
         }
     }
@@ -731,18 +762,18 @@ Hive.App.Text = function(o) {
         if (mode === edit_mode) return;
         if (mode) {
             o.unshield();
-            /*o.rte.remove_breaks();
+            o.rte.remove_breaks();
             o.rte.makeEditable();
-            o.rte.restore_cursor();*/
+            o.rte.restore_cursor();
             o.content_element
                 .bind('mousedown keydown', function(e){ e.stopPropagation(); });
             edit_mode = true;
         }
         else {
-            /*o.rte.unwrap_all_selections();
+            o.rte.unwrap_all_selections();
             o.rte.save_cursor();
             o.rte.add_breaks();
-            o.rte.make_uneditable();*/
+            o.rte.make_uneditable();
             o.content_element
                 .unbind('mousedown keydown')
                 .blur();
@@ -754,18 +785,9 @@ Hive.App.Text = function(o) {
     o.focus.add(function(){
         o.refresh_size();
         o.edit_mode(true);
-        o.codemirror.setOption("readOnly", false);
-        if (o.codemirror._old_cursor_selected)
-            o.codemirror.setSelection(o.codemirror._old_cursor_anchor, o.codemirror._old_cursor_head);
-        o.codemirror.focus();
     });
     o.unfocus.add(function(){
         o.edit_mode(false);
-        o.codemirror.setOption("readOnly", "nocursor");
-        o.codemirror._old_cursor_selected = o.codemirror.somethingSelected();
-        o.codemirror._old_cursor_head = o.codemirror.getCursor("head");
-        o.codemirror._old_cursor_anchor = o.codemirror.getCursor("anchor");
-        o.codemirror.setSelection(o.codemirror._old_cursor_head);
     });
 
     o.link = function(v) {
@@ -828,14 +850,6 @@ Hive.App.Text = function(o) {
         Hive.History.save(exec_cmd('+undo'), exec_cmd('+redo'), 'edit');
     };
 
-    o.handlers = new Object();
-    o.handlers.bold = function (value) {
-        var mark_start = o.codemirror.getCursor("start");
-        var mark_end = o.codemirror.getCursor("end");
-        var mark_options = o.codemirror.combine_font_class(mark_start, mark_end, "CodeMirror-mark-test");
-        o.codemirror.add_mark(mark_start, mark_end, mark_options);
-    };
-
     function controls(o) {
         var common = $.extend({}, o), d = o.div;
 
@@ -871,11 +885,11 @@ Hive.App.Text = function(o) {
                 open: function(){
                     // Update current color. Range should usually exist, but
                     // better to do nothing than throw error if not
-                    /*var range = o.app.rte.getRange();
+                    var range = o.app.rte.getRange();
                     if (range){
                         var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
                         o.color_picker.set_color(current_color);
-                    }*/
+                    }
                 },
             }
         );
@@ -891,7 +905,7 @@ Hive.App.Text = function(o) {
             $(el).bind('mousedown', function(e) {
                 e.preventDefault();
             }).click(function(){
-                o.app.handlers[$(el).attr('cmd').replace("+", "")]($(el).attr('val'));
+                o.app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
             });
         });
 
@@ -909,292 +923,17 @@ Hive.App.Text = function(o) {
     o.content_element = $('<div></div>');
     o.content_element.attr('id', Hive.random_str()).addClass('text_content_element');
     o.div.append(o.content_element);
-    o.codemirror = CodeMirror(o.content_element.get(0), {value: o.content()});
-    o.codemirror.setSize("100%", "100%");
-
-    //o.rte = new Hive.goog_rte(o.content_element, o);
-    //goog.events.listen(o.rte.undo_redo.undoManager_,
-    //        goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
-    //        o.history_saver);
-    //Sgoog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
+    o.rte = new Hive.goog_rte(o.content_element, o);
+    goog.events.listen(o.rte.undo_redo.undoManager_,
+            goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
+            o.history_saver);
+    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
     o.shield();
-
-    o.ranges = new Object();
-
-    /**************************************************************************
-        Compare range options objects
-
-        Arguments:
-            options1 and options2: Options object (follows o.codemirror.markText format)
-            
-        Returns:
-            true if options are the same, false otherwise
-    **************************************************************************/
-    o.codemirror.compare_options = function (options1, options2) {
-        for (var opt in options1) {
-            if (!(opt in options2))
-                return false;
-            if (options1[opt] != options2[opt])
-                return false;
-        }
-        for (var opt in options2) {
-            if (!(opt in options1))
-                return false;
-            if (options1[opt] != options2[opt])
-                return false;
-        }
-        return true;
-    };
-
-    /**************************************************************************
-        Checks if option object is empty (no formatting, classes, etc)
-
-        Arguments:
-            options: Options object (follows o.codemirror.markText format)
-            
-        Returns:
-            true if options object is empty, false otherwise
-    **************************************************************************/
-    o.codemirror.empty_options = function (options) {
-        if ($.trim(options["className"]) != "")
-            return false;
-        return true;
-    }
-
-    /**************************************************************************
-        Combines ranges with the same options
-
-        Arguments:
-            None
-
-        Returns:
-            Nothing
-    **************************************************************************/
-    o.codemirror.merge_ranges = function () {
-        // Object properties are not going to be sorted!
-        // This snippet sorts the keys from beginning of the text to the end
-        var sorted_keys = [];
-        for(var rkey in o.ranges) {
-            sorted_keys[sorted_keys.length] = rkey;
-        }
-        sorted_keys.sort();
-
-        for (var skey in sorted_keys) {
-            var rkey = sorted_keys[skey];
-            var range = o.ranges[rkey];
-            var end_index = o.codemirror.indexFromPos(range.find()["to"]);
-            if (end_index in o.ranges) {
-                var next_range = o.ranges[sorted_keys[skey+1]];
-                if (o.codemirror.compare_options(range["_options"], next_range["_options"])) {
-                    var options = $.extend({}, range["_options"]);
-                    var start_pos = range.find()["from"];
-                    var end_pos = next_range.find()["to"];
-                    range.clear();
-                    next_range.clear();
-                    delete o.ranges[sorted_keys[skey+1]];
-                    delete o.ranges[rkey];
-                    o.ranges[rkey] = o.codemirror.markText(start_pos, end_pos, options);
-                    return o.codemirror.merge_ranges();
-                }
-            } else if (o.codemirror.empty_options(range["_options"])) {
-                range.clear();
-                delete o.ranges[rkey];
-                return o.codemirror.merge_ranges();
-            }
-        }
-    };
-
-    /**************************************************************************
-        Processes and combines options for marks
-
-        Arguments:
-            old_options: Options object (follows o.codemirror.markText format)
-            new_options: New options to process. Follows same format as old_options
-                except each class must have a "+" or a "-" sign for addition or
-                removal respectively. If there is no sign, the option is instead
-                toggled for each individual range.
-
-        Returns:
-            Processed old_options
-    **************************************************************************/
-    o.codemirror.process_options = function (range_options, new_options) {
-        var classes = new_options["className"].split(" ");
-        var old_classes = null;
-        var old_options = {};
-        // If range_options is null, create a basic options object
-        if (range_options == null) {
-            old_options = {className: ""};
-            old_classes = new Array();
-        } else {
-            old_options = $.extend({}, range_options);
-            old_classes = old_options["className"].split(" ");
-        }
-
-        for (var ckey in classes) {
-            var cls = classes[ckey].slice(1, classes[ckey].length);
-            // cls_index = index of class, or -1 if not found
-            var cls_index = $.inArray(cls, old_classes);
-            var cmd = classes[ckey].slice(0, 1);
-            // If the class starts with a "+", add it if it doesn't exist
-            if (classes[ckey].slice(0, 1) == "+") {
-                if (cls_index < 0) {
-                    old_classes[old_classes.length] = cls;
-                }
-            // If the class starts with a "-", remove it if it exists
-            } else if (classes[ckey].slice(0, 1) == "-") {
-                if (cls_index >= 0) {
-                    
-                    old_classes.splice(cls_index, 1);
-                }
-            // Add the class if it doesnt exist, remove it otherwise
-            } else
-                if (cls_index < 0)
-                    old_classes[old_classes.length] = classes[ckey];
-                else
-                    old_classes.splice(cls_index, 1);
-        }
-        //alert(old_classes);
-        old_classes = old_classes.join(" ");
-        old_options["className"] = old_classes;
-        return old_options;
-    }
-
-    /**************************************************************************
-        Searches through ranges within {from, to} and decides whether to add
-            or remove the font style class
-
-        Arguments:
-            from - {line, ch}: start of new mark (inclusive)
-            to - {line, ch}: end of new mark (exclusive)
-            cls - string: name of font class
-
-        Returns:
-            Options object for o.codemirror.add_mark
-    **************************************************************************/
-    o.codemirror.combine_font_class = function (from, to, cls) {
-        var start_index = o.codemirror.indexFromPos(from);
-        var end_index = o.codemirror.indexFromPos(to);
-        var cmd = "+";
-
-        // Object properties are not going to be sorted!
-        // This snippet sorts the keys from beginning of the text to the end
-        var sorted_keys = [];
-        for(var rkey in o.ranges) {
-            sorted_keys[sorted_keys.length] = rkey;
-        }
-        sorted_keys.sort();
-
-        for (var skey in sorted_keys) {
-            var rkey = sorted_keys[skey];
-            var rend_index = o.codemirror.indexFromPos(o.ranges[rkey].find()["to"]);
-
-            if (rkey >= end_index)
-                break;
-            if ((rkey >= start_index) || (rend_index > start_index && rend_index <= end_index)) {
-                var classes = o.ranges[rkey]._options["className"].split(" ");
-                if ($.inArray(cls, classes) >= 0) {
-                    cmd = '-';
-                    break;
-                }
-            }
-        }
-        //alert(cmd + cls);
-        return {className: cmd + cls};
-    }
-
-    /**************************************************************************
-        Combines an existing range with a new mark.
-
-        Arguments:
-            rkey - int: Index of existing range in o.ranges
-            from_index - int: Starting index of new mark (include)
-            to_index - int: Ending index of new mark (exclusive)
-            options: Dictionary of mark options. Reffer to o.codemirror.process_options
-                for syntax.
-
-        Returns:
-            Returns the index of the end of the last created mark. If the returned
-                index is less than to_index, then the function did not finish
-                creating the entire mark and the return value is the new 
-    **************************************************************************/
-    o.codemirror.combine_marks = function (rkey, from_index, to_index, options) {
-        var range = o.ranges[rkey];
-        var new_opts = o.codemirror.process_options(range["_options"], options);
-        var old_end = o.codemirror.indexFromPos(range.find()["to"]);
-        var old_opts = $.extend({}, range["_options"]);
-
-        var end_index = old_end;
-        if (to_index <= end_index)
-            end_index = to_index;
-
-        o.ranges[rkey].clear();
-        delete o.ranges[rkey];
-
-        // Create mark with no new options in the front
-        if (from_index > rkey)
-            o.ranges[rkey] = o.codemirror.markText(o.codemirror.posFromIndex(rkey), o.codemirror.posFromIndex(from_index), old_opts);
-
-        // Create mark with new options
-        o.ranges[from_index] = o.codemirror.markText(o.codemirror.posFromIndex(from_index), o.codemirror.posFromIndex(end_index), new_opts);
-
-        // Create mark with no new options at the end
-        if (old_end > end_index) {
-            o.ranges[to_index] = o.codemirror.markText(o.codemirror.posFromIndex(to_index), o.codemirror.posFromIndex(old_end), old_opts);
-            return old_end;
-        }
-
-        return end_index;
-    };
-
-    /**************************************************************************
-        Cleanly adds a new mark and flattens list of ranges
-
-        Arguments:
-            from - {line, ch}: start of new mark (inclusive)
-            to - {line, ch}: end of new mark (exclusive)
-            options: Dictionary of mark options. Reffer to o.codemirror.process_options
-                for syntax.
-
-        Returns:
-            Nothing
-    **************************************************************************/
-    o.codemirror.add_mark = function (from, to, options) {
-        var start_index = o.codemirror.indexFromPos(from);
-        var end_index = o.codemirror.indexFromPos(to);
-        var clean_options = o.codemirror.process_options(null, options);
-
-        // Object properties are not going to be sorted!
-        // This snippet sorts the keys from beginning of the text to the end
-        var sorted_keys = [];
-        for(var rkey in o.ranges) {
-            sorted_keys[sorted_keys.length] = rkey;
-        }
-        sorted_keys.sort();
-
-        for (var skey in sorted_keys) {
-            var rkey = sorted_keys[skey];
-            var old_end = o.codemirror.indexFromPos(o.ranges[rkey].find()["to"]);
-
-            if (rkey >= end_index)
-                break;
-
-            if (rkey > start_index) {
-                o.ranges[start_index] = o.codemirror.markText(o.codemirror.posFromIndex(start_index), o.codemirror.posFromIndex(rkey), clean_options);
-                start_index = rkey;
-            }
-
-            if (rkey >= start_index || (old_end > start_index && old_end <= end_index))
-                start_index = o.codemirror.combine_marks(rkey, start_index, end_index, options);
-        }
-        if (start_index <= end_index) 
-            o.ranges[start_index] = o.codemirror.markText(o.codemirror.posFromIndex(start_index), o.codemirror.posFromIndex(end_index), clean_options)
-    }
 
     setTimeout(function(){ o.load(); }, 100);
     return o;
 }
 Hive.registerApp(Hive.App.Text, 'hive.text');
-/*
 
 Hive.goog_rte = function(content_element, app){
     var that = this;
@@ -1518,7 +1257,8 @@ Hive.goog_rte = function(content_element, app){
     }
 }
 goog.editor.Field.DELAYED_CHANGE_FREQUENCY = 100;
-goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);*/
+goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
+
 
 Hive.App.has_rotate = function(o) {
     var angle = o.init_state.angle ? o.init_state.angle : 0;
@@ -1560,7 +1300,7 @@ Hive.App.has_rotate = function(o) {
         };
 
         o.rotateHandle = $("<img class='control rotate hoverable drag' title='Rotate'>")
-            .attr('src', asset('skin/1/rotate.png'));
+            .attr('src', asset('skin/edit/rotate.png'));
         o.appendControl(o.rotateHandle);
 
         var angleRound = function(a) { return Math.round(a / 45)*45; },
@@ -1931,7 +1671,7 @@ Hive.App.Audio = function(o) {
     if(! o.init_state.dimensions) o.init_state.dimensions = [ 200, 35 ];
 
     // TODO: get title, filename, and track length from state and show it in skin
-    var audio_data = o.init_state.type_specific;
+    var audio_data = o.init_state.file_meta;
     o.content_element = $( o.init_state.src ?
             $.jPlayer.skin.minimal(o.init_state.src, Hive.random_str()) : o.init_state.content )
         .addClass('content')
@@ -2000,7 +1740,10 @@ Hive.Selection = function(){
         // Previously unfocused elements that should be focused
         $.each(apps, function(i, el){ o.app_select(el, multi); });
         // Previously focused elements that should be unfocused
-        o.each(function(i, el){ if(!inArray(apps, el)) o.app_unselect(el, multi) });
+        o.each(function(i, el){
+            if($.inArray(el, apps) == -1)
+                o.app_unselect(el, multi);
+        });
 
         o.elements = $.merge([], apps);
 
@@ -2020,7 +1763,9 @@ Hive.Selection = function(){
     o.select = function(app_or_apps){
         return o.update($.isArray(app_or_apps) ? app_or_apps : [app_or_apps]);
     };
-    o.selected = function(app){ return inArray(o.elements, app); };
+    o.selected = function(app){
+        return $.inArray(app, o.elements) != -1;
+    };
 
     o.divs = function(){
         return $.map(o.elements, function(a){ return a.div[0] });
@@ -2184,40 +1929,38 @@ Hive.Selection = function(){
         o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
     });
 
-    $(function() {
-        $('#grid_guide').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
+    $('#grid_guide').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
 
-        // Fallthrough click handler that unfocuses all apps if user clicks on background.
-        $(window).click(function(e) {
-            if(!Hive.Selection.count()) return;
-            var hit = false;
-            Hive.Selection.each(function(i,el){
-                if( $.contains(el.div.get(0), e.target)
-                    || (el.controls && $.contains(el.controls.div.get(0), e.target))
-                ) hit = true;
-            });
-            if(o.controls && $.contains(o.controls.div.get(0), e.target)) hit = true;
-            if (!hit) Hive.Selection.unfocus();
+    // Fallthrough click handler that unfocuses all apps if user clicks on background.
+    $(window).click(function(e) {
+        if(!Hive.Selection.count()) return;
+        var hit = false;
+        Hive.Selection.each(function(i,el){
+            if( $.contains(el.div.get(0), e.target)
+                || (el.controls && $.contains(el.controls.div.get(0), e.target))
+            ) hit = true;
         });
-
-        $(document).keydown(function(e){ 
-            // ctrl+[shift+]a to select all or none
-            if( e.keyCode == 65 && e.ctrlKey ){
-                o.select( e.shiftKey ? [] : Hive.Apps );
-                e.preventDefault();
-                return;
-            }
-
-            o.each(function(i, el){ el.keyPress(e) });
-
-            // TODO: improve efficiency by using o.controls.pos_set like drag handler
-            // or improving o.bounds
-            if(o.controls) o.controls.pos_update();
-        });
+        if(o.controls && $.contains(o.controls.div.get(0), e.target)) hit = true;
+        if (!hit) Hive.Selection.unfocus();
     });
+
+    $(document).keydown(function(e){ 
+        // ctrl+[shift+]a to select all or none
+        if( e.keyCode == 65 && e.ctrlKey ){
+            o.select( e.shiftKey ? [] : Hive.Apps );
+            e.preventDefault();
+            return;
+        }
+
+        o.each(function(i, el){ el.keyPress(e) });
+
+        // TODO: improve efficiency by using o.controls.pos_set like drag handler
+        // or improving o.bounds
+        if(o.controls) o.controls.pos_update();
+    });
+
     return o;
 };
-Hive.Selection();
 
 Hive.History = [];
 Hive.History.init = function(){
@@ -2342,8 +2085,8 @@ Hive.new_app = function(s, opts) {
 
 Hive.new_file = function(files, opts) {
     $.map(files, function(file, i){
-        var app = $.extend({ file_id: file.file_id, file_name: file.name,
-            type_specific: file.type_specific }, opts);
+        var app = $.extend({ file_id: file.id, file_name: file.name,
+            file_meta: file.meta }, opts);
 
         if(file.mime.match(/text\/html/)){
             // Not using code for auto-embeding urls that resolve to html
@@ -2373,33 +2116,12 @@ Hive.new_file = function(files, opts) {
     return false;
 }
 
-Hive.init = function() {
-    if (typeof(Hive.Exp.images) == "undefined" || typeof(Hive.Exp.images) == "number") {
-        if (typeof(Hive.Exp.apps) == "undefined") {
-            Hive.Exp.images = [];
-        } else {
-            Hive.Exp.images = $.map(Hive.Exp.apps, function(app){
-                if(app.type == 'hive.image' && app.file_id) {
-                    return { 
-                        file_id: app.file_id, 
-                        thumb: app.content + "_190x190?v=1", 
-                        url: app.content
-                    }
-                }
-            });
-            if (typeof(Hive.Exp.background.url) != "undefined"){
-                var image = {
-                    thumb: Hive.Exp.background.url + "_190x190?v=1"
-                    , url: Hive.Exp.background.url
-                };
-                var match = Hive.Exp.background.url.match(/[a-f0-9]+$/);
-                if (match !== null) image.file_id = match[0]; // If match doesn't exists it's not on S3
-                Hive.Exp.images.push(image);
-            }
-        }
-    };
+Hive.init = function(exp, page){
+    Hive.Exp = exp;
+    Hive.edit_page = page;
+
     //setInterval(Hive.set_draft, 5000);
-    if (!debug_mode){
+    if(!debug_mode){
         window.onbeforeunload = function(){
             //try { Hive.set_draft(); }
             //catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
@@ -2414,13 +2136,13 @@ Hive.init = function() {
         showDialog('#editor_browsers');
     }
 
-    $(document.body).filedrop({
-         data : { action : 'file_create' }
-        ,uploadFinished : function(i, f, data) {
-            Hive.new_file(data, { 'load' : Hive.upload_finish } );
-         }
-        ,drop : Hive.upload_start
-    });
+    // $(document.body).filedrop({
+    //      data : { action : 'file_create' }
+    //     ,uploadFinished : function(i, f, data) {
+    //         Hive.new_file(data, { 'load' : Hive.upload_finish } );
+    //      }
+    //     ,drop : Hive.upload_start
+    // });
 
     var old_env = Hive.env();
     $(window).resize(function(e) {
@@ -2437,7 +2159,7 @@ Hive.init = function() {
         Hive.make_fixed(Hive.Exp.fixed_width);
     }
 
-    $('#insert_text,#text_default').click(function(e) {
+    $('#text_default').click(function(e) {
         Hive.new_app({ type : 'hive.text', content : '' });
     });
     $('#text_header').click(function(e) {
@@ -2508,9 +2230,9 @@ Hive.init = function() {
     $('#insert_file' ).click(new_link);
     $('#menu_file'   ).click(new_link);
 
-    hover_menu($('#insert_text'), $('#menu_text'), { layout: 'center_y', min_y: 77 });
+    hover_menu('#insert_text', '#menu_text');
 
-    var image_menu = hover_menu($('#insert_image'), $('#menu_image'), { layout: 'center_y', min_y: 77 });
+    var image_menu = hover_menu('#insert_image', '#menu_image');
     var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'),
         { click_persist: $('#image_embed_code'), auto_close: false,
             open: function(){ $('#image_embed_code').focus(); }, group: image_menu });
@@ -2521,14 +2243,14 @@ Hive.init = function() {
         return false;
     });
 
-    hover_menu($('#insert_audio'), $('#menu_audio'), { layout: 'center_y', min_y: 77 });
+    hover_menu('#insert_audio', '#menu_audio');
 
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), {
-        layout: 'center_y', min_y: 77, open: function(){ $('#embed_code').get(0).focus() } });
+    var embed_menu = hover_menu('#insert_embed', '#menu_embed', {
+        open: function(){ $('#embed_code').get(0).focus() } });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
-    hover_menu($('#insert_shape'), $('#menu_shape'), { layout: 'center_y', min_y: 77 });
-    $('#insert_shape,#shape_rectangle').click(function(e) {
+    hover_menu('#insert_shape', '#menu_shape');
+    $('#shape_rectangle').click(function(e) {
         Hive.new_app({ type : 'hive.rectangle', content :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
                 'border-style' : 'solid', 'border-radius' : 0 } });
@@ -2537,59 +2259,59 @@ Hive.init = function() {
         Hive.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6], content: { brush: 'simple', brush_size: 10 } });
     });
 
-    hover_menu($('#insert_file'), $('#menu_file'), { layout: 'center_y', min_y: 77 });
+    hover_menu('#insert_file', '#menu_file');
 
     ////////////////////////////////////////////////////////////////////////////////
     // Labs features
-    if ($('#labs, #menu_labs').length == 2) {
-        hover_menu($('#labs'), $('#menu_labs'), { layout: 'center_y', min_y: 77 });
-    }
-    var set_make_fixed_text = function(){
-        var text = Hive.Exp.fixed_width ? "Make Auto-Scaling" : "Make Fixed-Width";
-        $('#make_fixed').text(text);
-    };
-    set_make_fixed_text();
-    $('#make_fixed').click(function(e) {
-        if (Hive.Exp.fixed_width){
-            Hive.make_fixed(false);
-        } else {
-            Hive.make_fixed(1000);
-        }
-        set_make_fixed_text();
-    });
-    $('#edit_script').click(function() {
-        showDialog('#dia_edit_script', {
-            fade: false,
-            close: function() {
-                var script = $('#expr_script_input').val();
-                Hive.Exp.script = script;
-            }
-            //open: function(){ history_point = Hive.History.saver(
-            //    function(){ return $.extend(true, {}, Hive.Exp.background) },
-            //    Hive.bg_set, 'change background'
-            //) },
-            //close: function(){ history_point.save() }
-        });
-    });
-    $('#edit_style').click(function() {
-        showDialog('#dia_edit_style', {
-            fade: false,
-            //open: function(){ history_point = Hive.History.saver(
-            //    function(){ return $.extend(true, {}, Hive.Exp.background) },
-            //    Hive.bg_set, 'change background'
-            //) },
-            close: function(){
-                var style = $('#expr_style_input').val();
-                Hive.Exp.style = style;
-                $('#expr_style').html( style );
-                //history_point.save()
-            }
-        });
-    });
-    $('#raw_html').click(function(){
-        var app = {type: 'hive.raw_html', content: '<div></div>'};
-        Hive.new_app(app);
-    });
+    // if ($('#labs, #menu_labs').length == 2) {
+    //     hover_menu($('#labs'), $('#menu_labs'), { layout: 'center_y', min_y: 77 });
+    // }
+    // var set_make_fixed_text = function(){
+    //     var text = Hive.Exp.fixed_width ? "Make Auto-Scaling" : "Make Fixed-Width";
+    //     $('#make_fixed').text(text);
+    // };
+    // set_make_fixed_text();
+    // $('#make_fixed').click(function(e) {
+    //     if (Hive.Exp.fixed_width){
+    //         Hive.make_fixed(false);
+    //     } else {
+    //         Hive.make_fixed(1000);
+    //     }
+    //     set_make_fixed_text();
+    // });
+    // $('#edit_script').click(function() {
+    //     showDialog('#dia_edit_script', {
+    //         fade: false,
+    //         close: function() {
+    //             var script = $('#expr_script_input').val();
+    //             Hive.Exp.script = script;
+    //         }
+    //         //open: function(){ history_point = Hive.History.saver(
+    //         //    function(){ return $.extend(true, {}, Hive.Exp.background) },
+    //         //    Hive.bg_set, 'change background'
+    //         //) },
+    //         //close: function(){ history_point.save() }
+    //     });
+    // });
+    // $('#edit_style').click(function() {
+    //     showDialog('#dia_edit_style', {
+    //         fade: false,
+    //         //open: function(){ history_point = Hive.History.saver(
+    //         //    function(){ return $.extend(true, {}, Hive.Exp.background) },
+    //         //    Hive.bg_set, 'change background'
+    //         //) },
+    //         close: function(){
+    //             var style = $('#expr_style_input').val();
+    //             Hive.Exp.style = style;
+    //             $('#expr_style').html( style );
+    //             //history_point.save()
+    //         }
+    //     });
+    // });
+    // $('#raw_html').click(function(){
+    //     var app = {type: 'hive.raw_html', content: '<div></div>'};
+    //     Hive.new_app(app);
+    // });
     // End labs
     ////////////////////////////////////////////////////////////////////////////////
     
@@ -2617,15 +2339,6 @@ Hive.init = function() {
         }
     };
 
-    var setThumb = function(app){
-        // Set thumb_id property for the server to find the appropriate file object
-        // if a default thumb a pseudo file_id, id<10 is chosen. 
-        // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
-        Hive.Exp.thumb_file_id = app.file_id;
-        $('#current_thumb').attr('src',
-            app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
-    };
-
     var save_menu = hover_menu($('#btn_save'), $('#menu_save'),
         { auto_height : false, auto_close : false,
             open: pickDefaultThumb, click_persist : '#menu_save' });
@@ -2642,23 +2355,32 @@ Hive.init = function() {
         Hive.Exp.overwrite = true;
         Hive.save();
     });
-    var dia_thumbnail;
-    $('#btn_thumbnail').click(function() {
-        dia_thumbnail = showDialog('#dia_thumbnail');
-        var user_thumbs = $.map(Hive.Exp.images, function(app){
-           if (typeof(app.file_id) != "undefined") { // Non S3 images can't be used for thumbs
-               var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
-               var e = $("<div class='thumb'>").append(img).get(0);
-               return e;
-           };
-        });
-        $('#expr_images').empty().append(user_thumbs);
-        $('#dia_thumbnail .thumb img').click(function() {
-            setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
-            dia_thumbnail.close();
-            return false;
-        });
-    });
+
+    // var setThumb = function(app){
+    //     // Set thumb_id property for the server to find the appropriate file object
+    //     // if a default thumb a pseudo file_id, id<10 is chosen. 
+    //     // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
+    //     Hive.Exp.thumb_file_id = app.file_id;
+    //     $('#current_thumb').attr('src',
+    //         app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
+    // };
+    // var dia_thumbnail;
+    // $('#btn_thumbnail').click(function() {
+    //     dia_thumbnail = showDialog('#dia_thumbnail');
+    //     var user_thumbs = $.map(Hive.Exp.images, function(app){
+    //        if (typeof(app.file_id) != "undefined") { // Non S3 images can't be used for thumbs
+    //            var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
+    //            var e = $("<div class='thumb'>").append(img).get(0);
+    //            return e;
+    //        };
+    //     });
+    //     $('#expr_images').empty().append(user_thumbs);
+    //     $('#dia_thumbnail .thumb img').click(function() {
+    //         setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
+    //         dia_thumbnail.close();
+    //         return false;
+    //     });
+    // });
     
     // Automatically update url unless it's an already saved
     // expression or the user has modified the url manually
@@ -2695,7 +2417,6 @@ Hive.init = function() {
 
     Hive.History.init();
 };
-$(Hive.init);
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to Hive.new_app.
@@ -2788,18 +2509,18 @@ Hive.embed_code = function(element) {
 Hive.upload_start = function() { center($('#loading').show()); }
 Hive.upload_finish = function() { $('#loading').hide(); }
 
-Hive.drag_start = function(){ hovers_active(false) };
-Hive.drag_end = function(){ hovers_active(true) };
+Hive.drag_start = noop; // function(){ hovers_active(false) };
+Hive.drag_end = noop; // function(){ hovers_active(true) };
 
 Hive.save = function() {
     var expr = Hive.state();
 
-    if(expr.name.match(/^expressions/)) {
-        alert('The url "/expressions" is reserved for your profile page.');
+    if(expr.name.match(/^profile/)) {
+        alert('The name "profile" is reserved.');
         return false;
     }
 
-    var on_response = function(ret) {
+    var on_response = function(ev, ret){
         Hive.upload_finish();
         if(typeof(ret) != 'object')
             alert("Sorry, something is broken :(. Please send us feedback");
@@ -2808,28 +2529,20 @@ Hive.save = function() {
             showDialog('#dia_overwrite');
             $('#save_submit').removeClass('disabled');
         }
-        else if(ret.location) {
-            //Hive.del_draft();
-            window.location = ret.location;
+        else if(ret.location){
+            Hive.edit_page.view_expr();
         }
-    }
-
-    var on_error = function(ret) {
+    }, on_error = function(ev, ret){
         Hive.upload_finish();
         if (ret.status == 403){
             relogin(function(){ $('#btn_save').click(); });
         }
         $('#save_submit').removeClass('disabled');
-    }
+    };
 
-    Hive.upload_start();
-    $.ajax({
-        type : "POST",
-        dataType : 'json',
-        data : { action : 'expr_save', exp : JSON.stringify(Hive.state()) },
-        success : on_response,
-        error: on_error
-    });
+    $('#expr_save .expr').val(JSON.stringify(Hive.state()));
+    $('#expr_save').bind('response', on_response)
+        .bind('error', on_error).submit();
 };
 Hive.get_draft = function() {
     return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
@@ -2861,13 +2574,13 @@ Hive.grid = false;
 Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
     var e = $('#btn_grid').get(0);
-    e.src = e.src_d = asset('skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png');
+    e.src = e.src_d = asset('skin/edit/grid-' + (Hive.grid ? 'on' : 'off') + '.png');
     $('#grid_guide').css(Hive.grid ?
-          { 'background-image' : "url('" + asset('skin/1/grid_square.png') + "')",
+          { 'background-image' : "url('" + asset('skin/edit/grid_square.png') + "')",
               'background-repeat' : 'repeat' }
         : { 'background-image' : '' }
     );
-}
+};
 
 Hive.bg_color_set = function(c) {
     Hive.bg_div.add('#bg_preview').css('background-color', c);
@@ -2925,27 +2638,23 @@ function remove_all_apps() {
 
 Hive.append_color_picker = function(container, callback, init_color, opts) {
     opts = $.extend({iframe: false}, opts);
-    var o = {};
-    init_color = init_color || '#000000';
-    var e = $('<div>').addClass('color_picker');
-    container.append(e);
-    var bar = $("<img class='hue_bar'>");
-    bar.attr('src', asset('skin/1/saturated.png'));
-    var shades = $("<div class='shades'><img src='" + asset('skin/1/greys.png') +"'></div>");
-    var manual_input = o.manual_input = $("<input type='text' size='6' class='color_input'>").val(init_color);
+    var o = {}, init_color = init_color || '#000000',
+        e = color_picker_template(colors),
+        bar = e.find('.hue_bar'),
+        shades = e.find('.shades'),
+        manual_input = e.find('.shades');
 
     var to_rgb = function(c) {
         return $.map($('<div>').css('color', c).css('color')
             .replace(/[^\d,]/g,'').split(','), function(v){ return parseInt(v) });
-    }
-    var to_hex = function(color) {
+    }, to_hex = function(color){
         if (typeof(color) == "string") color = to_rgb(color);
         return '#' + $.map(color, function(c) {
                 var s = c.toString(16);
                 return s.length == 1 ? '0' + s : s
             }).join('').toUpperCase();
-    }
-    init_color = to_hex(init_color);
+    }, init_color = to_hex(init_color);
+
     var make_picker = function(c) {
         var d = $('<div>').addClass('color_select');
         d.css('background-color', c).attr('val', c).click(function(e) {
@@ -2958,17 +2667,6 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
         }).bind('mousedown', function(e){ e.preventDefault()});
         return d.get(0);
     }
-    var make_row = function(cs) {
-        var d = $("<div>").click(function(e){
-            e.preventDefault();
-        });
-        d.append($.map(cs, make_picker));
-        return d.get(0);
-    }
-    var by_sixes = map(function(n) { return colors.slice(n, n+6)}, [0, 6, 12, 18, 24, 30]);
-    var pickers = $("<div class='palette'>");
-    pickers.append($.map(by_sixes, make_row));
-    e.append(pickers);
 
     var hex_changed = false;
     var update_hex = o.update_hex = function() {
@@ -3001,26 +2699,25 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
         hsv[0] = bound(Math.floor(e.pageY - bar.offset().top) / bar.height(), 0, 1);
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
         calc_color();
-    }
+    };
     bar.click(get_hue).drag(get_hue);
 
     var set_color = function(c) {
         var rgb = to_rgb(c);
         hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
-    }
+    };
     set_color(init_color);
     o.set_color = function(color){
         manual_input.val(to_hex(color));
         set_color(color);
     };
 
-    var x = 1, y = 0; // gamma (x), saturation (y)
     var get_shade = function(e) {
         hsv[2] = bound((e.pageX - shades.offset().left) / 120, 0, 1);
         hsv[1] = bound((e.pageY - shades.offset().top) / 120, 0, 1);
         calc_color();
-    }
+    };
     shades.click(get_shade).drag(get_shade);
 
     var calc_color = function() {
@@ -3030,13 +2727,9 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
         callback(hex, color);
     }
 
-    e.append(bar);
-    e.append(shades);
-    if (opts.iframe){
-        Hive.input_frame(manual_input, e, {width: 124});
-    } else {
-        e.append(manual_input);
-    }
+    // if (opts.iframe){
+    //     Hive.input_frame(manual_input, e, {width: 124});
+    // }
 
     function hsvToRgb(h, s, v){
         var r, g, b;
@@ -3110,31 +2803,21 @@ Hive.input_frame = function(input, parent, opts){
 };
 
 // Convenience functions for interactive coding
-function sel(n) {
+Hive.sel = function(n) {
     if(!n) n = 0;
     return Hive.Selection.elements[n];
 }
 
-// Convenience function for logging something in a callback
-function log(text){
-    return function(){
-        console.log(text);
-    }
-}
-
-// Convenience for pausing javascript without changing focus, used during text
-// editor debugging
 $(function(){
     $(window).keydown(function(e){
-        if(e.shiftKey && e.keyCode == 120){
-            // Insert a breakpoint here
-            // console.log('F9 pause');
+        if(e.shiftKey && e.keyCode == 120){ // F9
+            debugger;
             console.log(sel().content_element.find('.hive_selection'));
         }
     });
 });
 
-function print_stack(){
+Hive.print_stack = function(){
     //try { thiswillthrowanerror^2 }
     //catch(e) { console.log(e.stack) }
 }
