@@ -19,6 +19,8 @@ define([
         });
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
+
+        curl.expose('server/context', 'c'); // useful for debugging
     };
     o.dispatch = function(route_name, data){
         context.route_name = route_name;

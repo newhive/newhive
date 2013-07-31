@@ -11,6 +11,7 @@ define([
     'sj!templates/color_picker.html',
     'js!browser/jquery/event/drag.js',
     'js!browser/jquery/rotate.js',
+    'js!google_closure.js'
 ], function(
     $,
     Menu,
@@ -738,7 +739,6 @@ Hive.App.Script = function(o){
 Hive.registerApp(Hive.App.Script, 'hive.script');
 
 var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
-
 Hive.App.Text = function(o) {
     Hive.App.has_resize(o);
     Hive.App.has_resize_h(o);
@@ -747,9 +747,13 @@ Hive.App.Text = function(o) {
     var content = o.init_state.content;
     o.content = function(content) {
         if(typeof(content) != 'undefined') {
-            o.codemirror.setValue(content);
+            // avoid 0-height content element in FF
+            if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
+            else o.rte.setHtml(false, content);
         } else {
-            return o.codemirror.getValue();
+            // remove any remaining selection-saving carets
+            o.rte.content_element.find('span[id^="goog_"]').remove();
+            return o.rte.getCleanContents();
         }
     }
 
@@ -758,18 +762,18 @@ Hive.App.Text = function(o) {
         if (mode === edit_mode) return;
         if (mode) {
             o.unshield();
-            /*o.rte.remove_breaks();
+            o.rte.remove_breaks();
             o.rte.makeEditable();
-            o.rte.restore_cursor();*/
+            o.rte.restore_cursor();
             o.content_element
                 .bind('mousedown keydown', function(e){ e.stopPropagation(); });
             edit_mode = true;
         }
         else {
-            /*o.rte.unwrap_all_selections();
+            o.rte.unwrap_all_selections();
             o.rte.save_cursor();
             o.rte.add_breaks();
-            o.rte.make_uneditable();*/
+            o.rte.make_uneditable();
             o.content_element
                 .unbind('mousedown keydown')
                 .blur();
@@ -781,25 +785,16 @@ Hive.App.Text = function(o) {
     o.focus.add(function(){
         o.refresh_size();
         o.edit_mode(true);
-        o.codemirror.setOption("readOnly", false);
-        if (o.codemirror._old_cursor_selected)
-            o.codemirror.setSelection(o.codemirror._old_cursor_anchor, o.codemirror._old_cursor_head);
-        o.codemirror.focus();
     });
     o.unfocus.add(function(){
         o.edit_mode(false);
-        o.codemirror.setOption("readOnly", "nocursor");
-        o.codemirror._old_cursor_selected = o.codemirror.somethingSelected();
-        o.codemirror._old_cursor_head = o.codemirror.getCursor("head");
-        o.codemirror._old_cursor_anchor = o.codemirror.getCursor("anchor");
-        o.codemirror.setSelection(o.codemirror._old_cursor_head);
     });
 
     o.link = function(v) {
-        // if(typeof(v) == 'undefined') return o.rte.get_link();
+        if(typeof(v) == 'undefined') return o.rte.get_link();
         //if(!v) o.rte.edit('unlink');
         //else o.rte.make_link(v);
-        // o.rte.make_link(v);
+        o.rte.make_link(v);
     };
 
     o.calcWidth = function() {
@@ -834,18 +829,15 @@ Hive.App.Text = function(o) {
         o.scale_set(scale_ref * scale_by);
         o.dims_set(dims);
     };
-    o.resize_end = function(){
-        history_point.save();
-        o.codemirror.refresh();
-    };
+    o.resize_end = function(){ history_point.save() };
     
-    // var _load = o.load;
-    // o.load = function() {
-    //     // o.scale_set(o.scale());
-    //     // o.content(content);
-    //     // _load();
-    //     // o.refresh_size();
-    // };
+    var _load = o.load;
+    o.load = function() {
+        o.scale_set(o.scale());
+        o.content(content);
+        _load();
+        o.refresh_size();
+    };
 
     o.history_saver = function(){
         var exec_cmd = function(cmd){ return function(){
@@ -856,14 +848,6 @@ Hive.App.Text = function(o) {
             o.rte.unwrap_all_selections();
         } };
         Hive.History.save(exec_cmd('+undo'), exec_cmd('+redo'), 'edit');
-    };
-
-    o.handlers = new Object();
-    o.handlers.bold = function (value) {
-        var mark_start = o.codemirror.getCursor("start");
-        var mark_end = o.codemirror.getCursor("end");
-        var mark_options = o.codemirror.combine_font_class(mark_start, mark_end, "CodeMirror-mark-test");
-        o.codemirror.add_mark(mark_start, mark_end, mark_options);
     };
 
     function controls(o) {
@@ -901,11 +885,11 @@ Hive.App.Text = function(o) {
                 open: function(){
                     // Update current color. Range should usually exist, but
                     // better to do nothing than throw error if not
-                    /*var range = o.app.rte.getRange();
+                    var range = o.app.rte.getRange();
                     if (range){
                         var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
                         o.color_picker.set_color(current_color);
-                    }*/
+                    }
                 },
             }
         );
@@ -913,7 +897,7 @@ Hive.App.Text = function(o) {
         o.align_menu = o.hover_menu(d.find('.button.align'), d.find('.drawer.align'));
 
         o.close_menus = function() {
-            // o.link_menu.close();
+            o.link_menu.close();
             o.color_menu.close();
         }
 
@@ -921,7 +905,7 @@ Hive.App.Text = function(o) {
             $(el).bind('mousedown', function(e) {
                 e.preventDefault();
             }).click(function(){
-                o.app.handlers[$(el).attr('cmd').replace("+", "")]($(el).attr('val'));
+                o.app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
             });
         });
 
@@ -939,294 +923,342 @@ Hive.App.Text = function(o) {
     o.content_element = $('<div></div>');
     o.content_element.attr('id', Hive.random_str()).addClass('text_content_element');
     o.div.append(o.content_element);
-    o.codemirror = CodeMirror(o.content_element.get(0), {
-        value: o.init_state.content,
-        lineWrapping: true
-    });
-    o.codemirror.setSize("100%", "100%");
-
-    //o.rte = new Hive.goog_rte(o.content_element, o);
-    //goog.events.listen(o.rte.undo_redo.undoManager_,
-    //        goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
-    //        o.history_saver);
-    //Sgoog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
-    // o.shield();
-
-    o.ranges = new Object();
-
-    /**************************************************************************
-        Compare range options objects
-
-        Arguments:
-            options1 and options2: Options object (follows o.codemirror.markText format)
-            
-        Returns:
-            true if options are the same, false otherwise
-    **************************************************************************/
-    o.codemirror.compare_options = function (options1, options2) {
-        for (var opt in options1) {
-            if (!(opt in options2))
-                return false;
-            if (options1[opt] != options2[opt])
-                return false;
-        }
-        for (var opt in options2) {
-            if (!(opt in options1))
-                return false;
-            if (options1[opt] != options2[opt])
-                return false;
-        }
-        return true;
-    };
-
-    /**************************************************************************
-        Checks if option object is empty (no formatting, classes, etc)
-
-        Arguments:
-            options: Options object (follows o.codemirror.markText format)
-            
-        Returns:
-            true if options object is empty, false otherwise
-    **************************************************************************/
-    o.codemirror.empty_options = function (options) {
-        if ($.trim(options["className"]) != "")
-            return false;
-        return true;
-    }
-
-    /**************************************************************************
-        Combines ranges with the same options
-
-        Arguments:
-            None
-
-        Returns:
-            Nothing
-    **************************************************************************/
-    o.codemirror.merge_ranges = function () {
-        // Object properties are not going to be sorted!
-        // This snippet sorts the keys from beginning of the text to the end
-        var sorted_keys = [];
-        for(var rkey in o.ranges) {
-            sorted_keys[sorted_keys.length] = rkey;
-        }
-        sorted_keys.sort();
-
-        for (var skey in sorted_keys) {
-            var rkey = sorted_keys[skey];
-            var range = o.ranges[rkey];
-            var end_index = o.codemirror.indexFromPos(range.find()["to"]);
-            if (end_index in o.ranges) {
-                var next_range = o.ranges[sorted_keys[skey+1]];
-                if (o.codemirror.compare_options(range["_options"], next_range["_options"])) {
-                    var options = $.extend({}, range["_options"]);
-                    var start_pos = range.find()["from"];
-                    var end_pos = next_range.find()["to"];
-                    range.clear();
-                    next_range.clear();
-                    delete o.ranges[sorted_keys[skey+1]];
-                    delete o.ranges[rkey];
-                    o.ranges[rkey] = o.codemirror.markText(start_pos, end_pos, options);
-                    return o.codemirror.merge_ranges();
-                }
-            } else if (o.codemirror.empty_options(range["_options"])) {
-                range.clear();
-                delete o.ranges[rkey];
-                return o.codemirror.merge_ranges();
-            }
-        }
-    };
-
-    /**************************************************************************
-        Processes and combines options for marks
-
-        Arguments:
-            old_options: Options object (follows o.codemirror.markText format)
-            new_options: New options to process. Follows same format as old_options
-                except each class must have a "+" or a "-" sign for addition or
-                removal respectively. If there is no sign, the option is instead
-                toggled for each individual range.
-
-        Returns:
-            Processed old_options
-    **************************************************************************/
-    o.codemirror.process_options = function (range_options, new_options) {
-        var classes = new_options["className"].split(" ");
-        var old_classes = null;
-        var old_options = {};
-        // If range_options is null, create a basic options object
-        if (range_options == null) {
-            old_options = {className: ""};
-            old_classes = new Array();
-        } else {
-            old_options = $.extend({}, range_options);
-            old_classes = old_options["className"].split(" ");
-        }
-
-        for (var ckey in classes) {
-            var cls = classes[ckey].slice(1, classes[ckey].length);
-            // cls_index = index of class, or -1 if not found
-            var cls_index = $.inArray(cls, old_classes);
-            var cmd = classes[ckey].slice(0, 1);
-            // If the class starts with a "+", add it if it doesn't exist
-            if (classes[ckey].slice(0, 1) == "+") {
-                if (cls_index < 0) {
-                    old_classes[old_classes.length] = cls;
-                }
-            // If the class starts with a "-", remove it if it exists
-            } else if (classes[ckey].slice(0, 1) == "-") {
-                if (cls_index >= 0) {
-                    
-                    old_classes.splice(cls_index, 1);
-                }
-            // Add the class if it doesnt exist, remove it otherwise
-            } else
-                if (cls_index < 0)
-                    old_classes[old_classes.length] = classes[ckey];
-                else
-                    old_classes.splice(cls_index, 1);
-        }
-        //alert(old_classes);
-        old_classes = old_classes.join(" ");
-        old_options["className"] = old_classes;
-        return old_options;
-    }
-
-    /**************************************************************************
-        Searches through ranges within {from, to} and decides whether to add
-            or remove the font style class
-
-        Arguments:
-            from - {line, ch}: start of new mark (inclusive)
-            to - {line, ch}: end of new mark (exclusive)
-            cls - string: name of font class
-
-        Returns:
-            Options object for o.codemirror.add_mark
-    **************************************************************************/
-    o.codemirror.combine_font_class = function (from, to, cls) {
-        var start_index = o.codemirror.indexFromPos(from);
-        var end_index = o.codemirror.indexFromPos(to);
-        var cmd = "+";
-
-        // Object properties are not going to be sorted!
-        // This snippet sorts the keys from beginning of the text to the end
-        var sorted_keys = [];
-        for(var rkey in o.ranges) {
-            sorted_keys[sorted_keys.length] = rkey;
-        }
-        sorted_keys.sort();
-
-        for (var skey in sorted_keys) {
-            var rkey = sorted_keys[skey];
-            var rend_index = o.codemirror.indexFromPos(o.ranges[rkey].find()["to"]);
-
-            if (rkey >= end_index)
-                break;
-            if ((rkey >= start_index) || (rend_index > start_index && rend_index <= end_index)) {
-                var classes = o.ranges[rkey]._options["className"].split(" ");
-                if ($.inArray(cls, classes) >= 0) {
-                    cmd = '-';
-                    break;
-                }
-            }
-        }
-        //alert(cmd + cls);
-        return {className: cmd + cls};
-    }
-
-    /**************************************************************************
-        Combines an existing range with a new mark.
-
-        Arguments:
-            rkey - int: Index of existing range in o.ranges
-            from_index - int: Starting index of new mark (include)
-            to_index - int: Ending index of new mark (exclusive)
-            options: Dictionary of mark options. Reffer to o.codemirror.process_options
-                for syntax.
-
-        Returns:
-            Returns the index of the end of the last created mark. If the returned
-                index is less than to_index, then the function did not finish
-                creating the entire mark and the return value is the new 
-    **************************************************************************/
-    o.codemirror.combine_marks = function (rkey, from_index, to_index, options) {
-        var range = o.ranges[rkey];
-        var new_opts = o.codemirror.process_options(range["_options"], options);
-        var old_end = o.codemirror.indexFromPos(range.find()["to"]);
-        var old_opts = $.extend({}, range["_options"]);
-
-        var end_index = old_end;
-        if (to_index <= end_index)
-            end_index = to_index;
-
-        o.ranges[rkey].clear();
-        delete o.ranges[rkey];
-
-        // Create mark with no new options in the front
-        if (from_index > rkey)
-            o.ranges[rkey] = o.codemirror.markText(o.codemirror.posFromIndex(rkey), o.codemirror.posFromIndex(from_index), old_opts);
-
-        // Create mark with new options
-        o.ranges[from_index] = o.codemirror.markText(o.codemirror.posFromIndex(from_index), o.codemirror.posFromIndex(end_index), new_opts);
-
-        // Create mark with no new options at the end
-        if (old_end > end_index) {
-            o.ranges[to_index] = o.codemirror.markText(o.codemirror.posFromIndex(to_index), o.codemirror.posFromIndex(old_end), old_opts);
-            return old_end;
-        }
-
-        return end_index;
-    };
-
-    /**************************************************************************
-        Cleanly adds a new mark and flattens list of ranges
-
-        Arguments:
-            from - {line, ch}: start of new mark (inclusive)
-            to - {line, ch}: end of new mark (exclusive)
-            options: Dictionary of mark options. Reffer to o.codemirror.process_options
-                for syntax.
-
-        Returns:
-            Nothing
-    **************************************************************************/
-    o.codemirror.add_mark = function (from, to, options) {
-        var start_index = o.codemirror.indexFromPos(from);
-        var end_index = o.codemirror.indexFromPos(to);
-        var clean_options = o.codemirror.process_options(null, options);
-
-        // Object properties are not going to be sorted!
-        // This snippet sorts the keys from beginning of the text to the end
-        var sorted_keys = [];
-        for(var rkey in o.ranges) {
-            sorted_keys[sorted_keys.length] = rkey;
-        }
-        sorted_keys.sort();
-
-        for (var skey in sorted_keys) {
-            var rkey = sorted_keys[skey];
-            var old_end = o.codemirror.indexFromPos(o.ranges[rkey].find()["to"]);
-
-            if (rkey >= end_index)
-                break;
-
-            if (rkey > start_index) {
-                o.ranges[start_index] = o.codemirror.markText(o.codemirror.posFromIndex(start_index), o.codemirror.posFromIndex(rkey), clean_options);
-                start_index = rkey;
-            }
-
-            if (rkey >= start_index || (old_end > start_index && old_end <= end_index))
-                start_index = o.codemirror.combine_marks(rkey, start_index, end_index, options);
-        }
-        if (start_index <= end_index) 
-            o.ranges[start_index] = o.codemirror.markText(o.codemirror.posFromIndex(start_index), o.codemirror.posFromIndex(end_index), clean_options)
-    }
+    o.rte = new Hive.goog_rte(o.content_element, o);
+    goog.events.listen(o.rte.undo_redo.undoManager_,
+            goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
+            o.history_saver);
+    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
+    o.shield();
 
     setTimeout(function(){ o.load(); }, 100);
     return o;
 }
 Hive.registerApp(Hive.App.Text, 'hive.text');
+
+Hive.goog_rte = function(content_element, app){
+    var that = this;
+    var id = content_element.attr('id');
+    this.content_element = content_element;
+    this.app = app;
+
+    goog.editor.SeamlessField.call(this, id);
+
+    this.make_uneditable = function() {
+        // Firefox tries to style the entire content_element, which google
+        // clobbers with makeUneditable.  This solution works, but results
+        // in multiple nested empty divs in some cases. TODO: improve
+        that.content_element.css('opacity', ''); //Opacity isn't supported for text anyway yet
+        var style = that.content_element.attr('style');
+        if (style != '') {
+            var inner_wrapper = $('<div></div>');
+            inner_wrapper.attr('style', style);
+            that.content_element.wrapInner(inner_wrapper[0]);
+        }
+        that.makeUneditable();
+    };
+
+    function rangeIntersectsNode(range, node) {
+        var nodeRange = node.ownerDocument.createRange();
+        try {
+          nodeRange.selectNode(node);
+        }
+        catch (e) {
+          nodeRange.selectNodeContents(node);
+        }
+
+        return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
+               range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
+    }
+
+    this.select = function(range) {
+        var s = window.getSelection();
+        if(!s) return;
+        s.removeAllRanges();
+        if(range)
+        s.addRange(range);
+        return s;
+    }
+
+    this.get_range = function() {
+        var s = window.getSelection();
+        if(s.rangeCount) return window.getSelection().getRangeAt(0).cloneRange();
+        else return null;
+    }
+
+    // Finds link element the cursor is on, selects it after saving
+    // any existing selection, returns its href
+    this.get_link = function() {
+        // If the color menu is still open the selection needs to be restored.
+        // TODO: make this work right :)
+        if (saved_range) that.restore_selection();
+
+        that.range = that.get_range();
+        var r = that.range.cloneRange(); // save existing selection
+
+        // Look for link in parents
+        var node = r.startContainer;
+        while(node.parentNode) {
+            node = node.parentNode;
+            if (node == that.content_element) return;
+            if($(node).is('a')) {
+                r.selectNode(node);   
+                that.select(r);
+                return $(node).attr('href');
+            }
+        }
+
+        // Look for the first link that intersects r
+        var find_intersecting = function(r) {
+            var link = false;
+            $(document).find('a').each(function() {
+                if(!link && rangeIntersectsNode(r, this)) link = this;
+            });
+            if(link) {
+                r.selectNode(link);
+                that.select(r);
+                return $(link).attr('href');
+            };
+            return '';
+        }
+        var link = find_intersecting(r);
+        if(link) return link;
+
+        // If there's still no link, select current word
+        if(!r.toString()) {
+            // select current word
+            // r.expand('word') // works in IE and Chrome
+            var s = that.select(r);
+            // If the cursor is not at the beginning of a word...
+            if(!r.startContainer.data || !/\W|^$/.test(
+                r.startContainer.data.charAt(r.startOffset - 1))
+            ) s.modify('move','backward','word');
+            s.modify('extend','forward','word');
+        }
+
+        // It's possible to grab a previously missed link with the above code 
+        var link = find_intersecting(that.get_range());
+        return link;
+    }
+
+    this.make_link = function(href) {
+        // TODO: don't use browser API directly
+        if (href === ''){
+            document.execCommand('unlink', false);
+        } else {
+            document.execCommand('createlink', false, href);
+        }
+    };
+
+    var saved_range;
+    this.save_selection = function(){
+        var range = this.getRange();
+        saved_range = range.saveUsingCarets();
+    };
+
+    this.restore_selection = function(){
+        if (!saved_range || saved_range.isDisposed()) return false;
+        saved_range.restore();
+        saved_range = false;
+        return true;
+    };
+
+    // Wrap a node around selecte text, even if selection spans multiple block elements
+    var current_selection;
+    this.wrap_selection = function(wrapper){
+        if (current_selection) return;
+        wrapper = wrapper || '<span class="hive_selection"></span>';
+        var range, node, nodes;
+
+        // Turn wrapper into DOM object
+        if (typeof(wrapper) == "string") wrapper = $(wrapper)[0];
+
+        // Get selection
+        range = that.getRange();
+        if (!range) return;
+
+        if (range.getStartNode() === range.getEndNode()) {
+            // Return if selection is empty
+            if (range.getStartOffset() === range.getEndOffset()) return;
+
+            // Check if selection is already a link
+            var node = $(range.getStartNode());
+            if (node.parent().is('a')) nodes = node.parent();
+        }
+
+        that.save_selection();
+        range.select(); // For some reason on FF save_selection unselects the range
+        if (!nodes){
+            // Create temporary anchor nodes using execcommand
+            document.execCommand('createLink', false, 'temporary_link');
+
+            // Replace temporary nodes with desired wrapper, saving reference in
+            // closure for use by unwrap_selection
+            nodes = $(range.getContainer()).find('a[href=temporary_link]');
+        }
+        current_selection = nodes.wrapInner(wrapper)
+        current_selection = current_selection.children()
+        current_selection = current_selection.unwrap();
+
+        // Remove browser selection
+        window.getSelection().removeAllRanges();
+        return current_selection;
+    };
+    this.unwrap_selection = function(){
+        if (! current_selection) return;
+        current_selection.each(function(i,el){ $(el).replaceWith($(el).html()); });
+        that.restore_selection();
+        current_selection = false;
+    };
+    this.unwrap_all_selections = function(){
+        var selection =  that.content_element.find('.hive_selection');
+        if (selection.length) {
+            current_selection = selection;
+            that.unwrap_selection();
+        }
+    };
+
+    this.undo_redo = new goog.editor.plugins.UndoRedo();
+    this.basic_text = new goog.editor.plugins.BasicTextFormatter();
+    this.registerPlugin(this.undo_redo);
+    this.registerPlugin(this.basic_text);
+    this.registerPlugin(new goog.editor.plugins.RemoveFormatting());
+
+    var previous_range = {};
+    this.content_element.on('paste', function(){
+        setTimeout(function(){
+            that.strip_sizes();
+
+            // Unformat all text, google RTE doesn't have selectAll so we use browser
+            document.execCommand('selectAll');
+            that.execCommand('+removeFormat');
+        }, 0);
+
+        // Paste unformatting code
+        //    var current_range = that.getRange();
+        //    var pasted_range = goog.dom.Range.createFromNodes(
+        //        previous_range.before.getStartNode(), 
+        //        previous_range.before.getStartOffset(), 
+        //        current_range.getStartNode(), 
+        //        current_range.getStartOffset()
+        //        );
+        //    pasted_range.select();
+        //    that.execCommand('+removeFormat');
+
+        //    // Place cursor at end of pasted range
+        //    var range = that.getRange();
+        //    previous_range.before = goog.dom.Range.createFromNodes(
+        //        range.getEndNode(), 
+        //        range.getEndOffset(), 
+        //        range.getEndNode(), 
+        //        range.getEndOffset()
+        //        );
+        //    previous_range.before.select();
+        //}, 0);
+    });
+
+    var range_change_callback = function(type){
+        return function(){
+            var range = that.getRange();
+            $.each(type, function(i, name){
+                previous_range[name] = range;
+            });
+        }
+    };
+
+    this.exec_command = function(cmd, val){
+        that.execCommand(cmd, val);
+        that.strip_sizes();
+    };
+
+    this.strip_sizes = function(){
+        that.content_element.find('*').css('font-size', '');
+        //    .css('width', '').css('height', '')
+        //    .attr('width', '').attr('height', '');
+    };
+
+
+    goog.events.listen(this, goog.editor.Field.EventType.DELAYEDCHANGE, range_change_callback(['delayed']));
+    goog.events.listen(this, goog.editor.Field.EventType.BEFORECHANGE, range_change_callback(['before']));
+    goog.events.listen(this, goog.editor.Field.EventType.SELECTIONCHANGE, range_change_callback(['delayed', 'before']));
+    //goog.events.listen(this, goog.editor.Field.EventType.FOCUS, range_change_callback(['before']));
+
+    var saved_cursor;
+    this.save_cursor = function(){
+        saved_cursor = previous_range.delayed.saveUsingCarets();
+    };
+    this.restore_cursor = function(){
+        if (saved_cursor){
+            that.focus();
+            saved_cursor.restore();
+            return true;
+        } else {
+            that.focusAndPlaceCursorAtStart();
+            return false;
+        };
+    };
+    //goog.events.listen(this, goog.editor.Field.EventType.LOAD, this.restore_cursor);
+
+    // Text wrapping hack: insert explicit line breaks where text is
+    // soft-wrapped before saving, remove them on loading
+    this.add_breaks = function(){
+        var text_content = that.content_element;
+
+        // Get text nodes: .find gets all non-textNode elements, contents gets
+        // all child nodes (inc textNodes) and the not() part removes all
+        // non-textNodes. Technique by Nathan MacInnes, nathan@macinn.es from
+        // http://stackoverflow.com/questions/4671713/#7431801
+         var textNodes = text_content.find('*').add(text_content).contents()
+            .not(text_content.find('*'));
+
+        // Split each textNode into individual textNodes, one for each word
+        textNodes.each(function (index, lastNode) {
+            var startOfWord = /\W\b/,
+                result;
+            while (startOfWord.exec(lastNode.nodeValue) !== null) {
+                result = startOfWord.exec(lastNode.nodeValue);
+                // startOfWord matches the character before the start of a
+                // word, so need to add 1.
+                lastNode = lastNode.splitText(result.index + 1);
+            }
+        });
+        // end contributed code
+
+        var textNodes = text_content.find('*').add(text_content).contents()
+            .not(text_content.find('*'));
+
+        textNodes.wrap('<span class="wordmark">');
+
+        // iterate over wordmarks, add <br>s where line breaks occur
+        var y = 0;
+        text_content.find('.wordmark').each(function(i, e) {
+            var ely = $(e).offset().top;
+            if($(e).text().length && ely > y) {
+                var br = $('<br class="softbr">');
+                $(e).before(br);
+                if(ely != $(e).offset().top){
+                    br.remove(); // if element moves, oops, remove <br>
+                }
+            }
+            y = ely;
+        });
+
+        // unwrap all words
+        text_content.find('.wordmark').each(function(i, e) {
+            $(e).replaceWith($(e).text());
+        });
+
+        var html = text_content.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
+        return html;
+    }
+    this.remove_breaks = function() {
+        that.content_element.find('.softbr').remove();
+        var wrapper = that.content_element.find('.viewstyle');
+        if(wrapper.length) that.content_element.html(wrapper.html());
+    }
+}
+goog.editor.Field.DELAYED_CHANGE_FREQUENCY = 100;
+goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
+
 
 Hive.App.has_rotate = function(o) {
     var angle = o.init_state.angle ? o.init_state.angle : 0;
