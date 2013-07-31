@@ -25,6 +25,11 @@ define([
         if(data.owner && (data.owner.id == context.user.id))
             data.user_is_owner = true;
         nav.set_expr_view(route_name == 'view_expr'); // TODO: move to expr page
+        // BUGBUG. Server error on login?
+        if (route_name == "expr")
+            route_name = "view_expr";
+        if (data.page_data)
+            data = data.page_data;
         route = routes[route_name];
         var cards = context.page_data.cards;
         context.page_data = data;

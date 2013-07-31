@@ -22,7 +22,7 @@ define([
     var o = {}, contentFrameURLBase = context.is_secure ?
             context.secure_content_server_url : context.content_server_url,
             controller;
-    const anim_duration = 700;
+    const anim_duration = 400;
 
     o.init = function(controller){
         o.controller = controller;
@@ -51,18 +51,18 @@ define([
 
     o.render = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
-        // $("#nav").prependTo("body");
-        // TODO: shouldn't empty #nav
         o.expr = context.page_data.expr;
 
         $("#nav").hide();
         $("#popup_content").remove();
+        $("#dia_comments").remove();
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
         $("#dia_comments").data("dialog").opts.open = function(){
             $("#dia_comments textarea").focus();
         }
-
+        o.resize();
+        
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
         $('#dia_embed textarea').val("<iframe src='" + embed_url + 
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
@@ -80,10 +80,14 @@ define([
         $(".logged_out.social_btn").removeClass("hide");
         if (!context.user.logged_in) {
             $("#signup_create").show();
-            $("#signup_create .signup").removeclass("hide");
-            $('#social_plus').hide();
-        } else if (context.user.id == o.expr.owner.id) {
-            $('.panel .edit_btn').replaceWith(edit_btn_template(page_data).show());
+            $("#signup_create .signup").removeClass("hide");
+            // $('#social_plus').hide();
+        } else {
+            $("#signup_create").show();
+            $("#signup_create .create").removeClass("hide");
+            if (context.user.id == o.expr.owner.id) {
+                $('.panel .edit_btn').replaceWith(edit_btn_template(page_data).show());
+            }
         }
     };
 
