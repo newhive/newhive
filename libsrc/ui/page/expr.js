@@ -32,6 +32,7 @@ define([
     o.exit = function(){
         hide_exprs();
         hide_panel();
+        $('#site').show();
     };
     
     hide_panel = function(){
@@ -49,11 +50,17 @@ define([
         browser_layout.center($('#page_next'), undefined, {'h': false});
     };
 
+    o.get_expr = function(id){
+        return $('#expr_' + id);
+    };
+
     o.render = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
         o.expr = context.page_data.expr;
 
+        $('title').text(o.expr.title);
         $("#nav").hide();
+        $('#site').hide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
         $('#social_overlay').append(
@@ -133,7 +140,7 @@ define([
         $('#exprs').show();
         $('.overlay.social_btn').show();
 
-        var contentFrame = $('#expr_' + expr_id);
+        var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
             // Create new content frame
             var contentFrameURL = contentFrameURLBase + expr_id;

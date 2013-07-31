@@ -1398,8 +1398,10 @@ class File(Entity):
 
     def set_thumb(self, w, h, file=False):
         name = str(w) + 'x' + str(h)
-        if not file: file = self.file
+        thumbs = self.get('thumbs', {})
+        if thumbs.get(name): return False
 
+        if not file: file = self.file
         try: thumb_file = generate_thumb(file, (w,h))
         except:
             print 'failed to generate thumb for file: ' + self.id
@@ -1407,7 +1409,6 @@ class File(Entity):
         url = self.db.s3.upload_file(thumb_file, 'thumb', self._thumb_name(w, h),
             self['name'] + '_' + name, 'image/jpeg')
 
-        thumbs = self.get('thumbs', {})
         thumbs[name] = True
         self.update(thumbs=thumbs)
         return thumb_file

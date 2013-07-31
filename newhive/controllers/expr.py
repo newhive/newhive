@@ -1,4 +1,5 @@
 import os, json, cgi
+from pymongo.errors import DuplicateKeyError
 from newhive import utils
 from newhive.utils import dfilter
 from newhive.controllers.controller import ModelController

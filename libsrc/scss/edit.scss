@@ -1,5 +1,10 @@
 @import "common";
 
+#site .nav {
+    position: fixed;
+    z-index: 1;
+}
+
 #happs {
     position: absolute;
     left: 0;
@@ -9,8 +14,10 @@
 
 #edit_nav {
     right: 0;
-    top: 0;
+    bottom: 0;
     padding-left: 4px;
+
+    & > * { display: inline-block; }
 }
 
 .ehapp, .ehapp > * { position : absolute; }
@@ -73,13 +80,17 @@
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
 #app_btns {
-    right: 0;
-    top: 70px;
+    right: 200px;
+    bottom: 0px;
+    background-color: white;
 
     .active { background-color: $color_grey_medium; }
     .insert_btn { cursor: default; }
     img { width: 50px; }
-    .icon { width: 67px; height: 50px; display: block; }
+    .icon {
+        width: 67px; height: 50px;
+        display: inline-block;
+    }
 
     #insert_text   { &.active { background-image: asset_url('skin/1/text-hover.png');   } background-image: asset_url('skin/1/text.png');   }
     #insert_image  { &.active { background-image: asset_url('skin/1/images-hover.png'); } background-image: asset_url('skin/1/images.png'); }

@@ -2,12 +2,14 @@ define([
     'browser/jquery',
     'server/context',
     'ui/editor',
+    'ui/page/expr',
     'json!server/compiled.bundles.json',
     'sj!templates/edit.html'
 ], function(
     $,
     context,
     editor,
+    expr_page,
     bundles, 
     edit_template
 ) {
@@ -21,8 +23,8 @@ define([
         o.controller = controller;
     };
     o.exit = function(){
-        // hide_exprs();
         $('link.edit').remove();
+        $('#site').empty().hide();
     };
 
     o.resize = function(){
@@ -45,6 +47,7 @@ define([
 
     o.view_expr = function(){
         var expr = context.page_data.expr;
+        expr_page.get_expr(expr.id).remove();
         o.controller.open('view_expr', {
             id: expr.id,
             owner_name: expr.owner_name,
