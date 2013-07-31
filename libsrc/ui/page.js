@@ -85,6 +85,7 @@ define([
         if (new_page && new_page.enter) new_page.enter();
         resize();
 
+        if (page_data.title) $("head title").text(page_data.title);
         o.attach_handlers();
     };
     o.attach_handlers = function(){

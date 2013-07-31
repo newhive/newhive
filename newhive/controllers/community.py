@@ -30,7 +30,7 @@ class Community(Controller):
         user = self.db.User.named(username)
         return {
             "cards": user.feed_page_esdb(feed='trending', **paging_args),
-            'header': ("The Hive", "Trending"), 'card_type': 'expr',
+            'header': ("Network", "Trending"), 'card_type': 'expr',
             'title': "Network - Trending",
         }
 
