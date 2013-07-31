@@ -196,8 +196,9 @@ define([
     }
 
     function resize(){
-        $('#exprs').css('height', $(window).height());
-        $('#site').css('height', $(window).height() - 44);
+        // these lines were causing #site and #exprs to not fill the window
+        // $('#exprs').css('height', $(window).height());
+        // $('#site').css('height', $(window).height() - 44);
         if(context.page_data.layout == 'grid') $('#feed').css('width',
             Math.min(3, Math.floor($(window).width() / grid_width)) * grid_width);
         if (context.page && context.page.resize)

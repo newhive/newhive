@@ -22,8 +22,10 @@ define([
     color_picker_template
 ){
 
-var Hive = {}, debug_mode = context.config.debug_mode, asset = context.asset,
-    hover_menu = Menu, noop = function(){}, Funcs = util.Funcs;
+var Hive = {}, debug_mode = context.config.debug_mode,
+    hover_menu = Menu, noop = function(){}, Funcs = util.Funcs
+    asset = function(name){ return context.asset({}, name) };
+Hive.asset = asset;
 
 var showDialog = function(jq, opts){
     return dialog.create(jq, opts);
@@ -40,11 +42,9 @@ Hive.has_shuffle = function(arr) {
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
 // editing functions.
-Hive.Apps = [];
-Hive.Apps.init = function(initial_state, load) {
-    var o = Hive.Apps;
-    if(! load) load = noop;
-    
+Hive.Apps = (function(){
+    var o = [];
+
     o.state = function() {
         return $.map(o.all(), function(app) { return app.state(); });
     };
@@ -81,14 +81,23 @@ Hive.Apps.init = function(initial_state, load) {
     };
     o.all = function(){ return $.grep(o, function(e){ return ! e.deleted; }); };
     
-    if(! initial_state) initial_state = [ ];
-    var load_count = initial_state.length;
-    var load_counter = function(){
-        load_count--;
-        if( ! load_count ) load();
+    o.init = function(initial_state, load){
+        stack.splice(0);
+        o.splice(0);
+
+        if(!load) load = noop;
+        
+        if(!initial_state) initial_state = [];
+        var load_count = initial_state.length;
+        var load_counter = function(){
+            load_count--;
+            if(!load_count) load();
+        };
+        $.map(initial_state, function(e){ Hive.App(e, { load: load_counter }) } );
     };
-    $.map(initial_state, function(e){ Hive.App(e, { load: load_counter }) } );
-};
+
+    return o;
+})();
 
 Hive.env = function(){
     scale = Hive.Exp.fixed_width ? 1 : $(window).width() / 1000;
@@ -353,7 +362,7 @@ Hive.Controls = function(app, multiselect) {
         // opts = $.extend({ open: noop, close: noop }, opts);
         // var e = $("<div class='control drawer link'>");
         // var cancel_btn = $("<img>").addClass('hoverable')
-        //     .attr('src', asset('skin/1/delete_sm.png'))
+        //     .attr('src', asset('skin/edit/delete_sm.png'))
         //     .attr('title', 'Clear link')
         //     .css('margin', '12px 0 0 5px');
         // var input = $('<input type="text">');
@@ -824,7 +833,10 @@ Hive.App.Text = function(o) {
         o.scale_set(scale_ref * scale_by);
         o.dims_set(dims);
     };
-    o.resize_end = function(){ history_point.save() };
+    o.resize_end = function(){
+        history_point.save();
+        o.codemirror.refresh();
+    };
     
     // var _load = o.load;
     // o.load = function() {
@@ -926,7 +938,10 @@ Hive.App.Text = function(o) {
     o.content_element = $('<div></div>');
     o.content_element.attr('id', Hive.random_str()).addClass('text_content_element');
     o.div.append(o.content_element);
-    o.codemirror = CodeMirror(o.content_element.get(0), {value: o.init_state.content});
+    o.codemirror = CodeMirror(o.content_element.get(0), {
+        value: o.init_state.content,
+        lineWrapping: true
+    });
     o.codemirror.setSize("100%", "100%");
 
     //o.rte = new Hive.goog_rte(o.content_element, o);
@@ -1252,7 +1267,7 @@ Hive.App.has_rotate = function(o) {
         };
 
         o.rotateHandle = $("<img class='control rotate hoverable drag' title='Rotate'>")
-            .attr('src', asset('skin/1/rotate.png'));
+            .attr('src', asset('skin/edit/rotate.png'));
         o.appendControl(o.rotateHandle);
 
         var angleRound = function(a) { return Math.round(a / 45)*45; },
@@ -2111,7 +2126,7 @@ Hive.init = function(exp, page){
         Hive.make_fixed(Hive.Exp.fixed_width);
     }
 
-    $('#insert_text,#text_default').click(function(e) {
+    $('#text_default').click(function(e) {
         Hive.new_app({ type : 'hive.text', content : '' });
     });
     $('#text_header').click(function(e) {
@@ -2182,9 +2197,9 @@ Hive.init = function(exp, page){
     $('#insert_file' ).click(new_link);
     $('#menu_file'   ).click(new_link);
 
-    hover_menu($('#insert_text'), $('#menu_text'), { layout: 'center_y', min_y: 77 });
+    hover_menu('#insert_text', '#menu_text');
 
-    var image_menu = hover_menu($('#insert_image'), $('#menu_image'), { layout: 'center_y', min_y: 77 });
+    var image_menu = hover_menu('#insert_image', '#menu_image');
     var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'),
         { click_persist: $('#image_embed_code'), auto_close: false,
             open: function(){ $('#image_embed_code').focus(); }, group: image_menu });
@@ -2195,14 +2210,14 @@ Hive.init = function(exp, page){
         return false;
     });
 
-    hover_menu($('#insert_audio'), $('#menu_audio'), { layout: 'center_y', min_y: 77 });
+    hover_menu('#insert_audio', '#menu_audio');
 
-    var embed_menu = hover_menu($('#insert_embed'), $('#menu_embed'), {
-        layout: 'center_y', min_y: 77, open: function(){ $('#embed_code').get(0).focus() } });
+    var embed_menu = hover_menu('#insert_embed', '#menu_embed', {
+        open: function(){ $('#embed_code').get(0).focus() } });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
-    hover_menu($('#insert_shape'), $('#menu_shape'), { layout: 'center_y', min_y: 77 });
-    $('#insert_shape,#shape_rectangle').click(function(e) {
+    hover_menu('#insert_shape', '#menu_shape');
+    $('#shape_rectangle').click(function(e) {
         Hive.new_app({ type : 'hive.rectangle', content :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
                 'border-style' : 'solid', 'border-radius' : 0 } });
@@ -2211,7 +2226,7 @@ Hive.init = function(exp, page){
         Hive.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6], content: { brush: 'simple', brush_size: 10 } });
     });
 
-    hover_menu($('#insert_file'), $('#menu_file'), { layout: 'center_y', min_y: 77 });
+    hover_menu('#insert_file', '#menu_file');
 
     ////////////////////////////////////////////////////////////////////////////////
     // Labs features
@@ -2526,13 +2541,13 @@ Hive.grid = false;
 Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
     var e = $('#btn_grid').get(0);
-    e.src = e.src_d = asset('skin/1/grid-' + (Hive.grid ? 'on' : 'off') + '.png');
+    e.src = e.src_d = asset('skin/edit/grid-' + (Hive.grid ? 'on' : 'off') + '.png');
     $('#grid_guide').css(Hive.grid ?
-          { 'background-image' : "url('" + asset('skin/1/grid_square.png') + "')",
+          { 'background-image' : "url('" + asset('skin/edit/grid_square.png') + "')",
               'background-repeat' : 'repeat' }
         : { 'background-image' : '' }
     );
-}
+};
 
 Hive.bg_color_set = function(c) {
     Hive.bg_div.add('#bg_preview').css('background-color', c);
