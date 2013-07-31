@@ -105,6 +105,17 @@
 
     #feed {
         margin: 0 auto 0 auto;
+        .title {
+            font-weight: 300;
+            font-size: 36px;
+            font-family: Museo;
+            .words {
+                padding: 4px 0;
+                word-spacing: -3px;
+                line-height: 49px;
+                background-color: rgba(255,255,255,.95);
+            }
+        }
     }
 
     #feed.profile {
@@ -116,27 +127,16 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
 
-            .title {
-                position:absolute;
-                left: 0; top: 22px;
-                max-width: 550px;
-                font-weight: 300;
-                font-size: 36px;
-                font-family: Museo;
-                border-left: 7px solid rgba(255,255,255,.95);
-                .words {
-                    padding: 4px 0;
-                    word-spacing: -3px;
-                    line-height: 49px;
-                    background-color: rgba(255,255,255,.95);
-                }
-            }
-
             .snapshot {
                 width: 715px;
                 height: 430px;
             }
-
+            .title {
+                position: absolute;
+                left: 0; top: 22px;
+                max-width: 550px;
+                border-left: 7px solid rgba(255,255,255,.95);
+            }
             .info {
                 position: relative;
                 padding: 10px 0;
@@ -152,6 +152,13 @@
     }
 
     #feed.grid {
+        .title {
+            max-width: 390px;
+        }
+        .snapshot {
+            width: 390px;
+            height: 235px;
+        }
         /* max-width: 1256px; */
         margin: auto;
         width: 1230px;

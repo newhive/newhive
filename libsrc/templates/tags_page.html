@@ -1,7 +1,8 @@
 <div id="tag_bar">
   <div id="tag_name">
     {<for tags_search "tagnum"}
-      #{item}{>}</div>
+      {|templates/tag_card.html}  
+    {>}</div>
   <div class="float_right"> 
   	{# button or <a>? #}
     <form { form_attrs "tag_follow" } id='follow_tag_form' method='POST'>
