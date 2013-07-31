@@ -58,6 +58,7 @@ Hive.Apps = (function(){
         stack.move_element(from, to);
         restack();
     };
+    o._stack = stack;
     
     o.add = function(app) {
         var i = o.length;
