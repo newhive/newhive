@@ -25,9 +25,7 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
   position:absolute;
   width: 500px;
   background-color : white;
-  -moz-box-shadow: 05px 05px 05px #666;
-  -webkit-box-shadow: 05px 05px 05px #666;
-  box-shadow: 05px 05px 05px #666;
+  @include box-shadow(05px 05px 05px #666);
   .center, &.center {text-align: center;}
   .line { margin: 7px 0; clear: both;}
   .line .element { float: left; }

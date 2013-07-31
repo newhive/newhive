@@ -25,11 +25,11 @@ define([
         if (ago < 2*60) {
             return 'moments ago';
         } else if (ago < 60*60) {
-            return (ago/60).toFixed(0) + ' minutes ago';
+            return (ago/60).toFixed(0) + ' min ago';
         } else if (ago < 1.5*60*60) {
-            return 'about an hour ago';
+            return '~1 hour ago';
         } else if (ago < 24*60*60) {
-            return (ago/3600).toFixed(0) + ' hours ago';
+            return (ago/3600).toFixed(0) + ' hrs ago';
         } else  if (ago < 7*24*60*60) {
             return (ago/3600/24).toFixed(0) + ' days ago';
         } else {

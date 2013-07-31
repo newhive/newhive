@@ -2,6 +2,24 @@
 
 .upper { text-transform: uppercase; }
 
+.rightalign {
+    position: absolute;
+    right: 0px;
+}
+.rightify {
+    text-align: right;
+}
+.textarea_padder {
+    padding-right: 18px;
+}
+.show_hover {
+    display:none;
+}
+.hoverable:hover .show_hover {
+    display:block;
+}
+
+
 // vertical centering
 table.vcenter {
    height:100%;
@@ -30,14 +48,18 @@ img.centered, div.centered {
     display:inline-block;
 }
 .title {
-    font-size: 46px;
+    font-size: 42px;
 }
 
 // Icons
 .counts_icon {
     display:inline-block;
     width:74px;
-    border-radius: 15px;
+    border-radius: 12px;
+
+    &.narrow {
+        width:50px;
+    }
 
     span {
         position:absolute;
@@ -55,7 +77,7 @@ img.centered, div.centered {
         &.on { background-color: $color_bright_red; }
         &.on .icon { background-image: asset_url('skin/nav/views-hover.png'); }
         //&:hover { background-color: $color_selected; }
-        &.hover { background-image: asset_url('skin/nav/views-hover.png'); }
+        &:hover { background-image: asset_url('skin/nav/views-hover.png'); }
     }
     .icon.logo {
         width:45px;
@@ -63,7 +85,7 @@ img.centered, div.centered {
         &.on { background-color: $color_bright_red; }
         &.on .icon { background-image: asset_url('skin/nav/logo-hover.png'); }
         //&:hover { background-color: $color_selected; }
-        &.hover { background-image: asset_url('skin/nav/logo-hover.png'); }
+        &:hover { background-image: asset_url('skin/nav/logo-hover.png'); }
     }
     // need minus asset
     .plus-minus {
@@ -71,7 +93,7 @@ img.centered, div.centered {
         &.on { background-color: $color_bright_red; }
         //&.on .icon { background-image: asset_url('skin/nav/plus-on.png'); }
         //&:hover { background-color: $color_selected; }
-        &.hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+        &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
     }
 
     &.love.on {
@@ -83,19 +105,33 @@ img.centered, div.centered {
         //&.on { background-color: $color_bright_red; }
         &.on.icon { background-image: asset_url('skin/nav/love-on.png'); }
         //&:hover { background-color: $color_selected; }
-        &.hover { background-image: asset_url('skin/nav/love-hover.png'); }
+        &:hover { background-image: asset_url('skin/nav/love-hover.png'); }
     }
 
+    &.comment.on {
+        color: $color_white;
+        background-color: $color_blue;
+        .icon { background-image: asset_url('skin/nav/comment-on.png'); }
+    }
     .comment {
         &.icon { background-image: asset_url('skin/nav/comment.png'); }
-        &.on { background-color: $color_blue; }
-        &.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
+        //&.on { background-color: $color_blue; }
+        //&.on .icon { background-image: asset_url('skin/nav/comment-on.png'); }
         &.active .icon { background-image: asset_url('skin/nav/comment-hover.png'); }
         //&.active { background-color: $color_selected; }
     }
-    &.republish.on {
-        background-color: $color_blue;
+    &.comment.discussions {
+        position: absolute;
+        right: 8px;
     }
+
+    &.republish.on {
+        color: $color_white;
+        // background-color: $color_blue;
+        // !!TODO where is the gradient asset for bg color?
+        @include background-image(linear-gradient(to bottom, rgba(193,113,93,1) 0%,rgba(237,249,97,1) 44%,rgba(45,146,155,1) 100%)); /* W3C */
+    }
+    &.republish .counts {margin-left: 3px;}
     .republish {
         &.icon { background-image: asset_url('skin/nav/republish.png'); }
         //&.on { background-color: $color_blue; }
@@ -128,6 +164,10 @@ img.centered, div.centered {
     }
     &.on:hover {
         background-color: $color_selected;
+        background-image: none;
+    }
+    &.nohover:hover {
+        background-color: transparent; 
     }
 }
 

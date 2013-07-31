@@ -24,8 +24,9 @@ define([
         }
     };
 
-    o.enter = function (){
+   o.enter = function (){
         o.exit();
+        // $("#nav").show();
         $("#signup_create").show();
         $(".panel.profile").show();
         $(".logo.overlay").removeClass("hide");
@@ -36,6 +37,7 @@ define([
         }
     };
     o.exit = function(){
+        // $("#nav").hide();
         $("#signup_create").hide();
         $(".panel.profile").hide();
         $(".logo.overlay").addClass("hide");

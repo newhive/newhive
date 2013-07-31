@@ -56,7 +56,7 @@
         <form {form_attrs "broadcast"} method='post'>
           <input type="hidden" name="entity" value="{id}">
           <input type="hidden" name="state" value="true">
-          {<with null "attr_id" "broadcast_icon" "icon_class" "republish"}
+          {<with null "attr_id" "broadcast_icon" "icon_class" "republish" "count" counts.Broadcast}
             {|templates/icon_count.html}
           {>}
           {# Broadcast menu drawer #}
@@ -71,16 +71,16 @@
         {>}{<with null "icon_class" "tweet"}
           {|templates/icon_count.html}
           #}
-        {<with null "attr_id" "comment_icon" "icon_class" "comment"}
+        {<with null "attr_id" "comment_icon" "icon_class" "comment" "count" counts.Comment}
           {|templates/icon_count.html}
-        {>}{<with null "attr_id" "social_share_icon" "icon_class" "share"}
+        {>}{<with null "attr_id" "social_share_icon" "icon_class" "share narrow"}
           {|templates/icon_count.html}
         {>}
         {# home button #}
         <a { anchor_attrs "home" }>
-          {<with null "icon_class" "logo"}{|templates/icon_count.html}{>}
+          {<with null "icon_class" "logo narrow"}{|templates/icon_count.html}{>}
         </a>
-        {<with null "attr_id" "social_close" "icon_class" "plus-minus"}
+        {<with null "attr_id" "social_close" "icon_class" "plus-minus narrow"}
           {|templates/icon_count.html}
         {>}
 
@@ -97,7 +97,7 @@
               {# TODO: this saves as png, need to process into jpg #}
             </a></div>
           <div id='embed_form_btn' class='text_btn menu_item item text hoverable black_active'
-              ><span class='text'>Embed</span></div>
+              ><span class='text'>Embed Expression</span></div>
           <div id='share_form_btn' class='text_btn menu_item item text hoverable black_active'
               ><span class='text'>Share Expression</span></div>
         </div>
@@ -105,14 +105,19 @@
         <div id="dia_comments" class="dialog" data-handle='#comment_icon'>
           {# activity feed #}
           <div class="title text">Discussion</div>
-          <div class='activity'>{<with null "activity" expr.comments}
+          {<with null "icon_class" "comment nohover discussions" "count" counts.Comment} {|templates/icon_count.html}{>}
+          <div>TODO: Dialog to spec (Move enter button, add horizontal separators, change format to include wrench/x hover and comment age)</div>
+          <div class='activity'>{<with null "activity" expr.comments "mode" "discussion"}
             {|templates/activity.html}
           {>}</div>
           {# discussion input #}
           <div id="discussions">
            <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
-              <textarea name='text' placeholder='Type comment here...' rows='4'></textarea>
-              <input type='submit' value='Enter' class='submit btn black rounded'>
+              <div class="textarea_padder"><textarea name='text' placeholder=
+                {<if user.logged_in}'Join the conversation.'
+                {>}{<else}'Log in to comment...' disabled
+                {>} rows='4'></textarea></div>
+              <div class="rightify">{<if user.logged_in}<input type='submit' value='Enter' class='submit upper btn black rounded'>{>}</div>
               <input type='hidden' name='action' value='comment'>
               <input type='hidden' name='entity' value='{id}'>
             </form>

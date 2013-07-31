@@ -55,6 +55,7 @@ define([
     };
 
     o.render = function(method, data){
+        console.log(method);
         new_page = pages[method];
         expr_page = (method == 'expr');
         var page_data = data.page_data;
@@ -74,6 +75,8 @@ define([
             o[method](page_data);
         else
             render_site(page_data);
+        if (context.route_name == "home")
+            $("#nav").show();
 
         // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
@@ -83,6 +86,7 @@ define([
         if (new_page && new_page.enter) new_page.enter();
         resize();
 
+        if (page_data.title) $("head title").text(page_data.title);
         o.attach_handlers();
     };
     o.attach_handlers = function(){
