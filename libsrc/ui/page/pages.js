@@ -12,7 +12,10 @@ define([
 	return {
     	expr: expr,
         home: home,
-        edit_expr: edit_expr,
-    	profile: profile
+        profile: profile,
+        profile_private: profile,
+        mini: profile,
+        grid: profile,
+        edit_expr: edit_expr
 	}
 });
