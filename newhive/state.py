@@ -329,6 +329,7 @@ class Entity(dict):
         self._col.insert(self, safe=True)
         return self
 
+    # should be avoided, because it clobbers record. Use update instead
     def save(self, updated=True):
         if updated: self['updated'] = now()
         return self.update_cmd(self)
@@ -784,11 +785,11 @@ class User(HasSocial):
         # Do nothing if not an in-database user
         if not self.id: return False
 
-        if not self.has_key('oauth'): self['oauth'] = {}
+        upd = { 'oauth': self.get('oauth', {}) }
         if profile:
-            self['facebook'] = self.fb_client.me()
-        self['oauth']['facebook'] = json.loads(credentials.to_json())
-        self.save()
+            upd['facebook'] = self.fb_client.me()
+        upd['oauth']['facebook'] = json.loads(credentials.to_json())
+        self.update(**upd)
 
     @property
     def facebook_id(self):
@@ -1027,12 +1028,6 @@ class Expr(HasSocial):
         t.daemon = True
         t.start()
 
-    def save(self, updated=True):
-        # When an expression is updated, update its snapshots (in separate thread)
-        if updated:
-            self.threaded_snapshot();
-        return super(Expr, self).save(updated)
-
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):
             self['entropy'] = junkstr(8)
@@ -1080,9 +1075,8 @@ class Expr(HasSocial):
                 name = self.snapshot_name_base(size, str(old_time))
                 self.db.s3.delete_file('thumb', name)
 
-        # self['snapshot'] = url[:-7]
-        self['snapshot_time'] = snapshot_time
-        self.save(False)
+        self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
+            updated=False)
 
     # @property
     def snapshot(self, size='big', update=True):
@@ -1116,6 +1110,7 @@ class Expr(HasSocial):
         self.build_search(d)
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
+        if d.get('apps') or d.get('background'): self.threaded_snapshot()
         return self
 
     def build_search(self, d):
@@ -1478,7 +1473,7 @@ class File(Entity):
         if not file: file = self.file
         self['url'] = self.store()
         if self._file: self._file.close()
-        self.save()
+        self.update(**self)
 
     def delete_files(self):
         for k in self.thumb_keys + [self.id]:
