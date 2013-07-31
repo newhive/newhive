@@ -1,0 +1,18 @@
+@import "common";
+
+.item, .menu_item {
+    text-transform: uppercase;
+    font-weight: bold;
+}
+.menu.drawer .menu_item.active.black_active {
+    background-color: black;
+    color: white;
+}
+.text_btn {
+    cursor: pointer;
+}
+.black_active.active, .black_active.active * {
+    background-color: black;
+    color: white;
+}
+

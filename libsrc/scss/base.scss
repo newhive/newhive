@@ -77,7 +77,7 @@ img.centered, div.centered {
         &.on { background-color: $color_bright_red; }
         &.on .icon { background-image: asset_url('skin/nav/views-hover.png'); }
         //&:hover { background-color: $color_selected; }
-        &.hover { background-image: asset_url('skin/nav/views-hover.png'); }
+        &:hover { background-image: asset_url('skin/nav/views-hover.png'); }
     }
     .icon.logo {
         width:45px;
@@ -85,7 +85,7 @@ img.centered, div.centered {
         &.on { background-color: $color_bright_red; }
         &.on .icon { background-image: asset_url('skin/nav/logo-hover.png'); }
         //&:hover { background-color: $color_selected; }
-        &.hover { background-image: asset_url('skin/nav/logo-hover.png'); }
+        &:hover { background-image: asset_url('skin/nav/logo-hover.png'); }
     }
     // need minus asset
     .plus-minus {
@@ -93,7 +93,7 @@ img.centered, div.centered {
         &.on { background-color: $color_bright_red; }
         //&.on .icon { background-image: asset_url('skin/nav/plus-on.png'); }
         //&:hover { background-color: $color_selected; }
-        &.hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+        &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
     }
 
     &.love.on {
@@ -105,7 +105,7 @@ img.centered, div.centered {
         //&.on { background-color: $color_bright_red; }
         &.on.icon { background-image: asset_url('skin/nav/love-on.png'); }
         //&:hover { background-color: $color_selected; }
-        &.hover { background-image: asset_url('skin/nav/love-hover.png'); }
+        &:hover { background-image: asset_url('skin/nav/love-hover.png'); }
     }
 
     &.comment.on {

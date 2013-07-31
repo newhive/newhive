@@ -15,22 +15,11 @@
         font-family: Gibson;
         font-size: 16px;
     }
-    .item, .menu_item {
-        text-transform: uppercase;
-        font-weight: bold;
-    }
-
     .expr {
         bottom: 0px;
     }
     .site {
         top: 0;
-    }
-
-    .item {
-        display: inline-block;
-        height: $nav_size;
-        vertical-align: top;
     }
     .icon, .text_btn {
         background-size: 100% 100%;
@@ -41,17 +30,18 @@
         line-height: 47px;
         .icon { margin-left: -9px; }
     }
+    .item {
+        display: inline-block;
+        height: $nav_size;
+        vertical-align: top;
+    }
+
     .icon {
         display: inline-block;
         vertical-align: top;
         height: $nav_size;
         width: $nav_size;
     }
-    .black_active.active, .black_active.active * {
-        background-color: black;
-        color: white;
-    }
-
     .count {
         padding: 1px 4px;
         margin: 0 6px 0px -5px;
@@ -318,6 +308,10 @@ img.thumb { background-color: $color_grey_medium; }
         text-align: center;
         display: inline-block;
         margin: 3px 7px;
+    }
+    .menu_item {
+        border-bottom: 2px solid $color_grey_medium;
+        padding: 7px;
     }
 }
 

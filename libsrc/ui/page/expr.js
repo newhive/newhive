@@ -306,7 +306,10 @@ define([
         top_context.icon_only = true;
         el_drawer.empty().html(activity_template(top_context));
         el_drawer.data('menu').layout();
-        el_counts.html(parseInt(el_counts.html()) + ((own_item) ? 1 : -1));
+        var count = (el_counts.text().length == 0) ? 0 : parseInt(el_counts.text());
+        count += ((own_item) ? 1 : -1);
+        count = (count) ? ("" + count) : "";
+        el_counts.text(count);
         o.action_set_state(el, own_item);
     };
 
