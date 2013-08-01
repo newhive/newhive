@@ -1403,7 +1403,7 @@ Hive.App.has_color = function(o) {
 Hive.App.Image = function(o) {
     Hive.App.has_resize(o);
     o.content = function(content) {
-        if(typeof(content) != 'undefined') o.image_src(content);
+        if(typeof(content) != 'undefined') o.url_set(content);
         return o.img.attr('src');
     }
 
@@ -1420,7 +1420,7 @@ Hive.App.Image = function(o) {
         return s;
     };
 
-    o.image_src = function(src) {
+    o.url_set = function(src) {
         if(o.img) o.img.remove();
         o.content_element = o.img = $("<img class='content drag'>");
         o.img.attr('src', src);
@@ -1476,7 +1476,7 @@ Hive.App.Image = function(o) {
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
 
-    o.image_src(o.init_state.content);
+    o.url_set(o.init_state.content);
     link_set(o.init_state.href);
 
     return o;
@@ -2079,7 +2079,7 @@ Hive.new_app = function(s, opts) {
     };
     var app = Hive.App(s, opts);
     Hive.History.save(app._remove, app._unremove, 'create');
-    return false;
+    return app;
 };
 
 Hive.new_file = function(files, opts) {
@@ -2101,20 +2101,21 @@ Hive.new_file = function(files, opts) {
         //         $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
         // }
 
-        if(file.mime.match(/image\/(png|gif|jpeg)/)){
-            $.extend(app, {
-                 type: 'hive.image'
-                ,content: file.url
-            });
-        } else if(file.mime.match(/audio\/mpeg/)) {
-            $.extend(app, {
-                src: file.url
-                ,type: 'hive.audio'
-            });
-        } else {
-            $.extend(app, { type: 'hive.text', content:
-                $('<a>').attr('href', file.url).text(file.name).outerHTML() });
+        // TODO: make this work...
+        // image = { content: file.url }
+        // audio = { src: file.url }
+        // link = { content: $('<a>').attr('href', file.url).text(file.name).outerHTML() }
+
+        if(file.mime.match(/image\/(png|gif|jpeg)/)) app.type = 'hive.image';
+        else if(file.mime.match(/audio\/mpeg/)) app.type = 'hive.audio';
+        else {
+            app.type = hive.text;
+            // TODO: implement read-only for text app so server response can simply
+            // reset the link content, and not potentially lose changes to
+            // text box made while file was uploading
+            // app.read_only = true;
         }
+        app.url = file.url;
 
         Hive.new_app(app, { offset: [20*i, 20*i] } );
     });
@@ -2334,7 +2335,7 @@ Hive.init = function(exp, page){
         };
         files.map(function(f){
             find_apps(f.name).map(function(a){
-                a.state_update({ file_id: f.id });
+                a.state_update({ file_id: f.id, url: f.url });
                 if(f.meta) a.state_update({ file_meta: f.meta });
             });
         });
