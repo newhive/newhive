@@ -23,8 +23,8 @@ define([
     color_picker_template
 ){
 
-var Hive = {}, debug_mode = context.config.debug_mode,
-    hover_menu = Menu, noop = function(){}, Funcs = util.Funcs
+var Hive = {}, debug_mode = context.config.debug_mode, bound = util.bound,
+    hover_menu = Menu, noop = function(){}, Funcs = util.Funcs,
     asset = function(name){ return context.asset({}, name) };
 Hive.asset = asset;
 
@@ -2648,13 +2648,14 @@ function remove_all_apps() {
     $.map(apps, function(a) { a.remove() });
 }
 
-Hive.append_color_picker = function(container, callback, init_color, opts) {
-    opts = $.extend({iframe: false}, opts);
+Hive.append_color_picker = function(container, callback, init_color, opts){
+    // opts = $.extend({iframe: false}, opts);
     var o = {}, init_color = init_color || '#000000',
         e = color_picker_template(colors),
         bar = e.find('.hue_bar'),
         shades = e.find('.shades'),
-        manual_input = e.find('.shades');
+        manual_input = e.find('.shades'),
+        pickers = e.find('.color_select');
 
     var to_rgb = function(c) {
         return $.map($('<div>').css('color', c).css('color')
@@ -2667,18 +2668,15 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
             }).join('').toUpperCase();
     }, init_color = to_hex(init_color);
 
-    var make_picker = function(c) {
-        var d = $('<div>').addClass('color_select');
-        d.css('background-color', c).attr('val', c).click(function(e) {
+    pickers.each(function(i, el){
+        el = $(el);
+        var c = el.attr('val');
+        el.click(function(ev){
             set_color(c);
             manual_input.val(c);
             callback(c, to_rgb(c));
-            //e.stopPropagation();
-            //e.preventDefault();
-            //return false;
         }).bind('mousedown', function(e){ e.preventDefault()});
-        return d.get(0);
-    }
+    });
 
     var hex_changed = false;
     var update_hex = o.update_hex = function() {
@@ -2785,6 +2783,8 @@ Hive.append_color_picker = function(container, callback, init_color, opts) {
 
         return [h, s, v];
     }
+
+    container.append(e);
     return o;
 };
 
