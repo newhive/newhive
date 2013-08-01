@@ -139,9 +139,9 @@ define(['browser/layout',
     
     return {
         'initExpression': function() {
+            layout.place_apps();
             $(Hive.Page.init);
             Hive.Page.show();
-            // layout.place_apps();
         }
     };
 });
