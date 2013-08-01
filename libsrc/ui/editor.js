@@ -1423,7 +1423,6 @@ Hive.App.Image = function(o) {
     o.image_src = function(src) {
         if(o.img) o.img.remove();
         o.content_element = o.img = $("<img class='content drag'>");
-        o.img.hide();
         o.img.attr('src', src);
         o.div.append(o.img);
         o.img.load(function(){setTimeout(o.img_load, 1)});
@@ -1449,7 +1448,6 @@ Hive.App.Image = function(o) {
             o.init_state.dimensions = [ iw, ih ];
         }
         o.img.css('width', '100%');
-        o.img.show();
         o.load();
     };
 
