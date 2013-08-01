@@ -155,8 +155,9 @@ define([
         inputs.each(function(i, e){
             var input = $(e);
             input.on('change', function(){
-                with_files(i.files);
+                with_files(e.files);
                 submit();
+                input.val('');
             });
 
             var input_id = input.attr('id'),
@@ -179,13 +180,19 @@ define([
             return false;
         });
 
-        var with_files = function(files){
+        var with_files = function(file_list){
             if(!file_api) return;
-            var urls = [];
+            var files = [];
             // FileList is not a list at all, has no map :'(
-            for(var i = 0; i < files.length; i++)
-                urls.push(URL.createObjectURL(files.item(i)));
-            form.trigger('with_files', [urls]);
+            for(var i = 0; i < file_list.length; i++){
+                var f = file_list.item(i), file = {
+                    url: URL.createObjectURL(f),
+                    name: f.name,
+                    mime: f.type
+                };
+                files.push(file);
+            };
+            form.trigger('with_files', [files]);
         };
 
         var submit = function(files){
@@ -196,11 +203,6 @@ define([
                     form_data.append('files', f.slice(0, f.size), f.name);
                 }
             }
-
-            // doesn't seem to work with FormData
-            // $.post(form.attr('action'), form_data, function(data){
-            //     form.trigger('response', [data]);
-            // }, 'json');
 
             // TODO-polish: add busy indicator while uploading
             $.ajax({

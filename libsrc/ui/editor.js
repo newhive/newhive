@@ -258,15 +258,16 @@ Hive.App = function(init_state, opts) {
     };
 
     o.state = function(){
-        var s = $.extend(o.state_relative(Hive.env()), {
-            type: o.type.tname,
+        var s = $.extend({}, o.init_state, o.state_relative(Hive.env()), {
             z: o.layer(),
             content: o.content(),
-        });
             id: o.id
+        });
         if(opacity != 1) s.opacity = opacity;
-        if(init_state.file_id) s.file_id = init_state.file_id;
         return s;
+    };
+    o.state_update = function(s){
+        $.extend(o.init_state, s);
     };
 
     o.history_helper_relative = function(name){
@@ -647,7 +648,7 @@ Hive.has_scale = function(o){
 // This App shows an arbitrary single HTML tag.
 Hive.App.Html = function(o) {
     Hive.App.has_resize(o);
-    o.content = function() { return o.content_element.outerHTML(); };
+    o.content = function() { return o.content_element[0].outerHTML; };
 
     o.content_element = $(o.init_state.content).addClass('content');
     o.div.append(o.content_element);
@@ -1947,7 +1948,7 @@ Hive.Selection = function(){
     $(document).keydown(function(e){ 
         // ctrl+[shift+]a to select all or none
         if( e.keyCode == 65 && e.ctrlKey ){
-            o.select( e.shiftKey ? [] : Hive.Apps );
+            o.select( e.shiftKey ? [] : Hive.Apps.all() );
             e.preventDefault();
             return;
         }
@@ -2084,19 +2085,25 @@ Hive.new_app = function(s, opts) {
 };
 
 Hive.new_file = function(files, opts) {
-    $.map(files, function(file, i){
-        var app = $.extend({ file_id: file.id, file_name: file.name,
-            file_meta: file.meta }, opts);
+    // TODO-feature: depending on type and number of files, create grouping of
+    // media objects. Multiple audio files should be assembled into a play
+    // list. Multiple images should be placed in a table, or slide-show
 
-        if(file.mime.match(/text\/html/)){
-            // Not using code for auto-embeding urls that resolve to html
-            // pages because of too many problems with sites that
-            // don't want to be framed. Just link to site instead.
-            // app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
-            $.extend(app, { type: 'hive.text', content:
-                $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
-        } else if(file.mime.match(/image\/(png|gif|jpeg)/)) {
-            Hive.Exp.images.push(file);
+    $.map(files, function(file, i){
+        var app = $.extend({ file_name: file.name },
+            util.dfilter(file, ['id', 'meta']), opts);
+
+        // TODO: html files should just be saved on s3 and inserted as an <iframe>
+        // if(file.mime.match(/text\/html/)){
+        //     // Not using code for auto-embeding urls that resolve to html
+        //     // pages because of too many problems with sites that
+        //     // don't want to be framed. Just link to site instead.
+        //     // app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
+        //     $.extend(app, { type: 'hive.text', content:
+        //         $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
+        // }
+
+        if(file.mime.match(/image\/(png|gif|jpeg)/)){
             $.extend(app, {
                  type: 'hive.image'
                 ,content: file.url
@@ -2113,6 +2120,7 @@ Hive.new_file = function(files, opts) {
 
         Hive.new_app(app, { offset: [20*i, 20*i] } );
     });
+
     return false;
 }
 
@@ -2202,7 +2210,6 @@ Hive.init = function(exp, page){
     $('#bg_upload').click(function() { asyncUpload({
         start: Hive.upload_start, error: uploadErrorCallback,
         success: function(data) { 
-            Hive.Exp.images.push(data);
             Hive.bg_set(data, Hive.upload_finish);
         } 
     }); });
@@ -2223,10 +2230,10 @@ Hive.init = function(exp, page){
             Hive.new_app(app);
         }
     }); };
-    $('#insert_image').click(upload_file);
-    $('#image_upload').click(upload_file);
-    $('#insert_audio').click(upload_file);
-    $('#audio_upload').click(upload_file);
+    // $('#insert_image').click(upload_file);
+    // $('#image_upload').click(upload_file);
+    // $('#insert_audio').click(upload_file);
+    // $('#audio_upload').click(upload_file);
     $('#insert_file' ).click(new_link);
     $('#menu_file'   ).click(new_link);
 
@@ -2316,6 +2323,24 @@ Hive.init = function(exp, page){
     ////////////////////////////////////////////////////////////////////////////////
     
     $('#btn_grid').click(Hive.toggle_grid);
+
+    $('#media_upload').bind('with_files', function(ev, files){
+        // media files are available immediately upon selection
+        Hive.new_file(files);
+    }).bind('response', function(ev, files){
+        // after file is uploaded, save meta data and id from server by
+        // matching up file name
+        var find_apps = function(name){
+            return Hive.Apps.all().filter(function(a){
+                return (a.state().file_name == name) });
+        };
+        files.map(function(f){
+            find_apps(f.name).map(function(a){
+                a.state_update({ file_id: f.id });
+                if(f.meta) a.state_update({ file_meta: f.meta });
+            });
+        });
+    });
     
     var checkUrl = function(){
         var u = $('#url').val();
@@ -2328,20 +2353,9 @@ Hive.init = function(exp, page){
         }
     }
 
-    var pickDefaultThumb = function(){
-        if (! (Hive.Exp.thumb_file_id || Hive.Exp.thumb)) {
-            var image_apps = $.map(Hive.state().apps, function(app){
-                if (app.type == 'hive.image' && app.file_id) { return app; }
-            });
-            if (image_apps.length > 0){
-                setThumb(image_apps[0]);
-            }
-        }
-    };
-
-    var save_menu = hover_menu($('#btn_save'), $('#menu_save'),
+    var save_menu = hover_menu('#btn_save', '#menu_save',
         { auto_height : false, auto_close : false,
-            open: pickDefaultThumb, click_persist : '#menu_save' });
+            click_persist : '#menu_save' });
     $('#save_submit').click(function(){
         if( ! $(this).hasClass('disabled') ){
             if(checkUrl()){

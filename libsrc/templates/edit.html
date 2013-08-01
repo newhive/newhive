@@ -62,7 +62,8 @@
 </div>
 
 <div id='menu_image' class='menu drawer medbold'>
- <div id='image_upload' class='menu_item'>Upload image</div>
+ <label for='media_input'>
+   <div id='image_upload' class='menu_item'>Upload image</div></label>
  <div id='image_background' class='menu_item'>Background</div>
  <div id='image_from_url' class='menu_item'>Image URL</div>
  <div id='image_embed_submenu' style='text-align: center; padding-bottom: 7px;'>
@@ -77,7 +78,8 @@
 </div>
 
 <div id='menu_audio' class='menu drawer medbold'>
- <div id='audio_upload' class='menu_item'>Upload MP3</div>
+  <label for='media_input'><div id='audio_upload'
+    class='menu_item'>Upload Audio</div>
 </div>
 
 <div id='menu_embed' class='menu drawer'>
@@ -291,9 +293,12 @@ blah blah
 <div id='controls'></div>
 <div id='happs'></div>
 
-<form {form_attrs "file_create"} id='media_upload'>
+<form {form_attrs "file_create"} method='POST' class='hide' id='media_upload'
+  data-drop-area='#grid_guide'
+>
+  <input type='file' id='media_input' name='files' {#accept='image/*'#}>
 </form>
 
-<form {form_attrs "expr_save"} id='expr_save' method='POST'>
+<form {form_attrs "expr_save"} id='expr_save' method='POST' class='hide'>
   <input type='hidden' name='expr' class='expr'>
 </form>
