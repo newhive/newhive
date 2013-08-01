@@ -105,7 +105,7 @@ define([
     }
 
     o.grid = function(page_data){
-        grid_width = 410;
+        grid_width = 410 + 1;
         render_site(page_data);
     }
 
@@ -191,7 +191,7 @@ define([
 
     o.mini = function(page_data){
         page_data.layout = 'grid';
-        grid_width = 232 + 20; // padding = 10 + 10
+        grid_width = 232 + 20 + 1; // padding = 10 + 10
         render_site(page_data);
     };
     
@@ -202,8 +202,29 @@ define([
     function resize(){
         $('#exprs').css('height', $(window).height());
         $('#site').css('height', $(window).height() - 44);
-        if(context.page_data.layout == 'grid') $('#feed').css('width',
-            Math.min(3, Math.floor($(window).width() / grid_width)) * grid_width);
+        if(context.page_data.layout == 'grid') {
+            var columns = Math.min(3, Math.floor($(window).width() / grid_width));
+            $('#feed').css('width', columns * grid_width);
+            // Set up the grid borders
+            var expr_cards = $('#feed .expr.card');
+            var card_count = expr_cards.length - (expr_cards.length % columns);
+            expr_cards.each(function(i) {
+                // TODO: should either be multiples of 12 or auto-page
+                if (i >= card_count) {
+                    $(this).hide();
+                } else {
+                    $(this).show();
+                    if (i >= columns)
+                        $(this).css("border-top", "1px solid black");
+                    else
+                        $(this).css("border-top", "none");
+                    if ((i + 1) % 3 != 0)
+                        $(this).css("border-right", "1px solid black");
+                    else
+                        $(this).css("border-right", "none");
+                }
+            });
+        }
         if (context.page && context.page.resize)
             context.page.resize();
     }

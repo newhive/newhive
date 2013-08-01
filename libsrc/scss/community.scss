@@ -6,6 +6,7 @@
     z-index: 1;
     width:100%; height:100%;
     display: none;
+    background-color: $color_grey_medium;
 
     .expr {
         width:100%; height:100%; position:absolute; left: 0; top:0;
@@ -105,26 +106,28 @@
 
     #feed {
         margin: 0 auto 0 auto;
-        .title {
-            font-weight: 300;
-            font-size: 36px;
-            font-family: Museo;
-            .words {
-                padding: 4px 0;
-                word-spacing: -3px;
-                line-height: 49px;
-                background-color: rgba(255,255,255,.95);
-            }
-        }
-    }
-
-    #feed.profile {
-        width: 715px;
-
         .card {
             &:hover {
                 @include box-shadow(05px 05px 05px #666);
             }
+            .title {
+                font-weight: 300;
+                font-size: 36px;
+                font-family: Museo;
+                .words {
+                    padding: 4px 0;
+                    word-spacing: -3px;
+                    line-height: 49px;
+                    background-color: rgba(255,255,255,.95);
+                }
+            }
+        }
+    }
+    
+    #feed.profile {
+        width: 715px;
+
+        .card {
             position: relative;
             border-bottom: 2px solid $color_grey_medium;
             padding-bottom: 10px;
@@ -135,6 +138,7 @@
                 height: 430px;
             }
             .title {
+                opacity: 0.4;
                 position: absolute;
                 left: 0; top: 22px;
                 max-width: 550px;
@@ -155,8 +159,12 @@
     }
 
     #feed.grid {
+        .title_spacer { height:88px; }
         .title {
             max-width: 390px;
+            height: 88px;
+            vertical-align: middle;
+            display: table-cell;
         }
         .snapshot {
             width: 390px;

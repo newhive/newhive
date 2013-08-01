@@ -24,7 +24,7 @@ define([
         }
     };
 
-   o.enter = function (){
+    o.enter = function (){
         o.exit();
         // $("#nav").show();
         $("#signup_create").show();
@@ -43,6 +43,33 @@ define([
         $(".logo.overlay").addClass("hide");
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
+    };
+    o.attach_handlers = function(){
+        $('#feed.profile .expr.card').on('mouseenter', function(event){
+            card_animate($(this), "in");
+        }).on('mouseleave', function(event){
+            card_animate($(this), "out");
+        });
+    };
+
+    var card_animate = function(card, dir){
+        var prop = "opacity";
+        var goal = 1.0;
+        var duration = 150;
+        var el = card.find(".title");
+
+        var orig_value = el.css(prop);
+        if (el.data(prop))
+            orig_value = el.data(prop);
+        else
+            el.data(prop, orig_value);
+        if (dir == "out") goal = orig_value; 
+        var anims = {};
+        anims[prop] = goal;
+        el.stop().animate(anims, {
+            duration: duration,
+            easing: 'swing'
+        });
     };
 
     return o;

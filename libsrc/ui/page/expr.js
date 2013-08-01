@@ -74,6 +74,7 @@ define([
         o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
 
         animate_expr();
+        navigate_page(0); // To cache nearby expressions
 
         hide_panel();
         $(".panel.profile").show();
@@ -262,16 +263,21 @@ define([
     };
 
     o.page_animate = function (el) {
-        dir = (el.prop("id") == "page_next") ? "" : "-";
-        position = el.css("background-position-x");
+        var prop = "background-position-x";
+        var dir = (el.prop("id") == "page_next") ? "" : "-";
+        var orig_position = el.css(prop);
+        if (el.data(prop))
+            orig_position = el.data(prop);
+        else
+            el.data(prop, orig_position);
+
         el.stop().animate({
-            // opacity: 0.25 },{
             'background-position-x': dir + "26px" }, {
             duration: 150,
             easing: 'swing',
             complete: function() {
                 el.animate({
-                    'background-position-x': dir + "4px" }, {
+                    'background-position-x': orig_position }, {
                     duration: 150,
                     easing: 'swing'
                 });
@@ -280,12 +286,12 @@ define([
     };
 
     o.user_operation = function(e, el, btn) {
-        el_drawer = $("[data-handle=#" + el.prop("id") + "]");
-        el_form = el.parent();
-        el_counts = el.find($(".counts"));
+        var el_drawer = $("[data-handle=#" + el.prop("id") + "]");
+        var el_form = el.parent();
+        var el_counts = el.find($(".counts"));
 
         // Toggle the state on the server
-        own_item = ! o.action_get_state(btn);
+        var own_item = ! o.action_get_state(btn);
         el_form.find("input[name=state]").val(own_item);
         el_form.submit();
 
@@ -383,6 +389,9 @@ define([
         if (json.comments != undefined) {
             top_context = {};
             top_context.activity = json.comments;
+            // TODO: how can we remember variable state in stringjay
+            // and not have to duplicate it in js?
+            top_context.mode = "discussion";
             context.page_data.expr.activity = json.activity;
             context.page_data.expr.comments = json.comments;
             $('#dia_comments .activity').empty().html(activity_template(top_context));
@@ -422,12 +431,25 @@ define([
             if (found >= 0) {
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
-                page_data.expr_id = page_data.cards[found].id;
-                o.controller.open('view_expr', {
-                    id: page_data.expr_id,
-                    owner_name: page_data.cards[found].owner.name,
-                    expr_name: page_data.cards[found].name
-                });
+                // TODO: Cache upcoming expressions
+                cache_offsets = [];//[-1, 1];
+                for (var i = 0, off; off = cache_offsets[i++];) {
+                   var found_next = (found + len + off) % len;
+                   page_data.expr_id = page_data.cards[found_next].id;
+                   o.controller.open('view_expr', {
+                       id: page_data.expr_id,
+                       owner_name: page_data.cards[found_next].owner.name,
+                       expr_name: page_data.cards[found_next].name
+                   });
+                }
+                if (offset) {
+                    page_data.expr_id = page_data.cards[found].id;
+                    o.controller.open('view_expr', {
+                        id: page_data.expr_id,
+                        owner_name: page_data.cards[found].owner.name,
+                        expr_name: page_data.cards[found].name
+                    });
+                }
             }
         }
     };
