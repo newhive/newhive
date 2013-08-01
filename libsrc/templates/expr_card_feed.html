@@ -16,6 +16,9 @@
   <img class="thumb" src='{owner.thumb_small}'/>
   <span>by <span class='username'>{owner.name}</span></span>
 </div>
-{<unless suppress_feed}{<for feed}
-  {|templates/feed_card.html}
-{>}{>}
+{# this is broken AND breaks layout
+      {<unless suppress_feed}{<for feed}
+        {|templates/feed_card.html}
+      {>}
+#}
+{>}

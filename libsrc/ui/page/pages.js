@@ -11,7 +11,7 @@ define([
 ){ 
 	return {
     	expr: expr,
-        home: home,
+        home: profile,
         profile: profile,
         profile_private: profile,
         mini: profile,

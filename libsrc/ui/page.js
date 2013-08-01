@@ -75,8 +75,6 @@ define([
             o[method](page_data);
         else
             render_site(page_data);
-        if (context.route_name == "home")
-            $("#nav").show();
 
         // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
@@ -206,29 +204,31 @@ define([
         if(context.page_data.layout == 'grid') {
             var columns = Math.min(3, Math.floor($(window).width() / grid_width));
             $('#feed').css('width', columns * grid_width);
-            // Set up the grid borders
-            var expr_cards = $('#feed .expr.card');
-            var card_count = expr_cards.length - (expr_cards.length % columns);
-            expr_cards.each(function(i) {
-                // TODO: should either be multiples of 12 or auto-page
-                if (i >= card_count) {
-                    $(this).hide();
-                } else {
-                    $(this).show();
-                    if (i >= columns)
-                        $(this).css("border-top", "1px solid black");
-                    else
-                        $(this).css("border-top", "none");
-                    if ((i + 1) % 3 != 0)
-                        $(this).css("border-right", "1px solid black");
-                    else
-                        $(this).css("border-right", "none");
-                }
-            });
+            if (o.columns != columns) {
+                o.columns = columns;
+                add_grid_borders(columns);
+            }
         }
         if (context.page && context.page.resize)
             context.page.resize();
-    }
+    };
+
+    // Set up the grid borders
+    var add_grid_borders = function(columns){
+        var expr_cards = $('#feed .expr.card');
+        // Count of cards which fit to even multiple of columns
+        var card_count = expr_cards.length - (expr_cards.length % columns);
+        expr_cards.each(function(i) {
+            if (i < card_count)
+                $(this).css("border-bottom", "1px solid black");
+            else
+                $(this).css("border-bottom", "none");
+            if ((i + 1) % 3 != 0)
+                $(this).css("border-right", "1px solid black");
+            else
+                $(this).css("border-right", "none");
+        });
+    };
 
     function expr_column(){
         // TODO: put actual rendering code here?

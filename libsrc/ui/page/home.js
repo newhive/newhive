@@ -15,6 +15,5 @@ define([
     o.exit = function(){
         $("#nav").hide();
     };
-
     return o;
 });

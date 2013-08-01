@@ -16,6 +16,11 @@ define([
     };
 
     o.attach_handlers = function(){
+        $('#feed.profile .expr.card').on('mouseenter', function(event){
+            card_animate($(this), "in");
+        }).on('mouseleave', function(event){
+            card_animate($(this), "out");
+        });
         if (!context.user.logged_in) {
             var d = dialog.create($("#dia_login_or_join"));
             $(".overlay .signup_btn").unbind('click').click(d.open);
@@ -26,7 +31,8 @@ define([
 
     o.enter = function (){
         o.exit();
-        // $("#nav").show();
+        if (context.route_name == "home")
+            $("#nav").show();
         $("#signup_create").show();
         $(".panel.profile").show();
         $(".logo.overlay").removeClass("hide");
@@ -37,19 +43,13 @@ define([
         }
     };
     o.exit = function(){
-        // $("#nav").hide();
+        if (context.route_name == "home")
+            $("#nav").hide();
         $("#signup_create").hide();
         $(".panel.profile").hide();
         $(".logo.overlay").addClass("hide");
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
-    };
-    o.attach_handlers = function(){
-        $('#feed.profile .expr.card').on('mouseenter', function(event){
-            card_animate($(this), "in");
-        }).on('mouseleave', function(event){
-            card_animate($(this), "out");
-        });
     };
 
     var card_animate = function(card, dir){
