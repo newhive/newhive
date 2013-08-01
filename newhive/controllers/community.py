@@ -228,13 +228,15 @@ class Community(Controller):
         #     profile = expr_owner.client_view()
         #     page_data.update('profile': profile)
         query = self.db._query(request.args['q'], viewer=tdata.user)
+        search = query['search']
+        tags = search.get('tags', [])
+        print search
         data = {
             "cards": query['result'],
             "card_type": "expr",
             'title': 'Search',
+            'header': ("Search", request.args['q']),  
         }
-        search = query['search']
-        tags = search.get('tags', [])
         if (len(search) == 1 and len(tags) == 1):
             profile = tdata.user #.client_view(activity=False)
             profile = dfilter(profile, ['tags_following'])

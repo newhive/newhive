@@ -87,7 +87,8 @@
 #site {
     position: absolute;
     z-index: 0;
-    left: 0; top: 0;
+    left: 0px; 
+    top: 0px;
     width: 100%; height: 100%;
     
     #header {
@@ -101,6 +102,36 @@
     }
 
     #user_header {
+    }
+
+    #tag_bar {
+        padding-bottom: 10px;
+        position: relative;
+        button .plus_button {
+            position:absolute;
+            top: -4px;
+            left: 0px;
+            background-image: asset_url('skin/nav/plus.png');
+            display:inline-block;
+            width:36px;
+            height:36px;
+            background-size: 100% 100%;
+            // vertical-align: middle;
+        }
+        .float_right {
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            // #follow_tag_form
+            .teal_btn {
+                padding: 6px;
+                background-color: $color_selected;
+            }
+            #new_expr_form button {
+                padding-left: 36px;
+                position: relative;
+            }
+        }
     }
 
     #feed {
@@ -182,11 +213,12 @@
 
 .tag_label {
     display: inline-block;
-    /* float: right;*/
+    border-top: 1px solid black;
+    border-left: 1px solid black;
+    padding: 3px 8px;
     clear: both;
     color: white;
-    padding: 0 8px;
-    margin: 5px 0;
+    margin: 3px 0;
     font-size: 16px;
     &:hover { 
         color: white; 

@@ -120,7 +120,7 @@ define([
 
     o.render_tag_page = function(){
         $('#tag_bar').remove();
-        $('#site').prepend(tags_page_template(context.page_data));
+        $('#feed').prepend(tags_page_template(context.page_data));
         $('#follow_tag_form').on('response', o.tag_response);
     }
 
@@ -223,7 +223,7 @@ define([
                 $(this).css("border-bottom", "1px solid black");
             else
                 $(this).css("border-bottom", "none");
-            if ((i + 1) % 3 != 0)
+            if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
                 $(this).css("border-right", "1px solid black");
             else
                 $(this).css("border-right", "none");

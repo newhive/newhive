@@ -18,7 +18,10 @@
 .hoverable:hover .show_hover {
     display:block;
 }
-
+button {
+    border: none;
+    cursor: pointer;
+}
 
 // vertical centering
 table.vcenter {
