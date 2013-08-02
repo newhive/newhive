@@ -176,16 +176,17 @@ define([
         }}
     };
     o.profile_private = function(page_data){
-        page_data.profile.subheading = 'Private';
+        // page_data.profile.subheading = 'Private';
+        
         page_data.layout = 'grid';
         render_site(page_data);
         expr_column();
     };
 
-    o.loves = function(page_data){
-        page_data.profile.subheading = 'Loves';
-        render_site(page_data);
-    };
+    // o.loves = function(page_data){
+    //     page_data.profile.subheading = 'Loves';
+    //     render_site(page_data);
+    // };
 
     o.mini = function(page_data){
         page_data.layout = 'grid';
