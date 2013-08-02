@@ -59,7 +59,8 @@ class Expr(ModelController):
                     res = tdata.user.expr_create(upd)
                     self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
                 else:
-                    return { 'error' : 'overwrite' } #'An expression already exists with the URL: ' + upd['name']
+                     #'An expression already exists with the URL: ' + upd['name']
+                    return self.serve_json(response, { 'error' : 'overwrite' })
                     self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
         else:
             if not res['owner'] == tdata.user.id:

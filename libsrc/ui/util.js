@@ -1,7 +1,10 @@
 define([
-    'browser/jquery'
-], function($){
+    'browser/jquery',
+    'json!server/compiled.assets.json'
+], function($, assets){
     var o = {};
+
+    o.asset = function(name){ return assets[name] };
 
     // Can extend jquery functions with custom behavior.
     o.extend_jquery = function() {

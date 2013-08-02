@@ -1,7 +1,7 @@
 <div class="color_picker">
   <div class="palette">
-    {<for colors}
-      <div class="color_select" val="{.}" style="background-color: {.}"></div>
+    {<for .}
+      <div class="color_select" val="{item}" style="background-color: {item}"></div>
     {>}
   </div>
   <img class="hue_bar" src='{asset "skin/edit/saturated.png"}'>

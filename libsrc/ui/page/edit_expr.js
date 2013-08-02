@@ -21,6 +21,7 @@ define([
         // o.render_overlays();
         // window.addEventListener('message', o.handle_message, false);        
         o.controller = controller;
+        curl.expose('ui/editor', 'h'); // for debugging
     };
     o.exit = function(){
         $('link.edit').remove();
