@@ -12,12 +12,21 @@
     z-index: 0;
 }
 
+.edit.nav {
+    background-color: white;
+
+    .active { background-color: $color_grey_medium; }
+}
+
 #edit_nav {
     right: 0;
     bottom: 0;
     padding-left: 4px;
 
-    & > * { display: inline-block; }
+    & > * {
+        display: inline-block;
+        margin: 13px 4px;
+    }
 }
 
 .ehapp, .ehapp > * { position : absolute; }
@@ -82,9 +91,7 @@
 #app_btns {
     right: 200px;
     bottom: 0px;
-    background-color: white;
 
-    .active { background-color: $color_grey_medium; }
     .insert_btn { cursor: default; }
     img { width: 50px; }
     .icon {

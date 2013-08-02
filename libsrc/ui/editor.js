@@ -2,18 +2,21 @@
 // thenewhive.com client-side expression editor version 0.1
 define([
     'browser/jquery', 
+    'browser/js',
     'ui/menu', 
     'ui/codemirror',
     'ui/dialog',
-    'browser/js',
+    'ui/util',
     'server/context',
     'ui/colors',
     'sj!templates/color_picker.html',
+    'browser/jquery/jplayer/skin',
     'js!browser/jquery/event/drag.js',
     'js!browser/jquery/rotate.js',
     'js!google_closure.js'
 ], function(
     $,
+    js,
     Menu,
     CodeMirror,
     dialog,
@@ -23,9 +26,9 @@ define([
     color_picker_template
 ){
 
-var Hive = {}, debug_mode = context.config.debug_mode, bound = util.bound,
-    hover_menu = Menu, noop = function(){}, Funcs = util.Funcs,
-    asset = function(name){ return context.asset({}, name) };
+var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
+    hover_menu = Menu, noop = function(){}, Funcs = js.Funcs,
+    asset = util.asset;
 Hive.asset = asset;
 
 var showDialog = function(jq, opts){
@@ -227,7 +230,7 @@ Hive.App = function(init_state, opts) {
                 ( win.height() - o.height() ) / 2 + win.scrollTop() ];
         if(typeof(offset) != "undefined"){ pos = array_sum(pos, offset) };
         o.pos_set(pos);
-    }
+    };
 
     o.copy = function(opts){
         if(!opts) opts = {};
@@ -440,7 +443,8 @@ Hive.Controls = function(app, multiselect) {
     o.hover_menu = function(h, d, opts) {
         return Menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
-    o.div = $("<div style='position: absolute; z-index: 3; width: 0; height: 0' class='controls'>");
+    o.div = $('<div>').css({'position': 'absolute', 'z-index': 3,
+        'width': 0, 'height': 0}).addClass('controls');
     $('#controls').append(o.div);
 
     // add borders
@@ -1407,7 +1411,7 @@ Hive.App.Image = function(o) {
         return o.img.attr('src');
     }
 
-    var link_set = function(v){ o.href = v; };
+    var link_set = function(v){ o.init_state.href = v; };
     o.link = function(v) {
         if(typeof(v) == 'undefined') return o.href;
         Hive.History.saver(o.link, link_set, 'link image').exec(v);
@@ -1419,6 +1423,11 @@ Hive.App.Image = function(o) {
         if(o.href) s.href = o.href;
         return s;
     };
+    var _state_update = o.state_update;
+    o.state_update = function(s){
+        _state_update(s);
+        s.content = s.url = s.url || s.content;
+    };
 
     o.url_set = function(src) {
         if(o.img) o.img.remove();
@@ -1426,7 +1435,7 @@ Hive.App.Image = function(o) {
         o.img.attr('src', src);
         o.div.append(o.img);
         o.img.load(function(){setTimeout(o.img_load, 1)});
-    }
+    };
     o.img_load = function() {
         o.imageWidth  = o.img.width();
         o.imageHeight = o.img.height();
@@ -1459,26 +1468,24 @@ Hive.App.Image = function(o) {
         o.dims_set(dims);
     }
 
-    o.natural_size = function() {
-        var img = o.div.find('img')[0];
-        o.dims_set([img.naturalWidth, img.naturalHeight]);
+    o.pixel_size = function(){
+        return [img.naturalWidth, img.naturalHeight]
     };
 
     function controls(o) {
-        o.addControls($('#controls_image'));
-        o.append_link_picker(o.div.find('.buttons'));
-        o.div.find('.button.set_bg').click(function() { Hive.bg_change(o.app.state()) });
+        // o.addControls($('#controls_image'));
+        // o.append_link_picker(o.div.find('.buttons'));
+        // o.div.find('.button.set_bg').click(function() { Hive.bg_change(o.app.state()) });
 
-        return o;
+        // return o;
     };
+    o.make_controls = [];
     o.make_controls.push(controls);
 
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
 
-    o.url_set(o.init_state.content);
-    link_set(o.init_state.href);
-
+    o.state_update(o.init_state);
     return o;
 }
 Hive.registerApp(Hive.App.Image, 'hive.image');
@@ -1634,10 +1641,10 @@ Hive.App.Audio = function(o) {
         o.dims_set(dims);
     };
 
-    var color, colored;
-    o.color = function(){ return color; };
+    var colored;
+    o.color = function(){ return o.init_state.color; };
     o.color_set = function(v){
-        color = v;
+        o.init_state.color = v;
         colored.css('background-color', v);
     };
 
@@ -1655,11 +1662,24 @@ Hive.App.Audio = function(o) {
         _load();
         o.dims_set(o.dims());
         o.scale_set(o.dims()[1] / 35);
-    }
+    };
+
+    o.set_shield = function() { return true; }
 
     o.make_controls.push(function(o){
         o.addButton($('#controls_misc .button.color'))
     });
+
+    var _state_update = o.state_update;
+    o.state_update = function(s){
+        _state_update(s);
+        if(typeof s.file_meta == 'object')
+            o.content_element.attr('title', [s.file_meta.artist, s.file_meta.album,
+                s.file_meta.title].join(' - '));
+        if(typeof s.url != 'undefined'){
+            o.content_element.jPlayer('setMedia', s.url);
+        }
+    };
 
     // Mixins
     Hive.App.has_shield(o, {always: true});
@@ -1668,22 +1688,15 @@ Hive.App.Audio = function(o) {
 
     // Initialization
     if(! o.init_state.dimensions) o.init_state.dimensions = [ 200, 35 ];
-
-    // TODO: get title, filename, and track length from state and show it in skin
-    var audio_data = o.init_state.file_meta;
-    o.content_element = $( o.init_state.src ?
-            $.jPlayer.skin.minimal(o.init_state.src, Hive.random_str()) : o.init_state.content )
+    o.content_element = $( $.jPlayer.skin.minimal(
+            o.init_state.url, Hive.random_str() ) )
         .addClass('content')
         .css('position', 'relative')
-        .css('height', '100%');
-    o.div.append(o.content_element).attr('title', audio_data ?
-            [audio_data.artist, audio_data.album, audio_data.title].join(' - ') : '');
-
+        .css('height', '100%')
+        .appendTo(o.div);
     colored = o.div.find('.jp-play-bar, .jp-interface');
-    color = colored.css('background-color');
     if(!o.init_state.color) o.init_state.color = colors[23];
 
-    o.set_shield = function() { return true; }
     o.update_shield();
     setTimeout(function(){ o.load(); }, 100);
     return o;
@@ -2089,7 +2102,7 @@ Hive.new_file = function(files, opts) {
 
     $.map(files, function(file, i){
         var app = $.extend({ file_name: file.name },
-            util.dfilter(file, ['id', 'meta']), opts);
+            js.dfilter(file, ['id', 'meta']), opts);
 
         // TODO: html files should just be saved on s3 and inserted as an <iframe>
         // if(file.mime.match(/text\/html/)){
@@ -2109,7 +2122,7 @@ Hive.new_file = function(files, opts) {
         if(file.mime.match(/image\/(png|gif|jpeg)/)) app.type = 'hive.image';
         else if(file.mime.match(/audio\/mpeg/)) app.type = 'hive.audio';
         else {
-            app.type = hive.text;
+            app.type = 'hive.text';
             // TODO: implement read-only for text app so server response can simply
             // reset the link content, and not potentially lose changes to
             // text box made while file was uploading
@@ -2184,7 +2197,7 @@ Hive.init = function(exp, page){
     if(!Hive.Exp.background) Hive.Exp.background = { };
     if(!Hive.Exp.background.color) Hive.Exp.background.color = '#FFFFFF';
 
-    Hive.bg_div = $('.happfill');
+    Hive.bg_div = $('#bg');
     Hive.append_color_picker($('#color_pick'), Hive.bg_color_set, Hive.Exp.background.color);
 
     $('#image_background').click(function() {
@@ -2206,35 +2219,38 @@ Hive.init = function(exp, page){
         Hive.bg_set(Hive.Exp.background);
     });
 
-    $('#bg_upload').click(function() { asyncUpload({
-        start: Hive.upload_start, error: uploadErrorCallback,
-        success: function(data) { 
-            Hive.bg_set(data, Hive.upload_finish);
-        } 
-    }); });
-
     Hive.bg_set(Hive.Exp.background);
 
 
-    var upload_file = function() { asyncUpload({
-        multiple: true, start: Hive.upload_start, success: Hive.new_file,
-        error: uploadErrorCallback
-    }); };
-    var new_link = function() { asyncUpload({
-        start: Hive.upload_start, error: uploadErrorCallback,
-        success : function(data) {
-            if(data.error) { return error(); }
-            var app = { type: 'hive.text', content:
-                $('<a>').attr('href', data.url).text(data.name).outerHTML() };
-            Hive.new_app(app);
-        }
-    }); };
+    //// TODO-draft: hook up with new uploader
+    ////
+    // $('#bg_upload').click(function() { asyncUpload({
+    //     start: Hive.upload_start, error: uploadErrorCallback,
+    //     success: function(data) { 
+    //         Hive.bg_set(data, Hive.upload_finish);
+    //     } 
+    // }); });
+    //
+    // var upload_file = function() { asyncUpload({
+    //     multiple: true, start: Hive.upload_start, success: Hive.new_file,
+    //     error: uploadErrorCallback
+    // }); };
+    // var new_link = function() { asyncUpload({
+    //     start: Hive.upload_start, error: uploadErrorCallback,
+    //     success : function(data) {
+    //         if(data.error) { return error(); }
+    //         var app = { type: 'hive.text', content:
+    //             $('<a>').attr('href', data.url).text(data.name).outerHTML() };
+    //         Hive.new_app(app);
+    //     }
+    // }); };
+    // 
     // $('#insert_image').click(upload_file);
     // $('#image_upload').click(upload_file);
     // $('#insert_audio').click(upload_file);
     // $('#audio_upload').click(upload_file);
-    $('#insert_file' ).click(new_link);
-    $('#menu_file'   ).click(new_link);
+    // $('#insert_file' ).click(new_link);
+    
 
     hover_menu('#insert_text', '#menu_text');
 
@@ -2335,8 +2351,9 @@ Hive.init = function(exp, page){
         };
         files.map(function(f){
             find_apps(f.name).map(function(a){
-                a.state_update({ file_id: f.id, url: f.url });
-                if(f.meta) a.state_update({ file_meta: f.meta });
+                var upd = { file_id: f.id, url: f.url };
+                if(f.meta) upd.file_meta = f.meta;
+                a.state_update(upd);
             });
         });
     });
@@ -2820,6 +2837,8 @@ Hive.sel = function(n) {
     if(!n) n = 0;
     return Hive.Selection.elements[n];
 }
+
+Hive.foc = function(n){ Hive.Selection.update([Hive.Apps[n]]) };
 
 $(function(){
     $(window).keydown(function(e){

@@ -1,4 +1,4 @@
-<div id='edit_nav' class='nav horiz'
+<div id='edit_nav' class='edit nav'
   ><div class='center pad'><img id='btn_undo' title='undo' class='hoverable'
     src='{"skin/edit/undo.png"|asset}'></div
   ><div class='center'><img id='btn_redo' title='redo' class='hoverable'
@@ -46,7 +46,7 @@
   <div val='public' class='menu_item'>Public</div>
 </div>
 
-<div id='app_btns' class='nav vert'
+<div id='app_btns' class='edit nav'
  ><div id='insert_text'  class='icon hoverable'></div
  ><div id='insert_image' class='icon hoverable'></div
  ><div id='insert_audio' class='icon hoverable'></div
@@ -291,6 +291,8 @@ blah blah
 <div id='grid_guide'></div>
 
 <div id='controls'></div>
+<div id='bg' class='happfill'><img src='{expr.background.url}'
+  class='hide'></div>
 <div id='happs'></div>
 
 <form {form_attrs "file_create"} method='POST' class='hide' id='media_upload'
