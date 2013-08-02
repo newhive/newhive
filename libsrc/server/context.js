@@ -1,22 +1,19 @@
 // empty object module for server to put stuff in
 define([
-    'json!server/compiled.assets.json',
     'json!ui/routes.json',
     'ui/routing',
     'browser/js',
     'ui/menu',
     'ui/dialog',
     'ui/util'
-], function(assets, api_routes, routing, js, menu, dialog, ui_util){
+], function(api_routes, routing, js, menu, dialog, ui_util){
     var o = {};
+
+    o.asset = function(context, name){ return ui_util.asset(name) };
 
     // vcenter creates a valigned block (with tables)
     o.vcenter = function(context, block){
         return "<table class='vcenter'><tr><td>" + block(context) + "</td></tr></table>";
-    };
-
-    o.asset = function(context, name){
-        return assets[name];
     };
 
     o.recency_time = function(context, time) {
