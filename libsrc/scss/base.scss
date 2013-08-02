@@ -90,13 +90,12 @@ img.centered, div.centered {
         //&:hover { background-color: $color_selected; }
         &:hover { background-image: asset_url('skin/nav/logo-hover.png'); }
     }
-    // need minus asset
     .plus-minus {
-        &.icon { background-image: asset_url('skin/nav/plus.png'); }
-        &.on { background-color: $color_bright_red; }
+        &.icon { background-image: asset_url('skin/nav/minus.png'); }
+        // &.on { background-color: $color_bright_red; }
         //&.on .icon { background-image: asset_url('skin/nav/plus-on.png'); }
         //&:hover { background-color: $color_selected; }
-        &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+        &:hover { background-image: asset_url('skin/nav/minus-hover.png'); }
     }
 
     &.love.on {

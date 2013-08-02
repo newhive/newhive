@@ -1028,6 +1028,12 @@ class Expr(HasSocial):
         def threaded_snapshot_q(q, expr):
             expr.take_snapshots()
 
+        # If we spin up too many threads, block.
+        while threading.active_count() > 56:
+            # log sleeps to see if server is being pounded.
+            log_error(self.db, message = "Too many snapshot threads", critical=False)
+            time.sleep(0.02)
+
         q = Queue.Queue()
 
         t = threading.Thread(target=threaded_snapshot_q, args = (q,self))
@@ -1069,11 +1075,14 @@ class Expr(HasSocial):
             name = self.snapshot_name_base(size, str(snapshot_time))
             # This would be cleaner with file pipes instead of filesystem.
             local = '/tmp/' + name
-            snapshotter.take_snapshot(self.id, dimensions=(w,h),
+            r =  snapshotter.take_snapshot(self.id, dimensions=(w,h),
                 out_filename=local)
-            url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
+            if r: url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
             # need to delete local
             call(["rm", local])
+
+        if not r:
+            return False;
 
         # Delete old snapshot
         if old_time:

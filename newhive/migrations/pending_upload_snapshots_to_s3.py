@@ -59,7 +59,7 @@ def start_snapshots(proc_tmp_snapshots=False):
     
     # existing_snapshots = proccess_snapshots_file() if proc_tmp_snapshots else []
     
-    def get_exprs():
+    def get_exprs(limit):
         expressions_to_snapshot = db.Expr.search({
             "$and": [
                 {"auth": "public"},
@@ -67,11 +67,13 @@ def start_snapshots(proc_tmp_snapshots=False):
                     "$exists": False
                 }}
             ]
-        },limit=100)
+        },limit=limit)
         return expressions_to_snapshot
-    
+
+    count = 0
+    total = get_exprs(0).count()
     while True:
-        exprs = get_exprs()
+        exprs = get_exprs(100)
         if len(exprs) == 0: break
         # print exprs
         for expr in exprs:
@@ -81,8 +83,9 @@ def start_snapshots(proc_tmp_snapshots=False):
             #     print "not yet snapshotted %s!" % expr.get('_id')
             
             expr_id = expr.get('_id')
-            print "snapshotting %s" % expr_id
-            expr.take_snapshots()
+            count += 1
+            print "(%s/%s) snapshotting %s" % (count, total, expr_id)
+            expr.threaded_snapshot()
             # take_snapshot(expr_id)
             # s3_url = upload_snapshot_to_s3(expr_id, thumb_bucket)    
     

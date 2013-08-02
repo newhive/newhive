@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 import os, json, cgi
 from pymongo.errors import DuplicateKeyError
 from newhive import utils

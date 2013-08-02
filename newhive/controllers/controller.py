@@ -1,9 +1,8 @@
 import json
 from werkzeug import Request, Response
 from collections import namedtuple
-from newhive.utils import dfilter
 from newhive import auth, config, utils
-from newhive.utils import abs_url
+from newhive.utils import abs_url, log_error, dfilter
 
 class TransactionData(utils.FixedAttrs):
     """ One of these is associated with each request cycle to put stuff in
@@ -95,7 +94,7 @@ class Controller(object):
         if config.debug_mode:
             raise exception, None, traceback
 
-        log_error(request, self.db, traceback=traceback, critical=True)
+        log_error(self.db, request=request, traceback=traceback, critical=True)
 
         response.status_code = 500
         if json: return self.serve_json(response, {'error': 500 })

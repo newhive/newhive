@@ -48,8 +48,12 @@ class Snapshots(object):
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
             print cmd
-            envoy.run(cmd)
-            envoy.run('convert -crop %sx%s+0+0 %s %s' % (dimensions[0],dimensions[1],out_filename,out_filename))
+            r = envoy.run(cmd)
+            if r.status_code != 0:
+                return False
+            r = envoy.run('convert -crop %sx%s+0+0 %s %s' % (dimensions[0],dimensions[1],out_filename,out_filename))
+            if r.status_code != 0:
+                return False
             # 'webkit2png --feature=javascript --display=:99 '+
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
             return True

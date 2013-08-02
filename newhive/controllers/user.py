@@ -198,7 +198,7 @@ class User(ModelController):
             mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
             mailer.send(form.get('email'), form.get('name'), sendgrid_args)
         except:
-            log_error(request, self.db)
+            log_error(self.db, request=request)
 
         return self.serve_json(response, True)
 
@@ -336,7 +336,7 @@ class User(ModelController):
     #                     , 'tmp_file': tmp_file
     #                     , 'mime': profile_picture.headers.type})
     #         except IOError as e:
-    #             # log_error(request, db, message="Error downloading fb profile picture '%s': %s" % (profile_picture_url, e))
+    #             # log_error(db, request=request, message="Error downloading fb profile picture '%s': %s" % (profile_picture_url, e))
     #             profile_picture = None
     #         response.context['f'] = dfilter(fb_profile, ['email'])
     #         response.context['f']['fullname'] = fb_profile['name']
@@ -420,7 +420,7 @@ class User(ModelController):
 
         try: mail.Welcome(db = self.db, jinja_env=self.jinja_env).send(user)
         except: 
-            # log_error(request, db, message="unable to welcome send email for {}".format(user.get('email')))
+            # log_error(db, request=request, message="unable to welcome send email for {}".format(user.get('email')))
             pass
 
         request.form = dict(username = args['username'], secret = args['password'])

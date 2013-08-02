@@ -707,10 +707,14 @@ def test_scripts(db, owner_name = None):
         print dfilter(res2[i], ['name', 'created', 'star', 'broadcast', 'views'])
     return res1, res2
 
-def log_error(request, db, message=None, traceback=None, critical=False):
-    from werkzeug.debug.tbtools import get_current_traceback
-    traceback = traceback or get_current_traceback(skip=0, show_hidden_frames=False
-            , ignore_system_exceptions=True)
+def log_error(db, request=None, message=None, traceback=None, critical=False):
+    # from werkzeug.debug.tbtools import get_current_traceback
+    # traceback = traceback or get_current_traceback(skip=0, show_hidden_frames=False
+    #, ignore_system_exceptions=True)
+    import traceback as sys_traceback
+    import newhive.manage.git
+    traceback = traceback or sys_traceback.extract_stack()
+    # print traceback
     def privacy_filter(dictionary):
         for key in ['password', 'secret', 'old_password']:
             if dictionary.has_key(key): dictionary.update({key: "******"})
@@ -719,21 +723,25 @@ def log_error(request, db, message=None, traceback=None, critical=False):
         'type': 'python',
         'critical': critical,
         'exception': message or traceback.exception,
-        'environ': serializable_filter(request.environ),
-        'form': privacy_filter(serializable_filter(request.form)),
-        'url': request.url,
         'stack_frames': [{
-            'filename': x.filename,
-            'lineno': x.lineno,
-            'function_name': x.function_name,
-            'current_line': x.current_line.strip()
-        } for x in traceback.frames],
+            'filename': x[0],
+            'lineno': x[1],
+            'function_name': x[2],
+            'current_line': x[3].strip()
+        } for x in traceback],
         'code_revision': newhive.manage.git.current_revision,
         'dev_prefix': config.dev_prefix,
     }
-    request = request.environ.get('hive.request')
-    if request and hasattr(request, 'requester'):
-        log_entry.update({'requester': {'id': request.requester.id
-                                        , 'name': request.requester.get('name')}})
+    if request:
+        log_entry.update({
+            'environ': serializable_filter(request.environ),
+            'form': privacy_filter(serializable_filter(request.form)),
+            'url': request.url,
+            })
+        request = request.environ.get('hive.request')
+        if request and hasattr(request, 'requester'):
+            log_entry.update({'requester': {'id': request.requester.id
+                                            , 'name': request.requester.get('name')}})
 
     db.ErrorLog.create(log_entry)
+
