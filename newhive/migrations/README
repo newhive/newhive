@@ -1,0 +1,9 @@
+To run a migration
+
+run ipython
+
+from newhive import state
+db=state.Database() 
+
+%run newhive/migrations/foo.py
+run_foo()
