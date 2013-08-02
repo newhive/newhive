@@ -139,6 +139,8 @@ textarea.code {
 
 .btn { display: inline-block; padding: 5px; cursor: default; }
 // .menu label { font-weight: normal; font-size: 15px; }
+
+#btn_save .loading { width: 25px; }
 #menu_save {
     font-size: .85em;
     width: 220px;
@@ -206,7 +208,6 @@ input, textarea { font-size : inherit; }
 #privacy { background-color : $color_selected; color : $color_0; }
 
 .dialogue_handle { background-color : $color_selected; }
-#loading { position : fixed; z-index: 3; display : none; }
 
 .hive_selection {
     background: $color_light_grey;

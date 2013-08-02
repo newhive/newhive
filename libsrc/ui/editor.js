@@ -2343,7 +2343,18 @@ Hive.init = function(exp, page){
             });
         });
     });
-    
+
+    var busy_e = $('#btn_save .loading');
+    $(document).ajaxStart(function(){
+        // TODO-draft: set a flag to block saving while uploads are in progress
+        busy_e.show();
+    }).ajaxStop(function(){
+        busy_e.hide();
+    }).ajaxError(function(ev, jqXHR, ajaxOptions){
+        // TODO-polish upload_error: show some warning, and somehow indicate
+        // which app(s) failed to save
+    });
+
     var checkUrl = function(){
         var u = $('#url').val();
         if(u.match(/[^\w.\/-]/)) {
@@ -2519,11 +2530,6 @@ Hive.embed_code = function(element) {
     Hive.new_app(app);
     $(element).val('');
 } 
-
-// TODO: create Hive.Task which returns an object with .start() and .finish()
-// to support multiple busy processes
-Hive.upload_start = function() { center($('#loading').show()); }
-Hive.upload_finish = function() { $('#loading').hide(); }
 
 Hive.drag_start = noop; // function(){ hovers_active(false) };
 Hive.drag_end = noop; // function(){ hovers_active(true) };
