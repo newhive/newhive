@@ -263,6 +263,8 @@ Hive.App = function(init_state, opts) {
     o.state = function(){
         var s = $.extend({}, o.init_state, o.state_relative(Hive.env()), {
             z: o.layer(),
+            // TODO-cleanup: flatten state and use o.state() and
+            // o.state_update to simplify behavior around shared attributes
             content: o.content(),
             id: o.id
         });
@@ -1408,25 +1410,20 @@ Hive.App.Image = function(o) {
     Hive.App.has_resize(o);
     o.content = function(content) {
         if(typeof(content) != 'undefined') o.url_set(content);
-        return o.img.attr('src');
+        return o.init_state.url;
     }
 
     var link_set = function(v){ o.init_state.href = v; };
     o.link = function(v) {
-        if(typeof(v) == 'undefined') return o.href;
+        if(typeof(v) == 'undefined') return o.init_state.href;
         Hive.History.saver(o.link, link_set, 'link image').exec(v);
     };
     
-    var _state = o.state;
-    o.state = function(){
-        var s = _state();
-        if(o.href) s.href = o.href;
-        return s;
-    };
     var _state_update = o.state_update;
     o.state_update = function(s){
+        // TODO-cleanup: migrate to use only url for consistency with other apps
+        s.content = s.url = (s.url || s.content);
         _state_update(s);
-        s.content = s.url = s.url || s.content;
     };
 
     o.url_set = function(src) {
@@ -1473,19 +1470,18 @@ Hive.App.Image = function(o) {
     };
 
     function controls(o) {
-        // o.addControls($('#controls_image'));
-        // o.append_link_picker(o.div.find('.buttons'));
-        // o.div.find('.button.set_bg').click(function() { Hive.bg_change(o.app.state()) });
-
-        // return o;
+        o.addControls($('#controls_image'));
+        o.append_link_picker(o.div.find('.buttons'));
+        o.div.find('.button.set_bg').click(function() { Hive.bg_change(o.app.state()) });
+        return o;
     };
-    o.make_controls = [];
     o.make_controls.push(controls);
 
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
 
     o.state_update(o.init_state);
+    o.url_set(o.init_state.url);
     return o;
 }
 Hive.registerApp(Hive.App.Image, 'hive.image');
@@ -2084,7 +2080,7 @@ Hive.new_app = function(s, opts) {
     if(!opts) opts = {};
     var load = opts.load;
     opts.load = function(a) {
-        Hive.upload_finish();
+        // Hive.upload_finish();
         a.center(opts.offset);
         a.dims_set(a.dims());
         Hive.Selection.select(a);
@@ -2156,14 +2152,6 @@ Hive.init = function(exp, page){
         showDialog('#editor_browsers');
     }
 
-    // $(document.body).filedrop({
-    //      data : { action : 'file_create' }
-    //     ,uploadFinished : function(i, f, data) {
-    //         Hive.new_file(data, { 'load' : Hive.upload_finish } );
-    //      }
-    //     ,drop : Hive.upload_start
-    // });
-
     var old_env = Hive.env();
     $(window).resize(function(e) {
         var new_env = Hive.env();
@@ -2186,12 +2174,6 @@ Hive.init = function(exp, page){
         Hive.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
-
-
-    var uploadErrorCallback = function(){
-        Hive.upload_finish();
-        alert('Sorry, your file failed to upload');
-    }
 
 
     if(!Hive.Exp.background) Hive.Exp.background = { };
@@ -2224,6 +2206,10 @@ Hive.init = function(exp, page){
 
     //// TODO-draft: hook up with new uploader
     ////
+    // var uploadErrorCallback = function(){
+    //     Hive.upload_finish();
+    //     alert('Sorry, your file failed to upload');
+    // }
     // $('#bg_upload').click(function() { asyncUpload({
     //     start: Hive.upload_start, error: uploadErrorCallback,
     //     success: function(data) { 
@@ -2493,7 +2479,7 @@ Hive.embed_code = function(element) {
     else if(c.match(/^https?:\/\//i)) {
         var error = function(data, msg){
             alert('Sorry, failed to load url ' + c + '.\n' + msg);
-            Hive.upload_finish();
+            // Hive.upload_finish();
         };
         var callback = function(data) {
             if( data.error ){
@@ -2504,10 +2490,10 @@ Hive.embed_code = function(element) {
                     return error(false, data.error);
                 }
             }
-            Hive.new_file(data, { load: Hive.upload_finish });
+            Hive.new_file(data/*, { load: Hive.upload_finish }*/);
             $(element).val('');
         }
-        Hive.upload_start();
+        // Hive.upload_start();
         $.ajax(secure_server, {
             data: { action: 'file_create', remote: true, url: c }
             , success: callback
@@ -2551,7 +2537,7 @@ Hive.save = function() {
     }
 
     var on_response = function(ev, ret){
-        Hive.upload_finish();
+        // Hive.upload_finish();
         if(typeof(ret) != 'object')
             alert("Sorry, something is broken :(. Please send us feedback");
         if(ret.error == 'overwrite') {
@@ -2563,7 +2549,7 @@ Hive.save = function() {
             Hive.edit_page.view_expr();
         }
     }, on_error = function(ev, ret){
-        Hive.upload_finish();
+        // Hive.upload_finish();
         if (ret.status == 403){
             relogin(function(){ $('#btn_save').click(); });
         }
