@@ -38,8 +38,10 @@ def get_api_endpoints(api):
             for secure in (False, True):
                 rules.append(Rule(
                     route_obj['page_route'],
-                    endpoint=(getattr(api,route_obj['controller']),
-                        route_obj['method']),
+                    endpoint=(
+                        getattr(api, route_obj.get('controller', 'community')),
+                        route_obj.get('method', 'empty')
+                    ),
                     defaults={'route_name': route_name},
                     host=url_host(secure=secure)
                 ))
