@@ -2364,7 +2364,7 @@ Hive.init = function(exp, page){
         } else {
             return true;
         }
-    }
+    };
 
     var save_menu = hover_menu('#btn_save', '#menu_save',
         { auto_height : false, auto_close : false,
@@ -2551,9 +2551,7 @@ Hive.save = function() {
             showDialog('#dia_overwrite');
             $('#save_submit').removeClass('disabled');
         }
-        else if(ret.location){
-            Hive.edit_page.view_expr();
-        }
+        else if(ret.id) Hive.edit_page.view_expr(ret);
     }, on_error = function(ev, ret){
         // Hive.upload_finish();
         if (ret.status == 403){

@@ -3,19 +3,20 @@ define([
 ], function(ApiRoutes){
     var o = {};
 
-    o.page_state = function(routeName, route_args) {
-        var routeObj = ApiRoutes[routeName];
-        return {
-            "api": o.substitute_variables(routeObj.api_route, route_args, true),
-            "page": o.substitute_variables(routeObj.page_route, route_args, true),
-            "route_name": routeName
+    o.page_state = function(route_name, route_args) {
+        var route = ApiRoutes[route_name], state = {
+            'route_name': route_name,
+            'page': o.substitute_variables(route.page_route, route_args, true)
         };
+        if(route.api_route) state.api = o.substitute_variables(
+            route.api_route, route_args, true);
+        return state;
     };
     o.register_state = function(route_info) {
         if (!window.history && window.history.pushState) return;
-        var routeObj = ApiRoutes[route_info.route_name];
+        var route = ApiRoutes[route_info.route_name];
         history.pushState(o.page_state(
-            route_info.route_name, route_info), null, routeObj.page);
+            route_info.route_name, route_info), null, route.page);
     };
     o.substitute_variables = function(inStr, routeVars) {
         for (var routeVar in routeVars) {

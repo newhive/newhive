@@ -71,12 +71,10 @@ class Expr(ModelController):
             self.db.UpdatedExpr.create(res.owner, res)
             self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
 
-        return self.serve_json(response, dict(
-            new = new_expression,
-            error = False,
-            id = res.id,
-            location = res.url + "?user=" + res['owner_name']
-        ) )
+        # TODO-cleanup: create client_view for full expression record, instead
+        # of just feed cards
+        if new_expression: res['id'] = res.id
+        return self.serve_json(response, res if new_expression else False)
 
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)

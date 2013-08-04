@@ -40,14 +40,18 @@ define([
         });
         $('#site').empty().append(edit_template(page_data)).show();
         $('#nav').hide();
+
+        if(!page_data.expr) page_data.expr = {};
         editor.init(page_data.expr, o);
     };
 
     o.attach_handlers = function(){
     };
 
-    o.view_expr = function(){
-        var expr = context.page_data.expr;
+    o.view_expr = function(expr){
+        // TODO-polish: make controller.open_route actually use this instead
+        // of refetching from server
+        context.page_data.expr = expr;
         expr_page.get_expr(expr.id).remove();
         o.controller.open('view_expr', {
             id: expr.id,

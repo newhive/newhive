@@ -12,7 +12,8 @@
             <span class="signup_btn" >Sign up</span>
             <span class='login_btn left_border'>Log in</span>
         </div>
-        <div class='create hide'><span>Create</span></div>
+        <a {anchor_attrs "create_expr" "owner_name" user.name}><div
+            class='create hide'><span>Create</span></div></a>
     </div>
     {# + button to open overlay #}
     <div class='hide overlay logged_out social_btn'></div>
