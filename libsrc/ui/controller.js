@@ -67,19 +67,8 @@ define([
     };
 
     o.open_route = function(page_state) {
-        fetch_route_data(page_state, function() {
-            history.pushState(page_state, null, page_state.page);
-        });
-    };
-    o.open = function(route_name, route_args){
-        o.open_route(routing.page_state(route_name, route_args));
-    };
-    
-    function fetch_route_data(page_state, callback) {
-        var callback = callback || function(){};
-
         if(page_state.api){
-            api_call = {
+            var api_call = {
                 method: 'get',
                 url: page_state.api.toString(),
                 dataType: 'json',
@@ -87,13 +76,16 @@ define([
             };
             $.ajax(api_call);
         }
-        else success(context.page_data);
+        else success({});
 
         function success(data){
             o.dispatch(page_state.route_name, data);
-            callback();
+            history.pushState(page_state, null, page_state.page);
         }
-    }
-
+    };
+    o.open = function(route_name, route_args){
+        o.open_route(routing.page_state(route_name, route_args));
+    };
+    
     return o;
 });

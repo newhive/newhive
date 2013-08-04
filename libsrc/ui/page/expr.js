@@ -56,7 +56,7 @@ define([
 
     o.render = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
-        o.expr = context.page_data.expr;
+        o.expr = page_data.expr;
 
         $('title').text(o.expr.title);
         $("#nav").hide();

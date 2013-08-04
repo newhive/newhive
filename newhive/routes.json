@@ -98,6 +98,7 @@
         "method": "expr",
         "client_method": "expr"
     },
+
     "edit_expr": {
         "page_route": "/<owner_name>/<expr_name>/edit",
         "api_route": "/api/expr/<id>",
@@ -105,17 +106,20 @@
         "method": "edit_expr",
         "client_method": "edit_expr"
     },
+    "create_expr": {
+        "page_route": "/<owner_name>/profile/create",
+        "client_method": "create_expr"
+    },
+    "expr_save": {
+        "api_route": "/api/expr/save",
+        "controller": "expr",
+        "method": "save"
+    },
     "expr_snapshot": {
         "page_route": "/api/expr/snapshot/<expr_id>",
         "api_route": "/api/expr/snapshot/<expr_id>",
         "controller": "expr",
         "method": "snapshot"
-    },
-
-    "expr_save": {
-        "api_route": "/api/expr/save",
-        "controller": "expr",
-        "method": "save"
     },
 
     "request_invite": {

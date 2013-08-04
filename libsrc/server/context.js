@@ -42,14 +42,16 @@ define([
     };
 
     var attrs = function(route_name, args, query_args, is_form, suppress){
+        var route = api_routes[route_name];
         if (!suppress) suppress = [];
-        if(!api_routes[route_name]) throw('Route "' + route_name + '" not found');
+        if(!route) throw('Route "' + route_name + '" not found');
         var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
                 [ ['data-route-name', route_name] ],
-            href = suppress.indexOf('href') >= 0 ? null : 
-                api_routes[route_name]['page_route'] + query_args,
-            api = suppress.indexOf('api') >= 0 ? null : 
-                api_routes[route_name]['api_route'] + query_args;
+            href = null, api = null;
+        if(suppress.indexOf('href') < 0)
+            href = route['page_route'] + query_args;
+        if(suppress.indexOf('api') < 0 && route.api_route)
+            api = api_routes[route_name]['api_route'] + query_args;
         if (is_form) {
             attributes.push(['enctype', 'multipart/form-data']);
             if(api) attributes.push(['action',
