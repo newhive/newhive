@@ -4,6 +4,7 @@
 import envoy
 import os
 from sys import platform
+from subprocess import call
 
 from newhive import config, utils
 
@@ -16,16 +17,6 @@ def snapshot_test():
     snapshots.take_snapshot("50f60b796d902242fd02a754", "snap_out.png", (640,480))
 
 class Snapshots(object):
-    def __init__(self):
-        pass
-        # if platform == 'linux' or platform == 'linux2':
-        #     # Need xvfb running on linux to take snapshots. Check to see if it's currently running
-        #     sp = envoy.run('xdpyinfo -display :99')
-        #     if sp.status_code != 0:
-        #         self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
-    def __del__(self):
-        # if hasattr(self,'ps'): self.ps.kill()
-        pass
 
     @staticmethod
     def remote_uri(expr_id):
@@ -47,12 +38,16 @@ class Snapshots(object):
                 % (dimensions[0],dimensions[1],url,out_filename) )
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
+            os.environ['DISPLAY'] =':99'
             print cmd
-            r = envoy.run(cmd)
-            if r.status_code != 0:
+            r = call(cmd.split(" "))
+            # r = envoy.run(cmd, {"DISPLAY":":19"})
+            if r != 0:
                 return False
-            r = envoy.run('convert -crop %sx%s+0+0 %s %s' % (dimensions[0],dimensions[1],out_filename,out_filename))
-            if r.status_code != 0:
+            r = call(('convert -crop %sx%s+0+0 %s %s' % (
+                dimensions[0],dimensions[1],out_filename,out_filename)).split(" "))
+            if r != 0:
+                print "FAILED: " + cmd
                 return False
             # 'webkit2png --feature=javascript --display=:99 '+
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
@@ -68,11 +63,12 @@ class Snapshots(object):
                 return False
             os.rename('out-clipped.png',out_filename)
             return True
-    # def __init__(self):
-        # if platform == 'linux' or platform == 'linux2':
-        #     # Need xvfb running on linux to take snapshots. Check to see if it's currently running
-        #     sp = envoy.run('xdpyinfo -display :99')
-        #     if sp.status_code != 0:
-        #         self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
-    # def __del__(self):
-        # if hasattr(self,'ps'): self.ps.kill()
+    def __init__(self):
+        print "snapshot init!!!"
+        if platform == 'linux' or platform == 'linux2':
+            # Need xvfb running on linux to take snapshots. Check to see if it's currently running
+            sp = envoy.run('xdpyinfo -display :99')
+            if sp.status_code != 0:
+                self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
+    def __del__(self):
+        if hasattr(self,'ps'): self.ps.kill()
