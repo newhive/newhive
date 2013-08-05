@@ -1029,7 +1029,7 @@ class Expr(HasSocial):
             expr.take_snapshots()
 
         # If we spin up too many threads, block.
-        while threading.active_count() > 56:
+        while threading.active_count() > 16:
             # log sleeps to see if server is being pounded.
             # log_error(self.db, message = "Too many snapshot threads", critical=False)
             time.sleep(0.02)
@@ -1077,9 +1077,10 @@ class Expr(HasSocial):
             local = '/tmp/' + name
             r =  snapshotter.take_snapshot(self.id, dimensions=(w,h),
                 out_filename=local)
-            if r: url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
-            # need to delete local
-            call(["rm", local])
+            if r: 
+                url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
+                # need to delete local
+                call(["rm", local])
 
         if not r:
             return False;
