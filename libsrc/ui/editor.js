@@ -1616,7 +1616,7 @@ Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 Hive.App.Audio = function(o) {
     Hive.App.has_resize(o);
     o.content = function() {
-        return o.content_element.outerHTML();
+        return o.content_element[0].outerHTML;
     };
 
     o.resize = function(delta) {
@@ -2116,7 +2116,7 @@ Hive.new_file = function(files, opts) {
         // link = { content: $('<a>').attr('href', file.url).text(file.name).outerHTML() }
 
         if(file.mime.match(/image\/(png|gif|jpeg)/)) app.type = 'hive.image';
-        else if(file.mime.match(/audio\/mpeg/)) app.type = 'hive.audio';
+        else if(file.mime.match(/audio\//)) app.type = 'hive.audio';
         else {
             app.type = 'hive.text';
             // TODO: implement read-only for text app so server response can simply
@@ -2333,7 +2333,7 @@ Hive.init = function(exp, page){
         // matching up file name
         var find_apps = function(name){
             return Hive.Apps.all().filter(function(a){
-                return (a.state().file_name == name) });
+                return (a.init_state.file_name == name) });
         };
         files.map(function(f){
             find_apps(f.name).map(function(a){

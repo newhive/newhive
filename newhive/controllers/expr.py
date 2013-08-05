@@ -73,8 +73,8 @@ class Expr(ModelController):
 
         # TODO-cleanup: create client_view for full expression record, instead
         # of just feed cards
-        if new_expression: res['id'] = res.id
-        return self.serve_json(response, res if new_expression else False)
+        res['id'] = res.id
+        return self.serve_json(response, res)
 
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
