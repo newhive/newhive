@@ -1,19 +1,16 @@
 @import "common";
 
-#site .nav {
-    position: fixed;
-    z-index: 1;
-}
-
 #happs {
     position: absolute;
     left: 0;
     top: 0;
-    z-index: 0;
+    z-index: 3;
 }
 
 .edit.nav {
     background-color: white;
+    position: fixed;
+    z-index: 4;
 }
 
 #edit_nav {
@@ -27,8 +24,21 @@
     }
 }
 
+#bg {
+    z-index: 1;
+}
+#grid_guide {
+    z-index: 2;
+    position : fixed;
+    width : 100%; height : 100%;
+}
+
 .ehapp, .ehapp > * { position : absolute; }
-.ehapp .shield { left : 0px; top : 0px; z-index: 2; width : 100%; height : 100%; }
+.ehapp .shield {
+    left : 0px; top : 0px;
+    z-index: 2;
+    width : 100%; height : 100%;
+}
 .select_border {
     background-color: $color_selected; position: absolute;
     border-color: $color_light_blue;
@@ -41,9 +51,11 @@
     position: absolute;
     z-index: 1;
 }
-.select_box { width: 100%; height:100%; border: 2px dashed $color_selected; }
+.select_box {
+    width: 100%; height:100%;
+    border: 2px dashed $color_selected;
+}
 .app_select { position : absolute; }
-#grid_guide { position : fixed; width : 100%; height : 100%; }
 
 .content { z-index : 2 }
 /* it would be nice to make all .content 100%x100%, but that distorts new images */
@@ -60,7 +72,11 @@
 .controls_src { display : none; }
 .drag { cursor : move; }
 
-.controls { position:absolute; width:0; height:0; z-index: 1; }
+.controls {
+    position:absolute;
+    width:0; height:0;
+    z-index: 4;
+}
 .control { position : absolute; cursor : default; z-index : 1 }
 .control.resize_h { cursor : ew-resize; }
 .control.resize { cursor : se-resize; }

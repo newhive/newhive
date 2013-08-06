@@ -153,6 +153,7 @@ define([
 
         inputs.each(function(i, e){
             var input = $(e);
+
             input.on('change', function(){
                 with_files(e.files);
                 submit();
@@ -160,17 +161,19 @@ define([
             });
 
             var input_id = input.attr('id'),
-                drop_areas = find_all(all, 'label[for=' + input_id + ']'),
                 drop_selector = input.attr('data-drop-area');
-            drop_areas = drop_areas.add(drop_selector).add(find_all(all, drop_selector));
-            drop_areas.on('dragenter dragover', function(){ return false; })
-            drop_areas.on('drop', function(e){
-                var dt = e.originalEvent.dataTransfer;
-                if(!dt || !dt.files || !dt.files.length) return;
-                with_files(dt.files);
-                submit(dt.files);
-                return false;
-            });
+                drop_areas = find_all(all, 'label[for=' + input_id + ']')
+                    .add(drop_selector).add(find_all(all, drop_selector));
+                drop_areas.on('dragenter dragover', function(ev){
+                    ev.preventDefault();
+                })
+                .on('drop', function(e){
+                    var dt = e.originalEvent.dataTransfer;
+                    if(!dt || !dt.files || !dt.files.length) return;
+                    with_files(dt.files);
+                    submit(dt.files);
+                    return false;
+                });
         });
 
         // make form submission of non-file inputs asynchronous too
