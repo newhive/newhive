@@ -164,7 +164,7 @@ define([
                 drop_selector = input.attr('data-drop-area');
                 drop_areas = find_all(all, 'label[for=' + input_id + ']')
                     .add(drop_selector).add(find_all(all, drop_selector));
-                drop_areas.on('dragenter dragover', function(ev){
+            drop_areas.on('dragenter dragover', function(ev){
                     ev.preventDefault();
                 })
                 .on('drop', function(e){

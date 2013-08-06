@@ -34,7 +34,7 @@ define([
         hide_panel();
         $('#site').show();
     };
-    
+
     hide_panel = function(){
         $("#signup_create").hide();
         $(".panel.profile").hide();
