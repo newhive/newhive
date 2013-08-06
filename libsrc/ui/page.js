@@ -56,6 +56,7 @@ define([
 
     o.render = function(method, data){
         console.log(method);
+        o.columns = 0;
         new_page = pages[method];
         expr_page = (method == 'expr');
         var page_data = data.page_data;
