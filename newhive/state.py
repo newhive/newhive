@@ -1058,20 +1058,43 @@ class Expr(HasSocial):
             return self.db.Expr.fetch(query)
 
     def threaded_snapshot(self):
+        def timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
+            """This function will spawn a thread and run the given function
+            using the args, kwargs and return the given default value if the
+            timeout_duration is exceeded.
+            """ 
+            # import threading
+            class InterruptableThread(threading.Thread):
+                def __init__(self):
+                    threading.Thread.__init__(self)
+                    self.result = default
+                def run(self):
+                    self.result = func(*args, **kwargs)
+            it = InterruptableThread()
+            it.daemon = True
+            it.start()
+            it.join(timeout_duration)
+            if it.isAlive():
+                return it.result
+            else:
+                return default
+
         def threaded_snapshot_q(q, expr):
             expr.take_snapshots()
 
         # If we spin up too many threads, block.
-        while threading.active_count() > 16:
+        while threading.active_count() > 8:
             # log sleeps to see if server is being pounded.
             # log_error(self.db, message = "Too many snapshot threads", critical=False)
             time.sleep(0.02)
 
         q = Queue.Queue()
 
-        t = threading.Thread(target=threaded_snapshot_q, args = (q,self))
-        t.daemon = True
-        t.start()
+        # t = InterruptableThread(
+            # threading.Thread(target=threaded_snapshot_q, args = (q,self)))
+        result = timeout(threaded_snapshot_q, (q,self), timeout_duration=69)
+        # t.daemon = True
+        # t.start()
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):
