@@ -1,6 +1,7 @@
 import hsaudiotag.auto
 import urllib, urlparse, itertools, mimetypes, os, json
 from werkzeug.http import parse_options_header
+from newhive.utils import lget
 from newhive.controllers.controller import ModelController, auth_required
 from PIL import Image
 
@@ -21,7 +22,10 @@ class File(ModelController):
             if file.getcode() != 200:
                 return {'error': 'remote url download failed with status %s' % (file.getcode())}
             mime = file.headers.getheader('Content-Type')
-            filename = lget([i[1] for i in [i.split('=') for i in file.headers.get('content-disposition', '').split(';')] if i[0].strip() == 'filename'], 0)
+            filename = lget([i[1] for i in [
+                i.split('=') for i in
+                    file.headers.get('content-disposition', '').split(';')]
+                if i[0].strip() == 'filename'], 0)
             if filename:
                 file.filename = filename + mimetypes.guess_extension(mime)
             else:

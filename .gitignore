@@ -1,4 +1,5 @@
 /lib/*.js
+!/lib/harmony_sketch.js
 /lib/*.css
 /lib/tmp/*
 /libsrc/scss/*.css

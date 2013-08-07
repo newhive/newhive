@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-import os, json, cgi
+import os, json, cgi, base64
 from pymongo.errors import DuplicateKeyError
 from newhive import utils
 from newhive.utils import dfilter

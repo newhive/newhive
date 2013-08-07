@@ -7,6 +7,7 @@
   {% for item in asset_bundle('app.css') %}
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
   {% endfor %}
+
   <script>
 curl(['server/context', 'browser/js'], function(context, util){
     var server_data = {

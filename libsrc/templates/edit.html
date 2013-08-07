@@ -97,7 +97,8 @@
 </div>
 
 <div id='menu_file' class='menu drawer medbold'>
- <div class='menu_item menu_hover'>Upload file to link</div>
+ <label for='link_input'><div class='menu_item menu_hover'
+   >Upload file to link</div></label>
 </div>
 
 <div id='controls_common' class='controls_src'>
@@ -273,8 +274,10 @@ blah blah
  <h2>Edit Background</h2>
  <div id='edit_bg_image'>
   <div id='bg_preview' class='border'><img id='bg_preview_img'></div>
-  <div id='bg_opacity_label' class='small_text'>opacity: <input id='bg_opacity' type='text' size='3' value='100%'></div>
-  <div id='bg_upload' class='btn black small_text rounded'>Upload Image</div>
+  <div id='bg_opacity_label' class='small_text'>opacity: <input id='bg_opacity'
+    type='text' size='3' value='100%'></div>
+  <label for='bg_input'><div id='bg_upload_btn'
+    class='btn black small_text rounded'>Upload Image</div>
   <div id='bg_remove' class='btn black small_text rounded'>Clear</div>
  </div>
  <div id='color_pick' style='float : right; position : relative;'></div>
@@ -296,7 +299,15 @@ blah blah
 
 <form {form_attrs "file_create"} method='POST' class='hide' id='media_upload'>
   <input type='file' id='media_input' name='files'
-    data-drop-area='#grid_guide' {#accept='image/*'#}>
+    data-drop-area='#grid_guide' multiple>
+</form>
+
+<form {form_attrs "file_create"} method='POST' class='hide' id='bg_upload'>
+  <input type='file' id='bg_input' name='files' accept='image/*'>
+</form>
+
+<form {form_attrs "file_create"} method='POST' class='hide' id='link_upload'>
+  <input type='file' id='link_input' name='files'>
 </form>
 
 <form {form_attrs "expr_save"} id='expr_save' method='POST' class='hide'>

@@ -8,7 +8,6 @@ define(['browser/jquery'], function($) {
             //e.width(e.parent().width()).height(e.parent().height());
             o.img_fill(e.find('img'))
         });
-        if (Hive.expr && Hive.expr.fixed_width) return;
         $('.happ').each(function(i, app_div) {
             var e = $(this);
             var s = e.parent().width() / 1000;
