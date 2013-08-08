@@ -23,6 +23,20 @@ button {
     cursor: pointer;
 }
 
+.ncolumn {
+    width: 100%;
+    .column {
+        display: inline-block;
+        vertical-align: top;
+        width: 33.33%;
+        float: left;
+
+        * {
+            vertical-align: bottom;
+        }
+    }
+}
+
 // vertical centering
 table.vcenter {
    height:100%;
