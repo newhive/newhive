@@ -42,6 +42,7 @@ define([
     activity_template
 ){
     var o = {}, expr_page = false, grid_width, controller,
+        column_layout = false,
         anim_direction; // 0 = up, +/-1 = right/left
     const anim_duration = 700;
 
@@ -56,6 +57,8 @@ define([
 
     o.render = function(method, data){
         console.log(method);
+        column_layout = false,
+        o.columns = 0;
         new_page = pages[method];
         expr_page = (method == 'expr');
         var page_data = data.page_data;
@@ -105,6 +108,8 @@ define([
     o.grid = function(page_data){
         grid_width = 410 + 1;
         render_site(page_data);
+        o.column_layout = (JSON.stringify(page_data.header) == 
+            JSON.stringify(["Network", "Recent"]))
     }
 
     o.forms = function(page_data){
@@ -207,11 +212,45 @@ define([
             $('#feed').css('width', columns * grid_width);
             if (o.columns != columns) {
                 o.columns = columns;
+                if (o.column_layout)
+                    layout_columns();
                 add_grid_borders(columns);
             }
         }
         if (context.page && context.page.resize)
             context.page.resize();
+    };
+
+    // Move the expr.card's into the feed layout, shuffling them
+    // into the shortest column.  The order is not preserved.
+    // TODO: preserve order.
+    var layout_columns = function(){
+        // First move the cards from column into #feed
+        // (to reset to known state)
+        // var all_cards = $("#feed .expr.card").
+        // all_cards.prepend($("#feed"));
+
+        // Resize the columns
+        for (var i = 0; i < 3; ++i){
+            var col_width = 0;
+            if (i < o.columns)
+                col_width = grid_width;
+            $("#feed .column_"+i).css("width", col_width);
+        }
+
+        // Then add the cards into the shortest column
+        var row_heights = [];
+        for (var i = 0; i < o.columns; ++i){
+            row_heights = row_heights.concat(0);
+        }
+        var expr_cards = $('#feed .expr.card');
+        expr_cards.each(function(i) {
+            var min = Math.min.apply(null, row_heights);
+            var min_i = row_heights.indexOf(min);
+            var el_col = $("#feed .column_" + min_i);
+            el_col.append($(this));
+            row_heights[min_i] += $(this).height();
+        });
     };
 
     // Set up the grid borders
@@ -220,14 +259,25 @@ define([
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - (expr_cards.length % columns);
         expr_cards.each(function(i) {
-            if (i < card_count)
-                $(this).css("border-bottom", "1px solid black");
-            else
-                $(this).css("border-bottom", "none");
-            if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
-                $(this).css("border-right", "1px solid black");
-            else
-                $(this).css("border-right", "none");
+            if (o.column_layout) {
+                if (! $(this).parent().hasClass("column_0"))
+                    $(this).css("border-left", "1px solid black");
+                else
+                    $(this).css("border-left", "none");
+                if (! $(this).is(":first-child"))
+                    $(this).css("border-top", "1px solid black");
+                else
+                    $(this).css("border-top", "none");
+            } else {
+                if (i < card_count)
+                    $(this).css("border-bottom", "1px solid black");
+                else
+                    $(this).css("border-bottom", "none");
+                if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
+                    $(this).css("border-right", "1px solid black");
+                else
+                    $(this).css("border-right", "none");
+            }
         });
     };
 
@@ -241,7 +291,7 @@ define([
             e.html(e.html().replace(/ |$/g, '&nbsp; '));
             e.addClass('spaced');
         });
-    }
+    };
 
     o.add_to_feed = function(page_data){
         $('#feed').append(show_cards(page_data));

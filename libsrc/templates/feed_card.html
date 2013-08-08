@@ -41,19 +41,22 @@
           <img src='{asset "skin/nav/comment.png"}' class='action_icon'><br>
         {>}
         <div class='text'>{text}</div>
-        {<if initiator user.id}
-          <form class="comment_edit" {form_attrs "comment_edit"} method='post'>
-            <textarea name="text" class="inplace_edit"></textarea>
-            <input type="hidden" name="deletion" value="delete">
-            <input type="hidden" name="id" value="{_id}">
-            <div class="show_hover">
-              <button name="edit" type=button>Edit</button>
-              <button name="delete" type="submit">Delete</button>
-            </div>
-          </form>
+        {<if mode "discussion"}
+          {# no edit outside discussion mode #}
+          {<if initiator user.id}
+            <form class="comment_edit" {form_attrs "comment_edit"} method='post'>
+              <textarea name="text" class="inplace_edit"></textarea>
+              <input type="hidden" name="deletion" value="delete">
+              <input type="hidden" name="id" value="{_id}">
+              <div class="show_hover">
+                <button name="edit" type=button>Edit</button>
+                <button name="delete" type="submit">Delete</button>
+              </div>
+            </form>
+          {>}
+          {# timestamp. should add to other types? #}
+          <div class="timestamp rightalign">{recency_time updated}</div>
         {>}
-        {# timestamp. should add to other types? #}
-        <div class="timestamp rightalign">{recency_time updated}</div>
       {>}
       {<if action "Broadcast"}
         <img src='{asset "skin/nav/republish.png"}' class='action_icon'>

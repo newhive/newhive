@@ -11,17 +11,6 @@
   #}
   <div id="popup_content">
     <div class="left_pane">
-      {# views, metadata #}
-      {<with null "attr_id" "views_icon" "icon_class" "views" "count" counts.Views}
-        {|templates/icon_count.html}
-      {>}
-      {# Views menu drawer #}
-      <div id="views_menu" class="menu drawer" data-handle='#views_icon' >
-        <div class="text upper item">Created</div>
-        <div>{recency_time created}</div>
-        <div class="text upper item">Updated</div>
-        <div>{recency_time updated}</div>
-      </div>
       {# expression title #}
       <div class="title text">{expr.title}</div>
       {# user profile #}
@@ -40,6 +29,17 @@
         </div>        
       </div>
       <div class="stats_bar">
+        {# views, metadata #}
+        {<with null "attr_id" "views_icon" "icon_class" "views" "count" counts.Views}
+          {|templates/icon_count.html}
+        {>}
+        {# Views menu drawer #}
+        <div id="views_menu" class="menu drawer" data-handle='#views_icon' >
+          <div class="text upper item">Created</div>
+          <div>{recency_time created}</div>
+          <div class="text upper item">Updated</div>
+          <div>{recency_time updated}</div>
+        </div>
         <form {form_attrs "star_unstar"} method='post'>
           <input type="hidden" name="entity" value="{id}">
           <input type="hidden" name="state" value="true">
@@ -80,6 +80,7 @@
         <a { anchor_attrs "home" }>
           {<with null "icon_class" "logo narrow"}{|templates/icon_count.html}{>}
         </a>
+        {# Overlay close button #}
         {<with null "attr_id" "social_close" "icon_class" "plus-minus narrow"}
           {|templates/icon_count.html}
         {>}

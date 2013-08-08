@@ -161,7 +161,7 @@ class Collection(object):
 
     def fetch(self, key, keyname='_id', **opts):
         if type(key) == list:
-            return list(self.search({'_id': {'$in': key }}))
+            return list(self.search(key))
         else:
             return self.find({ keyname : key }, **opts)
 
@@ -554,6 +554,8 @@ class User(HasSocial):
         return res
 
     def feed_page_esdb(self, at=0, limit=40, feed=False, trending=False, **opts):
+        def index_max(values):
+            return max(xrange(len(values)),key=values.__getitem__)
         # Filter for expressions which are viewable by self (for security)
         # Currently broken.
         f_view = self.can_view_filter()
@@ -564,7 +566,8 @@ class User(HasSocial):
         f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
         f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
 
-        # Filter for Comment and UpdatedExpr Feed actions from followed users excluding self's comments
+        # Filter for Comment and UpdatedExpr Feed actions for starred expressions
+        # from followed users excluding self's comments
         f_expr_class_name = pyes.filters.TermsFilter('class_name', ['UpdatedExpr', 'Comment'])
         f_expr_entity = pyes.filters.TermsFilter('entity', self.starred_expr_ids)
         f_expr_initiator = pyes.filters.TermFilter('initiator', self.id)
@@ -589,12 +592,28 @@ class User(HasSocial):
         # Both are map from (expression id) -> list
         feed_with_expr = defaultdict(list)  # -> list of feed ids
         user_with_expr = defaultdict(list)  # -> list of initiator ids
+        time_with_expr = defaultdict(list)  # -> list of update time
 
         # if feed == 'trending' or trending is True:
         for r in res_feed[:total_limit]:
             feed_with_expr[r['entity']].append(r._meta.id)
             user_with_expr[r['entity']].append(r['initiator'])
-        expr_ids = feed_with_expr.keys()
+            if (r.has_key('updated')):
+                time_with_expr[r['entity']].append(r['updated'])
+            else:
+                time_with_expr[r['entity']].append(r['created'])
+
+        # Grab all the expressions with followed tags and insert into lists
+        # NOTE: these items only get time, not feed or user, because there is
+        # no associated feed item.
+        # TODO: This code needs to be examined for efficiency.
+        expr_tags = self.db.esdb.conn.search(q_tags, indices=self.db.esdb.index,
+                                             doc_types="expr-type",
+                                             sort="updated:desc", size=total_limit)
+        for r in expr_tags[:total_limit]:
+            time_with_expr[r._meta.id].append(r['updated'])
+
+        expr_ids = time_with_expr.keys()
         qid = pyes.query.IdsQuery(expr_ids)
         query = qid
         # BUGBUG: why is filtering broken?
@@ -608,11 +627,25 @@ class User(HasSocial):
             res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
                                            doc_types="expr-type", start=at,
                                            sort="_score,created:desc", size=limit)
+            items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
         else:
-            res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
-                                           doc_types="expr-type", start=at,
-                                           sort="created:desc", size=limit)
-        items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
+            # if self.get('tags_following') is not None:
+            #     query = pyes.query.BoolQuery(should=[query, q_tags])
+
+            # Just use the max age of the commingled ids set
+            # All this data is in time_with_expr.
+            id_times = []
+            for eid in expr_ids:
+                id_times.append((eid, max(time_with_expr[eid])))
+            id_times = sorted(id_times, key=lambda x: x[1], reverse=True)
+            ids = [x[0] for x in id_times][at : at + limit]
+            # Use mongo whenever possible.
+            items = self.db.Expr.fetch(ids)
+            # qid = pyes.query.IdsQuery(ids)
+
+            # res = self.db.esdb.conn.search(qid, indices=self.db.esdb.index,
+            #                                doc_types="expr-type", start=0, size=limit)
+            #                                # sort="created:desc", size=limit)
         # else:
         #     items = Page([])
         #     new_at = at
@@ -1025,20 +1058,43 @@ class Expr(HasSocial):
             return self.db.Expr.fetch(query)
 
     def threaded_snapshot(self):
+        def timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
+            """This function will spawn a thread and run the given function
+            using the args, kwargs and return the given default value if the
+            timeout_duration is exceeded.
+            """ 
+            # import threading
+            class InterruptableThread(threading.Thread):
+                def __init__(self):
+                    threading.Thread.__init__(self)
+                    self.result = default
+                def run(self):
+                    self.result = func(*args, **kwargs)
+            it = InterruptableThread()
+            it.daemon = True
+            it.start()
+            it.join(timeout_duration)
+            if it.isAlive():
+                return it.result
+            else:
+                return default
+
         def threaded_snapshot_q(q, expr):
             expr.take_snapshots()
 
         # If we spin up too many threads, block.
-        while threading.active_count() > 16:
+        while threading.active_count() > 8:
             # log sleeps to see if server is being pounded.
             # log_error(self.db, message = "Too many snapshot threads", critical=False)
             time.sleep(0.02)
 
         q = Queue.Queue()
 
-        t = threading.Thread(target=threaded_snapshot_q, args = (q,self))
-        t.daemon = True
-        t.start()
+        # t = InterruptableThread(
+            # threading.Thread(target=threaded_snapshot_q, args = (q,self)))
+        result = timeout(threaded_snapshot_q, (q,self), timeout_duration=69)
+        # t.daemon = True
+        # t.start()
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):

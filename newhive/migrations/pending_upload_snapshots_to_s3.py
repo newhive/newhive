@@ -64,18 +64,22 @@ def start_snapshots(proc_tmp_snapshots=False):
             "$and": [
                 {"auth": "public"},
                 {"snapshot_time": {
-                    "$exists": False
+                    "$exists": True#False
                 }}
             ]
+        },limit=limit)
+        expressions_to_snapshot = db.Expr.search(
+            {"owner_name": "zach"
         },limit=limit)
         return expressions_to_snapshot
 
     count = 0
     total = get_exprs(0).count()
-    while True:
-    # if True:
+    # while True:
+    if True:
         exprs = get_exprs(100)
-        if len(exprs) == 0: break
+        print total
+        # if len(exprs) == 0: break
         # print exprs
         for expr in exprs:
             # if expr.get('_id') in existing_snapshots:

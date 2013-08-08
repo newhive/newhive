@@ -143,7 +143,7 @@
 
 #social_overlay {
     @include border-radius(25px 25px 0px 0px);
-    max-width: 1024px;
+    // max-width: 1024px;
     right: 0px;
     bottom: 0px;
     width: 100%;
@@ -153,10 +153,14 @@
     #popup_content {
         //position:absolute;
         //top: 44px;
-        width: 100%;
-        margin: 15px;
+        max-width: 1000px;
+        margin: auto;
+        padding: 0px 5px 0px 20px;
+        position: relative;
         //height: 306px;
         //overflow: auto;
+        * { vertical-align:top; }
+        * { vertical-align:bottom; }
     }
     #views_menu {
         .text.item {
@@ -165,8 +169,8 @@
     }
     .left_pane {
         display: inline-block;
-        width: 50%;
-        margin-right: 60px;
+        width: 450px;
+        // margin-right: 60px;
         .title {
             overflow: hidden;
             text-overflow: ellipsis;
@@ -177,16 +181,21 @@
 
     .right_pane {
         display: inline-block;
-        width: 50%;
-        position: absolute;
-        right: 0;
-        vertical-align: top;
-        border-left: 1px solid #d1d1d1;
+        width: 450px;
+        // position: absolute;
+        // right: 0;
+        // vertical-align: top;
+        text-align: right;
+        * * { text-align: left; }
+        // border-left: 1px solid #d1d1d1;
+        margin-right: 50px;
     }
     .stats_bar {
-        position: fixed;
-        right: 14px;
-        bottom: 10px;
+        // position: fixed;
+        // right: 14px;
+        // bottom: 10px;
+        margin-top: 20px;
+        // margin-left: 15px;
     }
 
     .footer {
@@ -195,7 +204,7 @@
 
     .tag_list {
         padding: 0 0 20px 0;
-        text-align: center;
+        // text-align: center;
         height: 40px;
         overflow: hidden;
     }
