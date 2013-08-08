@@ -1080,6 +1080,8 @@ class Expr(HasSocial):
                 return default
 
         def threaded_snapshot_q(q, expr):
+            result = timeout(threaded_snapshot, (self,), timeout_duration=69)
+        def threaded_snapshot(expr):
             expr.take_snapshots()
 
         # If we spin up too many threads, block.
@@ -1091,10 +1093,10 @@ class Expr(HasSocial):
         q = Queue.Queue()
 
         # t = InterruptableThread(
-            # threading.Thread(target=threaded_snapshot_q, args = (q,self)))
-        result = timeout(threaded_snapshot_q, (q,self), timeout_duration=69)
-        # t.daemon = True
-        # t.start()
+        t = threading.Thread(target=threaded_snapshot_q, args = (q,self))
+        # result = timeout(threaded_snapshot_q, (q,self), timeout_duration=69)
+        t.daemon = True
+        t.start()
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):

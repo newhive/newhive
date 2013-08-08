@@ -64,7 +64,7 @@ class Snapshots(object):
             os.rename('out-clipped.png',out_filename)
             return True
     def __init__(self):
-        print "snapshot init!!!"
+        # print "snapshot init!!!"
         if platform == 'linux' or platform == 'linux2':
             # Need xvfb running on linux to take snapshots. Check to see if it's currently running
             sp = envoy.run('xdpyinfo -display :99')

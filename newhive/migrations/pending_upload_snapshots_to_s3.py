@@ -49,7 +49,23 @@ def test_snapshot():
         
     # xvfb.terminate()
     
-       
+test = False
+
+def clear_snapshots():
+    expressions_to_snapshot = db.Expr.search({
+        "$and": [
+            {"snapshot_time": {
+                "$exists": True
+            }}
+            # bugbug    
+            # ,{"owner_name": "abram"}
+        ]
+    })
+    for expr in expressions_to_snapshot:
+        expr.pop('snapshot_time')
+        expr.save()
+
+
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
     # thumb_bucket = config.s3_buckets['thumb']
@@ -62,24 +78,24 @@ def start_snapshots(proc_tmp_snapshots=False):
     def get_exprs(limit):
         expressions_to_snapshot = db.Expr.search({
             "$and": [
-                {"auth": "public"},
                 {"snapshot_time": {
-                    "$exists": True#False
+                    "$exists": False
                 }}
             ]
         },limit=limit)
-        expressions_to_snapshot = db.Expr.search(
-            {"owner_name": "zach"
-        },limit=limit)
+        if test:
+            expressions_to_snapshot = db.Expr.search(
+                {"owner_name": "abram"
+            },limit=limit)
         return expressions_to_snapshot
 
     count = 0
     total = get_exprs(0).count()
-    # while True:
-    if True:
+    while True:
+    # if True:
         exprs = get_exprs(100)
         print total
-        # if len(exprs) == 0: break
+        if len(exprs) == 0: break
         # print exprs
         for expr in exprs:
             # if expr.get('_id') in existing_snapshots:
