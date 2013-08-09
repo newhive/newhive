@@ -6,6 +6,7 @@
 define([
     'browser/jquery',
     'ui/nav',
+    'ui/dialog', 
     'ui/new_account',
     'server/context',
     'browser/layout',
@@ -31,6 +32,7 @@ define([
 ], function(
     $,
     nav,
+    dialog,
     new_account,
     context,
     browser_layout,
@@ -65,7 +67,7 @@ define([
         if(!context.user.logged_in){
             var d = dialog.create('#login_menu',  
                 { open: function(){ $("#login_menu input[name=username]").focus(); } });
-            $('#login_btn').click(d.open);
+            $('.login_btn').click(d.open);
 
             if(context.error.login) d.open();
 
@@ -98,7 +100,7 @@ define([
     //     $('#overlays').empty().html(overlay_template());
     //     // $("#nav #plus").click(o.social_toggle);
     // };
-    function login(){
+    var login = function(){
         var f = $(this);
         var json_flag = f.find('[name=json]');
 
@@ -119,19 +121,22 @@ define([
             f.attr('action', context.secure_server + here.pathname.slice(1) + here.search);
             f.off('submit'); // prevent loop
         }
-    }
+    };
  
-    function logout(){
+    var logout = function(){
         $.post('/api/user/logout', '', function(){
             context.user.logged_in = false;
-            render();
+            init_overlays();
+            o.render(o.method, context);
+
             require(['ui/controller'], function(ctrl){ ctrl.refresh(); });
         });
-    }
+    };
     ///////////////////////////////
 
     o.render = function(method, data){
         console.log(method);
+        o.method = method;
         column_layout = false,
         o.columns = 0;
         new_page = pages[method];
