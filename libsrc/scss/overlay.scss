@@ -10,18 +10,17 @@
 #page_prev {
     background-image: asset_url('skin/nav/page_prev.png');
     &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
-    background-position: -4px 0px;
+    // background-position: -4px 0px;
     left: 14px;
 }
 #page_next {
     background-image: asset_url('skin/nav/page_next.png');
     &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
-    background-position: 4px 0px;
+    // background-position: 4px 0px;
     right: 20px;
 }
 
-.panel.profile {
-    display: none;
+#content_btns {
     //display: block;
     position: fixed;
     z-index: $nav_layer;
@@ -43,15 +42,7 @@
         background-image: asset_url('skin/nav/plus.png');
         &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
         background-position: 6px 5px;
-
-        &.logged_out {
-            @include border-radius(0 11px 11px 0);
-            display: inline-block;
-            position: static;
-            background-color: white;
-            &:hover { background-color: black; }
-            background-position: 3px -1px;
-        }
+        // background-position: 3px -1px;
     }
 }
 
@@ -64,14 +55,13 @@
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include border-radius(11px);
 
-    height: 42px;
-
-    .overlay {
-        display: inline-block;
-        position: static;    
+    &.panel {
+        height: 42px;
     }
 
     .icon {
+        position: static;
+        display: inline-block;
         height: 42px; width: 48px;
         background-size: 48px 42px;
         &:hover { background-color: black; }
@@ -81,52 +71,9 @@
         background-color: black;
     }
     &.logo {
-        display: inline-block;
-        height: 46px;
-        width: 46px;
-        position: static;    
+        height: 46px; width: 46px;
     }
 }
-
-.overlay.social_btn {
-    display: none;
-    right: 20px;
-    bottom: 20px;
-
-    * {
-        display: inline-block;
-        @include border-radius(11px);
-        width: 55px; height: 55px;
-    }
-
-}
-/*
-.social_btn {
-     background-image: asset_url('skin/nav/plus.png');
-     &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
-     background-position: 6px 5px;
-     display: none;
-+
-+    &.overlay {
-+        @include border-radius(11px);
-+        width: 55px;
-+        height: 55px;
-+        right: 20px;
-+        bottom: 20px;
-+    }
-+    &.logged_out {
-+        @include border-radius(0 11px 11px 0);
-+        display: inline-block;
-+        position: static;
-+        height: 42px;
-+        width: 48px;
-+        background-color: white;
-+        &:hover { background-color: black; }
-+        background-position: 3px -1px;
-+    }
-+
- }
- */
 
 #social_overlay {
     @include border-radius(25px 25px 0px 0px);

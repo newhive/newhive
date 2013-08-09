@@ -37,10 +37,10 @@ define([
 
     hide_panel = function(){
         $("#signup_create").hide();
-        $(".panel.profile").hide();
+        $("#content_btns").hide();
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
-        $(".panel .logged_out.social_btn").addClass("hide");
+        $(".panel .social_btn").addClass("hide");
         $(".panel .edit_btn").hide();
         $(".panel .logo.overlay").hide();
     }
@@ -84,8 +84,8 @@ define([
         navigate_page(0); // To cache nearby expressions
 
         hide_panel();
-        $(".panel.profile").show();
-        $(".logged_out.social_btn").removeClass("hide");
+        $("#content_btns").show();
+        $(".social_btn").removeClass("hide");
         if (!context.user.logged_in) {
             $("#signup_create").show();
             $("#signup_create .signup").removeClass("hide");
@@ -94,7 +94,7 @@ define([
             $("#signup_create").show();
             $("#signup_create .create").removeClass("hide");
             if (context.user.id == o.expr.owner.id) {
-                $('.panel .edit_btn').replaceWith(edit_btn_template(page_data).show());
+                $('#content_btns .edit_btn').replaceWith(edit_btn_template(page_data).show());
             }
         }
     };
@@ -139,7 +139,7 @@ define([
         var expr_curr = $('.expr-visible');
         expr_curr.removeClass('expr-visible');
         $('#exprs').show();
-        $('.overlay.social_btn').show();
+        $('.social_btn').show();
 
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
@@ -233,8 +233,8 @@ define([
         $("#social_close").unbind('click');
         $("#social_close").click(o.social_toggle);
         
-        $(".logged_out.social_btn").unbind('click');
-        $(".logged_out.social_btn").click(o.social_toggle);
+        $(".social_btn").unbind('click');
+        $(".social_btn").click(o.social_toggle);
 
         $('#comment_form').unbind('response').on('response', o.comment_response);
 
