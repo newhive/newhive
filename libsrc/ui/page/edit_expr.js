@@ -3,6 +3,7 @@ define([
     'server/context',
     'ui/editor',
     'ui/page/expr',
+    'browser/layout',
     'json!server/compiled.bundles.json',
     'sj!templates/edit.html'
 ], function(
@@ -10,6 +11,7 @@ define([
     context,
     editor,
     expr_page,
+    lay,
     bundles, 
     edit_template
 ) {
@@ -31,6 +33,7 @@ define([
     o.resize = function(){
         // browser_layout.center($('#page_prev'), undefined, {'h': false});
         // browser_layout.center($('#page_next'), undefined, {'h': false});
+        lay.center($('#app_btns'), $('#site'), {v: false});        
     };
 
     o.render = function(page_data){
@@ -43,6 +46,8 @@ define([
 
         if(!page_data.expr) page_data.expr = {};
         editor.init(page_data.expr, o);
+        setTimeout(o.resize, 0);
+        $('.edit.overlay').show();
     };
 
     o.attach_handlers = function(){

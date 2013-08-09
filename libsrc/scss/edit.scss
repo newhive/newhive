@@ -7,20 +7,21 @@
     z-index: 3;
 }
 
-.edit.nav {
+.edit.overlay {
     background-color: white;
     position: fixed;
     z-index: 4;
+    padding: 0 10px;
 }
 
 #edit_nav {
-    right: 0;
-    bottom: 0;
-    padding-left: 4px;
+    right: 20px; bottom: 20px;
 
     & > * {
         display: inline-block;
-        margin: 13px 4px;
+        padding: 10px 4px;
+        height: 22px;
+        vertical-align: top;
     }
 }
 
@@ -103,13 +104,10 @@
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
 #app_btns {
-    right: 200px;
-    bottom: 0px;
+    bottom: 20px;
 
     .insert_btn { cursor: default; }
-    img { width: 50px; }
     .icon {
-        width: 67px; height: 50px;
         display: inline-block;
     }
 

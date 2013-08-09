@@ -1,4 +1,4 @@
-<div id='edit_nav' class='edit nav'
+<div id='edit_nav' class='edit nav overlay'
   ><div class='center pad'><img id='btn_undo' title='undo' class='hoverable'
     src='{"skin/edit/undo.png"|asset}'></div
   ><div class='center'><img id='btn_redo' title='redo' class='hoverable'
@@ -47,7 +47,7 @@
   <div val='public' class='menu_item'>Public</div>
 </div>
 
-<div id='app_btns' class='edit nav'
+<div id='app_btns' class='edit nav overlay'
  ><div id='insert_text'  class='icon hoverable'></div
  ><div id='insert_image' class='icon hoverable'></div
  ><div id='insert_audio' class='icon hoverable'></div
@@ -57,16 +57,11 @@
 ></div> 
 
 <div id='menu_text' class='menu drawer medbold'>
- <div id='text_default' class='menu_item'>Normal</div>
  <div id='text_header' class='menu_item'>Header</div>
- <!--<div id='text_upload' class='menu_item'>Upload .txt</div>-->
+ <div id='text_default' class='menu_item default'>Normal</div>
 </div>
 
 <div id='menu_image' class='menu drawer medbold'>
- <label for='media_input'>
-   <div id='image_upload' class='menu_item'>Upload image</div></label>
- <div id='image_background' class='menu_item'>Background</div>
- <div id='image_from_url' class='menu_item'>Image URL</div>
  <div id='image_embed_submenu' style='text-align: center; padding-bottom: 7px;'>
    <form id='embed_image_form'>
      <input type='text' id='image_embed_code' class='embed_box'>
@@ -74,13 +69,17 @@
      <input id='image_embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
    </form>
  </div>
+ <div id='image_from_url' class='menu_item'>Image URL</div>
+ <div id='image_background' class='menu_item'>Background</div>
+ <label for='media_input'>
+   <div id='image_upload' class='menu_item default'>Upload image</div></label>
  <!--<div id='image_webcam' class='menu_item'>Take picture</div>
  <div id='image_search' class='menu_item'>Google images</div>-->
 </div>
 
 <div id='menu_audio' class='menu drawer medbold'>
   <label for='media_input'><div id='audio_upload'
-    class='menu_item'>Upload Audio</div>
+    class='menu_item default'>Upload Audio</div>
 </div>
 
 <div id='menu_embed' class='menu drawer'>
@@ -92,12 +91,12 @@
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'>
- <div id='shape_rectangle' class='menu_item'>Rectangle</div>
  <div id='shape_sketch' class='menu_item'>Sketch</div>
+ <div id='shape_rectangle' class='menu_item default'>Rectangle</div>
 </div>
 
 <div id='menu_file' class='menu drawer medbold'>
- <label for='link_input'><div class='menu_item menu_hover'
+ <label for='link_input'><div class='menu_item menu_hover default'
    >Upload file to link</div></label>
 </div>
 
@@ -277,7 +276,7 @@ blah blah
   <div id='bg_opacity_label' class='small_text'>opacity: <input id='bg_opacity'
     type='text' size='3' value='100%'></div>
   <label for='bg_input'><div id='bg_upload_btn'
-    class='btn black small_text rounded'>Upload Image</div>
+    class='btn black small_text rounded'>Upload Image</div></label>
   <div id='bg_remove' class='btn black small_text rounded'>Clear</div>
  </div>
  <div id='color_pick' style='float : right; position : relative;'></div>

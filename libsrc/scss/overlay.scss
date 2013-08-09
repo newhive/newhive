@@ -3,8 +3,9 @@
 @import "common";
 
 .page_btn {
-    width: 55px;
+    width: 42px;
     height: 55px;
+    background-size: 42px 55px;
 }
 #page_prev {
     background-image: asset_url('skin/nav/page_prev.png');
@@ -28,17 +29,14 @@
     right: 20px;
     bottom: 20px;
 
-    .overlay {
-        display: inline-block;
-        position: static;    
-        margin-top: -31px;
-        vertical-align: middle;
-    }
-
     .edit_icon {
-        height: 42px; width: 48px;
         background-image: asset_url('skin/nav/edit.png');
         &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
+    }
+
+    .create {
+        background-image: asset_url('skin/nav/create.png');
+        &:hover { background-image: asset_url('skin/nav/create-hover.png'); }
     }
 
     .social_btn {
@@ -50,8 +48,6 @@
             @include border-radius(0 11px 11px 0);
             display: inline-block;
             position: static;
-            height: 42px;
-            width: 48px;
             background-color: white;
             &:hover { background-color: black; }
             background-position: 3px -1px;
@@ -66,6 +62,20 @@
     background-color: white;
     background-repeat: no-repeat;
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+    @include border-radius(11px);
+
+    height: 42px;
+
+    .overlay {
+        display: inline-block;
+        position: static;    
+    }
+
+    .icon {
+        height: 42px; width: 48px;
+        background-size: 48px 42px;
+        &:hover { background-color: black; }
+    }
 
     &:hover { 
         background-color: black;
@@ -117,29 +127,6 @@
 +
  }
  */
-#signup_create {
-    &:hover { 
-        background-color: white;
-    }
-   
-    right: 20px;
-    bottom: 20px;
-    @include border-radius(11px 0px 0px 11px);
-    padding: 10px 0px 10px 0px;
-    &:first-child {
-    }
-    span {
-        &:hover { 
-            background-color: black;
-            color: white;
-        }
-        text-transform: uppercase;
-        padding: 0px 10px 0px 10px;
-    }
-    .left_border {
-        border-left: 1px solid red;
-    }
-}
 
 #social_overlay {
     @include border-radius(25px 25px 0px 0px);

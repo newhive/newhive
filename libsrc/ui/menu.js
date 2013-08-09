@@ -21,7 +21,7 @@ var menu = function(handle, drawer, options) {
             ,open_condition: function(){ return true; }
             ,close_condition: function(){ return true; }
             ,auto_height: true
-            ,default_item: drawer.find('.menu_item').eq(0)
+            ,default_item: drawer.find('.menu_item.default')
             ,layout: 'bottom'
             ,layout_x: 'auto'
             ,min_y: 0
