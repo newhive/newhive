@@ -33,6 +33,7 @@ define([
         hide_exprs();
         hide_panel();
         $('#site').show();
+        $('.page_btn').hide();
     };
 
     hide_panel = function(){
@@ -186,6 +187,16 @@ define([
                 queue: false })
         }
         $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
+
+        // postMessage only works after the page loads, so once page loads, we
+        // can hide them and show on hover
+        $('.page_btn').show();
+        contentFrame.load(function(){
+            var btns = $('.page_btn');
+            btns.each(function(i, e){
+                if(!$(e).hasClass('active')) $(e).hide()
+            });
+        });
     };
 
     o.render_overlays = function(){
@@ -468,12 +479,12 @@ define([
             return;
         }
         if ( m.data == "show_prev" || m.data == "show_next") {
-            var div = (m.data == "show_prev" ? $("#page_prev") : $("#page_next"));
-            div.show();
+            var div = $(m.data == "show_prev" ? "#page_prev" : "#page_next");
+            div.show().addClass('active');
         }
         if ( m.data == "hide_prev" || m.data == "hide_next") {
-            var div = (m.data == "hide_prev" ? $("#page_prev") : $("#page_next"));
-            div.hide();
+            var div = $(m.data == "hide_prev" ? "#page_prev" : "#page_next");
+            div.hide().removeClass('active');
         }
     };
 

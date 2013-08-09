@@ -24,7 +24,6 @@
     //display: block;
     position: fixed;
     z-index: $nav_layer;
-    background-color: transparent;
     right: 20px;
     bottom: 20px;
 
@@ -57,14 +56,14 @@
 
     &.panel {
         height: 42px;
-    }
 
-    .icon {
-        position: static;
-        display: inline-block;
-        height: 42px; width: 48px;
-        background-size: 48px 42px;
-        &:hover { background-color: black; }
+        .icon {
+            position: static;
+            display: inline-block;
+            height: 42px; width: 48px;
+            background-size: 48px 42px;
+            &:hover { background-color: black; }
+        }
     }
 
     &:hover { 
