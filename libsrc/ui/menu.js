@@ -142,7 +142,7 @@ var menu = function(handle, drawer, options) {
         // window if below handle, or above top of window if above the handle
         var hp = handle.parent().is(drawer.parent()) ? handle.position() : handle.offset();
 
-        if ( layout_x == 'submenu' ){
+        if ( opts.layout_x == 'submenu' ){
             css_opts.left = hp.left + handle.outerWidth();
             css_opts.top = hp.top - drawer.outerHeight() + handle.outerHeight() - opts.offset_y
             // hp.top + opts.offset_y;
