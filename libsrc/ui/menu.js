@@ -43,16 +43,19 @@ var menu = function(handle, drawer, options) {
     drawer.data('menu', o);
     handle.data('menu', o);
 
-    o.delayed_close = function(close_delay) {
+    o.delayed_close_r = function(recurse, close_delay) {
         if(typeof(close_delay) != 'number') close_delay = false;
-        if(opts.group.delayed_close) {
-            opts.group.delayed_close();
+        if(typeof(recurse) == 'boolean' && recurse && opts.group.delayed_close) {
+            opts.group.delayed_close_r(true, close_delay);
             return;
         }
         opts.default_item.removeClass('active');
         if(opts.hover_close && ! close_timer) {
             close_timer = setTimeout(o.close, close_delay || opts.close_delay);
-        }
+        }    
+    };
+    o.delayed_close = function(close_delay) {
+        o.delayed_close_r(true, close_delay);
     };
     o.cancel_close = function(e) {
         if(opts.group.cancel_close) 
@@ -181,7 +184,7 @@ var menu = function(handle, drawer, options) {
 
     if(opts.hover) {
         handle.on('mouseover', null, { delay: opts.open_delay }, o.open)
-            .on('mouseleave', o.delayed_close);
+            .on('mouseleave', o.delayed_close_r);
         drawer.mouseenter(o.cancel_close).mouseleave(o.delayed_close);
     }
     handle.click(function(){
