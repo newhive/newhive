@@ -147,7 +147,7 @@ var menu = function(handle, drawer, options) {
             css_opts.top = hp.top - drawer.outerHeight() + handle.outerHeight() - opts.offset_y
             // hp.top + opts.offset_y;
         }
-        else if opts.layout == 'bottom' ){
+        else if ( opts.layout == 'bottom' ){
             var oy = handle.outerHeight() + opts.offset_y;
             css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
                 && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
