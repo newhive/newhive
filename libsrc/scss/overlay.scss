@@ -70,12 +70,12 @@
     &:hover { 
         background-color: black;
     }
-    &.logo {
-        display: inline-block;
-        height: 46px;
-        width: 46px;
-        position: static;    
-    }
+    // &.logo {
+    //     display: inline-block;
+    //     height: 46px;
+    //     width: 46px;
+    //     position: static;    
+    // }
 }
 
 .overlay.social_btn {
@@ -244,4 +244,16 @@
     .submit {
         padding: 7px;
     }
+}
+
+.overlay.logo {
+    display: block;
+    ////////////
+    margin-left: 0px;
+    height: 46px;
+    width: 46px;
+    background-position: 6px 5px;
+    left: 20px;
+    bottom: 20px;
+
 }

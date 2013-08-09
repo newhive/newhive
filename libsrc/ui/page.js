@@ -11,6 +11,7 @@ define([
     'browser/layout',
     'ui/util',
     'ui/page/pages',
+    'sj!templates/overlay.html',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
     'sj!templates/profile_edit.html',
@@ -35,6 +36,7 @@ define([
     browser_layout,
     ui_util,
     pages,
+    overlay_template,
     master_template,
     home_template,
     profile_edit_template,
@@ -49,11 +51,84 @@ define([
     o.init = function(controller){
         o.anim_direction = 0;
         o.controller = controller;
-        nav.render();
+        // nav.render();
+        init_overlays();
         $(window).resize(resize);
 
-        resize();
+        // resize();
     };
+
+    var init_overlays = function(){
+        $('#overlays').empty().html(overlay_template());
+        // render_overlays();
+        $('#login_form').submit(login);
+        if(!context.user.logged_in){
+            var d = dialog.create('#login_menu',  
+                { open: function(){ $("#login_menu input[name=username]").focus(); } });
+            $('#login_btn').click(d.open);
+
+            if(context.error.login) d.open();
+
+            // request invite form handlers. This form also appears on home page,
+            // so this applies to both, and must be done after the top level render
+            context.after_render.add('.invite_form [name=email]', function(e){
+                e.on('change', function(){
+                    $('.invite_form .optional').removeClass('hide');
+                });
+            });
+            context.after_render.add('.invite_form', function(e){
+                e.on('response', function(e, data){
+                    if(data){ // success
+                        $('.request_invite').hide();
+                        $('.request_sent').removeClass('hide');
+                        // TODO: set cookie so request_sent can be shown later
+                    }
+                    else { // failure
+                        $('#request_invite .error').removeClass('hide');
+                    }
+                });
+            });
+        } else {
+            $('#logout_btn').click(logout);
+        }
+    };
+
+    ///////////////////////////////
+    // var render_overlays = function(){
+    //     $('#overlays').empty().html(overlay_template());
+    //     // $("#nav #plus").click(o.social_toggle);
+    // };
+    function login(){
+        var f = $(this);
+        var json_flag = f.find('[name=json]');
+
+        if(location.protocol == 'https:'){
+            $.post(f.attr('action'), f.serialize(), function(user){
+                if(user){
+                    context.user = user;
+                    render();
+                    require(['ui/controller'], function(ctrl){ ctrl.refresh() });
+                }
+                else $('.login.error').removeClass('hide');
+            });
+            return false;
+        }
+        // can't post between protocols, so pass credentials to site-wide auth
+        else{
+            var here = window.location;
+            f.attr('action', context.secure_server + here.pathname.slice(1) + here.search);
+            f.off('submit'); // prevent loop
+        }
+    }
+ 
+    function logout(){
+        $.post('/api/user/logout', '', function(){
+            context.user.logged_in = false;
+            render();
+            require(['ui/controller'], function(ctrl){ ctrl.refresh(); });
+        });
+    }
+    ///////////////////////////////
 
     o.render = function(method, data){
         console.log(method);
@@ -227,8 +302,8 @@ define([
     var layout_columns = function(){
         // First move the cards from column into #feed
         // (to reset to known state)
-        // var all_cards = $("#feed .expr.card").
-        // all_cards.prepend($("#feed"));
+        var all_cards = $("#feed .expr.card");
+        all_cards.prepend($("#feed"));
 
         // Resize the columns
         for (var i = 0; i < 3; ++i){

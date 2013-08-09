@@ -31,7 +31,7 @@ expr_ids = ["50f60b796d902242fd02a754",
 snapshots = Snapshots()
 
 def sss():
-    snapshots.take_snapshot("50f60b796d902242fd02a754", "snap_out.png")
+    snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png")
 
 def test_snapshot():
     # s3_con = S3Connection(config.aws_id, config.aws_secret)

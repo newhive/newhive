@@ -43,8 +43,7 @@ define([
         }
     };
     o.exit = function(){
-        if (context.route_name == "home")
-            $("#nav").hide();
+        $("#nav").hide();
         $("#signup_create").hide();
         $(".panel.profile").hide();
         $(".logo.overlay").addClass("hide");
