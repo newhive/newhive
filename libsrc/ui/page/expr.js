@@ -4,7 +4,6 @@ define([
     'browser/layout',
     'ui/menu',
     'ui/dialog',
-    'sj!templates/overlay.html',
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html'
@@ -14,7 +13,6 @@ define([
     browser_layout,
     menu,
     dialog,
-    overlay_template,
     activity_template,
     social_overlay_template,
     edit_btn_template
@@ -26,7 +24,9 @@ define([
 
     o.init = function(controller){
         o.controller = controller;
-        o.render_overlays();
+        $("#page_prev").click(o.page_prev);
+        $("#page_next").click(o.page_next);
+        $("#social_plus").click(o.social_toggle);
         window.addEventListener('message', o.handle_message, false);
     };
     o.exit = function(){
@@ -188,15 +188,6 @@ define([
         $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
     };
 
-    o.render_overlays = function(){
-        $('#overlays').empty().html(overlay_template());
-        $("#page_prev").click(o.page_prev);
-        $("#page_next").click(o.page_next);
-        $("#social_plus").click(o.social_toggle);
-        // $("#nav #plus").click(o.social_toggle);
-    };
-
-
     var hide_other_exprs = function() {
         $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').hide();
         fixup_tags_list();
@@ -253,12 +244,12 @@ define([
         });
 
         $("#love_icon").unbind('click').click(function (event) {
-            o.user_operation(event, $(this), "loves"); });
+            o.social_btn_click(event, $(this), "loves"); });
         $("#broadcast_icon").click(function (event) {
-            o.user_operation(event, $(this), "broadcast"); });
+            o.social_btn_click(event, $(this), "broadcast"); });
 
         $('.page_btn').on('mouseenter', function(event){
-            o.page_animate($(this));
+            o.page_btn_animate($(this));
         });
 
         try {
@@ -269,7 +260,7 @@ define([
         } catch(err) {;}
     };
 
-    o.page_animate = function (el) {
+    o.page_btn_animate = function (el) {
         var prop = "background-position-x";
         var dir = (el.prop("id") == "page_next") ? "" : "-";
         var orig_position = el.css(prop);
@@ -292,7 +283,7 @@ define([
         });
     };
 
-    o.user_operation = function(e, el, btn) {
+    o.social_btn_click = function(e, el, btn) {
         var el_drawer = $("[data-handle=#" + el.prop("id") + "]");
         var el_form = el.parent();
         var el_counts = el.find($(".counts"));

@@ -113,14 +113,22 @@ define([
         var dom = $('<div>');
         dom[0].innerHTML = text;
         var elements = dom.contents();
-        
+        // var all_elements = elements.add(document.body);
+
         // Common site-wide handlers
         find_all(elements, 'form[data-route-name]').each(
             function(i, e){ form_handler(e, elements) });
         find_all(elements, '.menu.drawer[data-handle]').each(function(i, e){
             var handle = find_all(elements, $(e).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            menu(handle, e);
+            var parent = find_all(elements, $(e).attr('data-parent'));
+            var opts = {};
+            if (parent.length && parent.data('menu')) {
+                opts['group'] = parent.data('menu');
+                opts['layout_x'] = 'submenu';
+                // opts['layout'] =  'center_y';
+            }
+            menu(handle, e, opts);
         });
         find_all(elements, '.dialog[data-handle]').each(function(i, e){
             var handle = find_all(elements, $(e).attr('data-handle'));

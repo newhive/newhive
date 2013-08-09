@@ -1,9 +1,6 @@
 <div class='social overlay page_btn' id='page_prev'></div>
 <div class='social overlay page_btn' id='page_next'></div>
 <div class='social panel profile'>
-    {# hive logo #}
-    <a class='hide logo overlay counts_icon' {anchor_attrs "home"}
-        ><div id='logo' class='icon logo'></div></a>
     {# edit expression #}
     <div class='hide edit_btn'></div>
     {# create or signup/login #}
@@ -19,3 +16,72 @@
     <div class='hide overlay logged_out social_btn'></div>
 </div>
 <div class='social overlay' id='social_overlay'></div>
+
+{# hive logo #}
+<a class='logo overlay counts_icon' {anchor_attrs "home"}
+    ><div id='logo' class='icon logo'></div></a>
+
+{# menu: logo #}
+<div id='logo_menu' class='menu drawer' data-handle='#logo'>
+  {<if user.logged_in}
+  {#log out
+  activity
+  username
+  network#}
+    <div id='logout_btn' class='menu_item'>Logout
+    </div> <div id='activity_btn' class='text_btn menu_item hoverable'>Activity
+    </div> <div id='user_btn' class='text_btn menu_item hoverable'>{user.name|e}
+    </div> <a {anchor_attrs "home"}><div class='text_btn menu_item hoverable'>Network</a>
+    </div>
+  {>}{<else}
+    <div class='menu_item'>About NewHive</div>
+  {>}
+</div>
+
+{<if user.logged_in}
+  <div id='user_menu' class='menu drawer user_menu' data-handle='#user_btn' data-parent='#logo'>
+    <a { anchor_attrs "expressions_public" "owner_name" user.name }><div
+      class='menu_item'>Expressions<div class='count'></div></div></a>
+    <a { anchor_attrs "expressions_private" "owner_name" user.name }><div
+      class='menu_item'>Private<div class='count'></div></div></a>
+    <a { anchor_attrs "following" "owner_name" user.name }><div
+      class='menu_item'>Following<div class='count'></div></div></a>
+    <a { anchor_attrs "followers" "owner_name" user.name }><div
+      class='menu_item'>Followers<div class='count'></div></div></a>
+    <a { anchor_attrs "loves" "owner_name" user.name }><div
+      class='menu_item'>Loves<div class='count'></div></div></a>
+  </div>
+  <div id='activity_menu' class='menu drawer user_menu' data-handle='#activity_btn' data-parent='#logo'>
+    <div class='activity'>{<with . "activity" user.activity}
+      {|templates/activity.html}
+    {>}</div>
+  </div>
+{>}{<else}
+  <div id='login_menu' class='dialog' data-handle='#login_btn'>
+    {#<a href="{facebook_authentication_url}" target="_top"
+      <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 2px 0 2px -4px;'>
+    </a>#}
+    {|templates/login_form.html}
+  </div>
+{>}
+
+{# Dialog: Login or Join #}
+{<unless user.logged_in}
+  <div id='dia_login_or_join' class='dialog hide' data-handle='#sign_up_btn'>
+    <div class="column left">
+      <img class='centered' src='{asset "skin/1/facebook_flat_lg.png"}'>
+      <h3>
+        <span class="line1">Have an account?</span><br/>
+        <span class="line2">Please log in.</span>
+      </h3>
+      {|templates/login_form.html}
+    </div>
+    <div class="column right">
+      <h3>
+        <span class="line1">Don't have an account yet?</span><br/>
+        <span class="line2">Please request an invite.</span>
+      </h3>
+      {|templates/request_invite_form.html}
+    </div>
+  </div>
+{>}
