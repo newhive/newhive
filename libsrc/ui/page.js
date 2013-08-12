@@ -6,11 +6,13 @@
 define([
     'browser/jquery',
     'ui/nav',
+    'ui/dialog', 
     'ui/new_account',
     'server/context',
     'browser/layout',
     'ui/util',
     'ui/page/pages',
+    'sj!templates/overlay.html',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
     'sj!templates/profile_edit.html',
@@ -30,11 +32,13 @@ define([
 ], function(
     $,
     nav,
+    dialog,
     new_account,
     context,
     browser_layout,
     ui_util,
     pages,
+    overlay_template,
     master_template,
     home_template,
     profile_edit_template,
@@ -42,20 +46,99 @@ define([
     activity_template
 ){
     var o = {}, expr_page = false, grid_width, controller,
+        column_layout = false,
         anim_direction; // 0 = up, +/-1 = right/left
     const anim_duration = 700;
 
     o.init = function(controller){
         o.anim_direction = 0;
         o.controller = controller;
-        nav.render();
+        // nav.render();
+        init_overlays();
         $(window).resize(resize);
 
-        resize();
+        // resize();
     };
+
+    var init_overlays = function(){
+        $('#overlays').empty().html(overlay_template());
+        // render_overlays();
+        $('#login_form').submit(login);
+        if(!context.user.logged_in){
+            var d = dialog.create('#login_menu',  
+                { open: function(){ $("#login_menu input[name=username]").focus(); } });
+            $('.login_btn').click(d.open);
+
+            if(context.error.login) d.open();
+
+            // request invite form handlers. This form also appears on home page,
+            // so this applies to both, and must be done after the top level render
+            context.after_render.add('.invite_form [name=email]', function(e){
+                e.on('change', function(){
+                    $('.invite_form .optional').removeClass('hide');
+                });
+            });
+            context.after_render.add('.invite_form', function(e){
+                e.on('response', function(e, data){
+                    if(data){ // success
+                        $('.request_invite').hide();
+                        $('.request_sent').removeClass('hide');
+                        // TODO: set cookie so request_sent can be shown later
+                    }
+                    else { // failure
+                        $('#request_invite .error').removeClass('hide');
+                    }
+                });
+            });
+        } else {
+            $('#logout_btn').click(logout);
+        }
+    };
+
+    ///////////////////////////////
+    // var render_overlays = function(){
+    //     $('#overlays').empty().html(overlay_template());
+    //     // $("#nav #plus").click(o.social_toggle);
+    // };
+    var login = function(){
+        var f = $(this);
+        var json_flag = f.find('[name=json]');
+
+        if(location.protocol == 'https:'){
+            $.post(f.attr('action'), f.serialize(), function(user){
+                if(user){
+                    context.user = user;
+                    render();
+                    require(['ui/controller'], function(ctrl){ ctrl.refresh() });
+                }
+                else $('.login.error').removeClass('hide');
+            });
+            return false;
+        }
+        // can't post between protocols, so pass credentials to site-wide auth
+        else{
+            var here = window.location;
+            f.attr('action', context.secure_server + here.pathname.slice(1) + here.search);
+            f.off('submit'); // prevent loop
+        }
+    };
+ 
+    var logout = function(){
+        $.post('/api/user/logout', '', function(){
+            context.user.logged_in = false;
+            init_overlays();
+            o.render(o.method, context);
+
+            require(['ui/controller'], function(ctrl){ ctrl.refresh(); });
+        });
+    };
+    ///////////////////////////////
 
     o.render = function(method, data){
         console.log(method);
+        o.method = method;
+        column_layout = false,
+        o.columns = 0;
         new_page = pages[method];
         expr_page = (method == 'expr');
         var page_data = data.page_data;
@@ -105,6 +188,8 @@ define([
     o.grid = function(page_data){
         grid_width = 410 + 1;
         render_site(page_data);
+        o.column_layout = (JSON.stringify(page_data.header) == 
+            JSON.stringify(["Network", "Recent"]))
     }
 
     o.forms = function(page_data){
@@ -207,11 +292,45 @@ define([
             $('#feed').css('width', columns * grid_width);
             if (o.columns != columns) {
                 o.columns = columns;
+                if (o.column_layout)
+                    layout_columns();
                 add_grid_borders(columns);
             }
         }
         if (context.page && context.page.resize)
             context.page.resize();
+    };
+
+    // Move the expr.card's into the feed layout, shuffling them
+    // into the shortest column.  The order is not preserved.
+    // TODO: preserve order.
+    var layout_columns = function(){
+        // First move the cards from column into #feed
+        // (to reset to known state)
+        var all_cards = $("#feed .expr.card");
+        all_cards.prepend($("#feed"));
+
+        // Resize the columns
+        for (var i = 0; i < 3; ++i){
+            var col_width = 0;
+            if (i < o.columns)
+                col_width = grid_width;
+            $("#feed .column_"+i).css("width", col_width);
+        }
+
+        // Then add the cards into the shortest column
+        var row_heights = [];
+        for (var i = 0; i < o.columns; ++i){
+            row_heights = row_heights.concat(0);
+        }
+        var expr_cards = $('#feed .expr.card');
+        expr_cards.each(function(i) {
+            var min = Math.min.apply(null, row_heights);
+            var min_i = row_heights.indexOf(min);
+            var el_col = $("#feed .column_" + min_i);
+            el_col.append($(this));
+            row_heights[min_i] += $(this).height();
+        });
     };
 
     // Set up the grid borders
@@ -220,14 +339,25 @@ define([
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - (expr_cards.length % columns);
         expr_cards.each(function(i) {
-            if (i < card_count)
-                $(this).css("border-bottom", "1px solid black");
-            else
-                $(this).css("border-bottom", "none");
-            if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
-                $(this).css("border-right", "1px solid black");
-            else
-                $(this).css("border-right", "none");
+            if (o.column_layout) {
+                if (! $(this).parent().hasClass("column_0"))
+                    $(this).css("border-left", "1px solid black");
+                else
+                    $(this).css("border-left", "none");
+                if (! $(this).is(":first-child"))
+                    $(this).css("border-top", "1px solid black");
+                else
+                    $(this).css("border-top", "none");
+            } else {
+                if (i < card_count)
+                    $(this).css("border-bottom", "1px solid black");
+                else
+                    $(this).css("border-bottom", "none");
+                if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
+                    $(this).css("border-right", "1px solid black");
+                else
+                    $(this).css("border-right", "none");
+            }
         });
     };
 
@@ -241,7 +371,7 @@ define([
             e.html(e.html().replace(/ |$/g, '&nbsp; '));
             e.addClass('spaced');
         });
-    }
+    };
 
     o.add_to_feed = function(page_data){
         $('#feed').append(show_cards(page_data));

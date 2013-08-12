@@ -71,7 +71,7 @@
   </div>
 {>}
 
-
+{# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
   {<if user.logged_in}
     <div class='menu_item'>Email Invites</div>
@@ -86,20 +86,23 @@
   {>}
 </div>
 
-{<unless user.logged_in}<div id='dia_login_or_join' class='dialog hide' data-handle='#sign_up_btn'>
-  <div class="column left">
-    <img class='centered' src='{asset "skin/1/facebook_flat_lg.png"}'>
-    <h3>
-      <span class="line1">Have an account?</span><br/>
-      <span class="line2">Please log in.</span>
-    </h3>
-    {|templates/login_form.html}
+{# Dialog: Login or Join #}
+{<unless user.logged_in}
+  <div id='dia_login_or_join' class='dialog hide' data-handle='#sign_up_btn'>
+    <div class="column left">
+      <img class='centered' src='{asset "skin/1/facebook_flat_lg.png"}'>
+      <h3>
+        <span class="line1">Have an account?</span><br/>
+        <span class="line2">Please log in.</span>
+      </h3>
+      {|templates/login_form.html}
+    </div>
+    <div class="column right">
+      <h3>
+        <span class="line1">Don't have an account yet?</span><br/>
+        <span class="line2">Please request an invite.</span>
+      </h3>
+      {|templates/request_invite_form.html}
+    </div>
   </div>
-  <div class="column right">
-    <h3>
-      <span class="line1">Don't have an account yet?</span><br/>
-      <span class="line2">Please request an invite.</span>
-    </h3>
-    {|templates/request_invite_form.html}
-  </div>
-</div>{>}
+{>}

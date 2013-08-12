@@ -43,15 +43,23 @@ var menu = function(handle, drawer, options) {
     drawer.data('menu', o);
     handle.data('menu', o);
 
-    o.delayed_close = function(close_delay) {
+    o.delayed_close_r = function(recurse, close_delay) {
         if(typeof(close_delay) != 'number') close_delay = false;
+        if(typeof(recurse) == 'boolean' && recurse && opts.group.delayed_close) {
+            opts.group.delayed_close_r(true, close_delay);
+            return;
+        }
         opts.default_item.removeClass('active');
         if(opts.hover_close && ! close_timer) {
             close_timer = setTimeout(o.close, close_delay || opts.close_delay);
-        }
-        if(opts.group.delayed_close) opts.group.delayed_close();
+        }    
+    };
+    o.delayed_close = function(close_delay) {
+        o.delayed_close_r(true, close_delay);
     };
     o.cancel_close = function(e) {
+        if(opts.group.cancel_close) 
+            opts.group.cancel_close();
         if(close_timer) {
             clearTimeout(close_timer);
             close_timer = false;
@@ -65,11 +73,12 @@ var menu = function(handle, drawer, options) {
     o.close = function(force) {
         if (!opts.close_condition()) return;
         o.cancel_close();
-        if(!o.opened) return;
+        if(!o.opened) {
+            return;
+        }
 
-        if(force) $.map(o.menus, function(m){ m.close(force) });
-        else if(o.sticky || $.inArray(true, $.map(o.menus,
-            function(m){ return m.opened })) > -1) return;
+        if(o.sticky) return;
+        $.map(o.menus, function(m){ m.close(force) });
 
         o.do_close();
 
@@ -136,7 +145,12 @@ var menu = function(handle, drawer, options) {
         // window if below handle, or above top of window if above the handle
         var hp = handle.parent().is(drawer.parent()) ? handle.position() : handle.offset();
 
-        if( opts.layout == 'bottom' ){
+        if ( opts.layout_x == 'submenu' ){
+            css_opts.left = hp.left + handle.outerWidth();
+            css_opts.top = hp.top - drawer.outerHeight() + handle.outerHeight() - opts.offset_y
+            // hp.top + opts.offset_y;
+        }
+        else if ( opts.layout == 'bottom' ){
             var oy = handle.outerHeight() + opts.offset_y;
             css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
                 && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
@@ -170,8 +184,8 @@ var menu = function(handle, drawer, options) {
 
     if(opts.hover) {
         handle.on('mouseover', null, { delay: opts.open_delay }, o.open)
-            .on('mouseout', o.delayed_close);
-        drawer.mouseover(o.cancel_close).mouseout(o.delayed_close);
+            .on('mouseleave', o.delayed_close_r);
+        drawer.mouseenter(o.cancel_close).mouseleave(o.delayed_close);
     }
     handle.click(function(){
         if(o.opened && opts.default_item) opts.default_item.click();

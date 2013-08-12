@@ -23,6 +23,20 @@ button {
     cursor: pointer;
 }
 
+.ncolumn {
+    width: 100%;
+    .column {
+        display: inline-block;
+        vertical-align: top;
+        width: 33.33%;
+        float: left;
+
+        * {
+            vertical-align: bottom;
+        }
+    }
+}
+
 // vertical centering
 table.vcenter {
    height:100%;
@@ -82,6 +96,9 @@ img.centered, div.centered {
         //&:hover { background-color: $color_selected; }
         &:hover { background-image: asset_url('skin/nav/views-hover.png'); }
     }
+    &.logo {
+        margin-left: 15px;
+    }
     .icon.logo {
         width:45px;
         &.icon { background-image: asset_url('skin/nav/logo.png'); }
@@ -96,6 +113,11 @@ img.centered, div.centered {
         //&.on .icon { background-image: asset_url('skin/nav/plus-on.png'); }
         //&:hover { background-color: $color_selected; }
         &:hover { background-image: asset_url('skin/nav/minus-hover.png'); }
+    }
+    &.plus-minus {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
     }
 
     &.love.on {

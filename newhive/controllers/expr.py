@@ -138,6 +138,7 @@ class Expr(ModelController):
             elif type == 'hive.html':
                 if snapshot_mode:
                     def get_embed_img_html(url):
+                        # 1/0
                         ret_html = ''
                         oembed = utils.get_embedly_oembed(url)
                         if oembed and oembed.get('thumbnail_url'):
@@ -145,6 +146,7 @@ class Expr(ModelController):
                         return ret_html
                     html = ''
                     # Turn embeds in hive.html blocks to static images
+                    # 1/0
                     hivehtml = BeautifulSoup(app.get('content',''))
                     for iframe in hivehtml.find_all('iframe'):
                        html += get_embed_img_html(iframe.get('src'))
@@ -155,6 +157,7 @@ class Expr(ModelController):
                         for param in param_tags:
                             if param.get('name') == 'movie':
                                 html += get_embed_img_html(param.get('value'))
+                    # 1/0
                 else:
                     encoded_content = cgi.escape(app.get('content',''), quote=True)
                     html = '%s' % (app.get('content',''))
