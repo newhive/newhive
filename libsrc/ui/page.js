@@ -161,7 +161,7 @@ define([
         // fix up rounded borders on content_btns overlay
         var btns = $('#content_btns').find('.btn');
         btns.removeClass('left right');
-        for(var i = 0, e; (e = btns.eq(i--)).length;){
+        for(var i = 0, e; (e = btns.eq(i++)).length;){
             if(!e.hasClass('hide')) {
                 $(e).addClass('left');
                 break;

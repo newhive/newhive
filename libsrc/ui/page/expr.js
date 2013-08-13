@@ -42,7 +42,7 @@ define([
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
         $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_btn").hide();
+        $(".panel .edit_btn .icon").hide();
         $(".panel .logo.overlay").hide();
     }
 
@@ -95,7 +95,8 @@ define([
             $("#signup_create").show();
             $("#signup_create .create").removeClass("hide");
             if (context.user.id == o.expr.owner.id) {
-                $('#content_btns .edit_btn').replaceWith(edit_btn_template(page_data).show());
+                $('#content_btns .edit_btn').replaceWith(edit_btn_template(page_data));
+                $('#content_btns .edit_btn .icon').show();
             }
         }
     };
