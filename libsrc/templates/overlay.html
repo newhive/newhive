@@ -1,32 +1,31 @@
+<div class='overlay panel' id='content_btns'>
+  {# edit expression #}
+  <div class='hide edit_btn btn'></div>
+  {# create or signup/login #}
+  {<unless user.logged_in}
+    <span class='signup'>
+      <span class='signup_btn text_btn btn'>Sign up</span>
+      <span class='login_btn text_btn left_border btn'>Log in</span>
+    </span>
+  {>}
+  <a {anchor_attrs "create_expr" "owner_name" user.name}><div
+    class='create icon btn'></div></a>
+  {# + button to open overlay #}
+  <div class='social_btn icon btn hide'></div>
+</div>
 <div class='social overlay page_btn' id='page_prev'></div>
 <div class='social overlay page_btn' id='page_next'></div>
-<div class='overlay panel' id='content_btns'>
-    {# hive logo #}
-    <a class='hide logo overlay counts_icon' {anchor_attrs "home"}
-        ><div id='logo' class='icon logo'></div></a>
-    {# edit expression #}
-    <div class='hide edit_btn'></div>
-    {# create or signup/login #}
-    <div class='signup hide'>
-        <span class="signup_btn" >Sign up</span>
-        <span class='login_btn left_border'>Log in</span>
-    </div>
-    <a {anchor_attrs "create_expr" "owner_name" user.name}><div
-        class='create icon'></div></a>
-    {# + button to open overlay #}
-    <div class='social_btn icon'></div>
-</div>
 <div class='social overlay' id='social_overlay'></div>
 
 {# hive logo #}
 <a class='logo overlay counts_icon' {anchor_attrs "home"}
-    ><div id='logo' class='icon logo'></div></a>
+  ><div id='logo' class='icon logo'></div></a>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
   {<if user.logged_in}
   {#log out
-  activity
+  activiyt
   username
   network#}
     <div id='logout_btn' class='menu_item'>Logout

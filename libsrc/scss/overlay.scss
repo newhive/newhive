@@ -43,6 +43,11 @@
         background-position: 6px 5px;
         // background-position: 3px -1px;
     }
+
+    .signup {
+        display: inline-block;
+        vertical-align: top;
+    }
 }
 
 .overlay {
@@ -53,6 +58,9 @@
     background-repeat: no-repeat;
     @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include border-radius(11px);
+    .right { @include border-radius(0 11px 11px 0); }
+    .left {  @include border-radius(11px 0 0 11px); }
+    .left.right {  @include border-radius(11px 11px 11px 11px); }
 
     &.panel {
         height: 42px;
@@ -63,6 +71,19 @@
             height: 42px; width: 48px;
             background-size: 48px 42px;
             &:hover { background-color: black; }
+        }
+
+        .text_btn {
+            display: inline-block;
+            padding: 10px;
+            height: 22px;
+            line-height: 22px;
+            vertical-align: middle;
+            white-space: nowrap;
+            &:hover {
+                color: white;
+                background-color: black;
+            }
         }
     }
 
