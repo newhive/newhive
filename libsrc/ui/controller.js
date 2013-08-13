@@ -12,7 +12,7 @@ define([
 
     o.init = function(route_args){
         routing.register_state(route_args);
-        nav.set_expr_view(route_args.route_name == 'view_expr');
+        // nav.set_expr_view(route_args.route_name == 'view_expr');
         page.init(o);
         util.each(pages, function(m){
             if(m.init) m.init(o);
@@ -26,7 +26,7 @@ define([
         context.route_name = route_name;
         if(data.owner && (data.owner.id == context.user.id))
             data.user_is_owner = true;
-        nav.set_expr_view(route_name == 'view_expr'); // TODO: move to expr page
+        // nav.set_expr_view(route_name == 'view_expr'); // TODO: move to expr page
         // BUGBUG. Server error on login?
         if (route_name == "expr")
             route_name = "view_expr";

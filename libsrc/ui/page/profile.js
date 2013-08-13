@@ -31,8 +31,8 @@ define([
 
     o.enter = function (){
         o.exit();
-        if (context.route_name == "home")
-            $("#nav").show();
+        // if (context.route_name == "home")
+        //     $("#nav").show();
         $("#signup_create").show();
         $("#content_btns").show();
         $(".logo.overlay").removeClass("hide");
@@ -43,7 +43,7 @@ define([
         }
     };
     o.exit = function(){
-        $("#nav").hide();
+        // $("#nav").hide();
         $("#signup_create").hide();
         $("#content_btns").hide();
         $(".logo.overlay").addClass("hide");
