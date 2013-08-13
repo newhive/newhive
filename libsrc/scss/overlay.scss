@@ -38,8 +38,8 @@
     }
 
     .social_btn {
-        background-image: asset_url('skin/nav/plus.png');
-        &:hover { background-image: asset_url('skin/nav/plus-hover.png'); }
+        background-image: asset_url('skin/nav/open.png');
+        &:hover { background-image: asset_url('skin/nav/open-hover.png'); }
         background-position: 6px 5px;
         // background-position: 3px -1px;
     }
@@ -104,14 +104,16 @@
     #popup_content {
         //position:absolute;
         //top: 44px;
-        max-width: 1000px;
+        max-width: 1001px;
         margin: auto;
         padding: 0px 5px 0px 20px;
         position: relative;
         //height: 306px;
         //overflow: auto;
-        * { vertical-align:top; }
-        * { vertical-align:bottom; }
+        // Direct descendents
+        &> * { vertical-align:top; }
+        // Direct grand-descendents
+        &> * > * { vertical-align:bottom; }
     }
     #views_menu {
         .text.item {
@@ -120,45 +122,58 @@
     }
     .left_pane {
         display: inline-block;
-        width: 450px;
+        width: 420px;
+        padding-top: 10px;
         // margin-right: 60px;
         .title {
             overflow: hidden;
             text-overflow: ellipsis;
-            width: 79%;
+            width: 400px;
             white-space: nowrap;
         }
     }
 
     .right_pane {
         display: inline-block;
-        width: 450px;
+        width: 490px;
         // position: absolute;
         // right: 0;
         // vertical-align: top;
         text-align: right;
         * * { text-align: left; }
         // border-left: 1px solid #d1d1d1;
-        margin-right: 50px;
-    }
-    .stats_bar {
-        // position: fixed;
-        // right: 14px;
-        // bottom: 10px;
-        margin-top: 20px;
-        // margin-left: 15px;
-    }
+        margin-right: 70px;
 
+        .tag_list {
+            padding: 10px 0px 20px 0px;
+            // text-align: center;
+            height: 40px;
+            overflow: hidden;
+        }
+        .stats_bar {
+            // position: fixed;
+            // right: 14px;
+            // bottom: 10px;
+            margin-top: 20px;
+            // margin-left: 15px;
+        }
+
+        .counts_icon {
+            width: 90px;
+            .icon {
+                width: 60px;
+                background-position-y: -7px;
+            }
+            .icon.comment, .icon.logo, .icon.plus-minus {
+                width: 36px;
+                background-position-y: 0px;
+            }
+        }
+    }
     .footer {
         margin-top: 30px;
     }
 
-    .tag_list {
-        padding: 0 0 20px 0;
-        // text-align: center;
-        height: 40px;
-        overflow: hidden;
-    }
 }
 
 #dia_comments {
