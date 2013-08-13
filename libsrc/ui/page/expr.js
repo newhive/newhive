@@ -33,14 +33,15 @@ define([
         hide_exprs();
         hide_panel();
         $('#site').show();
+        $('.page_btn').hide();
     };
 
     hide_panel = function(){
         $("#signup_create").hide();
-        $(".panel.profile").hide();
+        $("#content_btns").hide();
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
-        $(".panel .logged_out.social_btn").addClass("hide");
+        $(".panel .social_btn").addClass("hide");
         $(".panel .edit_btn").hide();
         $(".panel .logo.overlay").hide();
     }
@@ -84,8 +85,8 @@ define([
         navigate_page(0); // To cache nearby expressions
 
         hide_panel();
-        $(".panel.profile").show();
-        $(".logged_out.social_btn").removeClass("hide");
+        $("#content_btns").show();
+        $(".social_btn").removeClass("hide");
         if (!context.user.logged_in) {
             $("#signup_create").show();
             $("#signup_create .signup").removeClass("hide");
@@ -94,7 +95,7 @@ define([
             $("#signup_create").show();
             $("#signup_create .create").removeClass("hide");
             if (context.user.id == o.expr.owner.id) {
-                $('.panel .edit_btn').replaceWith(edit_btn_template(page_data).show());
+                $('#content_btns .edit_btn').replaceWith(edit_btn_template(page_data).show());
             }
         }
     };
@@ -139,7 +140,7 @@ define([
         var expr_curr = $('.expr-visible');
         expr_curr.removeClass('expr-visible');
         $('#exprs').show();
-        $('.overlay.social_btn').show();
+        $('.social_btn').show();
 
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
@@ -186,6 +187,16 @@ define([
                 queue: false })
         }
         $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
+
+        // postMessage only works after the page loads, so once page loads, we
+        // can hide them and show on hover
+        $('.page_btn').show();
+        contentFrame.load(function(){
+            var btns = $('.page_btn');
+            btns.each(function(i, e){
+                if(!$(e).hasClass('active')) $(e).hide()
+            });
+        });
     };
 
     var hide_other_exprs = function() {
@@ -224,8 +235,8 @@ define([
         $("#social_close").unbind('click');
         $("#social_close").click(o.social_toggle);
         
-        $(".logged_out.social_btn").unbind('click');
-        $(".logged_out.social_btn").click(o.social_toggle);
+        $(".social_btn").unbind('click');
+        $(".social_btn").click(o.social_toggle);
 
         $('#comment_form').unbind('response').on('response', o.comment_response);
 
@@ -460,12 +471,12 @@ define([
             return;
         }
         if ( m.data == "show_prev" || m.data == "show_next") {
-            var div = (m.data == "show_prev" ? $("#page_prev") : $("#page_next"));
-            div.show();
+            var div = $(m.data == "show_prev" ? "#page_prev" : "#page_next");
+            div.show().addClass('active');
         }
         if ( m.data == "hide_prev" || m.data == "hide_next") {
-            var div = (m.data == "hide_prev" ? $("#page_prev") : $("#page_next"));
-            div.hide();
+            var div = $(m.data == "hide_prev" ? "#page_prev" : "#page_next");
+            div.hide().removeClass('active');
         }
     };
 

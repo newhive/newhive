@@ -34,7 +34,7 @@ define([
         if (context.route_name == "home")
             $("#nav").show();
         $("#signup_create").show();
-        $(".panel.profile").show();
+        $("#content_btns").show();
         $(".logo.overlay").removeClass("hide");
         if (context.user.logged_in) {
             $("#signup_create .create").removeClass("hide");
@@ -45,7 +45,7 @@ define([
     o.exit = function(){
         $("#nav").hide();
         $("#signup_create").hide();
-        $(".panel.profile").hide();
+        $("#content_btns").hide();
         $(".logo.overlay").addClass("hide");
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");

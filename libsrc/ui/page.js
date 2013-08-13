@@ -56,7 +56,6 @@ define([
         // nav.render();
         init_overlays();
         $(window).resize(resize);
-
         // resize();
     };
 
@@ -126,9 +125,9 @@ define([
     var logout = function(){
         $.post('/api/user/logout', '', function(){
             context.user.logged_in = false;
-            init_overlays();
-            o.render(o.method, context);
-
+            //// This should be redundant when refreshing the whole page
+            // init_overlays();
+            // o.render(o.method, context);
             require(['ui/controller'], function(ctrl){ ctrl.refresh(); });
         });
     };
@@ -158,6 +157,22 @@ define([
             o[method](page_data);
         else
             render_site(page_data);
+
+        // fix up rounded borders on content_btns overlay
+        var btns = $('#content_btns').find('.btn');
+        btns.removeClass('left right');
+        for(var i = 0, e; (e = btns.eq(i--)).length;){
+            if(!e.hasClass('hide')) {
+                $(e).addClass('left');
+                break;
+            }
+        }
+        for(var i = btns.length - 1, e; (e = btns.eq(i--)).length;){
+            if(!e.hasClass('hide')) {
+                $(e).addClass('right');
+                break;
+            }
+        }
 
         // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
