@@ -88,7 +88,6 @@ def handle(request):
     try: (controller, handler), args = routes.bind_to_environ(
         request.environ).match()
     except exceptions.NotFound as e:
-        1/0
         print "Serving 500!"
         return api.controller.serve_500(request, Response(),
             exception=e, json=False)

@@ -26,9 +26,9 @@ define(['browser/layout',
         o.page_next = function(){ o.page('next') },
         o.page_prev = function(){ o.page('prev') };
 
-        o.layout_parent = function(){
-            o.send_top('layout=' + $(window).width() + ',' + $(window).height());
-        };
+        // o.layout_parent = function(){
+        //     o.send_top('layout=' + $(window).width() + ',' + $(window).height());
+        // };
 
         o.init = function(){
             window.addEventListener('message', function(m){
@@ -47,7 +47,7 @@ define(['browser/layout',
             }, false);
             $(document).mousemove(check_hover);
             $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
-            $(window).resize(o.layout_parent)
+            $(window).resize(layout.place_apps)
                  .click(function(){ o.send_top('focus'); });
         };
 
@@ -124,7 +124,6 @@ define(['browser/layout',
             layout.place_apps();
 
             util.update_targets();
-            o.layout_parent();
         };
         o.hide = function(){
             $('.hive_html').each(function(i, div) {

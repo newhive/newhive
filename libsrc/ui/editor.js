@@ -686,14 +686,14 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 
 Hive.App.RawHtml = function(o) {
     Hive.App.has_resize(o);
-    o.content = function() { return o.content_element.outerHTML(); };
+    o.content = function() { return o.content_element[0].outerHTML; };
     o.content_element = $(o.init_state.content).addClass('content');
     o.div.append(o.content_element);
 
     var controls = function(o){
         o.addControls($('#controls_raw_html'));
         o.div.find('.edit').click(function(){
-            var dia = $($('#dia_edit_code').outerHTML());
+            var dia = $($('#dia_edit_code')[0].outerHTML);
             showDialog(dia, {
                 fade: false,
                 close: function() {
@@ -2521,15 +2521,12 @@ Hive.embed_code = function(element) {
     }
 
     else {
-        var stuffs = $('<div>');
-        stuffs.html(c);
-        var embed = stuffs.children().first();
-        if(embed.is('object')) embed.append($('<param name="wmode" value="opaque"/>'));
-        if(embed.is('embed')) embed.attr('wmode', 'opaque');
-        embed.attr('width', '100%').attr('height', '100%');
-        embed.find('[width]').attr('width', '100%').attr('height', '100%');
-        embed.find('embed').attr('wmode', 'opaque');
-        app = { type : 'hive.html', content : embed.outerHTML() };
+        var dom = $('<div>');
+        dom[0].innerHTML = c;
+        dom.find('object').append($('<param name="wmode" value="opaque"/>'));
+        dom.find('embed').attr('wmode', 'opaque');
+        dom.find('iframe').attr('width', '100%').attr('height', '100%');
+        app = { type : 'hive.html', content: dom[0].innerHTML };
     }
 
     Hive.new_app(app);
