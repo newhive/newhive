@@ -53,6 +53,13 @@
         "method": "network",
         "client_method": "grid"
     },
+    "user_home": {
+        "page_route": "/<owner_name>",
+        "api_route": "/api/expr/view/<id>",
+        "controller": "community",
+        "method": "expr",
+        "client_method": "expr"
+    },
     "expressions_public": {
         "page_route": "/<owner_name>/profile",
         "api_route": "/api/feed/expressions/<owner_name>",

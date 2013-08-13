@@ -20,12 +20,11 @@ import pstats
 import io
 from newhive.profiling import don, functools, doflags
 
-def make_routing_rules(url_pattern, endpoint, on_main_domain=True, with_ssl=True, without_ssl=True):
+def make_routing_rules(url_pattern, endpoint, on_main_domain=True, defaults={}):
     rules = []
-    if with_ssl:
-        rules.append(Rule(url_pattern, endpoint=endpoint, host=url_host(on_main_domain=on_main_domain,secure=True)))
-    if without_ssl:
-        rules.append(Rule(url_pattern, endpoint=endpoint, host=url_host(on_main_domain=on_main_domain,secure=False)))
+    for secure in (False, True):
+        rules.append(Rule(url_pattern, endpoint=endpoint, defaults=defaults,
+            host=url_host(on_main_domain=on_main_domain, secure=secure)))
     return rules
 
 def get_api_endpoints(api):
@@ -63,21 +62,18 @@ api = Controllers(server_env)
 # rules tuples are (routing_str, endpoint)
 # the endpoints are (Controller, method_str) tuples
 # TODO-cleanup: move these to routes.json
-rules_tuples = [
-    ('/home/streamified_test', (api.user, 'streamified_test')),
-    ('/home/streamified_login', (api.user, 'streamified_login')),
-]
-rules = []
-for rule in rules_tuples:
-    rules.extend(make_routing_rules(rule[0], endpoint=rule[1]))
-rules.extend(get_api_endpoints(api))
-
-# Add these catch-all routes last
-rules.extend(make_routing_rules('/<owner_name>',
-    endpoint=(api.community, 'user_home'), on_main_domain=True))
+# rules_tuples = [
+#     ('/home/streamified_test', (api.user, 'streamified_test')),
+#     ('/home/streamified_login', (api.user, 'streamified_login')),
+# ]
+# for rule in rules_tuples:
+#     rules.extend(make_routing_rules(rule[0], endpoint=rule[1]))
+rules = get_api_endpoints(api)
+# Add catch-all routes last
 rules.extend(make_routing_rules('/<expr_id>',
     endpoint=(api.expr, 'fetch_naked'), on_main_domain=False))
-routes = Map(rules, strict_slashes=False, host_matching=True, redirect_defaults=False)
+routes = Map(rules, strict_slashes=False, host_matching=True,
+    redirect_defaults=False)
 
 @Request.application
 def handle(request):
@@ -97,7 +93,7 @@ def handle(request):
         return api.controller.serve_500(request, Response(),
             exception=e, json=False)
     except RequestRedirect as e:
-        # what's going on here anyway?
+        # bugbug: what's going on here anyway?
         raise Exception('redirect not implemented: from: ' + request.url + ', to: ' + e.new_url)
     print (controller, handler), args
     try:

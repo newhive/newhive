@@ -1,6 +1,6 @@
 from newhive import mail
 from newhive.ui_strings import en as ui_str
-from newhive.utils import dfilter, now
+from newhive.utils import dfilter, now, abs_url
 from newhive.controllers.controller import Controller
 
 class Community(Controller):
@@ -175,11 +175,7 @@ class Community(Controller):
             'title': owner['name'] + ': Followers', 'about_text': 'Followers',
         }
 
-    def user_home(self, tdata, request, owner_name=None, **args):
-        # show home expression or redirect to profile
-        return {}
-
-    def expr(self, tdata, request, id=None, owner_name=None, expr_name=None):
+    def expr(self, tdata, request, id=None, owner_name=None, expr_name=''):
         print "EXPR", id, owner_name, expr_name
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
@@ -261,6 +257,10 @@ class Community(Controller):
 
         page_data = query(tdata, request, **merged_args)
         if not page_data:
+            # TODO-cleanup: make this less hacky
+            if kwargs.get('route_name') == 'user_home':
+                return self.redirect(response, abs_url(
+                    '/' + kwargs.get('owner_name') + '/profile'))
             return self.serve_404(tdata, request, response, json=json)
         if page_data.get('cards'):
             special = page_data.get('special', {})
