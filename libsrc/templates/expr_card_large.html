@@ -5,10 +5,10 @@
   "id" id  "expr_name" name  "owner_name" owner.name }
 ><div class="title"><span class='words'>{title}</span></div>
   <img class="snapshot" src=
-  {<if snapshot "snapshot_placeholder.png"}
-    "https://dev-1-s0-newhive.s3.amazonaws.com/expr_snapshot_{ id }_big"
-  {>}{<else}
+  {<if snapshot}
     "{snapshot}big.png"
+  {>}{<else}
+    {asset "skin/site/expr_placeholder_big.jpg"}  
   {>}>
 </a>
 <div class='info'>

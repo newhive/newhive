@@ -2489,7 +2489,7 @@ Hive.embed_code = function(element) {
         embed.attr('width', '100%');
         embed.find('[width]').attr('width', '100%');
         embed.find('embed').attr('wmode', 'opaque');
-        app = { type : 'hive.html', content : embed.outerHTML() };
+        app = { type : 'hive.html', content : embed[0].outerHTML };
     }
 
     else if(c.match(/^https?:\/\//i)) {

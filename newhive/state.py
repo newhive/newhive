@@ -1109,16 +1109,13 @@ class Expr(HasSocial):
     # size is "big" or "small".
     # will return 'snapshot_placeholder.png' if no available snapshot
     def snapshot_name(self, size):
-        if not self.get('snapshot_time'):
-            return 'snapshot_placeholder.png'
+        if not self.get('snapshot_time'): return False
         filename = self.snapshot_name_base(size, str(self.get('snapshot_time')))
         return 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
 
     def snapshot_name_prefix(self):
-        if not self.get('snapshot_time'):
-            return 'snapshot_placeholder.png'
-        # Chop off the ".png" extension, don't include "big" or "small".
-        return self.snapshot_name('')[:-4]
+        name = self.snapshot_name('')
+        return name[:-4] if name else name
 
     # Note: this takes snapshots in the current thread.
     # For threaded snapshots, use threaded_snapshot()
