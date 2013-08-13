@@ -93,7 +93,8 @@ class User(ModelController):
         """
         resp = {}
         user = tdata.user
-        state = request.form.get('state') == 'false'
+        # requested state
+        state = request.form.get('state') != 'false'
         eid = request.form.get('entity')
 
         entity = self.db.Expr.fetch(eid)
@@ -101,26 +102,27 @@ class User(ModelController):
         if not entity: return self.serve_404(request, response)
 
         s = self.db.Star.find({'initiator': user.id, 'entity': entity.id})
-        if state:
+        if not state:
             if s: s.delete()
         else:
             if not s: s = self.db.Star.create(user, entity)
 
-        print entity['name'], state
-        resp.update({'state': state})
+        print entity['name'], state, s
+        resp.update({'state': state, 'entity': eid})
         return self.serve_json(response, resp)
 
     def broadcast(self, tdata, request, response, **args):
         resp = {}
         user = tdata.user
-        state = request.form.get('state') == 'false'
+        # requested state
+        state = request.form.get('state') != 'false'
         eid = request.form.get('entity')
 
         entity = self.db.Expr.fetch(eid)
         if not entity: return self.serve_404(request, response)
 
         s = self.db.Broadcast.find({ 'initiator': user.id, 'entity': entity.id })
-        if state:
+        if not state:
            if s: res = s.delete()
         else:
            if not s: s = self.db.Broadcast.create(user, entity)

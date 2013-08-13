@@ -5,7 +5,7 @@
  */
 define([
     'browser/jquery',
-    'ui/nav',
+    // 'ui/nav',
     'ui/dialog', 
     'ui/new_account',
     'server/context',
@@ -16,6 +16,7 @@ define([
     'sj!templates/card_master.html',
     'sj!templates/home.html',
     'sj!templates/profile_edit.html',
+    'sj!templates/user_actions.html',
     'sj!templates/tags_page.html',
     'sj!templates/activity.html',
     'sj!templates/expr_card_large.html',
@@ -32,7 +33,7 @@ define([
     'sj!templates/request_invite_form.html'
 ], function(
     $,
-    nav,
+    // nav,
     dialog,
     new_account,
     context,
@@ -43,6 +44,7 @@ define([
     master_template,
     home_template,
     profile_edit_template,
+    user_actions_template,
     tags_page_template,
     activity_template
 ){
@@ -96,6 +98,7 @@ define([
     };
 
     ///////////////////////////////
+    // TODO(refactor): move to overlays module
     // var render_overlays = function(){
     //     $('#overlays').empty().html(overlay_template());
     //     // $("#nav #plus").click(o.social_toggle);
@@ -131,6 +134,29 @@ define([
             // o.render(o.method, context);
             require(['ui/controller'], function(ctrl){ ctrl.refresh(); });
         });
+    };
+    ///////////////////////////////
+
+    ///////////////////////////////
+    // form responses
+    var follow_response = function (e, json){
+        // TODO: make stringjay track state (parent tree of with's)
+        // so we don't have to
+        local_context = {};
+        if ($("#social_overlay").has(e).length) {
+            local_context["brief"] = true
+            // TODO: server should package the data exactly how it is in context
+            // so we don't have to munge it on client
+            context.page_data.expr.owner.listening = json.state;
+            $.extend(true, local_context, context.page_data.expr.owner);
+        } else {
+            context.page_data.owner.listening = json.state;
+            $.extend(true, local_context, context.page_data.owner);
+        }
+        // local_context["id"] = json.entity;
+        e.parent().empty().append(user_actions_template(local_context).children());
+        // TODO: put button hookup into an after_render
+        local_attach_handlers();
     };
     ///////////////////////////////
 
@@ -186,19 +212,26 @@ define([
         if (page_data.title) $("head title").text(page_data.title);
         o.attach_handlers();
     };
-    o.attach_handlers = function(){
-        if(context.page && context.page.attach_handlers)
-            context.page.attach_handlers();
+    var local_attach_handlers = function(){
+        $('.user_action_bar form.follow').unbind('response').on('response', 
+            function(event, json) {
+                follow_response($(this), json); 
+        });
 
         // global keypress handler
         $("body").keydown(function(e) {
-          if(e.keyCode == 27) { // escape
-            // If a dialog is up, kill it.
-            $('#dialog_shield').click();
-          } else {
-            // alert('keyCode: ' + e.keyCode);
-          }
+            if(e.keyCode == 27) { // escape
+                // If a dialog is up, kill it.
+                $('#dialog_shield').click();
+            } else {
+                // alert('keyCode: ' + e.keyCode);
+            }
         });
+    };
+    o.attach_handlers = function(){
+        if(context.page && context.page.attach_handlers)
+            context.page.attach_handlers();
+        local_attach_handlers();
     }
 
     o.grid = function(page_data){

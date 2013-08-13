@@ -1,0 +1,22 @@
+{# User actions 
+  Edit profile
+  Mail (button)
+  Follow/Unfollow
+#}
+<span class="user_action_bar">
+  {<unless brief}{<if user_is_owner}
+    <a {anchor_attrs "user_update" "owner_name" name}>
+      <div class='icon' id='edit_btn'></div></a>
+  {>}{>}
+  {<unless user_is_owner}
+    <a><div class='icon mail_btn'></div></a>
+    <form class='follow' {form_attrs "star_unstar"} method='post'>
+      <input type="hidden" name="entity" value="{id}">
+      <input type="hidden" name="state" value="{<if listening}false{>}{<else}true{>}">
+      <button type="submit" class="text teal_btn upper" value="">
+        {<if listening}Unfollow
+        {>}{<else}Follow{>}
+      </button>
+    </form>
+  {>}
+</span>

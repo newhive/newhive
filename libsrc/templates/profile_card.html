@@ -1,32 +1,28 @@
 {# Profile card
   User thumb, name, view/love counts
 #}
-<div id='user_header' class='header'>
-  {<if brief}
-    <div class="owner">
-      {# bugbug: style belongs elsewhere, namely icon from server should
-      be correct height #}
-      <a {anchor_attrs "expressions_public" "owner_name" name}>
-        <img style='height:70px;' src='{thumb_small}' class='thumb'></a>
-      <span>by <span class='username'>{owner.name}</span></span>
-      <a><div class='icon' id='mail_btn'></div></a>
-    </div>
-  {>}{<else}
-  {<if profile_bg}<div class='background'><img src='{profile_bg}'></div>{>}
-  <div class='profile'>
-    <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
-    <div class='info'>
-      <div class='name'>
-        {fullname}
-        {<if user_is_owner}
-          <a {anchor_attrs "user_update" "owner_name" name}>
-            <div class='icon' id='edit_btn'></div></a>
-        {>}
-        <a><div class='icon' id='mail_btn'></div></a>
+{<if brief}
+  <div class="owner profile">
+    {# bugbug: style belongs elsewhere, namely icon from server should
+    be correct height #}
+    <a {anchor_attrs "expressions_public" "owner_name" name}>
+      <img style='height:60px;' src='{thumb_small}' class='thumb'></a>
+    <span>by <span class='username'>{owner.name}</span></span>
+    {|templates/user_actions.html}
+  </div>
+{>}{<else}
+  <div id='user_header' class='header'>
+    {<if profile_bg}<div class='background'><img src='{profile_bg}'></div>{>}
+    <div class='profile'>
+      <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
+      <div class='info'>
+        <div class='name'>
+          {fullname}
+          {|templates/user_actions.html}
+        </div>
+        <div class='subheading'>{subheading}</div>
+        <div>{profile_about}</div>
       </div>
-      <div class='subheading'>{subheading}</div>
-      <div>{profile_about}</div>
     </div>
   </div>
-  {>}
-</div>
+{>}
