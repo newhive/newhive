@@ -190,8 +190,8 @@ define([
 
         // postMessage only works after the page loads, so once page loads, we
         // can hide them and show on hover
+        var btns = $('.page_btn').show();
         contentFrame.load(function(){
-            var btns = $('.page_btn');
             btns.each(function(i, e){
                 if(!$(e).hasClass('active')) $(e).hide()
             });
