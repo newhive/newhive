@@ -107,7 +107,6 @@ class User(ModelController):
         else:
             if not s: s = self.db.Star.create(user, entity)
 
-        print entity['name'], state, s
         resp.update({'state': state, 'entity': eid})
         return self.serve_json(response, resp)
 
@@ -127,7 +126,7 @@ class User(ModelController):
         else:
            if not s: s = self.db.Broadcast.create(user, entity)
 
-        resp.update({'state': state})
+        resp.update({'state': state, 'entity': eid})
         return self.serve_json(response, resp)
 
     def expr_share(self, tdata, request, response, **args):
