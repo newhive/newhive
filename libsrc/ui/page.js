@@ -28,6 +28,7 @@ define([
     'sj!templates/tag_card.html',
     'sj!templates/dialog_embed.html',
     'sj!templates/dialog_share.html',
+    'sj!templates/network_nav.html',
     'sj!templates/request_invite_form.html'
 ], function(
     $,
@@ -322,8 +323,8 @@ define([
     var layout_columns = function(){
         // First move the cards from column into #feed
         // (to reset to known state)
-        var all_cards = $("#feed .expr.card");
-        all_cards.prepend($("#feed"));
+        // var all_cards = $("#feed .expr.card");
+        // $("#feed").prepend(all_cards);
 
         // Resize the columns
         for (var i = 0; i < 3; ++i){
