@@ -16,7 +16,7 @@
 <div class='social overlay page_btn' id='page_prev'></div>
 <div class='social overlay page_btn' id='page_next'></div>
 
-{# hive logo #}
+{# hive logo button #}
 <a class='logo overlay counts_icon' {anchor_attrs "home"}
   ><div id='logo' class='icon logo'></div></a>
 
@@ -37,6 +37,7 @@
   {>}
 </div>
 
+{# User community actions #}
 {<if user.logged_in}
   <div id='user_menu' class='menu drawer user_menu' data-handle='#user_btn' data-parent='#logo'>
     <a { anchor_attrs "expressions_public" "owner_name" user.name }><div
