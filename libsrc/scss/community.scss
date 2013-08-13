@@ -67,7 +67,6 @@
         vertical-align: middle;
     }
     #edit_btn { background-image: asset_url('skin/nav/edit.png'); }
-    #mail_btn { background-image: asset_url('skin/nav/mail.png'); }
 }
 
 // moved out of #feed because it applies to social overlay
@@ -77,11 +76,21 @@
         font-family: Gibson Semibold;
         text-transform: uppercase;
     }
-   .thumb {
+    .thumb {
        width:50px;
        height:50px;
        vertical-align: middle;
-   }
+    }
+    .icon {
+        width: 44px; height: 44px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    .mail_btn { background-image: asset_url('skin/nav/mail.png'); }
+    .follow_btn {
+        padding: 6px;
+        background-color: $color_selected;
+    }
 }
 
 #site {

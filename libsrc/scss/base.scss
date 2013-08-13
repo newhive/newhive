@@ -22,6 +22,10 @@ button {
     border: none;
     cursor: pointer;
 }
+.teal_btn {
+    padding: 6px;
+    background-color: $color_selected;
+}
 
 .ncolumn {
     width: 100%;

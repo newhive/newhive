@@ -7,7 +7,10 @@ class Community(Controller):
     def search(self, tdata, request, **paging_args):
         return self.db.query(request.args.get('q'), **paging_args)
 
-    def home(self, tdata, request, **paging_args):
+    # def home(self, tdata, request, **paging_args):
+        # return self.featured(self, tdata, request, **paging_args)
+
+    def featured(self, tdata, request, **paging_args):
         return {
             "cards": self.db.query('#Featured', viewer=tdata.user),
             'header': ("Featured Expressions",), 'card_type': 'expr',
@@ -21,13 +24,10 @@ class Community(Controller):
             'title': "NewHive - Featured",
         }
 
-    def forms_signup(self, tdata, request, username=None, **paging_args):
-        return {
-            'form': 'create_account', 'title': "NewHive - Sign Up",
-        }
-
     def trending(self, tdata, request, username=None, **paging_args):
         user = self.db.User.named(username)
+        if not user:
+            user = tdata.user
         return {
             "cards": user.feed_page_esdb(feed='trending', **paging_args),
             'header': ("Network", "Trending"), 'card_type': 'expr',
@@ -36,10 +36,17 @@ class Community(Controller):
 
     def network(self, tdata, request, username=None, **paging_args):
         user = self.db.User.named(username)
+        if not user:
+            user = tdata.user
         return {
             "cards": user.feed_page_esdb(feed='network', **paging_args),
             "header": ("Network", "Recent"), 'card_type': 'expr',
             "title": 'Network - Recent',
+        }
+
+    def forms_signup(self, tdata, request, username=None, **paging_args):
+        return {
+            'form': 'create_account', 'title': "NewHive - Sign Up",
         }
 
     # TODO: fix/test these functions for looking at other (nonowner) pages
@@ -48,7 +55,7 @@ class Community(Controller):
         if not owner: return None
         spec = {'owner_name': owner_name, 'auth': 'public'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
-        profile = owner.client_view(activity=True)
+        profile = owner.client_view(viewer=tdata.user, activity=True)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Expressions by ' + owner['name'],
@@ -123,7 +130,7 @@ class Community(Controller):
         # ...and grab its expressions.
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view(activity=True)
+        profile = owner.client_view(viewer=tdata.user, activity=True)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Loves by ' + owner['name'],
@@ -155,7 +162,7 @@ class Community(Controller):
         # ...and grab its users.
         users = self.db.User.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view(activity=True)
+        profile = owner.client_view(viewer=tdata.user, activity=True)
         tags = owner.get('tags_following', [])
         return {
             'special': {'mini_expressions': 3},
@@ -168,7 +175,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         users = owner.starrer_page(**args)
-        profile = owner.client_view(activity=True)
+        profile = owner.client_view(viewer=tdata.user, activity=True)
         return {
             'special': {'mini_expressions': 3},
             'cards': users, 'owner': profile, 'card_type':'user',
@@ -184,10 +191,10 @@ class Community(Controller):
         expr_owner = expr.get_owner()
         if expr_owner and expr_owner['analytics'].get('views_by'):
             expr_owner.increment({'analytics.views_by': 1})
-        
-        profile = expr_owner.client_view()
+        profile = expr_owner.client_view(viewer=tdata.user)
+        # TODO(speed): expr client_view CONTAINS owner profile. Duplication of effort.
         return {
-            'owner': profile, 'expr': expr.client_view(activity=10),
+            'owner': profile, 'expr': expr.client_view(viewer=tdata.user, activity=10),
             'expr_id': expr.id, 'title': expr['title'],
         }
 

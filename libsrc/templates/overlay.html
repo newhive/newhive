@@ -23,12 +23,6 @@
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
   {<if user.logged_in}
-    {#
-    log out
-    activiyt
-    username
-    network
-    #}
     <form {form_attrs "logout"} method='POST' id='logout_form'></form>
     <div id='logout_btn' class='menu_item'>Logout</div>
     <div id='activity_btn' class='text_btn menu_item hoverable'>Activity
