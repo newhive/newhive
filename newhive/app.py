@@ -20,7 +20,7 @@ import pstats
 import io
 from newhive.profiling import don, functools, doflags
 
-def make_routing_rules(url_pattern, endpoint, on_main_domain = True, with_ssl=True, without_ssl=True):
+def make_routing_rules(url_pattern, endpoint, on_main_domain=True, with_ssl=True, without_ssl=True):
     rules = []
     if with_ssl:
         rules.append(Rule(url_pattern, endpoint=endpoint, host=url_host(on_main_domain=on_main_domain,secure=True)))
@@ -62,31 +62,21 @@ api = Controllers(server_env)
 
 # rules tuples are (routing_str, endpoint)
 # the endpoints are (Controller, method_str) tuples
+# TODO-cleanup: move these to routes.json
 rules_tuples = [
-    ('/api/expr/thumb/<id>', (api.expr, 'thumb')),
-    ('/api/user/login', (api.user, 'login')),
-    ('/api/user/logout', (api.user, 'logout')),
     ('/home/streamified_test', (api.user, 'streamified_test')),
     ('/home/streamified_login', (api.user, 'streamified_login')),
-    ('/api/user/create', (api.user, 'create')),
 ]
-
 rules = []
-
 for rule in rules_tuples:
     rules.extend(make_routing_rules(rule[0], endpoint=rule[1]))
-
 rules.extend(get_api_endpoints(api))
 
 # Add these catch-all routes last
-catchall_rules_tuples = [
-    ('/<owner_name>', (api.community, 'user_home')),
-    ('/<expr_id>', (api.expr, 'fetch_naked'))
-]
-
-for rule in catchall_rules_tuples:
-    rules.extend(make_routing_rules(rule[0], endpoint=rule[1], on_main_domain=(rule[0] != '/<expr_id>')))
-
+rules.extend(make_routing_rules('/<owner_name>',
+    endpoint=(api.community, 'user_home'), on_main_domain=True))
+rules.extend(make_routing_rules('/<expr_id>',
+    endpoint=(api.expr, 'fetch_naked'), on_main_domain=False))
 routes = Map(rules, strict_slashes=False, host_matching=True, redirect_defaults=False)
 
 @Request.application
@@ -102,6 +92,7 @@ def handle(request):
     try: (controller, handler), args = routes.bind_to_environ(
         request.environ).match()
     except exceptions.NotFound as e:
+        1/0
         print "Serving 500!"
         return api.controller.serve_500(request, Response(),
             exception=e, json=False)

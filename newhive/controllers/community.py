@@ -176,7 +176,7 @@ class Community(Controller):
         }
 
     def user_home(self, tdata, request, owner_name=None, **args):
-        # show home expression or redirect to home 
+        # show home expression or redirect to profile
         return {}
 
     def expr(self, tdata, request, id=None, owner_name=None, expr_name=None):

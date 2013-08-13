@@ -46,9 +46,6 @@
 // 		global.stringjay = o;
 // 	}
 
-// TODO: make templates/context dependency part of sj! loader module
-// create base_context setter method in here.
-// That should make stringjay independent of NewHive
 define(['browser/js', 'module'],
 	function(util, module)
 {
@@ -60,7 +57,7 @@ define(['browser/js', 'module'],
 		tag_open: /^{/,
 		tag_close: /^\s*}/,
 		strip_whitespace: false // not yet implemented
-	}, default_base = {};
+	}, context_base = {};
 	var suffix = new Array('', 'K', 'M', 'G');
 
 	// parse :: String -> AST Object Array, throws ParseError String
@@ -256,7 +253,7 @@ define(['browser/js', 'module'],
 	}
 
 	function get_template(context) {
-		return context[1].template;
+		return context[2].template;
 	}
 	function is_if_node(node) {
 		if (node.type != "function" || node.value.length != 1)
@@ -300,16 +297,17 @@ define(['browser/js', 'module'],
 	}
 
 	o.render_error = function(msg, context, node){
-		return 'Render error in template ' + context[1].template.template_name +
-			', line ' + node.line + ': ' + msg; }
+		return ('Render error in template ' +
+			get_template(context).template_name +
+			', line ' + node.line + ': ' + msg);
+	};
 
-	o.template = function(template_src, name, base_context){
-		var ast = parse(template_src),
-			context = util.copy(base_context, default_base);
+	o.template = function(template_src, name, user_context){
+		var ast = parse(template_src);
 		function template(data){
 			if(!data) data = {};
 			data.template = template;
-			var stack = [ context, data ];
+			var stack = [ context_base, user_context, data ];
 			return resolve(stack, ['after_render'], false, 0)(
 				render_node(stack, ast) );
 		}
@@ -321,7 +319,7 @@ define(['browser/js', 'module'],
 		template.template_name = name;
 
 		// add template_apply to context for rendering from within a template
-		set_reference(base_context, name, template.template_apply);
+		set_reference(user_context, name, template.template_apply);
 
 		return template;
 	};
@@ -377,15 +375,15 @@ define(['browser/js', 'module'],
 		});
 	};
 
-	default_base.after_render = function(a){ return a };
-	default_base['true'] = true;
-	default_base['false'] = false;
-	default_base['null'] = null;
-	default_base['if'] = function(context, block, condition, equals){
+	context_base.after_render = function(a){ return a };
+	context_base['true'] = true;
+	context_base['false'] = false;
+	context_base['null'] = null;
+	context_base['if'] = function(context, block, condition, equals){
 		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? block(context) : '';
 	};
-	default_base['else'] = function(context, block){
+	context_base['else'] = function(context, block){
 		var if_node = null
 		var node = get_template(context).render_node;
 		while (node = node.prev_node) {
@@ -398,17 +396,17 @@ define(['browser/js', 'module'],
 		// else warn("No matching if");
 		return '';
 	};
-	default_base['contains'] = function(context, block, list, item){
+	context_base['contains'] = function(context, block, list, item){
 		var contains = list.lastIndexOf(item) >= 0
 		if (arguments.length > 4) contains = ! contains
 		return contains ? block(context) : '';
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
-	default_base['unless'] = function(context, block, condition, equals){
+	context_base['unless'] = function(context, block, condition, equals){
 		if(typeof equals != 'undefined') condition = (condition == equals);
 		return condition ? '' : block(context);
 	};
-	default_base['for'] = function(context, block, iteratee, var_name){
+	context_base['for'] = function(context, block, iteratee, var_name){
 		if(!iteratee || iteratee.constructor != Array) return '';
 		return iteratee.map(function(v, i){
 			if(typeof(v) != "object") {
@@ -418,7 +416,7 @@ define(['browser/js', 'module'],
 			return block(context.concat(v));
 		}).reduce(util.op['+'], '');
 	};
-	default_base['range'] = function(context, block, var_name, start, stop, step){
+	context_base['range'] = function(context, block, var_name, start, stop, step){
 		if(typeof stop == 'undefined'){
 			stop = start;
 			start = 0;
@@ -432,7 +430,7 @@ define(['browser/js', 'module'],
 		}
 		return out;
 	};
-	default_base['sparsefor'] = function(context, block, iteratee, modulous, selector){
+	context_base['sparsefor'] = function(context, block, iteratee, modulous, selector){
 		if(!iteratee || iteratee.constructor != Array) return '';
 		return iteratee.map(function(v, i){
 			return (i % modulous == selector) ? block(context.concat(v)) : '';
@@ -440,7 +438,7 @@ define(['browser/js', 'module'],
 	};
 	// With pushes a new, top context with "what" as its contents.
 	// Takes optional varargs key-value pairs which are also pushed onto context.
-	default_base['with'] = function(context, block, what){
+	context_base['with'] = function(context, block, what){
 		var new_context = $.extend({}, what);
 		// All arguments after what are name value pairs
 		for(var i = 3; i < arguments.length; i += 2){
@@ -448,7 +446,7 @@ define(['browser/js', 'module'],
 		}
 		return block(context.concat(new_context));
 	};
-	default_base['debug'] = function(context, do_debugger){
+	context_base['debug'] = function(context, do_debugger){
 		if(typeof do_debugger == "undefined") do_debugger = true;
 		if(do_debugger) debugger;
             //throw o.render_error('debug break', context,
@@ -456,12 +454,12 @@ define(['browser/js', 'module'],
 		// possibly add rendering context in invisible div
 		return '<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};
-	default_base.e = encode_to_html;
-	default_base.json = function(context, data){
+	context_base.e = encode_to_html;
+	context_base.json = function(context, data){
 		return JSON.stringify(data);
 	};
-	default_base.mod = function(context, x, y){ return x % y };
-	default_base.thousands = function(context, n){ 
+	context_base.mod = function(context, x, y){ return x % y };
+	context_base.thousands = function(context, n){ 
 		for (var i = 0; Math.abs(n) >= 1000 && i < suffix.length - 1; ++i) {
 			if (Math.abs(n) < 10000)
 				n = Math.round(n/100)/10;

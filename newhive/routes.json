@@ -1,4 +1,15 @@
 {
+    "login": {
+        "api_route": "/api/user/login",
+        "controller": "user",
+        "method": "login"
+    },
+    "logout": {
+        "api_route": "/api/user/logout",
+        "controller": "user",
+        "method": "logout"
+    },
+
     "home": {
         "page_route": "/",
         "api_route": "/api/feed/featured",

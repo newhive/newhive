@@ -10,13 +10,13 @@ class User(ModelController):
         1/0
         return self.serve_json(response, resp)
 
-    def login(self, tdata, request, response):
+    def login(self, tdata, request, response, **args):
         authed = auth.handle_login(self.db, request, response)
         if type(authed) == self.db.User.entity: resp = authed.client_view()
         else: resp = False
         return self.serve_json(response, resp)
 
-    def logout(self, tdata, request, response):
+    def logout(self, tdata, request, response, **args):
         auth.handle_logout(self.db, tdata.user, request, response)
         return self.serve_json(response, True)
 

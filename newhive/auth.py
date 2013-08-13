@@ -70,8 +70,7 @@ def new_session(db, user, request, response):
 
 def handle_logout(db, user, request, response):
     """Removes cookies, deletes session record."""
-
-    session = db.Session.fetch(user['session'])
+    session = db.Session.fetch(get_cookie(request, 'identity'))
 
     rm_cookie(response, 'plain_secret')
     rm_cookie(response, 'secure_secret', True)

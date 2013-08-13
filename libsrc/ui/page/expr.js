@@ -336,10 +336,11 @@ define([
         return d[btn];
     };
     o.action_get_state = function(btn){
-        items = get_items(btn);
-        own_item = items.filter(function(el) {
-            return el.initiator_name == context.user.name; } );
-        return (own_item.length > 0);        
+        var items = get_items(btn),
+            own_item = items.filter(function(el) {
+                return el.initiator_name == context.user.name;
+            });
+        return (own_item.length > 0);
     };
     o.action_set_state = function(el, state) {
         if (state) {

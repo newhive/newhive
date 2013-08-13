@@ -12,6 +12,7 @@ define([
     'browser/layout',
     'ui/util',
     'ui/page/pages',
+    'require',
     'sj!templates/overlay.html',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
@@ -38,6 +39,7 @@ define([
     browser_layout,
     ui_util,
     pages,
+    require,
     overlay_template,
     master_template,
     home_template,
@@ -53,7 +55,6 @@ define([
     o.init = function(controller){
         o.anim_direction = 0;
         o.controller = controller;
-        // nav.render();
         init_overlays();
         $(window).resize(resize);
         // resize();
@@ -62,7 +63,7 @@ define([
     var init_overlays = function(){
         $('#overlays').empty().html(overlay_template());
         // render_overlays();
-        $('#login_form').submit(login);
+        $('#login_form').submit(o.login);
         if(!context.user.logged_in){
             var d = dialog.create('#login_menu',  
                 { open: function(){ $("#login_menu input[name=username]").focus(); } });
@@ -90,16 +91,18 @@ define([
                 });
             });
         } else {
-            $('#logout_btn').click(logout);
+            $('#logout_btn').click(function(){ $('#logout_form').submit(); });
+            $('#logout_form').bind('response', function(){
+                context.user.logged_in = false;
+                init_overlays();
+                require(['ui/controller'], function(ctrl){
+                    ctrl.refresh();
+                });
+            });
         }
     };
 
-    ///////////////////////////////
-    // var render_overlays = function(){
-    //     $('#overlays').empty().html(overlay_template());
-    //     // $("#nav #plus").click(o.social_toggle);
-    // };
-    var login = function(){
+    o.login = function(){
         var f = $(this);
         var json_flag = f.find('[name=json]');
 
@@ -107,8 +110,11 @@ define([
             $.post(f.attr('action'), f.serialize(), function(user){
                 if(user){
                     context.user = user;
-                    render();
-                    require(['ui/controller'], function(ctrl){ ctrl.refresh() });
+                    init_overlays();
+                    require(['ui/controller'], function(ctrl){
+                        ctrl.refresh()
+                    });
+                    $('#login_menu').data('dialog').close();
                 }
                 else $('.login.error').removeClass('hide');
             });
@@ -122,17 +128,6 @@ define([
         }
     };
  
-    var logout = function(){
-        $.post('/api/user/logout', '', function(){
-            context.user.logged_in = false;
-            //// This should be redundant when refreshing the whole page
-            // init_overlays();
-            // o.render(o.method, context);
-            require(['ui/controller'], function(ctrl){ ctrl.refresh(); });
-        });
-    };
-    ///////////////////////////////
-
     o.render = function(method, data){
         console.log(method);
         o.method = method;

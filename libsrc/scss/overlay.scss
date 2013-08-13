@@ -40,8 +40,6 @@
     .social_btn {
         background-image: asset_url('skin/nav/open.png');
         &:hover { background-image: asset_url('skin/nav/open-hover.png'); }
-        background-position: 6px 5px;
-        // background-position: 3px -1px;
     }
 
     .signup {

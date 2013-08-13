@@ -115,7 +115,7 @@ define([
             .change(function() { opts.start(); form.submit() }).appendTo(form);
         Hive.profile_upload_input = input;
         if(opts.multiple) { input.attr('multiple', 'multiple'); }
-        for (p in opts.data) {
+        for(var p in opts.data) {
             $("<input type='hidden'>").attr('name', p).attr('value', opts.data[p]).appendTo(form);
         }
         form.appendTo(document.body);

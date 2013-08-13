@@ -8,8 +8,8 @@
       <span class='login_btn text_btn left_border btn'>Log in</span>
     </span>
   {>}
-  <a {anchor_attrs "create_expr" "owner_name" user.name}><div
-    class='create icon btn'></div></a>
+  {<if user.logged_in}<a {anchor_attrs "create_expr" "owner_name" user.name}
+    ><div class='create icon btn'></div></a>{>}
   {# + button to open overlay #}
   <div class='social_btn icon btn hide'></div>
 </div>
@@ -23,12 +23,15 @@
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
   {<if user.logged_in}
-  {#log out
-  activiyt
-  username
-  network#}
-    <div id='logout_btn' class='menu_item'>Logout
-    </div> <div id='activity_btn' class='text_btn menu_item hoverable'>Activity
+    {#
+    log out
+    activiyt
+    username
+    network
+    #}
+    <form {form_attrs "logout"} method='POST' id='logout_form'></form>
+    <div id='logout_btn' class='menu_item'>Logout</div>
+    <div id='activity_btn' class='text_btn menu_item hoverable'>Activity
     </div> <div id='user_btn' class='text_btn menu_item hoverable'>{user.name|e}
     </div> <a {anchor_attrs "home"}><div class='text_btn menu_item hoverable'>Network</a>
     </div>

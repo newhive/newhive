@@ -142,18 +142,6 @@ def normalize(ws):
     return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
         re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
         
-def url_host(on_main_domain = True, port = None, secure = False):
-    domain = config.server_name if on_main_domain else config.content_domain
-    ssl = secure or config.always_secure
-    if domain.find('.' + config.server_name) > -1:
-        (subdomain, domain) = domain.split('.', 1)
-    if config.dev_prefix: domain = config.dev_prefix + '.' + domain
-    if not port:
-        port = config.ssl_port if ssl else config.plain_port
-    port = '' if port == 80 or port == 443 else ':' + str(port)
-    return domain if port == '' else domain + port
-
-
 def format_tags(s):
     return re.sub(r'[_\W]','',s.lower(), flags = re.UNICODE)
 
@@ -184,6 +172,16 @@ def getTagCnt(data):
         tagCnt.update(normalize_tags(tags))
     return tagCnt
 
+def url_host(on_main_domain=True, port=None, secure=False):
+    domain = config.server_name if on_main_domain else config.content_domain
+    ssl = secure or config.always_secure
+    if domain.find('.' + config.server_name) > -1:
+        (subdomain, domain) = domain.split('.', 1)
+    if config.dev_prefix: domain = config.dev_prefix + '.' + domain
+    if not port:
+        port = config.ssl_port if ssl else config.plain_port
+    port = '' if port == 80 or port == 443 else ':' + str(port)
+    return domain if port == '' else domain + port
 
 def abs_url(path='', secure=False, domain=None, subdomain=None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
@@ -396,8 +394,8 @@ def set_cookie(response, name, data, secure = False, expires = True):
         #domain = None if secure else '.' + config.server_name, httponly = True,
         expires = expiration)
 def get_cookie(request, name): return request.cookies.get(name, False)
-def rm_cookie(response, name, secure = False): response.delete_cookie(name,
-    domain = None if secure else '.' + config.server_name)
+def rm_cookie(response, name, secure = False):
+    response.delete_cookie(name, domain=None)
 
 
 def local_date(offset=0):
