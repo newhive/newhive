@@ -769,7 +769,7 @@ class User(HasSocial):
 
     def get_thumb(self, size=222):
         thumb = False
-        thumb_file = self.db.File.fetch(self.get('thumb_id'))
+        thumb_file = self.db.File.fetch(self.get('thumb_file_id'))
         if thumb_file: thumb = thumb_file.get_thumb(size, size)
         if not thumb:
             # bugbug: Need correct asset.

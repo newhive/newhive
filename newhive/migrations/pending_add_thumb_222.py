@@ -6,7 +6,6 @@ def update_all_users():
 
 def new_thumb(u):
     thumb_id = u.get('thumb_file_id')
-    if thumb_id: u.update(thumb_id=thumb_id)
     f = db.File.fetch(thumb_id)
     if not f: return # bail. # TODO: fall back to 'profile_thumb' url key
     thumb_file = f.set_thumb(222, 222)
