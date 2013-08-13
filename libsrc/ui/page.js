@@ -171,7 +171,6 @@ define([
     };
     ///////////////////////////////
 
->>>>>>> newduke
     o.render = function(method, data){
         console.log(method);
         o.method = method;
