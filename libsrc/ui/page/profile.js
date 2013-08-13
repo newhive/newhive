@@ -35,7 +35,6 @@ define([
             $("#nav").show();
         $("#signup_create").show();
         $("#content_btns").show();
-        $(".logo.overlay").removeClass("hide");
         if (context.user.logged_in) {
             $("#signup_create .create").removeClass("hide");
         } else {
@@ -43,10 +42,10 @@ define([
         }
     };
     o.exit = function(){
-        $("#nav").hide();
+        if (context.route_name == "home")
+            $("#nav").hide();
         $("#signup_create").hide();
         $("#content_btns").hide();
-        $(".logo.overlay").addClass("hide");
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
     };

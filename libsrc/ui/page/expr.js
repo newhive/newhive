@@ -43,7 +43,6 @@ define([
         $("#signup_create .create").addClass("hide");
         $(".panel .social_btn").addClass("hide");
         $(".panel .edit_btn .icon").hide();
-        $(".panel .logo.overlay").hide();
     }
 
     o.resize = function(){
@@ -191,7 +190,6 @@ define([
 
         // postMessage only works after the page loads, so once page loads, we
         // can hide them and show on hover
-        $('.page_btn').show();
         contentFrame.load(function(){
             var btns = $('.page_btn');
             btns.each(function(i, e){

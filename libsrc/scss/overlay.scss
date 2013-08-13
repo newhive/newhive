@@ -6,6 +6,7 @@
     width: 42px;
     height: 55px;
     background-size: 42px 55px;
+    &:hover { background-color: black; }
 }
 #page_prev {
     background-image: asset_url('skin/nav/page_prev.png');
