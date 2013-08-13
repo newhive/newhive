@@ -31,8 +31,6 @@ define([
 
     o.enter = function (){
         o.exit();
-        if (context.route_name == "home")
-            $("#nav").show();
         $("#signup_create").show();
         $("#content_btns").show();
         if (context.user.logged_in) {
@@ -42,8 +40,6 @@ define([
         }
     };
     o.exit = function(){
-        if (context.route_name == "home")
-            $("#nav").hide();
         $("#signup_create").hide();
         $("#content_btns").hide();
         $("#signup_create .signup").addClass("hide");

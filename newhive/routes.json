@@ -12,10 +12,17 @@
 
     "home": {
         "page_route": "/",
+        "api_route": "/api/feed/trending/",
+        "controller": "community",
+        "method": "trending",
+        "client_method": "home"
+    },
+    "featured": {
+        "page_route": "/home/featured",
         "api_route": "/api/feed/featured",
         "controller": "community",
-        "method": "home",
-        "client_method": "home"
+        "method": "featured",
+        "client_method": "grid"
     },
     "recent": {
         "page_route": "/home/recent",
@@ -23,6 +30,20 @@
         "controller": "community",
         "method": "recent",
         "client_method": "grid"
+    },
+    "network": {
+        "page_route": "/<username>/profile/network",
+        "api_route": "/api/feed/network/<username>",
+        "controller": "community",
+        "method": "network",
+        "client_method": "grid"
+    },
+    "trending": {
+        "page_route": "/<username>/profile/trending",
+        "api_route": "/api/feed/trending/<username>",
+        "controller": "community",
+        "method": "trending",
+        "client_method": "profile"
     },
 
     "signup": {
@@ -32,25 +53,11 @@
         "method": "forms_signup",
         "client_method": "forms"
     },
-    "trending": {
-        "page_route": "/<username>/profile/trending",
-        "api_route": "/api/feed/trending/<username>",
-        "controller": "community",
-        "method": "trending",
-        "client_method": "profile"
-    },
     "search": {
         "page_route": "/search",
         "api_route": "/api/search",
         "controller": "community",
         "method": "search",
-        "client_method": "grid"
-    },
-    "network": {
-        "page_route": "/<username>/profile/network",
-        "api_route": "/api/feed/network/<username>",
-        "controller": "community",
-        "method": "network",
         "client_method": "grid"
     },
     "user_home": {

@@ -299,6 +299,7 @@ define([
         var el_counts = el.find($(".counts"));
 
         // Toggle the state on the server
+        // own_item is the toggled state, thus the opposite of current.
         var own_item = ! o.action_get_state(btn);
         el_form.find("input[name=state]").val(own_item);
         el_form.submit();
