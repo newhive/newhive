@@ -108,13 +108,14 @@ $icon_name_on: logo close love-lg-on comment-on republish-lg-on share-lg views-l
     .icon.logo {
         width:45px;
     }
+    // BUGBUG
     .icon.share {
         &:hover { background-image: asset_url('skin/nav/share-lg.png'); }
     }
     &.plus-minus {
         position: fixed;
-        bottom: 20px;
-        right: 20px;
+        bottom: 10px;
+        right: 16px;
     }
 
     &.love.on {

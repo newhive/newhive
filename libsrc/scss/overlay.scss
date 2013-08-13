@@ -142,6 +142,7 @@
 }
 
 #social_overlay {
+    z-index: #{$nav_layer + 1};
     @include border-radius(25px 25px 0px 0px);
     // max-width: 1024px;
     right: 0px;
