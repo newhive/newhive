@@ -124,6 +124,10 @@
     }
     .tag_list {
         text-align: center;
+        &.main {
+            margin: auto;
+            width: 500px;
+        }
     }
     #tag_bar {
         padding-bottom: 10px;
@@ -160,11 +164,11 @@
         .card {
             .tag_list {
                 position: absolute;
+                padding: 16px 15px 10px 15px;
                 @include calc-width("100% - 30px");
                 opacity: 0;
                 top: 0px;
                 left: 0px;
-                padding: 16px 15px 10px 15px;
                 max-height: 88px;
                 overflow: hidden;
             }
