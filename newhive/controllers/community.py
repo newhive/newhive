@@ -28,6 +28,9 @@ class Community(Controller):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
+        # Logged out users see featured.
+        if not user or not user.id:
+            return self.featured(tdata, request, **paging_args)
         return {
             "cards": user.feed_page_esdb(feed='trending', **paging_args),
             'header': ("Network", "Trending"), 'card_type': 'expr',
