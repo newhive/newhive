@@ -1,6 +1,10 @@
 {# Expression card (large)
   Expression snapshot including counts
 #}
+{# tags #}
+{<with null "extra_classes" "show_hover"}
+  {|templates/tag_list.html}
+{>}
 <a { anchor_attrs "view_expr"
   "id" id  "expr_name" name  "owner_name" owner.name }
 >

@@ -2,8 +2,10 @@
   Tiling-sized expression view, with activity feed
   param{suppress_feed}: disable activity
 #}
-<div class="title_spacer"><div class='title'>{title}</div></div>
-<div class='tags hide'>{<for tag_index}{.}{>}</div>
+{# tags #}
+{<with null "extra_classes" "shozw_hover"}
+  {|templates/tag_list.html}
+{>}
 <a { anchor_attrs "view_expr"
     "id" id  "expr_name" name  "owner_name" owner.name }
   ><img class="snapshot" src=
@@ -12,13 +14,12 @@
   {>}{<else}
     {asset "skin/site/expr_placeholder_small.jpg"}  
   {>}>
+<div class="title_spacer"><div class='title'>{title}</div></div>
 <div class='info'>
   <img class="thumb" src='{owner.thumb_small}'/>
   <span>by <span class='username'>{owner.name}</span></span>
 </div>
-{# this is broken AND breaks layout
       {<unless suppress_feed}{<for feed}
         {|templates/feed_card.html}
       {>}
-#}
 {>}

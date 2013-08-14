@@ -2,6 +2,7 @@ from newhive import mail
 from newhive.ui_strings import en as ui_str
 from newhive.utils import dfilter, now, abs_url
 from newhive.controllers.controller import Controller
+from collections import Counter
 
 class Community(Controller):
     def search(self, tdata, request, **paging_args):
@@ -277,6 +278,17 @@ class Community(Controller):
             if page_data.get('special'):
                 del page_data['special']
             page_data['cards'] = [o.client_view(special=special) for o in page_data['cards']]
+            # Collate tags into list by most commonly appearing.
+            cnt = Counter()
+            for card in page_data['cards']:
+                for tag in (card.get('tags', []) if card.get('tags') else []):
+                    cnt[tag] += 1
+            # TODO: we'll have to have another solution with pagination.
+            page_data['tag_list'] = map(lambda x: x[0], cnt.most_common(16))
+            # Fetch feed data
+            for card in page_data['cards']:
+                feed = card.get('feed', [])
+                card['feed'] = map(lambda x: x.client_view(), self.db.Feed.fetch(feed)[:3])
         if json:
             return self.serve_json(response, page_data)
         else:
