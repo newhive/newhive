@@ -1,7 +1,8 @@
 {# 
 	Display icon, count (Loves 3.1K) 
 #}
-<div class="stats counts_icon {icon_class}" {<if attr_id}id="{attr_id}"{>}>
+<div title=" {icon_class} tooltip"
+  class="stats counts_icon {icon_class}" {<if attr_id}id="{attr_id}"{>}>
   <div class='icon {icon_class}'>
   	{<if icon}<img src='{asset icon}'>{>}
   </div>
