@@ -25,7 +25,7 @@
           {|templates/tag_card.html}
         {>}
         <div id="tag_more" class="tag_label tag_0 hide">...</div>
-        <div id="tags_menu" class="menu drawer icon_set vertical" data-handle='#tag_more' >
+        <div id="tags_menu" class="menu drawer icon_set" data-handle='#tag_more' >
         </div>        
       </div>
       <div class="stats_bar">
@@ -34,7 +34,7 @@
           {|templates/icon_count.html}
         {>}
         {# Views menu drawer #}
-        <div id="views_menu" class="menu drawer vertical" data-handle='#views_icon' >
+        <div id="views_menu" class="menu drawer" data-handle='#views_icon' >
           <div class='menu_item'>
             <div class="text upper item">Created</div>
             <div>{recency_time created}</div>
@@ -51,7 +51,7 @@
             {|templates/icon_count.html}
           {>}
           {# Loves menu drawer #}
-          <div id="loves_menu" class="menu drawer icon_set vertical" data-handle='#love_icon' >
+          <div id="loves_menu" class="menu drawer icon_set" data-handle='#love_icon' >
             {<with null "activity" expr.loves "icon_only" true}
               {|templates/activity.html}
             {>}
@@ -64,7 +64,7 @@
             {|templates/icon_count.html}
           {>}
           {# Broadcast menu drawer #}
-          <div id="broadcast_menu" class="menu drawer icon_set vertical" data-handle='#broadcast_icon' >
+          <div id="broadcast_menu" class="menu drawer icon_set" data-handle='#broadcast_icon' >
             {<with null "activity" expr.broadcast "icon_only" true}
               {|templates/activity.html}
             {>}
@@ -90,13 +90,13 @@
         {>}
 
         {# Comments menu drawer #}
-        <div id="comments_menu" class="menu drawer icon_set vertical" data-handle='#comment_icon' >
+        <div id="comments_menu" class="menu drawer icon_set" data-handle='#comment_icon' >
           {<with null "activity" expr.comments "icon_only" true}
             {|templates/activity.html}
           {>}
         </div>
         {# Share menu drawer #}
-        <div id="share_menu" class="menu drawer vertical" data-handle='#social_share_icon'>
+        <div id="share_menu" class="menu drawer" data-handle='#social_share_icon'>
           <div class='menu_item black_active'>
             <a {href_attrs "expr_snapshot" "expr_id" id} id='save_jpg_btn'>Save as JPG
               {# TODO: this saves as png, need to process into jpg #}

@@ -14,7 +14,7 @@ var menu = function(handle, drawer, options) {
             ,hover_close: true
             ,open_delay: 0
             ,close_delay: 500
-            ,offset_y: 0
+            ,offset_y: 10
             ,offset_x: 0
             ,focus_persist: true
             ,hover: true
