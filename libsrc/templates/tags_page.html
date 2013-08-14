@@ -12,7 +12,9 @@
       	{<contains viewer.tags_following tags_search.0}Unfollow
       	{>}{<else}Follow{>} collection</button>
     </form>
-    <form { form_attrs "tag_follow" } id='new_expr_form' method='POST'>
-      <button type="submit" class="teal_btn upper" value=""><span class="plus_button"></span>Add to Collection</button>
-    </form>
+    {# need a new form and form handler... #}
+    <form { form_attrs "tag_follow" } id='create_form' method='POST'>
+      <button type="submit" class="teal_btn upper" value="">
+        <span class="plus_button"></span>Add to Collection
+    </button></form>
   </div></div>
