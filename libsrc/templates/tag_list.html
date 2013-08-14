@@ -1,0 +1,13 @@
+{# Tag list
+  extra_classes: classes to add to tag_list
+  more_menu: true to have the "..." tag with associated menu
+#}
+<div class="tag_list {extra_classes}">
+  {<for tags "tagnum"}
+    {|templates/tag_card.html}
+  {>}
+  {<if more_menu}
+	<div id="tag_more" class="tag_label tag_0 hide">...</div>
+	<div id="tags_menu" class="menu drawer icon_set" data-handle='#tag_more' ></div>
+  {>}
+</div>

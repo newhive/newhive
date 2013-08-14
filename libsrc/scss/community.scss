@@ -124,6 +124,10 @@
     }
     .tag_list {
         text-align: center;
+        &.main {
+            margin: auto;
+            width: 500px;
+        }
     }
     #tag_bar {
         padding-bottom: 10px;
@@ -158,6 +162,16 @@
     #feed {
         margin: 0 auto 0 auto;
         .card {
+            .tag_list {
+                position: absolute;
+                padding: 16px 15px 10px 15px;
+                @include calc-width("100% - 30px");
+                opacity: 0;
+                top: 0px;
+                left: 0px;
+                max-height: 88px;
+                overflow: hidden;
+            }
             &:hover {
                 @include box-shadow(05px 05px 05px #666);
             }
@@ -208,6 +222,7 @@
         width: 1230px;
 
         .card {
+            position: relative;
             float: left;
             padding: 11px;
 
