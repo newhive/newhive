@@ -5,7 +5,6 @@
  */
 define([
     'browser/jquery',
-    // 'ui/nav',
     'ui/dialog', 
     'ui/new_account',
     'server/context',
@@ -31,10 +30,10 @@ define([
     'sj!templates/dialog_embed.html',
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
+    'sj!templates/login_form.html', 
     'sj!templates/request_invite_form.html'
 ], function(
     $,
-    // nav,
     dialog,
     new_account,
     context,
