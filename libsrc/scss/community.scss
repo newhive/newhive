@@ -165,12 +165,9 @@
                 font-weight: 300;
                 font-size: 36px;
                 font-family: Museo;
-                .words {
-                    padding: 4px 0;
-                    word-spacing: -3px;
-                    line-height: 49px;
-                    background-color: rgba(255,255,255,.95);
-                }
+                height: 88px;
+                vertical-align: middle;
+                display: table-cell;
             }
         }
         .user.card {
@@ -206,17 +203,6 @@
     }
 
     #feed.grid {
-        .title_spacer { height:88px; }
-        .title {
-            max-width: 390px;
-            height: 88px;
-            vertical-align: middle;
-            display: table-cell;
-        }
-        .snapshot {
-            width: 390px;
-            height: 235px;
-        }
         /* max-width: 1256px; */
         margin: auto;
         width: 1230px;
@@ -224,6 +210,15 @@
         .card {
             float: left;
             padding: 11px;
+
+            .title_spacer { height:88px; }
+            .title {
+                max-width: 390px;
+            }
+            .snapshot {
+                width: 390px;
+                height: 235px;
+            }
         }
     }
 }
