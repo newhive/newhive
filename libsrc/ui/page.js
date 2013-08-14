@@ -58,8 +58,7 @@ define([
         o.anim_direction = 0;
         o.controller = controller;
         init_overlays();
-        $(window).resize(resize);
-        // resize();
+        $(window).resize(o.resize);
     };
 
     var init_overlays = function(){
@@ -217,7 +216,7 @@ define([
         }
 
         if (new_page && new_page.enter) new_page.enter();
-        resize();
+        o.resize();
 
         if (page_data.title) $("head title").text(page_data.title);
         o.attach_handlers();
@@ -245,7 +244,7 @@ define([
     }
 
     o.grid = function(page_data){
-        grid_width = 410 + 1;
+        grid_width = 413;
         render_site(page_data);
         o.column_layout = (JSON.stringify(page_data.header) == 
             JSON.stringify(["Network", "Recent"]))
@@ -342,7 +341,7 @@ define([
         $('#site').empty().append(master_template(page_data));
     }
 
-    function resize(){
+    o.resize = function(){
         // these lines were causing #site and #exprs to not fill the window
         // $('#exprs').css('height', $(window).height());
         // $('#site').css('height', $(window).height() - 44);

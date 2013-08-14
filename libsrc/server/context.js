@@ -105,6 +105,8 @@ define([
         return attrs(route_name, args, "", true);
     };
 
+    // o.user_thumb = 
+
     // takes rendered string from template, parses into DOM,
     // and adds appropriate handlers for us
     // stringjay filters the output of all top-level templates through this
