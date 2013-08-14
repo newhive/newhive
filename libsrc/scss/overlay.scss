@@ -11,13 +11,13 @@
 #page_prev {
     background-image: asset_url('skin/nav/page_prev.png');
     &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
-    // background-position: -4px 0px;
+    background-position: -4px 0px;
     left: 14px;
 }
 #page_next {
     background-image: asset_url('skin/nav/page_next.png');
     &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
-    // background-position: 4px 0px;
+    background-position: 4px 0px;
     right: 20px;
 }
 
