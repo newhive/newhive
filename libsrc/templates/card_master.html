@@ -23,12 +23,12 @@
 <div id='feed' class='{layout}'>
   {<for cards}
     {<if card_type "user"}
-      <div class='user card' draggable='false'>
+      <div class='user card' id='card_{id}' draggable='false'>
         {|templates/user_card.html}
       </div>
     {>}
     {<if card_type "expr"}
-      <div class='expr card' draggable='false'>
+      <div class='expr card hoverable' id='card_{id}' draggable='false'>
         {<if layout "grid"}
           {|templates/expr_card_feed.html}
         {>}

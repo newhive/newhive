@@ -22,6 +22,7 @@ define([
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
+    'sj!templates/tag_list.html',
     'sj!templates/feed_card.html',
     'sj!templates/user_card.html',
     'sj!templates/profile_card.html',
@@ -364,11 +365,6 @@ define([
     // into the shortest column.  The order is not preserved.
     // TODO: preserve order.
     var layout_columns = function(){
-        // First move the cards from column into #feed
-        // (to reset to known state)
-        // var all_cards = $("#feed .expr.card");
-        // $("#feed").prepend(all_cards);
-
         // Resize the columns
         for (var i = 0; i < 3; ++i){
             var col_width = 0;
@@ -382,14 +378,15 @@ define([
         for (var i = 0; i < o.columns; ++i){
             row_heights = row_heights.concat(0);
         }
-        var expr_cards = $('#feed .expr.card');
-        expr_cards.each(function(i) {
+        var cards = context.page_data.cards;
+        for (var i = 0, card; card = cards[i++];) {
+            el_card = $("#card_" + card.id);
             var min = Math.min.apply(null, row_heights);
             var min_i = row_heights.indexOf(min);
             var el_col = $("#feed .column_" + min_i);
-            el_col.append($(this));
-            row_heights[min_i] += $(this).height();
-        });
+            el_col.append(el_card);
+            row_heights[min_i] += el_card.height();
+        };
     };
 
     // Set up the grid borders

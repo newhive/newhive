@@ -12,3 +12,9 @@ $left_padding: 30px;
 $right_padding: 12px;
 $left_column_width: 178px;
 $right_column_x: $left_padding + $left_column_width + $right_padding;
+
+@mixin calc-width($w: 100%) {
+    width: -moz-calc(#{$w});
+    width: -webkit-calc(#{$w});
+    width: calc(#{$w});
+}

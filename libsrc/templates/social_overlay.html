@@ -20,14 +20,10 @@
     </div>
     <div class="right_pane">
       {# tags #}
-      <div class="tag_list">
-        {<for tags "tagnum"}
-          {|templates/tag_card.html}
-        {>}
-        <div id="tag_more" class="tag_label tag_0 hide">...</div>
-        <div id="tags_menu" class="menu drawer icon_set" data-handle='#tag_more' >
-        </div>        
-      </div>
+      {<with null "more_menu" true}
+        {|templates/tag_list.html}
+      {>}
+      {# Action icons #}
       <div class="stats_bar">
         {# views, metadata #}
         {<with null "attr_id" "views_icon" "icon_class" "views" "count" counts.Views}
@@ -40,6 +36,7 @@
           <div class="text upper item">Updated</div>
           <div>{recency_time updated}</div>
         </div>
+        {# Love icon + drawer #}
         <form {form_attrs "star_unstar"} method='post'>
           <input type="hidden" name="entity" value="{id}">
           <input type="hidden" name="state" value="true">
@@ -53,6 +50,7 @@
             {>}
           </div>
         </form>
+        {# Broadcast icon + drawer #}
         <form {form_attrs "broadcast"} method='post'>
           <input type="hidden" name="entity" value="{id}">
           <input type="hidden" name="state" value="true">
@@ -66,20 +64,25 @@
             {>}
           </div>
         </form>
-        {# {>}{<with null "icon_class" "facebook"}
-          {|templates/icon_count.html}
-        {>}{<with null "icon_class" "tweet"}
-          {|templates/icon_count.html}
-          #}
+        {# TODO: add share icons back in
+            {>}{<with null "icon_class" "facebook"}
+              {|templates/icon_count.html}
+            {>}{<with null "icon_class" "tweet"}
+              {|templates/icon_count.html}
+        #}
+        {# Comment #}
         {<with null "attr_id" "comment_icon" "icon_class" "comment" "count" counts.Comment}
           {|templates/icon_count.html}
-        {>}{<with null "attr_id" "social_share_icon" "icon_class" "share narrow"}
+        {>}
+        {# Share #}
+        {<with null "attr_id" "social_share_icon" "icon_class" "share narrow"}
           {|templates/icon_count.html}
         {>}
-        {# home button 
-        <a { anchor_attrs "home" }>
-          {<with null "icon_class" "logo narrow"}{|templates/icon_count.html}{>}
-        </a>#}
+        {# home button (moved to top nav)
+            <a { anchor_attrs "home" }>
+              {<with null "icon_class" "logo narrow"}{|templates/icon_count.html}{>}
+            </a> 
+        #}
         {# Overlay close button #}
         {<with null "attr_id" "social_close" "icon_class" "plus-minus narrow"}
           {|templates/icon_count.html}
