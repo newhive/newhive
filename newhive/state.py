@@ -1119,8 +1119,8 @@ class Expr(HasSocial):
         old_time = self.get('snapshot_time', False)
 
         snapshotter = Snapshots()
-        snapshot_time = now()
-        dimension_list = [(715, 430, "big"), (390, 235, "small")]
+        snapshot_time = int(now())
+        dimension_list = [(715, 430, "big"), (390, 235, "small"), (70, 42, 'tiny')]
 
         for w, h, size in dimension_list:
             name = self.snapshot_name_base(size, str(snapshot_time))
