@@ -46,12 +46,13 @@ class Database:
     def add_collection(self, col):
         pass
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, assets=None):
         config = self.config = (config if config else newhive.config)
 
         self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
         self.s3 = S3Interface()
+        self.assets = assets
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
         for col in self.collections:
@@ -607,11 +608,12 @@ class User(HasSocial):
         # NOTE: these items only get time, not feed or user, because there is
         # no associated feed item.
         # TODO: This code needs to be examined for efficiency.
-        expr_tags = self.db.esdb.conn.search(q_tags, indices=self.db.esdb.index,
-                                             doc_types="expr-type",
-                                             sort="updated:desc", size=total_limit)
-        for r in expr_tags[:total_limit]:
-            time_with_expr[r._meta.id].append(r['updated'])
+        if self.get('tags_following'):
+            expr_tags = self.db.esdb.conn.search(q_tags, indices=self.db.esdb.index,
+                doc_types="expr-type",
+                sort="updated:desc", size=total_limit)
+            for r in expr_tags[:total_limit]:
+                time_with_expr[r._meta.id].append(r['updated'])
 
         expr_ids = time_with_expr.keys()
         qid = pyes.query.IdsQuery(expr_ids)
@@ -761,21 +763,12 @@ class User(HasSocial):
         return base + self.get('name', '') + '/' + path
     url = property(get_url)
 
-    @property
-    def has_thumb(self):
-        id = self.get('thumb_file_id')
-        url = self.get('profile_thumb')
-        return True if ( (id and id != '') or (url and url != '') ) else False
-
     def get_thumb(self, size=222):
         thumb = False
         thumb_file = self.db.File.fetch(self.get('thumb_file_id'))
-        if thumb_file: thumb = thumb_file.get_thumb(size, size)
-        if not thumb:
-            # bugbug: Need correct asset.
-            # perhaps get this image from a prototypical user
-            return '/lib/skin/nav/comment.png'
-        return thumb
+        if thumb_file:
+            return thumb_file.get_thumb(size, size)
+        else: return False
     thumb = property(get_thumb)
 
     def get_files(self):
@@ -907,12 +900,15 @@ class User(HasSocial):
                 expressions = self.get_expr_count(), # Why expressions->count?  nothing else is in there.
                 ))
 
+        thumb_big = (self.get_thumb(222) or self.get_thumb(190) or
+            self.db.assets.url('skin/site/user_placeholder_big.jpg'))
+        thumb_small = (self.get_thumb(70) or
+            self.db.assets.url('skin/site/user_placeholder_small.jpg'))
         dict.update(user, dict(
             id = self.id,
             url = self.url,
-            thumb_small = self.get_thumb(70),
-            thumb_big = self.get_thumb(222),
-            has_thumb = self.has_thumb,
+            thumb_small = thumb_small,
+            thumb_big = thumb_big,
             logged_in = self.logged_in,
             notification_count = self.notification_count,
         ) )
@@ -1243,8 +1239,12 @@ class Expr(HasSocial):
     def views(self): return self.get('views', 0)
 
     def mini_view(self):
-        mini = dfilter( self, ['thumb', 'name', 'owner_name'] )
+        mini = dfilter( self, ['name', 'owner_name'] )
         mini['id'] = self['_id']
+        snapshot = self.snapshot_name_prefix()
+        mini['snapshot_tiny'] = (self.snapshot_name_prefix() + 'small.png'
+            if snapshot else
+            self.db.assets.url('skin/site/expr_placeholder_tiny.jpg'))
         return mini
 
     def qualified_url(self):
@@ -1479,7 +1479,9 @@ class File(Entity):
     def get_thumb(self, w, h):
         name = str(w) + 'x' + str(h)
         if not self.get('thumbs', {}).get(name): return False
-        return self.db.s3.url('thumb', self._thumb_name(w, h))
+        url = self.get('url')
+        if not url: return False
+        return url + '_' + name
 
     def get_default_thumb(self):
         return self.get_thumb(190,190)

@@ -4,9 +4,6 @@ from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
 from newhive.utils import dfilter
 from newhive import state, config
-# from newhive.controllers.shared import ( no_zero, large_number, querystring,
-#     length_bucket, friendly_date, epoch_to_string )
-# from newhive.assets import HiveAssets
 from newhive.controllers import Controllers
 from newhive.routes import Routes
 import json, urllib
