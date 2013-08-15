@@ -54,9 +54,9 @@ define([
             attributes.push(['enctype', 'multipart/form-data']);
             if(page_state.api) attributes.push(['action', page_state.api]);
         } else {
-            if(suppress.indexOf('href') >= 0 && page_state.page)
+            if(suppress.indexOf('href') < 0 && page_state.page)
                 attributes.push(['href', page_state.page]);
-            if(suppress.indexOf('api') >= 0 && page_state.api)
+            if(suppress.indexOf('api') < 0 && page_state.api)
                 attributes.push(['data-api-path', page_state.api]);
         }
         // TODO-cleanup: make another func that just returns a dict of attrs
