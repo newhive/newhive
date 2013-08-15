@@ -139,8 +139,8 @@ var menu = function(handle, drawer, options) {
             var icon_x = 70; //drawer.children().eq(0).children().width();
             var count_children = drawer.children().length;
             var size = 1;
-            for (; size < 5 && count_children > (size*size); size++) {}
-            drawer.css("max-width", ((count_children > size*size) ? 30 : 0) + size*icon_x);
+            for (; size < 4 && count_children > (size*size); size++) {}
+            drawer.css("max-width", ((count_children > 20) ? 30 : 0) + size*icon_x);
         }
         var css_opts = {};
         // pick top of menu based on if menu would go past bottom of
