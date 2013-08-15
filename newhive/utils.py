@@ -14,6 +14,7 @@ import urllib,urllib2
 
 import newhive
 from newhive import config
+from newhive.config import abs_url, url_host
 
 def lset(l, i, e, *default):
     default = default[0] if default else [None]
@@ -171,35 +172,6 @@ def getTagCnt(data):
         tags = row.get('tags', '')
         tagCnt.update(normalize_tags(tags))
     return tagCnt
-
-def url_host(on_main_domain=True, port=None, secure=False):
-    domain = config.server_name if on_main_domain else config.content_domain
-    if domain.find('.' + config.server_name) > -1:
-        (subdomain, domain) = domain.split('.', 1)
-    if config.dev_prefix: domain = config.dev_prefix + '.' + domain
-    ssl = secure or config.always_secure
-    port = config.ssl_port if ssl else config.plain_port
-    port = '' if port == 80 or port == 443 else ':' + str(port)
-    return domain if port == '' else domain + port
-
-# TODO-cleanup: remove duplicate logic with url_host
-def abs_url(path='', secure=False, domain=None, subdomain=None):
-    """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
-    domain = domain or config.server_name
-    if domain.find('.' + config.server_name) > -1:
-        (subdomain, domain) = domain.split('.', 1)
-    if config.dev_prefix: domain = config.dev_prefix + '.' + domain
-    ssl = secure or config.always_secure
-    proto = 'https' if ssl else 'http'
-    port = config.ssl_port if ssl else config.plain_port
-    port = '' if port == 80 or port == 443 else ':' + str(port)
-    return (
-        proto + '://' +
-        (subdomain + '.' if subdomain else '') +
-        domain + port + 
-        '/' + re.sub('^/', '', path)
-    )
-
 
 def uniq(seq, idfun=None):
     # order preserving 

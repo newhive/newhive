@@ -1,15 +1,37 @@
 define([
-    'json!ui/routes.json'
-], function(ApiRoutes){
+    'json!ui/routes.json',
+    'json!server/compiled.config.json'
+], function(ApiRoutes, config){
     var o = {};
 
-    o.page_state = function(route_name, route_args) {
-        var route = ApiRoutes[route_name], state = {
-            'route_name': route_name,
-            'page': o.substitute_variables(route.page_route, route_args, true)
+    // turns out I don't really need this, but could be useful in the future
+    // (untested)
+    // o.abs_url = function(opts){
+    //     var ssl = (typeof opts.secure == 'boolean') ? opts.secure : o.is_secure,
+    //         proto = 'https' if ssl else 'http',
+    //         port = ssl ? config.ssl_port : config.plain_port,
+    //         port = (port == 80 || port == 443) ? '' : ':' + port,
+    //         domain = config.server_name;
+    //     if(config.dev_prefix) domain = config.dev_prefix + '.' + domain;
+    //     var url = proto + '://' + domain + port + '/';
+    //     if(opts.path) url += opts.path.replace(/^\//,'');
+    //     return url;
+
+    o.page_state = function(route_name, route_args, query) {
+        query = query ? '?' + query : '';
+        var route = ApiRoutes[route_name];
+        if(!route) throw('Route "' + route_name + '" not found');
+        var state = { 'route_name': route_name };
+        if(route.page_route){
+            state.page = o.substitute_variables(
+                route.page_route, route_args, true) + query;
         };
-        if(route.api_route) state.api = o.substitute_variables(
-            route.api_route, route_args, true);
+        if(route.api_route){
+            state.api = o.substitute_variables(
+                route.api_route, route_args, true) + query;
+            if(route.secure)
+                state.api = config.secure_server + state.api.slice(1);
+        }
         return state;
     };
     o.register_state = function(route_info) {

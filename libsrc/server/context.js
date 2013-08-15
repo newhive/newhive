@@ -1,13 +1,16 @@
 // empty object module for server to put stuff in
 define([
     'json!ui/routes.json',
+    'json!server/compiled.config.json',
     'ui/routing',
     'browser/js',
     'ui/menu',
     'ui/dialog',
     'ui/util'
-], function(api_routes, routing, js, menu, dialog, ui_util){
-    var o = {};
+], function(api_routes, config, routing, js, menu, dialog, ui_util){
+    var o = { config: config };
+
+    o.server_url = o.config.server_url; // used in many templates
 
     o.asset = function(context, name){ return ui_util.asset(name) };
 
@@ -42,30 +45,27 @@ define([
     };
 
     var attrs = function(route_name, args, query_args, is_form, suppress){
-        var route = api_routes[route_name];
-        if (!suppress) suppress = [];
-        if(!route) throw('Route "' + route_name + '" not found');
+        if(!suppress) suppress = [];
         var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
                 [ ['data-route-name', route_name] ],
-            href = null, api = null;
-        if(suppress.indexOf('href') < 0)
-            href = route['page_route'] + query_args;
-        if(suppress.indexOf('api') < 0 && route.api_route)
-            api = api_routes[route_name]['api_route'] + query_args;
+            page_state = routing.page_state(route_name, args, query_args);
+
         if (is_form) {
             attributes.push(['enctype', 'multipart/form-data']);
-            if(api) attributes.push(['action',
-                routing.substitute_variables(api, args, true)]);
+            if(page_state.api) attributes.push(['action', page_state.api]);
         } else {
-            if(href) attributes.push(['href',
-                routing.substitute_variables(href, args, true)]);
-            if(api) attributes.push(['data-api-path',
-                routing.substitute_variables(api, args, true)]);
+            if(suppress.indexOf('href') >= 0 && page_state.page)
+                attributes.push(['href', page_state.page]);
+            if(suppress.indexOf('api') >= 0 && page_state.api)
+                attributes.push(['data-api-path', page_state.api]);
         }
+        // TODO-cleanup: make another func that just returns a dict of attrs
         return attributes.map(function(attribute_pair) {
             return attribute_pair[0] + '="' + attribute_pair[1] + '"';
         }).join(' ');
-    }, get_route_args = function(arguments){
+    };
+
+    var get_route_args = function(arguments){
         var args = { username: o.user.name };
         // All arguments after route_name are name value pairs
         for(var i = 2; i < arguments.length; i += 2)
@@ -81,7 +81,7 @@ define([
         for(var i = 1; i < arguments.length; i += 2)
             query_args += arguments[i] + arguments[i + 1];
 
-        return attrs("search", args, "?q=" + encodeURIComponent(query_args));
+        return attrs("search", args, "q=" + encodeURIComponent(query_args));
     };
 
     // takes route_name, and association argument list.

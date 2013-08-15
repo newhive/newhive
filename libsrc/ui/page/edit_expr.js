@@ -15,8 +15,7 @@ define([
     bundles, 
     edit_template
 ) {
-    var o = {}, contentFrameURLBase = context.is_secure ?
-            context.secure_content_server_url : context.content_server_url;
+    var o = {};
 
     o.init = function(controller){
         // o.controller = controller;

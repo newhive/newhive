@@ -2,7 +2,8 @@
     "login": {
         "api_route": "/api/user/login",
         "controller": "user",
-        "method": "login"
+        "method": "login",
+        "secure": true
     },
     "logout": {
         "api_route": "/api/user/logout",

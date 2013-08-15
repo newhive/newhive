@@ -17,9 +17,7 @@ define([
     social_overlay_template,
     edit_btn_template
 ) {
-    var o = {}, contentFrameURLBase = context.is_secure ?
-            context.secure_content_server_url : context.content_server_url,
-            controller;
+    var o = {}, contentFrameURLBase = context.config.content_url;
     const anim_duration = 400;
 
     o.init = function(controller){

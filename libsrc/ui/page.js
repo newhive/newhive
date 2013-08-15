@@ -92,60 +92,33 @@ define([
                     }
                 });
             });
+
+            // login_form already rendered in overlay_template()
+            $('#login_form').on('response', function(e, data){
+                if(data){
+                    context.user = data;
+                    init_overlays();
+                    o.controller.refresh();
+                    $('#login_menu').data('dialog').close();
+                } else {
+                    $('#login_form .error').show();
+                }
+            });
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
-            $('#logout_form').bind('response', function(){
-                context.user.logged_in = false;
-                init_overlays();
-                require(['ui/controller'], function(ctrl){
-                    ctrl.refresh();
-                });
-            });
+            $('#logout_form').bind('response', o.on_logout);
         }
     };
 
-    ///////////////////////////////
-    // TODO(refactor): move to overlays module
-    // var render_overlays = function(){
-    //     $('#overlays').empty().html(overlay_template());
-    //     // $("#nav #plus").click(o.social_toggle);
-    // };
-    var login = function(){
-        var f = $(this);
-        var json_flag = f.find('[name=json]');
-
-        if(location.protocol == 'https:'){
-            $.post(f.attr('action'), f.serialize(), function(user){
-                if(user){
-                    context.user = user;
-                    init_overlays();
-                    require(['ui/controller'], function(ctrl){
-                        ctrl.refresh()
-                    });
-                    $('#login_menu').data('dialog').close();
-                }
-                else $('.login.error').removeClass('hide');
-            });
-            return false;
-        }
-        // can't post between protocols, so pass credentials to site-wide auth
-        else{
-            var here = window.location;
-            f.attr('action', context.secure_server + here.pathname.slice(1) + here.search);
-            f.off('submit'); // prevent loop
-        }
+    o.on_logout = function(){
+        context.user.logged_in = false;
+        // overlays are rendered once on init, so not done on .refresh()
+        init_overlays();
+        o.controller.refresh();
     };
- 
-    var logout = function(){
-        $.post('/api/user/logout', '', function(){
-            context.user.logged_in = false;
-            //// This should be redundant when refreshing the whole page
-            // init_overlays();
-            // o.render(o.method, context);
-            require(['ui/controller'], function(ctrl){ ctrl.refresh(); });
-        });
+    o.logout = function(){
+        $.post('/api/user/logout', '', o.on_logout);
     };
-    ///////////////////////////////
 
     ///////////////////////////////
     // form responses

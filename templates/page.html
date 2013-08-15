@@ -10,18 +10,12 @@
 
   <script>
 curl(['server/context', 'browser/js'], function(context, util){
-    var server_data = {
+    util.copy({
         user: {{ user.client_view(activity=20)|json }},
         error: {{ error|json }},
-        link_url: "{{ link_url }}",
-        server_url: {{ server_url|json }}, secure_server: {{ secure_server|json }},
-        content_server_url: {{ content_server_url|json }},
-        secure_content_server_url: {{ secure_content_server_url|json }},
         is_secure: {{ is_secure|json }},
-        config: {{ config.client_view()|json }}, /* streamified_url, streamified_client_id */
-    };
-    util.copy(server_data, context);
-    context.page_data = {{ page_data|json }};
+        page_data: {{ page_data|json }}
+    }, context);
 });
   </script>
 {% endblock %}
