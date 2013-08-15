@@ -78,7 +78,7 @@ define([
         }
         var transition_length = val(orig_goal) - val(orig_value);
         if (transition_length != 0) {
-            duration *= (val(goal) - val(curr_value)) / transition_length;
+            duration *= Math.abs((val(goal) - val(curr_value)) / transition_length);
         }
         var anims = {};
         anims[prop] = goal;

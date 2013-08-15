@@ -168,7 +168,13 @@ img.thumb { background-color: $color_grey_medium; }
         &.active { background-color: $color_selected; }
     }
     &.icon_set {
-        max-width: 440px;  // 55px * 8
+        max-width: 280px;  // 70px * 4
+        max-height: 350px;
+        // overflow: scroll;
+        .feed_item {
+            padding: 5px 5px 0px 5px;
+            float: left;
+        }
     }
 }
 
