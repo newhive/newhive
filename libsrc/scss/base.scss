@@ -1,7 +1,12 @@
 @import "common";
 
 .upper { text-transform: uppercase; }
-
+.elipsis {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .rightalign {
     position: absolute;
     right: 0px;

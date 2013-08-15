@@ -135,6 +135,13 @@ var menu = function(handle, drawer, options) {
             else o.do_open();
         }
 
+        if (!children_empty && drawer.hasClass("icon_set")) {
+            var icon_x = 70; //drawer.children().eq(0).children().width();
+            var count_children = drawer.children().length;
+            var size = 1;
+            for (; size < 5 && count_children > (size*size); size++) {}
+            drawer.css("max-width", ((count_children > size*size) ? 30 : 0) + size*icon_x);
+        }
         var css_opts = {};
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle

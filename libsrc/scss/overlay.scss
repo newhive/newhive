@@ -104,7 +104,7 @@
     #popup_content {
         //position:absolute;
         //top: 44px;
-        max-width: 1001px;
+        max-width: 980px;
         margin: auto;
         padding: 0px 0px 0px 10px;
         position: relative;
@@ -126,21 +126,22 @@
         padding-top: 10px;
         // margin-right: 60px;
         .title {
-            overflow: hidden;
-            text-overflow: ellipsis;
             width: 400px;
-            white-space: nowrap;
+        }
+        .user_action_bar { float: right; }
+        .username {
+            width: 190px;
         }
     }
 
     .right_pane {
         display: inline-block;
-        width: 490px;
+        width: 480px;
         // position: absolute;
         // right: 0;
         // vertical-align: top;
         text-align: right;
-        * * { text-align: left; }
+        &> * > * { text-align: left; }
         // border-left: 1px solid #d1d1d1;
         margin-right: 70px;
 
