@@ -7,7 +7,7 @@
     be correct height #}
     <a {anchor_attrs "expressions_public" "owner_name" name}>
       <img style='height:60px;' src='{thumb_small}' class='thumb'></a>
-    <span>by <span class='username'>{owner.name}</span></span>
+    <span>by <span class='elipsis username'>{owner.name}</span></span>
     {|templates/user_actions.html}
   </div>
 {>}{<else}

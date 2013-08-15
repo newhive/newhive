@@ -12,7 +12,7 @@
   <div id="popup_content">
     <div class="left_pane">
       {# expression title #}
-      <div class="title text">{expr.title}</div>
+      <div class="title text elipsis">{expr.title}</div>
       {# user profile #}
       {<with owner "brief" true}
         {|templates/profile_card.html}
