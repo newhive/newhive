@@ -59,8 +59,7 @@ define([
         o.anim_direction = 0;
         o.controller = controller;
         init_overlays();
-        $(window).resize(resize);
-        // resize();
+        $(window).resize(o.resize);
     };
 
     var init_overlays = function(){
@@ -93,60 +92,33 @@ define([
                     }
                 });
             });
+
+            // login_form already rendered in overlay_template()
+            $('#login_form').on('response', function(e, data){
+                if(data){
+                    context.user = data;
+                    init_overlays();
+                    o.controller.refresh();
+                    $('#login_menu').data('dialog').close();
+                } else {
+                    $('#login_form .error').show();
+                }
+            });
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
-            $('#logout_form').bind('response', function(){
-                context.user.logged_in = false;
-                init_overlays();
-                require(['ui/controller'], function(ctrl){
-                    ctrl.refresh();
-                });
-            });
+            $('#logout_form').bind('response', o.on_logout);
         }
     };
 
-    ///////////////////////////////
-    // TODO(refactor): move to overlays module
-    // var render_overlays = function(){
-    //     $('#overlays').empty().html(overlay_template());
-    //     // $("#nav #plus").click(o.social_toggle);
-    // };
-    var login = function(){
-        var f = $(this);
-        var json_flag = f.find('[name=json]');
-
-        if(location.protocol == 'https:'){
-            $.post(f.attr('action'), f.serialize(), function(user){
-                if(user){
-                    context.user = user;
-                    init_overlays();
-                    require(['ui/controller'], function(ctrl){
-                        ctrl.refresh()
-                    });
-                    $('#login_menu').data('dialog').close();
-                }
-                else $('.login.error').removeClass('hide');
-            });
-            return false;
-        }
-        // can't post between protocols, so pass credentials to site-wide auth
-        else{
-            var here = window.location;
-            f.attr('action', context.secure_server + here.pathname.slice(1) + here.search);
-            f.off('submit'); // prevent loop
-        }
+    o.on_logout = function(){
+        context.user.logged_in = false;
+        // overlays are rendered once on init, so not done on .refresh()
+        init_overlays();
+        o.controller.refresh();
     };
- 
-    var logout = function(){
-        $.post('/api/user/logout', '', function(){
-            context.user.logged_in = false;
-            //// This should be redundant when refreshing the whole page
-            // init_overlays();
-            // o.render(o.method, context);
-            require(['ui/controller'], function(ctrl){ ctrl.refresh(); });
-        });
+    o.logout = function(){
+        $.post('/api/user/logout', '', o.on_logout);
     };
-    ///////////////////////////////
 
     ///////////////////////////////
     // form responses
@@ -218,7 +190,7 @@ define([
         }
 
         if (new_page && new_page.enter) new_page.enter();
-        resize();
+        o.resize();
 
         if (page_data.title) $("head title").text(page_data.title);
         o.attach_handlers();
@@ -246,7 +218,7 @@ define([
     }
 
     o.grid = function(page_data){
-        grid_width = 410 + 1;
+        grid_width = 413;
         render_site(page_data);
         o.column_layout = (JSON.stringify(page_data.header) == 
             JSON.stringify(["Network", "Recent"]))
@@ -343,7 +315,7 @@ define([
         $('#site').empty().append(master_template(page_data));
     }
 
-    function resize(){
+    o.resize = function(){
         // these lines were causing #site and #exprs to not fill the window
         // $('#exprs').css('height', $(window).height());
         // $('#site').css('height', $(window).height() - 44);

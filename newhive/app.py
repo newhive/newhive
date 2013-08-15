@@ -4,9 +4,6 @@ from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
 from newhive.utils import dfilter
 from newhive import state, config
-# from newhive.controllers.shared import ( no_zero, large_number, querystring,
-#     length_bucket, friendly_date, epoch_to_string )
-# from newhive.assets import HiveAssets
 from newhive.controllers import Controllers
 from newhive.routes import Routes
 import json, urllib
@@ -104,7 +101,7 @@ def handle(request):
                 [6],
                 [3])
 
-        result = controller.dispatch(handler, request, **args)
+        response = controller.dispatch(handler, request, **args)
         if stats:
             pr.disable()
             s = io.StringIO()
@@ -115,7 +112,7 @@ def handle(request):
             ps.dump_stats("/var/www/newhive/stats")
     except:
         (blah, exception, traceback) = sys.exc_info()
-        result = api.controller.serve_500(request, Response(), exception=exception,
+        response = api.controller.serve_500(request, Response(), exception=exception,
             traceback=traceback, json=False)
     print request
     print "time %s ms" % (1000.*(now() - time_start))
@@ -126,6 +123,8 @@ def handle(request):
         yappi.print_stats(sys.stdout, yappi.SORTTYPE_TTOT, yappi.SORTORDER_DESC, 25)
         yappi.clear_stats()
 
-    return result
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+    return response
 
 application = handle

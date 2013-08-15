@@ -21,7 +21,7 @@ jinja_env.globals.update({
     ,'asset_bundle': hive_assets.asset_bundle
 })
 
-db = state.Database(config)
+db = state.Database(config, hive_assets)
 server_env = {
      'db': db
     ,'jinja_env': jinja_env

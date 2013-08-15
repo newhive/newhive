@@ -6,8 +6,8 @@
     {# bugbug: style belongs elsewhere, namely icon from server should
     be correct height #}
     <a {anchor_attrs "expressions_public" "owner_name" name}>
-      <img style='height:60px;' src='{thumb_small}' class='thumb'></a>
-    <span>by <span class='elipsis username'>{owner.name}</span></span>
+      <img src='{thumb_small}' class='thumb'>
+    <span>by <span class='elipsis username'>{owner.name}</span></span></a>
     {|templates/user_actions.html}
   </div>
 {>}{<else}

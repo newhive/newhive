@@ -12,9 +12,9 @@ var menu = function(handle, drawer, options) {
             ,close_menu: function(){ drawer.hide() }
             ,sticky: false
             ,hover_close: true
-            ,open_delay: 100
+            ,open_delay: 0
             ,close_delay: 500
-            ,offset_y: 0
+            ,offset_y: 10
             ,offset_x: 0
             ,focus_persist: true
             ,hover: true
@@ -43,23 +43,19 @@ var menu = function(handle, drawer, options) {
     drawer.data('menu', o);
     handle.data('menu', o);
 
-    o.delayed_close_r = function(recurse, close_delay) {
-        if(typeof(close_delay) != 'number') close_delay = false;
-        if(typeof(recurse) == 'boolean' && recurse && opts.group.delayed_close) {
-            opts.group.delayed_close_r(true, close_delay);
-            return;
-        }
+    o.delayed_close = function(close_parent){
         opts.default_item.removeClass('active');
-        if(opts.hover_close && ! close_timer) {
-            close_timer = setTimeout(o.close, close_delay || opts.close_delay);
+        if(close_parent && opts.group.delayed_close){
+            opts.group.delayed_close(true);
+        }
+        if(opts.hover_close && !close_timer){
+            close_timer = setTimeout(o.close, opts.close_delay);
         }    
     };
-    o.delayed_close = function(close_delay) {
-        o.delayed_close_r(true, close_delay);
-    };
-    o.cancel_close = function(e) {
-        if(opts.group.cancel_close) 
+    o.cancel_close = function(){
+        if(opts.group.cancel_close){ 
             opts.group.cancel_close();
+        }
         if(close_timer) {
             clearTimeout(close_timer);
             close_timer = false;
@@ -71,11 +67,10 @@ var menu = function(handle, drawer, options) {
     o.drawer = function(){ return drawer };
 
     o.close = function(force) {
-        if (!opts.close_condition()) return;
-        o.cancel_close();
-        if(!o.opened) {
-            return;
-        }
+        clearTimeout(close_timer);
+        close_timer = false;
+        if(!opts.close_condition()) return;
+        if(!o.opened) return;
 
         if(o.sticky) return;
         $.map(o.menus, function(m){ m.close(force) });
@@ -191,8 +186,10 @@ var menu = function(handle, drawer, options) {
 
     if(opts.hover) {
         handle.on('mouseover', null, { delay: opts.open_delay }, o.open)
-            .on('mouseleave', o.delayed_close_r);
-        drawer.mouseenter(o.cancel_close).mouseleave(o.delayed_close);
+            .on('mouseleave', function(){ o.delayed_close(false) });
+        drawer.mouseenter(o.cancel_close)
+            .mouseleave(function(){ o.delayed_close(true) })
+            .mousemove(o.cancel_close);
     }
     handle.click(function(){
         if(o.opened && opts.default_item) opts.default_item.click();
@@ -203,7 +200,7 @@ var menu = function(handle, drawer, options) {
             o.sticky = true;
         }).on('blur', function(){
             o.sticky = false;
-            o.delayed_close();
+            o.delayed_close(true);
         }).on('focus', o.cancel_close);
         drawer.mousedown(function(){ setTimeout(o.cancel_close, 1) });
     }

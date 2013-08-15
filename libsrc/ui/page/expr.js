@@ -17,9 +17,7 @@ define([
     social_overlay_template,
     edit_btn_template
 ) {
-    var o = {}, contentFrameURLBase = context.is_secure ?
-            context.secure_content_server_url : context.content_server_url,
-            controller;
+    var o = {}, contentFrameURLBase = context.config.content_url;
     const anim_duration = 400;
 
     o.init = function(controller){
@@ -190,8 +188,8 @@ define([
 
         // postMessage only works after the page loads, so once page loads, we
         // can hide them and show on hover
+        var btns = $('.page_btn').show();
         contentFrame.load(function(){
-            var btns = $('.page_btn');
             btns.each(function(i, e){
                 if(!$(e).hasClass('active')) $(e).hide()
             });

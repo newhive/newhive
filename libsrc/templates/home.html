@@ -1,15 +1,19 @@
 {<unless user.logged_in}
-  <img src='{asset "skin/site/logo_text.png"}'>
+  <div class='centered'>
+    <img src='{asset "skin/site/logo_text.png"}'>
   
-  NewHive is your blank canvas.
-  It’s freedom of expression on the web.
-  
-  {<with . "compact" "true"}{|templates/request_invite_form.html}{>}
-  
-  <iframe
-    src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0"
-    width="640px" height="360px" frameborder="0" webkitAllowFullScreen allowFullScreen
-  ></iframe>
+    <div>
+      NewHive is your blank canvas.<br>
+      It’s freedom of expression on the web.
+    </div>
+    <br>
+    {<with . "compact" "true"}{|templates/request_invite_form.html}{>}
+    <br> 
+    <iframe
+      src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0"
+      width="640px" height="360px" frameborder="0" webkitAllowFullScreen allowFullScreen
+    ></iframe>
+  </div>
 {>}
 
 {|templates/card_master.html}

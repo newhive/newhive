@@ -100,17 +100,17 @@ class Assets(object):
                 f.write('    "'+ name + '" => "' + self.url(name) + '",\n')
 
             f.write('}')
-    
-    def write_js(self, write_path):
+
+    # store a javascript object in source tree
+    def write_js(self, obj, write_path):
+        with open(join(config.src_home, write_path), 'w') as f:
+            f.write(json.dumps(obj))
+
+    def write_js_assets(self, write_path):
         urls = dict([(name, self.url(name)) for name in self.assets])
         urls[''] = self.base_url
-        with open(join(config.src_home, write_path), 'w') as f:
-            f.write(json.dumps(urls))
+        self.write_js(urls, write_path)
 
-    def write_js_bundles(self, write_path):
-        with open(join(config.src_home, write_path), 'w') as f:
-            f.write(json.dumps(self.bundles))
-    
     def audit(self, limit=None):
         assets = sorted(self.assets.items())
         if limit: assets = assets[:limit]
@@ -132,7 +132,6 @@ class Assets(object):
 
 
 class HiveAssets(Assets):
-
     def __init__(self):
         super(HiveAssets, self).__init__('lib')
 
@@ -147,7 +146,8 @@ class HiveAssets(Assets):
         # first grab assets for JavaScript
         self.find('Jplayer.swf', local=True)
         self.find('skin')
-        self.write_js('libsrc/server/compiled.assets.json')
+        self.write_js_assets('libsrc/server/compiled.assets.json')
+        self.write_js(config.client_view(), 'libsrc/server/compiled.config.json')
 
         self.find('fonts')
         self.write_ruby('libsrc/scss/compiled.asset_paths.rb')
@@ -164,7 +164,7 @@ class HiveAssets(Assets):
         # actually get webassets to build bundles (webassets is very lazy)
         for b in self.final_bundles:
             self.bundles[b] = self.assets_env[b].urls()
-        self.write_js_bundles('libsrc/server/compiled.bundles.json')
+        self.write_js(self.bundles, 'libsrc/server/compiled.bundles.json')
         print("Assets build complete in %s seconds", time.time() - t0)
 
         ## now grab the rest of 'em after compiling our webassets shit

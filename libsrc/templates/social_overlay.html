@@ -31,10 +31,14 @@
         {>}
         {# Views menu drawer #}
         <div id="views_menu" class="menu drawer" data-handle='#views_icon' >
-          <div class="text upper item">Created</div>
-          <div>{recency_time created}</div>
-          <div class="text upper item">Updated</div>
-          <div>{recency_time updated}</div>
+          <div class='menu_item'>
+            <div class="text upper item">Created</div>
+            <div>{recency_time created}</div>
+          </div>
+          <div class='menu_item'>
+            <div class="text upper item">Updated</div>
+            <div>{recency_time updated}</div>
+          </div>
         </div>
         {# Love icon + drawer #}
         <form {form_attrs "star_unstar"} method='post'>

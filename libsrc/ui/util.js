@@ -124,12 +124,13 @@ define([
         return form;
     }
 
-    function asyncSubmit(form, callback, opts) {
-        var opts = $.extend({ dataType : 'text' }, opts);
-        var url = opts.url || $(form).attr('action') || server_url;
-        $.post(url, $(form).serialize(), callback, opts.dataType);
-        return false;
-    }
+    // TODO-compat: may be useful for browsers that don't do XHR right
+    // function asyncSubmit(form, callback, opts) {
+    //     var opts = $.extend({ dataType : 'text' }, opts);
+    //     var url = opts.url || $(form).attr('action') || server_url;
+    //     $.post(url, $(form).serialize(), callback, opts.dataType);
+    //     return false;
+    // }
 
     /*** puts alt attribute of input fields in to value attribute, clears
      * it when focused.
