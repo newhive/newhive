@@ -12,7 +12,8 @@
   <div id="popup_content">
     <div class="left_pane">
       {# expression title #}
-      <div class="title text elipsis">{expr.title}</div>
+      <div class="title_spacer">
+        <div class="title expr text">{expr.title}</div></div>
       {# user profile #}
       {<with owner "brief" true}
         {|templates/profile_card.html}
@@ -20,9 +21,11 @@
     </div>
     <div class="right_pane">
       {# tags #}
-      {<with null "more_menu" true}
-        {|templates/tag_list.html}
-      {>}
+      <div class="vcenter_spacer"><div class="spacer">
+        {<with null "more_menu" true}
+          {|templates/tag_list.html}
+        {>}
+      </div></div>
       {# Action icons #}
       <div class="stats_bar">
         {# views, metadata #}
@@ -41,33 +44,25 @@
           </div>
         </div>
         {# Love icon + drawer #}
-        <form {form_attrs "star_unstar"} method='post'>
-          <input type="hidden" name="entity" value="{id}">
-          <input type="hidden" name="state" value="true">
-          {<with null "attr_id" "love_icon" "icon_class" "love" "count" counts.Star}
-            {|templates/icon_count.html}
+        {<with null "attr_id" "love_icon" "icon_class" "love" "count" counts.Star}
+          {|templates/icon_count.html}
+        {>}
+        {# Loves menu drawer #}
+        <div id="loves_menu" class="menu drawer icon_set" data-handle='#love_icon' >
+          {<with null "activity" expr.loves "icon_only" true}
+            {|templates/activity.html}
           {>}
-          {# Loves menu drawer #}
-          <div id="loves_menu" class="menu drawer icon_set" data-handle='#love_icon' >
-            {<with null "activity" expr.loves "icon_only" true}
-              {|templates/activity.html}
-            {>}
-          </div>
-        </form>
+        </div>
         {# Broadcast icon + drawer #}
-        <form {form_attrs "broadcast"} method='post'>
-          <input type="hidden" name="entity" value="{id}">
-          <input type="hidden" name="state" value="true">
-          {<with null "attr_id" "broadcast_icon" "icon_class" "republish" "count" counts.Broadcast}
-            {|templates/icon_count.html}
+        {<with null "attr_id" "broadcast_icon" "icon_class" "republish" "count" counts.Broadcast}
+          {|templates/icon_count.html}
+        {>}
+        {# Broadcast menu drawer #}
+        <div id="broadcast_menu" class="menu drawer icon_set" data-handle='#broadcast_icon' >
+          {<with null "activity" expr.broadcast "icon_only" true}
+            {|templates/activity.html}
           {>}
-          {# Broadcast menu drawer #}
-          <div id="broadcast_menu" class="menu drawer icon_set" data-handle='#broadcast_icon' >
-            {<with null "activity" expr.broadcast "icon_only" true}
-              {|templates/activity.html}
-            {>}
-          </div>
-        </form>
+        </div>
         {# TODO: add share icons back in
             {>}{<with null "icon_class" "facebook"}
               {|templates/icon_count.html}
@@ -92,6 +87,15 @@
           {|templates/icon_count.html}
         {>}
 
+        {# Star/unstar form #}
+        <form class="love" {form_attrs "star_unstar"} method='post'>
+          <input type="hidden" name="entity" value="{id}">
+          <input type="hidden" name="state" value="true">
+        </form>
+        <form class="republish" {form_attrs "broadcast"} method='post'>
+          <input type="hidden" name="entity" value="{id}">
+          <input type="hidden" name="state" value="true">
+        </form>
         {# Comments menu drawer #}
         <div id="comments_menu" class="menu drawer icon_set" data-handle='#comment_icon' >
           {<with null "activity" expr.comments "icon_only" true}

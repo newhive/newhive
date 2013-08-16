@@ -94,11 +94,13 @@
 #social_overlay {
     z-index: #{$nav_layer + 1};
     @include border-radius(25px 25px 0px 0px);
+    @include box-shadow(rgba(black, .3) 3px 3px 28px);
+
     // max-width: 1024px;
     right: 0px;
     bottom: 0px;
     width: 100%;
-    height: 150px;
+    // height: 180px;
     &:hover { background-color: white; }
 
     #popup_content {
@@ -106,12 +108,17 @@
         //top: 44px;
         max-width: 980px;
         margin: auto;
-        padding: 0px 0px 0px 10px;
+        padding: 20px 0px 0px 10px;
         position: relative;
         //height: 306px;
         //overflow: auto;
         // Direct descendents
-        &> * { vertical-align:top; }
+        &> * { 
+            vertical-align:top; 
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 10px;
+        }
         // Direct grand-descendents
         &> * > * { vertical-align:bottom; }
     }
@@ -123,20 +130,37 @@
     .left_pane {
         display: inline-block;
         width: 420px;
-        padding-top: 10px;
+        // padding-top: 10px;
         // margin-right: 60px;
-        .title {
-            width: 400px;
+        .title_spacer { 
+            height:78px;
+            display: table;
         }
-        .user_action_bar { float: right; }
+        .title {
+            @include calc-width("100% - 10px");
+            height: 100%;
+            vertical-align: middle;
+            display: table-cell;
+        }
+        .user_action_bar { 
+            float: right; 
+            padding-right: 10px;
+        }
+        // TODO: Make it vcenter
+        .owner.profile {
+            padding-top: 13px;
+            .user_action_bar {
+                padding-top: 4px;
+            }
+        }
         .username {
-            width: 190px;
+            width: 157px;
         }
     }
 
     .right_pane {
         display: inline-block;
-        width: 480px;
+        width: 470px;
         // position: absolute;
         // right: 0;
         // vertical-align: top;
@@ -145,29 +169,43 @@
         // border-left: 1px solid #d1d1d1;
         margin-right: 70px;
 
+        .vcenter_spacer {
+            height: 80px;
+        }
         .tag_list {
-            padding: 10px 0px 20px 0px;
+            // padding: 10px 0px 20px 0px;
             // text-align: center;
-            height: 40px;
+            max-height: 80px;
             overflow: hidden;
+            text-align: right;
         }
         .stats_bar {
             // position: fixed;
             // right: 14px;
             // bottom: 10px;
-            margin-top: 20px;
+            margin-top: 10px;
+            // margin-bottom: 10px;
             // margin-left: 15px;
         }
 
         .counts_icon {
             width: 90px;
+            margin-left: 7px;
             .icon {
-                width: 55px;
-                background-position-y: -7px;
+                // width: 55px;
+                // background-position-y: -7px;
+                width: 60px;
+                height: 60px;
+                // margin-bottom: -5px;
             }
-            .icon.logo, .icon.plus-minus {
-                width: 36px;
-                background-position-y: 0px;
+            // .icon.logo, .icon.plus-minus {
+            //     width: 36px;
+            //     background-position-y: 0px;
+            // }
+            &.plus-minus {
+                &:hover {
+                    background-color: black;
+                }
             }
         }
     }

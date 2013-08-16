@@ -77,9 +77,10 @@
         text-transform: uppercase;
     }
     .thumb {
-       width:50px;
-       height:50px;
-       vertical-align: middle;
+        margin-right: 10px;
+        width: 60px;
+        // height:50px;
+        vertical-align: middle;
     }
     .icon {
         width: 44px; height: 44px;
@@ -126,7 +127,7 @@
         text-align: center;
         &.main {
             margin: auto;
-            width: 500px;
+            width: 600px;
         }
     }
     #tag_bar {
@@ -148,10 +149,10 @@
             right: 0px;
             top: 0px;
             // #follow_tag_form
-            .teal_btn {
-                padding: 6px;
-                background-color: $color_selected;
-            }
+            // .teal_btn {
+            //     padding: 6px;
+            //     background-color: $color_selected;
+            // }
             #create_form button {
                 padding-left: 36px;
                 position: relative;
@@ -169,7 +170,7 @@
                 opacity: 0;
                 top: 0px;
                 left: 0px;
-                max-height: 88px;
+                max-height: 108px;
                 overflow: hidden;
             }
             &:hover {
@@ -179,13 +180,13 @@
                 font-weight: 300;
                 font-size: 36px;
                 font-family: Museo;
-                height: 88px;
-                vertical-align: middle;
-                display: table-cell;
+                .words {
+                    padding: 4px 0;
+                    word-spacing: -3px;
+                    line-height: 49px;
+                    background-color: rgba(255,255,255,.95);
+                }
             }
-        }
-        .user.card {
-            height: 363px;
         }
     }
     
@@ -202,6 +203,13 @@
                 width: 715px;
                 height: 430px;
             }
+            .title {
+                opacity: 0.4;
+                position: absolute;
+                left: 0; top: 22px;
+                max-width: 550px;
+                border-left: 7px solid rgba(255,255,255,.95);
+            }
             .info {
                 position: relative;
                 padding: 10px 0;
@@ -217,6 +225,20 @@
     }
 
     #feed.grid {
+        .title_spacer { 
+            height:88px; 
+            display: table;
+        }
+        .title {
+            max-width: 390px;
+            // height: 88px;
+            vertical-align: middle;
+            display: table-cell;
+        }
+        .snapshot {
+            width: 390px;
+            height: 235px;
+        }
         /* max-width: 1256px; */
         margin: auto;
         width: 1230px;
@@ -224,32 +246,27 @@
         .card {
             position: relative;
             float: left;
-            padding: 11px;
-
-            .title_spacer { height:88px; }
-            .title {
-                max-width: 390px;
-            }
-            .snapshot {
-                width: 390px;
-                height: 235px;
-            }
+            padding: 10px;
         }
     }
 }
 
 .tag_label {
     display: inline-block;
-    border-top: 1px solid black;
-    border-left: 1px solid black;
-    padding: 3px 8px;
+    // border-top: 1px solid black;
+    // border-left: 1px solid black;
     clear: both;
     color: white;
-    margin: 3px 0;
+
+    text-transform: uppercase;
     font-size: 16px;
-    &:hover { 
-        color: white; 
-        //padding-left: 30px; 
+    font-family: Gibson;
+
+    padding: 6px 10px;
+    margin: 7px 7px 0px 0px;
+    &:hover {
+        color: white;
+        background-color: black;
     }
 
     &.tag_0 { background-color: $color_tag_0; }
