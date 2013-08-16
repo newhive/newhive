@@ -167,13 +167,22 @@ img.thumb { background-color: $color_grey_medium; }
         white-space: nowrap;
         &.active { background-color: $color_selected; }
     }
+    $icon_width: 55px;
+    $icon_padding: 5px;
     &.icon_set {
-        max-width: 280px;  // 70px * 4
-        max-height: 350px;
+        padding: 5px 5px 0px 5px;
+        max-width: ($icon_width + $icon_padding)*4;
+        max-height: ($icon_width + $icon_padding)*5;
         // overflow: scroll;
         .feed_item {
-            padding: 5px 5px 0px 5px;
-            float: left;
+            img { height: $icon_width; }
+            display: inline-block;
+            // height: $icon_width;
+            // padding: $icon_padding;
+            padding: 0px 5px 5px 5px;
+            // TODO: fix the HTML to remove spaces
+            margin-right: -5px;
+            // float: left;
         }
     }
 }
@@ -238,59 +247,6 @@ img.thumb { background-color: $color_grey_medium; }
         }
     }
 }
-
-/*
-.feed_item {
-    width: auto;
-    height: auto;
-    clear: both;
-    overflow: hidden;
-    font-weight: normal;
-    cursor: pointer;
-    margin: 0px;
-    padding: 2px;
-    position: relative;
-    border-top: 1px solid $color_light_grey;
-    &:first-child { border-top: none; }
-    &:hover, &.active {
-        background-color: $color_selected;
-        img { background-color: $color_selected; }
-    }
-    img {
-        margin: 4px 7px 4px 4px;
-        width: 50px;
-        height: 50px;
-        float: left;
-    }
-    .feed_text {
-        margin-left: 5px;
-        font-size: 13px;
-        a, .title {
-            font-weight: bold;
-        }
-    }
-    .byline {
-        position: absolute;
-        right: 6px;
-        bottom: 4px;
-        overflow: hidden;
-        font-size: 12px;
-    }
-    .comment_text {
-        white-space: nowrap;
-        margin-top: 5px;
-        height: 33px;
-    }
-    p {
-        margin: 0;
-    }
-    .timestamp {
-        float: right;
-        color: $color_grey_medium;
-    }
-}
-*/
-
 #owner_menu {
     width: 260px;
 
@@ -302,21 +258,6 @@ img.thumb { background-color: $color_grey_medium; }
         display: inline-block;
         vertical-align: middle;
         width: 100%;
-    }
-}
-
-#share_menu {
-    width: 200px;
-    padding-top: 10px;
-
-    .like_button {
-        text-align: center;
-        display: inline-block;
-        margin: 3px 7px;
-    }
-    .menu_item {
-        border-bottom: 2px solid $color_grey_medium;
-        padding: 7px;
     }
 }
 

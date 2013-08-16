@@ -2,7 +2,11 @@
 
 .item, .menu_item {
     text-transform: uppercase;
-    font-weight: bold;
+    &:hover {
+    	font-weight: bold;
+    }
+    font-family: Gibson Semibold;
+    font-size: 16px;
 }
 .menu.drawer .menu_item.active.black_active {
     background-color: black;
@@ -15,4 +19,20 @@
     background-color: black;
     color: white;
 }
+
+#share_menu .menu_item {
+    & + * {
+    	border-top: 2px solid $color_grey_medium;
+    }
+    // padding: 7px;
+}
+//     width: 200px;
+//     padding-top: 10px;
+
+//     .like_button {
+//         text-align: center;
+//         display: inline-block;
+//         margin: 3px 7px;
+//     }
+// }
 
