@@ -1,7 +1,17 @@
 @import "common";
 
+.inline {
+    display: inline-block;
+    vertical-align: top;
+    /*
+    TODO: We don't know how we want to handle this yet.
+    &> * {
+        vertical-align: middle;
+    }
+    */
+}
 .upper { text-transform: uppercase; }
-.elipsis {
+.ellipsis {
     display: inline-block;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -23,13 +33,21 @@
 .hoverable:hover .show_hover {
     display:block;
 }
+
+
 button {
     border: none;
     cursor: pointer;
 }
 .teal_btn {
-    padding: 6px;
+    padding: 10px;
     background-color: $color_selected;
+    font-family: Gibson;
+    font-size: 17px;
+    &:hover {
+        color: white;
+        background-color: black;
+    }
 }
 
 .ncolumn {
@@ -47,6 +65,16 @@ button {
 }
 
 // vertical centering
+.vcenter_spacer {
+    display: table;
+    width: 100%;
+    &> * {
+        height: 100%;
+        vertical-align: middle;
+        display: table-cell;
+        overflow: hidden;
+    }
+}
 table.vcenter {
    height:100%;
    width: 100%;
@@ -82,22 +110,30 @@ $icon_class: logo plus-minus love comment republish share views;
 $icon_name: logo close love-lg comment-lg republish-lg share-lg views-lg;
 $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg views-lg;
 
+.hover.arrow {
+    position: absolute;
+    width: 59px;
+    height: 31px;
+    background-image: asset_url('skin/nav/arrow.png');
+}
+
 .counts_icon {
     display:inline-block;
     width:74px;
     border-radius: 12px;
 
     &.narrow {
-        width:50px !important;
+        width:60px !important;
     }
 
     span {
-        position:absolute;
-        margin-top:14px;
+        position: absolute;
+        margin-top: 21px;
+        font-family: bebas;
+        font-size: 14px;
     }
 
     .icon {
-        display:inline-block;
         width:36px;
         height:48px;
     }
@@ -107,7 +143,9 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
         .icon.#{$class_name} {
             &.icon { background-image: asset_url('skin/nav/'#{nth($icon_name, $nth)}'.png'); }
             &.on.icon { background-image: asset_url('skin/nav/#{nth($icon_name_on, $nth)}.png'); }
-            &:hover { background-image: asset_url('skin/nav/'#{nth($icon_name, $nth)}'-hover.png'); }
+        }
+        &.#{$class_name}:hover .icon {
+            background-image: asset_url('skin/nav/'#{nth($icon_name, $nth)}'-hover.png');
         }
     }
 
@@ -124,7 +162,7 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
     &.plus-minus {
         position: fixed;
         bottom: 10px;
-        right: 16px;
+        right: 10px;
     }
 
     &.love.on {
