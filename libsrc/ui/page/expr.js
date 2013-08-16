@@ -292,6 +292,9 @@ define([
     };
 
     o.social_btn_click = function(e, el, btn) {
+        if (!context.user.logged_in)
+            return;
+        
         var el_drawer = $("[data-handle=#" + el.prop("id") + "]");
         var el_form = el.parent();
         var el_counts = el.find($(".counts"));
