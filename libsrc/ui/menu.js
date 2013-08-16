@@ -136,11 +136,11 @@ var menu = function(handle, drawer, options) {
         }
 
         if (!children_empty && drawer.hasClass("icon_set")) {
-            var icon_x = 70; //drawer.children().eq(0).children().width();
+            var icon_x = 65; //drawer.children().eq(0).children().width();
             var count_children = drawer.children().length;
             var size = 1;
-            for (; size < 5 && count_children > (size*size); size++) {}
-            drawer.css("max-width", ((count_children > size*size) ? 30 : 0) + size*icon_x);
+            for (; size < 4 && count_children > (size*size); size++) {}
+            drawer.css("max-width", ((count_children > 20) ? 30 : 0) + size*icon_x);
         }
         var css_opts = {};
         // pick top of menu based on if menu would go past bottom of
@@ -166,6 +166,10 @@ var menu = function(handle, drawer, options) {
             }
             css_opts.left = ( layout_x == 'right' ?
                 hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
+            // TODO-polish: check that the menu still fits on window
+            // Namely, shift it into screen at the bottom of code
+            if (drawer.hasClass("icon_set"))
+                css_opts.left -= (drawer.outerWidth() - handle.outerWidth()) / 2;
         }
         else if( opts.layout == 'center_y' ){
             css_opts.top = Math.max(opts.min_y, hp.top + handle.outerHeight() / 2 -

@@ -2,8 +2,7 @@
   Switches based on activity type
 #}
 
-<a
-{<if icon_only}
+<a {<if icon_only}
   {<if entity_class "Expr"}
     {anchor_attrs "expressions_public" "owner_name" initiator_name}
     {# bugbug Didn''t work. Let's take user to initator's profile instead
@@ -14,13 +13,12 @@
   {<if entity_class "User"}
     { anchor_attrs "expressions_public"  "owner_name" initiator.name }
   {>}
-{>}
-> 
-<div class='feed_item hoverable' {<if icon_only}style='display:inline-block'{>} >
+{>}>
+<div class='feed_item hoverable' >
   {# bugbug: style belongs elsewhere, namely icon from server should
   be correct height #}
   {<if icon_only}
-    <img style='height:60px;' src='{initiator_thumb_small}' class='thumb'>
+    <img src='{initiator_thumb_small}' class='thumb'>
   {>}{<else}
     <img style='height:30px;' src='{initiator_thumb_small}' class='thumb'>
     <div class='content'>

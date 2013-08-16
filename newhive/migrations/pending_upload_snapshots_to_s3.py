@@ -82,7 +82,7 @@ def start_snapshots(proc_tmp_snapshots=False):
                     "$exists": False
                 }}
             ]
-        },limit=limit)
+        }, limit=limit, sort=[('updated', -1)])
         if test:
             expressions_to_snapshot = db.Expr.search(
                 {"owner_name": "abram"

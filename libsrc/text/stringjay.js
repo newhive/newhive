@@ -285,8 +285,14 @@ define(['browser/js', 'module'],
 		if(node.constructor == Array)
 			return node.map(function(n){ return render_node(context, n) })
 				.reduce(util.op['+'], '');
-		else if(node.type == 'literal')
+		else if(node.type == 'literal') {
+			if (typeof(node.value) == "string") {
+				var str = node.value.replace(/^\s*\n\s*/, "");
+				str = str.replace(/\s*\n\s*$/, "");
+				return str;
+			}
 			return node.value;
+		}
 		else if(node.type == 'path')
 			return resolve(context, node.value, node.absolute, node.up_levels);
 		else if(node.type == 'function')
