@@ -88,11 +88,11 @@
         {>}
 
         {# Star/unstar form #}
-        <form {form_attrs "star_unstar"} method='post'>
+        <form class="love" {form_attrs "star_unstar"} method='post'>
           <input type="hidden" name="entity" value="{id}">
           <input type="hidden" name="state" value="true">
         </form>
-        <form {form_attrs "broadcast"} method='post'>
+        <form class="republish" {form_attrs "broadcast"} method='post'>
           <input type="hidden" name="entity" value="{id}">
           <input type="hidden" name="state" value="true">
         </form>

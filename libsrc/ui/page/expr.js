@@ -17,7 +17,8 @@ define([
     social_overlay_template,
     edit_btn_template
 ) {
-    var o = {}, contentFrameURLBase = context.config.content_url;
+    var o = {}, contentFrameURLBase = context.config.content_url,
+        overlay_columns = 0, wide_overlay = false;
     const anim_duration = 400;
 
     o.init = function(controller){
@@ -46,8 +47,24 @@ define([
     o.resize = function(){
         browser_layout.center($('#page_prev'), undefined, {'h': false});
         browser_layout.center($('#page_next'), undefined, {'h': false});
+        var wide = ($(window).width() >= 1180) ? true : false;
+        if (o.wide_overlay != wide) {
+            o.wide_overlay = wide;
+            $('#popup_content').css("max-width", (wide) ? 980+600-420 : 980);
+            $('#popup_content .left_pane').width((wide) ? 600 : 420);
+        }
+        var columns = ($(window).width() >= 990) ? 2 : 1;
+        if (o.overlay_columns != columns) {
+            o.overlay_columns = columns;
+            $('#popup_content > *').css('display', (columns == 1) ? 'block' : 'inline-block')
+        }
     };
-
+    var resize_icon = function(el) {
+        if (el.find(".counts").text().length > 0)
+            el.width(Math.min(90, 90 + el.find(".counts").width()));
+        else
+            el.width(60);
+    };
     o.get_expr = function(id){
         return $('#expr_' + id);
     };
@@ -66,6 +83,9 @@ define([
         $("#dia_comments").data("dialog").opts.open = function(){
             $("#dia_comments textarea").focus();
         }
+        $('#popup_content .counts_icon').each(function(i, el) {
+            resize_icon($(this));
+        });
         o.resize();
         
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
@@ -296,7 +316,7 @@ define([
             return;
         
         var el_drawer = $("[data-handle=#" + el.prop("id") + "]");
-        var el_form = el.parent();
+        var el_form = $("form." + ((btn == "loves") ? "love" : "republish"));
         var el_counts = el.find($(".counts"));
 
         // Toggle the state on the server
@@ -324,7 +344,6 @@ define([
         el_drawer.data('menu').layout();
         var count = (el_counts.text().length == 0) ? 0 : parseInt(el_counts.text());
         count += ((own_item) ? 1 : -1);
-        count = (count) ? ("" + count) : "";
         el_counts.text(count);
         o.action_set_state(el, own_item);
     };
@@ -350,6 +369,11 @@ define([
             el.removeClass("on");
             el.find(".icon").removeClass("on");
         }
+        var el_counts = el.find(".counts");
+        var count = (el_counts.text().length == 0) ? 0 : parseInt(el_counts.text());
+        count = (count) ? ("" + count) : "";
+        el_counts.text(count);
+        resize_icon(el);
     };
 
     o.fake_item = function(btn) {
@@ -407,7 +431,7 @@ define([
             context.page_data.expr.comments = json.comments;
             $('#dia_comments .activity').empty().html(activity_template(top_context));
             // update count and highlight state
-            $(".counts_icon.comment").find(".counts").html(json.comments.length);
+            $(".counts_icon.comment").find(".counts").text(json.comments.length);
             o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
         }
         if (json.user != undefined) {
