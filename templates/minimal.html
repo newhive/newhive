@@ -4,7 +4,7 @@
   {% block meta %}{% endblock %}
   <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
 
-  {% for item in asset_bundle('curl.js') %}
+{#  {% for item in asset_bundle('curl.js') %}
     <script src='{{ item }}'></script>
   {% endfor %}
   <script>
@@ -14,6 +14,7 @@ curl({
     pluginPath: 'curl/plugin'
 });
   </script>
+#}
 
   {% block head %}{% endblock %}
 </head>
