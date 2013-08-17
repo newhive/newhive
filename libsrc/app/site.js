@@ -1,10 +1,11 @@
 // dummy module for cram build system
 define(['curl'], function(curl){
-    curl.config({ //config);
-        baseUrl: '/lib/libsrc',
-        pluginPath: 'curl/plugin'
+    curl({
+        baseUrl: 'libsrc',
+        pluginPath: 'curl/plugin',
+        packages: {
+            'curl': 'curl'
+        }
     });
-    curl(['ui/controller'], function(controller){
-        // pass
-    });
+    curl(['ui/controller']);
 });
