@@ -55,7 +55,7 @@
                 .spacer {
                     border-left: 1px solid red;
                     height: 20px;
-                    margin: 0px;
+                    margin: 2px;
                     + .nav_button {                        
                         padding-left: 10px;
                     }
@@ -70,12 +70,15 @@
                 }
                 .love {
                     background-image: asset_url('skin/nav/love.png');
+                    &.on { background-image: asset_url('skin/nav/love-on.png'); }
                 }
                 .tags {
-                    background-image: asset_url('skin/nav/love.png');
+                    background-image: asset_url('skin/nav/collections.png');
+                    &.on { background-image: asset_url('skin/nav/collections-on.png'); }
                 }
                 .icon.private {
-                    background-image: asset_url('skin/nav/love.png');
+                    background-image: asset_url('skin/nav/private.png');
+                    &.on { background-image: asset_url('skin/nav/private-on.png'); }
                 }
             }
             /* for editing view */

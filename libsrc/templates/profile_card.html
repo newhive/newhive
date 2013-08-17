@@ -25,26 +25,34 @@
         <div class='subheading text'>{subheading}</div>
         <div class='about text'>{profile_about}</div>
         <div class='nav_bar'>
-          <div class='nav_button inline'><img src='{asset "skin/nav/expressions.png"}'/> 
-            {thousands views_by}</div>
-          <div class='spacer inline'></div>
+          {# expressions public, count #}
+          <a class='nav_button inline'{<if route_name "expressions_public"} on{>}
+            { anchor_attrs "expressions_public" "owner_name" user.name }>
+            <img src='{asset "skin/nav/expressions.png"}'/> 
+            {thousands views_by}</a
+          ><div class='spacer inline'></div>
+          {# following #}
           <a class='nav_button inline upper{<if route_name "following"} on{>}' 
             { anchor_attrs "following" "owner_name" user.name }>
-            Following</a>
-          <div class='spacer inline'></div>
+            Following</a
+          ><div class='spacer inline'></div>
+          {# followers #}
           <a class='nav_button inline upper{<if route_name "followers"} on{>}'
             { anchor_attrs "followers" "owner_name" user.name }>
-            Followers</a>
-          <div class='spacer inline'></div>
+            Followers</a
+          ><div class='spacer inline'></div>
+          {# loves #}
           <a class='nav_button inline'
             { anchor_attrs "loves" "owner_name" user.name }>
-            <div class="love icon{<if route_name "loves"} on{>}"></div></a>
-          <div class='spacer inline'></div>
+            <div class="love icon{<if route_name "loves"} on{>}"></div></a
+          ><div class='spacer inline'></div>
+          {# tags #}
           <a class='nav_button inline'
             { anchor_attrs "loves" "owner_name" user.name }>
             <div class="tags icon{<if route_name "tags_are_on_TODO"} on{>}"></div></a>
           {<if user.logged_in}
             <div class='spacer inline'></div>
+            {# private (logged in only) #}
             <a class='nav_button inline private'
               { anchor_attrs "expressions_private" "owner_name" user.name }>
               <div class="private icon{<if route_name "expressions_private"} on{>}"></div></a>
