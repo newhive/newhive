@@ -17,32 +17,67 @@
 
 #user_header {
     .profile {
-        margin: 180px auto 50px auto;
         width: 800px;
         margin: 180px auto 50px auto;
-        position: relative; z-index: 1;
+        position: relative;
+        z-index: 1;
         background-color: white;
 
         .thumb {
-            width: 222px; height: 222px;
+            // width: 222px; height: 222px;
             vertical-align: top;
             margin: 10px;
             display: inline-block;
             img { width: 222px; height: 222px; }
         }
         .info {
+            display: inline-block;
+            width: 500px; height: 222px;
             font-family: Gibson;
             margin: 20px;
-            .name {
+            .username {
                 font-size: 50px;
                 img {
                     vertical-align: middle;
                     margin: 0 10px 4px 10px;
                 }
             }
-            display: inline-block;
-            width: 500px; height: 222px;
-
+            .user_action_bar { float:right; }
+            .icon {
+                width: 36px; height: 44px;
+                display: inline-block;
+                vertical-align: middle;
+                &.on { background-color: grey; }
+                &.mail_btn { background-image: asset_url('skin/nav/mail.png'); }
+            }
+            .nav_bar {
+                * { vertical-align: middle; }
+                .spacer {
+                    border-left: 1px solid red;
+                    height: 20px;
+                    margin: 0px;
+                    + .nav_button {                        
+                        padding-left: 10px;
+                    }
+                }
+                .nav_button {
+                    padding: 10px 10px 10px 0px;
+                    // padding-right: 12px;
+                    &.on {
+                        background-color: $color_selected;
+                    }
+                    &.private { padding-right: 0px; }
+                }
+                .love {
+                    background-image: asset_url('skin/nav/love.png');
+                }
+                .tags {
+                    background-image: asset_url('skin/nav/love.png');
+                }
+                .icon.private {
+                    background-image: asset_url('skin/nav/love.png');
+                }
+            }
             /* for editing view */
             textarea {
                 font-family: Gibson;
@@ -61,11 +96,6 @@
         img { width: 100%; }
     }
 
-    .info .icon {
-        width: 44px; height: 44px;
-        display: inline-block;
-        vertical-align: middle;
-    }
     #edit_btn { background-image: asset_url('skin/nav/edit.png'); }
 }
 
@@ -121,8 +151,6 @@
         }
     }
 
-    #user_header {
-    }
     .tag_list {
         text-align: center;
         &.main {
@@ -204,11 +232,11 @@
                 height: 430px;
             }
             .title {
-                opacity: 0.4;
-                position: absolute;
-                left: 0; top: 22px;
+                // opacity: 0.4;
+                // position: absolute;
+                // left: 0; top: 22px;
                 max-width: 550px;
-                border-left: 7px solid rgba(255,255,255,.95);
+                // border-left: 7px solid rgba(255,255,255,.95);
             }
             .info {
                 position: relative;
