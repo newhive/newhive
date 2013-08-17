@@ -12,7 +12,7 @@
 }
 .upper { text-transform: uppercase; }
 .ellipsis {
-    display: inline-block;
+    // display: inline-block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -33,7 +33,7 @@
 .hoverable:hover .show_hover {
     display:block;
 }
-
+.full_wide { width: 100%; }
 
 button {
     border: none;
