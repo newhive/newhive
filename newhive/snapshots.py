@@ -4,7 +4,7 @@
 import envoy
 import os
 from sys import platform
-from subprocess import call, Popen
+from subprocess import call, Popen, PIPE
 
 from newhive import config, utils
 
@@ -70,11 +70,12 @@ class Snapshots(object):
             # sp = envoy.run('xdpyinfo -display :99')
             # print sp.status_code
             # if sp.status_code != 0:
-            r = call('xdpyinfo -display :99'.split(" "))
-            print r
-            if r != 0:
-                self.ps = Popen("Xvfb :99 -screen scrn 1024x768x24".split(" "))
-                # self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
+            with open(os.devnull, "w") as fnull:
+                r = call('xdpyinfo -display :99'.split(" "), stderr=fnull, stdout=fnull)
+                print r
+                if r != 0:
+                    self.ps = Popen("Xvfb :99 -screen scrn 1024x768x24".split(" "), stderr=fnull, stdout=fnull)
+                    # self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
             print "snapshots ready"
     def __del__(self):
         print "snapshot del!!!"
