@@ -156,9 +156,9 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
         width:45px;
     }
     // BUGBUG
-    .icon.share {
-        &:hover { background-image: asset_url('skin/nav/share-lg.png'); }
-    }
+    // .icon.share {
+    //     &:hover { background-image: asset_url('skin/nav/share-lg.png'); }
+    // }
     &.plus-minus {
         position: fixed;
         bottom: 10px;

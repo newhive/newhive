@@ -1,5 +1,35 @@
 @import "common";
 
+// Search bar
+.search_bar {
+    margin: 5px auto 5px auto;
+    display: block;
+    width: 550px;
+    // height: $nav_size - 18;
+    input[type=text] { 
+        width: 440px; 
+        margin-left: 10px;
+        margin-right: 5px;
+    }
+    .icon { 
+        width: 36px;
+        height: 48px;
+    }
+    .icon.random {
+        background-image: asset_url('skin/nav/random.png');
+        &:hover { background-image: asset_url('skin/nav/random-hover.png'); }
+    }
+    .icon.go_arrow {
+        background-color: transparent;
+        background-image: asset_url('skin/nav/activity.png');
+        &:hover { background-image: asset_url('skin/nav/activity-hover.png'); }
+    }
+}
+// #plus {
+//     background-image: asset_url('skin/nav/plus.png');
+//     &.active { background-image: asset_url('skin/nav/plus-hover.png'); }
+// }
+
 #exprs {
     position:absolute; left: 0; bottom: 0;
     overflow:hidden;
@@ -15,6 +45,7 @@
     }
 }
 
+// User Profile header
 #user_header {
     .profile {
         width: 800px;
@@ -55,7 +86,7 @@
                 .spacer {
                     border-left: 1px solid red;
                     height: 20px;
-                    margin: 0px;
+                    margin: 2px;
                     + .nav_button {                        
                         padding-left: 10px;
                     }
@@ -70,12 +101,15 @@
                 }
                 .love {
                     background-image: asset_url('skin/nav/love.png');
+                    &.on { background-image: asset_url('skin/nav/love-on.png'); }
                 }
                 .tags {
-                    background-image: asset_url('skin/nav/love.png');
+                    background-image: asset_url('skin/nav/collections.png');
+                    &.on { background-image: asset_url('skin/nav/collections-on.png'); }
                 }
                 .icon.private {
-                    background-image: asset_url('skin/nav/love.png');
+                    background-image: asset_url('skin/nav/private.png');
+                    &.on { background-image: asset_url('skin/nav/private-on.png'); }
                 }
             }
             /* for editing view */
@@ -155,6 +189,7 @@
         text-align: center;
         &.main {
             margin: auto;
+            margin-bottom: 20px;
             width: 600px;
         }
     }
