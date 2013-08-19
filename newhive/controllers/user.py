@@ -14,7 +14,8 @@ class User(ModelController):
         authed = auth.handle_login(self.db, request, response)
         if type(authed) == self.db.User.entity: resp = authed.client_view()
         else: resp = False
-        return self.serve_json(response, resp)
+        return self.redirect(response, request.form.get('from') or abs_url())
+        # return self.serve_json(response, resp)
 
     def logout(self, tdata, request, response, **args):
         auth.handle_logout(self.db, tdata.user, request, response)
