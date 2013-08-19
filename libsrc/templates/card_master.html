@@ -9,6 +9,14 @@
   {<with owner}
     {|templates/profile_card.html}
   {>}
+{>}{<else}
+  <form class="search_bar" method='GET' action='/search' name='search_form'
+      ><a href='/random' title="View Random Expression" class='random_link'
+        ><div class='hoverable icon random inline'></div></a
+      ><input type="text" id="search_box" class="inline" placeholder="search" name='q'
+      ><input type="submit" value class='hoverable icon go_arrow inline'
+    ></form
+  >
 {>}
 {#{<if page "tag_search"}
   {|templates/tags_page.html} 
