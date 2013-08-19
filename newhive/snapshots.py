@@ -4,7 +4,7 @@
 import envoy
 import os
 from sys import platform
-from subprocess import call
+from subprocess import call, Popen
 
 from newhive import config, utils
 
@@ -14,7 +14,7 @@ from newhive import config, utils
 
 def snapshot_test():
     snapshots = Snapshots()
-    snapshots.take_snapshot("50f60b796d902242fd02a754", "snap_out.png", (640,480))
+    snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png", (640,480))
 
 class Snapshots(object):
 
@@ -64,11 +64,18 @@ class Snapshots(object):
             os.rename('out-clipped.png',out_filename)
             return True
     def __init__(self):
-        # print "snapshot init!!!"
+        print "snapshot init!2!!"
         if platform == 'linux' or platform == 'linux2':
             # Need xvfb running on linux to take snapshots. Check to see if it's currently running
-            sp = envoy.run('xdpyinfo -display :99')
-            if sp.status_code != 0:
-                self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
+            # sp = envoy.run('xdpyinfo -display :99')
+            # print sp.status_code
+            # if sp.status_code != 0:
+            r = call('xdpyinfo -display :99'.split(" "))
+            print r
+            if r != 0:
+                self.ps = Popen("Xvfb :99 -screen scrn 1024x768x24".split(" "))
+                # self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
+            print "snapshots ready"
     def __del__(self):
+        print "snapshot del!!!"
         if hasattr(self,'ps'): self.ps.kill()

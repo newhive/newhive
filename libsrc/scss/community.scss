@@ -17,7 +17,10 @@
     }
     .icon.random {
         background-image: asset_url('skin/nav/random.png');
-        &:hover { background-image: asset_url('skin/nav/random-hover.png'); }
+        &:hover {
+            background-image: asset_url('skin/nav/random-hover.png'); 
+            background-color: black;
+        }
     }
     .icon.go_arrow {
         background-color: transparent;
@@ -99,6 +102,7 @@
                     }
                     &.private { padding-right: 0px; }
                 }
+                .views { margin-right: 5px; }
                 .love {
                     background-image: asset_url('skin/nav/love.png');
                     &.on { background-image: asset_url('skin/nav/love-on.png'); }
@@ -240,9 +244,11 @@
                 @include box-shadow(05px 05px 05px #666);
             }
             .title {
-                font-weight: 300;
-                font-size: 36px;
-                font-family: Museo;
+                max-height: 64px;
+                overflow: hidden;
+                // font-weight: 300;
+                // font-size: 36px;
+                // font-family: Museo;
                 .words {
                     padding: 4px 0;
                     word-spacing: -3px;
@@ -250,6 +256,9 @@
                     background-color: rgba(255,255,255,.95);
                 }
             }
+        }
+        .footer {
+            height: 200px;
         }
     }
     
