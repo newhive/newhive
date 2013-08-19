@@ -157,6 +157,7 @@
         .brief .username_bar {
             display: inline-block;
             width: 325px;
+            @include calc-width("100% - 94px");
         }
         // .brief .ellipsis { display:inline-block; }
         // .username {

@@ -49,7 +49,7 @@ def test_snapshot():
         
     # xvfb.terminate()
     
-test = False
+test = True
 
 def clear_snapshots():
     expressions_to_snapshot = db.Expr.search({
@@ -61,6 +61,14 @@ def clear_snapshots():
             # ,{"owner_name": "abram"}
         ]
     })
+    if test:
+        expressions_to_snapshot = db.Expr.search({
+            "$and": [
+                {"snapshot_time": {
+                    "$exists": True
+                }},
+            {"owner_name": "abram"}
+        ] })
     for expr in expressions_to_snapshot:
         expr.pop('snapshot_time')
         expr.save()
@@ -84,9 +92,13 @@ def start_snapshots(proc_tmp_snapshots=False):
             ]
         },limit=limit)
         if test:
-            expressions_to_snapshot = db.Expr.search(
-                {"owner_name": "abram"
-            },limit=limit)
+            expressions_to_snapshot = db.Expr.search({
+                "$and": [
+                    {"snapshot_time": {
+                        "$exists": False
+                    }},
+                {"owner_name": "abram"}
+            ] },limit=limit)
         return expressions_to_snapshot
 
     count = 0
@@ -118,7 +130,6 @@ def take_snapshot(expr_id):
     # expr_obj = db.Expr.fetch(expr_id)
     # setup_x_server(dimensions)
     # gen_thumb('http://tnh.me/' + str(expr_obj['_id']),dimensions)
-    
 # def upload_snapshot_to_s3(expr_id,thumb_bucket):
 #     # def upload_image(local,remote):
 #     #     k = S3Key(thumb_bucket)
@@ -181,4 +192,6 @@ def take_snapshot(expr_id):
 #             return ret.group(1)
 #     ids = [get_id(line) for line in lines if get_id(line)]
 #     return ids
+'''
 
+'''
