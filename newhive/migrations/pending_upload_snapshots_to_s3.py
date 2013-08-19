@@ -1,6 +1,13 @@
 # requires xvfb on the running machine:
 # sudo apt-get install xvfb
 
+# troubleshooting
+#
+# Xvfb likes this file to be modifyable
+# sudo chown www-data:dev  /tmp/.X11-unix
+#
+
+
 from newhive import state, config
 db = state.Database(config)
 
