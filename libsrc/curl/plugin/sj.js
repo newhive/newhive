@@ -23,9 +23,9 @@ define(
 					var out = "define('" + absId	+ "',"
 						+ "['text/stringjay', 'server/context'],"
 						+ "function(sj, context){"
-							+ "return sj.template("
-								+ JSON.dumps(source) + ","
-								+ JSON.dumps(resId) + ","
+							+ "return sj.template('source','id',"
+								// + JSON.dumps(source) + ","
+								// + JSON.dumps(resId) + ","
 								+ "context"
 							+ ");"
 						+ "});";

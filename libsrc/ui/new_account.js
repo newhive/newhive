@@ -5,7 +5,7 @@
 define([
     'browser/jquery',
     'server/context',
-    'sj!templates/create_account.html',
+    'sj!templates/create_account.html'
 ], function(
     $, context, create_account
 ) {
