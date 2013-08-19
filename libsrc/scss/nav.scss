@@ -171,8 +171,8 @@ img.thumb { background-color: $color_grey_medium; }
     $icon_padding: 5px;
     &.icon_set {
         padding: 5px 5px 0px 5px;
-        max-width: ($icon_width + $icon_padding)*4;
-        max-height: ($icon_width + $icon_padding)*5;
+        max-width: ($icon_width + 2*$icon_padding)*4;
+        max-height: ($icon_width + 2*$icon_padding)*5;
         // overflow: scroll;
         .feed_item {
             img { height: $icon_width; }
