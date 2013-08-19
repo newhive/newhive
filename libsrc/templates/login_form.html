@@ -1,10 +1,10 @@
-<form {form_attrs "login"} method='POST' id='login_form'>
+<form action='{config.secure_server}api/user/login' method='POST' id='login_form'>
   <div class="field username">
       <input id='username' type='text' name='username' value='{user.name}' placeholder='username or email'>
       <div class='spacer'></div>
   </div>
   <div class="field password">
-      <input type='password' name='secret' placeholder='password'><br>
+    <input type='password' name='secret' placeholder='password'><br>
   </div>
   <div class='login error {<unless error.login}hide{>}'>This username / email or password isn't matching :-/</div>
   <div class='spacer'></div>
@@ -12,6 +12,7 @@
     <a href="#" class='password_recovery'>Forgot<br>Password?</a>
     <input type='submit' class='submit button black' value='Enter'>
   </div>
+  <input type='hidden' name='from' value=''>
   <input type='hidden' name='expires' value=''>
   <input type='hidden' name='remember' value=''>
 </form>

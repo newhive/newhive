@@ -1,0 +1,16 @@
+Naming conventions of variables and constant values
+    all words separated by underscores
+    Constructors are capitalized
+
+    Language style, wording:
+        Avoid excessively long and short names. One or two words is ideal, 3 is definitely necessary, if you find yourself putting four words in a name, please reconsider
+
+        Certain abreviations are encouraged, when the meaning is obvious, ex: expr instead of expression.
+
+        If word order is not obvious, pick the one that sounds intuitively
+        correct, ex: view_expr instead of expr_view
+
+JavaScript
+    In constructors use an empty object called 'o' to serve as this. Avoid use
+    of this, new, and prototype keywords unless absolutely required for
+    compatibility with library code

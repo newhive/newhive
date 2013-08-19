@@ -94,15 +94,20 @@ define([
             });
 
             // login_form already rendered in overlay_template()
-            $('#login_form').on('response', function(e, data){
-                if(data){
-                    context.user = data;
-                    init_overlays();
-                    o.controller.refresh();
-                    $('#login_menu').data('dialog').close();
-                } else {
-                    $('#login_form .error').show();
-                }
+            // login can't set cookies from cross-domain request
+            // so must be done synchronously
+            // $('#login_form').on('response', function(e, data){
+            //     if(data){
+            //         context.user = data;
+            //         init_overlays();
+            //         o.controller.refresh();
+            //         $('#login_menu').data('dialog').close();
+            //     } else {
+            //         $('#login_form .error').show();
+            //     }
+            // });
+            $('#login_form').on('submit', function(e){
+                $('#login_form [name=from]').val(window.location);
             });
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
