@@ -1,7 +1,7 @@
 import httplib2, urllib
 from newhive import auth, config, mail
 from newhive.controllers.controller import ModelController
-from newhive.utils import log_error, dfilter, lget
+from newhive.utils import log_error, dfilter, lget, abs_url
 
 class User(ModelController):
     model_name = 'User'
