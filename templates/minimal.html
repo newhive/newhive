@@ -7,6 +7,12 @@
   {% for item in asset_bundle('curl.js') %}
     <script src='{{ item }}'></script>
   {% endfor %}
+  {#
+  {% for item in asset_bundle('site.js') %}
+    <script src='{{ item }}'></script>
+  {% endfor %}
+  #}
+
   <script>
 curl({
     // baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
