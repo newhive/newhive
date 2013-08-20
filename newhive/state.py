@@ -1081,15 +1081,16 @@ class Expr(HasSocial):
             expr.take_snapshots()
 
         # If we spin up too many threads, block.
-        while threading.active_count() > 8:
+        while threading.active_count() > 88:
             # log sleeps to see if server is being pounded.
             # log_error(self.db, message = "Too many snapshot threads", critical=False)
-            time.sleep(0.02)
+            time.sleep(0.1)
 
         q = Queue.Queue()
 
         # t = InterruptableThread(
-        t = threading.Thread(target=threaded_snapshot_q, args = (q,self))
+        t = threading.Thread(target=threaded_snapshot, args = (self,))
+        # t = threading.Thread(target=threaded_snapshot_q, args = (q,self))
         # result = timeout(threaded_snapshot_q, (q,self), timeout_duration=69)
         t.daemon = True
         t.start()
@@ -1121,20 +1122,27 @@ class Expr(HasSocial):
         snapshotter = Snapshots()
         snapshot_time = int(now())
         dimension_list = [(715, 430, "big"), (390, 235, "small"), (70, 42, 'tiny')]
+        upload_list = []
 
         for w, h, size in dimension_list:
             name = self.snapshot_name_base(size, str(snapshot_time))
             # This would be cleaner with file pipes instead of filesystem.
             local = '/tmp/' + name
-            r =  snapshotter.take_snapshot(self.id, dimensions=(w,h),
-                out_filename=local)
-            if r: 
-                url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
-                # need to delete local
-                call(["rm", local])
+            if w == dimension_list[0][0]:
+                r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
+                    out_filename=local)
+                if not r:
+                    return False
+            else:
+                f = open(upload_list[0][0], "r")
+                local = generate_thumb(f, (w, h), "png")
+            upload_list.append((local,name))
 
-        if not r:
-            return False;
+        # clean up local files, upload them atomically to s3 (on success)
+        for local, name in upload_list:
+            url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
+        # need to delete local
+        call(["rm", upload_list[0][0]])
 
         # Delete old snapshot
         if old_time:
@@ -1396,7 +1404,7 @@ class Expr(HasSocial):
         return self['auth'] != 'public'
 
 
-def generate_thumb(file, size):
+def generate_thumb(file, size, format='jpeg'):
     # resize and crop image to size tuple, preserving aspect ratio, save over original
     file.seek(0)
     imo = Img.open(file)
@@ -1412,7 +1420,7 @@ def generate_thumb(file, size):
     #print "   conversion took " + str(dt*1000) + " ms"
 
     output = os.tmpfile()
-    imo.save(output, format='jpeg', quality=70)
+    imo.save(output, format=format, quality=70)
     return output
 
 
