@@ -63,7 +63,8 @@ class Database:
                 col._col.ensure_index(key, **opts)
 
         # initialize elasticsearch index
-        self.esdb = ESDatabase(self)
+        if config.use_esdb:
+            self.esdb = ESDatabase(self)
 
     def dict_to_query(self, search):
         queries = []
