@@ -205,6 +205,9 @@
                 height: 60px;
                 // margin-bottom: -5px;
             }
+            .counts {
+                line-height: 56px;
+            }
             // .icon.logo, .icon.plus-minus {
             //     width: 36px;
             //     background-position-y: 0px;
@@ -213,6 +216,16 @@
                 &:hover {
                     background-color: black;
                 }
+            }
+            &:hover {
+                background-color: $color_selected;
+            }
+            &.on:hover {
+                background-color: $color_selected;
+                background-image: none;
+            }
+            &.nohover:hover {
+                background-color: transparent; 
             }
         }
     }
