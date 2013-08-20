@@ -26,10 +26,12 @@ import os
 from random import choice
 
 from subprocess import Popen
-import envoy
+# import envoy
+import threading
 
 from datetime import datetime
 import time
+
 
 urls = ["http://tnh.me/50f60b796d902242fd02a754",
 "http://tnh.me/50f737d36d902248910accfe"]
@@ -128,7 +130,11 @@ def start_snapshots(proc_tmp_snapshots=False):
             expr.threaded_snapshot()
             # take_snapshot(expr_id)
             # s3_url = upload_snapshot_to_s3(expr_id, thumb_bucket)    
-    
+        while threading.active_count() > 2:
+            # log sleeps to see if server is being pounded.
+            # log_error(self.db, message = "Too many snapshot threads", critical=False)
+            time.sleep(1)
+
     # print "need to get %s exprs" % len(expressions_to_snapshot)
     
 def take_snapshot(expr_id):
