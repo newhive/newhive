@@ -3,6 +3,7 @@
 
 import envoy
 import os
+from os.path import join
 from sys import platform
 from subprocess import call, Popen, PIPE
 
@@ -34,7 +35,7 @@ class Snapshots(object):
         url = 'http://' + host + '/' + expr_id + '?snapshot'
         # print url
         if platform == 'linux' or platform == 'linux2':
-            cmd = ( 'bin/CutyCapt/CutyCapt --max-wait=90000 --min-width=%s --min-height=%s --url=%s --out=%s'
+            cmd = ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + ' --max-wait=90000 --min-width=%s --min-height=%s --url=%s --out=%s'
                 % (dimensions[0],dimensions[1],url,out_filename) )
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
