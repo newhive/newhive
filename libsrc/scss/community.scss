@@ -55,7 +55,7 @@
 // User Profile header
 #user_header {
     width: 800px;
-    margin: 50px auto 10px auto;
+    margin: 50px auto; // 10px auto;
     &.with_background {
         margin: 180px auto 50px auto;
     }
@@ -64,12 +64,12 @@
         z-index: 1;
         background-color: white;
 
+        img.thumb { width: 222px; height: 222px; }
         .thumb {
             // width: 222px; height: 222px;
             vertical-align: top;
             margin: 10px;
             display: inline-block;
-            img { width: 222px; height: 222px; }
         }
         .info {
             display: inline-block;
@@ -114,7 +114,7 @@
                     background-image: asset_url('skin/nav/love.png');
                     &.on { background-image: asset_url('skin/nav/love-on.png'); }
                 }
-                .tags {
+                .icon.tags {
                     background-image: asset_url('skin/nav/collections.png');
                     &.on { background-image: asset_url('skin/nav/collections-on.png'); }
                 }
@@ -312,7 +312,9 @@
         /* max-width: 1256px; */
         margin: auto;
         width: 1230px;
-
+        .user.card {
+            width: 222px;
+        }
         .card {
             width: 390px;
             position: relative;

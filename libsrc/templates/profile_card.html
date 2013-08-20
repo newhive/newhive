@@ -47,9 +47,8 @@
             <div class="love icon{<if route_name "loves"} on{>}"></div></a
           ><div class='spacer inline'></div>
           {# tags #}
-          <a class='nav_button inline'
-            { anchor_attrs "loves" "owner_name" user.name }>
-            <div class="tags icon{<if route_name "tags_are_on_TODO"} on{>}"></div></a>
+          <div class='nav_button inline tags'>
+            <div class="tags icon{<if route_name "tags_are_on_TODO"} on{>}"></div></div>
           {<if user.logged_in}
             <div class='spacer inline'></div>
             {# private (logged in only) #}
