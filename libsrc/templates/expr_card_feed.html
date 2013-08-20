@@ -14,12 +14,15 @@
   {>}{<else}
     {asset "skin/site/expr_placeholder_small.jpg"}  
   {>}>
-<div class="title_spacer"><div class='title'>{title}</div></div>
+  {<vcenter}<div class='title expr'>{title}</div>{>}
+</a>
 <div class='info'>
-  <img class="thumb" src='{owner.thumb_small}'/>
-  <span>by <span class='username'>{owner.name}</span></span>
+  {# Should template profile_card, but... #}
+  <a {anchor_attrs "expressions_public" "owner_name" owner.name}>
+    <img class="thumb" src='{owner.thumb_small}'/>
+    <span>by <span class='username'>{owner.name}</span></span>
+  </a>
 </div>
-      {<unless suppress_feed}{<for feed}
-        {|templates/feed_card.html}
-      {>}
+{<unless suppress_feed}{<for feed}
+  {|templates/feed_card.html}
 {>}

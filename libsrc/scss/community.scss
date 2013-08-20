@@ -2,18 +2,14 @@
 
 // Search bar
 .search_bar {
-    margin: 5px auto 5px auto;
+    margin: 50px auto;
     display: block;
     width: 550px;
     // height: $nav_size - 18;
     input[type=text] { 
-        width: 440px; 
-        margin-left: 10px;
-        margin-right: 5px;
-    }
-    .icon { 
-        width: 36px;
-        height: 48px;
+        width: 430px; 
+        margin-left: 7px;
+        margin-right: 7px;
     }
     .icon.random {
         background-image: asset_url('skin/nav/random.png');
@@ -24,8 +20,16 @@
     }
     .icon.go_arrow {
         background-color: transparent;
-        background-image: asset_url('skin/nav/activity.png');
-        &:hover { background-image: asset_url('skin/nav/activity-hover.png'); }
+        background-image: asset_url('skin/nav/search-arrow.png');
+        &:hover { 
+            background-image: asset_url('skin/nav/search-arrow-hover.png');
+            // background-color: $color_bright_red;
+        }
+    }
+    .icon { 
+        @include border-radius(11px);
+        width: 44px;
+        height: 44px;
     }
 }
 // #plus {
@@ -50,9 +54,12 @@
 
 // User Profile header
 #user_header {
-    .profile {
-        width: 800px;
+    width: 800px;
+    margin: 50px auto 10px auto;
+    &.with_background {
         margin: 180px auto 50px auto;
+    }
+    .profile {
         position: relative;
         z-index: 1;
         background-color: white;
@@ -180,29 +187,34 @@
         // @include box-shadow(rgba(black, 0.4) 0px 0px 0px);
     }
     #header {
-        margin: 60px 0;
+        margin: 50px 0;
         text-align: center;
         .heading {
-            font-size: 50px;
-            font-family: Bebas Neue;
-            padding: 0 2px 6px 2px;
+            // padding: 0 2px 6px 2px;
         }
     }
 
     .tag_list {
         text-align: center;
         &.main {
-            margin: auto;
-            margin-bottom: 20px;
+            margin: 50px auto;
             width: 600px;
         }
     }
     #tag_bar {
-        padding-bottom: 10px;
+        // padding-bottom: 10px;
+        margin: 50px auto;
         position: relative;
+        button.create {
+            position: relative;
+            span.text { padding-left: 25px; }
+        }
+        button:hover .plus_button {
+            background-image: asset_url('skin/nav/plus-hover.png');
+        }
         button .plus_button {
             position:absolute;
-            top: -4px;
+            top: 0px;
             left: 0px;
             background-image: asset_url('skin/nav/plus.png');
             display:inline-block;
@@ -249,12 +261,12 @@
                 // font-weight: 300;
                 // font-size: 36px;
                 // font-family: Museo;
-                .words {
-                    padding: 4px 0;
-                    word-spacing: -3px;
-                    line-height: 49px;
-                    background-color: rgba(255,255,255,.95);
-                }
+                // .words {
+                //     padding: 4px 0;
+                //     word-spacing: -3px;
+                //     line-height: 49px;
+                //     background-color: rgba(255,255,255,.95);
+                // }
             }
         }
         .footer {
@@ -297,28 +309,31 @@
     }
 
     #feed.grid {
-        .title_spacer { 
-            height:88px; 
-            display: table;
-        }
-        .title {
-            max-width: 390px;
-            // height: 88px;
-            vertical-align: middle;
-            display: table-cell;
-        }
-        .snapshot {
-            width: 390px;
-            height: 235px;
-        }
         /* max-width: 1256px; */
         margin: auto;
         width: 1230px;
 
         .card {
+            width: 390px;
             position: relative;
-            float: left;
+            // float: left;
+            display: inline-block;
             padding: 10px;
+            .vcenter_outer { height: 75px; }
+            // .title_spacer { 
+            //     height:88px;
+            //     display: table;
+            // }
+            // .title {
+            //     max-width: 390px;
+            //     // height: 88px;
+            //     vertical-align: middle;
+            //     display: table-cell;
+            // }
+            .snapshot {
+                width: 390px;
+                height: 235px;
+            }
         }
     }
 }
