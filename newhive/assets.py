@@ -249,10 +249,10 @@ class HiveAssets(Assets):
             output = '../lib/google_closure.js'
         )
 
-        self.assets_env.register('site.js', 'compiled.site-bundle.js',
-            filters = 'yui_js',
-            output = '../lib/site-bundle.js'
-        )
+        # self.assets_env.register('site.js', 'compiled.site-bundle.js',
+        #     filters = 'yui_js',
+        #     output = '../lib/site-bundle.js'
+        # )
 
         # CSS for expressions, and also site pages
         minimal_scss = webassets.Bundle(
@@ -292,7 +292,7 @@ class HiveAssets(Assets):
             'app.css',
             'edit.css',
             'google_closure.js',
-            'site.js',
+            #'site.js',
             'email.css',
             'admin.css',
             'admin.js',
