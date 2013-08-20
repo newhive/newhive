@@ -13,7 +13,7 @@
       <div class='ellipsis username'>{owner.name}</div></div>
   </div>
 {>}{<else}
-  <div id='user_header' class='header'>
+  <div id='user_header' class='header{<if profile_bg} with_background{>}'>
     {<if profile_bg}<div class='background'><img src='{profile_bg}'></div>{>}
     <div class='profile'>
       <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
