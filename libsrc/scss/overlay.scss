@@ -145,17 +145,24 @@
         .user_action_bar { 
             float: right; 
             padding-right: 10px;
+            margin-top: -10px;
         }
         // TODO: Make it vcenter
         .owner.profile {
             padding-top: 13px;
-            .user_action_bar {
-                padding-top: 4px;
-            }
+            // .user_action_bar {
+            //     padding-top: 4px;
+            // }
         }
-        .username {
-            width: 157px;
+        .brief .username_bar {
+            display: inline-block;
+            width: 325px;
+            @include calc-width("100% - 94px");
         }
+        // .brief .ellipsis { display:inline-block; }
+        // .username {
+        //     width: 157px;
+        // }
     }
 
     .right_pane {

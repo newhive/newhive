@@ -1,5 +1,38 @@
 @import "common";
 
+// Search bar
+.search_bar {
+    margin: 5px auto 5px auto;
+    display: block;
+    width: 550px;
+    // height: $nav_size - 18;
+    input[type=text] { 
+        width: 440px; 
+        margin-left: 10px;
+        margin-right: 5px;
+    }
+    .icon { 
+        width: 36px;
+        height: 48px;
+    }
+    .icon.random {
+        background-image: asset_url('skin/nav/random.png');
+        &:hover {
+            background-image: asset_url('skin/nav/random-hover.png'); 
+            background-color: black;
+        }
+    }
+    .icon.go_arrow {
+        background-color: transparent;
+        background-image: asset_url('skin/nav/activity.png');
+        &:hover { background-image: asset_url('skin/nav/activity-hover.png'); }
+    }
+}
+// #plus {
+//     background-image: asset_url('skin/nav/plus.png');
+//     &.active { background-image: asset_url('skin/nav/plus-hover.png'); }
+// }
+
 #exprs {
     position:absolute; left: 0; bottom: 0;
     overflow:hidden;
@@ -15,34 +48,74 @@
     }
 }
 
+// User Profile header
 #user_header {
     .profile {
-        margin: 180px auto 50px auto;
         width: 800px;
         margin: 180px auto 50px auto;
-        position: relative; z-index: 1;
+        position: relative;
+        z-index: 1;
         background-color: white;
 
         .thumb {
-            width: 222px; height: 222px;
+            // width: 222px; height: 222px;
             vertical-align: top;
             margin: 10px;
             display: inline-block;
             img { width: 222px; height: 222px; }
         }
         .info {
+            display: inline-block;
+            width: 500px; height: 222px;
             font-family: Gibson;
             margin: 20px;
-            .name {
+            .username {
                 font-size: 50px;
                 img {
                     vertical-align: middle;
                     margin: 0 10px 4px 10px;
                 }
             }
-            display: inline-block;
-            width: 500px; height: 222px;
-
+            .user_action_bar { float:right; }
+            .icon {
+                width: 36px; height: 44px;
+                display: inline-block;
+                vertical-align: middle;
+                &.on { background-color: grey; }
+                &.mail_btn { background-image: asset_url('skin/nav/mail.png'); }
+            }
+            .nav_bar {
+                * { vertical-align: middle; }
+                .spacer {
+                    border-left: 1px solid red;
+                    height: 20px;
+                    margin: 2px;
+                    + .nav_button {                        
+                        padding-left: 10px;
+                    }
+                }
+                .nav_button {
+                    padding: 10px 10px 10px 0px;
+                    // padding-right: 12px;
+                    &.on {
+                        background-color: $color_selected;
+                    }
+                    &.private { padding-right: 0px; }
+                }
+                .views { margin-right: 5px; }
+                .love {
+                    background-image: asset_url('skin/nav/love.png');
+                    &.on { background-image: asset_url('skin/nav/love-on.png'); }
+                }
+                .tags {
+                    background-image: asset_url('skin/nav/collections.png');
+                    &.on { background-image: asset_url('skin/nav/collections-on.png'); }
+                }
+                .icon.private {
+                    background-image: asset_url('skin/nav/private.png');
+                    &.on { background-image: asset_url('skin/nav/private-on.png'); }
+                }
+            }
             /* for editing view */
             textarea {
                 font-family: Gibson;
@@ -61,11 +134,6 @@
         img { width: 100%; }
     }
 
-    .info .icon {
-        width: 44px; height: 44px;
-        display: inline-block;
-        vertical-align: middle;
-    }
     #edit_btn { background-image: asset_url('skin/nav/edit.png'); }
 }
 
@@ -121,12 +189,11 @@
         }
     }
 
-    #user_header {
-    }
     .tag_list {
         text-align: center;
         &.main {
             margin: auto;
+            margin-bottom: 20px;
             width: 600px;
         }
     }
@@ -177,9 +244,11 @@
                 @include box-shadow(05px 05px 05px #666);
             }
             .title {
-                font-weight: 300;
-                font-size: 36px;
-                font-family: Museo;
+                max-height: 64px;
+                overflow: hidden;
+                // font-weight: 300;
+                // font-size: 36px;
+                // font-family: Museo;
                 .words {
                     padding: 4px 0;
                     word-spacing: -3px;
@@ -187,6 +256,9 @@
                     background-color: rgba(255,255,255,.95);
                 }
             }
+        }
+        .footer {
+            height: 200px;
         }
     }
     
@@ -204,11 +276,11 @@
                 height: 430px;
             }
             .title {
-                opacity: 0.4;
-                position: absolute;
-                left: 0; top: 22px;
+                // opacity: 0.4;
+                // position: absolute;
+                // left: 0; top: 22px;
                 max-width: 550px;
-                border-left: 7px solid rgba(255,255,255,.95);
+                // border-left: 7px solid rgba(255,255,255,.95);
             }
             .info {
                 position: relative;
