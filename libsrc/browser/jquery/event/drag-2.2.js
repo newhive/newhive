@@ -1,4 +1,4 @@
-/*! 
+/*
  * jquery.event.drag - v 2.2
  * Copyright (c) 2010 Three Dub Media - http://threedubmedia.com
  * Open Source MIT License - http://threedubmedia.com/code/license
@@ -400,3 +400,4 @@ $event.fixHooks.touchcancel = {
 $special.draginit = $special.dragstart = $special.dragend = drag;
 
 })( jQuery );
+
