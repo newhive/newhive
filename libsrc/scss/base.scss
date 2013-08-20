@@ -34,6 +34,17 @@
     display:block;
 }
 .full_wide { width: 100%; }
+.vcenter_outer {
+    display: table;
+    width: 100%;
+}
+.vcenter_middle {
+    display: table-cell;
+    vertical-align: middle;
+    &> * {
+        overflow: hidden;
+    }
+}
 
 button {
     border: none;
@@ -58,7 +69,7 @@ button {
         width: 33.33%;
         float: left;
 
-        * {
+        &> * {
             vertical-align: bottom;
         }
     }
