@@ -214,6 +214,16 @@
                     background-color: black;
                 }
             }
+            &:hover {
+                background-color: $color_selected;
+            }
+            &.on:hover {
+                background-color: $color_selected;
+                background-image: none;
+            }
+            &.nohover:hover {
+                background-color: transparent; 
+            }
         }
     }
     .footer {
