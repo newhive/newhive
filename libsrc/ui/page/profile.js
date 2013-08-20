@@ -9,6 +9,7 @@ define([
     context
 ) {
     var o = {},
+            show_tags = true,
             controller;
 
     o.init = function(controller){
@@ -27,10 +28,30 @@ define([
             d = dialog.create($("#login_menu"));
             $(".overlay .login_btn").unbind('click').click(d.open);
         }
+        $(".tags.nav_button").unbind('click').click(show_hide_tags);
     };
 
+    show_hide_tags = function (){
+        o.show_tags = ! o.show_tags;
+        show_tags();
+    }
+
+    show_tags = function (){
+        if (o.show_tags) {
+            $(".tag_list.main").show();
+            $(".tags.icon").addClass("on");
+        } else {
+            $(".tag_list.main").hide();
+            $(".tags.icon").removeClass("on");
+        }
+    }
     o.enter = function (){
         o.exit();
+        profile_pages=["expressions_private","expressions_public", "following", "followers", "loves"];
+        if (profile_pages.indexOf(context.route_name) > 0) {
+            $(".network_nav").hide();
+            show_tags();
+        }
         $("#signup_create").show();
         $("#content_btns").show();
         if (context.user.logged_in) {
@@ -40,6 +61,8 @@ define([
         }
     };
     o.exit = function(){
+        $(".network_nav").show();
+        $(".tag_list.main").show();
         $("#signup_create").hide();
         $("#content_btns").hide();
         $("#signup_create .signup").addClass("hide");
