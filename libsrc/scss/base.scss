@@ -202,6 +202,8 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
 iframe { border: none; }
 html, body { background-color: white; height: 100%; }
 
+img.thumb { background-color: $color_grey_medium; }
+
 // Site-wide form styling
 input[type=text], input[type=password], textarea {
     border: 1px solid black;

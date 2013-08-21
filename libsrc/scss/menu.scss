@@ -20,7 +20,7 @@
     color: white;
 }
 
-#share_menu .menu_item {
+#share_menu .menu_item, #logo_menu .menu_item {
     & + * {
     	border-top: 2px solid $color_grey_medium;
     }
@@ -35,4 +35,236 @@
 //         margin: 3px 7px;
 //     }
 // }
+
+.menu {
+    display: none;
+    z-index: $nav_layer + 2;
+    position: absolute;
+}
+
+.menu.drawer {
+    display: none;
+    z-index: $nav_layer + 2;
+    background-color: white;
+    overflow: auto;
+    @include box-shadow(rgba(black, 0.4) 2px 3px 5px);
+    border-width: 0 1px 0 0;
+    border-color: $color_light_grey;
+    cursor: default;
+
+    .bar {
+        background-color: $color_light_grey;
+        height: 1px;
+        margin: 5px 0;
+    }
+    .active { color: black; }
+    .thumbs { padding: 5px; }
+    .thumbs .thumb { width: 44px; margin: 3px; }
+
+    .menu_item {
+        padding: 7px 15px;
+        display: block;
+        white-space: nowrap;
+        &.active { background-color: $color_selected; }
+    }
+    $icon_width: 55px;
+    $icon_padding: 5px;
+    &.icon_set {
+        padding: 5px 5px 0px 5px;
+        max-width: ($icon_width + $icon_padding)*4;
+        max-height: ($icon_width + $icon_padding)*5;
+        // overflow: scroll;
+        .feed_item {
+            img { height: $icon_width; }
+            display: inline-block;
+            // height: $icon_width;
+            // padding: $icon_padding;
+            padding: 0px 5px 5px 5px;
+            // TODO: fix the HTML to remove spaces
+            margin-right: -5px;
+            // float: left;
+        }
+    }
+}
+
+#login_menu {
+    width: 220px;
+    padding: 10px;
+    input[type=text], input[type=password] { width: 202px; }
+    .password_recovery {
+        font-size: 12px;
+        color: black;
+        margin-right: 15px;
+        float: left;
+    }
+    .submit { float: right; }
+}
+
+.user_menu {
+    width: 400px;
+}
+
+// This definition applies to all feed items, not just nav
+// TODO: move elsewhere
+.activity {
+    .inplace_edit {
+        display: none;
+        width: 95%;
+    }
+    .feed_item {
+        display: inline-block;
+        width: 100%;
+        padding: 10px;
+        margin: -3px; /* wtf? */
+        clear: both;
+        border-top: 1px solid #d1d1d1;
+
+        &:hover, &.active {
+            background-color: $color_selected;
+        }
+
+        .thumb {
+            width: 30px;
+            vertical-align: top;
+            float: left;
+            margin-right: 7px;
+        }
+        .content {
+            float: left;
+            width: 350px;
+        }
+        .action_icon {
+            height: 30px;
+            margin: -7px 0 -7px 0;
+            float: right;
+        }
+        .title { font-style: italic; }
+        .text {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-height: 40px;
+            color: $color_grey_medium;
+        }
+    }
+}
+#owner_menu {
+    width: 260px;
+
+    .listen.off .icon { background-image: asset_url('skin/1/listen.png') }
+    .listen.on .icon { background-image: asset_url('skin/1/listening.png') }
+    .menu_item.listen .listen_text { /* prevent long usernames from overlapping */
+        max-width: 215px;
+        overflow: hidden;
+        display: inline-block;
+        vertical-align: middle;
+        width: 100%;
+    }
+}
+
+.action_menu {
+    padding: 10px;
+
+    .header {
+        background-color: $color_highlight;
+        font-size: 22px;
+        padding: 0 8px;
+        font-weight: bold;
+    }
+    .info {
+        margin: 10px 0 10px 4px;
+        font-size: 13px;
+    }
+}
+
+#expr_menu {
+    top: 68px;
+    right: 58px;
+    width: 250px;
+    overflow: hidden;
+
+    .card_text {
+        bottom: 5px;
+        padding: 7px;
+    }
+    .title { font-size: 22px; }
+    .tags a { float: left; margin-right: 5px; }
+    .byline {
+        font-size: 12px;
+        right: 6px;
+        bottom: 4px;
+        float: right;
+        display: inline-block;
+        margin: 5px 0 0 5px;
+    }
+
+    .items .item {
+        padding: 5px;
+        clear: both;
+        border-top: 1px solid $color_light_grey;
+
+        img {
+            float: left;
+            width: 32px;
+            margin-right: 8px;
+        }
+        .user { font-weight: bold; }
+        .text { font-size: 13px; height: 32px; overflow: hidden; }
+    }
+}
+
+.face_menu {
+    width: 243px;
+
+    .items {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid $color_light_grey;
+
+        img {
+            width: 44px;
+            margin: 2px;
+        }
+    }
+}
+
+#comment_menu {
+    width: 500px;
+    padding: 15px;
+
+    .items { overflow: auto; }
+
+    .item {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid $color_light_grey;
+        position: relative;
+        clear: both;
+        min-height: 44px;
+
+        img {
+            width: 44px;
+            margin: 2px 10px 10px 0;
+            float: left;
+        }
+        .comment { float: left; }
+        .text { position: relative; float: right; width: 490px; margin-right: 10px; white-space: pre-wrap; }
+        .user { display: block; font-weight: bold; margin-top: 5px; }
+        .time { font-size: 12px; position: absolute; right: 0; bottom: 0; padding-right: 2px; }
+    }
+
+    textarea {
+        @include box-sizing(border-box);
+        width: 100%;
+        margin-top: 20px;
+    }
+    input { float: right; }
+}
+
+#dia_password {
+    padding: 20px;
+    .error {
+        color: $color_active;
+        display: none;
+    }
+}
 
