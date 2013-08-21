@@ -170,7 +170,7 @@ class Community(Controller):
         tags = owner.get('tags_following', [])
         return {
             'special': {'mini_expressions': 3},
-            'tags': tags, 'cards': users, 'owner': profile, 'card_type':'user',
+            'tag_list': tags, 'cards': users, 'owner': profile, 'card_type':'user',
             'title': owner['name'] + ' Following', 'about_text': 'Following',
         }
 
@@ -284,7 +284,8 @@ class Community(Controller):
                 for tag in (card.get('tags', []) if card.get('tags') else []):
                     cnt[tag] += 1
             # TODO: we'll have to have another solution with pagination.
-            page_data['tag_list'] = map(lambda x: x[0], cnt.most_common(16))
+            if type(page_data.get('tag_list')) != list:
+                page_data['tag_list'] = map(lambda x: x[0], cnt.most_common(16))
             # Fetch feed data
             for card in page_data['cards']:
                 feed = card.get('feed', [])
