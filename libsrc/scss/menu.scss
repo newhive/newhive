@@ -21,6 +21,9 @@
 }
 
 #share_menu .menu_item, #logo_menu .menu_item {
+    height: 28px;
+    line-height: 28px;
+
     & + * {
     	border-top: 2px solid $color_grey_medium;
     }
