@@ -1,4 +1,3 @@
-
 define([
     'browser/jquery',
     'ui/dialog',
@@ -28,29 +27,30 @@ define([
             d = dialog.create($("#login_menu"));
             $(".overlay .login_btn").unbind('click').click(d.open);
         }
-        $(".tags.nav_button").unbind('click').click(show_hide_tags);
+        // $(".tags.nav_button").unbind('click').click(show_hide_tags);
     };
 
-    show_hide_tags = function (){
-        o.show_tags = ! o.show_tags;
-        show_tags();
-    }
+    // show_hide_tags = function (){
+    //     o.show_tags = ! o.show_tags;
+    //     show_tags(o.show_tags);
+    // }
 
-    show_tags = function (){
-        if (o.show_tags) {
+    show_tags = function (show){
+        if (show) {
             $(".tag_list.main").show();
-            $(".tags.icon").addClass("on");
+            // $(".tags.icon").addClass("on");
         } else {
             $(".tag_list.main").hide();
-            $(".tags.icon").removeClass("on");
+            // $(".tags.icon").removeClass("on");
         }
     }
     o.enter = function (){
         o.exit();
-        profile_pages=["expressions_private","expressions_public", "following", "followers", "loves"];
-        if (profile_pages.indexOf(context.route_name) > 0) {
+        profile_pages=["expressions_public_tags", "following", "expressions_public", "expressions_private","followers", "loves"];
+        i = profile_pages.indexOf(context.route_name);
+        if (i >= 0) {
             $(".network_nav").hide();
-            show_tags();
+            show_tags((i < 2) ? true : false);
         }
         $("#signup_create").show();
         $("#content_btns").show();

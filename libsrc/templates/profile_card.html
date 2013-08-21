@@ -27,36 +27,37 @@
         <div class='nav_bar'>
           {# expressions public, count #}
           <a class='nav_button inline'{<if route_name "expressions_public"} on{>}
-            { anchor_attrs "expressions_public" "owner_name" user.name }>
-            <img class="views" src='{asset "skin/nav/expressions.png"}'/> 
-            {thousands views_by}</a
+            { anchor_attrs "expressions_public" "owner_name" owner.name }>
+            <img class="exprs" src='{asset "skin/nav/expressions.png"}'/> 
+            {thousands expressions}</a
+          ><div class='spacer inline'></div>
+          {# tags #}
+          <a class='nav_button inline tags'
+            { anchor_attrs "expressions_public_tags" "owner_name" owner.name }>
+            <div class="tags icon{<if route_name "expressions_public_tags"} on{>}"></div></a
           ><div class='spacer inline'></div>
           {# following #}
           <a class='nav_button inline upper{<if route_name "following"} on{>}' 
-            { anchor_attrs "following" "owner_name" user.name }>
+            { anchor_attrs "following" "owner_name" owner.name }>
             Following</a
           ><div class='spacer inline'></div>
           {# followers #}
           <a class='nav_button inline upper{<if route_name "followers"} on{>}'
-            { anchor_attrs "followers" "owner_name" user.name }>
+            { anchor_attrs "followers" "owner_name" owner.name }>
             Followers</a
           ><div class='spacer inline'></div>
           {# loves #}
           <a class='nav_button inline'
-            { anchor_attrs "loves" "owner_name" user.name }>
+            { anchor_attrs "loves" "owner_name" owner.name }>
             <div class="love icon{<if route_name "loves"} on{>}"></div></a
-          ><div class='spacer inline'></div>
-          {# tags #}
-          <div class='nav_button inline tags'>
-            <div class="tags icon{<if route_name "tags_are_on_TODO"} on{>}"></div></div>
-          {<if user.logged_in}
-            <div class='spacer inline'></div>
+          {<if user.logged_in}{<if user.name owner.name}
+            ><div class='spacer inline'></div>
             {# private (logged in only) #}
             <a class='nav_button inline private'
               { anchor_attrs "expressions_private" "owner_name" user.name }>
-              <div class="private icon{<if route_name "expressions_private"} on{>}"></div></a>
-          {>}
-        </div>
+              <div class="private icon{<if route_name "expressions_private"} on{>}"></div></a
+          {>}{>}
+        ></div>
       </div>
     </div>
   </div>
