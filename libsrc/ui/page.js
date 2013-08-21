@@ -324,7 +324,7 @@ define([
         // these lines were causing #site and #exprs to not fill the window
         // $('#exprs').css('height', $(window).height());
         // $('#site').css('height', $(window).height() - 44);
-        if(context.page_data.layout == 'grid') {
+        if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
             var columns = Math.min(3, Math.floor($(window).width() / grid_width));
             $('#feed').css('width', columns * grid_width);
             if (o.columns != columns) {
@@ -368,7 +368,7 @@ define([
 
     // Set up the grid borders
     var add_grid_borders = function(columns){
-        var expr_cards = $('#feed .expr.card');
+        var expr_cards = $('#feed .card');
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - (expr_cards.length % columns);
         expr_cards.each(function(i) {

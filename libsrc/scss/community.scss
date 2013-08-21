@@ -76,7 +76,7 @@
             width: 500px; height: 222px;
             font-family: Gibson;
             margin: 20px;
-            .username {
+            .full_name {
                 font-size: 50px;
                 img {
                     vertical-align: middle;
@@ -85,10 +85,10 @@
             }
             .user_action_bar { float:right; }
             .icon {
-                width: 36px; height: 44px;
+                width: 44px; height: 44px;
                 display: inline-block;
                 vertical-align: middle;
-                &.on { background-color: grey; }
+                &.on { background-color: $color_selected; }
                 &.mail_btn { 
                     background-image: asset_url('skin/nav/mail.png'); 
                     margin-right: 4px;
@@ -317,9 +317,16 @@
         width: 1230px;
         .user.card {
             width: 222px;
+            vertical-align: top;
+            &> * { vertical-align: bottom; }
             .counts_icon .counts {
                 line-height: 40px;
             }
+            .expr_preview_bar {
+                height: 47px;
+                img { margin-left: 4px; }
+            }
+            .username { margin-top: 5px; }
         }
         .card {
             width: 390px;
