@@ -215,7 +215,7 @@ class HiveAssets(Assets):
         )
 
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss",
-            "scss/nav.scss", "scss/dialogs.scss", "scss/community.scss",
+            "scss/dialogs.scss", "scss/community.scss",
             "scss/settings.scss", "scss/signup_flow.scss", "scss/menu.scss",
             "scss/jplayer.scss", "scss/forms.scss", "scss/overlay.scss",
             "scss/skin.scss",

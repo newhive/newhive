@@ -1,6 +1,7 @@
 // overlay css
-
 @import "common";
+
+@media print { #nav { display: none; } }
 
 .page_btn {
     width: 42px;
@@ -62,14 +63,13 @@
     .left.right {  @include border-radius(11px 11px 11px 11px); }
 
     &.panel {
-        height: 42px;
+        height: 44px;
 
         .icon {
             position: static;
             display: inline-block;
-            height: 42px; width: 48px;
-            background-size: 48px 42px;
-            &:hover { background-color: black; }
+            height: 44px; width: 44px;
+            &:hover, &.active { background-color: black; }
         }
 
         .text_btn {
@@ -86,8 +86,13 @@
         }
     }
 
-    &.logo {
-        height: 46px; width: 46px;
+    .logo {
+        width: 44px; height: 44px;
+        background-image: asset_url('skin/nav/logo.png');
+        &.active {
+            background-image: asset_url('skin/nav/logo-hover.png');
+            background-color: black;
+        }
     }
 }
 
@@ -273,12 +278,9 @@
 
 .overlay.logo {
     display: block;
-    ////////////
     margin-left: 0px;
-    height: 46px;
-    width: 46px;
-    background-position: 6px 5px;
+    height: 44px;
+    width: 44px;
     left: 20px;
     bottom: 20px;
-
 }
