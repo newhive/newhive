@@ -139,7 +139,6 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
 
     span {
         position: absolute;
-        margin-top: 21px;
         font-family: bebas;
         font-size: 14px;
     }
@@ -197,17 +196,6 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
         @include background-image(linear-gradient(to bottom, rgba(193,113,93,1) 0%,rgba(237,249,97,1) 44%,rgba(45,146,155,1) 100%)); /* W3C */
     }
     &.republish .counts {margin-left: 3px;}
-
-    &:hover {
-        background-color: $color_selected;
-    }
-    &.on:hover {
-        background-color: $color_selected;
-        background-image: none;
-    }
-    &.nohover:hover {
-        background-color: transparent; 
-    }
 }
 
 // Resets

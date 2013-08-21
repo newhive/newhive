@@ -6,11 +6,11 @@
     {# bugbug: style belongs elsewhere, namely icon from server should
     be correct height #}
     <a {anchor_attrs "expressions_public" "owner_name" name}>
-      <img src='{thumb_small}' class='thumb'>
-      <span>by </span></a>
+      <img src='{thumb_small}' class='thumb'></a>
     <div class="username_bar">
       {|templates/user_actions.html}
-      <div class='ellipsis username'>{owner.name}</div></div>
+      <a {anchor_attrs "expressions_public" "owner_name" name}>by
+        <span class='ellipsis username'>{owner.name}</span></a></div>
   </div>
 {>}{<else}
   <div id='user_header' class='header{<if profile_bg} with_background{>}'>
