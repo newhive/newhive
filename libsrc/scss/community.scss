@@ -89,7 +89,10 @@
                 display: inline-block;
                 vertical-align: middle;
                 &.on { background-color: grey; }
-                &.mail_btn { background-image: asset_url('skin/nav/mail.png'); }
+                &.mail_btn { 
+                    background-image: asset_url('skin/nav/mail.png'); 
+                    margin-right: 4px;
+                }
             }
             .nav_bar {
                 * { vertical-align: middle; }
