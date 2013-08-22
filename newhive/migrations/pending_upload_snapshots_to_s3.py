@@ -40,7 +40,10 @@ expr_ids = ["50f60b796d902242fd02a754",
 snapshots = Snapshots()
 
 def sss():
-    snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png")
+    snapshots.take_snapshot("4eace6b3ba28392acc000083", "snap_out.png", (715, 430))
+    # snapshots.take_snapshot("5034466363dade522e00727f", "snap2_out.png", (715, 430))
+
+    # snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png", (715, 430))
 
 def test_snapshot():
     # s3_con = S3Connection(config.aws_id, config.aws_secret)
@@ -112,6 +115,8 @@ def start_snapshots(proc_tmp_snapshots=False):
 
     count = 0
     total = get_exprs(0).count()
+    # sss()
+    threads = threading.active_count()
     while True:
     # if True:
         exprs = get_exprs(100)
@@ -130,7 +135,8 @@ def start_snapshots(proc_tmp_snapshots=False):
             expr.threaded_snapshot()
             # take_snapshot(expr_id)
             # s3_url = upload_snapshot_to_s3(expr_id, thumb_bucket)    
-        while threading.active_count() > 2:
+        while threading.active_count() > threads:
+            print "waiting for %s threads:" % (threading.active_count() - threads)
             # log sleeps to see if server is being pounded.
             # log_error(self.db, message = "Too many snapshot threads", critical=False)
             time.sleep(1)
