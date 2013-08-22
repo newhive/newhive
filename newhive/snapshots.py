@@ -8,6 +8,9 @@ from sys import platform
 from subprocess import call, Popen, PIPE
 
 from newhive import config, utils
+from PIL import Image
+import PIL.Image as Img
+from PIL import ImageOps
 
 # TODO: move to routes manager?
 # def expression_snapshot_URI(expr_id):
@@ -35,8 +38,11 @@ class Snapshots(object):
         url = 'http://' + host + '/' + expr_id + '?snapshot'
         # print url
         if platform == 'linux' or platform == 'linux2':
-            cmd = ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + ' --max-wait=90000 --min-width=%s --min-height=%s --url=%s --out=%s'
-                % (dimensions[0],dimensions[1],url,out_filename) )
+            ratio = 1.0 * dimensions[0] / dimensions[1];
+            snap_dimensions = list(dimensions)
+            snap_dimensions = [ 1000, 1000./dimensions[0]*dimensions[1] ]
+            cmd = ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + ' --delay=1000 --max-wait=90000 --min-width=%s --min-height=%s --url=%s --out=%s'
+                % (snap_dimensions[0],snap_dimensions[1],url,out_filename) )
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
             os.environ['DISPLAY'] =':99'
@@ -47,11 +53,34 @@ class Snapshots(object):
                 if r != 0:
                     print "FAILED: " + cmd
                     return False
-                r = call(('convert -crop %sx%s+0+0 %s %s' % (
-                    dimensions[0],dimensions[1],out_filename,out_filename)).split(" "))
-                if r != 0:
-                    print "FAILED: " + cmd
-                    return False
+                # img = Image.open(out_filename)
+                # print img.size;
+                # new_dimensions = list(img.size);
+                # # the site normalizes to 1000px wide
+                # new_dimensions[0] = 1000
+                # new_ratio = 1.0 * new_dimensions[0] / new_dimensions[1];
+                # if new_ratio > ratio:
+                #     new_dimensions[0] = new_dimensions[1] * ratio;
+                # else:
+                #     new_dimensions[1] = new_dimensions[0] / ratio;
+                # print new_dimensions;
+                cmd = ('convert -resize %s -background transparent -extent %sx%s %s %s' % (
+                    dimensions[0],dimensions[0],dimensions[1], out_filename, out_filename))
+                print cmd
+                r = call(cmd.split(' '))
+                # r = call(('convert -crop %sx%s+0+0 %s %s' % (
+                #     new_dimensions[0],new_dimensions[1],out_filename, out_filename,out_filename)).split(" "))
+                # if r != 0:
+                #     print "FAILED: " + cmd
+                #     return False
+                # img = Image.open(out_filename)
+                # img = ImageOps.fit(img, size=dimensions, method=Img.ANTIALIAS, centering=(0.5, 0.5))
+                # img.save(out_filename, format="png") #, quality=70)
+
+                # if imo.mode != 'RGB':
+                #     bg = Img.new("RGBA", imo.size, (255,255,255))
+                #     imo = imo.convert(mode='RGBA')
+                #     imo = Img.composite(imo, bg, imo)
             # 'webkit2png --feature=javascript --display=:99 '+
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
             return True
