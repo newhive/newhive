@@ -18,11 +18,11 @@
     <div class='profile'>
       <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
       <div class='info'>
-        <div>
+        <div class='title_bar'>
           {|templates/user_actions.html}
           <div class='title ellipsis fullname'>{fullname}</div>
         </div>
-        <div class='subheading text'>{subheading}</div>
+        {# <div class='subheading text'>{subheading}</div> #}
         <div class='about text'>{profile_about}</div>
         <div class='nav_bar'>
           {# expressions public, count #}
@@ -37,12 +37,12 @@
             <div class="tags icon{<if route_name "expressions_public_tags"} on{>}"></div></a
           ><div class='spacer inline'></div>
           {# following #}
-          <a class='nav_button inline upper{<if route_name "following"} on{>}' 
+          <a class='nav_button txt_button inline upper{<if route_name "following"} on{>}' 
             { anchor_attrs "following" "owner_name" owner.name }>
             Following</a
           ><div class='spacer inline'></div>
           {# followers #}
-          <a class='nav_button inline upper{<if route_name "followers"} on{>}'
+          <a class='nav_button txt_button inline upper{<if route_name "followers"} on{>}'
             { anchor_attrs "followers" "owner_name" owner.name }>
             Followers</a
           ><div class='spacer inline'></div>

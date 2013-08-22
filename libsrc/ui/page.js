@@ -206,6 +206,13 @@ define([
                 follow_response($(this), json); 
         });
 
+        $("textarea.about").keypress(function(e) {
+            // Check the keyCode and if the user pressed Enter (code = 13) 
+            // disable it
+            if (event.keyCode == 13) {
+                event.preventDefault();
+            }
+        });
         // global keypress handler
         $("body").keydown(function(e) {
             if(e.keyCode == 27) { // escape

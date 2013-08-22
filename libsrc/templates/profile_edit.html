@@ -1,7 +1,7 @@
 {<with owner}
   <form id='user_update_form' {form_attrs "user_update" "owner_name" user.name} method='POST'>
 
-    <div id='user_header' class='header'>
+    <div id='user_header' class='header{<if profile_bg} with_background{>}'>
       <label for='profile_bg_input' class='background'>
         <img id='profile_bg'
           src='{<if profile_bg}{profile_bg}{>}{<else}place_holder.png{>}'>
@@ -11,9 +11,9 @@
           <img src='{thumb_big}' id='profile_thumb'>
         </label>
         <div class='info'>
-          <textarea class='name' rows='1' name='fullname'>{fullname}</textarea>
-          <textarea class='about' rows='3' name='profile_about' placeholder=
-            'Put in a sentance or two about yourself.'></textarea>
+          <textarea class='title fullname' rows='1' name='fullname'>{fullname}</textarea>
+          <textarea maxlength=120 class='about' rows='3' name='profile_about' placeholder=
+            'Put in a sentence or two about yourself.'>{profile_about}</textarea>
         </div>
       </div>
     </div>
