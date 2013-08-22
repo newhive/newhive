@@ -206,6 +206,7 @@ define([
                 follow_response($(this), json); 
         });
 
+        
         // global keypress handler
         $("body").keydown(function(e) {
             if(e.keyCode == 27) { // escape

@@ -76,6 +76,12 @@
             width: 500px; height: 222px;
             font-family: Gibson;
             margin: 20px;
+            .about.text {
+                white-space: pre;
+                max-height: 57px;
+                overflow-y: scroll;
+                width: 100%;
+            }
             .full_name {
                 font-size: 50px;
                 img {
@@ -114,16 +120,21 @@
                 }
                 .exprs { margin-right: 5px; }
                 .love {
-                    background-image: asset_url('skin/nav/love.png');
-                    &.on { background-image: asset_url('skin/nav/love-on.png'); }
+                    background-image: asset_url('skin/nav/love-profile.png');
+                    &.on { 
+                        background-image: asset_url('skin/nav/love-profile-on-white.png'); 
+                        background-color: $color_bright_red;
+                    }
                 }
                 .icon.tags {
                     background-image: asset_url('skin/nav/collections.png');
-                    &.on { background-image: asset_url('skin/nav/collections-on.png'); }
+                    // &.on { 
+                        //background-image: asset_url('skin/nav/collections-on.png'); 
+                    // }
                 }
                 .icon.private {
                     background-image: asset_url('skin/nav/private.png');
-                    &.on { background-image: asset_url('skin/nav/private-on.png'); }
+                    // &.on { background-image: asset_url('skin/nav/private-on.png'); }
                 }
             }
             /* for editing view */
@@ -132,6 +143,7 @@
                 padding: 0;
                 width: 480px;
                 border: none;
+                resize: none;
             }
         }
     }
@@ -295,6 +307,7 @@
                 // position: absolute;
                 // left: 0; top: 22px;
                 max-width: 550px;
+                margin-top: 10px;
                 // border-left: 7px solid rgba(255,255,255,.95);
             }
             .info {
