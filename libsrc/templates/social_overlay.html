@@ -1,14 +1,4 @@
-{#<div class="overlay" id="social_overlay">#}
 {<with expr}
-  {#
-    We were including the nav bar here, but now the nav
-    bar <div> is migrated to the correct location in page.js
-  {<with null "expr_view" false "nav_view" true }
-    <div id='social_nav' class='nav_class'>
-      {|templates/nav.html}
-  </div>{>}
-
-  #}
   <div id="popup_content">
     <div class="left_pane">
       {# expression title #}
@@ -119,8 +109,8 @@
           <div class="title text">Discussion</div>
           {<with null "icon_class" "comment nohover discussions" "count" counts.Comment} {|templates/icon_count.html}{>}
           <div>TODO: Dialog to spec (Move enter button, add horizontal separators, change format to include wrench/x hover and comment age)</div>
-          <div class='activity'>{<with null "activity" expr.comments "mode" "discussion"}
-            {|templates/activity.html}
+          <div class='activity'>{<for expr.comments}
+            {|templates/comment.html}
           {>}</div>
           {# discussion input #}
           <div id="discussions">

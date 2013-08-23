@@ -20,13 +20,45 @@
     color: white;
 }
 
+#logo_menu {
+    width: 140px;
+
+    #activity_btn {
+        position: relative;
+
+        &.active .icon {
+            background-image: asset_url('skin/nav/activity-hover.png');
+        }
+        .icon {
+            background-image: asset_url('skin/nav/activity.png');
+            position: absolute;
+            top: 0px; right: 4px;
+            width: 44px; height: 44px;
+        }
+        .count {
+            background-color: $color_active;
+            color: white;
+            padding: 3px;
+            height: 16px; width: 16px;
+            text-align: center;
+            position: absolute;
+            top: 4px; right: 4px;
+        }
+    }
+}
+
+#activity_menu {
+    height: 600px;
+}
+
 #share_menu .menu_item, #logo_menu .menu_item {
     height: 28px;
     line-height: 28px;
 
     & + * {
-    	border-top: 2px solid $color_grey_medium;
+    	border-top: 1px solid $color_light_grey;
     }
+    &.active, &.active + .menu_item { border-color: $color_selected; }
     // padding: 7px;
 }
 //     width: 200px;
@@ -42,7 +74,7 @@
 .menu {
     display: none;
     z-index: $nav_layer + 2;
-    position: absolute;
+    position: fixed;
 }
 
 .menu.drawer {
@@ -107,49 +139,6 @@
     width: 400px;
 }
 
-// This definition applies to all feed items, not just nav
-// TODO: move elsewhere
-.activity {
-    .inplace_edit {
-        display: none;
-        width: 95%;
-    }
-    .feed_item {
-        display: inline-block;
-        width: 100%;
-        padding: 10px;
-        margin: -3px; /* wtf? */
-        clear: both;
-        border-top: 1px solid #d1d1d1;
-
-        &:hover, &.active {
-            background-color: $color_selected;
-        }
-
-        .thumb {
-            width: 30px;
-            vertical-align: top;
-            float: left;
-            margin-right: 7px;
-        }
-        .content {
-            float: left;
-            width: 350px;
-        }
-        .action_icon {
-            height: 30px;
-            margin: -7px 0 -7px 0;
-            float: right;
-        }
-        .title { font-style: italic; }
-        .text {
-            text-overflow: ellipsis;
-            overflow: hidden;
-            max-height: 40px;
-            color: $color_grey_medium;
-        }
-    }
-}
 #owner_menu {
     width: 260px;
 

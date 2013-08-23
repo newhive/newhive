@@ -5,6 +5,7 @@
  */
 define([
     'browser/jquery',
+    'browser/js',
     'ui/dialog', 
     'ui/new_account',
     'server/context',
@@ -18,7 +19,7 @@ define([
     'sj!templates/profile_edit.html',
     'sj!templates/user_actions.html',
     'sj!templates/tags_page.html',
-    'sj!templates/activity.html',
+    'sj!templates/user_activity.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
@@ -35,6 +36,7 @@ define([
     'sj!templates/request_invite_form.html'
 ], function(
     $,
+    js,
     dialog,
     new_account,
     context,
@@ -48,7 +50,7 @@ define([
     profile_edit_template,
     user_actions_template,
     tags_page_template,
-    activity_template
+    user_activity_template
 ){
     var o = {}, expr_page = false, grid_width, controller,
         column_layout = false,
@@ -112,6 +114,35 @@ define([
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
             $('#logout_form').bind('response', o.on_logout);
+
+            /// notification count and activity menu code
+
+            var activity_opened = false, activity_menu = $('#activity_menu');
+            activity_menu.data('menu').opts().open = function(){
+                if(!activity_opened)
+                    activity_menu.scrollTop(activity_menu[0].scrollHeight);
+                activity_opened = true;
+                if(context.user.notification_count)
+                    $('#notification_reset').submit();
+                update_activity({notification_count:0});
+            };
+
+            var update_activity = function(data){
+                var count = data.notification_count,
+                    box = $('#activity_btn .count').html(count);
+                js.copy(data, context.user);
+                if(!count) box.hide();
+                else box.show();
+                if(data.activity){
+                    $('#activity_menu').empty().append(
+                        user_activity_template());
+                }
+            };
+            update_activity(context.user);
+            $('#activity_form').on('response', function(e, data){
+                update_activity(data);
+            });
+            setInterval(function(){$('#activity_form').submit() }, 180000);
         }
     };
 

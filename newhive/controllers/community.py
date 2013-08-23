@@ -59,7 +59,7 @@ class Community(Controller):
         if not owner: return None
         spec = {'owner_name': owner_name, 'auth': 'public'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
-        profile = owner.client_view(viewer=tdata.user, activity=True)
+        profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Expressions by ' + owner['name'],
@@ -70,7 +70,7 @@ class Community(Controller):
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, tdata.user, auth='password', **args)
         return {
-            'cards': cards, 'owner': owner.client_view(activity=True), 'card_type':'expr',
+            'cards': cards, 'owner': owner.client_view(), 'card_type':'expr',
             'title': 'Your Private Expressions',
         }
     def user_update(self, tdata, request, owner_name=None, **args):
@@ -134,7 +134,7 @@ class Community(Controller):
         # ...and grab its expressions.
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view(viewer=tdata.user, activity=True)
+        profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Loves by ' + owner['name'],
@@ -166,7 +166,7 @@ class Community(Controller):
         # ...and grab its users.
         users = self.db.User.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view(viewer=tdata.user, activity=True)
+        profile = owner.client_view(viewer=tdata.user)
         tags = owner.get('tags_following', [])
         return {
             'special': {'mini_expressions': 3},
@@ -179,7 +179,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         users = owner.starrer_page(**args)
-        profile = owner.client_view(viewer=tdata.user, activity=True)
+        profile = owner.client_view(viewer=tdata.user)
         return {
             'special': {'mini_expressions': 3},
             'cards': users, 'owner': profile, 'card_type':'user',
@@ -245,7 +245,7 @@ class Community(Controller):
             'header': ("Search", request.args['q']),  
         }
         if (len(search) == 1 and len(tags) == 1):
-            profile = tdata.user #.client_view(activity=False)
+            profile = tdata.user
             profile = dfilter(profile, ['tags_following'])
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
         return data

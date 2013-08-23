@@ -180,7 +180,16 @@
         "controller": "user",
         "method": "broadcast"
     },
-
+    "notification_reset": {
+        "api_route": "/api/user/notification_reset",
+        "controller": "user",
+        "method": "notification_reset"
+    },
+    "activity": {
+        "api_route": "/api/user/activity",
+        "controller": "user",
+        "method": "activity"
+    },
     "tag_follow": {
         "api_route": "/api/community/follow",
         "controller": "user",
