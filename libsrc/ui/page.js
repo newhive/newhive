@@ -302,7 +302,7 @@ define([
         expr_column();
     };
 
-    // js for profile edit. TODO: add to separate module
+    // js for settings. TODO: add to separate module
     o.user_settings = function(page_data){
         $('#site').empty().append(settings_template(page_data));
 
@@ -319,12 +319,15 @@ define([
             }
         });
 
-        // needs to be keyup
-        $('#email_input, #new_password_input').on('keyup', function(e){
-            $('#password_field').removeClass('hide');
+        $('#email_input, #new_password_input').on('keyup', function(e) {
+            if ($("#new_password_input").val() ||
+                $("#email_input").val() != context.user.email) {
+                $('#password_field').removeClass('hide');
+            }
         });
     };
 
+    // js for profile edit. TODO: add to separate module
     o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
         

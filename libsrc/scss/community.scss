@@ -217,6 +217,7 @@
     }
 }
 #user_settings_form {
+    input[type=text], input[type=password] { width: 100%; }
 }
 .settings.container {
     margin: auto;
