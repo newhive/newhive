@@ -124,7 +124,7 @@ def _send_mail(headers, body, db, category=None, filters=None, unique_args=None,
     # Send mail, but if we're in debug mode only send to admins
     if send_real_email and (config.live_server or msg['To'] in test_emails):
         t0 = time.time()
-        sent = smtp.sendmail(msg['From'], msg['To'].split(','), encoded_msg)
+        sent = smtp.sendmail(msg['From'], (msg['To'] or '').split(','), encoded_msg)
         logger.debug('SMTP sendmail time %d ms', (time.time() - t0) * 1000)
         return sent
     else:

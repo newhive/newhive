@@ -1,14 +1,18 @@
 {<with owner}
   <form id='user_update_form' {form_attrs "user_update" "owner_name" user.name} method='POST'>
 
-    <div id='user_header' class='header{<if profile_bg} with_background{>}'>
+    <div id='user_header' class='header with_background'> {# {<if profile_bg} with_background{>}'> #}
       <label for='profile_bg_input' class='background'>
         <img id='profile_bg'
           src='{<if profile_bg}{profile_bg}{>}{<else}place_holder.png{>}'>
+          {# TODO: if no profile_bg, we should put text informing user to create one #}
       </label>
       <div class='profile'>
+        {<unless profile_bg}
+          <div class="help_bar centered">
+            <div class="inline plus_button"></div><div class="inline help background_missing title expr">Add header image</div></div>{>}
         <label for='profile_thumb_input' class='thumb'>
-          <img src='{thumb_big}' id='profile_thumb'>
+          <img src='{<if has_thumb}{thumb_big}{>}{<else}{asset "skin/site/profile-holder.jpg"}{>}' id='profile_thumb'>
         </label>
         <div class='info'>
           <textarea class='title fullname' rows='1' name='fullname'>{fullname}</textarea>
@@ -17,56 +21,20 @@
         </div>
       </div>
     </div>
-
-    <div>Email address</div>
-    <input id='email_input' type='text' name='email' value='{email}'>
-    <div>New password</div>
-    <input id='new_password_input' type='password' name='new_password'>
-    <div id='password_field' class='hide'>
-      <div>Current password</div>
-      <input type='password' name='password'>
-    </div>
-    <br>
-    <input type='submit' name='user_update' value='Save settings'>
-
     <input type='hidden' value='' name='profile_thumb' id='thumb_id_input'>
     <input type='hidden' value='' name='profile_bg' id='bg_id_input'>
     <input type='hidden' name='user_update' value='true'>
-  </form>
-
-  <form {form_attrs "file_create"} method='POST' class='hide' id='bg_form'>
-    <input type='file' id='profile_bg_input' name='files1' accept='image/*'>
-  </form>
-  <form {form_attrs "file_create"} method='POST' class='hide' id='thumb_form'>
-    <input type='file' id='profile_thumb_input' name='files2' accept='image/*'>
-    <input type='hidden' name='thumb' value='true'>
-  </form>
-{>}
-
-<hr>
-<h1>Email settings:</h1>
-<form {form_attrs "user_update" "owner_name" user.name} method='POST'>
-  {<for email_lists}
-    <div class='checkbox'>
-      <input id='{id}' type='checkbox' name='{id}' {<if subscribed}checked{>}>
-      <label for='{id}'>{description}</label>
+    <div class="centered">
+      <button class="teal_btn upper inline" name='cancel'>Cancel</button>
+      <button class="teal_btn upper inline" type='submit' name='user_update'>Save profile settings</button>
     </div>
+  </form>
+</with>
 
-     {#
-     {% for column in email_types | slice(2) %}
-     {% for type in column %}
-     <div class="column">
-     </div>
-     {% endfor %}
-     {% endfor %}
-     #}
-  {>}
-  <br>
-  <input type='submit' name='user_update' value='Save settings'>
+<form {form_attrs "file_create"} method='POST' class='hide' id='bg_form'>
+  <input type='file' id='profile_bg_input' name='files1' accept='image/*'>
 </form>
-
-<hr>
-<h1>Account settings:</h1>
-<form {form_attrs "user_update" "owner_name" user.name} method='POST'>
-  <input type='submit' value='DEACTIVITAE ACCOUNT'>
+<form {form_attrs "file_create"} method='POST' class='hide' id='thumb_form'>
+  <input type='file' id='profile_thumb_input' name='files2' accept='image/*'>
+  <input type='hidden' name='thumb' value='true'>
 </form>

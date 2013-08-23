@@ -5,11 +5,16 @@
 	line-height: 32px;
 }
 .heading {
-    font-size: 40px;
+    font-size: 44px;
     font-family: Gibson;
+	letter-spacing: -1px;
 }
 .username {
     font-family: Gibson Semibold;
     font-size: 17px;
     text-transform: uppercase;
+}
+.title.fullname {
+	font-family: Gibson;
+	letter-spacing: -1px;
 }

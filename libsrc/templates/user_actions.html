@@ -6,7 +6,9 @@
 <span class="user_action_bar">
   {<unless brief}{<if user_is_owner}
     <a {anchor_attrs "user_update" "owner_name" name}>
-      <div class='icon' id='edit_btn'></div></a>
+      <div class='icon edit_btn'></div></a>
+    <a {anchor_attrs "user_settings" "owner_name" name}>
+      <div class='icon settings_btn'></div></a>
   {>}{>}
   {<unless user_is_owner}
     <a><div class='icon mail_btn'></div></a>
@@ -20,5 +22,16 @@
         </button>
       </form>
     {>}
+    <div id="dia_mail" class="dialog" data-handle=".icon.mail_btn">
+      <div class="ellipsis username">Email @{name}:</div>
+      <form>
+        <textarea autofocus placeholder="Type your message to @{name} here."></textarea>
+        <div class="copy inline">
+          <input type="checkbox" checked name="send_copy">
+          <label>Send me a copy.</label>
+        </div>
+        <button class='submit upper teal_btn'>Send</button>
+      </form>
+    </div>
   {>}
 </span>
