@@ -23,7 +23,7 @@
         "api_route": "/api/feed/featured",
         "controller": "community",
         "method": "featured",
-        "client_method": "grid"
+        "client_method": "profile"
     },
     "recent": {
         "page_route": "/home/recent",

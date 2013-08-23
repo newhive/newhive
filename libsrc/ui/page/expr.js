@@ -164,7 +164,7 @@ define([
             ).animate({
                 top: "0"
             }, {
-                duration: anim_duration,
+                duration: 0, //anim_duration,
                 complete: hide_other_exprs });
         } else {
             // 
@@ -209,7 +209,7 @@ define([
             contentFrame.animate({
                 top: $(window).height() + 'px'
             },{
-                duration: anim_duration,
+                duration: 0, //anim_duration,
                 complete: function() {
                     contentFrame.addClass('expr-hidden');
                     contentFrame.removeClass('expr-visible');

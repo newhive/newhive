@@ -1077,7 +1077,7 @@ class Expr(HasSocial):
             expr.take_snapshots()
 
         # If we spin up too many threads, block.
-        while threading.active_count() > 88:
+        while threading.active_count() > 32:
             # log sleeps to see if server is being pounded.
             # log_error(self.db, message = "Too many snapshot threads", critical=False)
             time.sleep(0.1)

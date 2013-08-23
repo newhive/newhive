@@ -421,6 +421,8 @@ define(['browser/js', 'module'],
 	context_base['for'] = function(context, block, iteratee, var_name){
 		if(!iteratee || iteratee.constructor != Array) return '';
 		return iteratee.map(function(v, i){
+			// If iterating through literals, the value of the literal
+			// is passed in the context as the variable "item"
 			if(typeof(v) != "object") {
 				v = {item: v};
 			}

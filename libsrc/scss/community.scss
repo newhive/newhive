@@ -73,54 +73,74 @@
         }
         .info {
             display: inline-block;
-            width: 500px; height: 222px;
+            width: 533px; height: 222px;
             font-family: Gibson;
-            margin: 20px;
-            .username {
+            margin: 10px;
+            .title_bar { margin-top: 10px; }
+            .user_action_bar { float:right; }
+            .full_name {
                 font-size: 50px;
                 img {
                     vertical-align: middle;
                     margin: 0 10px 4px 10px;
                 }
             }
-            .user_action_bar { float:right; }
+            .about {
+                // white-space: pre;
+                margin-top: 20px;
+                max-height: 57px;
+                overflow: hidden;
+                width: 100%;
+            }
             .icon {
-                width: 36px; height: 44px;
+                width: 44px; height: 44px;
                 display: inline-block;
                 vertical-align: middle;
-                &.on { background-color: grey; }
-                &.mail_btn { background-image: asset_url('skin/nav/mail.png'); }
+                &.on { background-color: $color_selected; }
+                &.mail_btn { 
+                    background-image: asset_url('skin/nav/mail.png'); 
+                    margin-right: 4px;
+                }
             }
             .nav_bar {
                 * { vertical-align: middle; }
                 .spacer {
                     border-left: 1px solid red;
                     height: 20px;
-                    margin: 2px;
-                    + .nav_button {                        
-                        padding-left: 10px;
-                    }
+                    margin: 5px;
+                    // + .nav_button {
+                    //     padding-left: 10px;
+                    // }
                 }
                 .nav_button {
-                    padding: 10px 10px 10px 0px;
+                    // padding: 10px 10px 10px 0px;
                     // padding-right: 12px;
                     &.on {
                         background-color: $color_selected;
                     }
-                    &.private { padding-right: 0px; }
+                    // &.private { padding-right: 0px; }
                 }
-                .exprs { margin-right: 5px; }
+                .nav_button.txt_button {
+                    padding: 10px;
+                }
+                .nav_button.exprs { margin-right: 10px; }
+                img.exprs { margin-right: 5px; }
                 .love {
-                    background-image: asset_url('skin/nav/love.png');
-                    &.on { background-image: asset_url('skin/nav/love-on.png'); }
+                    background-image: asset_url('skin/nav/love-profile.png');
+                    &.on { 
+                        background-image: asset_url('skin/nav/love-profile-on-white.png'); 
+                        background-color: $color_bright_red;
+                    }
                 }
                 .icon.tags {
                     background-image: asset_url('skin/nav/collections.png');
-                    &.on { background-image: asset_url('skin/nav/collections-on.png'); }
+                    // &.on { 
+                        //background-image: asset_url('skin/nav/collections-on.png'); 
+                    // }
                 }
                 .icon.private {
                     background-image: asset_url('skin/nav/private.png');
-                    &.on { background-image: asset_url('skin/nav/private-on.png'); }
+                    // &.on { background-image: asset_url('skin/nav/private-on.png'); }
                 }
             }
             /* for editing view */
@@ -129,6 +149,7 @@
                 padding: 0;
                 width: 480px;
                 border: none;
+                resize: none;
             }
         }
     }
@@ -170,6 +191,9 @@
 }
 
 #site {
+    ///
+    // background-color:blue;
+    //
     position: absolute;
     z-index: 0;
     left: 0px; 
@@ -292,6 +316,7 @@
                 // position: absolute;
                 // left: 0; top: 22px;
                 max-width: 550px;
+                margin-top: 10px;
                 // border-left: 7px solid rgba(255,255,255,.95);
             }
             .info {
@@ -314,9 +339,16 @@
         width: 1230px;
         .user.card {
             width: 222px;
+            vertical-align: top;
+            &> * { vertical-align: bottom; }
             .counts_icon .counts {
                 line-height: 44px;
             }
+            .expr_preview_bar {
+                height: 47px;
+                img { margin-left: 4px; }
+            }
+            .username { margin-top: 5px; }
         }
         .card {
             width: 390px;
