@@ -1,24 +1,24 @@
 {# Feed card
   Switches based on activity type
 #}
-<a {<if icon_only}
-  {anchor_attrs "expressions_public" "owner_name" initiator_name}>
-{>}
-{<else}
-  {<if entity_class "Expr"}
-    {anchor_attrs "view_expr" "id" entity "owner_name" owner_name
-      "expr_name" entity_name}
+<a
+  {<if icon_only}
+    {anchor_attrs "expressions_public" "owner_name" initiator_name}
   {>}
   {<else}
-    {<if initiator user.id}
-      {anchor_attrs "expressions_public" "owner_name" entity_name}
+    {<if entity_class "Expr"}
+      {anchor_attrs "view_expr" "id" entity "owner_name" owner_name
+        "expr_name" entity_name}
     {>}
     {<else}
-      {anchor_attrs "expressions_public" "owner_name" initiator_name}
+      {<if initiator user.id}
+        {anchor_attrs "expressions_public" "owner_name" entity_name}
+      {>}
+      {<else}
+        {anchor_attrs "expressions_public" "owner_name" initiator_name}
+      {>}
     {>}
-  {>}
-{>}>
-  <div class='feed_item hoverable'>
+  {>}><div class='feed_item hoverable'>
     {# bugbug: style belongs elsewhere, namely icon from server should
     be correct height #}
     {<if icon_only}
@@ -74,8 +74,7 @@
       </div>
       <div class="timestamp">{recency_time updated}</div>
     {>} {# unless icon_only #}
-  </div>
-</a>
+</div></a>
 
 {#
 {% if feed.class_name == 'InviteNote' %}
