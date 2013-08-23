@@ -910,6 +910,7 @@ class User(HasSocial):
             url = self.url,
             thumb_small = thumb_small,
             thumb_big = thumb_big,
+            has_thumb = (self.get_thumb(222) or self.get_thumb(190) != False),
             logged_in = self.logged_in,
             notification_count = self.notification_count,
         ) )

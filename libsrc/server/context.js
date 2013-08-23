@@ -240,7 +240,7 @@ define([
                 error: function(data){
                     // TODO: open new window with debugger
                     console.error("Server error post request: " + form.attr('action')
-                        + '\n(remove form handlers to see error)');
+                        + '\n(remove form handlers to see error) $("form").unbind("submit")');
                     form.trigger('error', [data]);
                 },
                 // Form data

@@ -96,7 +96,14 @@
         "method": "user_update",
         "client_method": "user_update"
     },
-   "following": {
+    "user_settings": {
+        "page_route": "/<owner_name>/profile/settings",
+        "api_route": "/api/user/settings/<owner_name>",
+        "controller": "community",
+        "method": "settings_update",
+        "client_method": "user_settings"
+    },
+    "following": {
         "page_route": "/<owner_name>/profile/following",
         "api_route": "/api/feed/following/<owner_name>",
         "controller": "community",
