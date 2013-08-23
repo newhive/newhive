@@ -6,6 +6,7 @@
         <img id='profile_bg'
           src='{<if profile_bg}{profile_bg}{>}{<else}place_holder.png{>}'>
           {# TODO: if no profile_bg, we should put text informing user to create one #}
+        <img src='{asset "skin/edit/loading.gif"}' class='loading hide'>
       </label>
       <div class='profile'>
         {<unless profile_bg}
@@ -13,6 +14,7 @@
             <div class="inline plus_button"></div><div class="inline help background_missing title expr">Add header image</div></div>{>}
         <label for='profile_thumb_input' class='thumb'>
           <img src='{<if has_thumb}{thumb_big}{>}{<else}{asset "skin/site/profile-holder.jpg"}{>}' id='profile_thumb'>
+          <img src='{asset "skin/edit/loading.gif"}' class='loading hide'>
         </label>
         <div class='info'>
           <textarea class='title fullname' rows='1' name='fullname'>{fullname}</textarea>

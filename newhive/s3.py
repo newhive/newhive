@@ -23,7 +23,7 @@ class S3Interface(object):
             + '.s3.amazonaws.com/' + key)
 
     def upload_file(self, file, bucket, path, name=None, mimetype=None):
-        if type(file)==str or type(file)==unicode:
+        if isinstance(file, basestring):
             file = open(file, 'r')
         else: file.seek(0)
         k = S3Key(self.buckets[bucket])
