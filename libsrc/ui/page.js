@@ -17,6 +17,7 @@ define([
     'sj!templates/card_master.html',
     'sj!templates/home.html',
     'sj!templates/profile_edit.html',
+    'sj!templates/settings.html',
     'sj!templates/user_actions.html',
     'sj!templates/tags_page.html',
     'sj!templates/user_activity.html',
@@ -48,6 +49,7 @@ define([
     master_template,
     home_template,
     profile_edit_template,
+    settings_template,
     user_actions_template,
     tags_page_template,
     user_activity_template
@@ -301,6 +303,28 @@ define([
     };
 
     // js for profile edit. TODO: add to separate module
+    o.user_settings = function(page_data){
+        $('#site').empty().append(settings_template(page_data));
+
+        $('#user_settings_form button[name=cancel]').click(function(e) {
+            o.controller.open('expressions_public',
+                {owner_name: context.user.name });
+            return false;
+        });
+        $('#user_settings_form').on('response', function(e, data){
+            if(data.error) alert(data.error);
+            else {
+                o.controller.open('expressions_public',
+                    {owner_name: context.user.name });
+            }
+        });
+
+        // needs to be keyup
+        $('#email_input, #new_password_input').on('keyup', function(e){
+            $('#password_field').removeClass('hide');
+        });
+    };
+
     o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
         
@@ -309,16 +333,17 @@ define([
         $('#bg_form').on('response',
             on_file_upload('#profile_bg', '#bg_id_input'));
 
+        $('#user_update_form button[name=cancel]').click(function(e) {
+            o.controller.open('expressions_public',
+                {owner_name: context.user.name });
+            return false;
+        });
         $('#user_update_form').on('response', function(e, data){
             if(data.error) alert(data.error);
-            else{
+            else {
                 o.controller.open('expressions_public',
                     {owner_name: context.user.name });
             }
-        });
-
-        $('#email_input, #new_password_input').on('change', function(){
-            $('#password_field').removeClass('hide');
         });
 
         // on_file_upload returns a handler for server response from a

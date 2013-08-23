@@ -87,7 +87,7 @@
         }
     }
 
-    .logo {
+    &.logo {
         width: 44px; height: 44px;
         background-image: asset_url('skin/nav/logo.png');
         &.active {

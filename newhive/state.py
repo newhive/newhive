@@ -904,6 +904,7 @@ class User(HasSocial):
             url = self.url,
             thumb_small = thumb_small,
             thumb_big = thumb_big,
+            has_thumb = (self.get_thumb(222) or self.get_thumb(190) != False),
             logged_in = self.logged_in,
             notification_count = self.notification_count,
         ) )
@@ -1470,7 +1471,7 @@ class File(Entity):
         except:
             print 'failed to generate thumb for file: ' + self.id
             return False # thumb generation is non-critical so we eat exception
-        url = self.db.s3.upload_file(thumb_file, 'thumb', self._thumb_name(w, h),
+        url = self.db.s3.upload_file(thumb_file, 'media', self._thumb_name(w, h),
             self['name'] + '_' + name, 'image/jpeg')
 
         thumbs[name] = True
@@ -1538,10 +1539,11 @@ class File(Entity):
         #         self._file.close()
         #         self._file = newfile
 
-        self['url'] = self.store()
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         super(File, self).create()
+        self['url'] = self.store()
+        self.update(url=self['url'])
         return self
 
     # download file from source and reupload
