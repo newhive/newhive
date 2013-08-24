@@ -100,7 +100,8 @@ class Expression(Community, PagingMixin):
         is_owner = request.requester.logged_in and owner.id == request.requester.id
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
         if is_owner: resource.owner.unflag('expr_new')
-        expr_url = abs_url(domain = config.content_domain) + resource.id
+        expr_url = abs_url(domain = config.content_domain,
+	    secure=request.is_secure) + resource.id
 
         response.context.update(
              domain = request.domain
@@ -109,10 +110,7 @@ class Expression(Community, PagingMixin):
             ,path = request.path
             ,user_is_owner = request.is_owner
             ,listeners = owner.starrer_page()
-            )
-
-        response.context.update(
-             expr_frame = True
+            ,expr_frame = True
             ,title = resource.get('title', False)
             ,expr = self.item_prepare(resource, viewer=response.user)
             ,expr_url = expr_url
