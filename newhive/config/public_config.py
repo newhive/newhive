@@ -1,3 +1,5 @@
+live_server     = False
+
 plain_port      = 80
 ssl_port        = 443
 server_name     = 'newhive.com'
@@ -6,8 +8,9 @@ database_host   = 'localhost'
 database_port   = 27017
 email_port      = 2525
 media_path      = '/home/domains/thenewhive.com'
-dev_prefix      = None
 redirect_domains = ['newhive.com', 'thenewhive.com']
+
+analytics_db    = 'analytics'
 
 ssl_ca          = False
 
@@ -17,11 +20,13 @@ s3_buckets      = []
 asset_bucket    = None
 
 admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack', 'fred']
-admin_emails    = ['abram@thenewhive.com', 'andrew@thenewhive.com',
-                   'cara@thenewhive.com', 'zach@thenewhive.com',
-                   'duffy@thenewhive.com', 'info@thenewhive.com',
-                   'duffy.tilleman@gmail.com', 'duffy@lumana.org',
-                   'straussss@gmail.com', 'quuxman@gmail.com']
+test_emails     = ['abram@thenewhive.com', 'andrew@thenewhive.com',
+                   'cara@thenewhive.com', 'zach@thenewhive.com', 'duffy@thenewhive.com',
+                   'info@thenewhive.com', 'duffy.tilleman@gmail.com', 'duffy@lumana.org',
+                   'straussss@gmail.com', 'quuxman@gmail.com', 'bugs@newhive.com',
+                   'bugs+feedback@newhive.com'
+                  ]
+
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
 # Note, could define milestones programmatically, but this is more readable:
@@ -47,11 +52,6 @@ beta_testers = admins + beta_testers
 
 site_user       = 'thenewhive'
 admins.append(site_user)
-site_pages      = {
-     'editor-help'  : 'default-instructional'
-    ,'profile-help' : 'profile-help'
-    ,'welcome'      : 'welcome'
-    }
 
 content_domain = 'tnh.me'
 

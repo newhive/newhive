@@ -48,8 +48,10 @@ class Mail(Application):
             if referral_id:
                 contact.update(referral_id=referral_id)
         else:
-            mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
-            mailer.send(form.get('email'), form.get('name'), sendgrid_args)
+            pass
+            ## disable this so Catherine can experiment with sending a customized & personal version 
+            # mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
+            # mailer.send(form.get('email'), form.get('name'), sendgrid_args)
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
@@ -85,11 +87,13 @@ class Mail(Application):
 
     def mail_feedback(self, request, response):
         if not request.form.get('message'): return serve_error(response, 'Sorry, there was a problem sending your message.')
+        feedback_address = 'bugs+feedback@' + config.server_name 
+        user_email = request.requester.get('email', '')
         heads = {
-             'To' : 'bugs@thenewhive.com'
-            ,'From' : 'Feedback <noreply+feedback@' + config.server_name +'>'
-            ,'Subject' : 'Feedback from ' + request.requester.get('name', '') + ', ' + request.requester.get('fullname', '')
-            ,'Reply-to' : request.requester.get('email', '')
+             'To' : feedback_address
+            ,'From' : user_email
+            ,'Subject' : 'Feedback from ' + request.requester.get('name') + ' - ' + request.requester.get('fullname', '')
+            ,'Reply-to' : ', '.join([ feedback_address, user_email ])
             }
         url = url_unquote(request.args.get('url', ''))
         body = (
@@ -102,6 +106,7 @@ class Mail(Application):
             )
         print send_mail(heads, body)
         if request.form.get('send_copy'):
-            heads.update(To = request.requester.get('email', ''))
-            send_mail(heads, body, 'mail_feedback', {'initiator': request.requester.get('name')})
+            heads.update( To = user_email, From = feedback_address )
+            print heads
+            send_mail( heads, body, category = 'mail_feedback' )
         response.context['success'] = True

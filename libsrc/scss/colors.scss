@@ -38,7 +38,7 @@ $color_35 : #FFFFFF;     $color_white          : $color_35;
 
 // Aliases
 $color_medium_blue    : $color_blue;
-$color_unselected     : $color_tan;
+$color_unselected     : $color_light_grey;
 $color_highlight      : $color_pale_yellow;
 $color_facebook       : #3c5a98;
 
@@ -61,3 +61,210 @@ $color_tag_14 : $color_charcoal;
 $color_tag_15 : $color_deep_maroon;
 
 .color_grey_medium { color: $color_grey_medium; }
+
+@function tag_color($i, $total) {
+
+    @if $total == 1 {
+        @return $color_bright_red;
+    } @else if $total == 2 {
+        @return nth( $color_bright_red $color_blue, $i );
+    } @else if $total == 3 {
+        @return nth( $color_bright_red $color_dark_yellow $color_blue, $i );
+    } @else if $total == 4 {
+        @return nth( $color_bright_red $color_dark_yellow $color_lime_green $color_blue, $i );
+    } @else if $total == 5 {
+        @return nth(
+            $color_bright_red
+            $color_dark_yellow
+            $color_bright_yellow
+            $color_lime_green
+            $color_blue
+            , $i
+        );
+    } @else if $total == 6 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_blue
+            , $i
+        );
+    } @else if $total == 7 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_blue
+            , $i
+        );
+    } @else if $total == 8 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_blue
+            $color_greyish_purple
+            , $i
+        );
+    } @else if $total == 9 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_forest_teal
+            $color_blue
+            $color_greyish_purple
+            , $i
+        );
+    } @else if $total == 10 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_orange
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_forest_teal
+            $color_blue
+            $color_greyish_purple
+            , $i
+        );
+    } @else if $total == 11 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_orange
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_forest_teal
+            $color_blue
+            $color_bright_blue
+            $color_greyish_purple
+            , $i
+        );
+    } @else if $total == 12 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_orange
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_deep_teal 
+            $color_forest_teal
+            $color_blue
+            $color_bright_blue
+            $color_greyish_purple
+            , $i
+        );
+    } @else if $total == 13 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_orange
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_deep_teal 
+            $color_forest_teal
+            $color_blue
+            $color_bright_blue
+            $color_greyish_purple
+            $color_purple 
+            , $i
+        );
+    } @else if $total == 14 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_orange
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_deep_teal 
+            $color_forest_teal
+            $color_blue
+            $color_bright_blue
+            $color_greyish_purple
+            $color_purple 
+            $color_grey_medium 
+            , $i
+        );
+    } @else if $total == 15 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_orange
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_deep_teal 
+            $color_forest_teal
+            $color_blue
+            $color_bright_blue
+            $color_greyish_purple
+            $color_purple 
+            $color_grey_medium 
+            $color_charcoal  
+            , $i
+        );
+    } @else if $total == 16 {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_orange
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_deep_teal 
+            $color_forest_teal
+            $color_blue
+            $color_bright_blue
+            $color_greyish_purple
+            $color_purple 
+            $color_grey_medium 
+            $color_charcoal
+            $color_deep_maroon 
+            , $i
+        );
+    } @else {
+        @return nth( 
+            $color_bright_red 
+            $color_active 
+            $color_orange
+            $color_dark_yellow 
+            $color_bright_yellow
+            $color_lime_green
+            $color_grass_green
+            $color_deep_teal 
+            $color_forest_teal
+            $color_blue
+            $color_bright_blue
+            $color_greyish_purple
+            $color_purple 
+            $color_grey_medium 
+            $color_charcoal
+            $color_deep_maroon 
+            , $i - floor($i / 16) * 16
+        );
+    }
+}

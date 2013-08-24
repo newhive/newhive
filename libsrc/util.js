@@ -19,7 +19,7 @@ function Funcs(fn, filter) {
     if(fn) o.push(fn);
     var callback = function() {
         if (!filter || filter()){
-            for(i in o) o[i].apply(this, arguments);
+            for(var i in o) o[i].apply(this, arguments);
         }
     };
     callback.handlers = o;
@@ -82,13 +82,14 @@ function logShare(service){
 };
 
 function exprDialog(url, opts) {
-    $.extend(opts, { absolute: true, layout : function(dia) {
-        dia.css({ width : '80%' });
-        dia.css({ height : dia.width() / parseFloat(dia.attr('data-aspect')) });
+    $.extend(opts, { absolute: true, layout : function(e) {
+        var w = e.parent().width(), h = e.parent().height(), a = parseFloat(e.attr('data-aspect'));
+        if(e.width() / e.height() < w / h) e.width(h * .8 * a).height(h * .8);
+        else e.width(w * .8).height(w * .8 / a);
+        center(e, $(window), opts);
         place_apps();
-        center(dia, $(window), opts);
     } });
-    return loadDialog(url + '?template=expr_iframe', opts);
+    return loadDialog(url + '?template=expr_dialog', opts);
 }
 exprDialog.loaded = {};
 
@@ -215,7 +216,14 @@ function noop() { };
 //function apo(f) { var args = arguments; return function() { return f.apply(args[1], Array.prototype.slice.call(args, 2)); }; };
 //function accessor(name) { return function(o) { return o[name] } }
 function cp(f, g) { return function(a) { f(g(a)); } } // functional composition
-function range(n) { var l = []; while(n) l[--n] = n; return l; }
+function range(start, end) {
+    if (typeof(end) == "undefined") { end=start; start=0; }
+    var l = [];
+    for (var i = start; i < end; i++){
+        l.push(i);
+    }
+    return l;
+}
 
 function map(f, list) {
     var ret = [];
@@ -546,7 +554,7 @@ hover_menu = function(handle, drawer, options) {
         if(opts.animate_close){
             if(!opts.animate_open){
                 opts.animate_open = {};
-                for(p in opts.animate_close) opts.animate_open[p] = drawer.css(p);
+                for(var p in opts.animate_close) opts.animate_open[p] = drawer.css(p);
             }
             drawer.animate(opts.animate_close, 100);
         } else opts.close_menu();
@@ -587,10 +595,13 @@ hover_menu = function(handle, drawer, options) {
                     && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
                     hp.top - drawer.outerHeight() - opts.offset_y : hp.top + oy;
 
-                if( opts.layout_x == 'auto' ) opts.layout_x =
-                    (handle.offset().left + drawer.outerWidth() > ($(window).width() + window.scrollX) ?
-                        'right' : 'left');
-                css_opts.left = ( opts.layout_x == 'right' ?
+                var layout_x = opts.layout_x;
+                if( layout_x == 'auto' ) {
+                    var drawer_right = handle.offset().left + drawer.outerWidth();
+                    var window_right = $(window).width() + window.scrollX;
+                    layout_x = (drawer_right > window_right) ? 'right' : 'left';
+                }
+                css_opts.left = ( layout_x == 'right' ?
                     hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
             }
             else if( opts.layout == 'center_y' ){
@@ -723,35 +734,37 @@ function new_window(b,c,d){var a=function(){if(!window.open(b,'t','scrollbars=ye
 
 var positionHacks = Funcs(noop);
 var place_apps = function() {
-   $('.happ').each(function(i, app_div) {
-       var e = $(this);
-       var s = e.parent().width() / 1000;
-       if(!e.data('css')) {
-           var c = {}, props = ['left', 'top', 'width', 'height'];
-           if($(app_div).css('border-radius').indexOf('px') > 0) $.merge(props,
-                    ['border-top-left-radius', 'border-top-right-radius',
-                        'border-bottom-right-radius', 'border-bottom-left-radius']
-                );
-           map(function(p) { c[p] = parseFloat(app_div.style[p]) }, props);
-           var scale = parseFloat(e.attr('data-scale'));
-           if(scale) c['font-size'] = scale;
-           e.data('css', c);
-           var a; if(a = e.attr('data-angle')) e.rotate(parseFloat(a));
-           e.css('opacity', this.style.opacity);
-       }
-       var c = $.extend({}, e.data('css'));
-       for(var p in c) {
-           if(p == 'font-size') c[p] = (c[p] * s) + 'em';
-           else c[p] = Math.round(c[p] * s);
-       }
-       e.css(c);
-   });
-   positionHacks();
-   $('.happfill').each(function(i, div) {
-       var e = $(div);
-       //e.width(e.parent().width()).height(e.parent().height());
-       img_fill(e.find('img'))
-   });
+    var win_width = $(window).width();
+    $('.happfill').each(function(i, div) {
+        var e = $(div);
+        //e.width(e.parent().width()).height(e.parent().height());
+        img_fill(e.find('img'))
+    });
+    if (Hive.expr && Hive.expr.fixed_width) return;
+    $('.happ').each(function(i, app_div) {
+        var e = $(this);
+        var s = e.parent().width() / 1000;
+        if(!e.data('css')) {
+            var c = {}, props = ['left', 'top', 'width', 'height'];
+            if($(app_div).css('border-radius').indexOf('px') > 0) $.merge(props,
+                     ['border-top-left-radius', 'border-top-right-radius',
+                         'border-bottom-right-radius', 'border-bottom-left-radius']
+                 );
+            map(function(p) { c[p] = parseFloat(app_div.style[p]) }, props);
+            var scale = parseFloat(e.attr('data-scale'));
+            if(scale) c['font-size'] = scale;
+            e.data('css', c);
+            var a; if(a = e.attr('data-angle')) e.rotate(parseFloat(a));
+            e.css('opacity', this.style.opacity);
+        }
+        var c = $.extend({}, e.data('css'));
+        for(var p in c) {
+            if(p == 'font-size') c[p] = (c[p] * s) + 'em';
+            else c[p] = Math.round(c[p] * s);
+        }
+        e.css(c);
+    });
+    positionHacks();
 }
 
 var fix_borders = function(items){
@@ -775,10 +788,6 @@ var fix_borders = function(items){
             $(el).addClass('border_bottom');
         }
     });
-
-    // fix top tab placement
-    var card_width = $('#feed .card').outerWidth();
-    $('#top_tabs').css({'right': Math.min( $('#feed').outerWidth() - 245, $('#feed').outerWidth() - columns * card_width ) });
 }
 
 var context_to_string = function(opt_arg){

@@ -1,5 +1,5 @@
 intro_paragraph = """<b>We believe that your life is a blank canvas <span class='color_active'>+</span> you decide what goes on it.<br>
-The New Hive is your radically simple, DIY self publishing tool.</b>"""
+NewHive is your radically simple, DIY self publishing tool.</b>"""
 
 embed_code_description = """Paste in the <b>URL</b> for Vimeo <span
 class='color_active'>+</span> YouTube videos or enter the <b>embed code</b>
@@ -20,14 +20,14 @@ email_change_success_message = "To finish changing your e-mail address, please c
 email_subscription_change_success_message = """Your e-mail subscriptions have been updated."""
 password_recovery_failure_message = "Sorry, we can't find a username with that e-mail address.  Please try again"
 password_recovery_success_message = """We've sent a password reset link to your e-mail address.  If you don't see the e-mail, make sure to check your spam folder."""
-listen_to_all_friends = "Listen to all of my friends from Facebook that are on The New Hive."
+listen_to_all_friends = "Listen to all of my friends from Facebook that are on NewHive."
 invalid_password_recovery_link = """Sorry, the password recovery link you are
     trying to use is invalid or has expired. Please try requesting a new password
     again from the Log In menu."""
 
-facebook_flow_exhange_error = 'Either something went wrong with facebook login or your facebook account is not connected to The New Hive.'
+facebook_flow_exhange_error = 'Either something went wrong with facebook login or your facebook account is not connected to NewHive.'
 
-milestone_message = "You can always keep track of the number of views by checking they eyeball icon on your expressions."
+milestone_message = "You can always keep track of the number of views by checking the eyeball icon on your expressions."
 
 email_subscription_ui = {
     'comment': 'People comment on my expression'

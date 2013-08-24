@@ -1,5 +1,6 @@
 from newhive.controllers.shared import *
 from newhive.controllers import Application
+import newhive.auth
 from newhive import mail
 from werkzeug import Response
 
@@ -46,6 +47,10 @@ class Admin(Application):
             return self.serve_page(response, 'pages/admin/users.html')
         else:
             user = self.db.User.named(p3)
+            if not user: return self.serve_404(request, response)
+            if request.args.get('delete'):
+                user.delete()
+                return self.serve_json(response, True)
             expressions = self.db.Expr.search(dict(owner=user.id))
             public_expressions = user.get_expressions(auth="public")
             private_expressions = user.get_expressions(auth="password")
@@ -61,6 +66,14 @@ class Admin(Application):
                     , 'private': private_expressions.count()
                     }
             return self.serve_page(response, 'pages/admin/user.html')
+
+    # Facilitates testing user-specific bugs.  Only use with permission of user!
+    @admins
+    def log_in_as(self, request, response):
+        user = request.args.get('user')
+        user = self.db.User.named(user)
+        newhive.auth.new_session(self.db, user, request, response)
+        return self.redirect(response, AbsUrl(user['name'] + '/profile'))
 
     @admins
     def add_referral(self, request, response):

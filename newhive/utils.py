@@ -1,7 +1,10 @@
 import time, random, re, base64, copy, pytz, pandas
 from datetime import datetime
 from newhive import config
+import urlparse
+import werkzeug.urls
 import pymongo
+from brownie.datastructures import OrderedSet
 
 
 def lget(L, i, *default):
@@ -69,8 +72,8 @@ def dfilter(d, keys):
     return r
 
 def normalize(ws):
-    ret = filter(lambda s: re.match('\w', s), re.split('\W', ws.lower()))
-    return ret if len(ret) else ['']
+    return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
+        re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
 
 def abs_url(path='', secure = False, domain = None, subdomain = None):
     """Returns absolute url for this server, like 'https://thenewhive.com:1313/' """
@@ -142,6 +145,14 @@ class memoized(object):
       """Support instance methods."""
       return functools.partial(self.__call__, obj)
 
+def cached(fn):
+    def inner(self):
+        prop = '_cache_' + fn.__name__
+        if not hasattr(self, prop):
+            setattr(self, prop, fn(self))
+        return getattr(self, prop)
+    return inner
+
 def bound(num, lower_bound, upper_bound):
     if num < lower_bound: return lower_bound
     if num > upper_bound: return upper_bound
@@ -211,8 +222,11 @@ def serializable_filter(dictionary):
             for key, val in dictionary.iteritems()
             if type(val) in [bool, str, int, float, tuple, unicode]}
 
-import urlparse
-import werkzeug.urls
+def count(L):
+    c = {}
+    for v in L: c[v] = c.get(v, 0) + 1
+    return sorted([(c[v], v) for v in c])
+
 class URL(object):
     def __init__(self, string):
         self.scheme, self.netloc, self.path, self.params, self._query, self.fragment = urlparse.urlparse(string)
@@ -233,10 +247,16 @@ class AbsUrl(URL):
             path = user + '/' + page
         super(AbsUrl, self).__init__(abs_url(secure=secure) + path)
 
-def modify_query(url_string, d):
-    url = URL(url_string)
+def modify_query(url, d):
+    url_obj = isinstance(url, URL)
+    if not url_obj: url = URL(url)
+
     url.query.update(d)
-    return url.get_url()
+
+    if url_obj:
+        return url
+    else:
+        return url.get_url()
 
 def set_cookie(response, name, data, secure = False, expires = True):
     expiration = None if expires else datetime(2100, 1, 1)
@@ -249,8 +269,82 @@ def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name, secure = False): response.delete_cookie(name,
     domain = None if secure else '.' + config.server_name)
 
-def local_date():
+def local_date(offset=0):
     tz = pytz.timezone('US/Pacific')
     dt = datetime.now(tz)
-    return dt.date()
+    return dt.date() + pandas.DateOffset(days=offset)
 
+def friendly_date(then):
+    """Accepts datetime.datetime, returns string such as 'May 23' or '1 day ago'. """
+    if type(then) in [int, float]:
+      then = time_u(then)
+
+    now = datetime.utcnow()
+    dt = now - then
+    if dt.seconds < 60:
+        return "just now"
+    months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    s = months[then.month] + ' ' + str(then.day)
+    if then.year != now.year: s += ' ' + str(then.year)
+    if dt.days < 7:
+        if not dt.days:
+            if dt.seconds < 3600: (t, u) = (dt.seconds / 60, 'min')
+            else: (t, u) = (dt.seconds / 3600, 'hr')
+        else: (t, u) = (dt.days, 'day')
+        s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
+    return s
+
+def dates_to_spec(start, end=None, offset=None):
+    """Return a mongodb spec dictionary that will match ids of objects created
+    between date and date + offset"""
+    end = end or start + offset
+    return {'$gt': datetime_to_int(start), '$lte': datetime_to_int(end)}
+
+def friendly_log_scale(start, end=None, significands = None):
+    """
+    >>> friendly_log_scale(10)
+    [0, 1, 2, 5, 10]
+
+    >>> friendly_log_scale(500,2000)
+    [500, 1000, 2000]
+    """
+
+    if not significands: significands = [1,2,5]
+
+    if not end: start, end = (0, start)
+    rv = [0] if start is 0 else []
+
+    power = 0
+    while True:
+        for i in significands:
+            val = i * 10 ** power
+            if val > end:
+                return rv
+            if val >= start:
+                rv.append(val)
+        power += 1
+
+def un_camelcase(s): return re.sub(r'([A-Z])', r' \1', s)
+
+def camelcase(s): return " ".join(s.split('_')).title().replace(' ', '')
+
+def percent_change(ratio, precision=0):
+    s = "down" if ratio < 0 else "up"
+    return ("{} {:." + str(precision) + "f}%").format(s, abs(ratio) * 100)
+
+def analytics_email_number_format(number):
+    """
+    >>> analytics_email_number_format(123)
+    '123'
+
+    >>> analytics_email_number_format(99.12345)
+    '99.12'
+
+    >>> analytics_email_number_format(0.000123)
+    '0.00012'
+    """
+
+    r = r'([0-9]*)(\.(0*)([0-9]*))?'
+    whole, remainder, zeros, decimal = re.match(r, str(number)).groups()
+    if not decimal: return whole
+    return whole + "." + zeros + decimal[:2]

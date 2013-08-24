@@ -1,5 +1,5 @@
 {% for item in cards %}
-  {% if item.email %}
+  {% if item.fullname %}
     {% include "partials/user_card.html" %}
   {% elif item.entity_class %}
     {% include "partials/feed_card.html" %}

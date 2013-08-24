@@ -1,10 +1,20 @@
+"""
+    newhive.analytics.analytics
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    This module is mostly legacy analytics code.  Over time most of this should
+    be either removed, migrated into a newhive.analytics.queries.Query or into
+    a funciton in newhive.analytics.functions
+
+"""
 import time, datetime, re, pandas, newhive, pandas, numpy, pytz
 from newhive import state, oauth
 from newhive.state import now
 from brownie.datastructures import OrderedDict
-from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, local_date
+from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, local_date, un_camelcase
 from newhive.analytics.ga import GAClient, GAQuery
 from newhive.analytics import queries
+from newhive.analytics.functions import ga_column_name_to_title
 Day = pandas.datetools.Day
 
 import logging
@@ -480,52 +490,6 @@ def _cohort_users(db, stop_date=datetime.datetime.now()):
         data.append(item)
     return pandas.DataFrame(data, index=cohort_range)
 
-
-def overall_impressions(db, histogram=True, key='owner'):
-    map_function = """
-        function() {
-             if (typeof(this.apps) != "undefined" && this.apps.length > 0 && this.views && this.owner_views){
-                 emit(this.""" + key + """, {count: 1, views: this.views - this.owner_views});
-             }
-        }
-        """
-
-    reduce = """
-        function(key, values) {
-            result = {count: 0, views: 0};
-            for (var i=0; i < values.length; i++) {
-                result.count += values[i].count;
-                result.views += values[i].views;
-            };
-            return result;
-        }"""
-
-    name = 'overall_impressions_per_user'
-
-    results_collection = db.mdb.expr.map_reduce(map_function, reduce, 'mr.' + name)
-    if histogram:
-        data = [x['value']['views'] for x in results_collection.find()]
-        bin_edges = [0,1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000, 2000000, 5000000]
-        hist, bin_edges = numpy.histogram(data, bin_edges)
-        return (map(int,hist), map(int,bin_edges))
-    else:
-        return results_collection
-
-def active(db, period=7):
-    input_name = "mr.actions_per_user_per_day"
-    mr_col = actions_per_user_per_day(db)
-    mr_col.ensure_index('_id.date')
-    offset = pandas.DateOffset(days=period)
-    start = newhive.utils.time_u(mr_col.find_one(sort=[('_id.date', 1)])['_id']['date'])
-    dr = pandas.DateRange(start=start + offset, end=datetime.datetime.now(), offset=pandas.DateOffset(days=1))
-    data = []
-    for date in dr:
-        cursor = mr_col.find({'_id.date': {'$lte': datetime_to_int(date), '$gt': datetime_to_int(date - offset)}})
-        data.append(len(cursor.distinct('_id.name')))
-
-    #data = [mr_col.find({'_id.date': datetime_to_int(date)}).count() for date in dr]
-    return (data, dr)
-
 def _active_users_ga(db, period=7):
     """Return users present in GA logs in last 'period' days"""
     tz = pytz.timezone('US/Pacific')
@@ -559,13 +523,14 @@ def active_users_by_signup_date(db, users, freq='D'):
     #data['urls'] = pandas.Series([[u.url for u in c] for c in cursors])
     return data
 
-def retention(db, freq="D"):
+#TODO: move this into analytics.queries
+def retention(db, freq="D", subset=True):
     days = {'D': 1, 'W': 7, 'M': 30, 'MS': 30}.get(freq)
     active = _active_users_ga(db, days)
     data = active_users_by_signup_date(db, active, freq)
-    data.ratio = data.ratio.fillna(0)
-    subset = data[-30:]
-    return subset
+    data["Active Fraction"] = data.pop('ratio').fillna(0)
+    if subset: return data[-30:]
+    else: return data
 
 def engagement_pyramid(db):
 
@@ -645,11 +610,32 @@ def user_median_views(db):
     data.timestamp = datetime.datetime.now()
     return data
 
-def ga_summary(date):
-    q = queries.GASummary()
-    d = q.execute(date)
-    index = [0,1,7,28]
-    return pandas.DataFrame([d.dataframe.ix[date - Day(day)] for day in index], index=index)
+def summary(db):
+    data = queries.GASummary().execute(local_date(-1)).dataframe
+    data.index = data.index.map(lambda x: x.date())
+    data.columns = data.columns.map(ga_column_name_to_title)
+    data['Returning Visits'] = data['Visits'] - data['New Visits']
+
+    q = queries.Active(db)
+    for period in [1,7,30]:
+        active = q.execute(period)
+        active.index = active.index.map(lambda x: x.date())
+        data = data.join(active)
+
+    for q in [queries.UsersPerDay, queries.LovesPerDay, queries.ListensPerDay, queries.ExpressionsCreatedPerDay]:
+        per_day = q(db).execute()
+        data = data.join(per_day)
+
+    data["DAU/MAU"] = data["Active1"] / data["Active30"]
+    new = data["New Users Per Day"]
+    #data["DAU/MAU'"] = (data["Active1"] - new) / ( data["Active30"] - new)
+
+    data = data[data.index < local_date()]
+    today = data.ix[local_date(-1)]
+    previous = data.ix[[-2, -8, -29]]
+    previous.index = ['DoD', 'WoW', 'MoM']
+    change =  today.map(float) / previous - 1
+    return {'today': today, 'change': change}
 
 if __name__ == '__main__':
     from newhive.state import Database

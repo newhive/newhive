@@ -10,7 +10,7 @@ class Feed(Application):
         eid = request.form.get('entity')
         entity = self.db.Expr.fetch(eid)
         if not entity: entity = self.db.User.fetch(eid)
-        if not entity: self.serve_404(request, response)
+        if not entity: return self.serve_404(request, response)
 
         s = self.db.Star.find({'initiator': request.requester.id, 'entity': entity.id})
         if request.form.get('state') == 'false':
@@ -20,11 +20,12 @@ class Feed(Application):
             if not s: s = self.db.Star.create(request.requester, entity)
             state = True
 
+        print entity['name'], state
         return { 'state': state }
 
     def broadcast(self, request, response):
         entity = self.db.Expr.fetch(request.form.get('entity'))
-        if not entity: self.serve_404(request, response)
+        if not entity: return self.serve_404(request, response)
 
         s = self.db.Broadcast.find({ 'initiator': request.requester.id, 'entity': entity.id })
         if request.form.get('state') == 'false':
@@ -39,7 +40,7 @@ class Feed(Application):
     def comment(self, request, response):
         user = request.requester
         expr = self.db.Expr.fetch(request.form.get('entity'))
-        if not expr: self.serve_404(request, response)
+        if not expr: return self.serve_404(request, response)
         text = request.form.get('text')
         if text.strip() == '': return False
 

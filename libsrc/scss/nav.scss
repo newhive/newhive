@@ -172,6 +172,16 @@ img.thumb { background-color: $color_grey_medium; }
     cursor: default;
 }
 
+#social_icons {
+    margin: 0 5px;
+    img {
+        margin-right: 5px;
+        vertical-align: middle;
+        width: 20px;
+        height: 20px;
+    }
+}
+
 
 #action_nav_handle { width: 54px; right: 0; top: 60px; }
 #action_nav {
@@ -352,7 +362,9 @@ body.frame{
         white-space: nowrap;
         &.active { background-color: $color_selected; }
         .icon {
-            float: right;
+            position: absolute;
+            right: 10px;
+            top: auto;
             width: 33px;
             height: 33px;
             margin: -7px -9px;
@@ -361,6 +373,12 @@ body.frame{
 
     // styling for common menu items
     .message .icon { background-image: asset_url('skin/1/send_message.png') }
+    .embed .icon { 
+        background-image: asset_url('skin/1/embed_icon.png');
+        width: 28px;
+        height: 28px;
+        margin: -6px -7px;
+    }
 }
 
 #login_menu {
@@ -387,9 +405,11 @@ body.frame{
 
     .menu { display: inline-block; position: static; }
     .find { }
+    br + .links {
+        margin-top: 8px;
+    }
     .links {
         color: $color_grey_medium;
-        margin-top: 8px;
         cursor: pointer;
 
         .primary { color: black; }
@@ -420,6 +440,13 @@ body.frame{
 
     .listen.off .icon { background-image: asset_url('skin/1/listen.png') }
     .listen.on .icon { background-image: asset_url('skin/1/listening.png') }
+    .menu_item.listen .listen_text { /* prevent long usernames from overlapping */
+        max-width: 215px;
+        overflow: hidden;
+        display: inline-block;
+        vertical-align: middle;
+        width: 100%;
+    }
 }
 
 #share_menu {

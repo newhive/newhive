@@ -5,17 +5,15 @@ Hive.Page = (function(){
     o.initialized = false;
 
     o.send_top = function(msg){
-        //TODO: replace this hack with the right parent_url from the server
-        window.parent.postMessage(msg, Hive.parent_url.replace(/^http/, 'https'));
-        window.parent.postMessage(msg, Hive.parent_url.replace(/^https/, 'http'));
-    },
+        window.parent.postMessage(msg, '*');
+    };
         
     o.paging_sent = false;
     o.page = function(direction){
         if(o.paging_sent) return;
         o.paging_sent = true;
         o.send_top(direction);
-    },
+    };
     o.page_next = function(){ o.page('next') },
     o.page_prev = function(){ o.page('prev') };
 
@@ -44,12 +42,6 @@ Hive.Page = (function(){
     };
 
     o.init_content = function(){
-        // TODO: ends up being annoying a lot of times
-        $('#bg').on('click', function(e){
-            if(e.clientX > $(window).width() * .8) o.page_next();
-            if(e.clientX < $(window).width() * .2) o.page_prev();
-        });
-
         // bonus paging and scrolling features
         // TODO: prevent scroll sticking after mouse-up outside of expr frame
         // TODO: figure out how to attach to all elements that don't have default drag behavior
@@ -63,14 +55,14 @@ Hive.Page = (function(){
             document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
         });
 
-        $(document.body).on('keydown', function(e){
-            if(e.keyCode == 32) // space
-                if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) o.page_next();
-            if(e.keyCode == 39) // right arrow
-                if(document.body.scrollLeft + $(window).width() == document.body.scrollWidth) o.page_next();
-            if(e.keyCode == 37)
-                if(document.body.scrollLeft == 0) o.page_prev();
-        });
+        //$(document.body).on('keydown', function(e){
+        //    if(e.keyCode == 32) // space
+        //        if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) o.page_next();
+        //    if(e.keyCode == 39) // right arrow
+        //        if(document.body.scrollLeft + $(window).width() == document.body.scrollWidth) o.page_next();
+        //    if(e.keyCode == 37)
+        //        if(document.body.scrollLeft == 0) o.page_prev();
+        //});
 
         o.init_jplayer();
     };

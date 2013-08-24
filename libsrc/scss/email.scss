@@ -7,7 +7,7 @@ $space3: 15px;
 $space4: 5px;
 
 .outer {
-    background-color: $color_charcoal;
+    background-color: black;
 }
 
 #header_logotype {
@@ -83,7 +83,7 @@ $space4: 5px;
         margin-bottom: $space1 - 3px;
     }
     
-    #greeting{
+    #greeting, .color_selected{
         background: $color_selected;
     }
     
@@ -237,7 +237,7 @@ $space4: 5px;
             padding: 0 10px;
         }
         line-height: 46px;
-        a { text-decoration: underline; }
+        //a { text-decoration: underline; }
     }
 
     &.site_referral, &.user_referral, &.user_invites_reminder {
@@ -267,4 +267,9 @@ $space4: 5px;
 #unsubscribe {
     margin-top: 5px;
     font-size: 13px;
+}
+
+#analytics_summary {
+    th, td { padding: 3px 8px; }
+    tbody th { text-align: right; }
 }

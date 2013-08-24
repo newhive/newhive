@@ -4,6 +4,7 @@ from os.path import join as joinpath
 from md5 import md5
 from pymongo.connection import DuplicateKeyError
 from datetime import datetime
+from lxml import html
 from wsgiref.handlers import format_date_time
 from newhive import social_stats, config
 from itertools import ifilter, islice
@@ -53,6 +54,63 @@ class Database:
                 key = map(lambda a: a if type(a) == tuple else (a, 1), [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
 
+    def query(self, q, viewer=None, limit=40, expr_only=None, **args):
+        args['viewer'] = viewer
+        args['limit'] = limit
+        search = self.parse_query(q)
+
+        # substitute featured with network when not logged in
+        if not viewer and search.get('network'):
+            search['featured'] = True
+            del search['network']
+
+        spec = {}
+        if search.get('text'): spec['text_index'] = { '$all': search['text'] }
+        if search.get('tags'): spec['tags_index'] = { '$all': search['tags'] }
+        if search.get('user'): spec['owner_name'] = search['user']
+        if search.get('auth'): spec['auth'] = 'public' if search['auth'] == 'public' else 'password'
+
+        if search.get('network'):
+            results = viewer.feed_network(spec=spec, **args)
+        elif search.get('featured'):
+            results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
+        else:
+            sort = 'updated'
+            results = self.Expr.page(spec, **args)
+            if not expr_only:
+                results = results + self.User.page(spec, **args)
+                results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+
+                # redo pagination property after merging possible user results with expr results
+                results = Page(results)
+                results.next = results[-1][sort] if len(results) == limit else None
+
+        return results
+
+    def parse_query(self, q):
+        """ Parses search query into MongoDB spec
+            #tag, @user, text, #SpecialCategory
+        """
+
+        # split into words with possible [@#] prefix
+        search = { 'text': [], 'tags': [] }
+        for pattern in re.findall(r'(\b|\W+)(\w+)', q):
+            prefix = re.sub( r'[^#@]', '', pattern[0] )
+            if prefix == '@': search['user'] = pattern[1].lower()
+            elif prefix == '#':
+                if pattern[1] == 'All': search['all'] = True
+                elif pattern[1] == 'Featured': search['featured'] = True
+                elif pattern[1] == 'Network': search['network'] = True
+                elif pattern[1] == 'Public': search['auth'] = 'public' 
+                elif pattern[1] == 'Private': search['auth'] = 'password'
+                elif pattern[1] == 'Activity': search['activity'] = True
+                elif pattern[1] == 'Listening': search['listening'] = True
+                elif pattern[1] == 'Listeners': search['listeners'] = True
+                else: search['tags'].append( pattern[1].lower() )
+            else: search['text'].append( pattern[1].lower() )
+
+        return search
+
 class Collection(object):
     def __init__(self, db, entity):
         self.db = db
@@ -88,9 +146,15 @@ class Collection(object):
         return self.find(spec, **opts)
 
     def page(self, spec, limit=40, page=None, sort='updated', order=-1, viewer=None, filter=None):
-        if page and not is_mongo_key(page):
+        page_is_id = is_mongo_key(page)
+        if page and not page_is_id:
             page = float(page)
+
         if type(spec) == dict:
+            if page_is_id:
+                page_start = self.fetch(page)
+                page = page_start[sort] if page_start else None
+
             if page and sort: spec[sort] = { '$lt' if order == -1 else '$gt': page }
             res = self.search(spec, sort=[(sort, order)])
             # if there's a limit, collapse to list, get sort value of last item
@@ -104,33 +168,30 @@ class Collection(object):
 
         elif type(spec) == list:
             spec = uniq(spec)
-            if not page: page = '0'
+            assert( not page or page_is_id )
 
-            if is_mongo_key(page):
-                try:
-                    start = spec.index(page)
-                    end = start + limit * -order
-                    if end > start:
-                        if start == len(spec): return []
-                        sub_spec = spec[start+1:end+1]
+            try:
+                start = spec.index(page) if page else -1
+                end = start + limit * -order
+                if end > start:
+                    if start >= len(spec): return Page([])
+                    sub_spec = spec[start+1:end+1]
+                else:
+                    if start <= 0: return Page([])
+                    if end - 1 < 0:
+                        sub_spec = spec[start-1::-1]
                     else:
-                        if start == 0: return []
-                        if end - 1 < 0:
-                            sub_spec = spec[start-1::-1]
-                        else:
-                            sub_spec = spec[start-1:end-1:-1]
-                except ValueError:
-                    # TODO: would be better to raise a custom excpetion here so this situation
-                    # could be handled differently depending on application
-                    sub_spec = [] #paging element not in list
-            else:
-                page = int(page)
-                end = (page + 1) * limit
-                sub_spec = spec[ page * limit : end ]
+                        sub_spec = spec[start-1:end-1:-1]
+            except ValueError:
+                # paging element not in list
+                if order < 0:
+                    end = limit
+                    sub_spec = spec[0: end]
+                else:
+                    return Page([])
 
             res = Page(self.fetch(sub_spec))
-            if type(page) == int:
-                res.next = page + 1 if end <= len(spec) else None
+            res.next = lget(sub_spec, -1)
             return res
 
     def count(self, spec={}): return self.search(spec).count()
@@ -189,10 +250,11 @@ class Entity(dict):
         self._col = col._col
         self.db = col.db
         self.mdb = self.db.mdb
+        self.setdefault('_id', str(pymongo.objectid.ObjectId()))
+        self['id'] = self.id
 
     @property
     def id(self):
-        self.setdefault('_id', str(pymongo.objectid.ObjectId()))
         return self['_id']
 
     def create(self):
@@ -238,13 +300,8 @@ class Entity(dict):
 
 # Common code between User and Expr
 class HasSocial(Entity):
-    # TODO: remove this after migration for deleting feed attribute
-    def __init__(self, col, doc):
-        if doc.has_key('feed'): del doc['feed']
-        super(HasSocial, self).__init__(col, doc)
-
     @property
-    @memoized
+    @cached
     def starrer_ids(self):
         return [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
     @property
@@ -258,7 +315,7 @@ class HasSocial(Entity):
         return self.db.Star.search(spec)
 
     @property
-    @memoized
+    @cached
     def broadcast_count(self):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
 
@@ -303,13 +360,14 @@ class KeyWords(Entity):
 class User(HasSocial):
     cname = 'user'
     indexes = [
-            ('updated', -1),
-            ('name', {'unique':True}),
-            ('sites', {'unique':True}),
-            'facebook.id',
-            'email'
-            ]
-
+        ('updated', -1),
+        ('name', {'unique':True}),
+        ('sites', {'unique':True}),
+        'facebook.id',
+        'email',
+        'text_index'
+    ]
+    
     # fields = dict(
     #     name = str
     #    ,password = str
@@ -342,7 +400,6 @@ class User(HasSocial):
         self.logged_in = False
         self.fb_client = None
         self.owner = self
-        self['owner'] = self.id
 
     def expr_create(self, d):
         doc = dict(owner = self.id, name = '', domain = self['sites'][0])
@@ -359,13 +416,13 @@ class User(HasSocial):
         self['flags'] = {}
         self['email_subscriptions'] = config.default_email_subscriptions
         assert self.has_key('referrer')
+        self.build_search(self)
         super(User, self).create()
-        self.build_search_index()
         return self
 
     def update(self, **d):
+        self.build_search(d)
         super(User, self).update(**d)
-        self.build_search_index()
         return self
 
     @property
@@ -387,19 +444,21 @@ class User(HasSocial):
         return self.db.Expr.page(spec, viewer=viewer, **args)
 
     @property
-    @memoized
+    @cached
     def my_stars(self):
         """ Feed records indicating what expressions a user likes and who they're listening to """
         return self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)])
     @property
-    def starred_user_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
+    @cached
+    def starred_user_ids(self):
+        return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
     @property
     def starred_expr_ids(self): return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
 
     def starred_user_page(self, **args): return self.collection.page(self.starred_user_ids, **args)
 
     @property
-    @memoized
+    @cached
     def broadcast(self): return self.db.Broadcast.search({ 'initiator': self.id })
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
@@ -425,11 +484,11 @@ class User(HasSocial):
         for i, item in enumerate(res):
             if item.type == 'FriendJoined': continue
             entity = item.initiator if item.entity.id == self.id else item.entity
-            entity.feed = [item]
+            entity['feed'] = [item]
             res[i] = entity
         return res
 
-    def feed_network(self, limit=40, expr=None, **args):
+    def feed_network(self, spec={}, limit=40, page=None, **args):
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
                 'class_name': {'$in': ['NewExpr', 'Broadcast']}
@@ -445,17 +504,18 @@ class User(HasSocial):
         # In some cases we have an expression but no feed item to page relative
         # to.  In this case, look up the most recent appropriate feed item with
         # that expression as entity
-        if expr:
-            feed_start = self.feed_search({'entity': expr, '$or': or_clause },
-                    viewer=args['viewer'], limit=1
-                    ).next()
-            args['page'] = feed_start['created']
+        if is_mongo_key(page):
+            feed_start = list( self.feed_search({'entity': page, '$or': or_clause },
+                    viewer=args['viewer'], limit=1) )
+            if len( feed_start ): page = feed_start[0]['created']
+            else: page = None
+
         # produces an iterable for all network feed items
-        res = self.feed_search({ '$or': or_clause }, auth='public', **args)
+        res = self.feed_search({ '$or': or_clause }, auth='public', page=page, **args)
         # groups feed items by ther expressions (entity attribute), and applies page limit
-        page = Page(self.feed_group(res, limit))
-        page.next = page[-1]['feed'][-1]['created'] if len(page) == limit else None
-        return page
+        results = Page(self.feed_group(res, limit, spec=spec))
+        results.next = results[-1]['feed'][-1]['created'] if len(results) == limit else None
+        return results
 
     def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
         if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
@@ -465,10 +525,14 @@ class User(HasSocial):
         if limit: res = islice(res, limit)
         return res
 
-    def feed_group(self, res, limit, feed_limit=6):
+    def feed_group(self, res, limit, spec={}, feed_limit=6):
         """" group feed items by expression """
         exprs = []
+        filter = True if spec.items() else False
         for item in res:
+            if filter:
+                spec['_id'] = item['entity']
+                if not self.db.Expr.search(spec).count(): continue
             i = index_of(exprs, lambda e: e.id == item['entity'])
             if i == -1:
                 item.entity['feed'] = [item]
@@ -479,9 +543,8 @@ class User(HasSocial):
             if len(exprs) == limit: break
         return exprs
 
-    def build_search_index(self):
-        texts = {'name': self.get('name'), 'fullname': self.get('fullname')}
-        self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
+    def build_search(self, d):
+        d['text_index'] = normalize( self['name'] + ' ' + self.get('fullname', '') )
 
     def new_referral(self, d, decrement=True):
         if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
@@ -622,6 +685,17 @@ class User(HasSocial):
         return self.get_expressions(auth='public').sort([('updated', -1)]).limit(count)
     recent_expressions = property(get_recent_expressions)
 
+    def client_view(self, viewer=None):
+        user = self.db.User.new( dfilter( self, ['_id', 'fullname', 'profile_thumb', 'thumb_file_id',
+            'name', 'tags', 'updated', 'created', 'feed'] ) )
+        dict.update(user, dict(
+            url = self.url,
+            thumb = self.get_thumb(70),
+            has_thumb = self.has_thumb
+        ) )
+        if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
+        return user
+
     def delete(self):
         # Facebook Disconnect
         self.facebook_disconnect()
@@ -683,6 +757,7 @@ class Expr(HasSocial):
          (['owner_name', 'name'], {'unique':True})
         ,['owner', 'updated']
         ,'tags_index'
+        ,'text_index'
         ,'updated'
         ,'random'
         ,'file_id'
@@ -760,36 +835,39 @@ class Expr(HasSocial):
 
 
     def update(self, **d):
-        d.update(self._update_tags(d))
-        if not d.has_key('file_id'): d.update(self._collect_files(d))
-
+        if not d.has_key('file_id'): self._collect_files(d)
+        self.build_search(d)
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
-        self.build_search_index()
         return self
 
-    def _update_tags(self, d={}):
-        upd = {}
-        tags = d.get('tags') or self.get('tags', '')
-        if tags: upd['tags_index'] = normalize(tags)
-        dict.update(self, upd)
-        return upd
+    def build_search(self, d):
+        tags = d.get('tags')
+        tag_list = []
+        if tags: tag_list = d['tags_index'] = normalize(tags)
 
-    def build_search_index(self):
-        texts = {
-                'tags': self.get('tags')
-                , 'title': self.get('title')
-                }
-        self.db.KeyWords.set_words(self, texts, updated=self.get('updated'))
+        d['title_index'] = normalize( self.get('title', '') )
 
-    def _collect_files(self, d):
-        ids = ( self.get('file_id', []) +
-            ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] ) +
-            self._match_id(d.get('background', {}).get('url')) )
-        for a in d.get('apps', []): ids.extend( self._match_id( a.get('content') ) )
+        text_index = []
+        for a in d.get('apps', []):
+            if a.get('type') in ['hive.html', 'hive.text'] and a.get('content', '').strip():
+                text = html.fromstring( a.get('content') ).text_content()
+                text_index.extend( normalize(text) )
+        text_index = list( set( text_index + tag_list ) )
+        if text_index: d['text_index'] = text_index
+
+    def _collect_files(self, d, old=True, thumb=True, background=True, apps=True):
+        ids = []
+        if old: ids += self.get('file_id', [])
+        if thumb: ids += ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] )
+        if background: self._match_id(d.get('background', {}).get('url'))
+        if apps:
+            for a in d.get('apps', []):
+                ids.extend( self._match_id( a.get('content') ) )
         ids = list( set( ids ) )
         ids.sort()
-        return { 'file_id': ids }
+        d['file_id'] = ids
+        return ids
 
     def _match_id(self, s):
         if not isinstance(s, (str, unicode)): return []
@@ -803,12 +881,11 @@ class Expr(HasSocial):
         self['random'] = random.random()
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
-        self._update_tags()
-        dict.update(self, self._collect_files(self))
+        self._collect_files(self)
+        self.build_search(self)
         super(Expr, self).create()
         feed = self.db.NewExpr.create(self.owner, self)
         self.owner.get_expr_count(force_update=True)
-        self.build_search_index()
         return self
 
     def delete(self):
@@ -941,6 +1018,9 @@ class Expr(HasSocial):
         return self.id in self.db.User.get_root()['tagged'].get('Featured', [])
 
     public = property(lambda self: self.get('auth') == "public")
+
+    def client_view(self, viewer=None):
+        return self
 
     @property
     def tag_string(self):
@@ -1185,7 +1265,7 @@ class Feed(Entity):
         super(Feed, self).create()
 
         self.entity.update_cmd({'$inc': {'analytics.' + class_name + '.count': 1}})
-        if self.entity['owner'] != self['initiator']: self.entity.owner.notify(self)
+        if self.entity.owner.id != self['initiator']: self.entity.owner.notify(self)
 
         return self
 
@@ -1254,8 +1334,8 @@ class Star(Feed):
         return 'loves' if self['entity_class'] == 'Expr' else 'listening'
 
     def create(self):
-        if self['entity_class'] == 'User' and self.entity['owner'] == self['initiator']:
-            raise "You mustn't listen to yourself. It is confusing."
+        if self['entity_class'] == 'User' and self.entity.owner.id == self['initiator']:
+            raise "Excuse me, you mustn't listen to yourself. It is confusing."
         if self['initiator'] in self.entity.starrer_ids: return True
         return super(Star, self).create()
 
@@ -1328,6 +1408,10 @@ class ErrorLog(Entity):
     cname = 'error_log'
     indexes = ['created', 'type']
 
+@Database.register
+class Temp(Entity):
+    cname = 'temp'
+
 ## utils
 
 def get_id(entity_or_id):
@@ -1345,8 +1429,3 @@ def tags_by_frequency(query):
     counts = [[tags[t], t] for t in tags]
     counts.sort(reverse=True)
     return counts
-
-def count(L):
-    c = {}
-    for v in L: c[v] = c.get(v, 0) + 1
-    return sorted([(c[v], v) for v in c])

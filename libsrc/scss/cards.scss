@@ -72,7 +72,7 @@
         font-weight: bold;
         text-align: right;
         width: 120px;
-        div { background-color: $color_highlight; margin: 1px; display: inline; padding: 0 5px; }
+        div { background-color: $color_highlight; margin: 0; display: inline-block; padding: 0px 2px; }
         &.create div { background-color: white; }
     }
 }
@@ -84,7 +84,13 @@
         bottom: 5px; right: 13px;
         color: $color_grey_medium;
         img { vertical-align: middle; }
-        .listen_button:hover { background-color: $color_active }
+       .listen_button {
+            width: 40px;
+            height: 40px;
+            margin: -5px -10px;
+        }
+       .listen_button.off { background-image: asset_url('skin/1/listen.png') }
+       .listen_button.on { background-image: asset_url('skin/1/listening.png') }
     }
     &.with_hide .inactive_hide { display: none; }
     &.with_hide:hover .inactive_hide { display: block; }

@@ -10,10 +10,7 @@
 {% block head %}
   {{super()}}
   <script type='text/javascript'>
-      // TODO: temporary, should probably hide this better
-      var expr = {{ expr | json}};
-      var user = {{ user_client | json }};
-      var content_domain = {{ content_domain | json }};
+    var expr = {{ expr | json}};
   </script>
 {% endblock %}
 {% block body_classes %}{{super()}} frame{% endblock %}
@@ -22,7 +19,7 @@
   <div id='navigator_handle' class='menu_handle'></div>
   <div id="navigator" class="navigator">
     <div class="info">
-      <div class="icon random_btn hoverable rounded"></div>
+      <a href='/random' title="View Random Expression" class='random_link'><div class='random_btn icon hoverable rounded'></div></a>
       <form method='get' title="View random expression" onsubmit="Hive.navigator.search(); return false">
         <input type="text" class="search">
         <div class="hoverable icon scale submit" title="Submit search" onclick="Hive.navigator.search()"></div>
@@ -138,7 +135,7 @@
 {% endblock %}
 
 {% block footer_scripts %}<script>
-  Hive.Menus.expr_init();
+    Hive.Menus.expr_init();
 </script>{% endblock footer_scripts %}
 
 {% block dialogs %}

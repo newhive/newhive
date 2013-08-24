@@ -22,7 +22,7 @@ body.invited{
 }
 
 body.signup #right_column {
-    width: 920px;
+    width: 960px;
     margin: 0 auto;
     $input_width: 350px;
 
@@ -45,25 +45,28 @@ body.signup #right_column {
         background: $color_highlight;
         display: inline-block;
         padding: 2px 10px;
-        span { color: $color_blue; }
+        span { color: $color_active; }
     }
 
     h1 {
         margin: 0;
     }
     h3 {
-        margin: -5px 0 0 20px;
+        margin: -5px 0 0 35px;
     }
 
     #header {
         margin: 40px 0;
+        h1 {
+            display: inline-block;
+            vertical-align: middle;
+        }
     }
 
     #facebook_connect {
-        width: 188px;
-        position: absolute;
-        top: 24px;
-        left: 600px;
+        width: 244px;
+        margin-left: 160px;
+        vertical-align: middle;
     }
 
     input, #url, #terms_header {
@@ -75,11 +78,16 @@ body.signup #right_column {
         box-sizing: border-box;
     }
 
+    #url {
+        width: $input_width;
+        overflow: hidden;
+    }
+
     #url, #terms_header {
-        padding: 0 0 5px 10px;
+        padding: 0 0 0 10px;
         span {
-            font-weight: bold;
-            color: $color_selected;
+            font-weight: normal;
+            color: $color_active;
         }
     }
 
@@ -91,11 +99,14 @@ body.signup #right_column {
 
     #profile_thumb {
         .placeholder, img {
-            width: 140px;
-            height: 140px;
+            width: 180px;
+            height: 180px;
+        }
+        img {
+            padding: 5px;
         }
         #thumb_text {
-            margin-top: 47px;
+            margin-top: 65px;
             text-align: center;
             font-size: 18px;
             font-weight: bold;
@@ -112,18 +123,16 @@ body.signup #right_column {
     }
 
     #terms {
-        padding-top: 37px;
         .term, label {
             font-weight: bold;
         }
-        #terms_header {
-            color: $color_blue;
+        #terms_header, .numeral {
+            color: $color_active;
         }
-        .numeral {
-            color: $color_blue;
+        #fullterms, #term_list {
+            margin: 10px 0;
         }
         #fullterms  {
-            margin: 10px 0;
             a {
                 padding: 4px 8px;
                 background: $color_tan;
@@ -139,25 +148,14 @@ body.signup #right_column {
 
     input[type=submit] {
         font-size: 26px;
-        font-weight: bold;
+        font-weight: normal;
         font-family: Bebas, Helvetica, Verdana, sans-serif;
-        background-color: $color_active;
-        color: white;
-        &:hover {
-            background-color: $color_blue;
-        }
     }
 
-    .invalid {
-        border-color: desaturate(lighten($color_active, 20%), 20%) !important;
-    }
-    label.invalid {
-        border: 2px solid;
-    }
     .validation {
         font-size: 14px;
         font-weight: bold;
-        color: $color_active;
+        color: $color_bright_red; // Color also set in script
         margin: -8px 0 8px 0;
         max-width: $input_width;
     }

@@ -15,6 +15,7 @@
   </script>
 {% endblock head %}
 
+{% block body_classes %}{{ super() }} edit{% endblock %}
 {% block body %}
 
 {% include 'dialogs/editor_browsers.html' %}
@@ -28,7 +29,7 @@
  ><div class='pad'></div
  ><div class='center pad'><img id='btn_grid' title="Show Grid" class='hoverable' src='{{ 'skin/1/grid-off.png'|asset_url }}'></div
  ><div class='smpad'></div
- {#><div class='center hoverable text text_btn black_active' title="Editor Help" id='btn_help'>?</div#}
+ ><div class='center hoverable text text_btn black_active' title="Editor Help" id='btn_help'>?</div
  ><div id='btn_save' class='text text_btn hoverable center pad black_active'>
    Save
    <img src='{{ 'skin/1/drop_arrow_circle.png'|asset_url }}'>
@@ -36,7 +37,7 @@
 ></div>
 <script>
   (function() { var b = $('#btn_help');
-      b.click(function() { exprDialog('{{ site_pages['editor-help'] }}',
+      b.click(function() { exprDialog('/thenewhive/default-instructional',
           { minimize_to: b, click_close: true } ) });
      {% if show_help %}$('#btn_help').click();{% endif %}
   })();
@@ -49,6 +50,7 @@
 
   <div class='medbold'>URL</div>
   <div class=''>{{ server_name }}/{{ user.name }}/</div>
+  <div class='note'>Change the URL to "Save As"</div>
   <input id='url' type='text' value='{{ expr.name|e }}'>
   <div class='spacer'></div>
 
@@ -88,6 +90,9 @@
  ><div id='insert_embed' class='icon hoverable'></div
  ><div id='insert_shape' class='icon hoverable'></div
  ><div id='insert_file'  class='icon hoverable'></div
+ {% if user.is_admin %}
+ ><div id='labs'  class='icon hoverable'></div
+ {% endif %}
 ></div> 
 
 <div id='menu_text' class='menu medbold'>
@@ -131,6 +136,15 @@
  <div id='shape_rectangle' class='menu_item'>Rectangle</div>
  <div id='shape_sketch' class='menu_item'>Sketch</div>
 </div>
+
+{% if user.is_admin %}
+<div id='menu_labs' class='menu medbold'>
+ <div id='raw_html' class='menu_item'>Insert Raw HTML Div</div>
+ <div id='make_fixed' class='menu_item'>Make Fixed-Width</div>
+ <div id='edit_script' class='menu_item'>Edit scripts</div>
+ <div id='edit_style' class='menu_item'>Edit styles</div>
+</div>
+{% endif %}
 
 <img id='loading' src='{{ 'skin/1/loading.gif'|asset_url }}'>
 
@@ -230,6 +244,13 @@
  ></div
 ></div>
 
+<div id='controls_raw_html' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button edit tip_N' title='Edit Contents' src='{{ 'skin/1/edit.png'|asset_url }}'
+ ></div
+></div>
+
+
 <div id='controls_script' class='controls_src'>
  <div class='control buttons'
   ><img class='button code' title='Run' src='{{ 'skin/1/opacity.png'|asset_url }}'
@@ -307,6 +328,22 @@ blah blah
  <div id='color_pick' style='float : right; position : relative;'></div>
 </div>
 
+<div id='dia_edit_script' class='dialog border selected code_editor'>
+ <h2>Edit Expression Scripts</h2>
+ <p class="small_text">(won't execute while editing)</p>
+ <textarea id="expr_script_input" class="code">{{ expr.script }}</textarea>
+</div>
+
+<div id='dia_edit_style' class='dialog border selected code_editor'>
+ <h2>Edit Expression CSS</h2>
+ <textarea id="expr_style_input" class="code">{{ expr.style }}</textarea>
+</div>
+
+<div id='dia_edit_code' class='dialog border selected code_editor'>
+ <h2>Edit Contents</h2>
+ <textarea id="" class="code">{{ expr.style }}</textarea>
+</div>
+
 <div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
  <h2>Overwrite?</h2>
  You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
@@ -318,6 +355,8 @@ blah blah
 {% include 'expr_background.html' %}
 <div id='grid_guide'></div>
 
+<div id='controls'></div>
 <div id='happs'></div>
 
+<style id="expr_style">{{ expr.style }}</style>
 {% endblock %}

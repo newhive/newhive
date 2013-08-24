@@ -53,8 +53,10 @@ jinja_env.filters.update({
     ,'asset_url': hive_assets.url
     ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
     ,'clean_url': lambda s: re.match('https?://([^?]*)', s).groups()[0]
-    ,'html_breaks': lambda s: re.sub('\n', '<br/>', str(s))
+    ,'html_breaks': lambda s: re.sub('\n', '<br/>', unicode(s))
     ,'modify_query': utils.modify_query
+    ,'percent_change': utils.percent_change
+    ,'analytics_email_number_format': utils.analytics_email_number_format
 })
 jinja_env.globals.update({
      'colors': newhive.colors.colors
@@ -126,7 +128,8 @@ actions = dict(
 )
 
 site_pages = {
-     ''                    : controllers['community'].index
+     ''                    : controllers['expression'].site_expression
+    ,'about'               : controllers['expression'].site_expression
     ,'home'                : controllers['community'].index
     ,'search'              : controllers['community'].index
     ,'tag'                 : controllers['community'].tag
@@ -241,11 +244,11 @@ def handle(request): # HANDLER
     response.context.update(
          domain = request.domain
         ,owner = owner
-        ,owner_url = owner.url
+        ,client_owner = owner.client_view(viewer=response.user)
         ,path = request.path
         ,user_is_owner = request.is_owner
         ,listeners = owner.starrer_page()
-        )
+    )
 
     if parts[0] == 'profile': return controllers['community'].index(request, response)
     if parts[0] == 'expressions': return app.redirect(response, owner.url)
@@ -301,6 +304,8 @@ def handle_safe(request):
         db.ErrorLog.create(log_entry)
         raise
 
+#from werkzeug.contrib.profiler import ProfilerMiddleware
+#application = ProfilerMiddleware(handle_safe, sort_by=('cumulative', 'calls'))
 application = handle_safe
 #application = handle_debug
 logger.info("WSGI initialization complete")

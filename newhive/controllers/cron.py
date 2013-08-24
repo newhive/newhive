@@ -3,6 +3,7 @@ from newhive.controllers.shared import *
 from newhive.controllers import Application
 from newhive.utils import now
 from newhive.analytics.analytics import user_expression_summary
+import newhive.analytics.queries
 import newhive.mail
 from newhive import config
 
@@ -127,4 +128,12 @@ class Cron(Application):
             mailer.send(user)
             stats['send_count'] += 1
 
+        return stats
+
+    def analytics(self):
+        newhive.analytics.queries.clear_all_caches()
+        mailer = newhive.mail.Analytics(db = self.db, jinja_env = self.jinja_env)
+        mailer.send('team@newhive.com')
+
+        stats = {'send_count': 1}
         return stats

@@ -46,8 +46,10 @@ Hive.Menus = (function(){
     o.init = function(group){
         if(!group) group = { menus: [] };
 
-        hover_menu( '#logo', '#hive_menu', { offset_y: 8, open: function(){
-            $('#search_box').get(0).focus(); }, group: group } );
+        hover_menu( '#logo', '#hive_menu', { offset_y: 8, group: group, open: function(){
+            var search = $('#search_box').get(0);
+            if (search) search.focus();
+        }} );
 
         if(logged_in) {
             hover_menu( '#user_btn', '#user_menu', { offset_y: 8, group: group, open: function(){
@@ -99,21 +101,160 @@ Hive.Menus = (function(){
                 layout_x: 'right',
                 group: group
             } );
+            if(error) $(function(){ o.login_menu.open().sticky = true; });
             $('#call_to_action').html(Hive.config.nav.call_to_action);
         }
 
-        var swap_action_nav = { open: function(){ $('#action_nav').hide() },
-            close: function(){ $('#action_nav').show() } };
+        var swap_action_nav = {
+            open: function(){ $('#action_nav').hide(); },
+            close: function(){
+                if ($.inArray('action', Hive.config.frame.nav.visible) != -1) $('#action_nav').show();
+            }
+        };
 
-        if($('#owner_btn').length) hover_menu('#owner_btn', '#owner_menu', $.extend({ offset_y: 8,
-            layout_x: 'right', group: group }, swap_action_nav));
+        if ($('#owner_btn').length) {
+            hover_menu(
+                '#owner_btn', '#owner_menu',
+                $.extend({ offset_y: 8, layout_x: 'right', group: group }, swap_action_nav)
+            );
+        }
         $('#owner_menu .menu_item.listen').click(function(){
-            o.feed_toggle('star', Hive.expr ? Hive.expr.owner.id : owner_id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
+            o.feed_toggle('star', o.owner.id, '#owner_menu .menu_item.listen', '', {ga: 'listen'})
         });
 
-        if($('#share_btn').length) hover_menu('#share_btn', '#share_menu', $.extend({ offset_y: 8,
-            group: group }, swap_action_nav));
+        if ($('#share_btn').length) {
+            hover_menu(
+                '#share_btn', '#share_menu',
+                $.extend({ offset_y: 8, group: group }, swap_action_nav)
+            );
+        }
+
+        o.update_owner( owner );
+        //
+        // email and embed menus
+        $(function(){
+            $('.menu_item.message').click(require_login('email', function(){showDialog('#dia_share')}));
+            var dia = $('#dia_share');
+            dia.find('form').submit(function(e){
+                var submit = dia.find('input[type=submit]');
+                if (submit.hasClass('inactive')) return false;
+                submit.addClass('inactive');
+                var callback = function(){
+                    submit.removeClass('inactive');
+                    dia.find('#email_to').val('');
+                    dia.children().hide();
+                    var tmp = $('<h2>Your message has been sent.</h2>').appendTo(dia);
+                    setTimeout(function(){
+                        dia.data('dialog').close();
+                        dia.children().show();
+                        tmp.remove();
+                    }, 1500);
+                };
+                asyncSubmit('#dia_share form', callback, {url: window.location.href});
+                _gaq.push(['_trackEvent', 'share', 'email']);
+                return false;
+            });
+
+            $('.menu_item.embed').click(function(){
+                showDialog('#dia_embed');
+                $('#dia_embed textarea').get(0).focus();
+            });
+        });
     };
+
+    o.home_init = function(){
+        Hive.config.frame.navigator.hideable = false;
+        Hive.config.frame.nav.visible = ['owner'];
+
+        // Set up special version of navigator
+        if (!Hive.navigator) {
+            Hive.navigator = Hive.Navigator.create(
+                '#navigator',
+                '#expression_frames',
+                {
+                    hidden: false,
+                    initial_replaceState: false,
+                    show_current: false
+                }
+            );
+        }
+        Hive.navigator.current_expr().site_expr = true;
+        var context = URI(window.location.href).query(true).q || '#Featured';
+        Hive.navigator.context(context, false);  // also populates navigator
+
+        o.expr_init();
+
+        // Set up owner nav customizations
+        var about_btn = $('<div>')
+            .attr('id', 'about_btn')
+            .attr('class', 'hoverable center text_btn black_active')
+            .click(function(){ window.location = server_url + 'thenewhive/about?q=%40thenewhive' })
+            .append('<div>')
+          .children()
+            .attr('class', 'text')
+            .append('<span>About</span>')
+          .parent();
+
+        var facebook = $('<a>')
+            .attr('href', 'http://facebook.com/thenewhive')
+            .append('<img>')
+          .children()
+            .attr('src',  asset('skin/1/social/facebook.png'))
+          .parent();
+
+        var twitter = $('<a>')
+            .attr('href', 'http://twitter.com/newhive')
+            .append('<img>')
+          .children()
+            .attr('src',  asset('skin/1/social/twitter.png'))
+          .parent();
+
+        var social_icons = $('<div>')
+            .attr('id', 'social_icons')
+            .append(facebook).append(twitter);
+
+        $('#owner_nav').append(about_btn).append(social_icons);
+
+        $('#owner_btn').hide();
+
+        uninitialized = false;
+        var uninitialize = function(){
+            if (uninitialized) return;
+            uninitialized = true;
+
+            Hive.config.frame.navigator.hideable = true;
+            Hive.config.frame.nav.visible = ['owner', 'user', 'action'];
+            Hive.Menus.show_drawers();
+
+            about_btn.remove();
+            social_icons.remove();
+            $('#owner_btn').show();
+            $('#navigator').find('.navigator_inner .current, .loupe').show()
+            Hive.navigator.update_opts({show_current: true});
+        };
+        Hive.navigator.update_opts({onexpressionchange: uninitialize});
+    };
+
+    var add_window_message_listeners = function(nav_menu){
+        $(window).off('message').on('message', function(e){
+            var msg = e.originalEvent.data;
+            if(msg == 'focus' && nav_menu) {
+                nav_menu.close(true);
+                //o.navigator_menu.close(true);
+            }
+            else if( msg.match(/^layout=/) && nav_menu ){
+                var dims = msg.split('=')[1].split(',');
+                o.layout(dims);
+            }
+            else if (msg == 'signup') {
+                require_login('drawoneme');
+            }
+            else if (msg == 'video') {
+                showDialog('#dia_video');
+            }
+        });
+    };
+
 
     // initialize menus for frame page, then close them after delay
     o.expr_init = function(){
@@ -154,7 +295,7 @@ Hive.Menus = (function(){
         var handles = $('.nav_handle').add(drawers);
         if (config.navigator.opens_nav) handles.add('#navigator');
         var close_nav = function(){
-                if (config.nav.opens_navigator) Hive.navigator.hide(speed);
+                if (config.nav.opens_navigator && config.navigator.hideable) Hive.navigator.hide(speed);
                 drawers.stop().clearQueue();
                 // For some reason just using drawers.hide as the callback for animate didn't work
                 var callback = function(){ drawers.hide(); };
@@ -205,6 +346,7 @@ Hive.Menus = (function(){
             $.extend(
                 { opened: config.navigator.open_initially,
                   open_menu: function(){ Hive.navigator.show(speed); },
+                  close_condition: function(){ return config.navigator.hideable; },
                   close_menu: function(){ Hive.navigator.hide(speed); }
                 },
                 shared_hover_menu_opts
@@ -214,7 +356,12 @@ Hive.Menus = (function(){
         o.init(nav_menu);
         var initial_state = config.nav.open_initially ? open_state(opts) : close_state;
         animate_each(initial_state, 0);
-        drawers.show();
+
+        o.show_drawers = function(){
+            var selector = $.map(Hive.config.frame.nav.visible, function(el){ return "#" + el + "_nav"; }).join(',');
+            drawers.filter(selector).show();
+        }
+        o.show_drawers();
 
         o.action_nav_top = 70;
         var menu_top = o.action_nav_top + 4;
@@ -246,45 +393,17 @@ Hive.Menus = (function(){
 
         $('#comment_form').submit(o.post_comment);
 
-        // email and embed menus
-        $(function(){
-            $('.menu_item.message').click(require_login('email', function(){showDialog('#dia_share')}));
-            var dia = $('#dia_share');
-            dia.find('form').submit(function(e){
-                var submit = dia.find('input[type=submit]');
-                if (submit.hasClass('inactive')) return false;
-                submit.addClass('inactive');
-                var callback = function(){
-                    submit.removeClass('inactive');
-                    dia.find('#email_to').val('');
-                    dia.children().hide();
-                    var tmp = $('<h2>Your message has been sent.</h2>').appendTo(dia);
-                    setTimeout(function(){
-                        dia.data('dialog').close();
-                        dia.children().show();
-                        tmp.remove();
-                    }, 1500);
-                };
-                asyncSubmit('#dia_share form', callback, {url: window.location.href});
-                _gaq.push(['_trackEvent', 'share', 'email']);
-                return false;
-            });
-
-            $('.menu_item.embed').click(function(){
-                showDialog('#dia_embed');
-                $('#dia_embed textarea').get(0).focus();
-            });
-        });
-
         var del_dialog;
         $('#action_nav .delete').click(function(){ del_dialog = showDialog('#dia_delete'); });
         $(function(){ $('#dia_delete .no_btn').click(function(){ del_dialog.close() }) });
 
-        Hive.navigator = Hive.Navigator.create(
-            '#navigator',
-            '#expression_frames',
-            {hidden: !config.navigator.open_initially}
-        );
+        if (!Hive.navigator) {
+            Hive.navigator = Hive.Navigator.create(
+                '#navigator',
+                '#expression_frames',
+                {hidden: !config.navigator.open_initially}
+            );
+        }
         Hive.load_expr(Hive.navigator.current_expr());
         //o.navigator_menu = hover_menu(handles, '#navigator', {
         //    layout: false,
@@ -295,19 +414,7 @@ Hive.Menus = (function(){
         //    close_delay: o.slow_close
         //});
 
-        window.addEventListener('message', function(m){
-            if(m.data == 'focus') {
-                nav_menu.close(true);
-                //o.navigator_menu.close(true);
-            }
-            else if( m.data.match(/^layout=/) ){
-                var dims = m.data.split('=')[1].split(',');
-                o.layout(dims);    
-            }
-            else if (m.data == 'signup') {
-                require_login('drawoneme');
-            }
-        }, false);
+        add_window_message_listeners(nav_menu);
 
         o.layout([ $(window).width(), $(window).height() ]);
 
@@ -332,7 +439,8 @@ Hive.Menus = (function(){
             //.click(function(){ Hive.navigator.context('@' + name); return false; });
     };
     o.face_link = function(name, id, thumb){
-        return o.user_link(name, id).append( $('<img>').attr('src', thumb).addClass('thumb') );
+        return o.user_link(name, id).append(
+            $('<img>').attr({ src: thumb, title: name }).addClass('thumb') );
     };
     o.name_link = function(name, id){ return o.user_link(name, id).addClass('user').html(name); };
 
@@ -347,9 +455,7 @@ Hive.Menus = (function(){
     };
 
     o.btn_state = function(btn, state){
-        btn = $(btn);
-        btn.toggleClass('on', state);
-        btn.toggleClass('off', !state);
+        btn = $(btn).toggleClass('on', state).toggleClass('off', !state);
         if(btn.attr('data-title-on'))
             btn.attr('title', btn.attr('data-title-' + (state ? 'on' : 'off') ));
     }
@@ -388,50 +494,34 @@ Hive.Menus = (function(){
         $('.expr_id').val(expr.id); // for delete dialog
         $('.btn_box.edit,.btn_box.delete').toggleClass( 'none', ! is_owner );
 
-        $('#owner_btn').toggleClass('none', is_owner);
-        if(!is_owner){
-            var owner_name = expr.owner_name[0].toUpperCase() + expr.owner_name.slice(1);
-            $('.owner_name').html(owner_name);
-            $('#owner_btn .user_thumb').attr('src', expr.owner.thumb)
-                .toggleClass('none', !expr.owner.has_thumb);
-            $('.owner_url').attr('href', expr.owner.url);
-
-            // load owner's info: feed items in owner_menu, expr links and thumbs, listening status
-            $.getJSON(server_url + 'user/' + expr.owner.id, function(data, status, jqXHR){
-                var thumbs = $('#owner_menu .thumbs');
-                thumbs.html('');
-                $.map(data.exprs, function(e){
-                    $('<a>').attr({ 'href': e.url + '?user=' + expr.owner.name, 'title': e.title })
-                        // TODO: enable this when Navigator supports changing both expression and context
-                        //.click(function(){
-                        //    Hive.navigator.context('@' + expr.owner.name).select_by_id(e.id);
-                        //    return false;
-                        //})
-                        .append($('<img>').attr('src', e.thumb).addClass('thumb')).appendTo(thumbs);
-                });
-                $('#owner_menu .listen').removeClass('on off').addClass(data.listening ? 'on' : 'off');
-                $('#owner_menu .items').html(data.feed_html);
-            });
-        }
+        var owner_name = expr.owner_name[0].toUpperCase() + expr.owner_name.slice(1);
+        $('.owner_name').html(owner_name);
+        $('#owner_btn .user_thumb').attr('src', expr.owner.thumb)
+            .toggleClass('none', !expr.owner.has_thumb);
+        $('.owner_url').attr('href', expr.owner.url);
+        o.update_owner( expr.owner );
 
         var is_empty = function(v){ return !v || (v == '0') };
-        $('.view .count').html(expr.counts.Views);
-        $('.star .count').html(expr.counts.Star).toggleClass('zero', is_empty(expr.counts.Star));
-        $('.broadcast .count').html(expr.counts.Broadcast).toggleClass('zero', is_empty(expr.counts.Broadcast));
-        $('.comment .count').html(expr.counts.Comment).toggleClass('zero', is_empty(expr.counts.Comment));
+        if( expr.counts ){
+            $('.view .count').html(expr.counts.Views);
+            $('.star .count').html(expr.counts.Star).toggleClass('zero', is_empty(expr.counts.Star));
+            $('.broadcast .count').html(expr.counts.Broadcast).toggleClass('zero', is_empty(expr.counts.Broadcast));
+            $('.comment .count').html(expr.counts.Comment).toggleClass('zero', is_empty(expr.counts.Comment));
+        }
 
         // update share URLs and embed dialog
         o.update_share_urls(expr);
-        var embed_link = $( $('#dia_embed textarea').val() ).attr('src', expr.url);
-        $('#dia_embed textarea').val(embed_link.outerHTML());
+        var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
+        $('#dia_embed textarea').val("<iframe src='" + embed_url + "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0' frameborder='0' vspace='0' hspace='0'></iframe>");
 
         $('#expr_menu .big_card .title').html(expr.title);
         $('#expr_menu .big_card .thumb').attr('src', expr.thumb);
         $('#expr_menu .tags').html(tag_list_html(expr.tags_index));
         $('#expr_menu .time').html(expr.updated_friendly);
 
-        $('#add_to_featured').find('.' + (!!Hive.expr.featured).toString()).show();
-        $('#add_to_featured').find('.' + (!Hive.expr.featured).toString()).hide();
+        var featured = expr.featured ? 'true' : 'false';
+        $('#add_to_featured').find('.' + featured).show();
+        $('#add_to_featured').find('.' + featured).hide();
 
         // load expr's feed items: stars, broadcasts, comments
         var load_feed = function(data, status, jqXHR){
@@ -478,8 +568,37 @@ Hive.Menus = (function(){
         else $.getJSON(feed_url, load_feed);
     };
 
+    // load owner's info: feed items in owner_menu, expr links and thumbs, listening status
+    o.owner = false;
+    o.update_owner = function( owner ){
+        if( ! owner || o.owner && o.owner.id == owner.id ) return;
+        o.owner = owner;
+
+        var is_owner = (user && owner) ? (user.id == owner.id) : false;
+        $('#owner_btn').toggleClass('none', is_owner);
+        if( !owner || is_owner ) return;
+
+        $.getJSON('/user/' + owner.id, function(data, status, jqXHR){
+            var thumbs = $('#owner_menu .thumbs');
+            thumbs.html('');
+            $.map(data.exprs, function(e){
+                $('<a>').attr({ 'href': e.url + '?user=' + owner.name, 'title': e.title })
+                    // TODO: enable this when Navigator supports changing both expression and context
+                    //.click(function(){
+                    //    Hive.navigator.context('@' + owner.name).select_by_id(e.id);
+                    //    return false;
+                    //})
+                    .append($('<img>').attr('src', e.thumb).addClass('thumb')).appendTo(thumbs);
+            });
+
+            $('#owner_menu .items').html(data.feed_html);
+
+            $('#owner_menu .listen').removeClass('on off').addClass( data.listening ? 'on' : 'off' );
+        });
+    };
+
     o.update_user = function(user_data){
-        console.log('update_user: ', user_data);
+        //console.log('update_user: ', user_data);
     };
 
     o.action_name = function(i){
@@ -560,8 +679,8 @@ var sendRequestViaMultiFriendSelector = function(){
     }
   }
   FB.ui({method: 'apprequests'
-    , message: 'Join me on The New Hive'
-    , title: 'Invite Friends to Join The New Hive'
+    , message: 'Join me on NewHive'
+    , title: 'Invite Friends to Join NewHive'
     , filters: ['app_non_users']
   }, requestCallback);
 };
