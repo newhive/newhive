@@ -3,14 +3,11 @@
 #}
 {<if brief}
   <div class="owner profile brief">
-    {# bugbug: style belongs elsewhere, namely icon from server should
-    be correct height #}
     <a {anchor_attrs "expressions_public" "owner_name" name}>
       <img src='{thumb_small}' class='thumb'></a>
-    <div class="username_bar">
-      {|templates/user_actions.html}
-      <a {anchor_attrs "expressions_public" "owner_name" name}>by
-        <span class='ellipsis username'>{owner.name}</span></a></div>
+    {|templates/user_actions.html}
+    <a {anchor_attrs "expressions_public" "owner_name" name}
+      class='ellipsis'>by &nbsp;<span class='username'>{owner.name}</span></a>
   </div>
 {>}{<else}
   <div id='user_header' class='header{<if profile_bg} with_background{>}'>

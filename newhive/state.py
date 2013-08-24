@@ -489,6 +489,7 @@ class User(HasSocial):
     def notification_count_reset(self): self.update(notification_count=0)
 
     def notify(self, feed_item):
+        self['notification_count'] += 1
         self.increment({'notification_count': 1})
 
     @property
@@ -527,24 +528,17 @@ class User(HasSocial):
             f.append(pyes.filters.IdsFilter(self.starred_expr_ids))
         return pyes.filters.BoolFilter(should=f)
 
-    def activity(self, limit=20, at=0):
+    def activity(self, **args):
         if not self.id: return []
-        commented_exprs = [r['entity'] for r in self.db.Comment.search({'initiator': self.id})]
-        q1 = pyes.query.TermQuery('class_name', 'Comment')
-        q2 = pyes.query.TermQuery('initiator', self.id)
-        q3 = pyes.query.TermQuery('entity_owner', self.id)
-        q4 = pyes.query.TermsQuery('entity', commented_exprs)
-        q5 =pyes.query.BoolQuery(must = [q4, q1])
-        q = pyes.query.BoolQuery(should = [q2, q3, q5])  # boolean OR query
-        return map(self.db.Feed.esdb_new, self.db.esdb.conn.search(
-            q, indices=self.db.esdb.index, doc_types='feed-type',
-            size=limit, start=at, sort='created:desc'))
-
-        # return db.Feed.search({'$or': [
-        #     {'entity_owner': u.id},
-        #     {'initiator': u.id},
-        #     {'entity': {'$in': commented_exprs}, 'class_name': 'Comment'}
-        # ]}, **args)
+        # TODO-feature: create list of exprs user is following comments on in
+        # user record, so you can leave a comment thread
+        commented_exprs = [r['entity'] for r in
+            self.db.Comment.search({'initiator': self.id})]
+        return self.db.Feed.paginate({'$or': [
+            {'entity_owner': self.id},
+            {'initiator': self.id},
+            {'entity': {'$in': commented_exprs}, 'class_name': 'Comment'}
+        ]}, **args)
 
     def feed_profile_entities(self, **args):
         res = self.feed_profile(**args)
@@ -910,6 +904,7 @@ class User(HasSocial):
             url = self.url,
             thumb_small = thumb_small,
             thumb_big = thumb_big,
+            has_thumb = (self.get_thumb(222) or self.get_thumb(190) != False),
             logged_in = self.logged_in,
             notification_count = self.notification_count,
         ) )
@@ -920,8 +915,9 @@ class User(HasSocial):
                 mini_expressions = map(lambda e:e.mini_view(), exprs)))
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         if activity > 0:
-            dict.update( user, activity =
-                map(lambda r: r.client_view(), self.activity()[0:activity]) )
+            dict.update( user, activity=
+                map(lambda r: r.client_view(),
+                    list(self.activity(limit=activity))) )
         return user
 
     def delete(self):
@@ -1251,7 +1247,7 @@ class Expr(HasSocial):
         mini = dfilter( self, ['name', 'owner_name'] )
         mini['id'] = self['_id']
         snapshot = self.snapshot_name_prefix()
-        mini['snapshot_tiny'] = (self.snapshot_name_prefix() + 'small.png'
+        mini['snapshot_tiny'] = (self.snapshot_name_prefix() + 'tiny.png'
             if snapshot else
             self.db.assets.url('skin/site/expr_placeholder_tiny.jpg'))
         return mini
@@ -1475,7 +1471,7 @@ class File(Entity):
         except:
             print 'failed to generate thumb for file: ' + self.id
             return False # thumb generation is non-critical so we eat exception
-        url = self.db.s3.upload_file(thumb_file, 'thumb', self._thumb_name(w, h),
+        url = self.db.s3.upload_file(thumb_file, 'media', self._thumb_name(w, h),
             self['name'] + '_' + name, 'image/jpeg')
 
         thumbs[name] = True
@@ -1543,10 +1539,11 @@ class File(Entity):
         #         self._file.close()
         #         self._file = newfile
 
-        self['url'] = self.store()
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         super(File, self).create()
+        self['url'] = self.store()
+        self.update(url=self['url'])
         return self
 
     # download file from source and reupload
@@ -1697,20 +1694,23 @@ class Feed(Entity):
             return r
         if self.entity == None:
             return r
-        r['initiator_thumb_small'] = self.initiator.get_thumb(70)
+        r['initiator_thumb_small'] = (self.initiator.get_thumb(70) or
+            self.db.assets.url('skin/site/user_placeholder_small.jpg'))
         if self['entity_class'] == 'User':
-            r['entity_thumb_small'] = self.entity.get_thumb(70)
-            r['entity_name'] = self.entity['name']
+            r['entity_title'] = self.entity['name']
         elif self['entity_class'] == 'Expr':
             r['entity_title'] = self.entity.get('title')
-            r['entity_owner_name'] = self.entity.owner['name']
         r['entity_url'] = self.entity.url
+        r['owner_name'] = self.owner_name
+        r['entity_name'] = self.entity.get('name')
 
         # set sane name for feed action
         r['action'] = self['class_name']
         if self['class_name'] == 'Star':
             if self['entity_class'] == 'Expr': r['action'] = 'Love'
             else: r['action'] = 'Follow'
+        if self['class_name'] == 'Broadcast':
+            r['action'] = 'Republish'
 
         return r
 

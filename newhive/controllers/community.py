@@ -59,7 +59,7 @@ class Community(Controller):
         if not owner: return None
         spec = {'owner_name': owner_name, 'auth': 'public'}
         cards = self.db.Expr.page(spec, tdata.user, **args)
-        profile = owner.client_view(viewer=tdata.user, activity=True)
+        profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Expressions by ' + owner['name'],
@@ -70,45 +70,39 @@ class Community(Controller):
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, tdata.user, auth='password', **args)
         return {
-            'cards': cards, 'owner': owner.client_view(activity=True), 'card_type':'expr',
+            'cards': cards, 'owner': owner.client_view(), 'card_type':'expr',
             'title': 'Your Private Expressions',
         }
-    def user_update(self, tdata, request, owner_name=None, **args):
+    def settings_update(self, tdata, request, owner_name=None, **args):
         """ Doubles as post handler and settings page api route
-            for profile edit """
+            for settings """
         owner = tdata.user
 
-        # If user update form submitted, update user
-        if request.form.get('user_update'):
-            if ( ( request.form.get('email') != owner['email'] ) or
-                request.form.get('new_password')
-            ) and ( not owner.cmp_password(request.form.get('password')) ):
-                return { 'error': 'Password given does not match existing password' };
+        print request.form
+        if (len(request.form.keys())):
+            if request.form.get('email'):
+                update = dict(
+                    email=request.form.get('email'))
+                if ( ( request.form.get('email') != owner['email'] ) or
+                    request.form.get('new_password')
+                ) and ( not owner.cmp_password(request.form.get('password')) ):
+                    return { 'error': 'Password given does not match existing password' };
+                if request.form.get('new_password'):
+                    update.update({'password': request.form.get('new_password')})
 
-            update = dict(
-                fullname=request.form.get('fullname'),
-                profile_about=request.form.get('profile_about'),
-                email=request.form.get('email'))
 
-            if request.form.get('new_password'):
-                update.update({'password': request.form.get('new_password')})
+                if update['email'] and update['email'] != owner.get('email'):
+                    request_date = now()
+                    # owner.update(email_confirmation_request_date=request_date)
+                    try:
+                        mail.EmailConfirmation(db=self.db, jinja_env=self.jinja_env).send(
+                            owner, update['email'], request_date)
+                    except Exception, e:
+                        pass
+                        # return { 'error': 'Email not sent' };
+                    # message = message + ui.email_change_success_message + " "
 
-            file_r = self.db.File.fetch(request.form.get('profile_bg'))
-            if file_r:
-                update['profile_bg_id'] = file_r.id
-                update['profile_bg'] = file_r['url']
-            file_r = self.db.File.fetch(request.form.get('profile_thumb'))
-            if file_r:
-                update['thumb_file_id'] = file_r.id
-
-            if update['email'] and update['email'] != owner.get('email'):
-                request_date = now()
-                # owner.update(email_confirmation_request_date=request_date)
-                mail.EmailConfirmation(db=self.db, jinja_env=self.jinja_env).send(
-                    owner, update['email'], request_date)
-                # message = message + ui.email_change_success_message + " "
-
-            owner.update(**update)
+                owner.update(**update)
 
         # TODO: implement account deletion
 
@@ -122,8 +116,34 @@ class Community(Controller):
 
         return {
             'owner': tdata.user.client_view(),
-            'title': 'Edit your profile',
+            'title': 'Edit your settings',
             'email_lists': email_lists,
+        }
+
+    def user_update(self, tdata, request, owner_name=None, **args):
+        """ Doubles as post handler and settings page api route
+            for profile edit """
+        owner = tdata.user
+
+        # If user update form submitted, update user
+        if request.form.get('user_update'):
+            update = dict(
+                fullname=request.form.get('fullname'),
+                profile_about=request.form.get('profile_about'))
+
+            file_r = self.db.File.fetch(request.form.get('profile_bg'))
+            if file_r:
+                update['profile_bg_id'] = file_r.id
+                update['profile_bg'] = file_r['url']
+            file_r = self.db.File.fetch(request.form.get('profile_thumb'))
+            if file_r:
+                update['thumb_file_id'] = file_r.id
+
+            owner.update(**update)
+
+        return {
+            'owner': tdata.user.client_view(),
+            'title': 'Edit your profile',
         }
 
     def loves(self, tdata, request, owner_name=None, **args):
@@ -134,7 +154,7 @@ class Community(Controller):
         # ...and grab its expressions.
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view(viewer=tdata.user, activity=True)
+        profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Loves by ' + owner['name'],
@@ -166,7 +186,7 @@ class Community(Controller):
         # ...and grab its users.
         users = self.db.User.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, tdata.user, **args)))
-        profile = owner.client_view(viewer=tdata.user, activity=True)
+        profile = owner.client_view(viewer=tdata.user)
         tags = owner.get('tags_following', [])
         return {
             'special': {'mini_expressions': 3},
@@ -179,7 +199,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         users = owner.starrer_page(**args)
-        profile = owner.client_view(viewer=tdata.user, activity=True)
+        profile = owner.client_view(viewer=tdata.user)
         return {
             'special': {'mini_expressions': 3},
             'cards': users, 'owner': profile, 'card_type':'user',
@@ -245,7 +265,7 @@ class Community(Controller):
             'header': ("Search", request.args['q']),  
         }
         if (len(search) == 1 and len(tags) == 1):
-            profile = tdata.user #.client_view(activity=False)
+            profile = tdata.user
             profile = dfilter(profile, ['tags_following'])
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
         return data

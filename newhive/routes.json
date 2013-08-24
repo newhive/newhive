@@ -96,7 +96,14 @@
         "method": "user_update",
         "client_method": "user_update"
     },
-   "following": {
+    "user_settings": {
+        "page_route": "/<owner_name>/profile/settings",
+        "api_route": "/api/user/settings/<owner_name>",
+        "controller": "community",
+        "method": "settings_update",
+        "client_method": "user_settings"
+    },
+    "following": {
         "page_route": "/<owner_name>/profile/following",
         "api_route": "/api/feed/following/<owner_name>",
         "controller": "community",
@@ -180,7 +187,16 @@
         "controller": "user",
         "method": "broadcast"
     },
-
+    "notification_reset": {
+        "api_route": "/api/user/notification_reset",
+        "controller": "user",
+        "method": "notification_reset"
+    },
+    "activity": {
+        "api_route": "/api/user/activity",
+        "controller": "user",
+        "method": "activity"
+    },
     "tag_follow": {
         "api_route": "/api/community/follow",
         "controller": "user",

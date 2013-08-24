@@ -132,7 +132,7 @@ define(['browser/js', 'module'],
 			var parsed, new_node;
 			if(parsed = match(/^\s*\|/, false)){
 				new_node = func();
-				if(node) new_node.arguments.unshift(node);
+				if(node) new_node.arguments.push(node);
 			}
 			else if(new_node = path(false)){
 				new_node.arguments = args();
@@ -158,11 +158,17 @@ define(['browser/js', 'module'],
 
 		function space(){ match(/^\s*/); }
 
-		// TODO: grouping with parenthesis
 		function args(){
 			var args = [], arg;
-			while(arg = json() || path()) args.push(arg);
+			while(arg = json() || path() || grouping()) args.push(arg);
 			return args;
+		}
+
+		function grouping(){
+			if(!match(/^\s*\(/)) return false;
+			var grouped = expr();
+			match(/^\s*\)/, true);
+			return grouped;
 		}
 
 		// 'foo/..' not supported, because it's pointless ('..'s must be at beginning)
@@ -466,6 +472,8 @@ define(['browser/js', 'module'],
 	context_base.json = function(context, data){
 		return JSON.stringify(data);
 	};
+	context_base.lower = function(context, s){ return s.toLowerCase(); };
+	context_base.reverse = function(context, l){ return l.concat().reverse(); };
 	context_base.mod = function(context, x, y){ return x % y };
 	context_base.thousands = function(context, n){ 
 		for (var i = 0; Math.abs(n) >= 1000 && i < suffix.length - 1; ++i) {

@@ -8,4 +8,5 @@ def add_entity_owner(r):
         return
     r.update(entity_owner=r.entity.owner.id, updated=None)
 
-for r in db.Feed.search({}): add_entity_owner(r)
+def update_all_feed():
+    for r in db.Feed.search({}): add_entity_owner(r)

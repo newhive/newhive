@@ -1,5 +1,12 @@
 @import "common";
 
+.upper { text-transform: uppercase; }
+.ellipsis {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .inline {
     display: inline-block;
     vertical-align: top;
@@ -9,13 +16,6 @@
         vertical-align: middle;
     }
     */
-}
-.upper { text-transform: uppercase; }
-.ellipsis {
-    // display: inline-block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 .rightalign {
     position: absolute;
@@ -128,6 +128,12 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
     background-image: asset_url('skin/nav/arrow.png');
 }
 
+.count {
+    position: absolute;
+    font-family: Bebas;
+    font-size: 14px;
+}
+
 .counts_icon {
     display:inline-block;
     width:74px;
@@ -139,7 +145,7 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
 
     span {
         position: absolute;
-        font-family: bebas;
+        font-family: Bebas;
         font-size: 14px;
     }
 

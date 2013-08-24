@@ -5,6 +5,7 @@
  */
 define([
     'browser/jquery',
+    'browser/js',
     'ui/dialog', 
     'ui/new_account',
     'server/context',
@@ -16,9 +17,10 @@ define([
     'sj!templates/card_master.html',
     'sj!templates/home.html',
     'sj!templates/profile_edit.html',
+    'sj!templates/settings.html',
     'sj!templates/user_actions.html',
     'sj!templates/tags_page.html',
-    'sj!templates/activity.html',
+    'sj!templates/user_activity.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
@@ -35,6 +37,7 @@ define([
     'sj!templates/request_invite_form.html'
 ], function(
     $,
+    js,
     dialog,
     new_account,
     context,
@@ -46,9 +49,10 @@ define([
     master_template,
     home_template,
     profile_edit_template,
+    settings_template,
     user_actions_template,
     tags_page_template,
-    activity_template
+    user_activity_template
 ){
     var o = {}, expr_page = false, grid_width, controller,
         column_layout = false,
@@ -112,6 +116,35 @@ define([
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
             $('#logout_form').bind('response', o.on_logout);
+
+            /// notification count and activity menu code
+
+            var activity_opened = false, activity_menu = $('#activity_menu');
+            activity_menu.data('menu').opts().open = function(){
+                if(!activity_opened)
+                    activity_menu.scrollTop(activity_menu[0].scrollHeight);
+                activity_opened = true;
+                if(context.user.notification_count)
+                    $('#notification_reset').submit();
+                update_activity({notification_count:0});
+            };
+
+            var update_activity = function(data){
+                var count = data.notification_count,
+                    box = $('#activity_btn .count').html(count);
+                js.copy(data, context.user);
+                if(!count) box.hide();
+                else box.show();
+                if(data.activity){
+                    $('#activity_menu').empty().append(
+                        user_activity_template());
+                }
+            };
+            update_activity(context.user);
+            $('#activity_form').on('response', function(e, data){
+                update_activity(data);
+            });
+            setInterval(function(){$('#activity_form').submit() }, 180000);
         }
     };
 
@@ -213,6 +246,7 @@ define([
                 event.preventDefault();
             }
         });
+        $("#search_box").focus();
         // global keypress handler
         $("body").keydown(function(e) {
             if(e.keyCode == 27) { // escape
@@ -269,6 +303,31 @@ define([
         expr_column();
     };
 
+    // js for settings. TODO: add to separate module
+    o.user_settings = function(page_data){
+        $('#site').empty().append(settings_template(page_data));
+
+        $('#user_settings_form button[name=cancel]').click(function(e) {
+            o.controller.open('expressions_public',
+                {owner_name: context.user.name });
+            return false;
+        });
+        $('#user_settings_form').on('response', function(e, data){
+            if(data.error) alert(data.error);
+            else {
+                o.controller.open('expressions_public',
+                    {owner_name: context.user.name });
+            }
+        });
+
+        $('#email_input, #new_password_input').on('keyup', function(e) {
+            if ($("#new_password_input").val() ||
+                $("#email_input").val() != context.user.email) {
+                $('#password_field').removeClass('hide');
+            }
+        });
+    };
+
     // js for profile edit. TODO: add to separate module
     o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
@@ -278,16 +337,17 @@ define([
         $('#bg_form').on('response',
             on_file_upload('#profile_bg', '#bg_id_input'));
 
+        $('#user_update_form button[name=cancel]').click(function(e) {
+            o.controller.open('expressions_public',
+                {owner_name: context.user.name });
+            return false;
+        });
         $('#user_update_form').on('response', function(e, data){
             if(data.error) alert(data.error);
-            else{
+            else {
                 o.controller.open('expressions_public',
                     {owner_name: context.user.name });
             }
-        });
-
-        $('#email_input, #new_password_input').on('change', function(){
-            $('#password_field').removeClass('hide');
         });
 
         // on_file_upload returns a handler for server response from a

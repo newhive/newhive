@@ -1,86 +1,80 @@
 {# Feed card
   Switches based on activity type
 #}
-
-<a {<if icon_only}
-  {<if entity_class "Expr"}
-    {anchor_attrs "expressions_public" "owner_name" initiator_name}
-    {# bugbug Didn''t work. Let's take user to initator's profile instead
-    { anchor_attrs "view_expr" "id" entity  "expr_name" entity_name
-      "owner_name" entity_owner_name } 
-    #}
-  {>}
-  {<if entity_class "User"}
-    { anchor_attrs "expressions_public"  "owner_name" initiator.name }
-  {>}
-{>}>
-<div class='feed_item hoverable' >
-  {# bugbug: style belongs elsewhere, namely icon from server should
-  be correct height #}
+<a
   {<if icon_only}
-    <img src='{initiator_thumb_small}' class='thumb'>
-  {>}{<else}
-    <img style='height:30px;' src='{initiator_thumb_small}' class='thumb'>
-    <div class='content'>
-      {<unless mode "discussion"}
+    {anchor_attrs "expressions_public" "owner_name" initiator_name}
+  {>}
+  {<else}
+    {<if entity_class "Expr"}
+      {anchor_attrs "view_expr" "id" entity "owner_name" owner_name
+        "expr_name" entity_name}
+    {>}
+    {<else}
+      {<if initiator user.id}
+        {anchor_attrs "expressions_public" "owner_name" entity_name}
+      {>}
+      {<else}
+        {anchor_attrs "expressions_public" "owner_name" initiator_name}
+      {>}
+    {>}
+  {>}><div class='feed_item hoverable'>
+    {# bugbug: style belongs elsewhere, namely icon from server should
+    be correct height #}
+    {<if icon_only}
+      <img src='{initiator_thumb_small}' class='thumb'>
+    {>}{<else}
+      <img src='{initiator_thumb_small}' class='thumb'>
+      <div class='action_icon {lower action}'></div>
+      <div class='content'>
         <span class='username'>
-          {<if initiator user.id}You{>}
-          {<else}{initiator_name}{>}
+          {<if initiator user.id}You {>}
+          {<else}{initiator_name} {>}
         </span>
-        :
-        <span class='title2'>{entity_title}{entity_name}</span>
-      {>}
-      {<if action "Love"}
-        <img src='{asset "skin/nav/love.png"}' class='action_icon'>
-      {>}
-      {<if action "Follow"}<span class='action_text'>follow</span>{>}
-      {<if action "Comment"}
-        {<unless mode "discussion"}
-          <img src='{asset "skin/nav/comment.png"}' class='action_icon'><br>
+  
+        {<if action "Love"}
+          {<if initiator user.id}love{>}{<else}loves{>}
         {>}
-        <div class='text'>{text}</div>
-        {<if mode "discussion"}
-          {# no edit outside discussion mode #}
-          {<if initiator user.id}
-            <form class="comment_edit" {form_attrs "comment_edit"} method='post'>
-              <textarea name="text" class="inplace_edit"></textarea>
-              <input type="hidden" name="deletion" value="delete">
-              <input type="hidden" name="id" value="{_id}">
-              <div class="show_hover">
-                <button name="edit" type=button>Edit</button>
-                <button name="delete" type="submit">Delete</button>
-              </div>
-            </form>
-          {>}
-          {# timestamp. should add to other types? #}
-          <div class="timestamp rightalign">{recency_time updated}</div>
+  
+        {<if action "Follow"}
+          {<if initiator user.id}are{>}{<else}is{>} following
         {>}
-      {>}
-      {<if action "Broadcast"}
-        <img src='{asset "skin/nav/republish.png"}' class='action_icon'>
-      {>}
-      {#
-          {<if initiator user.id}You{>}
-          {<unless initiator user.id}{initiator_name}{>}
-          {<if action "Love"}
-            <img src='{asset "skin/nav/love.png"}' class='action_icon'>
-            <span class='title'>{entity_title}</span>
-          {>}
-          {<if action "Follow"}follow {entity_name}{>}
-          {<if action "Comment"}
-            <img src='{asset "skin/nav/comment.png"}' class='action_icon'> on
-            <span class='title'>{entity_title}</span><br>
-            <div class='text'>{text}</div>
-          {>}
-          {<if action "Broadcast"}
-            <img src='{asset "skin/nav/republish.png"}' class='action_icon'>
-            <span class='title'>{entity_title}</span>
-          {>}
-      #}
-    </div>
-  {>} {# unless icon_only #}
-</div>
-</a>
+  
+        {<if action "Comment"}
+          commented on
+        {>}
+  
+        {<if action "Broadcast"}
+          republished
+        {>}
+  
+        {<if action "NewExpr"}
+          created
+        {>}
+  
+        {<if action "UpdatedExpr"}
+          updated
+        {>}
+  
+        {<if action "InviteNote"}
+          has given you {count} invites
+        {>}
+  
+        {<if action "FriendJoined"}
+          has joined NewHive
+        {>}
+  
+        {<if entity_title}<div class='entity_title'>
+          {<if entity user.id}You{>}{<else}{entity_title|e}{>}
+        </div>{>}
+  
+        {<if text}
+          <div class='text'>{text|e}</div>
+        {>}
+      </div>
+      <div class="timestamp">{recency_time updated}</div>
+    {>} {# unless icon_only #}
+</div></a>
 
 {#
 {% if feed.class_name == 'InviteNote' %}

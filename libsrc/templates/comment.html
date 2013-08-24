@@ -1,0 +1,20 @@
+<div class='feed_item hoverable'>
+  <img src='{initiator_thumb_small}' class='thumb'>
+  <div class='content'>
+    <div class='text'>{text}</div>
+    {# no edit outside discussion mode #}
+    {<if initiator user.id}
+      <form class="comment_edit" {form_attrs "comment_edit"} method='post'>
+        <textarea name="text" class="inplace_edit"></textarea>
+        <input type="hidden" name="deletion" value="delete">
+        <input type="hidden" name="id" value="{_id}">
+        <div class="show_hover">
+          <button name="edit" type=button>Edit</button>
+          <button name="delete" type="submit">Delete</button>
+        </div>
+      </form>
+    {>}
+    {# timestamp. should add to other types? #}
+    <div class="timestamp rightalign">{recency_time updated}</div>
+  </div>
+</div>

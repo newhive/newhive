@@ -152,7 +152,18 @@ class User(ModelController):
 
         return self.serve_json(response, resp)
 
-    def streamified_login(self, tdata, request, response):
+    def notification_reset(self, tdata, request, response, **args):
+        tdata.user.notification_count_reset()
+        return self.serve_json(response, True)
+
+    def activity(self, tdata, request, response, **args):
+        notify = tdata.user.notification_count
+        res = { 'notification_count': notify }
+        if notify: res['activity'] = [f.client_view()
+            for f in list(tdata.user.activity(limit=20))]
+        return self.serve_json(response, res)
+
+    def streamified_login(self, tdata, request, response, **args):
         streamified_username = request.args['usernames'].split(',')[0]
 
         post = {
@@ -175,7 +186,7 @@ class User(ModelController):
         
         return self.serve_page(tdata, response, 'pages/streamified_login.html')
 
-    def streamified_test(self, tdata, request, response):
+    def streamified_test(self, tdata, request, response, **args):
         return self.serve_page(tdata, response, 'pages/streamified_test.html')
 
     def request_invite(self, tdata, request, response, **args):

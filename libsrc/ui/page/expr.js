@@ -6,7 +6,8 @@ define([
     'ui/dialog',
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
-    'sj!templates/edit_btn.html'
+    'sj!templates/edit_btn.html',
+    'sj!templates/comment.html'
 ], function(
     $,
     context,
@@ -18,7 +19,8 @@ define([
     edit_btn_template
 ) {
     var o = {}, contentFrameURLBase = context.config.content_url,
-        overlay_columns = 0, wide_overlay = false;
+        loading_frame_list = [], loaded_frame_list = [],
+        allow_animations = true, timeout = undefined;
     const anim_duration = 400;
 
     o.init = function(controller){
@@ -47,24 +49,8 @@ define([
     o.resize = function(){
         browser_layout.center($('#page_prev'), undefined, {'h': false});
         browser_layout.center($('#page_next'), undefined, {'h': false});
-        var wide = ($(window).width() >= 1180) ? true : false;
-        if (o.wide_overlay != wide) {
-            o.wide_overlay = wide;
-            $('#popup_content').css("max-width", (wide) ? 980+600-420 : 980);
-            $('#popup_content .left_pane').width((wide) ? 600 : 420);
-        }
-        var columns = ($(window).width() >= 990) ? 2 : 1;
-        if (o.overlay_columns != columns) {
-            o.overlay_columns = columns;
-            $('#popup_content > *').css('display', (columns == 1) ? 'block' : 'inline-block')
-        }
     };
-    var resize_icon = function(el) {
-        if (el.find(".counts").text().length > 0)
-            el.width(Math.min(90, 90 + el.find(".counts").width()));
-        else
-            el.width(60);
-    };
+
     o.get_expr = function(id){
         return $('#expr_' + id);
     };
@@ -83,9 +69,6 @@ define([
         $("#dia_comments").data("dialog").opts.open = function(){
             $("#dia_comments textarea").focus();
         }
-        $('#popup_content .counts_icon').each(function(i, el) {
-            resize_icon($(this));
-        });
         o.resize();
         
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
@@ -150,6 +133,66 @@ define([
         }
     };
 
+    function cache_frames(expr_ids){
+        if (expr_ids.length == 0)
+            return false;
+        expr_id = expr_ids[0];
+        var contentFrame = o.get_expr(expr_id);
+        if (contentFrame.length > 0) {
+            cache_frames(expr_ids.slice(1));
+            return contentFrame;
+        }
+        // Create new content frame
+        var contentFrameURL = contentFrameURLBase + expr_id;
+        contentFrame = $('<iframe class="expr">');
+        contentFrame.attr('src', contentFrameURL);
+        contentFrame.attr('id','expr_' + expr_id);
+        // Cache the expr data on the card
+        var page_data = context.page_data;
+        if (page_data.cards != undefined) {
+            var len = page_data.cards.length
+            var found = -1;
+            for (var i = 0; i < len; ++i){
+                if (page_data.cards[i].id == expr_id) {
+                    found = i;
+                    break;
+                }
+            }
+            if (found >= 0) {
+                var card = page_data.cards[found]
+                if (card.json == undefined) {
+                    o.controller.get('view_expr', {
+                        id: expr_id,
+                        owner_name: card.owner.name,
+                        expr_name: card.name
+                    }, function(json) {
+                        card.json = json;
+                    });
+                }
+            }
+        }
+        // Remember all the frames that are loading.
+        loading_frame_list = loading_frame_list.concat(contentFrame.eq(0));
+        contentFrame.load(function () {
+            for (var i = 0, el; el = loading_frame_list[i]; i++) {
+                if (el.prop("id") == contentFrame.prop("id")) {
+                    loaded_frame_list.concat(loading_frame_list.splice(i, 1));
+                    break;
+                }
+            }
+            if (expr_ids.length > 1)
+                cache_frames(expr_ids.slice(1))
+            // alert("loaded frame.  Others remaining:" + loading_frame_list);
+        });
+        $('#exprs').append(contentFrame);
+        // Remove all but 2 loading frames
+        var max_loading_frames = 2;
+        var removed_frames = loading_frame_list.splice(0, Math.max(0, loading_frame_list.length - max_loading_frames));
+        for (var i = 0, el; el = removed_frames[i]; i++) {
+            el.remove();
+        }
+        return contentFrame;
+    };
     // Animate the new visible expression, bring it to top of z-index.
     function animate_expr (){
         page_data = context.page_data;
@@ -162,24 +205,20 @@ define([
 
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
-            // Create new content frame
-            var contentFrameURL = contentFrameURLBase + expr_id;
-            contentFrame = $('<iframe class="expr expr-visible">');
-            contentFrame.attr('src', contentFrameURL);
-            contentFrame.attr('id','expr_' + expr_id);
-            $('#exprs').append(contentFrame);
+            contentFrame = cache_frames([expr_id]);
         }
         else {
-            contentFrame.addClass('expr-visible').removeClass('expr-hidden');
             contentFrame.get(0).contentWindow.
                 postMessage({action: 'show'}, '*');
         }
+        contentFrame.addClass('expr-visible').removeClass('expr-hidden');
         contentFrame.show();
-        if (o.anim_direction == 0 || expr_curr.length != 1) {
+        $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
+        if (o.anim_direction == 0 || expr_curr.length != 1 || ! o.allow_animations) {
             contentFrame.css({
                 'left': 0,
                 'top': -contentFrame.height() + 'px',
-                'z-index': 1 }
+                'z-index': 2 }
             ).animate({
                 top: "0"
             }, {
@@ -190,21 +229,26 @@ define([
             contentFrame.css({
                 'top': 0,
                 'left': o.anim_direction * contentFrame.width(),
-                'z-index': 1 }
+                'z-index': 2 }
             ).animate({
                 left: "0"
             }, {
                 duration: anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
-            expr_curr.animate({
+            expr_curr.css('z-index', 1).animate({
                 'left': -o.anim_direction * contentFrame.width(),
             }, {
                 duration: anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
         }
-        $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
+        if (timeout != undefined) 
+            clearTimeout(timeout);
+        timeout = setTimeout(function() {
+            o.allow_animations = true;
+        }, anim_duration);
+        o.allow_animations = false;
 
         // postMessage only works after the page loads, so once page loads, we
         // can hide them and show on hover
@@ -312,11 +356,8 @@ define([
     };
 
     o.social_btn_click = function(e, el, btn) {
-        if (!context.user.logged_in)
-            return;
-        
         var el_drawer = $("[data-handle=#" + el.prop("id") + "]");
-        var el_form = $("form." + ((btn == "loves") ? "love" : "republish"));
+        var el_form = el.parent();
         var el_counts = el.find($(".counts"));
 
         // Toggle the state on the server
@@ -344,6 +385,7 @@ define([
         el_drawer.data('menu').layout();
         var count = (el_counts.text().length == 0) ? 0 : parseInt(el_counts.text());
         count += ((own_item) ? 1 : -1);
+        count = (count) ? ("" + count) : "";
         el_counts.text(count);
         o.action_set_state(el, own_item);
     };
@@ -369,11 +411,6 @@ define([
             el.removeClass("on");
             el.find(".icon").removeClass("on");
         }
-        var el_counts = el.find(".counts");
-        var count = (el_counts.text().length == 0) ? 0 : parseInt(el_counts.text());
-        count = (count) ? ("" + count) : "";
-        el_counts.text(count);
-        resize_icon(el);
     };
 
     o.fake_item = function(btn) {
@@ -431,7 +468,7 @@ define([
             context.page_data.expr.comments = json.comments;
             $('#dia_comments .activity').empty().html(activity_template(top_context));
             // update count and highlight state
-            $(".counts_icon.comment").find(".counts").text(json.comments.length);
+            $(".counts_icon.comment").find(".counts").html(json.comments.length);
             o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
         }
         if (json.user != undefined) {
@@ -450,7 +487,7 @@ define([
     o.page_prev = function() { navigate_page(-1); };
     o.page_next = function() { navigate_page(1); };
     var navigate_page = function (offset){
-        o.anim_direction = offset / Math.abs(offset);
+        o.anim_direction = (offset < 0) ? -1 : 1;
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
@@ -466,24 +503,29 @@ define([
             if (found >= 0) {
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
-                // TODO: Cache upcoming expressions
-                cache_offsets = [];//[-1, 1];
-                for (var i = 0, off; off = cache_offsets[i++];) {
+                // Cache upcoming expressions
+                cache_offsets = [1, -1, 2, 3];
+                if (offset < 0)
+                    cache_offsets = cache_offsets.map(function(o) { return -o; });
+                expr_ids = [];
+                for (var i = 0, off; off = cache_offsets[i]; ++i) {
                    var found_next = (found + len + off) % len;
-                   page_data.expr_id = page_data.cards[found_next].id;
-                   o.controller.open('view_expr', {
-                       id: page_data.expr_id,
-                       owner_name: page_data.cards[found_next].owner.name,
-                       expr_name: page_data.cards[found_next].name
-                   });
+                   expr_ids = expr_ids.concat(page_data.cards[found_next].id);
                 }
+                cache_frames(expr_ids);
                 if (offset) {
-                    page_data.expr_id = page_data.cards[found].id;
-                    o.controller.open('view_expr', {
-                        id: page_data.expr_id,
-                        owner_name: page_data.cards[found].owner.name,
-                        expr_name: page_data.cards[found].name
-                    });
+                    var card = page_data.cards[found]
+                    page_data.expr_id = card.id;
+                    if (card.json) {
+                        $.extend(page_data, card.json);
+                        o.render(page_data);
+                    } else {
+                        o.controller.open('view_expr', {
+                            id: page_data.expr_id,
+                            owner_name: page_data.cards[found].owner.name,
+                            expr_name: page_data.cards[found].name
+                        });
+                    }
                 }
             }
         }

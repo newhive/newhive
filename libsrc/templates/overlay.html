@@ -17,15 +17,18 @@
 <div class='social overlay page_btn' id='page_next'></div>
 
 {# hive logo button #}
-<a class='logo overlay' {anchor_attrs "home"}
-  ><div id='logo' class='icon logo left right'></div></a>
+<a {anchor_attrs "home"} id='logo' class='overlay logo icon left right'></a>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
   {<if user.logged_in}
     <form {form_attrs "logout"} method='POST' id='logout_form'></form>
     <div id='logout_btn' class='menu_item'>Logout</div>
-    <div id='activity_btn' class='menu_item hoverable'>Activity</div>
+    <div id='activity_btn' class='menu_item hoverable'>
+        <div class='icon'></div>
+        <div class='count'>0</div>
+        Activity
+    </div>
     <a id='user_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
       class='menu_item hoverable'>{user.name|e}</a>
     <a {anchor_attrs "home"} class='menu_item hoverable'>Network</a>
@@ -36,11 +39,11 @@
 
 {# User community actions #}
 {<if user.logged_in}
-  <div id='activity_menu' class='menu drawer user_menu' data-handle='#activity_btn' data-parent='#logo'>
-    <div class='activity'>{<with . "activity" user.activity}
-      {|templates/activity.html}
-    {>}</div>
-  </div>
+  <div id='activity_menu' class='menu drawer user_menu activity'
+    data-handle='#activity_btn' data-parent='#logo'
+  >{|templates/user_activity.html}</div>
+  <form id='notification_reset' {form_attrs "notification_reset"}></form>
+  <form id='activity_form' {form_attrs "activity"}></form>
 {>}{<else}
   <div id='login_menu' class='dialog' data-handle='#login_btn'>
     {#<a href="{facebook_authentication_url}" target="_top"
