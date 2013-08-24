@@ -246,6 +246,7 @@ define([
                 event.preventDefault();
             }
         });
+        $("#search_box").focus();
         // global keypress handler
         $("body").keydown(function(e) {
             if(e.keyCode == 27) { // escape

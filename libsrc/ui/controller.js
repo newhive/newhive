@@ -63,13 +63,13 @@ define([
         };
     };
 
-    o.open_route = function(page_state) {
+    o.open_route = function(page_state, callback) {
         if(page_state.api){
             var api_call = {
                 method: 'get',
                 url: page_state.api.toString(),
                 dataType: 'json',
-                success: success
+                success: callback ? callback : success
             };
             $.ajax(api_call);
         }
@@ -83,6 +83,9 @@ define([
     o.open = function(route_name, route_args){
         o.open_route(routing.page_state(route_name, route_args));
     };
+    o.get = function(route_name, route_args, callback){
+        o.open_route(routing.page_state(route_name, route_args), callback);
+    }
     
     return o;
 });
