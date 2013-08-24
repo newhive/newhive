@@ -8,15 +8,15 @@
       <button class="teal_btn upper inline" type='submit' name='user_settings'>Save settings</button>
     </div>
     <div class="container">
-      <div>Email address</div>
+      <div class="label">Email address</div>
       <input id='email_input' type='text' name='email' value='{email}'>
-      <div>New password</div>
-      <input id='new_password_input' type='password' name='new_password'>
       <div id='password_field' class='hide'>
-        <div>Current password</div>
+        <div class="label">Current password</div>
         <input type='password' name='password'>
       </div>
-      <br>
+      <div class="label">New password</div>
+      <input id='new_password_input' type='password' name='new_password'>
+     <br>
 
       <input type='hidden' name='user_settings' value='true'>
       </form>
@@ -25,6 +25,7 @@
 {>}
 
   <div class="container">
+    <div class="settings heading">Email me when...</div>
     {<for email_lists}
       <div class='checkbox'>
         <input id='{id}' type='checkbox' name='{id}' {<if subscribed}checked{>}>
