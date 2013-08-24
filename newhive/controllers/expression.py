@@ -122,7 +122,8 @@ class Expression(Application, PagingMixin):
         if resource.get('auth') == 'private' and not is_owner: return self.serve_404(request, response)
         if is_owner: owner.unflag('expr_new')
 
-        expr_url = abs_url(domain = config.content_domain) + resource.id
+        expr_url = abs_url(domain = config.content_domain,
+		secure=request.is_secure) + resource.id
         self.expr_prepare(resource, response.user)
         response.context.update(
              expr_frame = True

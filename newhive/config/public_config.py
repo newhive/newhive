@@ -53,7 +53,7 @@ site_pages      = {
     ,'welcome'      : 'welcome'
     }
 
-content_domain = 'newhiveexpression.com'
+content_domain = 'tnh.me'
 
 email_server    = 'localhost'
 email_user      = False
