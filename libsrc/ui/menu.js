@@ -136,12 +136,12 @@ var menu = function(handle, drawer, options) {
         }
 
         if (!children_empty && drawer.hasClass("icon_set")) {
-            var icon_x = 65; //drawer.children().eq(0).children().width();
+            var icon_x = 60; //drawer.children().eq(0).children().width();
             var count_children = drawer.children().length;
             var size = 1;
             for (; size < 4 && count_children > (size*size); size++) {}
             // -10 for padding.
-            drawer.width(((count_children > 20) ? 20 : 0) + size*icon_x - 10);
+            drawer.width(((count_children > 20) ? 20 : 0) + size*icon_x);
             drawer.css("overflow-y", (count_children > 20) ? "scroll" : "hidden");
         }
         var css_opts = {};
