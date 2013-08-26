@@ -140,7 +140,9 @@ var menu = function(handle, drawer, options) {
             var count_children = drawer.children().length;
             var size = 1;
             for (; size < 4 && count_children > (size*size); size++) {}
-            drawer.css("max-width", ((count_children > 20) ? 30 : 0) + size*icon_x);
+            // -10 for padding.
+            drawer.width(((count_children > 20) ? 20 : 0) + size*icon_x - 10);
+            drawer.css("overflow-y", (count_children > 20) ? "scroll" : "hidden");
         }
         var css_opts = {};
         // pick top of menu based on if menu would go past bottom of
