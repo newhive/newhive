@@ -207,6 +207,11 @@
         "controller": "user",
         "method": "expr_share"
     },
+    "send_mail": {
+        "api_route": "/api/community/send_mail",
+        "controller": "user",
+        "method": "send_mail"
+    },
 
     "file_create": {
         "api_route": "/api/file/create",

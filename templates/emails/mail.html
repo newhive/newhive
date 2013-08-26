@@ -1,0 +1,34 @@
+{% extends "emails/colorful.html" %}
+
+{% block body_classes%}{{super()}} {{type}} {{super_type}} site{% endblock %}
+
+{% block body %}
+    <div id="logo">
+      <a href="{{ server_url }}">
+        <img src="{{ 'skin/1/newhive_logo_lg.png' | asset_url(abs=True) }}"/>
+      </a>
+    </div>
+
+    <h2 id="greeting" class="line">
+        Hi {{ recipient.name or "there"}},
+    </h2>
+
+    <h3 class="line">
+        <a href="{{ initiator.url }}">{{ initiator['name'] }}</a> sent you a message:
+    </h3>
+
+    <div id="main_message">
+        <div class="line">
+          {% block main_message %}
+            {{message}}
+          {% endblock %}
+        </div>
+    </div>
+
+    {% block footer_message %}
+    <h4 id="footer_message">
+        Questions or feedback?<br/>
+        <a href="mailto:info@newhive.com">info@newhive.com</a>
+    </h4>
+    {% endblock %}
+{% endblock %}
