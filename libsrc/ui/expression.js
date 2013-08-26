@@ -132,6 +132,7 @@ define(['browser/layout',
         o.hide = function(){
             $('.hive_html').each(function(i, div) {
                 var $div = $(div);
+                if ($div.html() == '') return;
                 $div.attr('data-content',$div.html());
                 $div.html('');
             });

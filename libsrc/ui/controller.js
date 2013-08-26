@@ -86,6 +86,14 @@ define([
     o.get = function(route_name, route_args, callback){
         o.open_route(routing.page_state(route_name, route_args), callback);
     }
+    o.fake_open = function(route_name, route_args){
+        // Test for old browsers which don't support history.pushState.
+        // Fallback to plane old open.
+        if (!window.history && window.history.pushState)
+            return o.open(route_name, route_args);
+        var page_state = routing.page_state(route_name, route_args);
+        history.pushState(page_state, null, page_state.page);
+    };
     
     return o;
 });
