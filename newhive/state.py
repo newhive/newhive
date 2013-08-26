@@ -1866,7 +1866,7 @@ class ESDatabase:
     # elasticsearch-able database, just for full-text search (tags, text, title)
     def __init__(self, db, index='expr_index'):
         self.index = index
-        self.conn = pyes.ES('127.0.0.1:9200')
+        self.conn = pyes.ES(server=[('http', 'localhost', 9200)])
         self.db = db
         feed_mapping = {
             "class_name": {"type": "string", "index": "not_analyzed"},
@@ -1927,7 +1927,7 @@ class ESDatabase:
             self.add_related_types()
             self.conn.indices.refresh()
 
-        self.sync_with_mongo()
+        #self.sync_with_mongo()
 
         return None
 
