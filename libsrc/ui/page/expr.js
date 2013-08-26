@@ -516,15 +516,17 @@ define([
                 if (offset) {
                     var card = page_data.cards[found]
                     page_data.expr_id = card.id;
+                    var data = {
+                        id: page_data.expr_id,
+                        owner_name: page_data.cards[found].owner.name,
+                        expr_name: page_data.cards[found].name
+                    };
                     if (card.json) {
                         $.extend(page_data, card.json);
                         o.render(page_data);
+                        o.controller.fake_open('view_expr', data);
                     } else {
-                        o.controller.open('view_expr', {
-                            id: page_data.expr_id,
-                            owner_name: page_data.cards[found].owner.name,
-                            expr_name: page_data.cards[found].name
-                        });
+                        o.controller.open('view_expr', data);
                     }
                 }
             }
