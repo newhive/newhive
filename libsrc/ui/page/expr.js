@@ -261,7 +261,12 @@ define([
     };
 
     var hide_other_exprs = function() {
-        $('#exprs .expr').not('.expr-visible').addClass('expr-hidden').hide();
+        var to_hide = $('#exprs .expr').not('.expr-visible').filter(":visible");
+        to_hide.each(function(i, el) {
+            $(el).get(0).contentWindow.
+                postMessage({action: 'hide'}, '*');
+        });
+        to_hide.addClass('expr-hidden').hide();
         fixup_tags_list();
     };
 
