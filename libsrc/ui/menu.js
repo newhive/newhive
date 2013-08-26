@@ -145,7 +145,8 @@ var menu = function(handle, drawer, options) {
         var css_opts = {};
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
-        var hp = handle.parent().is(drawer.parent()) ? handle.position() : handle.offset();
+        var hp = handle.offsetParent().is(drawer.offsetParent()) ?
+            handle.position() : handle.offset();
 
         if(opts.layout_x == 'submenu'){
             css_opts.left = hp.left + handle.outerWidth() + opts.offset_x;

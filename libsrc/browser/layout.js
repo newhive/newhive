@@ -87,6 +87,6 @@ define(['browser/jquery'], function($) {
     var new_window = function(b,c,d){
         var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}
     };
-    
+
     return o;
 });
