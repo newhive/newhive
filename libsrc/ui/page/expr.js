@@ -16,12 +16,13 @@ define([
     dialog,
     activity_template,
     social_overlay_template,
-    edit_btn_template
+    edit_btn_template,
+    comment_template
 ) {
     var o = {}, contentFrameURLBase = context.config.content_url,
         loading_frame_list = [], loaded_frame_list = [],
         allow_animations = true, timeout = undefined;
-    const anim_duration = 400;
+    o.anim_duration = 400;
 
     o.init = function(controller){
         o.controller = controller;
@@ -233,13 +234,13 @@ define([
             ).animate({
                 left: "0"
             }, {
-                duration: anim_duration,
+                duration: o.anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
             expr_curr.css('z-index', 1).animate({
                 'left': -o.anim_direction * contentFrame.width(),
             }, {
-                duration: anim_duration,
+                duration: o.anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
         }
@@ -459,18 +460,19 @@ define([
         // rerender activity feed (only in social overlay and nav menu)
         // with new data received from server
         if (json.comments != undefined) {
-            top_context = {};
-            top_context.activity = json.comments;
             // TODO: how can we remember variable state in stringjay
             // and not have to duplicate it in js?
-            top_context.mode = "discussion";
             context.page_data.expr.activity = json.activity;
             context.page_data.expr.comments = json.comments;
-            $('#dia_comments .activity').empty().html(activity_template(top_context));
+            var comment_box = $('#dia_comments .activity').empty();
+            json.comments.map(function(item){
+                comment_box.append(comment_template(item))});
+
             // update count and highlight state
             $(".counts_icon.comment").find(".counts").html(json.comments.length);
             o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
         }
+        // TODO-cleanup: merge somehow with existing code to update activity menu
         if (json.user != undefined) {
             top_context = {};
             top_context.activity = json.user.activity;
