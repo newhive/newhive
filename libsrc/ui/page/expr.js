@@ -532,6 +532,12 @@ define([
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
+        if (m.data == "expr_click") {
+            popup = $('#social_overlay');
+            if (popup.css('display') != 'none')
+                o.social_toggle();
+            return
+        }
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
             || context.page_data.cards.length == 1) {

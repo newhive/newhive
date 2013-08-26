@@ -46,6 +46,7 @@ define(['browser/layout',
                 if ( m.data.action == "hide" ) o.hide();
             }, false);
             $(document).mousemove(check_hover);
+            $(document).click(expr_click);
             $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
             $(window).resize(layout.place_apps)
                  .click(function(){ o.send_top('focus'); });
@@ -53,6 +54,9 @@ define(['browser/layout',
 
         o.margin = function () {
             return $(window).width() / 4;
+        }
+        var expr_click = function (e) {
+            o.send_top("expr_click");
         }
         var clear_hover = function (e) {
             o.send_top("hide_prev"); // $('#page_prev').hide();

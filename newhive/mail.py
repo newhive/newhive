@@ -122,7 +122,16 @@ def _send_mail(headers, body, db, category=None, filters=None, unique_args=None,
             {'name': {'$in': config.admins} }) ]
 
     # Send mail, but if we're in debug mode only send to admins
-    if send_real_email and (config.live_server or msg['To'] in test_emails):
+    send_email = send_real_email
+    # Why can't we break into separate emails? smtp.sendmail accepts "to" field but
+    # sends it to the To in encoded_msg anyway!
+    # Ensure ALL TO: emails are in test_emails
+    if send_email and not config.live_server:
+        for to in (msg['To'] or '').split(','):
+            if not to in test_emails:
+                send_email = False
+                break
+    if send_email:
         t0 = time.time()
         sent = smtp.sendmail(msg['From'], (msg['To'] or '').split(','), encoded_msg)
         logger.debug('SMTP sendmail time %d ms', (time.time() - t0) * 1000)
@@ -154,6 +163,7 @@ class Mailer(object):
     initiator = None
     unsubscribable = True
     inline_css = True
+    bcc = False
 
     def __init__(self, jinja_env=None, db=None, smtp=None):
         self.db = db
@@ -213,6 +223,8 @@ class Mailer(object):
              'To' : self.recipient.get('email')
             ,'Subject' : self.subject
             }
+        if self.bcc and self.initiator:
+            heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
         return heads
 
 
@@ -256,7 +268,7 @@ class Mailer(object):
 
         body = self.body(context)
         heads = self.heads()
-        heads.update(To=self.recipient.get('email'))
+        # heads.update(To=self.recipient.get('email'))
 
         subscribed = self.check_subscription()
         record.update(sent=subscribed)
@@ -450,6 +462,26 @@ class Welcome(Mailer):
             }
         self.send_mail(context)
 
+class SendMail(Mailer):
+    name = 'mail'
+    unsubscribable = False
+    sent_to = ['user']
+    template = 'emails/mail'
+
+    def send(self, recipient, initiator, message, bcc=False):
+        self.subject = 'New message from %s' % initiator['name']
+        self.recipient = recipient
+        self.initiator = initiator
+        self.bcc = bcc
+        # user_profile_url = recipient.url
+        # user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
+        context = {
+            'recipient': recipient
+            , 'initiator' : initiator
+            , 'message' : message
+            }
+        self.send_mail(context)
+
 class ShareExpr(ExprAction):
 
     name = 'share_expr'
@@ -458,11 +490,11 @@ class ShareExpr(ExprAction):
     initiator = None
     sent_to = ['user', 'nonuser']
 
-    def heads(self):
-        heads = super(ShareExpr, self).heads()
-        if self.bcc:
-            heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
-        return heads
+    # def heads(self):
+    #     heads = super(ShareExpr, self).heads()
+    #     if self.bcc:
+    #         heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
+    #     return heads
 
     def send(self, expr, initiator, recipient, message, bcc=False):
         self.card = expr

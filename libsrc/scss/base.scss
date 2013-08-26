@@ -116,6 +116,10 @@ img.centered, div.centered {
     font-size: 42px;
 }
 
+.error_msg {
+    color: $color_bright_red;
+}
+
 // Icons
 $icon_class: logo plus-minus love comment republish share views;
 $icon_name: logo close love-lg comment-lg republish-lg share-lg views-lg;

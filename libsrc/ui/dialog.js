@@ -45,6 +45,9 @@ define([
             opts.shield.appendTo(document.body).click(o.close);
 
             opts.dialog.detach().appendTo(document.body).removeClass('hide').show();
+            // For old browsers which don't support autofocus.
+            opts.dialog.find("*[autofocus]").focus();
+            opts.dialog.find(".error_msg").hide();
             $(window).resize(opts.layout);
             opts.layout();
 
