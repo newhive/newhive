@@ -233,12 +233,20 @@ define([
         if (page_data.title) $("head title").text(page_data.title);
         o.attach_handlers();
     };
+    var generic_dialog_handler = function(event, json){
+        if (json.error != undefined) {
+            $(this).parents().filter(".dialog").find('.error_msg').text(json.error).show();
+        } else {
+            $('#dialog_shield').click();
+        }
+    };
     var local_attach_handlers = function(){
         $('.user_action_bar form.follow').unbind('response').on('response', 
             function(event, json) {
                 follow_response($(this), json); 
         });
 
+        // Belongs in edit
         $("textarea.about").keypress(function(e) {
             // Check the keyCode and if the user pressed Enter (code = 13) 
             // disable it
@@ -246,7 +254,10 @@ define([
                 event.preventDefault();
             }
         });
+        // Belongs in "community"
         $("#search_box").focus();
+        $("#form_send_mail").unbind('response').on('response', generic_dialog_handler);
+        
         // global keypress handler
         $("body").keydown(function(e) {
             if(e.keyCode == 27) { // escape

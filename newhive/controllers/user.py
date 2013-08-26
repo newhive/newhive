@@ -152,6 +152,31 @@ class User(ModelController):
 
         return self.serve_json(response, resp)
 
+    def send_mail(self, tdata, request, response, **args):
+        resp = {}
+        user = tdata.user
+        recipient_id = request.form.get('user_id')
+        message = request.form.get('message')
+        send_copy = (request.form.get('send_copy') == 'on')
+
+        recipient = self.db.User.fetch(recipient_id)
+        if not recipient:
+            return self.serve_json(response, 
+                { 'error': 'Invalid recipient.' })
+        recipient_email = recipient['email']
+        if not recipient_email:
+            return self.serve_json(response, 
+                { 'error': 'Recipient has no valid email address.' })
+
+        if not message:
+            return self.serve_json(response, 
+                { 'error': 'Empty message. Please type a message in the box.' })
+
+        mailer = mail.SendMail(self.jinja_env, db=self.db)
+        mailer.send(recipient, user, message, send_copy)
+
+        return self.serve_json(response, resp)
+
     def notification_reset(self, tdata, request, response, **args):
         tdata.user.notification_count_reset()
         return self.serve_json(response, True)
