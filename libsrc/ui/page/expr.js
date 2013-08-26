@@ -248,7 +248,7 @@ define([
             clearTimeout(timeout);
         timeout = setTimeout(function() {
             o.allow_animations = true;
-        }, anim_duration);
+        }, o.anim_duration);
         o.allow_animations = false;
 
         // postMessage only works after the page loads, so once page loads, we

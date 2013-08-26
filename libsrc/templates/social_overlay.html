@@ -109,7 +109,7 @@
           <div class="title text">Discussion</div>
           {<with null "icon_class" "comment nohover discussions" "count" counts.Comment} {|templates/icon_count.html}{>}
           <div>TODO: Dialog to spec (Move enter button, add horizontal separators, change format to include wrench/x hover and comment age)</div>
-          <div class='activity'>{<for expr.comments}
+          <div class='activity'>{<for comments}
             {|templates/comment.html}
           {>}</div>
           {# discussion input #}
