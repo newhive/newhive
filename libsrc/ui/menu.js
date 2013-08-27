@@ -144,12 +144,22 @@ var menu = function(handle, drawer, options) {
             drawer.width(((count_children > 20) ? 20 : 0) + size*icon_x);
             drawer.css("overflow-y", (count_children > 20) ? "scroll" : "hidden");
         }
+
+        // find handle position relative to positioning of drawer
+        var hp;
+        if(handle.offsetParent().is(drawer.offsetParent())){
+            hp = handle.position();
+        } else{
+            hp = handle.offset();
+            if(drawer.css('position') == 'fixed'){
+                hp.left -= window.scrollX;
+                hp.top -= window.scrollY;
+            }
+        }
+
         var css_opts = {};
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
-        var hp = handle.offsetParent().is(drawer.offsetParent()) ?
-            handle.position() : handle.offset();
-
         if(opts.layout_x == 'submenu'){
             css_opts.left = hp.left + handle.outerWidth() + opts.offset_x;
             css_opts.top = hp.top - drawer.outerHeight()
