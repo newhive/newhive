@@ -141,7 +141,7 @@ var menu = function(handle, drawer, options) {
             var size = 1;
             for (; size < 4 && count_children > (size*size); size++) {}
             // -10 for padding.
-            drawer.width(((count_children > 20) ? 20 : 0) + size*icon_x);
+            drawer.width(((count_children > 20) ? 20 : 0) + 5 + size*icon_x);
             drawer.css("overflow-y", (count_children > 20) ? "scroll" : "hidden");
         }
         var css_opts = {};
