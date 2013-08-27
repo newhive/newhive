@@ -3,7 +3,9 @@
     <div class="left_pane">
       {# expression title #}
       <div class="title_spacer">
-        <div class="title expr text">{expr.title}</div></div>
+        <div class="title expr text">{expr.title}
+          {<unless expr.title}Untitled
+          {>}</div></div>
       {# user profile #}
       {<with owner "brief" true}
         {|templates/profile_card.html}

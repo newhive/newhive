@@ -33,10 +33,6 @@
         height: 44px;
     }
 }
-// #plus {
-//     background-image: asset_url('skin/nav/plus.png');
-//     &.active { background-image: asset_url('skin/nav/plus-hover.png'); }
-// }
 
 #exprs {
     position:absolute; left: 0; bottom: 0;
@@ -44,7 +40,7 @@
     z-index: 1;
     width:100%; height:100%;
     display: none;
-    background-color: $color_grey_medium;
+    background-color: white;
 
     .expr {
         width:100%; height:100%; position:absolute; left: 0; top:0;

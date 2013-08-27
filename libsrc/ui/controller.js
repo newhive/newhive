@@ -7,7 +7,7 @@ define([
     'json!ui/routes.json',
     'ui/routing'
 ], function($, util, page, pages, context, routes, routing) {
-    var o = {}, route;
+    var o = { back: false }, route;
 
     o.init = function(route_args){
         routing.register_state(route_args);
@@ -39,6 +39,10 @@ define([
         o.dispatch(route.method, context);
     };
 
+    function pop_route_success() {
+        o.dispatch(page_state.route_name, data);
+        $("body").scrollTop(0);
+    }
     function wrapLinks() {
         // If we don't support pushState, fall back on default link behavior.
         if (!window.history && window.history.pushState) return;
@@ -59,11 +63,13 @@ define([
         // TODO: Bind this event with jquery?
         window.onpopstate = function(e) {
             if (!e.state) return;
-            o.open_route(e.state);
+            o.open_route(e.state, false, false);
+            o.back = true;
         };
     };
 
-    o.open_route = function(page_state, callback) {
+    o.open_route = function(page_state, callback, push_state) {
+        o.back = false;
         if(page_state.api){
             var api_call = {
                 method: 'get',
@@ -77,7 +83,8 @@ define([
 
         function success(data){
             o.dispatch(page_state.route_name, data);
-            history.pushState(page_state, null, page_state.page);
+            if (push_state == undefined || push_state)
+                history.pushState(page_state, null, page_state.page);
             $("body").scrollTop(0);
         }
     };

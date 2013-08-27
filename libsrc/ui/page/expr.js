@@ -22,7 +22,7 @@ define([
     var o = {}, contentFrameURLBase = context.config.content_url,
         loading_frame_list = [], loaded_frame_list = [],
         overlay_columns = 0, wide_overlay = false,
-        allow_animations = true, timeout = undefined;
+        animation_timeout = undefined, last_found = -1;
     o.anim_duration = 400;
 
     o.init = function(controller){
@@ -33,6 +33,7 @@ define([
         window.addEventListener('message', o.handle_message, false);
     };
     o.exit = function(){
+        o.last_found = -1;
         hide_exprs();
         hide_panel();
         $('#site').show();
@@ -155,6 +156,19 @@ define([
         }
     };
 
+    var find_card = function(expr_id){
+        var found = -1;
+        if (! page_data.cards)
+            return found;
+        var len = page_data.cards.length;
+        for (var i = 0; i < len; ++i){
+            if (page_data.cards[i].id == expr_id) {
+                found = i;
+                break;
+            }
+        }
+        return found;
+    };
     function cache_frames(expr_ids){
         if (expr_ids.length == 0)
             return false;
@@ -172,14 +186,7 @@ define([
         // Cache the expr data on the card
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
-            var len = page_data.cards.length
-            var found = -1;
-            for (var i = 0; i < len; ++i){
-                if (page_data.cards[i].id == expr_id) {
-                    found = i;
-                    break;
-                }
-            }
+            found = find_card(expr_id);
             if (found >= 0) {
                 var card = page_data.cards[found]
                 if (card.json == undefined) {
@@ -236,7 +243,16 @@ define([
         contentFrame.addClass('expr-visible').removeClass('expr-hidden');
         contentFrame.show();
         $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
-        if (o.anim_direction == 0 || expr_curr.length != 1 || ! o.allow_animations) {
+        var found = find_card(expr_id);
+        var anim_direction = 0;
+        if (o.last_found >= 0 && found >= 0) {
+            var dir = found - o.last_found;
+            if (Math.abs(dir) > 5)
+                dir *= -1;
+            anim_direction = (dir > 0) ? 1 : -1;
+        }
+        o.last_found = found;
+        if (anim_direction == 0 || expr_curr.length != 1 || o.animation_timeout != undefined) {
             contentFrame.css({
                 'left': 0,
                 'top': -contentFrame.height() + 'px',
@@ -250,7 +266,7 @@ define([
             // 
             contentFrame.css({
                 'top': 0,
-                'left': o.anim_direction * contentFrame.width(),
+                'left': anim_direction * contentFrame.width(),
                 'z-index': 2 }
             ).animate({
                 left: "0"
@@ -259,16 +275,16 @@ define([
                 complete: hide_other_exprs,
                 queue: false })
             expr_curr.css('z-index', 1).animate({
-                'left': -o.anim_direction * contentFrame.width(),
+                'left': -anim_direction * contentFrame.width(),
             }, {
                 duration: o.anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
         }
-        if (timeout != undefined) 
-            clearTimeout(timeout);
-        timeout = setTimeout(function() {
-            o.allow_animations = true;
+        if (o.animation_timeout != undefined) 
+            clearTimeout(o.animation_timeout);
+        o.animation_timeout = setTimeout(function() {
+            o.animation_timeout = undefined;
         }, o.anim_duration);
         o.allow_animations = false;
 
@@ -523,18 +539,10 @@ define([
     o.page_prev = function() { navigate_page(-1); };
     o.page_next = function() { navigate_page(1); };
     var navigate_page = function (offset){
-        o.anim_direction = (offset < 0) ? -1 : 1;
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
-            var found = -1;
-            // TODO: add the current card to context.
-            for (var i = 0; i < len; ++i){
-                if (page_data.cards[i].id == page_data.expr_id) {
-                    found = i;
-                    break;
-                }
-            }
+            var found = find_card(page_data.expr_id);
             // TODO: do we need error handling?
             if (found >= 0) {
                 // TODO: need to asynch fetch more expressions and concat to cards.
