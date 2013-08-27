@@ -20,6 +20,7 @@ define([
     'sj!templates/settings.html',
     'sj!templates/user_actions.html',
     'sj!templates/tags_page.html',
+    'sj!templates/tag_card.html',
     'sj!templates/user_activity.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
@@ -29,7 +30,6 @@ define([
     'sj!templates/user_card.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
-    'sj!templates/tag_card.html',
     'sj!templates/dialog_embed.html',
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
@@ -52,6 +52,7 @@ define([
     settings_template,
     user_actions_template,
     tags_page_template,
+    tag_card_template,
     user_activity_template
 ){
     var o = {}, expr_page = false, grid_width, controller,
@@ -183,12 +184,13 @@ define([
 
     o.render = function(method, data){
         console.log(method);
+        var page_data = data.page_data;
+        if (page_data.title) $("head title").text(page_data.title);
         o.method = method;
         column_layout = false,
         o.columns = 0;
         new_page = pages[method];
         expr_page = (method == 'expr');
-        var page_data = data.page_data;
         page_data.layout = method;
         if (context.page != new_page) {
             if (context.page && context.page.exit) 
@@ -230,7 +232,6 @@ define([
         if (new_page && new_page.enter) new_page.enter();
         o.resize();
 
-        if (page_data.title) $("head title").text(page_data.title);
         o.attach_handlers();
     };
     var generic_dialog_handler = function(event, json){
@@ -295,6 +296,11 @@ define([
     o.render_tag_page = function(){
         $('#tag_bar').remove();
         $('#feed').prepend(tags_page_template(context.page_data));
+        var tag_name = context.page_data.tags_search[0];
+        $('title').text("#" + tag_name.toUpperCase());
+        var top_context = { "tagnum": 0, "item": tag_name };
+        var header_prefix = ""; // "Search: "
+        $('#header span').text(header_prefix).append(tag_card_template(top_context));
         $('#follow_tag_form').on('response', o.tag_response);
     }
 
