@@ -64,7 +64,8 @@ button {
 .ncolumn {
     width: 100%;
     .column {
-        display: inline-block;
+        margin-right: -3px;
+        // display: inline-block;
         vertical-align: top;
         width: 33.33%;
         float: left;

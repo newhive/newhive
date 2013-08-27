@@ -241,10 +241,9 @@
 }
 
 $action: love comment republish;
-// This definition applies to all feed items, not just nav
-// TODO: move elsewhere
 .activity {
     .feed_item {
+        background-color: #EEE;
         padding: 10px;
         overflow: auto;
         border-top: 1px solid #d1d1d1;

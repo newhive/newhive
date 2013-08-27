@@ -381,11 +381,12 @@
             .username { margin-top: 5px; }
         }
         .card {
-            width: 393px;
+            width: 390px;
             position: relative;
             // float: left;
             display: inline-block;
             padding: 10px;
+            &:hover { background-color: #EEFFF8; }
             .vcenter_outer { height: 75px; }
             // .title_spacer { 
             //     height:88px;
