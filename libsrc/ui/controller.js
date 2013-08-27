@@ -78,6 +78,7 @@ define([
         function success(data){
             o.dispatch(page_state.route_name, data);
             history.pushState(page_state, null, page_state.page);
+            $("body").scrollTop(0);
         }
     };
     o.open = function(route_name, route_args){
