@@ -1,4 +1,4 @@
-<div class='feed_item hoverable'>
+<div class='feed_item hoverable comment'>
   <img src='{initiator_thumb_small}' class='thumb'>
   <div class='content'>
     <div class='text'>{text}</div>
@@ -15,6 +15,8 @@
       </form>
     {>}
     {# timestamp. should add to other types? #}
+    <a class="byline" {anchor_attrs "expressions_public" "owner_name" name}
+      class='ellipsis'>by &nbsp;<span class='username'>{owner.name}</span></a>
     <div class="timestamp rightalign">{recency_time updated}</div>
   </div>
 </div>

@@ -244,6 +244,7 @@ $action: love comment republish;
 .activity {
     .feed_item {
         // background-color: #EEE;
+        position: relative;
         padding: 10px;
         overflow: auto;
         border-top: 1px solid #d1d1d1;
@@ -251,6 +252,32 @@ $action: love comment republish;
         font-family: Gibson;
         font-size: 16px;
 
+        &.comment {
+            .content {
+                @include calc-width("100% - 54px");
+                .text {
+                    // min-height: 44px;
+                    max-height: inherit;
+                    max-width: inherit;
+                    display: block;
+                    margin-bottom: 10px;
+                }
+                a.byline { float: left; }
+            }
+            .timestamp {
+                float: right;
+                position: inherit;
+            }
+            .show_hover {
+                position: absolute;
+                right: 8px;
+                top: 5px;
+            }
+            textarea {
+                height: 77px;
+                margin-top: 18px;
+            }
+        }
         &:hover, &.active {
             background-color: $color_selected;
         }
@@ -279,7 +306,7 @@ $action: love comment republish;
         }
         .timestamp {
             float: right;
-            clear: both;
+            // clear: both;
             font-family: Bebas;
             font-size: 14px;
             color: $color_grey_medium;
@@ -313,27 +340,21 @@ $action: love comment republish;
         }
 
         .feed_item {
-            width: 100%;
-            display: inline-block;
-            margin: -3px; /* wtf? */
+            // width: 100%;
+            // display: inline-block;
             position: relative;
-            border-top: 2px solid #d1d1d1;
+            // border-top: 2px solid #d1d1d1;
 
-            .show_hover {
-                position: absolute;
-                right: 20px;
-                top: 5px;
-            }
-            .timestamp {
-                right: 24px;
-                bottom: 0px;
-                max-width: 114px;
-                overflow: hidden;
-                white-space: nowrap;
-            }
-            .text {
-                max-height: none;
-            }
+            // .timestamp {
+            //     right: 24px;
+            //     bottom: 0px;
+            //     max-width: 114px;
+            //     overflow: hidden;
+            //     white-space: nowrap;
+            // }
+            // .text {
+            //     max-height: none;
+            // }
         }
     }
     #discussions {
