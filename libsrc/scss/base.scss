@@ -50,9 +50,8 @@ button {
     border: none;
     cursor: pointer;
 }
-.teal_btn {
+.teal_btn, .text_btn {
     padding: 10px;
-    background-color: $color_selected;
     font-family: Gibson;
     font-size: 17px;
     &:hover {
@@ -60,11 +59,13 @@ button {
         background-color: black;
     }
 }
-
+.teal_btn {
+    background-color: $color_selected;
+}
 .ncolumn {
     width: 100%;
     .column {
-        margin-right: -3px;
+        // margin-right: -3px;
         // display: inline-block;
         vertical-align: top;
         width: 33.33%;

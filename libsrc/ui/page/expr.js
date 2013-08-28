@@ -95,7 +95,7 @@ define([
         o.resize();
         
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
-        $('#dia_embed textarea').val("<iframe src='" + embed_url + 
+        $('#dia_embed .copy.embed_code').val("<iframe src='" + embed_url + 
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
             " frameborder='0' vspace='0' hspace='0'></iframe>");
 
@@ -385,7 +385,7 @@ define([
             el.data(prop, orig_position);
 
         el.stop().animate({
-            'background-position-x': dir + "26px" }, {
+            'background-position-x': dir + "20px" }, {
             duration: 150,
             easing: 'swing',
             complete: function() {
@@ -548,7 +548,7 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 // Cache upcoming expressions
-                cache_offsets = [1, -1, 2, 3];
+                cache_offsets = [1, -1, 2];
                 if (offset < 0)
                     cache_offsets = cache_offsets.map(function(o) { return -o; });
                 expr_ids = [];

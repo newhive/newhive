@@ -88,6 +88,12 @@ define([
         return attrs("search", args, "q=" + encodeURIComponent(query_args));
     };
 
+    o.routing_href = function(scope, route_name){
+        var args = get_route_args(arguments);
+        page_state = routing.page_state(route_name, args);
+        return page_state.page.slice(1);
+    }
+
     // takes route_name, and association argument list.
     // Returns attribute string.
     o.anchor_attrs = function(scope, route_name){

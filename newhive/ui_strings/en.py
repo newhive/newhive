@@ -33,7 +33,7 @@ email_subscription_ui = {
     'comment': 'People comment on my expression'
     , 'listen': 'People are listening to me'
     , 'love': 'People love my expression'
-    , 'broadcast': 'People broadcast my expression'
+    , 'broadcast': 'People republish my expression'
     , 'share_expr': 'People share an expression with me'
     , 'milestone': "Updates about my expression's views"
     , 'featured': "NewHive features my expression"

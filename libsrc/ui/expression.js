@@ -47,7 +47,7 @@ define(['browser/layout',
             }, false);
             $(document).mousemove(check_hover);
             $(document).click(expr_click);
-            $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
+            // $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
             $(window).resize(layout.place_apps)
                  .click(function(){ o.send_top('focus'); });
         };

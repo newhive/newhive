@@ -6,7 +6,7 @@
 .page_btn {
     width: 42px;
     height: 55px;
-    background-size: 42px 55px;
+    // background-size: 42px 55px;
     &:hover { background-color: black; }
 }
 #page_prev {
@@ -18,7 +18,7 @@
 #page_next {
     background-image: asset_url('skin/nav/page_next.png');
     &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
-    background-position: 4px 0px;
+    background-position: -6px 0px;
     right: 20px;
 }
 
@@ -243,7 +243,7 @@
 $action: love comment republish;
 .activity {
     .feed_item {
-        background-color: #EEE;
+        // background-color: #EEE;
         padding: 10px;
         overflow: auto;
         border-top: 1px solid #d1d1d1;
