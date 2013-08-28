@@ -105,32 +105,33 @@
           <div id='share_form_btn' class='text_btn menu_item item text hoverable black_active'
               ><span class='text'>Share Expression</span></div>
         </div>
-        {# belongs in its own file? #}
-        <div id="dia_comments" class="dialog" data-handle='#comment_icon'>
-          {# activity feed #}
-          <div class="title text">Discussion</div>
-          {<with null "icon_class" "comment nohover discussions" "count" counts.Comment} {|templates/icon_count.html}{>}
-          <div>TODO: include wrench/x hover)</div>
-          <div class='activity'>{<for comments}
-            {|templates/comment.html}
-          {>}</div>
-          {# discussion input #}
-          <div id="discussions">
-           <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
-              <div class="textarea_padder"><textarea name='text' placeholder=
-                {<if user.logged_in}'Join the conversation.'
-                {>}{<else}'Log in to comment...' disabled
-                {>} rows='4'></textarea></div>
-              <div class="rightify">{<if user.logged_in}<input type='submit' value='Enter' class='submit upper btn black rounded'>{>}</div>
-              <input type='hidden' name='action' value='comment'>
-              <input type='hidden' name='entity' value='{id}'>
-            </form>
-          </div>  
-        </div>
         {|templates/dialog_embed.html}
         {|templates/dialog_share.html}
       </div>
    
     </div>
   </div>
+
+  {# belongs in its own file? #}
+  <div id="dia_comments" class="dialog" data-handle='#comment_icon'>
+    {# activity feed #}
+    <div class="title text">Discussion</div>
+    {<with null "icon_class" "comment nohover discussions" "count" counts.Comment} {|templates/icon_count.html}{>}
+    <div class='activity'>{<for comments}
+      {|templates/comment.html}
+    {>}</div>
+    {# discussion input #}
+    <div id="discussions">
+     <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
+        <div class="textarea_padder"><textarea name='text' placeholder=
+          {<if user.logged_in}'Join the conversation.'
+          {>}{<else}'Log in to comment...' disabled
+          {>} rows='4'></textarea></div>
+        <div class="rightify">{<if user.logged_in}<input type='submit' value='Enter' class='submit teal_btn'>{>}</div>
+        <input type='hidden' name='action' value='comment'>
+        <input type='hidden' name='entity' value='{id}'>
+      </form>
+    </div>  
+  </div>
+
 {>}

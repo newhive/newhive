@@ -172,51 +172,32 @@
     .right_pane {
         display: inline-block;
         width: 470px;
-        // position: absolute;
-        // right: 0;
-        // vertical-align: top;
         text-align: right;
-        &> * > * { text-align: left; }
-        // border-left: 1px solid #d1d1d1;
         margin-right: 70px;
 
         .vcenter_spacer {
             height: 80px;
         }
         .tag_list {
-            // padding: 10px 0px 20px 0px;
             // text-align: center;
             max-height: 80px;
             overflow: hidden;
-            text-align: left;
         }
         .stats_bar {
             margin-top: 10px;
-            text-align: left;
-            // position: fixed;
-            // right: 14px;
-            // bottom: 10px;
-            // margin-bottom: 10px;
-            // margin-left: 15px;
+            &> * { text-align: left; }
         }
 
         .counts_icon {
             width: 90px;
             margin-right: 7px;
             .icon {
-                // width: 55px;
-                // background-position-y: -7px;
                 width: 60px;
                 height: 60px;
-                // margin-bottom: -5px;
             }
             .counts {
                 line-height: 60px;
             }
-            // .icon.logo, .icon.plus-minus {
-            //     width: 36px;
-            //     background-position-y: 0px;
-            // }
             &.plus-minus {
                 &:hover {
                     background-color: black;
@@ -228,9 +209,6 @@
             &.on:hover {
                 background-color: $color_selected;
                 background-image: none;
-            }
-            &.nohover:hover {
-                background-color: transparent; 
             }
         }
     }

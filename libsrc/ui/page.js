@@ -405,9 +405,6 @@ define([
     }
 
     o.resize = function(){
-        // these lines were causing #site and #exprs to not fill the window
-        // $('#exprs').css('height', $(window).height());
-        // $('#site').css('height', $(window).height() - 44);
         if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
             var columns = Math.min(3, Math.floor($(window).width() / grid_width));
             $('#feed').css('width', columns * grid_width);

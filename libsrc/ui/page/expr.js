@@ -52,16 +52,18 @@ define([
     o.resize = function(){
         browser_layout.center($('#page_prev'), undefined, {'h': false});
         browser_layout.center($('#page_next'), undefined, {'h': false});
+
         var wide = ($(window).width() >= 1180) ? true : false;
         if (o.wide_overlay != wide) {
             o.wide_overlay = wide;
-            $('#popup_content').css("max-width", (wide) ? 980+600-420 : 980);
-            $('#popup_content .left_pane').width((wide) ? 600 : 420);
+            $("#popup_content").css("max-width", (wide) ? 980+600-420 : 980);
+            $("#popup_content .left_pane").width((wide) ? 600 : 420);
         }
         var columns = ($(window).width() >= 990) ? 2 : 1;
         if (o.overlay_columns != columns) {
             o.overlay_columns = columns;
-            $('#popup_content > *').css('display', (columns == 1) ? 'block' : 'inline-block')
+            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
+            $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right');
         }
     };
     var resize_icon = function(el) {
@@ -519,7 +521,7 @@ define([
 
             // update count and highlight state
             $(".counts_icon.comment").find(".counts").text(json.comments.length);
-            resize_icon($(".counts_icon.comment"));
+            resize_icon($("#social_overlay .counts_icon.comment"));
             o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
         }
         // TODO-cleanup: merge somehow with existing code to update activity menu
