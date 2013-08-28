@@ -1,17 +1,16 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+  <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
   {% block meta %}{% endblock %}
   <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
 
   {% for item in asset_bundle('curl.js') %}
     <script src='{{ item }}'></script>
   {% endfor %}
-  {#
-  {% for item in asset_bundle('site.js') %}
-    <script src='{{ item }}'></script>
-  {% endfor %}
-  #}
+  {% if not debug %}
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  {% endif %}
 
   <script>
 curl({

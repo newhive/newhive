@@ -192,15 +192,15 @@ class HiveAssets(Assets):
 
         opts = { }
 
-        self.assets_env.register('curl.js', 'curl.js',
-            filters = 'yui_js',
-            output = '../lib/curl.js'
-        )
-
         self.assets_env.register('admin.js',
-            'raphael/raphael.js', 'raphael/g.raphael.js', 'raphael/g.pie.js',
-            'raphael/g.line.js', 'jquery.tablesorter.min.js',
-            'jquery-ui/jquery-ui-1.8.16.custom.min.js', 'd3/d3.js', 'd3/d3.time.js',
+            'raphael/raphael.js',
+            'raphael/g.raphael.js',
+            'raphael/g.pie.js',
+            'raphael/g.line.js',
+            'browser/jquery/tablesorter.min.js',
+            'browser/jquery-ui/jquery-ui-1.8.16.custom.min.js',
+            'd3/d3.js',
+            'd3/d3.time.js',
             output='../lib/admin.js'
         )
 
@@ -244,15 +244,15 @@ class HiveAssets(Assets):
             output='../lib/edit.css'
         )
 
-        self.assets_env.register('google_closure.js', 'google_closure.js',
+        self.assets_env.register('curl.js', 'curl.js',
             filters = 'yui_js',
-            output = '../lib/google_closure.js'
+            output = '../lib/curl.js'
         )
 
-        # self.assets_env.register('site.js', 'compiled.site-bundle.js',
-        #     filters = 'yui_js',
-        #     output = '../lib/site-bundle.js'
-        # )
+        self.assets_env.register('site.js', 'compiled.site.js',
+            filters = 'yui_js',
+            output = '../lib/site.js'
+        )
 
         # CSS for expressions, and also site pages
         minimal_scss = webassets.Bundle(
@@ -283,7 +283,8 @@ class HiveAssets(Assets):
         )
         self.assets_env.register(
             'admin.css',
-            admin_scss, 'jquery-ui/jquery-ui-1.8.16.custom.css',
+            admin_scss,
+            'browser/jquery-ui/jquery-ui-1.8.16.custom.css',
             output='../lib/admin.css'
         )
 
@@ -291,11 +292,10 @@ class HiveAssets(Assets):
             'minimal.css',
             'app.css',
             'edit.css',
-            'google_closure.js',
-            #'site.js',
-            'email.css',
-            'admin.css',
-            'admin.js',
+            'site.js',
+            'email.css'
+            # 'admin.css',
+            # 'admin.js',
         ]
 
     def urls_with_expiry(self):

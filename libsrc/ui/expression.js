@@ -5,8 +5,7 @@
 */
 define(['browser/layout',
         'browser/jquery',
-        'server/context',
-        'ui/util'], function(layout, $, context, util) {
+        'ui/util'], function(layout, $, util) {
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){

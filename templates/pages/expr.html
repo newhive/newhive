@@ -1,9 +1,7 @@
-{% extends "base.html" %}
+{% extends "minimal.html" %}
 
 {% block head %}
-  <script>
-    Hive = { user: {{ user.client_view() | json }}, expr: {{ expr | json }} };
-  </script>
+  <title>{{ expr.title|e }}</title>
   <script>
   curl([
       'ui/expression'],
@@ -18,9 +16,7 @@
   {% endif %}
 {% endblock %}
 
-{% block body_classes %}{{ super() }} expression{% endblock %}
-
-{% block main %}
+{% block body %}
   {% include 'page_parts/expr_body.html' %}
   {% if expr_script %}
     <script id="expr_script">

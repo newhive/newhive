@@ -1,1 +1,1 @@
-cram app/site -o compiled.site-bundle.js -r /home/abram/newhive/
+cram app/site -o compiled.site.js -r .. -m app/external_jquery

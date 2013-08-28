@@ -2836,7 +2836,7 @@ Hive.foc = function(n){ Hive.Selection.update([Hive.Apps[n]]) };
 $(function(){
     $(window).keydown(function(e){
         if(e.shiftKey && e.keyCode == 120){ // F9
-            debugger;
+            // debugger;
             console.log(sel().content_element.find('.hive_selection'));
         }
     });
