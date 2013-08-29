@@ -78,8 +78,17 @@ class Community(Controller):
             for settings """
         owner = tdata.user
 
-        print request.form
-        if (len(request.form.keys())):
+        subscribed = owner.get('email_subscriptions', [])
+        email_lists = map(lambda email_list: {
+            'id': 'email_' + email_list.name,
+            'subscribed': email_list.name in subscribed,
+            'description': ui_str.email_subscription_ui[email_list.name],
+            'name': email_list.name
+        }, mail.MetaMailer.unsubscribable('user'))
+
+        # if user submitted form
+        if len(request.form.keys()):
+            # update user email and password.
             if request.form.get('email'):
                 update = dict(
                     email=request.form.get('email'))
@@ -101,18 +110,21 @@ class Community(Controller):
                         pass
                         # return { 'error': 'Email not sent' };
                     # message = message + ui.email_change_success_message + " "
+            
+            # update email subscriptions
+            subscribed = []
+            for email_list in email_lists:
+                if request.form.get(email_list['id']):
+                    subscribed.append(email_list['name'])
+                    email_list['subscribed'] = True
+                else:
+                    email_list['subscribed'] = False
+            update['email_subscriptions'] = subscribed
 
-                owner.update(**update)
+            owner.update(**update)
 
-        # TODO: implement account deletion
+            # TODO: implement account deletion
 
-        subscribed = tdata.user.get('email_subscriptions', [])
-        email_lists = map(lambda email_list: {
-            'id': 'email_' + email_list.name,
-            'subscribed': email_list.name in subscribed,
-            'description': ui_str.email_subscription_ui[email_list.name],
-            'name': email_list.name
-        }, mail.MetaMailer.unsubscribable('user'))
 
         return {
             'owner': tdata.user.client_view(),
