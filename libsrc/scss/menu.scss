@@ -1,13 +1,5 @@
 @import "common";
 
-.item, .menu_item {
-    text-transform: uppercase;
-    &:hover {
-    	font-weight: bold;
-    }
-    font-family: Gibson Semibold;
-    font-size: 16px;
-}
 .menu.drawer .menu_item.active.black_active {
     background-color: black;
     color: white;
@@ -19,6 +11,11 @@
     background-color: black;
     color: white;
 }
+.black_hover:hover, .black_bg {
+    background-color: black;
+    color: white;
+}
+
 
 #logo_menu {
     min-width: 140px;
@@ -131,8 +128,10 @@
         color: black;
         margin-right: 15px;
         float: left;
+        line-height: 40px;
+        height: 40px;
     }
-    .submit { float: right; }
+    input[type=submit] { float: right; }
 }
 
 .user_menu {

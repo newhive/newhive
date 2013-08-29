@@ -90,6 +90,8 @@ var menu = function(handle, drawer, options) {
         else opts.open_menu();
     };
     o.do_close = function() {
+        if (opts.auto_height)
+            drawer.css("max-height", "none");
         if(opts.animate_close){
             if(!opts.animate_open){
                 opts.animate_open = {};
@@ -149,7 +151,7 @@ var menu = function(handle, drawer, options) {
         var hp;
         if(handle.offsetParent().is(drawer.offsetParent())){
             hp = handle.position();
-        } else{
+        } else {
             hp = handle.offset();
             if(drawer.css('position') == 'fixed'){
                 hp.left -= window.scrollX;
@@ -158,11 +160,18 @@ var menu = function(handle, drawer, options) {
         }
 
         var css_opts = {};
+        // special stuff for activity menu. Belongs in template file
+        // as special attributes
+        if (drawer.is("#activity_menu")) {
+            opts.auto_height = true;
+            // opts.offset_y = (95 - handle.outerHeight()) / 2;
+            opts.offset_y = 0;
+        }
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
         if(opts.layout_x == 'submenu'){
             css_opts.left = hp.left + handle.outerWidth() + opts.offset_x;
-            css_opts.top = hp.top - drawer.outerHeight()
+            css_opts.top = hp.top - drawer.outerHeight() + opts.offset_y
                 + handle.outerHeight();
             // hp.top + opts.offset_y;
         }
@@ -191,10 +200,16 @@ var menu = function(handle, drawer, options) {
             css_opts.left = hp.left - opts.offset_x - drawer.outerWidth();
         }
 
-        if(opts.auto_height && css_opts.top + drawer.outerHeight() > $(window).height()) {
+        var margin_y = 50;
+        if(opts.auto_height) {
             var scroller = drawer.find('.items');
-            scroller.css('max-height', $(window).height() - 50 - css_opts.top -
-                (drawer.outerHeight() - scroller.outerHeight()));
+            if(css_opts.top + drawer.outerHeight() > $(window).height()) {
+                scroller.css('max-height', $(window).height() - margin_y - css_opts.top -
+                    (drawer.outerHeight() - scroller.outerHeight()));
+            } else if (css_opts.top < margin_y) {
+                drawer.css("max-height", drawer.outerHeight() + css_opts.top - margin_y)
+                css_opts.top = 50;
+            }
         }
 
         drawer.css(css_opts);

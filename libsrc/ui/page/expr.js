@@ -52,16 +52,18 @@ define([
     o.resize = function(){
         browser_layout.center($('#page_prev'), undefined, {'h': false});
         browser_layout.center($('#page_next'), undefined, {'h': false});
+
         var wide = ($(window).width() >= 1180) ? true : false;
         if (o.wide_overlay != wide) {
             o.wide_overlay = wide;
-            $('#popup_content').css("max-width", (wide) ? 980+600-420 : 980);
-            $('#popup_content .left_pane').width((wide) ? 600 : 420);
+            $("#popup_content").css("max-width", (wide) ? 980+600-420 : 980);
+            $("#popup_content .left_pane").width((wide) ? 600 : 420);
         }
         var columns = ($(window).width() >= 990) ? 2 : 1;
         if (o.overlay_columns != columns) {
             o.overlay_columns = columns;
-            $('#popup_content > *').css('display', (columns == 1) ? 'block' : 'inline-block')
+            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
+            $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right');
         }
     };
     var resize_icon = function(el) {
@@ -95,7 +97,7 @@ define([
         o.resize();
         
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
-        $('#dia_embed textarea').val("<iframe src='" + embed_url + 
+        $('#dia_embed .copy.embed_code').val("<iframe src='" + embed_url + 
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
             " frameborder='0' vspace='0' hspace='0'></iframe>");
 
@@ -385,7 +387,7 @@ define([
             el.data(prop, orig_position);
 
         el.stop().animate({
-            'background-position-x': dir + "26px" }, {
+            'background-position-x': dir + "20px" }, {
             duration: 150,
             easing: 'swing',
             complete: function() {
@@ -519,7 +521,7 @@ define([
 
             // update count and highlight state
             $(".counts_icon.comment").find(".counts").text(json.comments.length);
-            resize_icon($(".counts_icon.comment"));
+            resize_icon($("#social_overlay .counts_icon.comment"));
             o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
         }
         // TODO-cleanup: merge somehow with existing code to update activity menu
@@ -548,7 +550,7 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 // Cache upcoming expressions
-                cache_offsets = [1, -1, 2, 3];
+                cache_offsets = [1, -1, 2];
                 if (offset < 0)
                     cache_offsets = cache_offsets.map(function(o) { return -o; });
                 expr_ids = [];

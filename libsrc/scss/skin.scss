@@ -1,4 +1,4 @@
-.title.expr {
+.title.expr, .dialog .title {
 	font-family: Gibson Semibold;
 	font-size: 33px;
 	letter-spacing: -1px;
@@ -9,12 +9,25 @@
     font-family: Gibson;
 	letter-spacing: -1px;
 }
+.title.fullname {
+	font-family: Gibson;
+	letter-spacing: -1px;
+}
 .username {
     font-family: Gibson Semibold;
     font-size: 17px;
     text-transform: uppercase;
 }
-.title.fullname {
-	font-family: Gibson;
-	letter-spacing: -1px;
+.subheading {
+    font-family: Gibson Semibold;
+    font-size: 17px;
+    // text-transform: uppercase;
+}
+.item, .menu_item {
+    text-transform: uppercase;
+    &:hover {
+    	font-weight: bold;
+    }
+    font-family: Gibson Semibold;
+    font-size: 16px;
 }

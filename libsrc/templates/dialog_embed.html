@@ -1,10 +1,13 @@
 {# Dialog for Expression Embed #}
 <div id="dia_embed" class="dialog" data-handle='#embed_form_btn'>
-  <h1>Embed</h1>
-  <h2>Interactive Expression:</h2>
-  <textarea class='copy embed_code' onfocus='this.select()' 
-    onclick='this.select()' readonly='readonly' id='expression_embed_code'>
+  <div class="heading title expr">Embed</div>
+  <div class="subheading">Interactive Expression:</div>
+  <textarea autofocus class='copy embed_code' id='expression_embed_code'
+    onfocus='this.select()' onclick='this.select()' readonly>
   </textarea>
-  <h2>Expression image link:</h2>
-  <label>newhive.com/api/snapshot/{owner.name}/{expr.title}</label>
+  <div class="subheading">Expression image link:</div>
+  <textarea class="image_link" 
+    onfocus='this.select()' onclick='this.select()' readonly>
+    {server_url}{routing_href "expr_snapshot" "expr_id" id}
+  </textarea>
 </div>

@@ -31,7 +31,7 @@ define([
         } else if (ago < 60*60) {
             return (ago/60).toFixed(0) + ' min ago';
         } else if (ago < 1.5*60*60) {
-            return '~1 hour ago';
+            return '1 hour ago';
         } else if (ago < 24*60*60) {
             return (ago/3600).toFixed(0) + ' hrs ago';
         } else  if (ago < 7*24*60*60) {
@@ -87,6 +87,12 @@ define([
 
         return attrs("search", args, "q=" + encodeURIComponent(query_args));
     };
+
+    o.routing_href = function(scope, route_name){
+        var args = get_route_args(arguments);
+        page_state = routing.page_state(route_name, args);
+        return page_state.page.slice(1);
+    }
 
     // takes route_name, and association argument list.
     // Returns attribute string.

@@ -4,8 +4,8 @@
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
-      <span class='signup_btn text_btn btn'>Sign up</span>
-      <span class='login_btn text_btn left_border btn'>Log in</span>
+      <span class='signup_btn text_btn btn menu_item'>Sign up</span>
+      <span class='login_btn text_btn left_border btn menu_item'>Log in</span>
     </span>
   {>}
   {<if user.logged_in}<a {anchor_attrs "create_expr" "owner_name" user.name}

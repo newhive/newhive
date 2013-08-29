@@ -70,6 +70,7 @@ define([
 
     o.open_route = function(page_state, callback, push_state) {
         o.back = false;
+        $('#dialog_shield').click();
         if(page_state.api){
             var api_call = {
                 method: 'get',

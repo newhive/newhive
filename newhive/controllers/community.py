@@ -14,15 +14,15 @@ class Community(Controller):
     def featured(self, tdata, request, **paging_args):
         return {
             "cards": self.db.query('#Featured', viewer=tdata.user),
-            'header': ("Featured Expressions",), 'card_type': 'expr',
-            'title': "NewHive - Featured",
+            'header': ("The Hive",), 'card_type': 'expr',
+            'title': "The Hive",
         }
 
     def recent(self, tdata, request, **paging_args):
         return {
             "cards": self.db.query('#Recent', viewer=tdata.user),
-            'header': ("Recent Expressions",), 'card_type': 'expr',
-            'title': "NewHive - Featured",
+            'header': ("ALL Expressions",), 'card_type': 'expr',
+            'title': "NewHive - ALL",
         }
 
     def trending(self, tdata, request, username=None, **paging_args):
@@ -34,8 +34,8 @@ class Community(Controller):
             return self.featured(tdata, request, **paging_args)
         return {
             "cards": user.feed_page_esdb(feed='trending', **paging_args),
-            'header': ("Network", "Trending"), 'card_type': 'expr',
-            'title': "Network - Trending",
+            'header': ("Network",), 'card_type': 'expr',
+            'title': "Network",
         }
 
     def network(self, tdata, request, username=None, **paging_args):
@@ -44,8 +44,8 @@ class Community(Controller):
             user = tdata.user
         return {
             "cards": user.feed_page_esdb(feed='network', **paging_args),
-            "header": ("Network", "Recent"), 'card_type': 'expr',
-            "title": 'Network - Recent',
+            "header": ("Recent",), 'card_type': 'expr',
+            "title": 'Recent',
         }
 
     def forms_signup(self, tdata, request, username=None, **paging_args):
@@ -215,7 +215,12 @@ class Community(Controller):
         expr_owner = expr.get_owner()
         if expr_owner and expr_owner['analytics'].get('views_by'):
             expr_owner.increment({'analytics.views_by': 1})
+        if not expr.get('views'):
+            expr['views'] = 0
+        expr['views'] += 1
+        expr.save(updated = False)
         profile = expr_owner.client_view(viewer=tdata.user)
+        print expr_owner['analytics']
         # TODO(speed): expr client_view CONTAINS owner profile. Duplication of effort.
         return {
             'owner': profile, 'expr': expr.client_view(viewer=tdata.user, activity=10),
