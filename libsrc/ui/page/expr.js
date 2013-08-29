@@ -585,18 +585,22 @@ define([
                 o.social_toggle();
             return
         }
+        o.page_btn_handle(msg);
+    };
+
+    o.page_btn_handle = function(msg){
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
             || context.page_data.cards.length == 1) {
             $(".page_btn").hide();
             return;
         }
-        if ( m.data == "show_prev" || m.data == "show_next") {
-            var div = $(m.data == "show_prev" ? "#page_prev" : "#page_next");
+        if ( msg == "show_prev" || msg == "show_next") {
+            var div = $(msg == "show_prev" ? "#page_prev" : "#page_next");
             div.show().addClass('active');
         }
-        if ( m.data == "hide_prev" || m.data == "hide_next") {
-            var div = $(m.data == "hide_prev" ? "#page_prev" : "#page_next");
+        if ( msg == "hide_prev" || msg == "hide_next") {
+            var div = $(msg == "hide_prev" ? "#page_prev" : "#page_next");
             div.hide().removeClass('active');
         }
     };

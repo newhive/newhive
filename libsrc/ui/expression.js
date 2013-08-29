@@ -12,8 +12,11 @@ define(['browser/layout',
         var o = {};
         o.initialized = false;
 
+        var last_message = '';
         o.send_top = function(msg){
+            if(last_message == msg) return;
             window.parent.postMessage(msg, '*');
+            last_message = msg;
         };
         
         o.paging_sent = false;
@@ -72,7 +75,7 @@ define(['browser/layout',
             } else {
                 o.send_top("hide_next"); // $('#page_next').hide();
             }
-        }
+       }
 
         o.init_content = function(){
             // bonus paging and scrolling features
