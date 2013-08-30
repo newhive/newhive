@@ -1,3 +1,4 @@
 CutyCapt
 *.o
 Makefile
+moc_CutyCapt.cpp
