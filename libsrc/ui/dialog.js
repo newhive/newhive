@@ -27,6 +27,13 @@ define([
         opts.dialog.data('dialog', o);
         oo.dialogs.push(o);
 
+        var generic_dialog_handler = function(event, json){
+            if (json.error != undefined) {
+                $(this).parents().filter(".dialog").find('.error_msg').text(json.error).show();
+            } else {
+                $('#dialog_shield').click();
+            }
+        };
         // construct element
         // if(!opts.opts.mandatory){
         //     var manual_close = function(){ opts.close(true); };
@@ -45,6 +52,7 @@ define([
             opts.shield.appendTo(document.body).click(o.close);
 
             opts.dialog.detach().appendTo(document.body).removeClass('hide').show();
+            opts.dialog.find("form").on('response', generic_dialog_handler);
             // For old browsers which don't support autofocus.
             opts.dialog.find("*[autofocus]").focus();
             opts.dialog.find(".error_msg").hide();

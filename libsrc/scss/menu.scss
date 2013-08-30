@@ -119,21 +119,6 @@
     }
 }
 
-#login_menu {
-    width: 220px;
-    padding: 10px;
-    input[type=text], input[type=password] { width: 202px; }
-    .password_recovery {
-        font-size: 12px;
-        color: black;
-        margin-right: 15px;
-        float: left;
-        line-height: 40px;
-        height: 40px;
-    }
-    input[type=submit] { float: right; }
-}
-
 .user_menu {
     width: 400px;
 }

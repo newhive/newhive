@@ -1,5 +1,5 @@
 {|templates/network_nav.html}
-{<if header}
+{<if (and header (or user.logged_in (neq route_name "home")))}
   <div id='header' class='header'>
     <span class='heading'>{ header.0 }
       {<if header.1}: { header.1 }{>}</span>

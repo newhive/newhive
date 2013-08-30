@@ -1,14 +1,12 @@
 {<unless user.logged_in}
-  <div class='centered'>
-    <img src='{asset "skin/site/logo_text.png"}'>
+  <div class='centered logged_out header'>
+    <img class="vert_spaced" src='{asset "skin/site/logo_text.png"}'>
   
-    <div>
+    <div class="small heading">
       NewHive is your blank canvas.<br>
       It’s freedom of expression on the web.
     </div>
-    <br>
     {<with . "compact" "true"}{|templates/request_invite_form.html}{>}
-    <br> 
     <iframe
       src="http://player.vimeo.com/video/18836819?title=0&amp;byline=0&amp;portrait=0"
       width="640px" height="360px" frameborder="0" webkitAllowFullScreen allowFullScreen

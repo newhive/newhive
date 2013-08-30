@@ -6,6 +6,9 @@
 }
 .heading {
     font-size: 44px;
+    &.small {
+        font-size: 33px;
+    }
     font-family: Gibson;
 	letter-spacing: -1px;
 }

@@ -29,7 +29,7 @@ class Community(Controller):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
-        # Logged out users see featured.
+        # # Logged out users see featured.
         if not user or not user.id:
             return self.featured(tdata, request, **paging_args)
         return {
