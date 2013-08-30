@@ -249,10 +249,10 @@ class HiveAssets(Assets):
             output = '../lib/curl.js'
         )
 
-        self.assets_env.register('site.js', 'compiled.site.js',
-            filters = 'yui_js',
-            output = '../lib/site.js'
-        )
+        # self.assets_env.register('site.js', 'compiled.site.js',
+        #     filters = 'yui_js',
+        #     output = '../lib/site.js'
+        # )
 
         # CSS for expressions, and also site pages
         minimal_scss = webassets.Bundle(
@@ -292,7 +292,7 @@ class HiveAssets(Assets):
             'minimal.css',
             'app.css',
             'edit.css',
-            'site.js',
+            # 'site.js',
             'email.css'
             # 'admin.css',
             # 'admin.js',
