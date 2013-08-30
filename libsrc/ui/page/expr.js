@@ -183,6 +183,8 @@ define([
         // Create new content frame
         var contentFrameURL = contentFrameURLBase + expr_id;
         contentFrame = $('<iframe class="expr">');
+        // #page_btn_load_hack
+        contentFrame.load(function(){ contentFrame.data('loaded', true); });
         contentFrame.attr('src', contentFrameURL);
         contentFrame.attr('id','expr_' + expr_id);
         // Cache the expr data on the card
@@ -290,13 +292,21 @@ define([
         }, o.anim_duration);
         o.allow_animations = false;
 
-        // postMessage only works after the page loads, so once page loads, we
-        // can hide them and show on hover
-        var btns = $('.page_btn').show();
+        // postMessage only works after the page loads.
+        // So page buttons are always visible during expr loading,
+        // and once expr loads, they behave normally #page_btn_load_hack
+        if(!contentFrame.data('loaded')){
+            // bugbug: sometimes this is never followed by a contentFrame.load
+            // console.log('showing');
+            $('.page_btn').show();
+        }
+        else {
+            // console.log('resetting on show');
+            o.page_btn_handle();
+        }
         contentFrame.load(function(){
-            btns.each(function(i, e){
-                if(!$(e).hasClass('active')) $(e).hide()
-            });
+            // console.log('resetting on load', contentFrame);
+            o.page_btn_handle();
         });
     };
 
@@ -587,24 +597,32 @@ define([
                 o.social_toggle();
             return
         }
-        o.page_btn_handle(msg);
+        else o.page_btn_handle(m.data);
     };
 
+    var page_btn_state = '';
     o.page_btn_handle = function(msg){
+        if(!msg) msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
             || context.page_data.cards.length == 1) {
             $(".page_btn").hide();
             return;
         }
-        if ( msg == "show_prev" || msg == "show_next") {
-            var div = $(msg == "show_prev" ? "#page_prev" : "#page_next");
-            div.show().addClass('active');
+
+        if(msg == 'show_prev') {
+            $('#page_prev').show();
+            $('#page_next').hide();
+        } else if(msg == 'show_next') {
+            $('#page_next').show();
+            $('#page_prev').hide();
+        } else if(msg == 'hide') {
+            $('.page_btn').hide();
         }
-        if ( msg == "hide_prev" || msg == "hide_next") {
-            var div = $(msg == "hide_prev" ? "#page_prev" : "#page_next");
-            div.hide().removeClass('active');
-        }
+
+        // should reflect whether left or right page_btn should be visible if
+        // page is not loading. See #page_btn_load_hack
+        page_btn_state = msg;
     };
 
     return o;
