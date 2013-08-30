@@ -3,6 +3,14 @@
 
 @media print { #nav { display: none; } }
 
+.red_spacer {
+    border-left: 2px solid red;
+    // height: 14px;
+    font-size: 13px;
+    margin-left: -2px;
+    margin-right: 3px;
+}
+
 .page_btn {
     width: 42px;
     height: 55px;
