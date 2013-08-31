@@ -85,7 +85,7 @@ def handle(request):
     try: (controller, handler), args = routes.bind_to_environ(
         request.environ).match()
     except exceptions.NotFound as e:
-        print "Serving 500!"
+        print "Gap in routing table!"
         return api.controller.serve_500(request, Response(),
             exception=e, json=False)
     except RequestRedirect as e:
@@ -111,6 +111,7 @@ def handle(request):
 
             ps.dump_stats("/var/www/newhive/stats")
     except:
+        import traceback
         (blah, exception, traceback) = sys.exc_info()
         response = api.controller.serve_500(request, Response(), exception=exception,
             traceback=traceback, json=False)

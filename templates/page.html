@@ -7,6 +7,12 @@
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
   {% endfor %}
 
+  {% if not debug %}
+    {% for item in asset_bundle('site.js') %}
+      <script src='{{item}}'></script>
+    {% endfor %}
+  {% endif %}
+
   <script>
 curl(['server/context', 'browser/js'], function(context, util){
     util.copy({

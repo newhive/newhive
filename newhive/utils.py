@@ -682,7 +682,7 @@ def log_error(db, request=None, message=None, traceback=None, critical=False):
     #, ignore_system_exceptions=True)
     import traceback as tb
     import newhive.manage.git
-    traceback = traceback or tb.extract_stack()[0:-1]
+    traceback = tb.extract_tb(traceback) or tb.extract_stack()[0:-1]
 
     log_entry = {
         'type': 'python',
