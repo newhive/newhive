@@ -4,9 +4,10 @@
     via postMessage.
 */
 define([
-    'browser/layout',
-    'browser/jquery'
-], function(layout, $){
+    'browser/jquery',
+    'ui/util',
+    'browser/layout'
+], function($, util, layout){
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
@@ -34,6 +35,8 @@ define([
         // };
 
         o.init = function(){
+            var no_embed = util.url_params["no-embed"] != undefined;
+            if (no_embed) o.hide();
             window.addEventListener('message', function(m){
                 if ( m.data.action == "show" ) {
                     function callback(data){
@@ -81,14 +84,15 @@ define([
             // TODO: figure out how to attach to all elements that don't have default drag behavior
             // TODO: make work in FF
             var scroll_ref, mouse_ref;
-            $('#bg').on('dragstart', function(e, dd){
-                scroll_ref = [document.body.scrollLeft, document.body.scrollTop];
-                mouse_ref = [e.clientX, e.clientY];
-            }).on('drag', function(e, dd){
-                document.body.scrollLeft = scroll_ref[0] - e.clientX + mouse_ref[0];
-                document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
-            });
-
+            if (0) {
+                $('#bg').on('dragstart', function(e, dd){
+                    scroll_ref = [document.body.scrollLeft, document.body.scrollTop];
+                    mouse_ref = [e.clientX, e.clientY];
+                }).on('drag', function(e, dd){
+                    document.body.scrollLeft = scroll_ref[0] - e.clientX + mouse_ref[0];
+                    document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
+                });
+            }
             //$(document.body).on('keydown', function(e){
             //    if(e.keyCode == 32) // space
             //        if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) o.page_next();
@@ -98,7 +102,7 @@ define([
             //        if(document.body.scrollLeft == 0) o.page_prev();
             //});
 
-            o.init_jplayer();
+            // o.init_jplayer();
         };
 
         o.show = function(){
@@ -107,7 +111,7 @@ define([
 
             if( ! o.initialized ){
                 o.initialized = true;
-                // o.init_content();
+                o.init_content();
             }
 
             // $.each(Hive.expr.apps, function(i, app){
