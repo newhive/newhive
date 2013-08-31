@@ -88,7 +88,8 @@ class Controller(object):
         if config.debug_mode:
             raise exception, None, traceback
 
-        log_error(self.db, request=request, traceback=traceback, critical=True)
+        log_error(self.db, message=exception, request=request,
+            traceback=traceback, critical=True)
 
         response.status_code = 500
         if json: return self.serve_json(response, {'error': 500 })

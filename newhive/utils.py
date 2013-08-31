@@ -680,18 +680,14 @@ def log_error(db, request=None, message=None, traceback=None, critical=False):
     # from werkzeug.debug.tbtools import get_current_traceback
     # traceback = traceback or get_current_traceback(skip=0, show_hidden_frames=False
     #, ignore_system_exceptions=True)
-    import traceback as sys_traceback
+    import traceback as tb
     import newhive.manage.git
-    traceback = traceback or sys_traceback.extract_stack()
-    # print traceback
-    def privacy_filter(dictionary):
-        for key in ['password', 'secret', 'old_password']:
-            if dictionary.has_key(key): dictionary.update({key: "******"})
-        return dictionary
+    traceback = traceback or tb.extract_stack()[0:-1]
+
     log_entry = {
         'type': 'python',
         'critical': critical,
-        'exception': message or traceback.exception,
+        'exception': str(message),
         'stack_frames': [{
             'filename': x[0],
             'lineno': x[1],
@@ -701,6 +697,11 @@ def log_error(db, request=None, message=None, traceback=None, critical=False):
         'code_revision': newhive.manage.git.current_revision,
         'dev_prefix': config.dev_prefix,
     }
+
+    def privacy_filter(dictionary):
+        for key in ['password', 'secret', 'old_password']:
+            if dictionary.has_key(key): dictionary.update({key: "******"})
+        return dictionary
     if request:
         log_entry.update({
             'environ': serializable_filter(request.environ),
