@@ -389,6 +389,7 @@ define([
     };
 
     o.page_btn_animate = function (el) {
+        return;
         var prop = "background-position-x";
         var dir = (el.prop("id") == "page_next") ? "" : "-";
         var orig_position = el.css(prop);
