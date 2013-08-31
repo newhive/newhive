@@ -252,10 +252,13 @@ define([
         $("#search_box").focus();
         
         // global keypress handler
-        $("body").keydown(function(e) {
-            if(e.keyCode == 27) { // escape
+        $("body").unbind('keydown').keydown(function(e) {
+            if (e.keyCode == 27) { // escape
                 // If a dialog is up, kill it.
                 $('#dialog_shield').click();
+            } else if (e.keyCode == 39 || e.keyCode == 37) {
+                // If paging, go to previous / next expression.
+                context.page.navigate_page((e.keyCode == 39) ? 1 : -1);
             } else {
                 // alert('keyCode: ' + e.keyCode);
             }

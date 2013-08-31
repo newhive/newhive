@@ -107,7 +107,7 @@ define([
         o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
 
         animate_expr();
-        navigate_page(0); // To cache nearby expressions
+        o.navigate_page(0); // To cache nearby expressions
 
         hide_panel();
         $("#content_btns").show();
@@ -171,7 +171,7 @@ define([
         }
         return found;
     };
-    function cache_frames(expr_ids){
+    function cache_frames(expr_ids, current){
         if (expr_ids.length == 0)
             return false;
         expr_id = expr_ids[0];
@@ -183,9 +183,7 @@ define([
         // Create new content frame
         var contentFrameURL = contentFrameURLBase + expr_id;
         contentFrame = $('<iframe class="expr">');
-        // #page_btn_load_hack
-        contentFrame.load(function(){ contentFrame.data('loaded', true); });
-        contentFrame.attr('src', contentFrameURL);
+        contentFrame.attr('src', contentFrameURL + ((current != undefined) ? "" : "?no-embed"));
         contentFrame.attr('id','expr_' + expr_id);
         // Cache the expr data on the card
         var page_data = context.page_data;
@@ -207,6 +205,9 @@ define([
         // Remember all the frames that are loading.
         loading_frame_list = loading_frame_list.concat(contentFrame.eq(0));
         contentFrame.load(function () {
+            contentFrame.data('loaded', true);
+            if (contentFrame.hasClass('expr-visible')) 
+                contentFrame.get(0).contentWindow.postMessage({action: 'show'}, '*');
             for (var i = 0, el; el = loading_frame_list[i]; i++) {
                 if (el.prop("id") == contentFrame.prop("id")) {
                     loaded_frame_list.concat(loading_frame_list.splice(i, 1));
@@ -238,7 +239,7 @@ define([
 
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
-            contentFrame = cache_frames([expr_id]);
+            contentFrame = cache_frames([expr_id], true);
         }
         else {
             contentFrame.get(0).contentWindow.
@@ -548,9 +549,9 @@ define([
         o.edit_comment_response([], json);
     };
 
-    o.page_prev = function() { navigate_page(-1); };
-    o.page_next = function() { navigate_page(1); };
-    var navigate_page = function (offset){
+    o.page_prev = function() { o.navigate_page(-1); };
+    o.page_next = function() { o.navigate_page(1); };
+    o.navigate_page = function (offset){
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
