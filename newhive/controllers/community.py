@@ -7,7 +7,7 @@ from collections import Counter
 def deduped(item, dict):
     if dict.get(item):
         return False
-    dict['item'] = True
+    dict[item] = True
     return item
 
 class Community(Controller):
@@ -75,6 +75,7 @@ class Community(Controller):
         feeds = self.db.Feed.page(spec)
         for f in feeds:
             id = deduped(f['entity'], d)
+            print d
             if id:
                 card_ids.append(id)
                 card = self.db.Expr.fetch(id)
