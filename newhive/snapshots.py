@@ -1,5 +1,7 @@
 # requires cutycapt:
 # sudo apt-get install cutycapt
+# see http://daveelkins.com/2009/04/10/setting-up-headless-xserver-and-cutycapt-on-ubuntu/
+# TODO: Snapshot batching. namely, CutyCapt should be able to take a list of 
 
 import envoy
 import os
@@ -45,10 +47,13 @@ class Snapshots(object):
                 % (snap_dimensions[0],snap_dimensions[1],url,out_filename) )
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
-            os.environ['DISPLAY'] =':99'
-            print cmd
+            # os.environ['DISPLAY'] =':99'
             with open(os.devnull, "w") as fnull:
-                r = call(cmd.split(" "), stderr=fnull, stdout=fnull)
+                # BUGBUG
+                if True:
+                    cmd = 'xvfb-run --server-args="-screen 0, 1024x768x24" ' + cmd
+                print cmd
+                r = os.system(cmd) #, stderr=fnull, stdout=fnull)
                 # r = envoy.run(cmd, {"DISPLAY":":19"})
                 if r != 0:
                     print "FAILED: " + cmd
@@ -98,16 +103,17 @@ class Snapshots(object):
     def __init__(self):
         # print "snapshot init!2!!"
         if platform == 'linux' or platform == 'linux2':
+            pass
             # Need xvfb running on linux to take snapshots. Check to see if it's currently running
             # sp = envoy.run('xdpyinfo -display :99')
             # print sp.status_code
             # if sp.status_code != 0:
-            with open(os.devnull, "w") as fnull:
-                r = call('xdpyinfo -display :99'.split(" "), stderr=fnull, stdout=fnull)
-                # print r
-                if r != 0:
-                    self.ps = Popen("Xvfb :99 -screen scrn 1024x768x24".split(" "), stderr=fnull, stdout=fnull)
-                    # self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
+            # with open(os.devnull, "w") as fnull:
+            #     r = call('xdpyinfo -display :99'.split(" "), stderr=fnull, stdout=fnull)
+            #     # print r
+            #     if r != 0:
+            #         self.ps = Popen("Xvfb :99 -screen scrn 1024x768x24".split(" "), stderr=fnull, stdout=fnull)
+            #         # self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
             # print "snapshots ready"
     def __del__(self):
         # print "snapshot del!!!"
