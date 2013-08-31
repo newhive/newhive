@@ -263,6 +263,15 @@ define([
                 // alert('keyCode: ' + e.keyCode);
             }
         });
+        $(window).scroll(function(e) {
+            $(".overlay.nav").fadeOut("fast");
+            if (o.scroll_timeout != undefined)
+                clearTimeout(o.scroll_timeout);
+            o.scroll_timeout = setTimeout(function() {
+                o.scroll_timeout = undefined;
+                $(".overlay.nav").fadeIn("fast");
+            }, 1000);
+        });
     };
     o.attach_handlers = function(){
         if(context.page && context.page.attach_handlers)
