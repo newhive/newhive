@@ -6,7 +6,7 @@
 .page_btn {
     width: 42px;
     height: 55px;
-    background-size: 42px 55px;
+    // background-size: 42px 55px;
     &:hover { background-color: black; }
 }
 #page_prev {
@@ -18,7 +18,7 @@
 #page_next {
     background-image: asset_url('skin/nav/page_next.png');
     &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
-    background-position: 4px 0px;
+    background-position: -6px 0px;
     right: 20px;
 }
 
@@ -172,51 +172,32 @@
     .right_pane {
         display: inline-block;
         width: 470px;
-        // position: absolute;
-        // right: 0;
-        // vertical-align: top;
         text-align: right;
-        &> * > * { text-align: left; }
-        // border-left: 1px solid #d1d1d1;
         margin-right: 70px;
 
         .vcenter_spacer {
             height: 80px;
         }
         .tag_list {
-            // padding: 10px 0px 20px 0px;
             // text-align: center;
             max-height: 80px;
             overflow: hidden;
-            text-align: left;
         }
         .stats_bar {
             margin-top: 10px;
-            text-align: left;
-            // position: fixed;
-            // right: 14px;
-            // bottom: 10px;
-            // margin-bottom: 10px;
-            // margin-left: 15px;
+            &> * { text-align: left; }
         }
 
         .counts_icon {
             width: 90px;
             margin-right: 7px;
             .icon {
-                // width: 55px;
-                // background-position-y: -7px;
                 width: 60px;
                 height: 60px;
-                // margin-bottom: -5px;
             }
             .counts {
                 line-height: 60px;
             }
-            // .icon.logo, .icon.plus-minus {
-            //     width: 36px;
-            //     background-position-y: 0px;
-            // }
             &.plus-minus {
                 &:hover {
                     background-color: black;
@@ -229,9 +210,6 @@
                 background-color: $color_selected;
                 background-image: none;
             }
-            &.nohover:hover {
-                background-color: transparent; 
-            }
         }
     }
     .footer {
@@ -241,10 +219,10 @@
 }
 
 $action: love comment republish;
-// This definition applies to all feed items, not just nav
-// TODO: move elsewhere
 .activity {
     .feed_item {
+        // background-color: #EEE;
+        position: relative;
         padding: 10px;
         overflow: auto;
         border-top: 1px solid #d1d1d1;
@@ -252,6 +230,32 @@ $action: love comment republish;
         font-family: Gibson;
         font-size: 16px;
 
+        &.comment {
+            .content {
+                @include calc-width("100% - 54px");
+                .text {
+                    // min-height: 44px;
+                    max-height: inherit;
+                    max-width: inherit;
+                    display: block;
+                    margin-bottom: 10px;
+                }
+                a.byline { float: left; }
+            }
+            .timestamp {
+                float: right;
+                position: inherit;
+            }
+            .show_hover {
+                position: absolute;
+                right: 8px;
+                top: 5px;
+            }
+            textarea {
+                height: 77px;
+                margin-top: 18px;
+            }
+        }
         &:hover, &.active {
             background-color: $color_selected;
         }
@@ -280,7 +284,7 @@ $action: love comment republish;
         }
         .timestamp {
             float: right;
-            clear: both;
+            // clear: both;
             font-family: Bebas;
             font-size: 14px;
             color: $color_grey_medium;
@@ -314,27 +318,21 @@ $action: love comment republish;
         }
 
         .feed_item {
-            width: 100%;
-            display: inline-block;
-            margin: -3px; /* wtf? */
+            // width: 100%;
+            // display: inline-block;
             position: relative;
-            border-top: 2px solid #d1d1d1;
+            // border-top: 2px solid #d1d1d1;
 
-            .show_hover {
-                position: absolute;
-                right: 20px;
-                top: 5px;
-            }
-            .timestamp {
-                right: 24px;
-                bottom: 0px;
-                max-width: 114px;
-                overflow: hidden;
-                white-space: nowrap;
-            }
-            .text {
-                max-height: none;
-            }
+            // .timestamp {
+            //     right: 24px;
+            //     bottom: 0px;
+            //     max-width: 114px;
+            //     overflow: hidden;
+            //     white-space: nowrap;
+            // }
+            // .text {
+            //     max-height: none;
+            // }
         }
     }
     #discussions {

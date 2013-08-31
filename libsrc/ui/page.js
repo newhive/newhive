@@ -276,10 +276,9 @@ define([
     }
 
     o.grid = function(page_data){
-        grid_width = 413;
+        grid_width = 410;
         render_site(page_data);
-        o.column_layout = (JSON.stringify(page_data.header) == 
-            JSON.stringify(["Network", "Recent"]))
+        o.column_layout = true;//(context.route == "");
     }
 
     o.forms = function(page_data){
@@ -298,9 +297,10 @@ define([
         $('#feed').prepend(tags_page_template(context.page_data));
         var tag_name = context.page_data.tags_search[0];
         $('title').text("#" + tag_name.toUpperCase());
-        var top_context = { "tagnum": 0, "item": tag_name };
         var header_prefix = ""; // "Search: "
-        $('#header span').text(header_prefix).append(tag_card_template(top_context));
+        $('#header span').text("#" + tag_name);
+        // var top_context = { "tagnum": 0, "item": tag_name };
+        // $('#header span').text(header_prefix).append(tag_card_template(top_context));
         $('#follow_tag_form').on('response', o.tag_response);
     }
 
@@ -405,9 +405,6 @@ define([
     }
 
     o.resize = function(){
-        // these lines were causing #site and #exprs to not fill the window
-        // $('#exprs').css('height', $(window).height());
-        // $('#site').css('height', $(window).height() - 44);
         if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
             var columns = Math.min(3, Math.floor($(window).width() / grid_width));
             $('#feed').css('width', columns * grid_width);

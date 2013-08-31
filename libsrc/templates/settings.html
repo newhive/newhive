@@ -2,12 +2,8 @@
   <form id='user_settings_form' {form_attrs "user_settings" "owner_name" user.name} method='POST'>
 
   <div class="settings container">
-    <div class="settings heading">Settings:</div>
-    <div class="centered">
-      <button class="teal_btn upper inline" name='cancel'>Cancel</button>
-      <button class="teal_btn upper inline" type='submit' name='user_settings'>Save settings</button>
-    </div>
     <div class="container">
+      <div class="settings heading">Settings:</div>
       <div class="label">Email address</div>
       <input id='email_input' type='text' name='email' value='{email}'>
       <div id='password_field' class='hide'>
@@ -22,33 +18,29 @@
       </form>
     </div class="container">
 
-{>}
-
-  <div class="container">
-    <div class="settings heading">Email me when...</div>
-    {<for email_lists}
-      <div class='checkbox'>
-        <input id='{id}' type='checkbox' name='{id}' {<if subscribed}checked{>}>
-        <label for='{id}'>{description}</label>
+    <div class="container">
+      <div class="settings heading">Email me when:</div>
+      {<for email_lists}
+        <div class='checkbox'>
+          <input id='{id}' type='checkbox' name='{id}' {<if subscribed}checked{>}>
+          <label for='{id}'>{description}</label>
+        </div>
+      {>}
+      <br>
+      <div class="centered">
+        <button class="teal_btn upper inline" name='cancel'>Cancel</button>
+        <button class="teal_btn upper inline" type='submit' name='user_settings'>Save settings</button>
       </div>
+    </div>
 
-       {#
-       {% for column in email_types | slice(2) %}
-       {% for type in column %}
-       <div class="column">
-       </div>
-       {% endfor %}
-       {% endfor %}
-       #}
-    {>}
-    <br>
-</div>
-
-  <div class="container">
-    <form {form_attrs "user_settings" "owner_name" user.name} method='POST'>
-      {# <div class="settings heading">Account settings:</div> #}
+    <div class="container">
       <hr>
-      <button class="teal_btn upper" type='submit'>DEACTIVATE ACCOUNT</button>
-    </form>
+      <form {form_attrs "user_settings" "owner_name" user.name} method='POST'>
+        {# <div class="settings heading">Account settings:</div> #}
+        <div class="centered">
+          <button class="teal_btn upper deactivate" type='submit'>DEACTIVATE ACCOUNT</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
+{>}

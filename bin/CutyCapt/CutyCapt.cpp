@@ -76,6 +76,18 @@ static struct _CutyExtMap {
   { CutyCapt::OtherFormat,       "",            ""      }
 };
 
+CutyPage::CutyPage() {
+  connect(networkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(handleNetworkFinished2(QNetworkReply*)));
+  mHttpStatus = 0;
+}
+
+void CutyPage::handleNetworkFinished2(QNetworkReply *reply) {
+  bool ok = false;
+  if (!mHttpStatus)
+    mHttpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(&ok);
+  // printf("Status: %d\n", mHttpStatus);
+}
+
 QString
 CutyPage::chooseFile(QWebFrame* /*frame*/, const QString& /*suggestedFile*/) {
   return QString::null;
@@ -189,7 +201,10 @@ CutyCapt::InitialLayoutCompleted() {
 }
 
 void
-CutyCapt::DocumentComplete(bool /*ok*/) {
+CutyCapt::DocumentComplete(bool ok) {
+  // printf("%s\n", ok ? "ok": "not ok");
+  // if (!ok) 
+  //   QApplication::exit(1);
   mSawDocumentComplete = true;
 
   if (mSawInitialLayout && mSawDocumentComplete)
@@ -250,6 +265,11 @@ CutyCapt::handleSslErrors(QNetworkReply* reply, QList<QSslError> errors) {
 
 void
 CutyCapt::saveSnapshot() {
+  if (mPage->mHttpStatus != 200) {
+    QApplication::exit(1);
+    exit(1);
+  }
+
   QWebFrame *mainFrame = mPage->mainFrame();
   QPainter painter;
   const char* format = NULL;

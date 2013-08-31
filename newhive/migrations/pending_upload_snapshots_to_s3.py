@@ -85,6 +85,7 @@ def clear_snapshots():
         expr.pop('snapshot_time')
         expr.save()
 
+expr_limit = 2
 
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
@@ -119,7 +120,7 @@ def start_snapshots(proc_tmp_snapshots=False):
     threads = threading.active_count()
     while True:
     # if True:
-        exprs = get_exprs(100)
+        exprs = get_exprs(expr_limit)
         print total
         if len(exprs) == 0: break
         # print exprs

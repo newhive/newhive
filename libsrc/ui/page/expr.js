@@ -52,16 +52,18 @@ define([
     o.resize = function(){
         browser_layout.center($('#page_prev'), undefined, {'h': false});
         browser_layout.center($('#page_next'), undefined, {'h': false});
+
         var wide = ($(window).width() >= 1180) ? true : false;
         if (o.wide_overlay != wide) {
             o.wide_overlay = wide;
-            $('#popup_content').css("max-width", (wide) ? 980+600-420 : 980);
-            $('#popup_content .left_pane').width((wide) ? 600 : 420);
+            $("#popup_content").css("max-width", (wide) ? 980+600-420 : 980);
+            $("#popup_content .left_pane").width((wide) ? 600 : 420);
         }
         var columns = ($(window).width() >= 990) ? 2 : 1;
         if (o.overlay_columns != columns) {
             o.overlay_columns = columns;
-            $('#popup_content > *').css('display', (columns == 1) ? 'block' : 'inline-block')
+            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
+            $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right');
         }
     };
     var resize_icon = function(el) {
@@ -95,7 +97,7 @@ define([
         o.resize();
         
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
-        $('#dia_embed textarea').val("<iframe src='" + embed_url + 
+        $('#dia_embed .copy.embed_code').val("<iframe src='" + embed_url + 
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
             " frameborder='0' vspace='0' hspace='0'></iframe>");
 
@@ -181,6 +183,8 @@ define([
         // Create new content frame
         var contentFrameURL = contentFrameURLBase + expr_id;
         contentFrame = $('<iframe class="expr">');
+        // #page_btn_load_hack
+        contentFrame.load(function(){ contentFrame.data('loaded', true); });
         contentFrame.attr('src', contentFrameURL);
         contentFrame.attr('id','expr_' + expr_id);
         // Cache the expr data on the card
@@ -288,13 +292,21 @@ define([
         }, o.anim_duration);
         o.allow_animations = false;
 
-        // postMessage only works after the page loads, so once page loads, we
-        // can hide them and show on hover
-        var btns = $('.page_btn').show();
+        // postMessage only works after the page loads.
+        // So page buttons are always visible during expr loading,
+        // and once expr loads, they behave normally #page_btn_load_hack
+        if(!contentFrame.data('loaded')){
+            // bugbug: sometimes this is never followed by a contentFrame.load
+            // console.log('showing');
+            $('.page_btn').show();
+        }
+        else {
+            // console.log('resetting on show');
+            o.page_btn_handle();
+        }
         contentFrame.load(function(){
-            btns.each(function(i, e){
-                if(!$(e).hasClass('active')) $(e).hide()
-            });
+            // console.log('resetting on load', contentFrame);
+            o.page_btn_handle();
         });
     };
 
@@ -385,7 +397,7 @@ define([
             el.data(prop, orig_position);
 
         el.stop().animate({
-            'background-position-x': dir + "26px" }, {
+            'background-position-x': dir + "20px" }, {
             duration: 150,
             easing: 'swing',
             complete: function() {
@@ -519,7 +531,7 @@ define([
 
             // update count and highlight state
             $(".counts_icon.comment").find(".counts").text(json.comments.length);
-            resize_icon($(".counts_icon.comment"));
+            resize_icon($("#social_overlay .counts_icon.comment"));
             o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
         }
         // TODO-cleanup: merge somehow with existing code to update activity menu
@@ -548,7 +560,7 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 // Cache upcoming expressions
-                cache_offsets = [1, -1, 2, 3];
+                cache_offsets = [1, -1, 2];
                 if (offset < 0)
                     cache_offsets = cache_offsets.map(function(o) { return -o; });
                 expr_ids = [];
@@ -585,20 +597,32 @@ define([
                 o.social_toggle();
             return
         }
+        else o.page_btn_handle(m.data);
+    };
+
+    var page_btn_state = '';
+    o.page_btn_handle = function(msg){
+        if(!msg) msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
             || context.page_data.cards.length == 1) {
             $(".page_btn").hide();
             return;
         }
-        if ( m.data == "show_prev" || m.data == "show_next") {
-            var div = $(m.data == "show_prev" ? "#page_prev" : "#page_next");
-            div.show().addClass('active');
+
+        if(msg == 'show_prev') {
+            $('#page_prev').show();
+            $('#page_next').hide();
+        } else if(msg == 'show_next') {
+            $('#page_next').show();
+            $('#page_prev').hide();
+        } else if(msg == 'hide') {
+            $('.page_btn').hide();
         }
-        if ( m.data == "hide_prev" || m.data == "hide_next") {
-            var div = $(m.data == "hide_prev" ? "#page_prev" : "#page_next");
-            div.hide().removeClass('active');
-        }
+
+        // should reflect whether left or right page_btn should be visible if
+        // page is not loading. See #page_btn_load_hack
+        page_btn_state = msg;
     };
 
     return o;

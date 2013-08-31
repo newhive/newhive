@@ -9,12 +9,18 @@ class CutyPage : public QWebPage {
   Q_OBJECT
 
 public:
+  CutyPage();
+
+public slots:
+  void handleNetworkFinished2(QNetworkReply *reply);
+public:
   void setAttribute(QWebSettings::WebAttribute option, const QString& value);
   void setUserAgent(const QString& userAgent);
   void setAlertString(const QString& alertString);
   void setPrintAlerts(bool printAlerts);
   void setCutyCapt(CutyCapt* cutyCapt);
   QString getAlertString();
+  int mHttpStatus;
 
 protected:
   QString chooseFile(QWebFrame *frame, const QString& suggestedFile);

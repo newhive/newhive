@@ -14,15 +14,15 @@ class Community(Controller):
     def featured(self, tdata, request, **paging_args):
         return {
             "cards": self.db.query('#Featured', viewer=tdata.user),
-            'header': ("Featured Expressions",), 'card_type': 'expr',
-            'title': "NewHive - Featured",
+            'header': ("The Hive",), 'card_type': 'expr',
+            'title': "The Hive",
         }
 
     def recent(self, tdata, request, **paging_args):
         return {
             "cards": self.db.query('#Recent', viewer=tdata.user),
-            'header': ("Recent Expressions",), 'card_type': 'expr',
-            'title': "NewHive - Featured",
+            'header': ("ALL Expressions",), 'card_type': 'expr',
+            'title': "NewHive - ALL",
         }
 
     def trending(self, tdata, request, username=None, **paging_args):
@@ -34,8 +34,8 @@ class Community(Controller):
             return self.featured(tdata, request, **paging_args)
         return {
             "cards": user.feed_page_esdb(feed='trending', **paging_args),
-            'header': ("Network", "Trending"), 'card_type': 'expr',
-            'title': "Network - Trending",
+            'header': ("Network",), 'card_type': 'expr',
+            'title': "Network",
         }
 
     def network(self, tdata, request, username=None, **paging_args):
@@ -44,8 +44,8 @@ class Community(Controller):
             user = tdata.user
         return {
             "cards": user.feed_page_esdb(feed='network', **paging_args),
-            "header": ("Network", "Recent"), 'card_type': 'expr',
-            "title": 'Network - Recent',
+            "header": ("Recent",), 'card_type': 'expr',
+            "title": 'Recent',
         }
 
     def forms_signup(self, tdata, request, username=None, **paging_args):
@@ -78,8 +78,17 @@ class Community(Controller):
             for settings """
         owner = tdata.user
 
-        print request.form
-        if (len(request.form.keys())):
+        subscribed = owner.get('email_subscriptions', [])
+        email_lists = map(lambda email_list: {
+            'id': 'email_' + email_list.name,
+            'subscribed': email_list.name in subscribed,
+            'description': ui_str.email_subscription_ui[email_list.name],
+            'name': email_list.name
+        }, mail.MetaMailer.unsubscribable('user'))
+
+        # if user submitted form
+        if len(request.form.keys()):
+            # update user email and password.
             if request.form.get('email'):
                 update = dict(
                     email=request.form.get('email'))
@@ -101,18 +110,21 @@ class Community(Controller):
                         pass
                         # return { 'error': 'Email not sent' };
                     # message = message + ui.email_change_success_message + " "
+            
+            # update email subscriptions
+            subscribed = []
+            for email_list in email_lists:
+                if request.form.get(email_list['id']):
+                    subscribed.append(email_list['name'])
+                    email_list['subscribed'] = True
+                else:
+                    email_list['subscribed'] = False
+            update['email_subscriptions'] = subscribed
 
-                owner.update(**update)
+            owner.update(**update)
 
-        # TODO: implement account deletion
+            # TODO: implement account deletion
 
-        subscribed = tdata.user.get('email_subscriptions', [])
-        email_lists = map(lambda email_list: {
-            'id': 'email_' + email_list.name,
-            'subscribed': email_list.name in subscribed,
-            'description': ui_str.email_subscription_ui[email_list.name],
-            'name': email_list.name
-        }, mail.MetaMailer.unsubscribable('user'))
 
         return {
             'owner': tdata.user.client_view(),
@@ -215,7 +227,12 @@ class Community(Controller):
         expr_owner = expr.get_owner()
         if expr_owner and expr_owner['analytics'].get('views_by'):
             expr_owner.increment({'analytics.views_by': 1})
+        if not expr.get('views'):
+            expr['views'] = 0
+        expr['views'] += 1
+        expr.save(updated = False)
         profile = expr_owner.client_view(viewer=tdata.user)
+        print expr_owner['analytics']
         # TODO(speed): expr client_view CONTAINS owner profile. Duplication of effort.
         return {
             'owner': profile, 'expr': expr.client_view(viewer=tdata.user, activity=10),

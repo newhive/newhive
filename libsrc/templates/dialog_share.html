@@ -1,18 +1,23 @@
 {# Dialog for Expression Share #}
 <div id="dia_share" class="dialog" data-handle='#share_form_btn'>
-  <h1>Share</h1>
-  <h2>Expression link:</h2>
-  <label class="dark">newhive.com/{owner.name}/{expr.title}</label>
+  <div class="heading title expr">Share</div>
+  <div class="subheading">Expression link:</div>
+  <textarea readonly class="dark">newhive.com/{owner.name}/{expr.name}</textarea>
   <hr>
   <form { form_attrs "expr_share" } id='form_expr_share' method='POST'>
-    <h2>Email(s) and/or Usernames:</h2>
-    <input type="text" name="emails">
-    <h2>Message:</h2>
-    <textarea name="message"></textarea>
-    <input type="checkbox" name="send_copy">
-    <label>Send me a copy</label>
+    <div class="subheading">Email(s) and/or Usernames:</div>
+    <input placeholder="Separate emails and usernames with commas." type="text" name="emails">
+
+    <div class="subheading">Message:</div>
+    <textarea class="message" name="message"></textarea>
+
+    <div class="copy inline">
+      <input type="checkbox" checked name="send_copy">
+      <label>Send me a copy.</label>
+    </div>
+    <button type="submit" class="submit teal_btn">Send</button>
+
     <input type="hidden" name="expr_user" value="{owner.name}">
     <input type="hidden" name="expr_id" value="{expr.id}">
-    <button type="submit">Send</button>
   </form>
 </div>

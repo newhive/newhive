@@ -54,28 +54,6 @@ define([
         }
     };
 
-    // All links in content frame need to target either
-    // the top frame (on site) or a new window (off site)
-    o.update_targets = function(){
-        // function link_target(i, a) {
-        //     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
-        //     var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
-        //     var a = $(a), href = a.attr('href') || a.attr('action');
-        // 
-        //     // Don't change target if it's already set
-        //     if (a.attr('target')) return;
-        // 
-        //     if(href && href.indexOf('http') === 0 && !re.test(href)) {
-        //         a.attr('target', '_blank');
-        //     } else if (href && href.indexOf('http') === 0 && re.test(href)) {
-        //         a.attr('target', '_top');
-        //     }
-        // }
-        // TODO: Re-enable link targeting  
-        return;
-        // $('a, form').each(link_target);
-    }
-    
     return o;
 });
 

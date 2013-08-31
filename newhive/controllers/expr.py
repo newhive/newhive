@@ -82,7 +82,7 @@ class Expr(ModelController):
             return self.serve_json(response,expr_obj)
 
         # expr_obj.take_snapshots()
-        return self.redirect(response, expr_obj.snapshot('big', False)+".png")
+        return self.redirect(response, expr_obj.snapshot_name('big'))
 
     def fetch_naked(self, tdata, request, response, expr_id):
         # Request must come from content_domain, as this serves untrusted content

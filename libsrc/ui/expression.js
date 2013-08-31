@@ -3,17 +3,21 @@
   Expression interacts with its parent frame, the main site,
     via postMessage.
 */
-define(['browser/layout',
-        'browser/jquery',
-        'ui/util'], function(layout, $, util) {
+define([
+    'browser/layout',
+    'browser/jquery'
+], function(layout, $){
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
         var o = {};
         o.initialized = false;
 
+        var last_message = '';
         o.send_top = function(msg){
+            if(last_message == msg) return;
             window.parent.postMessage(msg, '*');
+            last_message = msg;
         };
         
         o.paging_sent = false;
@@ -46,7 +50,7 @@ define(['browser/layout',
             }, false);
             $(document).mousemove(check_hover);
             $(document).click(expr_click);
-            $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
+            // $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
             $(window).resize(layout.place_apps)
                  .click(function(){ o.send_top('focus'); });
         };
@@ -64,15 +68,12 @@ define(['browser/layout',
         var check_hover = function (e) {
             if (e.clientX < o.margin()) {
                 o.send_top("show_prev"); //$('#page_prev').show();
-            } else {
-                o.send_top("hide_prev"); // $('#page_prev').hide();
-            }
-            if (e.clientX > $(window).width() - o.margin()) {
+            } else if (e.clientX > $(window).width() - o.margin()) {
                 o.send_top("show_next"); //$('#page_next').show();
             } else {
-                o.send_top("hide_next"); // $('#page_next').hide();
+                o.send_top("hide"); // $('#page_prev').hide();
             }
-        }
+       }
 
         o.init_content = function(){
             // bonus paging and scrolling features
@@ -137,6 +138,29 @@ define(['browser/layout',
             });
         };
 
+
+        // All links in content frame need to target either
+        // the top frame (on site) or a new window (off site)
+        o.update_targets = function(){
+            // function link_target(i, a) {
+            //     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
+            //     var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
+            //     var a = $(a), href = a.attr('href') || a.attr('action');
+            // 
+            //     // Don't change target if it's already set
+            //     if (a.attr('target')) return;
+            // 
+            //     if(href && href.indexOf('http') === 0 && !re.test(href)) {
+            //         a.attr('target', '_blank');
+            //     } else if (href && href.indexOf('http') === 0 && re.test(href)) {
+            //         a.attr('target', '_top');
+            //     }
+            // }
+            // TODO: Re-enable link targeting  
+            return;
+            // $('a, form').each(link_target);
+        }
+    
         return o;
     })();
     
