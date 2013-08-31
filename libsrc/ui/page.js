@@ -264,12 +264,15 @@ define([
             }
         });
         $(window).scroll(function(e) {
+            if (c.route_name == "edit_expr")
+                return;
             $(".overlay.nav").fadeOut("fast");
             if (o.scroll_timeout != undefined)
                 clearTimeout(o.scroll_timeout);
             o.scroll_timeout = setTimeout(function() {
                 o.scroll_timeout = undefined;
-                $(".overlay.nav").fadeIn("fast");
+                if (c.route_name != "edit_expr")
+                    $(".overlay.nav").fadeIn("fast");
             }, 1000);
         });
     };
