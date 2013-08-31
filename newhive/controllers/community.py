@@ -75,7 +75,6 @@ class Community(Controller):
         feeds = self.db.Feed.page(spec)
         for f in feeds:
             id = deduped(f['entity'], d)
-            print d
             if id:
                 card_ids.append(id)
                 card = self.db.Expr.fetch(id)

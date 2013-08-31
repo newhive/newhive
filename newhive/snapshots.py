@@ -33,7 +33,7 @@ class Snapshots(object):
         return ( "https://%s.s3.amazonaws.com/%s" % 
             (config.s3_buckets['thumb'], Snapshots.remote_uri(expr_id)) )
 
-    def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768)):
+    def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768),full_page=False):
         host = utils.url_host(on_main_domain=False,secure=False)
         # host = "localhost:3737"
         # url = 'http://' + host + ExpressionSnapshotURI(expr_id)
@@ -69,10 +69,11 @@ class Snapshots(object):
                 # else:
                 #     new_dimensions[1] = new_dimensions[0] / ratio;
                 # print new_dimensions;
-                cmd = ('convert -resize %s -background transparent -extent %sx%s %s %s' % (
-                    dimensions[0],dimensions[0],dimensions[1], out_filename, out_filename))
-                print cmd
-                r = call(cmd.split(' '))
+                if not full_page:
+                    cmd = ('convert -resize %s -background transparent -extent %sx%s %s %s' % (
+                        dimensions[0],dimensions[0],dimensions[1], out_filename, out_filename))
+                    print cmd
+                    r = call(cmd.split(' '))
                 # r = call(('convert -crop %sx%s+0+0 %s %s' % (
                 #     new_dimensions[0],new_dimensions[1],out_filename, out_filename,out_filename)).split(" "))
                 # if r != 0:

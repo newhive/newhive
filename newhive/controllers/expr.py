@@ -81,8 +81,9 @@ class Expr(ModelController):
         if expr_obj.private and tdata.user.id != expr_obj.owner.id:
             return self.serve_json(response,expr_obj)
 
-        # expr_obj.take_snapshots()
-        return self.redirect(response, expr_obj.snapshot_name('big'))
+        # expr_obj.take_full_shot()
+        expr_obj.threaded_snapshot(full_page = True)
+        return self.redirect(response, expr_obj.snapshot_name('full'))
 
     def fetch_naked(self, tdata, request, response, expr_id):
         # Request must come from content_domain, as this serves untrusted content

@@ -1050,7 +1050,7 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
-    def threaded_snapshot(self):
+    def threaded_snapshot(self, full_page=False):
         def timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
             """This function will spawn a thread and run the given function
             using the args, kwargs and return the given default value if the
@@ -1075,7 +1075,10 @@ class Expr(HasSocial):
         def threaded_snapshot_q(q, expr):
             result = timeout(threaded_snapshot, (self,), timeout_duration=69)
         def threaded_snapshot(expr):
-            expr.take_snapshots()
+            if full_page:
+                expr.take_full_shot()
+            else:
+                expr.take_snapshots()
 
         # If we spin up too many threads, block.
         while threading.active_count() > 32:
@@ -1110,6 +1113,20 @@ class Expr(HasSocial):
     def snapshot_name_prefix(self):
         name = self.snapshot_name('')
         return name[:-4] if name else name
+
+    def take_full_shot(self):
+        snapshotter = Snapshots()
+
+        name = self.snapshot_name_base("full", str(self.get('snapshot_time')))
+        # This would be cleaner with file pipes instead of filesystem.
+        local = '/tmp/' + name
+        r = snapshotter.take_snapshot(self.id, out_filename=local, full_page=True)
+        if not r:
+            print 'FAIL'
+            return False
+
+        url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png', ttl=30)
+        print url
 
     # Note: this takes snapshots in the current thread.
     # For threaded snapshots, use threaded_snapshot()
