@@ -51,7 +51,7 @@ class Snapshots(object):
             with open(os.devnull, "w") as fnull:
                 # BUGBUG
                 if True:
-                    cmd = 'xvfb-run --server-args="-screen 0, 1024x768x24" ' + cmd
+                    cmd = 'xvfb-run --auto-servernum --server-args="-screen 0, 1024x768x24" ' + cmd
                 print cmd
                 r = os.system(cmd) #, stderr=fnull, stdout=fnull)
                 # r = envoy.run(cmd, {"DISPLAY":":19"})
