@@ -1050,7 +1050,9 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
-    def threaded_snapshot(self, full_page=False):
+    # full_page = True to capture entire expression page, not just snapshot
+    # timeout != 0. time in seconds to block before killing thread
+    def threaded_snapshot(self, full_page=False, time_out=0):
         def timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
             """This function will spawn a thread and run the given function
             using the args, kwargs and return the given default value if the
@@ -1094,6 +1096,12 @@ class Expr(HasSocial):
         # result = timeout(threaded_snapshot_q, (q,self), timeout_duration=69)
         t.daemon = True
         t.start()
+        if timeout:
+            t.join(time_out)
+            if t.isAlive():
+                # TODO-perf: could be wise to also kill the thread
+                return False
+        return True
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):
@@ -1101,7 +1109,7 @@ class Expr(HasSocial):
         return self['entropy']
 
     def snapshot_name_base(self, size, time):
-        return '_'.join([self.id, time, self.entropy(), size]) + ".png"
+        return '_'.join([self.id, time, self.entropy(), size]) + (".jpg" if (size == "full") else ".png")
 
     # size is "big" or "small".
     # will return 'snapshot_placeholder.png' if no available snapshot
@@ -1117,7 +1125,9 @@ class Expr(HasSocial):
     def take_full_shot(self):
         snapshotter = Snapshots()
 
-        name = self.snapshot_name_base("full", str(self.get('snapshot_time')))
+        name = self.snapshot_name_base("full", str(self.get('snapshot_time')))[:-4] + ".jpg"
+        if self.db.s3.file_exists('thumb', name):
+            return True
         # This would be cleaner with file pipes instead of filesystem.
         local = '/tmp/' + name
         r = snapshotter.take_snapshot(self.id, out_filename=local, full_page=True)
@@ -1125,8 +1135,8 @@ class Expr(HasSocial):
             print 'FAIL'
             return False
 
-        url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png', ttl=30)
-        print url
+        url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/jpg', ttl=30)
+        # print url
 
     # Note: this takes snapshots in the current thread.
     # For threaded snapshots, use threaded_snapshot()

@@ -141,7 +141,6 @@
                 vertical-align: middle;
                 &.on { background-color: $color_selected; }
                 &.mail_btn { 
-                    background-image: asset_url('skin/nav/mail.png'); 
                     margin-right: 4px;
                 }
             }
@@ -209,6 +208,11 @@
     .icon.settings_btn { background-image: asset_url('skin/nav/settings.png'); }
 }
 
+.mail_btn { 
+    background-image: asset_url('skin/nav/mail.png');
+    cursor: pointer;
+}
+
 // moved out of #feed because it applies to social overlay
 .owner {
     font-family: Gibson;
@@ -227,7 +231,6 @@
         display: inline-block;
         vertical-align: middle;
     }
-    .mail_btn { background-image: asset_url('skin/nav/mail.png'); }
     .follow_btn {
         padding: 6px;
         background-color: $color_selected;

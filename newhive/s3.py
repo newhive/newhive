@@ -22,6 +22,11 @@ class S3Interface(object):
         return ('https://' + self.buckets[bucket].name
             + '.s3.amazonaws.com/' + key)
 
+    def file_exists(self, bucket, path):
+        k = S3Key(self.buckets[bucket])
+        k.name = path
+        return k.exists()
+
     def upload_file(self, file, bucket, path, name=None, mimetype=None, ttl=False):
         if isinstance(file, basestring):
             file = open(file, 'r')
