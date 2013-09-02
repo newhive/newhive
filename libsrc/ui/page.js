@@ -234,13 +234,6 @@ define([
 
         o.attach_handlers();
     };
-    var generic_dialog_handler = function(event, json){
-        if (json.error != undefined) {
-            $(this).parents().filter(".dialog").find('.error_msg').text(json.error).show();
-        } else {
-            $('#dialog_shield').click();
-        }
-    };
     var local_attach_handlers = function(){
         $('.user_action_bar form.follow').unbind('response').on('response', 
             function(event, json) {
@@ -257,16 +250,34 @@ define([
         });
         // Belongs in "community"
         $("#search_box").focus();
-        $("#form_send_mail").unbind('response').on('response', generic_dialog_handler);
         
         // global keypress handler
-        $("body").keydown(function(e) {
-            if(e.keyCode == 27) { // escape
+        $("body").unbind('keydown').keydown(function(e) {
+            if (e.keyCode == 27) { // escape
                 // If a dialog is up, kill it.
                 $('#dialog_shield').click();
+            } else if ((e.keyCode == 39 || e.keyCode == 37) &&
+                !(e.metaKey || e.ctrlKey || e.altKey)) {
+                // If paging, go to previous / next expression.
+                if (context.page && context.page.navigate_page) {
+                    var speed = (e.shiftKey) ? 2 : 1;
+                    context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
+                }
             } else {
                 // alert('keyCode: ' + e.keyCode);
             }
+        });
+        $(window).scroll(function(e) {
+            if (c.route_name == "edit_expr")
+                return;
+            $(".overlay.nav").fadeOut("fast");
+            if (o.scroll_timeout != undefined)
+                clearTimeout(o.scroll_timeout);
+            o.scroll_timeout = setTimeout(function() {
+                o.scroll_timeout = undefined;
+                if (c.route_name != "edit_expr")
+                    $(".overlay.nav").fadeIn("fast");
+            }, 1000);
         });
     };
     o.attach_handlers = function(){

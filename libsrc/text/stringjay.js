@@ -472,6 +472,32 @@ define(['browser/js', 'module'],
 	context_base.json = function(context, data){
 		return JSON.stringify(data);
 	};
+	context_base.and = function(context){
+		for(var i = 1; i < arguments.length; ++i){
+			if (!arguments[i])
+				return false;
+		}
+		return true;
+	};
+	context_base.or = function(context){
+		// special case: (or) returns true. (or false) and (or true... false true) are false.
+		if (arguments.length == 1)
+			return true;
+		for(var i = 1; i < arguments.length; ++i){
+			if (arguments[i])
+				return true;
+		}
+		return false;
+	};
+	context_base.not = function(context, arg){
+		return ! arg;
+	};
+	context_base.eq = function(context, lhs, rhs){
+		return lhs == rhs;
+	};
+	context_base.neq = function(context, lhs, rhs){
+		return lhs != rhs;
+	};
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
 	context_base.reverse = function(context, l){ return l.concat().reverse(); };
 	context_base.mod = function(context, x, y){ return x % y };

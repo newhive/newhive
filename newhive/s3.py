@@ -22,7 +22,12 @@ class S3Interface(object):
         return ('https://' + self.buckets[bucket].name
             + '.s3.amazonaws.com/' + key)
 
-    def upload_file(self, file, bucket, path, name=None, mimetype=None):
+    def file_exists(self, bucket, path):
+        k = S3Key(self.buckets[bucket])
+        k.name = path
+        return k.exists()
+
+    def upload_file(self, file, bucket, path, name=None, mimetype=None, ttl=False):
         if isinstance(file, basestring):
             file = open(file, 'r')
         else: file.seek(0)
@@ -31,7 +36,7 @@ class S3Interface(object):
         name_escaped = urllib.quote_plus(name.encode('utf8')) if name else path
         s3_headers = {
             'Content-Disposition': 'inline; filename=' + name_escaped,
-            'Cache-Control': 'max-age=' + str(86400 * 3650)
+            'Cache-Control': 'max-age=' + str(86400 * (ttl if ttl else 3650))
         }
         if mimetype: s3_headers['Content-Type'] = mimetype
         k.set_contents_from_file(file, headers=s3_headers)

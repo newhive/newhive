@@ -1,5 +1,7 @@
 # requires cutycapt:
 # sudo apt-get install cutycapt
+# see http://daveelkins.com/2009/04/10/setting-up-headless-xserver-and-cutycapt-on-ubuntu/
+# TODO: Snapshot batching. namely, CutyCapt should be able to take a list of 
 
 import envoy
 import os
@@ -31,7 +33,7 @@ class Snapshots(object):
         return ( "https://%s.s3.amazonaws.com/%s" % 
             (config.s3_buckets['thumb'], Snapshots.remote_uri(expr_id)) )
 
-    def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768)):
+    def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768),full_page=False):
         host = utils.url_host(on_main_domain=False,secure=False)
         # host = "localhost:3737"
         # url = 'http://' + host + ExpressionSnapshotURI(expr_id)
@@ -45,10 +47,13 @@ class Snapshots(object):
                 % (snap_dimensions[0],snap_dimensions[1],url,out_filename) )
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
-            os.environ['DISPLAY'] =':99'
-            print cmd
+            # os.environ['DISPLAY'] =':99'
             with open(os.devnull, "w") as fnull:
-                r = call(cmd.split(" "), stderr=fnull, stdout=fnull)
+                # BUGBUG
+                if True:
+                    cmd = 'xvfb-run --auto-servernum --server-args="-screen 0, 1024x768x24" ' + cmd
+                print cmd
+                r = os.system(cmd) #, stderr=fnull, stdout=fnull)
                 # r = envoy.run(cmd, {"DISPLAY":":19"})
                 if r != 0:
                     print "FAILED: " + cmd
@@ -64,10 +69,11 @@ class Snapshots(object):
                 # else:
                 #     new_dimensions[1] = new_dimensions[0] / ratio;
                 # print new_dimensions;
-                cmd = ('convert -resize %s -background transparent -extent %sx%s %s %s' % (
-                    dimensions[0],dimensions[0],dimensions[1], out_filename, out_filename))
-                print cmd
-                r = call(cmd.split(' '))
+                if not full_page:
+                    cmd = ('convert -resize %s -background transparent -extent %sx%s %s %s' % (
+                        dimensions[0],dimensions[0],dimensions[1], out_filename, out_filename))
+                    print cmd
+                    r = call(cmd.split(' '))
                 # r = call(('convert -crop %sx%s+0+0 %s %s' % (
                 #     new_dimensions[0],new_dimensions[1],out_filename, out_filename,out_filename)).split(" "))
                 # if r != 0:
@@ -98,16 +104,17 @@ class Snapshots(object):
     def __init__(self):
         # print "snapshot init!2!!"
         if platform == 'linux' or platform == 'linux2':
+            pass
             # Need xvfb running on linux to take snapshots. Check to see if it's currently running
             # sp = envoy.run('xdpyinfo -display :99')
             # print sp.status_code
             # if sp.status_code != 0:
-            with open(os.devnull, "w") as fnull:
-                r = call('xdpyinfo -display :99'.split(" "), stderr=fnull, stdout=fnull)
-                # print r
-                if r != 0:
-                    self.ps = Popen("Xvfb :99 -screen scrn 1024x768x24".split(" "), stderr=fnull, stdout=fnull)
-                    # self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
+            # with open(os.devnull, "w") as fnull:
+            #     r = call('xdpyinfo -display :99'.split(" "), stderr=fnull, stdout=fnull)
+            #     # print r
+            #     if r != 0:
+            #         self.ps = Popen("Xvfb :99 -screen scrn 1024x768x24".split(" "), stderr=fnull, stdout=fnull)
+            #         # self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
             # print "snapshots ready"
     def __del__(self):
         # print "snapshot del!!!"

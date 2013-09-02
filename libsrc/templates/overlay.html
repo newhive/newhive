@@ -1,10 +1,11 @@
-<div class='overlay panel' id='content_btns'>
+<div class='overlay panel nav' id='content_btns'>
   {# edit expression #}
   <div class='hide edit_btn btn'></div>
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
       <span class='signup_btn text_btn btn menu_item'>Sign up</span>
+      <span class='red_spacer'></span>
       <span class='login_btn text_btn left_border btn menu_item'>Log in</span>
     </span>
   {>}
@@ -17,7 +18,7 @@
 <div class='social overlay page_btn' id='page_next'></div>
 
 {# hive logo button #}
-<a {anchor_attrs "home"} id='logo' class='overlay logo icon left right'></a>
+<a {anchor_attrs "home"} id='logo' class='overlay nav logo icon left right'></a>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
@@ -45,10 +46,11 @@
   <form id='notification_reset' {form_attrs "notification_reset"}></form>
   <form id='activity_form' {form_attrs "activity"}></form>
 {>}{<else}
-  <div id='login_menu' class='dialog' data-handle='#login_btn'>
+  <div id='login_menu' class='dialog login' data-handle='#login_btn'>
     {#<a href="{facebook_authentication_url}" target="_top"
       <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 2px 0 2px -4px;'>
     </a>#}
+    <div class="title">Log in:</div>
     {|templates/login_form.html}
   </div>
 {>}
@@ -56,18 +58,18 @@
 {# Dialog: Login or Join #}
 {<unless user.logged_in}
   <div id='dia_login_or_join' class='dialog hide' data-handle='#sign_up_btn'>
+    <div class="centered"><img src='{asset "skin/site/newhive_dialog_logo.png"}'></div>
     <div class="column left">
-      <img class='centered' src='{asset "skin/1/facebook_flat_lg.png"}'>
       <h3>
-        <span class="line1">Have an account?</span><br/>
-        <span class="line2">Please log in.</span>
+        <span class="title line1">Have an account?</span><br/>
+        <span class="title line2">Log in.</span>
       </h3>
       {|templates/login_form.html}
     </div>
     <div class="column right">
       <h3>
-        <span class="line1">Don't have an account yet?</span><br/>
-        <span class="line2">Please request an invite.</span>
+        <span class="title line1">Need an account?</span><br/>
+        <span class="title line2">Sign up.</span>
       </h3>
       {|templates/request_invite_form.html}
     </div>

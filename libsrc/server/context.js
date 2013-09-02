@@ -19,7 +19,9 @@ define([
     //     return "<table class='vcenter'><tr><td>" + block(context) + "</td></tr></table>";
     // };
     o.vcenter = function(context, block){
-        return "<div class='vcenter_outer'><div class='vcenter_middle'>" + block(context) + "</div></div>";
+        var extra_classes = ((arguments.length > 2) ? " " + arguments[2] : "");
+        return "<div class='vcenter_outer" + extra_classes +
+            "'><div class='vcenter_middle'>" + block(context) + "</div></div>";
     };
 
 

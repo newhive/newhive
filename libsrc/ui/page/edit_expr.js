@@ -25,8 +25,10 @@ define([
         curl.expose('ui/editor', 'h'); // for debugging
     };
     o.exit = function(){
+        // TODO: don't let user navigate away from page w/o saving
+        // TODO: implement autosave
         $('link.edit').remove();
-        $('#site').empty().hide();
+        $('#site').empty();
     };
 
     o.resize = function(){

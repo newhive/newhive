@@ -54,6 +54,23 @@ define([
         }
     };
 
+    // erm, from online. let's use url_params for now.
+    // http://stackoverflow.com/questions/7731778/jquery-get-query-string-parameters
+    o.qs = function(key) {
+        key = key.replace(/[*+?^$.\[\]{}()|\\\/]/g, "\\$&"); // escape RegEx meta chars
+        var match = location.search.match(new RegExp("[?&]"+key+"=([^&]+)(&|$)"));
+        return match && decodeURIComponent(match[1].replace(/\+/g, " "));
+    }
+    
+    o.url_params = {};
+    (function () {
+        var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
+        if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
+            var pair = v.split('=');
+            o.url_params[d(pair[0])] = d(pair[1]);
+        });
+    })();
+
     return o;
 });
 
@@ -130,12 +147,12 @@ define([
     //         comments: function(){ $('#comment_btn').click(); }
     //         , email_invites: function(){ $('#hive_menu .email_invites').click(); }
     //     };
-    //     if (urlParams.loadDialog) {
-    //         action = dialog_actions[urlParams.loadDialog];
+    //     if (url_params.loadDialog) {
+    //         action = dialog_actions[url_params.loadDialog];
     //         if (action) {
     //             action();
     //         } else {
-    //             loadDialog("?dialog=" + urlParams.loadDialog);
+    //             loadDialog("?dialog=" + url_params.loadDialog);
     //         }
     //     }
     // 
@@ -156,15 +173,6 @@ define([
     // });
     // $(window).load(function(){setTimeout(place_apps, 10)}); // position background
         
-    var urlParams = {};
-    (function () {
-        var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
-        if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
-            var pair = v.split('=');
-            urlParams[d(pair[0])] = d(pair[1]);
-        });
-    })();
-
     function hovers_active(state){
         hover_add.disabled = !state;
         hover_menu.disabled = !state;

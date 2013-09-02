@@ -56,7 +56,7 @@ app
     z :: Int # z-index layer
 
 feed
-    class_name :: "Comment"|"Star"|"InviteNote"|"NewExpr"|"UpdatedExpr"
+    class_name :: "Broadcast"|"Comment"|"Star"|"InviteNote"|"NewExpr"|"UpdatedExpr"
     entity_class :: "Expr"|"User"
     entity :: expr|user
     initiator :: user

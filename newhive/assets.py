@@ -302,7 +302,6 @@ class HiveAssets(Assets):
             'browser/jquery-ui/jquery-ui-1.8.16.custom.css',
             output='../lib/admin.css'
         )
-        # self.final_bundles.append('admin.css')
 
     def urls_with_expiry(self):
         urls = self.urls()

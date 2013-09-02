@@ -53,6 +53,7 @@ if __name__ == '__main__':
             '0.0.0.0'
             , port
             , application
+            , threaded = True
             , use_reloader = True
             , use_debugger = config.debug_mode
             , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication

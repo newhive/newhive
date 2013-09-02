@@ -107,8 +107,12 @@ define([
         o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
 
         animate_expr();
-        navigate_page(0); // To cache nearby expressions
-
+        var found = find_card(o.expr.id);
+        if (found >= 0) {
+            var card = page_data.cards[found];
+            if (! card.json)
+                _navigate_page(0); // To cache nearby expressions
+        }
         hide_panel();
         $("#content_btns").show();
         $(".social_btn").removeClass("hide");
@@ -129,7 +133,7 @@ define([
     // Check to see if tags overflows its bounds.
     // If so, create "..." tag with associated menu.
     var fixup_tags_list = function () {
-        tags = $(".tag_list a");
+        var tags = $(".tag_list a");
         if (tags.length) {
             top_y = tags.eq(0).position().top;
             client_height = $(".tag_list").height();
@@ -160,6 +164,7 @@ define([
 
     var find_card = function(expr_id){
         var found = -1;
+        var page_data = context.page_data;
         if (! page_data.cards)
             return found;
         var len = page_data.cards.length;
@@ -171,26 +176,29 @@ define([
         }
         return found;
     };
-    function cache_frames(expr_ids){
+    var debug = function(text){
+        if (1)
+            console.log("DEBUG: " + text);
+    };
+    var cache_frames = function(expr_ids, current){
         if (expr_ids.length == 0)
             return false;
-        expr_id = expr_ids[0];
+        var expr_id = expr_ids[0];
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length > 0) {
             cache_frames(expr_ids.slice(1));
+            debug("caching frame, already loaded: " + find_card(expr_id));
             return contentFrame;
         }
         // Create new content frame
         var contentFrameURL = contentFrameURLBase + expr_id;
         contentFrame = $('<iframe class="expr">');
-        // #page_btn_load_hack
-        contentFrame.load(function(){ contentFrame.data('loaded', true); });
-        contentFrame.attr('src', contentFrameURL);
+        contentFrame.attr('src', contentFrameURL + ((current != undefined) ? "" : "?no-embed"));
         contentFrame.attr('id','expr_' + expr_id);
         // Cache the expr data on the card
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
-            found = find_card(expr_id);
+            var found = find_card(expr_id);
             if (found >= 0) {
                 var card = page_data.cards[found]
                 if (card.json == undefined) {
@@ -204,9 +212,15 @@ define([
                 }
             }
         }
+        debug("caching frame: " + found);
         // Remember all the frames that are loading.
         loading_frame_list = loading_frame_list.concat(contentFrame.eq(0));
         contentFrame.load(function () {
+            contentFrame.data('loaded', true);
+            debug("loaded frame: " + found);
+
+            if (contentFrame.hasClass('expr-visible')) 
+                contentFrame.get(0).contentWindow.postMessage({action: 'show'}, '*');
             for (var i = 0, el; el = loading_frame_list[i]; i++) {
                 if (el.prop("id") == contentFrame.prop("id")) {
                     loaded_frame_list.concat(loading_frame_list.splice(i, 1));
@@ -222,13 +236,14 @@ define([
         var max_loading_frames = 2;
         var removed_frames = loading_frame_list.splice(0, Math.max(0, loading_frame_list.length - max_loading_frames));
         for (var i = 0, el; el = removed_frames[i]; i++) {
+            debug("removing cached frame: " + find_card(el.prop("id").slice(5)));
             el.remove();
         }
         return contentFrame;
     };
     // Animate the new visible expression, bring it to top of z-index.
     function animate_expr (){
-        page_data = context.page_data;
+        var page_data = context.page_data;
         // display_expr(page_data.expr_id);
         var expr_id = page_data.expr_id;
         var expr_curr = $('.expr-visible');
@@ -238,7 +253,7 @@ define([
 
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
-            contentFrame = cache_frames([expr_id]);
+            contentFrame = cache_frames([expr_id], true);
         }
         else {
             contentFrame.get(0).contentWindow.
@@ -388,6 +403,7 @@ define([
     };
 
     o.page_btn_animate = function (el) {
+        return;
         var prop = "background-position-x";
         var dir = (el.prop("id") == "page_next") ? "" : "-";
         var orig_position = el.css(prop);
@@ -486,7 +502,7 @@ define([
     };
 
     o.social_toggle = function(){
-        popup = $('#social_overlay');
+        var popup = $('#social_overlay');
         // TODO: animate
         if (popup.css('display') == 'none') {
             popup.show();
@@ -497,10 +513,10 @@ define([
     };
 
     o.edit_comment = function(feed_item){
-        edit_button = feed_item.find('button[name=edit]');
-        delete_button = feed_item.find('button[name=delete]');
-        text_el = feed_item.find('div.text');
-        text = text_el.html();
+        var edit_button = feed_item.find('button[name=edit]');
+        var delete_button = feed_item.find('button[name=delete]');
+        var text_el = feed_item.find('div.text');
+        var text = text_el.html();
         if (text_el.is(":hidden")) {
             // Return to uneditable state
             text_el.show();
@@ -548,9 +564,10 @@ define([
         o.edit_comment_response([], json);
     };
 
-    o.page_prev = function() { navigate_page(-1); };
-    o.page_next = function() { navigate_page(1); };
-    var navigate_page = function (offset){
+    o.page_prev = function() { _navigate_page(-1); };
+    o.page_next = function() { _navigate_page(1); };
+    o.navigate_page = function(offset) { _navigate_page(offset); };
+    _navigate_page = function (offset){
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
@@ -560,10 +577,10 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 // Cache upcoming expressions
-                cache_offsets = [1, -1, 2];
+                var cache_offsets = [1, -1, 2];
                 if (offset < 0)
                     cache_offsets = cache_offsets.map(function(o) { return -o; });
-                expr_ids = [];
+                var expr_ids = [];
                 for (var i = 0, off; off = cache_offsets[i]; ++i) {
                    var found_next = (found + len + off) % len;
                    expr_ids = expr_ids.concat(page_data.cards[found_next].id);
@@ -602,7 +619,8 @@ define([
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){
-        if(!msg) msg = page_btn_state;
+        if (!msg)
+            msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
             || context.page_data.cards.length == 1) {

@@ -20,6 +20,7 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 /* === General === */
 .dialog {
     display: none; 
+    position: fixed;
     padding: 10px;
     z-index: 201;
     position:absolute;
@@ -335,12 +336,9 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 }
 
 #dia_login_or_join {
+    
     padding: 20px;
     width: auto;
-    img {
-        width: 70px;
-        height: 70px;
-    }
     h3 {
         text-align: center;
         font-size: 22px;
@@ -369,14 +367,20 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
         float: left;
         padding: 0 40px;
     }
+    input[type=text], input[type=password] { @include calc-width("100% - 18px", "240px") }
     .left {
-        .field { width: 240px; }
-        input[type=text], input[type=password] { width: 220px; }
+        // .field { width: 240px; }
+        // input[type=text], input[type=password] { width: 220px; }
         border-right: 1px solid #D1D1D1;
     }
     .right {
-        .field { width: 270px; }
-        input[type=text], input[type=password] { width: 250px; }
+        // .field { width: 270px; }
+        input[type=text], input[type=password] {
+            // width: 202px;
+            margin: 4px 0px;
+            &[name=message] { margin-bottom: 10px; }
+        }
+        .heading { display: none; }
     }
     .name { display: none; }
 }
@@ -447,23 +451,31 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     width: 640px;
 }
 
-#dia_must_login {
-    width: auto;
-    .field { margin: 0 auto; }
-    .column { float: left; padding: 10px 35px 0; margin-top: 10px; }
-    input[type=text], input[type=password] { width: 220px; }
-    .right.separator { border-left: 1px solid #D1D1D1; }
-    h1, h2, h3, h4 { margin: 0 0 20px 0; text-align: center; }
-    .line1 { font-weight: bold; }
-    .line2 { color: $color_active; }
-    .description { background-color: $color_highlight; padding: 2px; }
+.dialog.login {
+    width: 220px;
+    padding: 20px;
+    .title { margin-bottom: 10px; }
 
-    #send_msg { float: right; }
-    .right { input[type=text], input[type=password] { width: 290px; } }
-    .description { font-family: Helvetica, Arial, sans-serif; }
-    .field.username { margin-top: 30px; }
-    .field.login.submit { margin-top: 20px; }
 }
+
+form.login {
+    input[type=text], input[type=password] {
+        width: 202px;
+        margin: 4px 0px;
+        &[name=secret] { margin-bottom: 10px; }
+    }
+    .password_recovery {
+        font-size: 12px;
+        color: black;
+        margin-right: 15px;
+        float: left;
+        line-height: 40px;
+        height: 40px;
+    }
+    input[type=submit] { float: right; }
+
+}
+
 
 #login_error {
     font-size: 12px;
