@@ -95,13 +95,12 @@ class Database:
         feed = search.get('feed')
         if feed:
             if feed == 'network':
-                results =  viewer.feed_page_esdb(
-                    trending=False, at=start, limit=limit)
+                results =  viewer.feed_page_esdb(at=start, limit=limit)
             elif feed == 'trending':
-                results =  viewer.feed_page_esdb(
-                    trending=True, at=start, limit=limit)
+                results =  viewer.feed_page_esdb(at=start, limit=limit)
             elif feed == 'featured':
-                results = self.Expr.page(self.User.root_user['tagged']['Featured'], **args)
+                results = self.Expr.page(
+                    self.User.root_user['tagged']['Featured'], **args)
             elif feed == 'recent':
                 results = self.Expr.page({}, **args)
             else:
