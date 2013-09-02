@@ -171,13 +171,18 @@ define([
         }
         return found;
     };
-    function cache_frames(expr_ids, current){
+    var debug = function(text){
+        if (1)
+            console.log("DEBUG: " + text);
+    };
+    var cache_frames = function(expr_ids, current){
         if (expr_ids.length == 0)
             return false;
         expr_id = expr_ids[0];
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length > 0) {
             cache_frames(expr_ids.slice(1));
+            debug("caching frame, already loaded: " + find_card(expr_id));
             return contentFrame;
         }
         // Create new content frame
@@ -188,7 +193,7 @@ define([
         // Cache the expr data on the card
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
-            found = find_card(expr_id);
+            var found = find_card(expr_id);
             if (found >= 0) {
                 var card = page_data.cards[found]
                 if (card.json == undefined) {
@@ -202,10 +207,13 @@ define([
                 }
             }
         }
+        debug("caching frame: " + found);
         // Remember all the frames that are loading.
         loading_frame_list = loading_frame_list.concat(contentFrame.eq(0));
         contentFrame.load(function () {
             contentFrame.data('loaded', true);
+            debug("loaded frame: " + found);
+
             if (contentFrame.hasClass('expr-visible')) 
                 contentFrame.get(0).contentWindow.postMessage({action: 'show'}, '*');
             for (var i = 0, el; el = loading_frame_list[i]; i++) {
@@ -223,6 +231,7 @@ define([
         var max_loading_frames = 2;
         var removed_frames = loading_frame_list.splice(0, Math.max(0, loading_frame_list.length - max_loading_frames));
         for (var i = 0, el; el = removed_frames[i]; i++) {
+            debug("removing cached frame: " + find_card(el.prop("id").slice(5)));
             el.remove();
         }
         return contentFrame;
