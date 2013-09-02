@@ -256,9 +256,13 @@ define([
             if (e.keyCode == 27) { // escape
                 // If a dialog is up, kill it.
                 $('#dialog_shield').click();
-            } else if (e.keyCode == 39 || e.keyCode == 37) {
+            } else if ((e.keyCode == 39 || e.keyCode == 37) &&
+                !(e.metaKey || e.ctrlKey || e.altKey)) {
                 // If paging, go to previous / next expression.
-                context.page.navigate_page((e.keyCode == 39) ? 1 : -1);
+                if (context.page && context.page.navigate_page) {
+                    var speed = (e.shiftKey) ? 2 : 1;
+                    context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
+                }
             } else {
                 // alert('keyCode: ' + e.keyCode);
             }

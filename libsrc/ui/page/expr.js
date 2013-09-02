@@ -107,8 +107,12 @@ define([
         o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
 
         animate_expr();
-        o.navigate_page(0); // To cache nearby expressions
-
+        var found = find_card(o.expr.id);
+        if (found >= 0) {
+            var card = page_data.cards[found];
+            if (! card.json)
+                _navigate_page(0); // To cache nearby expressions
+        }
         hide_panel();
         $("#content_btns").show();
         $(".social_btn").removeClass("hide");
@@ -129,7 +133,7 @@ define([
     // Check to see if tags overflows its bounds.
     // If so, create "..." tag with associated menu.
     var fixup_tags_list = function () {
-        tags = $(".tag_list a");
+        var tags = $(".tag_list a");
         if (tags.length) {
             top_y = tags.eq(0).position().top;
             client_height = $(".tag_list").height();
@@ -160,6 +164,7 @@ define([
 
     var find_card = function(expr_id){
         var found = -1;
+        var page_data = context.page_data;
         if (! page_data.cards)
             return found;
         var len = page_data.cards.length;
@@ -178,7 +183,7 @@ define([
     var cache_frames = function(expr_ids, current){
         if (expr_ids.length == 0)
             return false;
-        expr_id = expr_ids[0];
+        var expr_id = expr_ids[0];
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length > 0) {
             cache_frames(expr_ids.slice(1));
@@ -238,7 +243,7 @@ define([
     };
     // Animate the new visible expression, bring it to top of z-index.
     function animate_expr (){
-        page_data = context.page_data;
+        var page_data = context.page_data;
         // display_expr(page_data.expr_id);
         var expr_id = page_data.expr_id;
         var expr_curr = $('.expr-visible');
@@ -497,7 +502,7 @@ define([
     };
 
     o.social_toggle = function(){
-        popup = $('#social_overlay');
+        var popup = $('#social_overlay');
         // TODO: animate
         if (popup.css('display') == 'none') {
             popup.show();
@@ -508,10 +513,10 @@ define([
     };
 
     o.edit_comment = function(feed_item){
-        edit_button = feed_item.find('button[name=edit]');
-        delete_button = feed_item.find('button[name=delete]');
-        text_el = feed_item.find('div.text');
-        text = text_el.html();
+        var edit_button = feed_item.find('button[name=edit]');
+        var delete_button = feed_item.find('button[name=delete]');
+        var text_el = feed_item.find('div.text');
+        var text = text_el.html();
         if (text_el.is(":hidden")) {
             // Return to uneditable state
             text_el.show();
@@ -559,9 +564,10 @@ define([
         o.edit_comment_response([], json);
     };
 
-    o.page_prev = function() { o.navigate_page(-1); };
-    o.page_next = function() { o.navigate_page(1); };
-    o.navigate_page = function (offset){
+    o.page_prev = function() { _navigate_page(-1); };
+    o.page_next = function() { _navigate_page(1); };
+    o.navigate_page = function(offset) { _navigate_page(offset); };
+    _navigate_page = function (offset){
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
@@ -571,10 +577,10 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 // Cache upcoming expressions
-                cache_offsets = [1, -1, 2];
+                var cache_offsets = [1, -1, 2];
                 if (offset < 0)
                     cache_offsets = cache_offsets.map(function(o) { return -o; });
-                expr_ids = [];
+                var expr_ids = [];
                 for (var i = 0, off; off = cache_offsets[i]; ++i) {
                    var found_next = (found + len + off) % len;
                    expr_ids = expr_ids.concat(page_data.cards[found_next].id);
@@ -613,7 +619,8 @@ define([
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){
-        if(!msg) msg = page_btn_state;
+        if (!msg)
+            msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
             || context.page_data.cards.length == 1) {
