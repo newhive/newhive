@@ -257,6 +257,7 @@ class HiveAssets(Assets):
         # CSS for expressions, and also site pages
         minimal_scss = webassets.Bundle(
             'scss/minimal.scss',
+            'scss/jplayer.scss',
             'scss/fonts.scss',
             filters=scss_filter,
             output='compiled.minimal.css',
