@@ -16,21 +16,24 @@
         "api_route": "/api/feed/trending/",
         "controller": "community",
         "method": "trending",
-        "client_method": "home"
+        "client_method": "home",
+        "require_login": true
     },
     "trending": {
         "page_route": "/<username>/profile/trending",
         "api_route": "/api/feed/trending/<username>",
         "controller": "community",
         "method": "trending",
-        "client_method": "profile"
+        "client_method": "profile",
+        "require_login": true
     },
     "network": {
         "page_route": "/<username>/profile/network",
         "api_route": "/api/feed/network/<username>",
         "controller": "community",
         "method": "network",
-        "client_method": "grid"
+        "client_method": "grid",
+        "require_login": true
     },
  
     "featured": {
@@ -38,14 +41,16 @@
         "api_route": "/api/feed/featured",
         "controller": "community",
         "method": "featured",
-        "client_method": "profile"
+        "client_method": "profile",
+        "require_login": true
     },
     "recent": {
         "page_route": "/home/recent",
         "api_route": "/api/feed/recent",
         "controller": "community",
         "method": "recent",
-        "client_method": "grid"
+        "client_method": "grid",
+        "require_login": true
     },
    "signup": {
         "page_route": "/home/signup",

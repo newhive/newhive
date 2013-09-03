@@ -135,7 +135,8 @@ class User(ModelController):
         user = tdata.user
         expr = self.db.Expr.fetch(request.form.get('expr_id'))
         recipient_address = request.form.get('emails')
-        if not request.form.get('message') or not recipient_address: return False
+        if not request.form.get('message') or not recipient_address: 
+            return self.serve_json(response, { 'error': 'Message and recipient are mandatory fields.'})
 
         recipient = self.db.User.fetch(recipient_address, keyname='email')
         recipient = recipient or {'email': recipient_address}

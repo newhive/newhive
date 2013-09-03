@@ -73,7 +73,7 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     padding: 20px;
     hr { margin-bottom: 20px; }
     textarea, input[type=text] {
-        @include calc-width("100% - 20px");
+        width: 100%;
         margin: 10px 0px;
     }
     textarea {
@@ -88,16 +88,19 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 #dia_embed {
     width: 440px;
     padding: 20px;
+    // textarea, input[type=text] {
+    //     width: 100%;
+    // }
     textarea {
-        @include calc-width("100% - 20px");
+        width: 100%;
         resize: none;
         margin: 10px 0px;
         white-space: pre-wrap;
         &.copy {
-            height: 85px;
+            height: 100px;
         }
         &.image_link {
-            height: 41px;
+            height: 60px;
         }
     }
 }
@@ -110,7 +113,7 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
         font-size: 33px;
     }
     textarea {
-        @include calc-width("100% - 20px");
+        width: 100%;
         resize: none;
         height: 155px;
         margin: 10px 0px;
@@ -213,7 +216,7 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     .line1 { font-weight: bold; }
     .line2 { color: $color_active; }
 
-    input[type=text] { width: 290px; }
+    input[type=text] { width: 100%; }
     h3 { text-align: left; margin: 10px 0; }
 }
 
@@ -367,16 +370,14 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
         float: left;
         padding: 0 40px;
     }
-    input[type=text], input[type=password] { @include calc-width("100% - 18px", "240px") }
     .left {
         // .field { width: 240px; }
-        // input[type=text], input[type=password] { width: 220px; }
         border-right: 1px solid #D1D1D1;
     }
     .right {
         // .field { width: 270px; }
         input[type=text], input[type=password] {
-            // width: 202px;
+            width: 100%;
             margin: 4px 0px;
             &[name=message] { margin-bottom: 10px; }
         }
@@ -460,7 +461,7 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 
 form.login {
     input[type=text], input[type=password] {
-        width: 202px;
+        width: 100%;
         margin: 4px 0px;
         &[name=secret] { margin-bottom: 10px; }
     }

@@ -5,6 +5,7 @@
  */
 define([
     'browser/jquery',
+    'json!ui/routes.json',
     'browser/js',
     'ui/dialog', 
     'ui/new_account',
@@ -37,6 +38,7 @@ define([
     'sj!templates/request_invite_form.html'
 ], function(
     $,
+    routes,
     js,
     dialog,
     new_account,
@@ -153,6 +155,9 @@ define([
         context.user.logged_in = false;
         // overlays are rendered once on init, so not done on .refresh()
         init_overlays();
+        if (routes[context.route_name].require_login) {
+            return o.controller.open("home", {});
+        }
         o.controller.refresh();
     };
     o.logout = function(){

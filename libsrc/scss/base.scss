@@ -225,6 +225,7 @@ html, body { background-color: white; height: 100%; }
 img.thumb { background-color: $color_grey_medium; }
 
 // Site-wide form styling
+input, textarea { @include box-sizing(border-box); }
 input[type=text], input[type=password], textarea {
     border: 1px solid black;
     padding: 8px;

@@ -577,7 +577,7 @@ define([
         o.attach_handlers();
     };
     o.comment_response = function (e, json){
-        $('#comment_form textarea').val('').prop('disabled', false);
+        $('#comment_form textarea').val('').prop('disabled', false).focus();
         $("#comment_form input[type=submit]").prop('disabled', false);
 
         o.edit_comment_response([], json);
