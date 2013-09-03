@@ -108,6 +108,16 @@ define([
         o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
 
         animate_expr();
+        if (page_data.cards == undefined) {
+            // In case of direct link with no contect,
+            // fetch the default context: owner's cards
+            // TODO: shold be able to link context in URL with #user=foo or #tag=bar
+            o.controller.get('expressions_public', {
+                owner_name: page_data.expr.owner.name
+            }, function(json) {
+                page_data.cards = json.cards;
+            });
+        }
         var found = find_card(o.expr.id);
         if (found >= 0) {
             var card = page_data.cards[found];
