@@ -107,7 +107,6 @@ define([
         o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
         o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
 
-        animate_expr();
         if (page_data.cards == undefined) {
             // In case of direct link with no contect,
             // fetch the default context: owner's cards
@@ -124,6 +123,7 @@ define([
             if (! card.json)
                 _navigate_page(0); // To cache nearby expressions
         }
+        animate_expr();
         hide_panel();
         $("#content_btns").show();
         $(".social_btn").removeClass("hide");
