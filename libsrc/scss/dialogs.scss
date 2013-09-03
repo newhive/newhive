@@ -35,6 +35,14 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
           font-family: $header_font;
           text-align: center;
     }
+    .success_show {
+        height: 180px;
+        color: white;
+        background-color: $color_selected;
+        .centered {
+            padding: 0px 30px;
+        }
+    }
 }
 
 .btn_dialog_close, #btn_dialog_close {

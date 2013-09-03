@@ -2,26 +2,28 @@
 <div id="dia_share" class="dialog" data-handle='#share_form_btn'>
   <div class="heading title expr">Share</div>
   <div class="subheading error_msg"></div>
-  <div class="success_msg">
-    Email sent.
+  {<vcenter "success_show heading"}
+    <div class="centered">Email sent.</div>
+  {>}
+  <div class="success_hide">
+    <div class="subheading">Expression link:</div>
+    <textarea readonly class="dark">newhive.com/{owner.name}/{expr.name}</textarea>
+    <hr>
+    <form { form_attrs "expr_share" } id='form_expr_share' method='POST'>
+      <div class="subheading">Email(s) and/or Usernames:</div>
+      <input autofocus placeholder="Separate emails and usernames with commas." type="text" name="emails">
+
+      <div class="subheading">Message:</div>
+      <textarea class="message" name="message"></textarea>
+
+      <div class="copy inline">
+        <input type="checkbox" checked name="send_copy">
+        <label>Send me a copy.</label>
+      </div>
+      <button type="submit" class="submit teal_btn">Send</button>
+
+      <input type="hidden" name="expr_user" value="{owner.name}">
+      <input type="hidden" name="expr_id" value="{expr.id}">
+    </form>
   </div>
-  <div class="subheading">Expression link:</div>
-  <textarea readonly class="dark">newhive.com/{owner.name}/{expr.name}</textarea>
-  <hr>
-  <form { form_attrs "expr_share" } id='form_expr_share' method='POST'>
-    <div class="subheading">Email(s) and/or Usernames:</div>
-    <input placeholder="Separate emails and usernames with commas." type="text" name="emails">
-
-    <div class="subheading">Message:</div>
-    <textarea class="message" name="message"></textarea>
-
-    <div class="copy inline">
-      <input type="checkbox" checked name="send_copy">
-      <label>Send me a copy.</label>
-    </div>
-    <button type="submit" class="submit teal_btn">Send</button>
-
-    <input type="hidden" name="expr_user" value="{owner.name}">
-    <input type="hidden" name="expr_id" value="{expr.id}">
-  </form>
 </div>

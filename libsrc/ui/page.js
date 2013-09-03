@@ -262,7 +262,8 @@ define([
                 // If a dialog is up, kill it.
                 $('#dialog_shield').click();
             } else if ((e.keyCode == 39 || e.keyCode == 37) &&
-                !(e.metaKey || e.ctrlKey || e.altKey)) {
+                !(e.metaKey || e.ctrlKey || e.altKey) &&
+                $(e.target).is("body")) {
                 // If paging, go to previous / next expression.
                 if (context.page && context.page.navigate_page) {
                     var speed = (e.shiftKey) ? 2 : 1;
