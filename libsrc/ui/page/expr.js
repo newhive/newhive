@@ -89,9 +89,6 @@ define([
         $("#dia_comments").remove();
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
-        $("#dia_comments").data("dialog").opts.open = function(){
-            $("#dia_comments textarea").focus();
-        }
         $('#popup_content .counts_icon').each(function(i, el) {
             resize_icon($(this));
         });
@@ -380,7 +377,16 @@ define([
         $(".social_btn").unbind('click');
         $(".social_btn").click(o.social_toggle);
 
-        $('#comment_form').unbind('response').on('response', o.comment_response);
+        // $('#comment_form').unbind('response').on('response', o.comment_response);
+        var dia_comments = $("#dia_comments").data("dialog");
+        dia_comments.opts.open = function(){
+            $("#dia_comments textarea").focus();
+        }
+        dia_comments.opts.handler = o.comment_response;
+        $("#comment_form").unbind('after_submit').on('after_submit', function() {
+            $("#dia_comments textarea[name=text]").prop('disabled', true);
+            $("#dia_comments input[type=submit]").prop('disabled', true);
+        });
 
         $(".feed_item").each(function(i, el) {
             edit_button = $(el).find('button[name=edit]');
@@ -392,7 +398,7 @@ define([
                 });
             }
             $(el).find('form').on('response', function(event, data) {
-                o.edit_comment_response($(el), data); 
+                o.edit_comment_response($(el), data);
             });
         });
 
@@ -571,7 +577,9 @@ define([
         o.attach_handlers();
     };
     o.comment_response = function (e, json){
-        $('#comment_form textarea').val('');
+        $('#comment_form textarea').val('').prop('disabled', false);
+        $("#comment_form input[type=submit]").prop('disabled', false);
+
         o.edit_comment_response([], json);
     };
 
