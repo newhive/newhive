@@ -91,6 +91,9 @@ Hive.Apps = (function(){
     o.all = function(){ return $.grep(o, function(e){ return ! e.deleted; }); };
     
     o.init = function(initial_state, load){
+        var query = location.search.slice(1);
+        if (query.length)
+            $("#tags_input").val(query);
         stack.splice(0);
         o.splice(0);
 

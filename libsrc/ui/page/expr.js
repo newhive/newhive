@@ -23,6 +23,7 @@ define([
         loading_frame_list = [], loaded_frame_list = [],
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
+    o.cache_offsets = [1, -1, 2];
     o.anim_duration = 400;
 
     o.init = function(controller){
@@ -577,13 +578,13 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 // Cache upcoming expressions
-                var cache_offsets = [1, -1, 2];
-                if (offset < 0)
-                    cache_offsets = cache_offsets.map(function(o) { return -o; });
+                var cache_offsets = o.cache_offsets;
                 var expr_ids = [];
                 for (var i = 0, off; off = cache_offsets[i]; ++i) {
-                   var found_next = (found + len + off) % len;
-                   expr_ids = expr_ids.concat(page_data.cards[found_next].id);
+                    if (offset < 0)
+                        off = -off;
+                    var found_next = (found + len + off) % len;
+                    expr_ids = expr_ids.concat(page_data.cards[found_next].id);
                 }
                 cache_frames(expr_ids);
                 if (offset) {

@@ -98,6 +98,13 @@ define([
 
     // takes route_name, and association argument list.
     // Returns attribute string.
+    o.query_attrs = function(scope, route_name, query){
+        var args = get_route_args(Array.prototype.slice.call(arguments, 1));
+        return attrs(route_name, args, query, false);
+    };
+
+    // takes route_name, and association argument list.
+    // Returns attribute string.
     o.anchor_attrs = function(scope, route_name){
         var args = get_route_args(arguments);
         return attrs(route_name, args, "", false);
