@@ -66,20 +66,13 @@ class Database:
         # if config.use_esdb:
         #     self.esdb = ESDatabase(self)
 
-    def dict_to_query(self, search):
-        queries = []
-        for term in search:
-            queries.append(pyes.query.TermsQuery(term, search[term]))
-        query = pyes.query.BoolQuery(must=queries)
-        return query
-
     # def query(self, q, viewer=None, expr_only=None, fuzzy=False,
     #           es_order='_score,updated:desc', **args):
     #     return self._query(q, viewer, expr_only, fuzzy, es_order, **args)['result']
 
     # def _query(self, q, viewer=None, expr_only=None, fuzzy=False,
     #           es_order='_score,updated:desc', **args):
-    def query(self, q, expr_only=None, viewer=None, **args):
+    def query_echo(self, q, expr_only=None, viewer=None, **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
 
@@ -122,7 +115,9 @@ class Database:
                 results = results + self.User.page(spec, **args)
                 results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
 
-        return {'result': results, 'search': search}
+        return results, search
+    def query(self, *args, **kwargs):
+        return self.query_echo(*args, **kwargs)[0]
 
     def parse_query(self, q):
         """ Parses search query into MongoDB spec
@@ -700,8 +695,7 @@ class User(HasSocial):
     def exprs_tagged_following(self, limit=0):
         # return iterable of matching expressions for each tag you're following
         tags = self.get('tags_following', [])
-        queries = [self.db.query('#' + tag, sort=[('updated', -1)])
-            for tag in tags]
+        queries = [self.db.query('#' + tag) for tag in tags]
         return (item for grp in izip_longest(*queries) for item in grp)
 
     # TODO-polish merge with db.query to enable searching within feed
@@ -753,9 +747,8 @@ class User(HasSocial):
                 if (item['auth'] != 'public') or existing: continue
                 break
             for r in tagged_exprs:
-                item = exprs.get(r.id)
-                if item: continue
-                else: add_expr(item)
+                if exprs.get(r.id): continue
+                else: item = add_expr(r)
                 break
             if not item: break
             result.append(item)

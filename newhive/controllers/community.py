@@ -11,12 +11,6 @@ def deduped(item, dict):
     return item
 
 class Community(Controller):
-    def search(self, tdata, request, **paging_args):
-        return self.db.query(request.args.get('q'), **paging_args)
-
-    # def home(self, tdata, request, **paging_args):
-        # return self.featured(self, tdata, request, **paging_args)
-
     def featured(self, tdata, request, **paging_args):
         return {
             "cards": self.db.query('#Featured', viewer=tdata.user),
@@ -311,12 +305,11 @@ class Community(Controller):
         # if owner_count == 1
         #     profile = expr_owner.client_view()
         #     page_data.update('profile': profile)
-        query = self.db.query(request.args['q'], viewer=tdata.user)
-        search = query['search']
+        result, search = self.db.query_echo(request.args['q'], viewer=tdata.user)
         tags = search.get('tags', [])
         print search
         data = {
-            "cards": query['result'],
+            "cards": result,
             "card_type": "expr",
             'title': 'Search',
             'header': ("Search", request.args['q']),  

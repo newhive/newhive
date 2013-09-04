@@ -29,9 +29,11 @@
         <span>by <span class='username'>{owner.name}</span></span></a>
     </div>
     <div class="stats">
-      <img src='{asset "skin/nav/views.png"}'/> {counts.Views}
-      {<if counts.Star}<img src='{asset "skin/nav/love.png"}'/> {counts.Star}{>}
-      {<if counts.Comment}<img src='{asset "skin/nav/comment.png"}'/> {counts.Comment}{>}
+      <img src='{asset "skin/nav/views.png"}'/> {thousands counts.Views}
+      {<if counts.Star}<img src='{asset "skin/nav/love.png"}'/>
+        {thousands counts.Star}{>}
+      {<if counts.Comment}<img src='{asset "skin/nav/comment.png"}'/>
+        {thousands counts.Comment}{>}
     </div>
   </div>
 </div>
