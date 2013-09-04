@@ -21,16 +21,17 @@
 <div class='title_spacer'><div class="title expr">
   <a { anchor_attrs "view_expr"
     "id" id  "expr_name" name  "owner_name" owner.name }>{title}</a>
-</div></div>
-<div class='info'>
-  <div class="owner">
-    <a {anchor_attrs "expressions_public" "owner_name"
-      owner.name}><img class="thumb" src="{owner.thumb_small}"/>
-      <span>by <span class='username'>{owner.name}</span></span></a>
   </div>
-  <div class="stats">
-    <img src='{asset "skin/nav/views.png"}'/> {counts.Views}
-    {<if counts.Star}<img src='{asset "skin/nav/love.png"}'/> {counts.Star}{>}
-    {<if counts.Comment}<img src='{asset "skin/nav/comment.png"}'/> {counts.Comment}{>}
+  <div class='info'>
+    <div class="owner">
+      <a {anchor_attrs "expressions_public" "owner_name"
+        owner.name}><img class="thumb" src="{owner.thumb_small}"/>
+        <span>by <span class='username'>{owner.name}</span></span></a>
+    </div>
+    <div class="stats">
+      <img src='{asset "skin/nav/views.png"}'/> {counts.Views}
+      {<if counts.Star}<img src='{asset "skin/nav/love.png"}'/> {counts.Star}{>}
+      {<if counts.Comment}<img src='{asset "skin/nav/comment.png"}'/> {counts.Comment}{>}
+    </div>
   </div>
 </div>

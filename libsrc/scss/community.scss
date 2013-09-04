@@ -392,13 +392,20 @@
 
         .card {
             position: relative;
-            border-bottom: 2px solid $color_grey_medium;
-            padding-bottom: 10px;
+            // border-bottom: 2px solid $color_grey_medium;
+            // padding-bottom: 10px;
             margin-bottom: 20px;
+            box-shadow: 0px 0px 6px #BBB;
+            &:hover {
+                @include box-shadow(2px 2px 10px #666);
+            }
 
             .snapshot {
                 width: 715px;
                 height: 430px;
+            }
+            .title_spacer {
+                padding: 0px 10px;
             }
             .title {
                 // opacity: 0.4;

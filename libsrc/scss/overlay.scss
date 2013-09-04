@@ -60,6 +60,10 @@
 
 .overlay {
     display: none;
+    opacity: .95;
+    &.social {
+        opacity: inherit;
+    }
     position: fixed;
     z-index: $nav_layer;
     background-color: white;
