@@ -61,7 +61,7 @@ def test_snapshot():
         
     # xvfb.terminate()
     
-test = True
+test = False
 
 def clear_snapshots():
     expressions_to_snapshot = db.Expr.search({
