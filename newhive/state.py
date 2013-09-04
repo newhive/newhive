@@ -717,7 +717,8 @@ class User(HasSocial):
         for expr in exprs:
             expr['score'] = popularity_time_score(expr)
             exprs_by_id[expr.id] = expr
-        result = sorted(exprs_by_id.values(), key=lambda x: x['score'])
+        result = sorted(exprs_by_id.values(),
+            key=lambda x: x['score'], reverse=True)
         return result[at:at+limit]
 
     # TODO-polish merge with db.query to enable searching within feed
