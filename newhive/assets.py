@@ -244,7 +244,7 @@ class HiveAssets(Assets):
         if not config.debug_mode:
             # can't figure out how to make cram work from another dir
             old_dir = os.getcwd()
-            os.chdir(join(config.src_home, libsrc))
+            os.chdir(join(config.src_home, 'libsrc'))
             os.system('./cram.sh')
             os.chdir(old_dir)
 
