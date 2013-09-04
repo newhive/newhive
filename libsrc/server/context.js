@@ -12,7 +12,9 @@ define([
 
     o.server_url = o.config.server_url; // used in many templates
 
-    o.asset = function(context, name){ return ui_util.asset(name) };
+    o.asset = function(context, name){ 
+        return ui_util.asset(name);
+    };
 
     // vcenter creates a valigned block
     o.vcenter = function(context, block){
