@@ -57,10 +57,10 @@ define([
         var wide = ($(window).width() >= 1180) ? true : false;
         if (o.wide_overlay != wide) {
             o.wide_overlay = wide;
-            $("#popup_content").css("max-width", (wide) ? 980+600-420 : 980);
-            $("#popup_content .left_pane").width((wide) ? 600 : 420);
+            $("#popup_content").css("max-width", (wide) ? 980+600-430 : 980);
+            $("#popup_content .left_pane").width((wide) ? 600 : 430);
         }
-        var columns = ($(window).width() >= 990) ? 2 : 1;
+        var columns = ($(window).width() >= 980) ? 2 : 1;
         if (o.overlay_columns != columns) {
             o.overlay_columns = columns;
             $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');

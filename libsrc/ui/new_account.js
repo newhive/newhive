@@ -18,15 +18,18 @@ define([
     o.render = function(){
         $('#site').empty().append(create_account(context.page_data));
         field_name = $('#create_account input[name=username]');
-        field_name.change(update_name_url);
-        $('#create_account input[name=email]').change(check_form);
-        $('#create_account input[name=password]').change(check_form);
+        field_name.focus().keyup(update_name_url);
+        $('#create_account input[name=email]').keyup(check_form);
+        $('#create_account input[name=password]').keyup(check_form);
         $('#create_account input[name=agree]').change(check_form);
         check_form();
     }
 
     function update_name_url() {
         var username = field_name.val();
+        if (username.length == 0)
+            username = "username";
+            // $('#create_account input[name=username]').attr("placeholder");
         $('#username_label').html(username);
         check_form();
     }

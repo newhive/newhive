@@ -24,9 +24,6 @@
 .rightify {
     text-align: right;
 }
-.textarea_padder {
-    padding-right: 18px;
-}
 .show_hover {
     display:none;
 }
@@ -50,7 +47,7 @@ button {
     border: none;
     cursor: pointer;
 }
-.teal_btn, .text_btn {
+.teal_btn, .text_btn, .grey_btn {
     padding: 10px;
     font-family: Gibson;
     font-size: 17px;
@@ -58,6 +55,9 @@ button {
         color: white;
         background-color: black;
     }
+}
+.grey_btn {
+    background-color: $color_light_grey;
 }
 .teal_btn {
     background-color: $color_selected;
@@ -166,8 +166,10 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
             &.icon { background-image: asset_url('skin/nav/'#{nth($icon_name, $nth)}'.png'); }
             &.on.icon { background-image: asset_url('skin/nav/#{nth($icon_name_on, $nth)}.png'); }
         }
-        &.#{$class_name}:hover .icon {
-            background-image: asset_url('skin/nav/'#{nth($icon_name, $nth)}'-hover.png');
+        &.#{$class_name}:hover, &.#{$class_name}:hover.on {
+            .icon {
+                background-image: asset_url('skin/nav/'#{nth($icon_name, $nth)}'-hover.png');
+            }
         }
     }
 
@@ -187,15 +189,6 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
         right: 10px;
     }
 
-    &.love.on {
-        background-color: $color_bright_red;
-        color: $color_white;
-    }
-
-    &.comment.on {
-        color: $color_white;
-        background-color: $color_blue;
-    }
     &.comment.discussions {
         position: absolute;
         right: 8px;
@@ -206,11 +199,21 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
         .counts { line-height: 44px }
     }
 
+    &.love.on {
+        background-color: $color_bright_red;
+        color: $color_white;
+    }
+
+    &.comment.on {
+        color: $color_white;
+        background-color: $color_blue;
+    }
     &.republish.on {
         color: $color_white;
         // !!TODO where is the gradient asset for bg color?
         // Edit here: http://www.colorzilla.com/gradient-editor/
-        @include background-image(linear-gradient(to bottom, rgba(193,113,93,1) 0%,rgba(237,249,97,1) 44%,rgba(45,146,155,1) 100%)); /* W3C */
+        // @include background-image(linear-gradient(to bottom, rgba(193,113,93,1) 0%,rgba(237,249,97,1) 44%,rgba(45,146,155,1) 100%)); /* W3C */
+        @include background-image(linear-gradient(to right, rgba(249,51,24,1) 0%,rgba(234,144,47,1) 33%,rgba(150,170,4,1) 66%,rgba(150,170,4,1) 66%,rgba(105,130,147,1) 100%)); /* W3C */
     }
     &.republish .counts {margin-left: 3px;}
     &.nohover:hover {

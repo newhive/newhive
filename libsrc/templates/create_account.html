@@ -2,40 +2,218 @@
 #}
 
 <div id="create_account">
-{<if user.logged_in}
-  <p>Error: already logged in.</p>
-{>}
 
 {<unless user.logged_in}
   <img id="logo" src='{asset "skin/site/logo_text.png"}'>
-  <form id='create_form' action='{secure_server}api/user/create' method='POST'>
+  <form id='create_form' class="form_text" action='{secure_server}api/user/create' method='POST'>
   	<div class="center">
+	  <div class="centered heading">Create account:</div>
 	  <div id="left_pane">
-	  	<h2>Create my account:</h2>
-	  	<div class="upper"><span>newhive.com/</span><span id="username_label">username</span></div>
+	  	<div class="upper subheading"><span>newhive.com/</span><span id="username_label">username</span></div>
 	  	<div><input type="text" name="username" placeholder="USERNAME"></div>
 	  	<div><input type="text" name="full_name" placeholder="FULL NAME (OPTIONAL)"></div>
 	  	<div><input type="password" name="password" placeholder="PASSWORD"></div>
 	  	<div><input type="text" name="email" placeholder="EMAIL"></div>
 	  </div>
 	  <div id="right_pane">
-	  	<div class="facebook" id="facebook_signup">
-	  	  <button type="button"><span class="icon"></span>TODO: Sign up with Facebook</button></div>
-	  	<h2>Terms:</h2>
+	  	{#
+		  	<div class="facebook" id="facebook_signup">
+		  	  <button type="button"><span class="icon">
+		  	  	</span>TODO: Sign up with Facebook</button></div>
+	  	#}
+	  	<div class="upper subheading">Terms:</div>
 	  	<ol><li>You own your information.</li>
 	  	  <li>Don't be mean or obscene.</li>
 	  	  <li>Encourage expression.</li>
 	  	</ol>
-	  	<button type="button" class="gray_btn upper">TODO: Read full terms</button>
+	  	<button id="read_tos" type="button" class="grey_btn upper">Read full terms</button>
+        <div class="upper terms_agree"><input type="checkbox" name="agree" value="agree" id="agree">
+	   	  <label for="agree">Agree to terms of service</label></div>
 	  </div>
 	</div>
     <div id="footer">
-      <div class="upper"><input type="checkbox" name="agree" value="agree" id="agree">
-      	<label for="agree">Agree to terms of service</label></div>
-      <div><button type="submit" class="submit teal_btn">
+      <div class="centered"><button type="submit" class="upper submit teal_btn">
       	Create my account<span id="go_btn"></span></button></div>
     </div>
   </form>
+{>}{<else}
+  <p>Error: already logged in.</p>
 {>}
 
+<div class="dialog" id="dia_TOS" data-handle="#read_tos"
+><div class="content"
+  ><div class="title">Terms of Service
+</div>Welcome to NewHive!
+
+These Terms of Service form a contract between you and us applicable when you use the Site and the NewHive Services.  Here are the basics:  You own your content.  You agree that all information/data/pictures you post are your own creation or you are allowed to use them.  You refrain from using the site in any way that could be interpreted as hateful/derogatory.  Most of all, we want you to have fun. Please read these Terms carefully for all the details before you use the Site.
+
+ 
+1. What We Mean When We Say...
+ 
+In these Terms, when we say:
+ 
+“Site”, we mean newhive.com;
+“NewHive Services”, we mean newhive.com along with all the other domains, products, applications, services, and content provided by AReflectionOf, Inc. under the “NewHive” brand name;
+“NewHive”, “we”, or “us”, we mean AReflectionOf, Inc., a Delaware corporation, collectively with its agents, consultants, employees, officers, and directors;
+“Subscriber” or “you”, we mean you, whether you are a person or acting on behalf of an entity you are authorized to bind;
+“Content”, we mean any creative expression, including video, audio, photographs, images, illustrations, animations, logos, tools, written posts, replies, and comments, information, data, text, software, scripts, executable files, graphics, and interactive features, any of which may be generated, provided, or otherwise made accessible on or through NewHive Services;
+“Subscriber Content”, we mean all Content that is posted or otherwise provided or transferred to NewHive Services by a Subscriber, including you; and
+“Terms”, we mean these Terms of Service.
+ 
+2. Accepting the Terms of Service
+ 
+Please read these Terms, our Privacy Policy, and our NewHive Rules carefully before using newhive.com or the other NewHive-branded domains, products, services, applications, or content provided by AReflectionOf, Inc. By using NewHive Services, you agree to become bound by all the terms and conditions of these Terms. If you do not agree to all of these Terms, you are not authorized to use NewHive Services.
+ 
+3. Modifications to the Terms of Service
+ 
+NewHive reserves the right, in our sole discretion, to modify these Terms at any time by posting revised Terms through NewHive Services and by providing notice to you that these Terms have changed, generally via e-mail where practical, and otherwise through NewHive Services themselves. For example, we might provide a notification that appears when you log in or return to newhive.com.
+ 
+When you see a modification alert, it’s important to review and familiarize yourself with the changes. Modifications become effective as soon as they are posted, so using NewHive Services after the posting and notice of a modification constitutes your acceptance of these Terms as modified.
+ 
+4. Use of NewHive Services
+ 
+Eligibility
+NewHive Services are intended for use by adults. No one under the age of thirteen (13) may use NewHive Services or provide any information to NewHive or to anyone else through NewHive Services, including name, address, telephone number, and email address. In addition to the age requirement, you may only use NewHive Services if you are able, legally speaking, to form a binding contract with NewHive and are not legally prohibited from using NewHive Services.
+ 
+Service Changes and Limitations
+NewHive Services change frequently, and their form and functionality may change without notice. NewHive retains the right – in our sole discretion, at any time, with or without notice – to place limits on the use of NewHive Services. We may also impose limits on certain Services or aspects of those Services or restrict your access to parts or all of NewHive Services without notice or liability. NewHive may change, suspend, or discontinue any or all of the Services at any time, including the availability of any product, feature, database, or Content. NewHive may also suspend accounts at any time, in its sole discretion.
+ 
+Limitations on Automated Use
+It will be a violation of these Terms, and we may suspend your account, if you engage in any of the following activities while using NewHive Services, generally through automated processes:
+ 
+(a) Probe, scan, or test our systems or networks, or otherwise attempt to breach or circumvent any security or authentication measures. This includes well-intentioned testing for vulnerabilities; please contact us first if you want to help us do that.
+ 
+(b) Access or search or attempt to access or search NewHive Services by means other than NewHive’s currently available, published interfaces, pursuant to our Terms. You may use other modes of access or search only if we have specifically allowed them in a separate agreement, or if they are permitted by NewHive's robot exclusion mechanisms.
+ 
+(c) Scrape NewHive Services, and in particular Content from NewHive Services, without our express prior written consent.
+ 
+(d) Use the Services to send altered, deceptive, or false source-identifying information. For example, it is a violation of these Terms to use newhive.com to send forged packet or email headers.
+ 
+(e) Interfere with or disrupt the access of any Subscriber, host or network. That includes things like sending a virus to, spamming, or overloading NewHive Services. It also includes the scripted use of NewHive Services in a way that interferes with, or creates an undue burden on, our systems.
+ 
+5. Account and Authorization Services
+ 
+As a condition to using some NewHive Services, you may be required to utilize a third-party account and authorization service, such as Facebook. We reserve the right to refuse or cancel service if we find that you are using someone else’s authorization credentials. By using a third party authorization service, you are agreeing to that third party’s Terms of Use, Privacy Policy, and any other agreement between you and the third party.
+ 
+6. Privacy
+ 
+Whatever information you provide to NewHive is subject to NewHive's Privacy Policy [THIS SHOULD LINK TO THE PRIVACY POLICY], which governs our collection and use of your information. When you use NewHive Services, you consent to the collection and use of this information as detailed in the Privacy Policy.
+ 
+7. Content and Subscriber Content
+ 
+Ownership
+You retain ownership of all intellectual property rights in your Subscriber Content. NewHive (and/or other third parties) retains ownership of intellectual property rights in all Content other than Subscriber Content.
+ 
+Subscriber Content License to NewHive
+When you transfer Subscriber Content to us through NewHive Services, you give NewHive a license to use it to operate and improve our products and offerings. That license is a non-exclusive, worldwide, royalty-free, sublicensable, transferable right and license to use, host, store, cache, reproduce, publish, display, perform, distribute, transmit, modify, adapt, and create derivative works of your Subscriber Content. When we say “adapt” Subscriber Content, that includes format modifications to make it look good on any networks, devices, services, or media through which users can access NewHive Services.
+ 
+This is a license for limited purposes only. Specifically, the rights you grant to us in this license are for the limited purposes of operating and improving NewHive Services, and allowing us to develop new products and services. Likewise, the reference to “derivative works” does not give us a right to make substantive changes or our own derivations. It does, though, enable NewHive Subscribers to redistribute Subscriber Content from one post or collection to another in a manner that allows Subscribers to do things like add comments, quote, embed, or otherwise make reference to your Subscriber Content.  We may allow other NewHive Subscribers to fork your Subscriber Content and modify it, but only if you opt in to this feature.
+ 
+This license gives NewHive the right to make all publicly-posted Content available to third-parties approved by NewHive, so that those third parties can distribute or analyze the Content on other media and services for non-commercial purposes, for example, sharing Subscriber Content through Twitter or Facebook. 
+ 
+One important thing to note: This license continues even if you stop using NewHive Services, primarily because of the shared, social nature of Content on NewHive. For example, when you post something publicly, others may choose to comment on it, embedding your Content in a social dialogue that cannot later be erased without retroactively censoring the speech of others.
+ 
+When you use NewHive Services, you agree that you will respect the copyright, trademark, and trade secret rights of others. You represent that you have all of the necessary rights to grant this license to NewHive for all Subscriber Content you submit.
+ 
+Content License to You
+As a Subscriber of NewHive Services, NewHive grants you a worldwide, non-exclusive, non-sublicensable, and non-transferable license to download, store, view, display, perform, redistribute, and create derivative works of Content solely in connection with your use of, and in accordance with the functionality and restrictions of, NewHive Services.
+ 
+Compliance with NewHive Rules
+You agree that you won't post Subscriber Content that violates, or otherwise use your Account in ways that violate, NewHive Rules [THIS SHOULD BE A LINK TO THE RULES].
+ 
+Termination and Deletion
+When you delete particular pieces of Subscriber Content from NewHive Services, we will make reasonable efforts to make it inaccessible and to cease use of it. However, we have to point out, and you understand and agree, that (a) caching of, copies of, or references to the Subscriber Content may not be immediately removed; (b) such removed Subscriber Content may persist in backups for a reasonable period of time; and (c) such removed Subscriber Content may be available and stored on our servers through the accounts of other Subscribers, when, for example, it has been the subject of commentary and quotation by others.
+ 
+8. Warranty Disclaimer; Services Available on an "AS-IS" Basis
+ 
+Your access to and use of NewHive Services or any Content is at your own risk. YOU UNDERSTAND AND AGREE THAT THE NEW HIVE SERVICES ARE PROVIDED TO YOU ON AN "AS IS" AND "AS AVAILABLE" BASIS. WITHOUT LIMITING THE FOREGOING, TO THE FULL EXTENT PERMITTED BY LAW, THE NEW HIVE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+ 
+NewHive makes no representations or warranties of any kind with respect to NewHive Services, including any representation or warranty that the use of NewHive Services will (a) be timely, uninterrupted or error-free or operate in combination with any other hardware, software, system or data, (b) meet your requirements or expectations, (c) be free from errors or that defects will be corrected, or (d) be free of viruses or other harmful components. NewHive also makes no representations or warranties of any kind with respect to Content; Subscriber Content, in particular, is provided by and is solely the responsibility of, the Subscribers providing that Content. No advice or information, whether oral or written, obtained from NewHive or through NewHive Services, will create any warranty not expressly made herein.
+ 
+9. Release From Liability
+ 
+You release, to the fullest extent permitted by law, NewHive, its directors, officers, shareholders, employees, representatives, consultants, agents, suppliers, and/or distributors from responsibility, liability, claims, demands, and/or damages (actual and consequential) of every kind and nature, known and unknown, arising out of or in any way connected with the following:
+ 
+	•	Disputes between Subscribers, including those between you and other Subscribers;
+	•	Third party sites and services, including content found on such sites and services;
+	•	Disputes concerning any use of or action taken using your account by you or a third party; and
+	•	Claims relating to the unauthorized access to any data communications or Content stored under or relating to your account, including unauthorized use or alteration of such communications or your Content.
+If you are a California resident, you waive California Civil Code §1542, which says: “A general release does not extend to claims which the creditor does not know or suspect to exist in his favor at the time of executing the release, which if known by him must have materially affected his settlement with the debtor.”
+ 
+10. Limitation of Liability
+ 
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE NEW HIVE, ITS DIRECTORS, OFFICERS, SHAREHOLDERS, EMPLOYEES, REPRESENTATIVES, CONSULTANTS, AGENTS, SUPPLIERS, AND/OR DISTRIBUTORS SHALL NOT BE LIABLE FOR: (A) ANY INDIRECT, INCIDENTAL, EXEMPLARY PUNITIVE, OR CONSEQUENTIAL DAMAGES OF ANY KIND WHATSOEVER; (B) LOSS OF: PROFITS, REVENUE, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES; (C) DAMAGES RELATING TO YOUR ACCESS TO, USE OF, OR INABILITY TO ACCESS OR USE THE NEW HIVE SERVICES; (D) DAMAGES RELATING TO ANY CONDUCT OR CONTENT OF ANY THIRD PARTY OR SUBSCRIBER USING THE NEW HIVE SERVICES, INCLUDING WITHOUT LIMITATION, DEFAMATORY, OFFENSIVE OR ILLEGAL CONDUCT OR CONTENT; AND/OR (E) DAMAGES IN ANY MANNER RELATING TO ANY CONTENT. THIS LIMITATION APPLIES TO ALL CLAIMS, WHETHER BASED ON WARRANTY, CONTRACT, TORT, OR ANY OTHER LEGAL THEORY, WHETHER OR NOT THE NEW HIVE HAS BEEN INFORMED OF THE POSSIBILITY OF SUCH DAMAGES, AND FURTHER WHERE A REMEDY SET FORTH HEREIN IS FOUND TO HAVE FAILED OF ITS ESSENTIAL PURPOSE.
+ 
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE TOTAL LIABILITY OF THE NEW HIVE AND ITS DIRECTORS, OFFICERS, SHAREHOLDERS, EMPLOYEES, REPRESENTATIVES, CONSULTANTS, AGENTS, SUPPLIERS, AND/OR DISTRIBUTORS, FOR ANY CLAIM UNDER THIS AGREEMENT, INCLUDING FOR ANY IMPLIED WARRANTIES, IS LIMITED TO THE GREATER OF FIFTY DOLLARS (US$50.00) OR THE AMOUNT YOU PAID US TO USE THE APPLICABLE SERVICE(S).
+ 
+11. Exclusions to Warranties and Limitation of Liability
+ 
+Some jurisdictions may not allow the exclusion of certain warranties or the exclusion/limitation of liability as set forth in Section 10, so the limitations above may not apply to you.
+ 
+12. Termination
+ 
+Either you or we can terminate these Terms at any time by notifying the other party. NewHive may also terminate or suspend your access to or ability to use any and all NewHive Services immediately, without prior notice or liability, for any reason or no reason, including (but not limited to) if you breach any of these Terms. In particular, NewHive may immediately terminate or suspend Accounts that have been flagged for repeat copyright infringement.
+ 
+Upon termination of your ability to use a NewHive Service, your right to use or access that Service and any Content will immediately cease. All provisions of these Terms which by their nature should survive termination shall survive termination, including, without limitation, ownership provisions, warranty disclaimers, releases, and limitations of liability.
+ 
+Termination of your access to and use of NewHive Services shall not relieve you of any obligations arising or accruing prior to such termination or limit any liability which you otherwise may have to NewHive or any third party.
+ 
+13. Legal Disputes
+ 
+You and NewHive agree that we will resolve any claim or controversy at law or equity that arises out of these Terms or NewHive Services in accordance with this Section of the Terms or as you and NewHive otherwise agree in writing. Before resorting to litigation or arbitration, we strongly encourage you to contact us directly to seek a resolution.
+ 
+Choice of Law for Legal Disputes
+These Terms shall be governed in all respects by the laws of the State of California without regard to its conflicts of laws provisions. The United Nations Convention on Contracts for the International Sale of Goods will not apply in any way to these Terms or to the transactions contemplated by these Terms.
+ 
+Where a Lawsuit Must Occur
+The exclusive jurisdiction and venue of any action to prevent the actual or threatened infringement, misappropriation or violation of a party’s copyrights, trademarks, trade secrets, patents or other intellectual property rights will be the state and federal courts located in the City and County of San Francisco, California, U.S.A. You and we both waive any objection to jurisdiction and venue in those courts.
+ 
+Waiver of Jury Trial and Class Action
+You acknowledge and agree that you and we each waive the right to a trial by jury or to participate as a plaintiff or class member in any purported class action or representative proceeding against the other.
+ 
+Binding Agreement to Arbitrate with Limited Exceptions
+You and we each agree that any dispute, claim or controversy arising out of or relating to these Terms shall be settled by binding arbitration, except that each party retains the right to bring an individual action in small claims court and the right to seek injunctive or other equitable relief in a court of competent jurisdiction to prevent the actual or threatened infringement, misappropriation or violation of a party’s copyrights, trademarks, trade secrets, patents or other intellectual property rights.
+ 
+Waiver of Class Action Arbitration
+Unless both you and we otherwise agree in writing, the arbitrator may not consolidate more than one party’s claims and may not otherwise preside over any form of any class or representative proceeding. If the previous sentence is held to be unenforceable, then the remaining paragraphs of this Section on Legal Disputes relating to arbitration are void.
+ 
+Arbitration Rules
+The arbitration will be administered by the American Arbitration Association (“AAA”) in accordance with the Commercial Arbitration Rules and the Supplementary Procedures for Consumer Related Disputes then in effect, except as modified by this dispute resolution section. (The AAA Rules are available here.) The Federal Arbitration Act will govern the interpretation and enforcement of this Section.
+ 
+Arbitration Process
+A party who desires to initiate arbitration must provide the other party with a written Demand for Arbitration as specified in the AAA Rules. (The AAA provides a form Demand for Arbitration and a separate form for California residents.) The arbitrator will be either a retired judge or an attorney licensed to practice law and will be selected by the parties from the AAA’s roster of arbitrators. If the parties are unable to agree upon an arbitrator within seven (7) days of delivery of the Demand for Arbitration, then the AAA will appoint the arbitrator in accordance with the AAA Rules.
+ 
+Arbitration Location and Procedure
+Unless you and we otherwise agree, the arbitration will be conducted in the county, city or municipality where you reside. If your claim does not exceed $10,000, then the arbitration will be conducted solely on the basis of the documents that you and we submit to the arbitrator, unless you request a hearing or the arbitrator determines that a hearing is necessary. If your claim exceeds $10,000, your right to a hearing will be determined by the AAA Rules. Subject to the AAA Rules, the arbitrator will have the discretion to direct a reasonable exchange of information by the parties, consistent with the expedited nature of the arbitration.
+ 
+Arbitrator’s Decision
+The arbitrator will render an award within the time frame specified in the AAA Rules. Judgment on the arbitration award may be entered in any court having jurisdiction thereof. The arbitrator’s award of damages must be consistent with the terms of the “Limitation of Liability” section above as to the types and amounts of damages for which a party may be held liable. The arbitrator may award declaratory or injunctive relief only in favor of the claimant and only to the extent necessary to provide relief warranted by the claimant’s individual claim.
+ 
+Arbitration Fees
+Your responsibility to pay any AAA filing, administrative and arbitrator fees will be solely as set forth in the AAA Rules.
+ 
+Changes
+If we change this dispute resolution section after the date you first accepted these Terms (or accepted any subsequent changes to these Terms), you may reject any such change by sending us written notice (including by emailing us at info@newhive.com within 30 days of the date such change became effective, as indicated in the “Last Modified” date above. By rejecting any change, you are agreeing that you will arbitrate any Dispute between you and us in accordance with the provisions of this dispute resolution section as of the date you first accepted these Terms (or accepted any subsequent changes to these Terms).
+ 
+14. Miscellaneous Provisions
+ 
+These Terms, as modified from time to time, constitute the entire agreement between you and NewHive in connection with NewHive Services. These Terms replace all prior or contemporaneous understandings or agreements, written or oral, regarding the subject matter hereof and constitute the entire and exclusive agreement between the parties.
+ 
+The failure of either party to exercise in any respect any right provided for herein shall not be deemed a waiver of any further rights hereunder. If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary so that these Terms shall otherwise remain in full force and effect and enforceable. These Terms are not assignable, transferable, or sublicensable by you except with NewHive's prior written consent.
+ 
+NewHive may assign these Terms in whole or in part at any time without your consent. No agency, partnership, joint venture, or employment is created as a result of these Terms and you do not have any authority of any kind to bind NewHive in any respect whatsoever. Any notice to NewHive that is required or permitted by these Terms shall be in writing and shall be deemed effective upon receipt, when delivered in person by nationally recognized overnight courier or mailed by certified mail, postage prepaid, to AReflectionOf, Inc., 1975 Bryant Street, Suite 5, San Francisco, California  94110.
+ 
+15. Special Provisions for Subscribers Located Outside of the United States
+ 
+NewHive provides global products and services and enables a global community for individuals to create, publish, and consume great content. NewHive’s operations are, however, located in the United States, and NewHive’s policies and procedures are based on United States law.
+ 
+As such, the following provisions apply specifically to Subscribers located outside of the United States: (1) you consent to the transfer, storage, and processing of your information, including but not limited to Subscriber Content and any personal information, to and in the United States and/or other countries; and (2) if you are using NewHive Services from a country embargoed by the United States, or are on the United States Treasury Department's list of “Specially Designated Nationals,” you agree that you will not conduct any commercial activities using or through NewHive Services.
+ 
+16. DMCA Copyright Policy
+ 
+NewHive deals with copyright infringement on NewHive Services in accordance with the Digital Millennium Copyright Act. 
+Thanks! We appreciate that you choose to use NewHive, and we hope you enjoy using it! If You have any comments for us, we'd love to hear them. Please send them to: info@thenewhive.com.
+
+</div>
+</div>
 </div>

@@ -76,6 +76,16 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     .submit { float: right; }
 }
 
+#dia_editor_help {
+    width: 90%;
+    height: 60%;
+    // max-width: 1000px;
+    iframe {
+        width: 100%;
+        height: 100%;
+    }
+}
+
 #dia_share {
     width: 440px;
     padding: 20px;
@@ -214,151 +224,42 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     color: #419DD6;
 }
 
-#dia_signup {
+#dia_TOS {
+    padding: 0px;
+    .title { margin: 20px 0px; }
+    .content {
+        font-size: 16px;
+        padding: 0px 20px;
+        max-height: 450px;
+        overflow-y: scroll;
+        white-space: pre-wrap;
+    }
+}
+#dia_signup, #dia_login_or_join {
     width: auto;
+    .line1 {}
+    .line2 { 
+        color: $color_bright_red;
+    }
+}
+#dia_signup {
     padding: 20px 35px;
     .field { margin: 0 auto; }
     .column { float: left; }
     .column.left { float: left; padding-right: 20px; }
     .column.right { float: right; padding-left: 20px; }
-    .line1 { font-weight: bold; }
-    .line2 { color: $color_active; }
 
     input[type=text] { width: 100%; }
     h3 { text-align: left; margin: 10px 0; }
 }
 
-#dia_password_recovery {
-    padding: 0px 35px 22px 35px;
-}
-
-// Thumbnail Dialog
-#dia_thumbnail .thumb {
-    @include border-radius(7px);
-    img { @include border-radius(7px); }
-    background-color: #EEEEEE;
-    cursor: pointer;
-    img:hover { @include opacity(0.75); }
-}
-
-#dia_facebook_connect {
-    width: 860px;
-    .list { font-weight: bold; }
-    .smallprint {
-        color: $color_grey_medium;
-        font-size: 15px;
-        margin: 20px 0 0 0;
-    }
-}
-
-#dia_facebook_listen {
-    padding: 20px 10px 20px 20px;
-    width: auto;
-    h1 {
-        display: inline;
-        font-size: 35px;
-        font-family: $header_font;
-        margin-bottom: 15px;
-    }
-    img.thumb {
-        width: 50px;
-        height: 50px;
-        &.tnh { display: none; }
-    }
-    .friends {
-        width: 671px;
-        max-height: 400px;
-        overflow: auto;
-    }
-    .friend {
-        width: 300px;
-        padding: 7px;
-        padding-left: 0;
-        border: none;
-        float: left;
-        margin-right: 20px;
-        font-size: 16px;
-        img { 
-            vertical-align: middle; 
-            margin-right: 5px;
-        }
-    }
-    .names {
-        display: inline-block;
-        vertical-align: middle;
-        font-weight: bold;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        width: 193px;
-    }
-    .facebook_name {
-        font-size: 19px;
-        margin-bottom: 3px;
-    }
-    .username {
-        font-size: 12px;
-    }
-    .invite_fb_link {
-        float: left;
-        font-weight: bold;
-        padding-right: 8px;
-        margin-right: 25px;
-        cursor: pointer;
-        img { vertical-align: middle; }
-        &:hover { 
-            color: white;
-            background-color: $color_facebook; 
-        } 
-    }
-    .line2 {
-        margin-bottom: 22px;
-        overflow: auto;
-    }
-    #listen_to_all {
-        font-size: 17px;
-        margin: 0 55px 0 0;
-        float: right;
-        background-color: $color_active;
-        color: white;
-        &:hover, &.disabled {
-            background-color: $color_blue;
-            color: white;
-        }
-    }
-
-    .listen {
-        width: 37px;
-        height: 31px;
-        margin: 10px 0;
-        float: right;
-        background: asset_url("skin/1/people_small.png");
-        @include border-radius(3px);
-        &:hover {
-          background: $color_active asset_url("skin/1/people_small-hover.png");
-        }
-        &.active {
-          background: asset_url("skin/1/people_small_active.png");
-          &:hover {
-            background: $color_active asset_url("skin/1/people_small_active-hover.png");
-          }
-        }
-    }
-}
-
 #dia_login_or_join {
-    
-    padding: 20px;
-    width: auto;
+    padding: 20px 0px;
+    .heading { margin: 15px 0px; }
     h3 {
-        text-align: center;
-        font-size: 22px;
-        .line1 {
-            font-weight: bold;
-        }
-        .line2 {
-            color: $color_active;
-        }
+        margin: 10px 0px;
+        // text-align: center;
+        // font-size: 22px;
     }
     .main_fields {
         height: 350px;
@@ -374,6 +275,7 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 
     input[type=submit] { float: right; }
     .column {
+        min-width: 220px;
         overflow: auto;
         float: left;
         padding: 0 40px;
@@ -394,71 +296,190 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     .name { display: none; }
 }
 
-.newdialog {
-    display: none; 
-    position: absolute;
-    z-index: 8;
-    max-width: 700px;
-    padding: 20px;
-    background-color : white;
-    border: 5px solid $color_selected;
-    @include box-shadow(05px 05px 05px #666);
-    @include border-radius(8px);
-
-    h1, h2, h3 {
-        font-family: $header_font;
-        letter-spacing: -1px;
-        margin: 0;
-    }
-    h1 { font-size: 42px; }
-    h2 { font-size: 34px; }
-    h3 { letter-spacing: -1px; }
-    .btn_dialog_close + h3 {
-        margin-top: 0;
-    }
-    h3 + form {
-        display: block;
-        margin-top: 20px;
-    }
-    p { margin: 10px 0 20px 0; }
-    &.centered {
-        text-align: center;
-    }
+#dia_password_recovery {
+    padding: 0px 35px 22px 35px;
 }
 
-#dia_fb_connect_landing {
-  .line { 
-      clear: both;
-      @include clearfix;
-      margin-top: 10px;
-  }
-  .button, .fb_icon { float: left; }
-  .fb_icon { width: 50px; height: 50px; }
-  $button_width: 280px;
-  .button_wrapper { width: $button_width; }
-  .button {
-      $padding: 15px;
-      padding: $padding;
-      margin-left: 5px;
-      width: $button_width - 56px - 2 * $padding; 
-      height: 51px - 2*$padding; 
-      text-align: left;
-      font-weight: bold;
-      font-size: 18px;
-      background-color: $color_facebook;
-      color: white;
-      cursor: default;
-  }
-  .button_wrapper:hover .button {
-      background-color: $color_highlight;
-      color: $color_active;
-  }
-  p { margin-bottom: 27px; }
+// Thumbnail Dialog
+#dia_thumbnail .thumb {
+    @include border-radius(7px);
+    img { @include border-radius(7px); }
+    background-color: #EEEEEE;
+    cursor: pointer;
+    img:hover { @include opacity(0.75); }
 }
 
-#dia_fb_account_duplicate {
-    width: 640px;
-}
+// #dia_facebook_connect {
+//     width: 860px;
+//     .list { font-weight: bold; }
+//     .smallprint {
+//         color: $color_grey_medium;
+//         font-size: 15px;
+//         margin: 20px 0 0 0;
+//     }
+// }
+
+// #dia_facebook_listen {
+//     padding: 20px 10px 20px 20px;
+//     width: auto;
+//     h1 {
+//         display: inline;
+//         font-size: 35px;
+//         font-family: $header_font;
+//         margin-bottom: 15px;
+//     }
+//     img.thumb {
+//         width: 50px;
+//         height: 50px;
+//         &.tnh { display: none; }
+//     }
+//     .friends {
+//         width: 671px;
+//         max-height: 400px;
+//         overflow: auto;
+//     }
+//     .friend {
+//         width: 300px;
+//         padding: 7px;
+//         padding-left: 0;
+//         border: none;
+//         float: left;
+//         margin-right: 20px;
+//         font-size: 16px;
+//         img { 
+//             vertical-align: middle; 
+//             margin-right: 5px;
+//         }
+//     }
+//     .names {
+//         display: inline-block;
+//         vertical-align: middle;
+//         font-weight: bold;
+//         overflow: hidden;
+//         text-overflow: ellipsis;
+//         white-space: nowrap;
+//         width: 193px;
+//     }
+//     .facebook_name {
+//         font-size: 19px;
+//         margin-bottom: 3px;
+//     }
+//     .username {
+//         font-size: 12px;
+//     }
+//     .invite_fb_link {
+//         float: left;
+//         font-weight: bold;
+//         padding-right: 8px;
+//         margin-right: 25px;
+//         cursor: pointer;
+//         img { vertical-align: middle; }
+//         &:hover { 
+//             color: white;
+//             background-color: $color_facebook; 
+//         } 
+//     }
+//     .line2 {
+//         margin-bottom: 22px;
+//         overflow: auto;
+//     }
+//     #listen_to_all {
+//         font-size: 17px;
+//         margin: 0 55px 0 0;
+//         float: right;
+//         background-color: $color_active;
+//         color: white;
+//         &:hover, &.disabled {
+//             background-color: $color_blue;
+//             color: white;
+//         }
+//     }
+
+//     .listen {
+//         width: 37px;
+//         height: 31px;
+//         margin: 10px 0;
+//         float: right;
+//         background: asset_url("skin/1/people_small.png");
+//         @include border-radius(3px);
+//         &:hover {
+//           background: $color_active asset_url("skin/1/people_small-hover.png");
+//         }
+//         &.active {
+//           background: asset_url("skin/1/people_small_active.png");
+//           &:hover {
+//             background: $color_active asset_url("skin/1/people_small_active-hover.png");
+//           }
+//         }
+//     }
+// }
+
+
+// .newdialog {
+//     display: none; 
+//     position: absolute;
+//     z-index: 8;
+//     max-width: 700px;
+//     padding: 20px;
+//     background-color : white;
+//     border: 5px solid $color_selected;
+//     @include box-shadow(05px 05px 05px #666);
+//     @include border-radius(8px);
+
+//     h1, h2, h3 {
+//         font-family: $header_font;
+//         letter-spacing: -1px;
+//         margin: 0;
+//     }
+//     h1 { font-size: 42px; }
+//     h2 { font-size: 34px; }
+//     h3 { letter-spacing: -1px; }
+//     .btn_dialog_close + h3 {
+//         margin-top: 0;
+//     }
+//     h3 + form {
+//         display: block;
+//         margin-top: 20px;
+//     }
+//     p { margin: 10px 0 20px 0; }
+//     &.centered {
+//         text-align: center;
+//     }
+// }
+
+// #dia_fb_connect_landing {
+//   .line { 
+//       clear: both;
+//       @include clearfix;
+//       margin-top: 10px;
+//   }
+//   .button, .fb_icon { float: left; }
+//   .fb_icon { width: 50px; height: 50px; }
+//   $button_width: 280px;
+//   .button_wrapper { width: $button_width; }
+//   .button {
+//       $padding: 15px;
+//       padding: $padding;
+//       margin-left: 5px;
+//       width: $button_width - 56px - 2 * $padding; 
+//       height: 51px - 2*$padding; 
+//       text-align: left;
+//       font-weight: bold;
+//       font-size: 18px;
+//       background-color: $color_facebook;
+//       color: white;
+//       cursor: default;
+//   }
+//   .button_wrapper:hover .button {
+//       background-color: $color_highlight;
+//       color: $color_active;
+//   }
+//   p { margin-bottom: 27px; }
+// }
+
+// #dia_fb_account_duplicate {
+//     width: 640px;
+// }
 
 .dialog.login {
     width: 220px;

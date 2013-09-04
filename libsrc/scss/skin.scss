@@ -1,7 +1,7 @@
 .title.expr, .dialog .title {
 	font-family: Gibson Semibold;
 	font-size: 33px;
-	letter-spacing: -1px;
+	// letter-spacing: -1px;
 	line-height: 32px;
 }
 .heading {
@@ -10,11 +10,16 @@
         font-size: 33px;
     }
     font-family: Gibson;
-	letter-spacing: -1px;
+	// letter-spacing: -1px;
 }
 .title.fullname {
 	font-family: Gibson;
-	letter-spacing: -1px;
+	// letter-spacing: -1px;
+}
+.form_text {
+    font-family: Gibson;
+    font-size: 17px;
+    // text-transform: uppercase;
 }
 .username {
     font-family: Gibson Semibold;

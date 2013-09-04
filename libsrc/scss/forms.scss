@@ -9,6 +9,13 @@
 		width: 400px;
 		display: block;
 	}
+	.heading {
+		margin: 28px 0px;
+		margin-bottom: 38px;
+	}
+	.subheading {
+		margin-bottom: 7px;
+	}
 	span#username_label {
 		color: red;
 	}
@@ -16,20 +23,36 @@
 		display: inline-block;
 		width: 300px;
 		margin-right: 60px;
+		margin-left: 45px;
 
-		input {
+		input[type="text"],input[type=password] {
 			width: 100%;
+			margin: 4px 0px;
 		}
 	}
 
 	#right_pane {
 		display: inline-block;
+		vertical-align: top;
+		&> * { vertical-align: bottom; }
+		ol {
+			// to shift items to left margin
+			-webkit-padding-start: 24px;
+		}
 		.facebook {
 			background-color: blue;
+		}
+		.terms_agree {
+			margin: 20px 0px;
 		}
 	}
 
 	#footer {
 		margin-top: 30px;
+		// override disable button color
+		button { 
+			color: black; 
+			&:hover { color: white; }
+		}
 	}
 }

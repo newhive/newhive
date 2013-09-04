@@ -137,6 +137,8 @@ class User(ModelController):
         recipient_address = request.form.get('emails')
         if not request.form.get('message') or not recipient_address: 
             return self.serve_json(response, { 'error': 'Message and recipient are mandatory fields.'})
+        if not user.logged_in:
+            return self.serve_json(response, { 'error': 'need_login'})
 
         recipient = self.db.User.fetch(recipient_address, keyname='email')
         recipient = recipient or {'email': recipient_address}

@@ -401,10 +401,10 @@ define([
     };
     o.profile_private = function(page_data){
         // page_data.profile.subheading = 'Private';
-        
         page_data.layout = 'grid';
-        render_site(page_data);
-        expr_column();
+        o.grid(page_data);
+        // render_site(page_data);
+        // expr_column();
     };
 
     // o.loves = function(page_data){
