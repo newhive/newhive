@@ -191,18 +191,7 @@ class HiveAssets(Assets):
         print('Bundling webassets...')
 
         opts = { }
-
-        self.assets_env.register('admin.js',
-            'raphael/raphael.js',
-            'raphael/g.raphael.js',
-            'raphael/g.pie.js',
-            'raphael/g.line.js',
-            'browser/jquery/tablesorter.min.js',
-            'browser/jquery-ui/jquery-ui-1.8.16.custom.min.js',
-            'd3/d3.js',
-            'd3/d3.time.js',
-            output='../lib/admin.js'
-        )
+        self.final_bundles = []
 
         # Note: IMPORTANT any time a file that is imported into other scss
         # files is changed (i.e. common.scss is imported into almost every
@@ -210,7 +199,7 @@ class HiveAssets(Assets):
         scss_filter = webassets.filter.get_filter(
             'scss',
             use_compass=True,
-            debug_info=False,
+            debug_info=config.debug_mode,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')]
         )
 
@@ -229,6 +218,7 @@ class HiveAssets(Assets):
             filters='yui_css',
             output='../lib/app.css'
         )
+        self.final_bundles.append('app.css')
 
         edit_scss = webassets.Bundle(
             'scss/edit.scss',
@@ -243,16 +233,26 @@ class HiveAssets(Assets):
             filters='yui_css',
             output='../lib/edit.css'
         )
+        self.final_bundles.append('edit.css')
 
         self.assets_env.register('curl.js', 'curl.js',
             filters = 'yui_js',
             output = '../lib/curl.js'
         )
 
-        # self.assets_env.register('site.js', 'compiled.site.js',
-        #     filters = 'yui_js',
-        #     output = '../lib/site.js'
-        # )
+        # build cram bundles
+        if not config.debug_mode:
+            # can't figure out how to make cram work from another dir
+            old_dir = os.getcwd()
+            os.chdir(join(config.src_home, libsrc))
+            os.system('./cram.sh')
+            os.chdir(old_dir)
+
+            self.assets_env.register('site.js', 'compiled.site.js',
+                filters = 'yui_js',
+                output = '../lib/site.js'
+            )
+            self.final_bundles.append('site.js')
 
         # CSS for expressions, and also site pages
         minimal_scss = webassets.Bundle(
@@ -268,6 +268,7 @@ class HiveAssets(Assets):
             filters='yui_css',
             output='../lib/minimal.css'
         )
+        self.final_bundles.append('minimal.css')
 
         email_scss = webassets.Bundle(
             'scss/email.scss',
@@ -276,6 +277,20 @@ class HiveAssets(Assets):
             debug=False
         )
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
+        self.final_bundles.append('email.css')
+
+        self.assets_env.register('admin.js',
+            'raphael/raphael.js',
+            'raphael/g.raphael.js',
+            'raphael/g.pie.js',
+            'raphael/g.line.js',
+            'browser/jquery/tablesorter.min.js',
+            'browser/jquery-ui/jquery-ui-1.8.16.custom.min.js',
+            'd3/d3.js',
+            'd3/d3.time.js',
+            output='../lib/admin.js'
+        )
+        # self.final_bundles.append('admin.js')
 
         admin_scss = webassets.Bundle("scss/chart.scss",
             filters=scss_filter,
@@ -288,16 +303,6 @@ class HiveAssets(Assets):
             'browser/jquery-ui/jquery-ui-1.8.16.custom.css',
             output='../lib/admin.css'
         )
-
-        self.final_bundles = [
-            'minimal.css',
-            'app.css',
-            'edit.css',
-            # 'site.js',
-            'email.css'
-            # 'admin.css',
-            # 'admin.js',
-        ]
 
     def urls_with_expiry(self):
         urls = self.urls()

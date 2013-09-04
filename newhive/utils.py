@@ -635,32 +635,6 @@ def convert_dict_to_sorted_list(d, size=5):
     results_nodup = OrderedDict.fromkeys(results)
     return list(results_nodup)[:size]
 
-
-##### utils for testing ranking/trending algorithms #####
-
-from scipy.stats import norm
-
-popularity_score = "_score * (doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value)"
-popularity_time_score = "(doc['views'].value + 100*doc['star'].value + 500*doc['broadcast'].value) * exp((doc['created'].value- time()/1000)/1000000)"
-
-
-def get_expr_rating_score(expr, downvotes):
-    confidence = 0.95
-    stars = expr.get('analytics', {}).get('Star', {}).get('count', 0)
-    broadcasts = expr.get('analytics', {}).get('Broadcast', {}).get('count', 0)
-    upvotes = stars + 5*broadcasts
-    return ci_lower_bound(upvotes, upvotes + downvotes, confidence)
-
-
-def ci_lower_bound(pos, n, confidence):
-    if n == 0:
-        return 0
-    z = norm.ppf(1-(1-confidence)/2)
-    phat = 1.0*pos/n
-    w = phat + z*z/(2*n) - z*numpy.sqrt((phat*(1-phat)+z*z/(4*n))/n)/(1+z*z/n)
-    return w
-
-
 def test_scripts(db, owner_name = None):
     if owner_name:
         q = pyes.query.TermQuery('owner_name', owner_name)
@@ -680,18 +654,14 @@ def log_error(db, request=None, message=None, traceback=None, critical=False):
     # from werkzeug.debug.tbtools import get_current_traceback
     # traceback = traceback or get_current_traceback(skip=0, show_hidden_frames=False
     #, ignore_system_exceptions=True)
-    import traceback as sys_traceback
+    import traceback as tb
     import newhive.manage.git
-    traceback = traceback or sys_traceback.extract_stack()
-    # print traceback
-    def privacy_filter(dictionary):
-        for key in ['password', 'secret', 'old_password']:
-            if dictionary.has_key(key): dictionary.update({key: "******"})
-        return dictionary
+    traceback = tb.extract_tb(traceback) or tb.extract_stack()[0:-1]
+
     log_entry = {
         'type': 'python',
         'critical': critical,
-        'exception': message or traceback.exception,
+        'exception': str(message),
         'stack_frames': [{
             'filename': x[0],
             'lineno': x[1],
@@ -701,6 +671,11 @@ def log_error(db, request=None, message=None, traceback=None, critical=False):
         'code_revision': newhive.manage.git.current_revision,
         'dev_prefix': config.dev_prefix,
     }
+
+    def privacy_filter(dictionary):
+        for key in ['password', 'secret', 'old_password']:
+            if dictionary.has_key(key): dictionary.update({key: "******"})
+        return dictionary
     if request:
         log_entry.update({
             'environ': serializable_filter(request.environ),
