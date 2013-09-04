@@ -7,10 +7,9 @@
 cd /var/www/newhive
 sudo chown www-data:dev -R .
 sudo chmod g+rwX -R .
-git pull origin v2-community
+git pull
 sudo chown www-data:dev -R .
 sudo chmod g+rwX -R .
-git pull
 # restart server
 bin/hive_server_deploy
 
