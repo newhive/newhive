@@ -192,7 +192,8 @@ define([
         var page_data = data.page_data;
         if (page_data.title) $("head title").text(page_data.title);
         o.method = method;
-        column_layout = false,
+        o.done_layout = false;
+        o.column_layout = false
         o.columns = 0;
         new_page = pages[method];
         expr_page = (method == 'expr');
@@ -424,9 +425,10 @@ define([
 
     o.resize = function(){
         if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
-            var columns = Math.min(3, Math.floor($(window).width() / grid_width));
+            var columns = Math.max(1, Math.min(3, 
+                Math.floor($(window).width() / grid_width)));
             $('#feed').css('width', columns * grid_width);
-            if (o.columns != columns) {
+            if (o.columns != columns || !o.done_layout) {
                 o.columns = columns;
                 if (o.column_layout)
                     layout_columns();
@@ -435,6 +437,7 @@ define([
         }
         if (context.page && context.page.resize)
             context.page.resize();
+        o.done_layout = true;
     };
 
     // Move the expr.card's into the feed layout, shuffling them

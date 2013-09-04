@@ -2,6 +2,11 @@
 
 {% block head %}
   <title>{{ expr.title|e }}</title>
+  {% if not debug %}
+    {% for item in asset_bundle('expr.js') %}
+      <script src='{{item}}'></script>
+    {% endfor %}
+  {% endif %}
   <script>
   curl([
       'ui/expression'],
@@ -9,11 +14,6 @@
         expression.initExpression();
       });
   </script>
-  {% if expr_style %}
-    <style>
-      {{ expr_style }}
-    </style>
-  {% endif %}
 {% endblock %}
 
 {% block body %}
