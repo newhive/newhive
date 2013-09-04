@@ -26,8 +26,8 @@
         "client_method": "profile"
     },
     "network": {
-        "page_route": "/<username>/profile/network",
-        "api_route": "/api/feed/network/<username>",
+        "page_route": "/<username>/profile/recent",
+        "api_route": "/api/feed/recent/<username>",
         "controller": "community",
         "method": "network",
         "client_method": "grid"

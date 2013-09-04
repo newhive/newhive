@@ -1,5 +1,5 @@
 import newhive
-import re, pymongo, bson.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
+import re, pymongo, bson.objectid, random, urllib, os, time, json, math
 import operator as op
 from os.path import join as joinpath
 from md5 import md5
@@ -7,7 +7,7 @@ from datetime import datetime
 from lxml import html
 from wsgiref.handlers import format_date_time
 from newhive import social_stats
-from itertools import ifilter, islice, imap
+from itertools import ifilter, islice, izip_longest, chain
 import PIL.Image as Img
 from PIL import ImageOps
 from bson.code import Code
@@ -62,9 +62,9 @@ class Database:
                 key = map(lambda a: a if type(a) == tuple else (a, 1), [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
 
-        # initialize elasticsearch index
-        if config.use_esdb:
-            self.esdb = ESDatabase(self)
+        # initialize elasticsearch index (not used currently)
+        # if config.use_esdb:
+        #     self.esdb = ESDatabase(self)
 
     def dict_to_query(self, search):
         queries = []
@@ -73,12 +73,13 @@ class Database:
         query = pyes.query.BoolQuery(must=queries)
         return query
 
-    def query(self, q, viewer=None, expr_only=None, fuzzy=False,
-              es_order='_score,updated:desc', **args):
-        return self._query(q, viewer, expr_only, fuzzy, es_order, **args)['result']
+    # def query(self, q, viewer=None, expr_only=None, fuzzy=False,
+    #           es_order='_score,updated:desc', **args):
+    #     return self._query(q, viewer, expr_only, fuzzy, es_order, **args)['result']
 
-    def _query(self, q, viewer=None, expr_only=None, fuzzy=False,
-              es_order='_score,updated:desc', **args):
+    # def _query(self, q, viewer=None, expr_only=None, fuzzy=False,
+    #           es_order='_score,updated:desc', **args):
+    def query(self, q, expr_only=None, viewer=None, **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
 
@@ -94,21 +95,26 @@ class Database:
 
         feed = search.get('feed')
         if feed:
-            if feed == 'network':
-                results =  viewer.feed_page_esdb(at=start, limit=limit)
-            elif feed == 'trending':
-                results =  viewer.feed_page_esdb(at=start, limit=limit)
-            elif feed == 'featured':
+            # if feed == 'network':
+            #     results =  viewer.feed_recent()
+            # elif feed == 'trending':
+            #     results =  viewer.feed_page_esdb(at=start, limit=limit)
+            if feed == 'featured':
                 results = self.Expr.page(
                     self.User.root_user['tagged']['Featured'], **args)
             elif feed == 'recent':
                 results = self.Expr.page({}, **args)
-            else:
-                results = viewer.feed_page_esdb(spec=spec, feed=feed, **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            del search['feed']
-            results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
-               sort='score', **args)
+            spec = {'auth': 'public'}
+            if search.get('tags'):
+                spec['tags_index'] = {'$all': search['tags']}
+            if search.get('text'):
+                spec['text_index'] = {'$all': search['text']}
+            if search.get('user'):
+                spec['owner_name'] = search['user']
+            results = self.Expr.page(spec, **args)
+            # results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
+            #    sort='score', **args)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -125,13 +131,12 @@ class Database:
 
         # split into words with possible [@#] prefix, isolate phrases in quotes
 
-        search = {'text': [], 'tags': [], 'phrases': [], 'feed': False }
-        q_quotes = re.findall(r'"(.*?)"', q, flags=re.UNICODE)
-        q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
+        search = {'text': [], 'tags': [], 'phrases': [], 'feed': [] }
+        # q_quotes = re.findall(r'"(.*?)"', q, flags=re.UNICODE)
+        # q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
+        # search['phrases'].extend(q_quotes)
 
-        search['phrases'].extend(q_quotes)
-
-        for pattern in re.findall(r'(\b|\W+)(\w+)', q_no_quotes):
+        for pattern in re.findall(r'(\b|\W+)(\w+)', q):
             prefix = re.sub( r'[^#@]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':
@@ -145,7 +150,7 @@ class Database:
                 else: search['tags'].append( pattern[1].lower() )
             else: search['text'].append( pattern[1].lower() )
 
-        for k in ['text', 'tags', 'phrases']:
+        for k in ['text', 'tags', 'phrases', 'feed']:
             if len(search[k]) == 0:
                 del search[k]
 
@@ -548,136 +553,136 @@ class User(HasSocial):
             res[i] = entity
         return res
 
-    def feed_page_esdb(self, at=0, limit=40, feed=False, trending=False, **opts):
-        def index_max(values):
-            return max(xrange(len(values)),key=values.__getitem__)
-        # Filter for expressions which are viewable by self (for security)
-        # Currently broken.
-        f_view = self.can_view_filter()
+    # def feed_page_esdb(self, at=0, limit=40, feed=False, trending=False, **opts):
+    #     def index_max(values):
+    #         return max(xrange(len(values)),key=values.__getitem__)
+    #     # Filter for expressions which are viewable by self (for security)
+    #     # Currently broken.
+    #     f_view = self.can_view_filter()
 
-        # Filter for Feed actions from users followed by self
-        f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr',
-            'Broadcast', 'Star', 'UpdatedExpr', 'NewExpr'])
-        f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
-        f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
+    #     # Filter for Feed actions from users followed by self
+    #     f_user_class_name = pyes.filters.TermsFilter('class_name', ['NewExpr',
+    #         'Broadcast', 'Star', 'UpdatedExpr', 'NewExpr'])
+    #     f_user_initiator = pyes.filters.TermsFilter('initiator', self.starred_user_ids)
+    #     f_user = pyes.filters.BoolFilter(must=[f_user_initiator, f_user_class_name])
 
-        # Filter for Comment and UpdatedExpr Feed actions for starred expressions
-        # from followed users excluding self's comments
-        f_expr_class_name = pyes.filters.TermsFilter('class_name', ['UpdatedExpr', 'Comment'])
-        f_expr_entity = pyes.filters.TermsFilter('entity', self.starred_expr_ids)
-        f_expr_initiator = pyes.filters.TermFilter('initiator', self.id)
-        f_expr = pyes.filters.BoolFilter(must=[f_expr_class_name, f_expr_entity], must_not=[f_expr_initiator])
+    #     # Filter for Comment and UpdatedExpr Feed actions for starred expressions
+    #     # from followed users excluding self's comments
+    #     f_expr_class_name = pyes.filters.TermsFilter('class_name', ['UpdatedExpr', 'Comment'])
+    #     f_expr_entity = pyes.filters.TermsFilter('entity', self.starred_expr_ids)
+    #     f_expr_initiator = pyes.filters.TermFilter('initiator', self.id)
+    #     f_expr = pyes.filters.BoolFilter(must=[f_expr_class_name, f_expr_entity], must_not=[f_expr_initiator])
 
-        if self.get('tags_following') is not None:
-            q_tags = pyes.query.TermsQuery('tags', self.get('tags_following'))
-            # q_tags = pyes.query.FilteredQuery(q_tags, f_view)
+    #     if self.get('tags_following') is not None:
+    #         q_tags = pyes.query.TermsQuery('tags', self.get('tags_following'))
+    #         # q_tags = pyes.query.FilteredQuery(q_tags, f_view)
 
-        f = pyes.filters.BoolFilter(should=[f_user, f_expr])
-        fq = pyes.query.FilteredQuery(match_all_query, f)
+    #     f = pyes.filters.BoolFilter(should=[f_user, f_expr])
+    #     fq = pyes.query.FilteredQuery(match_all_query, f)
 
-        total_limit = 20*limit
-        # since there may be many feed items for the same expression
-        # note that with the current pagination, the maximum number of
-        # retrievable feed items is total_limit
+    #     total_limit = 20*limit
+    #     # since there may be many feed items for the same expression
+    #     # note that with the current pagination, the maximum number of
+    #     # retrievable feed items is total_limit
 
-        res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
-                                            doc_types="feed-type",
-                                            sort="created:desc", size=total_limit)
+    #     res_feed = self.db.esdb.conn.search(fq, indices=self.db.esdb.index,
+    #                                         doc_types="feed-type",
+    #                                         sort="created:desc", size=total_limit)
 
-        # Both are map from (expression id) -> list
-        feed_with_expr = defaultdict(list)  # -> list of feed ids
-        user_with_expr = defaultdict(list)  # -> list of initiator ids
-        time_with_expr = defaultdict(list)  # -> list of update time
+    #     # maps from (expression id) -> list
+    #     feed_with_expr = defaultdict(list)  # -> list of feed ids
+    #     user_with_expr = defaultdict(list)  # -> list of initiator ids
+    #     time_with_expr = defaultdict(list)  # -> list of update time
 
-        # if feed == 'trending' or trending is True:
-        for r in res_feed[:total_limit]:
-            feed_with_expr[r['entity']].append(r._meta.id)
-            user_with_expr[r['entity']].append(r['initiator'])
-            if (r.has_key('updated')):
-                time_with_expr[r['entity']].append(r['updated'])
-            else:
-                time_with_expr[r['entity']].append(r['created'])
+    #     # if feed == 'trending' or trending is True:
+    #     for r in res_feed[:total_limit]:
+    #         feed_with_expr[r['entity']].append(r._meta.id)
+    #         user_with_expr[r['entity']].append(r['initiator'])
+    #         if (r.has_key('updated')):
+    #             time_with_expr[r['entity']].append(r['updated'])
+    #         else:
+    #             time_with_expr[r['entity']].append(r['created'])
 
-        # Grab all the expressions with followed tags and insert into lists
-        # NOTE: these items only get time, not feed or user, because there is
-        # no associated feed item.
-        # TODO: This code needs to be examined for efficiency.
-        if self.get('tags_following'):
-            expr_tags = self.db.esdb.conn.search(q_tags, indices=self.db.esdb.index,
-                doc_types="expr-type",
-                sort="updated:desc", size=total_limit)
-            for r in expr_tags[:total_limit]:
-                time_with_expr[r._meta.id].append(r['updated'])
+    #     # Grab all the expressions with followed tags and insert into lists
+    #     # NOTE: these items only get time, not feed or user, because there is
+    #     # no associated feed item.
+    #     # TODO: This code needs to be examined for efficiency.
+    #     if self.get('tags_following'):
+    #         expr_tags = self.db.esdb.conn.search(q_tags, indices=self.db.esdb.index,
+    #             doc_types="expr-type",
+    #             sort="updated:desc", size=total_limit)
+    #         for r in expr_tags[:total_limit]:
+    #             time_with_expr[r._meta.id].append(r['updated'])
 
-        expr_ids = time_with_expr.keys()
-        qid = pyes.query.IdsQuery(expr_ids)
-        query = qid
-        # BUGBUG: why is filtering broken?
-        # query = pyes.query.FilteredQuery(qid, f_view)
-        # would also be nice to be able to filter by read/unread.
-        if self.get('tags_following') is not None:
-            query = pyes.query.BoolQuery(should=[query, q_tags])
-        custom_query = pyes.query.CustomScoreQuery(query,
-                                                   script=popularity_time_score)
-        if feed == 'trending' or trending is True:
-            res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
-                                           doc_types="expr-type", start=at,
-                                           sort="_score,created:desc", size=limit)
-            items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
-        else:
-            # if self.get('tags_following') is not None:
-            #     query = pyes.query.BoolQuery(should=[query, q_tags])
+    #     expr_ids = time_with_expr.keys()
+    #     qid = pyes.query.IdsQuery(expr_ids)
+    #     query = qid
+    #     # BUGBUG: why is filtering broken?
+    #     # query = pyes.query.FilteredQuery(qid, f_view)
+    #     # would also be nice to be able to filter by read/unread.
+    #     if self.get('tags_following') is not None:
+    #         query = pyes.query.BoolQuery(should=[query, q_tags])
+    #     custom_query = pyes.query.CustomScoreQuery(query,
+    #                                                script=popularity_time_score)
+    #     if feed == 'trending' or trending is True:
+    #         res = self.db.esdb.conn.search(custom_query, indices=self.db.esdb.index,
+    #                                        doc_types="expr-type", start=at,
+    #                                        sort="_score,created:desc", size=limit)
+    #         items = self.db.esdb.esdb_paginate(res, es_type='expr-type')
+    #     else:
+    #         # if self.get('tags_following') is not None:
+    #         #     query = pyes.query.BoolQuery(should=[query, q_tags])
 
-            # Just use the max age of the commingled ids set
-            # All this data is in time_with_expr.
-            id_times = []
-            for eid in expr_ids:
-                id_times.append((eid, max(time_with_expr[eid])))
-            id_times = sorted(id_times, key=lambda x: x[1], reverse=True)
-            ids = [x[0] for x in id_times][at : at + limit]
-            # Use mongo whenever possible.
-            items = self.db.Expr.fetch(ids)
-            # qid = pyes.query.IdsQuery(ids)
+    #         # Just use the max age of the commingled ids set
+    #         # All this data is in time_with_expr.
+    #         id_times = []
+    #         for eid in expr_ids:
+    #             id_times.append((eid, max(time_with_expr[eid])))
+    #         id_times = sorted(id_times, key=lambda x: x[1], reverse=True)
+    #         ids = [x[0] for x in id_times][at : at + limit]
+    #         # Use mongo whenever possible.
+    #         items = self.db.Expr.fetch(ids)
+    #         # qid = pyes.query.IdsQuery(ids)
 
-            # res = self.db.esdb.conn.search(qid, indices=self.db.esdb.index,
-            #                                doc_types="expr-type", start=0, size=limit)
-            #                                # sort="created:desc", size=limit)
-        # else:
-        #     items = Page([])
-        #     new_at = at
-        #     # res_feed is all relevant feed actions, sorted by created: desc.
-        #     # i think it's too late to add tags.
-        #     for r in res_feed[at:]:
-        #         # print r['created']
-        #         new_at += 1
-        #         feed_with_expr[r['entity']].append(r._meta.id)
-        #         user_with_expr[r['entity']].append(r['initiator'])
-        #         if r['entity'] not in [i['_id'] for i in items]:
-        #             # bad: multiple expr fetch should be batched
-        #             expr = self.db.Expr.fetch(r['entity'])
-        #             if expr is not None and self.can_view(expr):
-        #                 expr['feed_latest'] = r['created']
-        #                 items.append(expr)
-        #         if len(items) == limit:
-        #             items.next = min(new_at, res_feed.total)
-        #             break
-        #         if self.get('tags') is not None:
-        #             fl = [i['feed_latest'] for i in items]
-        #             query = pyes.query.RangeQuery(qrange=pyes.utils.ESRange('updated',
-        #                         from_value=min(fl), to_value=max(fl)))
-        #             query = pyes.query.BoolQuery(must=[query, q_tags])
-        #             res = self.db.esdb.conn.search(query, indices=self.db.esdb.index,
-        #                                            doc_types='expr-type', size=limit)
-        #     if items.next is None:
-        #         items.next = res_feed.total
+    #         # res = self.db.esdb.conn.search(qid, indices=self.db.esdb.index,
+    #         #                                doc_types="expr-type", start=0, size=limit)
+    #         #                                # sort="created:desc", size=limit)
+    #     # else:
+    #     #     items = Page([])
+    #     #     new_at = at
+    #     #     # res_feed is all relevant feed actions, sorted by created: desc.
+    #     #     # i think it's too late to add tags.
+    #     #     for r in res_feed[at:]:
+    #     #         # print r['created']
+    #     #         new_at += 1
+    #     #         feed_with_expr[r['entity']].append(r._meta.id)
+    #     #         user_with_expr[r['entity']].append(r['initiator'])
+    #     #         if r['entity'] not in [i['_id'] for i in items]:
+    #     #             # bad: multiple expr fetch should be batched
+    #     #             expr = self.db.Expr.fetch(r['entity'])
+    #     #             if expr is not None and self.can_view(expr):
+    #     #                 expr['feed_latest'] = r['created']
+    #     #                 items.append(expr)
+    #     #         if len(items) == limit:
+    #     #             items.next = min(new_at, res_feed.total)
+    #     #             break
+    #     #         if self.get('tags') is not None:
+    #     #             fl = [i['feed_latest'] for i in items]
+    #     #             query = pyes.query.RangeQuery(qrange=pyes.utils.ESRange('updated',
+    #     #                         from_value=min(fl), to_value=max(fl)))
+    #     #             query = pyes.query.BoolQuery(must=[query, q_tags])
+    #     #             res = self.db.esdb.conn.search(query, indices=self.db.esdb.index,
+    #     #                                            doc_types='expr-type', size=limit)
+    #     #     if items.next is None:
+    #     #         items.next = res_feed.total
 
-        for i in items:
-            i['feed'] = feed_with_expr[i['_id']]
-            i['feed_users'] = user_with_expr[i['_id']]
-        return items
+    #     for i in items:
+    #         i['feed'] = feed_with_expr[i['_id']]
+    #         i['feed_users'] = user_with_expr[i['_id']]
+    #     return items
 
-    # TODO: move this into ESDB for searching within your network
-    def feed_network(self, spec={}, limit=40, at=None, **args):
+    def network_feed_items(self, limit=0):
+        # get iterable for all feed items in your network
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
                 'class_name': {'$in': ['NewExpr', 'Broadcast', 'Star']}
@@ -689,51 +694,77 @@ class User(HasSocial):
                 , 'initiator': { '$ne': self.id }
                 }
         or_clause = [user_action, own_broadcast, expression_action]
+        return self.db.Feed.search({ '$or': or_clause }, limit=limit,
+            sort=[('updated', -1)])
 
-        # In some cases we have an expression but no feed item to page relative
-        # to.  In this case, look up the most recent appropriate feed item with
-        # that expression as entity
-        if is_mongo_key(at):
-            feed_start = list( self.feed_search({'entity': at, '$or': or_clause },
-                    viewer=args['viewer'], limit=1) )
-            if len( feed_start ): at = feed_start[0]['created']
-            else: at = None
+    def exprs_tagged_following(self, limit=0):
+        # return iterable of matching expressions for each tag you're following
+        tags = self.get('tags_following', [])
+        queries = [self.db.query('#' + tag, sort=[('updated', -1)])
+            for tag in tags]
+        return (item for grp in izip_longest(*queries) for item in grp)
 
-        # produces an iterable for all network feed items
-        res = self.feed_search({ '$or': or_clause }, auth='public', at=at, **args)
-        # groups feed items by ther expressions (entity attribute), and applies page limit
-        results = self.feed_group(res, limit, spec=spec)
-        return results
+    # TODO-polish merge with db.query to enable searching within feed
+    def feed_trending(self, at=0, limit=20):
+        items = self.network_feed_items(limit=500)
+        exprs = self.db.Expr.fetch([r['entity'] for r in items])
+        exprs.extend(self.exprs_tagged_following(500))
 
-    # wrapper around db.query('#Trending') to add recent feed items
-    def feed_trending(self, **paging_args):
-        self.db.query('#Trending')
+        query_time = now()
+        def popularity_time_score(expr):
+            return (
+                expr.get_count('Broadcast') * 500 +
+                expr.get_count('Star') * 100 +
+                expr.get_count('Comment') * 20 -
+                math.pow(1.4, abs((expr['created']-query_time)/86400))
+                )
 
-    def feed_search(self, spec, viewer=None, auth=None, limit=None, **args):
-        if type(viewer) != User: viewer = self.db.User.fetch_empty(viewer)
-        res = self.db.Feed.paginate(spec, limit=0, sort='created', **args)
-        if auth: res = ifilter(lambda i: i.entity and i.entity.get('auth', auth) == auth, res)
-        res = ifilter(lambda i: i.viewable(viewer) and viewer.can_view(i.entity), res)
-        if limit: res = islice(res, limit)
-        return res
+        exprs_by_id = {}
+        for expr in exprs:
+            expr['score'] = popularity_time_score(expr)
+            exprs_by_id[expr.id] = expr
+        result = sorted(exprs_by_id.values(), key=lambda x: x['score'])
+        return result[at:at+limit]
 
-    def feed_group(self, res, limit, spec={}, feed_limit=6):
-        """" group feed items by expression """
-        exprs = []
-        filter = True if spec.items() else False
-        for item in res:
-            if filter:
-                spec['_id'] = item['entity']
-                if not self.db.Expr.search(spec).count(): continue
-            i = index_of(exprs, lambda e: e.id == item['entity'])
-            if i == -1:
-                item.entity['feed'] = [item]
-                exprs.append(item.entity)
-            elif len(exprs[i]['feed']) < feed_limit:
-                if index_of(exprs[i]['feed'], lambda e: e['initiator'] == item['initiator']) != -1: continue
-                exprs[i]['feed'].append(item)
-            if len(exprs) == limit: break
-        return exprs
+    # TODO-polish merge with db.query to enable searching within feed
+    def feed_recent(self, spec={}, limit=20, at=0, **args):
+        feed_items = self.network_feed_items()
+        tagged_exprs = self.exprs_tagged_following()
+
+        # group feed items into expressions, alternate
+        # these with tagged_exprs and de-duplicate
+        exprs = {}
+        result = []
+        def add_expr(r):
+            r['feed'] = []
+            exprs[r.id] = r
+            return r
+        while len(result) < (limit + at):
+            item = False
+            # grab one from feed_items
+            for r in feed_items:
+                existing = item = exprs.get(r['entity'])
+                if not item:
+                    expr = self.db.Expr.fetch(r['entity'], meta=True)
+                    if not expr: continue
+                    item = add_expr(expr)
+                if (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
+                    item['feed'].append(r)
+                if (item['auth'] != 'public') or existing: continue
+                break
+            for r in tagged_exprs:
+                item = exprs.get(r.id)
+                if item: continue
+                else: add_expr(item)
+                break
+            if not item: break
+            result.append(item)
+
+        return result[at:]
+
+    # # wrapper around db.query('#Trending') to add recent feed items
+    # def feed_trending(self, **paging_args):
+    #     self.db.query('#Trending')
 
     def build_search(self, d):
         d['text_index'] = normalize( self['name'] + ' ' + self.get('fullname', '') )
@@ -794,7 +825,7 @@ class User(HasSocial):
         if not hasattr(self, '_facebook_credentials'):
             if self.has_key('oauth') and self['oauth'].has_key('facebook'):
                 self._facebook_credentials = OAuth2Credentials.from_json(
-                                                    json.dumps(self['oauth']['facebook']))
+                    json.dumps(self['oauth']['facebook']))
             else: return None
         return self._facebook_credentials
 
@@ -986,16 +1017,18 @@ class Expr(HasSocial):
     _owner = None
 
     class Collection(Collection):
+        ignore_not_meta = { 'apps': 0, 'background': 0, 'text_index': 0,
+            'title_index': 0, 'file_id': 0, 'images': 0  }
+
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
         def cards(self,  spec, **opts):
-            opts.setdefault('fields', { 'apps': 0, 'background': 0,
-                'text_index': 0, 'title_index': 0, 'file_id': 0, 'images': 0  })
+            opts.setdefault('fields', self.ignore_not_meta)
             return self.search(spec, **opts)
 
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0, 'title_index': 0 }
-            if meta: fields.update({ 'apps': 0, 'background': 0, 'file_id': 0, 'images': 0 })
+            if meta: fields.update(self.ignore_not_meta)
             return super(Expr.Collection, self).fetch(key, keyname, fields=fields)
 
         def popular_tags(self):
@@ -1028,7 +1061,7 @@ class Expr(HasSocial):
 
             assert(sort in ['updated', 'random'])
             args.update(sort=sort)
-            rs = self.paginate(spec, filter=viewer.can_view, **args)
+            rs = self.paginate(spec, **args)
 
             # remove random static patterns from random index
             # to make it _really_ random
@@ -1049,9 +1082,7 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
-    # full_page = True to capture entire expression page, not just snapshot
-    # timeout != 0. time in seconds to block before killing thread
-    def threaded_snapshot(self, full_page=False, time_out=0):
+    def threaded_snapshot(self):
         def timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
             """This function will spawn a thread and run the given function
             using the args, kwargs and return the given default value if the
@@ -1076,10 +1107,7 @@ class Expr(HasSocial):
         def threaded_snapshot_q(q, expr):
             result = timeout(threaded_snapshot, (self,), timeout_duration=69)
         def threaded_snapshot(expr):
-            if full_page:
-                expr.take_full_shot()
-            else:
-                expr.take_snapshots()
+            expr.take_snapshots()
 
         # If we spin up too many threads, block.
         while threading.active_count() > 32:
@@ -1095,12 +1123,6 @@ class Expr(HasSocial):
         # result = timeout(threaded_snapshot_q, (q,self), timeout_duration=69)
         t.daemon = True
         t.start()
-        if timeout:
-            t.join(time_out)
-            if t.isAlive():
-                # TODO-perf: could be wise to also kill the thread
-                return False
-        return True
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):
@@ -1108,7 +1130,7 @@ class Expr(HasSocial):
         return self['entropy']
 
     def snapshot_name_base(self, size, time):
-        return '_'.join([self.id, time, self.entropy(), size]) + (".jpg" if (size == "full") else ".png")
+        return '_'.join([self.id, time, self.entropy(), size]) + ".png"
 
     # size is "big" or "small".
     # will return 'snapshot_placeholder.png' if no available snapshot
@@ -1120,22 +1142,6 @@ class Expr(HasSocial):
     def snapshot_name_prefix(self):
         name = self.snapshot_name('')
         return name[:-4] if name else name
-
-    def take_full_shot(self):
-        snapshotter = Snapshots()
-
-        name = self.snapshot_name_base("full", str(self.get('snapshot_time')))[:-4] + ".jpg"
-        if self.db.s3.file_exists('thumb', name):
-            return True
-        # This would be cleaner with file pipes instead of filesystem.
-        local = '/tmp/' + name
-        r = snapshotter.take_snapshot(self.id, out_filename=local, full_page=True)
-        if not r:
-            print 'FAIL'
-            return False
-
-        url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/jpg', ttl=30)
-        # print url
 
     # Note: this takes snapshots in the current thread.
     # For threaded snapshots, use threaded_snapshot()
@@ -1280,6 +1286,9 @@ class Expr(HasSocial):
 
     def qualified_url(self):
         return "http://" + self['domain'] + "/" + self['name']
+
+    def get_count(self, name):
+        return self.get('analytics', {}).get('count', 0)
 
     def analytic_count(self, string):
         if string in ['facebook', 'gplus', 'twitter', 'stumble']:
@@ -2172,3 +2181,14 @@ class ESDatabase:
         entries = self.conn.search(match_all_query,
             indices=self.index, doc_types=es_type)
         return entries.total
+
+popularity_score = (
+    "_score * (doc['views'].value + 100*doc['star'].value" +
+    "+ 500*doc['broadcast'].value)"
+    )
+popularity_time_score = (
+    "(doc['views'].value + 100*doc['star'].value" +
+    "+ 500*doc['broadcast'].value) *" +
+    "exp((doc['created'].value - time()/1000)/1000000)"
+    )
+

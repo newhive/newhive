@@ -39,7 +39,7 @@ class Community(Controller):
         if not user or not user.id:
             return self.featured(tdata, request, **paging_args)
         return {
-            "cards": user.feed_page_esdb(feed='trending', **paging_args),
+            "cards": user.feed_trending(**paging_args),
             'header': ("Network",), 'card_type': 'expr',
             'title': "Network",
         }
@@ -49,7 +49,7 @@ class Community(Controller):
         if not user:
             user = tdata.user
         return {
-            "cards": user.feed_page_esdb(feed='network', **paging_args),
+            "cards": user.feed_recent(),
             "header": ("Recent",), 'card_type': 'expr',
             "title": 'Recent',
         }
@@ -306,7 +306,7 @@ class Community(Controller):
         # if owner_count == 1
         #     profile = expr_owner.client_view()
         #     page_data.update('profile': profile)
-        query = self.db._query(request.args['q'], viewer=tdata.user)
+        query = self.db.query(request.args['q'], viewer=tdata.user)
         search = query['search']
         tags = search.get('tags', [])
         print search
@@ -361,7 +361,7 @@ class Community(Controller):
             # Fetch feed data
             for card in page_data['cards']:
                 feed = card.get('feed', [])
-                card['feed'] = map(lambda x: x.client_view(), self.db.Feed.fetch(feed)[:3])
+                card['feed'] = map(lambda x: x.client_view(), feed)
         if json:
             return self.serve_json(response, page_data)
         else:
