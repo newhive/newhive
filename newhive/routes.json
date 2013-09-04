@@ -68,7 +68,7 @@
     },
     "user_home": {
         "page_route": "/<owner_name>",
-        "api_route": "/api/expr/view/<id>",
+        "api_route": "/api/expr/view/<owner_name>",
         "controller": "community",
         "method": "expr",
         "client_method": "expr"
