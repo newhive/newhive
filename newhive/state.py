@@ -751,7 +751,7 @@ class User(HasSocial):
                 else: item = add_expr(r)
                 break
             if not item: break
-            result.append(r)
+            result.append(item)
 
         return result[at:]
 
