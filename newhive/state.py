@@ -747,6 +747,7 @@ class User(HasSocial):
                     item['feed'].append(r)
                 if (item['auth'] != 'public') or existing: continue
                 break
+            if item: result.append(item)
             for r in tagged_exprs:
                 if exprs.get(r.id): continue
                 else: item = add_expr(r)
