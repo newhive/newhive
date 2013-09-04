@@ -254,6 +254,12 @@ class HiveAssets(Assets):
             )
             self.final_bundles.append('site.js')
 
+            self.assets_env.register('expr.js', 'compiled.expr.js',
+                filters = 'yui_js',
+                output = '../lib/expr.js'
+            )
+            self.final_bundles.append('expr.js')
+
         # CSS for expressions, and also site pages
         minimal_scss = webassets.Bundle(
             'scss/minimal.scss',
