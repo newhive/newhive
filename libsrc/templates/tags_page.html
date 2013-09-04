@@ -13,9 +13,9 @@
       	{>}{<else}Follow{>} collection</button>
     </form>
     {# need a new form and form handler... #}
-    <form { form_attrs "tag_follow" } id='create_form' method='POST'>
+    <a { query_attrs "create_expr" tags_search.0 "owner_name" user.name } id='create_form' method='POST'>
       <button type="submit" class="teal_btn upper create" value="">
         <span class="plus_button"></span>
         <span class="text">Add to Collection</span>
-    </button></form>
+    </button></a>
   </div></div>

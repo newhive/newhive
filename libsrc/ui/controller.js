@@ -10,6 +10,8 @@ define([
     var o = { back: false }, route;
 
     o.init = function(route_args){
+        curl.expose('server/context', 'c'); // useful for debugging
+
         routing.register_state(route_args);
         page.init(o);
         util.each(pages, function(m){
@@ -17,8 +19,6 @@ define([
         });
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
-
-        curl.expose('server/context', 'c'); // useful for debugging
     };
     o.dispatch = function(route_name, data){
         context.route_name = route_name;

@@ -6,8 +6,10 @@
 define([
     'browser/jquery',
     'ui/util',
-    'browser/layout'
-], function($, util, layout){
+    'browser/layout',
+    'ui/jplayer',
+    'browser/jquery/jplayer/skin'
+], function($, util, layout, jplayer){
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
@@ -35,8 +37,11 @@ define([
         // };
 
         o.init = function(){
-            var no_embed = util.url_params["no-embed"] != undefined;
-            if (no_embed) o.hide();
+            var no_embed = (util.url_params["no-embed"] != undefined);
+            if (no_embed) 
+                o.hide();
+            else
+                o.show();
             window.addEventListener('message', function(m){
                 if ( m.data.action == "show" ) {
                     function callback(data){
@@ -102,12 +107,12 @@ define([
             //        if(document.body.scrollLeft == 0) o.page_prev();
             //});
 
-            // o.init_jplayer();
+            jplayer.init_jplayer();
         };
 
         o.show = function(){
             o.paging_sent = false;
-            if(!Hive.expr) return;
+            // if(!Hive.expr) return;
 
             if( ! o.initialized ){
                 o.initialized = true;
@@ -131,7 +136,7 @@ define([
             
             layout.place_apps();
 
-            util.update_targets();
+            o.update_targets();
         };
         o.hide = function(){
             $('.hive_html').each(function(i, div) {
@@ -139,6 +144,9 @@ define([
                 if ($div.html() == '') return;
                 $div.attr('data-content',$div.html());
                 $div.html('');
+            });
+            $('.hive_audio .jp-jplayer').each(function(i, div) {
+                $(div).jPlayer("pause");
             });
         };
 

@@ -270,14 +270,15 @@ define([
         $(window).scroll(function(e) {
             if (c.route_name == "edit_expr")
                 return;
+            return;
             $(".overlay.nav").fadeOut("fast");
             if (o.scroll_timeout != undefined)
                 clearTimeout(o.scroll_timeout);
             o.scroll_timeout = setTimeout(function() {
                 o.scroll_timeout = undefined;
                 if (c.route_name != "edit_expr")
-                    $(".overlay.nav").fadeIn("fast");
-            }, 1000);
+                    $(".overlay.nav").stop().fadeIn("fast");
+            }, 100);
         });
     };
     o.attach_handlers = function(){

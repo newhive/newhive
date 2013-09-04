@@ -1,4 +1,10 @@
 // jPlayer shenanigans
+define([
+    'browser/jquery',
+    'ui/util',
+    'browser/jquery/jplayer/skin.js'
+], function($, util, skin){
+
 init_jplayer = function(){
     var update_timer = function (player) {
         return function(event) {
@@ -20,7 +26,7 @@ init_jplayer = function(){
             loadeddata: update_timer(this),
             timeupdate: update_timer(this),
             ended: update_timer(this),
-            swfPath: asset('Jplayer.swf'),
+            swfPath: util.asset('Jplayer.swf'),
             supplied: "mp3",
             verticalVolume: true
         });
@@ -70,3 +76,7 @@ init_jplayer = function(){
         player.jPlayer('volume', newVolume);
     });
 };
+return {
+    init_jplayer: init_jplayer
+};
+});

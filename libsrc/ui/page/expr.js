@@ -23,6 +23,7 @@ define([
         loading_frame_list = [], loaded_frame_list = [],
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
+    o.cache_offsets = [1, -1, 2];
     o.anim_duration = 400;
 
     o.init = function(controller){
@@ -88,9 +89,6 @@ define([
         $("#dia_comments").remove();
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
-        $("#dia_comments").data("dialog").opts.open = function(){
-            $("#dia_comments textarea").focus();
-        }
         $('#popup_content .counts_icon').each(function(i, el) {
             resize_icon($(this));
         });
@@ -106,13 +104,23 @@ define([
         o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
         o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
 
-        animate_expr();
+        if (page_data.cards == undefined) {
+            // In case of direct link with no contect,
+            // fetch the default context: owner's cards
+            // TODO: shold be able to link context in URL with #user=foo or #tag=bar
+            o.controller.get('expressions_public', {
+                owner_name: page_data.expr.owner.name
+            }, function(json) {
+                page_data.cards = json.cards;
+            });
+        }
         var found = find_card(o.expr.id);
         if (found >= 0) {
             var card = page_data.cards[found];
             if (! card.json)
                 _navigate_page(0); // To cache nearby expressions
         }
+        animate_expr();
         hide_panel();
         $("#content_btns").show();
         $(".social_btn").removeClass("hide");
@@ -369,7 +377,16 @@ define([
         $(".social_btn").unbind('click');
         $(".social_btn").click(o.social_toggle);
 
-        $('#comment_form').unbind('response').on('response', o.comment_response);
+        // $('#comment_form').unbind('response').on('response', o.comment_response);
+        var dia_comments = $("#dia_comments").data("dialog");
+        dia_comments.opts.open = function(){
+            $("#dia_comments textarea").focus();
+        }
+        dia_comments.opts.handler = o.comment_response;
+        $("#comment_form").unbind('after_submit').on('after_submit', function() {
+            $("#dia_comments textarea[name=text]").prop('disabled', true);
+            $("#dia_comments input[type=submit]").prop('disabled', true);
+        });
 
         $(".feed_item").each(function(i, el) {
             edit_button = $(el).find('button[name=edit]');
@@ -381,7 +398,7 @@ define([
                 });
             }
             $(el).find('form').on('response', function(event, data) {
-                o.edit_comment_response($(el), data); 
+                o.edit_comment_response($(el), data);
             });
         });
 
@@ -560,7 +577,9 @@ define([
         o.attach_handlers();
     };
     o.comment_response = function (e, json){
-        $('#comment_form textarea').val('');
+        $('#comment_form textarea').val('').prop('disabled', false);
+        $("#comment_form input[type=submit]").prop('disabled', false);
+
         o.edit_comment_response([], json);
     };
 
@@ -577,13 +596,13 @@ define([
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
                 // Cache upcoming expressions
-                var cache_offsets = [1, -1, 2];
-                if (offset < 0)
-                    cache_offsets = cache_offsets.map(function(o) { return -o; });
+                var cache_offsets = o.cache_offsets;
                 var expr_ids = [];
                 for (var i = 0, off; off = cache_offsets[i]; ++i) {
-                   var found_next = (found + len + off) % len;
-                   expr_ids = expr_ids.concat(page_data.cards[found_next].id);
+                    if (offset < 0)
+                        off = -off;
+                    var found_next = (found + len + off) % len;
+                    expr_ids = expr_ids.concat(page_data.cards[found_next].id);
                 }
                 cache_frames(expr_ids);
                 if (offset) {
