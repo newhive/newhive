@@ -92,8 +92,13 @@ Hive.Apps = (function(){
     
     o.init = function(initial_state, load){
         var query = location.search.slice(1);
-        if (query.length)
-            $("#tags_input").val(query);
+        if (query.length) {
+            if (query == "new_user") {
+                $("#dia_editor_help").data("dialog").open();
+            } else {
+                $("#tags_input").val(query);
+            }
+        }
         stack.splice(0);
         o.splice(0);
 

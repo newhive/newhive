@@ -25,6 +25,7 @@
   {<if user.logged_in}
     <form {form_attrs "logout"} method='POST' id='logout_form'></form>
     <div id='logout_btn' class='menu_item'>Logout</div>
+    <div id='invite_btn' class='menu_item'>Invites</div>
     <div id='activity_btn' class='menu_item hoverable'>
         <div class='icon'></div>
         <div class='count'>0</div>
@@ -34,7 +35,7 @@
       class='menu_item hoverable'>{user.name|e}</a>
     <a {anchor_attrs "home"} class='menu_item default hoverable'>Network</a>
   {>}{<else}
-    <div class='menu_item default'>About NewHive</div>
+    <div class='menu_item default'><a href="/{config.site_user}/about">About NewHive</a></div>
   {>}
 </div>
 
@@ -59,17 +60,21 @@
 {<unless user.logged_in}
   <div id='dia_login_or_join' class='dialog hide' data-handle='#sign_up_btn'>
     <div class="centered"><img src='{asset "skin/site/newhive_dialog_logo.png"}'></div>
+    <div class="small heading centered">
+      NewHive is your blank canvas.<br>
+      It’s freedom of expression on the web.
+    </div>
     <div class="column left">
       <h3>
-        <span class="title line1">Have an account?</span><br/>
-        <span class="title line2">Log in.</span>
+        {#<span class="title line1">Have an account?</span><br/>#}
+        <span class="title line2">Log in:</span>
       </h3>
       {|templates/login_form.html}
     </div>
     <div class="column right">
       <h3>
-        <span class="title line1">Need an account?</span><br/>
-        <span class="title line2">Sign up.</span>
+        {#<span class="title line1">Need an account?</span><br/>#}
+        <span class="title line2">Sign up:</span>
       </h3>
       {|templates/request_invite_form.html}
     </div>

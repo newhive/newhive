@@ -87,13 +87,13 @@ class Expr(ModelController):
 
         return self.serve_404(tdata, request, response)
 
-    def fetch_naked(self, tdata, request, response, expr_id):
+    def fetch_naked(self, tdata, request, response, expr_id=None, owner_name=None, expr_name=None):
         # Request must come from content_domain, as this serves untrusted content
         # TODO: get routing to take care of this
         if request.host != utils.url_host(on_main_domain=False,secure=request.is_secure):
             return self.redirect('/')
         snapshot_mode = request.args.get('snapshot') is not None
-        expr_obj = self.db.Expr.fetch(expr_id)
+        expr_obj = self.db.Expr.fetch(expr_id) if expr_id else self.db.Expr.named(owner_name, expr_name)
         tdata.context.update(
                 html = self.expr_to_html(expr_obj,snapshot_mode=snapshot_mode)
                 , expr = expr_obj

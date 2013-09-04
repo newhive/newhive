@@ -123,10 +123,10 @@
     {# discussion input #}
     <div id="discussions">
      <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
-        <div class="textarea_padder"><textarea name='text' placeholder=
+        <textarea name='text' placeholder=
           {<if user.logged_in}'Join the conversation.'
           {>}{<else}'Log in to comment...' disabled
-          {>} rows='4'></textarea></div>
+          {>} rows='4'></textarea>
         <div class="rightify">{<if user.logged_in}<input type='submit' value='Enter' class='submit teal_btn'>{>}</div>
         <input type='hidden' name='action' value='comment'>
         <input type='hidden' name='entity' value='{id}'>

@@ -5,11 +5,26 @@ define([
     var oo = { dialogs: [] };
 
     oo.create = function(element, options){
+        oo.generic_dialog_handler = function(event, json){
+            if (json.error != undefined) {
+                opts.dialog.find('.error_msg').text(json.error).hide().fadeIn("slow");
+            } else {
+                opts.dialog.find('.error_msg').hide();
+                var el_show = opts.dialog.find(".success_show").unbind("click").click(
+                    function() { o.close(); });
+                if (el_show.length) {
+                    el_show.show();
+                    opts.dialog.find(".success_hide").hide();
+                } else {
+                    $('#dialog_shield').click();
+                }
+            }
+        };
         var opts = $.extend({
             dialog: $(element),
             opened: false,
             open: function(){},
-            handler: generic_dialog_handler,
+            handler: oo.generic_dialog_handler,
             close: function(){},
             mandatory: false,
             layout: function(){ layout.center(opts.dialog, $(window)) },
@@ -28,13 +43,6 @@ define([
         opts.dialog.data('dialog', o);
         oo.dialogs.push(o);
 
-        var generic_dialog_handler = function(event, json){
-            if (json.error != undefined) {
-                $(this).parents().filter(".dialog").find('.error_msg').text(json.error).show();
-            } else {
-                $('#dialog_shield').click();
-            }
-        };
         // construct element
         // if(!opts.opts.mandatory){
         //     var manual_close = function(){ opts.close(true); };
@@ -57,6 +65,8 @@ define([
             // For old browsers which don't support autofocus.
             opts.dialog.find("*[autofocus]").focus();
             opts.dialog.find(".error_msg").hide();
+            opts.dialog.find(".success_show").hide();
+            opts.dialog.find(".success_hide").show();
             $(window).resize(opts.layout);
             opts.layout();
 

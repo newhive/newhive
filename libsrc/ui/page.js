@@ -5,6 +5,7 @@
  */
 define([
     'browser/jquery',
+    'json!ui/routes.json',
     'browser/js',
     'ui/dialog', 
     'ui/new_account',
@@ -37,6 +38,7 @@ define([
     'sj!templates/request_invite_form.html'
 ], function(
     $,
+    routes,
     js,
     dialog,
     new_account,
@@ -153,6 +155,9 @@ define([
         context.user.logged_in = false;
         // overlays are rendered once on init, so not done on .refresh()
         init_overlays();
+        if (routes[context.route_name].require_login) {
+            return o.controller.open("home", {});
+        }
         o.controller.refresh();
     };
     o.logout = function(){
@@ -257,7 +262,8 @@ define([
                 // If a dialog is up, kill it.
                 $('#dialog_shield').click();
             } else if ((e.keyCode == 39 || e.keyCode == 37) &&
-                !(e.metaKey || e.ctrlKey || e.altKey)) {
+                !(e.metaKey || e.ctrlKey || e.altKey) &&
+                $(e.target).is("body")) {
                 // If paging, go to previous / next expression.
                 if (context.page && context.page.navigate_page) {
                     var speed = (e.shiftKey) ? 2 : 1;
@@ -395,10 +401,10 @@ define([
     };
     o.profile_private = function(page_data){
         // page_data.profile.subheading = 'Private';
-        
         page_data.layout = 'grid';
-        render_site(page_data);
-        expr_column();
+        o.grid(page_data);
+        // render_site(page_data);
+        // expr_column();
     };
 
     // o.loves = function(page_data){

@@ -14,16 +14,12 @@ define([
 
     o.asset = function(context, name){ return ui_util.asset(name) };
 
-    // vcenter creates a valigned block (with tables)
-    // o.vcenter = function(context, block){
-    //     return "<table class='vcenter'><tr><td>" + block(context) + "</td></tr></table>";
-    // };
+    // vcenter creates a valigned block
     o.vcenter = function(context, block){
         var extra_classes = ((arguments.length > 2) ? " " + arguments[2] : "");
         return "<div class='vcenter_outer" + extra_classes +
             "'><div class='vcenter_middle'>" + block(context) + "</div></div>";
     };
-
 
     o.recency_time = function(context, time) {
         var now = Date.now();

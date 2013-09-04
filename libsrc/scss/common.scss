@@ -19,3 +19,9 @@ $right_column_x: $left_padding + $left_column_width + $right_padding;
     width: -webkit-calc(#{$w});
     width: calc(#{$w});
 }
+
+@mixin box-sizing($style) {
+	-moz-box-sizing: $style;
+	-webkit-box-sizing: $style;
+	box-sizing: $style;
+}

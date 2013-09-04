@@ -143,8 +143,8 @@
     }
     .left_pane {
         display: inline-block;
-        width: 420px;
-        padding-right: 15px;
+        width: 430px;
+        padding-right: 5px;
 
         .title_spacer { 
             height:78px;
@@ -213,6 +213,7 @@
             }
             &:hover {
                 background-color: $color_selected;
+                color: black;
             }
             &.on:hover {
                 background-color: $color_selected;

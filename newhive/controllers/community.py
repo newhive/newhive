@@ -88,6 +88,11 @@ class Community(Controller):
             #     limit = max(10, limit)
             #     card_ids = []
 
+        if 0 == len(cards):
+            # New user has no cards; give him the "edit" card
+            # TODO: replace thenewhive with a config string
+            cards = []
+            cards.append(self.db.Expr.named("newhive","default-instructional"));
         profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
