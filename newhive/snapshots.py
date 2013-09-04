@@ -43,7 +43,7 @@ class Snapshots(object):
             ratio = 1.0 * dimensions[0] / dimensions[1];
             snap_dimensions = list(dimensions)
             snap_dimensions = [ 1000, 1000./dimensions[0]*dimensions[1] ]
-            cmd = ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + ' --delay=1000 --max-wait=90000 --min-width=%s --min-height=%s --url=%s --out=%s'
+            cmd = ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + ' --delay=3000 --max-wait=90000 --min-width=%s --min-height=%s --url=%s --out=%s'
                 % (snap_dimensions[0],snap_dimensions[1],url,out_filename) )
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))

@@ -139,20 +139,19 @@ class Expr(ModelController):
                 more_css = ';'.join([p + ':' + str(c[p]) for p in c])
                 html = ''
             elif type == 'hive.html':
+                html_original = '%s' % (app.get('content',''))
+                # print 'found hive.html'
                 if snapshot_mode:
                     def get_embed_img_html(url):
-                        # 1/0
                         ret_html = ''
                         oembed = utils.get_embedly_oembed(url)
                         if oembed and oembed.get('thumbnail_url'):
                             ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
                         return ret_html
                     html = ''
+                    error = False
                     # Turn embeds in hive.html blocks to static images
-                    # 1/0
                     hivehtml = BeautifulSoup(app.get('content',''))
-                    for iframe in hivehtml.find_all('iframe'):
-                       html += get_embed_img_html(iframe.get('src'))
                     # Youtube embeds are <object>, and not <iframe>. We handle this
                     # special case here.
                     for object_tags in hivehtml.find_all('object'):
@@ -160,7 +159,17 @@ class Expr(ModelController):
                         for param in param_tags:
                             if param.get('name') == 'movie':
                                 html += get_embed_img_html(param.get('value'))
-                    # 1/0
+                                more_css += ";overflow:hidden"
+                                # print 'found Youtube.'
+                    if not html:
+                        # print 'found iframe'
+                        for iframe in hivehtml.find_all('iframe'):
+                            html = get_embed_img_html(iframe.get('src'))
+                            if not html:
+                                error = True
+                                # print 'error.'
+                        if error:
+                            html = html_original
                 else:
                     encoded_content = cgi.escape(app.get('content',''), quote=True)
                     html = '%s' % (app.get('content',''))

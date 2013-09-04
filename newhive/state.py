@@ -696,6 +696,7 @@ class User(HasSocial):
         # return iterable of matching expressions for each tag you're following
         tags = self.get('tags_following', [])
         queries = [self.db.query('#' + tag) for tag in tags]
+
         return (item for grp in izip_longest(*queries) for item in grp)
 
     # TODO-polish merge with db.query to enable searching within feed
@@ -715,8 +716,9 @@ class User(HasSocial):
 
         exprs_by_id = {}
         for expr in exprs:
-            expr['score'] = popularity_time_score(expr)
-            exprs_by_id[expr.id] = expr
+            if expr:
+                expr['score'] = popularity_time_score(expr)
+                exprs_by_id[expr.id] = expr
         result = sorted(exprs_by_id.values(),
             key=lambda x: x['score'], reverse=True)
         return result[at:at+limit]
