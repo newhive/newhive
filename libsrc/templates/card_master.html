@@ -1,4 +1,10 @@
 {|templates/network_nav.html}
+{<if network_help}
+  <div class="centered">
+    <iframe src="{config.content_url}{config.site_user}/network-expression" 
+    class="network_help"></iframe>
+  </div>
+{>}
 {<if (and header (or user.logged_in (neq route_name "home")))}
   <div id='header' class='header'>
     <span class='heading'>{ header.0 }

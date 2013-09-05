@@ -29,12 +29,11 @@ class Community(Controller):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
-        # # Logged out users see featured.
+        # Logged out users see featured.
         if not user or not user.id:
             return self.featured(tdata, request, **paging_args)
-        if len(cards) == 0:
-            welcome_card = self.db.Expr.named(self.config.site_user, "network-expression");
         return {
+            "network_help": (len(user.starred_user_ids) <= 1),
             "cards": user.feed_trending(**paging_args),
             'header': ("Network",), 'card_type': 'expr',
             'title': "Network",

@@ -16,6 +16,11 @@
     color: white;
 }
 
+.teal_hover:hover, .teal_bg {
+    background-color: $color_selected;
+    color: black;
+}
+
 
 #logo_menu {
     min-width: 140px;
