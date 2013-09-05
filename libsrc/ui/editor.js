@@ -2146,6 +2146,7 @@ Hive.new_file = function(files, opts) {
 Hive.init = function(exp, page){
     Hive.Exp = exp;
     Hive.edit_page = page;
+    if(!exp.auth) exp.auth = 'public';
 
     //setInterval(Hive.set_draft, 5000);
     if(!debug_mode){
