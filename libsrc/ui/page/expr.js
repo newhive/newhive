@@ -185,7 +185,7 @@ define([
         return found;
     };
     var debug = function(text){
-        if (1)
+        if (0)
             console.log("DEBUG: " + text);
     };
     var cache_frames = function(expr_ids, current){

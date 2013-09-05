@@ -188,7 +188,7 @@ define([
     ///////////////////////////////
 
     o.render = function(method, data){
-        console.log(method);
+        // console.log(method);
         var page_data = data.page_data;
         if (page_data.title) $("head title").text(page_data.title);
         o.method = method;

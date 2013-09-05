@@ -36,6 +36,8 @@ def client_view():
 	   	streamified_url=streamified_url,
         streamified_client_id=streamified_client_id,
 
+        site_user=site_user,
+
         server_name=server_name,
         server_domain=(dev_prefix + '.' + server_name if 
             dev_prefix else server_name),

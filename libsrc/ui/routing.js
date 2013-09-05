@@ -36,9 +36,8 @@ define([
     };
     o.register_state = function(route_info) {
         if (!window.history && window.history.pushState) return;
-        var route = ApiRoutes[route_info.route_name];
-        history.pushState(o.page_state(
-            route_info.route_name, route_info, location.search.slice(1)), null, route.page);
+        var state = o.page_state(route_info.route_name, route_info, location.search.slice(1));
+        history.pushState(state, null, state.page);
     };
     o.substitute_variables = function(inStr, routeVars) {
         for (var routeVar in routeVars) {

@@ -4,7 +4,11 @@ define([
 ], function($, assets){
     var o = {};
 
-    o.asset = function(name){ return assets[name] };
+    o.asset = function(name){
+        if (assets[name])
+            return assets[name];
+        return "Not-found:" + name;
+    };
 
     // Can extend jquery functions with custom behavior.
     o.extend_jquery = function() {
