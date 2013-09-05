@@ -50,7 +50,7 @@ beta_testers    = [
                   ]
 beta_testers = admins + beta_testers
 
-site_user       = 'thenewhive'
+site_user       = 'newhive'
 admins.append(site_user)
 
 content_domain = 'tnh.me'
