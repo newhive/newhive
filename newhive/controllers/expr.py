@@ -93,13 +93,13 @@ class Expr(ModelController):
         if request.host != utils.url_host(on_main_domain=False,secure=request.is_secure):
             return self.redirect('/')
         snapshot_mode = request.args.get('snapshot') is not None
-        expr_obj = self.db.Expr.fetch(expr_id) if expr_id else self.db.Expr.named(owner_name, expr_name)
+        expr_obj = (self.db.Expr.fetch(expr_id) if expr_id else
+            self.db.Expr.named(owner_name, expr_name))
         tdata.context.update(
-                html = self.expr_to_html(expr_obj,snapshot_mode=snapshot_mode)
-                , expr = expr_obj
-                , use_ga = False
-                , expr_script = expr_obj.get('script')
-                , expr_style = expr_obj.get('style'))
+            html = self.expr_to_html(expr_obj,snapshot_mode=snapshot_mode)
+            , expr = expr_obj
+            , use_ga = False
+            )
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False):

@@ -155,8 +155,8 @@ define([
             var d = dialog.create(e);
             handle.click(d.open);
         });
-        find_all(elements, '.hoverable').each(function(){
-            ui_util.hoverable(this) });
+        find_all(elements, '.hoverable').each(function(i, e){
+            ui_util.hoverable($(e)) });
 
         js.each(o._after_render_handlers, function(handler, selector){
             find_all(elements, selector).each(function(i,e){ handler($(e)) });

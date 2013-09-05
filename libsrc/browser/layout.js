@@ -21,7 +21,9 @@ define(['browser/jquery'], function($) {
                 var scale = parseFloat(e.attr('data-scale'));
                 if(scale) c['font-size'] = scale;
                 e.data('css', c);
-                var a; if(a = e.attr('data-angle') && e.rotate) e.rotate(parseFloat(a));
+                var angle;
+                if((angle = e.attr('data-angle')) && e.rotate)
+                    e.rotate(parseFloat(angle));
                 e.css('opacity', this.style.opacity);
             }
             var c = $.extend({}, e.data('css'));
