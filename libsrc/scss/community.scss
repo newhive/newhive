@@ -1,5 +1,11 @@
 @import "common";
 
+.network_help {
+    display: inline-block;
+    width: 715px;
+    height: 400px;
+}
+
 // Search bar
 .search_bar {
     margin: 50px auto;
@@ -130,7 +136,7 @@
             }
             .about {
                 // white-space: pre;
-                margin-top: 20px;
+                margin: 20px 0px;
                 max-height: 57px;
                 overflow: hidden;
                 width: 100%;
@@ -367,7 +373,7 @@
                 overflow: hidden;
             }
             &:hover {
-                @include box-shadow(05px 05px 05px #666);
+                @include box-shadow(1px 1px 10px #666);
             }
             .title {
                 max-height: 64px;

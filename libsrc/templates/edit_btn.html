@@ -1,2 +1,22 @@
-<a class='edit_btn' {anchor_attrs "edit_expr" "owner_name" user.name
-  "expr_name" expr.name "id" expr.id}><div class='edit_icon icon btn hide'></div></a>
+{# this template exists because the route of the edit button
+  can change but the overlay isn't rerendered. #}
+<div class='inline edit_btn' id="edit_btn" {anchor_attrs "edit_expr" "owner_name" user.name
+  "expr_name" expr.name "id" expr.id}>
+  <div class='edit_icon icon btn hide'></div></div>
+
+{# menu: wrench (edit) #}
+<div id='edit_menu' class='menu drawer' data-handle='#edit_btn' data-menu-opts='"layout_x":"right"'>
+  <a class='menu_item'>Delete</a>
+  <a class='edit_btn default menu_item' {anchor_attrs "edit_expr" "owner_name" user.name
+  "expr_name" expr.name "id" expr.id}>Edit</a>
+</div>
+
+{# dialog: delete confirmation #}
+<div class="dialog" id="dia_delete_ok" data-handle="#edit_menu"
+  {form_attrs "expr_delete" "expr_id" expr.id}>
+  <form>
+	  <div class="small heading">Are you sure you want to delete this Expression?</div>
+	  <button type="cancel" class="teal_btn upper">Cancel</button>
+	  <button type="submit" class="grey_btn upper">Delete</button>
+  </form>
+</div>

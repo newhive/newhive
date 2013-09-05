@@ -29,10 +29,11 @@ class Community(Controller):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
-        # # Logged out users see featured.
+        # Logged out users see featured.
         if not user or not user.id:
             return self.featured(tdata, request, **paging_args)
         return {
+            "network_help": (len(user.starred_user_ids) <= 1),
             "cards": user.feed_trending(**paging_args),
             'header': ("Network",), 'card_type': 'expr',
             'title': "Network",
@@ -88,7 +89,7 @@ class Community(Controller):
             #     limit = max(10, limit)
             #     card_ids = []
 
-        if 0 == len(cards):
+        if 0 == len(cards) and tdata.user == owner:
             # New user has no cards; give him the "edit" card
             # TODO: replace thenewhive with a config string
             cards = []

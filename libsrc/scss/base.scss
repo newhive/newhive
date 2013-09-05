@@ -47,7 +47,7 @@ button {
     border: none;
     cursor: pointer;
 }
-.teal_btn, .text_btn, .grey_btn {
+.teal_btn, .text_btn, .grey_btn, .black_btn {
     padding: 10px;
     font-family: Gibson;
     font-size: 17px;
@@ -59,6 +59,10 @@ button {
 .grey_btn {
     background-color: $color_light_grey;
 }
+.black_btn {
+    color: white;
+    background-color: black;
+}
 .teal_btn {
     background-color: $color_selected;
 }
@@ -69,7 +73,8 @@ button {
         // display: inline-block;
         vertical-align: top;
         width: 33.33%;
-        float: left;
+        // float: left;
+        display: inline-block;
 
         &> * {
             vertical-align: bottom;

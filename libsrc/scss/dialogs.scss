@@ -23,7 +23,6 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     position: fixed;
     padding: 10px;
     z-index: 201;
-    position:absolute;
     width: 500px;
     background-color : white;
     @include box-shadow(05px 05px 05px #666);
@@ -35,6 +34,12 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
           font-family: $header_font;
           text-align: center;
     }
+    h3 {
+        font-family: $header_font;
+        font-weight: normal;
+        font-size: 28px;
+        margin: 0;
+    }
     .success_show {
         height: 180px;
         color: white;
@@ -43,21 +48,6 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
             padding: 0px 30px;
         }
     }
-}
-
-.btn_dialog_close, #btn_dialog_close {
-    position: absolute; width: 20px; height: 20px; background-image: asset_url("skin/1/close.png");
-    right:10px; top:5px; z-index : 100; 
-}
-.btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
-.dialog h3 {
-    font-family: $header_font;
-    font-weight: normal;
-    font-size: 28px;
-    margin: 0;
-}
-
-.dialog {
     .heading {
         margin-bottom: 20px;
     }
@@ -73,8 +63,14 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
         font-size: 17px;
         input { margin-right: 5px; }
     }
-    .submit { float: right; }
+    .submit, button[type=submit] { float: right; }
 }
+
+.btn_dialog_close, #btn_dialog_close {
+    position: absolute; width: 20px; height: 20px; background-image: asset_url("skin/1/close.png");
+    right:10px; top:5px; z-index : 100; 
+}
+.btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
 
 #dia_editor_help {
     width: 90%;
@@ -86,6 +82,14 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     }
 }
 
+#dia_delete_ok {
+    padding: 20px;
+    width: 280px;
+    .title {margin-bottom: 15px;}
+    // button[type=submit] {
+    //     float: right;
+    // }
+}
 #dia_share {
     width: 440px;
     padding: 20px;

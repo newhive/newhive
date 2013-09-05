@@ -2,18 +2,18 @@
 {<if user.logged_in}
   <div class='center network_nav'>
     <a { anchor_attrs "home" }>
-      <div class='text_btn item black_hover menu_item
-      {<if route_name "home"} teal_btn{>}'>Network</div></a>
+      <div class='text_btn item teal_hover menu_item
+      {<if route_name "home"} black_btn{>}'>Network</div></a>
     <a { anchor_attrs "featured"}>
-      <div class='text_btn item black_hover menu_item
-      {<if route_name "featured"} teal_btn{>}'>The Hive</div></a>
+      <div class='text_btn item teal_hover menu_item
+      {<if route_name "featured"} black_btn{>}'>The Hive</div></a>
     <a { anchor_attrs "network" }>
-      <div class='text_btn item black_hover menu_item
-      {<if route_name "network"} teal_btn{>}'>Recent</div></a>
+      <div class='text_btn item teal_hover menu_item
+      {<if route_name "network"} black_btn{>}'>Recent</div></a>
     {# maybe enable if admin
       <a { anchor_attrs "recent"}>
-        <div class='text_btn item black_hover menu_item
-        {<if route_name "home"} teal_btn{>}'>Hive_Recent</div></a> 
+        <div class='text_btn item teal_hover menu_item
+        {<if route_name "home"} black_btn{>}'>Hive_Recent</div></a> 
     #}
   </div>
 
