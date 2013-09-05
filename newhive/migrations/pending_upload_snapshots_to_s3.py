@@ -85,7 +85,7 @@ def clear_snapshots():
         expr.pop('snapshot_time')
         expr.save()
 
-expr_limit = 5
+expr_limit = 30
 
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
