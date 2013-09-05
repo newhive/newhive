@@ -716,7 +716,7 @@ class User(HasSocial):
 
         exprs_by_id = {}
         for expr in exprs:
-            if expr:
+            if expr and expr.get('auth') == 'public':
                 expr['score'] = popularity_time_score(expr)
                 exprs_by_id[expr.id] = expr
         result = sorted(exprs_by_id.values(),

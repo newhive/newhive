@@ -69,7 +69,8 @@ button {
         // display: inline-block;
         vertical-align: top;
         width: 33.33%;
-        float: left;
+        // float: left;
+        display: inline-block;
 
         &> * {
             vertical-align: bottom;
