@@ -123,7 +123,7 @@ class Expression(Community, PagingMixin):
         if request.requester.logged_in and request.path == '':
             return self.redirect(response, AbsUrl('home/network'))
         expressions = {
-                '': ['thenewhive', 'home']
+                '': ['newhive', 'home']
                 }
         expr = self.db.Expr.named(*expressions.get(request.path))
         return self.serve_expression_frame(request, response, expr, template="home")
