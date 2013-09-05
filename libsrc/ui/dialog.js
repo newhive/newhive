@@ -67,6 +67,10 @@ define([
             opts.dialog.find(".error_msg").hide();
             opts.dialog.find(".success_show").hide();
             opts.dialog.find(".success_hide").show();
+            opts.dialog.find("*[type=cancel]").unbind('click').click(function(e) {
+                o.close();
+                e.preventDefault(); 
+            });
             $(window).resize(opts.layout);
             opts.layout();
 

@@ -8,6 +8,21 @@ from newhive.controllers.controller import ModelController
 class Expr(ModelController):
     model_name = 'Expr'
 
+    def delete(self, tdata, request, response, **args):
+        resp = {}
+        expr_id = request.form.get("expr_id")
+
+        print expr_id
+        expr = self.db.Expr.fetch(expr_id)
+        if not expr:
+            resp = { 'error': 'Expression not found.' }
+            return self.serve_json(response, resp)
+        
+        expr.delete()
+
+        return self.serve_json(response, resp)
+
+        
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""

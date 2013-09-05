@@ -42,6 +42,11 @@ var menu = function(handle, drawer, options) {
     o.sticky = opts.sticky;
     drawer.data('menu', o);
     handle.data('menu', o);
+    // TODO: make this more sofisticated
+    var html_opts = drawer.attr("data-menu-opts");
+    if (html_opts) {
+        $.extend(opts, JSON.parse("{"+html_opts+"}"))
+    }
 
     o.delayed_close = function(close_parent){
         opts.default_item.removeClass('active');
@@ -189,6 +194,9 @@ var menu = function(handle, drawer, options) {
             }
             css_opts.left = ( layout_x == 'right' ?
                 hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
+            if (opts.layout_x == "center")
+                css_opts.left += (handle.outerWidth() - drawer.outerWidth()) / 2;
+
             // TODO-polish: check that the menu still fits on window
             // Namely, shift it into screen at the bottom of code
             if (drawer.hasClass("icon_set"))

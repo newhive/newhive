@@ -32,6 +32,8 @@ class Community(Controller):
         # # Logged out users see featured.
         if not user or not user.id:
             return self.featured(tdata, request, **paging_args)
+        if len(cards) == 0:
+            welcome_card = self.db.Expr.named(self.config.site_user, "network-expression");
         return {
             "cards": user.feed_trending(**paging_args),
             'header': ("Network",), 'card_type': 'expr',
@@ -88,7 +90,7 @@ class Community(Controller):
             #     limit = max(10, limit)
             #     card_ids = []
 
-        if 0 == len(cards):
+        if 0 == len(cards) and tdata.user == owner:
             # New user has no cards; give him the "edit" card
             # TODO: replace thenewhive with a config string
             cards = []

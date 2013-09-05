@@ -160,6 +160,11 @@
         "controller": "expr",
         "method": "save"
     },
+    "expr_delete": {
+        "api_route": "/api/expr/delete",
+        "controller": "expr",
+        "method": "delete"
+    },
     "expr_snapshot": {
         "page_route": "/api/expr/snapshot/<expr_id>",
         "api_route": "/api/expr/snapshot/<expr_id>",
