@@ -45,7 +45,7 @@
   {% if profile and user_is_owner %}
     <div class='nav_icon text hoverable medbold center pad' onclick="" title="Help with your profile" style='margin-right : 8px;' id='btn_help'>?</div>
     <script>
-      $('#btn_help').click(function() { exprDialog('/thenewhive/profile-help', { minimize_to : $('#btn_help') } ) });
+      $('#btn_help').click(function() { exprDialog('/newhive/profile-help', { minimize_to : $('#btn_help') } ) });
       {% if show_help %}$('#btn_help').click();{% endif %}
     </script>
   {% endif %}
@@ -72,8 +72,8 @@
           <a href="" onclick="return false;">Request Invite</a>
         </div>
         <div class='happ' style='left: 230px; top: 177px; width: 300px; z-index: 3;'>
-          <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://thenewhive.com" data-text="NewHive is the easiest way to express yourself online. #expression" data-count="horizontal" data-via="newhive">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
-          <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fthenewhive.com&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:180px; height:20px;" allowTransparency="true"></iframe>
+          <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://newhive.com" data-text="NewHive is the easiest way to express yourself online. #expression" data-count="horizontal" data-via="newhive">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
+          <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fnewhive.com&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:180px; height:20px;" allowTransparency="true"></iframe>
           {#<div class="fb-facepile" data-max-rows="1" data-width="300"></div>#}
         </div>
         <div id="h_2" class="happ" style="left: 585px; top: 20px; width: 365.802px; height: 207px; z-index:3;">
