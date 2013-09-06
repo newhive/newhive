@@ -11,7 +11,7 @@ NewHive is your radically simple, DIY self publishing tool." />
 {% block body %}
   <div id='overlays'></div>
   <div id='site'></div>
-  <div id='exprs'></div>
+  <div id='exprs'><div class='expr blank'></div></div>
   <script>
 curl(['ui/controller'], function(controller){
     controller.init({{ route_args|json }});
