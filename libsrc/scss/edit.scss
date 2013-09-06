@@ -86,11 +86,21 @@
 .drawer { background-color : white; }
 
 .control.stack { white-space : nowrap; }
-.control.buttons .button { margin-right : 2px; float : left; }
+.control.buttons .button {
+    margin-right: 4px;
+    float: left;
+}
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
-.button.blank { display : inline-block; background-image : asset_url('skin/1/button.png'); width : 28px; height : 28px; line-height : 28px; text-align : center; font-weight : bold; }
+.button.blank {
+    display: inline-block;
+    background-image: asset_url('skin/1/button.png');
+    width: 28px; height: 28px;
+    line-height: 28px;
+    text-align: center;
+    font-weight: bold;
+}
 .option.small { display : inline-block; }
 .drawer.bstyle { padding : 5px 5px 0 5px; }
 .bstyle .border { background-color : #54D3AC; border-color : #0A2655; border-width : 3px; width : 20px; height : 15px; margin-bottom : 10px; }

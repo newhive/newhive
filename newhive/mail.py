@@ -207,8 +207,11 @@ class Mailer(object):
             html = EmailHtml(html_string)
             html.tag_links({'email_id': context.get('email_id')})
             if self.inline_css and not css_debug:
-                dir = '/libsrc/' if config.debug_mode else '/lib/'
-                html.inline_css(config.src_home + dir + "compiled.email.css")
+                if config.debug_mode:
+                    css_file = config.src_home + "/libsrc/compiled.email.css"
+                else:
+                    css_file = config.src_home + "/lib/email.css"
+                html.inline_css(css_file)
             body['html'] = html.tounicode()
         except TemplateNotFound as e:
             if e.message != self.template + '.html': raise e

@@ -36,14 +36,14 @@ define([
     };
     o.extend_jquery();
 
-    o.hoverable = function(e){
-        if(e.src) {
-            e.src_d = e.src;
-            e.src_h = hover_url(e.src_d);
-            $(e).mouseover(function() { e.src = e.src_h }).
-                mouseout(function() { e.src = e.src_d });
+    o.hoverable = function(el){
+        if(el.prop('src')) {
+            el.data('src', el.prop('src'));
+            el.data('src_hover', hover_url(el.prop('src')));
+            el.mouseover(function() { el.attr('src', el.data('src_hover')) }).
+                mouseout(function() { el.attr('src', el.data('src')) });
         }
-        $(e).mouseover(function() {
+        el.mouseover(function() {
             if(o.hoverable.disabled) return;
             $(this).addClass('active');
         }).mouseout(function() {
