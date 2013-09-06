@@ -89,10 +89,6 @@
 .control.buttons .button {
     margin-right: 4px;
     float: left;
-
-    &.active {
-        background-color: $color_selected
-    }
 }
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
