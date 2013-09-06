@@ -21,7 +21,7 @@ define([
     Menu,
     CodeMirror,
     dialog,
-    util,
+    ui_util,
     layout,
     context,
     colors,
@@ -29,9 +29,12 @@ define([
 ){
 
 var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
-    hover_menu = Menu, noop = function(){}, Funcs = js.Funcs,
-    asset = util.asset;
+    noop = function(){}, Funcs = js.Funcs, asset = ui_util.asset;
 Hive.asset = asset;
+
+var hover_menu = function(handle, drawer, opts){
+    Menu(handle, drawer, $.extend({ auto_height: false }, opts));
+};
 
 var showDialog = function(jq, opts){
     var d = dialog.create(jq, opts);
@@ -455,7 +458,7 @@ Hive.Controls = function(app, multiselect) {
     o.addButton = function(ctrls) { $.map(ctrls.clone(false), o.appendButton); };
     o.addControls = function(ctrls) { $.map(ctrls.clone(false).children(), o.appendControl); };
     o.hover_menu = function(h, d, opts) {
-        return Menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
+        return hover_menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
     o.div = $('<div>').addClass('controls');
     $('#controls').append(o.div);
@@ -500,8 +503,7 @@ Hive.Controls = function(app, multiselect) {
         $.map(o.app.make_controls, function(f){ f(o) });
 
         o.c.buttons = d.find('.buttons');
-        // TODO: use templates to add controls?
-        // d.find('.hoverable').each(function() { hover_add(this) });
+        d.find('.hoverable').each(function(i, el){ ui_util.hoverable($(el)) });
     }
 
     // disable hover handlers while dragging
@@ -1352,9 +1354,11 @@ Hive.App.has_slider_menu = function(o, handle, set, init, start, end) {
         if(!start) start = noop;
         if(!end) end = noop;
 
-        var input = $("<input class='control drawer' type='text' size='3'>");
-        o.div.find('.buttons').append(input);
-        var m = o.hover_menu(o.div.find(handle), input, {
+        var drawer = $('<div>').addClass('control drawer hide');
+        var input = $("<input class='control' type='text' size='3'>")
+            .appendTo(drawer);
+        o.div.find('.buttons').append(drawer);
+        var m = o.hover_menu(o.div.find(handle), drawer, {
             open: function(){
                     input.val(init());
                     input.focus().select();
@@ -1390,7 +1394,8 @@ Hive.App.has_opacity = function(o) {
     Hive.App.has_slider_menu(o, '.button.opacity',
         function(v) { o.opacity_set(v/100) },
         function() { return Math.round(o.opacity() * 100) },
-        function(){ history_point = Hive.History.saver(o.opacity, o.opacity_set, 'change opacity') },
+        function(){ history_point = Hive.History.saver(
+            o.opacity, o.opacity_set, 'change opacity') },
         function(){ history_point.save() }
     );
 };
@@ -2381,8 +2386,7 @@ Hive.init = function(exp, page){
     };
 
     var save_menu = hover_menu('#btn_save', '#menu_save',
-        { auto_height : false, auto_close : false,
-            click_persist : '#menu_save' });
+        { auto_close : false, click_persist : '#menu_save' });
     $('#save_submit').click(function(){
         if( ! $(this).hasClass('disabled') ){
             if(checkUrl()){

@@ -252,20 +252,6 @@ input[type=button], input[type=submit], button { border : none; margin: 0px; }
 .border { border : 5px solid $color_unselected; padding : 5px; }
 .selected { border-color: $color_selected; }
 .medbold { font-weight : bold; font-size : 1.2em; }
-.button { 
-    padding:5px 10px; 
-    font-weight : bold; 
-    font-size : 20px; 
-    display : inline-block; 
-    cursor : default;
-    white-space: nowrap;
-    &.inactive { background-color : $color_24; color: white;}
-    &.black:hover { 
-        color : $color_1; 
-        background-color : $color_32;
-        &.inactive { background-color : $color_24; color: white;}
-    }
-}
 
 .rounded {
     @include border-radius(5px);
