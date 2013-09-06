@@ -371,11 +371,15 @@ define([
     };
 
     o.attach_handlers = function(){
-        $("#social_close").unbind('click');
-        $("#social_close").click(o.social_toggle);
-        
-        $(".social_btn").unbind('click');
-        $(".social_btn").click(o.social_toggle);
+        $("#social_close").unbind('click').click(o.social_toggle);
+        $(".social_btn").unbind('click').click(o.social_toggle);
+        if ($("#site").children().length && context.page_data.cards_query)
+            $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
+                o.exit();
+                o.controller.direct_fake_open(context.page_data.cards_query);
+                $("body").scrollTop(o.controller.scroll_top);
+                o.controller.scroll_top = 0;
+            });
 
         // $('#comment_form').unbind('response').on('response', o.comment_response);
         var dia_comments = $("#dia_comments").data("dialog");
