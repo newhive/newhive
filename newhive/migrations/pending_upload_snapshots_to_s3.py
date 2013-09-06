@@ -83,7 +83,7 @@ def clear_snapshots():
         ] })
     for expr in expressions_to_snapshot:
         expr.pop('snapshot_time')
-        expr.save()
+        expr.save(updated=False)
 
 expr_limit = 30
 
