@@ -99,7 +99,8 @@ Hive.Apps = (function(){
             if (query == "new_user") {
                 $("#dia_editor_help").data("dialog").open();
             } else {
-                $("#tags_input").val(query);
+                // otherwise query is assumed to be tag list
+                $("#tags_input").val(query.slice(2).replace("%23","#"));
             }
         }
         stack.splice(0);
