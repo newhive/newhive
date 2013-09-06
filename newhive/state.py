@@ -1079,7 +1079,10 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
-    def threaded_snapshot(self):
+    # full_page = True to capture entire expression page, not just snapshot
+    # timeout != 0. time in seconds to block before killing thread
+    # retry = initial (multiplicate) delay to retry failed snapshots
+    def threaded_snapshot(self, full_page=False, time_out=0, retry=0):
         def timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
             """This function will spawn a thread and run the given function
             using the args, kwargs and return the given default value if the
@@ -1104,7 +1107,14 @@ class Expr(HasSocial):
         def threaded_snapshot_q(q, expr):
             result = timeout(threaded_snapshot, (self,), timeout_duration=69)
         def threaded_snapshot(expr):
-            expr.take_snapshots()
+            # If requested, keep trying to snapshot, with multiplicative delay,
+            # until success.
+            while True:
+                result = (expr.take_full_shot() if full_page else expr.take_snapshots())
+                if result or not retry:
+                    return result
+                time.sleep(retry)
+                retry *= 2
 
         # If we spin up too many threads, block.
         while threading.active_count() > 32:
@@ -1120,6 +1130,12 @@ class Expr(HasSocial):
         # result = timeout(threaded_snapshot_q, (q,self), timeout_duration=69)
         t.daemon = True
         t.start()
+        if time_out:
+            t.join(time_out)
+            if t.isAlive():
+                # TODO-perf: could be wise to also kill the thread
+                return False
+        return True
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):
@@ -1127,7 +1143,7 @@ class Expr(HasSocial):
         return self['entropy']
 
     def snapshot_name_base(self, size, time):
-        return '_'.join([self.id, time, self.entropy(), size]) + ".png"
+        return '_'.join([self.id, time, self.entropy(), size]) + (".jpg" if (size == "full") else ".png")
 
     # size is "big" or "small".
     # will return 'snapshot_placeholder.png' if no available snapshot
@@ -1139,6 +1155,23 @@ class Expr(HasSocial):
     def snapshot_name_prefix(self):
         name = self.snapshot_name('')
         return name[:-4] if name else name
+
+    def take_full_shot(self):
+        snapshotter = Snapshots()
+
+        name = self.snapshot_name_base("full", str(self.get('snapshot_time')))[:-4] + ".jpg"
+        if self.db.s3.file_exists('thumb', name):
+            return True
+        # This would be cleaner with file pipes instead of filesystem.
+        local = '/tmp/' + name
+        r = snapshotter.take_snapshot(self.id, out_filename=local, full_page=True)
+        if not r:
+            print 'FAIL'
+            return False
+
+        url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/jpg', ttl=30)
+        return True
+        # print url
 
     # Note: this takes snapshots in the current thread.
     # For threaded snapshots, use threaded_snapshot()
@@ -1178,6 +1211,7 @@ class Expr(HasSocial):
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
             updated=False)
+        return True
 
     # @property
     def snapshot(self, size='big', update=True):
@@ -1211,7 +1245,7 @@ class Expr(HasSocial):
         self.build_search(d)
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
-        if d.get('apps') or d.get('background'): self.threaded_snapshot()
+        if d.get('apps') or d.get('background'): self.threaded_snapshot(retry=120)
         return self
 
     def build_search(self, d):

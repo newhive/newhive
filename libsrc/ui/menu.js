@@ -29,8 +29,8 @@ var menu = function(handle, drawer, options) {
             ,animate_close: false
             ,animate_open: false
             ,opened: false
-        }, options)
-    ;
+        }, options);
+    
     if(!handle.length)
         throw("menu has no handle");
     if(!drawer.length)
@@ -232,7 +232,7 @@ var menu = function(handle, drawer, options) {
             .mouseleave(function(){ o.delayed_close(true) })
             .mousemove(o.cancel_close);
     }
-    handle.click(function(){
+    handle.unbind('click').click(function(){
         if(o.opened && opts.default_item) opts.default_item.click();
         o.open();
     });

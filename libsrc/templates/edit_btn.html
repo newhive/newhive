@@ -2,12 +2,12 @@
   can change but the overlay isn't rerendered. #}
 <div class='inline edit_btn' id="edit_btn" {anchor_attrs "edit_expr" "owner_name" user.name
   "expr_name" expr.name "id" expr.id}>
-  <div class='edit_icon icon btn hide'></div></div>
+  <div class='edit_icon icon btn hide'></div>
 
 {# menu: wrench (edit) #}
 <div id='edit_menu' class='menu drawer' data-handle='#edit_btn' data-menu-opts='"layout_x":"right"'>
   <a class='menu_item'>Delete</a>
-  <a class='edit_btn default menu_item' {anchor_attrs "edit_expr" "owner_name" user.name
+  <a class='default menu_item' {anchor_attrs "edit_expr" "owner_name" user.name
   "expr_name" expr.name "id" expr.id}>Edit</a>
 </div>
 
@@ -19,4 +19,5 @@
 	  <button type="cancel" class="teal_btn upper">Cancel</button>
 	  <button type="submit" class="grey_btn upper">Delete</button>
   </form>
+</div>
 </div>
