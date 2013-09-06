@@ -61,7 +61,7 @@ define([
             opts.shield.appendTo(document.body).click(o.close);
 
             opts.dialog.detach().appendTo(document.body).removeClass('hide').show();
-            opts.dialog.find("form").on('response', opts.handler);
+            opts.dialog.find("form").unbind('response').on('response', opts.handler);
             // For old browsers which don't support autofocus.
             opts.dialog.find("*[autofocus]").focus();
             opts.dialog.find(".error_msg").hide();
