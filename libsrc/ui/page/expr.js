@@ -200,9 +200,9 @@ define([
         }
         // Create new content frame
         var contentFrameURL = contentFrameURLBase + expr_id;
-        contentFrame = $('<iframe class="expr">');
-        contentFrame.attr('src', contentFrameURL + ((current != undefined) ? "" : "?no-embed"));
-        contentFrame.attr('id','expr_' + expr_id);
+        contentFrame = $('<iframe class="expr">').attr('src',
+            contentFrameURL + ((current != undefined) ? "" : "?no-embed"))
+            .attr('id','expr_' + expr_id);
         // Cache the expr data on the card
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
@@ -339,7 +339,7 @@ define([
             $(el).get(0).contentWindow.
                 postMessage({action: 'hide'}, '*');
         });
-        to_hide.addClass('expr-hidden').hide();
+        to_hide.addClass('expr-hidden');
         fixup_tags_list();
     };
 

@@ -7,20 +7,13 @@
       <script src='{{item}}'></script>
     {% endfor %}
   {% endif %}
-  <script>
-  curl([
-      'ui/expression'],
-      function(expression) {
-        expression.initExpression();
-      });
-  </script>
 {% endblock %}
 
 {% block body %}
   {% include 'page_parts/expr_body.html' %}
-  {% if expr_script %}
-    <script id="expr_script">
-      {{ expr_script }}
-    </script>
-  {% endif %}
+  <script>
+    curl(['ui/expression'], function(expression) {
+      expression.initExpression();
+    });
+  </script>
 {% endblock %}
