@@ -687,5 +687,7 @@ def log_error(db, request=None, message=None, traceback=None, critical=False):
             log_entry.update({'requester': {'id': request.requester.id
                                             , 'name': request.requester.get('name')}})
 
-    db.ErrorLog.create(log_entry)
+    # db.ErrorLog.create(log_entry)
+    print log_entry
+
 
