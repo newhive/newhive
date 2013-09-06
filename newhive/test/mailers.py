@@ -1,8 +1,8 @@
 import unittest, random
-import newhive.test
+# import newhive.test
 # from newhive.wsgi import db, jinja_env
 # from newhive import app      
-from newhive.utils import abs_url, now
+# from newhive.utils import abs_url, now
 from newhive import mail, config, state, app
 
 import jinja2

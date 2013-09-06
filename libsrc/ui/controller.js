@@ -31,8 +31,10 @@ define([
             data = data.page_data;
         route = routes[route_name];
         var cards = context.page_data.cards;
+        var cards_query = context.page_data.cards_query;
         context.page_data = data;
         if(!data.cards) context.page_data.cards = cards;
+        if(!data.cards_query) context.page_data.cards_query = cards_query;
         page.render(route.client_method, context);
     };
     o.refresh = function(){
@@ -69,6 +71,12 @@ define([
     };
 
     o.open_route = function(page_state, callback, push_state) {
+        // remember scroll position.
+        if (page_state.route_name != "view_expr") {
+            o.scroll_top = 0;
+        } else if (!o.scroll_top) {
+            o.scroll_top = $("body").scrollTop();
+        }
         o.back = false;
         $('#dialog_shield').click();
         if(page_state.api){
@@ -79,22 +87,30 @@ define([
                 success: callback ? callback : success
             };
             $.ajax(api_call);
-        }
-        else success({});
+        } else 
+            success({});
 
         function success(data){
             o.dispatch(page_state.route_name, data);
             if (push_state == undefined || push_state)
                 history.pushState(page_state, null, page_state.page);
-            $("body").scrollTop(0);
+            if (page_state.route_name != "view_expr")
+                $("body").scrollTop(0);
         }
     };
+    o.direct_open = function(card_query) {
+        o.open(card_query['route_name'], card_query);
+    };
+    o.direct_fake_open = function(card_query) {
+        o.fake_open(card_query['route_name'], card_query);
+    };
     o.open = function(route_name, route_args){
+        o.open_cache = page_data.route_name
         o.open_route(routing.page_state(route_name, route_args));
     };
     o.get = function(route_name, route_args, callback){
         o.open_route(routing.page_state(route_name, route_args), callback);
-    }
+    };
     o.fake_open = function(route_name, route_args){
         // Test for old browsers which don't support history.pushState.
         // Fallback to plane old open.
