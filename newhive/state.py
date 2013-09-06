@@ -1104,9 +1104,9 @@ class Expr(HasSocial):
             else:
                 return default
 
-        def threaded_snapshot_q(q, expr):
-            result = timeout(threaded_snapshot, (self,), timeout_duration=69)
-        def threaded_snapshot(expr):
+        def threaded_snapshot_q(q, expr,retry):
+            result = timeout(threaded_snapshot, (self,retry), timeout_duration=69)
+        def threaded_snapshot(expr, retry):
             # If requested, keep trying to snapshot, with multiplicative delay,
             # until success.
             while True:
@@ -1125,8 +1125,8 @@ class Expr(HasSocial):
         q = Queue.Queue()
 
         # t = InterruptableThread(
-        t = threading.Thread(target=threaded_snapshot, args = (self,))
-        # t = threading.Thread(target=threaded_snapshot_q, args = (q,self))
+        t = threading.Thread(target=threaded_snapshot, args = (self,retry))
+        # t = threading.Thread(target=threaded_snapshot_q, args = (q,self,retry))
         # result = timeout(threaded_snapshot_q, (q,self), timeout_duration=69)
         t.daemon = True
         t.start()
