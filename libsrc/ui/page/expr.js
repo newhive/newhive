@@ -283,7 +283,7 @@ define([
             contentFrame.css({
                 'left': 0,
                 'top': -contentFrame.height() + 'px',
-                'z-index': 2 }
+                'z-index': 3 }
             ).animate({
                 top: "0"
             }, {
@@ -294,14 +294,14 @@ define([
             contentFrame.css({
                 'top': 0,
                 'left': anim_direction * contentFrame.width(),
-                'z-index': 2 }
+                'z-index': 3 }
             ).animate({
                 left: "0"
             }, {
                 duration: o.anim_duration,
                 complete: hide_other_exprs,
                 queue: false })
-            expr_curr.css('z-index', 1).animate({
+            expr_curr.css('z-index', 2).animate({
                 'left': -anim_direction * contentFrame.width(),
             }, {
                 duration: o.anim_duration,
