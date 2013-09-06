@@ -83,7 +83,6 @@ define([
         o.expr = page_data.expr;
 
         $('title').text(o.expr.title);
-        $("#nav").hide();
         $('#site').hide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
@@ -367,7 +366,6 @@ define([
     var hide_expr_complete = function() {
         $('#exprs').hide();
         $('.social.overlay').hide();
-        // $('#nav').prependTo("body");
     };
 
     o.attach_handlers = function(){
@@ -576,7 +574,7 @@ define([
             top_context = {};
             top_context.activity = json.user.activity;
             context.user.activity = json.user.activity;
-            $('#nav .activity').empty().html(activity_template(top_context));
+            // $('#nav .activity').empty().html(activity_template(top_context));
         }
         o.attach_handlers();
     };
