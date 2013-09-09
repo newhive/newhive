@@ -55,6 +55,9 @@ define([
         o.open = function(){
             if(opts.opened) return;
             opts.opened = true;
+            // Close any previous dialog. 
+            // TODO: Allow multiple dialogs?
+            $('#dialog_shield').click();
 
             opts.shield = $("<div id='dialog_shield'>");
             if(opts.fade) opts.shield.addClass('fade');

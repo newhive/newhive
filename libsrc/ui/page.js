@@ -241,7 +241,12 @@ define([
         o.attach_handlers();
     };
     var local_attach_handlers = function(){
-        $('.user_action_bar form.follow').unbind('response').on('response', 
+        if (!context.user.logged_in) {
+            $(".needs_login").unbind("click").click(function() {
+                $("#login_menu").data("dialog").open();
+            });
+        }
+        $(".user_action_bar form.follow").unbind('response').on('response', 
             function(event, json) {
                 follow_response($(this), json); 
         });

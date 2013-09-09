@@ -11,7 +11,7 @@
       <div class='icon settings_btn'></div></a>
   {>}{>}
   {<unless user_is_owner}
-    <a><div class='icon mail_btn'></div></a>
+    <a><div class='icon mail_btn needs_login'></div></a>
     {<if user.logged_in}
       <form class='follow' {form_attrs "star_unstar"} method='post'>
         <input type="hidden" name="entity" value="{id}">
