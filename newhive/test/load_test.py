@@ -160,11 +160,9 @@ class LoadTest(unittest.TestCase):
         return (self.error_count < count * .02)
 
     def test_load_user(self):
-        if not self.loadtest(max_count=100, qps=20., generate_url=generate_url_profile):
-            1/0
+        self.assertTrue(self.loadtest(max_count=100, qps=20., generate_url=generate_url_profile))
     def test_load_expr(self):
-        if not self.loadtest(max_count=100, qps=20., generate_url=generate_url_expr):
-            1/0
+        self.assertTrue(self.loadtest(max_count=100, qps=20., generate_url=generate_url_expr))
 
 if __name__ == '__main__':
     unittest.main()
