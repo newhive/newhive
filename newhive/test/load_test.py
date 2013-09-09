@@ -37,7 +37,6 @@ class LoadTest(unittest.TestCase):
         error_count = 0
         success_count = 0
 
-    # returns -1 or time
     def threaded_wget(self, url, time_out=0, pipe=None):
         if time_out:
             # If given a maximum execution time, call back into self,
@@ -47,12 +46,11 @@ class LoadTest(unittest.TestCase):
             t = threading.Thread(target=self.threaded_wget, args = (url,0,pipe))
             t.daemon = True
             t.start()
-            # TODO: this needs to occur on another thread so loadtest can continue
             t.join(time_out)
             if t.isAlive():
-                # TODO-perf: could be wise to also kill the thread
                 append_log(url, "timeout")
                 self.error_count += 1
+                self.running_queries -= 1
                 pipe['kill'] = True
             return
 
@@ -60,19 +58,18 @@ class LoadTest(unittest.TestCase):
         # debug("fetching: " + url)
         # TODO: do real work
         # res = wget
-        res = time.sleep(.2)
+        res = time.sleep(.82)
         #
         if pipe and pipe.get('kill'):
             return
         self.success_count += 1
+        self.running_queries -= 1
         append_log(url, str(now() - time_start))
-
-    def test_load(self):
-        self.loadtest(max_count=10, qps=2.)
 
     def loadtest(self, max_count=9999, qps=5.):
         self.error_count = 0
         self.success_count = 0
+        self.running_queries = 0
         
         count = 0
         time_out = max_time
@@ -83,19 +80,30 @@ class LoadTest(unittest.TestCase):
             while calc_qps > qps or threading.active_count() > max_threads:
                 calc_qps = 0 if not count else count / (now() - time_start)
                 #
-                debug("waiting for %s threads:" % (threading.active_count() - max_threads))
-                debug("qps: %d" % calc_qps)
-                # log sleeps to see if server is being pounded.
-                # log_error(self.db, message = "Too many snapshot threads", critical=False)
-                time.sleep(1)
-            # TODO: get URLs from generator
+                # debug("waiting for %s threads:" % (threading.active_count() - max_threads))
+                # debug("qps: %f" % calc_qps)
+                time.sleep(.1)
             url = generate_url(count)
             t = threading.Thread(target=self.threaded_wget, args=(url,time_out))
             t.daemon = True
             t.start()
+            self.running_queries += 1
 
-        return True
+        while self.running_queries > 0:
+            time.sleep(.1)
 
+        count += 1
+        total_time = now() - time_start
+        final_qps = self.success_count / total_time
+        print
+        print "Loadtest complete (%f seconds)" % total_time
+        print "(%d/%d) errors/total: %f QPS" % (self.error_count, count, final_qps)
+        # Passing condition is that 98% of queries succeeded.
+        return (self.error_count < count * .02)
+
+    def test_load(self):
+        if not self.loadtest(max_count=10, qps=2.):
+            1/0
 
 if __name__ == '__main__':
     unittest.main()
