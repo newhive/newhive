@@ -1,18 +1,45 @@
 # Loadtester
 #
-#
+# from src base, run:
+# python -m unittest newhive.test.load_test
+
 from subprocess import call, Popen, PIPE
 from newhive.utils import now
 import threading
 import unittest
-import time
+import time, math
+from urllib2 import urlopen
+from newhive import state, config
+
+db=state.Database() 
 
 max_threads = 32
 max_time = 10.
 
 # TODO: make this a serializable class
 # with an option to write to a file
-log = []
+class Log(object):
+    """docstring for Log"""
+    # histogram = {} 
+    def __init__(self):
+        super(Log, self).__init__()
+        self.histogram = {}
+        self.queries = {}
+        self.log = []
+
+    def append(self, url, msg):
+        bucket = msg
+        if type(msg) == float:
+            bucket = "%d" % 2**math.floor(math.log(msg*1000)/math.log(2))
+        self.histogram[bucket] = 1 + self.histogram.get(bucket, 0)
+        if not self.queries.get(bucket):
+            self.queries[bucket] = []
+        self.queries[bucket].append((url, msg))
+        # print bucket
+        # print self.histogram[bucket]
+        self.log.append((url, msg))
+
+log = Log()
 
 
 # TODO: break into separate module
@@ -25,20 +52,37 @@ def debug(txt, severity=0):
 
 # TODO: flush log to disk
 def append_log(url, msg):
-    log.append((url, msg))
+    log.append(url, msg)
     debug("%s: %s" % (url,msg))
 
-# TODO: implement
-def generate_url(count):
+# TODO: figure out how to query random parts of an external server.
+# This code assumes that the local db is (mostly) in sync
+# with the external one.
+# Alternatively, require the loadtest to run *on* the external machine
+server = "http://site:3737"
+
+exprs = db.Expr.search({})
+def generate_url_expr(count):
+    new_count = (count + 2000) % exprs.count()
+    expr = exprs[new_count]
+    return "%s/%s/%s" % (server, expr['owner_name'], expr['name'])
+users = db.User.search({})
+def generate_url_profile(count):
+    new_count = (count + 2000) % users.count()
+    user = users[new_count]
+    return "%s/%s/profile" % (server, user['name'])
+def test_url(count):
     return "%d test" % count
+
+generate_urls = [generate_url_expr]
 
 class LoadTest(unittest.TestCase):
     def setUp(self):
-        error_count = 0
-        success_count = 0
+        self.error_count = 0
+        self.success_count = 0
 
     def threaded_wget(self, url, time_out=0, pipe=None):
-        if time_out:
+        if False and time_out:
             # If given a maximum execution time, call back into self,
             # and join with a timeout. If joined thread succeeds, it takes
             # care of itself, otherwise handle errors on this thread.
@@ -56,17 +100,30 @@ class LoadTest(unittest.TestCase):
 
         time_start = now()
         # debug("fetching: " + url)
-        # TODO: do real work
-        # res = wget
-        res = time.sleep(.82)
-        #
+        error = False
+        try:
+            res = urlopen(url, None, time_out)
+        except Exception, e:
+            error = True
+        
         if pipe and pipe.get('kill'):
             return
-        self.success_count += 1
-        self.running_queries -= 1
-        append_log(url, str(now() - time_start))
 
-    def loadtest(self, max_count=9999, qps=5.):
+        if error:
+            self.error_count += 1
+            append_log(url, "error")
+        elif res.getcode() >= 400:
+            self.error_count += 1
+            append_log(url, "timeout")
+        else:
+            self.success_count += 1
+            append_log(url, now() - time_start)
+
+        self.running_queries -= 1
+
+    def loadtest(self, max_count=9999, qps=5., generate_url=test_url):
+        global log
+        log = Log()
         self.error_count = 0
         self.success_count = 0
         self.running_queries = 0
@@ -89,7 +146,7 @@ class LoadTest(unittest.TestCase):
             t.start()
             self.running_queries += 1
 
-        while self.running_queries > 0:
+        while threading.active_count() > 1:
             time.sleep(.1)
 
         count += 1
@@ -98,11 +155,15 @@ class LoadTest(unittest.TestCase):
         print
         print "Loadtest complete (%f seconds)" % total_time
         print "(%d/%d) errors/total: %f QPS" % (self.error_count, count, final_qps)
+        print log.histogram
         # Passing condition is that 98% of queries succeeded.
         return (self.error_count < count * .02)
 
-    def test_load(self):
-        if not self.loadtest(max_count=10, qps=2.):
+    def test_load_user(self):
+        if not self.loadtest(max_count=100, qps=20., generate_url=generate_url_profile):
+            1/0
+    def test_load_expr(self):
+        if not self.loadtest(max_count=100, qps=20., generate_url=generate_url_expr):
             1/0
 
 if __name__ == '__main__':
