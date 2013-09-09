@@ -333,7 +333,7 @@ define([
     };
 
     var hide_other_exprs = function() {
-        var to_hide = $('#exprs .expr').not('.expr-visible').filter(":visible");
+        var to_hide = $('#exprs .expr').not('.expr-visible,.blank').filter(":visible");
         to_hide.each(function(i, el) {
             $(el).get(0).contentWindow.
                 postMessage({action: 'hide'}, '*');
