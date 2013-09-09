@@ -105,7 +105,6 @@ define([
         o.fake_open(card_query['route_name'], card_query);
     };
     o.open = function(route_name, route_args){
-        o.open_cache = page_data.route_name
         o.open_route(routing.page_state(route_name, route_args));
     };
     o.get = function(route_name, route_args, callback){
