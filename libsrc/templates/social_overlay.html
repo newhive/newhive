@@ -21,7 +21,8 @@
       {# Action icons #}
       <div class="stats_bar">
         {# views, metadata #}
-        {<with null "attr_id" "views_icon" "icon_class" "views" "count" counts.Views}
+        {<with null "attr_id" "views_icon" "icon_class" "views" 
+          "count" counts.Views "tooltip" "Views"}
           {|templates/icon_count.html}
         {>}
         {# Views menu drawer #}
@@ -36,7 +37,8 @@
           </div>
         </div>
         {# Love icon + drawer #}
-        {<with null "attr_id" "love_icon" "icon_class" "love" "count" counts.Star}
+        {<with null "attr_id" "love_icon" "icon_class" "love needs_login" 
+          "count" counts.Star "tooltip" "Love"}
           {|templates/icon_count.html}
         {>}
         {# Loves menu drawer #}
@@ -46,7 +48,8 @@
           {>}
         </div>
         {# Broadcast icon + drawer #}
-        {<with null "attr_id" "broadcast_icon" "icon_class" "republish" "count" counts.Broadcast}
+        {<with null "attr_id" "broadcast_icon" "icon_class" "republish needs_login" 
+          "count" counts.Broadcast "tooltip" "Republish"}
           {|templates/icon_count.html}
         {>}
         {# Broadcast menu drawer #}
@@ -62,7 +65,8 @@
               {|templates/icon_count.html}
         #}
         {# Comment #}
-        {<with null "attr_id" "comment_icon" "icon_class" "comment" "count" counts.Comment}
+        {<with null "attr_id" "comment_icon" "icon_class" "comment" 
+          "count" counts.Comment "tooltip" "Comment"}
           {|templates/icon_count.html}
         {>}
         {# Share #}
@@ -125,7 +129,7 @@
      <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
         <textarea name='text' placeholder=
           {<if user.logged_in}'Join the conversation.'
-          {>}{<else}'Log in to comment...' disabled
+          {>}{<else}'Log in to comment...' class="needs_login"
           {>} rows='4'></textarea>
         <div class="rightify">{<if user.logged_in}<input type='submit' value='Enter' class='submit teal_btn'>{>}</div>
         <input type='hidden' name='action' value='comment'>
