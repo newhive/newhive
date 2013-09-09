@@ -137,16 +137,16 @@
         "client_method": "grid"
     },
     "view_expr": {
-        "page_route": "/<owner_name>/<expr_name>",
-        "api_route": "/api/expr/view/<owner_name>/<expr_name>",
+        "page_route": "/<owner_name>/<path:expr_name>",
+        "api_route": "/api/expr/view/<owner_name>/<path:expr_name>",
         "controller": "community",
         "method": "expr",
         "client_method": "expr"
     },
 
     "edit_expr": {
-        "page_route": "/<owner_name>/<expr_name>/edit",
-        "api_route": "/api/expr/<owner_name>/<expr_name>",
+        "page_route": "/<owner_name>/<path:expr_name>/edit",
+        "api_route": "/api/expr/<owner_name>/<path:expr_name>",
         "controller": "community",
         "method": "edit_expr",
         "client_method": "edit_expr"
