@@ -1,17 +1,11 @@
 import unittest, random
+from newhive.server_session import db, server_env, jinja_env, hive_assets
 # import newhive.test
-# from newhive.wsgi import db, jinja_env
 # from newhive import app      
 # from newhive.utils import abs_url, now
 from newhive import mail, config, state, app
 
-import jinja2
 import os.path
-from newhive.assets import HiveAssets
-
-hive_assets = app.hive_assets
-jinja_env = app.jinja_env
-db = app.db
 
 mail.send_real_email = False
 mail.css_debug = True
