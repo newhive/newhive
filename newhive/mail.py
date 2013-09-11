@@ -138,6 +138,9 @@ def _send_mail(headers, body, db, category=None, filters=None, unique_args=None,
         return sent
     else:
         logger.warn("Not sending mail to '%s' in debug mode" % (msg['To']))
+        with open('/tmp/sent_mail', 'w') as f:
+            f.write(body['html'])
+            f.close()
 
 
 #registry = []
