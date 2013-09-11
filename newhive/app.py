@@ -9,6 +9,7 @@ from newhive.routes import Routes
 import json, urllib
 from newhive.utils import url_host, now
 from newhive.server_session import db, server_env, jinja_env
+from os.path import join
 
 # For stats
 import yappi
@@ -78,7 +79,7 @@ routes = Map(rules, strict_slashes=False, host_matching=True,
 def handle(request):
     time_start = now()
     stats = False
-    # stats = True
+    #stats = True
     if stats:
         pass
         # statprof.start()
@@ -93,7 +94,6 @@ def handle(request):
     except RequestRedirect as e:
         # bugbug: what's going on here anyway?
         raise Exception('redirect not implemented: from: ' + request.url + ', to: ' + e.new_url)
-    print (controller, handler), args
     try:
         if stats:
             pr = cProfile.Profile()
@@ -111,7 +111,7 @@ def handle(request):
             ps.sort_stats('cumulative')
             ps.print_stats(25)
 
-            ps.dump_stats("/var/www/newhive/stats")
+            ps.dump_stats(join(config.src_home, 'stats'))
     except:
         import traceback
         (blah, exception, traceback) = sys.exc_info()

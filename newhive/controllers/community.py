@@ -256,7 +256,6 @@ class Community(Controller):
         }
 
     def expr(self, tdata, request, id=None, owner_name=None, expr_name=''):
-        print "EXPR", id, owner_name, expr_name
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
@@ -268,11 +267,8 @@ class Community(Controller):
             expr['views'] = 0
         expr['views'] += 1
         expr.save(updated = False)
-        profile = expr_owner.client_view(viewer=tdata.user)
-        print expr_owner['analytics']
-        # TODO(speed): expr client_view CONTAINS owner profile. Duplication of effort.
         return {
-            'owner': profile, 'expr': expr.client_view(viewer=tdata.user, activity=10),
+            'expr': expr.client_view(viewer=tdata.user, activity=10),
             'expr_id': expr.id, 'title': expr['title'],
         }
 
