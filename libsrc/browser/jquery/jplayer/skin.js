@@ -1,10 +1,11 @@
 define([
+    'browser/jquery',
     'server/context',
     'ui/util',
     //// TODO-cleanup: move this shit into templates
     // 'sj!./basic.html',
     // 'sj!./minimal.html',
-    'js!./jplayer.js'
+    './jplayer'
 ], function(context, util){
 
 var asset = util.asset;
