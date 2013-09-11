@@ -516,9 +516,10 @@ class User(HasSocial):
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
 
     def can_view(self, expr):
-        return expr and ((expr.get('auth', 'public') == 'public') or
-                         (self.id == expr['owner']) or
-                         (expr.id in self.starred_expr_ids))
+        return expr and (
+            (expr.get('auth', 'public') == 'public') or
+            (self.id == expr['owner'])
+        )
 
     def can_view_filter(self):
         """Creates an elasticsearch filter corresponding to can_view"""
