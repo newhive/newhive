@@ -8,5 +8,5 @@ define(['curl'], function(curl){
         },
         excludes: ['browser/jquery']
     });
-    curl(['ui/controller', 'ui/expression']);
+    curl(['ui/controller']);
 });
