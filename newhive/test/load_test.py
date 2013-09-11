@@ -10,6 +10,7 @@ import unittest
 import time, math
 from urllib2 import urlopen
 from newhive import state, config
+from newhive.config import abs_url
 
 db=state.Database() 
 
@@ -59,7 +60,7 @@ def append_log(url, msg):
 # This code assumes that the local db is (mostly) in sync
 # with the external one.
 # Alternatively, require the loadtest to run *on* the external machine
-server = "http://site:3737"
+server = abs_url()[:-1]
 
 exprs = db.Expr.search({})
 def generate_url_expr(count):
