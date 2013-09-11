@@ -39,7 +39,7 @@
 
     .edit_icon {
         background-image: asset_url('skin/nav/edit.png');
-        &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
+        &.active { background-image: asset_url('skin/nav/edit-hover.png'); }
     }
 
     .create {
