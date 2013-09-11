@@ -41,7 +41,7 @@ define([
     };
     o.substitute_variables = function(inStr, routeVars) {
         for (var routeVar in routeVars) {
-            var needle = '<'+routeVar+'>';
+            var needle = RegExp('<(\\w+:)?' + routeVar +'>');
             inStr = inStr.replace(needle, routeVars[routeVar]);
         }
         return inStr;

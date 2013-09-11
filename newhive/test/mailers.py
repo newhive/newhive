@@ -1,17 +1,8 @@
 import unittest, random
-# import newhive.test
-# from newhive.wsgi import db, jinja_env
-# from newhive import app      
-# from newhive.utils import abs_url, now
+from newhive.server_session import db, server_env, jinja_env, hive_assets
 from newhive import mail, config, state, app
 
-import jinja2
 import os.path
-from newhive.assets import HiveAssets
-
-hive_assets = app.hive_assets
-jinja_env = app.jinja_env
-db = app.db
 
 mail.send_real_email = False
 mail.css_debug = True
@@ -20,7 +11,7 @@ mail.css_debug = True
 class MailerTest(unittest.TestCase):
     def setUp(self):
         self.test_user = db.User.named('test')
-        self.test_nonuser = {'email': 'test+nonuser@thenewhive.com', 'name': 'Nonuser'}
+        self.test_nonuser = {'email': 'test+nonuser@newhive.com', 'name': 'Nonuser'}
 
     def get_expr(self):
         #return db.Expr.fetch("504fb8e063dade0b7401d422") # contains unicode title
@@ -39,13 +30,13 @@ class ShareExpr(MailerTest):
     def test_to_nonuser(self):
         expr = self.get_expr()
         initiator = self.test_user
-        recipient = {'email': 'duffytilleman@gmail.com'}
+        recipient = {'email': 'a@newhive.com'}
         self.mailer.send(expr, initiator, recipient, self.message)
 
     def test_to_user(self):
         expr = self.get_expr()
         initiator = self.test_user
-        recipient = db.User.named('duffy')
+        recipient = db.User.named('abram')
         self.mailer.send(expr, initiator, recipient, self.message)
 
 class SiteReferral(MailerTest):

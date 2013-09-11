@@ -69,7 +69,7 @@ rules = get_api_endpoints(api)
 # Add catch-all routes last
 rules.extend(make_routing_rules('/<expr_id>',
     endpoint=(api.expr, 'fetch_naked'), on_main_domain=False))
-rules.extend(make_routing_rules('/<owner_name>/<expr_name>',
+rules.extend(make_routing_rules('/<owner_name>/<path:expr_name>',
     endpoint=(api.expr, 'fetch_naked'), on_main_domain=False))
 routes = Map(rules, strict_slashes=False, host_matching=True,
     redirect_defaults=False)
