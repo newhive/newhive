@@ -1,23 +1,22 @@
 {# this template exists because the route of the edit button
   can change but the overlay isn't rerendered. #}
-<div class='inline edit_btn' id="edit_btn" {anchor_attrs "edit_expr" "owner_name" user.name
-  "expr_name" expr.name "id" expr.id}>
-  <div class='edit_icon icon btn hide'></div>
+<span class='edit_ui'>
+  <div id="edit_handle" class='edit_icon icon btn hide'></div>
 
-{# menu: wrench (edit) #}
-<div id='edit_menu' class='menu drawer' data-handle='#edit_btn' data-menu-opts='"layout_x":"right"'>
-  <div class='pointer menu_item hoverable'>Delete</div>
-  <a {anchor_attrs "edit_expr" "owner_name" user.name
-  "expr_name" expr.name "id" expr.id}><div class='default menu_item hoverable'>Edit</div></a>
-</div>
+  {# menu: wrench (edit) #}
+  <div id='edit_menu' class='menu drawer' data-handle='#edit_handle' data-menu-opts='  "layout_x":"right"'>
+    <div class='pointer menu_item hoverable' id='delete_btn'>Delete</div>
+    <a {anchor_attrs "edit_expr" "owner_name" user.name "expr_name" expr.name
+      "id" expr.id} class='default menu_item hoverable'>Edit</a>
+  </div>
 
-{# dialog: delete confirmation #}
-<div class="dialog" id="dia_delete_ok" data-handle="#edit_menu">
-  <form {form_attrs "expr_delete"}>
+  {# dialog: delete confirmation #}
+  <div class="dialog" id="dia_delete_ok" data-handle="#delete_btn">
+    <form {form_attrs "expr_delete"}>
 	  <div class="small heading">Are you sure you want to delete this Expression?</div>
 	  <input type="hidden" value="{expr.id}" name="expr_id">
 	  <button type="cancel" class="teal_btn upper">Cancel</button>
 	  <button type="submit" class="grey_btn upper">Delete</button>
-  </form>
-</div>
-</div>
+    </form>
+  </div>
+</span>

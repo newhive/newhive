@@ -47,7 +47,7 @@ define([
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
         $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_btn .icon").hide();
+        $(".panel .edit_ui .icon").hide();
     }
 
     o.resize = function(){
@@ -131,8 +131,8 @@ define([
             $("#signup_create").show();
             $("#signup_create .create").removeClass("hide");
             if (context.user.id == o.expr.owner.id) {
-                $('#content_btns .edit_btn').replaceWith(edit_btn_template(page_data));
-                $('#content_btns .edit_btn .icon').show();
+                $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
+                $('#content_btns .edit_ui .icon').show();
             }
         }
     };
