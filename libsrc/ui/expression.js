@@ -9,7 +9,7 @@ define([
     'browser/layout',
     'ui/jplayer',
     'browser/jquery/jplayer/skin',
-    'js!browser/jquery/rotate.js'
+    'browser/jquery/rotate.js'
 ], function($, util, layout, jplayer){
     if (typeof Hive == "undefined") Hive = {};
 

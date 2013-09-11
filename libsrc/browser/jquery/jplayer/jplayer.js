@@ -15,6 +15,7 @@
 /* Code verified using http://www.jshint.com/ */
 /*jshint asi:false, bitwise:false, boss:false, browser:true, curly:true, debug:false, eqeqeq:true, eqnull:false, evil:false, forin:false, immed:false, jquery:true, laxbreak:false, newcap:true, noarg:true, noempty:true, nonew:true, nomem:false, onevar:false, passfail:false, plusplus:false, regexp:false, undef:true, sub:false, strict:false, white:false */
 /*global jQuery:false, ActiveXObject:false, alert:false */
+define(['browser/jquery'], function($){
 
 (function($, undefined) {
 
@@ -2347,3 +2348,5 @@
 		OPTION_KEY: "Check your option name."
 	};
 })(jQuery);
+
+});
