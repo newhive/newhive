@@ -256,30 +256,33 @@ class Community(Controller):
         }
 
     def expr(self, tdata, request, id=None, owner_name=None, expr_name=''):
-        print "EXPR", id, owner_name, expr_name
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
-        # owner = self.db.User.named(owner_name)
-        expr_owner = expr.get_owner()
-        if expr_owner and expr_owner['analytics'].get('views_by'):
-            expr_owner.increment({'analytics.views_by': 1})
-        if not expr.get('views'):
-            expr['views'] = 0
-        expr['views'] += 1
-        expr.save(updated = False)
-        profile = expr_owner.client_view(viewer=tdata.user)
-        print expr_owner['analytics']
-        # TODO(speed): expr client_view CONTAINS owner profile. Duplication of effort.
-        return {
-            'owner': profile, 'expr': expr.client_view(viewer=tdata.user, activity=10),
-            'expr_id': expr.id, 'title': expr['title'],
+
+        resp = {
+            'expr_id': expr.id,
+            'expr': expr.client_view(viewer=tdata.user, activity=10)
         }
+
+        if (not tdata.user.can_view(expr)
+            and not expr.cmp_password(request.form.get('password'))
+        ):
+            resp['expr'] = dfilter(resp['expr'], ['owner', 'auth', 'id', 'name'])
+            resp['expr']['title'] = '[password required]'
+            resp['error'] = 'password'
+        else: 
+            expr_owner = expr.get_owner()
+            if expr_owner and expr_owner['analytics'].get('views_by'):
+                expr_owner.increment({'analytics.views_by': 1})
+            if not expr.get('views'): expr['views'] = 0
+            if expr_owner.id != tdata.user.id: expr.increment({'views': 1})
+        return resp
 
     def edit_expr(self, tdata, request, id=None, owner_name=None, expr_name=None):
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
-        if not expr: return None
+        if not expr or not tdata.user.can_view(expr): return None
         expr['id'] = expr.id
         return { 'expr': expr }
 

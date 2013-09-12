@@ -174,7 +174,7 @@ $icon_name_on: logo close love-lg-on comment-lg-on republish-lg-on share-lg view
             &.icon { background-image: asset_url('skin/nav/'#{nth($icon_name, $nth)}'.png'); }
             &.on.icon { background-image: asset_url('skin/nav/#{nth($icon_name_on, $nth)}.png'); }
         }
-        &.#{$class_name}:hover, &.#{$class_name}:hover.on {
+        &.#{$class_name}.active {
             .icon {
                 background-image: asset_url('skin/nav/'#{nth($icon_name, $nth)}'-hover.png');
             }

@@ -516,9 +516,10 @@ class User(HasSocial):
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
 
     def can_view(self, expr):
-        return expr and ((expr.get('auth', 'public') == 'public') or
-                         (self.id == expr['owner']) or
-                         (expr.id in self.starred_expr_ids))
+        return expr and (
+            (expr.get('auth', 'public') == 'public') or
+            (self.id == expr['owner'])
+        )
 
     def can_view_filter(self):
         """Creates an elasticsearch filter corresponding to can_view"""
@@ -1415,8 +1416,8 @@ class Expr(HasSocial):
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
-        # if expr.auth_required(viewer, password):
-        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed', 'created', 'updated'])
+        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed', 'created',
+            'updated', 'password'])
         dict.update(expr, {
             'tags': self.get('tags_index'),
             'id': self.id,

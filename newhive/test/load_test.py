@@ -15,7 +15,7 @@ from newhive.config import abs_url
 db=state.Database() 
 
 max_threads = 32
-max_time = 10.
+max_time = 120.
 
 # TODO: make this a serializable class
 # with an option to write to a file

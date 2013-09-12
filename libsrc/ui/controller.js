@@ -20,25 +20,20 @@ define([
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
     };
-    o.dispatch = function(route_name, data){
+    o.dispatch = function(route_name, page_data){
         context.route_name = route_name;
-        if(data.owner && (data.owner.id == context.user.id))
-            data.user_is_owner = true;
-        // BUGBUG. Server error on login?
         if (route_name == "expr")
             route_name = "view_expr";
-        if (data.page_data)
-            data = data.page_data;
         route = routes[route_name];
         var cards = context.page_data.cards;
         var cards_query = context.page_data.cards_query;
-        context.page_data = data;
-        if(!data.cards) context.page_data.cards = cards;
-        if(!data.cards_query) context.page_data.cards_query = cards_query;
+        context.page_data = page_data;
+        if(!page_data.cards) context.page_data.cards = cards;
+        if(!page_data.cards_query) context.page_data.cards_query = cards_query;
         page.render(route.client_method, context);
     };
     o.refresh = function(){
-        o.dispatch(route.method, context);
+        o.dispatch(route.method, context.page_data);
     };
 
     function pop_route_success() {
