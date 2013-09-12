@@ -1,10 +1,5 @@
 @import "common";
 
-/* ==========================================
-   popup dialogs 
-   ========================================== */
-
-
 /* === click shield element === */
 #dialog_shield{
   position:fixed;
@@ -15,7 +10,7 @@
 }
 #dialog_shield.fade { background-color:black; opacity:0.33; }
 
-$header_font: Museo, Helvetica, Arial, sans-serif;
+$header_font: Gibson, Helvetica, Arial, sans-serif;
 
 /* === General === */
 .dialog {
@@ -32,7 +27,9 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     .line .label {float:left; margin-top: 6px; margin-right:4px;}
     h1 { 
           font-family: $header_font;
-          text-align: center;
+          font-size: 33px;
+          font-weight: normal;
+          margin-top: 0;
     }
     h3 {
         font-family: $header_font;
@@ -54,6 +51,10 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     .subheading {
         margin-bottom: -5px;
         margin-top: 10px;
+    }
+    .btns {
+        text-align: right;
+        margin-top: 20px;
     }
 
     // Send me a copy.
@@ -143,10 +144,6 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 }
 #dia_delete {
     width: 240px;
-    .btns {
-        text-align: right;
-        margin-top: 20px;
-    }
     input { background-color: $color_highlight; }
 }
 
@@ -313,6 +310,35 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
     img:hover { @include opacity(0.75); }
 }
 
+.dialog.login {
+    width: 220px;
+    padding: 20px;
+    .title { margin-bottom: 10px; }
+}
+
+form.login {
+    input[type=text], input[type=password] {
+        width: 100%;
+        margin: 4px 0px;
+        &[name=secret] { margin-bottom: 10px; }
+    }
+    .password_recovery {
+        font-size: 12px;
+        color: black;
+        margin-right: 15px;
+        float: left;
+        line-height: 40px;
+        height: 40px;
+    }
+    input[type=submit] { float: right; }
+}
+
+#dia_expr_password {
+    width: 290px;
+    padding: 30px;
+    input[type=password] { width: 100%; }
+}
+
 // #dia_facebook_connect {
 //     width: 860px;
 //     .list { font-weight: bold; }
@@ -418,39 +444,6 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 //     }
 // }
 
-
-// .newdialog {
-//     display: none; 
-//     position: absolute;
-//     z-index: 8;
-//     max-width: 700px;
-//     padding: 20px;
-//     background-color : white;
-//     border: 5px solid $color_selected;
-//     @include box-shadow(05px 05px 05px #666);
-//     @include border-radius(8px);
-
-//     h1, h2, h3 {
-//         font-family: $header_font;
-//         letter-spacing: -1px;
-//         margin: 0;
-//     }
-//     h1 { font-size: 42px; }
-//     h2 { font-size: 34px; }
-//     h3 { letter-spacing: -1px; }
-//     .btn_dialog_close + h3 {
-//         margin-top: 0;
-//     }
-//     h3 + form {
-//         display: block;
-//         margin-top: 20px;
-//     }
-//     p { margin: 10px 0 20px 0; }
-//     &.centered {
-//         text-align: center;
-//     }
-// }
-
 // #dia_fb_connect_landing {
 //   .line { 
 //       clear: both;
@@ -484,42 +477,3 @@ $header_font: Museo, Helvetica, Arial, sans-serif;
 // #dia_fb_account_duplicate {
 //     width: 640px;
 // }
-
-.dialog.login {
-    width: 220px;
-    padding: 20px;
-    .title { margin-bottom: 10px; }
-
-}
-
-form.login {
-    input[type=text], input[type=password] {
-        width: 100%;
-        margin: 4px 0px;
-        &[name=secret] { margin-bottom: 10px; }
-    }
-    .password_recovery {
-        font-size: 12px;
-        color: black;
-        margin-right: 15px;
-        float: left;
-        line-height: 40px;
-        height: 40px;
-    }
-    input[type=submit] { float: right; }
-
-}
-
-
-#login_error {
-    font-size: 12px;
-}
-
-#dia_video {
-    width: auto;
-    padding: 10px;
-    img { width: 200px; }
-    iframe {
-        display: block;
-    }
-}

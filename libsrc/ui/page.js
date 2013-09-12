@@ -243,7 +243,7 @@ define([
     var local_attach_handlers = function(){
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function() {
-                $("#login_menu").data("dialog").open();
+                $("#dia_login_or_join").data("dialog").open();
             });
         }
         $(".user_action_bar form.follow").unbind('response').on('response', 
