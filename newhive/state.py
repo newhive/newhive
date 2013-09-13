@@ -1901,6 +1901,19 @@ class Temp(Entity):
     cname = 'temp'
 
 
+class Broken(Entity):
+    """ This collection is for records that would cause problems if they were
+        in their original table """
+
+    cname = 'broken'
+    indexes = ['created','updated']
+
+    def create(self, collection_name, record):
+        self['collection'] = collection_name
+        self['record'] = record
+        return super(Broken, self).create()
+
+
 ## utils
 
 def mk_password(v):
