@@ -1909,10 +1909,12 @@ class Broken(Entity):
     cname = 'broken'
     indexes = ['record.id','record.created','record.updated']
 
-    def create(self, collection_name, record):
-        self['collection'] = collection_name
-        self['record'] = record
-        return super(Broken, self).create()
+    class Collection(Collection):
+        def create(self, collection_name, record):
+            entity = {}
+            entity['collection'] = collection_name
+            entity['record'] = record
+            return super(Broken.Collection, self).create(entity)
 
 
 ## utils
