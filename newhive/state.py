@@ -1901,12 +1901,13 @@ class Temp(Entity):
     cname = 'temp'
 
 
+@register
 class Broken(Entity):
     """ This collection is for records that would cause problems if they were
         in their original table """
 
     cname = 'broken'
-    indexes = ['created','updated']
+    indexes = ['record.id','record.created','record.updated']
 
     def create(self, collection_name, record):
         self['collection'] = collection_name
