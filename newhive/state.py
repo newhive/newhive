@@ -35,17 +35,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+entity_types = []
+def register(entity_cls):
+    entity_types.append(entity_cls)
+    return entity_cls
+
+
 class Database:
-    entity_types = []  # list of entity classes
-
-    @classmethod
-    def register(cls, entity_cls):
-        cls.entity_types.append(entity_cls)
-        return entity_cls
-
-    def add_collection(self, col):
-        pass
-
     def __init__(self, config=None, assets=None):
         config = self.config = (config if config else newhive.config)
 
@@ -54,7 +50,7 @@ class Database:
         self.s3 = S3Interface()
         self.assets = assets
 
-        self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
+        self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), entity_types)
         for col in self.collections:
             setattr(self, col.entity.__name__, col)
             for index in col.entity.indexes:
@@ -408,7 +404,7 @@ class HasSocial(Entity):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
 
 
-@Database.register
+@register
 class User(HasSocial):
     cname = 'user'
     indexes = [
@@ -990,7 +986,7 @@ class User(HasSocial):
         return self.get('name') in self.db.config.admins
 
 
-@Database.register
+@register
 class Session(Entity):
     cname = 'session'
 
@@ -999,7 +995,7 @@ def media_path(user, name=None):
     p = joinpath(config.media_path, user['name'])
     return joinpath(p, name) if name else p
 
-@Database.register
+@register
 class Expr(HasSocial):
     cname = 'expr'
     indexes = [
@@ -1488,7 +1484,7 @@ def generate_thumb(file, size, format='jpeg'):
     return output
 
 
-@Database.register
+@register
 class File(Entity):
     cname = 'file'
     _file = None #temporary fd
@@ -1638,7 +1634,7 @@ class File(Entity):
             thumb_small=self.get_thumb(70,70))
         return r
 
-@Database.register
+@register
 class ActionLog(Entity):
     indexes = ['created', 'user']
     cname = 'action_log'
@@ -1653,19 +1649,19 @@ class ActionLog(Entity):
             return super(ActionLog.Collection, self).create(data)
 
 
-@Database.register
+@register
 class MailLog(Entity):
     indexes = ['initiator', 'recipient', 'category', 'created']
     cname = 'mail_log'
 
 
-@Database.register
+@register
 class Unsubscribes(Entity):
     indexes = ['email']
     cname = 'unsubscribes'
 
 
-@Database.register
+@register
 class Feed(Entity):
     cname = 'feed'
     indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
@@ -1782,7 +1778,7 @@ class Feed(Entity):
         return r
 
 
-@Database.register
+@register
 class Comment(Feed):
     action_name = 'commented'
 
@@ -1806,7 +1802,7 @@ class Comment(Feed):
     thumb = property(get_thumb)
 
 
-@Database.register
+@register
 class Star(Feed):
     @property
     def action_name(self):
@@ -1824,7 +1820,7 @@ class Star(Feed):
         return super(Star, self).delete()
 
 
-@Database.register
+@register
 class Broadcast(Feed):
     action_name = 'broadcast'
 
@@ -1836,17 +1832,17 @@ class Broadcast(Feed):
         return super(Broadcast, self).create()
 
 
-@Database.register
+@register
 class InviteNote(Feed):
     action_name = 'gave invites'
 
 
-@Database.register
+@register
 class NewExpr(Feed):
     action_name = 'created'
 
 
-@Database.register
+@register
 class UpdatedExpr(Feed):
     action_name = 'updated'
 
@@ -1858,7 +1854,7 @@ class UpdatedExpr(Feed):
         return self
 
 
-@Database.register
+@register
 class FriendJoined(Feed):
     def viewable(self, viewer):
         return self['entity'] == viewer.id
@@ -1868,7 +1864,7 @@ class FriendJoined(Feed):
         return super(FriendJoined, self).create()
 
 
-@Database.register
+@register
 class Referral(Entity):
     cname = 'referral'
     indexes = [ 'key', 'request_id', 'created' ]
@@ -1888,19 +1884,19 @@ class Referral(Entity):
         return url
 
 
-@Database.register
+@register
 class Contact(Entity):
     cname = 'contact_log'
     indexes = ['created']
 
 
-@Database.register
+@register
 class ErrorLog(Entity):
     cname = 'error_log'
     indexes = ['created', 'type']
 
 
-@Database.register
+@register
 class Temp(Entity):
     cname = 'temp'
 

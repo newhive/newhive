@@ -340,9 +340,10 @@ define([
                     $('#dia_expr_password .error').show();
                     return;
                 }
-
                 context.page_data = data;
                 o.controller.refresh(data);
+                open_passworded_expr(data.expr.password);
+                
                 var frame_name = contentFrame.prop('id'),
                     content_form = box.find('form.content');
                 contentFrame[0].name = frame_name;
@@ -350,6 +351,9 @@ define([
                 content_form.attr('target', frame_name).submit();
             });
         }
+    };
+
+    var open_passworded_expr = function(password){
     };
 
     var hide_other_exprs = function() {
