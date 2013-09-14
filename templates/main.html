@@ -59,9 +59,9 @@
           ></a></div
       {% endif %}
     ></div>
-    {#{% if not user.logged_in and owner.name != 'upload' %}#}
+    {% if not user.logged_in and owner and owner.name != 'upload' %}
       <div id='call_to_action' onclick="require_login('call_to_action');">&nbsp;</div>
-    {#{% endif %}#}
+    {% endif %}
 </div>
 
   <div id='hive_menu'>
