@@ -259,12 +259,11 @@ define([
                 event.preventDefault();
             }
         });
-        // Belongs in "community"
-        $("#search_box").focus();
         // Special case for logged-out home screen, focus search and 
         // scroll back to top.
-        if (!context.user.logged_in && context.route_name == "home")
-            $("body").scrollTop(0);
+        // hack not necessary anymore with conditional autofocus in template
+        // if (!context.user.logged_in && context.route_name == "home")
+        //     $("body").scrollTop(0);
         
         // global keypress handler
         $("body").unbind('keydown').keydown(function(e) {
