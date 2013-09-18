@@ -43,7 +43,7 @@ JavaScript dependencies
         sudo npm install -g cram
 
 Application dependencies (Ubuntu packages)
-    sudo apt-get install mongodb ruby-sass ruby-compass cutycapt libicu48
+    sudo apt-get install mongodb ruby-sass ruby-compass cutycapt libicu48 imagemagick
     # these are on abram's machine.  scp
     #elastic search -- http://www.elasticsearch.org/download/
     #    sudo dpkg -i elasticsearch-0.20.5.deb
