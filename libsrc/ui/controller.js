@@ -74,16 +74,18 @@ define([
         }
         o.back = false;
         $('#dialog_shield').click();
+
+        callback = callback ? callback : success;
         if(page_state.api){
             var api_call = {
                 method: 'get',
                 url: page_state.api.toString(),
                 dataType: 'json',
-                success: callback ? callback : success
+                success: callback
             };
             $.ajax(api_call);
         } else 
-            success({});
+            callback({});
 
         function success(data){
             o.dispatch(page_state.route_name, data);

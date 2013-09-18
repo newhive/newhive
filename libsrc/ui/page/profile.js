@@ -7,7 +7,7 @@ define([
     dialog,
     context
 ) {
-    var o = {},
+    var o = { name: 'profile' },
             show_tags = true,
             controller;
 
@@ -28,6 +28,16 @@ define([
             $(".overlay .login_btn").unbind('click').click(d.open);
         }
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
+
+        // pagination here
+        var win = $(window), feed = $('#feed'), loading,
+            cards_more = true, page = 0;
+        win.scroll(function(e){
+            if((win.scrollTop() > (feed.height() - win.height() * 2))
+                && !loading && next_page
+            ){
+            }
+        });
     };
 
     // show_hide_tags = function (){

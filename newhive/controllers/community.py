@@ -13,14 +13,14 @@ def deduped(item, dict):
 class Community(Controller):
     def featured(self, tdata, request, **paging_args):
         return {
-            "cards": self.db.query('#Featured', viewer=tdata.user),
+            "cards": self.db.query('#Featured', viewer=tdata.user, **paging_args),
             'header': ("The Hive",), 'card_type': 'expr',
             'title': "The Hive",
         }
 
     def recent(self, tdata, request, **paging_args):
         return {
-            "cards": self.db.query('#Recent', viewer=tdata.user),
+            "cards": self.db.query('#Recent', viewer=tdata.user, **paging_args),
             'header': ("ALL Expressions",), 'card_type': 'expr',
             'title': "NewHive - ALL",
         }
@@ -44,7 +44,7 @@ class Community(Controller):
         if not user:
             user = tdata.user
         return {
-            "cards": user.feed_recent(),
+            "cards": user.feed_recent(**paging_args),
             "header": ("Recent",), 'card_type': 'expr',
             "title": 'Recent',
         }
@@ -64,14 +64,14 @@ class Community(Controller):
         initial_limit = args.get('limit', 40)
         limit = initial_limit
         at = initial_at = args.get('at', 0)
-        card_ids = []
+        # card_ids = []
         cards = []
         d = {}
-        feeds = self.db.Feed.page(spec)
+        feeds = self.db.Feed.page(spec, **args)
         for f in feeds:
             id = deduped(f['entity'], d)
             if id:
-                card_ids.append(id)
+                # card_ids.append(id)
                 card = self.db.Expr.fetch(id)
                 if not card:
                     continue
@@ -286,7 +286,7 @@ class Community(Controller):
         expr['id'] = expr.id
         return { 'expr': expr }
 
-    def search(self, tdata, request, id=None, owner_name=None, expr_name=None):
+    def search(self, tdata, request, id=None, owner_name=None, expr_name=None, **args):
         if not request.args.has_key('q'): return None
         # terms = request.args['q'].split()
         # specs = []
@@ -311,7 +311,8 @@ class Community(Controller):
         # if owner_count == 1
         #     profile = expr_owner.client_view()
         #     page_data.update('profile': profile)
-        result, search = self.db.query_echo(request.args['q'], viewer=tdata.user)
+        result, search = self.db.query_echo(request.args['q'],
+            viewer=tdata.user, **args)
         tags = search.get('tags', [])
         print search
         data = {

@@ -516,10 +516,6 @@ define([
         });
     };
 
-    o.add_to_feed = function(page_data){
-        $('#feed').append(show_cards(page_data));
-    };
-
     // function replace_or_append(e, replace, append){
     //     var replace = $(replace);
     //     if(replace.length) replace.replaceWith(e);
