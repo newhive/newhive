@@ -14,7 +14,7 @@ from bson.code import Code
 from crypt import crypt
 from oauth2client.client import OAuth2Credentials
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
-import pyes
+#import pyes
 from collections import defaultdict
 from snapshots import Snapshots
 
