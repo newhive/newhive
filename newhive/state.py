@@ -190,18 +190,20 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def paginate(self, spec, limit=40, at=None, sort='updated', order=-1, filter=None):
-        page_is_id = is_mongo_key(at)
-        if at and not page_is_id:
-            at = float(at)
+    def paginate(self, spec, limit=40, at=0, sort='updated', order=-1, filter=None):
+        # page_is_id = is_mongo_key(at)
+        # if at and not page_is_id:
+        at = int(at)
 
         if type(spec) == dict:
-            if page_is_id:
-                page_start = self.fetch(at)
-                at = page_start[sort] if page_start else None
+            # if page_is_id:
+            #     page_start = self.fetch(at)
+            #     at = page_start[sort] if page_start else None
 
-            if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
-            res = self.cards(spec, sort=[(sort, order)])
+            # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
+
+            res = self.cards(spec, sort=[(sort, order)], skip=at)
+
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
                 if filter:
@@ -211,11 +213,12 @@ class Collection(object):
             return res
 
         elif type(spec) == list:
-            spec = uniq(spec)
-            assert( not at or page_is_id )
+            # spec = uniq(spec)
+            # assert( not at or page_is_id )
 
             try:
-                start = spec.index(at) if at else -1
+                # start = spec.index(at) if at else -1
+                start = at
                 end = start + limit * -order
                 if end > start:
                     if start >= len(spec): return []

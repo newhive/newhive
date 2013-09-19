@@ -35,7 +35,8 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
-    'sj!templates/request_invite_form.html'
+    'sj!templates/request_invite_form.html',
+    'sj!templates/cards.html'
 ], function(
     $,
     routes,

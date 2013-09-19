@@ -1,0 +1,17 @@
+{<for cards}
+  {<if card_type "user"}
+    <div class='user card' id='card_{id}' draggable='false'>
+      {|templates/user_card.html}
+    </div>
+  {>}
+  {<if card_type "expr"}
+    <div class='expr activity card hoverable' id='card_{id}' draggable='false'>
+      {<if layout "grid"}
+        {|templates/expr_card_feed.html}
+      {>}
+      {<if layout "profile"}
+        {|templates/expr_card_large.html}
+      {>}
+    </div>
+  {>}
+{>}
