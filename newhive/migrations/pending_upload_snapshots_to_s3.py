@@ -97,13 +97,8 @@ def start_snapshots(proc_tmp_snapshots=False):
     # existing_snapshots = proccess_snapshots_file() if proc_tmp_snapshots else []
     
     def get_exprs(limit):
-        expressions_to_snapshot = db.Expr.search({
-            "$and": [
-                {"snapshot_time": {
-                    "$exists": False
-                }}
-            ]
-        }, limit=limit, sort=[('updated', -1)])
+        expressions_to_snapshot = db.Expr.search({"snapshot_time": { "$exists": False }},
+	    limit=limit, sort=[('updated', -1)])
         if test:
             expressions_to_snapshot = db.Expr.search({
                 "$and": [

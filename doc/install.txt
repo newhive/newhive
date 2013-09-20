@@ -43,19 +43,19 @@ JavaScript dependencies
         sudo npm install -g cram
 
 Application dependencies (Ubuntu packages)
-	sudo apt-get install mongodb ruby-sass ruby-compass cutycapt
+    sudo apt-get install mongodb ruby-sass ruby-compass cutycapt libicu48 imagemagick
     # these are on abram's machine.  scp
-    elastic search -- http://www.elasticsearch.org/download/
-        sudo dpkg -i elasticsearch-0.20.5.deb
-        # might need fix dependencies: 
-        sudo apt-get -f install 
+    #elastic search -- http://www.elasticsearch.org/download/
+    #    sudo dpkg -i elasticsearch-0.20.5.deb
+    #    # might need fix dependencies: 
+    #    sudo apt-get -f install 
 
 To make Cutycapt:
-  sudo apt-get install subversion libqt4-webkit libqt4-dev g++
-  # svn co svn://svn.code.sf.net/p/cutycapt/code/ cutycapt
-  cd bin/CutyCapt
-  make clean;qmake;make
-  # ./CutyCapt --url=http://www.example.org --out=example.png
+    sudo apt-get install subversion libqt4-webkit libqt4-dev g++ xvfb
+    svn co svn://svn.code.sf.net/p/cutycapt/code/ cutycapt
+    cd cutycapt/CutyCapt
+    make clean;qmake;make
+    xvfb-run ./CutyCapt --url=http://www.example.org --out=example.png
 
 Get the db
     scp dev-1.newhive.com:/tmp/2013* .

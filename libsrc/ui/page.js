@@ -35,7 +35,8 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
-    'sj!templates/request_invite_form.html'
+    'sj!templates/request_invite_form.html',
+    'sj!templates/cards.html'
 ], function(
     $,
     routes,
@@ -259,12 +260,11 @@ define([
                 event.preventDefault();
             }
         });
-        // Belongs in "community"
-        $("#search_box").focus();
         // Special case for logged-out home screen, focus search and 
         // scroll back to top.
-        if (!context.user.logged_in && context.route_name == "home")
-            $("body").scrollTop(0);
+        // hack not necessary anymore with conditional autofocus in template
+        // if (!context.user.logged_in && context.route_name == "home")
+        //     $("body").scrollTop(0);
         
         // global keypress handler
         $("body").unbind('keydown').keydown(function(e) {
@@ -515,10 +515,6 @@ define([
             e.html(e.html().replace(/ |$/g, '&nbsp; '));
             e.addClass('spaced');
         });
-    };
-
-    o.add_to_feed = function(page_data){
-        $('#feed').append(show_cards(page_data));
     };
 
     // function replace_or_append(e, replace, append){

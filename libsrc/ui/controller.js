@@ -65,6 +65,22 @@ define([
         };
     };
 
+    // TODO-cleanup: merge with open_route?
+    o.next_cards = function(with_cards){
+        var add_cards = function(data){
+            context.page_data.cards = context.page_data.cards.concat(data);
+            if(with_cards) with_cards(data);
+        };
+        var query = context.page_data.cards_query, api_call = {
+            method: 'get',
+            url: routing.page_state(query.route_name, query).api,
+            dataType: 'json',
+            success: add_cards,
+            data: { at: context.page_data.cards.length }
+        };
+        $.ajax(api_call);
+    };
+
     o.open_route = function(page_state, callback, push_state) {
         // remember scroll position.
         if (page_state.route_name != "view_expr") {
@@ -74,16 +90,18 @@ define([
         }
         o.back = false;
         $('#dialog_shield').click();
+
+        callback = callback ? callback : success;
         if(page_state.api){
             var api_call = {
                 method: 'get',
                 url: page_state.api.toString(),
                 dataType: 'json',
-                success: callback ? callback : success
+                success: callback
             };
             $.ajax(api_call);
         } else 
-            success({});
+            callback({});
 
         function success(data){
             o.dispatch(page_state.route_name, data);
@@ -93,6 +111,8 @@ define([
                 $("body").scrollTop(0);
         }
     };
+
+    // TODO-cleanup: distil these into one or two methods
     o.direct_open = function(card_query) {
         o.open(card_query['route_name'], card_query);
     };

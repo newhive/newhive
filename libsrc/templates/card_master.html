@@ -20,6 +20,7 @@
       ><a href='/random' title="View Random Expression" class='random_link'
         ><div class='hoverable icon random inline'></div></a
       ><input type="text" id="search_box" class="inline" placeholder="Search" name='q'
+        {<if user.logged_in }autofocus{>}
       ><input type="submit" value class='hoverable icon go_arrow inline'
     ></form
   >
@@ -35,23 +36,7 @@
     {>}</div>
 {>}
 <div id='feed' class='{layout}'>
-  {<for cards}
-    {<if card_type "user"}
-      <div class='user card' id='card_{id}' draggable='false'>
-        {|templates/user_card.html}
-      </div>
-    {>}
-    {<if card_type "expr"}
-      <div class='expr activity card hoverable' id='card_{id}' draggable='false'>
-        {<if layout "grid"}
-          {|templates/expr_card_feed.html}
-        {>}
-        {<if layout "profile"}
-          {|templates/expr_card_large.html}
-        {>}
-      </div>
-    {>}
-  {>}
+  {|templates/cards.html}
   {# Insert 3-column layout here.  
     When unused, it's 0 height.
     When unused, the columns have 0 width #}
