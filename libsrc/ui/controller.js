@@ -68,7 +68,7 @@ define([
     // TODO-cleanup: merge with open_route?
     o.next_cards = function(with_cards){
         var add_cards = function(data){
-            context.page_data.cards = context.page_data.cards.concat(data);
+            context.page_data.cards = context.page_data.cards.concat(data.cards);
             if(with_cards) with_cards(data);
         };
         var query = context.page_data.cards_query, api_call = {
