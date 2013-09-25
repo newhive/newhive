@@ -190,7 +190,7 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def paginate(self, spec, limit=40, at=0, sort='updated', order=-1, filter=None):
+    def paginate(self, spec, limit=20, at=0, sort='updated', order=-1, filter=None):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
         at = int(at)
@@ -676,7 +676,7 @@ class User(HasSocial):
     #         i['feed_users'] = user_with_expr[i['_id']]
     #     return items
 
-    def network_feed_items(self, limit=0):
+    def network_feed_items(self, limit=0, at=0):
         # get iterable for all feed items in your network
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
@@ -690,7 +690,7 @@ class User(HasSocial):
                 }
         or_clause = [user_action, own_broadcast, expression_action]
         return self.db.Feed.search({ '$or': or_clause }, limit=limit,
-            sort=[('updated', -1)])
+            sort=[('created', -1)])
 
     def exprs_tagged_following(self, limit=0):
         # return iterable of matching expressions for each tag you're following
@@ -701,6 +701,8 @@ class User(HasSocial):
 
     # TODO-polish merge with db.query to enable searching within feed
     def feed_trending(self, at=0, limit=20):
+        at = int(at)
+        limit = int(limit)
         items = self.network_feed_items(limit=500)
         exprs = self.db.Expr.fetch([r['entity'] for r in items])
         exprs.extend(self.exprs_tagged_following(500))
@@ -725,7 +727,9 @@ class User(HasSocial):
 
     # TODO-polish merge with db.query to enable searching within feed
     def feed_recent(self, spec={}, limit=20, at=0, **args):
-        feed_items = self.network_feed_items()
+        at=int(at)
+        limit=int(limit)
+        feed_items = self.network_feed_items()#limit=limit*4, at=at)
         tagged_exprs = self.exprs_tagged_following()
 
         # group feed items into expressions, alternate
