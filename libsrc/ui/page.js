@@ -440,8 +440,8 @@ define([
             if (o.columns != columns || !o.done_layout) {
                 o.columns = columns;
                 if (o.column_layout)
-                    layout_columns();
-                add_grid_borders(columns);
+                    o.layout_columns();
+                o.add_grid_borders(columns);
             }
         }
         if (context.page && context.page.resize)
@@ -452,7 +452,7 @@ define([
     // Move the expr.card's into the feed layout, shuffling them
     // into the shortest column.  The order is not preserved.
     // TODO: preserve order.
-    var layout_columns = function(){
+    o.layout_columns = function(){
         // Resize the columns
         for (var i = 0; i < 3; ++i){
             var col_width = 0;
@@ -478,7 +478,7 @@ define([
     };
 
     // Set up the grid borders
-    var add_grid_borders = function(columns){
+    o.add_grid_borders = function(columns){
         var expr_cards = $('#feed .card');
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - (expr_cards.length % columns);

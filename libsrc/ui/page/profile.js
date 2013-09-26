@@ -2,12 +2,14 @@ define([
     'browser/jquery',
     'ui/dialog',
     'server/context',
-    'sj!templates/cards.html'
+    'sj!templates/cards.html',
+    'require'
 ], function(
     $,
     dialog,
     context,
-    cards_template
+    cards_template,
+    require
 ) {
     var o = { name: 'profile' },
             show_tags = true,
@@ -33,7 +35,7 @@ define([
 
         // pagination here
         var win = $(window), feed = $('#feed'), loading = false,
-            more_cards = true, page = 0;
+            more_cards = true, page = 0, ui_page = require('ui/page');
         var render_new_cards = function(data){
             // ugly hack to deal with data path
             data.card_type = context.page_data.card_type;
@@ -41,6 +43,8 @@ define([
             if(data.cards.length < 20)
                 more_cards = false;
             cards_template(data).insertBefore('#feed .footer');
+            ui_page.layout_columns();
+            ui_page.add_grid_borders();
             loading = false;
         };
         win.scroll(function(e){
