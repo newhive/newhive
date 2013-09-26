@@ -4,12 +4,6 @@ from newhive.utils import dfilter, now, abs_url
 from newhive.controllers.controller import Controller
 from collections import Counter
 
-def deduped(item, dict):
-    if dict.get(item):
-        return False
-    dict[item] = True
-    return item
-
 class Community(Controller):
     def featured(self, tdata, request, **paging_args):
         return {
@@ -54,41 +48,10 @@ class Community(Controller):
             'form': 'create_account', 'title': "NewHive - Sign Up",
         }
 
-    def expressions_public(self, tdata, request, owner_name=None, **args):
+    def expressions_public(self, tdata, request, owner_name=None, at=0, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
-        spec = {'initiator': owner.id,
-            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr']}
-        }
-        # cards = self.db.Expr.page(spec, tdata.user, **args)
-        initial_limit = args.get('limit', 40)
-        limit = initial_limit
-        at = initial_at = args.get('at', 0)
-        # card_ids = []
-        cards = []
-        d = {}
-        feeds = self.db.Feed.page(spec, **args)
-        for f in feeds:
-            id = deduped(f['entity'], d)
-            if id:
-                # card_ids.append(id)
-                card = self.db.Expr.fetch(id)
-                if not card:
-                    continue
-                if card['auth'] == 'public':
-                    cards.append(card)
-                if len(cards) >= initial_limit:
-                    break
-            # Possible optimization
-            # if len(card_ids) >= limit:
-            #     cards = filter(lambda e: e['auth'] == 'public', 
-            #         cards.extend(self.db.Expr.fetch(card_ids)))
-            #     limit = initial_limit - len(cards)
-            #     if limit == 0:
-            #         break
-            #     limit = max(10, limit)
-            #     card_ids = []
-
+        cards = owner.profile(at=at)
         if 0 == len(cards) and tdata.user == owner:
             # New user has no cards; give him the "edit" card
             # TODO: replace thenewhive with a config string
@@ -101,6 +64,7 @@ class Community(Controller):
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Expressions by ' + owner['name'],
         }
+
     def expressions_private(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
@@ -110,6 +74,7 @@ class Community(Controller):
             'cards': cards, 'owner': owner.client_view(), 'card_type':'expr',
             'title': 'Your Private Expressions',
         }
+
     def settings_update(self, tdata, request, owner_name=None, **args):
         """ Doubles as post handler and settings page api route
             for settings """

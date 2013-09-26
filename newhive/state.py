@@ -752,15 +752,32 @@ class User(HasSocial):
                 if (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
                     item['feed'].append(r)
                 if (item['auth'] != 'public') or existing: continue
+                result.append(item)
                 break
-            if item: result.append(item)
             for r in tagged_exprs:
                 if exprs.get(r.id): continue
-                else: item = add_expr(r)
-                break
+                else:
+                    item = add_expr(r)
+                    result.append(item)
+                    break
             if not item: break
-            result.append(item)
 
+        return result[at:]
+
+    def profile(self, limit=20, at=0):
+        at=int(at)
+        limit=int(limit)
+        spec = {'initiator': self.id,
+            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr']}
+        }
+        result = []
+        exprs = {}
+        for r in self.db.Feed.search(spec, order='created'):
+            if len(result) >= (limit + at): break
+            if exprs.get(r['entity']): continue
+            exprs[r['entity']] = True
+            if r.entity and r.entity.get('auth') == 'public':
+                result.append(r.entity)
         return result[at:]
 
     # # wrapper around db.query('#Trending') to add recent feed items
