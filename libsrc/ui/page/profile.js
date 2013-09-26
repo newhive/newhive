@@ -46,9 +46,10 @@ define([
             ui_page.layout_columns();
             ui_page.add_grid_borders();
             loading = false;
+            feed = $('#feed'); // rerendering cards loses reference
         };
         win.scroll(function(e){
-            if((win.scrollTop() > (feed.height() - win.height() * 2))
+            if((win.scrollTop() > (feed.height() - win.height()))
                 && !loading && more_cards
             ){
                 loading = true;
