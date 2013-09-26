@@ -38,7 +38,8 @@ define([
             // ugly hack to deal with data path
             data.card_type = context.page_data.card_type;
             data.layout = context.page_data.layout;
-
+            if(data.cards.length < 20)
+                more_cards = false;
             cards_template(data).insertBefore('#feed .footer');
             loading = false;
         };
