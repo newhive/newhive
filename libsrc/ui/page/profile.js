@@ -37,7 +37,7 @@ define([
         var win = $(window), feed = $('#feed'), loading = false,
             more_cards = true, page = 0, ui_page = require('ui/page');
         var render_new_cards = function(data){
-            // ugly hack to deal with data path
+            // ugly hack to merge old context attributes to new data
             data.card_type = context.page_data.card_type;
             data.layout = context.page_data.layout;
             if(data.cards.length < 20)

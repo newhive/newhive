@@ -479,6 +479,7 @@ define([
 
     // Set up the grid borders
     o.add_grid_borders = function(columns){
+        if(context.page_data.layout != 'grid') return;
         var expr_cards = $('#feed .card');
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - (expr_cards.length % columns);
