@@ -29,7 +29,7 @@ define([
         if(route.api_route){
             state.api = o.substitute_variables(
                 route.api_route, route_args, true) + query;
-            if(route.secure)
+            if(route.secure || route_args.secure)
                 state.api = config.secure_server + state.api.slice(1);
         }
         return state;

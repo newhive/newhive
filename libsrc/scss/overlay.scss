@@ -39,17 +39,17 @@
 
     .edit_icon {
         background-image: asset_url('skin/nav/edit.png');
-        &:hover { background-image: asset_url('skin/nav/edit-hover.png'); }
+        &.active { background-image: asset_url('skin/nav/edit-hover.png'); }
     }
 
     .create {
         background-image: asset_url('skin/nav/create.png');
-        &:hover { background-image: asset_url('skin/nav/create-hover.png'); }
+        &.active { background-image: asset_url('skin/nav/create-hover.png'); }
     }
 
     .social_btn {
         background-image: asset_url('skin/nav/open.png');
-        &:hover { background-image: asset_url('skin/nav/open-hover.png'); }
+        &.active, &:hover { background-image: asset_url('skin/nav/open-hover.png'); }
     }
 
     .signup {
@@ -210,16 +210,14 @@
             .counts {
                 line-height: 60px;
             }
-            &.plus-minus {
-                &:hover {
-                    background-color: black;
-                }
+            &.plus-minus.active {
+                background-color: black;
             }
-            &:hover {
+            &.active {
                 background-color: $color_selected;
                 color: black;
             }
-            &.on:hover {
+            &.on.active {
                 background-color: $color_selected;
                 background-image: none;
             }

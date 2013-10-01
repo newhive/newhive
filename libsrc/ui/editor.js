@@ -12,8 +12,8 @@ define([
     'ui/colors',
     'sj!templates/color_picker.html',
     'browser/jquery/jplayer/skin',
+    'browser/jquery/rotate.js',
     'js!browser/jquery/event/drag.js',
-    'js!browser/jquery/rotate.js',
     'js!google_closure.js'
 ], function(
     $,

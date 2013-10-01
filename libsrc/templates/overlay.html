@@ -1,6 +1,6 @@
 <div class='overlay panel nav' id='content_btns'>
   {# edit expression #}
-  <div class='hide edit_btn btn' id="edit_btn"></div>
+  <span class='hide edit_ui'></span>{# no \n #}
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
@@ -10,9 +10,9 @@
     </span>
   {>}
   {<if user.logged_in}<a {anchor_attrs "create_expr" "owner_name" user.name}
-    ><div class='create icon btn'></div></a>{>}
+    ><div class='create icon btn hoverable'></div></a>{>}
   {# + button to open overlay #}
-  <div class='social_btn icon btn hide'></div>
+  <div class='social_btn icon btn hide hoverable'></div>
 </div>
 <div class='social overlay page_btn' id='page_prev'></div>
 <div class='social overlay page_btn' id='page_next'></div>

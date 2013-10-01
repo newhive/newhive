@@ -2,6 +2,8 @@
 #
 # from src base, run:
 # python -m unittest newhive.test.load_test
+import os, sys
+sys.path.insert(0, os.getcwd())
 
 from subprocess import call, Popen, PIPE
 from newhive.utils import now
@@ -12,7 +14,7 @@ from urllib2 import urlopen
 from newhive import state, config
 from newhive.config import abs_url
 
-db=state.Database() 
+db=state.Database()
 
 max_threads = 32
 max_time = 120.
@@ -122,6 +124,16 @@ class LoadTest(unittest.TestCase):
 
         self.running_queries -= 1
 
+    def wget(self, url, time_out=10, pipe=None):
+        error = False
+        try:
+            res = urlopen(url, None, time_out)
+        except Exception, e:
+            print e
+            error = True
+
+        return error
+
     def loadtest(self, max_count=9999, qps=5., generate_url=test_url):
         global log
         log = Log()
@@ -160,10 +172,20 @@ class LoadTest(unittest.TestCase):
         # Passing condition is that 98% of queries succeeded.
         return (self.error_count < count * .02)
 
-    def test_load_user(self):
-        self.assertTrue(self.loadtest(max_count=100, qps=20., generate_url=generate_url_profile))
-    def test_load_expr(self):
-        self.assertTrue(self.loadtest(max_count=100, qps=20., generate_url=generate_url_expr))
+    def simple(self, qps=1):
+        count = 0
+        while True:
+            self.wget(generate_url_profile(count))
+            self.wget(generate_url_expr(count))
+            time.sleep(1)
+            count += 1
+
+    def test_simple(self):
+        self.simple()
+    # def test_load_user(self):
+    #     self.assertTrue(self.loadtest(max_count=100, qps=20., generate_url=generate_url_profile))
+    # def test_load_expr(self):
+    #     self.assertTrue(self.loadtest(max_count=100, qps=20., generate_url=generate_url_expr))
 
 if __name__ == '__main__':
     unittest.main()

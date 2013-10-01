@@ -61,7 +61,7 @@ def test_snapshot():
         
     # xvfb.terminate()
     
-test = True
+test = False
 
 def clear_snapshots():
     expressions_to_snapshot = db.Expr.search({
@@ -83,9 +83,9 @@ def clear_snapshots():
         ] })
     for expr in expressions_to_snapshot:
         expr.pop('snapshot_time')
-        expr.save()
+        expr.save(updated=False)
 
-expr_limit = 5
+expr_limit = 30
 
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
@@ -97,13 +97,8 @@ def start_snapshots(proc_tmp_snapshots=False):
     # existing_snapshots = proccess_snapshots_file() if proc_tmp_snapshots else []
     
     def get_exprs(limit):
-        expressions_to_snapshot = db.Expr.search({
-            "$and": [
-                {"snapshot_time": {
-                    "$exists": False
-                }}
-            ]
-        }, limit=limit, sort=[('updated', -1)])
+        expressions_to_snapshot = db.Expr.search({"snapshot_time": { "$exists": False }},
+	    limit=limit, sort=[('updated', -1)])
         if test:
             expressions_to_snapshot = db.Expr.search({
                 "$and": [

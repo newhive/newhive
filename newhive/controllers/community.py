@@ -4,23 +4,17 @@ from newhive.utils import dfilter, now, abs_url
 from newhive.controllers.controller import Controller
 from collections import Counter
 
-def deduped(item, dict):
-    if dict.get(item):
-        return False
-    dict[item] = True
-    return item
-
 class Community(Controller):
     def featured(self, tdata, request, **paging_args):
         return {
-            "cards": self.db.query('#Featured', viewer=tdata.user),
+            "cards": self.db.query('#Featured', viewer=tdata.user, **paging_args),
             'header': ("The Hive",), 'card_type': 'expr',
             'title': "The Hive",
         }
 
     def recent(self, tdata, request, **paging_args):
         return {
-            "cards": self.db.query('#Recent', viewer=tdata.user),
+            "cards": self.db.query('#Recent', viewer=tdata.user, **paging_args),
             'header': ("ALL Expressions",), 'card_type': 'expr',
             'title': "NewHive - ALL",
         }
@@ -44,7 +38,7 @@ class Community(Controller):
         if not user:
             user = tdata.user
         return {
-            "cards": user.feed_recent(),
+            "cards": user.feed_recent(**paging_args),
             "header": ("Recent",), 'card_type': 'expr',
             "title": 'Recent',
         }
@@ -54,41 +48,10 @@ class Community(Controller):
             'form': 'create_account', 'title': "NewHive - Sign Up",
         }
 
-    def expressions_public(self, tdata, request, owner_name=None, **args):
+    def expressions_public(self, tdata, request, owner_name=None, at=0, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
-        spec = {'initiator': owner.id,
-            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr']}
-        }
-        # cards = self.db.Expr.page(spec, tdata.user, **args)
-        initial_limit = args.get('limit', 40)
-        limit = initial_limit
-        at = initial_at = args.get('at', 0)
-        card_ids = []
-        cards = []
-        d = {}
-        feeds = self.db.Feed.page(spec)
-        for f in feeds:
-            id = deduped(f['entity'], d)
-            if id:
-                card_ids.append(id)
-                card = self.db.Expr.fetch(id)
-                if not card:
-                    continue
-                if card['auth'] == 'public':
-                    cards.append(card)
-                if len(cards) >= initial_limit:
-                    break
-            # Possible optimization
-            # if len(card_ids) >= limit:
-            #     cards = filter(lambda e: e['auth'] == 'public', 
-            #         cards.extend(self.db.Expr.fetch(card_ids)))
-            #     limit = initial_limit - len(cards)
-            #     if limit == 0:
-            #         break
-            #     limit = max(10, limit)
-            #     card_ids = []
-
+        cards = owner.profile(at=at)
         if 0 == len(cards) and tdata.user == owner:
             # New user has no cards; give him the "edit" card
             # TODO: replace thenewhive with a config string
@@ -101,6 +64,7 @@ class Community(Controller):
             'cards': cards, 'owner': profile, 'card_type':'expr',
             'title': 'Expressions by ' + owner['name'],
         }
+
     def expressions_private(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
@@ -110,6 +74,7 @@ class Community(Controller):
             'cards': cards, 'owner': owner.client_view(), 'card_type':'expr',
             'title': 'Your Private Expressions',
         }
+
     def settings_update(self, tdata, request, owner_name=None, **args):
         """ Doubles as post handler and settings page api route
             for settings """
@@ -256,34 +221,37 @@ class Community(Controller):
         }
 
     def expr(self, tdata, request, id=None, owner_name=None, expr_name=''):
-        print "EXPR", id, owner_name, expr_name
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
-        # owner = self.db.User.named(owner_name)
-        expr_owner = expr.get_owner()
-        if expr_owner and expr_owner['analytics'].get('views_by'):
-            expr_owner.increment({'analytics.views_by': 1})
-        if not expr.get('views'):
-            expr['views'] = 0
-        expr['views'] += 1
-        expr.save(updated = False)
-        profile = expr_owner.client_view(viewer=tdata.user)
-        print expr_owner['analytics']
-        # TODO(speed): expr client_view CONTAINS owner profile. Duplication of effort.
-        return {
-            'owner': profile, 'expr': expr.client_view(viewer=tdata.user, activity=10),
-            'expr_id': expr.id, 'title': expr['title'],
+
+        resp = {
+            'expr_id': expr.id,
+            'expr': expr.client_view(viewer=tdata.user, activity=10)
         }
+
+        if (not tdata.user.can_view(expr)
+            and not expr.cmp_password(request.form.get('password'))
+        ):
+            resp['expr'] = dfilter(resp['expr'], ['owner', 'auth', 'id', 'name'])
+            resp['expr']['title'] = '[password required]'
+            resp['error'] = 'password'
+        else: 
+            expr_owner = expr.get_owner()
+            if expr_owner and expr_owner['analytics'].get('views_by'):
+                expr_owner.increment({'analytics.views_by': 1})
+            if not expr.get('views'): expr['views'] = 0
+            if expr_owner.id != tdata.user.id: expr.increment({'views': 1})
+        return resp
 
     def edit_expr(self, tdata, request, id=None, owner_name=None, expr_name=None):
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
-        if not expr: return None
+        if not expr or not tdata.user.can_view(expr): return None
         expr['id'] = expr.id
         return { 'expr': expr }
 
-    def search(self, tdata, request, id=None, owner_name=None, expr_name=None):
+    def search(self, tdata, request, id=None, owner_name=None, expr_name=None, **args):
         if not request.args.has_key('q'): return None
         # terms = request.args['q'].split()
         # specs = []
@@ -308,7 +276,8 @@ class Community(Controller):
         # if owner_count == 1
         #     profile = expr_owner.client_view()
         #     page_data.update('profile': profile)
-        result, search = self.db.query_echo(request.args['q'], viewer=tdata.user)
+        result, search = self.db.query_echo(request.args['q'],
+            viewer=tdata.user, **args)
         tags = search.get('tags', [])
         print search
         data = {

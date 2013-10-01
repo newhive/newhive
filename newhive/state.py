@@ -14,7 +14,7 @@ from bson.code import Code
 from crypt import crypt
 from oauth2client.client import OAuth2Credentials
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
-import pyes
+#import pyes
 from collections import defaultdict
 from snapshots import Snapshots
 
@@ -35,17 +35,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+entity_types = []
+def register(entity_cls):
+    entity_types.append(entity_cls)
+    return entity_cls
+
+
 class Database:
-    entity_types = []  # list of entity classes
-
-    @classmethod
-    def register(cls, entity_cls):
-        cls.entity_types.append(entity_cls)
-        return entity_cls
-
-    def add_collection(self, col):
-        pass
-
     def __init__(self, config=None, assets=None):
         config = self.config = (config if config else newhive.config)
 
@@ -54,7 +50,7 @@ class Database:
         self.s3 = S3Interface()
         self.assets = assets
 
-        self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
+        self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), entity_types)
         for col in self.collections:
             setattr(self, col.entity.__name__, col)
             for index in col.entity.indexes:
@@ -194,18 +190,20 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def paginate(self, spec, limit=40, at=None, sort='updated', order=-1, filter=None):
-        page_is_id = is_mongo_key(at)
-        if at and not page_is_id:
-            at = float(at)
+    def paginate(self, spec, limit=20, at=0, sort='updated', order=-1, filter=None):
+        # page_is_id = is_mongo_key(at)
+        # if at and not page_is_id:
+        at = int(at)
 
         if type(spec) == dict:
-            if page_is_id:
-                page_start = self.fetch(at)
-                at = page_start[sort] if page_start else None
+            # if page_is_id:
+            #     page_start = self.fetch(at)
+            #     at = page_start[sort] if page_start else None
 
-            if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
-            res = self.cards(spec, sort=[(sort, order)])
+            # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
+
+            res = self.cards(spec, sort=[(sort, order)], skip=at)
+
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
                 if filter:
@@ -215,11 +213,12 @@ class Collection(object):
             return res
 
         elif type(spec) == list:
-            spec = uniq(spec)
-            assert( not at or page_is_id )
+            # spec = uniq(spec)
+            # assert( not at or page_is_id )
 
             try:
-                start = spec.index(at) if at else -1
+                # start = spec.index(at) if at else -1
+                start = at
                 end = start + limit * -order
                 if end > start:
                     if start >= len(spec): return []
@@ -408,7 +407,7 @@ class HasSocial(Entity):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
 
 
-@Database.register
+@register
 class User(HasSocial):
     cname = 'user'
     indexes = [
@@ -516,9 +515,10 @@ class User(HasSocial):
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
 
     def can_view(self, expr):
-        return expr and ((expr.get('auth', 'public') == 'public') or
-                         (self.id == expr['owner']) or
-                         (expr.id in self.starred_expr_ids))
+        return expr and (
+            (expr.get('auth', 'public') == 'public') or
+            (self.id == expr['owner'])
+        )
 
     def can_view_filter(self):
         """Creates an elasticsearch filter corresponding to can_view"""
@@ -676,7 +676,7 @@ class User(HasSocial):
     #         i['feed_users'] = user_with_expr[i['_id']]
     #     return items
 
-    def network_feed_items(self, limit=0):
+    def network_feed_items(self, limit=0, at=0):
         # get iterable for all feed items in your network
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
@@ -690,7 +690,7 @@ class User(HasSocial):
                 }
         or_clause = [user_action, own_broadcast, expression_action]
         return self.db.Feed.search({ '$or': or_clause }, limit=limit,
-            sort=[('updated', -1)])
+            sort=[('created', -1)])
 
     def exprs_tagged_following(self, limit=0):
         # return iterable of matching expressions for each tag you're following
@@ -701,6 +701,8 @@ class User(HasSocial):
 
     # TODO-polish merge with db.query to enable searching within feed
     def feed_trending(self, at=0, limit=20):
+        at = int(at)
+        limit = int(limit)
         items = self.network_feed_items(limit=500)
         exprs = self.db.Expr.fetch([r['entity'] for r in items])
         exprs.extend(self.exprs_tagged_following(500))
@@ -725,7 +727,9 @@ class User(HasSocial):
 
     # TODO-polish merge with db.query to enable searching within feed
     def feed_recent(self, spec={}, limit=20, at=0, **args):
-        feed_items = self.network_feed_items()
+        at=int(at)
+        limit=int(limit)
+        feed_items = self.network_feed_items()#limit=limit*4, at=at)
         tagged_exprs = self.exprs_tagged_following()
 
         # group feed items into expressions, alternate
@@ -748,15 +752,32 @@ class User(HasSocial):
                 if (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
                     item['feed'].append(r)
                 if (item['auth'] != 'public') or existing: continue
+                result.append(item)
                 break
-            if item: result.append(item)
             for r in tagged_exprs:
                 if exprs.get(r.id): continue
-                else: item = add_expr(r)
-                break
+                else:
+                    item = add_expr(r)
+                    result.append(item)
+                    break
             if not item: break
-            result.append(item)
 
+        return result[at:]
+
+    def profile(self, limit=20, at=0):
+        at=int(at)
+        limit=int(limit)
+        spec = {'initiator': self.id,
+            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr']}
+        }
+        result = []
+        exprs = {}
+        for r in self.db.Feed.search(spec, order='created'):
+            if len(result) >= (limit + at): break
+            if exprs.get(r['entity']): continue
+            exprs[r['entity']] = True
+            if r.entity and r.entity.get('auth') == 'public':
+                result.append(r.entity)
         return result[at:]
 
     # # wrapper around db.query('#Trending') to add recent feed items
@@ -989,7 +1010,7 @@ class User(HasSocial):
         return self.get('name') in self.db.config.admins
 
 
-@Database.register
+@register
 class Session(Entity):
     cname = 'session'
 
@@ -998,7 +1019,7 @@ def media_path(user, name=None):
     p = joinpath(config.media_path, user['name'])
     return joinpath(p, name) if name else p
 
-@Database.register
+@register
 class Expr(HasSocial):
     cname = 'expr'
     indexes = [
@@ -1415,8 +1436,8 @@ class Expr(HasSocial):
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
-        # if expr.auth_required(viewer, password):
-        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed', 'created', 'updated'])
+        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed', 'created',
+            'updated', 'password'])
         dict.update(expr, {
             'tags': self.get('tags_index'),
             'id': self.id,
@@ -1487,7 +1508,7 @@ def generate_thumb(file, size, format='jpeg'):
     return output
 
 
-@Database.register
+@register
 class File(Entity):
     cname = 'file'
     _file = None #temporary fd
@@ -1637,7 +1658,7 @@ class File(Entity):
             thumb_small=self.get_thumb(70,70))
         return r
 
-@Database.register
+@register
 class ActionLog(Entity):
     indexes = ['created', 'user']
     cname = 'action_log'
@@ -1652,19 +1673,19 @@ class ActionLog(Entity):
             return super(ActionLog.Collection, self).create(data)
 
 
-@Database.register
+@register
 class MailLog(Entity):
     indexes = ['initiator', 'recipient', 'category', 'created']
     cname = 'mail_log'
 
 
-@Database.register
+@register
 class Unsubscribes(Entity):
     indexes = ['email']
     cname = 'unsubscribes'
 
 
-@Database.register
+@register
 class Feed(Entity):
     cname = 'feed'
     indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
@@ -1781,7 +1802,7 @@ class Feed(Entity):
         return r
 
 
-@Database.register
+@register
 class Comment(Feed):
     action_name = 'commented'
 
@@ -1805,7 +1826,7 @@ class Comment(Feed):
     thumb = property(get_thumb)
 
 
-@Database.register
+@register
 class Star(Feed):
     @property
     def action_name(self):
@@ -1823,7 +1844,7 @@ class Star(Feed):
         return super(Star, self).delete()
 
 
-@Database.register
+@register
 class Broadcast(Feed):
     action_name = 'broadcast'
 
@@ -1835,17 +1856,17 @@ class Broadcast(Feed):
         return super(Broadcast, self).create()
 
 
-@Database.register
+@register
 class InviteNote(Feed):
     action_name = 'gave invites'
 
 
-@Database.register
+@register
 class NewExpr(Feed):
     action_name = 'created'
 
 
-@Database.register
+@register
 class UpdatedExpr(Feed):
     action_name = 'updated'
 
@@ -1857,7 +1878,7 @@ class UpdatedExpr(Feed):
         return self
 
 
-@Database.register
+@register
 class FriendJoined(Feed):
     def viewable(self, viewer):
         return self['entity'] == viewer.id
@@ -1867,7 +1888,7 @@ class FriendJoined(Feed):
         return super(FriendJoined, self).create()
 
 
-@Database.register
+@register
 class Referral(Entity):
     cname = 'referral'
     indexes = [ 'key', 'request_id', 'created' ]
@@ -1887,21 +1908,37 @@ class Referral(Entity):
         return url
 
 
-@Database.register
+@register
 class Contact(Entity):
     cname = 'contact_log'
     indexes = ['created']
 
 
-@Database.register
+@register
 class ErrorLog(Entity):
     cname = 'error_log'
     indexes = ['created', 'type']
 
 
-@Database.register
+@register
 class Temp(Entity):
     cname = 'temp'
+
+
+@register
+class Broken(Entity):
+    """ This collection is for records that would cause problems if they were
+        in their original table """
+
+    cname = 'broken'
+    indexes = ['record.id','record.created','record.updated']
+
+    class Collection(Collection):
+        def create(self, collection_name, record):
+            entity = {}
+            entity['collection'] = collection_name
+            entity['record'] = record
+            return super(Broken.Collection, self).create(entity)
 
 
 ## utils
@@ -1925,301 +1962,300 @@ def tags_by_frequency(query):
     counts.sort(reverse=True)
     return counts
 
+
 ## tools for full text search
-
-
-class ESDatabase:
-    # elasticsearch-able database, just for full-text search (tags, text, title)
-    def __init__(self, db, index='expr_index'):
-        self.index = index
-        self.conn = pyes.ES(server=[('http', 'localhost', 9200)])
-        self.db = db
-        feed_mapping = {
-            "class_name": {"type": "string", "index": "not_analyzed"},
-            "updated": {"type": "double"},
-            "created": {"type": "double"},
-            "entity": {"type": "string", "index": "not_analyzed"},
-            "entity_class": {"type": "string", "index": "not_analyzed"},
-            "initiator": {"type": "string", "index": "not_analyzed"},
-            "initiator_name": {"type": "string", "index": "not_analyzed"},
-            "text": {"type": "string", "index": "not_analyzed"}
-        }
-        user_mapping = {
-            "tags": {"type": "string",
-            "index": "analyzed"},
-            "fullname": {"type": "string",
-            "index": "not_analyzed"},
-            "name": {"type": "string",
-            "index": "not_analyzed"},
-            "updated": {"type": "double"}
-        }
-        expr_mapping = {
-            "tags": {"type": "string", "index": "analyzed", "analyzer": "tag_analyzer"},
-            "text": {"type": "string", "index": "analyzed"},
-            "title": {"type": "string", "index": "analyzed"},
-            "name": {"type": "string", "index": "analyzed"},
-            "auth": {"type": "string", "index": "not_analyzed"},
-            "owner": {"type": "string", "index": "not_analyzed"},
-            "owner_name": {"type": "string", "index": "not_analyzed"},
-            "updated": {"type": "double"},
-            "created": {"type": "double"},
-            "views": {"type": "integer"},
-            "broadcast": {"type": "integer"},
-            "star": {"type": "integer"}
-        }
-
-        self.settings = {
-          "mappings": {
-            "expr-type": {"properties": expr_mapping},
-            "feed-type": {"properties": feed_mapping},
-            "user-type": {"properties": user_mapping}
-          },
-          "settings": {
-            "analysis": {
-              "analyzer": {
-                "default": {"tokenizer" : "standard", "filter" : ["standard", "lowercase", "stop", "kstem"]},
-                "tag_analyzer": {"tokenizer" : "whitespace", "filter" : ["standard", "lowercase", "stop", "kstem"]}
-              }
-            }
-          }
-        }
-
-        if not index in self.conn.indices.get_indices():
-            self.conn.indices.create_index(index, self.settings)
-            print "Indexing expr/feed/users from scratch, might take a while"
-            exprs = db.Expr.search({})
-            for expr in exprs:
-                self.update(expr, es_type='expr-type', refresh=False)
-            self.add_related_types()
-            self.conn.indices.refresh()
-
-        #self.sync_with_mongo()
-
-        return None
-
-    def delete_index(self):
-        self.conn.indices.delete_index(self.index)
-        self.conn.indices.refresh()
-        return None
-
-    def delete_by_ids(self, ids):
-        query = pyes.query.IdsQuery(ids)
-        self.conn.delete_by_query(query=query, indices=self.index,
-                                  doc_types=None)
-        self.conn.indices.refresh()
-
-    def parse_query(self, q):
-        return self.db.parse_query(q)
-
-    def create_query(self, search):
-        # results match ALL of the search terms
-        # query stemming disabled for phrase search
-
-        # TODO: parse OR as boolean OR
-
-        clauses = []
-
-        text_clauses = []
-
-        phrase_clauses = []
-
-        if search.get('text'):
-            text_clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text']), analyzer='default', boost=2, operator="and"))
-        if search.get('tags'):
-            text_clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer='tag_analyzer', boost=5, operator="and"))
-
-        if len(text_clauses) != 0:
-            q1 = pyes.query.BoolQuery(must=text_clauses, boost=1)
-            clauses.append(q1)
-
-        for p in search.get('phrases',[]):
-            phrase_clauses.append(pyes.query.TextQuery('text', p, type="phrase", analyzer='simple', boost=5))
-            phrase_clauses.append(pyes.query.TextQuery('title', p, type="phrase", analyzer='simple', boost=7))
-
-        if len(phrase_clauses) != 0:
-            q2 = pyes.query.BoolQuery(should=phrase_clauses, boost=2)
-            clauses.append(q2)
-
-        if search.get('user'):
-            q3 = pyes.query.TermQuery('owner_name', search['user'], boost=3)
-            clauses.append(q3)
-
-        query = pyes.query.BoolQuery(must=clauses)
-
-        custom_query = pyes.query.CustomScoreQuery(query, script=popularity_score)
-
-        return custom_query
-
-    def search_text(self, search, es_order, es_filter, start, limit):
-        query = self.create_query(search)
-        filtered_query = pyes.query.FilteredQuery(query, es_filter)
-        # filtering borked...
-        results = self.conn.search(query, indices=self.index,
-            doc_types="expr-type", sort=es_order, start=start, size=limit)
-        return results
-
-    def search_fuzzy(self, search, es_order, es_filter, start, limit):
-        # typo-tolerant searches. only works for text/tags, not usernames.
-        string = ' '.join(search.get('text',[]) + search.get('phrases',[]) + search.get('tags',[]))
-        query = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
-        filtered_query = pyes.query.FilteredQuery(query, es_filter)
-        results = self.conn.search(filtered_query, indices=self.index,
-            doc_types="expr-type", sort=es_order, start=start, size=limit)
-        return results
-
-    def update(self, entry, es_type, refresh=True):
-        if es_type == 'expr-type':
-            expr = entry
-            processed_tags = ' '.join(normalize_tags(expr.get('tags', '')))
-            data = {
-                'text': expr.get('text', ''),
-                'tags': processed_tags,
-                'star': expr.get('analytics', {}).get(
-                    'Star', {}).get('count', 0),
-                'broadcast': expr.get('analytics', {}).get(
-                    'Broadcast', {}).get('count', 0),
-                'name': expr.get('name', ''),
-                'owner_name': expr.get('owner_name', ''),
-                'auth': expr.get('auth', 'public'),
-                'owner': expr.get('owner', ''),
-                'title': expr.get('title', ''),
-                'created': expr.get('created', 0),
-                'updated': expr.get('updated', 0),
-                'views': expr.get('views', 0)
-            }
-        elif es_type == 'feed-type':
-            data = dfilter(entry, ['class_name', 'created', 'entity',
-                'entity_class', 'entity_owner', 'initiator', 'initiator_name',
-                'text'])
-        elif es_type == 'user-type':
-            data = {
-                'fullname': entry.get('fullname', ''),
-                'name': entry.get('name', ''),
-                'tags': entry.get('tags', []),
-                'updated': entry.get('updated', 0)
-            }
-        else:
-            raise Exception(es_type + " is not defined in this index!")
-        self.conn.index(data, self.index, es_type, entry['_id'])
-        if refresh is True:
-            self.conn.indices.refresh()
-        return None
-
-    def sync_with_mongo(self):
-        """make sure elasticsearch db reflects current mongodb state"""
-        updated = self.conn.search(match_all_query, indices=self.index, sort="updated:desc")
-        last_updated = updated[0]['updated']
-        time_diff = time.time() - last_updated
-        print 'time since last update:', time_diff
-        exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
-        feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
-        users = self.db.User.search({'updated': {'$gte': last_updated}})
-        print exprs.count(), 'expressions to update'
-        for expr in exprs:
-            print expr['updated']
-            self.update(expr, 'expr-type', refresh=False)
-        print feed.count(), 'feed items to update'
-        for f in feed:
-            print f['updated']
-            self.update(f, 'feed-type', refresh=False)
-        print users.count(), 'users to update'
-        for user in users:
-            print user['updated']
-            self.update(user, 'user-type', refresh=False)
-        self.conn.indices.refresh()
-
-    def purge_deleted(self, time_diff=0):
-        """remove entries from elasticsearch that have been deleted in mongo"""
-        #  time diff is the time in seconds to look back
-        last_updated = time.time() - time_diff
-        exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
-        feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
-        users = self.db.User.search({'updated': {'$gte': last_updated}})
-        valid_ids = []
-        purge_ids = []
-        for e in exprs:
-            valid_ids.append(e['_id'])
-        for u in users:
-            valid_ids.append(u['_id'])
-        for f in feed:
-            valid_ids.append(f['_id'])
-        q = pyes.query.RangeQuery(qrange=pyes.utils.ESRange('updated',
-            from_value=last_updated))
-        res = self.conn.search(q, indices=self.index)
-        for r in res:
-            if r._meta.id not in valid_ids:
-                purge_ids.append(r._meta.id)
-        print 'deleting: ', purge_ids
-        self.delete_by_ids(purge_ids)
-        self.conn.indices.refresh()
-
-    def paginate(self, search, limit=40, at=0, es_order='_score,updated:desc',
-        sort='score', fuzzy=False, viewer=None
-    ):
-        if viewer:
-            es_filter = viewer.can_view_filter()
-        else:
-            es_filter = pub_filter
-        if fuzzy:
-            res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
-                start=at, limit=limit)
-        else:
-            res = self.search_text(search, es_order=es_order, es_filter=es_filter,
-                start=at, limit=limit)
-        return self.esdb_paginate(res, es_type='expr-type')
-
-    def esdb_paginate(self, res, es_type):
-        # convert elasticsearch resultsets to result lists
-        result_ids = [r._meta.id for r in res]
-        if es_type == 'expr-type':
-            col = self.db.Expr
-        elif es_type == 'feed-type':
-            col = self.db.Feed
-        elif es_type == 'user-type':
-            col = self.db.User
-        return col.fetch(result_ids)
-
-    def add_related_types(self):
-
-        # Originally esdb was just used for full-text search over expressions.
-        # However, we might want to do sorting and analytics based on
-        # information in related collections (feed, user). Since elasticsearch
-        # doesn't have joins, we have to index the mongo feed and user
-        # collections in expr_index.
-
-        feed = self.db.Feed.search({})
-
-        users = self.db.User.search({})
-
-        print "indexing feed-type"
-
-        for f in feed:
-            self.update(f, es_type='feed-type', refresh=False)
-
-        self.conn.indices.refresh()
-
-        print "indexing user-type"
-
-        for u in users:
-            self.update(u, es_type='user-type', refresh=False)
-
-        self.conn.indices.refresh()
-
-        return None
-
-    def get_total(self, es_type):
-        """show the total number of items of each type"""
-        entries = self.conn.search(match_all_query,
-            indices=self.index, doc_types=es_type)
-        return entries.total
-
-popularity_score = (
-    "_score * (doc['views'].value + 100*doc['star'].value" +
-    "+ 500*doc['broadcast'].value)"
-    )
-popularity_time_score = (
-    "(doc['views'].value + 100*doc['star'].value" +
-    "+ 500*doc['broadcast'].value) *" +
-    "exp((doc['created'].value - time()/1000)/1000000)"
-    )
-
+#class ESDatabase:
+#    # elasticsearch-able database, just for full-text search (tags, text, title)
+#    def __init__(self, db, index='expr_index'):
+#        self.index = index
+#        self.conn = pyes.ES(server=[('http', 'localhost', 9200)])
+#        self.db = db
+#        feed_mapping = {
+#            "class_name": {"type": "string", "index": "not_analyzed"},
+#            "updated": {"type": "double"},
+#            "created": {"type": "double"},
+#            "entity": {"type": "string", "index": "not_analyzed"},
+#            "entity_class": {"type": "string", "index": "not_analyzed"},
+#            "initiator": {"type": "string", "index": "not_analyzed"},
+#            "initiator_name": {"type": "string", "index": "not_analyzed"},
+#            "text": {"type": "string", "index": "not_analyzed"}
+#        }
+#        user_mapping = {
+#            "tags": {"type": "string",
+#            "index": "analyzed"},
+#            "fullname": {"type": "string",
+#            "index": "not_analyzed"},
+#            "name": {"type": "string",
+#            "index": "not_analyzed"},
+#            "updated": {"type": "double"}
+#        }
+#        expr_mapping = {
+#            "tags": {"type": "string", "index": "analyzed", "analyzer": "tag_analyzer"},
+#            "text": {"type": "string", "index": "analyzed"},
+#            "title": {"type": "string", "index": "analyzed"},
+#            "name": {"type": "string", "index": "analyzed"},
+#            "auth": {"type": "string", "index": "not_analyzed"},
+#            "owner": {"type": "string", "index": "not_analyzed"},
+#            "owner_name": {"type": "string", "index": "not_analyzed"},
+#            "updated": {"type": "double"},
+#            "created": {"type": "double"},
+#            "views": {"type": "integer"},
+#            "broadcast": {"type": "integer"},
+#            "star": {"type": "integer"}
+#        }
+#
+#        self.settings = {
+#          "mappings": {
+#            "expr-type": {"properties": expr_mapping},
+#            "feed-type": {"properties": feed_mapping},
+#            "user-type": {"properties": user_mapping}
+#          },
+#          "settings": {
+#            "analysis": {
+#              "analyzer": {
+#                "default": {"tokenizer" : "standard", "filter" : ["standard", "lowercase", "stop", "kstem"]},
+#                "tag_analyzer": {"tokenizer" : "whitespace", "filter" : ["standard", "lowercase", "stop", "kstem"]}
+#              }
+#            }
+#          }
+#        }
+#
+#        if not index in self.conn.indices.get_indices():
+#            self.conn.indices.create_index(index, self.settings)
+#            print "Indexing expr/feed/users from scratch, might take a while"
+#            exprs = db.Expr.search({})
+#            for expr in exprs:
+#                self.update(expr, es_type='expr-type', refresh=False)
+#            self.add_related_types()
+#            self.conn.indices.refresh()
+#
+#        #self.sync_with_mongo()
+#
+#        return None
+#
+#    def delete_index(self):
+#        self.conn.indices.delete_index(self.index)
+#        self.conn.indices.refresh()
+#        return None
+#
+#    def delete_by_ids(self, ids):
+#        query = pyes.query.IdsQuery(ids)
+#        self.conn.delete_by_query(query=query, indices=self.index,
+#                                  doc_types=None)
+#        self.conn.indices.refresh()
+#
+#    def parse_query(self, q):
+#        return self.db.parse_query(q)
+#
+#    def create_query(self, search):
+#        # results match ALL of the search terms
+#        # query stemming disabled for phrase search
+#
+#        # TODO: parse OR as boolean OR
+#
+#        clauses = []
+#
+#        text_clauses = []
+#
+#        phrase_clauses = []
+#
+#        if search.get('text'):
+#            text_clauses.append(pyes.query.TextQuery('_all', ' '.join(search['text']), analyzer='default', boost=2, operator="and"))
+#        if search.get('tags'):
+#            text_clauses.append(pyes.query.TextQuery('tags', ' '.join(search['tags']), analyzer='tag_analyzer', boost=5, operator="and"))
+#
+#        if len(text_clauses) != 0:
+#            q1 = pyes.query.BoolQuery(must=text_clauses, boost=1)
+#            clauses.append(q1)
+#
+#        for p in search.get('phrases',[]):
+#            phrase_clauses.append(pyes.query.TextQuery('text', p, type="phrase", analyzer='simple', boost=5))
+#            phrase_clauses.append(pyes.query.TextQuery('title', p, type="phrase", analyzer='simple', boost=7))
+#
+#        if len(phrase_clauses) != 0:
+#            q2 = pyes.query.BoolQuery(should=phrase_clauses, boost=2)
+#            clauses.append(q2)
+#
+#        if search.get('user'):
+#            q3 = pyes.query.TermQuery('owner_name', search['user'], boost=3)
+#            clauses.append(q3)
+#
+#        query = pyes.query.BoolQuery(must=clauses)
+#
+#        custom_query = pyes.query.CustomScoreQuery(query, script=popularity_score)
+#
+#        return custom_query
+#
+#    def search_text(self, search, es_order, es_filter, start, limit):
+#        query = self.create_query(search)
+#        filtered_query = pyes.query.FilteredQuery(query, es_filter)
+#        # filtering borked...
+#        results = self.conn.search(query, indices=self.index,
+#            doc_types="expr-type", sort=es_order, start=start, size=limit)
+#        return results
+#
+#    def search_fuzzy(self, search, es_order, es_filter, start, limit):
+#        # typo-tolerant searches. only works for text/tags, not usernames.
+#        string = ' '.join(search.get('text',[]) + search.get('phrases',[]) + search.get('tags',[]))
+#        query = pyes.query.FuzzyLikeThisQuery(["tags", "text", "title"], string)
+#        filtered_query = pyes.query.FilteredQuery(query, es_filter)
+#        results = self.conn.search(filtered_query, indices=self.index,
+#            doc_types="expr-type", sort=es_order, start=start, size=limit)
+#        return results
+#
+#    def update(self, entry, es_type, refresh=True):
+#        if es_type == 'expr-type':
+#            expr = entry
+#            processed_tags = ' '.join(normalize_tags(expr.get('tags', '')))
+#            data = {
+#                'text': expr.get('text', ''),
+#                'tags': processed_tags,
+#                'star': expr.get('analytics', {}).get(
+#                    'Star', {}).get('count', 0),
+#                'broadcast': expr.get('analytics', {}).get(
+#                    'Broadcast', {}).get('count', 0),
+#                'name': expr.get('name', ''),
+#                'owner_name': expr.get('owner_name', ''),
+#                'auth': expr.get('auth', 'public'),
+#                'owner': expr.get('owner', ''),
+#                'title': expr.get('title', ''),
+#                'created': expr.get('created', 0),
+#                'updated': expr.get('updated', 0),
+#                'views': expr.get('views', 0)
+#            }
+#        elif es_type == 'feed-type':
+#            data = dfilter(entry, ['class_name', 'created', 'entity',
+#                'entity_class', 'entity_owner', 'initiator', 'initiator_name',
+#                'text'])
+#        elif es_type == 'user-type':
+#            data = {
+#                'fullname': entry.get('fullname', ''),
+#                'name': entry.get('name', ''),
+#                'tags': entry.get('tags', []),
+#                'updated': entry.get('updated', 0)
+#            }
+#        else:
+#            raise Exception(es_type + " is not defined in this index!")
+#        self.conn.index(data, self.index, es_type, entry['_id'])
+#        if refresh is True:
+#            self.conn.indices.refresh()
+#        return None
+#
+#    def sync_with_mongo(self):
+#        """make sure elasticsearch db reflects current mongodb state"""
+#        updated = self.conn.search(match_all_query, indices=self.index, sort="updated:desc")
+#        last_updated = updated[0]['updated']
+#        time_diff = time.time() - last_updated
+#        print 'time since last update:', time_diff
+#        exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
+#        feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
+#        users = self.db.User.search({'updated': {'$gte': last_updated}})
+#        print exprs.count(), 'expressions to update'
+#        for expr in exprs:
+#            print expr['updated']
+#            self.update(expr, 'expr-type', refresh=False)
+#        print feed.count(), 'feed items to update'
+#        for f in feed:
+#            print f['updated']
+#            self.update(f, 'feed-type', refresh=False)
+#        print users.count(), 'users to update'
+#        for user in users:
+#            print user['updated']
+#            self.update(user, 'user-type', refresh=False)
+#        self.conn.indices.refresh()
+#
+#    def purge_deleted(self, time_diff=0):
+#        """remove entries from elasticsearch that have been deleted in mongo"""
+#        #  time diff is the time in seconds to look back
+#        last_updated = time.time() - time_diff
+#        exprs = self.db.Expr.search({'updated': {'$gte': last_updated}})
+#        feed = self.db.Feed.search({'updated': {'$gte': last_updated}})
+#        users = self.db.User.search({'updated': {'$gte': last_updated}})
+#        valid_ids = []
+#        purge_ids = []
+#        for e in exprs:
+#            valid_ids.append(e['_id'])
+#        for u in users:
+#            valid_ids.append(u['_id'])
+#        for f in feed:
+#            valid_ids.append(f['_id'])
+#        q = pyes.query.RangeQuery(qrange=pyes.utils.ESRange('updated',
+#            from_value=last_updated))
+#        res = self.conn.search(q, indices=self.index)
+#        for r in res:
+#            if r._meta.id not in valid_ids:
+#                purge_ids.append(r._meta.id)
+#        print 'deleting: ', purge_ids
+#        self.delete_by_ids(purge_ids)
+#        self.conn.indices.refresh()
+#
+#    def paginate(self, search, limit=40, at=0, es_order='_score,updated:desc',
+#        sort='score', fuzzy=False, viewer=None
+#    ):
+#        if viewer:
+#            es_filter = viewer.can_view_filter()
+#        else:
+#            es_filter = pub_filter
+#        if fuzzy:
+#            res = self.search_fuzzy(search, es_order=es_order, es_filter=es_filter,
+#                start=at, limit=limit)
+#        else:
+#            res = self.search_text(search, es_order=es_order, es_filter=es_filter,
+#                start=at, limit=limit)
+#        return self.esdb_paginate(res, es_type='expr-type')
+#
+#    def esdb_paginate(self, res, es_type):
+#        # convert elasticsearch resultsets to result lists
+#        result_ids = [r._meta.id for r in res]
+#        if es_type == 'expr-type':
+#            col = self.db.Expr
+#        elif es_type == 'feed-type':
+#            col = self.db.Feed
+#        elif es_type == 'user-type':
+#            col = self.db.User
+#        return col.fetch(result_ids)
+#
+#    def add_related_types(self):
+#
+#        # Originally esdb was just used for full-text search over expressions.
+#        # However, we might want to do sorting and analytics based on
+#        # information in related collections (feed, user). Since elasticsearch
+#        # doesn't have joins, we have to index the mongo feed and user
+#        # collections in expr_index.
+#
+#        feed = self.db.Feed.search({})
+#
+#        users = self.db.User.search({})
+#
+#        print "indexing feed-type"
+#
+#        for f in feed:
+#            self.update(f, es_type='feed-type', refresh=False)
+#
+#        self.conn.indices.refresh()
+#
+#        print "indexing user-type"
+#
+#        for u in users:
+#            self.update(u, es_type='user-type', refresh=False)
+#
+#        self.conn.indices.refresh()
+#
+#        return None
+#
+#    def get_total(self, es_type):
+#        """show the total number of items of each type"""
+#        entries = self.conn.search(match_all_query,
+#            indices=self.index, doc_types=es_type)
+#        return entries.total
+#
+#popularity_score = (
+#    "_score * (doc['views'].value + 100*doc['star'].value" +
+#    "+ 500*doc['broadcast'].value)"
+#    )
+#popularity_time_score = (
+#    "(doc['views'].value + 100*doc['star'].value" +
+#    "+ 500*doc['broadcast'].value) *" +
+#    "exp((doc['created'].value - time()/1000)/1000000)"
+#    )
+#

@@ -47,7 +47,7 @@ define([
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
         $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_btn .icon").hide();
+        $(".panel .edit_ui .icon").hide();
     }
 
     o.resize = function(){
@@ -131,8 +131,8 @@ define([
             $("#signup_create").show();
             $("#signup_create .create").removeClass("hide");
             if (context.user.id == o.expr.owner.id) {
-                $('#content_btns .edit_btn').replaceWith(edit_btn_template(page_data));
-                $('#content_btns .edit_btn .icon').show();
+                $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
+                $('#content_btns .edit_ui .icon').show();
             }
         }
     };
@@ -226,7 +226,7 @@ define([
             contentFrame.data('loaded', true);
             debug("loaded frame: " + found);
 
-            if (contentFrame.hasClass('expr-visible')) 
+            if (contentFrame.hasClass('expr_visible')) 
                 contentFrame.get(0).contentWindow.postMessage({action: 'show'}, '*');
             for (var i = 0, el; el = loading_frame_list[i]; i++) {
                 if (el.prop("id") == contentFrame.prop("id")) {
@@ -253,8 +253,8 @@ define([
         var page_data = context.page_data;
         // display_expr(page_data.expr_id);
         var expr_id = page_data.expr_id;
-        var expr_curr = $('.expr-visible');
-        expr_curr.removeClass('expr-visible');
+        var expr_curr = $('.expr_visible');
+        expr_curr.removeClass('expr_visible');
         $('#exprs').show();
         $('.social_btn').show();
 
@@ -266,9 +266,9 @@ define([
             contentFrame.get(0).contentWindow.
                 postMessage({action: 'show'}, '*');
         }
-        contentFrame.addClass('expr-visible').removeClass('expr-hidden');
+        contentFrame.addClass('expr_visible').removeClass('expr_hidden');
         contentFrame.show();
-        $('#exprs .expr').not('.expr-visible').css({'z-index': 0 });
+        $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
         var found = find_card(expr_id);
         var anim_direction = 0;
         if (o.last_found >= 0 && found >= 0) {
@@ -330,20 +330,44 @@ define([
             // console.log('resetting on load', contentFrame);
             o.page_btn_handle();
         });
+
+        // password UI and submission
+        if(page_data.error == 'password'){
+            var box = $('#dia_expr_password');
+            dialog.create(box).open();
+            box.find('form.site').on('response', function(ev, data) {
+                if(data.error) {
+                    $('#dia_expr_password .error').show();
+                    return;
+                }
+                context.page_data = data;
+                o.controller.refresh(data);
+                open_passworded_expr(data.expr.password);
+                
+                var frame_name = contentFrame.prop('id'),
+                    content_form = box.find('form.content');
+                contentFrame[0].name = frame_name;
+                content_form.find('input').val(data.expr.password);
+                content_form.attr('target', frame_name).submit();
+            });
+        }
+    };
+
+    var open_passworded_expr = function(password){
     };
 
     var hide_other_exprs = function() {
-        var to_hide = $('#exprs .expr').not('.expr-visible,.blank').filter(":visible");
+        var to_hide = $('#exprs .expr').not('.expr_visible,.blank').filter(":visible");
         to_hide.each(function(i, el) {
             $(el).get(0).contentWindow.
                 postMessage({action: 'hide'}, '*');
         });
-        to_hide.addClass('expr-hidden');
+        to_hide.addClass('expr_hidden');
         fixup_tags_list();
     };
 
     var hide_exprs = function() {
-        var contentFrame = $('.expr-visible');
+        var contentFrame = $('.expr_visible');
 
         if(contentFrame.length){
             contentFrame.animate({
@@ -351,8 +375,8 @@ define([
             },{
                 duration: 0, //anim_duration,
                 complete: function() {
-                    contentFrame.addClass('expr-hidden');
-                    contentFrame.removeClass('expr-visible');
+                    contentFrame.addClass('expr_hidden');
+                    contentFrame.removeClass('expr_visible');
                     contentFrame.get(0).contentWindow.
                         postMessage({action: 'hide'}, '*');
                     hide_expr_complete();
@@ -491,7 +515,7 @@ define([
         d = { "loves": o.expr.loves,
               "comment": o.expr.comments,
               "broadcast": o.expr.broadcast  };
-        return d[btn];
+        return d[btn] ? d[btn] : [];
     };
     o.action_get_state = function(btn){
         var items = get_items(btn),

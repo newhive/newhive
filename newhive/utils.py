@@ -8,9 +8,9 @@ from brownie.datastructures import OrderedSet
 from collections import Counter, OrderedDict
 import numpy
 import operator
-import pyes
 import json
 import urllib,urllib2
+#import pyes
 
 import newhive
 from newhive import config
@@ -432,7 +432,9 @@ def get_embedly_oembed(url):
         return None
     return json.loads(res.read())
 
+
 ### utils for autocomplete and content recommendation ###
+### TODO-cleanup: move to another file!! ####
 
 blacklist = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm',
              'bethgirdler', 'i', 'be', 'of', 'the', 'a', 'an', 'in', 'on',
@@ -440,13 +442,13 @@ blacklist = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm',
 
 bad_tags = ['lovemenaut', 'paravion', 'moatzart', 'dain', 'fagerholm', 'bethgirdler', 'naut']  # blacklist minus stopwords
 
-match_all_query = pyes.query.MatchAllQuery()
+#match_all_query = pyes.query.MatchAllQuery()
 
-likes_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])  # assuming 'broadcast' and 'star' == 'likes'
+#likes_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star'])  # assuming 'broadcast' and 'star' == 'likes'
 
-feed_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star', 'Comment'])
+#feed_filter = pyes.filters.TermsFilter('class_name', ['Broadcast', 'Star', 'Comment'])
 
-pub_filter = pyes.filters.TermFilter('auth', 'public')
+#pub_filter = pyes.filters.TermFilter('auth', 'public')
 
 def autocomplete(pre, db, field='tags'):
     s = re.sub(r'[\s_\-"]', '', pre, flags=re.UNICODE)
@@ -650,6 +652,7 @@ def test_scripts(db, owner_name = None):
         print dfilter(res2[i], ['name', 'created', 'star', 'broadcast', 'views'])
     return res1, res2
 
+# TODO-cleanup: move to newhive.state, create reasonable failure case for DB connection
 def log_error(db, request=None, message=None, traceback=None, critical=False):
     # from werkzeug.debug.tbtools import get_current_traceback
     # traceback = traceback or get_current_traceback(skip=0, show_hidden_frames=False
@@ -687,5 +690,7 @@ def log_error(db, request=None, message=None, traceback=None, critical=False):
             log_entry.update({'requester': {'id': request.requester.id
                                             , 'name': request.requester.get('name')}})
 
-    db.ErrorLog.create(log_entry)
+    # db.ErrorLog.create(log_entry)
+    print log_entry
+
 

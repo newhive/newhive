@@ -1,13 +1,17 @@
 define([
     'browser/jquery',
     'ui/dialog',
-    'server/context'
+    'server/context',
+    'sj!templates/cards.html',
+    'require'
 ], function(
     $,
     dialog,
-    context
+    context,
+    cards_template,
+    require
 ) {
-    var o = {},
+    var o = { name: 'profile' },
             show_tags = true,
             controller;
 
@@ -28,6 +32,30 @@ define([
             $(".overlay .login_btn").unbind('click').click(d.open);
         }
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
+
+        // pagination here
+        var win = $(window), feed = $('#feed'), loading = false,
+            more_cards = true, page = 0, ui_page = require('ui/page');
+        var render_new_cards = function(data){
+            // ugly hack to merge old context attributes to new data
+            data.card_type = context.page_data.card_type;
+            data.layout = context.page_data.layout;
+            if(data.cards.length < 20)
+                more_cards = false;
+            cards_template(data).insertBefore('#feed .footer');
+            ui_page.layout_columns();
+            ui_page.add_grid_borders();
+            loading = false;
+            feed = $('#feed'); // rerendering cards loses reference
+        };
+        win.scroll(function(e){
+            if((win.scrollTop() > (feed.height() - win.height()))
+                && !loading && more_cards
+            ){
+                loading = true;
+                o.controller.next_cards(render_new_cards);
+            }
+        });
     };
 
     // show_hide_tags = function (){

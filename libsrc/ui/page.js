@@ -35,7 +35,8 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
-    'sj!templates/request_invite_form.html'
+    'sj!templates/request_invite_form.html',
+    'sj!templates/cards.html'
 ], function(
     $,
     routes,
@@ -243,7 +244,7 @@ define([
     var local_attach_handlers = function(){
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function() {
-                $("#login_menu").data("dialog").open();
+                $("#dia_login_or_join").data("dialog").open();
             });
         }
         $(".user_action_bar form.follow").unbind('response').on('response', 
@@ -259,12 +260,11 @@ define([
                 event.preventDefault();
             }
         });
-        // Belongs in "community"
-        $("#search_box").focus();
         // Special case for logged-out home screen, focus search and 
         // scroll back to top.
-        if (!context.user.logged_in && context.route_name == "home")
-            $("body").scrollTop(0);
+        // hack not necessary anymore with conditional autofocus in template
+        // if (!context.user.logged_in && context.route_name == "home")
+        //     $("body").scrollTop(0);
         
         // global keypress handler
         $("body").unbind('keydown').keydown(function(e) {
@@ -440,8 +440,8 @@ define([
             if (o.columns != columns || !o.done_layout) {
                 o.columns = columns;
                 if (o.column_layout)
-                    layout_columns();
-                add_grid_borders(columns);
+                    o.layout_columns();
+                o.add_grid_borders(columns);
             }
         }
         if (context.page && context.page.resize)
@@ -452,7 +452,7 @@ define([
     // Move the expr.card's into the feed layout, shuffling them
     // into the shortest column.  The order is not preserved.
     // TODO: preserve order.
-    var layout_columns = function(){
+    o.layout_columns = function(){
         // Resize the columns
         for (var i = 0; i < 3; ++i){
             var col_width = 0;
@@ -478,7 +478,8 @@ define([
     };
 
     // Set up the grid borders
-    var add_grid_borders = function(columns){
+    o.add_grid_borders = function(columns){
+        if(context.page_data.layout != 'grid') return;
         var expr_cards = $('#feed .card');
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - (expr_cards.length % columns);
@@ -515,10 +516,6 @@ define([
             e.html(e.html().replace(/ |$/g, '&nbsp; '));
             e.addClass('spaced');
         });
-    };
-
-    o.add_to_feed = function(page_data){
-        $('#feed').append(show_cards(page_data));
     };
 
     // function replace_or_append(e, replace, append){

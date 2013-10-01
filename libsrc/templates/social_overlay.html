@@ -26,7 +26,7 @@
           {|templates/icon_count.html}
         {>}
         {# Views menu drawer #}
-        <div id="views_menu" class="menu drawer" data-handle='#views_icon' >
+        <div id="views_menu" class="menu drawer" data-handle='#views_icon'>
           <div class='menu_item'>
             <div class="text upper item">Created</div>
             <div>{recency_time created}</div>
@@ -79,7 +79,9 @@
             </a> 
         #}
         {# Overlay close button #}
-        {<with null "attr_id" "social_close" "icon_class" "plus-minus narrow"}
+        {<with null "attr_id" "social_close" "icon_class"
+          "plus-minus narrow hoverable"
+        }
           {|templates/icon_count.html}
         {>}
 
@@ -136,6 +138,21 @@
         <input type='hidden' name='entity' value='{id}'>
       </form>
     </div>  
-  </div>
+ 
+  {# password dialog for protected expressions #}
+  {<if error "password"}
+    <div class='dialog hide' id='dia_expr_password'>
+      <h1>This Expression needs a password to be experienced:</h1>
+      <div class='error hide'>Password is incorrect</div>
+      <form {form_attrs "view_expr"
+        "expr_name" name "owner_name" owner.name "secure" true
+      } method='post' class='site'>
+        <input type='password' placeholder='Enter password' autofocus name='password'>
+        <div class='btns'><input type='submit' value='ENTER' class='teal_btn'></div>
+      </form>
+      <form action='{config.secure_content_url}{id}' method='POST' class='content'
+        class='expr_password_form'><input type='hidden' name='password'></form>
+    </div> </div>
+  {>}
 
 {>}

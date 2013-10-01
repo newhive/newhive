@@ -3,13 +3,13 @@ db = state.Database()
 
 def rename_user(old_name, name):
     u = db.User.named(old_name)
-    u.update(name=name)
+    u.update(name=name, updated=False)
     updated = 1
     for r in db.Expr.search({'owner':u.id}):
-        r.update(owner_name=name)
+        r.update(owner_name=name, updated=False)
         updated += 1
     for r in db.Feed.search({'initiator':u.id}):
-        r.update(initiator_name=name)
+        r.update(initiator_name=name, updated=False)
         updated += 1
     print('updated %i records, %s is now %s' % (updated, old_name, name))
 
