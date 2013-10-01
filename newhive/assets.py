@@ -66,7 +66,10 @@ class Assets(object):
                 k = S3Key(self.asset_bucket)
                 k.name = name
                 # assets expire 10 years from now (we rely on cache busting query string)
-                headers = { 'Cache-Control': 'max-age=' + str(86400 * 3650) }
+                headers = {
+                    'Cache-Control': 'max-age=' + str(86400 * 3650),
+                    'Access-Control-Allow-Origin': '*'
+                }
                 if re.search(r'\.woff$', name):
                     headers['Content-Type'] = 'application/x-font-woff'
                 if re.search(r'\.eot$', name):
