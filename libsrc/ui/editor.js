@@ -100,7 +100,7 @@ Hive.Apps = (function(){
                 $("#dia_editor_help").data("dialog").open();
             } else {
                 // otherwise query is assumed to be tag list
-                $("#tags_input").val(query.slice(2).replace("%23","#"));
+                $("#tags_input").val(unescape(query));
             }
         }
         stack.splice(0);
