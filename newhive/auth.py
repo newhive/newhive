@@ -99,7 +99,6 @@ def password_change(user, request, response, force=False):
 
 secrets = ['plain_secret', 'secure_secret']
 cookies = secrets + ['identity']
-
 def set_secret(session, is_secure, response):
     secret = junkstr(32)
     session.update(**{ secrets[is_secure] : secret })
