@@ -17,8 +17,10 @@
   {>}
 {>}{<else}
   <form class="search_bar" method='GET' action='/search' name='search_form'
-      ><a href='/random' title="View Random Expression" class='random_link'
+      {# ><a href='/random' title="View Random Expression" class='random_link'
         ><div class='hoverable icon random inline'></div></a
+        #}
+      ><input type="button" title="Tag Search" value="" class='hoverable icon hash inline'
       ><input type="text" id="search_box" class="inline" placeholder="Search" name='q'
         {<if user.logged_in }autofocus{>}
       ><input type="submit" value class='hoverable icon go_arrow inline'
