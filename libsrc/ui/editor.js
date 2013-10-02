@@ -33,7 +33,7 @@ var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
 Hive.asset = asset;
 
 var hover_menu = function(handle, drawer, opts){
-    Menu(handle, drawer, $.extend({ auto_height: false }, opts));
+    return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
 };
 
 var showDialog = function(jq, opts){
