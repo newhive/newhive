@@ -4,13 +4,13 @@
   Follow/Unfollow
 #}
 <span class="user_action_bar">
-  {<unless brief}{<if user_is_owner}
+  {<unless brief}{<if owner.id user.id}
     <a {anchor_attrs "user_update" "owner_name" name}>
       <div class='icon edit_btn'></div></a>
     <a {anchor_attrs "user_settings" "owner_name" name}>
       <div class='icon settings_btn'></div></a>
   {>}{>}
-  {<unless user_is_owner}
+  {<unless owner.id user.id}
     <a><div class='icon mail_btn needs_login'></div></a>
     {<if user.logged_in}
       <form class='follow' {form_attrs "star_unstar"} method='post'>

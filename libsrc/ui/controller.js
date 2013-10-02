@@ -104,9 +104,9 @@ define([
             callback({});
 
         function success(data){
-            o.dispatch(page_state.route_name, data);
             if (push_state == undefined || push_state)
                 history.pushState(page_state, null, page_state.page);
+            o.dispatch(page_state.route_name, data);
             if (page_state.route_name != "view_expr")
                 $("body").scrollTop(0);
         }
