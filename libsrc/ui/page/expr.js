@@ -332,28 +332,32 @@ define([
         });
 
         // password UI and submission
+        var password_dia = $('#dia_expr_password');
+        var open_passworded_expr = function(password){
+            var frame_name = contentFrame.prop('id'),
+                content_form = password_dia.find('form.content');
+            contentFrame[0].name = frame_name;
+            content_form.find('.password').val(password);
+            content_form.attr('target', frame_name).submit();
+        };
+
         if(page_data.error == 'password'){
-            var box = $('#dia_expr_password');
-            dialog.create(box).open();
-            box.find('form.site').on('response', function(ev, data) {
+            dialog.create(password_dia).open();
+            password_dia.find('form.site').on('response', function(ev, data) {
                 if(data.error) {
                     $('#dia_expr_password .error').show();
                     return;
                 }
-                context.page_data = data;
-                o.controller.refresh(data);
-                open_passworded_expr(data.expr.password);
+                $.extend(context.page_data, data);
+                delete context.page_data.error;
+                o.controller.refresh();
                 
-                var frame_name = contentFrame.prop('id'),
-                    content_form = box.find('form.content');
-                contentFrame[0].name = frame_name;
-                content_form.find('input').val(data.expr.password);
-                content_form.attr('target', frame_name).submit();
+                open_passworded_expr(
+                    password_dia.find('form.site .password').val());
             });
         }
-    };
-
-    var open_passworded_expr = function(password){
+        else if(page_data.expr.password)
+            open_passworded_expr(page_data.expr.password);
     };
 
     var hide_other_exprs = function() {

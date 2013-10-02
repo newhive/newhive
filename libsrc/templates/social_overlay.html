@@ -140,19 +140,18 @@
     </div>  
  
   {# password dialog for protected expressions #}
-  {<if error "password"}
-    <div class='dialog hide' id='dia_expr_password'>
-      <h1>This Expression needs a password to be experienced:</h1>
-      <div class='error hide'>Password is incorrect</div>
-      <form {form_attrs "view_expr"
-        "expr_name" name "owner_name" owner.name "secure" true
-      } method='post' class='site'>
-        <input type='password' placeholder='Enter password' autofocus name='password'>
-        <div class='btns'><input type='submit' value='ENTER' class='teal_btn'></div>
-      </form>
-      <form action='{config.secure_content_url}{id}' method='POST' class='content'
-        class='expr_password_form'><input type='hidden' name='password'></form>
-    </div> </div>
-  {>}
-
+  <div class='dialog' id='dia_expr_password'>
+    <h1>This Expression needs a password to be experienced:</h1>
+    <div class='error hide'>Password is incorrect</div>
+    <form {form_attrs "view_expr"
+      "expr_name" name "owner_name" owner.name "secure" true
+    } method='post' class='site'>
+      <input type='password' placeholder='Enter password' autofocus
+        name='password' class='password'>
+      <div class='btns'><input type='submit' value='ENTER' class='teal_btn'></div>
+    </form>
+    <form action='{config.secure_content_url}{id}' method='POST' class='content'
+      class='expr_password_form'><input type='hidden' name='password'
+      class='password'></form>
+  </div> </div>
 {>}
