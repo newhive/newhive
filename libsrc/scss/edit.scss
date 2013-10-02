@@ -160,7 +160,6 @@ textarea.code {
 
 #menu_image {
     width: 200px;
-    .embed_box { width: 150px; height: 1.2em; }
 }
 
 .btn { display: inline-block; padding: 5px; cursor: default; }
@@ -229,8 +228,7 @@ textarea.code {
 #dia_thumbnail .thumb { float : left; margin : 5px; width : 190px; height : 190px; overflow : hidden; position : relative; }
 #dia_thumbnail .thumb img { width: 190px; height: 190px; }
 
-#menu_embed { width: 275px; padding: 10px; }
-#image_embed_submenu { display: none; }
+.menu.embed { padding: 10px; }
 .embed_box { font-size: 12px; margin: 10px 0; width: 250px; height: 4em; }
 .embed_button { font-size: 18px; }
 
