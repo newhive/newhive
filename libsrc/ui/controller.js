@@ -138,9 +138,11 @@ define([
     };
 
     var setup_google_analytics = function() {
-       window._gaq = [];
+        // review analytics data at google.com:
+        // https://www.google.com/analytics/web/
+        window._gaq = [];
         _gaq.push(['_setAccount', 'UA-22827299-2']);
-        _gaq.push(['_setDomainName', 'foo']);
+        _gaq.push(['_setDomainName', 'none']);
         _gaq.push(['_setAllowLinker', true]);
         _gaq.push(['_setCampaignTrack', true]);
         _gaq.push(['_setCustomVar', 1, 'username', context.user.name, 1]);
@@ -159,7 +161,7 @@ define([
         // ?? Pageview now handled in config.js after custom var set
         //_gaq.push(['_trackPageview']);
 
-        if (context.config.use_ga) {
+        if (context.config.use_ga || 1) {
             (function() {
               var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
               ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
