@@ -28,10 +28,10 @@ define([
             route_name = "view_expr";
         route = routes[route_name];
         var cards = context.page_data.cards;
-        var cards_query = context.page_data.cards_query;
+        var cards_route = context.page_data.cards_route;
         context.page_data = page_data;
         if(!page_data.cards) context.page_data.cards = cards;
-        if(!page_data.cards_query) context.page_data.cards_query = cards_query;
+        if(!page_data.cards_route) context.page_data.cards_route = cards_route;
         page.render(route.client_method, context);
     };
     o.refresh = function(){
@@ -73,12 +73,13 @@ define([
             context.page_data.cards = context.page_data.cards.concat(data.cards);
             if(with_cards) with_cards(data);
         };
-        var query = context.page_data.cards_query, api_call = {
+        var route = context.page_data.cards_route, api_call = {
             method: 'get',
-            url: routing.page_state(query.route_name, query).api,
+            url: routing.page_state(route.route_args.route_name,
+                route.route_args, route.query).api,
             dataType: 'json',
             success: add_cards,
-            data: { at: context.page_data.cards.length }
+            data: $.extend({ at: context.page_data.cards.length }, route.query)
         };
         $.ajax(api_call);
     };

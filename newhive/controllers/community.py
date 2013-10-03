@@ -316,7 +316,8 @@ class Community(Controller):
                     '/' + kwargs.get('owner_name') + '/profile'))
             return self.serve_404(tdata, request, response, json=json)
         if page_data.get('cards'):
-            page_data['cards_query'] = kwargs
+            page_data['cards_route'] = { 'route_args': kwargs,
+                'query': request.args }
             special = page_data.get('special', {})
             if page_data.get('special'):
                 del page_data['special']

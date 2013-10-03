@@ -399,10 +399,10 @@ define([
     o.attach_handlers = function(){
         $("#social_close").unbind('click').click(o.social_toggle);
         $(".social_btn").unbind('click').click(o.social_toggle);
-        if ($("#site").children().length && context.page_data.cards_query)
+        if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
                 o.exit();
-                o.controller.direct_fake_open(context.page_data.cards_query);
+                o.controller.direct_fake_open(context.page_data.cards_route.route_args);
                 $("body").scrollTop(o.controller.scroll_top);
                 o.controller.scroll_top = 0;
             });

@@ -65,19 +65,21 @@
 </div>
 
 <div id='menu_image' class='menu drawer medbold'>
- <div id='image_embed_submenu' style='text-align: center; padding-bottom: 7px;'>
-   <form id='embed_image_form'>
-     <input type='text' id='image_embed_code' class='embed_box'>
-       {# TODO: placeholder='{ui.image_embed_textarea}'>#}
-     <input id='image_embed_done' type='submit' class='btn black rounded embed_button' value='Enter'>
-   </form>
- </div>
- <div id='image_from_url' class='menu_item'>Image URL</div>
- <div id='image_background' class='menu_item'>Background</div>
- <label for='media_input'>
-   <div id='image_upload' class='menu_item default'>Upload image</div></label>
- <!--<div id='image_webcam' class='menu_item'>Take picture</div>
- <div id='image_search' class='menu_item'>Google images</div>-->
+  <div id='image_from_url' class='menu_item'>Image URL</div>
+  <div id='image_background' class='menu_item'>Background</div>
+  <label for='media_input'><div id='image_upload'
+    class='menu_item default'>Upload image</div></label>
+  <!--<div id='image_webcam' class='menu_item'>Take picture</div>
+  <div id='image_search' class='menu_item'>Google images</div>-->
+  <div id='image_embed_submenu' class='menu drawer embed'
+    data-menu-opts='"layout_x":"submenu"'
+  >
+    <form id='embed_image_form'>
+      <input type='text' id='image_embed_code'>&nbsp;&nbsp;<input
+        id='image_embed_done' type='submit'
+        class='btn black rounded embed_button' value='Enter'>
+    </form>
+  </div>
 </div>
 
 <div id='menu_audio' class='menu drawer medbold'>
@@ -85,17 +87,19 @@
     class='menu_item default'>Upload Audio</div>
 </div>
 
-<div id='menu_embed' class='menu drawer'>
- <span class='medbold'>Embed</span><br>
- <div class='spacer'></div>
- <div class='description'>{# TODO: ui.embed_code_description #}</div>
- <textarea id='embed_code' class='embed_box' {#placeholder='{ui.embed_code_textarea}'#}></textarea>
- <div style='text-align : center'><input id='embed_done' type='submit' class='btn black rounded embed_button' value='Enter'></div>
+<div id='menu_embed' class='menu drawer embed'>
+  <span class='medbold'>Embed</span><br>
+  <div class='spacer'></div>
+  <div class='description'>{# TODO: ui.embed_code_description #}</div>
+    <textarea id='embed_code' class='embed_box'
+      {#placeholder='{ui.embed_code_textarea}'#}></textarea>
+    <div style='text-align : center'><input id='embed_done' type='submit'
+      class='btn black rounded embed_button' value='Enter'></div>
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'>
- <div id='shape_sketch' class='menu_item'>Sketch</div>
- <div id='shape_rectangle' class='menu_item default'>Rectangle</div>
+  <div id='shape_sketch' class='menu_item'>Sketch</div>
+  <div id='shape_rectangle' class='menu_item default'>Rectangle</div>
 </div>
 
 <div id='menu_file' class='menu drawer medbold'>
