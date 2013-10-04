@@ -11,6 +11,7 @@ define([
 
     o.init = function(route_args){
         curl.expose('server/context', 'c'); // useful for debugging
+        setup_google_analytics();
 
         routing.register_state(route_args);
         page.init(o);
@@ -21,6 +22,7 @@ define([
         wrapLinks();
     };
     o.dispatch = function(route_name, page_data){
+        track_pageview(route_name);
         context.route_name = route_name;
         if (route_name == "expr")
             route_name = "view_expr";
@@ -134,6 +136,42 @@ define([
         var page_state = routing.page_state(route_name, route_args);
         history.pushState(page_state, null, page_state.page);
     };
-    
+
+    var setup_google_analytics = function() {
+        // review analytics data at google.com:
+        // https://www.google.com/analytics/web/
+        window._gaq = [];
+        _gaq.push(['_setAccount', 'UA-22827299-2']);
+        _gaq.push(['_setDomainName', 'none']);
+        _gaq.push(['_setAllowLinker', true]);
+        _gaq.push(['_setCampaignTrack', true]);
+        _gaq.push(['_setCustomVar', 1, 'username', context.user.name, 1]);
+        _gaq.push(['_setCustomVar', 2, 'join_date', "" + context.user.created, 1]);
+        
+        // ?? What is this?
+        // nd['signup_group']
+        // Out[7]: 1
+        // _gaq.push(['_setCustomVar', 3, 'groups', '{{user.groups_to_string()}}', 1]);
+
+        // ?? where did ga_commands live?
+        // {% for command in ga_commands %}
+        // _gaq.push({{ command | json }});
+        // {% endfor %}
+
+        // ?? Pageview now handled in config.js after custom var set
+        //_gaq.push(['_trackPageview']);
+
+        if (context.config.use_ga || 1) {
+            (function() {
+              var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+              ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+              var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+        }
+    }
+    var track_pageview = function(route_name) {
+        _gaq.push(['_trackPageview']);
+    }
+
     return o;
 });

@@ -2,6 +2,7 @@
 #
 # from src base, run:
 # python -m unittest newhive.test.load_test
+# python -m unittest newhive.test.load_test.LoadTest.test_load_expr
 
 from subprocess import call, Popen, PIPE
 from newhive.utils import now
