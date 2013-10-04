@@ -245,10 +245,12 @@ class HiveAssets(Assets):
             # can't figure out how to make cram work from another dir
             old_dir = os.getcwd()
             os.chdir(join(config.src_home, 'libsrc'))
+            # cram is failing horribly for some reason.
+            # Maybe there's a circular dependency?
             os.system('./cram.sh')
             os.chdir(old_dir)
 
-            self.assets_env.register('site.js', 'compiled.site.js',
+            self.assets_env.register('site.js',
                 filters = 'yui_js',
                 output = '../lib/site.js'
             )
