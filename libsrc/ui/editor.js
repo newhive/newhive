@@ -1,9 +1,9 @@
 /* Copyright 2010, A Reflection Of Inc */
 // thenewhive.com client-side expression editor version 0.1
 define([
-    'browser/jquery', 
+    'browser/jquery',
     'browser/js',
-    'ui/menu', 
+    'ui/menu',
     'ui/codemirror',
     'ui/dialog',
     'ui/util',
