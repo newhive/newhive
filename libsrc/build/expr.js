@@ -5,7 +5,8 @@ define(['curl'], function(curl){
         pluginPath: 'curl/plugin',
         packages: {
             'curl': 'curl'
-        }
+        },
+        excludes: ['browser/jquery']
     });
     curl(['ui/expression']);
 });
