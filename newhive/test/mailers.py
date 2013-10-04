@@ -1,3 +1,8 @@
+# Run from src root:
+# python -m unittest newhive.test.mailers
+# python -m unittest newhive.test.mailers.ShareExpr
+
+
 import unittest, random
 from newhive.server_session import db, server_env, jinja_env, hive_assets
 from newhive import mail, config, state, app

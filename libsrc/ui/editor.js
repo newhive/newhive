@@ -33,7 +33,7 @@ var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
 Hive.asset = asset;
 
 var hover_menu = function(handle, drawer, opts){
-    Menu(handle, drawer, $.extend({ auto_height: false }, opts));
+    return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
 };
 
 var showDialog = function(jq, opts){
@@ -100,7 +100,7 @@ Hive.Apps = (function(){
                 $("#dia_editor_help").data("dialog").open();
             } else {
                 // otherwise query is assumed to be tag list
-                $("#tags_input").val(query.slice(2).replace("%23","#"));
+                $("#tags_input").val(unescape(query));
             }
         }
         stack.splice(0);
@@ -2261,9 +2261,12 @@ Hive.init = function(exp, page){
     hover_menu('#insert_text', '#menu_text');
 
     var image_menu = hover_menu('#insert_image', '#menu_image');
-    var image_embed_menu = hover_menu($('#image_from_url'), $('#image_embed_submenu'),
-        { click_persist: $('#image_embed_code'), auto_close: false,
-            open: function(){ $('#image_embed_code').focus(); }, group: image_menu });
+    var image_embed_menu = hover_menu('#image_from_url', '#image_embed_submenu', {
+        click_persist: $('#image_embed_code'), auto_close: false,
+        open: function(){
+            $('#image_embed_code').focus();
+        }, group: image_menu
+    });
     $('#embed_image_form').submit(function(){
         Hive.embed_code('#image_embed_code');
         image_embed_menu.close();

@@ -2,6 +2,7 @@
 #
 # from src base, run:
 # python -m unittest newhive.test.load_test
+# python -m unittest newhive.test.load_test.LoadTest.test_load_expr
 
 from subprocess import call, Popen, PIPE
 from newhive.utils import now
@@ -15,7 +16,7 @@ from newhive.config import abs_url
 db=state.Database() 
 
 max_threads = 32
-max_time = 120.
+max_time = 10.
 
 # TODO: make this a serializable class
 # with an option to write to a file
@@ -56,10 +57,12 @@ def append_log(url, msg):
     log.append(url, msg)
     debug("%s: %s" % (url,msg))
 
-# TODO: figure out how to query random parts of an external server.
 # This code assumes that the local db is (mostly) in sync
-# with the external one.
+# with the external one.  (If loadtest is running externally)
 # Alternatively, require the loadtest to run *on* the external machine
+
+# Using abs_url() means it will use the server in config.py
+# (which can point externally if desired)
 server = abs_url()[:-1]
 
 exprs = db.Expr.search({})

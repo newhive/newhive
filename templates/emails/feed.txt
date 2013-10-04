@@ -11,8 +11,8 @@ Hi {{ user_name }},
     Now they will receive updates about what you're creating, liking and discussing.
   {% endif %}
 {% elif type == "Broadcast" %}
-  broadcast your expression
-  Your expression has been broadcast to their network of listeners.
+  republish your expression
+  Your expression has been republished to their network of listeners.
 {% endif %}
 
 {{ url }}

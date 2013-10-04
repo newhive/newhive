@@ -38,7 +38,7 @@ define([
         // };
 
         o.init = function(){
-            var no_embed = (util.url_params["no-embed"] != undefined);
+            var no_embed = ("no-embed" in util.url_params);
             if (no_embed) 
                 o.hide();
             else
@@ -82,7 +82,7 @@ define([
             } else {
                 o.send_top("hide"); // $('#page_prev').hide();
             }
-       }
+        }
 
         o.init_content = function(){
             // bonus paging and scrolling features

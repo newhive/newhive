@@ -18,14 +18,14 @@
 <div class='social overlay page_btn' id='page_next'></div>
 
 {# hive logo button #}
-<a {anchor_attrs "home"} id='logo' class='overlay nav logo icon left right'></a>
+<div id='logo' class='overlay nav logo icon left right'></div>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
   {<if user.logged_in}
     <form {form_attrs "logout"} method='POST' id='logout_form'></form>
     <div id='logout_btn' class='menu_item'>Logout</div>
-    <div id='invite_btn' class='menu_item'>Invites</div>
+    {# <div id='invite_btn' class='menu_item'>Invites</div> #}
     <div id='activity_btn' class='menu_item hoverable'>
         <div class='icon'></div>
         <div class='count'>0</div>
@@ -35,7 +35,8 @@
       class='menu_item hoverable'>{user.name|e}</a>
     <a {anchor_attrs "home"} class='menu_item default hoverable'>Network</a>
   {>}{<else}
-    <div class='menu_item default'><a href="/{config.site_user}/about">About NewHive</a></div>
+    <a href="/{config.site_user}/about"><div class='menu_item'>About NewHive</div></a>
+    <a href="/"><div class='menu_item default'>The Hive</div></a>
   {>}
 </div>
 
