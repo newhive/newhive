@@ -66,7 +66,15 @@ class Assets(object):
                 k = S3Key(self.asset_bucket)
                 k.name = name
                 # assets expire 10 years from now (we rely on cache busting query string)
-                k.set_contents_from_filename(path, headers={'Cache-Control': 'max-age=' + str(86400 * 3650) })
+                headers = {
+                    'Cache-Control': 'max-age=' + str(86400 * 3650),
+                    'Access-Control-Allow-Origin': '*'
+                }
+                if re.search(r'\.woff$', name):
+                    headers['Content-Type'] = 'application/x-font-woff'
+                if re.search(r'\.eot$', name):
+                    headers['Content-Type'] = 'application/vnd.ms-fontobject'
+                k.set_contents_from_filename(path, headers=headers)
                 k.make_public()
         print("Done Syncing to s3")
 
