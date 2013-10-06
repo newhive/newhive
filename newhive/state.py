@@ -1067,8 +1067,8 @@ class Expr(HasSocial):
             return map(dict, result.find(sort=[('value', -1)]))
 
         def with_url(cls, url):
-            """ Convenience utility function not used in production, retrieve Expr from full URL """
-            [(port, user, name)] = re.findall(self.config.server_name + r'/(:\d+)?(\w+)/(.*)$', url)
+            """ Convenience utility function not used in production, retrieve Expr from path or full URL """
+            [user, name] = url.split('/')[-2:]
             return cls.named(user, name)
 
         def page(self, spec, viewer, auth='public', tag=None, sort='updated', **args):

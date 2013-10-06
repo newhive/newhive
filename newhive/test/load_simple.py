@@ -12,7 +12,7 @@ import unittest
 import time, math
 from urllib2 import urlopen
 from newhive import state, config
-from newhive.config import abs_url
+from newhive.config import abs_url, url_host
 
 db=state.Database()
 
@@ -62,18 +62,18 @@ def append_log(url, msg):
 # This code assumes that the local db is (mostly) in sync
 # with the external one.
 # Alternatively, require the loadtest to run *on* the external machine
-server = abs_url()[:-1]
+server = url_host(False) #abs_url()[:-1]
 
 exprs = db.Expr.search({})
 def generate_url_expr(count):
     new_count = (count + 2000) % exprs.count()
     expr = exprs[new_count]
-    return "%s/%s/%s" % (server, expr['owner_name'], expr['name'])
-users = db.User.search({})
-def generate_url_profile(count):
-    new_count = (count + 2000) % users.count()
-    user = users[new_count]
-    return "%s/%s/profile" % (server, user['name'])
+    return "http://%s/%s?snapshot" % (server, expr.id)
+#users = db.User.search({})
+#def generate_url_profile(count):
+#    new_count = (count + 2000) % users.count()
+#    user = users[new_count]
+#    return "%s/%s/profile" % (server, user['name'])
 def test_url(count):
     return "%d test" % count
 
@@ -129,7 +129,7 @@ class LoadTest(unittest.TestCase):
         try:
             res = urlopen(url, None, time_out)
         except Exception, e:
-            print e
+            print url, e
             error = True
 
         return error
@@ -175,7 +175,7 @@ class LoadTest(unittest.TestCase):
     def simple(self, qps=1):
         count = 0
         while True:
-            self.wget(generate_url_profile(count))
+            #self.wget(generate_url_profile(count))
             self.wget(generate_url_expr(count))
             time.sleep(1)
             count += 1
