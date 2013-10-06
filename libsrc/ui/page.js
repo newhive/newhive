@@ -205,6 +205,8 @@ define([
         }
         if (new_page) {
             context.page = new_page;
+            if (new_page.set_page) 
+                new_page.set_page(o);
         } else if (context.page) {
             delete context.page;
         }
