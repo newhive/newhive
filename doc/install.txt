@@ -31,6 +31,8 @@ Python library dependencies
         werkzeug --- ??? what repo
 
 JavaScript dependencies
+    # ?? sudo apt-get install npm
+
     node:
         wget http://nodejs.org/dist/v0.10.12/node-v0.10.12.tar.gz
         tar zxf node-v0.10.12.tar.gz

@@ -1,4 +1,4 @@
-from newhive.controllers import controller, community, expr, file, user
+import controller, community, expr, file, user
 
 class Controllers(object):
     """ Convenience class for instantiating all da controllers at once. """
