@@ -326,6 +326,8 @@
         &.main {
             margin: 50px auto;
             width: 600px;
+            max-height: 114px;
+            overflow: hidden;
         }
     }
     #tag_bar {
