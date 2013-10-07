@@ -12,6 +12,7 @@
 }
 
 .page_btn {
+    opacity: .9;
     width: 42px;
     height: 55px;
     // background-size: 42px 55px;
@@ -61,9 +62,9 @@
 .overlay {
     display: none;
     // opacity: .95;
-    &.social {
-        opacity: inherit;
-    }
+    // &.social {
+    //     opacity: inherit;
+    // }
     position: fixed;
     z-index: $nav_layer;
     background-color: white;
