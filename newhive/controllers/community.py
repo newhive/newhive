@@ -298,15 +298,21 @@ class Community(Controller):
     def empty(self, tdata, request, **args):
         return { 'page_data': {} }
 
+    @classmethod
+    def parse_query(klass, query_string):
+        if query_string:
+            return "?" + query_string
+        return ""
+
     def dispatch(self, handler, request, json=False, **kwargs):
         (tdata, response) = self.pre_process(request)
         # Handle redirects
         if kwargs.get('route_name') == 'my-profile':
             return self.redirect(response, abs_url(
-                '/' + tdata.user['name'] + '/profile'))
+                '/' + tdata.user['name'] + '/profile' + Community.parse_query(request.query_string)))
         elif kwargs.get('route_name') == 'my-create':
             return self.redirect(response, abs_url(
-                '/' + tdata.user['name'] + '/profile/create'))
+                '/' + tdata.user['name'] + '/profile/create' + Community.parse_query(request.query_string)))
 
         query = getattr(self, handler, None)
         if query is None:
