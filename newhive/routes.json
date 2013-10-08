@@ -35,6 +35,20 @@
         "client_method": "grid",
         "require_login": true
     },
+
+    "my-profile": {
+        "page_route": "/my-profile",
+        "api_route": "/api/my-profile",
+        "controller": "community",
+        "method": "empty"
+    },
+    "my-create": {
+        "page_route": "/my-create",
+        "api_route": "/api/my-create",
+        "controller": "community",
+        "method": "empty"
+    },
+
  
     "featured": {
         "page_route": "/home/featured",

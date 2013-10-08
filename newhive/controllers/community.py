@@ -12,6 +12,9 @@ class Community(Controller):
             'title': "The Hive",
         }
 
+    def empty(self, tdata, request, **paging_args):
+        return False
+
     def recent(self, tdata, request, **paging_args):
         return {
             "cards": self.db.query('#Recent', viewer=tdata.user, **paging_args),
@@ -297,6 +300,14 @@ class Community(Controller):
 
     def dispatch(self, handler, request, json=False, **kwargs):
         (tdata, response) = self.pre_process(request)
+        # Handle redirects
+        if kwargs.get('route_name') == 'my-profile':
+            return self.redirect(response, abs_url(
+                '/' + tdata.user['name'] + '/profile'))
+        elif kwargs.get('route_name') == 'my-create':
+            return self.redirect(response, abs_url(
+                '/' + tdata.user['name'] + '/profile/create'))
+
         query = getattr(self, handler, None)
         if query is None:
             return self.serve_404(tdata, request, response, json=json)
