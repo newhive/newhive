@@ -126,6 +126,7 @@
         //position:absolute;
         //top: 44px;
         max-width: 980px;
+        overflow-x: auto;
         margin: auto;
         padding: 20px 0px 0px 10px;
         position: relative;
@@ -142,8 +143,14 @@
         &> * > * { vertical-align:bottom; }
     }
     #views_menu {
-        .text.item {
-            margin-top: 6px;
+        // .text.item {
+        //     margin-top: 6px;
+        // }
+        .menu_item {
+            font-family: bebas;
+        }
+        .menu_item + .menu_item {
+            border-top: 2px solid grey;
         }
     }
     .left_pane {
@@ -152,10 +159,11 @@
         padding-right: 5px;
 
         .title_spacer { 
-            height:78px;
+            height: 78px;
             display: table;
         }
         .title {
+            // TODO: change to box?
             @include calc-width("100% - 10px");
             height: 100%;
             vertical-align: middle;
@@ -184,7 +192,10 @@
 
     .right_pane {
         display: inline-block;
-        width: 470px;
+        // width: 470px;
+        width: 100%;
+        max-width: 470px;
+
         text-align: right;
         margin-right: 70px;
 

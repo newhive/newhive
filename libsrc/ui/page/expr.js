@@ -65,6 +65,10 @@ define([
             o.overlay_columns = columns;
             $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
             $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right');
+            if (columns == 1)
+                $("#popup_content .empty").show();
+            else
+                $("#popup_content .empty").hide();
         }
     };
     var resize_icon = function(el) {
