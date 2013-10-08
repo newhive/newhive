@@ -258,7 +258,7 @@ class HiveAssets(Assets):
             os.system('./cram.sh')
             os.chdir(old_dir)
 
-            self.assets_env.register('site.js',
+            self.assets_env.register('site.js', 'compiled.site.js',
                 filters = 'yui_js',
                 output = '../lib/site.js'
             )
