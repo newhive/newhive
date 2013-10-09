@@ -153,11 +153,6 @@ define([
                 $('#content_btns .edit_ui .icon').show();
             }
         }
-
-        // slideshow functionality
-        var play_time = parseFloat(ui_util.url_params.play_time);
-        if(play_time)
-            setTimeout(o.page_next, play_time * 1000);
     };
 
     // Check to see if tags overflows its bounds.
@@ -271,6 +266,8 @@ define([
         }
         return contentFrame;
     };
+
+    o.play_timer = false;
     // Animate the new visible expression, bring it to top of z-index.
     function animate_expr (){
         var page_data = context.page_data;
@@ -381,6 +378,13 @@ define([
         }
         else if(page_data.expr.password)
             open_passworded_expr(page_data.expr.password);
+
+        // slideshow functionality
+        var play_time = parseFloat(ui_util.url_params.play_time);
+        if(play_time){
+            clearTimeout(o.play_timer);
+            o.play_timer = setTimeout(o.page_next, play_time * 1000);
+        }
     };
 
     var hide_other_exprs = function() {
@@ -685,9 +689,9 @@ define([
                         $.extend(page_data, card.json);
                         o.render(page_data);
                         o.attach_handlers();
-                        o.controller.fake_open('view_expr', data);
+                        o.controller.fake_open('view_expr', data, ui_util.url_params);
                     } else {
-                        o.controller.open('view_expr', data);
+                        o.controller.open('view_expr', data, ui_util.url_params);
                     }
                 }
             }

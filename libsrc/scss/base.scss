@@ -251,6 +251,7 @@ input[type=text]:focus, input[type=password]:focus, textarea:focus {
 input[type=button], input[type=submit], button { border : none; margin: 0px; }
 
 .hide { display: none !important; }
+.clean { display: none !important; }
 
 .border { border : 5px solid $color_unselected; padding : 5px; }
 .selected { border-color: $color_selected; }

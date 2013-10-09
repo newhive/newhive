@@ -2155,13 +2155,8 @@ Hive.init = function(exp, page){
     if(!exp.auth) exp.auth = 'public';
 
     //setInterval(Hive.set_draft, 5000);
-    if(!debug_mode){
-        window.onbeforeunload = function(){
-            //try { Hive.set_draft(); }
-            //catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
-            return "If you leave this page any unsaved changes to your expression will be lost.";
-        };
-    }
+    //try { Hive.set_draft(); }
+    //catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
     //var draft = Hive.get_draft();
     //if(draft) Hive.Exp = draft;
 
@@ -2394,8 +2389,7 @@ Hive.init = function(exp, page){
     $('#save_submit').click(function(){
         if( ! $(this).hasClass('disabled') ){
             if(checkUrl()){
-                window.onbeforeunload = null; //Cancel the warning for leaving the page
-                $(this).addClass('disabled');
+                page.controller.set_exit_warning(false);
                 Hive.save();
             }
         }

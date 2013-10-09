@@ -69,7 +69,11 @@ define([
     };
 
     var init_overlays = function(){
-        $('#overlays').empty().html(overlay_template());
+        var overlay_opts = {};
+        if(ui_util.url_params.clean)
+            overlay_opts.clean = true;
+
+        $('#overlays').empty().html(overlay_template(overlay_opts));
         // render_overlays();
         $('#login_form').submit(o.login);
         if(!context.user.logged_in){

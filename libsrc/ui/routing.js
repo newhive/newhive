@@ -1,7 +1,8 @@
 define([
+    'browser/jquery',
     'json!ui/routes.json',
     'json!server/compiled.config.json'
-], function(ApiRoutes, config){
+], function($, ApiRoutes, config){
     var o = {};
 
     // turns out I don't really need this, but could be useful in the future
@@ -18,6 +19,7 @@ define([
     //     return url;
 
     o.page_state = function(route_name, route_args, query) {
+        if(typeof query == 'object') query = $.param(query);
         query = query ? '?' + query : '';
         var route = ApiRoutes[route_name];
         if(!route) throw('Route "' + route_name + '" not found');

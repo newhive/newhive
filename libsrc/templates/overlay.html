@@ -1,4 +1,4 @@
-<div class='overlay panel nav' id='content_btns'>
+<div class='overlay panel nav {<if clean}clean{>}' id='content_btns'>
   {# edit expression #}
   <span class='hide edit_ui'></span>{# no \n #}
   {# create or signup/login #}
@@ -18,7 +18,7 @@
 <div class='social overlay page_btn' id='page_next'></div>
 
 {# hive logo button #}
-<div id='logo' class='overlay nav logo icon left right'></div>
+<div id='logo' class='overlay nav logo icon left right {<if clean}clean{>}'></div>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>

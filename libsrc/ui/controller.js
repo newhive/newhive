@@ -84,7 +84,24 @@ define([
         $.ajax(api_call);
     };
 
+    o.set_exit_warning = function(warning, exit_condition){
+        o.exit_warning = warning;
+        o.exit_condition = exit_condition;
+        if(warning){
+            window.onbeforeunload = function(){
+                return o.exit_warning;
+            };
+        } else {
+            window.onbeforeunload = null;
+        }
+    };
+
     o.open_route = function(page_state, callback, push_state) {
+        if(o.exit_warning &&
+            (!o.exit_condition || !o.exit_condition()) &&
+            !confirm(o.exit_warning)
+        ) return;
+
         // remember scroll position.
         if (page_state.route_name != "view_expr") {
             o.scroll_top = 0;
@@ -122,20 +139,19 @@ define([
     o.direct_fake_open = function(card_query) {
         o.fake_open(card_query['route_name'], card_query);
     };
-    o.open = function(route_name, route_args){
-        o.open_route(routing.page_state(route_name, route_args));
+    o.open = function(route_name, route_args, query){
+        o.open_route(routing.page_state(route_name, route_args, query));
     };
     o.get = function(route_name, route_args, callback, query){
-        if(typeof query == 'object') query = $.param(query);
         o.open_route(routing.page_state(
             route_name, route_args, query), callback);
     };
-    o.fake_open = function(route_name, route_args){
+    o.fake_open = function(route_name, route_args, query){
         // Test for old browsers which don't support history.pushState.
         // Fallback to plane old open.
         if (! (window.history && window.history.pushState))
             return o.open(route_name, route_args);
-        var page_state = routing.page_state(route_name, route_args);
+        var page_state = routing.page_state(route_name, route_args, query);
         history.pushState(page_state, null, page_state.page);
     };
 
