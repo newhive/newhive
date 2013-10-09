@@ -33,6 +33,11 @@ define([
                 // return jqHide(elem, name, value, pass);
             };
         }(jQuery));
+        (function($){
+            $.fn.bind_once = function( event_name, func ) {
+                return $(this).unbind(event_name).on(event_name, func);
+            };
+        }(jQuery));
     };
     o.extend_jquery();
 
@@ -58,14 +63,6 @@ define([
         }
     };
 
-    // erm, from online. let's use url_params for now.
-    // http://stackoverflow.com/questions/7731778/jquery-get-query-string-parameters
-    o.qs = function(key) {
-        key = key.replace(/[*+?^$.\[\]{}()|\\\/]/g, "\\$&"); // escape RegEx meta chars
-        var match = location.search.match(new RegExp("[?&]"+key+"=([^&]+)(&|$)"));
-        return match && decodeURIComponent(match[1].replace(/\+/g, " "));
-    }
-    
     o.url_params = {};
     (function () {
         var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }

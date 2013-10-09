@@ -12,6 +12,9 @@ class Community(Controller):
             'title': "The Hive",
         }
 
+    def empty(self, tdata, request, **paging_args):
+        return False
+
     def recent(self, tdata, request, **paging_args):
         return {
             "cards": self.db.query('#Recent', viewer=tdata.user, **paging_args),
@@ -236,7 +239,7 @@ class Community(Controller):
             resp['expr'] = dfilter(resp['expr'], ['owner', 'auth', 'id', 'name'])
             resp['expr']['title'] = '[password required]'
             resp['error'] = 'password'
-        else: 
+        else:
             expr_owner = expr.get_owner()
             if expr_owner and expr_owner['analytics'].get('views_by'):
                 expr_owner.increment({'analytics.views_by': 1})
@@ -295,8 +298,22 @@ class Community(Controller):
     def empty(self, tdata, request, **args):
         return { 'page_data': {} }
 
+    @classmethod
+    def parse_query(klass, query_string):
+        if query_string:
+            return "?" + query_string
+        return ""
+
     def dispatch(self, handler, request, json=False, **kwargs):
         (tdata, response) = self.pre_process(request)
+        # Handle redirects
+        if kwargs.get('route_name') == 'my-profile':
+            return self.redirect(response, abs_url(
+                '/' + tdata.user['name'] + '/profile' + Community.parse_query(request.query_string)))
+        elif kwargs.get('route_name') == 'my-create':
+            return self.redirect(response, abs_url(
+                '/' + tdata.user['name'] + '/profile/create' + Community.parse_query(request.query_string)))
+
         query = getattr(self, handler, None)
         if query is None:
             return self.serve_404(tdata, request, response, json=json)

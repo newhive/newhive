@@ -35,6 +35,20 @@
         "client_method": "grid",
         "require_login": true
     },
+
+    "my-profile": {
+        "page_route": "/home/my-profile",
+        "api_route": "/api/my-profile",
+        "controller": "community",
+        "method": "empty"
+    },
+    "my-create": {
+        "page_route": "/home/my-create",
+        "api_route": "/api/my-create",
+        "controller": "community",
+        "method": "empty"
+    },
+
  
     "featured": {
         "page_route": "/home/featured",
@@ -100,6 +114,10 @@
         "controller": "community",
         "method": "user_update",
         "client_method": "user_update"
+    },
+    "manage_tags": {
+        "page_route": "/<owner_name>/profile/manage_tags",
+        "client_method": "manage_tags"
     },
     "user_settings": {
         "page_route": "/<owner_name>/profile/settings",

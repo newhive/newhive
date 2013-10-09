@@ -2,12 +2,14 @@ define([
     './expr',
     './home',
     './edit_expr',
-    './profile'
+    './profile',
+    './manage_tags'
 ], function(
     expr,
     home,
     edit_expr,
-    profile
+    profile,
+    manage_tags
 ){ 
 	return {
     	expr: expr,
@@ -17,6 +19,7 @@ define([
         mini: profile,
         grid: profile,
         edit_expr: edit_expr,
-        create_expr: edit_expr
+        create_expr: edit_expr,
+        manage_tags: manage_tags
 	}
 });

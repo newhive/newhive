@@ -125,8 +125,10 @@ define([
     o.open = function(route_name, route_args){
         o.open_route(routing.page_state(route_name, route_args));
     };
-    o.get = function(route_name, route_args, callback){
-        o.open_route(routing.page_state(route_name, route_args), callback);
+    o.get = function(route_name, route_args, callback, query){
+        if(typeof query == 'object') query = $.param(query);
+        o.open_route(routing.page_state(
+            route_name, route_args, query), callback);
     };
     o.fake_open = function(route_name, route_args){
         // Test for old browsers which don't support history.pushState.
