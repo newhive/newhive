@@ -2,7 +2,7 @@ define([
     'browser/jquery',
     'ui/dialog',
     'server/context',
-    'sj!templates/cards.html',
+    'sj!templates/cards.html'
 ], function(
     $,
     dialog,
