@@ -101,6 +101,10 @@
         "method": "user_update",
         "client_method": "user_update"
     },
+    "manage_tags": {
+        "page_route": "/<owner_name>/profile/manage_tags",
+        "client_method": "manage_tags"
+    },
     "user_settings": {
         "page_route": "/<owner_name>/profile/settings",
         "api_route": "/api/user/settings/<owner_name>",

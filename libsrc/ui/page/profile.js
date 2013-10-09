@@ -2,14 +2,12 @@ define([
     'browser/jquery',
     'ui/dialog',
     'server/context',
-    'sj!templates/cards.html',
-    'require'
+    'sj!templates/cards.html'
 ], function(
     $,
     dialog,
     context,
-    cards_template,
-    require
+    cards_template
 ) {
     var o = { name: 'profile' },
             show_tags = true,
@@ -55,7 +53,7 @@ define([
         }
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
 
-        ui_page = require('ui/page');
+        // ui_page = require('ui/page');
         win.unbind('scroll', on_scroll_add_page).scroll(on_scroll_add_page);
     };
 

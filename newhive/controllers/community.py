@@ -236,7 +236,7 @@ class Community(Controller):
             resp['expr'] = dfilter(resp['expr'], ['owner', 'auth', 'id', 'name'])
             resp['expr']['title'] = '[password required]'
             resp['error'] = 'password'
-        else: 
+        else:
             expr_owner = expr.get_owner()
             if expr_owner and expr_owner['analytics'].get('views_by'):
                 expr_owner.increment({'analytics.views_by': 1})

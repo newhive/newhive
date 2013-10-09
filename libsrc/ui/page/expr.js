@@ -4,6 +4,7 @@ define([
     'browser/layout',
     'ui/menu',
     'ui/dialog',
+    'ui/util',
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
@@ -14,6 +15,7 @@ define([
     browser_layout,
     menu,
     dialog,
+    ui_util,
     activity_template,
     social_overlay_template,
     edit_btn_template,
@@ -104,22 +106,34 @@ define([
         o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
 
         if (page_data.cards == undefined) {
-            // In case of direct link with no contect,
-            // fetch the default context: owner's cards
-            // TODO: shold be able to link context in URL with #user=foo or #tag=bar
-            o.controller.get('expressions_public', {
-                owner_name: page_data.expr.owner.name
-            }, function(json) {
-                page_data.cards = json.cards;
-            });
+            // In case of direct link with no context,
+            // fetch cards from q param, or the default context, @owner
+
+            var set_cards = function(data){
+                page_data.cards = data.cards };
+
+            if(ui_util.url_params.q){
+                o.controller.get('search', {}, set_cards,
+                    {q: ui_util.url_params.q });
+                context.page_data.cards_route = {
+                    query: ui_util.url_params.q,
+                    route_args: { route_name: 'search' }
+                };
+            }
+            else
+                o.controller.get('expressions_public', {
+                    owner_name: page_data.expr.owner.name }, set_cards)
         }
+
         var found = find_card(o.expr.id);
         if (found >= 0) {
             var card = page_data.cards[found];
             if (! card.json)
-                _navigate_page(0); // To cache nearby expressions
+                o.navigate_page(0); // To cache nearby expressions
         }
+
         animate_expr();
+
         hide_panel();
         $("#content_btns").show();
         $(".social_btn").removeClass("hide");
@@ -135,6 +149,11 @@ define([
                 $('#content_btns .edit_ui .icon').show();
             }
         }
+
+        // slideshow functionality
+        var play_time = parseFloat(ui_util.url_params.play_time);
+        if(play_time)
+            setTimeout(o.page_next, play_time * 1000);
     };
 
     // Check to see if tags overflows its bounds.
@@ -613,10 +632,9 @@ define([
         o.edit_comment_response([], json);
     };
 
-    o.page_prev = function() { _navigate_page(-1); };
-    o.page_next = function() { _navigate_page(1); };
-    o.navigate_page = function(offset) { _navigate_page(offset); };
-    _navigate_page = function (offset){
+    o.page_prev = function() { o.navigate_page(-1); };
+    o.page_next = function() { o.navigate_page(1); };
+    o.navigate_page = function(offset){
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
