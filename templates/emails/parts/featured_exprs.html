@@ -12,7 +12,7 @@
         {% endif %}
         {% for expr in exprs -%}
           <a href="{{expr.url}}" title="{{expr.title}}" id="{{expr.id}}"
-              ><img class="featured_thumb" src="{{expr.thumb}}"/
+              ><img class="featured_thumb" src="{{expr.snapshot_name("small")}}"/
           ></a>
         {%- endfor %}
     </div>

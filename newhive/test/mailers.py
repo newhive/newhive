@@ -10,13 +10,28 @@ from newhive import mail, config, state, app
 import os.path
 
 mail.send_real_email = False
-mail.css_debug = True
+# mail.css_debug = True
 
+import functools
+def debug_on(*exceptions):
+    if not exceptions:
+        exceptions = (AssertionError, )
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except exceptions:
+                pdb.post_mortem(sys.exc_info()[2])
+        return wrapper
+    return decorator
 
+import pdb 
 class MailerTest(unittest.TestCase):
     def setUp(self):
         self.test_user = db.User.named('test')
         self.test_nonuser = {'email': 'test+nonuser@newhive.com', 'name': 'Nonuser'}
+        # pdb.set_trace()
 
     def get_expr(self):
         #return db.Expr.fetch("504fb8e063dade0b7401d422") # contains unicode title
@@ -27,6 +42,7 @@ class MailerTest(unittest.TestCase):
         return db.Expr.random().owner
 
 class ShareExpr(MailerTest):
+    @debug_on()
     def setUp(self):
         super(ShareExpr, self).setUp()
         self.mailer = mail.ShareExpr(db=db, jinja_env=jinja_env)
