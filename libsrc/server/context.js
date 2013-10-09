@@ -48,6 +48,12 @@ define([
         }
     };
 
+    o.untitled = function(context, str) {
+        if (str.length)
+            return str;
+        return "[Untitled]";
+    }
+
     var attrs = function(route_name, args, query_args, is_form, suppress){
         if(!suppress) suppress = [];
         var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
