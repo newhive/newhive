@@ -67,6 +67,10 @@ define([
             o.overlay_columns = columns;
             $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
             $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right');
+            if (columns == 1)
+                $("#popup_content .empty").show();
+            else
+                $("#popup_content .empty").hide();
         }
     };
     var resize_icon = function(el) {
@@ -456,8 +460,10 @@ define([
         $("#broadcast_icon").click(function (event) {
             o.social_btn_click(event, $(this), "broadcast"); });
 
-        $('.page_btn').on('mouseenter', function(event){
-            o.page_btn_animate($(this));
+        $('.page_btn').bind_once('mouseenter', function(event){
+            o.page_btn_animate($(this), "in");
+        }).bind_once('mouseleave', function(e) {
+            o.page_btn_animate($(this), "out");
         });
 
         try {
@@ -468,8 +474,22 @@ define([
         } catch(err) {;}
     };
 
-    o.page_btn_animate = function (el) {
+    o.page_btn_animate = function (el, into) {
+        var prop = "opacity";
+        var dir = (el.prop("id") == "page_next") ? "" : "-";
+        var orig_value = el.css(prop);
+        if (el.data(prop))
+            orig_value = el.data(prop);
+        else
+            el.data(prop, orig_value);
+
+        el.stop().css("opacity", (into == "in") ? .2 : .5).animate({
+            'opacity': (into == "in") ? 1.0 : orig_value }, {
+            duration: 500,
+            easing: 'swing'
+        });
         return;
+
         var prop = "background-position-x";
         var dir = (el.prop("id") == "page_next") ? "" : "-";
         var orig_position = el.css(prop);

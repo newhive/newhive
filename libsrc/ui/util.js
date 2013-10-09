@@ -33,6 +33,11 @@ define([
                 // return jqHide(elem, name, value, pass);
             };
         }(jQuery));
+        (function($){
+            $.fn.bind_once = function( event_name, func ) {
+                return $(this).unbind(event_name).on(event_name, func);
+            };
+        }(jQuery));
     };
     o.extend_jquery();
 

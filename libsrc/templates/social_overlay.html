@@ -26,7 +26,7 @@
           {|templates/icon_count.html}
         {>}
         {# Views menu drawer #}
-        <div id="views_menu" class="menu drawer" data-handle='#views_icon'>
+        <div id="views_menu" class="menu drawer" data-handle='#views_icon' data-menu-opts='"layout_x":"center"'>
           <div class='menu_item'>
             <div class="text upper item">Created</div>
             <div>{recency_time created}</div>
@@ -78,6 +78,10 @@
               {<with null "icon_class" "logo narrow"}{|templates/icon_count.html}{>}
             </a> 
         #}
+        {# spacer icon #}
+        {<with null "icon_class" "empty narrow"}
+          {|templates/icon_count.html}
+        {>}
         {# Overlay close button #}
         {<with null "attr_id" "social_close" "icon_class"
           "plus-minus narrow hoverable"

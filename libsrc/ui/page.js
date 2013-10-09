@@ -13,7 +13,6 @@ define([
     'browser/layout',
     'ui/util',
     'ui/page/pages',
-    'require',
     'sj!templates/overlay.html',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
@@ -47,7 +46,6 @@ define([
     browser_layout,
     ui_util,
     pages,
-    require,
     overlay_template,
     master_template,
     home_template,
@@ -205,6 +203,8 @@ define([
         }
         if (new_page) {
             context.page = new_page;
+            if (new_page.set_page) 
+                new_page.set_page(o);
         } else if (context.page) {
             delete context.page;
         }

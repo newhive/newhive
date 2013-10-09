@@ -16,6 +16,9 @@ define([
     o.init = function(controller){
         o.controller = controller;
     };
+    o.set_page = function(page){
+        ui_page = page;
+    }
 
     // pagination functions here
     var loading = false, more_cards = true, ui_page, win = $(window);

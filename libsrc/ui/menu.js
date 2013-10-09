@@ -199,8 +199,11 @@ var menu = function(handle, drawer, options) {
 
             // TODO-polish: check that the menu still fits on window
             // Namely, shift it into screen at the bottom of code
-            if (drawer.hasClass("icon_set"))
+            if (drawer.hasClass("icon_set")) {
                 css_opts.left -= (drawer.outerWidth() - handle.outerWidth()) / 2;
+                // TODO-cleanup: Should prolly have option for force upward layout.
+                css_opts.top = hp.top - drawer.outerHeight() - opts.offset_y;
+            }
         }
         else if( opts.layout == 'center_y' ){
             css_opts.top = Math.max(opts.min_y, hp.top + handle.outerHeight() / 2 -
