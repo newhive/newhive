@@ -84,7 +84,24 @@ define([
         $.ajax(api_call);
     };
 
+    o.set_exit_warning = function(warning, exit_condition){
+        o.exit_warning = warning;
+        o.exit_condition = exit_condition;
+        if(warning){
+            window.onbeforeunload = function(){
+                return o.exit_warning;
+            };
+        } else {
+            window.onbeforeunload = null;
+        }
+    };
+
     o.open_route = function(page_state, callback, push_state) {
+        if(o.exit_warning &&
+            (!o.exit_condition || !o.exit_condition()) &&
+            !confirm(o.exit_warning)
+        ) return;
+
         // remember scroll position.
         if (page_state.route_name != "view_expr") {
             o.scroll_top = 0;

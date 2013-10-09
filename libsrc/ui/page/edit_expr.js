@@ -29,6 +29,8 @@ define([
         // TODO: implement autosave
         $('link.edit').remove();
         $('#site').empty();
+
+        o.controller.set_exit_warning(false);
     };
 
     o.resize = function(){
@@ -49,6 +51,12 @@ define([
         editor.init(page_data.expr, o);
         setTimeout(o.resize, 0);
         $('.edit.overlay').show();
+
+        o.controller.set_exit_warning("If you leave this page any unsaved " +
+            "changes to your expression will be lost.",
+            function(){
+                return editor.Apps.length == 0 }
+        );
     };
 
     o.attach_handlers = function(){
