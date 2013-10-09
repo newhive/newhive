@@ -63,9 +63,11 @@
           has joined NewHive
         {>}
   
-        {<if entity_title}<div class='entity_title'>
-          {<if entity user.id}You{>}{<else}{entity_title|e}{>}
-        </div>{>}
+        <div class='entity_title'>
+          {<if entity user.id}You
+          {>}{<else}{entity_title|untitled|e}
+          {>}
+        </div>
   
         {<if text}
           <div class='text'>{text|e}</div>
