@@ -122,20 +122,19 @@ define([
     o.direct_fake_open = function(card_query) {
         o.fake_open(card_query['route_name'], card_query);
     };
-    o.open = function(route_name, route_args){
-        o.open_route(routing.page_state(route_name, route_args));
+    o.open = function(route_name, route_args, query){
+        o.open_route(routing.page_state(route_name, route_args, query));
     };
     o.get = function(route_name, route_args, callback, query){
-        if(typeof query == 'object') query = $.param(query);
         o.open_route(routing.page_state(
             route_name, route_args, query), callback);
     };
-    o.fake_open = function(route_name, route_args){
+    o.fake_open = function(route_name, route_args, query){
         // Test for old browsers which don't support history.pushState.
         // Fallback to plane old open.
         if (! (window.history && window.history.pushState))
             return o.open(route_name, route_args);
-        var page_state = routing.page_state(route_name, route_args);
+        var page_state = routing.page_state(route_name, route_args, query);
         history.pushState(page_state, null, page_state.page);
     };
 
