@@ -281,10 +281,10 @@ class Community(Controller):
         # if owner_count == 1
         #     profile = expr_owner.client_view()
         #     page_data.update('profile': profile)
+        id = request.args.get('id', None)
         result, search = self.db.query_echo(request.args['q'],
-            viewer=tdata.user, **args)
+            viewer=tdata.user, id=id, **args)
         tags = search.get('tags', [])
-        print search
         data = {
             "cards": result,
             "card_type": "expr",
@@ -308,6 +308,7 @@ class Community(Controller):
 
     def dispatch(self, handler, request, json=False, **kwargs):
         (tdata, response) = self.pre_process(request)
+        self.response = response
         # Handle redirects
         if kwargs.get('route_name') == 'my-profile':
             return self.redirect(response, abs_url(

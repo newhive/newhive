@@ -35,12 +35,22 @@
 
     <div class="container">
       <hr>
-      <form {form_attrs "user_settings" "owner_name" user.name} method='POST'>
+      {#<form {form_attrs "user_settings" "owner_name" user.name} method='POST'>#}
         {# <div class="settings heading">Account settings:</div> #}
         <div class="centered">
-          <button class="teal_btn upper deactivate" type='submit'>DEACTIVATE ACCOUNT</button>
+          <button type="button" name="deactivate" class="teal_btn upper deactivate">DEACTIVATE ACCOUNT</button>
         </div>
-      </form>
+      {#</form>#}
     </div>
+  </div>
+
+  <div class="dialog" id="dia_confirm_deactivate" data-handle=".teal_btn.deactivate">
+    <form {form_attrs "deactivate" "owner_name" user.name} method='POST'>
+      <div class="settings heading">Are you sure?</div>
+      <div class="centered">
+        <button class="teal_btn upper inline" name='cancel' type='cancel'>Cancel</button>
+        <button name="deactivate" class="teal_btn upper deactivate" type='submit'>DEACTIVATE ACCOUNT</button>
+      </div>
+    </form>
   </div>
 {>}

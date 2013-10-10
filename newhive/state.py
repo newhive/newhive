@@ -68,58 +68,66 @@ class Database:
 
     # def _query(self, q, viewer=None, expr_only=None, fuzzy=False,
     #           es_order='_score,updated:desc', **args):
-    def query_echo(self, q, expr_only=None, viewer=None, **args):
+    # arg{id}: if not None, ensure this result appears in the feed
+    def query_echo(self, q, expr_only=None, viewer=None, id=None, **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
 
-        spec = {}
-        if search.get('auth'): spec['auth'] = (
-            'public' if search['auth'] == 'public' else 'password')
+        while True:
+            spec = {}
+            if search.get('auth'): spec['auth'] = (
+                'public' if search['auth'] == 'public' else 'password')
 
-        # todo: put auth specs into elasticsearch searches
-        # todo: make sure that elasticsearch pagination resultsets are of the correct
-        #       size after filtering out exprs that are not viewable
-        # todo: return grouped_feed items with expressions in network trending
-        # todo: handle all queries with esdb for compound queries like '#Loves #food'
+            # todo: put auth specs into elasticsearch searches
+            # todo: make sure that elasticsearch pagination resultsets are of the correct
+            #       size after filtering out exprs that are not viewable
+            # todo: return grouped_feed items with expressions in network trending
+            # todo: handle all queries with esdb for compound queries like '#Loves #food'
 
-        feed = search.get('feed')
-        tags = search.get('tags', [])
-        user = search.get('user')
-        if feed:
-            # if feed == 'network':
-            #     results =  viewer.feed_recent()
-            # elif feed == 'trending':
-            #     results =  viewer.feed_page_esdb(at=start, limit=limit)
-            if feed == 'featured':
-                results = self.Expr.page(
-                    self.User.root_user['tagged']['Featured'], **args)
-            elif feed == 'recent':
-                results = self.Expr.page({}, **args)
-        elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            if user and len(tags) == 1:
-                # if search has user and one tag,
-                # look for specific ordered list in user record
-                owner = self.User.named(user)
-            if owner and owner.get('tagged', {}).has_key(tags[0]):
-                results = self.Expr.cards(owner['tagged'][tags[0]], viewer=viewer)
+            feed = search.get('feed')
+            tags = search.get('tags', [])
+            user = search.get('user')
+            if feed:
+                # if feed == 'network':
+                #     results =  viewer.feed_recent()
+                # elif feed == 'trending':
+                #     results =  viewer.feed_page_esdb(at=start, limit=limit)
+                if feed == 'featured':
+                    results = self.Expr.page(
+                        self.User.root_user['tagged']['Featured'], **args)
+                elif feed == 'recent':
+                    results = self.Expr.page({}, **args)
+            elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
+                owner = None
+                if user and len(tags) == 1:
+                    # if search has user and one tag,
+                    # look for specific ordered list in user record
+                    owner = self.User.named(user)
+                if owner and owner.get('tagged', {}).has_key(tags[0]):
+                    results = self.Expr.cards(owner['tagged'][tags[0]], viewer=viewer)
+                else:
+                    spec = {'auth': 'public'}
+                    if search.get('tags'):
+                        spec['tags_index'] = {'$all': search['tags']}
+                    if search.get('text'):
+                        spec['$or'] = [{'text_index': {'$all': search['text']}},
+                            {'title_index': {'$all': search['text']}}]
+                    if search.get('user'):
+                        spec['owner_name'] = search['user']
+                    results = self.Expr.page(spec, **args)
+                    # results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
+                    #    sort='score', **args)
             else:
-                spec = {'auth': 'public'}
-                if search.get('tags'):
-                    spec['tags_index'] = {'$all': search['tags']}
-                if search.get('text'):
-                    spec['$or'] = [{'text_index': {'$all': search['text']}},
-                        {'title_index': {'$all': search['text']}}]
-                if search.get('user'):
-                    spec['owner_name'] = search['user']
+                sort = 'updated'
                 results = self.Expr.page(spec, **args)
-                # results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
-                #    sort='score', **args)
-        else:
-            sort = 'updated'
-            results = self.Expr.page(spec, **args)
-            if not expr_only:
-                results = results + self.User.page(spec, **args)
-                results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+                if not expr_only:
+                    results = results + self.User.page(spec, **args)
+                    results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+            if not id or len(results) > 500:
+                break;
+            if len(filter(lambda x: x.id==id,results)):
+                break;
+            args['limit'] = (args.get('limit', 20) * 3/2)
 
         return results, search
 
@@ -159,6 +167,8 @@ class Database:
         return search
 
 class Collection(object):
+    trashable = True
+
     def __init__(self, db, entity):
         self.db = db
         self._col = db.mdb[entity.cname]
@@ -375,7 +385,11 @@ class Entity(dict):
         else:
             return False
 
-    def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
+    def delete(self):
+        res = self._col.remove(spec_or_id=self.id, safe=True)
+        if self.Collection.trashable:
+            self.db.Trash.create(self.cname, self)
+        return res
 
 # Common code between User and Expr
 class HasSocial(Entity):
@@ -425,7 +439,6 @@ class User(HasSocial):
     indexes = [
         ('updated', -1),
         ('name', {'unique': True}),
-        ('sites', {'unique': True}),
         'facebook.id',
         'email',
         'text_index'
@@ -1025,6 +1038,8 @@ class User(HasSocial):
 @register
 class Session(Entity):
     cname = 'session'
+    class Collection(Collection):
+        trashable = False
 
 
 def media_path(user, name=None):
@@ -1958,6 +1973,23 @@ class Broken(Entity):
             entity['collection'] = collection_name
             entity['record'] = record
             return super(Broken.Collection, self).create(entity)
+
+
+@register
+class Trash(Entity):
+    """ This collection is for records that are deleted but should be restorable
+        in their original table """
+
+    cname = 'trash'
+    indexes = ['record.id','record.created','record.updated']
+
+    class Collection(Collection):
+        trashable = False
+        def create(self, collection_name, record):
+            entity = {}
+            entity['collection'] = collection_name
+            entity['record'] = record
+            return super(Trash.Collection, self).create(entity)
 
 
 ## utils

@@ -91,6 +91,9 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     //     float: right;
     // }
 }
+#dia_confirm_deactivate {
+    button[type=cancel] { float: left; }
+}
 #dia_share {
     width: 440px;
     padding: 20px;

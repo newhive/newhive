@@ -124,7 +124,14 @@
         "api_route": "/api/user/settings/<owner_name>",
         "controller": "community",
         "method": "settings_update",
-        "client_method": "user_settings"
+        "client_method": "user_settings",
+        "require_login": true
+    },
+    "deactivate": {
+        "page_route": "/<owner_name>/profile/settings/deactivate",
+        "api_route": "/api/user/settings/<owner_name>/deactivate",
+        "controller": "user",
+        "method": "deactivate"
     },
     "following": {
         "page_route": "/<owner_name>/profile/following",
