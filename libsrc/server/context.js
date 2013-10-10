@@ -275,6 +275,8 @@ define([
         };
     }
 
+    o.query = {}; // set by ui.controller
+
     function find_all(elements, selector){
         return elements.filter(selector).add(elements.find(selector));
     }

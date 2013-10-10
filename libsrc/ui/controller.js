@@ -14,6 +14,7 @@ define([
         setup_google_analytics();
 
         routing.register_state(route_args);
+        parse_query();
         page.init(o);
         util.each(pages, function(m){
             if(m.init) m.init(o);
@@ -96,11 +97,15 @@ define([
         }
     };
 
+    // TODO-cleanup: refactor these into distinct functionalities of
+    // fetching data from server and opening a new page
     o.open_route = function(page_state, callback, push_state) {
         if(o.exit_warning &&
             (!o.exit_condition || !o.exit_condition()) &&
             !confirm(o.exit_warning)
         ) return;
+
+        context.query;
 
         // remember scroll position.
         if (page_state.route_name != "view_expr") {
@@ -126,13 +131,13 @@ define([
         function success(data){
             if (push_state == undefined || push_state)
                 history.pushState(page_state, null, page_state.page);
+            parse_query();
             o.dispatch(page_state.route_name, data);
             if (page_state.route_name != "view_expr")
                 $("body").scrollTop(0);
         }
     };
 
-    // TODO-cleanup: distil these into one or two methods
     o.direct_open = function(card_query) {
         o.open(card_query['route_name'], card_query);
     };
@@ -153,6 +158,15 @@ define([
             return o.open(route_name, route_args);
         var page_state = routing.page_state(route_name, route_args, query);
         history.pushState(page_state, null, page_state.page);
+        parse_query();
+    };
+
+    var parse_query = function(){
+        var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
+        if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
+            var pair = v.split('=');
+            context.query[d(pair[0])] = d(pair[1]);
+        });
     };
 
     var setup_google_analytics = function() {

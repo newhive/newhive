@@ -22,7 +22,7 @@
         #}
       ><input type="button" title="Tag Search" value="" class='hoverable icon hash inline'
       ><input type="text" id="search_box" class="inline" placeholder="Search" name='q'
-        {<if user.logged_in }autofocus{>}
+        {<if user.logged_in }autofocus{>} value='{query.q}'
       ><input type="submit" value class='hoverable icon go_arrow inline'
     ></form
   >

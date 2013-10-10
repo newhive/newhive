@@ -5,12 +5,12 @@
 */
 define([
     'browser/jquery',
-    'ui/util',
+    'server/context',
     'browser/layout',
     'ui/jplayer',
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js'
-], function($, util, layout, jplayer){
+], function($, context, layout, jplayer){
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
@@ -38,7 +38,7 @@ define([
         // };
 
         o.init = function(){
-            var no_embed = ("no-embed" in util.url_params);
+            var no_embed = ("no-embed" in context.query);
             if (no_embed) 
                 o.hide();
             else

@@ -4,7 +4,6 @@ define([
     'browser/layout',
     'ui/menu',
     'ui/dialog',
-    'ui/util',
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
@@ -15,7 +14,6 @@ define([
     browser_layout,
     menu,
     dialog,
-    ui_util,
     activity_template,
     social_overlay_template,
     edit_btn_template,
@@ -116,11 +114,11 @@ define([
             var set_cards = function(data){
                 page_data.cards = data.cards };
 
-            if(ui_util.url_params.q){
-                o.controller.get('search', {}, set_cards,
-                    {q: ui_util.url_params.q });
+            if(context.query.q){
+                var query = {q: context.query.q };
+                o.controller.get('search', {}, set_cards, query);
                 context.page_data.cards_route = {
-                    query: ui_util.url_params.q,
+                    query: query,
                     route_args: { route_name: 'search' }
                 };
             }
@@ -380,7 +378,7 @@ define([
             open_passworded_expr(page_data.expr.password);
 
         // slideshow functionality
-        var play_time = parseFloat(ui_util.url_params.play_time);
+        var play_time = parseFloat(context.query.play_time);
         if(play_time){
             clearTimeout(o.play_timer);
             o.play_timer = setTimeout(o.page_next, play_time * 1000);
@@ -689,9 +687,9 @@ define([
                         $.extend(page_data, card.json);
                         o.render(page_data);
                         o.attach_handlers();
-                        o.controller.fake_open('view_expr', data, ui_util.url_params);
+                        o.controller.fake_open('view_expr', data, context.query);
                     } else {
-                        o.controller.open('view_expr', data, ui_util.url_params);
+                        o.controller.open('view_expr', data, context.query);
                     }
                 }
             }

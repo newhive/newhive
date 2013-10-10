@@ -11,7 +11,6 @@ define([
     'ui/new_account',
     'server/context',
     'browser/layout',
-    'ui/util',
     'ui/page/pages',
     'sj!templates/overlay.html',
     'sj!templates/card_master.html',
@@ -44,7 +43,6 @@ define([
     new_account,
     context,
     browser_layout,
-    ui_util,
     pages,
     overlay_template,
     master_template,
@@ -69,11 +67,7 @@ define([
     };
 
     var init_overlays = function(){
-        var overlay_opts = {};
-        if(ui_util.url_params.clean)
-            overlay_opts.clean = true;
-
-        $('#overlays').empty().html(overlay_template(overlay_opts));
+        $('#overlays').empty().html(overlay_template());
         // render_overlays();
         $('#login_form').submit(o.login);
         if(!context.user.logged_in){
