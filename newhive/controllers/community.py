@@ -164,6 +164,8 @@ class Community(Controller):
         }
 
     def loves(self, tdata, request, owner_name=None, **args):
+        # TODO: properly handle private expressions by passing viewer to cards
+
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the feeds starred by owner_name...

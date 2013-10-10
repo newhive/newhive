@@ -83,6 +83,8 @@ class Database:
         # todo: handle all queries with esdb for compound queries like '#Loves #food'
 
         feed = search.get('feed')
+        tags = search.get('tags', [])
+        user = search.get('user')
         if feed:
             # if feed == 'network':
             #     results =  viewer.feed_recent()
@@ -94,17 +96,24 @@ class Database:
             elif feed == 'recent':
                 results = self.Expr.page({}, **args)
         elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            spec = {'auth': 'public'}
-            if search.get('tags'):
-                spec['tags_index'] = {'$all': search['tags']}
-            if search.get('text'):
-                spec['$or'] = [{'text_index': {'$all': search['text']}},
-                    {'title_index': {'$all': search['text']}}]
-            if search.get('user'):
-                spec['owner_name'] = search['user']
-            results = self.Expr.page(spec, **args)
-            # results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
-            #    sort='score', **args)
+            if user and len(tags) == 1:
+                # if search has user and one tag,
+                # look for specific ordered list in user record
+                owner = self.User.named(user)
+            if owner and owner.get('tagged', {}).has_key(tags[0]):
+                results = self.Expr.cards(owner['tagged'][tags[0]], viewer=viewer)
+            else:
+                spec = {'auth': 'public'}
+                if search.get('tags'):
+                    spec['tags_index'] = {'$all': search['tags']}
+                if search.get('text'):
+                    spec['$or'] = [{'text_index': {'$all': search['text']}},
+                        {'title_index': {'$all': search['text']}}]
+                if search.get('user'):
+                    spec['owner_name'] = search['user']
+                results = self.Expr.page(spec, **args)
+                # results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
+                #    sort='score', **args)
         else:
             sort = 'updated'
             results = self.Expr.page(spec, **args)
@@ -113,6 +122,7 @@ class Database:
                 results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
 
         return results, search
+
     def query(self, *args, **kwargs):
         return self.query_echo(*args, **kwargs)[0]
 
@@ -159,7 +169,7 @@ class Collection(object):
 
     def fetch(self, key, keyname='_id', **opts):
         if type(key) == list:
-            return list(self.search(key))
+            return list(self.search(key, **opts))
         else:
             return self.find({ keyname : key }, **opts)
 
@@ -172,11 +182,12 @@ class Collection(object):
         if not r: return None
         return self.new(r)
 
-    def search(self, spec, **opts):
+    def search(self, spec, filter={}, **opts):
         if type(spec) == list:
             items = {}
             res = []
-            for e in self.search({'_id': {'$in': spec }}):
+            filter.update({'_id': {'$in': spec }})
+            for e in self.search(filter, **opts):
                 items[e.id] = e
             for i in spec:
                 if items.has_key(i): res.append(items[i])
@@ -184,7 +195,8 @@ class Collection(object):
         return Cursor(self, self._col.find(spec=spec, **opts))
 
     # Should be overridden to ommit fields not used in list views
-    def cards(self, spec, **opts):
+    # TODO: fix privacy for viewer
+    def cards(self, spec, viewer=None, **opts):
         return self.search(spec, **opts)
 
     def last(self, spec={}, **opts):
@@ -243,8 +255,7 @@ class Collection(object):
 
     # default implementation of pagination, intended to be overridden by
     # specific model classes
-    # TODO: fix privacy for viewer
-    def page(self, spec, viewer=None, sort='updated', **opts):
+    def page(self, spec, sort='updated', **opts):
         return self.paginate(spec, **opts)
 
     def count(self, spec={}): return self.search(spec).count()
@@ -1041,9 +1052,16 @@ class Expr(HasSocial):
 
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
-        def cards(self,  spec, **opts):
+        def cards(self, spec, viewer=None, **opts):
+            filter = {}
+            spec2 = spec if type(spec) == dict else filter
+            if viewer and viewer.logged_in:
+                spec2.update({'$or': [
+                    {'auth': 'public'}, {'owner': viewer.id}]})
+            else:
+                spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
-            return self.search(spec, **opts)
+            return self.search(spec, filter, **opts)
 
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0, 'title_index': 0 }
