@@ -63,15 +63,6 @@ define([
         }
     };
 
-    o.url_params = {};
-    (function () {
-        var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
-        if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
-            var pair = v.split('=');
-            o.url_params[d(pair[0])] = d(pair[1]);
-        });
-    })();
-
     return o;
 });
 

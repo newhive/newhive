@@ -84,6 +84,7 @@ define([
         return args;
     };
 
+    // TODO-cleanup: merge with query_attrs
     o.search_attrs = function(scope){
         var args = { username: o.user.name };
         var query_args = ""
@@ -102,6 +103,8 @@ define([
 
     // takes route_name, and association argument list.
     // Returns attribute string.
+    // TODO-cleanup: make query argument an object, using stringjay
+    //   object constructor, see TODO-cleanup-object in text/stringjay
     o.query_attrs = function(scope, route_name, query){
         var args = get_route_args(Array.prototype.slice.call(arguments, 1));
         return attrs(route_name, args, query, false);
@@ -274,6 +277,8 @@ define([
             });
         };
     }
+
+    o.query = {}; // set by ui.controller
 
     function find_all(elements, selector){
         return elements.filter(selector).add(elements.find(selector));

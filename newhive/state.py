@@ -98,7 +98,8 @@ class Database:
             if search.get('tags'):
                 spec['tags_index'] = {'$all': search['tags']}
             if search.get('text'):
-                spec['text_index'] = {'$all': search['text']}
+                spec['$or'] = [{'text_index': {'$all': search['text']}},
+                    {'title_index': {'$all': search['text']}}]
             if search.get('user'):
                 spec['owner_name'] = search['user']
             results = self.Expr.page(spec, **args)

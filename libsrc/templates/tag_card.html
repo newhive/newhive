@@ -1,5 +1,9 @@
 {# 
 Render a tag
 #}
-<a { search_attrs "#" item }
-  ><div class="tag_label tag_{mod tagnum 16}">#{item}</div></a>
+{# TODO-cleanup: branch on something other than route_name #}
+<a {<if route_name "expressions_public_tags"}
+  { search_attrs "@" page_data.owner.name " " "" "#" item }
+{>}{<else}
+  { search_attrs "#" item }
+{>}><div class="tag_label tag_{mod tagnum 16}">#{item}</div></a>
