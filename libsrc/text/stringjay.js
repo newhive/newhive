@@ -469,6 +469,8 @@ define(['browser/js', 'module'],
 		return '<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};
 	context_base.e = encode_to_html;
+	// TODO-cleanup-object: add object builder, that takes key value
+	//   association list this will be used for query parameters and whatnot
 	context_base.json = function(context, data){
 		return JSON.stringify(data);
 	};
