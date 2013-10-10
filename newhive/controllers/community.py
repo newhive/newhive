@@ -306,6 +306,7 @@ class Community(Controller):
 
     def dispatch(self, handler, request, json=False, **kwargs):
         (tdata, response) = self.pre_process(request)
+        self.response = response
         # Handle redirects
         if kwargs.get('route_name') == 'my-profile':
             return self.redirect(response, abs_url(

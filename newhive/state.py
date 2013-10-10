@@ -413,7 +413,6 @@ class User(HasSocial):
     indexes = [
         ('updated', -1),
         ('name', {'unique': True}),
-        ('sites', {'unique': True}),
         'facebook.id',
         'email',
         'text_index'

@@ -264,6 +264,13 @@ define([
                 event.preventDefault();
             }
         });
+        
+        $("#dia_confirm_deactivate").data("dialog").opts.handler = 
+            function(e, j) {
+                dialog.generic_dialog_handler(e, j);
+                o.on_logout();
+            }
+
         // Special case for logged-out home screen, focus search and 
         // scroll back to top.
         // hack not necessary anymore with conditional autofocus in template

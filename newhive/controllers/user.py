@@ -21,6 +21,17 @@ class User(ModelController):
         auth.handle_logout(self.db, tdata.user, request, response)
         return self.serve_json(response, True)
 
+    def deactivate(self, tdata, request, response, **args):
+        if request.form.get('deactivate')=='':
+            if not tdata.user.logged_in:
+                return { 'error': 'need_login'}
+            # log them out
+            auth.handle_logout(self.db, tdata.user, request, response)
+            # delete user data
+            tdata.user.delete()
+            # redirect to home
+            return self.redirect(response, abs_url('/'))
+
     # edit or delete comment
     def comment_edit(self, tdata, request, response, **args):
         resp = {}
