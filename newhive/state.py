@@ -149,6 +149,8 @@ class Database:
         return search
 
 class Collection(object):
+    trashable = True
+
     def __init__(self, db, entity):
         self.db = db
         self._col = db.mdb[entity.cname]
@@ -364,7 +366,11 @@ class Entity(dict):
         else:
             return False
 
-    def delete(self): return self._col.remove(spec_or_id=self.id, safe=True)
+    def delete(self):
+        res = self._col.remove(spec_or_id=self.id, safe=True)
+        if self.Collection.trashable:
+            self.db.Trash.create(self.cname, self)
+        return res
 
 # Common code between User and Expr
 class HasSocial(Entity):
@@ -1013,6 +1019,8 @@ class User(HasSocial):
 @register
 class Session(Entity):
     cname = 'session'
+    class Collection(Collection):
+        trashable = False
 
 
 def media_path(user, name=None):
@@ -1939,6 +1947,23 @@ class Broken(Entity):
             entity['collection'] = collection_name
             entity['record'] = record
             return super(Broken.Collection, self).create(entity)
+
+
+@register
+class Trash(Entity):
+    """ This collection is for records that are deleted but should be restorable
+        in their original table """
+
+    cname = 'trash'
+    indexes = ['record.id','record.created','record.updated']
+
+    class Collection(Collection):
+        trashable = False
+        def create(self, collection_name, record):
+            entity = {}
+            entity['collection'] = collection_name
+            entity['record'] = record
+            return super(Trash.Collection, self).create(entity)
 
 
 ## utils
