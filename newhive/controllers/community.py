@@ -279,10 +279,10 @@ class Community(Controller):
         # if owner_count == 1
         #     profile = expr_owner.client_view()
         #     page_data.update('profile': profile)
+        id = request.args.get('id', None)
         result, search = self.db.query_echo(request.args['q'],
-            viewer=tdata.user, **args)
+            viewer=tdata.user, id=id, **args)
         tags = search.get('tags', [])
-        print search
         data = {
             "cards": result,
             "card_type": "expr",

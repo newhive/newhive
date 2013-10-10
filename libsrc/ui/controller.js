@@ -74,7 +74,8 @@ define([
             context.page_data.cards = context.page_data.cards.concat(data.cards);
             if(with_cards) with_cards(data);
         };
-        var route = context.page_data.cards_route, api_call = {
+        var route = context.page_data.cards_route;
+        var api_call = {
             method: 'get',
             url: routing.page_state(route.route_args.route_name,
                 route.route_args, route.query).api,

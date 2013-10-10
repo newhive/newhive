@@ -68,49 +68,56 @@ class Database:
 
     # def _query(self, q, viewer=None, expr_only=None, fuzzy=False,
     #           es_order='_score,updated:desc', **args):
-    def query_echo(self, q, expr_only=None, viewer=None, **args):
+    # arg{id}: if not None, ensure this result appears in the feed
+    def query_echo(self, q, expr_only=None, viewer=None, id=None, **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
 
-        spec = {}
-        if search.get('auth'): spec['auth'] = (
-            'public' if search['auth'] == 'public' else 'password')
+        while True:
+            spec = {}
+            if search.get('auth'): spec['auth'] = (
+                'public' if search['auth'] == 'public' else 'password')
 
-        # todo: put auth specs into elasticsearch searches
-        # todo: make sure that elasticsearch pagination resultsets are of the correct
-        #       size after filtering out exprs that are not viewable
-        # todo: return grouped_feed items with expressions in network trending
-        # todo: handle all queries with esdb for compound queries like '#Loves #food'
+            # todo: put auth specs into elasticsearch searches
+            # todo: make sure that elasticsearch pagination resultsets are of the correct
+            #       size after filtering out exprs that are not viewable
+            # todo: return grouped_feed items with expressions in network trending
+            # todo: handle all queries with esdb for compound queries like '#Loves #food'
 
-        feed = search.get('feed')
-        if feed:
-            # if feed == 'network':
-            #     results =  viewer.feed_recent()
-            # elif feed == 'trending':
-            #     results =  viewer.feed_page_esdb(at=start, limit=limit)
-            if feed == 'featured':
-                results = self.Expr.page(
-                    self.User.root_user['tagged']['Featured'], **args)
-            elif feed == 'recent':
-                results = self.Expr.page({}, **args)
-        elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
-            spec = {'auth': 'public'}
-            if search.get('tags'):
-                spec['tags_index'] = {'$all': search['tags']}
-            if search.get('text'):
-                spec['$or'] = [{'text_index': {'$all': search['text']}},
-                    {'title_index': {'$all': search['text']}}]
-            if search.get('user'):
-                spec['owner_name'] = search['user']
-            results = self.Expr.page(spec, **args)
-            # results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
-            #    sort='score', **args)
-        else:
-            sort = 'updated'
-            results = self.Expr.page(spec, **args)
-            if not expr_only:
-                results = results + self.User.page(spec, **args)
-                results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+            feed = search.get('feed')
+            if feed:
+                # if feed == 'network':
+                #     results =  viewer.feed_recent()
+                # elif feed == 'trending':
+                #     results =  viewer.feed_page_esdb(at=start, limit=limit)
+                if feed == 'featured':
+                    results = self.Expr.page(
+                        self.User.root_user['tagged']['Featured'], **args)
+                elif feed == 'recent':
+                    results = self.Expr.page({}, **args)
+            elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
+                spec = {'auth': 'public'}
+                if search.get('tags'):
+                    spec['tags_index'] = {'$all': search['tags']}
+                if search.get('text'):
+                    spec['$or'] = [{'text_index': {'$all': search['text']}},
+                        {'title_index': {'$all': search['text']}}]
+                if search.get('user'):
+                    spec['owner_name'] = search['user']
+                results = self.Expr.page(spec, **args)
+                # results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
+                #    sort='score', **args)
+            else:
+                sort = 'updated'
+                results = self.Expr.page(spec, **args)
+                if not expr_only:
+                    results = results + self.User.page(spec, **args)
+                    results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+            if not id or len(results) > 500:
+                break;
+            if len(filter(lambda x: x.id==id,results)):
+                break;
+            args['limit'] = (args.get('limit', 20) * 3/2)
 
         return results, search
     def query(self, *args, **kwargs):

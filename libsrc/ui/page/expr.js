@@ -26,6 +26,22 @@ define([
     o.cache_offsets = [1, -1, 2];
     o.anim_duration = 400;
 
+    // pagination functions here
+    var loading = false, more_cards = true, ui_page, win = $(window);
+    var on_scroll_add_page = function(){
+        loading = true;
+        o.controller.next_cards(render_new_cards);
+    };
+    var render_new_cards = function(data){
+        // ugly hack to merge old context attributes to new data
+        // data.card_type = context.page_data.card_type;
+        // data.layout = context.page_data.layout;
+        if(data.cards.length < 20)
+            more_cards = false;
+        // context.page_data.cards = context.page_data.cards.concat(data.cards);
+        loading = false;
+    };
+
     o.init = function(controller){
         o.controller = controller;
         $("#page_prev").click(o.page_prev);
@@ -64,7 +80,8 @@ define([
         if (o.overlay_columns != columns) {
             o.overlay_columns = columns;
             $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
-            $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right');
+            $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right').
+                css("max-width", (columns == 1) ? '522px' : '470px');
             if (columns == 1)
                 $("#popup_content .empty").show();
             else
@@ -115,7 +132,7 @@ define([
                 page_data.cards = data.cards };
 
             if(context.query.q){
-                var query = {q: context.query.q };
+                var query = {q: context.query.q, id: o.expr.id };
                 o.controller.get('search', {}, set_cards, query);
                 context.page_data.cards_route = {
                     query: query,
@@ -665,6 +682,9 @@ define([
             if (found >= 0) {
                 // TODO: need to asynch fetch more expressions and concat to cards.
                 found = (found + len + offset) % len;
+                if (offset > 0 && found + 5 > len) {
+                    on_scroll_add_page();
+                }
                 // Cache upcoming expressions
                 var cache_offsets = o.cache_offsets;
                 var expr_ids = [];

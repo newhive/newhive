@@ -259,7 +259,8 @@ define([
             }
         });
         
-        $("#dia_confirm_deactivate").data("dialog").opts.handler = 
+        var dia = $("#dia_confirm_deactivate");
+        if (dia.length) dia.data("dialog").opts.handler = 
             function(e, j) {
                 dialog.generic_dialog_handler(e, j);
                 o.on_logout();
