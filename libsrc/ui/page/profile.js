@@ -15,19 +15,17 @@ define([
 
     o.init = function(controller){
         o.controller = controller;
-        more_cards = (context.page_data.cards &&
-            (context.page_data.cards.length == 20));
     };
     o.set_page = function(page){
         ui_page = page;
     }
 
     // pagination functions here
-    var loading = false, ui_page, win = $(window),
-        more_cards = false;
+    var loading = false, ui_page, win = $(window);
+    o.more_cards = false;
     var on_scroll_add_page = function(){
         if((win.scrollTop() > ($('#feed').height() - win.height()))
-            && !loading && more_cards
+            && !loading && o.more_cards
         ){
             loading = true;
             o.controller.next_cards(render_new_cards);
@@ -38,7 +36,7 @@ define([
         data.card_type = context.page_data.card_type;
         data.layout = context.page_data.layout;
         if(data.cards.length < 20)
-            more_cards = false;
+            o.more_cards = false;
         cards_template(data).insertBefore('#feed .footer');
         ui_page.layout_columns();
         ui_page.add_grid_borders();
@@ -77,7 +75,7 @@ define([
             // $(".tags.icon").removeClass("on");
         }
     }
-    o.enter = function (){
+    o.enter = function(){
         o.exit();
         profile_pages=["expressions_public_tags", "following", "expressions_public", "expressions_private","followers", "loves"];
         i = profile_pages.indexOf(context.route_name);
@@ -92,6 +90,9 @@ define([
         } else {
             $("#signup_create .signup").removeClass("hide");
         }
+
+        o.more_cards = (context.page_data.cards &&
+            (context.page_data.cards.length == 20));
     };
     o.exit = function(){
         $(".network_nav").show();

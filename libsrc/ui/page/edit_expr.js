@@ -24,6 +24,15 @@ define([
         o.controller = controller;
         curl.expose('ui/editor', 'h'); // for debugging
     };
+
+    o.enter = function(){
+        o.controller.set_exit_warning("If you leave this page any unsaved " +
+            "changes to your expression will be lost.",
+            function(){
+                return editor.Apps.length == 0 }
+        );
+    };
+    
     o.exit = function(){
         // TODO: don't let user navigate away from page w/o saving
         // TODO: implement autosave
@@ -51,12 +60,6 @@ define([
         editor.init(page_data.expr, o);
         setTimeout(o.resize, 0);
         $('.edit.overlay').show();
-
-        o.controller.set_exit_warning("If you leave this page any unsaved " +
-            "changes to your expression will be lost.",
-            function(){
-                return editor.Apps.length == 0 }
-        );
     };
 
     o.attach_handlers = function(){
