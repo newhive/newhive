@@ -15,6 +15,8 @@ define([
 
     o.init = function(controller){
         o.controller = controller;
+        more_cards = (context.page_data.cards &&
+            (context.page_data.cards.length == 20));
     };
     o.set_page = function(page){
         ui_page = page;
@@ -22,7 +24,7 @@ define([
 
     // pagination functions here
     var loading = false, ui_page, win = $(window),
-        more_cards = (context.page_data.cards.length == 20);
+        more_cards = false;
     var on_scroll_add_page = function(){
         if((win.scrollTop() > ($('#feed').height() - win.height()))
             && !loading && more_cards
