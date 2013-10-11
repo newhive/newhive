@@ -1103,6 +1103,7 @@ class Expr(HasSocial):
         def with_url(cls, url):
             """ Convenience utility function not used in production, retrieve Expr from path or full URL """
             [user, name] = url.split('/')[-2:]
+            name = name.split('?')[0]
             return cls.named(user, name)
 
         def page(self, spec, viewer, auth='public', tag=None, sort='updated', **args):
