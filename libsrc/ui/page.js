@@ -462,8 +462,7 @@ define([
     };
 
     // Move the expr.card's into the feed layout, shuffling them
-    // into the shortest column.  The order is not preserved.
-    // TODO: preserve order.
+    // into the shortest column.  
     o.layout_columns = function(){
         // Resize the columns
         for (var i = 0; i < 3; ++i){

@@ -127,7 +127,7 @@ class Database:
                 break;
             if len(filter(lambda x: x.id==id,results)):
                 break;
-            args['limit'] = (args.get('limit', 20) * 3/2)
+            args['limit'] = (args.get('limit', 27) * 3/2)
 
         return results, search
 
