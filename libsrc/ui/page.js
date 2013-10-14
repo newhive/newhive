@@ -69,13 +69,25 @@ define([
     var init_overlays = function(){
         $('#overlays').empty().html(overlay_template());
         // render_overlays();
-        $('#login_form').submit(o.login);
+        // $('#login_form').submit(o.login);
+        $('#login_form [name=from]').val(window.location);
         if(!context.user.logged_in){
             var d = dialog.create('#login_menu',  
-                { open: function(){ $("#login_menu input[name=username]").focus(); } });
+                { open: function(){ $("#login_menu input[name=username]").focus(); },
+                  handler: function(e, json) {
+                    if (json.error != undefined) {
+                        $('#login_form .error_msg').text(json.error).hide().fadeIn("slow");
+                    } else {
+                        $('#dialog_shield').click();
+                        o.on_login();
+                    } }
+                } );
             $('.login_btn').click(d.open);
 
-            if(context.error.login) d.open();
+            if(context.error == "login") {
+                d.open();
+                $('#login_form .error_msg').fadeIn("slow");
+            }
 
             // request invite form handlers. This form also appears on home page,
             // so this applies to both, and must be done after the top level render
@@ -110,9 +122,6 @@ define([
             //         $('#login_form .error').show();
             //     }
             // });
-            $('#login_form').on('submit', function(e){
-                $('#login_form [name=from]').val(window.location);
-            });
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
             $('#logout_form').bind('response', o.on_logout);
@@ -155,6 +164,12 @@ define([
         if (routes[context.route_name].require_login) {
             return o.controller.open("home", {});
         }
+        o.controller.refresh();
+    };
+    o.on_login = function(e) {
+        context.user.logged_in = true;
+        // overlays are rendered once on init, so not done on .refresh()
+        init_overlays();
         o.controller.refresh();
     };
     o.logout = function(){

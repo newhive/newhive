@@ -13,8 +13,8 @@ define([
         curl.expose('server/context', 'c'); // useful for debugging
         setup_google_analytics();
 
-        routing.register_state(route_args);
         parse_query();
+        routing.register_state(route_args);
         page.init(o);
         util.each(pages, function(m){
             if(m.init) m.init(o);
@@ -168,6 +168,17 @@ define([
             var pair = v.split('=');
             context.query[d(pair[0])] = d(pair[1]);
         });
+        // Save error message and remove it from hash args
+        // Note, we can't put the error info into query args, because altering the URL
+        // causes a redirect.  Thus it has to be in hash args
+        // window.location.search = window.location.search.replace(/[?&]error[^&]*/,"")
+        $.each(window.location.hash.split("#"), function(i,v) {
+            var pair = v.split("=");
+            if (d(pair[0]) == "error") {
+                context.error = d(pair[1]);
+            }
+        });
+        window.location.hash = window.location.hash.replace(/#error[^#]*/,"")
     };
 
     var setup_google_analytics = function() {
