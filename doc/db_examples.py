@@ -13,6 +13,7 @@ def exprs_with_embeds():
 def create_user(name):
 	db.User.create({"name": name,
 		"email":"me@somewhere.com",
+		"sites":[name + ".thenewhive.com"],
 		"password":"password",
 		"referrer":db.User.site_user.id
 		})
