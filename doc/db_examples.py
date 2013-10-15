@@ -1,6 +1,10 @@
 import re
 from newhive import state
 db = state.Database()
+from newhive.utils import now
+
+def recent_exprs(within_secs):
+	return db.Expr.search({'updated': {'$gt': now() - within_secs}})
 
 def exprs_with_embeds():
     return db.Expr.search({'apps': {'$elemMatch': {
@@ -12,8 +16,9 @@ def create_user(name):
 		"password":"password",
 		"referrer":db.User.site_user.id
 		})
-	new = db.User.named(name)
-	nd = db.User.named("newduke")
+	return db.User.named(name)
+	# new = db.User.named(name)
+	# nd = db.User.named("newduke")
 
 def ids_from_urls(urls):
 	return map(lambda x:db.Expr.with_url(x).id, urls)

@@ -65,16 +65,20 @@ def append_log(url, msg):
 # (which can point externally if desired)
 server_url = abs_url()[:-1]
 content_server = url_host(False)
+server_url = "http://staging.newhive.com"
+content_server = "staging.tnh.me/"
 
-exprs = db.Expr.search({})
+exprs = db.Expr.search({ 'auth': 'public'})
 def generate_url_expr(count):
     new_count = (count + 2000) % exprs.count()
     expr = exprs[new_count]
     return "%s/%s/%s" % (server_url, expr['owner_name'], expr['name'])
 def generate_url_content(count):
     new_count = (count + 2000) % exprs.count()
+    # new_count = 1234 #///////////
     expr = exprs[new_count]
     return "http://%s/%s?snapshot" % (content_server, expr.id)
+
 users = db.User.search({})
 def generate_url_profile(count):
     new_count = (count + 2000) % users.count()
@@ -113,6 +117,7 @@ class LoadTest(unittest.TestCase):
         try:
             res = urlopen(url, None, time_out)
         except Exception, e:
+            print e
             error = True
         
         if pipe and pipe.get('kill'):
@@ -169,11 +174,11 @@ class LoadTest(unittest.TestCase):
         return (self.error_count < count * .02)
 
     def test_load_user(self):
-        self.assertTrue(self.loadtest(max_count=500, qps=100., generate_url=generate_url_profile))
+        self.assertTrue(self.loadtest(max_count=5000, qps=100., generate_url=generate_url_profile))
     def test_load_expr(self):
-        self.assertTrue(self.loadtest(max_count=500, qps=100., generate_url=generate_url_expr))
+        self.assertTrue(self.loadtest(max_count=5000, qps=100., generate_url=generate_url_expr))
     def test_load_content(self):
-        self.assertTrue(self.loadtest(max_count=500, qps=10., generate_url=generate_url_content))
+        self.assertTrue(self.loadtest(max_count=1000, qps=1., generate_url=generate_url_content))
 
 if __name__ == '__main__':
     unittest.main()
