@@ -401,12 +401,17 @@ class HasSocial(Entity):
         return self
     def update(self, **d):
         if d.has_key('password'):
-            d['password'] = mk_password(d['password'])
+            if d['password'] == '':
+                del self['password']
+            else:
+                d['password'] = mk_password(d['password'])
         super(HasSocial, self).update(**d)
         return self
     def cmp_password(self, v):
         password = self.get('password')
         if not password: return True
+        if v == None:
+            v = ''
         if not isinstance(v, (str, unicode)): return False
         # TODO: Test this with non-ascii text
         if password == v: return True

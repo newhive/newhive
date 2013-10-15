@@ -2427,7 +2427,8 @@ Hive.init = function(exp, page){
     
     // Automatically update url unless it's an already saved
     // expression or the user has modified the url manually
-    $('#menu_save #title').bind('keydown keyup', function(){
+    $('#menu_save #title').text(context.page_data.expr.title).
+        bind('keydown keyup', function(){
         if (!(Hive.Exp.home || Hive.Exp.created || $('#url').hasClass('modified') )) {
             $('#url').val($('#title').val().replace(/[^0-9a-zA-Z]/g, "-")
                 .replace(/--+/g, "-").replace(/-$/, "").toLowerCase());
@@ -2590,7 +2591,8 @@ Hive.state = function() {
     Hive.Exp.title = $('#title').val();
     Hive.Exp.tags = $('#tags_input').val();
     Hive.Exp.auth = $('#menu_privacy .selected').attr('val');
-    if(Hive.Exp.auth == 'password') Hive.Exp.password = $('#password').val();
+    if(Hive.Exp.auth == 'password') 
+        Hive.Exp.password = $('#password').val();
 
     // get height
     var h = 0;
