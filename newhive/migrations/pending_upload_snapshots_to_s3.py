@@ -116,7 +116,7 @@ def start_snapshots(proc_tmp_snapshots=False):
     while True:
     # if True:
         exprs = get_exprs(expr_limit)
-        print total
+        print get_exprs(0).count()
         if len(exprs) == 0: break
         # print exprs
         for expr in exprs:

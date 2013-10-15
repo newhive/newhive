@@ -669,7 +669,7 @@ def log_error(db, request=None, message=None, traceback=None, critical=False):
             'filename': x[0],
             'lineno': x[1],
             'function_name': x[2],
-            'current_line': x[3].strip()
+            'current_line': x[3].strip() if x[3]
         } for x in traceback],
         'code_revision': newhive.manage.git.current_revision,
         'dev_prefix': config.dev_prefix,
