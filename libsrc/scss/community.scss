@@ -442,7 +442,10 @@
                     position: absolute;
                     right: 13px; top: 13px;
                     font-family: Bebas Neue;
-                    img { vertical-align: middle; }
+                    img { 
+                        vertical-align: middle; 
+                        margin-left: 10px;
+                    }
                 }
             }
         }
