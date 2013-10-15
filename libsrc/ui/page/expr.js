@@ -112,6 +112,8 @@ define([
         $('#popup_content .counts_icon').each(function(i, el) {
             resize_icon($(this));
         });
+        // Reset scroll to top
+        $("body").scrollTop(0);
         o.resize();
         
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
