@@ -5,6 +5,7 @@ img { padding : 0; margin : 0; border : 0; }
 a { color : inherit; text-decoration : none; }
 .happ, .ehapp { position : absolute; }
 .happ img { width : 100%; }
+.happ.hive_text img { width: inherit; }
 .happfill { position : fixed; top : 0; left : 0; width : 100%; height : 100%; }
 .happfill img { position : absolute; left : 0; top : 0; }
 h1 { font-size : 40px; }
