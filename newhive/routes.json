@@ -191,6 +191,7 @@
         "method": "delete"
     },
     "expr_snapshot": {
+        "comment": "TODO-cleanup: Jordan believes this is deprecated",
         "page_route": "/api/expr/snapshot/<expr_id>",
         "api_route": "/api/expr/snapshot/<expr_id>",
         "controller": "expr",

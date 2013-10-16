@@ -387,10 +387,9 @@ define([
                 }
                 $.extend(context.page_data, data);
                 delete context.page_data.error;
-                o.controller.refresh();
-                
                 open_passworded_expr(
                     password_dia.find('form.site .password').val());
+                o.controller.refresh();
             });
         }
         else if(page_data.expr.password)
