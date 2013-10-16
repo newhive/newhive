@@ -217,7 +217,6 @@ class Collection(object):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
         at = int(at)
-
         if type(spec) == dict:
             # if page_is_id:
             #     page_start = self.fetch(at)
@@ -1076,8 +1075,11 @@ class Expr(HasSocial):
             filter = {}
             spec2 = spec if type(spec) == dict else filter
             if viewer and viewer.logged_in:
-                spec2.update({'$or': [
-                    {'auth': 'public'}, {'owner': viewer.id}]})
+                if spec.get('auth') == 'password':
+                    spec2.update({'owner': viewer.id})
+                else:
+                    spec2.update({'$or': [
+                        {'auth': 'public'}, {'owner': viewer.id}]})
             else:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
