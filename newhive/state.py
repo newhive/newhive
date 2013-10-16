@@ -213,7 +213,8 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def paginate(self, spec, limit=20, at=0, sort='updated', order=-1, filter=None):
+    def paginate(self, spec, limit=20, at=0, sort='updated', 
+        order=-1, filter=None, viewer=None):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
         at = int(at)
@@ -224,7 +225,7 @@ class Collection(object):
 
             # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
 
-            res = self.cards(spec, sort=[(sort, order)], skip=at)
+            res = self.cards(spec, sort=[(sort, order)], skip=at, viewer=viewer)
 
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -399,11 +400,13 @@ class HasSocial(Entity):
         super(HasSocial, self).create()
         return self
     def update(self, **d):
-        if d.has_key('password'):
-            if d['password'] == '':
+        if d.get('auth','') == 'password' and d.has_key('password'):
+            if d['password'] == '' and self.has_key('password'):
                 del self['password']
             else:
                 d['password'] = mk_password(d['password'])
+        elif self.has_key('password'):
+            del self['password']
         super(HasSocial, self).update(**d)
         return self
     def cmp_password(self, v):
@@ -1121,7 +1124,7 @@ class Expr(HasSocial):
 
             assert(sort in ['updated', 'random'])
             args.update(sort=sort)
-            rs = self.paginate(spec, **args)
+            rs = self.paginate(spec, viewer=viewer, **args)
 
             # remove random static patterns from random index
             # to make it _really_ random
