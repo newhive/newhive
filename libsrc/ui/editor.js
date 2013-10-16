@@ -1690,8 +1690,20 @@ Hive.App.Audio = function(o) {
             o.content_element.attr('title', [s.file_meta.artist, s.file_meta.album,
                 s.file_meta.title].join(' - '));
         if(typeof s.url != 'undefined'){
-            o.content_element.jPlayer('setMedia', s.url);
+            var new_content = o.skin();
+            o.content_element.replaceWith(new_content);
+            o.content_element = new_content;
         }
+    };
+
+    o.skin = function(){
+        return $( $.jPlayer.skin.minimal(
+            o.init_state.url, Hive.random_str() )
+        )
+            .addClass('content')
+            .css('position', 'relative')
+            .css('height', '100%')
+            .appendTo(o.div);
     };
 
     // Mixins
@@ -1701,12 +1713,8 @@ Hive.App.Audio = function(o) {
 
     // Initialization
     if(! o.init_state.dimensions) o.init_state.dimensions = [ 200, 35 ];
-    o.content_element = $( $.jPlayer.skin.minimal(
-            o.init_state.url, Hive.random_str() ) )
-        .addClass('content')
-        .css('position', 'relative')
-        .css('height', '100%')
-        .appendTo(o.div);
+    o.content_element = o.skin();
+
     colored = o.div.find('.jp-play-bar, .jp-interface');
     if(!o.init_state.color) o.init_state.color = colors[23];
 
@@ -2362,12 +2370,16 @@ Hive.init = function(exp, page){
         });
     });
 
-    var busy_e = $('#btn_save .loading');
+    var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
         // TODO-draft: set a flag to block saving while uploads are in progress
         busy_e.show();
+        $('#save_submit').addClass('disabled');
+        //$('#save_submit .label').hide(); // can't get to look nice
     }).ajaxStop(function(){
         busy_e.hide();
+        $('#save_submit').removeClass('disabled');;
+        //$('#save_submit .label').show();
     }).ajaxError(function(ev, jqXHR, ajaxOptions){
         // TODO-polish upload_error: show some warning, and somehow indicate
         // which app(s) failed to save
@@ -2394,6 +2406,8 @@ Hive.init = function(exp, page){
             }
         }
     });
+    var overwrite_dialog = dialog.create('#dia_overwrite');
+    $('#cancel_overwrite').click(overwrite_dialog.close);
     $('#save_overwrite').click(function() {
         Hive.Exp.overwrite = true;
         Hive.save();
@@ -2562,7 +2576,7 @@ Hive.save = function() {
             alert("Sorry, something is broken :(. Please send us feedback");
         if(ret.error == 'overwrite') {
             $('#expr_name').html(expr.name);
-            showDialog('#dia_overwrite');
+            $('#dia_overwrite').data('dialog').open();
             $('#save_submit').removeClass('disabled');
         }
         else if(ret.id) Hive.edit_page.view_expr(ret);
@@ -2574,7 +2588,7 @@ Hive.save = function() {
         $('#save_submit').removeClass('disabled');
     };
 
-    $('#expr_save .expr').val(JSON.stringify(Hive.state()));
+    $('#expr_save .expr').val(JSON.stringify(expr));
     $('#expr_save').bind('response', on_response)
         .bind('error', on_error).submit();
 };
