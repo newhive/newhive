@@ -12,7 +12,7 @@ class Cron(Application):
     key = 'VaUcZjzozgiV'
 
     def cron(self, request, response):
-        """ Reads intenal crontab, list of tuples of the format:
+        """ Reads internal crontab, list of tuples of the format:
 
             (Cron Format String, Method Name, Method Options Dictionary)
 
