@@ -1693,6 +1693,9 @@ Hive.App.Audio = function(o) {
             var new_content = o.skin();
             o.content_element.replaceWith(new_content);
             o.content_element = new_content;
+            // ideally jPlayer API would be used so the interface
+            // isn't reset, but this doesn't work, tested 2013-10
+            //o.content_element.jPlayer('setMedia', s.url);
         }
     };
 
