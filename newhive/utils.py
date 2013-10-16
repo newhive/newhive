@@ -427,7 +427,12 @@ class FixedAttrs(object):
 def get_embedly_oembed(url):
     request_url = ( 'https://api.embed.ly/1/oembed?key=%s&url=%s' 
         % (config.embedly_key,urllib.quote_plus(url.strip("/"))) )
-    res = urllib2.urlopen(request_url)
+    try:
+        res = urllib2.urlopen(request_url, None, 30)
+    except:
+        # timeout or something else wrong in the supplied link.
+        # forget and move on.
+        return None
     if res.getcode() != 200:
         return None
     return json.loads(res.read())
