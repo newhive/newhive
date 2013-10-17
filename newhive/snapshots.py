@@ -54,7 +54,7 @@ class Snapshots(object):
                 if True:
                     cmd = 'xvfb-run --auto-servernum --server-args="-screen 0, 1024x768x24" ' + cmd
                 print cmd
-                r = os.system(cmd) #, stderr=fnull, stdout=fnull)
+                r = call(cmd, shell=True) #, stderr=fnull, stdout=fnull)
                 # r = envoy.run(cmd, {"DISPLAY":":19"})
                 if r != 0:
                     print "FAILED: " + cmd

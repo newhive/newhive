@@ -1,7 +1,7 @@
 import re
 from newhive import state
 db = state.Database()
-from newhive.utils import now
+from newhive.utils import now, time_u
 
 def recent_exprs(within_secs):
 	return db.Expr.search({'updated': {'$gt': now() - within_secs}})

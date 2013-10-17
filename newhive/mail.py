@@ -139,7 +139,7 @@ def _send_mail(headers, body, db, category=None, filters=None, unique_args=None,
     else:
         logger.warn("Not sending mail to '%s' in debug mode" % (msg['To']))
         with open('/tmp/sent_mail', 'w') as f:
-            f.write(body['html'])
+            f.write(body['html'].encode('utf-8'))
             f.close()
 
 

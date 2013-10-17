@@ -94,6 +94,8 @@ def handle(request):
     except RequestRedirect as e:
         # bugbug: what's going on here anyway?
         raise Exception('redirect not implemented: from: ' + request.url + ', to: ' + e.new_url)
+    # print controller
+    # print handler
     try:
         if stats:
             pr = cProfile.Profile()
