@@ -138,12 +138,12 @@ Hive.App = function(init_state, opts) {
 
     o._remove = function(){
         o.unfocus();
-        o.div.hide();
+        o.div.hidehide();
         o.deleted = true;
         if(o.controls) o.controls.remove();
     };
     o._unremove = function(){
-        o.div.show();
+        o.div.showshow();
         o.deleted = false;
     };
     o.remove = function(){
@@ -2373,13 +2373,13 @@ Hive.init = function(exp, page){
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
         // TODO-draft: set a flag to block saving while uploads are in progress
-        busy_e.show();
+        busy_e.showshow();
         $('#save_submit').addClass('disabled');
-        //$('#save_submit .label').hide(); // can't get to look nice
+        //$('#save_submit .label').hidehide(); // can't get to look nice
     }).ajaxStop(function(){
-        busy_e.hide();
+        busy_e.hidehide();
         $('#save_submit').removeClass('disabled');;
-        //$('#save_submit .label').show();
+        //$('#save_submit .label').showshow();
     }).ajaxError(function(ev, jqXHR, ajaxOptions){
         // TODO-polish upload_error: show some warning, and somehow indicate
         // which app(s) failed to save
@@ -2466,8 +2466,8 @@ Hive.init = function(exp, page){
         t.addClass('selected');
         $('#privacy span').text(t.text());
         var v = t.attr('val');
-        if(v == 'password') $('#password_ui').show();
-        else $('#password_ui').hide();
+        if(v == 'password') $('#password_ui').showshow();
+        else $('#password_ui').hidehide();
     });
     if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 
@@ -2645,8 +2645,8 @@ Hive.bg_set = function(bg, load) {
         url = bg.content || bg.url;
     if(url) bg.url = url;
 
-    if(bg.url) imgs.show();
-    else { imgs.hide(); return }
+    if(bg.url) imgs.showshow();
+    else { imgs.hidehide(); return }
 
     imgs.attr('src', bg.url);
     img.load(function(){

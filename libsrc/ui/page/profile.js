@@ -68,10 +68,10 @@ define([
 
     show_tags = function (show){
         if (show) {
-            $(".tag_list.main").show();
+            $(".tag_list.main").showshow();
             // $(".tags.icon").addClass("on");
         } else {
-            $(".tag_list.main").hide();
+            $(".tag_list.main").hidehide();
             // $(".tags.icon").removeClass("on");
         }
     }
@@ -80,11 +80,11 @@ define([
         profile_pages=["expressions_public_tags", "following", "expressions_public", "expressions_private","followers", "loves"];
         i = profile_pages.indexOf(context.route_name);
         if (i >= 0) {
-            $(".network_nav").hide();
+            $(".network_nav").hidehide();
             show_tags((i < 2) ? true : false);
         }
-        $("#signup_create").show();
-        $("#content_btns").show();
+        $("#signup_create").showshow();
+        $("#content_btns").showshow();
         if (context.user.logged_in) {
             $("#signup_create .create").removeClass("hide");
         } else {
@@ -95,10 +95,10 @@ define([
             (context.page_data.cards.length == 20));
     };
     o.exit = function(){
-        $(".network_nav").show();
-        $(".tag_list.main").show();
-        $("#signup_create").hide();
-        $("#content_btns").hide();
+        $(".network_nav").showshow();
+        $(".tag_list.main").showshow();
+        $("#signup_create").hidehide();
+        $("#content_btns").hidehide();
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
     };

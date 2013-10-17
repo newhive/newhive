@@ -8,8 +8,8 @@ var menu = function(handle, drawer, options) {
         opts = $.extend({
              open: noop
             ,close: noop
-            ,open_menu: function(){ drawer.show() }
-            ,close_menu: function(){ drawer.hide() }
+            ,open_menu: function(){ drawer.showshow() }
+            ,close_menu: function(){ drawer.hidehide() }
             ,sticky: false
             ,hover_close: true
             ,open_delay: 0

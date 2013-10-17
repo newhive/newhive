@@ -89,6 +89,7 @@ def handle(request):
         request.environ).match()
     except exceptions.NotFound as e:
         print "Gap in routing table!"
+        print request
         return api.controller.serve_500(request, Response(),
             exception=e, json=False)
     except RequestRedirect as e:
