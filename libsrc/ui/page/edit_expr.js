@@ -53,13 +53,13 @@ define([
             $('<link>').attr({rel: 'stylesheet', href: url})
                 .addClass('edit').appendTo('head');
         });
-        $('#site').empty().append(edit_template(page_data)).show();
-        $('#nav').hide();
+        $('#site').empty().append(edit_template(page_data)).showshow();
+        $('#nav').hidehide();
 
         if(!page_data.expr) page_data.expr = {};
         editor.init(page_data.expr, o);
         setTimeout(o.resize, 0);
-        $('.edit.overlay').show();
+        $('.edit.overlay').showshow();
     };
 
     o.attach_handlers = function(){
