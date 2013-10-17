@@ -1,17 +1,18 @@
 from itertools import chain
-from newhive.controllers.shared import *
-from newhive.controllers import Application
-from newhive.utils import now
+# from newhive.controllers.shared import *
+# from newhive.controllers import Application
+from newhive.utils import now, lget, dfilter
+
 from newhive.analytics.analytics import user_expression_summary
 import newhive.analytics.queries
 import newhive.mail
 from newhive import config
+from newhive.controllers.controller import Controller
 
-
-class Cron(Application):
+class Cron(Controller):
     key = 'VaUcZjzozgiV'
 
-    def cron(self, request, response):
+    def cron(self, tdata, request, response, method_name=None, **args):
         """ Reads internal crontab, list of tuples of the format:
 
             (Cron Format String, Method Name, Method Options Dictionary)
@@ -21,10 +22,9 @@ class Cron(Application):
 
             """
 
-        method_name = lget(request.path_parts, 1)
         method = getattr(self, method_name)
         if not request.is_secure or not method or (request.args.get('key') != self.key):
-            return self.serve_404(request, response)
+            return self.serve_404(tdata, request, response)
 
         opts_serial = dfilter(request.args, ['delay', 'span'])
         opts = dict((k, int(v)) for k, v in opts_serial.iteritems())
@@ -86,6 +86,7 @@ class Cron(Application):
     def email_milestone(self):
         mailer = newhive.mail.Milestone(db = self.db, jinja_env = self.jinja_env)
         stats = { 'send_count': 0}
+        #TODO-perf: This hits EVERY public expression
         for expr in self.db.Expr.search({'auth': 'public', 'views': {'$gt': 0}}):
             sent = self._email_milestone_send(expr, mailer)
             if sent:

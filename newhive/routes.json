@@ -38,15 +38,22 @@
 
     "my-profile": {
         "page_route": "/home/my-profile",
-        "api_route": "/api/my-profile",
+        "api_route": "/api/home/my-profile",
         "controller": "community",
         "method": "empty"
     },
     "my-create": {
         "page_route": "/home/my-create",
-        "api_route": "/api/my-create",
+        "api_route": "/api/home/my-create",
         "controller": "community",
         "method": "empty"
+    },
+
+    "cron": {
+        "page_route": "/home/cron/<path:method_name>",
+        "api_route": "/api/home/cron/<path:method_name>",
+        "controller": "cron",
+        "method": "cron"
     },
 
  

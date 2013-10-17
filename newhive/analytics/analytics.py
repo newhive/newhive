@@ -595,7 +595,7 @@ def milestone_email_cadence(db, offset=86400, cutoff=2):
             print
 
 def user_expression_summary(user, p=False):
-    data = [(e['name'], e['views']) for e in user.get_expressions('public')]
+    data = [(e['name'], e.get('views', 0)) for e in user.get_expressions('public')]
     data = data or [('', 0)]
     data = pandas.DataFrame(data, columns=['name', 'views'])
     if p:

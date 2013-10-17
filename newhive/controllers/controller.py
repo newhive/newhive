@@ -75,6 +75,10 @@ class Controller(object):
         return self.serve_html(response, self.render_template(tdata, response, template))
 
     def serve_404(self, tdata, request, response, json=True):
+        if config.debug_mode:
+            print "404"
+            print json
+            raise Exception("404", json)
         response.status_code = 404
         if json: return self.serve_json(response, {'error': 404 })
         else: return self.serve_page(tdata, response, 'pages/notfound.html')

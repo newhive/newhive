@@ -850,6 +850,7 @@ class User(HasSocial):
         return self.db.File.search({ 'owner' : self.id })
     files = property(get_files)
 
+    #TODO-bug: when deleting/adding expression, this lags by one.
     def set_expr_count(self):
         count = self.mdb.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
         self.update_cmd({"$set": {'analytics.expressions.count': count}})
@@ -1351,6 +1352,7 @@ class Expr(HasSocial):
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
         self['domain'] = self['domain'].lower()
         self['random'] = random.random()
+        self['views'] = 0
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         self._collect_files(self)
@@ -1361,6 +1363,7 @@ class Expr(HasSocial):
         return self
 
     def delete(self):
+        #TODO-bug: note, this occurs BEFORE the delete action, thus lags.
         self.owner.get_expr_count(force_update=True)
         for r in self.db.Feed.search({'entity': self.id}): r.delete()
         return super(Expr, self).delete()
