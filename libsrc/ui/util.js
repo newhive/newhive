@@ -14,23 +14,23 @@ define([
     o.extend_jquery = function() {
         (function($){
             var jqShow = $.fn.show;
-            $.fn.show = function( name, elem, value, pass ) {
+            $.fn.showshow = function( speed, easing, callback) {
                 $(this).each(function(i, el) {
                     if ($(el).hasClass("hide"))
                         $(el).removeClass("hide");
-                    else
-                        return jqShow.apply($(el), elem, name, value, pass); 
+                    // else
+                    return jqShow.apply($(el), speed, easing, callback); 
                 });
-                return jqShow.apply($(this), elem, name, value, pass);
+                return jqShow.apply($(this), speed, easing, callback);
             };
         }(jQuery));
         (function($){
             var jqHide = $.fn.hide;
-            $.fn.hide = function( name, elem, value, pass ) {
+            $.fn.hidehide = function( speed, easing, callback) {
                 //if (elem.hasClass("hide"))
                 // if (elem)
                     return $(this).addClass("hide");
-                // return jqHide(elem, name, value, pass);
+                return jqHide(speed, easing, callback);
             };
         }(jQuery));
         (function($){

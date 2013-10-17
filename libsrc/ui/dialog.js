@@ -7,14 +7,14 @@ define([
     oo.create = function(element, options){
         oo.generic_dialog_handler = function(event, json){
             if (json.error != undefined) {
-                opts.dialog.find('.error_msg').text(json.error).hide().fadeIn("slow");
+                opts.dialog.find('.error_msg').text(json.error).hidehide().fadeIn("slow");
             } else {
-                opts.dialog.find('.error_msg').hide();
+                opts.dialog.find('.error_msg').hidehide();
                 var el_show = opts.dialog.find(".success_show").unbind("click").click(
                     function() { o.close(); });
                 if (el_show.length) {
-                    el_show.show();
-                    opts.dialog.find(".success_hide").hide();
+                    el_show.showshow();
+                    opts.dialog.find(".success_hide").hidehide();
                 } else {
                     $('#dialog_shield').click();
                 }
@@ -63,13 +63,13 @@ define([
             if(opts.fade) opts.shield.addClass('fade');
             opts.shield.appendTo(document.body).click(o.close);
 
-            opts.dialog.detach().appendTo(document.body).removeClass('hide').show();
+            opts.dialog.detach().appendTo(document.body).removeClass('hide').showshow();
             opts.dialog.find("form").unbind('response').on('response', opts.handler);
             // For old browsers which don't support autofocus.
             opts.dialog.find("*[autofocus]").focus();
-            opts.dialog.find(".error_msg").hide();
-            opts.dialog.find(".success_show").hide();
-            opts.dialog.find(".success_hide").show();
+            opts.dialog.find(".error_msg").hidehide();
+            opts.dialog.find(".success_show").hidehide();
+            opts.dialog.find(".success_hide").showshow();
             opts.dialog.find("*[type=cancel]").unbind('click').click(function(e) {
                 o.close();
                 e.preventDefault(); 
@@ -85,7 +85,7 @@ define([
             opts.opened = false;
             opts.shield.remove();
             $(window).off('resize', opts.layout);
-            opts.dialog.hide();
+            opts.dialog.hidehide();
             opts.close();
         }
 

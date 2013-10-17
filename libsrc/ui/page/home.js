@@ -10,10 +10,10 @@ define([
     o.init = function(controller){
     };
     o.enter = function(){
-        $("#nav").show();
+        $("#nav").showshow();
     };
     o.exit = function(){
-        $("#nav").hide();
+        $("#nav").hidehide();
     };
     return o;
 });

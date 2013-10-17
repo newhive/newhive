@@ -76,7 +76,7 @@ define([
                 { open: function(){ $("#login_menu input[name=username]").focus(); },
                   handler: function(e, json) {
                     if (json.error != undefined) {
-                        $('#login_form .error_msg').text(json.error).hide().fadeIn("slow");
+                        $('#login_form .error_msg').text(json.error).hidehide().fadeIn("slow");
                     } else {
                         $('#dialog_shield').click();
                         o.on_login();
@@ -99,7 +99,7 @@ define([
             context.after_render.add('.invite_form', function(e){
                 e.on('response', function(e, data){
                     if(data){ // success
-                        $('.request_invite').hide();
+                        $('.request_invite').hidehide();
                         $('.request_sent').removeClass('hide');
                         // TODO: set cookie so request_sent can be shown later
                     }
@@ -119,7 +119,7 @@ define([
             //         o.controller.refresh();
             //         $('#login_menu').data('dialog').close();
             //     } else {
-            //         $('#login_form .error').show();
+            //         $('#login_form .error').showshow();
             //     }
             // });
         } else {
@@ -142,8 +142,8 @@ define([
                 var count = data.notification_count,
                     box = $('#activity_btn .count').html(count);
                 js.copy(data, context.user);
-                if(!count) box.hide();
-                else box.show();
+                if(!count) box.hidehide();
+                else box.showshow();
                 if(data.activity){
                     $('#activity_menu').empty().append(
                         user_activity_template());
