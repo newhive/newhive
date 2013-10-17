@@ -61,7 +61,7 @@ def test_snapshot():
         
     # xvfb.terminate()
     
-test = True
+test = False
 
 def clear_snapshots():
     expressions_to_snapshot = db.Expr.search({
@@ -85,7 +85,7 @@ def clear_snapshots():
         expr.pop('snapshot_time')
         expr.save(updated=False)
 
-expr_limit = 30
+expr_limit = 10
 
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
