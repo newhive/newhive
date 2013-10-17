@@ -1,10 +1,11 @@
-import controller, community, expr, file, user
+import controller, community, expr, file, user, cron
 
 class Controllers(object):
     """ Convenience class for instantiating all da controllers at once. """
     controllers = [
         controller.Controller,
         community.Community,
+        cron.Cron,
         expr.Expr,
         file.File,
         user.User,
