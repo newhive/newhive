@@ -61,7 +61,7 @@ def test_snapshot():
         
     # xvfb.terminate()
     
-test = False
+test = True
 
 def clear_snapshots():
     expressions_to_snapshot = db.Expr.search({
@@ -115,7 +115,7 @@ def start_snapshots(proc_tmp_snapshots=False):
     threads = threading.active_count()
     while True:
     # if True:
-        exprs = get_exprs(expr_limit)
+        exprs = list(get_exprs(0))
         print get_exprs(0).count()
         if len(exprs) == 0: break
         # print exprs
@@ -127,10 +127,15 @@ def start_snapshots(proc_tmp_snapshots=False):
             
             expr_id = expr.get('_id')
             count += 1
-            print "(%s/%s) snapshotting %s" % (count, total, expr_id)
+            print "(%s/%s) (%s) snapshotting %s" % (count, total, len(exprs), expr_id)
             expr.threaded_snapshot()
             # take_snapshot(expr_id)
             # s3_url = upload_snapshot_to_s3(expr_id, thumb_bucket)    
+            while threading.active_count() > expr_limit:
+                print "waiting for %s threads:" % (threading.active_count() - expr_limit)
+                # log sleeps to see if server is being pounded.
+                # log_error(self.db, message = "Too many snapshot threads", critical=False)
+                time.sleep(1)
         while threading.active_count() > threads:
             print "waiting for %s threads:" % (threading.active_count() - threads)
             # log sleeps to see if server is being pounded.
