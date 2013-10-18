@@ -9,7 +9,7 @@ def recent_exprs(within_secs):
 def name(entity):
 	if type(entity) == list:
 		return names(entity)
-	if type(entity) == state.Cursor
+	if type(entity) == state.Cursor:
 		return names(list(entity))
 	res = ''
 	if entity.has_key('owner_name'):
