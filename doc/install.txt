@@ -25,7 +25,7 @@ Python library dependencies
     sudo pip install envoy scipy webkit2png
     sudo pip install pandas brownie google-api-python-client # for analytics
     # for development
-    sudo pip install statprof yappi
+    sudo pip install statprof yappi beautifulsoup
 
     pyes -- https://github.com/aparo/pyes
         werkzeug --- ??? what repo
@@ -71,4 +71,27 @@ Get the server config
 Run the server
     <from an enlistment>
     ./server.py
+
+Things that need to be run on live before a new push:
+    <empty>
+
+Ok, far easier to clone the working instance, staging.
+From AWS console, EC2 -> instances
+Right-click staging -> create image
+  Save as staging - version x.x
+
+Now create instances using that image.
+Right-click staging -> launch more like this
+  Make sure you select the new image you created, and fill in the data for a live server
+
+On AWS console, Route 53, {newhive.com, tnh.me} add new entry for new server (copy the format from the others, and get the DNS from EC2 Managment Console)
+
+On your new instance,
+  cd /var/www/newhive
+  vim newhive/config/config.py
+     change the dev prefix and make sure you can access it with a browser (navigate to <new server dns>.newhive.com)
+     hive_server_deploy
+     Everything worked out?
+       now comment out dev prefix
+       update the loadbalancer to point at the new server(s)
 
