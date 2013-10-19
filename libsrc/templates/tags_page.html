@@ -8,9 +8,11 @@
     <form { form_attrs "tag_follow" } id='follow_tag_form' method='POST'>
       <input type="hidden" name="tag" value="{tags_search.0}">
       <input type="hidden" name="action" value="toggle">
-      <button type="submit" class="teal_btn upper" value="">
-      	{<contains viewer.tags_following tags_search.0}Unfollow
-      	{>}{<else}Follow{>} tag</button>
+      <button type="submit" class="teal_btn upper hoverable" value="">
+      	{<contains viewer.tags_following tags_search.0}
+          <span class="hide_hover">Following tag</span
+          ><span class="show_hover">Unfollow tag</span>
+      	{>}{<else}Follow tag{>}</button>
     </form>
     {# need a new form and form handler... #}
     <a { query_attrs "create_expr" tags_search.0 "owner_name" user.name } id='create_form' method='POST'>

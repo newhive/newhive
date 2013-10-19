@@ -30,6 +30,9 @@
 .hoverable:hover .show_hover {
     display:block;
 }
+.hoverable:hover .hide_hover {
+    display:none;
+}
 .full_wide { width: 100%; }
 .vcenter_outer {
     display: table;
