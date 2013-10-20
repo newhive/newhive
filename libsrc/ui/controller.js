@@ -162,7 +162,7 @@ define([
         parse_query();
     };
 
-    var parse_query = function(){
+    o.parse_query = function(){
         var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
         if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
             var pair = v.split('=');
