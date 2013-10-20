@@ -290,6 +290,24 @@ define([
         };
     }
 
+    o.parse_query = function(){
+        var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
+        if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
+            var pair = v.split('=');
+            o.query[d(pair[0])] = d(pair[1]);
+        });
+        // Save error message and remove it from hash args
+        // Note, we can't put the error info into query args, because altering the URL
+        // causes a redirect.  Thus it has to be in hash args
+        // window.location.search = window.location.search.replace(/[?&]error[^&]*/,"")
+        $.each(window.location.hash.split("#"), function(i,v) {
+            var pair = v.split("=");
+            if (d(pair[0]) == "error") {
+                o.error = d(pair[1]);
+            }
+        });
+        window.location.hash = window.location.hash.replace(/#error[^#]*/,"")
+    };
     o.query = {}; // set by ui.controller
 
     function find_all(elements, selector){
