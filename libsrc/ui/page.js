@@ -286,12 +286,12 @@ define([
         // hack not necessary anymore with conditional autofocus in template
         // if (!context.user.logged_in && context.route_name == "home")
         //     $("body").scrollTop(0);
-        $(".search_bar .hash").unbind('click').click(function(e) {
-            var search_box = $(".search_bar #search_box");
-            search_box.val(search_box.val().split(" ").
-                map(function(w) {return "#" + w.replace("#","");}).join(" "));
-            $(".search_bar").submit();
-        });
+        // $(".search_bar .hash").unbind('click').click(function(e) {
+        //     var search_box = $(".search_bar #search_box");
+        //     search_box.val(search_box.val().split(" ").
+        //         map(function(w) {return "#" + w.replace("#","");}).join(" "));
+        //     $(".search_bar").submit();
+        // });
         
         // global keypress handler
         $("body").unbind('keydown').keydown(function(e) {
