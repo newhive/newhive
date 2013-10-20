@@ -39,7 +39,7 @@ define([
         // };
 
         o.init = function(){
-            controller.parse_query();
+            context.parse_query();
             var no_embed = ("no-embed" in context.query);
             if (no_embed) 
                 o.hide();
