@@ -54,10 +54,10 @@ define([
                     if (m.data.password && !$('body').children().length){
                         $.post('', { password: m.data.password, partial: true }, callback);
                     } else {
-                        o.showshow();
+                        o.show();
                     }
                 }
-                if ( m.data.action == "hide" ) o.hidehide();
+                if ( m.data.action == "hide" ) o.hide();
             }, false);
             $(document).mousemove(check_hover);
             $(document).click(expr_click);
