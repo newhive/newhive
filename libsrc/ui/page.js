@@ -161,7 +161,8 @@ define([
         context.user.logged_in = false;
         // overlays are rendered once on init, so not done on .refresh()
         init_overlays();
-        if (routes[context.route_name].require_login) {
+        if (routes[context.route_name].require_login 
+            || context.route_name == "view_expr") {
             return o.controller.open("home", {});
         }
         o.controller.refresh();
