@@ -145,6 +145,17 @@ define([
         // var all_elements = elements.add(document.body);
 
         // Common site-wide handlers
+        find_all(elements, '*[data-link-show]').each(function(i, e) {
+            var handle = find_all(elements, $(e).attr('data-link-show'));
+            if(!handle) throw 'missing handle';
+            var click_func = function() {
+                var obj = e;
+                return function(el) { 
+                    $(e).toggleshow();
+                };
+            }
+            handle.on('click', click_func());
+        });
         find_all(elements, 'form[data-route-name]').each(
             function(i, e){ form_handler(e, elements) });
         find_all(elements, '.menu.drawer[data-handle]').each(function(i, e){
