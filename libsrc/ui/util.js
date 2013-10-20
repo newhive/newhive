@@ -34,6 +34,15 @@ define([
             };
         }(jQuery));
         (function($){
+            $.fn.toggleshow = function( speed, easing, callback) {
+                var elem = $(this);
+                if (elem.hasClass("hide") || elem.css("display") == "none")
+                    elem.showshow();
+                else
+                    elem.hidehide();
+            };
+        }(jQuery));
+        (function($){
             $.fn.bind_once = function( event_name, func ) {
                 return $(this).unbind(event_name).on(event_name, func);
             };

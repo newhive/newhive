@@ -8,9 +8,10 @@ define([
     'server/context',
     'browser/layout',
     'ui/jplayer',
+    'ui/controller',
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js'
-], function($, context, layout, jplayer){
+], function($, context, layout, jplayer, controller){
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
@@ -38,6 +39,7 @@ define([
         // };
 
         o.init = function(){
+            context.parse_query();
             var no_embed = ("no-embed" in context.query);
             if (no_embed) 
                 o.hide();
