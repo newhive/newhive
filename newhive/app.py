@@ -75,10 +75,22 @@ rules.extend(make_routing_rules('/<owner_name>/<path:expr_name>',
 routes = Map(rules, strict_slashes=False, host_matching=True,
     redirect_defaults=False)
 
+def split_domain(url):
+    domain = url
+    index = max(1, domain.find(config.server_name), domain.find(config.content_domain))
+    prefix = domain[0:index - 1]
+    site = domain[index:]
+    return prefix, site
+
 @Request.application
 def handle(request):
     time_start = now()
     stats = False
+    1/0
+    prefix, site = split_domain(request.environ['HTTP_HOST'])
+    request.environ['HTTP_HOST'] = site
+    if len(request.environ['PATH_INFO']) <= 1:
+        request.environ['PATH_INFO'] = prefix
     #stats = True
     if stats:
         pass
