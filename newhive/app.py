@@ -77,7 +77,7 @@ routes = Map(rules, strict_slashes=False, host_matching=True,
 
 def split_domain(url):
     domain = url
-    index = max(1, domain.find(config.server_name), domain.find(config.content_domain))
+    index = max(0, domain.find(config.server_name), domain.find(config.content_domain))
     prefix = domain[0:index - 1]
     site = domain[index:]
     return prefix, site
