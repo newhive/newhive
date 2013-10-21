@@ -86,10 +86,10 @@ def split_domain(url):
 def handle(request):
     time_start = now()
     stats = False
-    prefix, site = split_domain(request.environ['HTTP_HOST'])
-    request.environ['HTTP_HOST'] = site
-    if len(request.environ['PATH_INFO']) <= 1:
-        request.environ['PATH_INFO'] = prefix
+    # prefix, site = split_domain(request.environ['HTTP_HOST'])
+    # request.environ['HTTP_HOST'] = site
+    # if len(request.environ['PATH_INFO']) <= 1:
+    #     request.environ['PATH_INFO'] = prefix
     #stats = True
     if stats:
         pass
