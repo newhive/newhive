@@ -77,19 +77,22 @@ routes = Map(rules, strict_slashes=False, host_matching=True,
 
 def split_domain(url):
     domain = url
-    index = max(0, domain.find(config.server_name), domain.find(config.content_domain))
-    prefix = domain[0:index - 1]
+    index = max(0, domain.find('.' + config.server_name), 
+        domain.find('.' + config.content_domain))
+    prefix = domain[0:index]
+    if index > 0: index = index + 1
     site = domain[index:]
+    if prefix == 'www': prefix = ''
     return prefix, site
 
 @Request.application
 def handle(request):
     time_start = now()
+    prefix, site = split_domain(request.environ['HTTP_HOST'])
+    request.environ['HTTP_HOST'] = site
+    if len(request.environ['PATH_INFO']) <= 1:
+        request.environ['PATH_INFO'] = prefix
     stats = False
-    # prefix, site = split_domain(request.environ['HTTP_HOST'])
-    # request.environ['HTTP_HOST'] = site
-    # if len(request.environ['PATH_INFO']) <= 1:
-    #     request.environ['PATH_INFO'] = prefix
     #stats = True
     if stats:
         pass
