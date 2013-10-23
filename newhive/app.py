@@ -77,8 +77,9 @@ routes = Map(rules, strict_slashes=False, host_matching=True,
 
 def split_domain(url):
     domain = url.replace('thenewhive','newhive')
-    index = max(0, domain.find('.' + config.server_name), 
-        domain.find('.' + config.content_domain))
+    dev = config.dev_prefix + '.' if config.dev_prefix else ''
+    index = max(0, domain.find('.' + dev + config.server_name), 
+        domain.find('.' + dev + config.content_domain))
     prefix = domain[0:index]
     if index > 0: index = index + 1
     site = domain[index:]
