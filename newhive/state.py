@@ -45,7 +45,7 @@ class Database:
     def __init__(self, config=None, assets=None):
         config = self.config = (config if config else newhive.config)
 
-        self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
+        self.con = pymongo.MongoClient(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
         self.s3 = S3Interface()
         self.assets = assets
