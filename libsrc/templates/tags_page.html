@@ -10,12 +10,12 @@
       <input type="hidden" name="action" value="toggle">
       <button type="submit" class="teal_btn upper" value="">
       	{<contains viewer.tags_following tags_search.0}Unfollow
-      	{>}{<else}Follow{>} collection</button>
+      	{>}{<else}Follow{>} tag</button>
     </form>
     {# need a new form and form handler... #}
     <a { query_attrs "create_expr" tags_search.0 "owner_name" user.name } id='create_form' method='POST'>
       <button type="submit" class="teal_btn upper create" value="">
         <span class="plus_button"></span>
-        <span class="text">Add to Collection</span>
+        <span class="text">Add to tag</span>
     </button></a>
   </div></div>

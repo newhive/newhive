@@ -38,15 +38,22 @@
 
     "my-profile": {
         "page_route": "/home/my-profile",
-        "api_route": "/api/my-profile",
+        "api_route": "/api/home/my-profile",
         "controller": "community",
         "method": "empty"
     },
     "my-create": {
         "page_route": "/home/my-create",
-        "api_route": "/api/my-create",
+        "api_route": "/api/home/my-create",
         "controller": "community",
         "method": "empty"
+    },
+
+    "cron": {
+        "page_route": "/home/cron/<path:method_name>",
+        "api_route": "/api/home/cron/<path:method_name>",
+        "controller": "cron",
+        "method": "cron"
     },
 
  
@@ -191,6 +198,7 @@
         "method": "delete"
     },
     "expr_snapshot": {
+        "comment": "TODO-cleanup: Jordan believes this is deprecated",
         "page_route": "/api/expr/snapshot/<expr_id>",
         "api_route": "/api/expr/snapshot/<expr_id>",
         "controller": "expr",

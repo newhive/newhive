@@ -53,17 +53,17 @@ define([
         o.last_found = -1;
         hide_exprs();
         hide_panel();
-        $('#site').show();
-        $('.page_btn').hide();
+        $('#site').showshow();
+        $('.page_btn').hidehide();
     };
 
     hide_panel = function(){
-        $("#signup_create").hide();
-        $("#content_btns").hide();
+        $("#signup_create").hidehide();
+        $("#content_btns").hidehide();
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
         $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_ui .icon").hide();
+        $(".panel .edit_ui .icon").hidehide();
     }
 
     o.resize = function(){
@@ -83,9 +83,9 @@ define([
             $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right').
                 css("max-width", (columns == 1) ? '522px' : '470px');
             if (columns == 1)
-                $("#popup_content .empty").show();
+                $("#popup_content .empty").showshow();
             else
-                $("#popup_content .empty").hide();
+                $("#popup_content .empty").hidehide();
         }
     };
     var resize_icon = function(el) {
@@ -104,7 +104,7 @@ define([
         o.expr = page_data.expr;
 
         $('title').text(o.expr.title);
-        $('#site').hide();
+        $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
         $('#social_overlay').append(
@@ -112,6 +112,8 @@ define([
         $('#popup_content .counts_icon').each(function(i, el) {
             resize_icon($(this));
         });
+        // Reset scroll to top
+        $("body").scrollTop(0);
         o.resize();
         
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
@@ -154,18 +156,18 @@ define([
         animate_expr();
 
         hide_panel();
-        $("#content_btns").show();
+        $("#content_btns").showshow();
         $(".social_btn").removeClass("hide");
         if (!context.user.logged_in) {
-            $("#signup_create").show();
+            $("#signup_create").showshow();
             $("#signup_create .signup").removeClass("hide");
-            // $('#social_plus').hide();
+            // $('#social_plus').hidehide();
         } else {
-            $("#signup_create").show();
+            $("#signup_create").showshow();
             $("#signup_create .create").removeClass("hide");
             if (context.user.id == o.expr.owner.id) {
                 $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
-                $('#content_btns .edit_ui .icon').show();
+                $('#content_btns .edit_ui .icon').showshow();
             }
         }
     };
@@ -290,8 +292,8 @@ define([
         var expr_id = page_data.expr_id;
         var expr_curr = $('.expr_visible');
         expr_curr.removeClass('expr_visible');
-        $('#exprs').show();
-        $('.social_btn').show();
+        $('#exprs').showshow();
+        $('.social_btn').showshow();
 
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
@@ -302,7 +304,7 @@ define([
                 postMessage({action: 'show'}, '*');
         }
         contentFrame.addClass('expr_visible').removeClass('expr_hidden');
-        contentFrame.show();
+        contentFrame.showshow();
         $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
         var found = find_card(expr_id);
         var anim_direction = 0;
@@ -355,7 +357,7 @@ define([
         if(!contentFrame.data('loaded')){
             // bugbug: sometimes this is never followed by a contentFrame.load
             // console.log('showing');
-            $('.page_btn').show();
+            $('.page_btn').showshow();
         }
         else {
             // console.log('resetting on show');
@@ -380,15 +382,14 @@ define([
             dialog.create(password_dia).open();
             password_dia.find('form.site').on('response', function(ev, data) {
                 if(data.error) {
-                    $('#dia_expr_password .error').show();
+                    $('#dia_expr_password .error').showshow();
                     return;
                 }
                 $.extend(context.page_data, data);
                 delete context.page_data.error;
-                o.controller.refresh();
-                
                 open_passworded_expr(
                     password_dia.find('form.site .password').val());
+                o.controller.refresh();
             });
         }
         else if(page_data.expr.password)
@@ -434,8 +435,8 @@ define([
     };
 
     var hide_expr_complete = function() {
-        $('#exprs').hide();
-        $('.social.overlay').hide();
+        $('#exprs').hidehide();
+        $('.social.overlay').hidehide();
     };
 
     o.attach_handlers = function(){
@@ -610,10 +611,10 @@ define([
         var popup = $('#social_overlay');
         // TODO: animate
         if (popup.css('display') == 'none') {
-            popup.show();
+            popup.showshow();
             fixup_tags_list();
         } else {
-            popup.hide();
+            popup.hidehide();
         }
     };
 
@@ -624,15 +625,15 @@ define([
         var text = text_el.html();
         if (text_el.is(":hidden")) {
             // Return to uneditable state
-            text_el.show();
-            feed_item.find('textarea').hide();
+            text_el.showshow();
+            feed_item.find('textarea').hidehide();
             edit_button.html("Edit");
             delete_button.html("Delete");
             feed_item.find('[name=deletion]').attr('value','delete');
         } else {
             // Settings -> editable state
-            text_el.hide();
-            feed_item.find('textarea').show().html(text);
+            text_el.hidehide();
+            feed_item.find('textarea').showshow().html(text);
             edit_button.html("Cancel");
             delete_button.html("Ok");
             feed_item.find('[name=deletion]').attr('value','edit');
@@ -733,18 +734,18 @@ define([
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
             || context.page_data.cards.length == 1) {
-            $(".page_btn").hide();
+            $(".page_btn").hidehide();
             return;
         }
 
         if(msg == 'show_prev') {
-            $('#page_prev').show();
-            $('#page_next').hide();
+            $('#page_prev').showshow();
+            $('#page_next').hidehide();
         } else if(msg == 'show_next') {
-            $('#page_next').show();
-            $('#page_prev').hide();
+            $('#page_next').showshow();
+            $('#page_prev').hidehide();
         } else if(msg == 'hide') {
-            $('.page_btn').hide();
+            $('.page_btn').hidehide();
         }
 
         // should reflect whether left or right page_btn should be visible if

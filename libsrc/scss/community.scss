@@ -374,9 +374,10 @@
         .card {
             box-shadow: 0px 0px 5px #CCC;
             .tag_list {
+                text-align: left;
                 // width: 100%;
                 position: absolute;
-                padding: 16px 15px 10px 15px;
+                padding: 16px 15px 10px 19px;
                 opacity: 0;
                 top: 0px;
                 left: 0px;
@@ -442,7 +443,10 @@
                     position: absolute;
                     right: 13px; top: 13px;
                     font-family: Bebas Neue;
-                    img { vertical-align: middle; }
+                    img { 
+                        vertical-align: middle; 
+                        margin-left: 10px;
+                    }
                 }
             }
         }

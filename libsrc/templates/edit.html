@@ -8,7 +8,7 @@
     src='{asset "skin/edit/grid-off.png"}'></div
   ><div class='smpad'></div
   ><div class='center hoverable text text_btn black_active' title="Editor Help" id='btn_help'>?</div
-  ><div id='btn_save' class='text text_btn hoverable center pad black_active'
+  ><div id='btn_save' class='save text text_btn hoverable center pad black_active'
     >Save
     <img src='{asset "skin/edit/loading.gif"}' class='hide loading'
   ></div
@@ -37,7 +37,9 @@
     <span>Private</span>
   </div>
 
-  <div id='save_submit' style='float : right; padding : 5px' class='btn black rounded'>Save</div>
+  <div id='save_submit' style='float: right; padding: 5px'
+    class='save btn black rounded'><span class='label'>Save</span>{#<img
+    src='{asset "skin/edit/loading.gif"}' class='hide loading'>#}</div>
 
   <div id='password_ui' style='display: none'>
     <br><br><br>
@@ -298,7 +300,7 @@ blah blah
  <h2>Overwrite?</h2>
  You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
  <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
- <input id='save_overwrite' type='button' class='btn black rounded' value='No' onclick='closeDialog()'>
+ <input id='cancel_overwrite' type='button' class='btn black rounded' value='No'>
 </div>
 
 <div id='grid_guide'></div>

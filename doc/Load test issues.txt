@@ -1,0 +1,16 @@
+Issues with load / snapshot
+
+Load is fine if it's not snapshot load
+I suspect the issue w/ snapshot load is the urlopen to embedly (untested)
+
+
+
+Flash
+	http://content:3737/4f288637ba28394f700000d1?snapshot
+	http://staging.newhive.com/ea298/my-first-expression
+	
+	http://staging.tnh.me/4f288637ba28394f700000d1?snapshot
+		returns 500
+	Well, it used to 500, but no longer does. no code change.
+	It has a flash sound player element and works fine on my machine
+

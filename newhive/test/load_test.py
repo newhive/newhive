@@ -11,11 +11,11 @@ import unittest
 import time, math
 from urllib2 import urlopen
 from newhive import state, config
-from newhive.config import abs_url
+from newhive.config import abs_url, url_host
 
 db=state.Database() 
 
-max_threads = 32
+max_threads = 10
 max_time = 10.
 
 # TODO: make this a serializable class
@@ -63,18 +63,27 @@ def append_log(url, msg):
 
 # Using abs_url() means it will use the server in config.py
 # (which can point externally if desired)
-server = abs_url()[:-1]
+server_url = abs_url()[:-1]
+content_server = url_host(False)
+server_url = "http://staging.newhive.com"
+content_server = "staging.tnh.me/"
 
-exprs = db.Expr.search({})
+exprs = db.Expr.search({ 'auth': 'public'})
 def generate_url_expr(count):
     new_count = (count + 2000) % exprs.count()
     expr = exprs[new_count]
-    return "%s/%s/%s" % (server, expr['owner_name'], expr['name'])
+    return "%s/%s/%s" % (server_url, expr['owner_name'], expr['name'])
+def generate_url_content(count):
+    new_count = (count + 2000) % exprs.count()
+    # new_count = 1234 #///////////
+    expr = exprs[new_count]
+    return "http://%s/%s?snapshot" % (content_server, expr.id)
+
 users = db.User.search({})
 def generate_url_profile(count):
     new_count = (count + 2000) % users.count()
     user = users[new_count]
-    return "%s/%s/profile" % (server, user['name'])
+    return "%s/%s/profile" % (server_url, user['name'])
 def test_url(count):
     return "%d test" % count
 
@@ -108,6 +117,7 @@ class LoadTest(unittest.TestCase):
         try:
             res = urlopen(url, None, time_out)
         except Exception, e:
+            print e
             error = True
         
         if pipe and pipe.get('kill'):
@@ -164,9 +174,11 @@ class LoadTest(unittest.TestCase):
         return (self.error_count < count * .02)
 
     def test_load_user(self):
-        self.assertTrue(self.loadtest(max_count=100, qps=20., generate_url=generate_url_profile))
+        self.assertTrue(self.loadtest(max_count=5000, qps=100., generate_url=generate_url_profile))
     def test_load_expr(self):
-        self.assertTrue(self.loadtest(max_count=100, qps=20., generate_url=generate_url_expr))
+        self.assertTrue(self.loadtest(max_count=5000, qps=100., generate_url=generate_url_expr))
+    def test_load_content(self):
+        self.assertTrue(self.loadtest(max_count=1000, qps=1., generate_url=generate_url_content))
 
 if __name__ == '__main__':
     unittest.main()

@@ -12,10 +12,16 @@ class User(ModelController):
 
     def login(self, tdata, request, response, **args):
         authed = auth.handle_login(self.db, request, response)
-        if type(authed) == self.db.User.entity: resp = authed.client_view()
-        else: resp = False
-        return self.redirect(response, request.form.get('from') or abs_url())
-        # return self.serve_json(response, resp)
+        error = False
+        if type(authed) == self.db.User.entity: 
+            resp = authed.client_view()
+        else: 
+            resp = { 'error': 'Incorrect username or password.' }
+            error = "login"
+        query = ""
+        if error:
+            query = "#error=" + error
+        return self.redirect(response, (request.form.get('from') or abs_url()) + query)
 
     def logout(self, tdata, request, response, **args):
         auth.handle_logout(self.db, tdata.user, request, response)

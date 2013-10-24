@@ -24,6 +24,7 @@ class GAClient(object):
             flow = OAuth2WebServerFlow(
                 client_id='350420752663-ou6fksfmbv8cpf22ou6t5aebduc661km.apps.googleusercontent.com',
                 client_secret='sD5aL7o27yZAj-O7Ik08cKWO',
+                # client_secret='4/c-l4i2SshYk2Vor44_3b7yl-8Gu1.Murf0kElvUcfMqTmHjyTFGPUzx-PgwI',
                 scope='https://www.googleapis.com/auth/analytics.readonly',
                 user_agent='moderator-cmdline-sample/1.0')
 

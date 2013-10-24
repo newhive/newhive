@@ -138,12 +138,12 @@ Hive.App = function(init_state, opts) {
 
     o._remove = function(){
         o.unfocus();
-        o.div.hide();
+        o.div.hidehide();
         o.deleted = true;
         if(o.controls) o.controls.remove();
     };
     o._unremove = function(){
-        o.div.show();
+        o.div.showshow();
         o.deleted = false;
     };
     o.remove = function(){
@@ -1690,8 +1690,23 @@ Hive.App.Audio = function(o) {
             o.content_element.attr('title', [s.file_meta.artist, s.file_meta.album,
                 s.file_meta.title].join(' - '));
         if(typeof s.url != 'undefined'){
-            o.content_element.jPlayer('setMedia', s.url);
+            var new_content = o.skin();
+            o.content_element.replaceWith(new_content);
+            o.content_element = new_content;
+            // ideally jPlayer API would be used so the interface
+            // isn't reset, but this doesn't work, tested 2013-10
+            //o.content_element.jPlayer('setMedia', s.url);
         }
+    };
+
+    o.skin = function(){
+        return $( $.jPlayer.skin.minimal(
+            o.init_state.url, Hive.random_str() )
+        )
+            .addClass('content')
+            .css('position', 'relative')
+            .css('height', '100%')
+            .appendTo(o.div);
     };
 
     // Mixins
@@ -1701,12 +1716,8 @@ Hive.App.Audio = function(o) {
 
     // Initialization
     if(! o.init_state.dimensions) o.init_state.dimensions = [ 200, 35 ];
-    o.content_element = $( $.jPlayer.skin.minimal(
-            o.init_state.url, Hive.random_str() ) )
-        .addClass('content')
-        .css('position', 'relative')
-        .css('height', '100%')
-        .appendTo(o.div);
+    o.content_element = o.skin();
+
     colored = o.div.find('.jp-play-bar, .jp-interface');
     if(!o.init_state.color) o.init_state.color = colors[23];
 
@@ -2362,12 +2373,16 @@ Hive.init = function(exp, page){
         });
     });
 
-    var busy_e = $('#btn_save .loading');
+    var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
         // TODO-draft: set a flag to block saving while uploads are in progress
-        busy_e.show();
+        busy_e.showshow();
+        $('#save_submit').addClass('disabled');
+        //$('#save_submit .label').hidehide(); // can't get to look nice
     }).ajaxStop(function(){
-        busy_e.hide();
+        busy_e.hidehide();
+        $('#save_submit').removeClass('disabled');;
+        //$('#save_submit .label').showshow();
     }).ajaxError(function(ev, jqXHR, ajaxOptions){
         // TODO-polish upload_error: show some warning, and somehow indicate
         // which app(s) failed to save
@@ -2394,6 +2409,8 @@ Hive.init = function(exp, page){
             }
         }
     });
+    var overwrite_dialog = dialog.create('#dia_overwrite');
+    $('#cancel_overwrite').click(overwrite_dialog.close);
     $('#save_overwrite').click(function() {
         Hive.Exp.overwrite = true;
         Hive.save();
@@ -2427,7 +2444,8 @@ Hive.init = function(exp, page){
     
     // Automatically update url unless it's an already saved
     // expression or the user has modified the url manually
-    $('#menu_save #title').bind('keydown keyup', function(){
+    $('#menu_save #title').text(context.page_data.expr.title).
+        bind('keydown keyup', function(){
         if (!(Hive.Exp.home || Hive.Exp.created || $('#url').hasClass('modified') )) {
             $('#url').val($('#title').val().replace(/[^0-9a-zA-Z]/g, "-")
                 .replace(/--+/g, "-").replace(/-$/, "").toLowerCase());
@@ -2451,8 +2469,8 @@ Hive.init = function(exp, page){
         t.addClass('selected');
         $('#privacy span').text(t.text());
         var v = t.attr('val');
-        if(v == 'password') $('#password_ui').show();
-        else $('#password_ui').hide();
+        if(v == 'password') $('#password_ui').showshow();
+        else $('#password_ui').hidehide();
     });
     if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 
@@ -2561,7 +2579,7 @@ Hive.save = function() {
             alert("Sorry, something is broken :(. Please send us feedback");
         if(ret.error == 'overwrite') {
             $('#expr_name').html(expr.name);
-            showDialog('#dia_overwrite');
+            $('#dia_overwrite').data('dialog').open();
             $('#save_submit').removeClass('disabled');
         }
         else if(ret.id) Hive.edit_page.view_expr(ret);
@@ -2573,7 +2591,7 @@ Hive.save = function() {
         $('#save_submit').removeClass('disabled');
     };
 
-    $('#expr_save .expr').val(JSON.stringify(Hive.state()));
+    $('#expr_save .expr').val(JSON.stringify(expr));
     $('#expr_save').bind('response', on_response)
         .bind('error', on_error).submit();
 };
@@ -2590,7 +2608,8 @@ Hive.state = function() {
     Hive.Exp.title = $('#title').val();
     Hive.Exp.tags = $('#tags_input').val();
     Hive.Exp.auth = $('#menu_privacy .selected').attr('val');
-    if(Hive.Exp.auth == 'password') Hive.Exp.password = $('#password').val();
+    if(Hive.Exp.auth == 'password') 
+        Hive.Exp.password = $('#password').val();
 
     // get height
     var h = 0;
@@ -2629,8 +2648,8 @@ Hive.bg_set = function(bg, load) {
         url = bg.content || bg.url;
     if(url) bg.url = url;
 
-    if(bg.url) imgs.show();
-    else { imgs.hide(); return }
+    if(bg.url) imgs.showshow();
+    else { imgs.hidehide(); return }
 
     imgs.attr('src', bg.url);
     img.load(function(){

@@ -69,13 +69,25 @@ define([
     var init_overlays = function(){
         $('#overlays').empty().html(overlay_template());
         // render_overlays();
-        $('#login_form').submit(o.login);
+        // $('#login_form').submit(o.login);
+        $('#login_form [name=from]').val(window.location);
         if(!context.user.logged_in){
             var d = dialog.create('#login_menu',  
-                { open: function(){ $("#login_menu input[name=username]").focus(); } });
+                { open: function(){ $("#login_menu input[name=username]").focus(); },
+                  handler: function(e, json) {
+                    if (json.error != undefined) {
+                        $('#login_form .error_msg').text(json.error).hidehide().fadeIn("slow");
+                    } else {
+                        $('#dialog_shield').click();
+                        o.on_login();
+                    } }
+                } );
             $('.login_btn').click(d.open);
 
-            if(context.error.login) d.open();
+            if(context.error == "login") {
+                d.open();
+                $('#login_form .error_msg').fadeIn("slow");
+            }
 
             // request invite form handlers. This form also appears on home page,
             // so this applies to both, and must be done after the top level render
@@ -87,7 +99,7 @@ define([
             context.after_render.add('.invite_form', function(e){
                 e.on('response', function(e, data){
                     if(data){ // success
-                        $('.request_invite').hide();
+                        $('.request_invite').hidehide();
                         $('.request_sent').removeClass('hide');
                         // TODO: set cookie so request_sent can be shown later
                     }
@@ -107,12 +119,9 @@ define([
             //         o.controller.refresh();
             //         $('#login_menu').data('dialog').close();
             //     } else {
-            //         $('#login_form .error').show();
+            //         $('#login_form .error').showshow();
             //     }
             // });
-            $('#login_form').on('submit', function(e){
-                $('#login_form [name=from]').val(window.location);
-            });
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
             $('#logout_form').bind('response', o.on_logout);
@@ -133,8 +142,8 @@ define([
                 var count = data.notification_count,
                     box = $('#activity_btn .count').html(count);
                 js.copy(data, context.user);
-                if(!count) box.hide();
-                else box.show();
+                if(!count) box.hidehide();
+                else box.showshow();
                 if(data.activity){
                     $('#activity_menu').empty().append(
                         user_activity_template());
@@ -155,6 +164,12 @@ define([
         if (routes[context.route_name].require_login) {
             return o.controller.open("home", {});
         }
+        o.controller.refresh();
+    };
+    o.on_login = function(e) {
+        context.user.logged_in = true;
+        // overlays are rendered once on init, so not done on .refresh()
+        init_overlays();
         o.controller.refresh();
     };
     o.logout = function(){
@@ -462,8 +477,7 @@ define([
     };
 
     // Move the expr.card's into the feed layout, shuffling them
-    // into the shortest column.  The order is not preserved.
-    // TODO: preserve order.
+    // into the shortest column.  
     o.layout_columns = function(){
         // Resize the columns
         for (var i = 0; i < 3; ++i){

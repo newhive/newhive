@@ -1,3 +1,7 @@
+{#<form class="login" {form_attrs "login"} method='POST' id='login_form'>#}
+{# Note we are NOT using the form_attrs version of ajax here. This is because login needs to be secure but
+   should be callable from unsecure frame, thus pure POST, not AJAX
+  #}
 <form class="login" action='{config.secure_server}api/user/login' method='POST' id='login_form'>
   <div class="field username">
       <input id='username' type='text' name='username' value='{user.name}' placeholder='username or email'>
@@ -5,7 +9,7 @@
   <div class="field password">
     <input type='password' name='secret' placeholder='password'><br>
   </div>
-  <div class='login error {<unless error.login}hide{>}'>This username / email or password isn't matching :-/</div>
+  <div class='login error error_msg {<unless error.login}hide{>}'>This username / email or password isn't matching :-/</div>
   <div class='field login'>
     <a href="#" class='password_recovery'>Forgot password?</a>
     <input type='submit' class='upper teal_btn' value='Enter'>

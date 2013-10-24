@@ -48,12 +48,13 @@ class Snapshots(object):
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
             # os.environ['DISPLAY'] =':99'
+            r = 0
             with open(os.devnull, "w") as fnull:
                 # BUGBUG
                 if True:
                     cmd = 'xvfb-run --auto-servernum --server-args="-screen 0, 1024x768x24" ' + cmd
                 print cmd
-                r = os.system(cmd) #, stderr=fnull, stdout=fnull)
+                r = call(cmd, shell=True) #, stderr=fnull, stdout=fnull)
                 # r = envoy.run(cmd, {"DISPLAY":":19"})
                 if r != 0:
                     print "FAILED: " + cmd
@@ -89,7 +90,7 @@ class Snapshots(object):
                 #     imo = Img.composite(imo, bg, imo)
             # 'webkit2png --feature=javascript --display=:99 '+
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
-            return True
+            return r == 0
         elif platform == 'darwin':
             # Mac support is super hacky and unreliable. Mostly just meant for local debugging.
             # Built to use this webkit2png: https://github.com/paulhammond/webkit2png/blob/master/webkit2png
