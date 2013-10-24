@@ -127,7 +127,7 @@ class Database:
                 break;
             if len(filter(lambda x: x.id==id,results)):
                 break;
-            args['limit'] = (args.get('limit', 27) * 3/2)
+            args['limit'] = (args.get('limit', 20) * 3/2)
 
         return results, search
 
@@ -213,11 +213,11 @@ class Collection(object):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
 
-    def paginate(self, spec, limit=20, at=0, sort='updated', 
-        order=-1, filter=None, viewer=None):
+    def paginate(self, spec, limit=20, at=0, sort='updated', order=-1, filter=None):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
         at = int(at)
+
         if type(spec) == dict:
             # if page_is_id:
             #     page_start = self.fetch(at)
@@ -225,7 +225,7 @@ class Collection(object):
 
             # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
 
-            res = self.cards(spec, sort=[(sort, order)], skip=at, viewer=viewer)
+            res = self.cards(spec, sort=[(sort, order)], skip=at)
 
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -400,20 +400,13 @@ class HasSocial(Entity):
         super(HasSocial, self).create()
         return self
     def update(self, **d):
-        if d.get('auth','') == 'password' and d.has_key('password'):
-            if d['password'] == '' and self.has_key('password'):
-                del self['password']
-            else:
-                d['password'] = mk_password(d['password'])
-        elif self.has_key('password'):
-            del self['password']
+        if d.get('password'):
+            d['password'] = mk_password(d['password'])
         super(HasSocial, self).update(**d)
         return self
     def cmp_password(self, v):
         password = self.get('password')
         if not password: return True
-        if v == None:
-            v = ''
         if not isinstance(v, (str, unicode)): return False
         # TODO: Test this with non-ascii text
         if password == v: return True
@@ -850,7 +843,6 @@ class User(HasSocial):
         return self.db.File.search({ 'owner' : self.id })
     files = property(get_files)
 
-    #TODO-bug: when deleting/adding expression, this lags by one.
     def set_expr_count(self):
         count = self.mdb.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
         self.update_cmd({"$set": {'analytics.expressions.count': count}})
@@ -1079,11 +1071,8 @@ class Expr(HasSocial):
             filter = {}
             spec2 = spec if type(spec) == dict else filter
             if viewer and viewer.logged_in:
-                if spec.get('auth') == 'password':
-                    spec2.update({'owner': viewer.id})
-                else:
-                    spec2.update({'$or': [
-                        {'auth': 'public'}, {'owner': viewer.id}]})
+                spec2.update({'$or': [
+                    {'auth': 'public'}, {'owner': viewer.id}]})
             else:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
@@ -1114,7 +1103,6 @@ class Expr(HasSocial):
         def with_url(cls, url):
             """ Convenience utility function not used in production, retrieve Expr from path or full URL """
             [user, name] = url.split('/')[-2:]
-            name = name.split('?')[0]
             return cls.named(user, name)
 
         def page(self, spec, viewer, auth='public', tag=None, sort='updated', **args):
@@ -1125,7 +1113,7 @@ class Expr(HasSocial):
 
             assert(sort in ['updated', 'random'])
             args.update(sort=sort)
-            rs = self.paginate(spec, viewer=viewer, **args)
+            rs = self.paginate(spec, **args)
 
             # remove random static patterns from random index
             # to make it _really_ random
@@ -1310,6 +1298,8 @@ class Expr(HasSocial):
     def update(self, **d):
         if not d.has_key('file_id'): self._collect_files(d)
         self.build_search(d)
+        if d.get('auth') == 'public':
+            d['password'] = None
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
         if d.get('apps') or d.get('background'): self.threaded_snapshot(retry=120)
@@ -1352,7 +1342,6 @@ class Expr(HasSocial):
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
         self['domain'] = self['domain'].lower()
         self['random'] = random.random()
-        self['views'] = 0
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         self._collect_files(self)
@@ -1363,7 +1352,6 @@ class Expr(HasSocial):
         return self
 
     def delete(self):
-        #TODO-bug: note, this occurs BEFORE the delete action, thus lags.
         self.owner.get_expr_count(force_update=True)
         for r in self.db.Feed.search({'entity': self.id}): r.delete()
         return super(Expr, self).delete()
