@@ -400,10 +400,8 @@ class HasSocial(Entity):
         super(HasSocial, self).create()
         return self
     def update(self, **d):
-        if d.get('auth', self.get('auth')) == 'private' and d.get('password'):
+        if d.get('password'):
             d['password'] = mk_password(d['password'])
-        else:
-            d['password'] = None
         super(HasSocial, self).update(**d)
         return self
     def cmp_password(self, v):
@@ -1307,6 +1305,8 @@ class Expr(HasSocial):
     def update(self, **d):
         if not d.has_key('file_id'): self._collect_files(d)
         self.build_search(d)
+        if d.get('auth') == 'public':
+            d['password'] = None
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
         if d.get('apps') or d.get('background'): self.threaded_snapshot(retry=120)
