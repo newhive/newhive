@@ -8,9 +8,10 @@ define([
     'server/context',
     'browser/layout',
     'ui/jplayer',
+    'ui/controller',
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js'
-], function($, context, layout, jplayer){
+], function($, context, layout, jplayer, controller){
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
@@ -38,6 +39,7 @@ define([
         // };
 
         o.init = function(){
+            context.parse_query();
             var no_embed = ("no-embed" in context.query);
             if (no_embed) 
                 o.hide();
@@ -52,10 +54,10 @@ define([
                     if (m.data.password && !$('body').children().length){
                         $.post('', { password: m.data.password, partial: true }, callback);
                     } else {
-                        o.showshow();
+                        o.show();
                     }
                 }
-                if ( m.data.action == "hide" ) o.hidehide();
+                if ( m.data.action == "hide" ) o.hide();
             }, false);
             $(document).mousemove(check_hover);
             $(document).click(expr_click);

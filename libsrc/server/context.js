@@ -145,6 +145,17 @@ define([
         // var all_elements = elements.add(document.body);
 
         // Common site-wide handlers
+        find_all(elements, '*[data-link-show]').each(function(i, e) {
+            var handle = find_all(elements, $(e).attr('data-link-show'));
+            if(!handle) throw 'missing handle';
+            var click_func = function() {
+                var obj = e;
+                return function(el) { 
+                    $(e).toggleshow();
+                };
+            }
+            handle.on('click', click_func());
+        });
         find_all(elements, 'form[data-route-name]').each(
             function(i, e){ form_handler(e, elements) });
         find_all(elements, '.menu.drawer[data-handle]').each(function(i, e){
@@ -279,6 +290,24 @@ define([
         };
     }
 
+    o.parse_query = function(){
+        var d = function (s) { return s ? decodeURIComponent(s.replace(/\+/, " ")) : null; }
+        if(window.location.search) $.each(window.location.search.substring(1).split('&'), function(i, v) {
+            var pair = v.split('=');
+            o.query[d(pair[0])] = d(pair[1]);
+        });
+        // Save error message and remove it from hash args
+        // Note, we can't put the error info into query args, because altering the URL
+        // causes a redirect.  Thus it has to be in hash args
+        // window.location.search = window.location.search.replace(/[?&]error[^&]*/,"")
+        $.each(window.location.hash.split("#"), function(i,v) {
+            var pair = v.split("=");
+            if (d(pair[0]) == "error") {
+                o.error = d(pair[1]);
+            }
+        });
+        window.location.hash = window.location.hash.replace(/#error[^#]*/,"")
+    };
     o.query = {}; // set by ui.controller
 
     function find_all(elements, selector){

@@ -16,8 +16,9 @@
       <form class='follow' {form_attrs "star_unstar"} method='post'>
         <input type="hidden" name="entity" value="{id}">
         <input type="hidden" name="state" value="{<if listening}false{>}{<else}true{>}">
-        <button type="submit" class="text teal_btn upper" value="">
-          {<if listening}Unfollow
+        <button type="submit" class="text teal_btn upper hoverable" value="">
+          {<if listening}<span class="hide_hover">Following</span
+            ><span class="show_hover">Unfollow</span>
           {>}{<else}Follow{>}
         </button>
       </form>

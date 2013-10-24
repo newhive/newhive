@@ -96,7 +96,7 @@ define([
     };
     o.exit = function(){
         $(".network_nav").showshow();
-        $(".tag_list.main").showshow();
+        // $(".tag_list.main").showshow();
         $("#signup_create").hidehide();
         $("#content_btns").hidehide();
         $("#signup_create .signup").addClass("hide");
