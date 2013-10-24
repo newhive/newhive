@@ -400,8 +400,10 @@ class HasSocial(Entity):
         super(HasSocial, self).create()
         return self
     def update(self, **d):
-        if d.has_key('password'):
+        if d.get('auth', self.get('auth')) == 'private' and d.get('password'):
             d['password'] = mk_password(d['password'])
+        else:
+            d['password'] = None
         super(HasSocial, self).update(**d)
         return self
     def cmp_password(self, v):
