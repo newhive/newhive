@@ -23,8 +23,6 @@ define([
         loading_frame_list = [], loaded_frame_list = [],
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
-    o.content_url_base = (context.is_secure ?
-            context.config.secure_content_url : context.config.content_url);
     o.cache_offsets = [1, -1, 2];
     o.anim_duration = 400;
 
@@ -46,6 +44,9 @@ define([
 
     o.init = function(controller){
         o.controller = controller;
+        // context.is_secure not set until after module instantiation
+        o.content_url_base = (context.is_secure ?
+                context.config.secure_content_url : context.config.content_url);
         $("#page_prev").click(o.page_prev);
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
