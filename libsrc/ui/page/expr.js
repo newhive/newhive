@@ -19,7 +19,8 @@ define([
     edit_btn_template,
     comment_template
 ) {
-    var o = {}, contentFrameURLBase = context.config.content_url,
+    var o = {}, contentFrameURLBase = 
+            (context.is_secure) ? context.config.secure_content_url : context.config.content_url,
         loading_frame_list = [], loaded_frame_list = [],
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;

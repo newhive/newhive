@@ -66,18 +66,21 @@ def append_log(url, msg):
 server_url = abs_url()[:-1]
 content_server = url_host(False)
 server_url = "http://staging.newhive.com"
-content_server = "staging.tnh.me/"
+content_server = "live-6.tnh.me/"
 
 exprs = db.Expr.search({ 'auth': 'public'})
 def generate_url_expr(count):
     new_count = (count + 2000) % exprs.count()
     expr = exprs[new_count]
     return "%s/%s/%s" % (server_url, expr['owner_name'], expr['name'])
-def generate_url_content(count):
+def generate_url_snapshot(count):
     new_count = (count + 2000) % exprs.count()
-    # new_count = 1234 #///////////
     expr = exprs[new_count]
     return "http://%s/%s?snapshot" % (content_server, expr.id)
+def generate_url_content(count):
+    new_count = (count + 2000) % exprs.count()
+    expr = exprs[new_count]
+    return "http://%s/%s" % (content_server, expr.id)
 
 users = db.User.search({})
 def generate_url_profile(count):
@@ -178,6 +181,8 @@ class LoadTest(unittest.TestCase):
     def test_load_expr(self):
         self.assertTrue(self.loadtest(max_count=5000, qps=100., generate_url=generate_url_expr))
     def test_load_content(self):
+        self.assertTrue(self.loadtest(max_count=1000, qps=100., generate_url=generate_url_content))
+    def test_load_snapshot(self):
         self.assertTrue(self.loadtest(max_count=1000, qps=1., generate_url=generate_url_content))
 
 if __name__ == '__main__':
