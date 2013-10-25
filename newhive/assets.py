@@ -40,11 +40,11 @@ class Assets(object):
         return self
 
     def add_file(self, path, local=None):
-        with open(path) as f: version = md5(f.read()).hexdigest()[:8]
-        name = path[self.strip:] + "." + version
+        name = path[self.strip:]
         if self.assets.get(name): return
 
         if local == None: local = self.default_local
+        with open(path) as f: version = md5(f.read()).hexdigest()[:8]
         self.assets[name] = (path, version, local)
 
         return self
