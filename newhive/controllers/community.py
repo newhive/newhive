@@ -258,29 +258,6 @@ class Community(Controller):
 
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None, **args):
         if not request.args.has_key('q'): return None
-        # terms = request.args['q'].split()
-        # specs = []
-        # tag_count = 0
-        # owner_count = 0
-        # text_count = 0
-        # for term in terms:
-        #     c = term[0]
-        #     if c == '#':
-        #         tag_count += 1
-        #         spec = {'tags_index': term[1:]}
-        #     elif c == '@':
-        #         owner_count += 1
-        #         spec = {'initiator_name': term[1:]}
-        #     else:
-        #         text_count += 1
-        #         spec = {'text_index': term}
-        #     specs.append(spec)
-
-        # page_data = {}
-        # # NOTE: owner_count > 1 should be impossible
-        # if owner_count == 1
-        #     profile = expr_owner.client_view()
-        #     page_data.update('profile': profile)
         id = request.args.get('id', None)
         result, search = self.db.query_echo(request.args['q'],
             viewer=tdata.user, id=id, **args)
