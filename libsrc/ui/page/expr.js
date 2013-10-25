@@ -19,11 +19,12 @@ define([
     edit_btn_template,
     comment_template
 ) {
-    var o = {}, contentFrameURLBase = 
-            (context.is_secure) ? context.config.secure_content_url : context.config.content_url,
+    var o = {}, 
         loading_frame_list = [], loaded_frame_list = [],
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
+    o.content_url_base = (context.is_secure ?
+            context.config.secure_content_url : context.config.content_url);
     o.cache_offsets = [1, -1, 2];
     o.anim_duration = 400;
 
@@ -234,7 +235,7 @@ define([
             return contentFrame;
         }
         // Create new content frame
-        var contentFrameURL = contentFrameURLBase + expr_id;
+        var contentFrameURL = o.content_url_base + expr_id;
         contentFrame = $('<iframe class="expr">').attr('src',
             contentFrameURL + ((current != undefined) ? "" : "?no-embed"))
             .attr('id','expr_' + expr_id);
