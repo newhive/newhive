@@ -19,7 +19,7 @@ define([
     edit_btn_template,
     comment_template
 ) {
-    var o = {}, contentFrameURLBase = context.config.content_url,
+    var o = {}, 
         loading_frame_list = [], loaded_frame_list = [],
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
@@ -44,6 +44,9 @@ define([
 
     o.init = function(controller){
         o.controller = controller;
+        // context.is_secure not set until after module instantiation
+        o.content_url_base = (context.is_secure ?
+                context.config.secure_content_url : context.config.content_url);
         $("#page_prev").click(o.page_prev);
         $("#page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
@@ -52,12 +55,12 @@ define([
     o.exit = function(){
         o.last_found = -1;
         hide_exprs();
-        hide_panel();
+        o.hide_panel();
         $('#site').showshow();
         $('.page_btn').hidehide();
     };
 
-    hide_panel = function(){
+    o.hide_panel = function(){
         $("#signup_create").hidehide();
         $("#content_btns").hidehide();
         $("#signup_create .signup").addClass("hide");
@@ -155,7 +158,7 @@ define([
 
         animate_expr();
 
-        hide_panel();
+        o.hide_panel();
         $("#content_btns").showshow();
         $(".social_btn").removeClass("hide");
         if (!context.user.logged_in) {
@@ -233,7 +236,7 @@ define([
             return contentFrame;
         }
         // Create new content frame
-        var contentFrameURL = contentFrameURLBase + expr_id;
+        var contentFrameURL = o.content_url_base + expr_id;
         contentFrame = $('<iframe class="expr">').attr('src',
             contentFrameURL + ((current != undefined) ? "" : "?no-embed"))
             .attr('id','expr_' + expr_id);

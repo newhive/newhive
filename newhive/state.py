@@ -45,7 +45,7 @@ class Database:
     def __init__(self, config=None, assets=None):
         config = self.config = (config if config else newhive.config)
 
-        self.con = pymongo.Connection(host=config.database_host, port=config.database_port)
+        self.con = pymongo.MongoClient(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
         self.s3 = S3Interface()
         self.assets = assets
@@ -75,8 +75,9 @@ class Database:
 
         while True:
             spec = {}
-            if search.get('auth'): spec['auth'] = (
-                'public' if search['auth'] == 'public' else 'password')
+            if search.get('auth'):
+                spec['auth'] = ('public' if
+                    search['auth'] == 'public' else 'password')
 
             # todo: put auth specs into elasticsearch searches
             # todo: make sure that elasticsearch pagination resultsets are of the correct
@@ -400,13 +401,8 @@ class HasSocial(Entity):
         super(HasSocial, self).create()
         return self
     def update(self, **d):
-        if d.get('auth','') == 'password' and d.has_key('password'):
-            if d['password'] == '' and self.has_key('password'):
-                del self['password']
-            else:
-                d['password'] = mk_password(d['password'])
-        elif self.has_key('password'):
-            del self['password']
+        if d.get('password'):
+            d['password'] = mk_password(d['password'])
         super(HasSocial, self).update(**d)
         return self
     def cmp_password(self, v):
@@ -1082,8 +1078,9 @@ class Expr(HasSocial):
                 if spec.get('auth') == 'password':
                     spec2.update({'owner': viewer.id})
                 else:
-                    spec2.update({'$or': [
-                        {'auth': 'public'}, {'owner': viewer.id}]})
+                    spec2.setdefault('$and', [])
+                    spec2['$and'].append({'$or': [{'auth': 'public'},
+                        {'owner': viewer.id}]})
             else:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
@@ -1310,6 +1307,8 @@ class Expr(HasSocial):
     def update(self, **d):
         if not d.has_key('file_id'): self._collect_files(d)
         self.build_search(d)
+        if d.get('auth') == 'public':
+            d['password'] = None
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
         if d.get('apps') or d.get('background'): self.threaded_snapshot(retry=120)

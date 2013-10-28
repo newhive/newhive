@@ -76,7 +76,7 @@ define([
                 { open: function(){ $("#login_menu input[name=username]").focus(); },
                   handler: function(e, json) {
                     if (json.error != undefined) {
-                        $('#login_form .error_msg').text(json.error).hidehide().fadeIn("slow");
+                        $('#login_form .error_msg').text(json.error).showshow().fadeIn("slow");
                     } else {
                         $('#dialog_shield').click();
                         o.on_login();
@@ -86,7 +86,7 @@ define([
 
             if(context.error == "login") {
                 d.open();
-                $('#login_form .error_msg').fadeIn("slow");
+                $('#login_form .error_msg').showshow().fadeIn("slow");
             }
 
             // request invite form handlers. This form also appears on home page,
