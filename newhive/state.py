@@ -75,8 +75,9 @@ class Database:
 
         while True:
             spec = {}
-            if search.get('auth'): spec['auth'] = (
-                'public' if search['auth'] == 'public' else 'password')
+            if search.get('auth'):
+                spec['auth'] = ('public' if
+                    search['auth'] == 'public' else 'password')
 
             # todo: put auth specs into elasticsearch searches
             # todo: make sure that elasticsearch pagination resultsets are of the correct
@@ -1077,8 +1078,9 @@ class Expr(HasSocial):
                 if spec.get('auth') == 'password':
                     spec2.update({'owner': viewer.id})
                 else:
-                    spec2.update({'$or': [
-                        {'auth': 'public'}, {'owner': viewer.id}]})
+                    spec2.setdefault('$and', [])
+                    spec2['$and'].append({'$or': [{'auth': 'public'},
+                        {'owner': viewer.id}]})
             else:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)

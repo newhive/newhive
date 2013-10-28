@@ -55,12 +55,12 @@ define([
     o.exit = function(){
         o.last_found = -1;
         hide_exprs();
-        hide_panel();
+        o.hide_panel();
         $('#site').showshow();
         $('.page_btn').hidehide();
     };
 
-    hide_panel = function(){
+    o.hide_panel = function(){
         $("#signup_create").hidehide();
         $("#content_btns").hidehide();
         $("#signup_create .signup").addClass("hide");
@@ -158,7 +158,7 @@ define([
 
         animate_expr();
 
-        hide_panel();
+        o.hide_panel();
         $("#content_btns").showshow();
         $(".social_btn").removeClass("hide");
         if (!context.user.logged_in) {
