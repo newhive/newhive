@@ -72,17 +72,15 @@ class Database:
     def query_echo(self, q, expr_only=None, viewer=None, id=None, **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
+        if search.get('auth'):
+            args['auth'] = ('public' if
+                search['auth'] == 'public' else 'password')
 
         while True:
             spec = {}
-            if search.get('auth'):
-                spec['auth'] = ('public' if
-                    search['auth'] == 'public' else 'password')
 
-            # todo: put auth specs into elasticsearch searches
             # todo: make sure that elasticsearch pagination resultsets are of the correct
             #       size after filtering out exprs that are not viewable
-            # todo: return grouped_feed items with expressions in network trending
             # todo: handle all queries with esdb for compound queries like '#Loves #food'
 
             feed = search.get('feed')
@@ -107,7 +105,6 @@ class Database:
                 if owner and owner.get('tagged', {}).has_key(tags[0]):
                     results = self.Expr.cards(owner['tagged'][tags[0]], viewer=viewer)
                 else:
-                    spec = {'auth': 'public'}
                     if search.get('tags'):
                         spec['tags_index'] = {'$all': search['tags']}
                     if search.get('text'):
@@ -115,7 +112,9 @@ class Database:
                             {'title_index': {'$all': search['text']}}]
                     if search.get('user'):
                         spec['owner_name'] = search['user']
+                    print('spec before', spec)
                     results = self.Expr.page(spec, **args)
+                    print('spec after', spec)
                     # results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
                     #    sort='score', **args)
             else:
@@ -215,7 +214,7 @@ class Collection(object):
         return self.find(spec, **opts)
 
     def paginate(self, spec, limit=20, at=0, sort='updated', 
-        order=-1, filter=None, viewer=None):
+        order=-1, filter=None, **args):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
         at = int(at)
@@ -226,7 +225,7 @@ class Collection(object):
 
             # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
 
-            res = self.cards(spec, sort=[(sort, order)], skip=at, viewer=viewer)
+            res = self.cards(spec, sort=[(sort, order)], skip=at, **args)
 
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -1071,11 +1070,13 @@ class Expr(HasSocial):
 
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
-        def cards(self, spec, viewer=None, **opts):
+        def cards(self, spec, auth=None, viewer=None, **opts):
             filter = {}
             spec2 = spec if type(spec) == dict else filter
+            if auth:
+                spec2.update(auth=auth)
             if viewer and viewer.logged_in:
-                if spec.get('auth') == 'password':
+                if auth == 'password':
                     spec2.update({'owner': viewer.id})
                 else:
                     spec2.setdefault('$and', [])
@@ -1114,15 +1115,10 @@ class Expr(HasSocial):
             name = name.split('?')[0]
             return cls.named(user, name)
 
-        def page(self, spec, viewer, auth='public', tag=None, sort='updated', **args):
-            if tag: spec.update(tags_index=tag) # normalize tag input?
-
-            if type(spec) == dict:
-                spec.update(auth=auth)
-
+        def page(self, spec, sort='updated', **args):
             assert(sort in ['updated', 'random'])
             args.update(sort=sort)
-            rs = self.paginate(spec, viewer=viewer, **args)
+            rs = self.paginate(spec, **args)
 
             # remove random static patterns from random index
             # to make it _really_ random
