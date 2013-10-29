@@ -75,10 +75,14 @@
     },
    "signup": {
         "page_route": "/home/signup",
-        "api_route": "/api/user/create",
         "controller": "community",
         "method": "forms_signup",
         "client_method": "forms"
+    },
+    "signup-create": {
+        "api_route": "/api/user/create",
+        "controller": "user",
+        "method": "create"
     },
     "search": {
         "page_route": "/search",

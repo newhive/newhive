@@ -410,7 +410,7 @@ class User(ModelController):
 
     #     return self.serve_page(tdata, response, 'pages/signup.html')
 
-    def create(self, tdata, request, response):
+    def create(self, tdata, request, response, **args):
         """ Checks if the referral code matches one found in database.
             Decrements the referral count of the user who created the referral and checks if the count is > 0.
             Creates user record.
