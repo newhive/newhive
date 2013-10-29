@@ -3,7 +3,14 @@
 
 <div id="create_account">
 
-{<unless user.logged_in}
+{<if user.logged_in}
+  <a href='/'><p class='heading error'>Error: already logged in.</p></a>
+{>}
+{<else}{<if error "referral"}
+  <a href='/'><p class='heading error'>Oops!
+    There was a problem with your invitation.</p></a>
+{>}
+{<else}
   <img id="logo" src='{asset "skin/site/logo_text.png"}'>
   <form id='create_form' class="form_text" action='{config.secure_server}api/user/create' method='POST'>
   	<div class="center">
@@ -11,9 +18,11 @@
 	  <div id="left_pane">
 	  	<div class="upper subheading"><span>newhive.com/</span><span id="username_label">username</span></div>
 	  	<div><input type="text" name="username" placeholder="USERNAME"></div>
-	  	<div><input type="text" name="full_name" placeholder="FULL NAME (OPTIONAL)"></div>
+	  	<div><input type="text" name="full_name"
+          placeholder="FULL NAME (OPTIONAL)" value='{fullname}'></div>
 	  	<div><input type="password" name="password" placeholder="PASSWORD"></div>
-	  	<div><input type="text" name="email" placeholder="EMAIL"></div>
+	  	<div><input type="text" name="email" placeholder="EMAIL"
+          value='{query.email}'></div>
 	  </div>
 	  <div id="right_pane">
 	  	{#
@@ -35,10 +44,9 @@
       <div class="centered"><button type="submit" class="upper submit teal_btn">
       	Create my account<span id="go_btn"></span></button></div>
     </div>
+    <input type='hidden' name='key' value='{query.key}'>
   </form>
-{>}{<else}
-  <p>Error: already logged in.</p>
-{>}
+{>}{>}
 
 <div class="dialog" id="dia_TOS" data-handle="#read_tos"
 ><div class="content"
