@@ -1946,7 +1946,8 @@ class Referral(Entity):
         #if self.get('to'): url += '&email=' + self['to']
 
         # skip "invited" page
-        url = AbsUrl('create_account/' + self.get('key'))
+        url = AbsUrl('home/signup')
+        url.query.update({'key': self.get('key')})
         if self.get('to'): url.query.update({'email': self['to']})
         return url
 
