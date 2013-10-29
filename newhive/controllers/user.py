@@ -236,7 +236,7 @@ class User(ModelController):
 
     def request_invite(self, tdata, request, response, **args):
         form = {
-            'name': request.form.get('name')
+            'name': ''
             ,'email': request.form.get('email').lower()
             ,'referral': request.form.get('referral')
             ,'message': request.form.get('message')
