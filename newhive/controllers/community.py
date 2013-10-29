@@ -72,7 +72,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         spec = {'owner_name': owner_name}
-        cards = self.db.Expr.page(spec, tdata.user, auth='password', **args)
+        cards = self.db.Expr.page(spec, viewer=tdata.user, auth='password', **args)
         return {
             'cards': cards, 'owner': owner.client_view(), 'card_type':'expr',
             'title': 'Your Private Expressions',
@@ -172,7 +172,7 @@ class Community(Controller):
         spec = {'initiator_name': owner_name, 'entity_class':'Expr' }
         # ...and grab its expressions.
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
-            self.db.Star.page(spec, tdata.user, **args)))
+            self.db.Star.page(spec, viewer=tdata.user, **args)))
         profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
@@ -204,7 +204,7 @@ class Community(Controller):
         spec = {'initiator_name': owner_name, 'entity_class':'User' }
         # ...and grab its users.
         users = self.db.User.fetch(map(lambda en:en['entity'], 
-            self.db.Star.page(spec, tdata.user, **args)))
+            self.db.Star.page(spec, viewer=tdata.user, **args)))
         profile = owner.client_view(viewer=tdata.user)
         tags = owner.get('tags_following', [])
         return {
@@ -261,12 +261,13 @@ class Community(Controller):
         id = request.args.get('id', None)
         result, search = self.db.query_echo(request.args['q'],
             viewer=tdata.user, id=id, **args)
+        print('executed search', search)
         tags = search.get('tags', [])
         data = {
             "cards": result,
             "card_type": "expr",
             'title': 'Search',
-            'header': ("Search", request.args['q']),  
+            'header': ("Search", request.args['q']),
         }
         if (len(search) == 1 and len(tags) == 1):
             profile = tdata.user
