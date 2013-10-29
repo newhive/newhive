@@ -48,3 +48,6 @@ def insert_tagged(user, tag, ids):
 		user['tagged'] = {}
 	user['tagged'][tag] = ids
 	user.save(updated=False)
+
+def new_referral(from_user, to_name, to_email):
+    return db.User.named(from_user).new_referral({'name': to_name, 'to': to_email})
