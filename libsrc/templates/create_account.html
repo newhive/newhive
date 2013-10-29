@@ -5,7 +5,7 @@
 
 {<unless user.logged_in}
   <img id="logo" src='{asset "skin/site/logo_text.png"}'>
-  <form id='create_form' class="form_text" action='{secure_server}api/user/create' method='POST'>
+  <form id='create_form' class="form_text" action='{config.secure_server}api/user/create' method='POST'>
   	<div class="center">
 	  <div class="centered heading">Create account:</div>
 	  <div id="left_pane">
