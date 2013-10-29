@@ -218,6 +218,7 @@ class Collection(object):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
         at = int(at)
+        limit = int(limit)
         if type(spec) == dict:
             # if page_is_id:
             #     page_start = self.fetch(at)
@@ -245,7 +246,7 @@ class Collection(object):
                 end = start + limit * -order
                 if end > start:
                     if start >= len(spec): return []
-                    sub_spec = spec[start+1:end+1]
+                    sub_spec = spec[start:end]
                 else:
                     if start <= 0: return []
                     if end - 1 < 0:
@@ -514,6 +515,7 @@ class User(HasSocial):
     def notification_count_reset(self): self.update(notification_count=0)
 
     def notify(self, feed_item):
+        self.setdefault('notification_count', 0)
         self['notification_count'] += 1
         self.increment({'notification_count': 1})
 
