@@ -47,9 +47,13 @@ class Community(Controller):
         }
 
     def forms_signup(self, tdata, request, username=None, **paging_args):
-        return {
-            'form': 'create_account', 'title': "NewHive - Sign Up",
-        }
+        referral = self.db.Referral.find({'key': request.args.get('key')})
+        resp = {'form': 'create_account', 'title': "NewHive - Sign Up", }
+        if not referral:
+            resp['error'] = 'referral'
+        else:
+            resp['fullname'] = referral.get('name')
+        return resp
 
     def expressions_public(self, tdata, request, owner_name=None, at=0, **args):
         owner = self.db.User.named(owner_name)

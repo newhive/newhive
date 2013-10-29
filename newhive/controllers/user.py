@@ -236,7 +236,7 @@ class User(ModelController):
 
     def request_invite(self, tdata, request, response, **args):
         form = {
-            'name': request.form.get('name')
+            'name': ''
             ,'email': request.form.get('email').lower()
             ,'referral': request.form.get('referral')
             ,'message': request.form.get('message')
@@ -421,10 +421,9 @@ class User(ModelController):
             """
 
         assert 'agree' in request.form
-        referral = self._check_referral(request)[0]
-        if (not referral): return self._bad_referral(tdata, request, response)
-        # BUGBUG
-        # if (not referral or referral.get('used')): return self._bad_referral(tdatakkkk, request, response)
+        referral = self._check_referral(request)
+        if (not referral):
+            return self.serve_json(response, { 'error': 'referral' })
         referrer = self.db.User.named(referral['name'])
         assert referrer, 'Referring user not found'
 
@@ -485,19 +484,7 @@ class User(ModelController):
         self.login(tdata, request, response)
         return self.redirect(response, '/' + user['name'] + '/profile')
 
-    def _bad_referral(self, tdata, request, response, msg=None):
-        # if request.requester.logged_in: self.redirect(response, request.requester.get_url())
-        # if not msg: msg = "This invite has already been used. If you think this is a " +\
-        #                   "mistake, please try signing up again, or contact us at " +\
-        #                   '<a href="mailto:info@thenewhive.com">info@thenewhive.com</a>'
-        # response.context['msg'] = msg
-        # response.context['error'] = 'Log in if you already have an account'
-        return self.serve_page(tdata, response, 'pages/exception.html')
-
     def _check_referral(self, request):
         # Get either key of a Referral object in our db, or a facebook id
-        key_or_id = request.args.get('key') or lget(request.path.split('/', 1),1)
-        # BUGBUG
-        key_or_id ='Z9o7Rr2XyIS45Rq2'
-        #
-        return self.db.Referral.find({ '$or': [{'key': key_or_id}, {'request_id': key_or_id}]}), key_or_id
+        key = request.form.get('key')
+        return self.db.Referral.find({'key': key})
