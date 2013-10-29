@@ -424,7 +424,7 @@ class User(ModelController):
         referral = self._check_referral(request)
         if (not referral):
             return self.serve_json(response, { 'error': 'referral' })
-        referrer = self.db.User.named(referral['name'])
+        referrer = self.db.User.fetch(referral['user'])
         assert referrer, 'Referring user not found'
 
         args = dfilter(request.form, ['username', 'password', 'email', 'fullname', 'gender', 'thumb', 'thumb_file_id'])
