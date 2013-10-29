@@ -60,13 +60,15 @@
         {>}
   
         {<if action "FriendJoined"}
-          has joined NewHive
+          joined NewHive
         {>}
   
         <div class='entity_title'>
-          {<if entity user.id}You
-          {>}{<else}{entity_title|untitled|e}
-          {>}
+          {<unless action "FriendJoined"}
+            {<if entity user.id}You
+            {>}{<else}{entity_title|untitled|e}
+            {>}
+          {>}{<else}&nbsp{>}
         </div>
   
         {<if text}

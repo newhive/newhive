@@ -514,6 +514,7 @@ class User(HasSocial):
     def notification_count_reset(self): self.update(notification_count=0)
 
     def notify(self, feed_item):
+        self.setdefault('notification_count', 0)
         self['notification_count'] += 1
         self.increment({'notification_count': 1})
 
