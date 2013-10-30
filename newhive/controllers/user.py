@@ -454,8 +454,10 @@ class User(ModelController):
 
         if user.get('referrer') != self.db.User.site_user.id:
             self.db.FriendJoined.create(user, referrer)
+            # new user follows referrer
+            self.db.Star.create(user, referrer)
+        # TODO: offer suggested users to follow.
         # new user follows NewHive
-        # TODO: follow referrer, offer suggested users to follow.
         self.db.Star.create(user, self.db.User.site_user)
         # self._friends_to_listen(request, user)
         # self._friends_not_to_listen(request, user)
