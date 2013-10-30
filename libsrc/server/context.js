@@ -10,8 +10,6 @@ define([
 ], function(api_routes, config, routing, js, menu, dialog, ui_util){
     var o = { config: config };
 
-    o.server_url = o.config.server_url; // used in many templates
-
     o.asset = function(context, name){
         // if supplied with single argument (old code), use that as name.
         return ui_util.asset(name ? name : context);

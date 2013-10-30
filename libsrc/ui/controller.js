@@ -13,6 +13,10 @@ define([
         curl.expose('server/context', 'c'); // useful for debugging
         setup_google_analytics();
 
+        context.server_url = context.config.server_url; // used in many templates
+        context.content_url = context.config.content_url = context.is_secure ?
+            context.config.secure_content_url : context.config.content_url;
+
         context.parse_query();
         routing.register_state(route_args);
         page.init(o);
