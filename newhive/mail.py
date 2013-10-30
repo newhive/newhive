@@ -1,4 +1,5 @@
 import crypt, urllib, time, json, re, pymongo, random
+from bson import objectid
 import newhive.state
 from newhive.state import abs_url
 from newhive.utils import AbsUrl
@@ -201,7 +202,7 @@ class Mailer(object):
         if not filters: filters = {}
         if not context: context = {}
 
-        email_id = str(pymongo.objectid.ObjectId())
+        email_id = str(objectid.ObjectId())
 
         record = {'_id': email_id, 'email': self.recipient.get('email'), 'category': self.name }
         if type(self.recipient) == newhive.state.User:
@@ -473,6 +474,7 @@ class Featured(ExprAction):
     def send(self, expr):
         self.recipient = expr.owner
         self.card = expr
+        return #BUGBUG
         super(Featured, self).send()
 
 class Milestone(Mailer):
@@ -533,7 +535,7 @@ class UserReferral(Mailer):
         context = {
             'initiator': initiator
             , 'recipient': {'name': referral.get('name')}
-            , 'url': referral.url
+            , 'url': str(referral.url).replace('live-1.','')
             }
         self.send_mail(context, unique_args={'referral_id': referral.id})
 
@@ -552,7 +554,7 @@ class SiteReferral(Mailer):
 
         context = {
             'recipient': self.recipient
-            , 'url': referral.url
+            , 'url': str(referral.url).replace('live-1.','')
             }
 
         self.send_mail(context)

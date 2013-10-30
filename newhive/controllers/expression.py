@@ -3,7 +3,7 @@ from newhive.controllers.shared import *
 from newhive.controllers.community import Community
 from newhive import utils, mail
 # TODO: handle this in model layer somehow
-from pymongo.connection import DuplicateKeyError
+from pymongo.errors import DuplicateKeyError
 
 class Expression(Community, PagingMixin):
     def edit_frame(self, request, response):

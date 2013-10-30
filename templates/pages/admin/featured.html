@@ -41,7 +41,8 @@
       };
       feed_borders();
       feed.sortable({
-          stop: feed_borders
+          stop: feed_borders,
+          items: items
       });
       var get_ids = function(){
           var confirmed = $(items.selector).not('.provisionary').find('.item_id').add('.hidden_item_id');

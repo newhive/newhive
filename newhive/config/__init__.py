@@ -3,7 +3,7 @@ from public_config import *
 from private_config import *
 
 if live_server:
-    dev_prefix = None
+    pass #dev_prefix = None
 else:
     with open('/etc/hostname') as f:
         hostname = f.read().strip()
