@@ -101,6 +101,7 @@ define([
                     document.body.scrollTop = scroll_ref[1] - e.clientY + mouse_ref[1];
                 });
             }
+
             //$(document.body).on('keydown', function(e){
             //    if(e.keyCode == 32) // space
             //        if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) o.page_next();
@@ -110,7 +111,25 @@ define([
             //        if(document.body.scrollLeft == 0) o.page_prev();
             //});
 
+            $('a, form').each(function(i, e){ o.link_target(e) });
+
             jplayer.init_jplayer();
+        };
+
+        o.link_target = function(a){
+            a = $(a);
+            if (a.attr('target')) return;
+
+            var re = new RegExp('^https?://[\\w-]*.?(' +
+                context.config.server_domain + '|' +
+                context.config.content_domain + ')');
+            var href = a.attr('href') || a.attr('action');
+
+            if(href && href.indexOf('http') === 0 && !re.test(href)) {
+                a.attr('target', '_blank');
+            } else if (href && href.indexOf('http') === 0 && re.test(href)) {
+                a.attr('target', '_top');
+            }
         };
 
         o.show = function(){
