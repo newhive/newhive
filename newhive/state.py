@@ -1,8 +1,9 @@
-import re, pymongo, pymongo.objectid, random, urllib, os, mimetypes, time, getpass, exceptions, json
+import re, pymongo, random, urllib, os, mimetypes, time, getpass, exceptions, json
+from bson import objectid
 import operator as op
 from os.path import join as joinpath
 from md5 import md5
-from pymongo.connection import DuplicateKeyError
+from pymongo.errors import DuplicateKeyError
 from datetime import datetime
 from lxml import html
 from wsgiref.handlers import format_date_time
@@ -250,7 +251,7 @@ class Entity(dict):
         self._col = col._col
         self.db = col.db
         self.mdb = self.db.mdb
-        self.setdefault('_id', str(pymongo.objectid.ObjectId()))
+        self.setdefault('_id', str(objectid.ObjectId()))
         self['id'] = self.id
 
     @property
@@ -1393,7 +1394,8 @@ class Referral(Entity):
         #if self.get('to'): url += '&email=' + self['to']
 
         # skip "invited" page
-        url = AbsUrl('create_account/' + self.get('key'))
+        url = AbsUrl('home/signup')
+        url.query.update({'key': self.get('key')})
         if self.get('to'): url.query.update({'email': self['to']})
         return url
 

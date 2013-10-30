@@ -1,4 +1,5 @@
 import time, random, re, base64, copy, pytz, pandas
+from bson import objectid
 from datetime import datetime
 from newhive import config
 import urlparse
@@ -30,7 +31,7 @@ def dupdate(d1, d2): return dict(d1.items() + d2.items())
 
 
 def datetime_to_id(d):
-    return str(pymongo.objectid.ObjectId.from_datetime(d))
+    return str(objectid.ObjectId.from_datetime(d))
 
 def now(): return time.time()
 
