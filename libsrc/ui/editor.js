@@ -383,66 +383,66 @@ Hive.Controls = function(app, multiselect) {
     };
 
     o.append_link_picker = function(d, opts) {
-        // opts = $.extend({ open: noop, close: noop }, opts);
-        // var e = $("<div class='control drawer link'>");
-        // var cancel_btn = $("<img>").addClass('hoverable')
-        //     .attr('src', asset('skin/edit/delete_sm.png'))
-        //     .attr('title', 'Clear link')
-        //     .css('margin', '12px 0 0 5px');
-        // var input = $('<input type="text">');
+        opts = $.extend({ open: noop, close: noop }, opts);
+        var e = $("<div class='control drawer link'>");
+        var cancel_btn = $("<img>").addClass('hoverable')
+            .attr('src', asset('skin/edit/delete_app.png'))
+            .attr('title', 'Clear link')
+            .css('margin', '12px 0 0 5px');
+        var input = $('<input type="text">');
 
-        // d.append(e);
-        // Hive.input_frame(input, e);
-        // e.append(cancel_btn);
+        d.append(e);
+        Hive.input_frame(input, e);
+        e.append(cancel_btn);
 
-        // // set_link is called when input is blurred
-        // var set_link = function(){
-        //     var v = input.val();
-        //     // TODO: improve URL guessing
-        //     if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\./)) v = 'http://' + v;
-        //     o.app.link(v);
-        // };
+        // set_link is called when input is blurred
+        var set_link = function(){
+            var v = input.val();
+            // TODO: improve URL guessing
+            if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && v.match(/\w+\.\w{2,}/)) v = 'http://' + v;
+            o.app.link(v);
+        };
 
-        // // Don't have to worry about duplicating handlers because all elements
-        // // were just created from scratch
-        // input.on('blur', set_link);
+        // Don't have to worry about duplicating handlers because all elements
+        // were just created from scratch
+        input.on('blur', set_link);
 
-        // var m = o.hover_menu(d.find('.button.link'), e, {
-        //      open : function() {
-        //          var link = o.app.link();
-        //          opts.open();
-        //          input.focus();
-        //          input.val(link);
-        //      }
-        //     ,click_persist : input
-        //     ,close : function() {
-        //         // No need for explicit call to set_link here because it is
-        //         // handled on blur, and blur is always triggered by one of the
-        //         // clauses below
-        //         if (opts.field_to_focus) {
-        //             opts.field_to_focus.focus();
-        //         }
-        //         input.blur();
-        //         opts.close();
-        //     }
-        //     ,auto_close : false
-        // });
+        var m = o.hover_menu(d.find('.button.link'), e, {
+             open : function() {
+                 var link = o.app.link();
+                 opts.open();
+                 input.focus();
+                 input.val(link);
+             }
+            ,click_persist : input
+            ,close : function() {
+                // No need for explicit call to set_link here because it is
+                // handled on blur, and blur is always triggered by one of the
+                // clauses below
+                if (opts.field_to_focus) {
+                    opts.field_to_focus.focus();
+                }
+                input.blur();
+                opts.close();
+            }
+            ,auto_close : false
+        });
 
-        // // timeout needed to get around firefox bug
-        // var close_on_delay = function(){
-        //     setTimeout(function(){m.close(true)}, 0);
-        // };
-        // e.find('img').click(function() {
-        //     input.focus();
-        //     input.val('');
-        //     close_on_delay();
-        // });
-        // input.keypress(function(e) {
-        //     if(e.keyCode == 13) {
-        //         close_on_delay();
-        //     }
-        // });
-        // return m;
+        // timeout needed to get around firefox bug
+        var close_on_delay = function(){
+            setTimeout(function(){m.close(true)}, 0);
+        };
+        e.find('img').click(function() {
+            input.focus();
+            input.val('');
+            close_on_delay();
+        });
+        input.keypress(function(e) {
+            if(e.keyCode == 13) {
+                close_on_delay();
+            }
+        });
+        return m;
     };
 
     o.appendControl = function(c) { 
