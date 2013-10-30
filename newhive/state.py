@@ -108,13 +108,16 @@ class Database:
                     if search.get('tags'):
                         spec['tags_index'] = {'$all': search['tags']}
                     if search.get('text'):
-                        spec['$or'] = [{'text_index': {'$all': search['text']}},
-                            {'title_index': {'$all': search['text']}}]
+                        # spec['$or'] = [{'text_index': {'$all': search['text']}},
+                        #     {'title_index': {'$all': search['text']}}]
+                        # WAS: body OR title contained ALL search terms.
+                        # NOW: EACH text term is found in body OR title OR tags
+                        spec['$and'] = [ {'$or': [{'title_index': text}, 
+                            {'text_index': text}, {'tags_index': text}]}
+                            for text in search.get('text')]
                     if search.get('user'):
                         spec['owner_name'] = search['user']
-                    print('spec before', spec)
                     results = self.Expr.page(spec, **args)
-                    print('spec after', spec)
                     # results = self.esdb.paginate(search, es_order=es_order, fuzzy=fuzzy,
                     #    sort='score', **args)
             else:
