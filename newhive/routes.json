@@ -254,6 +254,17 @@
         "controller": "user",
         "method": "expr_share"
     },
+    "password_recover": {
+        "api_route": "/api/community/password_recover",
+        "controller": "user",
+        "method": "password_recover"
+    },
+    "password_reset": {
+        "page_route": "/home/community/password_reset",
+        "api_route": "/api/community/password_reset",
+        "controller": "user",
+        "method": "password_reset"
+    },
     "send_mail": {
         "api_route": "/api/community/send_mail",
         "controller": "user",

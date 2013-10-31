@@ -1,7 +1,7 @@
 import httplib2, urllib
 from newhive import auth, config, mail
 from newhive.controllers.controller import ModelController
-from newhive.utils import log_error, dfilter, lget, abs_url
+from newhive.utils import log_error, dfilter, lget, abs_url, junkstr
 
 class User(ModelController):
     model_name = 'User'
@@ -26,6 +26,43 @@ class User(ModelController):
     def logout(self, tdata, request, response, **args):
         auth.handle_logout(self.db, tdata.user, request, response)
         return self.serve_json(response, True)
+
+    # User has requested a new password. Send a reset email
+    def password_recover(self, tdata, request, response, **args):
+        resp = {}
+        logged_user = tdata.user
+        email = request.form.get('email')
+        user = self.db.User.find({'email': email})
+
+        if logged_user and logged_user.id:
+            resp = { 'error': 'Already logged in.' }
+        elif not user:
+            resp = { 'error': 'Sorry, that email address is not in our records.' }
+        else:
+            key = junkstr(16)
+            recovery_link = abs_url(secure=True) + "home/community/password_reset?key=" + key + '&user=' + user.id
+            mail.TemporaryPassword(jinja_env=self.jinja_env, db=self.db).send(user, recovery_link)
+            user.update(password_recovery = key)
+
+        return self.serve_json(response, resp)
+
+    # Show password reset dialog, filled with user name 
+    def password_reset(self, tdata, request, response, **args):
+        resp = { 'page': 'password_reset' }
+        logged_user = tdata.user
+        key = request.args.get('key')
+        user_id = request.args.get('user', '')
+        user = self.db.User.fetch(user_id)
+
+        if not user:
+            resp.update({ 'error': 'User not found.' })
+        elif key != user.get('password_recovery'):
+            resp.update({ 'error': 'Incorrect key.' })
+        else:
+            resp.update({ 'user_id': user_id, 'name': user['name'], 'key': key })
+
+        tdata.context.update(page_data=resp, route_args=args)
+        return self.serve_loader_page('pages/main.html', tdata, request, response)
 
     def deactivate(self, tdata, request, response, **args):
         if request.form.get('deactivate')=='':

@@ -7,7 +7,7 @@ define([
     oo.create = function(element, options){
         oo.generic_dialog_handler = function(event, json){
             if (json.error != undefined) {
-                opts.dialog.find('.error_msg').text(json.error).hidehide().fadeIn("slow");
+                opts.dialog.find('.error_msg').text(json.error).showshow().hide().fadeIn("slow");
             } else {
                 opts.dialog.find('.error_msg').hidehide();
                 var el_show = opts.dialog.find(".success_show").unbind("click").click(
