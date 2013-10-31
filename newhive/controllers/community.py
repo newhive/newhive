@@ -82,10 +82,37 @@ class Community(Controller):
             'title': 'Your Private Expressions',
         }
 
+    def check_password(self, password):
+        if len(password) < 4:
+            return 'Passwords must be at least 4 characters long'
+        return False
+
     def settings_update(self, tdata, request, owner_name=None, **args):
         """ Doubles as post handler and settings page api route
             for settings """
         owner = tdata.user
+
+        # Check to see if user filled out password recovery form
+        key = request.form.get('key')
+        if key:
+            user_id = request.form.get('user_id', '')
+            user = self.db.User.fetch(user_id)
+            password = request.form.get('new_password', '')
+            password2 = request.form.get('new_password2', '')
+
+            resp = {}
+            if not user:
+                resp.update({ 'error': 'User not found.' })
+            elif key != user.get('password_recovery'):
+                resp.update({ 'error': 'Incorrect key.' })
+            elif password != password2:
+                resp.update({ 'error': 'Passwords must match.' })
+            elif self.check_password(password):
+                resp.update({ 'error': self.check_password(password) })
+            else:
+                user.update(**{'password': password})
+            resp.update({"page_data":"must have some data or else 404"})
+            return resp
 
         subscribed = owner.get('email_subscriptions', [])
         email_lists = map(lambda email_list: {
@@ -101,13 +128,16 @@ class Community(Controller):
             if request.form.get('email'):
                 update = dict(
                     email=request.form.get('email'))
+
                 if ( ( request.form.get('email') != owner['email'] ) or
                     request.form.get('new_password')
                 ) and ( not owner.cmp_password(request.form.get('password')) ):
                     return { 'error': 'Password given does not match existing password' };
                 if request.form.get('new_password'):
-                    update.update({'password': request.form.get('new_password')})
-
+                    password = request.form.get('new_password', '')
+                    if self.check_password(password):
+                        return { 'error': self.check_password(password) }
+                    update.update({'password': password})
 
                 if update['email'] and update['email'] != owner.get('email'):
                     request_date = now()
