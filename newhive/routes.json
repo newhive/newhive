@@ -124,7 +124,8 @@
         "api_route": "/api/user/update/<owner_name>",
         "controller": "community",
         "method": "user_update",
-        "client_method": "user_update"
+        "client_method": "user_update",
+        "require_login": true
     },
     "manage_tags": {
         "page_route": "/<owner_name>/profile/manage_tags",
@@ -185,11 +186,13 @@
         "api_route": "/api/expr/<owner_name>/<path:expr_name>",
         "controller": "community",
         "method": "edit_expr",
-        "client_method": "edit_expr"
+        "client_method": "edit_expr",
+        "require_login": true
     },
     "create_expr": {
         "page_route": "/<owner_name>/profile/create",
-        "client_method": "create_expr"
+        "client_method": "create_expr",
+        "require_login": true
     },
     "expr_save": {
         "api_route": "/api/expr/save",
