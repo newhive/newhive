@@ -320,6 +320,11 @@ class Community(Controller):
 
     def dispatch(self, handler, request, json=False, **kwargs):
         (tdata, response) = self.pre_process(request)
+        # Redirect to home if route requires login but user not logged in
+        if (kwargs.get('require_login') and not (tdata.user and tdata.user.id) and
+            kwargs['route_name'] != 'home'):
+            return self.redirect(response, "/")
+
         self.response = response
         # Handle redirects
         if kwargs.get('route_name') == 'my-profile':
