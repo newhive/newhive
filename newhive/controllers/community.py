@@ -287,6 +287,10 @@ class Community(Controller):
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
         if not expr or not tdata.user.can_view(expr): return None
+        # For others' expressions, require the #remix tag
+        if (tdata.user.id != self.db.User.named(owner_name).id and
+            "remix" not in expr.get('tags_index', [])):
+            return None
         expr['id'] = expr.id
         return { 'expr': expr }
 

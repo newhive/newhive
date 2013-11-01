@@ -169,6 +169,11 @@ define([
             $("#signup_create").showshow();
             $("#signup_create .create").removeClass("hide");
             if (context.user.id == o.expr.owner.id) {
+                page_data.remix = false;
+                $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
+                $('#content_btns .edit_ui .icon').showshow();
+            } else if (page_data.expr.tags.indexOf("remix") >= 0) {
+                page_data.remix = true;
                 $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
                 $('#content_btns .edit_ui .icon').showshow();
             }
