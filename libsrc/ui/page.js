@@ -411,6 +411,9 @@ define([
             on_file_upload('#profile_thumb', '#thumb_id_input'));
         $('#bg_form').on('response',
             on_file_upload('#profile_bg', '#bg_id_input'));
+        // Click-through help text to appropriate handler
+        $(".help_bar").on("click", function(e) {
+            console.log("ok" + e);$(this).next().trigger(e); })
 
         $('#user_update_form button[name=cancel]').click(function(e) {
             o.controller.open('expressions_public',
