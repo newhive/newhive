@@ -149,7 +149,7 @@ class Database:
         # q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
         # search['phrases'].extend(q_quotes)
 
-        for pattern in re.findall(r'(\b|\W+)(\w+)', q):
+        for pattern in re.findall(r'(\b|\W+)((\w|[/-])+)', q):
             prefix = re.sub( r'[^#@]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':

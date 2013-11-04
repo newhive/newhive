@@ -2571,9 +2571,10 @@ Hive.save = function() {
     if (expr.owner_name != context.user.name) {
         expr.owner_name = context.user.name;
         expr.owner = context.user.id;
+        expr.remix_parent_id = expr.id;
         expr.id='';
         expr._id='';
-
+        // expr.tags += " #remixed"
     }
 
     if(expr.name.match(/^profile/)) {

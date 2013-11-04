@@ -33,7 +33,7 @@ class Expr(ModelController):
 
         res = self.db.Expr.fetch(expr.id)
         allowed_attributes = ['name', 'domain', 'title', 'apps', 'dimensions',
-            'auth', 'password', 'tags', 'background', 'thumb', 'images']
+            'auth', 'password', 'tags', 'background', 'thumb', 'images', 'remix_parent_id']
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
         #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
@@ -62,8 +62,32 @@ class Expr(ModelController):
         if not res or upd['name'] != res['name'] or upd['domain'] != res['domain']:
             try:
               new_expression = True
+              # Handle remixed expressions
+              if upd.get('remix_parent_id'):
+                parent_id = upd.get('remix_parent_id')
+                remix_expr = self.db.Expr.fetch(parent_id)
+                while parent_id:
+                    remix_expr = self.db.Expr.fetch(parent_id)
+                    parent_id = remix_expr.get('remix_parent_id')
+                remix_owner = remix_expr.owner
+                upd['remix_root'] = remix_expr.id
+                remix_owner.setdefault('tagged', {})
+                remix_expr.setdefault('remix_name', remix_expr['name'])
+                remix_name = 'remix/' + remix_expr['remix_name']
+                # include self in remix list
+                remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
+                upd['tags'] += " #remixed #remix" # + remix_name
+
               res = tdata.user.expr_create(upd)
               self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id})
+
+              # TODO-remix: handle moving ownership of remix list, especially if original is
+              # made private or deleted.
+              if upd.get('remix_parent_id'):
+                remix_owner['tagged'][remix_name].append(res.id)
+                remix_owner.save(updated=False)
+                remix_expr.save(updated=False)
+
               tdata.user.flag('expr_new')
               if tdata.user.get('flags').get('add_invites_on_save'):
                   tdata.user.unflag('add_invites_on_save')
@@ -80,6 +104,9 @@ class Expr(ModelController):
         else:
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+            # remix: ensure that the remix tag is not deletable
+            if res.get('remix_parent_id'):
+                upd['tags'] += " #remixed #remix" # + remix_name
             res.update(**upd)
             new_expression = False
 
