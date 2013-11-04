@@ -258,6 +258,7 @@
         background-color: grey;
     }
     .help_bar {
+        pointer-events:none;
         position: absolute;
         top: -104px;
         width: 100%;
