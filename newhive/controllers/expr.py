@@ -76,14 +76,13 @@ class Expr(ModelController):
                 remix_name = 'remix/' + remix_expr['remix_name']
                 # include self in remix list
                 remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
-                upd['tags'] += " #remixed" # + remix_name
+                upd['tags'] += " #remixed #remix" # + remix_name
 
               res = tdata.user.expr_create(upd)
               self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id})
 
               # TODO-remix: handle moving ownership of remix list, especially if original is
               # made private or deleted.
-              # TODO-remix: ensure that the remix tag is not deletable
               if upd.get('remix_parent_id'):
                 remix_owner['tagged'][remix_name].append(res.id)
                 remix_owner.save(updated=False)
@@ -105,6 +104,9 @@ class Expr(ModelController):
         else:
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+            # remix: ensure that the remix tag is not deletable
+            if res.get('remix_parent_id'):
+                upd['tags'] += " #remixed #remix" # + remix_name
             res.update(**upd)
             new_expression = False
 
