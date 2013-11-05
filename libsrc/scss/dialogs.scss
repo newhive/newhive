@@ -20,6 +20,18 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     z-index: 201;
     width: 500px;
     background-color : white;
+    &.standard {
+        width: 440px;
+        padding: 20px;
+        .title { margin-bottom: 20px; }
+        .error_msg { margin-bottom: 10px; }
+        textarea, input[type=text] {
+            width: 100%;
+            resize: none;
+            margin: 10px 0px;
+            white-space: pre-wrap;
+        }
+    }
     @include box-shadow(05px 05px 05px #666);
     .center, &.center {text-align: center;}
     .line { margin: 7px 0; clear: both;}
@@ -39,7 +51,8 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     }
     .success_show {
         height: 180px;
-        color: white;
+        color: black;
+        // color: white;
         background-color: $color_selected;
         .centered {
             padding: 0px 30px;
@@ -110,6 +123,8 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
             height: 100px;
         }
     }
+}
+#dia_recover {
 }
 #dia_embed {
     width: 440px;

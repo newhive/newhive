@@ -123,7 +123,8 @@
         "api_route": "/api/user/update/<owner_name>",
         "controller": "community",
         "method": "user_update",
-        "client_method": "user_update"
+        "client_method": "user_update",
+        "require_login": true
     },
     "manage_tags": {
         "page_route": "/<owner_name>/profile/manage_tags",
@@ -181,14 +182,16 @@
 
     "create_expr": {
         "page_route": "/home/edit",
-        "client_method": "create_expr"
+        "client_method": "create_expr",
+        "require_login": true
     },
     "edit_expr": {
         "page_route": "/home/edit/<expr_id>",
         "api_route": "/api/expr/edit/<expr_id>",
         "controller": "community",
         "method": "edit_expr",
-        "client_method": "edit_expr"
+        "client_method": "edit_expr",
+        "require_login": true
     },
     "expr_save": {
         "api_route": "/api/expr/save",
@@ -252,6 +255,17 @@
         "api_route": "/api/community/expr_share",
         "controller": "user",
         "method": "expr_share"
+    },
+    "password_recover": {
+        "api_route": "/api/community/password_recover",
+        "controller": "user",
+        "method": "password_recover"
+    },
+    "password_reset": {
+        "page_route": "/home/community/password_reset",
+        "api_route": "/api/community/password_reset",
+        "controller": "user",
+        "method": "password_reset"
     },
     "send_mail": {
         "api_route": "/api/community/send_mail",

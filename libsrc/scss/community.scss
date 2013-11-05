@@ -258,6 +258,7 @@
         background-color: grey;
     }
     .help_bar {
+        pointer-events:none;
         position: absolute;
         top: -104px;
         width: 100%;
@@ -284,6 +285,9 @@
     width: 390px;
     hr {
         margin: 70px 0px;
+    }
+    .label {
+        margin-top: 10px;
     }
     .heading {
         margin-bottom: 20px;

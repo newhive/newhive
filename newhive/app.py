@@ -39,7 +39,8 @@ def get_api_endpoints(api):
                         getattr(api, route_obj.get('controller', 'community')),
                         route_obj.get('method', 'empty')
                     ),
-                    defaults={'route_name': route_name},
+                    defaults={'route_name': route_name, 
+                        'require_login': route_obj.get('require_login')},
                     host=url_host(secure=secure)
                 ))
 
@@ -50,7 +51,8 @@ def get_api_endpoints(api):
                     route_obj['api_route'],
                     endpoint=(getattr(api,route_obj['controller']),
                         route_obj['method']),
-                    defaults={'json':True, 'route_name': route_name},
+                    defaults={'json':True, 'route_name': route_name,
+                        'require_login': route_obj.get('require_login')},
                     host=url_host(secure=secure)
                 ))
     return rules
@@ -110,6 +112,7 @@ def handle(request):
     except RequestRedirect as e:
         # bugbug: what's going on here anyway?
         raise Exception('redirect not implemented: from: ' + request.url + ', to: ' + e.new_url)
+
     # print controller
     # print handler
     try:

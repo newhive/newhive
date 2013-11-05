@@ -21,6 +21,10 @@ class Controller(object):
     # def method(self, tdata, request, response, **args):
     def dispatch(self, handler, request, **args):
         (tdata, response) = self.pre_process(request)
+        # Redirect to home if route requires login but user not logged in
+        if args.get('require_login') and not (tdata.user and tdata.user.id):
+            return self.redirect(response, "/")
+
         return getattr(self, handler, None)(tdata, request, response, **args)
 
     def pre_process(self, request):

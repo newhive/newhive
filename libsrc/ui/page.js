@@ -12,6 +12,7 @@ define([
     'server/context',
     'browser/layout',
     'ui/page/pages',
+    'sj!templates/password_reset.html',
     'sj!templates/overlay.html',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
@@ -44,6 +45,7 @@ define([
     context,
     browser_layout,
     pages,
+    password_template,
     overlay_template,
     master_template,
     home_template,
@@ -409,6 +411,9 @@ define([
             on_file_upload('#profile_thumb', '#thumb_id_input'));
         $('#bg_form').on('response',
             on_file_upload('#profile_bg', '#bg_id_input'));
+        // Click-through help text to appropriate handler
+        $(".help_bar").on("click", function(e) {
+            console.log("ok" + e);$(this).next().trigger(e); })
 
         $('#user_update_form button[name=cancel]').click(function(e) {
             o.controller.open('expressions_public',
@@ -457,7 +462,25 @@ define([
     };
     
     function render_site(page_data){
-        $('#site').empty().append(master_template(page_data));
+        if (page_data.page) {
+            // TODO-polish: These functions belong in another module.
+            if (page_data.page == 'password_reset') {
+                $('#site').empty().append(password_template(page_data));
+                $('#user_settings_form').on('response',
+                    function(e, json) {
+                        if (json.error) {
+                            $('#user_settings_form .error_msg').showshow().
+                                text(json.error);
+                        } else {
+                            o.controller.open("home", {});
+                            $('#login_form [name=from]').val(window.location.origin);
+                        }
+                    });
+            }
+            else
+                $('#site').empty().append(master_template(page_data));
+        } else
+            $('#site').empty().append(master_template(page_data));
     }
 
     o.resize = function(){
