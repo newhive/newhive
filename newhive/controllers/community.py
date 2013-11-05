@@ -1,6 +1,6 @@
 from newhive import mail
 from newhive.ui_strings import en as ui_str
-from newhive.utils import dfilter, now, abs_url
+from newhive.utils import dfilter, now, abs_url, AbsUrl
 from newhive.controllers.controller import Controller
 from collections import Counter
 
@@ -253,9 +253,8 @@ class Community(Controller):
             if expr_owner.id != tdata.user.id: expr.increment({'views': 1})
         return resp
 
-    def edit_expr(self, tdata, request, id=None, owner_name=None, expr_name=None):
-        expr = ( self.db.Expr.fetch(id) if id else
-            self.db.Expr.named(owner_name, expr_name) )
+    def edit_expr(self, tdata, request, id=None):
+        expr = self.db.Expr.fetch(id)
         if not expr or not tdata.user.can_view(expr): return None
         expr['id'] = expr.id
         return { 'expr': expr }
@@ -292,12 +291,15 @@ class Community(Controller):
         (tdata, response) = self.pre_process(request)
         self.response = response
         # Handle redirects
-        if kwargs.get('route_name') == 'my-profile':
+        if kwargs.get('route_name') == 'my_profile':
             return self.redirect(response, abs_url(
-                '/' + tdata.user['name'] + '/profile' + Community.parse_query(request.query_string)))
-        elif kwargs.get('route_name') == 'my-create':
-            return self.redirect(response, abs_url(
-                '/' + tdata.user['name'] + '/profile/create' + Community.parse_query(request.query_string)))
+                '/' + tdata.user['name'] + '/profile' +
+                Community.parse_query(request.query_string)))
+        # TODO-cleanup: remove once old create_account links aren't being used
+        if kwargs.get('route_name') == 'old_signup':
+            u = AbsUrl('home/signup')
+            u.query.update({'key': kwargs.get('key')})
+            return self.redirect(response, str(u))
 
         query = getattr(self, handler, None)
         if query is None:

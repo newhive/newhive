@@ -9,7 +9,7 @@
       <span class='login_btn text_btn left_border btn menu_item'>Log in</span>
     </span>
   {>}
-  {<if user.logged_in}<a {anchor_attrs "create_expr" "owner_name" user.name}
+  {<if user.logged_in}<a {anchor_attrs "create_expr"}
     ><div class='create icon btn hoverable'></div></a>{>}
   {# + button to open overlay #}
   <div class='social_btn icon btn hide hoverable'></div>
