@@ -105,10 +105,21 @@ def handle(request):
     try: (controller, handler), args = routes.bind_to_environ(
         request.environ).match()
     except exceptions.NotFound as e:
-        print "Gap in routing table!"
-        print request
-        return api.controller.serve_500(request, Response(),
-            exception=e, json=False)
+        err=True
+        if not config.live_server: 
+          try:
+            err=False
+            dev = config.dev_prefix + '.' if config.dev_prefix else ''
+            request.environ['HTTP_HOST'] = config.server_name + ':' + request.environ['SERVER_PORT']
+            (controller, handler), args = routes.bind_to_environ(
+                request.environ).match()
+          except exceptions.NotFound as e:
+            err=True
+        if err:
+            print "Gap in routing table!"
+            print request
+            return api.controller.serve_500(request, Response(),
+                exception=e, json=False)
     except RequestRedirect as e:
         # bugbug: what's going on here anyway?
         raise Exception('redirect not implemented: from: ' + request.url + ', to: ' + e.new_url)
