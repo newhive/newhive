@@ -2,16 +2,16 @@
   can change but the overlay isn't rerendered. #}
 <span class='edit_ui'>{# #}
   {<if remix}
-      <a {anchor_attrs "edit_expr" "owner_name" expr.owner.name "expr_name" expr.name
-      "id" expr.id} class='remix_icon icon btn hide hoverable'></a>
+      <a {anchor_attrs "edit_expr" "id" expr.id}
+        class='remix_icon icon btn hide hoverable'></a>
   {>}{<else}
     <div id="edit_handle" class='edit_icon icon btn hide'></div>
 
     {# menu: wrench (edit) #}
     <div id='edit_menu' class='menu drawer' data-handle='#edit_handle' data-menu-opts='  "layout_x":"right"'>
       <div class='pointer menu_item hoverable' id='delete_btn'>Delete</div>
-      <a {anchor_attrs "edit_expr" "owner_name" user.name "expr_name" expr.name
-        "id" expr.id} class='default menu_item hoverable'>Edit</a>
+      <a {anchor_attrs "edit_expr" "id" expr.id}
+        class='default menu_item hoverable'>Edit</a>
     </div>
 
     {# dialog: delete confirmation #}
@@ -22,7 +22,6 @@
   	  <button type="cancel" class="teal_btn upper">Cancel</button>
   	  <button type="submit" class="grey_btn upper">Delete</button>
       </form>
-    </div>
-    {# #}
+    </div>{# #}
   {>}
 </span>
