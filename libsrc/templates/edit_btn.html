@@ -2,8 +2,8 @@
   can change but the overlay isn't rerendered. #}
 <span class='edit_ui'>{# #}
   {<if remix}
-      <a {anchor_attrs "edit_expr" "owner_name" expr.owner.name "expr_name" expr.name
-      "id" expr.id} class='remix_icon icon btn hide hoverable'></a>
+      <a {anchor_attrs "edit_expr" "id" expr.id}
+        class='remix_icon icon btn hide hoverable'></a>
   {>}{<else}
     <div id="edit_handle" class='edit_icon icon btn hide'></div>
 

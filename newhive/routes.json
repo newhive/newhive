@@ -186,8 +186,8 @@
         "require_login": true
     },
     "edit_expr": {
-        "page_route": "/home/edit/<expr_id>",
-        "api_route": "/api/expr/edit/<expr_id>",
+        "page_route": "/home/edit/<id>",
+        "api_route": "/api/expr/edit/<id>",
         "controller": "community",
         "method": "edit_expr",
         "client_method": "edit_expr",
