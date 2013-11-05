@@ -1,5 +1,6 @@
 #! /bin/sh
 # intended to be called from git post-receive hook
 
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:$PATH"
 bin/build_assets.py
 sudo apache2ctl graceful
