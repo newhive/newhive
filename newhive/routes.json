@@ -36,15 +36,9 @@
         "require_login": true
     },
 
-    "my-profile": {
+    "my_profile": {
         "page_route": "/home/my-profile",
         "api_route": "/api/home/my-profile",
-        "controller": "community",
-        "method": "empty"
-    },
-    "my-create": {
-        "page_route": "/home/my-create",
-        "api_route": "/api/home/my-create",
         "controller": "community",
         "method": "empty"
     },
@@ -78,6 +72,11 @@
         "controller": "community",
         "method": "forms_signup",
         "client_method": "forms"
+    },
+   "old_signup": {
+        "page_route": "/create_account/<key>",
+        "controller": "community",
+        "method": "old_signup"
     },
     "signup-create": {
         "api_route": "/api/user/create",
@@ -181,17 +180,17 @@
         "client_method": "expr"
     },
 
+    "create_expr": {
+        "page_route": "/home/edit",
+        "client_method": "create_expr",
+        "require_login": true
+    },
     "edit_expr": {
-        "page_route": "/<owner_name>/<path:expr_name>/edit",
-        "api_route": "/api/expr/<owner_name>/<path:expr_name>",
+        "page_route": "/home/edit/<expr_id>",
+        "api_route": "/api/expr/edit/<expr_id>",
         "controller": "community",
         "method": "edit_expr",
         "client_method": "edit_expr",
-        "require_login": true
-    },
-    "create_expr": {
-        "page_route": "/<owner_name>/profile/create",
-        "client_method": "create_expr",
         "require_login": true
     },
     "expr_save": {
