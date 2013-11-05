@@ -111,6 +111,8 @@ class Community(Controller):
                 resp.update({ 'error': self.check_password(password) })
             else:
                 user.update(**{'password': password})
+                user.update_cmd({'$unset': {'password_recovery': 1}})
+
             resp.update({"page_data":"must have some data or else 404"})
             return resp
 
