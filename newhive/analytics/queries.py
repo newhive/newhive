@@ -35,6 +35,7 @@ import httplib2
 import numpy
 
 from newhive import config
+from newhive import state
 from newhive.analytics import functions
 from functions import dataframe_to_record, record_to_dataframe
 from newhive.analytics.ga import GAQuery, QueryResponse
@@ -46,8 +47,7 @@ Day = pandas.datetools.Day
 import logging
 logger = logging.getLogger(__name__)
 
-connection = pymongo.Connection(host=config.database_host, port=config.database_port)
-adb = connection[config.analytics_db]
+adb = state.db_connect(config.analytics_db_host, config.analytics_db)
 min_start_date = datetime.date(2011, 4, 16)
 
 def clear_all_caches():
@@ -210,7 +210,7 @@ class ListensPerDay(CreatedPerDay):
 
     def _execute(self):
         collection = self.db.Star
-        spec = {'entity_class': 'User', 'entity': {'$ne': self.db.User.named('thenewhive').id}}
+        spec = {'entity_class': 'User', 'entity': {'$ne': self.db.User.named(config.site_user).id}}
         return super(ListensPerDay, self)._execute(collection, spec)
 
 class UsersPerDay(CreatedPerDay):
@@ -392,6 +392,5 @@ class UserImpressions(Query):
 
 
 if __name__ == "__main__":
-    import newhive.state
-    db = newhive.state.Database(config)
-    db_live = newhive.state.Database(config, db_name='hive')
+    db = state.Database(config)
+    db_live = state.Database(config)
