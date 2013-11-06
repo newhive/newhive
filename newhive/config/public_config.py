@@ -19,7 +19,7 @@ aws_secret      = False
 s3_buckets      = []
 asset_bucket    = None
 
-admins          = ['abram', 'andrew', 'cara', 'duffy', 'zach', 'jack', 'fred']
+admins          = ['abram', 'andrew', 'cara', 'zach', 'jack', 'newduke']
 test_emails     = ['abram@thenewhive.com', 'andrew@thenewhive.com',
                    'cara@thenewhive.com', 'zach@thenewhive.com', 'duffy@thenewhive.com',
                    'info@thenewhive.com', 'duffy.tilleman@gmail.com', 'duffy@lumana.org',
@@ -50,7 +50,7 @@ beta_testers    = [
                   ]
 beta_testers = admins + beta_testers
 
-site_user       = 'thenewhive'
+site_user       = 'newhive'
 admins.append(site_user)
 
 content_domain = 'tnh.me'

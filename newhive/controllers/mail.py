@@ -48,8 +48,10 @@ class Mail(Application):
             if referral_id:
                 contact.update(referral_id=referral_id)
         else:
-            mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
-            mailer.send(form.get('email'), form.get('name'), sendgrid_args)
+            pass
+            ## disable this so Catherine can experiment with sending a customized & personal version 
+            # mailer = mail.SignupRequest(db=self.db, jinja_env=self.jinja_env)
+            # mailer.send(form.get('email'), form.get('name'), sendgrid_args)
 
         return self.serve_page(response, 'dialogs/signup_thank_you.html')
 
