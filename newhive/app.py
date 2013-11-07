@@ -106,7 +106,7 @@ def handle(request):
         request.environ).match()
     except exceptions.NotFound as e:
         err=True
-        if not config.live_server: 
+        if not config.live_server:
           try:
             err=False
             dev = config.dev_prefix + '.' if config.dev_prefix else ''
