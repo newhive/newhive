@@ -335,8 +335,9 @@ class Active(Query):
             mr1_name = 'mr.actions_per_user_per_day'
             mr1 = self.db.mdb[mr1_name]
             latest = mr1.find_one(sort=[('_id.date', -1)])['_id']['date']
-            # The following line performs incremental map reduce, but depends on mongodb version >= 1.8
-            return self.db.ActionLog._col.map_reduce(map1, reduce, mr1_name, merge_output=True, query={'created': {'$gt': latest - 24*3600}})
+            return self.db.ActionLog._col.map_reduce(map1, reduce,
+                out={ 'merge': mr1_name },
+                query={'created': {'$gt': latest - 24*3600}})
 
         mr_col = actions_per_user_per_day()
         mr_col.ensure_index('_id.date')
