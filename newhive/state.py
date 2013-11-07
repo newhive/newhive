@@ -27,7 +27,8 @@ logger = logging.getLogger(__name__)
 def db_connect(host, db_name):
     con = pymongo.Connection(host=host, port=config.database_port)
     mdb = con[db_name or config.database]
-    mdb.authenticate(config.database_user, password=config.database_password)
+    if config.database_user and config.database_password:
+        mdb.authenticate(config.database_user, password=config.database_password)
     return mdb
 
 class Database:

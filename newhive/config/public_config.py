@@ -1,16 +1,18 @@
-live_server     = False
+live_server = False
 
-plain_port      = 80
-ssl_port        = 443
-server_name     = 'newhive.com'
-database        = 'hive'
-database_host   = 'localhost'
-database_port   = 27017
-email_port      = 2525
-media_path      = '/home/domains/thenewhive.com'
+plain_port = 80
+ssl_port = 443
+server_name = 'newhive.com'
+database = 'hive'
+database_host = 'localhost'
+database_port = 27017
+database_user = False
+database_password = False
+analytics_db = 'analytics'
+
+email_port = 2525
+media_path = '/home/domains/thenewhive.com'
 redirect_domains = ['newhive.com', 'thenewhive.com']
-
-analytics_db    = 'analytics'
 
 ssl_ca          = False
 
