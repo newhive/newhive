@@ -3,6 +3,9 @@ from newhive import state
 db = state.Database()
 from newhive.utils import now, time_u
 
+nd = db.User.named('newduke')
+e1 = db.Expr.with_url('newduke/index')
+
 def recent_exprs(within_secs):
 	return db.Expr.search({'updated': {'$gt': now() - within_secs}})
 
@@ -51,3 +54,4 @@ def insert_tagged(user, tag, ids):
 
 def new_referral(from_user, to_name, to_email):
     return db.User.named(from_user).new_referral({'name': to_name, 'to': to_email})
+
