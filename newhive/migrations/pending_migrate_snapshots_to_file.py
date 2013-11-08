@@ -53,3 +53,4 @@ def migrate_snapshot(expr):
 	            mime='image/png', autogen=False)
 	file_record.save()
 	expr.update(snapshot=file_record.id, updated=False)
+	return True
