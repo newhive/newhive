@@ -1284,7 +1284,7 @@ class Expr(HasSocial):
             if not it:
                 file_record = self.db.File.create(file_data)
                 file_record['dimensions'] = ( 
-                    dimension_list[it][0],namedimension_list[it][1])
+                    dimension_list[it][0], dimension_list[it][1])
             else:
                 file_record.set_thumb(
                     dimension_list[it][0], dimension_list[it][1], file=local,
