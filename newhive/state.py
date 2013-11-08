@@ -1223,7 +1223,7 @@ class Expr(HasSocial):
         if self.get('snapshot'):
             dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
             snapshot = self.db.File.fetch(self['snapshot'])
-            assert snapshot
+            if not snapshot: return ''
             dimension = dimensions.get(size, False)
             if size == "big" or not dimension:
                 filename = snapshot['url']
@@ -1417,7 +1417,7 @@ class Expr(HasSocial):
         mini = dfilter( self, ['name', 'owner_name'] )
         mini['id'] = self['_id']
         snapshot = self.snapshot_name_prefix()
-        mini['snapshot_tiny'] = (self.snapshot_name_prefix() + 'tiny.png'
+        mini['snapshot_tiny'] = (self.snapshot_name('tiny')
             if snapshot else
             self.db.assets.url('skin/site/expr_placeholder_tiny.jpg'))
         return mini
