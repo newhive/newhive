@@ -475,7 +475,7 @@ class Analytics(Application):
     @admins
     def actives(self, request, response):
         q = queries.Active(self.db)
-        data = q.execute(period=int(request.args.get('period', 1)) )
+        data = q.execute(int(request.args.get('period', 1)) )
         data.index = data.index.map(lambda x: x.date())
         return self.serve_gviz(response, data)
 
