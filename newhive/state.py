@@ -1213,6 +1213,7 @@ class Expr(HasSocial):
             self['entropy'] = junkstr(8)
         return self['entropy']
 
+    #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):
         return '_'.join([self.id, time, self.entropy(), size]) + (".jpg" if (size == "full") else ".png")
 
@@ -1220,9 +1221,9 @@ class Expr(HasSocial):
     # will return 'snapshot_placeholder.png' if no available snapshot
     def snapshot_name(self, size):
         if not self.get('snapshot_time'): return False
-        if self.get('snapshot'):
+        if self.get('snapshot_id'):
             dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
-            snapshot = self.db.File.fetch(self['snapshot'])
+            snapshot = self.db.File.fetch(self['snapshot_id'])
             if not snapshot: return ''
             dimension = dimensions.get(size, False)
             if size == "big" or not dimension:
@@ -1232,12 +1233,6 @@ class Expr(HasSocial):
 
         filename = self.snapshot_name_base(size, str(self.get('snapshot_time')))
         return 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
-
-    def snapshot_name_prefix(self):
-        name = self.snapshot_name('')
-        if self.get('snapshot'):
-            return name
-        return name[:-4] if name else name
 
     def take_full_shot(self):
         snapshotter = Snapshots()
@@ -1284,7 +1279,8 @@ class Expr(HasSocial):
         for local, name in upload_list:
             file_data = {'owner': self.owner.id,
                 'tmp_file': (local if it else open(local, 'r')),
-                'name': 'snapshot', 'mime': 'image/png'}
+                'name': 'snapshot.png', 'mime': 'image/png',
+                'generated_from': self.id, 'generated_from_type': 'Expr'}
             if not it:
                 file_record = self.db.File.create(file_data)
                 file_record['dimensions'] = ( 
@@ -1309,11 +1305,11 @@ class Expr(HasSocial):
                 name = self.snapshot_name_base(size, str(old_time))
                 self.db.s3.delete_file('thumb', name)
             # delete to here
-            if self.get('snapshot'):
-                self.db.File.fetch(self.get('snapshot')).purge()
+            if self.get('snapshot_id'):
+                self.db.File.fetch(self.get('snapshot_id')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
-            snapshot=file_record.id, updated=False)
+            snapshot_id=file_record.id, updated=False)
         return True
 
     # @property
@@ -1416,9 +1412,8 @@ class Expr(HasSocial):
     def mini_view(self):
         mini = dfilter( self, ['name', 'owner_name'] )
         mini['id'] = self['_id']
-        snapshot = self.snapshot_name_prefix()
         mini['snapshot_tiny'] = (self.snapshot_name('tiny')
-            if snapshot else
+            if self.snapshot_name('tiny') else
             self.db.assets.url('skin/site/expr_placeholder_tiny.jpg'))
         return mini
 
@@ -1522,7 +1517,7 @@ class Expr(HasSocial):
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
-        expr = dfilter(self, ['name', 'title', 'snapshot', 'feed', 'created',
+        expr = dfilter(self, ['name', 'title', 'feed', 'created',
             'updated', 'password'])
         dict.update(expr, {
             'tags': self.get('tags_index'),
@@ -1533,9 +1528,6 @@ class Expr(HasSocial):
             'url': self.url,
             'title': self.get('title')
         })
-        # Until the migration happens, let's just put a placeholder image in the snapshot field
-        # instead of starting the generation of snapshots inside of client_view.
-        expr['snapshot'] = self.snapshot_name_prefix()
         expr['snapshot_big'] = self.snapshot_name("big")
         expr['snapshot_small'] = self.snapshot_name("small")
         if viewer and viewer.is_admin:
