@@ -3,11 +3,15 @@ from newhive import state
 db = state.Database()
 from newhive.utils import now, time_u
 
+# A couple handy defaults
 nd = db.User.named('newduke')
 e1 = db.Expr.with_url('newduke/index')
 
 def recent_exprs(within_secs):
 	return db.Expr.search({'updated': {'$gt': now() - within_secs}})
+
+def new_exprs(within_secs):
+	return db.Expr.search({'created': {'$gt': now() - within_secs}})
 
 def name(entity):
 	if type(entity) == list:
@@ -55,3 +59,12 @@ def insert_tagged(user, tag, ids):
 def new_referral(from_user, to_name, to_email):
     return db.User.named(from_user).new_referral({'name': to_name, 'to': to_email})
 
+def apply_all(func, list):
+	errors = []
+	for e in list:
+		if not func(e):
+			errors.append(e)
+	return errors
+
+
+	
