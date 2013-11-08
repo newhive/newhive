@@ -41,7 +41,7 @@ def migrate_snapshot(expr):
 	file_data = {'owner': expr.owner.id,
 		'tmp_file': new_files["big"],
 		'name': 'snapshot.png', 'mime': 'image/png',
-		'generated_from': self.id, 'generated_from_type': 'Expr'}
+		'generated_from': expr.id, 'generated_from_type': 'Expr'}
 	file_record = db.File.create(file_data)
 	file_record['dimensions'] = ( 
 		dimensions["big"][0], dimensions["big"][1])
