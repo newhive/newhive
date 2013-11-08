@@ -395,6 +395,10 @@ class Entity(dict):
             self.db.Trash.create(self.cname, self)
         return res
 
+    def purge(self):
+        res = self._col.remove(spec_or_id=self.id, safe=True)
+        return res
+
 # Common code between User and Expr
 class HasSocial(Entity):
     # social things happen to have passwords
@@ -989,6 +993,8 @@ class User(HasSocial):
             logged_in = self.logged_in,
             notification_count = self.notification_count,
         ) )
+        if special.has_key("tagged"):
+            dict.update(user, { "tagged": self.get('tagged', {}).keys() })
         if special.has_key("mini_expressions") and g_flags['mini_expressions']:
             # exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
             exprs = self.get_top_expressions(g_flags['mini_expressions'])
@@ -1214,17 +1220,29 @@ class Expr(HasSocial):
     # will return 'snapshot_placeholder.png' if no available snapshot
     def snapshot_name(self, size):
         if not self.get('snapshot_time'): return False
+        if self.get('snapshot'):
+            dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
+            snapshot = self.db.File.fetch(self['snapshot'])
+            assert snapshot
+            dimension = dimensions.get(size, False)
+            if size == "big" or not dimension:
+                filename = snapshot['url']
+            else: filename = snapshot.get_thumb(dimension[0], dimension[1])
+            return filename
+
         filename = self.snapshot_name_base(size, str(self.get('snapshot_time')))
         return 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
 
     def snapshot_name_prefix(self):
         name = self.snapshot_name('')
+        if self.get('snapshot'):
+            return name
         return name[:-4] if name else name
 
     def take_full_shot(self):
         snapshotter = Snapshots()
 
-        name = self.snapshot_name_base("full", str(self.get('snapshot_time')))[:-4] + ".jpg"
+        name = self.snapshot_name_base("full", str(self.get('snapshot_time')))
         if self.db.s3.file_exists('thumb', name):
             return True
         # This would be cleaner with file pipes instead of filesystem.
@@ -1250,7 +1268,7 @@ class Expr(HasSocial):
 
         for w, h, size in dimension_list:
             name = self.snapshot_name_base(size, str(snapshot_time))
-            # This would be cleaner with file pipes instead of filesystem.
+            # TODO-cleanup: This would be cleaner with file pipes instead of filesystem.
             local = '/tmp/' + name
             if w == dimension_list[0][0]:
                 r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
@@ -1262,20 +1280,40 @@ class Expr(HasSocial):
                 local = generate_thumb(f, (w, h), "png")
             upload_list.append((local,name))
 
-        # clean up local files, upload them atomically to s3 (on success)
+        it = 0
         for local, name in upload_list:
-            url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
+            file_data = {'owner': self.owner.id,
+                'tmp_file': (local if it else open(local, 'r')),
+                'name': 'snapshot', 'mime': 'image/png'}
+            if not it:
+                file_record = self.db.File.create(file_data)
+                file_record['dimensions'] = ( 
+                    dimension_list[it][0],namedimension_list[it][1])
+            else:
+                file_record.set_thumb(
+                    dimension_list[it][0], dimension_list[it][1], file=local,
+                    mime='image/png', autogen=False)
+            it += 1
+        file_record.save()
+
+        # clean up local files, upload them atomically to s3 (on success)
+        # for local, name in upload_list:
+        #     url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
         # need to delete local
         call(["rm", upload_list[0][0]])
 
         # Delete old snapshot
         if old_time:
+            # TODO-cleanup: remove this after snapshot migration
             for w, h, size in dimension_list:
                 name = self.snapshot_name_base(size, str(old_time))
                 self.db.s3.delete_file('thumb', name)
+            # delete to here
+            if self.get('snapshot'):
+                self.db.File.fetch(self.get('snapshot')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
-            updated=False)
+            snapshot=file_record.id, updated=False)
         return True
 
     # @property
@@ -1498,6 +1536,8 @@ class Expr(HasSocial):
         # Until the migration happens, let's just put a placeholder image in the snapshot field
         # instead of starting the generation of snapshots inside of client_view.
         expr['snapshot'] = self.snapshot_name_prefix()
+        expr['snapshot_big'] = self.snapshot_name("big")
+        expr['snapshot_small'] = self.snapshot_name("small")
         if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': self.is_featured })
 
@@ -1596,18 +1636,21 @@ class File(Entity):
             return self.IMAGE
         return self.UNKNOWN
 
-    def set_thumb(self, w, h, file=False):
+    def set_thumb(self, w, h, file=False, mime='image/jpeg', autogen=True):
         name = str(w) + 'x' + str(h)
         thumbs = self.get('thumbs', {})
         if thumbs.get(name): return False
 
         if not file: file = self.file
-        try: thumb_file = generate_thumb(file, (w,h))
-        except:
-            print 'failed to generate thumb for file: ' + self.id
-            return False # thumb generation is non-critical so we eat exception
+        if autogen:
+            try: thumb_file = generate_thumb(file, (w,h))
+            except:
+                print 'failed to generate thumb for file: ' + self.id
+                return False # thumb generation is non-critical so we eat exception
+        else:
+            thumb_file = file
         url = self.db.s3.upload_file(thumb_file, 'media', self._thumb_name(w, h),
-            self['name'] + '_' + name, 'image/jpeg')
+            self['name'] + '_' + name, mime)
 
         thumbs[name] = True
         self.update(thumbs=thumbs)
@@ -1643,6 +1686,9 @@ class File(Entity):
             self['fs_path'] = media_path(owner)
             with open(joinpath(self['fs_path'], id), 'w') as f: f.write(file.read())
             return abs_url() + 'file/' + owner['name'] + '/' + name
+
+    def create_existing(self):
+        super(File, self).create()
 
     def create(self):
         """ Uploads file to s3 if config.aws_id is defined, otherwise
@@ -1689,6 +1735,10 @@ class File(Entity):
         self['url'] = self.store()
         if self._file: self._file.close()
         self.update(**self)
+
+    def purge(self):
+        self.delete_files()
+        Super(self, File).purge()
 
     def delete_files(self):
         for k in self.thumb_keys + [self.id]:
