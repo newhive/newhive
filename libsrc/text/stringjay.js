@@ -501,6 +501,8 @@ define(['browser/js', 'module'],
 		return lhs != rhs;
 	};
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
+	// TODO-cleanup: add example cases to all these functions.
+	// {<for (reverse user.activity)}<item>{>}
 	context_base.reverse = function(context, l){ return l.concat().reverse(); };
 	context_base.mod = function(context, x, y){ return x % y };
 	context_base.thousands = function(context, n){ 
