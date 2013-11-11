@@ -732,8 +732,10 @@ class User(HasSocial):
         # return iterable of matching expressions for each tag you're following
         tags = self.get('tags_following', [])
         queries = [self.db.query('#' + tag) for tag in tags]
-
-        return (item for grp in izip_longest(*queries) for item in grp)
+        flat = list(filter(lambda x:x != None, chain(*izip_longest(*queries))))
+        if limit:
+            return flat[0:limit]
+        return flat
 
     # TODO-polish merge with db.query to enable searching within feed
     def feed_trending(self, at=0, limit=20):
@@ -766,7 +768,7 @@ class User(HasSocial):
         at=int(at)
         limit=int(limit)
         feed_items = self.network_feed_items()#limit=limit*4, at=at)
-        tagged_exprs = self.exprs_tagged_following()
+        tagged_exprs = list(self.exprs_tagged_following())
 
         # group feed items into expressions, alternate
         # these with tagged_exprs and de-duplicate
