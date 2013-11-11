@@ -503,6 +503,20 @@ define(['browser/js', 'module'],
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
 	// TODO-cleanup: add example cases to all these functions.
 	// {<for (reverse user.activity)}<item>{>}
+	context_base.unique = function(context, l){
+		var field = false;
+		if (arguments.length >= 3)
+			field = arguments[2];
+		return l.reduce(function(p, c) {
+			if (field) {
+	        	if (!p.filter(function(e) {return e[field]==c[field];}
+	        		).length) p.push(c);
+	        }
+	        else if (p.indexOf(c) < 0)
+	        	p.push(c);
+	        return p;
+    	}, []);
+	};
 	context_base.reverse = function(context, l){ return l.concat().reverse(); };
 	context_base.mod = function(context, x, y){ return x % y };
 	context_base.thousands = function(context, n){ 
