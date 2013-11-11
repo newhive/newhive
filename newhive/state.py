@@ -1223,9 +1223,9 @@ class Expr(HasSocial):
     # will return 'snapshot_placeholder.png' if no available snapshot
     def snapshot_name(self, size):
         if not self.get('snapshot_time'): return False
-        if self.get('snapshot_id'):
+        if self.get('snapshot_id') or self.get('snapshot'):
             dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
-            snapshot = self.db.File.fetch(self['snapshot_id'])
+            snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
             if not snapshot: return ''
             dimension = dimensions.get(size, False)
             if size == "big" or not dimension:
@@ -1309,6 +1309,8 @@ class Expr(HasSocial):
             # delete to here
             if self.get('snapshot_id'):
                 self.db.File.fetch(self.get('snapshot_id')).purge()
+            if self.get('snapshot'):
+                self.db.File.fetch(self.get('snapshot')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
             snapshot_id=file_record.id, updated=False)
