@@ -166,6 +166,15 @@ textarea.code {
 // .menu label { font-weight: normal; font-size: 15px; }
 
 #btn_save .loading { width: 25px; }
+// TODO: we should have a mechanism to set up icons, correctly aligned,
+// correctly sized, with automatic hover.
+#btn_save div.arrow { 
+    background-image: asset_url('skin/nav/small_arrow.png');
+    width: 22px;
+    height: 42px;
+    margin-top: -10px;
+}
+#btn_save:hover div.arrow { background-image: asset_url('skin/nav/small_arrow_hover.png'); }
 #menu_save {
     font-size: .85em;
     width: 220px;

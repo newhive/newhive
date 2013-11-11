@@ -9,6 +9,7 @@
 // Search bar
 .search_bar {
     margin: 25px auto;
+    // margin-bottom: 50px;
     display: block;
     width: 538px;
     // padding-left: 44px;
@@ -30,10 +31,11 @@
     }
     .icon.hash {
         background-color: transparent;
+        @include border-radius(0px);
         background-image: asset_url('skin/nav/collections.png');
         &:hover {
-            background-image: asset_url('skin/nav/collections-on.png'); 
-            background-color: black;
+            // background-image: asset_url('skin/nav/collections-on.png'); 
+            background-color: $color_selected;
         }
     }
     .icon.go_arrow {
@@ -304,7 +306,8 @@
     ///
     // background-color:blue;
     //
-    position: absolute;
+    // TODO: WTF? static makes sense.
+    // position: absolute;
     z-index: 0;
     left: 0px; 
     top: 0px;
@@ -322,7 +325,8 @@
         // @include box-shadow(rgba(black, 0.4) 0px 0px 0px);
     }
     #header {
-        margin: 25px 0;
+        margin-bottom: 31px;
+        margin-top: 39px;
         text-align: center;
     }
 
@@ -337,7 +341,8 @@
     }
     #tag_bar {
         // padding-bottom: 10px;
-        margin: 50px auto;
+        margin: 35px auto;
+        margin-bottom: 40px;
         position: relative;
         button.create {
             position: relative;
@@ -374,7 +379,7 @@
     }
 
     #feed {
-        margin: 0 auto 0 auto;
+        margin: 50px auto 0px auto;
         .card {
             box-shadow: 0px 0px 5px #CCC;
             .tag_list {
@@ -458,7 +463,7 @@
 
     #feed.grid {
         /* max-width: 1256px; */
-        margin: auto;
+        // margin: auto;
         width: 1230px;
         .user.card {
             width: 222px;

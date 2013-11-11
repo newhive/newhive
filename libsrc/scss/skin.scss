@@ -33,7 +33,7 @@
 }
 .item, .menu_item {
     text-transform: uppercase;
-    &:hover {
+    &.active {
     	font-weight: bold;
     }
     font-family: Gibson Semibold;

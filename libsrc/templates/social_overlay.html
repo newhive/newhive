@@ -26,14 +26,14 @@
           {|templates/icon_count.html}
         {>}
         {# Views menu drawer #}
-        <div id="views_menu" class="menu drawer" data-handle='#views_icon' data-menu-opts='"layout_x":"center"'>
+        <div id="views_menu" class="menu drawer" data-handle='#views_icon' data-menu-opts='"layout_x":"center","no_item_hover":true'>
           <div class='menu_item'>
             <div class="text upper item">Created</div>
-            <div>{recency_time created}</div>
+            <div class="color_grey_medium">{recency_time created}</div>
           </div>
           <div class='menu_item'>
             <div class="text upper item">Updated</div>
-            <div>{recency_time updated}</div>
+            <div class="color_grey_medium">{recency_time updated}</div>
           </div>
         </div>
         {# Love icon + drawer #}
@@ -126,8 +126,10 @@
   <div id="dia_comments" class="dialog" data-handle='#comment_icon'>
     {# activity feed #}
     <div class="title text">Discussion</div>
-    {<with null "icon_class" "comment nohover discussions" "count" counts.Comment} {|templates/icon_count.html}{>}
-    <div class='activity'>{<for comments}
+    {# removing redundant comment icon
+      {<with null "icon_class" "comment nohover discussions" "count" counts.Comment} {|templates/icon_count.html}{>}
+    #}
+    <div class='activity'>{<for (reverse comments)}
       {|templates/comment.html}
     {>}</div>
     {# discussion input #}

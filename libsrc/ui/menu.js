@@ -165,6 +165,16 @@ var menu = function(handle, drawer, options) {
         }
 
         var css_opts = {};
+        var z_index = "auto";
+        el = handle;
+        var z_index_latch = 0;
+        while (el.length && ! (z_index_latch > 0)) {
+            z_index = el.css("z-index");
+            z_index_latch = parseInt(z_index) + 1;
+            el = el.parent();
+        }
+        if (z_index_latch > 0)
+            css_opts['z-index'] = z_index_latch;
         // special stuff for activity menu. Belongs in template file
         // as special attributes
         if (drawer.is("#activity_menu")) {
@@ -250,9 +260,11 @@ var menu = function(handle, drawer, options) {
     }
 
     menu_items.each(function(i, d){
-        var e = $(d);
-        e.mouseover(function(){ e.addClass('active'); });
-        e.mouseout(function(){ e.removeClass('active'); });
+        if (!opts.no_item_hover) {
+            var e = $(d);
+            e.mouseover(function(){ e.addClass('active'); });
+            e.mouseout(function(){ e.removeClass('active'); });
+        }
     });
 
     return o;
