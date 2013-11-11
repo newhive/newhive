@@ -347,7 +347,7 @@ $action: love comment republish;
 // TODO-cleanup: merge with &.comment above.
 #dia_comments {
     padding: 23px;
-    margin-bottom: 15px;
+    .title { margin-bottom: 15px; }
     .activity {
         max-height: 450px;
         overflow-y: auto;
