@@ -14,7 +14,8 @@
     {% else %}
         <span style="vertical-align: middle; color: green; {{ font }};">⬆</span>
     {% endif %}
-    <span style="vertical-align: middle;">{{ "%d%%" | format(percent) }}</span>
+    <span style="vertical-align: middle;">
+        {{ 'n/a' if isnan(percent) else "%d%%" | format(percent) }}</span>
 {%- endmacro %}
 
 {% macro grouping(title, stats) -%}

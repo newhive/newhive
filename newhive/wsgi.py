@@ -61,6 +61,7 @@ jinja_env.filters.update({
 jinja_env.globals.update({
      'colors': newhive.colors.colors
     ,'asset_bundle': hive_assets.asset_bundle
+    ,'isnan': math.isnan
 })
 
 ##############################################################################
