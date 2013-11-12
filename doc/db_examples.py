@@ -66,5 +66,3 @@ def apply_all(func, list):
 			errors.append(e)
 	return errors
 
-
-	
