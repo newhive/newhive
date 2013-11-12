@@ -13,6 +13,7 @@ define([
     'browser/layout',
     'ui/page/pages',
     'sj!templates/password_reset.html',
+    'sj!templates/collections.html',
     'sj!templates/overlay.html',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
@@ -46,6 +47,7 @@ define([
     browser_layout,
     pages,
     password_template,
+    collections_template,
     overlay_template,
     master_template,
     home_template,
@@ -259,8 +261,9 @@ define([
     };
     var local_attach_handlers = function(){
         if (!context.user.logged_in) {
-            $(".needs_login").unbind("click").click(function() {
+            $(".needs_login").unbind("click").click(function(e) {
                 $("#dia_login_or_join").data("dialog").open();
+                e.preventDefault();
             });
         }
         $(".user_action_bar form.follow").unbind('response').on('response', 
