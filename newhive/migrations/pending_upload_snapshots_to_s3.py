@@ -86,6 +86,7 @@ def clear_snapshots():
         expr.save(updated=False)
 
 expr_limit = 10
+continuous = True
 
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
@@ -117,7 +118,7 @@ def start_snapshots(proc_tmp_snapshots=False):
     # if True:
         exprs = list(get_exprs(0))
         print get_exprs(0).count()
-        if len(exprs) == 0: break
+        if len(exprs) == 0 and not continuous: break
         # print exprs
         for expr in exprs:
             # if expr.get('_id') in existing_snapshots:
@@ -136,11 +137,14 @@ def start_snapshots(proc_tmp_snapshots=False):
                 # log sleeps to see if server is being pounded.
                 # log_error(self.db, message = "Too many snapshot threads", critical=False)
                 time.sleep(1)
-        while threading.active_count() > threads:
-            print "waiting for %s threads:" % (threading.active_count() - threads)
+        wait_count = 150
+        while threading.active_count() > threads and wait_count:
+            print "waiting for %s threads or %ss:" % (
+                threading.active_count() - threads, wait_count)
             # log sleeps to see if server is being pounded.
             # log_error(self.db, message = "Too many snapshot threads", critical=False)
             time.sleep(1)
+            wait_count -= 1
 
     # print "need to get %s exprs" % len(expressions_to_snapshot)
     
