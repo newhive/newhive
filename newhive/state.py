@@ -1739,13 +1739,12 @@ class File(Entity):
 
     def purge(self):
         self.delete_files()
-        Super(self, File).purge()
+        super(File, self).purge()
 
     def delete_files(self):
         for k in self.thumb_keys + [self.id]:
             if self.get('s3_bucket'):
-                k = self.db.s3_con.get_bucket(self['s3_bucket']).get_key(self.id)
-                if k: k.delete()
+                self.db.s3.delete_file(self['s3_bucket'], self.id)
             elif self.get('fs_path'):
                 try: os.remove(self['fs_path'])
                 except:

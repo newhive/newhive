@@ -14,9 +14,12 @@ class S3Interface(object):
                 for k, v in config.s3_buckets.items() }
 
     def delete_file(self, bucket, path):
-        k = S3Key(self.buckets[bucket])
-        k.name = path
-        k.delete()
+        bucket = self.buckets.get(bucket) or self.con.get_bucket(bucket)
+        k = bucket.get_key(path)
+        if k:
+            k.delete()
+            return True
+        return False
 
     def url(self, bucket='media', key=''):
         return ('https://' + self.buckets[bucket].name
