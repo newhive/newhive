@@ -92,13 +92,8 @@ continuous = True
 
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
-    # thumb_bucket = config.s3_buckets['thumb']
     thumb_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
  
-    # xvfb = init_xvfb()
-    
-    # existing_snapshots = proccess_snapshots_file() if proc_tmp_snapshots else []
-    
     def get_exprs(limit):
         expressions_to_snapshot = db.Expr.search({
             "$or": [{"snapshot_time": { "$exists": False }},
@@ -116,7 +111,6 @@ def start_snapshots(proc_tmp_snapshots=False):
 
     count = 0
     total = get_exprs(0).count()
-    # sss()
     threads = threading.active_count()
     while True:
     # if True:

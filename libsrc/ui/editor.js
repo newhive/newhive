@@ -2411,11 +2411,12 @@ Hive.init = function(exp, page){
     });
     // canonicalize tags field.
     function tags_input_changed(el) {
-        var tags = el.val();
-        tags = tags.trim().replace(/[#,]/g," ").replace(/[ ]+/g," ");
-        tags = tags.replace(/([ ]|^)/g,"$1#").trim();
-        search_tags = " " + tags + " ";
-        $(".remix_label input").prop("checked", tags.indexOf(" #remix ") >= 0);
+        var tags = el.val().trim();
+        tags = tags.replace(/[#,]/g," ").replace(/[ ]+/g," ").trim();
+        if (tags.length) tags = tags.replace(/([ ]|^)/g,"$1#").trim();
+        // TODO-polish: unique the tags
+        var search_tags = " " + tags + " ";
+        $(".remix_label input").prop("checked", search_tags.indexOf(" #remix ") >= 0);
         el.val(tags);
     }
     $("#tags_input").change(function(e){
