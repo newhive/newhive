@@ -165,16 +165,22 @@ textarea.code {
 .btn { display: inline-block; padding: 5px; cursor: default; }
 // .menu label { font-weight: normal; font-size: 15px; }
 
-#btn_save .loading { width: 25px; }
-// TODO: we should have a mechanism to set up icons, correctly aligned,
-// correctly sized, with automatic hover.
-#btn_save div.arrow { 
-    background-image: asset_url('skin/nav/small_arrow.png');
-    width: 22px;
-    height: 42px;
-    margin-top: -10px;
+#btn_save {
+    @include border-radius(10px);
+    margin-right: -11px;
+    padding-left: 8px;
+    padding-right: 10px;
+    .loading { width: 25px; }
+    // TODO: we should have a mechanism to set up icons, correctly aligned,
+    // correctly sized, with automatic hover.
+    div.arrow { 
+        background-image: asset_url('skin/nav/small_arrow.png');
+        width: 22px;
+        height: 42px;
+        margin-top: -10px;
+    }
+    &:hover div.arrow { background-image: asset_url('skin/nav/small_arrow_hover.png'); }
 }
-#btn_save:hover div.arrow { background-image: asset_url('skin/nav/small_arrow_hover.png'); }
 #right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }
 
